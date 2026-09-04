@@ -4481,7 +4481,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
+    'package.json': '9624fa1e063edb9bfd8b8a980a472b1d4204f3975dcca6ce11e18bd011fb2ed4',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -4652,7 +4652,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
+    'package.json': '9624fa1e063edb9bfd8b8a980a472b1d4204f3975dcca6ce11e18bd011fb2ed4',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -4712,7 +4712,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
       '3fbbb1a4dc5bcafe289113674ae8176f2cc90af74dfd69c6f1dc4f138fbff067',
-    'package.json': '2bd0ff37f68b2f2a6bebfa6876170555319082853239990ad2354a94fc13ee8d',
+    'package.json': '9624fa1e063edb9bfd8b8a980a472b1d4204f3975dcca6ce11e18bd011fb2ed4',
     'reference/api/package.json':
       'bffedbee254dde969ae2a2a77689587fa9f553f0b9df2b869bd2b8fe910a5b64',
     'reference/web/package.json':
@@ -5769,621 +5769,6 @@ test('raw mutation reports are removed after every callback exit', () => {
   }
 });
 
-test('D24.12 focused report projection enforces census, process, safety, and headroom', () => {
-  const report = focusedCurrentShapeReport();
-  const projected = projectFocusedMutationReport(report, repoRoot);
-  assert.equal(projected.testFiles, undefined);
-  const persisted = canonicalize(projected);
-  for (const forbidden of [
-    'source',
-    'replacement',
-    'statusReason',
-    'coveredBy',
-    'killedBy',
-    'private-test-identifier',
-    'github_pat_',
-    '/Users/example',
-  ]) {
-    assert.equal(persisted.includes(forbidden), false);
-  }
-  assert.equal(assertFocusedEvidenceSafe(projected, repoRoot), true);
-  const census = focusedMutationCensus(projected, focusedStatusTotals);
-  assert.deepEqual(census, focusedCensus);
-  assert.equal(assertFocusedMutationCensus(census, focusedCensus), true);
-  for (const [key, value] of Object.entries(focusedCensus)) {
-    for (const displacement of [-1, 1]) {
-      assert.throws(
-        () =>
-          assertFocusedMutationCensus(
-            { ...focusedCensus, [key]: value + displacement },
-            focusedCensus,
-          ),
-        { code: 'MUTATION_FOCUSED_CENSUS' },
-      );
-    }
-  }
-  const incompleteTotals = { ...focusedStatusTotals };
-  delete incompleteTotals.Pending;
-  assert.throws(() => focusedMutationCensus(projected, incompleteTotals), {
-    code: 'MUTATION_FOCUSED_ACCOUNTING',
-  });
-  assert.equal(
-    assertFocusedMutationProcessResult({ errorAbsent: true, signal: null, status: 0 }, 'success'),
-    true,
-  );
-  for (const processResult of [
-    { errorAbsent: false, signal: null, status: 0 },
-    { errorAbsent: true, signal: 'SIGTERM', status: 0 },
-    { errorAbsent: true, signal: null, status: 1 },
-    { errorAbsent: true, signal: null, status: 0, stdout: 'not retained' },
-  ]) {
-    assert.throws(() => assertFocusedMutationProcessResult(processResult, 'success'), {
-      code: 'MUTATION_FOCUSED_PROCESS',
-    });
-  }
-  assert.equal(
-    assertFocusedMutationProcessResult({ errorAbsent: true, signal: null, status: 1 }, 'failure'),
-    true,
-  );
-  for (const unsafe of [
-    { source: 'retained' },
-    { nested: { replacement: 'retained' } },
-    { value: '/Users/example/retained' },
-    { value: 'github_pat_abcdefghijklmnopqrstuvwxyz0123456789' },
-  ]) {
-    assert.throws(() => assertFocusedEvidenceSafe(unsafe, repoRoot));
-  }
-  const reportBytes = encodeFocusedMutationJson(
-    projected,
-    FOCUSED_MUTATION_LIMITS.report,
-    'current-shape report',
-  );
-  assert.equal(reportBytes.length <= FOCUSED_MUTATION_LIMITS.syntheticReportHeadroom, true);
-  assert.equal(
-    (FOCUSED_MUTATION_LIMITS.report - reportBytes.length) / FOCUSED_MUTATION_LIMITS.report >= 0.25,
-    true,
-  );
-});
-
-test('D24.12 focused evidence bounds enforce every exact byte boundary', () => {
-  const reportMax = Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.report);
-  const resultMax = Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.result);
-  const manifestMax = Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.manifest);
-  assert.equal(
-    assertFocusedMutationByteBounds({
-      reportBytes: reportMax,
-      resultBytes: resultMax,
-      manifestBytes: manifestMax,
-      kind: 'success',
-    }),
-    FOCUSED_MUTATION_LIMITS.aggregate,
-  );
-  const one = Buffer.from('x');
-  for (const [field, limit] of [
-    ['reportBytes', FOCUSED_MUTATION_LIMITS.report],
-    ['resultBytes', FOCUSED_MUTATION_LIMITS.result],
-    ['manifestBytes', FOCUSED_MUTATION_LIMITS.manifest],
-  ]) {
-    const base = { reportBytes: one, resultBytes: one, manifestBytes: one, kind: 'success' };
-    assert.doesNotThrow(() =>
-      assertFocusedMutationByteBounds({ ...base, [field]: Buffer.allocUnsafe(limit - 1) }),
-    );
-    assert.doesNotThrow(() =>
-      assertFocusedMutationByteBounds({ ...base, [field]: Buffer.allocUnsafe(limit) }),
-    );
-    assert.throws(
-      () => assertFocusedMutationByteBounds({ ...base, [field]: Buffer.allocUnsafe(limit + 1) }),
-      { code: 'MUTATION_FOCUSED_BOUNDS' },
-    );
-  }
-  assert.doesNotThrow(() =>
-    assertFocusedMutationByteBounds({
-      manifestBytes: manifestMax.subarray(0, -1),
-      kind: 'failure',
-    }),
-  );
-  assert.doesNotThrow(() =>
-    assertFocusedMutationByteBounds({ manifestBytes: manifestMax, kind: 'failure' }),
-  );
-  assert.throws(
-    () =>
-      assertFocusedMutationByteBounds({
-        manifestBytes: Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.manifest + 1),
-        kind: 'failure',
-      }),
-    { code: 'MUTATION_FOCUSED_BOUNDS' },
-  );
-});
-
-test('D24.12 focused publication is immutable, exact, and rollback-safe', () => {
-  const root = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-12-publish-'));
-  try {
-    const paths = focusedAttempt(root);
-    const report = focusedFile(paths.reportName, { kind: 'report', total: 808 }, 4096);
-    const result = focusedFile(paths.resultName, { kind: 'result', scored: 428 }, 4096);
-    const manifest = focusedFile(paths.manifestName, {
-      kind: 'manifest',
-      paths: paths.relative,
-      reportDigest: report.digest,
-      resultDigest: result.digest,
-    });
-    const files = [report, result, manifest];
-    const byteSet = {
-      reportBytes: report.bytes,
-      resultBytes: result.bytes,
-      manifestBytes: manifest.bytes,
-    };
-    const phases = [];
-    assert.deepEqual(
-      publishFocusedMutationEvidence({
-        paths,
-        files,
-        byteSet,
-        validateCandidate: (phase) => phases.push(phase),
-      }),
-      paths.relative,
-    );
-    assert.deepEqual(phases, ['before-write', 'before-publication', 'after-publication']);
-    assert.equal(lstatSync(paths.finalDirectory).mode & 0o777, 0o700);
-    assert.equal(existsSync(paths.stageDirectory), false);
-    assert.deepEqual(
-      readdirSync(paths.finalDirectory).sort(),
-      files.map(({ name }) => name).sort(),
-    );
-    for (const entry of files) {
-      const path = join(paths.finalDirectory, entry.name);
-      const bytes = readFileSync(path);
-      assert.equal(lstatSync(path).mode & 0o777, 0o600);
-      assert.deepEqual(bytes, entry.bytes);
-      assert.equal(sha256Hex(bytes), entry.digest);
-    }
-    const successInventory = focusedInventory(paths.finalDirectory);
-    assert.throws(
-      () =>
-        publishFocusedMutationEvidence({
-          paths,
-          files,
-          byteSet,
-          validateCandidate: () => undefined,
-        }),
-      { code: 'MUTATION_FOCUSED_COLLISION' },
-    );
-    const sameAttemptFailure = focusedAttempt(root, { kind: 'failure', pid: 7002 });
-    const failureManifest = focusedFile(sameAttemptFailure.manifestName, { kind: 'failure' });
-    assert.throws(
-      () =>
-        publishFocusedMutationEvidence({
-          paths: sameAttemptFailure,
-          files: [failureManifest],
-          byteSet: { manifestBytes: failureManifest.bytes },
-          validateCandidate: () => undefined,
-        }),
-      { code: 'MUTATION_FOCUSED_COLLISION' },
-    );
-    const separateFailure = focusedAttempt(root, { kind: 'failure', digest: 'd'.repeat(64) });
-    const separateManifest = focusedFile(separateFailure.manifestName, { kind: 'failure' });
-    publishFocusedMutationEvidence({
-      paths: separateFailure,
-      files: [separateManifest],
-      byteSet: { manifestBytes: separateManifest.bytes },
-      validateCandidate: () => undefined,
-    });
-    assert.deepEqual(focusedInventory(paths.finalDirectory), successInventory);
-    assert.equal(
-      lstatSync(join(separateFailure.finalDirectory, separateManifest.name)).mode & 0o777,
-      0o600,
-    );
-    assert.throws(
-      () =>
-        publishFocusedMutationEvidence({
-          paths: separateFailure,
-          files: [separateManifest],
-          byteSet: { manifestBytes: separateManifest.bytes },
-          validateCandidate: () => undefined,
-        }),
-      { code: 'MUTATION_FOCUSED_COLLISION' },
-    );
-
-    const inject = (label, fileSystem, validateCandidate = () => undefined) => {
-      const injectedPaths = focusedAttempt(root, {
-        digest: sha256Hex(label),
-        pid: 7100 + label.length,
-      });
-      const injectedReport = focusedFile(injectedPaths.reportName, { label, kind: 'report' }, 4096);
-      const injectedResult = focusedFile(injectedPaths.resultName, { label, kind: 'result' }, 4096);
-      const injectedManifest = focusedFile(injectedPaths.manifestName, { label, kind: 'manifest' });
-      assert.throws(() =>
-        publishFocusedMutationEvidence({
-          paths: injectedPaths,
-          files: [injectedReport, injectedResult, injectedManifest],
-          byteSet: {
-            reportBytes: injectedReport.bytes,
-            resultBytes: injectedResult.bytes,
-            manifestBytes: injectedManifest.bytes,
-          },
-          validateCandidate,
-          fileSystem,
-        }),
-      );
-      assert.deepEqual(focusedInventory(paths.finalDirectory), successInventory);
-      return injectedPaths;
-    };
-    inject('write', {
-      ...FOCUSED_MUTATION_FILE_SYSTEM,
-      writeFileSync: () => {
-        throw new Error('injected write');
-      },
-    });
-    let closeInjected = false;
-    inject('close', {
-      ...FOCUSED_MUTATION_FILE_SYSTEM,
-      closeSync: (descriptor) => {
-        if (!closeInjected) {
-          closeInjected = true;
-          throw new Error('injected close');
-        }
-        FOCUSED_MUTATION_FILE_SYSTEM.closeSync(descriptor);
-      },
-    });
-    inject('chmod', {
-      ...FOCUSED_MUTATION_FILE_SYSTEM,
-      chmodSync: () => {
-        throw new Error('injected chmod');
-      },
-    });
-    inject('rename', {
-      ...FOCUSED_MUTATION_FILE_SYSTEM,
-      renameSync: () => {
-        throw new Error('injected rename');
-      },
-    });
-    const digestPaths = focusedAttempt(root, { digest: 'f'.repeat(64), pid: 7199 });
-    const digestReport = focusedFile(digestPaths.reportName, { kind: 'report' }, 4096);
-    const digestResult = focusedFile(digestPaths.resultName, { kind: 'result' }, 4096);
-    const digestManifest = focusedFile(digestPaths.manifestName, { kind: 'manifest' });
-    assert.throws(
-      () =>
-        publishFocusedMutationEvidence({
-          paths: digestPaths,
-          files: [{ ...digestReport, digest: '0'.repeat(64) }, digestResult, digestManifest],
-          byteSet: {
-            reportBytes: digestReport.bytes,
-            resultBytes: digestResult.bytes,
-            manifestBytes: digestManifest.bytes,
-          },
-          validateCandidate: () => undefined,
-        }),
-      { code: 'MUTATION_FOCUSED_DIGEST' },
-    );
-    assert.equal(existsSync(digestPaths.stageDirectory), false);
-    for (const phase of ['before-write', 'before-publication', 'after-publication']) {
-      const injectedPaths = inject(`candidate-${phase}`, FOCUSED_MUTATION_FILE_SYSTEM, (actual) => {
-        if (actual === phase) throw new Error(`injected ${phase}`);
-      });
-      assert.equal(existsSync(injectedPaths.finalDirectory), phase === 'after-publication');
-      if (phase === 'after-publication') {
-        assert.deepEqual(
-          readdirSync(injectedPaths.finalDirectory).sort(),
-          [injectedPaths.manifestName, injectedPaths.reportName, injectedPaths.resultName].sort(),
-        );
-      }
-      assert.equal(existsSync(injectedPaths.stageDirectory), false);
-    }
-    const boundPaths = focusedAttempt(root, { digest: 'e'.repeat(64), pid: 7200 });
-    const boundReport = focusedFile(boundPaths.reportName, { kind: 'report' }, 4096);
-    const boundResult = focusedFile(boundPaths.resultName, { kind: 'result' }, 4096);
-    const boundManifest = focusedFile(boundPaths.manifestName, { kind: 'manifest' });
-    assert.throws(
-      () =>
-        publishFocusedMutationEvidence({
-          paths: boundPaths,
-          files: [boundReport, boundResult, boundManifest],
-          byteSet: {
-            reportBytes: boundReport.bytes,
-            resultBytes: boundResult.bytes,
-            manifestBytes: Buffer.allocUnsafe(FOCUSED_MUTATION_LIMITS.manifest + 1),
-          },
-          validateCandidate: () => undefined,
-        }),
-      { code: 'MUTATION_FOCUSED_BOUNDS' },
-    );
-    assert.equal(existsSync(boundPaths.stageDirectory), false);
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test('D24.12 focused paths reject containment, symlink, collision, file, and mode faults', () => {
-  const root = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-12-paths-'));
-  try {
-    const sibling = focusedAttempt(root);
-    assert.equal(
-      relative(resolve(root, FULL_MUTATION_ARTIFACT_ROOT), sibling.focusedRoot).startsWith('..'),
-      true,
-    );
-    assert.throws(
-      () =>
-        focusedMutationAttemptPaths({
-          repoRoot: root,
-          packageStem: 'packages-worklist',
-          commit: focusedCommit,
-          diffDigest: focusedDiffDigest,
-          kind: 'success',
-          artifactRoot: '../escape',
-        }),
-      { code: 'MUTATION_REPORT_PATH' },
-    );
-    for (const artifactRoot of [
-      FULL_MUTATION_ARTIFACT_ROOT,
-      `${FULL_MUTATION_ARTIFACT_ROOT}/nested`,
-    ]) {
-      assert.throws(
-        () =>
-          focusedMutationAttemptPaths({
-            repoRoot: root,
-            packageStem: 'packages-worklist',
-            commit: focusedCommit,
-            diffDigest: focusedDiffDigest,
-            kind: 'success',
-            artifactRoot,
-          }),
-        { code: 'MUTATION_FOCUSED_PATH' },
-      );
-    }
-    const outside = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-12-outside-'));
-    mkdirSync(join(root, '.devai/state/check-cache/v1/artifacts'), { recursive: true });
-    symlinkSync(outside, sibling.focusedRoot);
-    assert.throws(() => assertFocusedMutationAttemptAvailable(sibling), {
-      code: 'MUTATION_FOCUSED_SYMLINK',
-    });
-    rmSync(sibling.focusedRoot, { force: true });
-    rmSync(outside, { recursive: true, force: true });
-
-    const fileFault = (label, overrides, expectedCode) => {
-      const paths = focusedAttempt(root, { digest: sha256Hex(label), pid: 7300 + label.length });
-      const report = focusedFile(paths.reportName, { label, kind: 'report' }, 4096);
-      const result = focusedFile(paths.resultName, { label, kind: 'result' }, 4096);
-      const manifest = focusedFile(paths.manifestName, { label, kind: 'manifest' });
-      assert.throws(
-        () =>
-          publishFocusedMutationEvidence({
-            paths,
-            files: [report, result, manifest],
-            byteSet: {
-              reportBytes: report.bytes,
-              resultBytes: result.bytes,
-              manifestBytes: manifest.bytes,
-            },
-            validateCandidate: () => undefined,
-            fileSystem: { ...FOCUSED_MUTATION_FILE_SYSTEM, ...overrides(paths) },
-          }),
-        { code: expectedCode },
-      );
-      return paths;
-    };
-    fileFault(
-      'extra-file',
-      (paths) => ({
-        readdirSync: (path) => {
-          const names = FOCUSED_MUTATION_FILE_SYSTEM.readdirSync(path);
-          return path === paths.stageDirectory ? [...names, 'extra.json'] : names;
-        },
-      }),
-      'MUTATION_FOCUSED_FILES',
-    );
-    fileFault(
-      'stage-symlink',
-      (paths) => ({
-        lstatSync: (path) => {
-          const metadata = FOCUSED_MUTATION_FILE_SYSTEM.lstatSync(path);
-          if (path.startsWith(`${paths.stageDirectory}/`)) {
-            return { ...metadata, isFile: () => true, isSymbolicLink: () => true };
-          }
-          return metadata;
-        },
-      }),
-      'MUTATION_FOCUSED_MODE',
-    );
-    const wrongFinal = fileFault(
-      'wrong-final-mode',
-      (paths) => ({
-        lstatSync: (path) => {
-          const metadata = FOCUSED_MUTATION_FILE_SYSTEM.lstatSync(path);
-          if (path.startsWith(`${paths.finalDirectory}/`)) {
-            return {
-              ...metadata,
-              mode: (metadata.mode & ~0o777) | 0o644,
-              isFile: () => true,
-              isSymbolicLink: () => false,
-            };
-          }
-          return metadata;
-        },
-      }),
-      'MUTATION_FOCUSED_MODE',
-    );
-    assert.equal(existsSync(wrongFinal.finalDirectory), true);
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test('D24.12 focused candidate rejects index, population, mode, identity, digest, and input drift', () => {
-  const fixture = focusedCandidateFixture();
-  try {
-    const expected = fixture.capture();
-    assert.equal(expected.commit, focusedCommit);
-    assert.equal(expected.tree, focusedTree);
-    assert.equal(expected.cleanIndex, true);
-    assert.equal(expected.allowedUnstaged.length, 4);
-    assert.equal(expected.diffDigest, sha256Hex(fixture.state.diffBytes));
-    assert.deepEqual(expected.inputDigests, focusedInputDigests);
-    assert.deepEqual(GOVERNED_MUTATION_DIFF_ARGUMENTS, [
-      '-c',
-      'core.abbrev=9',
-      '-c',
-      'color.ui=false',
-      '-c',
-      'diff.noprefix=false',
-      '-c',
-      'diff.mnemonicprefix=false',
-      '-c',
-      'diff.algorithm=myers',
-      '-c',
-      'diff.indentHeuristic=true',
-      '-c',
-      'core.autocrlf=false',
-      'diff',
-      '--no-ext-diff',
-      '--no-textconv',
-      '--binary',
-      'HEAD',
-      '--',
-    ]);
-    fixture.state.indexStatus = 1;
-    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_INDEX' });
-    fixture.state.indexStatus = 0;
-    const originalStatus = fixture.state.status;
-    fixture.state.status += '?? fifth.ts\0';
-    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_STATUS' });
-    fixture.state.status = originalStatus;
-    chmodSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), 0o600);
-    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_MODE' });
-    chmodSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), 0o644);
-    const symlinkPath = join(fixture.root, fixture.allowedUnstagedPaths[1]);
-    rmSync(symlinkPath);
-    symlinkSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), symlinkPath);
-    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_MODE' });
-    rmSync(symlinkPath);
-    writeFileSync(symlinkPath, 'spec 2\n', { mode: 0o644 });
-    writeFileSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), 'drifted spec\n');
-    const fileDrift = fixture.capture();
-    assert.throws(() => assertFocusedMutationCandidate(expected, fileDrift), {
-      code: 'MUTATION_FOCUSED_DRIFT',
-    });
-    writeFileSync(join(fixture.root, fixture.allowedUnstagedPaths[0]), 'spec 1\n');
-    for (const [field, drifted] of [
-      ['commit', 'd'.repeat(40)],
-      ['tree', 'e'.repeat(40)],
-    ]) {
-      const original = fixture.state[field];
-      fixture.state[field] = drifted;
-      assert.throws(() => assertFocusedMutationCandidate(expected, fixture.capture()), {
-        code: 'MUTATION_FOCUSED_DRIFT',
-      });
-      fixture.state[field] = original;
-    }
-    const originalDiff = fixture.state.diffBytes;
-    fixture.state.diffBytes = Buffer.from('different governed diff\n');
-    assert.throws(() => assertFocusedMutationCandidate(expected, fixture.capture()), {
-      code: 'MUTATION_FOCUSED_DRIFT',
-    });
-    fixture.state.diffBytes = originalDiff;
-    for (const key of Object.keys(focusedInputDigests)) {
-      const original = fixture.state.inputDigests[key];
-      fixture.state.inputDigests[key] = 'f'.repeat(64);
-      assert.throws(() => assertFocusedMutationCandidate(expected, fixture.capture()), {
-        code: 'MUTATION_FOCUSED_DRIFT',
-      });
-      fixture.state.inputDigests[key] = original;
-    }
-    delete fixture.state.inputDigests.configDigest;
-    assert.throws(() => fixture.capture(), { code: 'MUTATION_FOCUSED_INPUT' });
-    fixture.state.inputDigests.configDigest = focusedInputDigests.configDigest;
-    const ignored = fixture.capture();
-    fixture.state.ignored += '!! unexpected-cache/\0';
-    const ignoredDrift = fixture.capture();
-    assert.throws(() => assertFocusedMutationCandidate(ignored, ignoredDrift), {
-      code: 'MUTATION_FOCUSED_IGNORED_DRIFT',
-    });
-    assert.equal(assertFocusedMutationCandidate(ignored, ignoredDrift, ['unexpected-cache']), true);
-    fixture.state.status = ' M ../escape.ts\0';
-    assert.throws(() => fixture.capture({ allowedUnstagedPaths: ['../escape.ts'] }), {
-      code: 'MUTATION_REPORT_PATH',
-    });
-  } finally {
-    rmSync(fixture.root, { recursive: true, force: true });
-  }
-});
-
-test('D24.12 focused and full-roster publication roots are mechanically independent', () => {
-  const root = mkdtempSync(join(realpathSync(tmpdir()), 'stynx-d24-12-roots-'));
-  try {
-    const runnerSource = readFileSync(
-      resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'),
-      'utf8',
-    );
-    const runPackageSource = runnerSource.slice(
-      runnerSource.indexOf('function runPackage(entry) {'),
-      runnerSource.indexOf('\nfunction runFocusedPackage'),
-    );
-    const compositionStart = runnerSource.indexOf('\n  if (policy) {');
-    const legacyStart = runnerSource.indexOf('\n  if (!normalizeExisting) {', compositionStart);
-    const fullPublisherSource = runnerSource.slice(compositionStart, legacyStart);
-    assert.match(runPackageSource, /function runPackage\(entry\)/u);
-    assert.doesNotMatch(runPackageSource, /FOCUSED_MUTATION_ARTIFACT_ROOT|focused-attempts/u);
-    assert.match(fullPublisherSource, /mutation-composed-report-set-v1/u);
-    assert.match(fullPublisherSource, /fresh|reused/u);
-    assert.doesNotMatch(fullPublisherSource, /publishFocusedMutationEvidence/u);
-    const focusedPaths = focusedAttempt(root);
-    const focusedManifest = focusedFile(focusedPaths.manifestName, { kind: 'focused' });
-    const focusedReport = focusedFile(focusedPaths.reportName, { kind: 'focused-report' }, 4096);
-    const focusedResult = focusedFile(focusedPaths.resultName, { kind: 'focused-result' }, 4096);
-    publishFocusedMutationEvidence({
-      paths: focusedPaths,
-      files: [focusedReport, focusedResult, focusedManifest],
-      byteSet: {
-        reportBytes: focusedReport.bytes,
-        resultBytes: focusedResult.bytes,
-        manifestBytes: focusedManifest.bytes,
-      },
-      validateCandidate: () => undefined,
-    });
-    const focusedBefore = focusedInventory(focusedPaths.focusedRoot);
-    const fullRoot = resolve(root, FULL_MUTATION_ARTIFACT_ROOT);
-    const fullStage = resolve(
-      root,
-      '.devai/state/check-cache/v1/artifacts/.mutation-stage-synthetic',
-    );
-    mkdirSync(fullStage, { recursive: true });
-    const legacyReport = `${canonicalize({ kind: 'mutation-report-v1', total: 3 })}\n`;
-    const legacyResult = `${canonicalize({
-      kind: 'mutation-package-result-v1',
-      reportDigest: sha256Hex(legacyReport),
-    })}\n`;
-    writeFileSync(join(fullStage, 'packages-synthetic.stryker.json'), legacyReport);
-    writeFileSync(join(fullStage, 'packages-synthetic.result.json'), legacyResult);
-    renameSync(fullStage, fullRoot);
-    assert.equal(
-      readFileSync(join(fullRoot, 'packages-synthetic.stryker.json'), 'utf8'),
-      legacyReport,
-    );
-    assert.equal(
-      readFileSync(join(fullRoot, 'packages-synthetic.result.json'), 'utf8'),
-      legacyResult,
-    );
-    assert.equal(
-      sha256Hex(readFileSync(join(fullRoot, 'packages-synthetic.stryker.json'))),
-      sha256Hex(legacyReport),
-    );
-    assert.deepEqual(focusedInventory(focusedPaths.focusedRoot), focusedBefore);
-    rmSync(fullRoot, { recursive: true, force: true });
-    mkdirSync(fullStage, { recursive: true });
-    writeFileSync(join(fullStage, 'summary.json'), `${canonicalize({ complete: true })}\n`);
-    renameSync(fullStage, fullRoot);
-    assert.deepEqual(focusedInventory(focusedPaths.focusedRoot), focusedBefore);
-    assert.equal(
-      relative(
-        resolve(root, FULL_MUTATION_ARTIFACT_ROOT),
-        resolve(root, FOCUSED_MUTATION_ARTIFACT_ROOT),
-      ).startsWith('..'),
-      true,
-    );
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
-});
-
 test('D24.15 full-roster infrastructure preflight fails before package one', async () => {
   const mutationEvidence = await import('../../scripts/lib/mutation-evidence.mjs');
   const preflight = mutationEvidence.preflightFullMutationInfrastructure;
@@ -6626,186 +6011,85 @@ test('D24.15 full-roster infrastructure preflight fails before package one', asy
 
 test('D24.15 runner bypasses preflight only for non-executing modes', () => {
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
-  const focusedBranch = runnerSource.indexOf('\n  if (diagnosticPackageName) {');
-  const focusedExit = runnerSource.indexOf('process.exit(0);', focusedBranch);
-  const compositionBranch = runnerSource.indexOf('\n  if (policy) {');
-  const compositionPreflight = runnerSource.indexOf(
-    'preflightFullMutationInfrastructure()',
-    compositionBranch,
-  );
-  const packageAction = runnerSource.indexOf('freshRoster.map(runPackage)', compositionBranch);
   const preflightCall = runnerSource.lastIndexOf('preflightFullMutationInfrastructure(');
   const normalizeBypass = runnerSource.lastIndexOf('if (!normalizeExisting) {', preflightCall);
   const stagingAction = runnerSource.lastIndexOf(
     '\n  rmSync(stagingDirectory, { recursive: true, force: true });',
   );
-  assert.equal(focusedBranch > 0, true);
-  assert.equal(focusedExit > focusedBranch, true);
-  assert.equal(preflightCall > focusedExit, true, 'focused mode must bypass full-roster preflight');
+  assert.equal(preflightCall > 0, true, 'full-roster preflight must exist');
   assert.equal(
-    normalizeBypass > focusedExit && normalizeBypass < preflightCall,
+    normalizeBypass > 0 && normalizeBypass < preflightCall,
     true,
     '--normalize-existing must bypass full-roster infrastructure preflight',
   );
   assert.equal(preflightCall < stagingAction, true, 'preflight must precede staging action');
-  assert.equal(
-    compositionPreflight > compositionBranch && compositionPreflight < packageAction,
-    true,
-    'composition preflight must precede fresh package one',
-  );
   const preflightBranch = runnerSource.slice(normalizeBypass, stagingAction);
   assert.match(preflightBranch, /if \(!normalizeExisting\) \{/u);
   assert.match(preflightBranch, /preflightFullMutationInfrastructure\(\)/u);
   assert.match(preflightBranch, /JSON\.stringify\([^)]*preflight[^)]*\)/u);
   assert.match(preflightBranch, /process\.exit\(1\)/u);
   assert.doesNotMatch(preflightBranch, /(?:runPackage|mkdirSync|rmSync|renameSync)/u);
-});
 
-test('D24.32 composed mutation evidence runs exactly four packages and fails closed on reuse drift', () => {
-  const policy = JSON.parse(
-    readFileSync(resolve(repoRoot, 'law/policy/stynx-1.1.1-mutation-reuse.json'), 'utf8'),
-  );
-  assert.equal(policy.kind, 'stynx-1.1.1-mutation-reuse-policy-v1');
-  assert.equal(policy.freshPackages.length, 4);
-  assert.equal(policy.reusedPackages.length, 34);
-  assert.equal(new Set([...policy.freshPackages, ...policy.reusedPackages]).size, 38);
-  assert.deepEqual(policy.freshPackages, [
-    '@stynx-nyx/idempotency',
-    '@stynx-nyx/mobile-runtime',
-    '@stynx-nyx/preferences',
-    '@stynx-nyx/ratelimit',
-  ]);
-  assert.equal(policy.composedSummaryKind, 'mutation-composed-report-set-v1');
-
-  const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
-  const compositionSource = runnerSource.slice(
-    runnerSource.indexOf('\n  if (policy) {'),
-    runnerSource.indexOf(
-      '\n  if (!normalizeExisting) {',
-      runnerSource.indexOf('\n  if (policy) {'),
-    ),
-  );
-  for (const required of [
-    'stynx-1.1.1-mutation-reuse.json',
-    'mutation-composed-report-set-v1',
-    'freshPackages',
-    'reusedPackages',
-    'allowedChangedPaths',
-    'summarySha256',
-    'summaryBytes',
-    'inputProjectionDigest',
-    'baselineCommit',
-    'baselineTree',
-    'provenance',
-  ]) {
-    assert.match(runnerSource, new RegExp(required, 'u'));
-  }
-  assert.match(runnerSource, /git[^\n]*(?:diff|status)/u);
-  assert.match(runnerSource, /canonicalize\([^)]*report/u);
-  assert.match(runnerSource, /canonicalize\([^)]*result/u);
-  assert.match(compositionSource, /policy\.freshPackages\.map\(\(packageName\)/u);
-  assert.match(compositionSource, /freshRoster\.map\(runPackage\)/u);
-  assert.doesNotMatch(compositionSource, /selectedRoster\.map\(runPackage\)/u);
-  assert.match(runnerSource, /requiredFreshCount/u);
-  assert.match(runnerSource, /requiredReusedCount/u);
-  assert.match(runnerSource, /requiredRosterCount/u);
-  assert.match(runnerSource, /process\.exit\(1\)/u);
-  assert.doesNotMatch(
-    runnerSource,
-    /(?:skipReuseValidation|allowFifthPackage|fallbackFullRoster)/u,
-  );
-
-  const restorationSource = runnerSource.slice(
-    runnerSource.indexOf('function restoreOwnedStrykerSetup'),
-    runnerSource.indexOf(
-      '\nfunction runPackage',
-      runnerSource.indexOf('function restoreOwnedStrykerSetup'),
-    ),
-  );
-  assert.match(
-    restorationSource,
-    /11ea94ed9ba49a916fb0f6cbb365e896f4ce67958009f7a4320ceebaba14febb/u,
-  );
-  assert.match(restorationSource, /\^stryker-setup-\\d\+\\\.js\$/u);
-  assert.match(restorationSource, /stryker-setup\.js\.map/u);
-  assert.match(restorationSource, /unlinkSync/u);
-  assert.doesNotMatch(restorationSource, /recursive|glob|rmSync|\.stryker-tmp|coverage|dist/u);
-});
-
-test('D24.36 chained rebind preserves historical inputs and exits before every mutation start', () => {
-  const policy = JSON.parse(
-    readFileSync(resolve(repoRoot, 'law/policy/stynx-1.1.1-mutation-reuse.json'), 'utf8'),
-  );
-  assert.equal(policy.candidateRebind.kind, 'zero-mutation-candidate-rebind-v2');
-  assert.deepEqual(policy.candidateRebind.sourceCandidate, {
-    commit: 'f8a3521a944abc4b5c8a07e1ebae8d349e549fd7',
-    tree: '32a3a8fd59afcd500f9d67552081f819cba9b4d7',
-  });
-  assert.deepEqual(policy.candidateRebind.historicalInputCandidate, {
-    commit: '6754d65f89cc9c2f23ab82f61a4b68c543f0bef4',
-    tree: 'fa3f2a43eeb89e73dff04074d021e2ba1783cf84',
-  });
-  assert.deepEqual(
-    {
-      path: policy.candidateRebind.sourceSummary.path,
-      bytes: policy.candidateRebind.sourceSummary.bytes,
-      sha256: policy.candidateRebind.sourceSummary.sha256,
-      packageCount: policy.candidateRebind.sourceSummary.packageCount,
-      artifactBindingCount: policy.candidateRebind.sourceSummary.artifactBindingCount,
-    },
-    {
-      path: '.devai/state/check-cache/v1/artifacts/mutation/summary.json',
-      bytes: 37_433,
-      sha256: 'd86162cf5e2055dbea7e418c18de0904bcc2d077f25def95b32e2c71a147cf70',
-      packageCount: 38,
-      artifactBindingCount: 76,
-    },
+  // Replaces the retired focused-mode and composition-mode ordering assertions:
+  // both execution modes were removed with the candidate campaign machinery, so
+  // the runner must now expose exactly one roster execution path.
+  assert.doesNotMatch(runnerSource, /diagnosticPackageName\) \{\n/u);
+  assert.doesNotMatch(runnerSource, /freshRoster/u);
+  assert.equal(
+    (runnerSource.match(/\.map\(runPackage\)/gu) ?? []).length,
+    1,
+    'exactly one roster execution path must remain',
   );
   assert.equal(
-    policy.candidateRebind.sourceInputProjection.sha256,
-    'f9222176e2fcde022dae67e8a776fb7de4cfb9e0eb4f85d5c0a1f2c36a86b674',
+    (runnerSource.match(/preflightFullMutationInfrastructure\(/gu) ?? []).length,
+    1,
+    'preflight must be invoked exactly once',
   );
-  assert.equal(policy.candidateRebind.semanticRebindComparison.allowedScriptTransitions.length, 0);
-  assert.deepEqual(
-    policy.candidateRebind.semanticRebindComparison.sourceRootManifest,
-    policy.candidateRebind.semanticRebindComparison.targetRootManifest,
-  );
-  assert.equal(policy.candidateRebind.mutationSubprocesses, 0);
-  assert.equal(policy.candidateRebind.packageStarts, 0);
+});
 
+// Replacement coverage for the retired 'D24.12 focused and full-roster
+// publication roots are mechanically independent' test. Focused mode was
+// removed with the candidate campaign machinery, so the surviving product
+// guarantee is that the single full-roster publication is atomic and
+// rollback-safe through a staging directory and a backup directory.
+test('full-roster mutation publication is atomic and rollback-safe', () => {
   const runnerSource = readFileSync(resolve(repoRoot, 'scripts/run-mutation-evidence.mjs'), 'utf8');
-  const rebindStart = runnerSource.indexOf('export async function rebindCandidateComposition');
-  const directStart = runnerSource.indexOf('\nif (isDirectInvocation) {', rebindStart);
-  assert.notEqual(rebindStart, -1);
-  assert.notEqual(directStart, -1);
-  const rebindSource = runnerSource.slice(rebindStart, directStart);
-  for (const required of [
-    'historicalInputCandidate',
-    'historicalMutationInputTreeEntries',
-    'sourceRootManifest',
-    'targetRootManifest',
-    'sourceInputProjection',
-    'artifactBindingCount',
-    'publishComposedDirectory',
-  ]) {
-    assert.match(rebindSource, new RegExp(required, 'u'));
-  }
+
   assert.doesNotMatch(
-    rebindSource,
-    /(?:preflightFullMutationInfrastructure|runPackage|stryker|freshRoster\.map|selectedRoster\.map)/iu,
+    runnerSource,
+    /FOCUSED_MUTATION_ARTIFACT_ROOT|focused-attempts|publishFocusedMutationEvidence/u,
+    'no focused publication root may remain',
+  );
+  assert.doesNotMatch(
+    runnerSource,
+    /mutation-composed-report-set-v1/u,
+    'no composed campaign summary kind may remain',
   );
 
-  const directSource = runnerSource.slice(directStart);
-  const rebindCall = directSource.indexOf('await rebindCandidateComposition');
-  const preflightCall = directSource.indexOf('preflightFullMutationInfrastructure(');
-  const packageCall = directSource.indexOf('freshRoster.map(runPackage)');
-  assert.notEqual(rebindCall, -1);
-  assert.equal(preflightCall === -1 || rebindCall < preflightCall, true);
-  assert.equal(packageCall === -1 || rebindCall < packageCall, true);
-  assert.match(
-    directSource.slice(rebindCall, preflightCall === -1 ? undefined : preflightCall),
-    /process\.exit\(0\)/u,
+  const publisher = runnerSource.slice(
+    runnerSource.indexOf('function publishStagedDirectory()'),
+    runnerSource.indexOf('function main()'),
   );
+  assert.equal(publisher.length > 0, true, 'a single staged publisher must exist');
+  // final is moved aside to backup before staging is promoted, and restored on failure
+  assert.match(publisher, /renameSync\(finalDirectory, backupDirectory\)/u);
+  assert.match(publisher, /renameSync\(stagingDirectory, finalDirectory\)/u);
+  assert.match(publisher, /renameSync\(backupDirectory, finalDirectory\)/u);
+  // no partial writes into the live root
+  assert.doesNotMatch(publisher, /writeFileSync|canonicalWrite/u);
+
+  // the summary is written into staging, never directly into the published root
+  const summary = runnerSource.slice(
+    runnerSource.indexOf('function emitSummary('),
+    runnerSource.indexOf('function publishStagedDirectory()'),
+  );
+  assert.match(summary, /canonicalWrite\(join\(stagingDirectory, 'summary\.json'\)/u);
+  assert.doesNotMatch(summary, /finalDirectory/u);
+
+  // a failed run restores the previous published root and leaves no staging residue
+  const failurePath = runnerSource.slice(runnerSource.indexOf('} catch (error) {'));
+  assert.match(failurePath, /rmSync\(stagingDirectory, \{ recursive: true, force: true \}\)/u);
+  assert.match(failurePath, /renameSync\(backupDirectory, finalDirectory\)/u);
 });
 
 test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwright paths', async () => {
