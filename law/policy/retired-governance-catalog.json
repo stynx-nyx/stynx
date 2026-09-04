@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0.0",
+  "policy_id": "stynx.retired-governance-catalog",
+  "policy_version": "1.0.0",
+  "authority": "Architect",
+  "description": "Digest-bound record of governance artifacts retired by ADR-DEVAI-ADOPTION-0002. Digests are of the bytes as they existed at commit 4f106b92, immediately before removal. These artifacts confer no current authority and are not executable inputs.",
+  "retired_at_commit": "4f106b9244da51f217282a61f774255cb8709a0d",
+  "retired_by_adr": "ADR-DEVAI-ADOPTION-0002",
+  "removed_artifacts": [
+    {
+      "path": "scripts/devai-local-rc.mjs",
+      "sha256": "37eb07b08538e5545ef72d5ea2ce1aab61f45d286a2031f5c58cd1f718e8e8ba"
+    },
+    {
+      "path": "scripts/lib/devai-local-rc.mjs",
+      "sha256": "0f866e65f9cbb0c6a5c7c82bd1951475552dc287767c2c6fbf0f3bca557a687d"
+    },
+    {
+      "path": "scripts/verify-devai-trace.mjs",
+      "sha256": "914999e9f0284e75ae756a0c4b656d3f467e8fc1c148ce14fba517d4c1ca4185"
+    },
+    {
+      "path": "scripts/verify-mutation-roster.mjs",
+      "sha256": "e79d36a5494e627037d9d9a80548ae2a4f0fa96b704d5ae834a6c1fc00ff03ba"
+    },
+    {
+      "path": "law/policy/release-campaign-1.1.1.json",
+      "sha256": "82d52b9ee18b446c99378b4021a89b1dcb893b1f3096a5ec338adb3e15c80a30"
+    },
+    {
+      "path": "law/policy/stynx-1.1.1-mutation-reuse.json",
+      "sha256": "9ab9db866e1b2b57629bc2abdba70a1b94616d3ef883a84a7275bb1e8db381ac"
+    },
+    {
+      "path": "law/policy/devai-local-rc-environment.json",
+      "sha256": "3b927e3cbbc19b313789f8b4deba52dc41b95d0d2d94ecaed16e70fda4de29ee"
+    },
+    {
+      "path": "law/policy/devai-local-rc-toolchain.json",
+      "sha256": "72a105bd3ad8cc022859800d994a4fa6d4d07c1d05b493837cca815204278f5c"
+    },
+    {
+      "path": "law/policy/devai-local-rc-trust-store.json",
+      "sha256": "a209d188cd0948801dc1a1e8e51502d45ad9660ac2cb49888e037d786dfb58ef"
+    },
+    {
+      "path": "law/schemas/release-campaign-1.1.1.schema.json",
+      "sha256": "fc8cc79f9b2ba983e88701d91c5f67c5ce5e394c95f82c3e7178aa16160830b8"
+    },
+    {
+      "path": ".github/workflows/devai-local-rc-verify.yml",
+      "sha256": "615cb94cf9b6ab79883c9b0a409fdefac296197779777bb8834e7dca6c43455d"
+    },
+    {
+      "path": ".github/workflows/devai-main-observation.yml",
+      "sha256": "00a02fbaff3a9724665287baf20edde1ffe53d0821a0befe9e86567887794178"
+    },
+    {
+      "path": "test/scripts/devai-local-rc-verifier.test.mjs",
+      "sha256": "cbafac7c57d93570bf769a373f75076754f8131cac46a52c285fa14077053b72"
+    }
+  ],
+  "superseded_adrs": [
+    {
+      "path": "law/adr/2026-08-16-trusted-local-rc-evidence.md",
+      "sha256": "f81486bb42eed5cf46bde76da99b514727202430d16ba96af0cc6aa3e7097fec",
+      "bytes_preserved": true
+    },
+    {
+      "path": "law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md",
+      "sha256": "5212995df892182b19f63c86a6b0f7bc60aa764f7f5490312351de28e4e03503",
+      "bytes_preserved": true
+    }
+  ],
+  "inactive_historical_records": [
+    {
+      "path": "law/trace.json",
+      "note": "No executable path reads this file after the trace task node was removed."
+    }
+  ]
+}

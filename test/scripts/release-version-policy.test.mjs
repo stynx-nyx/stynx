@@ -652,6 +652,103 @@ function canonicalize(value) {
     .join(',')}}`;
 }
 
+function publicWorkspaceManifests() {
+  return ['packages', 'packages-web']
+    .flatMap((directory) =>
+      readdirSync(join(repoRoot, directory), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(repoRoot, directory, entry.name, 'package.json'))
+        .filter(existsSync),
+    )
+    .map((path) => ({ path, manifest: JSON.parse(readFileSync(path, 'utf8')) }))
+    .filter(({ manifest }) => packageNames.includes(manifest.name))
+    .sort((left, right) => left.manifest.name.localeCompare(right.manifest.name));
+}
+
+function executableFromPath(name) {
+  for (const directory of (process.env.PATH ?? '').split(delimiter)) {
+    if (!directory) continue;
+    const candidate = join(directory, name);
+    try {
+      accessSync(candidate, constants.X_OK);
+      return realpathSync(candidate);
+    } catch {
+      continue;
+    }
+  }
+  return undefined;
+}
+
+function trackedPaths() {
+  const result = spawnSync('git', ['ls-files', '-z'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout.split('\0').filter(Boolean).sort();
+}
+
+function trackedProjection(root, paths) {
+  return paths.map((path) => {
+    const absolutePath = join(root, path);
+    const stat = lstatSync(absolutePath);
+    const bytes = stat.isSymbolicLink()
+      ? Buffer.from(readlinkSync(absolutePath))
+      : readFileSync(absolutePath);
+    return {
+      path,
+      mode: stat.mode & 0o777,
+      type: stat.isSymbolicLink() ? 'symlink' : 'file',
+      digest: createHash('sha256').update(bytes).digest('hex'),
+    };
+  });
+}
+
+function cleanOperation(manifest) {
+  const command = manifest.scripts?.clean;
+  assert.equal(typeof command, 'string', `${manifest.name}: clean operation is required`);
+  const rmMatch = /^rm -rf (dist(?: coverage)?)$/u.exec(command);
+  if (rmMatch) {
+    const executable = executableFromPath('rm');
+    assert.ok(executable, `${manifest.name}: supported host rm must resolve`);
+    assert.ok(isAbsolute(executable), `${manifest.name}: rm resolution must be absolute`);
+    return { command, executable, args: ['-rf', ...rmMatch[1].split(' ')] };
+  }
+
+  const nodeMatch = /^node -e "([\s\S]+)"$/u.exec(command);
+  assert.ok(nodeMatch, `${manifest.name}: unsupported clean command`);
+  accessSync(process.execPath, constants.X_OK);
+  const source = nodeMatch[1];
+  assert.match(source, /require\(['"]node:fs['"]\)/u, `${manifest.name}: node:fs is required`);
+  assert.match(source, /rmSync/u, `${manifest.name}: clean must remove outputs`);
+  assert.match(source, /recursive\s*:\s*true/u, `${manifest.name}: recursive removal required`);
+  assert.match(source, /force\s*:\s*true/u, `${manifest.name}: missing outputs must succeed`);
+  assert.doesNotMatch(source, /(?:\.\.|\/|\\|src|generated)/u, `${manifest.name}: target escape`);
+  assert.ok(
+    /^const fs=require\(['"]node:fs['"]\); fs\.rmSync\(['"]dist['"],\{recursive:true,force:true\}\); fs\.rmSync\(['"]coverage['"],\{recursive:true,force:true\}\)$/u.test(
+      source,
+    ) ||
+      /^for \(const path of \[['"]dist['"], ['"]coverage['"]\]\) require\(['"]node:fs['"]\)\.rmSync\(path, \{ recursive: true, force: true \}\)$/u.test(
+        source,
+      ),
+    `${manifest.name}: node clean body must contain only the approved removals`,
+  );
+  const targets = [...source.matchAll(/['"](dist|coverage)['"]/gu)].map((match) => match[1]);
+  assert.deepEqual([...new Set(targets)].sort(), ['coverage', 'dist']);
+  return { command, executable: process.execPath, args: ['-e', source] };
+}
+
+function assertConfined(packageRoot, target, label) {
+  const displacement = relative(realpathSync(packageRoot), realpathSync(target));
+  assert.ok(
+    displacement !== '' && !displacement.startsWith('..') && !isAbsolute(displacement),
+    `${label}: target must remain inside its package`,
+  );
+  assert.equal(lstatSync(target).isSymbolicLink(), false, `${label}: symlink target is forbidden`);
+}
+
 test('all 44 package clean operations are confined, executable, idempotent, and tracked-tree preserving', () => {
   const manifests = publicWorkspaceManifests();
   const names = manifests.map(({ manifest }) => manifest.name);
