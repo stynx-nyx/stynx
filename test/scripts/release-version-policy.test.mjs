@@ -31,6 +31,7 @@ import {
   expectedRebaselineChangelog,
   runUnifiedRebaseline,
   unifiedRebaselinePackageCount,
+  unifiedRebaselineSource,
   unifiedRebaselineTarget,
 } from '../../scripts/lib/unified-rebaseline.mjs';
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
@@ -472,7 +473,7 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, unifiedRebaselineTarget);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');
   assert.equal(anomaly.version, '2.0.0');
-  assert.equal(anomaly.allowed_candidate, '1.1.1');
+  assert.equal(anomaly.allowed_candidate, unifiedRebaselineTarget);
 
   const root = mkdtempSync(join(tmpdir(), 'stynx-anomaly-policy-'));
   try {
@@ -506,7 +507,7 @@ function createRebaselineFixture() {
   writeJson(join(root, 'package.json'), {
     name: 'stynx-workspace',
     private: true,
-    version: '1.0.0',
+    version: unifiedRebaselineSource,
   });
   writeJson(join(root, '.changeset', 'config.json'), {
     fixed: [names],
@@ -517,13 +518,16 @@ function createRebaselineFixture() {
     const packageDirectory = join(root, 'packages', `fixture-${String(index).padStart(2, '0')}`);
     const manifest = {
       name,
-      version: '1.0.0',
-      dependencies: index === 0 ? { [names[1]]: '^1.0.0', [names[2]]: 'workspace:*' } : undefined,
+      version: unifiedRebaselineSource,
+      dependencies:
+        index === 0
+          ? { [names[1]]: `^${unifiedRebaselineSource}`, [names[2]]: 'workspace:*' }
+          : undefined,
     };
     writeJson(join(packageDirectory, 'package.json'), manifest);
     const priorTargetSection =
       index === 0
-        ? '\n## 1.1.1\n\n### Patch Changes\n\n- Preserve this unpublished historical note.\n'
+        ? `\n## ${unifiedRebaselineTarget}\n\n### Patch Changes\n\n- Preserve this unpublished historical note.\n`
         : '';
     mkdirSync(packageDirectory, { recursive: true });
     writeFileSync(
@@ -535,7 +539,7 @@ function createRebaselineFixture() {
   writeJson(join(root, 'tools', 'create-stynx-app', 'template', 'package.json'), {
     name: 'consumer-template',
     private: true,
-    dependencies: { [names[0]]: '^1.0.0' },
+    dependencies: { [names[0]]: `^${unifiedRebaselineSource}` },
   });
   writeJson(join(root, 'docs', 'meta', 'security', 'sbom.cdx.json'), {
     version: '0.5.0',
@@ -576,8 +580,8 @@ test('one-time rebaseline deterministically updates the exact 44-package release
     const firstManifest = JSON.parse(
       readFileSync(join(fixture.root, 'packages', 'fixture-00', 'package.json'), 'utf8'),
     );
-    assert.equal(firstManifest.version, '1.1.1');
-    assert.equal(firstManifest.dependencies[fixture.names[1]], '^1.1.1');
+    assert.equal(firstManifest.version, unifiedRebaselineTarget);
+    assert.equal(firstManifest.dependencies[fixture.names[1]], `^${unifiedRebaselineTarget}`);
     assert.equal(firstManifest.dependencies[fixture.names[2]], 'workspace:*');
     const template = JSON.parse(
       readFileSync(
@@ -585,13 +589,14 @@ test('one-time rebaseline deterministically updates the exact 44-package release
         'utf8',
       ),
     );
-    assert.equal(template.dependencies[fixture.names[0]], '^1.1.1');
+    assert.equal(template.dependencies[fixture.names[0]], `^${unifiedRebaselineTarget}`);
 
     const changelog = readFileSync(
       join(fixture.root, 'packages', 'fixture-00', 'CHANGELOG.md'),
       'utf8',
     );
-    assert.equal(changelog.match(/^## 1\.1\.1$/gmu)?.length, 1);
+    const targetHeading = new RegExp('^## ' + unifiedRebaselineTarget.split('.').join('\\.') + '$', 'gmu');
+    assert.equal(changelog.match(targetHeading)?.length, 1);
     assert.match(changelog, /Unified Version Rebaseline/u);
     assert.match(changelog, /Preserve this unpublished historical note/u);
     assert.equal(expectedRebaselineChangelog(changelog, fixture.names[0]), changelog);

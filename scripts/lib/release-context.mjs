@@ -1,8 +1,6 @@
-import { createHash } from 'node:crypto';
-
 const fullSha = /^[0-9a-f]{40}$/u;
 const versionCommitSubject = 'ci: version packages';
-const unifiedRebaselineVersion = '1.1.1';
+const unifiedRebaselineVersion = '1.2.0';
 const releaseStatusCommand = 'node scripts/run-release-preparation.mjs --release-status';
 
 const allowedVersionSupportPaths = new Set([

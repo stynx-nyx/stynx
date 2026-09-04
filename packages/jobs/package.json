@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/jobs",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Postgres-backed background job scheduler and worker runtime for stynx (E2)",
