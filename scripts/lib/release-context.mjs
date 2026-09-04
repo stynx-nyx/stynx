@@ -4,7 +4,6 @@ const fullSha = /^[0-9a-f]{40}$/u;
 const versionCommitSubject = 'ci: version packages';
 const unifiedRebaselineVersion = '1.1.1';
 const releaseStatusCommand = 'node scripts/run-release-preparation.mjs --release-status';
-const prAPolicyDigest = '7218cd47417a3f33eba9231b0ded060e19dc919472ead8e40cf55d565a4cb71f';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -42,104 +41,6 @@ function fail(code, message) {
 
 function isChangeset(path) {
   return /^\.changeset\/[^/]+\.md$/u.test(path);
-}
-
-function sameSortedValues(actual, expected) {
-  return (
-    Array.isArray(actual) &&
-    actual.length === expected.length &&
-    JSON.stringify([...actual].sort()) === JSON.stringify([...expected].sort())
-  );
-}
-
-function isPreparationChange({ path, status }) {
-  return (
-    ['A', 'M'].includes(status) &&
-    typeof path === 'string' &&
-    path.length > 0 &&
-    !isChangeset(path) &&
-    path !== 'CHANGELOG.md' &&
-    !path.endsWith('/CHANGELOG.md')
-  );
-}
-
-function classifyPrAPreparation({ baseCommit, headCommit, commits, prAPreparation }) {
-  if (prAPreparation === undefined) return null;
-
-  const { campaignPolicy, rootVersion, packageVersions, mutationPackageNames, changes } =
-    prAPreparation;
-  const changesetPolicy = campaignPolicy?.pr_a_changeset_policy;
-  const publishableNames = campaignPolicy?.publishable_packages;
-  const mutationNames = campaignPolicy?.mutation_packages;
-  const firstPublicationNames = campaignPolicy?.approved_first_publications;
-  const policyDigest = createHash('sha256')
-    .update(JSON.stringify(campaignPolicy ?? null))
-    .digest('hex');
-  const packageNames = Array.isArray(packageVersions)
-    ? packageVersions.map(({ name }) => name)
-    : [];
-
-  const exactPolicy =
-    policyDigest === prAPolicyDigest &&
-    campaignPolicy?.policy_id === 'stynx.release-campaign-1.1.1' &&
-    campaignPolicy?.baseline?.commit === 'b77b50230e3906cee632eb9218b06603cce6c89a' &&
-    campaignPolicy?.baseline?.tree === 'd0cde059f7a93a624ff01d485ebda9ac3cb9422e' &&
-    campaignPolicy?.baseline?.projected_version === '1.0.0' &&
-    campaignPolicy?.candidate?.version === '1.1.1' &&
-    campaignPolicy?.candidate?.publishable_count === 44 &&
-    campaignPolicy?.candidate?.mutation_count === 38 &&
-    campaignPolicy?.candidate?.approved_first_publication_count === 6 &&
-    changesetPolicy?.kind === 'campaign-preparation-only' &&
-    changesetPolicy?.baseline_commit === campaignPolicy.baseline.commit &&
-    changesetPolicy?.baseline_tree === campaignPolicy.baseline.tree &&
-    changesetPolicy?.current_version === '1.0.0' &&
-    changesetPolicy?.candidate_version === '1.1.1' &&
-    changesetPolicy?.changesets === 'forbidden' &&
-    changesetPolicy?.release_status_projection === 'empty-non-promoting' &&
-    changesetPolicy?.version_projection === 'deferred-to-pr-b';
-  const exactRosters =
-    sameSortedValues(packageNames, publishableNames ?? []) &&
-    sameSortedValues(mutationPackageNames, mutationNames ?? []) &&
-    new Set(packageNames).size === 44 &&
-    new Set(mutationPackageNames ?? []).size === 38 &&
-    new Set(firstPublicationNames ?? []).size === 6;
-  const baselineVersions =
-    rootVersion === '1.0.0' &&
-    Array.isArray(publishableNames) &&
-    packageVersions?.length === 44 &&
-    packageVersions.every(
-      ({ name, version }) => publishableNames.includes(name) && version === '1.0.0',
-    );
-  const preparationDiff =
-    Array.isArray(changes) && changes.length > 0 && changes.every(isPreparationChange);
-  const noVersionCommit = !commits.some(({ subject }) => subject === versionCommitSubject);
-
-  if (
-    baseCommit !== changesetPolicy?.baseline_commit ||
-    !exactPolicy ||
-    !exactRosters ||
-    !baselineVersions ||
-    !preparationDiff ||
-    !noVersionCommit
-  ) {
-    return null;
-  }
-
-  return {
-    kind: 'pr-a-preparation',
-    baseCommit,
-    headCommit,
-    policyId: campaignPolicy.policy_id,
-    packageCount: 44,
-    mutationCount: 38,
-    firstPublicationCount: 6,
-    currentVersion: '1.0.0',
-    targetVersion: '1.1.1',
-    changesetCount: 0,
-    promoting: false,
-    releaseStatusProjection: 'empty-non-promoting',
-    versionProjection: 'deferred-to-pr-b',
-  };
 }
 
 function packageDirectory(path) {
@@ -230,7 +131,6 @@ export function classifyReleaseContext({
   followUpChanges,
   rootManifestFollowUpValid,
   versionRebaselineValid = false,
-  prAPreparation,
 }) {
   if (!fullSha.test(baseCommit) || !fullSha.test(headCommit)) {
     fail('RELEASE_CONTEXT_IDENTITY', 'base and head must be full commit SHAs');
@@ -238,13 +138,9 @@ export function classifyReleaseContext({
 
   const versionCommits = commits.filter((commit) => commit.subject === versionCommitSubject);
   if (versionCommits.length === 0) {
-    const preparation = classifyPrAPreparation({
-      baseCommit,
-      headCommit,
-      commits,
-      prAPreparation,
-    });
-    if (preparation !== null) return preparation;
+    // The 1.1.1 "PR A" campaign-preparation classification was retired with the
+    // campaign policy it was bound to. A candidate without a version-packages
+    // commit is now simply ordinary.
     return { kind: 'ordinary', baseCommit, headCommit };
   }
   if (versionCommits.length !== 1) {

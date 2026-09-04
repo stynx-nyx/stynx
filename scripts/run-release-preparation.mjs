@@ -97,29 +97,6 @@ function versionRebaselineValid(baseCommit, versionCommit, changes) {
   );
 }
 
-function prAPreparation(baseCommit, headCommit) {
-  const campaignPolicy = readGitJson(headCommit, 'law/policy/release-campaign-1.1.1.json');
-  if (git(['rev-parse', `${baseCommit}^{tree}`]) !== campaignPolicy?.baseline?.tree) {
-    return undefined;
-  }
-
-  const rootManifest = readGitJson(headCommit, 'package.json');
-  const packageVersions = collectPublicPackages(repoRoot).map(({ manifestPath }) => {
-    const manifest = readGitJson(headCommit, relative(repoRoot, manifestPath));
-    return { name: manifest.name, version: manifest.version };
-  });
-  const { roster: mutationRoster, failures: mutationFailures } = discoverMutationRoster(repoRoot);
-  if (mutationFailures.length > 0) return undefined;
-
-  return {
-    campaignPolicy,
-    rootVersion: rootManifest.version,
-    packageVersions,
-    mutationPackageNames: mutationRoster.map(({ packageName }) => packageName).sort(),
-    changes: parseChanges(baseCommit, headCommit),
-  };
-}
-
 function releaseContext() {
   const baseCommit = git(['rev-parse', 'origin/main']);
   // pull_request workflows are checked out at GitHub's synthetic merge commit.
@@ -156,7 +133,6 @@ function releaseContext() {
     followUpChanges: marker ? parseChanges(marker.sha, headCommit) : [],
     rootManifestFollowUpValid: marker ? rootManifestFollowUpValid(marker.sha, rebaseline) : false,
     versionRebaselineValid: rebaseline,
-    prAPreparation: marker ? undefined : prAPreparation(baseCommit, headCommit),
   });
 }
 
