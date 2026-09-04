@@ -1,0 +1,1419 @@
+{
+  "schemaVersion": "1.0.0",
+  "policy_id": "stynx.release-verification",
+  "policy_version": "1.0.0",
+  "release_unit": "stynx-workspace",
+  "version_source": "package.json",
+  "default_support": "current",
+  "required_check": "stynx-release-gate",
+  "capability_tasks": {
+    "formatting-hygiene": [
+      "lint:families"
+    ],
+    "lint": [
+      "lint:families"
+    ],
+    "type-integrity": [
+      "typecheck"
+    ],
+    "schema-consistency": [
+      "api:contracts"
+    ],
+    "secret-scan": [
+      "security"
+    ],
+    "path-portability": [
+      "security"
+    ],
+    "package-integrity": [
+      "release:prepare"
+    ],
+    "exact-candidate": [
+      "release:prepare"
+    ],
+    "affected-checks": [
+      "test:unit"
+    ],
+    "dependent-checks": [
+      "test:integration"
+    ],
+    "build-integrity": [
+      "build"
+    ],
+    "unit": [
+      "test:unit"
+    ],
+    "integration": [
+      "test:integration"
+    ],
+    "e2e": [
+      "test:e2e"
+    ],
+    "consumer": [
+      "reference:apps"
+    ],
+    "api-compatibility": [
+      "api:contracts"
+    ],
+    "migration": [
+      "db:rls"
+    ],
+    "rollback": [
+      "db:rls"
+    ],
+    "adopter-materialization": [
+      "doctor"
+    ],
+    "security": [
+      "security"
+    ],
+    "database": [
+      "db:rls"
+    ],
+    "tenancy": [
+      "db:rls"
+    ],
+    "provenance": [
+      "release:prepare"
+    ],
+    "reproducibility": [
+      "release:prepare"
+    ],
+    "operational-matrix": [
+      "test:local-full"
+    ]
+  },
+  "risk_capabilities": {},
+  "mutation_roster": [
+    {
+      "id": "packages-web-angular",
+      "package": "@stynx-nyx/angular",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular/test/**"
+      ],
+      "manifest_path": "packages-web/angular/package.json",
+      "config_paths": [
+        "packages-web/angular/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-web-angular-audit",
+      "package": "@stynx-nyx/angular-audit",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-audit/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-audit/test/**"
+      ],
+      "manifest_path": "packages-web/angular-audit/package.json",
+      "config_paths": [
+        "packages-web/angular-audit/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 90,
+        "low": 80
+      }
+    },
+    {
+      "id": "packages-web-angular-auth",
+      "package": "@stynx-nyx/angular-auth",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-auth/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-auth/test/**"
+      ],
+      "manifest_path": "packages-web/angular-auth/package.json",
+      "config_paths": [
+        "packages-web/angular-auth/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 90,
+        "low": 80
+      }
+    },
+    {
+      "id": "packages-web-angular-flow",
+      "package": "@stynx-nyx/angular-flow",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-flow/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-flow/test/**"
+      ],
+      "manifest_path": "packages-web/angular-flow/package.json",
+      "config_paths": [
+        "packages-web/angular-flow/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-web-angular-i18n",
+      "package": "@stynx-nyx/angular-i18n",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-i18n/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-i18n/test/**"
+      ],
+      "manifest_path": "packages-web/angular-i18n/package.json",
+      "config_paths": [
+        "packages-web/angular-i18n/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-web-angular-iam",
+      "package": "@stynx-nyx/angular-iam",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-iam/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-iam/test/**"
+      ],
+      "manifest_path": "packages-web/angular-iam/package.json",
+      "config_paths": [
+        "packages-web/angular-iam/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 90,
+        "low": 80
+      }
+    },
+    {
+      "id": "packages-web-angular-profile",
+      "package": "@stynx-nyx/angular-profile",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-profile/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-profile/test/**"
+      ],
+      "manifest_path": "packages-web/angular-profile/package.json",
+      "config_paths": [
+        "packages-web/angular-profile/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-web-angular-sessions",
+      "package": "@stynx-nyx/angular-sessions",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-sessions/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-sessions/test/**"
+      ],
+      "manifest_path": "packages-web/angular-sessions/package.json",
+      "config_paths": [
+        "packages-web/angular-sessions/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-web-angular-storage",
+      "package": "@stynx-nyx/angular-storage",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-storage/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-storage/test/**"
+      ],
+      "manifest_path": "packages-web/angular-storage/package.json",
+      "config_paths": [
+        "packages-web/angular-storage/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-web-angular-tenancy",
+      "package": "@stynx-nyx/angular-tenancy",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-tenancy/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-tenancy/test/**"
+      ],
+      "manifest_path": "packages-web/angular-tenancy/package.json",
+      "config_paths": [
+        "packages-web/angular-tenancy/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-web-angular-trash",
+      "package": "@stynx-nyx/angular-trash",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-trash/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-trash/test/**"
+      ],
+      "manifest_path": "packages-web/angular-trash/package.json",
+      "config_paths": [
+        "packages-web/angular-trash/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-web-angular-ui",
+      "package": "@stynx-nyx/angular-ui",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/angular-ui/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/angular-ui/test/**"
+      ],
+      "manifest_path": "packages-web/angular-ui/package.json",
+      "config_paths": [
+        "packages-web/angular-ui/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-audit",
+      "package": "@stynx-nyx/audit",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/audit/src/**"
+      ],
+      "test_selectors": [
+        "packages/audit/test/**"
+      ],
+      "manifest_path": "packages/audit/package.json",
+      "config_paths": [
+        "packages/audit/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 90,
+        "low": 80
+      }
+    },
+    {
+      "id": "packages-auth",
+      "package": "@stynx-nyx/auth",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/auth/src/**"
+      ],
+      "test_selectors": [
+        "packages/auth/test/**"
+      ],
+      "manifest_path": "packages/auth/package.json",
+      "config_paths": [
+        "packages/auth/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 90,
+        "low": 80
+      }
+    },
+    {
+      "id": "packages-backend",
+      "package": "@stynx-nyx/backend",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/backend/src/**"
+      ],
+      "test_selectors": [
+        "packages/backend/test/**"
+      ],
+      "manifest_path": "packages/backend/package.json",
+      "config_paths": [
+        "packages/backend/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-cli",
+      "package": "@stynx-nyx/cli",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/cli/src/**"
+      ],
+      "test_selectors": [
+        "packages/cli/test/**"
+      ],
+      "manifest_path": "packages/cli/package.json",
+      "config_paths": [
+        "packages/cli/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-contracts",
+      "package": "@stynx-nyx/contracts",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/contracts/src/**"
+      ],
+      "test_selectors": [
+        "packages/contracts/test/**"
+      ],
+      "manifest_path": "packages/contracts/package.json",
+      "config_paths": [
+        "packages/contracts/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-core",
+      "package": "@stynx-nyx/core",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/core/src/**"
+      ],
+      "test_selectors": [
+        "packages/core/test/**"
+      ],
+      "manifest_path": "packages/core/package.json",
+      "config_paths": [
+        "packages/core/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 95,
+        "low": 85
+      }
+    },
+    {
+      "id": "packages-data",
+      "package": "@stynx-nyx/data",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/data/src/**"
+      ],
+      "test_selectors": [
+        "packages/data/test/**"
+      ],
+      "manifest_path": "packages/data/package.json",
+      "config_paths": [
+        "packages/data/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 90,
+        "low": 80
+      }
+    },
+    {
+      "id": "packages-flow",
+      "package": "@stynx-nyx/flow",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/flow/src/**"
+      ],
+      "test_selectors": [
+        "packages/flow/test/**"
+      ],
+      "manifest_path": "packages/flow/package.json",
+      "config_paths": [
+        "packages/flow/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 95,
+        "low": 85
+      }
+    },
+    {
+      "id": "packages-health",
+      "package": "@stynx-nyx/health",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/health/src/**"
+      ],
+      "test_selectors": [
+        "packages/health/test/**"
+      ],
+      "manifest_path": "packages/health/package.json",
+      "config_paths": [
+        "packages/health/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-i18n",
+      "package": "@stynx-nyx/i18n",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/i18n/src/**"
+      ],
+      "test_selectors": [
+        "packages/i18n/test/**"
+      ],
+      "manifest_path": "packages/i18n/package.json",
+      "config_paths": [
+        "packages/i18n/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-idempotency",
+      "package": "@stynx-nyx/idempotency",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/idempotency/src/**"
+      ],
+      "test_selectors": [
+        "packages/idempotency/test/**"
+      ],
+      "manifest_path": "packages/idempotency/package.json",
+      "config_paths": [
+        "packages/idempotency/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 95,
+        "low": 85
+      }
+    },
+    {
+      "id": "packages-jobs",
+      "package": "@stynx-nyx/jobs",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/jobs/src/**"
+      ],
+      "test_selectors": [
+        "packages/jobs/test/**"
+      ],
+      "manifest_path": "packages/jobs/package.json",
+      "config_paths": [
+        "packages/jobs/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-logging",
+      "package": "@stynx-nyx/logging",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/logging/src/**"
+      ],
+      "test_selectors": [
+        "packages/logging/test/**"
+      ],
+      "manifest_path": "packages/logging/package.json",
+      "config_paths": [
+        "packages/logging/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-mobile-runtime",
+      "package": "@stynx-nyx/mobile-runtime",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/mobile-runtime/src/**"
+      ],
+      "test_selectors": [
+        "packages/mobile-runtime/test/**"
+      ],
+      "manifest_path": "packages/mobile-runtime/package.json",
+      "config_paths": [
+        "packages/mobile-runtime/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-notifications",
+      "package": "@stynx-nyx/notifications",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/notifications/src/**"
+      ],
+      "test_selectors": [
+        "packages/notifications/test/**"
+      ],
+      "manifest_path": "packages/notifications/package.json",
+      "config_paths": [
+        "packages/notifications/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-offline-sync",
+      "package": "@stynx-nyx/offline-sync",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/offline-sync/src/**"
+      ],
+      "test_selectors": [
+        "packages/offline-sync/test/**"
+      ],
+      "manifest_path": "packages/offline-sync/package.json",
+      "config_paths": [
+        "packages/offline-sync/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-outbox",
+      "package": "@stynx-nyx/outbox",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/outbox/src/**"
+      ],
+      "test_selectors": [
+        "packages/outbox/test/**"
+      ],
+      "manifest_path": "packages/outbox/package.json",
+      "config_paths": [
+        "packages/outbox/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-preferences",
+      "package": "@stynx-nyx/preferences",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/preferences/src/**"
+      ],
+      "test_selectors": [
+        "packages/preferences/test/**"
+      ],
+      "manifest_path": "packages/preferences/package.json",
+      "config_paths": [
+        "packages/preferences/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-privacy",
+      "package": "@stynx-nyx/privacy",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/privacy/src/**"
+      ],
+      "test_selectors": [
+        "packages/privacy/test/**"
+      ],
+      "manifest_path": "packages/privacy/package.json",
+      "config_paths": [
+        "packages/privacy/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 90,
+        "low": 80
+      }
+    },
+    {
+      "id": "packages-ratelimit",
+      "package": "@stynx-nyx/ratelimit",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/ratelimit/src/**"
+      ],
+      "test_selectors": [
+        "packages/ratelimit/test/**"
+      ],
+      "manifest_path": "packages/ratelimit/package.json",
+      "config_paths": [
+        "packages/ratelimit/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 95,
+        "low": 85
+      }
+    },
+    {
+      "id": "packages-web-sdk",
+      "package": "@stynx-nyx/sdk",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages-web/sdk/src/**"
+      ],
+      "test_selectors": [
+        "packages-web/sdk/test/**"
+      ],
+      "manifest_path": "packages-web/sdk/package.json",
+      "config_paths": [
+        "packages-web/sdk/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 90,
+        "low": 80
+      }
+    },
+    {
+      "id": "packages-sessions",
+      "package": "@stynx-nyx/sessions",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/sessions/src/**"
+      ],
+      "test_selectors": [
+        "packages/sessions/test/**"
+      ],
+      "manifest_path": "packages/sessions/package.json",
+      "config_paths": [
+        "packages/sessions/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 95,
+        "low": 85
+      }
+    },
+    {
+      "id": "packages-storage",
+      "package": "@stynx-nyx/storage",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/storage/src/**"
+      ],
+      "test_selectors": [
+        "packages/storage/test/**"
+      ],
+      "manifest_path": "packages/storage/package.json",
+      "config_paths": [
+        "packages/storage/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 95,
+        "low": 85
+      }
+    },
+    {
+      "id": "packages-tenancy",
+      "package": "@stynx-nyx/tenancy",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/tenancy/src/**"
+      ],
+      "test_selectors": [
+        "packages/tenancy/test/**"
+      ],
+      "manifest_path": "packages/tenancy/package.json",
+      "config_paths": [
+        "packages/tenancy/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 90,
+        "low": 80
+      }
+    },
+    {
+      "id": "packages-testing",
+      "package": "@stynx-nyx/testing",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/testing/src/**"
+      ],
+      "test_selectors": [
+        "packages/testing/test/**"
+      ],
+      "manifest_path": "packages/testing/package.json",
+      "config_paths": [
+        "packages/testing/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    },
+    {
+      "id": "packages-worklist",
+      "package": "@stynx-nyx/worklist",
+      "task_node": "test:mutation",
+      "source_selectors": [
+        "packages/worklist/src/**"
+      ],
+      "test_selectors": [
+        "packages/worklist/test/**"
+      ],
+      "manifest_path": "packages/worklist/package.json",
+      "config_paths": [
+        "packages/worklist/stryker.conf.mjs"
+      ],
+      "sanitizer_paths": [
+        "tools/stryker/base.mjs"
+      ],
+      "orchestration_paths": [
+        "scripts/run-mutation-evidence.mjs",
+        "scripts/lib/mutation-evidence.mjs",
+        "scripts/lib/mutation-roster.mjs"
+      ],
+      "lockfile_path": "pnpm-lock.yaml",
+      "toolchain_keys": [
+        "node",
+        "pnpm",
+        "vitest",
+        "typescript"
+      ],
+      "thresholds": {
+        "break": 90,
+        "high": 100,
+        "low": 90
+      }
+    }
+  ]
+}
