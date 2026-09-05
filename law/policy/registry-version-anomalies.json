@@ -2,12 +2,16 @@
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.registry-version-anomalies",
   "canonical_line": "1.x",
-  "next_unified_version": "1.1.1",
+  "next_unified_version": "1.2.0",
   "owner_decision": {
-    "date": "2026-08-24",
-    "repository_baseline": "b77b50230e3906cee632eb9218b06603cce6c89a",
-    "repository_tree": "d0cde059f7a93a624ff01d485ebda9ac3cb9422e",
-    "statement": "The canonical STYNX line remains 1.x and the next unified version is exactly 1.1.1 for the complete 44-package release unit."
+    "date": "2026-09-04",
+    "repository_baseline": "75f8d49fba0f2418c310b62d98f50f796a33002e",
+    "repository_tree": "c526b93ef26bc5f9946dba19749a5268b9d2abff",
+    "statement": "The canonical STYNX line remains 1.x and the next unified version is exactly 1.2.0 for the complete 44-package release unit. This supersedes the 2026-08-24 decision naming 1.1.1, which was prepared but never published; the superseded decision is preserved in git history.",
+    "supersedes": {
+      "date": "2026-08-24",
+      "next_unified_version": "1.1.1"
+    }
   },
   "anomalies": [
     {
@@ -22,12 +26,16 @@
         "observed_at": "2026-08-24T02:04:20.663Z"
       },
       "rationale": "The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.",
-      "allowed_candidate": "1.1.1",
-      "allowed_effects": ["registry-monotonicity-exception"],
-      "permitted_remediation": ["retain-as-noncanonical-history"],
+      "allowed_candidate": "1.2.0",
+      "allowed_effects": [
+        "registry-monotonicity-exception"
+      ],
+      "permitted_remediation": [
+        "retain-as-noncanonical-history"
+      ],
       "deletion_requires": "new-owner-authorization-naming-version-id-and-recovery-evidence",
       "deprecation_requires": "new-owner-authorization-naming-package-version-action-and-message",
-      "closure_condition": "Unified 1.1.1 is verified for all 44 publishable packages, latest resolves to 1.1.1, and angular-profile 2.0.0 remains immutable non-canonical history.",
+      "closure_condition": "Unified 1.2.0 is verified for all 44 publishable packages, latest resolves to 1.2.0, and angular-profile 2.0.0 remains immutable non-canonical history.",
       "applies_to_other_packages": false,
       "applies_to_other_versions": false
     }

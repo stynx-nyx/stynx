@@ -1,0 +1,423 @@
+diff --git a/packages/contracts/stryker-setup-1.js b/packages/contracts/stryker-setup-1.js
+deleted file mode 100644
+index a9bb8e7d..00000000
+--- a/packages/contracts/stryker-setup-1.js
++++ /dev/null
+@@ -1,71 +0,0 @@
+-import { beforeEach, afterAll, beforeAll, afterEach, inject, } from 'vitest';
+-// This file is copied to the sandbox dir, don't import anything local!
+-// See https://github.com/stryker-mutator/stryker-js/issues/5305
+-const globalNamespace = inject('globalNamespace');
+-const mutantActivation = inject('mutantActivation');
+-const mode = inject('mode');
+-const ns = globalThis[globalNamespace] || (globalThis[globalNamespace] = {});
+-ns.hitLimit = inject('hitLimit');
+-const isGreaterThanVitest4Point1 = inject('isGreaterThanVitest4Point1');
+-if (mode === 'mutant') {
+-    beforeAll(() => {
+-        ns.hitCount = 0;
+-    });
+-    if (mutantActivation === 'static') {
+-        ns.activeMutant = inject('activeMutant');
+-    }
+-    else {
+-        beforeAll(() => {
+-            ns.activeMutant = inject('activeMutant');
+-        });
+-    }
+-    if (isGreaterThanVitest4Point1) {
+-        // Vitest's hooks API requires this empty destructure to allow access to suite.meta
+-         
+-        afterAll(({}, suite) => {
+-            suite.meta.hitCount = ns.hitCount;
+-        });
+-    }
+-    else {
+-        // @ts-expect-error This was changed in Vitest v4.1
+-        afterAll(({ meta }) => {
+-            meta.hitCount = ns.hitCount;
+-        });
+-    }
+-}
+-else {
+-    ns.activeMutant = undefined;
+-    beforeEach(({ task }) => {
+-        ns.currentTestId = toRawTestId(task);
+-    });
+-    afterEach(() => {
+-        ns.currentTestId = undefined;
+-    });
+-    if (isGreaterThanVitest4Point1) {
+-        // Vitest's hooks API requires this empty destructure to allow access to suite.meta
+-         
+-        afterAll(({}, suite) => {
+-            suite.meta.mutantCoverage = ns.mutantCoverage;
+-        });
+-    }
+-    else {
+-        // @ts-expect-error This was changed in Vitest v4.1
+-        afterAll(({ meta }) => {
+-            meta.mutantCoverage = ns.mutantCoverage;
+-        });
+-    }
+-}
+-// Stryker disable all: this file is copied to the sandbox dir
+-function collectTestName({ name, suite, }) {
+-    const nameParts = [name];
+-    let currentSuite = suite;
+-    while (currentSuite) {
+-        nameParts.unshift(currentSuite.name);
+-        currentSuite = currentSuite.suite;
+-    }
+-    return nameParts.join(' ').trim();
+-}
+-function toRawTestId(test) {
+-    return `${test.file?.filepath ?? 'unknown.js'}#${collectTestName(test)}`;
+-}
+-//# sourceMappingURL=stryker-setup.js.map
+\ No newline at end of file
+diff --git a/packages/data/migrations/platform/0019_auth_session_partitions.sql b/packages/data/migrations/platform/0019_auth_session_partitions.sql
+new file mode 100644
+index 00000000..0ee25360
+--- /dev/null
++++ b/packages/data/migrations/platform/0019_auth_session_partitions.sql
+@@ -0,0 +1,115 @@
++-- Keep auth.sessions writable across UTC month boundaries without relying on a
++-- process restart or on schema migrations being newly applicable.
++
++CREATE TABLE IF NOT EXISTS auth.sessions_default
++  PARTITION OF auth.sessions DEFAULT;
++
++-- @security-definer-approved: platform-architects/STYNX-SESSION-PARTITIONS
++CREATE OR REPLACE FUNCTION auth.ensure_session_partitions(
++  reference_time timestamptz,
++  months_ahead integer
++)
++RETURNS void
++LANGUAGE plpgsql
++SECURITY DEFINER
++SET search_path = pg_catalog, auth
++SET timezone = 'UTC'
++AS $$
++DECLARE
++  offset_month integer;
++  partition_start timestamptz;
++  partition_end timestamptz;
++  partition_name text;
++  partition_oid oid;
++  relation_kind "char";
++  attached_parent oid;
++  actual_bound text;
++  expected_bound text;
++  default_debt boolean;
++BEGIN
++  IF reference_time IS NULL OR months_ahead IS NULL OR months_ahead < 0 OR months_ahead > 2 THEN
++    RAISE EXCEPTION 'session partition maintenance arguments are invalid';
++  END IF;
++
++  PERFORM pg_advisory_xact_lock(hashtextextended('auth.sessions.partition-maintenance', 0));
++
++  FOR offset_month IN 0..months_ahead LOOP
++    partition_start := date_trunc('month', reference_time AT TIME ZONE 'UTC')
++      AT TIME ZONE 'UTC' + make_interval(months => offset_month);
++    partition_end := partition_start + interval '1 month';
++    partition_name := format('sessions_%s', to_char(partition_start, 'YYYY_MM'));
++    expected_bound := format(
++      'FOR VALUES FROM (%L) TO (%L)',
++      partition_start,
++      partition_end
++    );
++    partition_oid := to_regclass(format('%I.%I', 'auth', partition_name));
++
++    IF partition_oid IS NOT NULL THEN
++      SELECT child.relkind, inherits.inhparent, pg_get_expr(child.relpartbound, child.oid)
++      INTO relation_kind, attached_parent, actual_bound
++      FROM pg_class AS child
++      LEFT JOIN pg_inherits AS inherits ON inherits.inhrelid = child.oid
++      WHERE child.oid = partition_oid;
++
++      IF relation_kind <> 'r'
++        OR attached_parent IS DISTINCT FROM 'auth.sessions'::regclass::oid
++        OR actual_bound IS DISTINCT FROM expected_bound
++      THEN
++        RAISE EXCEPTION 'session partition relation drift: auth.%', partition_name;
++      END IF;
++    ELSE
++      EXECUTE format(
++        'SELECT EXISTS (SELECT 1 FROM auth.sessions_default WHERE created_at >= %L AND created_at < %L)',
++        partition_start,
++        partition_end
++      ) INTO default_debt;
++      IF default_debt THEN
++        RAISE EXCEPTION 'session default partition contains rows for auth.%', partition_name;
++      END IF;
++
++      EXECUTE format(
++        'CREATE TABLE auth.%I PARTITION OF auth.sessions FOR VALUES FROM (%L) TO (%L)',
++        partition_name,
++        partition_start,
++        partition_end
++      );
++    END IF;
++
++    EXECUTE format('ALTER TABLE auth.%I ENABLE ROW LEVEL SECURITY', partition_name);
++    EXECUTE format('ALTER TABLE auth.%I FORCE ROW LEVEL SECURITY', partition_name);
++    EXECUTE format('DROP POLICY IF EXISTS sessions_tenant_isolation ON auth.%I', partition_name);
++    EXECUTE format(
++      'CREATE POLICY sessions_tenant_isolation ON auth.%I '
++      'USING (tenant_id = NULLIF(current_setting(''app.tenant_id'', true), '''')::uuid) '
++      'WITH CHECK (tenant_id = NULLIF(current_setting(''app.tenant_id'', true), '''')::uuid)',
++      partition_name
++    );
++    EXECUTE format('REVOKE ALL ON TABLE auth.%I FROM stynx_app, stynx_reader', partition_name);
++  END LOOP;
++
++  ALTER TABLE auth.sessions_default ENABLE ROW LEVEL SECURITY;
++  ALTER TABLE auth.sessions_default FORCE ROW LEVEL SECURITY;
++  DROP POLICY IF EXISTS sessions_tenant_isolation ON auth.sessions_default;
++  CREATE POLICY sessions_tenant_isolation ON auth.sessions_default
++    USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)
++    WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);
++  REVOKE ALL ON TABLE auth.sessions_default FROM stynx_app, stynx_reader;
++END
++$$;
++
++-- @security-definer-approved: platform-architects/STYNX-SESSION-PARTITIONS
++CREATE OR REPLACE FUNCTION auth.ensure_current_session_partitions()
++RETURNS void
++LANGUAGE sql
++SECURITY DEFINER
++SET search_path = pg_catalog, auth
++AS $$
++  SELECT auth.ensure_session_partitions(clock_timestamp(), 2)
++$$;
++
++REVOKE ALL ON FUNCTION auth.ensure_session_partitions(timestamptz, integer) FROM PUBLIC;
++REVOKE ALL ON FUNCTION auth.ensure_current_session_partitions() FROM PUBLIC;
++GRANT EXECUTE ON FUNCTION auth.ensure_current_session_partitions() TO stynx_app;
++
++SELECT auth.ensure_current_session_partitions();
+diff --git a/packages/data/src/migration-runner.ts b/packages/data/src/migration-runner.ts
+index 18596998..de48758b 100644
+--- a/packages/data/src/migration-runner.ts
++++ b/packages/data/src/migration-runner.ts
+@@ -95,12 +95,16 @@ export class StynxMigrationRunner implements OnModuleInit {
+           throw error;
+         }
+       }
++
++      await client.query('SELECT auth.ensure_current_session_partitions()');
+     } finally {
+       client.release();
+     }
+   }
+ 
+-  private async promoteBootstrapObjectsToOwner(client: { query: (sql: string) => Promise<unknown> }): Promise<void> {
++  private async promoteBootstrapObjectsToOwner(client: {
++    query: (sql: string) => Promise<unknown>;
++  }): Promise<void> {
+     await client.query('ALTER SCHEMA core OWNER TO stynx_owner');
+     await client.query('ALTER TABLE core.schema_migrations OWNER TO stynx_owner');
+     await client.query('SET ROLE stynx_owner');
+diff --git a/packages/data/test/integration/migrations.spec.ts b/packages/data/test/integration/migrations.spec.ts
+index 621cd75f..87b37983 100644
+--- a/packages/data/test/integration/migrations.spec.ts
++++ b/packages/data/test/integration/migrations.spec.ts
+@@ -116,7 +116,7 @@ describe('Stynx platform migrations', () => {
+           order by 1
+         `,
+       );
+-      expect(partitions).toHaveLength(2);
++      expect(partitions).toHaveLength(5);
+ 
+       const rlsTables = await adminClient.query<{ name: string; forced: boolean }>(`
+         select format('%s.%s', n.nspname, c.relname) as name, c.relforcerowsecurity as forced
+@@ -258,6 +258,89 @@ describe('Stynx platform migrations', () => {
+     }
+   });
+ 
++  it('maintains the session partition horizon across UTC month rollover and rejects drift', async () => {
++    const testDatabase = await createPostgresTestDatabase('stynx_session_partitions', {
++      useTemplate: false,
++    });
++    let moduleRef: TestingModule | undefined;
++    let adminClient: Client | undefined;
++    let concurrentClient: Client | undefined;
++
++    try {
++      moduleRef = await createMigratedModule(
++        testDatabase.connectionString('stynx-session-partition-owner'),
++      );
++      adminClient = await testDatabase.connectAsAdmin();
++      concurrentClient = await testDatabase.connectAsAdmin();
++
++      await Promise.all([
++        adminClient.query(
++          `select auth.ensure_session_partitions('2040-01-31T23:59:59Z'::timestamptz, 2)`,
++        ),
++        concurrentClient.query(
++          `select auth.ensure_session_partitions('2040-02-01T00:00:00Z'::timestamptz, 2)`,
++        ),
++      ]);
++      await adminClient.query(
++        `select auth.ensure_session_partitions('2040-02-01T00:00:00Z'::timestamptz, 2)`,
++      );
++
++      const partitions = await adminClient.query<{ name: string; bound: string }>(`
++        select child.relname as name, pg_get_expr(child.relpartbound, child.oid) as bound
++        from pg_inherits
++        join pg_class child on child.oid = pg_inherits.inhrelid
++        join pg_class parent on parent.oid = pg_inherits.inhparent
++        join pg_namespace parent_ns on parent_ns.oid = parent.relnamespace
++        where parent_ns.nspname = 'auth'
++          and parent.relname = 'sessions'
++          and child.relname in (
++            'sessions_2040_01',
++            'sessions_2040_02',
++            'sessions_2040_03',
++            'sessions_2040_04',
++            'sessions_default'
++          )
++        order by child.relname
++      `);
++      expect(partitions.rows).toEqual([
++        {
++          name: 'sessions_2040_01',
++          bound: "FOR VALUES FROM ('2040-01-01 00:00:00+00') TO ('2040-02-01 00:00:00+00')",
++        },
++        {
++          name: 'sessions_2040_02',
++          bound: "FOR VALUES FROM ('2040-02-01 00:00:00+00') TO ('2040-03-01 00:00:00+00')",
++        },
++        {
++          name: 'sessions_2040_03',
++          bound: "FOR VALUES FROM ('2040-03-01 00:00:00+00') TO ('2040-04-01 00:00:00+00')",
++        },
++        {
++          name: 'sessions_2040_04',
++          bound: "FOR VALUES FROM ('2040-04-01 00:00:00+00') TO ('2040-05-01 00:00:00+00')",
++        },
++        { name: 'sessions_default', bound: 'DEFAULT' },
++      ]);
++
++      const defaultRows = await adminClient.query<{ count: string }>(
++        'select count(*)::text as count from auth.sessions_default',
++      );
++      expect(defaultRows.rows[0]?.count).toBe('0');
++
++      await adminClient.query('create table auth.sessions_2041_01 (id integer)');
++      await expect(
++        adminClient.query(
++          `select auth.ensure_session_partitions('2041-01-01T00:00:00Z'::timestamptz, 0)`,
++        ),
++      ).rejects.toThrow(/session partition relation drift/u);
++    } finally {
++      await concurrentClient?.end();
++      await adminClient?.end();
++      await moduleRef?.close();
++      await testDatabase.dispose();
++    }
++  });
++
+   it('creates soft-deletable live/archive pairs and rejects invalid registry behavior', async () => {
+     const testDatabase = await createPostgresTestDatabase('stynx_data_helpers');
+     let moduleRef: TestingModule | undefined;
+diff --git a/packages/sessions/src/session-mirror.writer.ts b/packages/sessions/src/session-mirror.writer.ts
+index 27b4db73..a3406a97 100644
+--- a/packages/sessions/src/session-mirror.writer.ts
++++ b/packages/sessions/src/session-mirror.writer.ts
+@@ -27,6 +27,7 @@ export class SessionMirrorWriter implements SessionMirror {
+         },
+         async () => {
+           await database.tx(async (trx) => {
++            await trx.query('select auth.ensure_current_session_partitions()');
+             await trx.insert(authSessions).values({
+               id: randomUUID(),
+               tenantId: entry.tenantId,
+diff --git a/packages/sessions/test/unit/session-control-depth.spec.ts b/packages/sessions/test/unit/session-control-depth.spec.ts
+index 950151ad..ee94d86f 100644
+--- a/packages/sessions/test/unit/session-control-depth.spec.ts
++++ b/packages/sessions/test/unit/session-control-depth.spec.ts
+@@ -644,9 +644,11 @@ describe('SessionControlService remaining behavior', () => {
+ 
+   it('writes an infrastructure mirror row without an optional membership', async () => {
+     const values = vi.fn(async () => undefined);
++    const query = vi.fn(async () => undefined);
+     const database = {
+       tx: vi.fn(async (callback: (trx: unknown) => Promise<void>) =>
+         callback({
++          query,
+           insert: vi.fn(() => ({ values })),
+         }),
+       ),
+@@ -667,6 +669,8 @@ describe('SessionControlService remaining behavior', () => {
+       createdAt: now,
+       expiresAt: '2026-08-26T12:00:00.000Z',
+     });
++    expect(query).toHaveBeenCalledWith('select auth.ensure_current_session_partitions()');
++    expect(query.mock.invocationCallOrder[0]).toBeLessThan(values.mock.invocationCallOrder[0]);
+     expect(values).toHaveBeenCalledWith(
+       expect.not.objectContaining({ membershipId: expect.anything() }),
+     );
+diff --git a/packages/sessions/test/unit/session.service.spec.ts b/packages/sessions/test/unit/session.service.spec.ts
+index f2a1f171..fca09f53 100644
+--- a/packages/sessions/test/unit/session.service.spec.ts
++++ b/packages/sessions/test/unit/session.service.spec.ts
+@@ -619,6 +619,7 @@ describe('SessionService', () => {
+ 
+   it('writes mirror rows with membership ids when infrastructure providers are available', async () => {
+     const values = vi.fn(async () => undefined);
++    const query = vi.fn(async () => undefined);
+     const runWithRequestContext = vi.fn(async (_context: unknown, callback: () => Promise<void>) => callback());
+     const writer = new SessionMirrorWriter({
+       get: vi.fn((token: { name?: string }) => {
+@@ -626,6 +627,7 @@ describe('SessionService', () => {
+           return {
+             tx: vi.fn(async (callback: (trx: unknown) => Promise<void>) =>
+               callback({
++                query,
+                 insert: vi.fn(() => ({ values })),
+               }),
+             ),
+@@ -649,6 +651,8 @@ describe('SessionService', () => {
+     });
+ 
+     expect(runWithRequestContext).toHaveBeenCalledTimes(1);
++    expect(query).toHaveBeenCalledWith('select auth.ensure_current_session_partitions()');
++    expect(query.mock.invocationCallOrder[0]).toBeLessThan(values.mock.invocationCallOrder[0] ?? 0);
+     expect(values).toHaveBeenCalledWith(expect.objectContaining({
+       membershipId: 'membership-1',
+       sid: 'sid-1',
+diff --git a/reference/web/test/e2e/record-trash.spec.ts b/reference/web/test/e2e/record-trash.spec.ts
+index 1d3332ea..02b7cb86 100644
+--- a/reference/web/test/e2e/record-trash.spec.ts
++++ b/reference/web/test/e2e/record-trash.spec.ts
+@@ -27,13 +27,23 @@ test('record soft-delete appears in trash and can be restored', async ({ page })
+   await expect(page.getByTestId(`record-row-${recordId}`)).toBeHidden();
+ 
+   await page.goto('/trash');
+-  await expect.poll(async () => {
+-    await page.getByTestId('trash-resource-records').click();
+-    return page.getByRole('article').filter({ hasText: recordTitle }).count();
+-  }).toBe(1);
++  await expect
++    .poll(async () => {
++      await page.getByTestId('trash-resource-records').click();
++      return page.getByRole('article').filter({ hasText: recordTitle }).count();
++    })
++    .toBe(1);
+   const trashedRecord = page.getByRole('article').filter({ hasText: recordTitle });
+   await expect(trashedRecord).toBeVisible();
+-  await trashedRecord.getByRole('button', { name: 'Restore' }).click();
++  const [restoreResponse] = await Promise.all([
++    page.waitForResponse(
++      (response) =>
++        response.request().method() === 'POST' &&
++        response.url().endsWith(`/records/${recordId}/restore`),
++    ),
++    trashedRecord.getByRole('button', { name: 'Restore' }).click(),
++  ]);
++  expect(restoreResponse.ok()).toBe(true);
+   await expect(trashedRecord).toBeHidden();
+ 
+   await page.goto(`/records/${recordId}`);

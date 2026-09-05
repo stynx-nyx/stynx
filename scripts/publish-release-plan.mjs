@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
 
 const repoRoot = process.cwd();
-const version = '1.1.1';
+const version = '1.2.0';
 const registry = 'https://npm.pkg.github.com';
 const artifactRoot = resolve(repoRoot, '.artifacts/publication');
 const tarballRoot = resolve(artifactRoot, 'tarballs');

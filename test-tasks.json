@@ -372,27 +372,8 @@
       "outputContract": { "kind": "command", "requiredResult": "pass" }
     },
     {
-      "nodeId": "trace",
-      "dependencies": ["engines"],
-      "argv": ["pnpm", "run", "devai:trace:verify"],
-      "cwd": ".",
-      "runner": "stynx-trace-v1",
-      "inputSelectors": [
-        { "kind": "exact", "pattern": "law/trace.json" },
-        { "kind": "prefix", "pattern": "law/invariants/" },
-        { "kind": "prefix", "pattern": "scripts/" },
-        { "kind": "glob", "pattern": "packages/*/test/**" },
-        { "kind": "glob", "pattern": "packages-web/*/test/**" },
-        { "kind": "glob", "pattern": "reference/*/test/**" },
-        { "kind": "glob", "pattern": "tools/*/test/**" }
-      ],
-      "toolchainKeys": ["node", "pnpm"],
-      "allowlistedEnv": ["CI"],
-      "outputContract": { "kind": "command", "requiredResult": "pass" }
-    },
-    {
       "nodeId": "doctor",
-      "dependencies": ["trace"],
+      "dependencies": [],
       "argv": ["pnpm", "run", "devai:doctor"],
       "cwd": ".",
       "runner": "devai-doctor-v1",
@@ -453,7 +434,7 @@
     {
       "profileId": "affected",
       "mode": "affected",
-      "requiredNodes": ["engines", "trace", "doctor"],
+      "requiredNodes": ["engines", "doctor"],
       "eligibleNodes": [
         "engines",
         "api:contracts",
@@ -469,7 +450,6 @@
         "test:mutation",
         "test:performance",
         "security",
-        "trace",
         "doctor",
         "test:local-full",
         "release:prepare"

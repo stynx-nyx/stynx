@@ -1,24 +1,24 @@
 # Platform packages
-/packages/* @aarusso-nyx
-/packages-web/* @aarusso-nyx
-/tools/* @aarusso-nyx
-/infra/* @aarusso-nyx
+/packages/* @aarusso-nyx @codexmark
+/packages-web/* @aarusso-nyx @codexmark
+/tools/* @aarusso-nyx @codexmark
+/infra/* @aarusso-nyx @codexmark
 
 # Reference applications
-/reference/* @aarusso-nyx
+/reference/* @aarusso-nyx @codexmark
 
 # Product modules
-/domain/* @aarusso-nyx
+/domain/* @aarusso-nyx @codexmark
 
 # Cross-cutting
-/.github/ @aarusso-nyx
-/docs/ @aarusso-nyx
+/.github/ @aarusso-nyx @codexmark
+/docs/ @aarusso-nyx @codexmark
 
 # Tests
-/test/ @aarusso-nyx
+/test/ @aarusso-nyx @codexmark
 
 # Top-level
-/package.json @aarusso-nyx
-/pnpm-workspace.yaml @aarusso-nyx
-/turbo.json @aarusso-nyx
-/* @aarusso-nyx
+/package.json @aarusso-nyx @codexmark
+/pnpm-workspace.yaml @aarusso-nyx @codexmark
+/turbo.json @aarusso-nyx @codexmark
+/* @aarusso-nyx @codexmark

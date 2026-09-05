@@ -1,5 +1,11 @@
 # @stynx-nyx/auth
 
+## 1.2.0
+
+### Unified Version Rebaseline
+
+- Advance the canonical STYNX 1.x line to exact version 1.2.0 for the complete 44-package fixed group without changing runtime behavior or public contracts.
+
 ## 1.1.1
 
 ### Unified Version Rebaseline

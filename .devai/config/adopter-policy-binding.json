@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.1.0",
+  "policy_version": "1.2.0",
   "source_path": "law/policy/devai-adoption.json",
-  "source_digest_sha256": "dd7cca4e542b16217ac1dd7bc6ab4341a98ea58dc71c3259ea6e0b445f5c4aaf",
+  "source_digest_sha256": "877b7fe1d196d45f2c224276bd4e166733508752e0ae3d74d8497d98e67eee4e",
   "materialized": {
     ".devai/config/project.json": "992d98dc8327e597909be80a2f9d93ad4ace7c8eb2a9d437038ef04749a0388b",
     ".devai/config/domains.json": "a1df7ff4ea537f5be17cd850fcee467aaef5aca1a60b0fa5b86010701d331f1e",

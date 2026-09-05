@@ -114,9 +114,26 @@ if (registryMode) {
       readFileSync(resolve(repoRoot, 'law/policy/registry-version-anomalies.json'), 'utf8'),
     );
     loadRegistryAnomalyPolicy(repoRoot, candidate);
-    const campaignPolicy = JSON.parse(
-      readFileSync(resolve(repoRoot, 'law/policy/release-campaign-1.1.1.json'), 'utf8'),
+    // The 1.1.1 campaign policy was retired with the DEVAI adoption migration.
+    // Its still-valid product content — the package census and the approved
+    // first-publication exceptions — now lives in the STYNX package roster.
+    const packageRoster = JSON.parse(
+      readFileSync(resolve(repoRoot, 'law/policy/stynx-package-roster.json'), 'utf8'),
     );
+    const campaignPolicy = {
+      policy_id: packageRoster.policy_id,
+      candidate: {
+        version: candidate,
+        publishable_count: packageRoster.counts.publishable,
+        mutation_count: packageRoster.counts.mutation,
+        existing_private_count: packageRoster.counts.existing_private,
+        approved_first_publication_count: packageRoster.counts.approved_first_publications,
+      },
+      publishable_packages: [...packageRoster.publishable_packages],
+      existing_private_packages: [...packageRoster.existing_private_packages],
+      mutation_packages: [...packageRoster.mutation_packages],
+      approved_first_publications: [...packageRoster.approved_first_publications],
+    };
     const token = process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN;
     const registryStatesByPackage = await fetchRegistryCensus({ packageNames, token });
     const githubPackagesInventory = await fetchGithubPackagesInventory({ packageNames, token });

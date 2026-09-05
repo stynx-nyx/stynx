@@ -3,8 +3,8 @@ import { dirname, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { collectPublicPackages, validateReleaseVersionPolicy } from './release-version-policy.mjs';
 
-export const unifiedRebaselineSource = '1.0.0';
-export const unifiedRebaselineTarget = '1.1.1';
+export const unifiedRebaselineSource = '1.1.1';
+export const unifiedRebaselineTarget = '1.2.0';
 export const unifiedRebaselinePackageCount = 44;
 
 const dependencySections = [
@@ -15,7 +15,7 @@ const dependencySections = [
 ];
 const rebaselineSection = `### Unified Version Rebaseline
 
-- Re-establish the canonical STYNX 1.x line at exact version 1.1.1 for the complete 44-package fixed group without changing runtime behavior or public contracts.`;
+- Advance the canonical STYNX 1.x line to exact version 1.2.0 for the complete 44-package fixed group without changing runtime behavior or public contracts.`;
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));

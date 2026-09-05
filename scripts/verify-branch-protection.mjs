@@ -158,13 +158,19 @@ function main() {
     command('gh', ['api', `repos/${repository}/rulesets?includes_parents=true`], repoRoot),
   );
   if (!Array.isArray(rulesets)) throw new Error('live ruleset response must be an array');
-  const releaseTagRule = rulesets.some((ruleset) => {
+  // The ruleset list endpoint returns a summary without `conditions`; the
+  // include patterns are only available by fetching each ruleset by id.
+  // Reading them from the list alone always yields an empty pattern set and
+  // reports drift against a ruleset that is present and active.
+  const releaseTagRule = rulesets.some((summary) => {
+    if (summary?.enforcement !== 'active' || summary?.target !== 'tag') return false;
+    const ruleset =
+      summary?.conditions === undefined
+        ? JSON.parse(command('gh', ['api', `repos/${repository}/rulesets/${summary.id}`], repoRoot))
+        : summary;
     const include = ruleset?.conditions?.ref_name?.include ?? [];
-    return (
-      ruleset?.enforcement === 'active' &&
-      include.some(
-        (pattern) => pattern === 'refs/tags/v*' || pattern === 'refs/tags/@stynx-nyx/*@*',
-      )
+    return include.some(
+      (pattern) => pattern === 'refs/tags/v*' || pattern === 'refs/tags/@stynx-nyx/*@*',
     );
   });
   if (!releaseTagRule) {
