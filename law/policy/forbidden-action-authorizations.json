@@ -817,6 +817,54 @@
       "commit": "77aa9fd3e516012a6e8d3302b7f30f8affcf534e",
       "authorized_by": "Owner",
       "reason": "Authorizes at tree e04d46bc53a0d2f7aee95b3f1ea8794dd419dd79 only the D24.45 hardening orchestration that executes all four unchanged k6 scenarios against fresh owned reference stacks while preserving every rate, duration, check, and threshold."
+    },
+    {
+      "forbidden_id": "FORBID-DELETE-AUTHORITY-DOCS",
+      "commit": "71fe160cb5854f1c31116eb6d14df639c0afa4a0",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 1a3e2cf913bcebd306f58a20f7613676e20d20ab only the deletion of the retired local RC and 1.1.1 campaign authority documents superseded by ADR-DEVAI-ADOPTION-0002: law/policy/release-campaign-1.1.1.json, law/policy/stynx-1.1.1-mutation-reuse.json, the three devai-local-rc-* pins, and law/schemas/release-campaign-1.1.1.schema.json. Their pre-removal bytes are digest-bound in law/policy/retired-governance-catalog.json and the superseded ADR bytes are preserved unchanged."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "71fe160cb5854f1c31116eb6d14df639c0afa4a0",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 1a3e2cf913bcebd306f58a20f7613676e20d20ab only the law/ removals listed in ADR-DEVAI-ADOPTION-0002. No invariant, threshold, mutation target, or test population changes: the 38-package roster and the break: 90 floor are unchanged."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "71fe160cb5854f1c31116eb6d14df639c0afa4a0",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 1a3e2cf913bcebd306f58a20f7613676e20d20ab only the removal of .github/workflows/devai-local-rc-verify.yml and .github/workflows/devai-main-observation.yml, whose responsibilities move to the installed DEVAI package under ADR-DEVAI-ADOPTION-0002. No remaining workflow gate is weakened."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "71fe160cb5854f1c31116eb6d14df639c0afa4a0",
+      "authorized_by": "Owner",
+      "reason": "Incidental text match only. The matched 'rm -rf' is a DELETED line inside the removed devai-local-rc-verify.yml workflow. No rm -rf is introduced; the branch reduces repository-wide occurrences from 65 to 64."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "178e80327658f08eee84505d5c7b8dcd626110e9",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree 98db09eb95526d809a3020214927a41c51e8e4a5 only the addition of law/policy/stynx-package-roster.json and law/policy/devai-package-identity.json, which preserve product requirements extracted from the retired campaign policy before it lost authority. The roster's 38 mutation packages were verified byte-identical to filesystem discovery and the DEVAI pin against node_modules and pnpm-lock.yaml."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "178e80327658f08eee84505d5c7b8dcd626110e9",
+      "authorized_by": "Owner",
+      "reason": "Incidental text match only. The matched 'rm -rf' is a DELETED line containing the regex literal /^rm -rf (dist(?: coverage)?)$/u inside the cleanOperation test helper, which asserts that package clean scripts stay confined to dist and coverage. It is a safety assertion, not a command."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "e08b6dc8cedd62d19813a1cc071b7661da7d753d",
+      "authorized_by": "Owner",
+      "reason": "Incidental text match only. The matched 'rm -rf' RE-ADDS the same cleanOperation regex literal removed in 178e8032, restoring a helper a surviving test still needs. The identical line exists on main at test/scripts/release-version-policy.test.mjs:1666."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "cfd746a27aa584a7175c38d940ff023891f6d358",
+      "authorized_by": "Owner",
+      "reason": "Authorizes at tree f7b5212c488054cb52bb897b363ed200a8698c3b only the removal of the verified-local-rc required status check from .github/branch-protection.yml. That check was produced by the deleted devai-local-rc-verify.yml workflow and can never report again; leaving it declared would block every pull request into main. The remaining twelve required contexts were each confirmed against a real job and are unchanged."
     }
   ]
 }
