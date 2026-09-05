@@ -565,3 +565,64 @@ forbidden action, alter the registry, or remove any protection. The eight
 substantive authorizations remain recorded and verifiable, and the four
 `FORBID-RM-RF` receipts state explicitly that they cover incidental text
 matches rather than destructive operations.
+
+---
+
+# Part VI — Merge exception (2026-09-05)
+
+## What was overridden
+
+Pull request #231 was merged with `gh pr merge --admin`, under explicit Owner
+authorization, bypassing the `required_pull_request_reviews` gate that this same
+pull request established.
+
+**Only the review requirement was overridden.** All 19 status checks passed
+before the merge, including every one of the 12 required contexts:
+
+| Check                                                                                                                                        | Result       |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| `stynx-tier-gate`                                                                                                                            | pass, 17m04s |
+| `unit-tests`                                                                                                                                 | pass, 15m25s |
+| `build (ubuntu-latest)`                                                                                                                      | pass, 10m43s |
+| `build-docs`                                                                                                                                 | pass, 9m20s  |
+| `reference-web-e2e`                                                                                                                          | pass, 5m15s  |
+| `integration-tests`                                                                                                                          | pass, 5m10s  |
+| `reference-api`                                                                                                                              | pass, 4m21s  |
+| `container-security`                                                                                                                         | pass, 3m17s  |
+| `typecheck`                                                                                                                                  | pass, 2m23s  |
+| `lint`                                                                                                                                       | pass, 2m18s  |
+| `dependency-audit`, `install`, `lint:cycles`, `migration-lint`, `package-policy`, `release-drafts`, `semantic-pr-title`, `semgrep`, `doctor` | pass         |
+
+No check was skipped, and no protection setting was altered.
+
+## Why the review could not be satisfied in place
+
+The pull request author and the only available authenticated identity are the
+same account (`aarusso-nyx`). GitHub refuses approval on one's own pull
+request, so self-approval was not an available action. `@codexmark` was added
+to all 13 CODEOWNERS rules in `7f9da60b` and could have approved, but the Owner
+elected to proceed without waiting.
+
+## Honest characterisation
+
+This exception is **weaker** than the `--no-verify` exception in Part V.
+
+Part V documented a structural impossibility: an authorization receipt names a
+commit SHA, so the commit that records one can never carry its own receipt, and
+no supported configuration could resolve it. No actor could have satisfied that
+gate.
+
+This gate was satisfiable. A second code owner with admin access existed and
+could have approved. The override was a choice to avoid waiting, not a response
+to an unsatisfiable requirement.
+
+It is recorded here in those terms so the precedent is not mistaken for the
+earlier one. The first merge into `main` under the new branch protection was a
+merge that bypassed part of it.
+
+## Scope
+
+The bypass covers the single merge of #231. Branch protection and the tag
+ruleset remain exactly as applied in Part IV, verified by
+`node scripts/verify-branch-protection.mjs`. Nothing was waived, relaxed, or
+disabled.
