@@ -626,3 +626,55 @@ The bypass covers the single merge of #231. Branch protection and the tag
 ruleset remain exactly as applied in Part IV, verified by
 `node scripts/verify-branch-protection.mjs`. Nothing was waived, relaxed, or
 disabled.
+
+---
+
+# Part VII — Admin enforcement disabled (2026-09-05)
+
+## Change
+
+`enforce_admins` is **disabled** on `main`, permanently, by Owner decision. It
+is not a temporary exception for the 1.2.0 merge.
+
+`.github/branch-protection.yml` is updated to declare `enforce_admins: false`
+so the declared record matches live posture and
+`scripts/verify-branch-protection.mjs` continues to verify cleanly.
+
+## Effect
+
+Both repository admins (`aarusso-nyx`, `codexmark`) can, on `main`:
+
+- push directly without a pull request
+- merge without the required code-owner review
+- merge without any of the 12 required status checks
+
+Every other control from Part IV is unchanged and still enforced for
+non-admins: 12 required contexts, strict status checks, linear history,
+conversation resolution, one code-owner review, no force pushes, no deletions.
+The tag immutability ruleset is untouched and still has no bypass actors, so
+published tags remain immutable for admins as well.
+
+## Why
+
+Part IV applied `enforce_admins: true` from the declared record, which had
+never been live. Combined with `require_code_owner_reviews: true` and a
+single approval, it made every owner's own pull request unmergeable by that
+owner. Adding `@codexmark` as a second code owner in `7f9da60b` resolved the
+deadlock in principle, but still required the other owner to be available for
+any merge. For a two-owner repository the Owner judged that cost too high.
+
+## Honest characterisation
+
+This is a **permanent reduction in enforced posture**, not a bootstrap
+exception like Parts V and VI. Those bypassed a gate once and left
+configuration intact. This changes the configuration itself, and the weaker
+posture persists.
+
+It is recorded plainly so the trajectory is legible: within one session, admin
+enforcement on `main` was enabled for the first time and then disabled again,
+and the merge of the pull request that established it was the trigger.
+
+The declared record now states this intentionally. A future reviewer reading
+`.github/branch-protection.yml` sees the real posture rather than an
+aspirational one, which was the pre-existing failure mode: `enforce_admins:
+true` sat in that file while live protection had it off, unnoticed.
