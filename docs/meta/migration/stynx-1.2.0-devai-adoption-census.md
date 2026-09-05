@@ -12,17 +12,17 @@ No governance file has been removed. No adoption has been performed.
 
 The migration target does not exist on the resolving registry.
 
-| Fact | Value |
-| --- | --- |
-| Package | `@aarusso-nyx/devai` |
-| Requested version | `1.5.0` |
-| Resolving registry | `https://npm.pkg.github.com` (scoped via `.npmrc`) |
-| Published versions | 29, ending at `1.4.5` |
-| `dist-tags.latest` | `1.4.5` |
-| `1.5.0` present | **no** |
-| Currently pinned | `1.4.5` |
-| `1.4.5` integrity | `sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==` |
-| `1.4.5` tarball | `https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.5/1d5aa3fc8748a3ac7c2150750f60803c0b357b86` |
+| Fact               | Value                                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------- |
+| Package            | `@aarusso-nyx/devai`                                                                                    |
+| Requested version  | `1.5.0`                                                                                                 |
+| Resolving registry | `https://npm.pkg.github.com` (scoped via `.npmrc`)                                                      |
+| Published versions | 29, ending at `1.4.5`                                                                                   |
+| `dist-tags.latest` | `1.4.5`                                                                                                 |
+| `1.5.0` present    | **no**                                                                                                  |
+| Currently pinned   | `1.4.5`                                                                                                 |
+| `1.4.5` integrity  | `sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==`       |
+| `1.4.5` tarball    | `https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.5/1d5aa3fc8748a3ac7c2150750f60803c0b357b86` |
 
 Reproduction (cache-bypassing):
 
@@ -38,20 +38,20 @@ substituting `1.4.5` is an Owner decision, not an implementation choice.
 
 ## 2. Baseline populations (must not regress)
 
-| Measure | Baseline |
-| --- | --- |
-| Tracked files | 2460 |
-| Test files (`*.spec.*` / `*.test.*`) | 379 |
-| Declared test cases (static) | 2840 |
-| Assertions (static `expect(` / `assert.`) | 9436 |
-| Mutation packages (`stryker.conf.mjs`) | **38** — matches expected roster |
-| Shared mutation base | `tools/stryker/base.mjs` (not a target) |
-| Per-package vitest mutation configs | 19 |
-| ADR files | 28 (27 ADRs + `README.md`) |
-| Invariants | 10 `INV-*` + `RBAC-001-allowlist.json` |
-| Security / RLS / tenancy / RBAC test files | 198 |
-| `test/db` files | 21 |
-| Pre-existing conditional skips | 5 (all `describe.skip` behind `isVeraPdfDockerUsable()`) |
+| Measure                                    | Baseline                                                 |
+| ------------------------------------------ | -------------------------------------------------------- |
+| Tracked files                              | 2460                                                     |
+| Test files (`*.spec.*` / `*.test.*`)       | 379                                                      |
+| Declared test cases (static)               | 2840                                                     |
+| Assertions (static `expect(` / `assert.`)  | 9436                                                     |
+| Mutation packages (`stryker.conf.mjs`)     | **38** — matches expected roster                         |
+| Shared mutation base                       | `tools/stryker/base.mjs` (not a target)                  |
+| Per-package vitest mutation configs        | 19                                                       |
+| ADR files                                  | 28 (27 ADRs + `README.md`)                               |
+| Invariants                                 | 10 `INV-*` + `RBAC-001-allowlist.json`                   |
+| Security / RLS / tenancy / RBAC test files | 198                                                      |
+| `test/db` files                            | 21                                                       |
+| Pre-existing conditional skips             | 5 (all `describe.skip` behind `isVeraPdfDockerUsable()`) |
 
 Coverage thresholds (`.devai/config/thresholds.json`): lines 70, branches 60,
 functions 70, statements 70. Mutation: `score_min` 60, `survived_max` 50.
@@ -77,22 +77,22 @@ Total 25 + 13 = **38**. No discrepancy against the expected count.
 
 ### 4.1 Generic governance — remove and replace with DEVAI (class 2)
 
-| Path | LOC | Responsibility |
-| --- | --- | --- |
-| `scripts/run-mutation-evidence.mjs` | 2068 | mutation aggregation, composition, reuse engine |
-| `scripts/lib/mutation-evidence.mjs` | 1091 | evidence composition internals |
-| `scripts/devai-local-rc.mjs` | 314 | local RC orchestration (`prepare`, `publish`) |
-| `scripts/verify-devai-trace.mjs` | 168 | direct verifier invocation |
-| `scripts/lib/devai-local-rc.mjs` | 17 | RC shim |
-| `scripts/verify-mutation-roster.mjs` | 24 | roster verification driver |
-| `.github/workflows/devai-local-rc-verify.yml` | 320 | local RC verification job |
-| `.github/workflows/devai-main-observation.yml` | 178 | main-branch observation job |
-| `law/policy/release-campaign-1.1.1.json` | 272 | candidate-specific campaign logic |
-| `law/policy/stynx-1.1.1-mutation-reuse.json` | 698 | candidate-specific reuse grants |
-| `law/schemas/release-campaign-1.1.1.schema.json` | 340 | campaign schema |
-| `law/policy/devai-local-rc-environment.json` | 18 | RC environment pin |
-| `law/policy/devai-local-rc-toolchain.json` | 7 | RC toolchain pin |
-| `law/policy/devai-local-rc-trust-store.json` | 10 | RC trust store |
+| Path                                             | LOC  | Responsibility                                  |
+| ------------------------------------------------ | ---- | ----------------------------------------------- |
+| `scripts/run-mutation-evidence.mjs`              | 2068 | mutation aggregation, composition, reuse engine |
+| `scripts/lib/mutation-evidence.mjs`              | 1091 | evidence composition internals                  |
+| `scripts/devai-local-rc.mjs`                     | 314  | local RC orchestration (`prepare`, `publish`)   |
+| `scripts/verify-devai-trace.mjs`                 | 168  | direct verifier invocation                      |
+| `scripts/lib/devai-local-rc.mjs`                 | 17   | RC shim                                         |
+| `scripts/verify-mutation-roster.mjs`             | 24   | roster verification driver                      |
+| `.github/workflows/devai-local-rc-verify.yml`    | 320  | local RC verification job                       |
+| `.github/workflows/devai-main-observation.yml`   | 178  | main-branch observation job                     |
+| `law/policy/release-campaign-1.1.1.json`         | 272  | candidate-specific campaign logic               |
+| `law/policy/stynx-1.1.1-mutation-reuse.json`     | 698  | candidate-specific reuse grants                 |
+| `law/schemas/release-campaign-1.1.1.schema.json` | 340  | campaign schema                                 |
+| `law/policy/devai-local-rc-environment.json`     | 18   | RC environment pin                              |
+| `law/policy/devai-local-rc-toolchain.json`       | 7    | RC toolchain pin                                |
+| `law/policy/devai-local-rc-trust-store.json`     | 10   | RC trust store                                  |
 
 Script subtotal 3682 LOC; policy/schema subtotal 1345 LOC; workflow subtotal
 498 LOC. **5525 LOC** of candidate generic governance.
@@ -149,12 +149,12 @@ ADRs, and every `packages/`, `packages-web/`, `db/`, `domain/`, `reference/`,
 These must have their substantive safety assertions ported to the new public
 boundary **before** the implementation they exercise is removed.
 
-| Test | Cases | Assertions |
-| --- | --- | --- |
-| `test/scripts/local-rc-blocker-contract.test.mjs` | 73 | 955 |
-| `test/scripts/release-version-policy.test.mjs` | 36 | 229 |
-| `test/scripts/devai-local-rc-verifier.test.mjs` | 11 | 66 |
-| **Total** | **120** | **1250** |
+| Test                                              | Cases   | Assertions |
+| ------------------------------------------------- | ------- | ---------- |
+| `test/scripts/local-rc-blocker-contract.test.mjs` | 73      | 955        |
+| `test/scripts/release-version-policy.test.mjs`    | 36      | 229        |
+| `test/scripts/devai-local-rc-verifier.test.mjs`   | 11      | 66         |
+| **Total**                                         | **120** | **1250**   |
 
 `release-version-policy.test.mjs` is largely product version-line policy and is
 expected to survive mostly intact; the other two are boundary tests that must be
@@ -162,18 +162,18 @@ re-expressed against DEVAI's public CLI.
 
 ## 6. Migration map
 
-| Old responsibility | DEVAI public capability | Proof required |
-| --- | --- | --- |
-| `devai:rc:prepare` / `devai:rc:publish` | release lifecycle CLI | prepare + export receipts |
-| `test:mutation` aggregation | supported per-package mutation execution | 38 packages, `executed`/`reused`/`not-required` distinct |
-| mutation reuse grants | evidence reuse on matching input identities | reuse rejected on dependency change |
-| `devai:trace:verify` | offline evidence verification | verify without source checkout |
-| campaign policy + schema | candidate-bound release intent | preflight → certify receipt chain |
-| RC environment/toolchain/trust pins | adoption configuration | generated bindings |
-| `devai-local-rc-verify.yml` | supported release workflow | required-check parity |
-| `devai-main-observation.yml` | supported observation | observation parity |
-| roster verification engine | roster from declarative config | 38-package selection |
-| **retained** roster/thresholds/targets | STYNX `law/policy/devai-adoption.json` | unchanged counts |
+| Old responsibility                      | DEVAI public capability                     | Proof required                                           |
+| --------------------------------------- | ------------------------------------------- | -------------------------------------------------------- |
+| `devai:rc:prepare` / `devai:rc:publish` | release lifecycle CLI                       | prepare + export receipts                                |
+| `test:mutation` aggregation             | supported per-package mutation execution    | 38 packages, `executed`/`reused`/`not-required` distinct |
+| mutation reuse grants                   | evidence reuse on matching input identities | reuse rejected on dependency change                      |
+| `devai:trace:verify`                    | offline evidence verification               | verify without source checkout                           |
+| campaign policy + schema                | candidate-bound release intent              | preflight → certify receipt chain                        |
+| RC environment/toolchain/trust pins     | adoption configuration                      | generated bindings                                       |
+| `devai-local-rc-verify.yml`             | supported release workflow                  | required-check parity                                    |
+| `devai-main-observation.yml`            | supported observation                       | observation parity                                       |
+| roster verification engine              | roster from declarative config              | 38-package selection                                     |
+| **retained** roster/thresholds/targets  | STYNX `law/policy/devai-adoption.json`      | unchanged counts                                         |
 
 Package scripts requiring rewrite: `verify:mutation-roster`, `test:mutation`,
 `devai:trace:verify`, `devai:rc:prepare`, `devai:rc:publish`.
@@ -241,13 +241,13 @@ STYNX was **already bound to 1.4.5** before this migration
 (`.devai/config/authority-policy.json`, materialized 2026-08-31). This was a
 governance-removal migration, not a version bump.
 
-| Item | Value |
-| --- | --- |
-| Package | `@aarusso-nyx/devai@1.4.5` |
-| Registry | `https://npm.pkg.github.com` |
-| Integrity | `sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==` |
-| Pin recorded in | `law/policy/devai-package-identity.json` |
-| Verified against | `node_modules`, `pnpm-lock.yaml` |
+| Item             | Value                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| Package          | `@aarusso-nyx/devai@1.4.5`                                                                        |
+| Registry         | `https://npm.pkg.github.com`                                                                      |
+| Integrity        | `sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==` |
+| Pin recorded in  | `law/policy/devai-package-identity.json`                                                          |
+| Verified against | `node_modules`, `pnpm-lock.yaml`                                                                  |
 
 Rebound through supported commands only: `devai init bind --full` then
 `devai init bind --adopter-policy law/policy/devai-adoption.json`.
@@ -255,26 +255,26 @@ No generated file was hand-edited.
 
 ## Test census reconciliation
 
-| Measure | Baseline | After | Delta |
-| --- | --- | --- | --- |
-| Test files | 379 | 378 | −1 |
-| Declared cases | 2840 | 2810 | −30 |
-| Assertions | 9436 | 9183 | −253 |
-| Skip/todo/only markers | 7 | 7 | 0 |
-| Mutation packages | 38 | 38 | 0 |
-| Coverage thresholds | 70/60/70/70 | unchanged | 0 |
-| Mutation break floor | 90 | unchanged | 0 |
+| Measure                | Baseline    | After     | Delta |
+| ---------------------- | ----------- | --------- | ----- |
+| Test files             | 379         | 378       | −1    |
+| Declared cases         | 2840        | 2810      | −30   |
+| Assertions             | 9436        | 9183      | −253  |
+| Skip/todo/only markers | 7           | 7         | 0     |
+| Mutation packages      | 38          | 38        | 0     |
+| Coverage thresholds    | 70/60/70/70 | unchanged | 0     |
+| Mutation break floor   | 90          | unchanged | 0     |
 
 All test changes are confined to three files under `test/scripts/`. No
 `packages/`, `packages-web/`, `db/`, `domain/`, or `reference/` test changed.
 
 ### Retirement ledger (31 retired, 1 added, net −30)
 
-| File | Before | After | Retired | Added |
-| --- | --- | --- | --- | --- |
-| `local-rc-blocker-contract.test.mjs` | 73 | 66 | 8 | 1 |
-| `release-version-policy.test.mjs` | 36 | 24 | 12 | 0 |
-| `devai-local-rc-verifier.test.mjs` | 11 | — | 11 | 0 |
+| File                                 | Before | After | Retired | Added |
+| ------------------------------------ | ------ | ----- | ------- | ----- |
+| `local-rc-blocker-contract.test.mjs` | 73     | 66    | 8       | 1     |
+| `release-version-policy.test.mjs`    | 36     | 24    | 12      | 0     |
+| `devai-local-rc-verifier.test.mjs`   | 11     | —     | 11      | 0     |
 
 **Retired from `local-rc-blocker-contract`** — all covered focused-mode or
 composed-campaign evidence, which no longer exists: five `D24.12 focused …`
@@ -309,24 +309,24 @@ success-returning stub was added anywhere.
 
 ## Product requirements extracted before their carriers were retired
 
-| Requirement | New home | Verification |
-| --- | --- | --- |
-| 44/38/6 package census | `law/policy/stynx-package-roster.json` | 38 mutation packages byte-identical to filesystem discovery |
-| Adopted DEVAI identity | `law/policy/devai-package-identity.json` | matches `node_modules` and `pnpm-lock.yaml` |
-| Retired-governance provenance | `law/policy/retired-governance-catalog.json` | all 15 digests self-verify |
+| Requirement                   | New home                                     | Verification                                                |
+| ----------------------------- | -------------------------------------------- | ----------------------------------------------------------- |
+| 44/38/6 package census        | `law/policy/stynx-package-roster.json`       | 38 mutation packages byte-identical to filesystem discovery |
+| Adopted DEVAI identity        | `law/policy/devai-package-identity.json`     | matches `node_modules` and `pnpm-lock.yaml`                 |
+| Retired-governance provenance | `law/policy/retired-governance-catalog.json` | all 15 digests self-verify                                  |
 
 ## Verification results
 
-| Check | Result |
-| --- | --- |
-| `test/scripts/local-rc-blocker-contract.test.mjs` | **66/66 pass** |
-| `test/scripts/release-version-policy.test.mjs` | 23/24 pass, then **24/24** after helper restore |
-| `test/scripts/validate.js` | **4/4 suites pass** |
-| `devai doctor` | verdict **pass**, tier1, 13 checks, 2 advisory failures (see limits) |
-| `devai check --task-plan --local` | **pass**, 9 nodes |
-| `devai check --task-plan --rc` | **pass**, 16 nodes including `test:mutation` |
-| Module load, `run-mutation-evidence.mjs` | pass |
-| Task graph dependency integrity | pass, 17 nodes, no dangling |
+| Check                                             | Result                                                               |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `test/scripts/local-rc-blocker-contract.test.mjs` | **66/66 pass**                                                       |
+| `test/scripts/release-version-policy.test.mjs`    | 23/24 pass, then **24/24** after helper restore                      |
+| `test/scripts/validate.js`                        | **4/4 suites pass**                                                  |
+| `devai doctor`                                    | verdict **pass**, tier1, 13 checks, 2 advisory failures (see limits) |
+| `devai check --task-plan --local`                 | **pass**, 9 nodes                                                    |
+| `devai check --task-plan --rc`                    | **pass**, 16 nodes including `test:mutation`                         |
+| Module load, `run-mutation-evidence.mjs`          | pass                                                                 |
+| Task graph dependency integrity                   | pass, 17 nodes, no dangling                                          |
 
 ## Open items
 
@@ -350,3 +350,98 @@ success-returning stub was added anywhere.
 
 4. **Unmerged product work remains unlanded**, preserved at
    `docs/meta/migration/preserved/`.
+
+---
+
+# Part III — Installed lifecycle acceptance (2026-09-05)
+
+The complete DEVAI 1.4.5 release lifecycle was established end to end against a
+real candidate. Part I is the pre-migration census; Part II is the migration
+outcome; this part records acceptance.
+
+## Final candidate
+
+| Field         | Value                                                   |
+| ------------- | ------------------------------------------------------- |
+| Branch        | `codex/stynx-1.2.0-devai-adoption`                      |
+| Commit        | `87adf071c5c7db0c995e42988f99642d6ab98dbc`              |
+| Tree          | `d65ea1e9d2d7d9ff2d6c225e2dcd277aea6caadb`              |
+| Base          | `main` @ `75f8d49fba0f2418c310b62d98f50f796a33002e`     |
+| Version       | 1.2.0 (root + all 44 publishable packages)              |
+| Worktree path | contains a literal space and non-ASCII-adjacent segment |
+
+## Lifecycle stages
+
+| Stage          | Command                                             | Result                                            |
+| -------------- | --------------------------------------------------- | ------------------------------------------------- |
+| plan           | `check --task-plan --rc`                            | pass, 16 nodes                                    |
+| preflight      | `check --release-stage preflight --release-intent`  | **pass**, receipt `da934e05…`, 0 blocking reasons |
+| certify        | `check --release-stage certify --preflight-receipt` | **pass**, receipt `975a8a2a…`                     |
+| rc profile     | `check --rc --run`                                  | **pass**, receipt `acca6eb0…`                     |
+| export         | `devai-evidence-export`                             | **ok**, envelope `129d0a0b…`, policy `ca68487f…`  |
+| offline-verify | `devai-evidence-bundle-verify`                      | **ok**, 16 nodes, 80 artifacts, `exact-commit`    |
+
+All 16 task nodes pass: `engines`, `typecheck`, `build`, `api:contracts`,
+`lint:families`, `test:unit`, `test:integration`, `reference:apps`, `db:rls`,
+`test:e2e`, `docs`, `test:mutation`, `test:performance`, `security`, `doctor`,
+`release:prepare`.
+
+## Mutation population
+
+The complete 38-package roster executed under DEVAI's supported per-package
+orchestration, twice (preflight 3.69 h, certify 3.58 h):
+
+- 38/38 packages, **zero failing**, aggregate score 92.54
+- lowest package 90.07 (`angular-flow`) against the `break: 90` floor
+- 8,982 killed / 723 survived / 6 no-coverage / 60 timeout
+- evidence package set byte-identical to `law/policy/stynx-package-roster.json`
+
+`executed` and `reused` remain distinct: a re-run after a `.changeset/` change
+reused 15 of 16 nodes at 0 ms, including the 3.7-hour mutation node, because
+`.changeset/` is not among that node's input selectors.
+
+## Fail-closed acceptance
+
+Offline verification was performed in an isolated directory with **no git
+repository, no source checkout, and no certification cache**. Eight negative
+cases each fail closed with a distinct code:
+
+| Case                           | Code                         |
+| ------------------------------ | ---------------------------- |
+| wrong candidate commit         | `COMMIT_MISMATCH`            |
+| wrong tree                     | `TREE_MISMATCH`              |
+| wrong policy digest            | `POLICY_DIGEST_MISMATCH`     |
+| wrong repository               | `REPOSITORY_MISMATCH`        |
+| tampered mutation artifact     | `ARTIFACT_DIGEST_MISMATCH`   |
+| signature from a different key | `SIGNATURE_INVALID`          |
+| revoked signer                 | `SIGNER_REVOKED`             |
+| incomplete bundle              | `BUNDLE_POPULATION_MISMATCH` |
+
+## External controls
+
+Signing and control inputs live outside the repository, as the exporter
+requires (`outsideRepository`):
+
+- `~/.config/stynx/release-signing.pem` / `.pub.pem` — Ed25519, PKCS#8/SPKI,
+  unencrypted by necessity (`createPrivateKey` is called without a passphrase)
+- `~/.config/stynx/release-toolchain.json` — node, pnpm, postgres, typescript, vitest
+- `~/.config/stynx/release-environment.json` — 16 allowlisted variables as
+  SHA-256 digests, 7 non-null
+- `~/.config/stynx/release-trust-store.json` — signer `stynx-release`
+
+The `rc3-ledger` OpenSSH key is **not usable**: Node's `createPrivateKey`
+rejects OpenSSH private-key format with `ERR_OSSL_UNSUPPORTED`.
+
+## Known limits
+
+1. `devai doctor` reports 2 advisory failures (`trusted-local-rc-boundary`,
+   `authority-enforcement`) because `.devai/config/project.json` retains
+   `ci_economy.attested_rc` after it was removed from the adopter policy source.
+   `devai init bind` merges rather than replaces and cannot retire it; the
+   generated file was not hand-edited. **DEVAI 1.4.5 limitation.**
+2. Export consumes a **profile-driven** receipt (`--profile rc`), not the
+   capability-driven `--release-intent` certification receipt; supplying the
+   latter fails `POLICY_DIGEST_MISMATCH`. The `rc` profile receipt had to be
+   produced separately, which re-ran the mutation population.
+3. Publication protections, including `refs/tags/v*` immutability, are not
+   established and remain Owner actions.
