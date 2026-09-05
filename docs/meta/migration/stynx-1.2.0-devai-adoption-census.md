@@ -499,3 +499,69 @@ set was therefore always empty and the script reported drift against a ruleset
 that was present, active, and correct. It now fetches each active tag ruleset
 by id when the summary omits `conditions`. The defect predates this migration
 and would have misreported on the 1.1.x line as well.
+
+---
+
+# Part V — Pre-push gate exception (2026-09-05)
+
+## What was bypassed
+
+The branch was pushed with `git push --no-verify`, skipping the DEVAI pre-push
+`forbidden-actions` hook, under explicit Owner authorization.
+
+## Why
+
+The gate rejected the branch with eight findings. All eight were resolved
+properly: eight Owner authorization receipts were added to
+`law/policy/forbidden-action-authorizations.json` in commit `327f04df`, and the
+check confirmed `applied: 8` with every original finding cleared.
+
+Adding those receipts produced one new, unresolvable finding:
+
+```
+FORBID-MUTATE-INVARIANTS  327f04df  |  git add law/
+```
+
+Commit `327f04df` changes exactly one file — the authorizations registry
+itself. A receipt names a commit SHA, so a commit can never carry its own
+receipt, and any commit that adds one trips the same rule. The mechanism
+cannot authorize itself.
+
+This is not specific to this migration. Every receipt-recording commit in the
+repository has the same shape; `71885658 docs(repo): record D24.45 workflow
+authorization` on `main` changes only
+`law/policy/forbidden-action-authorizations.json` and carries no receipt. The
+pre-push hook scans `--since-ref` across all outgoing commits, so it would
+reject those commits today as well.
+
+## Why it was not fixed locally
+
+No supported local fix exists in DEVAI 1.4.5:
+
+- `.devai/config/forbidden-actions.json` is byte-identical to
+  `node_modules/@aarusso-nyx/devai/dist/law/policy/forbidden-actions.json`
+  (`575f9345…`), materialized by `devai init bind --operational-law` with byte
+  identity required. Editing it breaks the binding.
+- The registry schema states adopters "may extend but never relax" it, and
+  offers no path-exemption mechanism.
+- `waivers` drops a canonical FORBID id entirely. Waiving
+  `FORBID-MUTATE-INVARIANTS` would remove protection from `law/`, `product/`,
+  `record/`, and `.devai/config/` wholesale to work around a bootstrapping
+  quirk, which is a larger loss than the problem it solves.
+- `glob_guards` serves an unrelated purpose and the adopter policy carries no
+  forbidden-actions override.
+
+## Upstream defect
+
+**DEVAI 1.4.5: the forbidden-actions check cannot admit the authorization
+registry it depends on.** The fix belongs in the package — either exempt
+`law/policy/forbidden-action-authorizations.json` from the `law/` write
+patterns, or accept a receipt that covers the commit introducing it.
+
+## Scope of the exception
+
+The bypass covers only the pre-push hook invocation. It does not waive any
+forbidden action, alter the registry, or remove any protection. The eight
+substantive authorizations remain recorded and verifiable, and the four
+`FORBID-RM-RF` receipts state explicitly that they cover incidental text
+matches rather than destructive operations.
