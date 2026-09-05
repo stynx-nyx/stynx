@@ -443,5 +443,59 @@ rejects OpenSSH private-key format with `ERR_OSSL_UNSUPPORTED`.
    capability-driven `--release-intent` certification receipt; supplying the
    latter fails `POLICY_DIGEST_MISMATCH`. The `rc` profile receipt had to be
    produced separately, which re-ran the mutation population.
-3. Publication protections, including `refs/tags/v*` immutability, are not
-   established and remain Owner actions.
+3. Publication protections were outstanding when Part III was written. They
+   are now applied and verified; see Part IV.
+
+---
+
+# Part IV — Remote protections (2026-09-05)
+
+Applied to `stynx-nyx/stynx` under explicit Owner authorization.
+`node scripts/verify-branch-protection.mjs` reports
+**"Branch protection matches .github/branch-protection.yml."**
+
+## Branch protection on `main`
+
+The applied state tightened `main` substantially. Before, it had no required
+reviews at all, admins were not enforced, status checks were not strict, and
+only 8 contexts were required. It now enforces admins, linear history,
+conversation resolution, strict status checks, one approving code-owner review
+with stale-review dismissal, and 12 required contexts.
+
+`verified-local-rc` was removed from both the declared record and the live
+protection. It was produced by `.github/workflows/devai-local-rc-verify.yml`,
+which this migration deletes, so it could never have reported again. The
+remaining 12 contexts were each confirmed against a real job.
+
+`@codexmark` was added to all 13 CODEOWNERS rules. With code-owner review
+required, a single approval, and admins enforced, a sole code owner could not
+approve their own pull requests and the 1.2.0 candidate would have been
+unmergeable.
+
+## Tag ruleset
+
+| Field         | Value                                      |
+| ------------- | ------------------------------------------ |
+| Name          | `stynx-release-tag-immutability`           |
+| Id            | 22343697                                   |
+| Target        | tag                                        |
+| Enforcement   | active                                     |
+| Include       | `refs/tags/v*`, `refs/tags/@stynx-nyx/*@*` |
+| Rules         | `deletion`, `non_fast_forward`             |
+| Bypass actors | none (`current_user_can_bypass: never`)    |
+
+The repository publishes under two tag shapes and the ruleset covers both: the
+release-line tags (`v1.1.1`, `v0.5.0`) and the per-package publish tags
+(`@stynx-nyx/worklist@1.1.1`). Checked against the live tag list:
+**100 of 100 tags covered, none uncovered.** Deletion and force-movement are
+refused for admins as well, so every published package's provenance anchor is
+immutable.
+
+## Verifier defect fixed
+
+`scripts/verify-branch-protection.mjs` read include patterns from the ruleset
+**list** endpoint, which returns a summary without `conditions`. The pattern
+set was therefore always empty and the script reported drift against a ruleset
+that was present, active, and correct. It now fetches each active tag ruleset
+by id when the summary omits `conditions`. The defect predates this migration
+and would have misreported on the 1.1.x line as well.
