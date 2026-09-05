@@ -865,6 +865,30 @@
       "commit": "cfd746a27aa584a7175c38d940ff023891f6d358",
       "authorized_by": "Owner",
       "reason": "Authorizes at tree f7b5212c488054cb52bb897b363ed200a8698c3b only the removal of the verified-local-rc required status check from .github/branch-protection.yml. That check was produced by the deleted devai-local-rc-verify.yml workflow and can never report again; leaving it declared would block every pull request into main. The remaining twelve required contexts were each confirmed against a real job and are unchanged."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "32fc82cf478fc74b4a60ea1171b793e54475620e",
+      "authorized_by": "Owner",
+      "reason": "Re-keys the Owner authorization already recorded for commit 71fe160cb5854f1c31116eb6d14df639c0afa4a0, orphaned when GitHub squash-merged PR #231 into this single commit. Incidental text match only: the matched 'rm -rf' is a deleted line inside the removed devai-local-rc-verify.yml workflow. No rm -rf is introduced."
+    },
+    {
+      "forbidden_id": "FORBID-DELETE-AUTHORITY-DOCS",
+      "commit": "32fc82cf478fc74b4a60ea1171b793e54475620e",
+      "authorized_by": "Owner",
+      "reason": "Re-keys the Owner authorization already recorded for commit 71fe160cb5854f1c31116eb6d14df639c0afa4a0, orphaned when GitHub squash-merged PR #231 into this single commit. Authorizes only the deletion of the retired local RC and 1.1.1 campaign authority documents superseded by ADR-DEVAI-ADOPTION-0002: law/policy/release-campaign-1.1.1.json, law/policy/stynx-1.1.1-mutation-reuse.json, the three devai-local-rc-* pins, and law/schemas/release-campaign-1.1.1.schema.json. Pre-removal bytes remain digest-bound in law/policy/retired-governance-catalog.json."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "32fc82cf478fc74b4a60ea1171b793e54475620e",
+      "authorized_by": "Owner",
+      "reason": "Re-keys the Owner authorization already recorded for commit 71fe160cb5854f1c31116eb6d14df639c0afa4a0, orphaned when GitHub squash-merged PR #231 into this single commit. Authorizes only the removal of .github/workflows/devai-local-rc-verify.yml and .github/workflows/devai-main-observation.yml, whose responsibilities move to the installed DEVAI package under ADR-DEVAI-ADOPTION-0002. No remaining workflow gate is weakened."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "32fc82cf478fc74b4a60ea1171b793e54475620e",
+      "authorized_by": "Owner",
+      "reason": "Re-keys the Owner authorization already recorded for commit 71fe160cb5854f1c31116eb6d14df639c0afa4a0 for the law/ removals listed in ADR-DEVAI-ADOPTION-0002 (no invariant, threshold, mutation-target, or test-population change; the 38-package roster and break: 90 floor are unchanged), and extends it to the .devai/config/release-verification.json addition and .devai/config/adopter-policy-binding.json update landed in the same PR, which materialize STYNX's release verification profile and the DEVAI adopter binding for the same adoption decision. Both receipts were orphaned when GitHub squash-merged PR #231 into this single commit."
     }
   ]
 }
