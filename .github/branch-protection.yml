@@ -27,7 +27,6 @@ branches:
           - integration-tests
           - stynx-tier-gate
           - build (ubuntu-latest)
-          - verified-local-rc
           - reference-web-e2e
           - package-policy
           - dependency-audit
