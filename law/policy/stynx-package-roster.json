@@ -6,9 +6,9 @@
   "description": "Candidate-independent STYNX package roster. Extracted from the retired release-campaign-1.1.1 policy so the product package census survives the DEVAI adoption migration. Counts are product truth, not release authority.",
   "counts": {
     "publishable": 44,
-    "existing_private": 38,
+    "existing_private": 44,
     "mutation": 38,
-    "approved_first_publications": 6
+    "approved_first_publications": 0
   },
   "publishable_packages": [
     "@stynx-nyx/angular",
@@ -82,7 +82,12 @@
     "@stynx-nyx/i18n",
     "@stynx-nyx/idempotency",
     "@stynx-nyx/integration-adapter",
+    "@stynx-nyx/jobs",
     "@stynx-nyx/logging",
+    "@stynx-nyx/mobile-runtime",
+    "@stynx-nyx/notifications",
+    "@stynx-nyx/offline-sync",
+    "@stynx-nyx/outbox",
     "@stynx-nyx/pdf",
     "@stynx-nyx/pdf-a",
     "@stynx-nyx/pdf-a-vera-docker",
@@ -94,7 +99,8 @@
     "@stynx-nyx/signature",
     "@stynx-nyx/storage",
     "@stynx-nyx/tenancy",
-    "@stynx-nyx/testing"
+    "@stynx-nyx/testing",
+    "@stynx-nyx/worklist"
   ],
   "mutation_packages": [
     "@stynx-nyx/angular",
@@ -136,12 +142,5 @@
     "@stynx-nyx/testing",
     "@stynx-nyx/worklist"
   ],
-  "approved_first_publications": [
-    "@stynx-nyx/jobs",
-    "@stynx-nyx/mobile-runtime",
-    "@stynx-nyx/notifications",
-    "@stynx-nyx/offline-sync",
-    "@stynx-nyx/outbox",
-    "@stynx-nyx/worklist"
-  ]
+  "approved_first_publications": []
 }
