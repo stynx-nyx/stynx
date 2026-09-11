@@ -895,6 +895,12 @@
       "commit": "c8bc6e7d71daadc8d09982084c3dc0e86c46370f",
       "authorized_by": "Owner",
       "reason": "Authorizes PR #232's own squash-merge commit, which added the four receipts above for 32fc82cf478fc74b4a60ea1171b793e54475620e. Editing law/policy/forbidden-action-authorizations.json unavoidably self-matches FORBID-MUTATE-INVARIANTS; no commit can carry a receipt for its own not-yet-computed SHA, so this receipt is recorded in a separate, later commit pushed directly to main to avoid minting another orphaned commit through a further PR squash-merge. No invariant, threshold, mutation-target, or test-population change."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "ea3a6aa9c7eb6d28cfb20ce5d8aa1e2b8d440f77",
+      "authorized_by": "Owner",
+      "reason": "Authorizes bumping the hardcoded --registry-monotonicity --candidate literal in .github/workflows/release.yml from 1.1.1 to 1.2.0, matching the unified version rebaseline already recorded for 32fc82cf478fc74b4a60ea1171b793e54475620e. The prior literal was left stale when that commit bumped every package.json to 1.2.0, and blocked the registry monotonicity check (and therefore any publish) for every package regardless of authorization state. No gate is weakened: the check still requires an exact match against the current unified version."
     }
   ]
 }
