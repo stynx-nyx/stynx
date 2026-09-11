@@ -889,6 +889,12 @@
       "commit": "32fc82cf478fc74b4a60ea1171b793e54475620e",
       "authorized_by": "Owner",
       "reason": "Re-keys the Owner authorization already recorded for commit 71fe160cb5854f1c31116eb6d14df639c0afa4a0 for the law/ removals listed in ADR-DEVAI-ADOPTION-0002 (no invariant, threshold, mutation-target, or test-population change; the 38-package roster and break: 90 floor are unchanged), and extends it to the .devai/config/release-verification.json addition and .devai/config/adopter-policy-binding.json update landed in the same PR, which materialize STYNX's release verification profile and the DEVAI adopter binding for the same adoption decision. Both receipts were orphaned when GitHub squash-merged PR #231 into this single commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c8bc6e7d71daadc8d09982084c3dc0e86c46370f",
+      "authorized_by": "Owner",
+      "reason": "Authorizes PR #232's own squash-merge commit, which added the four receipts above for 32fc82cf478fc74b4a60ea1171b793e54475620e. Editing law/policy/forbidden-action-authorizations.json unavoidably self-matches FORBID-MUTATE-INVARIANTS; no commit can carry a receipt for its own not-yet-computed SHA, so this receipt is recorded in a separate, later commit pushed directly to main to avoid minting another orphaned commit through a further PR squash-merge. No invariant, threshold, mutation-target, or test-population change."
     }
   ]
 }
