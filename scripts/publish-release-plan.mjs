@@ -127,9 +127,11 @@ for (const entry of planEntries) {
       `${entry.package}: stopped on first failure or ambiguous outcome; partial recovery requires a new Owner authorization`,
     );
   }
-  // changesets/action creates one GitHub Release per "New tag:" line it reads
-  // from the publish command output.
-  process.stdout.write(`New tag: ${entry.package}@${version}\n`);
+  // changesets/action reads each "New tag:" line, pushes that tag ref, and
+  // creates the matching GitHub Release, so the tag must already exist here.
+  const tag = `${entry.package}@${version}`;
+  git(['tag', tag, candidateSha]);
+  process.stdout.write(`New tag: ${tag}\n`);
 }
 
 process.stdout.write(`Published and verified ordered ${planEntries.length}-package plan.\n`);
