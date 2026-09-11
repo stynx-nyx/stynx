@@ -13,7 +13,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@angular/common": "21.2.19",
+    "@angular/common": "21.2.20",
     "@angular/core": "21.2.19",
     "@angular/router": "21.2.19",
     "@stynx-internal/eslint-config": "workspace:*",

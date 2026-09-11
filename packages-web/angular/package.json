@@ -45,7 +45,7 @@
     "@angular/router": ">=20.3.0 <22"
   },
   "devDependencies": {
-    "@angular/common": "21.2.19",
+    "@angular/common": "21.2.20",
     "@angular/compiler": "21.2.19",
     "@angular/compiler-cli": "21.2.19",
     "@angular/core": "21.2.19",
