@@ -12,7 +12,7 @@ const packageManager = manifest.packageManager;
 
 const supported = {
   angularPeer: '>=20.3.0 <22',
-  angularBuild: '21.2.19',
+  angularBuild: '21.2.20',
   ngPackagr: '21.2.3',
   nestPeer: '^11.1.19',
   node: '>=24 <25',
@@ -26,19 +26,17 @@ const supported = {
 // Reference apps and standalone test harnesses are not part of the
 // publishable dependency graph (packages/, packages-web/) and are allowed to
 // run ahead of the workspace-pinned @types/node / Angular TypeScript
-// versions so they can exercise forward compatibility. 2026-07 dependency
-// round: @types/node 25.6.0, reference/web TypeScript 6.0.2 (within
-// @angular/compiler-cli@21.2.19's supported >=5.9 <6.1 peer range).
-// 2026-09: test/db advances to @types/node 25.9.3; reference/api stays on
-// 25.6.0 because its manifest digest is frozen by the local-RC blocker
-// contract (D16.1/D21/D22) until an Inspector re-freeze.
+// versions so they can exercise forward compatibility. 2026-09 dependency
+// round: @types/node 25.9.3 (reference/api, test/db), reference/web
+// TypeScript 6.0.3 (within @angular/compiler-cli@21.2.20's supported
+// >=5.9 <6.1 peer range). test/packages stays on the 2026-07 pin.
 const NODE_TYPES_EXCEPTIONS = {
-  'reference/api/package.json': '25.6.0',
+  'reference/api/package.json': '25.9.3',
   'test/db/package.json': '25.9.3',
   'test/packages/package.json': '25.6.0',
 };
 const TS_ANGULAR_EXCEPTIONS = {
-  'reference/web/package.json': '6.0.2',
+  'reference/web/package.json': '6.0.3',
 };
 
 const failures = [];
