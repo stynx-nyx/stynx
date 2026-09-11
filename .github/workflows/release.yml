@@ -148,6 +148,7 @@ jobs:
         if: env.STYNX_ENABLE_REGISTRY_PUBLISH == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PACKAGES_READ_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}
         run: node scripts/verify-release-policy.mjs --registry-monotonicity --candidate 1.2.0
 
       - name: Run Changesets release flow

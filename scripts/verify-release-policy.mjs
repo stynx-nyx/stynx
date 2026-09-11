@@ -135,8 +135,12 @@ if (registryMode) {
       approved_first_publications: [...packageRoster.approved_first_publications],
     };
     const token = process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN;
+    const packagesReadToken = process.env.PACKAGES_READ_TOKEN || token;
     const registryStatesByPackage = await fetchRegistryCensus({ packageNames, token });
-    const githubPackagesInventory = await fetchGithubPackagesInventory({ packageNames, token });
+    const githubPackagesInventory = await fetchGithubPackagesInventory({
+      packageNames,
+      token: packagesReadToken,
+    });
     const result = validateRegistryCensus({
       packageNames,
       registryStatesByPackage,
