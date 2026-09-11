@@ -29,9 +29,12 @@ const supported = {
 // versions so they can exercise forward compatibility. 2026-07 dependency
 // round: @types/node 25.6.0, reference/web TypeScript 6.0.2 (within
 // @angular/compiler-cli@21.2.19's supported >=5.9 <6.1 peer range).
+// 2026-09: test/db advances to @types/node 25.9.3; reference/api stays on
+// 25.6.0 because its manifest digest is frozen by the local-RC blocker
+// contract (D16.1/D21/D22) until an Inspector re-freeze.
 const NODE_TYPES_EXCEPTIONS = {
   'reference/api/package.json': '25.6.0',
-  'test/db/package.json': '25.6.0',
+  'test/db/package.json': '25.9.3',
   'test/packages/package.json': '25.6.0',
 };
 const TS_ANGULAR_EXCEPTIONS = {
