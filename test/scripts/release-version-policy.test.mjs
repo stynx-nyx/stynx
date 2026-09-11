@@ -48,11 +48,12 @@ const packageRoster = JSON.parse(
 );
 
 // The 1.1.1 release campaign policy was retired with the DEVAI adoption
-// migration. Its still-valid product content — the 44/38/6 package census and
-// the six approved first-publication exceptions — now lives in
-// law/policy/stynx-package-roster.json. This fixture reconstructs the shape the
-// product registry-census validator accepts, so first-publication policy
-// enforcement keeps its coverage without a candidate-bound campaign document.
+// migration. Its still-valid product content — the 44-package census — now
+// lives in law/policy/stynx-package-roster.json. The six first publications of
+// that campaign shipped at 1.1.1, so the census is 44/44/0 and no absence is
+// approved. This fixture reconstructs the shape the product registry-census
+// validator accepts, so first-publication policy enforcement keeps its coverage
+// without a candidate-bound campaign document.
 const campaignPolicy = {
   policy_id: 'stynx.package-roster',
   candidate: {
@@ -71,7 +72,8 @@ const changesetConfig = JSON.parse(
   readFileSync(join(repoRoot, '.changeset', 'config.json'), 'utf8'),
 );
 const packageNames = [...changesetConfig.fixed[0]].sort();
-const firstPublicationNames = [
+const firstPublicationNames = [];
+const singleVersionNames = [
   '@stynx-nyx/jobs',
   '@stynx-nyx/mobile-runtime',
   '@stynx-nyx/notifications',
@@ -112,7 +114,9 @@ function validRegistryCensus() {
           ? ['0.5.0', '1.0.0', '1.1.0', '2.0.0']
           : name === '@stynx-nyx/angular-sessions' || name === '@stynx-nyx/sessions'
             ? ['0.5.0', '1.0.0', '1.1.0']
-            : ['0.5.0', '1.0.0'];
+            : singleVersionNames.includes(name)
+              ? ['1.1.1']
+              : ['0.5.0', '1.0.0'];
       return [name, publishedRegistryState(name, versions)];
     }),
   );
@@ -223,13 +227,13 @@ test('version rebaseline permits only the three generated dependency README cons
   );
 });
 
-test('Architect policy and workspace structurally define exactly 44/38/6', () => {
+test('Architect policy and workspace structurally define exactly 44/44/0', () => {
   const { roster: mutationRoster, failures: mutationFailures } = discoverMutationRoster(repoRoot);
   const mutationNames = mutationRoster.map(({ packageName }) => packageName).sort();
   assert.equal(registryVersionPolicyConstants.packageCount, 44);
   assert.equal(packageNames.length, 44);
   assert.equal(new Set(packageNames).size, 44);
-  assert.equal(publishedPackageNames.length, 38);
+  assert.equal(publishedPackageNames.length, 44);
   assert.deepEqual([...packageRoster.publishable_packages].sort(), packageNames);
   assert.deepEqual([...packageRoster.existing_private_packages].sort(), publishedPackageNames);
   assert.deepEqual(mutationFailures, []);
@@ -238,8 +242,8 @@ test('Architect policy and workspace structurally define exactly 44/38/6', () =>
   assert.deepEqual([...packageRoster.approved_first_publications].sort(), firstPublicationNames);
   assert.equal(packageRoster.counts.publishable, 44);
   assert.equal(packageRoster.counts.mutation, 38);
-  assert.equal(packageRoster.counts.existing_private, 38);
-  assert.equal(packageRoster.counts.approved_first_publications, 6);
+  assert.equal(packageRoster.counts.existing_private, 44);
+  assert.equal(packageRoster.counts.approved_first_publications, 0);
 });
 
 function assertGovernedMutationFloor({ roster, failures }) {
@@ -288,19 +292,19 @@ test('complete discovered mutation roster resolves the governed break=90 floor',
   }
 });
 
-test('complete authenticated registry and inventory census returns 44/38/6', () => {
+test('complete authenticated registry and inventory census returns 44/44/0', () => {
   assert.deepEqual(validate(), {
     anomalyMatches: 1,
-    absentPackageCount: 6,
+    absentPackageCount: 0,
     packageCount: 44,
-    publishedPackageCount: 38,
+    publishedPackageCount: 44,
   });
 });
 
 test('legitimate 1.1.0 history and the exact angular-profile 2.0.0 anomaly are accepted', () => {
   const result = validate();
   assert.equal(result.anomalyMatches, 1);
-  assert.equal(result.publishedPackageCount, 38);
+  assert.equal(result.publishedPackageCount, 44);
 });
 
 test('unadjudicated, missing, broadened, altered, or unmatched anomaly policy fails closed', () => {
@@ -341,10 +345,12 @@ test('unadjudicated, missing, broadened, altered, or unmatched anomaly policy fa
   assertPolicyError(() => validate({ candidate: '1.1.2' }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
 });
 
-test('first-publication exceptions reject extra, missing, renamed, and wrong-candidate policy', () => {
+test('first-publication exceptions reject extra, reopened, renamed, and wrong-candidate policy', () => {
   const mutations = [
     (policy) => policy.approved_first_publications.push('@stynx-nyx/extra'),
-    (policy) => policy.approved_first_publications.pop(),
+    (policy) => {
+      policy.approved_first_publications = ['@stynx-nyx/jobs'];
+    },
     (policy) => {
       policy.approved_first_publications[0] = '@stynx-nyx/jobs-renamed';
     },
@@ -395,7 +401,7 @@ test('roster drift, incomplete census, malformed metadata, and unsupported versi
 
 test('registry and authenticated inventory must be complete and agree exactly', () => {
   const disagreement = validInventory();
-  disagreement.packageNames.push('@stynx-nyx/jobs');
+  disagreement.packageNames.push('@stynx-nyx/extra');
   assertPolicyError(
     () => validate({ githubPackagesInventory: disagreement }),
     'REGISTRY_INVENTORY_DISAGREEMENT',

@@ -85,9 +85,13 @@ for (const entry of planEntries) {
 for (const entry of planEntries) {
   const attemptedAt = new Date().toISOString();
   const tarball = resolve(tarballRoot, entry.tarball);
+  // --tag latest is explicit because the registry refuses to move latest
+  // implicitly while the adjudicated angular-profile 2.0.0 sits above the
+  // canonical line; the anomaly closure condition requires latest to resolve
+  // to the unified version.
   const result = spawnSync(
     'npm',
-    ['publish', tarball, '--registry', registry, '--access', 'restricted'],
+    ['publish', tarball, '--registry', registry, '--access', 'restricted', '--tag', 'latest'],
     { cwd: repoRoot, env: publishEnvironment(), encoding: 'utf8', stdio: 'inherit' },
   );
   const observed = registryMetadata(entry.package);
@@ -123,6 +127,9 @@ for (const entry of planEntries) {
       `${entry.package}: stopped on first failure or ambiguous outcome; partial recovery requires a new Owner authorization`,
     );
   }
+  // changesets/action creates one GitHub Release per "New tag:" line it reads
+  // from the publish command output.
+  process.stdout.write(`New tag: ${entry.package}@${version}\n`);
 }
 
 process.stdout.write(`Published and verified ordered ${planEntries.length}-package plan.\n`);

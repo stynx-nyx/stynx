@@ -189,14 +189,9 @@ export function validateRegistryCensus({
 
 function validateCampaignPolicy(policy, packageNames, candidate) {
   const approved = policy?.approved_first_publications;
-  const expected = [
-    '@stynx-nyx/jobs',
-    '@stynx-nyx/mobile-runtime',
-    '@stynx-nyx/notifications',
-    '@stynx-nyx/offline-sync',
-    '@stynx-nyx/outbox',
-    '@stynx-nyx/worklist',
-  ];
+  // Every package in the fixed group has a published 1.1.1; the six first
+  // publications of the 1.1.1 campaign are closed, so no absence is approved.
+  const expected = [];
   if (
     policy?.candidate?.version !== candidate ||
     !Array.isArray(approved) ||
@@ -206,7 +201,7 @@ function validateCampaignPolicy(policy, packageNames, candidate) {
   ) {
     fail(
       'REGISTRY_FIRST_PUBLICATION_POLICY_UNSUPPORTED',
-      'the first-publication policy does not match the exact 44/38/6 campaign',
+      'the first-publication policy does not match the exact 44/44/0 campaign',
     );
   }
 }

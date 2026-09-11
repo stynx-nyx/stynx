@@ -2,6 +2,11 @@
 
 import { spawnSync } from 'node:child_process';
 
+if (process.env.STYNX_ENABLE_REGISTRY_PUBLISH !== 'true') {
+  console.log('Registry publish is disabled; campaign evidence is not required.');
+  process.exit(0);
+}
+
 const repoRoot = process.cwd();
 const candidate = git(['rev-parse', 'HEAD']);
 const tree = git(['rev-parse', 'HEAD^{tree}']);
@@ -15,10 +20,10 @@ if (git(['status', '--porcelain']) !== '') failures.push('candidate worktree is 
 const repository = process.env.GITHUB_REPOSITORY || repositoryFromOrigin();
 const checks = api(`repos/${repository}/commits/${candidate}/check-runs?per_page=100`);
 const runs = Array.isArray(checks?.check_runs) ? checks.check_runs : [];
-const requiredChecks = new Map([
-  ['verified-local-rc', 'trusted local RC'],
-  ['k6', 'hardening scenario=all'],
-]);
+// The trusted local RC check was produced by the local RC verifier workflow
+// retired under ADR-DEVAI-ADOPTION-0002 and can no longer report; hardening
+// evidence remains a publication precondition.
+const requiredChecks = new Map([['k6', 'hardening scenario=all']]);
 for (const [required, label] of requiredChecks) {
   const matching = runs.filter((run) => run.name === required);
   const successful = matching.filter(
@@ -28,11 +33,6 @@ for (const [required, label] of requiredChecks) {
   if (successful.length !== 1) {
     failures.push(`${label} evidence is missing, stale, failed, duplicated, or foreign-tree`);
   }
-}
-
-const localRc = runs.find((run) => run.name === 'verified-local-rc' && run.head_sha === candidate);
-if (localRc && !String(localRc.output?.summary ?? '').includes(tree)) {
-  failures.push('verified-local-rc evidence does not name the exact candidate tree');
 }
 
 const result = { ok: failures.length === 0, candidate, tree, failures };
