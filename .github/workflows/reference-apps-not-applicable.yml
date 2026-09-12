@@ -1,0 +1,44 @@
+name: STYNX Reference Apps (not applicable)
+
+# Companion to reference-apps.yml. That workflow is path-filtered, but its
+# `reference-web-e2e` job is a required status check on `main`. A pull request
+# that touches none of its paths (infra/, docs/, law/, ...) therefore never
+# receives the check and can only be merged through an administrator bypass.
+#
+# This workflow carries the exact inverse filter (`paths-ignore` with the same
+# list) and reports a passing job under the same name, which is the pattern
+# GitHub documents for required checks on path-filtered workflows. Exactly one
+# of the two workflows runs for any pull request. Keep both path lists
+# identical; `scripts/lint-workflows.mjs` runs actionlint over this file.
+
+on:
+  pull_request:
+    paths-ignore:
+      - '.github/workflows/reference-apps.yml'
+      - 'reference/api/**'
+      - 'reference/web/**'
+      - 'package.json'
+      - 'packages/**'
+      - 'packages-web/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/ci-local/**'
+      - 'tools/**'
+
+concurrency:
+  group: reference-apps-not-applicable-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  reference-web-e2e:
+    name: reference-web-e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Report the reference-app end-to-end gate as not applicable
+        run: |
+          echo "No reference-app path changed in this pull request."
+          echo "The reference-web-e2e gate does not apply; reporting success so the required check resolves."

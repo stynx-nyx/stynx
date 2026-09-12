@@ -913,6 +913,18 @@
       "commit": "d3560b510ff70acea6e9c2094908d757d9b8a8d4",
       "authorized_by": "Owner",
       "reason": "Authorizes the 2026-09 dependency-round commit's single CI edit: pinning aquasecurity/trivy-action from 0.35.0 (57a97c7e7821a5776cebc9bb87c984fa69cba8f1) to 0.36.0 (ed142fd0673e97e23eac54620cfb913e5ce36c25) at both call sites in the reference-apps workflow's container-security job. The new SHA was verified against the upstream annotated tag v0.36.0, which dereferences to that commit. This is the same change Dependabot proposed in PR #228 and supersedes it; the job's inputs, severity thresholds, and fail-closed behaviour are unchanged, so no gate is weakened. Owner decision recorded in the coupled Engineer -> Inspector -> Architect -> Owner sequence that consolidates the September 2026 Dependabot backlog into one reviewable change."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "04fec86eb496a10bc31b42b7380796c73c9ab9ed",
+      "authorized_by": "Owner",
+      "reason": "Authorizes adding the companion workflow 'STYNX Reference Apps (not applicable)'. reference-web-e2e is a required status check on main but is produced by the path-filtered STYNX Reference Apps workflow, so pull requests outside those paths (infra/, docs/, law/) never receive the check and could only merge through an administrator bypass, as #243 did on 2026-09-12. The companion carries the exact inverse filter (paths-ignore with the identical list) and reports a passing reference-web-e2e job, the pattern GitHub documents for this situation; exactly one of the two workflows runs for any pull request and the real end-to-end gate is unchanged for every reference-app change. No gate is weakened: the check still blocks whenever it applies, and scripts/lint-workflows.mjs now fails closed if the two path lists diverge or the companion stops exposing the job. Owner decision 2026-09-12."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "9f48bfe38ca1659cc1c2f6ad49e8f0ed786027d5",
+      "authorized_by": "Owner",
+      "reason": "Authorizes adding the companion workflow 'STYNX Release Prep (not applicable)', completing the pattern begun in 04fec86e. package-policy and dependency-audit are required status checks on main produced by the path-filtered STYNX Release Prep workflow; #247 proved that a pull request outside those paths stays blocked on them even with every other check green. The companion carries the exact inverse filter (paths-ignore with the identical list) and reports passing jobs of the same names. Both checks are pure functions of inputs inside the filtered list (pnpm-lock.yaml, package manifests, changesets, release scripts), so when none changed the outcome cannot differ from main; the real jobs still run whenever any of those paths change. No gate is weakened, and scripts/lint-workflows.mjs fails closed if either companion's path list diverges from its filtered workflow or stops exposing a required job. Owner decision 2026-09-12."
     }
   ]
 }
