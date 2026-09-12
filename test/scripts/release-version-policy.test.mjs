@@ -54,10 +54,15 @@ const packageRoster = JSON.parse(
 // approved. This fixture reconstructs the shape the product registry-census
 // validator accepts, so first-publication policy enforcement keeps its coverage
 // without a candidate-bound campaign document.
+// The registry census is validated against the current unified candidate
+// (registryVersionPolicyConstants.candidate), not the historical 1.2.0
+// rebaseline target that unified-rebaseline.mjs still describes.
+const currentCandidate = registryVersionPolicyConstants.candidate;
+
 const campaignPolicy = {
   policy_id: 'stynx.package-roster',
   candidate: {
-    version: unifiedRebaselineTarget,
+    version: currentCandidate,
     publishable_count: packageRoster.counts.publishable,
     mutation_count: packageRoster.counts.mutation,
     existing_private_count: packageRoster.counts.existing_private,
@@ -135,7 +140,7 @@ function validate(overrides = {}) {
     packageNames,
     registryStatesByPackage: validRegistryCensus(),
     githubPackagesInventory: validInventory(),
-    candidate: unifiedRebaselineTarget,
+    candidate: currentCandidate,
     anomalyPolicy,
     campaignPolicy,
     ...overrides,
@@ -476,22 +481,31 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 });
 
 test('Architect anomaly policy is required at its exact approved digest', () => {
-  const anomaly = loadRegistryAnomalyPolicy(repoRoot, unifiedRebaselineTarget);
+  // The Owner's 2026-09-12 decision names 1.3.0 as the next unified version;
+  // the 1.2.0 rebaseline target stays historical.
+  assert.equal(currentCandidate, '1.3.0');
+  assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
+  assert.equal(anomalyPolicy.owner_decision.supersedes.next_unified_version, unifiedRebaselineTarget);
+  const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');
   assert.equal(anomaly.version, '2.0.0');
-  assert.equal(anomaly.allowed_candidate, unifiedRebaselineTarget);
+  assert.equal(anomaly.allowed_candidate, currentCandidate);
+  assertPolicyError(
+    () => loadRegistryAnomalyPolicy(repoRoot, unifiedRebaselineTarget),
+    'REGISTRY_ANOMALY_POLICY_UNSUPPORTED',
+  );
 
   const root = mkdtempSync(join(tmpdir(), 'stynx-anomaly-policy-'));
   try {
     assertPolicyError(
-      () => loadRegistryAnomalyPolicy(root, unifiedRebaselineTarget),
+      () => loadRegistryAnomalyPolicy(root, currentCandidate),
       'REGISTRY_ANOMALY_POLICY_MISSING',
     );
     const policyPath = join(root, 'law', 'policy', 'registry-version-anomalies.json');
     mkdirSync(dirname(policyPath), { recursive: true });
     writeFileSync(policyPath, '{}\n');
     assertPolicyError(
-      () => loadRegistryAnomalyPolicy(root, unifiedRebaselineTarget),
+      () => loadRegistryAnomalyPolicy(root, currentCandidate),
       'REGISTRY_ANOMALY_POLICY_MODIFIED',
     );
   } finally {
