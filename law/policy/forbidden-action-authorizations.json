@@ -973,6 +973,12 @@
       "commit": "a15ee82591259836c73ef6a993c9ca062608f234",
       "authorized_by": "Owner",
       "reason": "Authorizes the 1.3.1 release lane's single workflow edit: the release workflow's unified registry monotonicity step passes --candidate-from-policy to scripts/verify-release-policy.mjs instead of a hard-coded version literal, so future releases advance the candidate in law/policy/registry-version-anomalies.json and scripts/lib/registry-version-policy.mjs only, without a workflow edit and receipt per release. The verifier still requires an exact candidate, reads it from the Architect-owned policy constant, and rejects a disagreeing explicit --candidate, so the check stays fail-closed. Owner decision 2026-09-12 (publish 1.3.1). The rebase-merged form of this commit receives its own receipt after the merge."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "185a03425cee6d2d4b6a34787056aba8cc2b741a",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the rebase-merged form of a15ee82591259836c73ef6a993c9ca062608f234 (PR #263, 1.3.1 release lane): the release workflow's unified registry monotonicity step passes --candidate-from-policy instead of a hard-coded version literal. GitHub's rebase merge rewrote the commit SHA while preserving its content and author; this receipt binds the same 2026-09-12 Owner decision to the commit that is actually on main. No other workflow line changes and the check stays fail-closed. This is the last per-release workflow edit: the candidate is now read from the Architect-owned policy."
     }
   ]
 }
