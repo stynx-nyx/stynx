@@ -34,8 +34,8 @@ _None._
 
 - `@nestjs/platform-express`: `^11.1.26`
 - `@nestjs/testing`: `^11.1.26`
-- `@types/node`: `24.12.4`
-- `testcontainers`: `^11.14.0`
+- `@types/node`: `24.13.4`
+- `testcontainers`: `^12.0.2`
 - `ts-node`: `^10.9.2`
 - `typescript`: `^6.0.3`
 

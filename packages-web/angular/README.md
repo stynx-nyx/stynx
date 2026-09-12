@@ -118,9 +118,7 @@ bootstrapApplication(AppComponent, {
 ```ts
 import { TenantContextService } from '@stynx-nyx/angular';
 
-@Component({
-  /* ... */
-})
+@Component({/* ... */})
 export class HeaderComponent {
   private readonly tenants = inject(TenantContextService);
   currentTenant = this.tenants.current;
@@ -181,7 +179,7 @@ _None._
 - `@angular/platform-browser`: `21.2.20`
 - `@angular/platform-browser-dynamic`: `21.2.20`
 - `@angular/router`: `21.2.20`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `cross-env`: `^10.1.0`
 - `jsdom`: `^29.0.2`
 - `ng-packagr`: `21.2.3`

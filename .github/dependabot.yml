@@ -39,6 +39,13 @@ updates:
     commit-message:
       prefix: 'chore(deps)'
       prefix-development: 'chore(deps-dev)'
+    ignore:
+      # @types/node tracks the runtime major. package.json engines pin Node
+      # >=24 <25 and every Dockerfile/CI runner is Node 24, so a @types/node
+      # 25.x proposal is never coherent here; scripts/check-engines.mjs pins
+      # the 24.x line for publishable packages. Minors/patches still flow.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       minor-and-patch:
         applies-to: version-updates

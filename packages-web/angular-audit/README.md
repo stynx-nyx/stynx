@@ -148,7 +148,7 @@ _None._
 - `@stynx-nyx/angular-i18n`: `workspace:*`
 - `@stynx-nyx/angular-ui`: `workspace:*`
 - `@stynx-nyx/sdk`: `workspace:*`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `jsdom`: `^29.0.2`
 - `ng-packagr`: `21.2.3`
 - `tslib`: `^2.8.1`

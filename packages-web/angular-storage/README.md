@@ -81,9 +81,7 @@ pnpm add @stynx-nyx/angular-storage
 ```ts
 import { DocumentService } from '@stynx-nyx/angular-storage';
 
-@Component({
-  /* ... */
-})
+@Component({/* ... */})
 export class Viewer {
   private readonly docs = inject(DocumentService);
   async download(id: string) {
@@ -143,7 +141,7 @@ _None._
 - `@angular/compiler-cli`: `21.2.20`
 - `@angular/core`: `21.2.20`
 - `@angular/platform-browser`: `21.2.20`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `jsdom`: `^29.0.2`
 - `ng-packagr`: `21.2.3`
 - `tslib`: `^2.8.1`

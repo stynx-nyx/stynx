@@ -96,9 +96,7 @@ export const routes: Routes = [
 ```ts
 import { ProfileService } from '@stynx-nyx/angular-profile';
 
-@Component({
-  /* ... */
-})
+@Component({/* ... */})
 export class DeleteAccount {
   private readonly profile = inject(ProfileService);
   async confirmDelete() {
@@ -159,7 +157,7 @@ _None._
 - `@angular/platform-browser`: `21.2.20`
 - `@angular/router`: `21.2.20`
 - `@stynx-nyx/sdk`: `workspace:*`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `jsdom`: `^29.0.2`
 - `ng-packagr`: `21.2.3`
 - `tslib`: `^2.8.1`
