@@ -63,7 +63,20 @@ export default [
     },
     processor: angularTemplatePlugin.processors['extract-inline-html'],
     rules: {
-      ...angularPlugin.configs.recommended.rules,
+      // angular-eslint 22 no longer ships flat configs on the plugin (they
+      // moved to the `angular-eslint` umbrella package). This is the v21
+      // `recommended` rule set spelled out, mirroring tools/eslint-config;
+      // v22's one addition (prefer-on-push-component-change-detection) is
+      // already enforced explicitly below.
+      '@angular-eslint/contextual-lifecycle': 'error',
+      '@angular-eslint/no-empty-lifecycle-method': 'error',
+      '@angular-eslint/no-inputs-metadata-property': 'error',
+      '@angular-eslint/no-output-native': 'error',
+      '@angular-eslint/no-outputs-metadata-property': 'error',
+      '@angular-eslint/prefer-inject': 'error',
+      '@angular-eslint/prefer-standalone': 'error',
+      '@angular-eslint/use-lifecycle-interface': 'warn',
+      '@angular-eslint/use-pipe-transform-interface': 'error',
       '@angular-eslint/component-class-suffix': 'error',
       '@angular-eslint/no-input-rename': 'error',
       '@angular-eslint/no-output-on-prefix': 'error',
@@ -80,7 +93,11 @@ export default [
       '@angular-eslint/template': angularTemplatePlugin,
     },
     rules: {
-      ...angularTemplatePlugin.configs.recommended.rules,
+      // v21 template `recommended` set, pinned explicitly; identical in v22.
+      '@angular-eslint/template/banana-in-box': 'error',
+      '@angular-eslint/template/eqeqeq': 'error',
+      '@angular-eslint/template/no-negated-async': 'error',
+      '@angular-eslint/template/prefer-control-flow': 'error',
       '@angular-eslint/template/click-events-have-key-events': 'warn',
     },
   },

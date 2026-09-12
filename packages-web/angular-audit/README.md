@@ -124,10 +124,10 @@ _None._
 
 ### Peer dependencies
 
-- `@angular/common`: `>=20.3.0 <22`
-- `@angular/core`: `>=20.3.0 <22`
-- `@angular/forms`: `>=20.3.0 <22`
-- `@angular/router`: `>=20.3.0 <22`
+- `@angular/common`: `>=22.0.0 <23`
+- `@angular/core`: `>=22.0.0 <23`
+- `@angular/forms`: `>=22.0.0 <23`
+- `@angular/router`: `>=22.0.0 <23`
 - `@stynx-nyx/angular`: `workspace:*`
 - `@stynx-nyx/angular-auth`: `workspace:*`
 - `@stynx-nyx/angular-i18n`: `workspace:*`
@@ -136,13 +136,13 @@ _None._
 
 ### Development-only dependencies
 
-- `@angular/common`: `21.2.20`
-- `@angular/compiler`: `21.2.20`
-- `@angular/compiler-cli`: `21.2.20`
-- `@angular/core`: `21.2.20`
-- `@angular/forms`: `21.2.20`
-- `@angular/platform-browser`: `21.2.20`
-- `@angular/router`: `21.2.20`
+- `@angular/common`: `22.0.1`
+- `@angular/compiler`: `22.0.1`
+- `@angular/compiler-cli`: `22.0.1`
+- `@angular/core`: `22.0.1`
+- `@angular/forms`: `22.0.1`
+- `@angular/platform-browser`: `22.0.1`
+- `@angular/router`: `22.0.1`
 - `@stynx-nyx/angular`: `workspace:*`
 - `@stynx-nyx/angular-auth`: `workspace:*`
 - `@stynx-nyx/angular-i18n`: `workspace:*`
@@ -150,8 +150,8 @@ _None._
 - `@stynx-nyx/sdk`: `workspace:*`
 - `@types/node`: `24.13.4`
 - `jsdom`: `^29.0.2`
-- `ng-packagr`: `21.2.3`
+- `ng-packagr`: `22.0.0`
 - `tslib`: `^2.8.1`
-- `typescript`: `5.9.3`
+- `typescript`: `6.0.3`
 
 <!-- stynx:generated-dependencies:end -->
