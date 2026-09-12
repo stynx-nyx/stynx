@@ -17,7 +17,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular.d.ts": "1cd460eaf3435bb8daa6b57c28382151b2cfa28ec22e07876eb21bfe929896a6"
+        "types/stynx-nyx-angular.d.ts": "00c9119be6696bfd9da612448385415a7d0f32b1037a53a28a2a6df44d85ab57"
       }
     },
     "@stynx-nyx/angular-audit": {
@@ -42,7 +42,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-audit-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-audit.d.ts": "35f9f301c6002e5e6f0ddd2ffcc76b16be89f1751b33d4abb1d414619ffb3449"
+        "types/stynx-nyx-angular-audit.d.ts": "7ddda762acae0ab1444ffb31723d2a67a06ebe619bb1a5316732e696c7353d96"
       }
     },
     "@stynx-nyx/angular-auth": {
@@ -67,7 +67,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-auth-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-auth.d.ts": "ea26d0e684e41f6c20b61b9fa636a4e5a3d8ba02493215ba3cf2386687ac6c13"
+        "types/stynx-nyx-angular-auth.d.ts": "60c5fb037c71d0158c20cadbaf1cadbdd317de984540a6e66cd7c2b2d879eb7c"
       }
     },
     "@stynx-nyx/angular-flow": {
@@ -92,7 +92,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-flow-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-flow.d.ts": "709301b1816e6333b7424398e02ad74696418839e7238af615e07eec9f1d6c6d"
+        "types/stynx-nyx-angular-flow.d.ts": "1eb7ceb2f9c6e6485e435971eb6986c3ff68ea0a52cb954b0be216de403a2b8f"
       }
     },
     "@stynx-nyx/angular-i18n": {
@@ -117,7 +117,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-i18n-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-i18n.d.ts": "256f3a7a9b10e23e46ba18836018e5760f5e90e7b279b4f2a6fa48f09c7f64b2"
+        "types/stynx-nyx-angular-i18n.d.ts": "afc6ca09cfddff22982b5927b4a17d399dc36cfdcb4774805d10ab57ebcce840"
       }
     },
     "@stynx-nyx/angular-iam": {
@@ -142,7 +142,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-iam-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-iam.d.ts": "4eeb19c972b2965af0a85bff9ba7cb313c85c56b19bd4ea2c1503ebcbc45bab2"
+        "types/stynx-nyx-angular-iam.d.ts": "2eccd7a1a482c692d3c3e43834726c47ae735a41af0fbc771589377b7d638cb5"
       }
     },
     "@stynx-nyx/angular-profile": {
@@ -167,7 +167,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-profile-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-profile.d.ts": "cb4781c7022aa6c4bc6590cf0944ac9fc37ae9ac7a70dc258726ab6a0aad1f2c"
+        "types/stynx-nyx-angular-profile.d.ts": "cf10c0c3988a34f04a5786d4645d23775f336ae218f5e6fb08343a74b640d30d"
       }
     },
     "@stynx-nyx/angular-sessions": {
@@ -192,7 +192,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-sessions-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-sessions.d.ts": "b46c7429c81b16a72bcc08bb31930321e0bf8ccaadee77c477cc92c584c9eefb"
+        "types/stynx-nyx-angular-sessions.d.ts": "a7ef9d190e8ae64181f06bedd177c8874fc808bbbd7e2ffafc0baed2ca7a7308"
       }
     },
     "@stynx-nyx/angular-storage": {
@@ -217,7 +217,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-storage-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-storage.d.ts": "cac4ae037f197f4ace7e06c2ed4eae84706d52e8659404360e53047259ccd05c"
+        "types/stynx-nyx-angular-storage.d.ts": "b39a7153e9c27477b50c9b80808c8a692b7f4af084172c3d2be64b6e188a7c96"
       }
     },
     "@stynx-nyx/angular-tenancy": {
@@ -242,7 +242,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-tenancy-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-tenancy.d.ts": "6d5cd977a0ceae8c0f63f3905139386625d036388148e9c6bf8b16ec45b7b5fb"
+        "types/stynx-nyx-angular-tenancy.d.ts": "c3ed1f17e57ecba87a7c910a42c23ed015f06aece18ada649aaaf7bb9fcfd0c4"
       }
     },
     "@stynx-nyx/angular-trash": {
@@ -267,7 +267,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-trash-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-trash.d.ts": "81a210809b9cd8ee3185aa531be7e897254e7d951d8c999ed1d25fe02b39a369"
+        "types/stynx-nyx-angular-trash.d.ts": "63556c7d4ec3b93bfbeaa9efdd82dfd283801e2a2e668abaa28d92b61b93c612"
       }
     },
     "@stynx-nyx/angular-ui": {
@@ -292,7 +292,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-ui-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-ui.d.ts": "a773f50f20b505476e471720e7367cf5eb5f893bc5e5557c531694f466454bd2"
+        "types/stynx-nyx-angular-ui.d.ts": "9e8c7b1339ac47cca075c1c8d7e6a6cea86821cc37c9605601ee7d33edcb2fdb"
       }
     },
     "@stynx-nyx/audit": {
@@ -2117,7 +2117,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-sdk-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-sdk.d.ts": "b3ccd9076eed10c8ef46ba9c32b82740ecbc57a649cc9d23c79496b88b78f50f"
+        "types/stynx-nyx-sdk.d.ts": "48178ce7721c12f2827d092f8cef98f6bdd7ee65c00785228656cc5f22d2c863"
       }
     },
     "@stynx-nyx/sessions": {

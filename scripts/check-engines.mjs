@@ -11,15 +11,15 @@ const nodeMajor = Number(process.versions.node.split('.')[0]);
 const packageManager = manifest.packageManager;
 
 const supported = {
-  angularPeer: '>=20.3.0 <22',
-  angularBuild: '21.2.20',
-  ngPackagr: '21.2.3',
+  angularPeer: '>=22.0.0 <23',
+  angularBuild: '22.1.6',
+  ngPackagr: '22.1.1',
   nestPeer: '^11.1.19',
   node: '>=24 <25',
   nodeTypes: '24.13.4',
   pnpm: '>=9 <10',
   packageManager: 'pnpm@9.15.0',
-  tsAngular: '5.9.3',
+  tsAngular: '6.0.3',
   tsNode: '^6.0.3',
 };
 
@@ -27,17 +27,16 @@ const supported = {
 // publishable dependency graph (packages/, packages-web/) and are allowed to
 // run ahead of the workspace-pinned @types/node / Angular TypeScript
 // versions so they can exercise forward compatibility. 2026-09 dependency
-// round: @types/node 25.9.3 (reference/api, test/db), reference/web
-// TypeScript 6.0.3 (within @angular/compiler-cli@21.2.20's supported
-// >=5.9 <6.1 peer range). test/packages stays on the 2026-07 pin.
+// round: @types/node 25.9.3 (reference/api, test/db); test/packages stays
+// on the 2026-07 pin. Angular 22 (compiler-cli peer typescript >=6.0 <6.1)
+// moved every Angular package to TypeScript 6.0.3, so reference/web no
+// longer needs a TypeScript exception; the map stays for the next round.
 const NODE_TYPES_EXCEPTIONS = {
   'reference/api/package.json': '25.9.3',
   'test/db/package.json': '25.9.3',
   'test/packages/package.json': '25.6.0',
 };
-const TS_ANGULAR_EXCEPTIONS = {
-  'reference/web/package.json': '6.0.3',
-};
+const TS_ANGULAR_EXCEPTIONS = {};
 
 const failures = [];
 if (expectedNode !== supported.node || nodeMajor !== 24) {

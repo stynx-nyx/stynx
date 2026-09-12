@@ -133,22 +133,22 @@ _None._
 
 ### Peer dependencies
 
-- `@angular/common`: `>=20.3.0 <22`
-- `@angular/core`: `>=20.3.0 <22`
-- `@angular/router`: `>=20.3.0 <22`
+- `@angular/common`: `>=22.0.0 <23`
+- `@angular/core`: `>=22.0.0 <23`
+- `@angular/router`: `>=22.0.0 <23`
 
 ### Development-only dependencies
 
-- `@angular/common`: `21.2.20`
-- `@angular/compiler`: `21.2.20`
-- `@angular/compiler-cli`: `21.2.20`
-- `@angular/core`: `21.2.20`
-- `@angular/platform-browser`: `21.2.20`
-- `@angular/router`: `21.2.20`
+- `@angular/common`: `22.1.6`
+- `@angular/compiler`: `22.1.6`
+- `@angular/compiler-cli`: `22.1.6`
+- `@angular/core`: `22.1.6`
+- `@angular/platform-browser`: `22.1.6`
+- `@angular/router`: `22.1.6`
 - `@types/node`: `24.13.4`
 - `jsdom`: `^29.0.2`
-- `ng-packagr`: `21.2.3`
+- `ng-packagr`: `22.1.1`
 - `tslib`: `^2.8.1`
-- `typescript`: `5.9.3`
+- `typescript`: `6.0.3`
 
 <!-- stynx:generated-dependencies:end -->
