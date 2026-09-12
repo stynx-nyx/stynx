@@ -5,9 +5,12 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
+import { registryVersionPolicyConstants } from './lib/registry-version-policy.mjs';
 
 const repoRoot = process.cwd();
-const version = '1.2.0';
+// The unified candidate version is bound once, in the registry version policy,
+// so the publication plan and the monotonicity check cannot disagree.
+const version = registryVersionPolicyConstants.candidate;
 const registry = 'https://npm.pkg.github.com';
 const artifactRoot = resolve(repoRoot, '.artifacts/publication');
 const tarballRoot = resolve(artifactRoot, 'tarballs');

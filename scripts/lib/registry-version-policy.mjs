@@ -4,8 +4,8 @@ import { resolve } from 'node:path';
 
 export const registryVersionPolicyConstants = Object.freeze({
   anomalyPolicyPath: 'law/policy/registry-version-anomalies.json',
-  anomalyPolicySha256: '01a0f6c90b917f18697c8a77e4dcf8cc3c63cbe5a402779e78534873cbdd79e3',
-  candidate: '1.2.0',
+  anomalyPolicySha256: '275c62e4dc34134138afff338e45cfb12866024fe958d8f4c5e9de54d9079ae2',
+  candidate: '1.3.0',
   canonicalMajor: 1,
   packageCount: 44,
   registryUrl: 'https://npm.pkg.github.com',
@@ -96,7 +96,10 @@ export function validateRegistryCensus({
   campaignPolicy,
 }) {
   if (candidate !== registryVersionPolicyConstants.candidate) {
-    fail('REGISTRY_CANDIDATE_UNSUPPORTED', 'only the Architect-approved 1.2.0 candidate is valid');
+    fail(
+      'REGISTRY_CANDIDATE_UNSUPPORTED',
+      `only the Architect-approved ${registryVersionPolicyConstants.candidate} candidate is valid`,
+    );
   }
   if (
     packageNames.length !== registryVersionPolicyConstants.packageCount ||
