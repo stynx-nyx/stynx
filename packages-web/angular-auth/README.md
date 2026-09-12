@@ -115,9 +115,7 @@ export const routes: Routes = [
 ```ts
 import { SessionService } from '@stynx-nyx/angular-auth';
 
-@Component({
-  /* ... */
-})
+@Component({/* ... */})
 export class Header {
   private readonly session = inject(SessionService);
   user = this.session.currentUser; // signal
@@ -181,7 +179,7 @@ _None._
 - `@angular/forms`: `21.2.20`
 - `@angular/platform-browser`: `21.2.20`
 - `@angular/router`: `21.2.20`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `jsdom`: `^29.0.2`
 - `ng-packagr`: `21.2.3`
 - `tslib`: `^2.8.1`

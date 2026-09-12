@@ -16,7 +16,7 @@ const supported = {
   ngPackagr: '21.2.3',
   nestPeer: '^11.1.19',
   node: '>=24 <25',
-  nodeTypes: '24.12.4',
+  nodeTypes: '24.13.4',
   pnpm: '>=9 <10',
   packageManager: 'pnpm@9.15.0',
   tsAngular: '5.9.3',

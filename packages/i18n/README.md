@@ -171,7 +171,7 @@ _None._
 - `@nestjs/testing`: `^11.1.26`
 - `@stynx-nyx/tenancy`: `workspace:*`
 - `@stynx-nyx/testing`: `workspace:*`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `@types/supertest`: `^7.2.0`
 - `supertest`: `^7.2.2`
 - `ts-node`: `^10.9.2`

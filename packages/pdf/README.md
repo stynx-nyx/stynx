@@ -191,7 +191,7 @@ _None._
 
 - `@nestjs/testing`: `^11.1.26`
 - `@stynx-nyx/signature`: `workspace:*`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `typescript`: `^6.0.3`
 
 <!-- stynx:generated-dependencies:end -->

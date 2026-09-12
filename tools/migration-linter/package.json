@@ -23,7 +23,7 @@
     "pg-query-emscripten": "^5.1.0"
   },
   "devDependencies": {
-    "@types/node": "24.12.4",
+    "@types/node": "24.13.4",
     "typescript": "^6.0.3"
   }
 }

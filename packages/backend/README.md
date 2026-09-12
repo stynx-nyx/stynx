@@ -194,6 +194,6 @@ _None._
 ### Development-only dependencies
 
 - `@nestjs/testing`: `^11.1.26`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 
 <!-- stynx:generated-dependencies:end -->

@@ -181,7 +181,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `redis`: `^5.12.1`
 - `reflect-metadata`: `^0.2.2`
 - `rxjs`: `^7.8.2`
-- `testcontainers`: `^11.14.0`
+- `testcontainers`: `^12.0.2`
 
 ### Optional dependencies
 
@@ -193,7 +193,7 @@ _None._
 
 ### Development-only dependencies
 
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `ts-node`: `^10.9.2`
 - `typescript`: `^6.0.3`
 

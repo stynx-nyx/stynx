@@ -28,7 +28,7 @@
     "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "devDependencies": {
-    "@types/node": "24.12.4",
+    "@types/node": "24.13.4",
     "typescript": "^6.0.3"
   },
   "repository": {

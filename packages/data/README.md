@@ -182,9 +182,9 @@ _None._
 ### Development-only dependencies
 
 - `@nestjs/testing`: `^11.1.26`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `@types/pg`: `^8.20.0`
-- `testcontainers`: `^11.14.0`
+- `testcontainers`: `^12.0.2`
 - `ts-node`: `^10.9.2`
 - `typescript`: `^6.0.3`
 

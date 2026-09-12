@@ -150,7 +150,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 ### Runtime dependencies
 
 - `@stynx-nyx/privacy`: `workspace:*`
-- `commander`: `^14.0.3`
+- `commander`: `^15.0.0`
 - `pg`: `^8.20.0`
 - `yaml`: `^2.8.3`
 
@@ -164,7 +164,7 @@ _None._
 
 ### Development-only dependencies
 
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `@types/pg`: `^8.20.0`
 - `typescript`: `^6.0.3`
 

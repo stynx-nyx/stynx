@@ -40,7 +40,7 @@ _None._
 - `@nestjs/platform-express`: `^11.1.26`
 - `@nestjs/testing`: `^11.1.26`
 - `@stynx-nyx/testing`: `workspace:*`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `ts-node`: `^10.9.2`
 - `typescript`: `^6.0.3`
 

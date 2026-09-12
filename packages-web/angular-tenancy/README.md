@@ -89,9 +89,7 @@ export const appConfig = { providers: [provideTenancy()] };
 ```ts
 import { TenantContextService } from '@stynx-nyx/angular-tenancy';
 
-@Component({
-  /* ... */
-})
+@Component({/* ... */})
 export class Dashboard {
   private readonly tenancy = inject(TenantContextService);
   tenant = this.tenancy.current; // signal
@@ -149,7 +147,7 @@ _None._
 - `@angular/core`: `21.2.20`
 - `@angular/forms`: `21.2.20`
 - `@angular/platform-browser`: `21.2.20`
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `jsdom`: `^29.0.2`
 - `ng-packagr`: `21.2.3`
 - `tslib`: `^2.8.1`

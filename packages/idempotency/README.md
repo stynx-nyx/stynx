@@ -166,7 +166,7 @@ _None._
 
 ### Development-only dependencies
 
-- `@types/node`: `24.12.4`
+- `@types/node`: `24.13.4`
 - `@types/supertest`: `^7.2.0`
 - `supertest`: `^7.2.2`
 - `typescript`: `^6.0.3`
