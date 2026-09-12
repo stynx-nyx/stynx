@@ -27,6 +27,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-PDF-A-CONFORMANCE — PDF/A-2b Conformance for STYNX PDF Output](ADR-PDF-A-CONFORMANCE.md)
 - [ADR-PDF-A-VALIDATOR-CONTRACT — PDF/A Validator Contract](ADR-PDF-A-VALIDATOR-CONTRACT.md)
 - [ADR-XMLDSIG-CONTRACT — XMLDSig Contract for `@stynx-nyx/signature`](ADR-XMLDSIG-CONTRACT.md)
+- [ADR-HARDENING-0001 — k6 baseline comparison on p95 and p99 with reference floors](2026-09-12-k6-baseline-comparison.md)
 
 ## Related RFCs
 
