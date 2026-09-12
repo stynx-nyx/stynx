@@ -176,17 +176,20 @@ export function createVitestConfig({
       // exports and so require() / import() resolve to the same module
       // instance (avoids CJS/ESM dual-class-identity issues with NestJS DI).
       server: { deps: { inline: [/@nestjs/, /@aws-sdk/, /@stynx-nyx\//, /@stynx-nyx\//] } },
+      // Vitest 4 removed `poolOptions.threads.singleThread` and `minWorkers`;
+      // the documented equivalent of the former is `maxWorkers: 1` with
+      // `isolate: false` on the threads pool (one worker thread, shared
+      // module graph), which is what these suites relied on under Vitest 3.
       ...(singleThread
         ? {
             fileParallelism: false,
             maxWorkers: 1,
-            minWorkers: 1,
             pool: 'threads',
-            poolOptions: { threads: { singleThread: true } },
+            isolate: false,
           }
         : {}),
       // Container-backed suites can require both serialization and a fresh
-      // process per file. Unlike threads.singleThread/singleFork, this keeps
+      // process per file. Unlike the single-thread form above, this keeps
       // one worker slot while allowing Vitest to recycle the isolated fork
       // between files, preventing a stopped Testcontainers lifecycle from
       // poisoning the next file.
@@ -194,7 +197,6 @@ export function createVitestConfig({
         ? {
             fileParallelism: false,
             maxWorkers: 1,
-            minWorkers: 1,
             pool: 'forks',
           }
         : {}),
@@ -205,6 +207,13 @@ export function createVitestConfig({
         reporter: ['text', 'json', 'lcov'],
         include: collectCoverageFrom,
         exclude: [
+          // Vitest 4 matches `coverage.include` anywhere in the absolute
+          // path and guards external files with a bare `startsWith(root)`,
+          // so a sibling package whose directory name extends this one
+          // (`packages-web/angular` -> `packages-web/angular-tenancy`) would
+          // leak into this package's population when its sources load
+          // through a workspace alias. Pin the population to this package.
+          `${packageDir.split(sep).join('/')}-*/**`,
           'src/generated/**',
           'src/main.ts',
           'src/**/*.module.ts',
