@@ -1,0 +1,11 @@
+{
+  "$comment": "Architect-owned reference floors for the k6 baseline comparison (law/adr/2026-09-12-k6-baseline-comparison.md). check-summary.mjs compares each tracked metric against max(previous successful main run, this floor) per statistic, so one unusually fast run cannot lower the bar below the documented steady state. Values are the maxima observed over the stable hardening runs of 2026-08-31 (33382745035), 2026-09-07 (34103083342) and 2026-09-11 (34645168917) on the 4-vCPU ubuntu-latest runner. Advance them deliberately, with the run ids, when the steady state changes.",
+  "observed_runs": ["33382745035", "34103083342", "34645168917"],
+  "metrics": {
+    "auth_verify_duration_ms": { "p(95)": 0.261, "p(99)": 0.318 },
+    "data_tx_overhead_ms": { "p(95)": 0.216, "p(99)": 0.239 },
+    "storage_presign_duration_ms": { "p(95)": 8.22, "p(99)": 10.57 },
+    "ratelimit_overhead_ms": { "p(95)": 0.15, "p(99)": 0.165 },
+    "idempotency_lookup_ms": { "p(95)": 0.148, "p(99)": 0.165 }
+  }
+}
