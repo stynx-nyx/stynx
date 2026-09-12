@@ -2,7 +2,7 @@
 
 > **Status:** V0 ✅ · V1 ✅ · V2 ✅ · V3 ✅ · V4 ✅ · V5 gate green — hardening window can begin · V6 partially landed · V7 pending
 > **Authority:** Engineer (configs, scripts), Architect (this doc).
-> **Last updated:** 2026-05-18
+> **Last updated:** 2026-09-12 (Vitest 4 runner adoption; content otherwise as of 2026-05-18)
 
 Parallel-adoption initiative: stand up Vitest alongside Jest across stynx, prove parity on a per-package basis, then cut over (V6) once the parity gate has been green for the V5 hardening window.
 
@@ -65,8 +65,8 @@ Used as `setupFiles` in `packages/{auth,core,sessions,testing}/jest.config.cjs`.
 
 ### Workspace dependencies (root devDependencies)
 
-- `vitest@^3`
-- `@vitest/coverage-v8@^3`
+- `vitest@^4` (4.1.11 pinned through `pnpm.overrides`; moved from the 3.x line on 2026-09-12)
+- `@vitest/coverage-v8@^4`
 - `unplugin-swc`
 - `@swc/core`
 
