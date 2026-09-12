@@ -35,7 +35,20 @@ import {
   unifiedRebaselineTarget,
 } from '../../scripts/lib/unified-rebaseline.mjs';
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
-import { classifyReleaseContext, ReleaseContextError } from '../../scripts/lib/release-context.mjs';
+import {
+  classifyReleaseContext,
+  releaseContextConstants,
+  ReleaseContextError,
+} from '../../scripts/lib/release-context.mjs';
+import {
+  applyFixedGroupVersion,
+  computeFixedGroupBump,
+  FixedGroupVersionError,
+  incrementVersion,
+  parseChangesetFrontmatter,
+  planFixedGroupVersion,
+  readPendingChangesets,
+} from '../../scripts/lib/fixed-group-version.mjs';
 import { typeOnlyCoverageExclusions } from '../../tools/repo-config/coverage-population.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
@@ -485,7 +498,10 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
   // the 1.2.0 rebaseline target stays historical.
   assert.equal(currentCandidate, '1.3.0');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
-  assert.equal(anomalyPolicy.owner_decision.supersedes.next_unified_version, unifiedRebaselineTarget);
+  assert.equal(
+    anomalyPolicy.owner_decision.supersedes.next_unified_version,
+    unifiedRebaselineTarget,
+  );
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');
   assert.equal(anomaly.version, '2.0.0');
@@ -615,7 +631,10 @@ test('one-time rebaseline deterministically updates the exact 44-package release
       join(fixture.root, 'packages', 'fixture-00', 'CHANGELOG.md'),
       'utf8',
     );
-    const targetHeading = new RegExp('^## ' + unifiedRebaselineTarget.split('.').join('\\.') + '$', 'gmu');
+    const targetHeading = new RegExp(
+      '^## ' + unifiedRebaselineTarget.split('.').join('\\.') + '$',
+      'gmu',
+    );
     assert.equal(changelog.match(targetHeading)?.length, 1);
     assert.match(changelog, /Unified Version Rebaseline/u);
     assert.match(changelog, /Preserve this unpublished historical note/u);
@@ -1133,4 +1152,208 @@ test('publication uses an ordered 44-package plan, durable per-package receipts,
   }
   assert.match(workflow, /candidate_sha.*40-character/su);
   assert.match(workflow, /44/u);
+});
+
+// Fixed-group version rule (see scripts/lib/fixed-group-version.mjs): the
+// release unit's next version is the current unified version advanced by the
+// highest bump type a pending changeset declares for a group member. Changesets'
+// peer-dependency inference, which reads `workspace:*` peers as the exact old
+// version and therefore promotes every minor to a major, is corrected after
+// `changeset version` has written its output.
+
+function createFixedGroupFixture({ version = '1.3.0', changesets = [] } = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'stynx-fixed-group-'));
+  const names = ['@stynx-nyx/fixture-core', '@stynx-nyx/fixture-auth', '@stynx-nyx/fixture-sdk'];
+  writeJson(join(root, 'package.json'), { name: 'stynx-workspace', private: true, version });
+  writeJson(join(root, '.changeset', 'config.json'), { fixed: [names] });
+  mkdirSync(join(root, 'packages-web'), { recursive: true });
+  for (const [index, name] of names.entries()) {
+    const directory = join(root, 'packages', name.split('/')[1]);
+    writeJson(join(directory, 'package.json'), {
+      name,
+      version,
+      peerDependencies: index === 0 ? undefined : { [names[0]]: 'workspace:*' },
+    });
+    writeFileSync(
+      join(directory, 'CHANGELOG.md'),
+      `# ${name}\n\n## ${version}\n\n- Existing history.\n`,
+    );
+  }
+  writeJson(join(root, 'tools', 'create-stynx-app', 'template', 'package.json'), {
+    name: 'consumer-template',
+    dependencies: { [names[0]]: `^${version}` },
+  });
+  for (const [file, body] of Object.entries(changesets)) {
+    writeFileSync(join(root, '.changeset', file), body);
+  }
+  return { root, names };
+}
+
+function assertFixedGroupError(callback, code) {
+  assert.throws(
+    callback,
+    (error) => error instanceof FixedGroupVersionError && error.code === code,
+    `expected ${code}`,
+  );
+}
+
+test('changeset frontmatter parsing accepts the workspace form and fails closed on anything else', () => {
+  const parsed = parseChangesetFrontmatter(
+    '---\n\'@stynx-nyx/core\': minor\n"@stynx-nyx/auth": patch\n---\n\nSummary line.\n',
+  );
+  assert.deepEqual(parsed.releases, [
+    { name: '@stynx-nyx/core', type: 'minor' },
+    { name: '@stynx-nyx/auth', type: 'patch' },
+  ]);
+  assert.equal(parsed.summary, 'Summary line.');
+  assertFixedGroupError(
+    () => parseChangesetFrontmatter("'@stynx-nyx/core': minor\n---\n"),
+    'CHANGESET_FRONTMATTER_MISSING',
+  );
+  assertFixedGroupError(
+    () => parseChangesetFrontmatter("---\n'@stynx-nyx/core': minor\n"),
+    'CHANGESET_FRONTMATTER_MISSING',
+  );
+  assertFixedGroupError(
+    () => parseChangesetFrontmatter("---\n'@stynx-nyx/core': breaking\n---\n"),
+    'CHANGESET_FRONTMATTER_MALFORMED',
+  );
+});
+
+test('fixed-group bump is the highest declared type for a member and never a peer-inferred major', () => {
+  const group = ['@stynx-nyx/core', '@stynx-nyx/auth'];
+  const minor = { releases: [{ name: '@stynx-nyx/core', type: 'minor' }] };
+  const patch = { releases: [{ name: '@stynx-nyx/auth', type: 'patch' }] };
+  const foreignMajor = { releases: [{ name: '@stynx-nyx/reference-api', type: 'major' }] };
+  assert.equal(computeFixedGroupBump([patch, minor, foreignMajor], group), 'minor');
+  assert.equal(computeFixedGroupBump([patch], group), 'patch');
+  assert.equal(
+    computeFixedGroupBump(
+      [{ releases: [{ name: '@stynx-nyx/core', type: 'major' }] }, patch],
+      group,
+    ),
+    'major',
+  );
+  assert.equal(computeFixedGroupBump([foreignMajor], group), null);
+  assert.equal(computeFixedGroupBump([], group), null);
+  assert.equal(incrementVersion('1.3.0', 'patch'), '1.3.1');
+  assert.equal(incrementVersion('1.3.0', 'minor'), '1.4.0');
+  assert.equal(incrementVersion('1.3.9', 'major'), '2.0.0');
+  assertFixedGroupError(() => incrementVersion('v1.3.0', 'patch'), 'VERSION_MALFORMED');
+  assertFixedGroupError(() => incrementVersion('1.3.0', 'premajor'), 'BUMP_UNSUPPORTED');
+});
+
+test('the version plan reads pending changesets and advances the unified version by the declared bump', () => {
+  const fixture = createFixedGroupFixture({
+    changesets: {
+      'a-minor.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nFeature.\n",
+      'b-patch.md': "---\n'@stynx-nyx/fixture-core': patch\n---\n\nFix.\n",
+      'README.md': '# not a changeset\n',
+    },
+  });
+  try {
+    const pending = readPendingChangesets(fixture.root);
+    assert.deepEqual(
+      pending.map(({ file }) => file),
+      ['.changeset/a-minor.md', '.changeset/b-patch.md'],
+    );
+    const plan = planFixedGroupVersion(fixture.root, { fixed: [fixture.names] });
+    assert.equal(plan.current, '1.3.0');
+    assert.equal(plan.bump, 'minor');
+    assert.equal(plan.expected, '1.4.0');
+    assert.deepEqual(plan.changesets, [
+      { file: '.changeset/a-minor.md', types: ['minor'] },
+      { file: '.changeset/b-patch.md', types: ['patch'] },
+    ]);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+
+  const idle = createFixedGroupFixture();
+  try {
+    const plan = planFixedGroupVersion(idle.root, { fixed: [idle.names] });
+    assert.equal(plan.bump, null);
+    assert.equal(plan.expected, '1.3.0');
+    assert.deepEqual(plan.changesets, []);
+    assertFixedGroupError(
+      () => planFixedGroupVersion(idle.root, { fixed: [idle.names.slice(1)] }),
+      'FIXED_GROUP_ROSTER_DRIFT',
+    );
+    assertFixedGroupError(
+      () => planFixedGroupVersion(idle.root, { fixed: [] }),
+      'FIXED_GROUP_UNSUPPORTED',
+    );
+  } finally {
+    rmSync(idle.root, { recursive: true, force: true });
+  }
+});
+
+test('an over-promoted generated version is rewritten in manifests and the new changelog section only', () => {
+  const fixture = createFixedGroupFixture();
+  try {
+    for (const name of fixture.names) {
+      const directory = join(fixture.root, 'packages', name.split('/')[1]);
+      const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'));
+      manifest.version = '2.0.0';
+      writeJson(join(directory, 'package.json'), manifest);
+      writeFileSync(
+        join(directory, 'CHANGELOG.md'),
+        `# ${name}\n\n## 2.0.0\n\n### Minor Changes\n\n- abc1234: Feature.\n\n### Patch Changes\n\n- Updated dependencies [abc1234]\n  - ${fixture.names[0]}@2.0.0\n  - @stynx-nyx/outside@2.0.0\n\n## 1.3.0\n\n- Existing history.\n`,
+      );
+    }
+    const result = applyFixedGroupVersion(fixture.root, { from: '2.0.0', to: '1.4.0' });
+    assert.deepEqual(result, { manifests: 3, changelogs: 3 });
+    for (const name of fixture.names) {
+      const directory = join(fixture.root, 'packages', name.split('/')[1]);
+      assert.equal(
+        JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')).version,
+        '1.4.0',
+      );
+      const changelog = readFileSync(join(directory, 'CHANGELOG.md'), 'utf8');
+      assert.match(changelog, /^## 1\.4\.0$/mu);
+      assert.doesNotMatch(changelog, /^## 2\.0\.0$/mu);
+      assert.match(
+        changelog,
+        new RegExp(`^ {2}- ${fixture.names[0].replace('/', '\\/')}@1\\.4\\.0$`, 'mu'),
+      );
+      assert.match(changelog, /^ {2}- @stynx-nyx\/outside@2\.0\.0$/mu);
+      assert.match(changelog, /^## 1\.3\.0$/mu);
+    }
+    assert.deepEqual(applyFixedGroupVersion(fixture.root, { from: '1.4.0', to: '1.4.0' }), {
+      manifests: 0,
+      changelogs: 0,
+    });
+    assertFixedGroupError(
+      () => applyFixedGroupVersion(fixture.root, { from: '2.0.0', to: '1.5.0' }),
+      'VERSION_NOT_UNIFIED',
+    );
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('the release unit is versioned by the fixed-group script and previews without writing', () => {
+  const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+  assert.equal(
+    rootManifest.scripts['version-packages'],
+    releaseContextConstants.versionPackagesCommand,
+  );
+  assert.equal(releaseContextConstants.versionPackagesCommand, 'node scripts/version-packages.mjs');
+  assert.equal(
+    rootManifest.scripts['release:preview'],
+    'node scripts/version-packages.mjs --preview',
+  );
+  const worktreeState = () =>
+    spawnSync('git', ['status', '--porcelain', '--', 'packages', 'packages-web', 'package.json'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).stdout;
+  const before = worktreeState();
+  const preview = spawnSync(process.execPath, ['scripts/version-packages.mjs', '--preview'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+  assert.equal(preview.status, 0, preview.stderr);
+  assert.match(preview.stdout, /\[version-packages\] (no pending changesets|fixed-group bump)/u);
+  assert.equal(worktreeState(), before);
 });
