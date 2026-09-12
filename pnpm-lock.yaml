@@ -2418,12 +2418,15 @@ importers:
 
   tools/image-size-safe:
     devDependencies:
+      '@types/node':
+        specifier: 24.13.4
+        version: 24.13.4
       tsup:
         specifier: 8.5.1
-        version: 8.5.1(@swc/core@1.16.2)(jiti@2.7.0)(postcss@8.5.26)(typescript@5.9.3)(yaml@2.9.0)
+        version: 8.5.1(@swc/core@1.16.2)(jiti@2.7.0)(postcss@8.5.26)(typescript@6.0.3)(yaml@2.9.0)
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 6.0.3
+        version: 6.0.3
 
   tools/migration-linter:
     dependencies:
@@ -25823,7 +25826,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.1(@swc/core@1.16.2)(jiti@2.7.0)(postcss@8.5.26)(typescript@5.9.3)(yaml@2.9.0):
+  tsup@8.5.1(@swc/core@1.16.2)(jiti@2.7.0)(postcss@8.5.26)(typescript@6.0.3)(yaml@2.9.0):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.28.1)
       cac: 6.7.14
@@ -25845,7 +25848,7 @@ snapshots:
     optionalDependencies:
       '@swc/core': 1.16.2
       postcss: 8.5.26
-      typescript: 5.9.3
+      typescript: 6.0.3
     transitivePeerDependencies:
       - jiti
       - supports-color
