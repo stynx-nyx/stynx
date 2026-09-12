@@ -1,5 +1,18 @@
 # @stynx-nyx/testing
 
+## 1.3.1
+
+### Patch Changes
+
+- 773ad90: Release tooling: the 1.3.0 CHANGELOG sections list sibling packages as `@2.0.0` under "Updated dependencies"; Changesets' peer-dependency inference had computed 2.0.0 before the version was corrected to 1.3.0 by hand. The references now read `@1.3.0`. The workspace `version-packages` script applies the fixed-group version rule from now on (the highest bump a changeset declares for a group member; a peer-inferred major is corrected in manifests and changelogs). No public API or runtime behaviour changes.
+- Updated dependencies [773ad90]
+  - @stynx-nyx/audit@1.3.1
+  - @stynx-nyx/auth@1.3.1
+  - @stynx-nyx/core@1.3.1
+  - @stynx-nyx/data@1.3.1
+  - @stynx-nyx/sessions@1.3.1
+  - @stynx-nyx/storage@1.3.1
+
 ## 1.3.0
 
 ### Minor Changes
