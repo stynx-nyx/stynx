@@ -10,7 +10,7 @@ STYNX supports one active framework line for MVP adopters.
 | ---------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
 | Node.js    | `>=24 <25`                                                                                                                  | `engines` + `pnpm check:engines`        |
 | pnpm       | `>=9 <10`                                                                                                                   | `packageManager` + `pnpm check:engines` |
-| Angular    | `>=22.0.0 <23`, tested on `22.0.1` (STYNX 1.3.x); `>=20.3.0 <22` on STYNX 1.2.x                                             | package peer deps + package tests       |
+| Angular    | `>=22.0.0 <23`, tested on `22.1.6` (STYNX 1.3.x); `>=20.3.0 <22` on STYNX 1.2.x                                             | package peer deps + package tests       |
 | NestJS     | `^11.1.19`                                                                                                                  | package manifests + consumer fixtures   |
 | TypeScript | `6.0.3` for Angular packages (required by `@angular/compiler-cli@22`); root tooling may use a newer compiler where required | package manifests + typecheck           |
 
