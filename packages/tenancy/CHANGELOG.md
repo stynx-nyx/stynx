@@ -21,10 +21,10 @@
 - Updated dependencies [e639fa0]
 - Updated dependencies [9df17e7]
 - Updated dependencies [1b41c89]
-  - @stynx-nyx/contracts@2.0.0
-  - @stynx-nyx/core@2.0.0
-  - @stynx-nyx/data@2.0.0
-  - @stynx-nyx/idempotency@2.0.0
+  - @stynx-nyx/contracts@1.3.0
+  - @stynx-nyx/core@1.3.0
+  - @stynx-nyx/data@1.3.0
+  - @stynx-nyx/idempotency@1.3.0
 
 ## 1.2.0
 
