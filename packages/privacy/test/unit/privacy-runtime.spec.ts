@@ -532,10 +532,11 @@ describe('privacy runtime helpers', () => {
   it('delegates privacy object store operations with configured defaults and overrides', async () => {
     const putObject = vi.fn(async () => undefined);
     const presignDownload = vi.fn(async () => 'https://download.example.test');
-    vi.mocked(StynxObjectStore).mockImplementation(() => ({
-      putObject,
-      presignDownload,
-    }) as never);
+    // `StynxObjectStore` is constructed with `new`; Vitest 4 rejects
+    // arrow-function mock implementations as constructors.
+    vi.mocked(StynxObjectStore).mockImplementation(function () {
+      return { putObject, presignDownload } as never;
+    });
 
     const service = new PrivacyObjectStoreService({
       environment: 'prod',
