@@ -20,14 +20,30 @@ const changesetConfig = JSON.parse(
 );
 const expectedLicense = rootManifest.license;
 const registryMode = process.argv.includes('--registry-monotonicity');
-const candidate = optionValue('--candidate');
+const candidateFromPolicy = process.argv.includes('--candidate-from-policy');
+const explicitCandidate = optionValue('--candidate');
+// The unified candidate is bound once, in registryVersionPolicyConstants and the
+// Architect-owned anomaly policy. `--candidate-from-policy` reads it from there
+// so the release workflow carries no per-release literal; an explicit
+// `--candidate` must agree with the policy and exists for local diagnostics.
+const candidate = candidateFromPolicy
+  ? registryVersionPolicyConstants.candidate
+  : explicitCandidate;
 
 if (registryMode && candidate === null) {
-  console.error('Release policy verification failed: --candidate is required in registry mode.');
+  console.error(
+    'Release policy verification failed: --candidate <version> or --candidate-from-policy is required in registry mode.',
+  );
   process.exit(1);
 }
-if (!registryMode && candidate !== null) {
+if (!registryMode && (candidate !== null || candidateFromPolicy)) {
   console.error('Release policy verification failed: --candidate requires registry mode.');
+  process.exit(1);
+}
+if (candidateFromPolicy && explicitCandidate !== null && explicitCandidate !== candidate) {
+  console.error(
+    `Release policy verification failed: --candidate ${explicitCandidate} disagrees with the policy candidate ${candidate}.`,
+  );
   process.exit(1);
 }
 
