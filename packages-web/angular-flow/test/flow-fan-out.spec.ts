@@ -272,6 +272,35 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
     expect(component.errorMessage()).toBe('dashboard down');
   });
 
+  it('drops a stale dashboard analytics failure once a newer load has settled', async () => {
+    let rejectFirst: (reason: unknown) => void = () => undefined;
+    const api = createApi();
+    (api.dashboardAnalytics as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(
+        new Promise((_resolve, reject) => {
+          rejectFirst = reject;
+        }),
+      )
+      .mockResolvedValueOnce({
+        openTasks: 3,
+        cycleTime: { p50Seconds: 1, p95Seconds: 2 },
+        completionRate: { last7Days: 0.5, last30Days: 0.75 },
+        slaBreaches: 0,
+      });
+    const component = createWithApi(api, () => new StynxFlowDashboardComponent());
+
+    const first = component.load();
+    const second = component.load();
+    await second;
+    expect(component.loading()).toBe(false);
+    rejectFirst(new Error('stale dashboard failure'));
+    await first;
+
+    expect(component.errorMessage()).toBe('');
+    expect(component.metrics()).toEqual(expect.objectContaining({ openTasks: 3, slaBreaches: 0 }));
+    expect(component.loading()).toBe(false);
+  });
+
   it('loads dashboard analytics with empty filters when inputs are unset', async () => {
     const api = createApi();
     const component = createWithApi(api, () => new StynxFlowDashboardComponent());
@@ -390,6 +419,36 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
 
     expect(api.listRunActivity).toHaveBeenNthCalledWith(1, 'run-1', { page: 1, pageSize: 10 });
     expect(api.listRunActivity).toHaveBeenNthCalledWith(2, 'run-1', { page: 2, pageSize: 10 });
+    expect(component.events()).toEqual([{ id: 'event-latest', runId: 'run-1', kind: 'approved' }]);
+    expect(component.hasNextPage()).toBe(false);
+    expect(component.loading()).toBe(false);
+  });
+
+  it('drops a stale run activity failure once a newer refresh has settled', async () => {
+    let rejectFirst: (reason: unknown) => void = () => undefined;
+    const api = createApi();
+    (api.listRunActivity as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(
+        new Promise((_resolve, reject) => {
+          rejectFirst = reject;
+        }),
+      )
+      .mockResolvedValueOnce({
+        data: [{ id: 'event-latest', runId: 'run-1', kind: 'approved' }],
+        meta: { page: 1, pageSize: 25, total: 1 },
+      });
+    const component = createWithApi(api, () => new StynxFlowRunActivityComponent());
+    component.runId = 'run-1';
+
+    const first = component.refresh();
+    const second = component.refresh();
+    await second;
+    expect(component.loading()).toBe(false);
+    rejectFirst(new Error('stale activity failure'));
+    await first;
+
+    expect(api.listRunActivity).toHaveBeenCalledTimes(2);
+    expect(component.errorMessage()).toBe('');
     expect(component.events()).toEqual([{ id: 'event-latest', runId: 'run-1', kind: 'approved' }]);
     expect(component.hasNextPage()).toBe(false);
     expect(component.loading()).toBe(false);
@@ -552,6 +611,41 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
         { questionId: 'signature', value: null },
       ]),
     );
+  });
+
+  it('clears a signature answer when the clear control is not inside a signature canvas shell', () => {
+    const component = new StynxFlowFillEditorComponent();
+    const emitted: unknown[] = [];
+    component.answer.subscribe((value) => emitted.push(value));
+    component.questions = [
+      {
+        id: 'signature',
+        formId: 'form-1',
+        key: 'signature',
+        label: 'Signature',
+        fieldType: 'signature',
+        required: false,
+        blocksSubmit: false,
+      },
+    ];
+    const question = component.questions[0]!;
+    component.setValue(question, 'data:image/png;base64,signature');
+    expect(component.textValue(question)).toBe('data:image/png;base64,signature');
+
+    const detachedButton = document.createElement('button');
+    component.clearSignature(question, { target: detachedButton } as never);
+    expect(component.textValue(question)).toBe('');
+
+    component.setValue(question, 'data:image/png;base64,again');
+    component.clearSignature(question, { target: null } as never);
+    expect(component.textValue(question)).toBe('');
+
+    expect(emitted).toEqual([
+      { questionId: 'signature', value: 'data:image/png;base64,signature' },
+      { questionId: 'signature', value: null },
+      { questionId: 'signature', value: 'data:image/png;base64,again' },
+      { questionId: 'signature', value: null },
+    ]);
   });
 
   it('wires provideStynxFlow for instance-backed and factory-backed package hosts', () => {

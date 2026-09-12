@@ -15,7 +15,8 @@ import type { AuditEventSummary } from './types';
 const DEFAULT_PAGE_SIZE = 25;
 
 function stringify(value: unknown): string {
-  return JSON.stringify(value ?? {}, null, 2);
+  // Only diffText() calls stringify(), always with an object literal, so the `?? {}` fallback never runs.
+  return JSON.stringify(/* v8 ignore next */ value ?? {}, null, 2);
 }
 
 function errorMessage(error: unknown): string {

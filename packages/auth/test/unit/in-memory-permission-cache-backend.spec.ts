@@ -30,6 +30,20 @@ describe('InMemoryPermissionCacheBackend edge branches', () => {
     await expect(backend.get('sid-1')).resolves.toBe(null);
   });
 
+  it('publish is a no-op until a subscriber is registered', async () => {
+    const backend = new InMemoryPermissionCacheBackend();
+    const seen: string[] = [];
+
+    await expect(backend.publish('user-1:tenant-1')).resolves.toBe(undefined);
+
+    await backend.subscribe(async (message) => {
+      seen.push(message);
+    });
+    await backend.publish('user-2:tenant-2');
+
+    expect(seen).toEqual(['user-2:tenant-2']);
+  });
+
   it('ignores tenant and user invalidation misses', async () => {
     const backend = new InMemoryPermissionCacheBackend();
 

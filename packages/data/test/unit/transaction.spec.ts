@@ -232,6 +232,20 @@ describe('Transaction', () => {
     ]);
   });
 
+  it('lists child ids through the registry child column query', async () => {
+    const { tx, client } = createTx();
+    client.query.mockResolvedValueOnce({ rows: [{ id: 'invoice-1' }, { id: 'invoice-2' }], rowCount: 2 });
+    const api = tx as unknown as {
+      listChildIds: (entry: typeof childRegistryEntry, parentId: string) => Promise<string[]>;
+    };
+
+    await expect(api.listChildIds(childRegistryEntry, 'customer-1')).resolves.toEqual(['invoice-1', 'invoice-2']);
+    expect(client.query).toHaveBeenCalledWith(
+      expect.stringMatching(/select id\s+from "demo"\."invoice"\s+where "customer_id" = \$1/u),
+      ['customer-1'],
+    );
+  });
+
   it('builds recursive cascade plans with exact row counts and depth limits', async () => {
     const { tx } = createTx();
     const api = tx as unknown as {

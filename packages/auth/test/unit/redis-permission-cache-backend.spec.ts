@@ -104,6 +104,106 @@ describe('RedisPermissionCacheBackend', () => {
     expect(handler).toHaveBeenCalledWith('u-1:t-1');
   });
 
+  it('swallows redis error events emitted by the client and subscriber created on init', async () => {
+    const clientHandlers = new Map<string, (error: unknown) => unknown>();
+    const subscriberHandlers = new Map<string, (error: unknown) => unknown>();
+    const subscriber = {
+      isOpen: false,
+      on: vi.fn((event: string, handler: (error: unknown) => unknown) => {
+        subscriberHandlers.set(event, handler);
+      }),
+      connect: vi.fn(async () => {
+        subscriber.isOpen = true;
+      }),
+      subscribe: vi.fn(async () => undefined),
+    };
+    const client = {
+      isOpen: false,
+      on: vi.fn((event: string, handler: (error: unknown) => unknown) => {
+        clientHandlers.set(event, handler);
+      }),
+      connect: vi.fn(async () => {
+        client.isOpen = true;
+      }),
+      duplicate: vi.fn(() => subscriber),
+    };
+    vi.mocked(createClient).mockReturnValue(client as never);
+    const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
+
+    await backend.onModuleInit();
+
+    expect([...clientHandlers.keys()]).toEqual(['error']);
+    expect([...subscriberHandlers.keys()]).toEqual(['error']);
+    expect(clientHandlers.get('error')?.(new Error('client connection lost'))).toBe(undefined);
+    expect(subscriberHandlers.get('error')?.(new Error('subscriber connection lost'))).toBe(undefined);
+    expect(subscriber.subscribe).toHaveBeenCalledTimes(0);
+  });
+
+  it('onModuleInit reuses an already-open client and only creates and connects the subscriber', async () => {
+    const subscriber = {
+      isOpen: false,
+      on: vi.fn(),
+      connect: vi.fn(async () => {
+        subscriber.isOpen = true;
+      }),
+      subscribe: vi.fn(async () => undefined),
+    };
+    const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
+    const client = attachClient(
+      backend,
+      makeClient({
+        isOpen: true,
+        on: vi.fn(),
+        connect: vi.fn(async () => undefined),
+        duplicate: vi.fn(() => subscriber),
+      }),
+    );
+
+    await backend.onModuleInit();
+
+    expect(client.duplicate).toHaveBeenCalledTimes(1);
+    expect(client.connect).toHaveBeenCalledTimes(0);
+    expect(subscriber.on).toHaveBeenCalledWith('error', expect.any(Function));
+    expect(subscriber.connect).toHaveBeenCalledTimes(1);
+    expect(subscriber.subscribe).toHaveBeenCalledTimes(0);
+    expect((backend as unknown as { subscriber?: unknown }).subscriber).toBe(subscriber);
+  });
+
+  it('onModuleInit reuses an already-open subscriber and only connects the client', async () => {
+    const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
+    const client = attachClient(
+      backend,
+      makeClient({
+        isOpen: false,
+        on: vi.fn(),
+        connect: vi.fn(async () => {
+          client.isOpen = true;
+        }),
+        duplicate: vi.fn(),
+      }),
+    );
+    let subscribed: ((message: string) => void) | undefined;
+    const subscriber = attachSubscriber(backend, {
+      isOpen: true,
+      on: vi.fn(),
+      connect: vi.fn(async () => undefined),
+      subscribe: vi.fn(async (_channel: string, callback: (message: string) => void) => {
+        subscribed = callback;
+      }),
+    });
+    const handler = vi.fn(async () => undefined);
+    (backend as unknown as { onMessage?: unknown }).onMessage = handler;
+
+    await backend.onModuleInit();
+    subscribed?.('u-3:t-3');
+
+    expect(client.duplicate).toHaveBeenCalledTimes(0);
+    expect(client.connect).toHaveBeenCalledTimes(1);
+    expect(subscriber.connect).toHaveBeenCalledTimes(0);
+    expect(subscriber.subscribe).toHaveBeenCalledWith('permission-invalidation', expect.any(Function));
+    expect(handler).toHaveBeenCalledWith('u-3:t-3');
+  });
+
   it('subscribes immediately when a subscriber client is already attached', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
     let callback: ((message: string) => void) | undefined;
@@ -300,6 +400,29 @@ describe('RedisPermissionCacheBackend', () => {
     );
     await backend.invalidateScope('*:*');
     expect(multi.exec).toHaveBeenCalledTimes(1);
+  });
+
+  it('invalidateScope skips scanned keys that carry no sid suffix', async () => {
+    const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
+    const { multi } = makeMulti();
+
+    async function* scanGen() {
+      yield ['auth:perms:'];
+    }
+
+    const client = attachClient(
+      backend,
+      makeClient({
+        scanIterator: vi.fn(() => scanGen()) as never,
+        multi: vi.fn(() => multi),
+      }),
+    );
+    await backend.invalidateScope('*:*');
+
+    expect(client.scanIterator).toHaveBeenCalledWith({ MATCH: 'auth:perms:*' });
+    expect(client.get).toHaveBeenCalledTimes(0);
+    expect(client.multi).toHaveBeenCalledTimes(0);
+    expect(multi.exec).toHaveBeenCalledTimes(0);
   });
 
   it('subscribe records the handler and re-subscribes when subscriber is present', async () => {

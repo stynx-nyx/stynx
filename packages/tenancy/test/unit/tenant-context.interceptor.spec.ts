@@ -152,6 +152,22 @@ describe('TenantContextInterceptor', () => {
     expect(received).toBe(error);
   });
 
+  it('forwards tenant resolution failures to the subscriber without running the handler', async () => {
+    const { interceptor, requestContextMutator } = createInterceptor();
+    const handle = vi.fn();
+    const next = { handle } as unknown as CallHandler;
+
+    const received = await new Promise<unknown>((resolve) => {
+      interceptor
+        .intercept(createExecutionContext({ headers: {}, originalUrl: '/records' }), next)
+        .subscribe({ error: resolve });
+    });
+
+    expect(received).toBeInstanceOf(BadRequestException);
+    expect(handle).not.toHaveBeenCalled();
+    expect(requestContextMutator.runWithRequestContext).not.toHaveBeenCalled();
+  });
+
   it('rejects missing tenant context and mismatched header/claim pairs', async () => {
     const { interceptor } = createInterceptor();
 

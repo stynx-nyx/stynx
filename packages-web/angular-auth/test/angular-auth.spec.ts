@@ -630,6 +630,82 @@ describe('@stynx-nyx/angular-auth', () => {
     );
   });
 
+  it('clears the session and logs off OIDC even when the backend logout rejects', async () => {
+    let logoffCalls = 0;
+    let backendLogoutCalls = 0;
+    const tenantContext = createTenantContext({}, null);
+    const service = createSessionService(
+      tenantContext,
+      {
+        checkAuth: async () => ({
+          isAuthenticated: true,
+          accessToken: createJwt({ sub: 'oidc-sub' }),
+          idToken: '',
+          userData: {},
+          configId: 'default',
+        }),
+        authorize: () => undefined,
+        logoff: async () => {
+          logoffCalls += 1;
+        },
+        forceRefreshSession: async () => {
+          throw new Error('not used');
+        },
+      },
+      {
+        exchangeCognitoToken: async (_token, tenantId) => ({
+          sid: `sid-${tenantId}`,
+          accessToken: createJwt({
+            sub: 'user-1',
+            tenant_id: tenantId,
+            scope: 'document:read:*',
+          }),
+          accessTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          refreshToken: `refresh-${tenantId}`,
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+          idleExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+        }),
+        switchTenant: async () => {
+          throw new Error('not used');
+        },
+        logout: async () => {
+          backendLogoutCalls += 1;
+          throw new Error('backend logout unavailable');
+        },
+      },
+      {
+        oidc: {
+          authority: 'https://issuer.example.test',
+          clientId: 'client-id',
+          redirectUrl: 'https://app.example.test/login/callback',
+          postLogoutRedirectUri: 'https://app.example.test',
+          scope: 'openid profile email offline_access',
+          responseType: 'code',
+          silentRenew: true,
+          useRefreshToken: true,
+        },
+      },
+    );
+
+    await service.completeLogin('https://app.example.test/callback?tenantId=tenant-url');
+    expect(service.snapshot().active).toBe(true);
+    expect(service.snapshot().accessToken).toMatch(/\./u);
+
+    await expect(service.logout()).resolves.toBe(undefined);
+
+    expect(backendLogoutCalls).toBe(1);
+    expect(logoffCalls).toBe(1);
+    expect(service.snapshot()).toEqual({
+      active: false,
+      accessToken: null,
+      refreshToken: null,
+      sid: null,
+      permissions: [],
+      tenantId: null,
+      claims: null,
+    });
+  });
+
   it('parses JWT payloads and persists refresh tokens in storage and cookies', () => {
     const token = createJwt({ permissions: ['a', 'b'], scope: 'ignored' });
     expect(normalizePermissions(parseJwtPayload(token))).toEqual(['a', 'b']);

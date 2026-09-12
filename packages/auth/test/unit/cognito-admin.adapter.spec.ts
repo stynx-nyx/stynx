@@ -213,6 +213,25 @@ describe('CognitoIdentityAdminAdapter', () => {
     });
   });
 
+  it('getUser drops attributes that carry no Name', async () => {
+    const send = vi.fn(async () => ({
+      Username: 'alice',
+      Enabled: true,
+      UserAttributes: [
+        { Value: 'orphan-value' },
+        { Name: 'email', Value: 'a@b' },
+      ],
+    }));
+    const adapter = makeAdapter(send);
+
+    await expect(adapter.getUser('alice')).resolves.toEqual({
+      username: 'alice',
+      enabled: true,
+      email: 'a@b',
+      attributes: { email: 'a@b' },
+    });
+  });
+
   it('getUserBySubject lists users by sub filter then fetches details', async () => {
     const send = vi
       .fn()

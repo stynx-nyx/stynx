@@ -19,6 +19,18 @@ describe('audit test helpers', () => {
     ]);
   });
 
+  it('expectAuditRow resolves once a matching audit row exists', async () => {
+    const db = queryable([{ id: 7, tags: { source: 'unit' } }]);
+
+    await expect(expectAuditRow(db, { operation: 'insert', tags: { source: 'unit' } })).resolves.toBe(undefined);
+    expect(db.query).toHaveBeenCalledWith(expect.stringContaining('from audit.log'), [
+      'insert',
+      null,
+      null,
+      null,
+    ]);
+  });
+
   it('filters rows by tag subset and reports missing audit rows', async () => {
     const db = queryable([
       { id: 1, tags: null },

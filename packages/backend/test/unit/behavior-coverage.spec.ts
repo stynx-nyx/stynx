@@ -1068,6 +1068,72 @@ describe('backend idempotency behavior', () => {
     interceptor.onModuleDestroy();
   });
 
+  it('sweeps expired local cache entries on the scheduled cleanup interval', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-26T12:00:00.000Z'));
+    const interceptor = new IdempotencyInterceptor({ cacheCleanupMs: 1_000 });
+    const cache = (interceptor as unknown as { cache: Map<string, { expiresAt: number }> }).cache;
+    try {
+      cache.set('expired', { expiresAt: Date.now() + 500 });
+      cache.set('fresh', { expiresAt: Date.now() + 5_000 });
+
+      vi.advanceTimersByTime(999);
+      expect([...cache.keys()]).toEqual(['expired', 'fresh']);
+
+      vi.advanceTimersByTime(1);
+      expect([...cache.keys()]).toEqual(['fresh']);
+
+      vi.advanceTimersByTime(4_000);
+      expect([...cache.keys()]).toEqual([]);
+    } finally {
+      interceptor.onModuleDestroy();
+      vi.useRealTimers();
+    }
+  });
+
+  it('waits for a still-pending reservation discovered after losing the durable reservation race', async () => {
+    const pendingRaceStore: IdempotencyStore = {
+      lookup: vi.fn()
+        .mockResolvedValueOnce(null)
+        .mockImplementationOnce(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: null,
+          body: null,
+          expiresAt: Date.now() + 1000,
+        }))
+        .mockImplementationOnce(async (ctx) => ({
+          requestFingerprint: ctx.requestFingerprint,
+          statusCode: 207,
+          body: { settled: true },
+          expiresAt: Date.now() + 1000,
+        })),
+      reserve: vi.fn(async () => false),
+      persistResponse: vi.fn(async () => true),
+      clearReservation: vi.fn(async () => undefined),
+    };
+    const pendingRaceResponse = responseStub();
+    const handle = vi.fn(() => of({ unused: true }));
+
+    await expect(lastValueFrom(new IdempotencyInterceptor({
+      waitAttempts: 1,
+      waitIntervalMs: 0,
+    }, pendingRaceStore).intercept(
+      httpContextWithResponse({
+        method: 'POST',
+        tenantId: 'tenant-1',
+        headers: { 'x-idempotency-key': 'pending-race' },
+        url: '/pending-race',
+      }, pendingRaceResponse) as never,
+      { handle },
+    ))).resolves.toEqual({ settled: true });
+
+    expect(pendingRaceStore.lookup).toHaveBeenCalledTimes(3);
+    expect(pendingRaceStore.reserve).toHaveBeenCalledTimes(1);
+    expect(handle).toHaveBeenCalledTimes(0);
+    expect(pendingRaceResponse.status).toHaveBeenCalledWith(207);
+    expect(pendingRaceResponse.setHeader).toHaveBeenCalledWith('X-Idempotency-Replay', 'true');
+  });
+
   it('describes branch: durable replay/cache paths default status codes', async () => {
     const replayStore: IdempotencyStore = {
       lookup: vi.fn(async (ctx) => ({

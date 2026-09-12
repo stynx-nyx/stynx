@@ -4,6 +4,7 @@ import {
   Injector,
   runInInjectionContext,
 } from '@angular/core';
+import type { Route } from '@angular/router';
 import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { firstValueFrom } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
@@ -266,5 +267,24 @@ describe('@stynx-nyx/angular-audit', () => {
       'audit.routes.entityHistory',
     ]);
     expect(second.every((route) => route.canActivate?.length === 1)).toBe(true);
+  });
+
+  it('clones host-appended routes without inventing guards or route data', () => {
+    const hostRoute: Route = { path: 'exports', redirectTo: '' };
+    AUDIT_ROUTES.push(hostRoute);
+    try {
+      const cloned = auditRoutes().at(-1);
+
+      expect(auditRoutes()).toHaveLength(AUDIT_ROUTES.length);
+      expect(cloned).toEqual({ path: 'exports', redirectTo: '' });
+      expect(cloned).not.toBe(hostRoute);
+      expect(cloned?.canActivate).toBe(undefined);
+      expect(cloned?.data).toBe(undefined);
+    } finally {
+      AUDIT_ROUTES.pop();
+    }
+
+    expect(AUDIT_ROUTES).toHaveLength(3);
+    expect(auditRoutes().every((route) => route.canActivate?.length === 1)).toBe(true);
   });
 });

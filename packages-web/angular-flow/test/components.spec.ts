@@ -617,6 +617,55 @@ describe('@stynx-nyx/angular-flow components', () => {
     expect(component.loading()).toBe(false);
   });
 
+  it('ignores stale my-tasks results and failures once a newer refresh has settled', async () => {
+    let resolveFirst: (value: Awaited<ReturnType<FlowApiService['listTasks']>>) => void = () => undefined;
+    let rejectThird: (reason: unknown) => void = () => undefined;
+    const api = createApi();
+    const latest: Awaited<ReturnType<FlowApiService['listTasks']>> = {
+      data: [
+        {
+          id: 'task-latest',
+          runId: 'run-1',
+          nodeRunId: 'nr-1',
+          nodeId: 'node-1',
+          assigneeType: 'user',
+          status: 'open',
+          allowedActions: ['approve'],
+        },
+      ],
+      meta: { page: 1, pageSize: 50, total: 1 },
+    };
+    (api.listTasks as Mock)
+      .mockReturnValueOnce(new Promise((resolve) => { resolveFirst = resolve; }))
+      .mockResolvedValueOnce(latest)
+      .mockReturnValueOnce(new Promise((_resolve, reject) => { rejectThird = reject; }))
+      .mockResolvedValueOnce(latest);
+    const component = createWithApi(api, () => new StynxFlowMyTasksInboxComponent());
+
+    const first = component.refresh();
+    const second = component.refresh();
+    await second;
+    expect(component.loading()).toBe(false);
+    resolveFirst({
+      data: [{ ...latest.data[0]!, id: 'task-stale' }],
+      meta: { page: 1, pageSize: 50, total: 1 },
+    });
+    await first;
+    expect(component.tasks().map((task) => task.id)).toEqual(['task-latest']);
+    expect(component.loading()).toBe(false);
+
+    const third = component.refresh();
+    const fourth = component.refresh();
+    await fourth;
+    expect(component.loading()).toBe(false);
+    rejectThird(new Error('stale tasks failure'));
+    await third;
+    expect(component.errorMessage()).toBe('');
+    expect(component.tasks().map((task) => task.id)).toEqual(['task-latest']);
+    expect(component.loading()).toBe(false);
+    expect(api.listTasks).toHaveBeenCalledTimes(4);
+  });
+
   it('polls my tasks only while the component is active', async () => {
     vi.useFakeTimers();
     try {

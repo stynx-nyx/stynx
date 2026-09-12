@@ -187,6 +187,27 @@ describe('IntegrationAdapter', () => {
     await expect(timeout.execute({})).rejects.toThrow('timed out after 1ms');
   });
 
+  it('surfaces a timer scheduling failure without clearing an unset timeout', async () => {
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementationOnce(() => {
+      throw new Error('timer unavailable');
+    });
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    try {
+      const adapter = new IntegrationAdapter({
+        name: 'unschedulable-provider',
+        request: () => new Promise(() => undefined),
+        parseResponse: (raw) => raw,
+        timeoutMs: 5,
+      });
+      await expect(adapter.execute({})).rejects.toThrow('timer unavailable');
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 5);
+      expect(clearTimeoutSpy).not.toHaveBeenCalled();
+    } finally {
+      setTimeoutSpy.mockRestore();
+      clearTimeoutSpy.mockRestore();
+    }
+  });
+
   it('records successful keyed calls and emits circuit-open and idempotency-hit telemetry', async () => {
     const events: IntegrationTelemetryEvent[] = [];
     const breaker = new InMemoryCircuitBreaker(

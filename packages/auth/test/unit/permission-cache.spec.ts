@@ -682,6 +682,123 @@ describe('PermissionCache', () => {
     expect(invalidateScope).toHaveBeenLastCalledWith('user-a:*');
   });
 
+  it('operates fully in memory when no cache backend is configured', async () => {
+    const queries = {
+      resolveForUser: vi.fn().mockResolvedValue({
+        membershipId: 'membership-db',
+        permissions: ['document:write:*'],
+        hash: 'hash-db',
+        generation: 2,
+      }),
+      probeHash: vi.fn().mockResolvedValue({ hash: 'hash-read', generation: 1 }),
+    } as unknown as PermissionQueryService;
+    const metrics = new PermissionCacheMetrics();
+    const cache = new PermissionCache(
+      {
+        stynx: { issuer: 'https://stynx.test' },
+        permissions: { dbFallbackOnRedisDown: true },
+      },
+      null,
+      queries,
+      metrics,
+    );
+    const internals = cache as unknown as {
+      handleInvalidation(message: string): Promise<void>;
+      resyncTimer: unknown;
+    };
+    const primeRecord = (sid: string, userId: string, tenantId: string) =>
+      cache.prime(
+        {
+          sid,
+          userId,
+          tenantId,
+          membershipId: `membership-${userId}`,
+          permissions: ['document:read:*'],
+          hash: 'hash-read',
+          generation: 1,
+          computedAt: Date.now(),
+        },
+        new Date(Date.now() + 60_000).toISOString(),
+      );
+
+    await cache.onModuleInit();
+    expect(internals.resyncTimer).toBe(undefined);
+
+    await primeRecord('sid-direct', 'user-1', 'tenant-1');
+    await cache.invalidateSid('sid-direct');
+    await expect(cache.inspectSid('sid-direct')).resolves.toBe(null);
+
+    await primeRecord('sid-scoped', 'user-1', 'tenant-1');
+    await primeRecord('sid-other', 'user-2', 'tenant-1');
+    await internals.handleInvalidation('user-1:tenant-1');
+    await expect(cache.inspectSid('sid-scoped')).resolves.toBe(null);
+    await expect(cache.inspectSid('sid-other')).resolves.toMatchObject({ sid: 'sid-other' });
+
+    await internals.handleInvalidation('*:*');
+    await expect(cache.inspectSid('sid-other')).resolves.toBe(null);
+
+    await expect(cache.getForSession({
+      sid: 'sid-scoped',
+      sub: 'user-1',
+      tenantId: 'tenant-1',
+      permsHash: 'hash-read',
+      claims: {},
+    })).resolves.toMatchObject({ sid: 'sid-scoped', hash: 'hash-db', permissions: ['document:write:*'] });
+    expect(queries.resolveForUser).toHaveBeenCalledWith('user-1', 'tenant-1');
+    expect(metrics.snapshot()).toEqual({ in_memory: 0, redis: 0, db: 1 });
+
+    await expect(cache.onModuleDestroy()).resolves.toBe(undefined);
+  });
+
+  it('recomputes when the backend record matches the token hash but the hash probe detects drift', async () => {
+    const backend = new InMemoryPermissionCacheBackend();
+    const queries = {
+      resolveForUser: vi.fn().mockResolvedValue({
+        membershipId: 'membership-fresh',
+        permissions: ['document:write:*'],
+        hash: 'fresh-hash',
+        generation: 2,
+      }),
+      probeHash: vi.fn().mockResolvedValue({ hash: 'fresh-hash', generation: 2 }),
+    } as unknown as PermissionQueryService;
+    const metrics = new PermissionCacheMetrics();
+    const cache = new PermissionCache(
+      {
+        stynx: { issuer: 'https://stynx.test' },
+        permissions: { dbFallbackOnRedisDown: true },
+      },
+      backend,
+      queries,
+      metrics,
+    );
+
+    await backend.set({
+      sid: 'sid-redis-drift',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      membershipId: 'membership-old',
+      permissions: ['document:read:*'],
+      hash: 'old-hash',
+      generation: 1,
+      computedAt: Date.now(),
+    });
+
+    await expect(
+      cache.getForSession({
+        sid: 'sid-redis-drift',
+        sub: 'user-1',
+        tenantId: 'tenant-1',
+        permsHash: 'old-hash',
+        claims: {},
+      }),
+    ).resolves.toMatchObject({ hash: 'fresh-hash', permissions: ['document:write:*'], generation: 2 });
+
+    expect(queries.probeHash).toHaveBeenCalledWith('user-1', 'tenant-1');
+    expect(queries.resolveForUser).toHaveBeenCalledWith('user-1', 'tenant-1');
+    expect(metrics.snapshot()).toEqual({ in_memory: 0, redis: 0, db: 1 });
+    await expect(backend.get('sid-redis-drift')).resolves.toMatchObject({ hash: 'fresh-hash' });
+  });
+
   it('closes the backend on module destroy', async () => {
     const backend = new InMemoryPermissionCacheBackend();
     const closeSpy = vi.spyOn(backend, 'close');
@@ -801,6 +918,69 @@ describe('PermissionCache', () => {
 
       await expect(cache.inspectSid('sid-resync-fail')).resolves.toMatchObject({
         membershipId: 'membership-stale',
+      });
+    } finally {
+      await cache.onModuleDestroy();
+      vi.useRealTimers();
+    }
+  });
+
+  it('leaves in-memory entries alone while they are fresher than the drift re-sync interval', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-26T12:00:00.000Z'));
+
+    const queries = {
+      resolveForUser: vi.fn().mockResolvedValue({
+        membershipId: 'membership-fresh',
+        permissions: ['document:write:*'],
+        hash: 'fresh-hash',
+        generation: 2,
+      }),
+      probeHash: vi.fn(),
+    } as unknown as PermissionQueryService;
+    const cache = new PermissionCache(
+      {
+        stynx: { issuer: 'https://stynx.test' },
+        permissions: {
+          dbFallbackOnRedisDown: true,
+          driftResyncIntervalMs: 100,
+        },
+      },
+      new InMemoryPermissionCacheBackend(),
+      queries,
+      new PermissionCacheMetrics(),
+    );
+
+    try {
+      await cache.onModuleInit();
+      await vi.advanceTimersByTimeAsync(50);
+      await cache.prime(
+        {
+          sid: 'sid-fresh',
+          userId: 'user-1',
+          tenantId: 'tenant-1',
+          membershipId: 'membership-current',
+          permissions: ['document:read:*'],
+          hash: 'current-hash',
+          generation: 1,
+          computedAt: Date.now(),
+        },
+        new Date(Date.now() + 60_000).toISOString(),
+      );
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(queries.resolveForUser).toHaveBeenCalledTimes(0);
+      await expect(cache.inspectSid('sid-fresh')).resolves.toMatchObject({
+        membershipId: 'membership-current',
+        hash: 'current-hash',
+      });
+
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(queries.resolveForUser).toHaveBeenCalledWith('user-1', 'tenant-1');
+      await expect(cache.inspectSid('sid-fresh')).resolves.toMatchObject({
+        membershipId: 'membership-fresh',
+        hash: 'fresh-hash',
       });
     } finally {
       await cache.onModuleDestroy();

@@ -30,6 +30,7 @@ function cloneRoute(route: Route): Route {
   if (route.canDeactivate) {
     cloned.canDeactivate = [...route.canDeactivate];
   }
+  /* v8 ignore else -- every PROFILE_ROUTES entry declares data, so cloneRoute never receives a route without it */
   if (route.data) {
     cloned.data = { ...route.data };
   }
