@@ -1,5 +1,4 @@
 ---
-
 '@stynx-nyx/angular': patch
 '@stynx-nyx/angular-audit': patch
 '@stynx-nyx/angular-auth': patch
@@ -44,4 +43,6 @@
 '@stynx-nyx/tenancy': patch
 '@stynx-nyx/testing': patch
 '@stynx-nyx/worklist': patch
+---
+
 Dependency round 2026-09 (test runner): the workspace test runner moves from vitest 3.2.7 to vitest 4.1.11 with @vitest/coverage-v8 4.1.11. Test-only change: the shared Vitest base config adopts the Vitest 4 pool options (`maxWorkers: 1` + `isolate: false` replaces `poolOptions.threads.singleThread`; `minWorkers` is dropped) with the same single-thread and per-file-fork behaviour, pins each package's coverage population to its own directory (Vitest 4 otherwise lets a sibling package whose directory name extends the current one leak into the report), and constructor mocks in four specs move to `function` implementations. Coverage thresholds are unchanged; the more accurate Vitest 4 remapping exposed previously uncounted gaps, which are closed by additional unit tests. No public API or runtime behaviour changes.
