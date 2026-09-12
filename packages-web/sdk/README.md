@@ -127,11 +127,11 @@ _None._
 
 ### Development-only dependencies
 
-- `@angular/compiler`: `22.0.1`
-- `@angular/compiler-cli`: `22.0.1`
+- `@angular/compiler`: `22.1.6`
+- `@angular/compiler-cli`: `22.1.6`
 - `@stynx-nyx/core`: `workspace:*`
 - `@types/node`: `24.13.4`
-- `ng-packagr`: `22.0.0`
+- `ng-packagr`: `22.1.1`
 - `openapi-typescript-codegen`: `^0.30.0`
 - `tslib`: `^2.8.1`
 - `typescript`: `6.0.3`

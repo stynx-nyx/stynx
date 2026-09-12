@@ -149,17 +149,17 @@ _None._
 
 ### Development-only dependencies
 
-- `@angular/common`: `22.0.1`
-- `@angular/compiler`: `22.0.1`
-- `@angular/compiler-cli`: `22.0.1`
-- `@angular/core`: `22.0.1`
-- `@angular/forms`: `22.0.1`
-- `@angular/platform-browser`: `22.0.1`
-- `@angular/router`: `22.0.1`
+- `@angular/common`: `22.1.6`
+- `@angular/compiler`: `22.1.6`
+- `@angular/compiler-cli`: `22.1.6`
+- `@angular/core`: `22.1.6`
+- `@angular/forms`: `22.1.6`
+- `@angular/platform-browser`: `22.1.6`
+- `@angular/router`: `22.1.6`
 - `@stynx-nyx/sdk`: `workspace:*`
 - `@types/node`: `24.13.4`
 - `jsdom`: `^29.0.2`
-- `ng-packagr`: `22.0.0`
+- `ng-packagr`: `22.1.1`
 - `tslib`: `^2.8.1`
 - `typescript`: `6.0.3`
 
