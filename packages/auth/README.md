@@ -242,7 +242,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/idempotency`: `workspace:*`
 - `@stynx-nyx/sessions`: `workspace:*`
 - `jose`: `^6.2.2`
-- `redis`: `^5.12.1`
+- `redis`: `^6.0.0`
 - `zod`: `^4.3.6`
 
 ### Optional dependencies

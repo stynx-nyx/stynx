@@ -153,7 +153,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/auth`: `workspace:*`
 - `@stynx-nyx/contracts`: `workspace:*`
 - `@stynx-nyx/data`: `workspace:*`
-- `redis`: `^5.12.1`
+- `redis`: `^6.0.0`
 
 ### Optional dependencies
 

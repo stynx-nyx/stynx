@@ -1,7 +1,19 @@
 import { Inject, Injectable, Optional, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
-import { createClient, type RedisClientType } from 'redis';
+import {
+  createClient,
+  type RedisClientType,
+  type RedisFunctions,
+  type RedisModules,
+  type RedisScripts,
+} from 'redis';
 import { STYNX_RATE_LIMIT_OPTIONS } from './constants';
 import type { RateLimitDecision, RateLimitDecisionContext, RateLimitGuardOptions, RateLimitStore } from './types';
+
+/**
+ * Client type for the RESP2-pinned connection created below. node-redis 6
+ * defaults the RESP generic to 3, so the field annotation must say 2 as well.
+ */
+type Resp2RedisClient = RedisClientType<RedisModules, RedisFunctions, RedisScripts, 2>;
 
 const SLIDING_WINDOW_LUA = `
 local zsetKey = KEYS[1]
@@ -61,7 +73,7 @@ return {1, limit, remaining, resetAt, retryAfter, used}
 
 @Injectable()
 export class RedisSlidingWindowRateLimitStore implements RateLimitStore, OnModuleInit, OnModuleDestroy {
-  private client?: RedisClientType;
+  private client?: Resp2RedisClient;
   private scriptSha?: string;
   private sequence = 0;
 
@@ -75,7 +87,13 @@ export class RedisSlidingWindowRateLimitStore implements RateLimitStore, OnModul
     if (!this.options?.redis) {
       return;
     }
-    this.client = createClient({ url: this.options.redis.url });
+    this.client = createClient({
+      url: this.options.redis.url,
+      // node-redis 6 defaults to RESP3. Pin RESP2 so the wire protocol, reply
+      // shapes and the Redis server requirement stay exactly as in 1.2.x;
+      // switching to RESP3 is a separate, documented decision.
+      RESP: 2,
+    });
     this.client.on('error', () => undefined);
     await this.client.connect();
     this.scriptSha = await this.client.scriptLoad(SLIDING_WINDOW_LUA);
