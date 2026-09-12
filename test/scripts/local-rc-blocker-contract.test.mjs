@@ -4305,7 +4305,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
-      'cc28984577e12067798d81bd9daf6dd8482cd0430811ef9525005533fdad2089',
+      '1f71ab5805cc2f03862111dd55b7ad26134bf1963387dd5b426a3b7e63761cf2',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
   };
   for (const [path, digest] of Object.entries(frozenFiles)) {
@@ -4476,7 +4476,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
-      'cc28984577e12067798d81bd9daf6dd8482cd0430811ef9525005533fdad2089',
+      '1f71ab5805cc2f03862111dd55b7ad26134bf1963387dd5b426a3b7e63761cf2',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
   };
   for (const [path, digest] of Object.entries(frozenFiles)) {
@@ -4536,7 +4536,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
-      'cc28984577e12067798d81bd9daf6dd8482cd0430811ef9525005533fdad2089',
+      '1f71ab5805cc2f03862111dd55b7ad26134bf1963387dd5b426a3b7e63761cf2',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
   };
   for (const [path, digest] of Object.entries(frozen)) {
@@ -6058,7 +6058,7 @@ test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwrigh
         stderrEmpty: engineResult.stderr === '',
         stdoutExact:
           engineResult.stdout ===
-          `[engines][ok] node ${process.versions.node}; pnpm >=9 <10; Angular 22.0.1; NestJS ^11.1.19; TypeScript ^6.0.3/6.0.3\n`,
+          `[engines][ok] node ${process.versions.node}; pnpm >=9 <10; Angular 22.1.6; NestJS ^11.1.19; TypeScript ^6.0.3/6.0.3\n`,
       },
       playwright: {
         copiedBytesExact: readFileSync(
