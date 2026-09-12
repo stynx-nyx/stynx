@@ -354,6 +354,23 @@ describe('provider and controller entry behavior', () => {
     await controller.list({}, { setHeader: vi.fn(), status: vi.fn() } as never);
     expect(service.list).toHaveBeenCalledWith(context, { scope: 'tenant' });
   });
+
+  it('rejects an active RequestContext snapshot that lacks trusted session identity', async () => {
+    const service = { list: vi.fn(async () => []) };
+    const requestContext = {
+      hasActiveContext: () => true,
+      snapshot: () => ({ actorId: 'subject-a', tenantId, requestId: 'request-1' }),
+    };
+    const controller = new SessionControlController(
+      service as never,
+      { provider: {} as never },
+      requestContext as never,
+    );
+    await expect(
+      controller.list({}, { setHeader: vi.fn(), status: vi.fn() } as never),
+    ).rejects.toMatchObject({ status: 401 });
+    expect(service.list).not.toHaveBeenCalled();
+  });
 });
 
 describe('SessionControlService remaining behavior', () => {

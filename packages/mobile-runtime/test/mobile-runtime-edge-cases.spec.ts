@@ -512,6 +512,46 @@ describe('Offline-first mobile runtime edge cases', () => {
     });
   });
 
+  it('resolves a conflict whose local draft was already removed without recreating it', async () => {
+    const harness = createHarness({ conflictReservedNumbers: [1000] });
+    await bootstrap(harness.runtime);
+    await harness.runtime.installPublishedNormativePackage();
+    await harness.runtime.reserveNumbering({ entityType: 'ait', requestedSize: 1 });
+    const draft = await harness.runtime.createDraft(draftInput(harness.clock));
+    await harness.runtime.attachEvidence(draft.localId, {
+      localEvidenceId: 'evidence-orphaned-conflict',
+      hashAlgorithm: 'sha256',
+      hashValue: 'sha256:orphaned-conflict',
+      mediaType: 'image/jpeg',
+      capturedAt: harness.clock.now(),
+    });
+    await harness.runtime.finalizeOffline(draft.localId);
+    const queueItem = await harness.runtime.enqueue(draft.localId);
+    await harness.runtime.submitPendingQueue();
+    await harness.store.remove('entity-draft', draft.localId);
+
+    const resolution = await harness.runtime.resolveSimpleConflict(
+      queueItem.queueItemId,
+      'server-wins',
+    );
+
+    expect(
+      await harness.store.get<MobileConflictResolution>(
+        'sync-conflict-resolution',
+        resolution.conflictId,
+      ),
+    ).toEqual(resolution);
+    expect(
+      await harness.store.get<MobileSyncQueueItem>('sync-queue', queueItem.queueItemId),
+    ).toMatchObject({ status: 'applied' });
+    expect(await harness.store.list<MobileEntityDraft>('entity-draft')).toEqual([]);
+    expect(await harness.runtime.snapshot()).toMatchObject({
+      draftCount: 0,
+      queuedCount: 0,
+      conflictResolutionCount: 1,
+    });
+  });
+
   it('reports an exact empty and populated snapshot across lifecycle states', async () => {
     const harness = createHarness();
     expect(await harness.runtime.snapshot()).toEqual({

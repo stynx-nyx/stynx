@@ -296,6 +296,17 @@ describe('RedisIdempotencyBackend', () => {
     expect(redisMock.client.quit).toHaveBeenCalledTimes(1);
   });
 
+  it('registers an error listener that swallows redis client errors', async () => {
+    const backend = new RedisIdempotencyBackend({
+      redis: { url: 'redis://localhost:6379' },
+    });
+    await backend.onModuleInit();
+
+    const [event, listener] = redisMock.client.on.mock.calls[0] as [string, (error: unknown) => unknown];
+    expect(event).toBe('error');
+    expect(listener(new Error('connection reset'))).toBe(undefined);
+  });
+
   it('returns null cache misses and uses the default redis prefix', async () => {
     const backend = new RedisIdempotencyBackend({
       redis: { url: 'redis://localhost:6379' },

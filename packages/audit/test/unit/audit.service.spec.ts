@@ -1,7 +1,13 @@
 import { createHash } from 'node:crypto';
+import { rm } from 'node:fs/promises';
 import { ModuleRef } from '@nestjs/core';
 import { StynxAuditService } from '../../src/audit.service';
 import type { Mock } from 'vitest';
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
+  return { ...actual, rm: vi.fn(actual.rm) };
+});
 
 interface FakeTrx {
   query: Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
@@ -194,6 +200,30 @@ describe('StynxAuditService.detachEligible', () => {
       expect.stringContaining('alter table audit.log detach partition audit."log_2025_01"'),
       expect.stringContaining('drop table audit."log_2025_01"'),
     ]));
+  });
+
+  it('swallows temp dump cleanup failures after a partition is archived', async () => {
+    const { db } = makeDatabase([
+      [{ partition_name: 'log_2025_01' }],
+      [{ keep_longer: false }],
+      [],
+      [],
+    ]);
+    const dumpRunner = { dumpPartition: vi.fn(async () => undefined) };
+    const archiveStore = { uploadFile: vi.fn(async () => undefined) };
+    const service = makeService(db, {
+      now: new Date('2026-12-01T00:00:00Z'),
+      options: { bucket: 'audit-bucket' },
+      dumpRunner,
+      archiveStore,
+    });
+    vi.mocked(rm).mockRejectedValueOnce(new Error('EACCES: permission denied'));
+
+    const plans = await service.detachEligible();
+
+    expect(plans).toHaveLength(1);
+    expect(plans[0]?.partitionName).toBe('log_2025_01');
+    expect(rm).toHaveBeenCalledWith(expect.stringMatching(/log_2025_01\.sql\.gz$/), { force: true });
   });
 
   it('uses the default archive key prefix when module options omit keyPrefix', async () => {

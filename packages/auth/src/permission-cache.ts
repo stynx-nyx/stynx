@@ -45,6 +45,7 @@ class TtlLruCache<TKey, TValue> {
     });
     if (this.store.size > this.maxSize) {
       const oldest = this.store.keys().next().value;
+      /* v8 ignore else -- size > maxSize guarantees a first key, and TKey is always a string. */
       if (oldest !== undefined) {
         this.store.delete(oldest);
       }

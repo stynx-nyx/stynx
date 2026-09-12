@@ -404,7 +404,7 @@ export class StynxTrashListComponent {
     }
     if (adapter.bulkHardDelete) {
       await adapter.bulkHardDelete(this.activeKind(), ids);
-    } else if (adapter.hardDelete) {
+    } else /* v8 ignore else -- the guard above returns unless hardDelete or bulkHardDelete exists, so this arm cannot fall through */ if (adapter.hardDelete) {
       await Promise.all(ids.map((id) => adapter.hardDelete?.(this.activeKind(), id)));
     }
     this.toast.push('Selected items removed permanently', 'warning');

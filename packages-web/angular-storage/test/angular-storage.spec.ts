@@ -932,6 +932,32 @@ describe('@stynx-nyx/angular-storage', () => {
     expect(component.progress).toBe(100);
   });
 
+  it('activates the enabled drop zone on drag-over even without a data transfer', () => {
+    const component = createUploadComponent(
+      {
+        initiate: vi.fn(async () => {
+          throw new Error('not used');
+        }),
+        complete: vi.fn(async () => ({ id: 'doc-drop', scanStatus: 'completed' as const })),
+      },
+      { push: () => undefined } as never,
+      { upload: vi.fn(async () => undefined) },
+    );
+    component.enableDragAndDrop = true;
+    const event = {
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      dataTransfer: null,
+    } as unknown as DragEvent;
+
+    component.onDragOver(event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(event.stopPropagation).toHaveBeenCalledTimes(1);
+    expect(event.dataTransfer).toBe(null);
+    expect(component.isDragActive).toBe(true);
+  });
+
   it('ignores drag events while drag-and-drop is disabled', async () => {
     const component = createUploadComponent(
       {

@@ -240,6 +240,37 @@ describe('outbox supporting behavior', () => {
     expect(globalFetch).toHaveBeenCalledOnce();
     globalFetch.mockRestore();
   });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('aborts the pending request through the timeout signal and clears the timer', async () => {
+    vi.useFakeTimers();
+    let signal: AbortSignal | undefined;
+    const hangingFetch = vi.fn(
+      (_url: string, init: { signal: AbortSignal }) =>
+        new Promise<Response>((_resolve, reject) => {
+          signal = init.signal;
+          init.signal.addEventListener('abort', () => reject(new Error('request aborted')));
+        }),
+    ) as never;
+
+    const pending = new HttpOutboxDispatcher({
+      url: 'https://example.invalid/slow',
+      fetchImpl: hangingFetch,
+      timeoutMs: 25,
+    }).send(row);
+    const outcome = expect(pending).rejects.toThrow('request aborted');
+    expect(signal?.aborted).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(24);
+    expect(signal?.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(signal?.aborted).toBe(true);
+    await outcome;
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });
 
 describe('OutboxService depth', () => {

@@ -180,6 +180,24 @@ describe('TenantLifecycleMiddleware', () => {
     expect(release).toHaveBeenCalledTimes(1);
   });
 
+  it('marks the request released without calling anything when the client has no release function', async () => {
+    const mw = new TenantLifecycleMiddleware();
+    const response = fakeResponse();
+    const pgClient: Record<string, unknown> = { release: 'not-callable' };
+    const request: Record<string, unknown> = {
+      headers: { 'x-tenant-id': VALID_UUID },
+      pgClient,
+    };
+    mw.use(request, response, vi.fn());
+    response.emit('finish');
+    await new Promise((r) => setImmediate(r));
+    expect(pgClient.release).toBe('not-callable');
+    expect(Object.getOwnPropertySymbols(request).map((symbol) => symbol.description)).toEqual([
+      'STYNX_TENANT_LIFECYCLE_RELEASED',
+    ]);
+    expect(() => response.emit('close')).not.toThrow();
+  });
+
   it('is a no-op when no client is attached to the request', async () => {
     const mw = new TenantLifecycleMiddleware();
     const response = fakeResponse();

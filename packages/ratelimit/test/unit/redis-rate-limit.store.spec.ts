@@ -102,6 +102,17 @@ describe('RedisSlidingWindowRateLimitStore', () => {
     }
   });
 
+  it('registers an error listener that swallows redis client errors', async () => {
+    const store = new RedisSlidingWindowRateLimitStore({
+      redis: { url: 'redis://localhost:6379' },
+    });
+    await store.onModuleInit();
+
+    const [event, listener] = redisMock.client.on.mock.calls[0] as [string, (error: unknown) => unknown];
+    expect(event).toBe('error');
+    expect(listener(new Error('connection reset'))).toBe(undefined);
+  });
+
   it('skips quit for closed clients', async () => {
     const store = new RedisSlidingWindowRateLimitStore({
       redis: { url: 'redis://localhost:6379' },

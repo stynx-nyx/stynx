@@ -161,6 +161,7 @@ export class RateLimitGuard implements CanActivate {
     const keys = Array.from(this.buckets.keys());
     for (let i = 0; i < overflow; i += 1) {
       const key = keys[i];
+      /* v8 ignore else -- i < overflow <= keys.length, and bucket keys are non-empty "ip:method:path" strings. */
       if (key) this.buckets.delete(key);
     }
   }

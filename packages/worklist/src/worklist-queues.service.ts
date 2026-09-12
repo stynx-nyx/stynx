@@ -81,6 +81,7 @@ export class WorklistQueuesService {
 
     if (value.name !== undefined) add('name', value.name);
     if (value.description !== undefined) add('description', value.description);
+    /* v8 ignore else -- updateQueueSchema inherits createQueueSchema's strategy default ('pull'), so a parsed update never lacks it */
     if (value.strategy !== undefined) add('strategy', value.strategy);
     if (value.strategyConfig !== undefined)
       add('strategy_config', JSON.stringify(value.strategyConfig), '::jsonb');

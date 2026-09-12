@@ -183,6 +183,23 @@ describe('R21 session-control accepted contract', () => {
     expect(await registry.purgeTerminal('2026-06-13T00:00:00.000Z')).toBe(1);
   });
 
+  it('keeps active and post-cutoff terminal registrations when purging', async () => {
+    const survivorSid = '00000000-0000-4000-8000-000000000014';
+    const { registry } = await harness([
+      registration({ terminalAt: '2026-06-01T00:00:00.000Z', state: 'revoked' }),
+      registration({ sid: otherSid }),
+      registration({ sid: survivorSid, terminalAt: '2026-06-20T00:00:00.000Z', state: 'revoked' }),
+    ]);
+    expect(await registry.purgeTerminal('2026-06-13T00:00:00.000Z')).toBe(1);
+    const remaining = await registry.list(context(), { scope: 'tenant' });
+    expect(remaining.map((item) => item.sid).sort()).toEqual([otherSid, survivorSid].sort());
+    expect(remaining.find((item) => item.sid === otherSid)).toMatchObject({ sid: otherSid, terminalAt: null });
+    expect(remaining.find((item) => item.sid === survivorSid)).toMatchObject({
+      sid: survivorSid,
+      terminalAt: '2026-06-20T00:00:00.000Z',
+    });
+  });
+
   it('accepts general RFC UUID versions while rejecting malformed identifiers', async () => {
     const { service } = await harness([registration({ sid: otherSid })]);
     await expect(
