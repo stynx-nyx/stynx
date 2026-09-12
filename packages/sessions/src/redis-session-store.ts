@@ -1,5 +1,11 @@
 import { Inject, Injectable, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
-import { createClient } from 'redis';
+import {
+  createClient,
+  type RedisClientType,
+  type RedisFunctions,
+  type RedisModules,
+  type RedisScripts,
+} from 'redis';
 import { STYNX_SESSIONS_OPTIONS } from './tokens';
 import type {
   RefreshTokenLookup,
@@ -20,9 +26,15 @@ function parseJson<T>(value: string | null): T | null {
   return JSON.parse(value) as T;
 }
 
+/**
+ * Client type for the RESP2-pinned connection created below. node-redis 6
+ * defaults the RESP generic to 3, so the field annotation must say 2 as well.
+ */
+type Resp2RedisClient = RedisClientType<RedisModules, RedisFunctions, RedisScripts, 2>;
+
 @Injectable()
 export class RedisSessionStore implements SessionStore, OnModuleInit, OnModuleDestroy {
-  private client?: ReturnType<typeof createClient>;
+  private client?: Resp2RedisClient;
 
   constructor(
     @Inject(STYNX_SESSIONS_OPTIONS)
@@ -30,7 +42,13 @@ export class RedisSessionStore implements SessionStore, OnModuleInit, OnModuleDe
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const client = createClient({ url: this.options.redis.url });
+    const client: Resp2RedisClient = createClient({
+      url: this.options.redis.url,
+      // node-redis 6 defaults to RESP3. Pin RESP2 so the wire protocol, reply
+      // shapes and the Redis server requirement stay exactly as in 1.2.x;
+      // switching to RESP3 is a separate, documented decision.
+      RESP: 2,
+    });
     client.on('error', () => undefined);
     await client.connect();
     this.client = client;
@@ -197,7 +215,7 @@ export class RedisSessionStore implements SessionStore, OnModuleInit, OnModuleDe
     return active;
   }
 
-  private getClient(): ReturnType<typeof createClient> {
+  private getClient(): Resp2RedisClient {
     if (!this.client) {
       throw new Error('RedisSessionStore has not been initialized');
     }

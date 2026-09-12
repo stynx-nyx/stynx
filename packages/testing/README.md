@@ -178,7 +178,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/sessions`: `workspace:*`
 - `@stynx-nyx/storage`: `workspace:*`
 - `drizzle-orm`: `^0.45.2`
-- `redis`: `^5.12.1`
+- `redis`: `^6.0.0`
 - `reflect-metadata`: `^0.2.2`
 - `rxjs`: `^7.8.2`
 - `testcontainers`: `^12.0.2`

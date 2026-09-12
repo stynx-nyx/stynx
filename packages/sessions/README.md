@@ -164,7 +164,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/data`: `workspace:*`
 - `@stynx-nyx/idempotency`: `workspace:*`
 - `jose`: `^6.2.2`
-- `redis`: `^5.12.1`
+- `redis`: `^6.0.0`
 - `uuid`: `^14.0.0`
 - `zod`: `^4.3.6`
 
