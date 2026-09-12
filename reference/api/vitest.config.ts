@@ -26,8 +26,7 @@ export default {
     ...config.test,
     fileParallelism: false,
     maxWorkers: 1,
-    minWorkers: 1,
     pool: 'threads',
-    poolOptions: { threads: { isolate: true } },
+    isolate: true,
   },
 };
