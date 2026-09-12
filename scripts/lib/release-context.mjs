@@ -170,6 +170,5 @@ export const releaseContextConstants = Object.freeze({
   versionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
-  versionPackagesCommand:
-    'changeset version && node scripts/sync-release-version.mjs && pnpm security:sbom',
+  versionPackagesCommand: 'node scripts/version-packages.mjs',
 });
