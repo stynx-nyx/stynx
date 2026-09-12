@@ -1253,7 +1253,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 59,
-      "assertion_digest_sha256": "7770522d4a0aaaf8ce5a701d439ab3ed89ec1696e3b7391683d6d22f0e270aca"
+      "assertion_digest_sha256": "54df1c71480f5a19f3a4d38636187f07a4a58bddd71c85c5a9c1fb2b0115baac"
     },
     {
       "path": "packages/auth/test/unit/stynx-auth.guard.spec.ts",
@@ -2123,7 +2123,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 48,
-      "assertion_digest_sha256": "d857f8e1766cbc3de284c44678bee19ee9aa718ae689024d825b1e75310ef8d9"
+      "assertion_digest_sha256": "f0f3d379b4e49c319342fb6db819b143b6dc6acbe4a3c8a24c2c32a36c4c5330"
     },
     {
       "path": "packages/integration-adapter/test/unit/integration-adapter.spec.ts",
@@ -2411,7 +2411,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 16,
-      "assertion_digest_sha256": "6cfd4a8626dc6003276a020aa8c68283c844b3c79720cf84ede3a53fd999998a"
+      "assertion_digest_sha256": "083a9bb1a3c03bc6adbec029c1c5631c50abaa05ed59f0406bac8e0a3301e02e"
     },
     {
       "path": "packages/sessions/test/integration/session-jwks.api-matrix.spec.ts",
@@ -2459,7 +2459,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 19,
-      "assertion_digest_sha256": "d437c555b5ffd4080bb0f05c7482576faa9b7cfdc71541b98d72cded2aa05e52"
+      "assertion_digest_sha256": "678d9077381ef56cb2335a2a155a2282799e1970fcea27393b0ddd205d38a452"
     },
     {
       "path": "packages/sessions/test/unit/session-control-depth.spec.ts",
