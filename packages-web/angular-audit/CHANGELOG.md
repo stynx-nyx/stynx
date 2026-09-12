@@ -1,5 +1,17 @@
 # @stynx-nyx/angular-audit
 
+## 1.3.1
+
+### Patch Changes
+
+- 773ad90: Release tooling: the 1.3.0 CHANGELOG sections list sibling packages as `@2.0.0` under "Updated dependencies"; Changesets' peer-dependency inference had computed 2.0.0 before the version was corrected to 1.3.0 by hand. The references now read `@1.3.0`. The workspace `version-packages` script applies the fixed-group version rule from now on (the highest bump a changeset declares for a group member; a peer-inferred major is corrected in manifests and changelogs). No public API or runtime behaviour changes.
+- Updated dependencies [773ad90]
+  - @stynx-nyx/angular@1.3.1
+  - @stynx-nyx/angular-auth@1.3.1
+  - @stynx-nyx/angular-i18n@1.3.1
+  - @stynx-nyx/angular-ui@1.3.1
+  - @stynx-nyx/sdk@1.3.1
+
 ## 1.3.0
 
 ### Minor Changes
