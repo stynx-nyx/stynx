@@ -925,6 +925,36 @@
       "commit": "9f48bfe38ca1659cc1c2f6ad49e8f0ed786027d5",
       "authorized_by": "Owner",
       "reason": "Authorizes adding the companion workflow 'STYNX Release Prep (not applicable)', completing the pattern begun in 04fec86e. package-policy and dependency-audit are required status checks on main produced by the path-filtered STYNX Release Prep workflow; #247 proved that a pull request outside those paths stays blocked on them even with every other check green. The companion carries the exact inverse filter (paths-ignore with the identical list) and reports passing jobs of the same names. Both checks are pure functions of inputs inside the filtered list (pnpm-lock.yaml, package manifests, changesets, release scripts), so when none changed the outcome cannot differ from main; the real jobs still run whenever any of those paths change. No gate is weakened, and scripts/lint-workflows.mjs fails closed if either companion's path list diverges from its filtered workflow or stops exposing a required job. Owner decision 2026-09-12."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "e639fa07b40708be27aa50830c0a937c252b1395",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the squash-merge commit of PR #242 (consolidated September 2026 Dependabot backlog), whose single CI edit is the trivy-action 0.35.0 -> 0.36.0 pin already authorized for branch commit d3560b510ff70acea6e9c2094908d757d9b8a8d4. GitHub's squash merge minted a new commit for the pull request, so the branch-commit receipts recorded inside it no longer match any commit on main; the STYNX Release workflow's forbidden-actions job, which scans main from the v1.2.0 release commit forward, has failed on every push since. This receipt binds the same Owner decision to the squash commit itself. The commit's content is exactly the reviewed pull request; no gate is weakened. Owner decision 2026-09-12."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "e639fa07b40708be27aa50830c0a937c252b1395",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the squash-merge commit of PR #242 touching law/policy/forbidden-action-authorizations.json (its own receipts) and law/trace.json (Architect rebinds already authorized on the branch). The squash commit carries the merger's Git author rather than DEVAI Architect, so the author-role exemption does not apply to it. GitHub's squash merge minted a new commit for the pull request, so the branch-commit receipts recorded inside it no longer match any commit on main. The commit's content is exactly the reviewed pull request. No invariant, threshold, mutation-target, or test-population change. Owner decision 2026-09-12."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "3a9292aa8ca25de93fa7261576147490311ac08d",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the squash-merge commit of PR #247, which adds the two companion workflows 'STYNX Reference Apps (not applicable)' and 'STYNX Release Prep (not applicable)' already authorized for branch commits 04fec86eb496a10bc31b42b7380796c73c9ab9ed and 9f48bfe38ca1659cc1c2f6ad49e8f0ed786027d5. GitHub's squash merge minted a new commit for the pull request, so the branch-commit receipts recorded inside it no longer match any commit on main; the STYNX Release workflow's forbidden-actions job has failed on every push since. This receipt binds the same Owner decision to the squash commit itself. The commit's content is exactly the reviewed pull request; no gate is weakened. Owner decision 2026-09-12."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "3a9292aa8ca25de93fa7261576147490311ac08d",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the squash-merge commit of PR #247 touching law/policy/forbidden-action-authorizations.json (its own two receipts). The squash commit carries the merger's Git author rather than DEVAI Architect, so the author-role exemption does not apply to it. GitHub's squash merge minted a new commit for the pull request, so the branch-commit receipts recorded inside it no longer match any commit on main. The commit's content is exactly the reviewed pull request. No invariant, threshold, mutation-target, or test-population change. Owner decision 2026-09-12."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "cf13f2d5d09d64203532820ab77372461fd91529",
+      "authorized_by": "Owner",
+      "reason": "Authorizes bumping the hardcoded --registry-monotonicity --candidate literal in the release workflow from 1.2.0 to 1.3.0, matching the 2026-09-12 Owner decision recorded in law/policy/registry-version-anomalies.json (next unified version 1.3.0 for the complete 44-package release unit). No other workflow line changes and the monotonicity check stays fail-closed. Same precedent as the 1.2.0 line's candidate bump (ea3a6aa9)."
     }
   ]
 }
