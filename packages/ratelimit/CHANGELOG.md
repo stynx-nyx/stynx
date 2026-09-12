@@ -21,9 +21,9 @@
 - Updated dependencies [e639fa0]
 - Updated dependencies [9df17e7]
 - Updated dependencies [1b41c89]
-  - @stynx-nyx/auth@2.0.0
-  - @stynx-nyx/contracts@2.0.0
-  - @stynx-nyx/data@2.0.0
+  - @stynx-nyx/auth@1.3.0
+  - @stynx-nyx/contracts@1.3.0
+  - @stynx-nyx/data@1.3.0
 
 ## 1.2.0
 

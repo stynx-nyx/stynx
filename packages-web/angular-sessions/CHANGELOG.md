@@ -21,10 +21,10 @@
 - Updated dependencies [e639fa0]
 - Updated dependencies [9df17e7]
 - Updated dependencies [1b41c89]
-  - @stynx-nyx/angular@2.0.0
-  - @stynx-nyx/angular-auth@2.0.0
-  - @stynx-nyx/angular-i18n@2.0.0
-  - @stynx-nyx/angular-ui@2.0.0
+  - @stynx-nyx/angular@1.3.0
+  - @stynx-nyx/angular-auth@1.3.0
+  - @stynx-nyx/angular-i18n@1.3.0
+  - @stynx-nyx/angular-ui@1.3.0
 
 ## 1.2.0
 
