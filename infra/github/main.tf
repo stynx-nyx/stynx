@@ -49,11 +49,13 @@ resource "github_branch_protection" "main" {
   }
 
   required_pull_request_reviews {
-    dismiss_stale_reviews           = true
-    require_code_owner_reviews      = true
-    # CODEOWNERS lists two humans and GitHub never counts the PR author's own
-    # approval, so 2 was unsatisfiable. Reconciled to the live value on
-    # 2026-09-12.
-    required_approving_review_count = 1
+    dismiss_stale_reviews = true
+    # Owner decision 2026-09-12: the repository is maintained by one person.
+    # GitHub never counts the PR author's own approval, and a code-owner review
+    # requirement is enforced independently of the approval count, so both are
+    # off. Merges still require every status check below (strict, up to date)
+    # and a pull request; admin bypasses stay recorded on the PR.
+    require_code_owner_reviews      = false
+    required_approving_review_count = 0
   }
 }

@@ -44,4 +44,6 @@ terraform apply
 - Changing `enforce_admins` or `required_approving_review_count` weakens or
   strengthens a fail-closed gate and is an Owner decision.
 - Last reconciliation: 2026-09-12 (post-DEVAI-1.4.5 gate names; retired
-  `evidence/verify`; `enforce_admins=false`; one required approval).
+  `evidence/verify`; `enforce_admins=false`; Owner decision to require no
+  approvals and no code-owner review — the repository is maintained by one
+  person and GitHub never counts the author's own approval).
