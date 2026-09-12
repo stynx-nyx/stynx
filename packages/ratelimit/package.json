@@ -33,7 +33,7 @@
     "@stynx-nyx/auth": "workspace:*",
     "@stynx-nyx/contracts": "workspace:*",
     "@stynx-nyx/data": "workspace:*",
-    "redis": "^5.12.1"
+    "redis": "^6.0.0"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",
