@@ -39,7 +39,7 @@
     "@stynx-nyx/idempotency": "workspace:*",
     "@stynx-nyx/sessions": "workspace:*",
     "jose": "^6.2.2",
-    "redis": "^5.12.1",
+    "redis": "^6.0.0",
     "zod": "^4.3.6"
   },
   "peerDependencies": {
@@ -51,7 +51,7 @@
   "devDependencies": {
     "@nestjs/platform-express": "^11.1.26",
     "@nestjs/testing": "^11.1.26",
-    "@types/node": "24.12.4",
+    "@types/node": "25.9.3",
     "@types/supertest": "^7.2.0",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",

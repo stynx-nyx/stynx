@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^11.1.26",
-    "@types/node": "24.12.4"
+    "@types/node": "25.9.3"
   },
   "repository": {
     "type": "git",

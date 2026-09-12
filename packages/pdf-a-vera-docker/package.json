@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@stynx-nyx/logging": "workspace:*",
-    "@types/node": "24.12.4",
+    "@types/node": "25.9.3",
     "typescript": "^6.0.3"
   },
   "repository": {
