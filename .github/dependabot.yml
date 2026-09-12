@@ -18,6 +18,15 @@
 # entry) during a billing/lockfile incident; this change restores normal
 # operation under Option D and preserves all pre-existing directory/
 # ecosystem entries.
+#
+# pnpm workspace rule (2026-09-11): the root npm entry is the ONLY npm entry.
+# Every workspace member (packages/*, packages-web/*, reference/*, test/*,
+# domain/*, tools/*, docs/site) shares the single root pnpm-lock.yaml, and
+# Dependabot updates all of their manifests plus that lockfile from the root
+# job. Per-directory npm entries treat each directory as a standalone project,
+# find no lockfile there, and emit manifest-only PRs that always fail
+# `pnpm install --frozen-lockfile` (ERR_PNPM_OUTDATED_LOCKFILE). Do not add
+# them back.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -33,77 +42,17 @@ updates:
     groups:
       minor-and-patch:
         applies-to: version-updates
+        patterns:
+          - '*'
         update-types:
           - minor
           - patch
-
-  - package-ecosystem: npm
-    directory: /reference/web
-    schedule:
-      interval: monthly
-    cooldown:
-      default-days: 90
-    open-pull-requests-limit: 2
-    commit-message:
-      prefix: 'chore(deps)'
-      prefix-development: 'chore(deps-dev)'
-    groups:
-      minor-and-patch:
+      majors:
         applies-to: version-updates
+        patterns:
+          - '*'
         update-types:
-          - minor
-          - patch
-
-  - package-ecosystem: npm
-    directory: /reference/api
-    schedule:
-      interval: monthly
-    cooldown:
-      default-days: 90
-    open-pull-requests-limit: 2
-    commit-message:
-      prefix: 'chore(deps)'
-      prefix-development: 'chore(deps-dev)'
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - minor
-          - patch
-
-  - package-ecosystem: npm
-    directory: /test/db
-    schedule:
-      interval: monthly
-    cooldown:
-      default-days: 90
-    open-pull-requests-limit: 2
-    commit-message:
-      prefix: 'chore(deps)'
-      prefix-development: 'chore(deps-dev)'
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - minor
-          - patch
-
-  - package-ecosystem: npm
-    directory: /test/packages
-    schedule:
-      interval: monthly
-    cooldown:
-      default-days: 90
-    open-pull-requests-limit: 2
-    commit-message:
-      prefix: 'chore(deps)'
-      prefix-development: 'chore(deps-dev)'
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - minor
-          - patch
+          - major
 
   - package-ecosystem: github-actions
     directory: /

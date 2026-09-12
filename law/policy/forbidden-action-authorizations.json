@@ -907,6 +907,12 @@
       "commit": "d4767bbbc1bc68b63ec7ad36a88aa435e5fc81c9",
       "authorized_by": "Owner",
       "reason": "Authorizes sourcing the GitHub org packages inventory read in scripts/verify-release-policy.mjs from the existing PACKAGES_READ_TOKEN secret instead of reusing the write-capable NPM_TOKEN, and wiring that secret into the corresponding release.yml step. PACKAGES_READ_TOKEN is already documented in law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md as the step-scoped, read-only credential (contents: read, packages: read, checks: write) for exactly this purpose; it was never referenced by the rewritten script after the DEVAI 1.4.5 migration. No gate is weakened: this only changes which credential performs a read, and falls back to the prior token if the secret is unset."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "d3560b510ff70acea6e9c2094908d757d9b8a8d4",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the 2026-09 dependency-round commit's single CI edit: pinning aquasecurity/trivy-action from 0.35.0 (57a97c7e7821a5776cebc9bb87c984fa69cba8f1) to 0.36.0 (ed142fd0673e97e23eac54620cfb913e5ce36c25) at both call sites in the reference-apps workflow's container-security job. The new SHA was verified against the upstream annotated tag v0.36.0, which dereferences to that commit. This is the same change Dependabot proposed in PR #228 and supersedes it; the job's inputs, severity thresholds, and fail-closed behaviour are unchanged, so no gate is weakened. Owner decision recorded in the coupled Engineer -> Inspector -> Architect -> Owner sequence that consolidates the September 2026 Dependabot backlog into one reviewable change."
     }
   ]
 }

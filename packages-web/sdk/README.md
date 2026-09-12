@@ -127,8 +127,8 @@ _None._
 
 ### Development-only dependencies
 
-- `@angular/compiler`: `21.2.19`
-- `@angular/compiler-cli`: `21.2.19`
+- `@angular/compiler`: `21.2.20`
+- `@angular/compiler-cli`: `21.2.20`
 - `@stynx-nyx/core`: `workspace:*`
 - `@types/node`: `24.12.4`
 - `ng-packagr`: `21.2.3`

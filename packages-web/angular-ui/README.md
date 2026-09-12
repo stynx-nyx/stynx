@@ -147,11 +147,11 @@ _None._
 
 ### Development-only dependencies
 
-- `@angular/common`: `21.2.19`
-- `@angular/compiler`: `21.2.19`
-- `@angular/compiler-cli`: `21.2.19`
-- `@angular/core`: `21.2.19`
-- `@angular/platform-browser`: `21.2.19`
+- `@angular/common`: `21.2.20`
+- `@angular/compiler`: `21.2.20`
+- `@angular/compiler-cli`: `21.2.20`
+- `@angular/core`: `21.2.20`
+- `@angular/platform-browser`: `21.2.20`
 - `@types/node`: `24.12.4`
 - `jsdom`: `^29.0.2`
 - `ng-packagr`: `21.2.3`
