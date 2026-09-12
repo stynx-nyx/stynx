@@ -33,12 +33,8 @@ StynxSessionsModule.forRoot({
   signing: {
     activeKid: 'kid-2026-06',
     keys: {
-      'kid-2026-06': {
-        /* EC P-256 private key */
-      },
-      'kid-2026-04': {
-        /* retired but still verifying */
-      },
+      'kid-2026-06': {/* EC P-256 private key */},
+      'kid-2026-04': {/* retired but still verifying */},
     },
     accessTokenTtl: '15m',
   },
@@ -185,8 +181,8 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/platform-express`: `^11.1.19`
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/platform-express`: `^11.1.26`
+- `@nestjs/testing`: `^11.1.26`
 - `@types/node`: `24.12.4`
 - `@types/supertest`: `^7.2.0`
 - `supertest`: `^7.2.2`

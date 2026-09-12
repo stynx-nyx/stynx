@@ -151,7 +151,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 - `@stynx-nyx/core`: `workspace:*`
 - `@stynx-nyx/data`: `workspace:*`
-- `intl-messageformat`: `^11.2.2`
+- `intl-messageformat`: `^11.2.8`
 - `zod`: `^4.3.6`
 
 ### Optional dependencies
@@ -167,8 +167,8 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/platform-express`: `^11.1.19`
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/platform-express`: `^11.1.26`
+- `@nestjs/testing`: `^11.1.26`
 - `@stynx-nyx/tenancy`: `workspace:*`
 - `@stynx-nyx/testing`: `workspace:*`
 - `@types/node`: `24.12.4`

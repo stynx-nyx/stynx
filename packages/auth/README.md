@@ -190,9 +190,7 @@ StynxAuthModule.forRoot({
 ```ts
 StynxAuthModule.forRoot({
   verifier: 'cognito',
-  cognito: {
-    /* ... */
-  },
+  cognito: {/* ... */},
   principalMapper: (claims) => ({
     id: claims.sub,
     email: claims.email,
@@ -235,9 +233,9 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 ### Runtime dependencies
 
-- `@aws-sdk/client-cognito-identity-provider`: `^3.1037.0`
-- `@aws-sdk/credential-providers`: `^3.1037.0`
-- `@aws-sdk/types`: `^3.973.8`
+- `@aws-sdk/client-cognito-identity-provider`: `^3.1068.0`
+- `@aws-sdk/credential-providers`: `^3.1068.0`
+- `@aws-sdk/types`: `^3.973.12`
 - `@stynx-nyx/contracts`: `workspace:*`
 - `@stynx-nyx/core`: `workspace:*`
 - `@stynx-nyx/data`: `workspace:*`
@@ -260,8 +258,8 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/platform-express`: `^11.1.19`
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/platform-express`: `^11.1.26`
+- `@nestjs/testing`: `^11.1.26`
 - `@types/node`: `24.12.4`
 - `@types/supertest`: `^7.2.0`
 - `supertest`: `^7.2.2`

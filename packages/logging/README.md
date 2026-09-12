@@ -190,8 +190,8 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/platform-express`: `^11.1.19`
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/platform-express`: `^11.1.26`
+- `@nestjs/testing`: `^11.1.26`
 - `@types/node`: `24.12.4`
 - `@types/supertest`: `^7.2.0`
 - `supertest`: `^7.2.2`

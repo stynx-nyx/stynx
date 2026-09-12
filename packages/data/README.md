@@ -164,7 +164,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 - `@stynx-nyx/core`: `workspace:*`
 - `drizzle-orm`: `^0.45.2`
-- `nestjs-cls`: `^6.2.0`
+- `nestjs-cls`: `^6.2.1`
 - `pg`: `^8.20.0`
 - `zod`: `^4.3.6`
 
@@ -181,7 +181,7 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/testing`: `^11.1.26`
 - `@types/node`: `24.12.4`
 - `@types/pg`: `^8.20.0`
 - `testcontainers`: `^11.14.0`

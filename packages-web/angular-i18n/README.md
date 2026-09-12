@@ -104,9 +104,7 @@ export class AppModule {}
 ```ts
 import { I18nService } from '@stynx-nyx/angular-i18n';
 
-@Component({
-  /* ... */
-})
+@Component({/* ... */})
 export class Notifier {
   private readonly i18n = inject(I18nService);
   notify() {
@@ -140,7 +138,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 ### Runtime dependencies
 
-- `intl-messageformat`: `^11.2.2`
+- `intl-messageformat`: `^11.2.8`
 - `rxjs`: `^7.8.2`
 
 ### Optional dependencies

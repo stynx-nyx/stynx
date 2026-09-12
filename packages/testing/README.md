@@ -38,9 +38,7 @@ describe('UsersService (integration)', () => {
   beforeAll(async () => {
     ctx = await createTestApp({
       modules: [UsersModule],
-      sql: [
-        /* schema SQL or migration runner */
-      ],
+      sql: [/* schema SQL or migration runner */],
     });
   });
 
@@ -169,10 +167,10 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 ### Runtime dependencies
 
-- `@nestjs/common`: `^11.1.19`
-- `@nestjs/core`: `^11.1.19`
-- `@nestjs/platform-express`: `^11.1.19`
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/common`: `^11.1.26`
+- `@nestjs/core`: `^11.1.26`
+- `@nestjs/platform-express`: `^11.1.26`
+- `@nestjs/testing`: `^11.1.26`
 - `@stynx-nyx/audit`: `workspace:*`
 - `@stynx-nyx/auth`: `workspace:*`
 - `@stynx-nyx/core`: `workspace:*`

@@ -45,9 +45,7 @@ import {
       sla: { thresholds: { p99: '500ms' } },
       idempotency: {},
     }),
-    StynxBackendAuthModule.forRoot({
-      /* verifier config */
-    }),
+    StynxBackendAuthModule.forRoot({/* verifier config */}),
     StynxBackendAuditModule.forRoot({}),
     StynxDbContextModule.forRoot({}),
   ],
@@ -195,7 +193,7 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/testing`: `^11.1.26`
 - `@types/node`: `24.12.4`
 
 <!-- stynx:generated-dependencies:end -->

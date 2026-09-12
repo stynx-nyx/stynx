@@ -118,9 +118,7 @@ await pdf.render({
 import { VeraPdfDockerValidator } from '@stynx-nyx/pdf-a-vera-docker';
 
 StynxPdfModule.forRoot({
-  pdfAAdapter: new VeraPdfDockerValidator({
-    /* ... */
-  }),
+  pdfAAdapter: new VeraPdfDockerValidator({/* ... */}),
 });
 
 await pdf.render({
@@ -191,7 +189,7 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/testing`: `^11.1.26`
 - `@stynx-nyx/signature`: `workspace:*`
 - `@types/node`: `24.12.4`
 - `typescript`: `^6.0.3`
