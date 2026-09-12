@@ -967,6 +967,12 @@
       "commit": "bf9bc32ec23dab59882e2e21e243e7383ac5a024",
       "authorized_by": "Owner",
       "reason": "Authorizes Dependabot PR #249 as merged by the Owner on 2026-09-12: the release workflow's artifact upload step moves actions/upload-artifact from v4.6.2 (ea165f8d65b6e75b540449e92b4886f43607fa02) to v7.0.1 (043fb46d1a93c77aae656e7c1c64a875d1fc6a0a). The new SHA was verified against the upstream v7.0.1 tag, which resolves to that commit. The step's inputs (artifact name, path, if-no-files-found: error, retention) are unchanged, so the publication plan and receipts are preserved exactly as before and no gate is weakened. Recorded after the merge because the Dependabot commit carries no receipt of its own; the STYNX Release forbidden-actions job scans it from the v1.3.0 release commit forward."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "a15ee82591259836c73ef6a993c9ca062608f234",
+      "authorized_by": "Owner",
+      "reason": "Authorizes the 1.3.1 release lane's single workflow edit: the release workflow's unified registry monotonicity step passes --candidate-from-policy to scripts/verify-release-policy.mjs instead of a hard-coded version literal, so future releases advance the candidate in law/policy/registry-version-anomalies.json and scripts/lib/registry-version-policy.mjs only, without a workflow edit and receipt per release. The verifier still requires an exact candidate, reads it from the Architect-owned policy constant, and rejects a disagreeing explicit --candidate, so the check stays fail-closed. Owner decision 2026-09-12 (publish 1.3.1). The rebase-merged form of this commit receives its own receipt after the merge."
     }
   ]
 }
