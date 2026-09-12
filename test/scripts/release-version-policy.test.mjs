@@ -20,6 +20,7 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import test from 'node:test';
 
+import { collectPublicPackages } from '../../scripts/lib/release-version-policy.mjs';
 import {
   fetchRegistryCensus,
   loadRegistryAnomalyPolicy,
@@ -1343,17 +1344,30 @@ test('the release unit is versioned by the fixed-group script and previews witho
     rootManifest.scripts['release:preview'],
     'node scripts/version-packages.mjs --preview',
   );
-  const worktreeState = () =>
-    spawnSync('git', ['status', '--porcelain', '--', 'packages', 'packages-web', 'package.json'], {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).stdout;
-  const before = worktreeState();
+  // Compare the bytes the script could write (root and public manifests,
+  // changelogs, template) rather than `git status`, which sibling test
+  // packages perturb with their own temporary directories.
+  const writableState = () => {
+    const hash = createHash('sha256');
+    const files = [
+      join(repoRoot, 'package.json'),
+      join(repoRoot, 'tools', 'create-stynx-app', 'template', 'package.json'),
+      ...collectPublicPackages(repoRoot).flatMap(({ manifestPath }) => [
+        manifestPath,
+        join(dirname(manifestPath), 'CHANGELOG.md'),
+      ]),
+    ];
+    for (const file of files) {
+      if (existsSync(file)) hash.update(file).update(readFileSync(file));
+    }
+    return hash.digest('hex');
+  };
+  const before = writableState();
   const preview = spawnSync(process.execPath, ['scripts/version-packages.mjs', '--preview'], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
   assert.equal(preview.status, 0, preview.stderr);
   assert.match(preview.stdout, /\[version-packages\] (no pending changesets|fixed-group bump)/u);
-  assert.equal(worktreeState(), before);
+  assert.equal(writableState(), before);
 });
