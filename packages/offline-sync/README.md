@@ -43,7 +43,7 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/testing`: `^11.1.26`
 - `@types/node`: `24.12.4`
 - `typescript`: `^6.0.3`
 

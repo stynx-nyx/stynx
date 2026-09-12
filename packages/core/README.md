@@ -249,9 +249,9 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 ### Runtime dependencies
 
-- `@aws-sdk/client-secrets-manager`: `^3.1037.0`
-- `@aws-sdk/client-ssm`: `^3.1037.0`
-- `nestjs-cls`: `^6.2.0`
+- `@aws-sdk/client-secrets-manager`: `^3.1068.0`
+- `@aws-sdk/client-ssm`: `^3.1068.0`
+- `nestjs-cls`: `^6.2.1`
 - `zod`: `^4.3.6`
 
 ### Optional dependencies
@@ -267,8 +267,8 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/platform-express`: `^11.1.19`
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/platform-express`: `^11.1.26`
+- `@nestjs/testing`: `^11.1.26`
 - `@types/node`: `24.12.4`
 - `@types/supertest`: `^7.2.0`
 - `supertest`: `^7.2.2`

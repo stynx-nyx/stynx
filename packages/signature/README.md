@@ -106,9 +106,7 @@ export class SignedPdfService {
 ### Example 1 — sign a generated payslip
 
 ```ts
-const pdfBytes = await pdfRenderer.render({
-  /* payslip */
-});
+const pdfBytes = await pdfRenderer.render({/* payslip */});
 const signed = await pades.sign(pdfBytes, { profile: 'PAdES-B-T', tsaUrl: 'http://tsa.example' });
 await storage.put(`signed/${id}.pdf`, signed);
 ```
@@ -169,7 +167,7 @@ _None._
 
 ### Development-only dependencies
 
-- `@nestjs/testing`: `^11.1.19`
+- `@nestjs/testing`: `^11.1.26`
 - `@types/node`: `24.12.4`
 - `typescript`: `^6.0.3`
 
