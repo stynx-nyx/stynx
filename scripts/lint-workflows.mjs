@@ -14,22 +14,32 @@ const workflows = readdirSync(workflowsDir)
   .sort();
 
 verifyNoRemoteMutationWorkflows(repoRoot);
-verifyPathFilteredRequiredCheckCompanion({
-  filtered: 'reference-apps.yml',
-  companion: 'reference-apps-not-applicable.yml',
-  requiredJob: 'reference-web-e2e',
-});
 
-// A required status check that lives in a path-filtered workflow needs a
-// companion workflow with the exact inverse filter reporting the same job
-// name, or pull requests outside those paths can never merge. The two path
-// lists must stay byte-identical and the companion must expose the job.
-function verifyPathFilteredRequiredCheckCompanion({ filtered, companion, requiredJob }) {
+// Required status checks on `main` that live in path-filtered workflows. Each
+// needs a companion workflow with the exact inverse filter reporting the same
+// job names, or pull requests outside those paths can never merge. The two
+// path lists must stay identical and the companion must expose every job.
+const pathFilteredRequiredChecks = [
+  {
+    filtered: 'reference-apps.yml',
+    companion: 'reference-apps-not-applicable.yml',
+    requiredJobs: ['reference-web-e2e'],
+  },
+  {
+    filtered: 'release-prep.yml',
+    companion: 'release-prep-not-applicable.yml',
+    requiredJobs: ['package-policy', 'dependency-audit'],
+  },
+];
+for (const pair of pathFilteredRequiredChecks) {
+  verifyPathFilteredRequiredCheckCompanion(pair);
+}
+
+function verifyPathFilteredRequiredCheckCompanion({ filtered, companion, requiredJobs }) {
   const load = (name) => parseYaml(readFileSync(resolve(workflowsDir, name), 'utf8'));
   const filteredPaths = load(filtered).on?.pull_request?.paths;
   const companionWorkflow = load(companion);
   const companionIgnore = companionWorkflow.on?.pull_request?.['paths-ignore'];
-  const companionJobName = companionWorkflow.jobs?.[requiredJob]?.name;
   if (!Array.isArray(filteredPaths) || !Array.isArray(companionIgnore)) {
     console.error(`[workflows] ${filtered} pull_request.paths or ${companion} pull_request.paths-ignore is missing`);
     process.exit(1);
@@ -38,9 +48,11 @@ function verifyPathFilteredRequiredCheckCompanion({ filtered, companion, require
     console.error(`[workflows] ${companion} paths-ignore must equal ${filtered} paths (same entries, same order)`);
     process.exit(1);
   }
-  if (companionJobName !== requiredJob) {
-    console.error(`[workflows] ${companion} must expose a job named ${requiredJob}`);
-    process.exit(1);
+  for (const requiredJob of requiredJobs) {
+    if (companionWorkflow.jobs?.[requiredJob]?.name !== requiredJob) {
+      console.error(`[workflows] ${companion} must expose a job named ${requiredJob}`);
+      process.exit(1);
+    }
   }
 }
 

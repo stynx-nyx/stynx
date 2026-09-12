@@ -1,0 +1,66 @@
+name: STYNX Release Prep (not applicable)
+
+# Companion to release-prep.yml. That workflow is path-filtered, but its
+# `package-policy` and `dependency-audit` jobs are required status checks on
+# `main`. A pull request that touches none of its paths (for example only
+# workflow files under .github/ or repository scripts outside the release
+# set) never receives those checks and could only be merged through an
+# administrator bypass.
+#
+# This workflow carries the exact inverse filter (`paths-ignore` with the same
+# list) and reports passing jobs under the same names, the pattern GitHub
+# documents for required checks on path-filtered workflows. Both checks are
+# pure functions of inputs that are inside the filtered list (the lockfile,
+# package manifests, changesets, release scripts), so when none of those
+# changed the result cannot differ from `main`. Exactly one of the two
+# workflows runs for any pull request. Keep both path lists identical;
+# `scripts/lint-workflows.mjs` fails closed if they diverge.
+
+on:
+  pull_request:
+    paths-ignore:
+      - '.changeset/**'
+      - '.github/workflows/release-prep.yml'
+      - '.github/workflows/release.yml'
+      - '.semgrepignore'
+      - 'docs/**'
+      - 'infra/github/**'
+      - 'infra/cdk/**'
+      - 'package.json'
+      - 'packages/**'
+      - 'packages-web/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/generate-release-drafts.mjs'
+      - 'scripts/publish-docs-site.mjs'
+      - 'scripts/verify-pages-publication.mjs'
+      - 'scripts/verify-release-provenance.mjs'
+      - 'scripts/verify-release-policy.mjs'
+
+concurrency:
+  group: release-prep-not-applicable-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  package-policy:
+    name: package-policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Report the package policy gate as not applicable
+        run: |
+          echo "No package manifest, changeset, or release script changed in this pull request."
+          echo "The package-policy gate does not apply; reporting success so the required check resolves."
+
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Report the dependency audit gate as not applicable
+        run: |
+          echo "pnpm-lock.yaml and every package manifest are unchanged in this pull request."
+          echo "The dependency-audit gate does not apply; reporting success so the required check resolves."
