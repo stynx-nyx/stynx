@@ -495,14 +495,13 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 });
 
 test('Architect anomaly policy is required at its exact approved digest', () => {
-  // The Owner's 2026-09-12 decision names 1.3.0 as the next unified version;
-  // the 1.2.0 rebaseline target stays historical.
-  assert.equal(currentCandidate, '1.3.0');
+  // The Owner's 2026-09-12 decision names 1.3.1 as the next unified version
+  // (superseding the same day's 1.3.0); the 1.2.0 rebaseline target stays
+  // historical and is no longer a valid candidate.
+  assert.equal(currentCandidate, '1.3.1');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
-  assert.equal(
-    anomalyPolicy.owner_decision.supersedes.next_unified_version,
-    unifiedRebaselineTarget,
-  );
+  assert.equal(anomalyPolicy.owner_decision.supersedes.next_unified_version, '1.3.0');
+  assert.notEqual(currentCandidate, unifiedRebaselineTarget);
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');
   assert.equal(anomaly.version, '2.0.0');
@@ -1153,6 +1152,13 @@ test('publication uses an ordered 44-package plan, durable per-package receipts,
   }
   assert.match(workflow, /candidate_sha.*40-character/su);
   assert.match(workflow, /44/u);
+  // The monotonicity step reads the candidate from the policy constant; the
+  // workflow carries no per-release version literal.
+  assert.match(workflow, /--registry-monotonicity --candidate-from-policy/u);
+  assert.doesNotMatch(workflow, /--candidate \d+\.\d+\.\d+/u);
+  const verifier = repositorySource('scripts/verify-release-policy.mjs');
+  assert.match(verifier, /--candidate-from-policy/u);
+  assert.match(verifier, /registryVersionPolicyConstants\.candidate/u);
 });
 
 // Fixed-group version rule (see scripts/lib/fixed-group-version.mjs): the
