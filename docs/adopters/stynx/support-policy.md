@@ -6,13 +6,28 @@ STYNX supports one active framework line for MVP adopters.
 
 ## Supported Runtime Matrix
 
-| Surface    | Supported line                                                                     | Enforcement                             |
-| ---------- | ---------------------------------------------------------------------------------- | --------------------------------------- |
-| Node.js    | `>=24 <25`                                                                         | `engines` + `pnpm check:engines`        |
-| pnpm       | `>=9 <10`                                                                          | `packageManager` + `pnpm check:engines` |
-| Angular    | `>=20.3.0 <22`, tested on `21.2.15`                                                | package peer deps + package tests       |
-| NestJS     | `^11.1.19`                                                                         | package manifests + consumer fixtures   |
-| TypeScript | `5.9.3` for Angular packages; root tooling may use a newer compiler where required | package manifests + typecheck           |
+| Surface    | Supported line                                                                                                              | Enforcement                             |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Node.js    | `>=24 <25`                                                                                                                  | `engines` + `pnpm check:engines`        |
+| pnpm       | `>=9 <10`                                                                                                                   | `packageManager` + `pnpm check:engines` |
+| Angular    | `>=22.0.0 <23`, tested on `22.0.1` (STYNX 1.3.x); `>=20.3.0 <22` on STYNX 1.2.x                                             | package peer deps + package tests       |
+| NestJS     | `^11.1.19`                                                                                                                  | package manifests + consumer fixtures   |
+| TypeScript | `6.0.3` for Angular packages (required by `@angular/compiler-cli@22`); root tooling may use a newer compiler where required | package manifests + typecheck           |
+
+### Angular 22 compatibility note (STYNX 1.3.0)
+
+- STYNX 1.3.x Angular packages are built with `@angular/compiler-cli@22` and
+  declare peer ranges `>=22.0.0 <23`. Applications on Angular 20 or 21 must
+  stay on STYNX 1.2.x; Angular 22 library output is not consumable by older
+  Angular runtimes.
+- The published declaration files of nine Angular packages are stricter than
+  in 1.2.x: the previous toolchain dropped `| null` / `| undefined` from
+  emitted generic type arguments (for example `Signal<ErrorBannerState>` where
+  the source declares `Signal<ErrorBannerState | null>`). 1.3.x emits the
+  types as written. Consumers that relied on the narrower declarations will
+  see strict-null errors at compile time; runtime behaviour is unchanged.
+- `create-stynx-app` scaffolds Angular 22 / TypeScript 6 applications from
+  1.3.0 onward.
 
 ## Compatibility Window
 

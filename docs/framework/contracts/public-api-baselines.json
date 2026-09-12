@@ -17,7 +17,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular.d.ts": "1cd460eaf3435bb8daa6b57c28382151b2cfa28ec22e07876eb21bfe929896a6"
+        "types/stynx-nyx-angular.d.ts": "e24b916e23215504a8a34caaeceb38987b260854ef7a3bd72554f0a941d64ccc"
       }
     },
     "@stynx-nyx/angular-audit": {
@@ -42,7 +42,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-audit-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-audit.d.ts": "35f9f301c6002e5e6f0ddd2ffcc76b16be89f1751b33d4abb1d414619ffb3449"
+        "types/stynx-nyx-angular-audit.d.ts": "c79ec515baa47d9a3bf2d11cf5292ba03f1dd2692ef61cd526672731f63a7787"
       }
     },
     "@stynx-nyx/angular-auth": {
@@ -92,7 +92,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-flow-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-flow.d.ts": "709301b1816e6333b7424398e02ad74696418839e7238af615e07eec9f1d6c6d"
+        "types/stynx-nyx-angular-flow.d.ts": "f5b4a62ae00ca4cd58f215ee9c92b19863fc2416eb3d6b46fa8624d484583f12"
       }
     },
     "@stynx-nyx/angular-i18n": {
@@ -142,7 +142,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-iam-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-iam.d.ts": "4eeb19c972b2965af0a85bff9ba7cb313c85c56b19bd4ea2c1503ebcbc45bab2"
+        "types/stynx-nyx-angular-iam.d.ts": "646088f14b8d69bb2aeec9b7d63242bbe8203999f8454382ed444ba1cc638992"
       }
     },
     "@stynx-nyx/angular-profile": {
@@ -167,7 +167,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-profile-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-profile.d.ts": "cb4781c7022aa6c4bc6590cf0944ac9fc37ae9ac7a70dc258726ab6a0aad1f2c"
+        "types/stynx-nyx-angular-profile.d.ts": "b9682411b68dc872663e36ec21cf3024595b898c276240efcced98dba906b798"
       }
     },
     "@stynx-nyx/angular-sessions": {
@@ -217,7 +217,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-storage-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-storage.d.ts": "cac4ae037f197f4ace7e06c2ed4eae84706d52e8659404360e53047259ccd05c"
+        "types/stynx-nyx-angular-storage.d.ts": "e853da13d4c785547889115d6511204f0af7e328938b701c20d50f2c9e89a06d"
       }
     },
     "@stynx-nyx/angular-tenancy": {
@@ -242,7 +242,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-tenancy-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-tenancy.d.ts": "6d5cd977a0ceae8c0f63f3905139386625d036388148e9c6bf8b16ec45b7b5fb"
+        "types/stynx-nyx-angular-tenancy.d.ts": "cfd33e6f2030fa4a18a8d1092b23f4b7e894025c839730bfc7d3e0bec8beb262"
       }
     },
     "@stynx-nyx/angular-trash": {
@@ -267,7 +267,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-trash-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-trash.d.ts": "81a210809b9cd8ee3185aa531be7e897254e7d951d8c999ed1d25fe02b39a369"
+        "types/stynx-nyx-angular-trash.d.ts": "9dcc28100042e6060574f2a23422cdaaabfb50738aa508b2e23bffec0581f105"
       }
     },
     "@stynx-nyx/angular-ui": {
@@ -2117,7 +2117,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-sdk-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-sdk.d.ts": "b3ccd9076eed10c8ef46ba9c32b82740ecbc57a649cc9d23c79496b88b78f50f"
+        "types/stynx-nyx-sdk.d.ts": "48178ce7721c12f2827d092f8cef98f6bdd7ee65c00785228656cc5f22d2c863"
       }
     },
     "@stynx-nyx/sessions": {
