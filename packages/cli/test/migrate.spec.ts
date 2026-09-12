@@ -4,7 +4,9 @@ import { resolve } from 'node:path';
 
 const mockPg = vi.hoisted(() => ({
   clients: [] as unknown[],
-  Client: vi.fn((options: { connectionString: string }) => {
+  // `pg.Client` is constructed with `new`; Vitest 4 rejects arrow-function
+  // mock implementations as constructors, so the mock uses a `function` body.
+  Client: vi.fn(function (options: { connectionString: string }) {
     const client = mockPg.clients.shift() as { connectionString?: string } | undefined;
     if (!client) {
       throw new Error('Missing mocked pg client');

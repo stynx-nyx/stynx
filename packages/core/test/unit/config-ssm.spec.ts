@@ -2,8 +2,19 @@
 // `const mockX = vi.fn(...)` declarations, so those reference TDZ values
 // inside the factory. `vi.hoisted` is the official escape hatch.
 const mockSsmSend = vi.hoisted(() => vi.fn());
-const mockSsmClient = vi.hoisted(() => vi.fn(() => ({ send: mockSsmSend })));
-const mockGetParametersByPathCommand = vi.hoisted(() => vi.fn((input) => ({ input })));
+// `SSMClient` and `GetParametersByPathCommand` are constructed with `new`;
+// Vitest 4 rejects arrow-function mock implementations as constructors, so
+// both mocks use a `function` body.
+const mockSsmClient = vi.hoisted(() =>
+  vi.fn(function () {
+    return { send: mockSsmSend };
+  }),
+);
+const mockGetParametersByPathCommand = vi.hoisted(() =>
+  vi.fn(function (input) {
+    return { input };
+  }),
+);
 
 vi.mock('@aws-sdk/client-ssm', () => ({
   SSMClient: mockSsmClient,
