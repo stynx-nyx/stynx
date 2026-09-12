@@ -104,7 +104,7 @@ describe('RedisSessionStore', () => {
 
     const client = makeClient();
     await store.onModuleInit();
-    expect(mockCreateClient).toHaveBeenCalledWith({ url: 'redis://127.0.0.1:6379' });
+    expect(mockCreateClient).toHaveBeenCalledWith({ url: 'redis://127.0.0.1:6379', RESP: 2 });
     expect(client.on).toHaveBeenCalledWith('error', expect.any(Function));
     (client.on.mock.calls[0]?.[1] as () => void)();
     await store.onModuleDestroy();
