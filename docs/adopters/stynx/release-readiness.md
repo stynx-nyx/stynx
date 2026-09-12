@@ -86,6 +86,22 @@ readiness closure:
 
 ## Exact-main package and documentation publication
 
+### Fixed-group version rule (from 1.3.1)
+
+The 44 publishable `@stynx-nyx/*` packages form one Changesets `fixed` group and
+always release at one shared version. `pnpm version-packages` (backed by
+`scripts/version-packages.mjs`) computes that version _before_ Changesets runs:
+the current unified version advanced by the highest bump type that a pending
+changeset declares for a group member. A major is a major only when a changeset
+says so. Changesets' own peer-dependency inference reads the required
+`workspace:*` peer form as "exactly the previous version" and would otherwise
+promote every minor of the group to a major (1.3.0 was generated as 2.0.0 and
+corrected by hand); the script rewrites the generated version in the manifests
+and in the new CHANGELOG section, including the `Updated dependencies` sibling
+lines. `pnpm release:preview` prints the pending changesets and the resulting
+version without writing anything, and the `ci: version packages` commit must be
+the direct child of `main` as before.
+
 The current publication candidate is prepared through two independent manual
 lanes. Neither lane publishes from a pull request, a branch tip supplied by a
 candidate, or an automatic `main` push.
