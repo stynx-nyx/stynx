@@ -149,7 +149,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           PACKAGES_READ_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}
-        run: node scripts/verify-release-policy.mjs --registry-monotonicity --candidate 1.2.0
+        run: node scripts/verify-release-policy.mjs --registry-monotonicity --candidate 1.3.0
 
       - name: Run Changesets release flow
         # The publish command materializes publication-plan.json before the first
