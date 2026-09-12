@@ -95,7 +95,7 @@ describe('RedisPermissionCacheBackend', () => {
     await backend.onModuleInit();
     subscribed?.('u-1:t-1');
 
-    expect(createClient).toHaveBeenCalledWith({ url: 'redis://localhost:6379' });
+    expect(createClient).toHaveBeenCalledWith({ url: 'redis://localhost:6379', RESP: 2 });
     expect(client.on).toHaveBeenCalledWith('error', expect.any(Function));
     expect(subscriber.on).toHaveBeenCalledWith('error', expect.any(Function));
     expect(client.connect).toHaveBeenCalledTimes(1);

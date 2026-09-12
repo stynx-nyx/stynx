@@ -251,7 +251,7 @@ describe('RedisIdempotencyBackend', () => {
       redis: { url: 'redis://localhost:6379', keyPrefix: 'custom' },
     });
     await backend.onModuleInit();
-    expect(redisMock.createClient).toHaveBeenCalledWith({ url: 'redis://localhost:6379' });
+    expect(redisMock.createClient).toHaveBeenCalledWith({ url: 'redis://localhost:6379', RESP: 2 });
     expect(redisMock.client.on).toHaveBeenCalledWith('error', expect.any(Function));
     expect(redisMock.client.connect).toHaveBeenCalledTimes(1);
 
