@@ -52,7 +52,13 @@ ENV NODE_ENV=production
 
 WORKDIR /app
 
+# Apply Debian security updates at build time. The node:24-bookworm-slim tag
+# is a snapshot; without the upgrade the runtime image keeps whatever package
+# versions that snapshot shipped, and the Trivy gate (HIGH/CRITICAL,
+# ignore-unfixed) fails as soon as bookworm-security publishes a fix, as it
+# did for libpcre2-8-0 (CVE-2026-86145).
 RUN apt-get update \
+  && apt-get upgrade -y --no-install-recommends \
   && apt-get install -y --no-install-recommends wget \
   && rm -rf /var/lib/apt/lists/*
 
