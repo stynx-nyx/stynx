@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [DEVAI 1.5.0 adoption and external mutation hardening](2026-09-15-devai-1.5.0-adoption.md)
 - [Mobile/offline E6 promotion from TEAT](ADR-MOBILE-OFFLINE-0001-teat-promotion.md)
 - [Canonical 1.x package line and registry anomaly correction](ADR-VERSION-LINE-0001.md)
 - [STYNX 1.1.1 campaign control contract](2026-08-24-stynx-1.1.1-campaign-controls.md)
