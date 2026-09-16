@@ -1,5 +1,21 @@
 # @stynx-nyx/offline-sync
 
+## 1.4.0
+
+### Minor Changes
+
+- 1565d4e: Adopt DEVAI 1.5.0 and its release profile 1.4.0, keeping mutation testing as
+  optional manual hardening outside all CI, acceptance, and publication gates.
+
+### Patch Changes
+
+- Updated dependencies [1565d4e]
+  - @stynx-nyx/auth@1.4.0
+  - @stynx-nyx/backend@1.4.0
+  - @stynx-nyx/core@1.4.0
+  - @stynx-nyx/data@1.4.0
+  - @stynx-nyx/idempotency@1.4.0
+
 ## 1.3.1
 
 ### Patch Changes

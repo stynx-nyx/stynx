@@ -1,5 +1,23 @@
 # @stynx-nyx/notifications
 
+## 1.4.0
+
+### Minor Changes
+
+- 1565d4e: Adopt DEVAI 1.5.0 and its release profile 1.4.0, keeping mutation testing as
+  optional manual hardening outside all CI, acceptance, and publication gates.
+
+### Patch Changes
+
+- Updated dependencies [1565d4e]
+  - @stynx-nyx/contracts@1.4.0
+  - @stynx-nyx/core@1.4.0
+  - @stynx-nyx/data@1.4.0
+  - @stynx-nyx/i18n@1.4.0
+  - @stynx-nyx/integration-adapter@1.4.0
+  - @stynx-nyx/logging@1.4.0
+  - @stynx-nyx/preferences@1.4.0
+
 ## 1.3.1
 
 ### Patch Changes
