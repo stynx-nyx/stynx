@@ -495,12 +495,12 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 });
 
 test('Architect anomaly policy is required at its exact approved digest', () => {
-  // The Owner's 2026-09-12 decision names 1.3.1 as the next unified version
-  // (superseding the same day's 1.3.0); the 1.2.0 rebaseline target stays
-  // historical and is no longer a valid candidate.
-  assert.equal(currentCandidate, '1.3.1');
+  // The Owner's 2026-09-15 decision names 1.4.0 as the next unified version
+  // (superseding 1.3.1); the 1.2.0 rebaseline target stays historical and is
+  // no longer a valid candidate.
+  assert.equal(currentCandidate, '1.4.0');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
-  assert.equal(anomalyPolicy.owner_decision.supersedes.next_unified_version, '1.3.0');
+  assert.equal(anomalyPolicy.owner_decision.supersedes.next_unified_version, '1.3.1');
   assert.notEqual(currentCandidate, unifiedRebaselineTarget);
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');

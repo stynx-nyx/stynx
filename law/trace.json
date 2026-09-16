@@ -3680,12 +3680,20 @@
       "assertion_digest_sha256": "85d1e8edfa36840035e9968c206a4312b0f4db293ba82ec5919ab77ce4a8bd63"
     },
     {
+      "path": "test/scripts/devai-1.5-adoption-contract.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 36,
+      "assertion_digest_sha256": "deb75b87d6ca42f4fedd4ce534cb955d4b41d84511674167b4af03b4379b828c"
+    },
+    {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 849,
-      "assertion_digest_sha256": "88f05e5e52b9ebdbf61af16b8a9f5efabbe48bffdaed78a6e27d80a5d17ff36b"
+      "assertion_digest_sha256": "71801aee9cb0a5b24422f82cd257f3a9768c43b23ac9d058868c126133677b9b"
     },
     {
       "path": "test/scripts/k6-check-summary.test.mjs",
@@ -3701,7 +3709,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 186,
-      "assertion_digest_sha256": "9fae65d8c894de29a9915d3b551e99f6623bdf9e1ea29a63055570926e4b7a3b"
+      "assertion_digest_sha256": "c377c70131f57fd5ed64c20482545a8f82e04474083bcd8040aaf5380b43b35f"
     }
   ],
   "suites": {

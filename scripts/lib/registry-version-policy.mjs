@@ -4,8 +4,8 @@ import { resolve } from 'node:path';
 
 export const registryVersionPolicyConstants = Object.freeze({
   anomalyPolicyPath: 'law/policy/registry-version-anomalies.json',
-  anomalyPolicySha256: 'bd67ad0d10546775fff1e37c413842b74e7bbe7a273ea35fe20c00a33c849e48',
-  candidate: '1.3.1',
+  anomalyPolicySha256: '01d0ec7aeadb4c2dcd97ffa963e239b8ba6c7d4101fd17a761ec3b5fc7c278de',
+  candidate: '1.4.0',
   canonicalMajor: 1,
   packageCount: 44,
   registryUrl: 'https://npm.pkg.github.com',

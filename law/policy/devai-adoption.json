@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.2.0",
+  "policy_version": "1.3.0",
   "project": {
     "project_type": "platform-package",
     "repo": {
@@ -18,14 +18,46 @@
       }
     }
   },
+  "release_verification": {
+    "schemaVersion": "1.4.0",
+    "policy_id": "stynx.release-verification",
+    "policy_version": "1.4.0",
+    "release_unit": "stynx-workspace",
+    "version_source": "package.json",
+    "default_support": "current",
+    "required_check": "stynx-release-gate",
+    "capability_tasks": {
+      "formatting-hygiene": ["lint:families"],
+      "lint": ["lint:families"],
+      "type-integrity": ["typecheck"],
+      "schema-consistency": ["api:contracts"],
+      "secret-scan": ["security"],
+      "path-portability": ["security"],
+      "package-integrity": ["release:prepare"],
+      "exact-candidate": ["release:prepare"],
+      "affected-checks": ["test:unit"],
+      "dependent-checks": ["test:integration"],
+      "build-integrity": ["build"],
+      "unit": ["test:unit"],
+      "integration": ["test:integration"],
+      "e2e": ["test:e2e"],
+      "consumer": ["reference:apps"],
+      "api-compatibility": ["api:contracts"],
+      "migration": ["db:rls"],
+      "rollback": ["db:rls"],
+      "adopter-materialization": ["doctor"],
+      "security": ["security"],
+      "database": ["db:rls"],
+      "tenancy": ["db:rls"],
+      "provenance": ["release:prepare"],
+      "reproducibility": ["release:prepare"],
+      "operational-matrix": ["test:local-full"]
+    },
+    "risk_capabilities": {},
+    "mutation_roster": []
+  },
   "domains": {
-    "client": [
-      "COVERAGE",
-      "ERROR",
-      "FLOW",
-      "PRIVACY",
-      "RBAC"
-    ]
+    "client": ["COVERAGE", "ERROR", "FLOW", "PRIVACY", "RBAC"]
   },
   "thresholds": {
     "lint": {
