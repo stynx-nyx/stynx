@@ -3680,20 +3680,20 @@
       "assertion_digest_sha256": "85d1e8edfa36840035e9968c206a4312b0f4db293ba82ec5919ab77ce4a8bd63"
     },
     {
-      "path": "test/scripts/devai-local-rc-verifier.test.mjs",
-      "suite": "unit",
-      "invariant_ids": ["INV-CORE-001"],
-      "lifecycle": "supported",
-      "assertion_count": 66,
-      "assertion_digest_sha256": "4dc70b030c29ebb05e41092ac4c642308c92823ef7d94d8729c2693e66bf9a2f"
-    },
-    {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 849,
       "assertion_digest_sha256": "88f05e5e52b9ebdbf61af16b8a9f5efabbe48bffdaed78a6e27d80a5d17ff36b"
+    },
+    {
+      "path": "test/scripts/k6-check-summary.test.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 26,
+      "assertion_digest_sha256": "b5788ac2f8c1db5d2fda5ee7411a8967bee12592d3ee24ab6a3b90895cc78509"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
