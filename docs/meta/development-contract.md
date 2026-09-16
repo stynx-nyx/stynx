@@ -24,8 +24,12 @@ This is the repository-local engineering contract for all contributors.
    `@storage`, and `@env` over deep relative imports.
 5. Do not delete, bypass, or hand-edit generated scripts that CI or release
    automation depends on.
-6. Preserve existing tests, assertions, coverage thresholds, mutation targets,
-   and quality gates. A feature change must add or update tests for its behavior.
+6. Preserve existing tests, assertions, coverage thresholds, the 38 mutation
+   targets, and ordinary quality gates. Functional tests and ordinary quality
+   gates remain readiness-bearing. Mutation testing remains available only as
+   optional manual hardening through `pnpm test:mutation`; its absence, failure,
+   or stale reports cannot promote or block acceptance or publication. A feature
+   change must add or update tests for its behavior.
 7. Use Conventional Commit subjects and do not bypass hooks during routine work.
 8. Package clean commands may remove only package-local disposable, untracked
    outputs; workspace clean commands may remove only repository-local

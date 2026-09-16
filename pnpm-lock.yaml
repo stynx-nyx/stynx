@@ -23,7 +23,8 @@ overrides:
   handlebars: 4.7.9
   http-proxy-middleware@2: 2.0.10
   image-size@2: link:tools/image-size-safe
-  joi: 18.2.1
+  joi: 18.2.5
+  colord: 2.9.4
   fast-uri@3: 3.1.6
   js-yaml@3: 3.15.2
   js-yaml@4: 4.3.2
@@ -67,8 +68,8 @@ importers:
   .:
     devDependencies:
       '@aarusso-nyx/devai':
-        specifier: 1.4.5
-        version: 1.4.5(ws@8.21.0)(zod@3.25.76)
+        specifier: 1.5.0
+        version: 1.5.0(ws@8.21.0)(zod@3.25.76)
       '@angular-eslint/eslint-plugin':
         specifier: 22.0.0
         version: 22.0.0(@typescript-eslint/utils@8.70.0(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3)
@@ -2449,8 +2450,8 @@ packages:
     resolution: {integrity: sha512-7mJJl+wf1AByoT0PknQiQfOPnVNT4fevGrUBVWO4HXsnYn1aQPyRyrELYrNUFleUBM++KzMKN6QaxHPk0t/6/g==}
     engines: {node: '>=11'}
 
-  '@aarusso-nyx/devai@1.4.5':
-    resolution: {integrity: sha512-5XuNGqbiqRGx+3MJOlO9VdJoKwX5MZ9a1BxdX/APUeD/j48CgtLwf5hNyxDkujxexekNn5TGSLUmU7aki2LTeQ==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.4.5/1d5aa3fc8748a3ac7c2150750f60803c0b357b86}
+  '@aarusso-nyx/devai@1.5.0':
+    resolution: {integrity: sha512-xJoiua6Q4omdQt6adrcTpc8K2YXyGRkNnbvF6ePFghHfLsXnaGuUS/lxsNqTp1d+N+13M9rg6DQhbIUAnDhUYA==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.5.0/f87a6e78976f6844a6bf4f281d7e4e72df49f31b}
     engines: {node: '>=24.0.0'}
     hasBin: true
 
@@ -7496,8 +7497,8 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
-  colord@2.9.3:
-    resolution: {integrity: sha512-jeC1axXpnb0/2nn/Y1LPuLdgXBLH7aDcHu4KEKfqw3CUhX7ZpfBSlPKyqXE6btIgEzfWtrX3/tyBCaCvXvMkOw==}
+  colord@2.9.4:
+    resolution: {integrity: sha512-z0nTt5300AIviCn9FTEL4G2DzPkfEDfghx6Do0ZfM3u0rOINBtfw2H8lD4VXyZF/o8HTzzyiCztaG2X/+IMeZA==}
 
   colorette@2.0.20:
     resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
@@ -9679,8 +9680,8 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
-  joi@18.2.1:
-    resolution: {integrity: sha512-2/OKlogiESf2Nh3TFCrRjrr9z1DRHeW0I+KReF67+4J0Ns+8hBtHRmoWAZ2OFU6I5+TWLEe6sVlSdXPjHm5UbQ==}
+  joi@18.2.5:
+    resolution: {integrity: sha512-+gEA7rLfaNWx9JzawWPrPetSZwT16NUqHtECDgjyAJreXcs4TM7tx2Pa+VVJJK0YHM83ybrVdaT6UekHH50FJQ==}
     engines: {node: '>= 20'}
 
   jose@6.2.3:
@@ -12480,6 +12481,9 @@ packages:
   third-party-web@0.29.2:
     resolution: {integrity: sha512-fegtha91tq2DHphyoiBXVHjVi2YG9zFaRnboT9C28tO1en9Y3wJsfspuy40F+u5wl3hHVbw7cnd1b67kEGHb8g==}
 
+  third-party-web@0.30.0:
+    resolution: {integrity: sha512-p+PfyL5U0ediGzvwPzMSdD9MnC8rHW6nWJJVLIQvqN7RsSqfaZ+7n4c9GILqH36EYR0eXB9CzAeCRnKFr/9uJg==}
+
   thread-stream@4.2.0:
     resolution: {integrity: sha512-e2zZ96wSChazBsbENf/Pcm/4swHt2cEKQ92rhUjkL9GCKiTDJIaTBenjE/m9DXi0QBmTMDkFDdOomUy20A1tDQ==}
     engines: {node: '>=20'}
@@ -13351,12 +13355,14 @@ snapshots:
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
 
-  '@aarusso-nyx/devai@1.4.5(ws@8.21.0)(zod@3.25.76)':
+  '@aarusso-nyx/devai@1.5.0(ws@8.21.0)(zod@3.25.76)':
     dependencies:
+      '@types/node': 24.13.4
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       cac: 6.7.14
       minimatch: 9.0.9
+      semver: 7.8.5
       typescript: 5.9.3
       yaml: 2.9.0
     optionalDependencies:
@@ -16283,7 +16289,7 @@ snapshots:
       '@types/mdast': 4.0.4
       '@types/react': 19.3.0
       commander: 5.1.0
-      joi: 18.2.1
+      joi: 18.2.5
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       react-helmet-async: '@slorber/react-helmet-async@1.3.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
@@ -16334,7 +16340,7 @@ snapshots:
       '@docusaurus/utils': 3.10.2(@swc/core@1.16.2)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.26))(html-minifier-terser@7.2.0)(postcss@8.5.26)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@docusaurus/utils-common': 3.10.2(@swc/core@1.16.2)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.26))(html-minifier-terser@7.2.0)(postcss@8.5.26)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       fs-extra: 11.3.5
-      joi: 18.2.1
+      joi: 18.2.5
       js-yaml: 4.3.2
       lodash: 4.18.1
       tslib: 2.8.1
@@ -17598,7 +17604,7 @@ snapshots:
   '@paulirish/trace_engine@0.0.65':
     dependencies:
       legacy-javascript: 0.0.1
-      third-party-web: 0.29.2
+      third-party-web: 0.30.0
 
   '@pdf-lib/fontkit@1.1.1':
     dependencies:
@@ -19771,7 +19777,7 @@ snapshots:
 
   color-name@1.1.4: {}
 
-  colord@2.9.3: {}
+  colord@2.9.4: {}
 
   colorette@2.0.20: {}
 
@@ -22141,7 +22147,7 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  joi@18.2.1:
+  joi@18.2.5:
     dependencies:
       '@hapi/address': 5.1.1
       '@hapi/formula': 3.0.2
@@ -23910,7 +23916,7 @@ snapshots:
     dependencies:
       browserslist: 4.28.7
       caniuse-api: 3.0.0
-      colord: 2.9.3
+      colord: 2.9.4
       postcss: 8.5.26
       postcss-value-parser: 4.2.0
 
@@ -24061,7 +24067,7 @@ snapshots:
 
   postcss-minify-gradients@6.0.3(postcss@8.5.26):
     dependencies:
-      colord: 2.9.3
+      colord: 2.9.4
       cssnano-utils: 4.0.2(postcss@8.5.26)
       postcss: 8.5.26
       postcss-value-parser: 4.2.0
@@ -25653,6 +25659,8 @@ snapshots:
       tslib: 2.8.1
 
   third-party-web@0.29.2: {}
+
+  third-party-web@0.30.0: {}
 
   thread-stream@4.2.0:
     dependencies:
