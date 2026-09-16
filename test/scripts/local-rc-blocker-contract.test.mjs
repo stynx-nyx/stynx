@@ -27,10 +27,7 @@ import {
   normalizeMutationReport,
   withMutationReportCleanup,
 } from '../../scripts/lib/mutation-evidence.mjs';
-import {
-  canonicalize,
-  discoverMutationRoster,
-} from '../../scripts/lib/mutation-roster.mjs';
+import { canonicalize, discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '..', '..');
 const privacyRoot = join(repoRoot, 'packages/privacy');
@@ -4301,7 +4298,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': 'a553e739d15a9974a3537f9ce666f61aa303dce5724043c44a38bc26e5a0cc3a',
+    'package.json': 'ae8c5b644b203830d03cc2680ee7c6ce0b8eb0b991c7234c538b4933ee88699c',
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
@@ -4472,7 +4469,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': 'a553e739d15a9974a3537f9ce666f61aa303dce5724043c44a38bc26e5a0cc3a',
+    'package.json': 'ae8c5b644b203830d03cc2680ee7c6ce0b8eb0b991c7234c538b4933ee88699c',
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
@@ -4532,7 +4529,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
       '3fbbb1a4dc5bcafe289113674ae8176f2cc90af74dfd69c6f1dc4f138fbff067',
-    'package.json': 'a553e739d15a9974a3537f9ce666f61aa303dce5724043c44a38bc26e5a0cc3a',
+    'package.json': 'ae8c5b644b203830d03cc2680ee7c6ce0b8eb0b991c7234c538b4933ee88699c',
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
