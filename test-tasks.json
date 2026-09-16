@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "descriptorVersion": "stynx-devai-1.2.0-v1",
+  "descriptorVersion": "stynx-devai-1.5.0-v1",
   "repositoryId": "stynx-nyx/stynx",
   "fallbackNodeId": "test:local-full",
   "dynamicFallbackSelectors": [
@@ -409,7 +409,6 @@
         "lint:families",
         "test:e2e",
         "docs",
-        "test:mutation",
         "test:performance",
         "security",
         "doctor"
@@ -447,7 +446,6 @@
         "db:rls",
         "test:e2e",
         "docs",
-        "test:mutation",
         "test:performance",
         "security",
         "doctor",
