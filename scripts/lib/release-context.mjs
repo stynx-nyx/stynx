@@ -22,6 +22,10 @@ const allowedVersionFollowUpPaths = new Set([
   'scripts/run-release-preparation.mjs',
   'scripts/sync-release-version.mjs',
   'scripts/verify-release-policy.mjs',
+  // The versioned root manifest changes this frozen contract's digest. Its
+  // exact pin must follow the generated version commit without loosening the
+  // contract or permitting arbitrary release follow-up paths.
+  'test/scripts/local-rc-blocker-contract.test.mjs',
   'tools/create-stynx-app/template/package.json',
 ]);
 
