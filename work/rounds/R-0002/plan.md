@@ -1,7 +1,7 @@
 # R-0002 — plano e checkpoint da STYNX 1.5.0
 
 **Papel atual:** Architect. **Estado:** bootstrap e CI local verdes;
-delivery-review do CTG-0001 em reparo após REVIEW.
+delivery-review do CTG-0001 escalado após segundo REVIEW.
 **Worktree:**
 `/Users/aarusso/Development/stynx-worktrees/release-1-5-0`, branch
 `feat/release-1-5-0`.
@@ -214,6 +214,8 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Delivery-review CTG-0001 ciclo 2: `plant-bug` — catch amplo em dois verificadores rebaixa indisponibilidade JWKS/serviço a ator nominal, e tenancy aceita principal sem proveniência; escalar ao Architect para discriminar credencial inválida, infraestrutura e fonte de claim, depois nova tríade focal.
+- Delivery-review CTG-0001 ciclo 2: `sensor-error` — faltam negativos de sessão revogada, identidade anterior e grant verificado, além de prova explícita de inversão APP_INTERCEPTOR/id gerado; Inspector acrescenta, Architect faz rebind e repete uma vez na tarefa escalada.
 - Revisão interna CTG-0001 de marcadores combinados: `plant-bug` — @System ainda contornava @Permission em rota pública com tenant e AuthContextGuard deixava stynxClaims anterior com token inválido; Inspector adicionou sensores, Engineer corrige uma vez.
 - Sensor de PermissionGuard CTG-0001: `sensor-error` — mock não declarava STYNX_PUBLIC_TENANT_ROUTE e modelava @Public legado; Inspector adicionou o marcador e o sensor passou.
 - Revisão interna do reparo CTG-0001: `plant-bug` — PermissionGuard passou a negar @Public legado com @Permission, e AuthContextGuard optional conservava identidade anterior em token ausente/inválido; Inspector adicionou regressões, Engineer corrige sem alterar rotas protegidas.
