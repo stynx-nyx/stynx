@@ -214,6 +214,10 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- RC1 após CTG-0001: `plant-bug` — `pnpm version-packages` em pre mode
+  `rc` deixou os 44 pacotes em `1.5.0` estável após Changesets gerar
+  `2.0.0-rc.0` por inferência de peers; corrigir a projeção do grupo
+  fixo antes de qualquer publicação, com sensor Inspector e novo review.
 - DEVAI `audit observe` do merge: `policy-issue` — primeira chamada
   observou o SHA mesclado enquanto HEAD local ainda apontava ao PR;
   avançar a worktree ao merge commit exato e repetir uma vez; concluiu.
@@ -327,3 +331,24 @@ autorizado pelo Owner). Delivery-reviews: REVIEW nos ciclos 1–4; PASS nos
 ciclos 5 e 6 (delta dos checks do PR). O PR #272 foi mesclado; RC e release
 final não foram publicados. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.
+
+## Contrato de versionamento RC1
+
+O pre mode `rc` deve produzir `1.5.0-rc.1` para a primeira candidata,
+partindo do grupo fixo em `1.4.0` e do changeset minor de tenancy. O
+versionador continua corrigindo a promoção major causada por peers
+`workspace:*`, mas não pode descartar o sufixo `rc`. Todos os 44 pacotes
+publicáveis, o manifesto raiz, o template e os CHANGELOGs devem concordar
+com a mesma versão. A invocação repetida sem changeset novo não cria outra
+RC. Um novo changeset estável acrescentado em pre mode produz `rc.2`,
+sem avançar a base minor; `pre exit` produz a final `1.5.0`. Entradas
+malformadas ou tag divergente falham fechadas. O fluxo estável já testado
+permanece válido.
+
+Tríade focal: Architect fixa este contrato e os prompts; reviewer Opus
+5.5 faz prompt-review antes do despacho; Inspector escreve sensores de
+plano e reescrita de CHANGELOG no fixture de versão; Engineer ajusta
+`scripts/lib/fixed-group-version.mjs` e `scripts/version-packages.mjs`
+até o red/green. Architect rebinda `law/trace.json` se necessário.
+Nenhum workflow será editado. A preparação, CI e revisão de entrega da
+RC ocorrerão antes da solicitação de recibo para publicar.
