@@ -214,6 +214,16 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- CI local após reparos do PR #272: `plant-bug` — o contrato novo tinha link
+  relativo válido no checkout, mas inválido após cópia para `site-docs`;
+  Architect aponta à nota de migração no repositório e repete o build uma vez.
+- CI remoto PR #272 `semgrep`: `sensor-error` — detector de segredo identificou
+  um JWT estrutural fictício literal no teste do guard; Inspector mantém a
+  prova e monta o token em runtime, depois rebind do trace pelo Architect.
+- CI remoto PR #272 `dependency-audit`: `reference-gap` — override raiz
+  herdado fixa `adm-zip@0.6.0` transitivo de `github-actionlint`, agora
+  vulnerável; Engineer atualiza o override/lockfile a 0.6.1 corrigido sem
+  editar workflows e repete os gates uma vez.
 - Delivery-review CTG-0001 ciclo 4: `plant-bug` — refresh JWKS concluído
   dentro da janela de 30 s ainda classifica toda assinatura inválida como
   falha ambígua; Architect esclarece o contrato, Inspector muda o sensor

@@ -159,6 +159,26 @@ do ciclo 4. Uma observação não bloqueante recomenda um teste de interleaving
 para o fast path de cache JWKS já conferido pelo reviewer no código. Não
 há desvio MUST conhecido no CTG-0001. PR e CI remoto pendentes.
 
+O PR [#272](https://github.com/stynx-nyx/stynx/pull/272) abriu no
+`06ee0eec` após `PASS`. O primeiro CI remoto sinalizou dois checks
+vermelhos de release prep. O SARIF do Semgrep identificou somente o JWT
+fictício literal do teste `stynx-auth.guard.spec.ts`; o Inspector passou
+a montá-lo em runtime (`f36fe73e`) sem mudar a asserção, com 11/11 e
+`lint:tests` verdes. O Architect rebindou somente o digest desse sensor
+em `law/trace.json` (`5cf54f8e`, 393/393). O `dependency-audit` apontou
+o override raiz herdado `adm-zip@0.6.0`, transitivo de
+`github-actionlint@1.7.12`; o Engineer atualizou override e lockfile
+para 0.6.1 corrigido (`1ac5c50d`). Instalação congelada, `pnpm audit
+--audit-level high` e `pnpm lint:workflows` passaram. Nenhum workflow
+foi editado. CI completo e review do delta pendentes antes do push.
+
+O rebuild integral após atualizar o lockfile revelou um link relativo
+quebrado em `docs/framework/contracts/tenancy-context-1.5.md` quando o
+gerador copia o contrato para `site-docs/contracts`. O Architect substituiu
+o destino pela nota de migração no repositório; o build isolado do site
+passou, e novo CI integral está pendente. A falha foi classificada como `plant-bug` em
+`plan.md` §Triagem, sem alteração de workflow ou teste.
+
 ## Escopo condicional
 
 UPS-SIG, UPS-OBX e UPS-OFS estão fora da release enquanto a §8 da especificação

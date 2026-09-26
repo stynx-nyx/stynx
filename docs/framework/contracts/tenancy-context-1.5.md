@@ -61,7 +61,7 @@ The configured header name replaces `X-Tenant-Id` in the first and third message
 
 ### UPS-TEN-06 — migration
 
-Consumers that manually reorder global interceptors or seed portal public requests should remove the DETRAN prototype `patchTenantContextInterceptorOrdering`, `seedPortalPublicRequest`, `request.portalPublic`, and `portalRequestHostStorage` after adopting the released middleware and `@PublicTenantRoute` API. Replace the patch with `StynxTenancyModule.forRoot({ publicTenant: { resolveHost, actorId } })`; retain a Host allow-list at the application boundary, and configure proxy Host forwarding explicitly in deployment. See [the backend migration note](../../meta/migration/stynx-1.5-tenancy-context.md). The Engineer's package changeset supplies the package CHANGELOG entry.
+Consumers that manually reorder global interceptors or seed portal public requests should remove the DETRAN prototype `patchTenantContextInterceptorOrdering`, `seedPortalPublicRequest`, `request.portalPublic`, and `portalRequestHostStorage` after adopting the released middleware and `@PublicTenantRoute` API. Replace the patch with `StynxTenancyModule.forRoot({ publicTenant: { resolveHost, actorId } })`; retain a Host allow-list at the application boundary, and configure proxy Host forwarding explicitly in deployment. See [the backend migration note](https://github.com/stynx-nyx/stynx/blob/main/docs/meta/migration/stynx-1.5-tenancy-context.md). The Engineer's package changeset supplies the package CHANGELOG entry.
 
 ## Verification boundary
 
