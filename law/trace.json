@@ -17,7 +17,8 @@
       "STYNX 1.5.0 CTG-0001 delivery-review rebind adds six HTTP/permission sensors and refreshes two assertion projections.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins legacy-public and optional-auth stale identity regression sensors.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins public-tenant marker precedence and stale-claims negatives.",
-      "STYNX 1.5.0 CTG-0001 Architect rebind pins credential classification, shared provenance, Cognito claims, interceptor order, and generated request ID sensors."
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins credential classification, shared provenance, Cognito claims, interceptor order, and generated request ID sensors.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind aligns typed-credential fixtures and symbol assertions after Inspector sensor triage."
     ]
   },
   "invariants": [
@@ -1385,7 +1386,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 39,
-      "assertion_digest_sha256": "a2d97b3bf14bb5c4dc12d0dcaffff2341f62686bdd067a70f61eb907399f6ecf"
+      "assertion_digest_sha256": "c863dfda7308fa94c8e940534808d8d4b5ca2a16a1170044a2236c49ac7806a4"
     },
     {
       "path": "packages/auth/test/unit/utils.spec.ts",
@@ -1401,7 +1402,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 48,
-      "assertion_digest_sha256": "a191256e01b3e0e71506fa0c58efdf27dde36990f17c0824e9b4ea4f883d49d9"
+      "assertion_digest_sha256": "76b79a1792142b37851a8e0382990900a3004e4555d313d7f0a9bf68ee2dd165"
     },
     {
       "path": "packages/backend/test/unit/audit-export.spec.ts",
@@ -1425,7 +1426,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 27,
-      "assertion_digest_sha256": "dd7851058a24e2d0699d5a03069291070751c1f15d348555d2a36b136d7502fe"
+      "assertion_digest_sha256": "ed5b47108c19b52b927ddea490c8ff4a3e108c1f3c9950d1cf9d09a71faea4b9"
     },
     {
       "path": "packages/backend/test/unit/auth-export.spec.ts",
@@ -3897,7 +3898,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 13,
-      "assertion_digest_sha256": "ba716de2a34afb60647e0229fac1205f189e10f2413a0ff1fa35f9b61fd323b2"
+      "assertion_digest_sha256": "16f359c5ea0e5ad0e520df7efca9f6c65c3a49adfe28a06511de8ed20057b079"
     },
     {
       "path": "packages/backend/test/integration/auth-context-request-context.integration.spec.ts",

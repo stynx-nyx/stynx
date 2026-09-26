@@ -214,6 +214,10 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Reparo focal CTG-0001 de proveniência: `sensor-error` — a nova fixture
+  exigia roles/permissões de identidade upstream sem marcador apesar de o
+  contrato exigir ator nominal sem autoridade herdada; Inspector corrigiu a
+  expectativa para listas vazias e a integração PostgreSQL passou 38/38.
 - Reparo focal CTG-0001: `sensor-error` — fixtures antigos simulavam
   credencial definitivamente inválida com `Error` genérico, e `toHaveProperty`
   do Vitest não aceita chave `symbol`; Inspector troca só essas fixtures por
