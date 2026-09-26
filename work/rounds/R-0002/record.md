@@ -87,6 +87,18 @@ legado com `@Permission` e identidade residual em `AuthContextGuard` opcional
 com token ausente/inválido. O Inspector os fixou em sensores que falham no
 código atual, commit `d9bfda3e`. O contrato foi precisado em `adbdb3cd`;
 rebind Architect e correção Engineer seguem.
+Os reparos de código foram commitados em `62ca16fd` e o baseline de API em
+`f340aca5`. `pnpm ci:stynx` passou nesse HEAD: 97/97 tarefas de teste,
+51/51 de integração, 48/48 de build, 37/37 testes de tenancy com PostgreSQL,
+RLS negativo e smoke. `pnpm release:preview` continua a projetar minor 1.5.0;
+a §8 do DETRAN e seu HEAD permanecem sem adendas/alteração. A verificação
+DEVAI `forbidden-actions` sobre o intervalo desde o baseline passou sem
+achados. Delivery-review Opus 5.5 ciclo 2 retornou `REVIEW` com duas lacunas
+bloqueantes: distinguir falha de infraestrutura de credencial inválida e
+provar sessão revogada/limpeza/permissão concedida no guard STYNX. Três
+observações adicionais pedem prova da ordem real dos interceptors, proveniência
+compartilhada e claims Cognito. Tarefa escalada para nova tríade focal;
+nenhum PR foi aberto.
 
 ## Escopo condicional
 
