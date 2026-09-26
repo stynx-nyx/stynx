@@ -214,6 +214,14 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Delivery-review CTG-0001 ciclo 4: `plant-bug` — refresh JWKS concluído
+  dentro da janela de 30 s ainda classifica toda assinatura inválida como
+  falha ambígua; Architect esclarece o contrato, Inspector muda o sensor
+  para credencial inválida tipada após refresh recente e mantém falha fechada
+  com cache anterior/refresh falho, Engineer corrige uma vez.
+- Delivery-review CTG-0001 ciclo 4: `sensor-error` — faltam falha de refresh
+  via `jwksUri` com restauração garantida de `fetch` e HTTP de erro JWKS no
+  guard STYNX; Inspector acrescenta e estende a tabela de códigos JOSE.
 - Reparo JWKS CTG-0001: `sensor-error` — um teste antigo juntava JWKS
   inicialmente vazio a sucesso após refresh, contrariando o novo contrato de
   falha de fonte; Inspector separou o negativo de chaves vazias do teste de
@@ -282,20 +290,21 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 2. Os containers da referência devem continuar saudáveis; usar as quatro
    variáveis `STYNX_TEST_PG_*` acima nos gates locais. Chromium Playwright
    1223 já está instalado no host.
-3. O CTG-0001 passou CI completo até `086c3f7c`, com trace 393/393,
+3. O CTG-0001 passou CI completo até `3314eb69`, com trace 393/393,
    PostgreSQL/RLS reais, baseline API 44/44 e delivery-review Opus 5.5 ciclo
-   3 em REVIEW. O reparo focal anterior distinguiu credenciais de falhas de
-   infraestrutura, mas a revisão identificou três bloqueios remanescentes:
-   ordem de interceptors no teste, JWKS vazio e provas HTTP/JOSE faltantes.
-   Fazer nova tríade focal e obter PASS antes de PR e merge.
+   4 em REVIEW. A ordem real de interceptors, JWKS vazio/rotação e as provas
+   HTTP/JOSE do ciclo 3 foram confirmadas. Resta corrigir a classificação de
+   assinatura inválida contra um conjunto recém-atualizado dentro da janela
+   de 30 s; acrescentar as provas não bloqueantes e obter PASS antes de PR
+   e merge.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
 5. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador do grupo
-   fixo. O último CI completo verde refere-se a `086c3f7c`, antes da nova
-   rodada de sensores e do reparo focal exigido pelo terceiro review.
+   fixo. O último CI completo verde refere-se a `3314eb69`, antes da nova
+   rodada de sensores e do reparo focal exigido pelo quarto review.
 
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
-autorizado pelo Owner). Três delivery-reviews retornaram REVIEW. Nenhum PR,
+autorizado pelo Owner). Quatro delivery-reviews retornaram REVIEW. Nenhum PR,
 merge, RC ou release final foi iniciado. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.

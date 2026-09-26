@@ -127,6 +127,18 @@ HTTP/JOSE de ramos de erro tipado e sessão revogada. O parecer também pede
 melhor cobertura de limpeza de marcadores, claim upstream divergente e
 permissão sem concessão pelo AuthContextGuard. Nova tríade focal registrada
 em `plan.md` §Triagem. Nenhum PR foi aberto.
+O Inspector corrigiu a prova das duas ordens reais em `5ce78eea` e acrescentou
+os sensores de JWKS/JOSE/HTTP em `0cf2c9ee`; o Architect rebindou o trace
+em `e853a966`. O Engineer corrigiu fonte de chaves e refresh em `03469868`;
+o baseline de API está em `3314eb69`. O CI integral passou nesse HEAD:
+trace 393/393, API 44/44, auth 232/232, tenancy PostgreSQL 39/39, RLS
+negativo/smoke, testes 97/97, integração 51/51 e build 48/48.
+O delivery-review Opus 5.5 ciclo 4 retornou `REVIEW` com um bloqueio:
+assinatura inválida contra JWKS recém-atualizado dentro da janela de 30 s
+era tratada como falha ambígua, causando 500 em vez de modo público. Dois
+ajustes de sensor não bloqueantes pedem falha de refresh por `jwksUri`, HTTP
+de JWKS no guard STYNX e tabela JOSE completa. O contrato e a triagem foram
+atualizados antes da nova tentativa; nenhum PR foi aberto.
 
 ## Escopo condicional
 
