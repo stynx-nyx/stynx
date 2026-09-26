@@ -156,3 +156,71 @@ test('remote workflows and their transitive npm scripts never execute mutation',
   const result = verifyNoRemoteMutationWorkflows(repoRoot);
   assert.equal(result.workflowCount > 0, true);
 });
+
+test('trusted local RC ledger gate pins the DEVAI-designated verifier and admitted controls', () => {
+  const verifierPolicy = readJson(
+    'node_modules/@aarusso-nyx/devai/dist/law/policy/trusted-local-rc-verifier-package.json',
+  );
+  const workflow = readFileSync(
+    join(repoRoot, '.github/workflows/devai-local-rc-verify.yml'),
+    'utf8',
+  );
+  const trust = readJson('law/policy/devai-local-rc-trust-store.json');
+  const toolchain = readJson('law/policy/devai-local-rc-toolchain.json');
+  const environment = readJson('law/policy/devai-local-rc-environment.json');
+  const manifest = readJson('package.json');
+  const project = readJson('.devai/config/project.json');
+
+  assert.equal(verifierPolicy.package.version, '1.5.4');
+  assert.equal(
+    verifierPolicy.verifier.provenance_sha256,
+    '1035c8aad52f4b2beb6a6f010106a4d1866c92dadf3fbae1c6e36e1a4d2ceddf',
+  );
+  for (const pinned of [
+    verifierPolicy.package.tarball,
+    verifierPolicy.package.shasum_sha1,
+    verifierPolicy.package.integrity_sri,
+    verifierPolicy.package.release_source.commit,
+    verifierPolicy.package.release_source.tree,
+    verifierPolicy.verifier.provenance_sha256,
+    verifierPolicy.verifier.source_commit,
+    'vars.DEVAI_LEDGER_VERIFIER_PROVENANCE_SHA256',
+    'binding=exact-tree',
+    '--arg name verified-local-rc',
+  ]) {
+    assert.equal(workflow.includes(pinned), true, `workflow must pin ${pinned}`);
+  }
+  assert.doesNotMatch(workflow, /pull_request|pnpm |npm run|test:mutation/u);
+
+  assert.deepEqual(
+    trust.trustedSigners.map((signer) => signer.signerId),
+    ['stynx-inspector-workstation-02'],
+  );
+  assert.deepEqual(trust.revokedSignerIds, []);
+  assert.match(trust.trustedSigners[0].publicKeyPem, /^-----BEGIN PUBLIC KEY-----\n/u);
+  assert.doesNotMatch(JSON.stringify(trust), /PRIVATE/u);
+
+  assert.deepEqual(Object.keys(toolchain).sort(), [
+    'node',
+    'pnpm',
+    'postgres',
+    'typescript',
+    'vitest',
+  ]);
+  assert.equal(environment.NODE_AUTH_TOKEN, null, 'no registry credential digest is admitted');
+  for (const value of Object.values(environment)) {
+    assert.equal(value === null || /^sha256:[0-9a-f]{64}$/u.test(value), true);
+  }
+
+  assert.equal(manifest.scripts['devai:rc:prepare'], 'node scripts/devai-local-rc.mjs prepare');
+  assert.equal(manifest.scripts['devai:rc:publish'], 'node scripts/devai-local-rc.mjs publish');
+  assert.deepEqual(project.ci_economy.attested_rc, {
+    profile: 'rc',
+    transport: 'protected-tag-v1',
+    tag_prefix: 'devai-local-evidence/',
+    binding: 'exact-tree',
+    required_check: 'verified-local-rc',
+    failure_mode: 'fail-closed',
+    local_only_nodes: ['test:mutation'],
+  });
+});
