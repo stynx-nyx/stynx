@@ -262,6 +262,12 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
    commit Inspector `1cd9bee7`; o novo rebind Architect volta a passar
    387/387. Concluir o commit deste rebind e aguardar os gates do Engineer.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
+5. Engineer CTG-0001 foi commitado em `2a94cac0` após os novos negativos
+   passarem. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador
+   do grupo fixo. `pnpm api:baselines:write` atualizou os hashes das
+   declarações afetadas; `pnpm package-readmes:write` não alterou arquivos.
+   Fazer commit Architect do baseline e deste checkpoint, rodar `pnpm
+ci:stynx`, solicitar delivery-review Opus 5.5 e só então abrir o PR.
 
 ## Reviews, PRs e publicações
 

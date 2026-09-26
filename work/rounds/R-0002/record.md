@@ -56,6 +56,12 @@ ou mapper em um token já verificado. O Inspector acrescentou duas negativas
 em `7d513da7`; elas falham na implementação inicial como esperado. O
 Engineer está corrigindo a causa. O rebind Architect atualizado continua
 387/387.
+O Engineer corrigiu o downgrade, e auth 212/212, backend 292/292, integração
+auth 23/23 e tenancy PostgreSQL 35/35 passaram. O commit F2 é `2a94cac0`.
+`pnpm release:preview` calculou bump minor do grupo fixo para 1.5.0 apesar da
+inferência major do `changeset status` bruto; `scripts/version-packages.mjs`
+trata essa promoção indevida. `pnpm api:baselines:write` atualizou as
+declarações públicas e `pnpm package-readmes:write` teve zero mudanças.
 
 ## Escopo condicional
 
