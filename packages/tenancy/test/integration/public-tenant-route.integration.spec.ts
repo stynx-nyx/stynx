@@ -107,11 +107,13 @@ class PublicTenantController {
   @Get('/audit-read')
   @PublicTenantRoute()
   async auditedRead() {
-    return this.database.withReplica(async (trx) => {
+    return this.database.tx(async (trx) => {
+      await trx.query('set local role stynx_app');
+      const identity = await trx.query<{ current_user: string }>('select current_user');
       const result = await trx.query<{ event_id: string }>(
         `select event_id::text from audit.events where entity = 'portal.public_record' order by occurred_at`,
       );
-      return result.rows;
+      return { currentUser: identity.rows[0]?.current_user, rows: result.rows };
     });
   }
 }
@@ -327,6 +329,6 @@ describe('public tenant route contract', () => {
       .get('/portal/audit-read')
       .set('host', 'b.portal.test')
       .expect(200)
-      .expect([]);
+      .expect({ currentUser: 'stynx_app', rows: [] });
   });
 });

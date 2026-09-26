@@ -88,10 +88,13 @@ describe('StynxCoreModule', () => {
       schema: z.object({}),
     });
 
-    const sharedDescriptor = first.imports?.[0] as {
-      providers?: Array<{ provide?: unknown; useValue?: { middleware?: unknown } }>;
+    const clsModuleDescriptor = first.imports?.[0] as {
+      imports?: Array<{
+        providers?: Array<{ provide?: unknown; useValue?: { middleware?: unknown } }>;
+      }>;
     };
-    const clsOptions = sharedDescriptor.providers?.find(
+    const clsRootDescriptor = clsModuleDescriptor.imports?.[0];
+    const clsOptions = clsRootDescriptor?.providers?.find(
       (provider) => provider.useValue && typeof provider.useValue === 'object',
     )?.useValue;
 
