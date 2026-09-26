@@ -214,6 +214,18 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Delivery-review CTG-0001 ciclo 3: `sensor-error` — fixture invertia a
+  lista global de interceptors após `app.init()`, tarde demais para a cadeia
+  das rotas do Nest; Inspector força a ordem antes do registro e observa a
+  execução por requisição, preservando a prova do ID gerado.
+- Delivery-review CTG-0001 ciclo 3: `plant-bug` — JWKS vazio foi tratado como
+  assinatura inválida, e cache remoto não atualizava numa falha de assinatura;
+  Architect fixa o contrato de fonte/chave/refresh, Inspector acrescenta
+  negativos e Engineer corrige uma vez.
+- Delivery-review CTG-0001 ciclo 3: `sensor-error` — faltam ramos HTTP de
+  `InvalidCredentialError`, falha JWKS, sessão revogada e sensores de códigos
+  JOSE, marcadores e claims upstream; Inspector acrescenta sem enfraquecer os
+  casos existentes e Architect faz rebind.
 - Reparo focal CTG-0001 de proveniência: `sensor-error` — a nova fixture
   exigia roles/permissões de identidade upstream sem marcador apesar de o
   contrato exigir ator nominal sem autoridade herdada; Inspector corrigiu a
@@ -266,21 +278,20 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 2. Os containers da referência devem continuar saudáveis; usar as quatro
    variáveis `STYNX_TEST_PG_*` acima nos gates locais. Chromium Playwright
    1223 já está instalado no host.
-3. O CTG-0001 passou CI completo até `f340aca5`, com trace 393/393,
-   PostgreSQL/RLS reais e delivery-review Opus 5.5 ciclo 2 em REVIEW. A
-   tríade focal tem contrato Architect `6745d3fe`, sensores Inspector
-   `854ad19e` e rebind Architect `2902e545`. O Engineer corrige distinção
-   de erro de credencial/infraestrutura, proveniência compartilhada e claims
-   Cognito; depois repetir gates e obter PASS de delivery-review antes de PR
-   e merge.
+3. O CTG-0001 passou CI completo até `086c3f7c`, com trace 393/393,
+   PostgreSQL/RLS reais, baseline API 44/44 e delivery-review Opus 5.5 ciclo
+   3 em REVIEW. O reparo focal anterior distinguiu credenciais de falhas de
+   infraestrutura, mas a revisão identificou três bloqueios remanescentes:
+   ordem de interceptors no teste, JWKS vazio e provas HTTP/JOSE faltantes.
+   Fazer nova tríade focal e obter PASS antes de PR e merge.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
 5. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador do grupo
-   fixo. O último CI completo verde refere-se a `f340aca5`, antes da segunda
-   rodada de sensores e do reparo focal em andamento.
+   fixo. O último CI completo verde refere-se a `086c3f7c`, antes da nova
+   rodada de sensores e do reparo focal exigido pelo terceiro review.
 
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
-autorizado pelo Owner). Dois delivery-reviews retornaram REVIEW. Nenhum PR,
+autorizado pelo Owner). Três delivery-reviews retornaram REVIEW. Nenhum PR,
 merge, RC ou release final foi iniciado. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.

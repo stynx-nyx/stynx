@@ -109,6 +109,24 @@ As falhas observadas no código anterior são específicas ao contrato; `lint:te
 passou. O Architect atualizou `law/trace.json` em `2902e545`, com
 `pnpm check:trace --print` verde em 393/393. O Engineer iniciou o reparo focal;
 CI e novo delivery-review ainda estão pendentes.
+O Inspector alinhou fixtures de credencial e proveniência em `660a385c`,
+sem enfraquecer as negativas de infraestrutura; o rebind Architect está em
+`15756316`. O Engineer concluiu o reparo de código em `d6f76e8b` e o
+Architect rebindou as declarações em `086c3f7c`. O `pnpm ci:stynx` passou
+nesse SHA, com testes 97/97, integração 51/51, build 48/48, baseline API
+44/44, trace 393/393 e RLS negativo/smoke. `pnpm release:preview` projeta
+1.5.0 minor, READMEs gerados não mudaram e o check DEVAI de ações proibidas
+não encontrou achados. Um digest de `data/src/schema/flow.d.ts` na entrada
+backend do baseline mudou apenas por ordem de membros de uma união emitida
+pelo TypeScript após a mudança do programa backend; nenhum código ou
+contrato da API de data/flow mudou.
+O delivery-review Opus 5.5 ciclo 3 retornou `REVIEW`: a inversão de
+interceptors era aplicada depois de `app.init()` e não observada na cadeia
+servida; JWKS vazio era confundido com assinatura inválida; e faltam provas
+HTTP/JOSE de ramos de erro tipado e sessão revogada. O parecer também pede
+melhor cobertura de limpeza de marcadores, claim upstream divergente e
+permissão sem concessão pelo AuthContextGuard. Nova tríade focal registrada
+em `plan.md` §Triagem. Nenhum PR foi aberto.
 
 ## Escopo condicional
 
