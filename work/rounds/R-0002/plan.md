@@ -290,21 +290,19 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 2. Os containers da referência devem continuar saudáveis; usar as quatro
    variáveis `STYNX_TEST_PG_*` acima nos gates locais. Chromium Playwright
    1223 já está instalado no host.
-3. O CTG-0001 passou CI completo até `3314eb69`, com trace 393/393,
-   PostgreSQL/RLS reais, baseline API 44/44 e delivery-review Opus 5.5 ciclo
-   4 em REVIEW. A ordem real de interceptors, JWKS vazio/rotação e as provas
-   HTTP/JOSE do ciclo 3 foram confirmadas. Resta corrigir a classificação de
-   assinatura inválida contra um conjunto recém-atualizado dentro da janela
-   de 30 s; acrescentar as provas não bloqueantes e obter PASS antes de PR
-   e merge.
+3. O CTG-0001 passou CI completo em `e4253237`, com trace 393/393,
+   PostgreSQL/RLS reais, baseline API 44/44, auth 234/234, tenancy 39/39,
+   testes 97/97, integração 51/51 e build 48/48 tarefas. A correção da janela
+   JWKS e os sensores do ciclo 4 estão commitados em papéis separados. Resta
+   obter delivery-review PASS antes de PR e merge.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
 5. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador do grupo
-   fixo. O último CI completo verde refere-se a `3314eb69`, antes da nova
-   rodada de sensores e do reparo focal exigido pelo quarto review.
+   fixo. `pnpm api:baselines:write` e `pnpm package-readmes:write` não
+   produziram diff; o check DEVAI de ações proibidas passou sem findings.
 
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
-autorizado pelo Owner). Quatro delivery-reviews retornaram REVIEW. Nenhum PR,
-merge, RC ou release final foi iniciado. Publicar
+autorizado pelo Owner). Quatro delivery-reviews retornaram REVIEW; o quinto
+está pendente. Nenhum PR, merge, RC ou release final foi iniciado. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.

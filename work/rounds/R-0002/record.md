@@ -140,6 +140,19 @@ ajustes de sensor não bloqueantes pedem falha de refresh por `jwksUri`, HTTP
 de JWKS no guard STYNX e tabela JOSE completa. O contrato e a triagem foram
 atualizados antes da nova tentativa; nenhum PR foi aberto.
 
+O Inspector commitou os sensores do ciclo 4 em `57288b8d`: assinatura
+inválida no JWKS recém-atualizado, refresh `jwksUri` falho com restauração
+de `fetch`, supressão após falha, erro HTTP STYNX JWKS e códigos JOSE
+restantes. O Architect fez o rebind de `law/trace.json` em `d840448d`
+(393/393). O Engineer corrigiu o classificador e preservou o cache mais
+novo sob concorrência em `e4253237`. `pnpm api:baselines:write` e
+`pnpm package-readmes:write` não alteraram arquivos. CI integral nesse
+SHA passou: API 44/44, auth 234/234, tenancy PostgreSQL 39/39, testes
+97/97 tarefas, integração 51/51 e build 48/48; log
+`/private/tmp/stynx-s15-ctg1-ci-review5.log`. `pnpm release:preview`
+mantém 1.4.0 → 1.5.0 minor. Check DEVAI forbidden-actions passou sem
+findings. Quinto delivery-review pendente; nenhum PR aberto.
+
 ## Escopo condicional
 
 UPS-SIG, UPS-OBX e UPS-OFS estão fora da release enquanto a §8 da especificação
