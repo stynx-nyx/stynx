@@ -2,9 +2,11 @@ import type { ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import * as contracts from '@stynx-nyx/contracts';
-import { SessionService } from '@stynx-nyx/sessions';
+import { SessionJwtSigningService, SessionService } from '@stynx-nyx/sessions';
 import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from '../../src/decorators';
 import { StynxAuthGuard } from '../../src/stynx-auth.guard';
+import { StynxJwtValidator } from '../../src/stynx-jwt.validator';
+import { hasVerifiedPrincipal, markVerifiedPrincipal } from '../../src/verified-principal';
 
 function createExecutionContext(request: Record<string, unknown>): ExecutionContext {
   return {
@@ -120,6 +122,55 @@ describe('StynxAuthGuard', () => {
     for (const property of ['stynxClaims', 'principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim']) {
       expect(request).not.toHaveProperty(property);
     }
+    const marker = (contracts as Record<string, unknown>).STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as symbol;
+    expect(Reflect.get(request, marker)).toBe(undefined);
+  });
+
+  it('clears pre-seeded identity, entitlement, and verification provenance on nominal and nonoptional public-tenant branches', async () => {
+    const marker = (contracts as Record<string, unknown>).STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as symbol;
+    const cases: Array<{
+      options: Parameters<typeof createGuard>[0];
+      headers: Record<string, string>;
+      invalidate?: boolean;
+    }> = [
+      { options: { publicTenantRoute: { optionalAuth: true } }, headers: {} },
+      { options: { publicTenantRoute: { optionalAuth: true } }, headers: { authorization: 'Bearer invalid' }, invalidate: true },
+      { options: { publicTenantRoute: true }, headers: { authorization: 'Bearer ignored' } },
+    ];
+
+    for (const testCase of cases) {
+      const { guard, validator } = createGuard(testCase.options);
+      if (testCase.invalidate) validator.validate.mockRejectedValueOnce(new InvalidCredentialError('invalid'));
+      const request: Record<string | symbol, unknown> = {
+        headers: testCase.headers,
+        stynxClaims: { sub: 'stale' }, principal: { id: 'stale' }, user: { id: 'stale' }, actor: { id: 'stale' },
+        tenantId: 'stale-tenant', verifiedSessionId: 'stale-session', verifiedTenantClaim: 'stale-claim',
+        verifiedTenantEntitlement: { tenantId: 'stale-tenant' }, principalContext: { stale: true },
+      };
+      Reflect.set(request, marker, true);
+      markVerifiedPrincipal(request);
+
+      await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
+
+      for (const property of ['stynxClaims', 'principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim', 'verifiedTenantEntitlement', 'principalContext']) {
+        expect(request).not.toHaveProperty(property);
+      }
+      expect(Reflect.get(request, marker)).toBe(undefined);
+      expect(hasVerifiedPrincipal(request)).toBe(false);
+    }
+  });
+
+  it('propagates an empty actual STYNX JWKS for an optional bearer instead of treating it as nominal', async () => {
+    const validator = new StynxJwtValidator({
+      get: vi.fn((token: unknown) => token === SessionJwtSigningService ? { getJwks: async () => ({ keys: [] }) } : undefined),
+    } as unknown as ModuleRef, {
+      stynx: { issuer: 'https://stynx.test' }, permissions: { dbFallbackOnRedisDown: true },
+    } as never);
+    const { moduleRef, reflector, permissionCache } = createGuard({ publicTenantRoute: { optionalAuth: true } });
+    const guard = new StynxAuthGuard(moduleRef, reflector as never, validator, permissionCache as never);
+    const token = 'eyJhbGciOiJSUzI1NiIsImtpZCI6Im1pc3NpbmcifQ.eyJpc3MiOiJodHRwczovL3N0eW54LnRlc3QiLCJzdWIiOiJ1c2VyLTEiLCJzaWQiOiJzaWQtMSIsInRlbmFudF9pZCI6InRlbmFudC0xIn0.signature';
+
+    await expect(guard.canActivate(createExecutionContext({ headers: { authorization: `Bearer ${token}` } }))).rejects.not.toBeInstanceOf(InvalidCredentialError);
   });
 
   it('propagates an optional verifier infrastructure failure instead of downgrading it to nominal', async () => {

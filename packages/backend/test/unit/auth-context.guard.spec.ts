@@ -1,6 +1,6 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
-import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL } from '@stynx-nyx/contracts';
 import * as contracts from '@stynx-nyx/contracts';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard';
 
@@ -63,12 +63,12 @@ describe('AuthContextGuard', () => {
         token === STYNX_PUBLIC_TENANT_ROUTE ? { optionalAuth: true } : undefined,
       ),
     };
-    for (const verifier of [
-      { verifyAuthorizationHeader: vi.fn(async () => null) },
-      { verifyAuthorizationHeader: vi.fn(async () => { throw new Error('invalid'); }) },
+    for (const [headers, verifier] of [
+      [{}, { verifyAuthorizationHeader: vi.fn(async () => null) }],
+      [{ authorization: 'Bearer invalid' }, { verifyAuthorizationHeader: vi.fn(async () => { throw new InvalidCredentialError('invalid'); }) }],
     ]) {
       const request: Record<string, unknown> = {
-        headers: {},
+        headers,
         stynxClaims: { sub: 'stale-claim-actor', tenantId: 'stale-claim-tenant', sid: 'stale-claim-session' },
         principal: PRINCIPAL,
         user: { id: 'stale-user' },
@@ -76,7 +76,10 @@ describe('AuthContextGuard', () => {
         tenantId: 'stale-tenant',
         verifiedSessionId: 'stale-session',
         verifiedTenantClaim: 'stale-claim',
+        verifiedTenantEntitlement: vi.fn(),
+        principalContext: { principal: PRINCIPAL },
       };
+      Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
       const context = {
         getHandler: () => class Handler {},
         getClass: () => class Controller {},
@@ -84,10 +87,38 @@ describe('AuthContextGuard', () => {
       } as unknown as ExecutionContext;
       const guard = new AuthContextGuard(verifier as never, undefined, undefined, undefined, reflector as never);
       await expect(guard.canActivate(context)).resolves.toBe(true);
-      for (const property of ['stynxClaims', 'principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim']) {
+      for (const property of ['stynxClaims', 'principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim', 'verifiedTenantEntitlement', 'principalContext']) {
         expect(request).not.toHaveProperty(property);
       }
+      expect(Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL)).toBe(undefined);
     }
+  });
+
+  it('clears pre-seeded identity and shared provenance for a nonoptional public-tenant route', async () => {
+    const reflector = {
+      getAllAndOverride: vi.fn((token: symbol) => token === STYNX_PUBLIC_TENANT_ROUTE ? true : undefined),
+    };
+    const verifier = { verifyAuthorizationHeader: vi.fn() };
+    const request: Record<string, unknown> = {
+      headers: { authorization: 'Bearer ignored' },
+      stynxClaims: { sub: 'stale' }, principal: PRINCIPAL, user: { id: 'stale' }, actor: { id: 'stale' },
+      tenantId: 'stale-tenant', verifiedSessionId: 'stale-session', verifiedTenantClaim: 'stale-claim',
+      verifiedTenantEntitlement: vi.fn(), principalContext: { principal: PRINCIPAL },
+    };
+    Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
+    const context = {
+      getHandler: () => class Handler {}, getClass: () => class Controller {},
+      switchToHttp: () => ({ getRequest: () => request }),
+    } as unknown as ExecutionContext;
+    const guard = new AuthContextGuard(verifier as never, undefined, undefined, undefined, reflector as never);
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+
+    expect(verifier.verifyAuthorizationHeader).not.toHaveBeenCalled();
+    for (const property of ['stynxClaims', 'principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim', 'verifiedTenantEntitlement', 'principalContext']) {
+      expect(request).not.toHaveProperty(property);
+    }
+    expect(Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL)).toBe(undefined);
   });
 
   it('treats null optional verification as nominal but fails closed for undefined or malformed results and infrastructure errors', async () => {

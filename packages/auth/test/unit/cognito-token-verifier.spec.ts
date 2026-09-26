@@ -143,6 +143,37 @@ describe('CognitoTokenVerifier — header-shape early validation', () => {
   });
 });
 
+describe('CognitoTokenVerifier — JOSE failure classification', () => {
+  async function signedToken(): Promise<string> {
+    const { SignJWT, generateKeyPair } = await import('jose');
+    const { privateKey } = await generateKeyPair('RS256');
+    return new SignJWT({ sub: 'subject-1' })
+      .setProtectedHeader({ alg: 'RS256' })
+      .setIssuer('https://issuer.example.test')
+      .sign(privateKey);
+  }
+
+  it('maps definitive JOSE validation codes to InvalidCredentialError but propagates key-source failures', async () => {
+    const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as new (message: string) => Error;
+    const token = await signedToken();
+    for (const code of ['ERR_JWT_EXPIRED', 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED', 'ERR_JWT_CLAIM_VALIDATION_FAILED']) {
+      const verifier = new CognitoTokenVerifier({ issuer: 'https://issuer.example.test' }) as unknown as { jwks: () => Promise<unknown>; verifyAuthorizationHeader(value: string): Promise<unknown> };
+      verifier.jwks = async () => { throw Object.assign(new Error(code), { code }); };
+      await expect(verifier.verifyAuthorizationHeader(`Bearer ${token}`)).rejects.toBeInstanceOf(InvalidCredentialError);
+    }
+    for (const code of ['ERR_JWKS_TIMEOUT', 'ERR_JWKS_NO_MATCHING_KEY']) {
+      const verifier = new CognitoTokenVerifier({ issuer: 'https://issuer.example.test' }) as unknown as { jwks: () => Promise<unknown>; verifyAuthorizationHeader(value: string): Promise<unknown> };
+      const failure = Object.assign(new Error(code), { code });
+      verifier.jwks = async () => { throw failure; };
+      await expect(verifier.verifyAuthorizationHeader(`Bearer ${token}`)).rejects.toBe(failure);
+    }
+    const fetchFailure = new Error('Cognito JWKS fetch rejected');
+    const fetchRejectingVerifier = new CognitoTokenVerifier({ issuer: 'https://issuer.example.test' }) as unknown as { jwks: () => Promise<unknown>; verifyAuthorizationHeader(value: string): Promise<unknown> };
+    fetchRejectingVerifier.jwks = async () => { throw fetchFailure; };
+    await expect(fetchRejectingVerifier.verifyAuthorizationHeader(`Bearer ${token}`)).rejects.toBe(fetchFailure);
+  });
+});
+
 describe('CognitoTokenVerifier — payload branch helpers', () => {
   it('resolves principals, optional profile claims, and de-duplicated authorization claims', () => {
     const v = new CognitoTokenVerifier({

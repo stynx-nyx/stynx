@@ -47,6 +47,12 @@ class BackendPublicController {
   @Permission('records:read')
   @UseGuards(StynxAuthGuard, PermissionGuard)
   permissioned() { return { status: 'granted' }; }
+
+  @Get('/backend-permissioned')
+  @PublicTenantRoute({ optionalAuth: true })
+  @Permission('records:read')
+  @UseGuards(PermissionGuard)
+  backendPermissioned() { return { status: 'unreachable' }; }
 }
 
 @Controller('/auth-public')
@@ -66,11 +72,12 @@ const jwtValidator = {
     if (token === 'member') return { sid: 'member-session', sub: MEMBER, tenantId: TENANT_A, claims: {} };
     if (token === 'conflict') return { sid: 'conflict-session', sub: MEMBER, tenantId: TENANT_B, claims: {} };
     if (token === 'outsider') return { sid: 'outsider-session', sub: OUTSIDER, tenantId: TENANT_A, claims: {} };
+    if (token === 'revoked') return { sid: 'revoked-session', sub: MEMBER, tenantId: TENANT_A, claims: {} };
     throw new InvalidCredentialError('invalid token');
   }),
 };
 const permissionCache = { getForSession: vi.fn(async () => ({ permissions: ['records:read'] })) };
-const sessionService = { get: vi.fn(async () => ({ active: true })) };
+const sessionService = { get: vi.fn(async (sid: string) => sid === 'revoked-session' ? null : ({ active: true })) };
 
 const tokenVerifier = {
   verifyAuthorizationHeader: vi.fn(async (authorization: string | string[] | undefined) => {
@@ -81,6 +88,8 @@ const tokenVerifier = {
     if (token === 'Bearer cognito-conflict') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_A], claims: { 'custom:tenant_id': TENANT_B } } };
     if (token === 'Bearer sole-list-conflict') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_B], claims: {} } };
     if (token === 'Bearer multi-list') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_A, TENANT_B], claims: {} } };
+    if (token === 'Bearer typed-invalid') throw new InvalidCredentialError('bad signature');
+    if (token === 'Bearer jwks-error') throw new Error('JWKS unavailable');
     if (token === 'Bearer entitlement-deny') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_A], claims: { tenant_id: TENANT_A, entitlement: 'deny' } } };
     if (token === 'Bearer entitlement-throw') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_A], claims: { tenant_id: TENANT_A, entitlement: 'throw' } } };
     return null;
@@ -186,5 +195,22 @@ describe('AuthContextGuard public tenant HTTP contract', () => {
     }
     await request(app.getHttpServer()).get('/backend-public/optional').set('host', 'a.portal.test').set('authorization', 'Bearer multi-list')
       .expect(200).expect({ tenantId: TENANT_A, actorId: MEMBER, principalId: MEMBER });
+  });
+
+  it('uses nominal Host context for typed AuthContextGuard rejection but propagates verifier infrastructure failure', async () => {
+    await request(app.getHttpServer()).get('/backend-public/optional').set('host', 'a.portal.test').set('authorization', 'Bearer typed-invalid')
+      .expect(200).expect({ tenantId: TENANT_A, actorId: NOMINAL_ACTOR });
+    await request(app.getHttpServer()).get('/backend-public/optional').set('host', 'a.portal.test').set('authorization', 'Bearer jwks-error')
+      .expect(500);
+  });
+
+  it('does not let an AuthContextGuard principal grant an auth PermissionGuard permission', async () => {
+    await request(app.getHttpServer()).get('/backend-public/backend-permissioned').set('host', 'a.portal.test').set('authorization', 'Bearer member')
+      .expect(403).expect({ message: 'Missing permission records:read', error: 'Forbidden', statusCode: 403 });
+  });
+
+  it('uses the nominal Host actor for a revoked optional STYNX session without principal or session context', async () => {
+    await request(app.getHttpServer()).get('/auth-public/optional').set('host', 'a.portal.test').set('authorization', 'Bearer revoked')
+      .expect(200).expect({ tenantId: TENANT_A, actorId: NOMINAL_ACTOR });
   });
 });
