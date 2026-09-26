@@ -147,7 +147,7 @@ describe('public tenant route contract', () => {
           migrations: { enabled: true },
         }),
         StynxTenancyModule.forRoot({
-          headerName: 'X-Tenant-Id',
+          headerName: 'X-Portal-Tenant',
           publicTenant: {
             resolveHost: ({ host, path }: { host?: string; path: string }) => {
               if (!path.startsWith('/portal/')) return undefined;
@@ -242,11 +242,20 @@ describe('public tenant route contract', () => {
     await request(app.getHttpServer())
       .get('/portal/anonymous')
       .set('host', 'a.portal.test')
-      .set('x-tenant-id', TENANT_B)
+      .set('x-portal-tenant', TENANT_B)
       .expect(400)
       .expect({
         code: 'TENANCY:CONFLICT:host-header',
-        message: 'Tenant source conflict: Host and X-Tenant-Id disagree',
+        message: 'Tenant source conflict: Host and X-Portal-Tenant disagree',
+      });
+
+    await request(app.getHttpServer())
+      .get('/portal/anonymous')
+      .set('host', 'a.portal.test')
+      .set('x-portal-tenant', TENANT_A.toUpperCase())
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({ tenantId: TENANT_A, actorId: NOMINAL_ACTOR });
       });
 
     await request(app.getHttpServer())
@@ -298,7 +307,7 @@ describe('public tenant route contract', () => {
       .set('host', 'unknown.portal.test')
       .expect(400)
       .expect({
-        message: 'Tenant context is required: provide X-Tenant-Id, a tenant bearer claim, or a matching subdomain',
+        message: 'Tenant context is required: provide X-Portal-Tenant, a tenant bearer claim, or a matching subdomain',
         error: 'Bad Request',
         statusCode: 400,
       });
@@ -317,12 +326,23 @@ describe('public tenant route contract', () => {
   });
 
   it('writes the nominal UUID actor under Host tenant A and RLS never exposes that row to Host tenant B', async () => {
+    let writtenEventId: string | undefined;
     await request(app.getHttpServer())
       .get('/portal/audit-write')
       .set('host', 'a.portal.test')
       .expect(200)
       .expect(({ body }) => {
         expect(body).toMatchObject({ tenancy_id: TENANT_A, actor_id: NOMINAL_ACTOR });
+        writtenEventId = body.event_id;
+      });
+
+    await request(app.getHttpServer())
+      .get('/portal/audit-read')
+      .set('host', 'a.portal.test')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.currentUser).toBe('stynx_app');
+        expect(body.rows).toEqual([{ event_id: writtenEventId }]);
       });
 
     await request(app.getHttpServer())
