@@ -11,6 +11,7 @@ interface CachedKeySet {
   expiresAt: number;
   version: number;
   source: SessionJwtSigningService | string;
+  forcedRefreshStartedAt?: number;
   keys: Array<Record<string, string | undefined>>;
 }
 
@@ -94,14 +95,18 @@ export class StynxJwtValidator {
     if (state.inFlight) return state.inFlight;
 
     const newer = this.cache;
-    if (newer?.source === initial.source && newer.version > initial.version) return newer;
-
+    if (newer?.source === initial.source && newer.version > initial.version &&
+      newer.forcedRefreshStartedAt !== undefined && newer.forcedRefreshStartedAt === state.lastStartedAt) {
+      return newer;
+    }
     const now = Date.now();
     if (state.lastStartedAt !== undefined && now - state.lastStartedAt < 30_000) {
+      const candidate = newer?.source === initial.source && newer.version > initial.version ? newer : initial;
+      if (candidate.forcedRefreshStartedAt === state.lastStartedAt) return candidate;
       throw new Error('STYNX JWKS refresh suppressed after signature miss');
     }
     state.lastStartedAt = now;
-    const refresh = this.resolveKeys(true, signingService);
+    const refresh = this.resolveKeys(true, signingService, now);
     state.inFlight = refresh;
     try {
       return await refresh;
@@ -113,6 +118,7 @@ export class StynxJwtValidator {
   private async resolveKeys(
     forceRefresh: boolean,
     signingService?: SessionJwtSigningService,
+    forcedRefreshStartedAt?: number,
   ): Promise<CachedKeySet> {
     const now = Date.now();
     const source = signingService ?? this.options.stynx.jwksUri;
@@ -144,6 +150,7 @@ export class StynxJwtValidator {
       source,
       keys,
       version: ++this.cacheVersion,
+      ...(forcedRefreshStartedAt !== undefined ? { forcedRefreshStartedAt } : {}),
       expiresAt: Date.now() + 12 * 60 * 60 * 1000,
     };
     return this.cache;
