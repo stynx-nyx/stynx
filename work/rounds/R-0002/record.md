@@ -99,6 +99,16 @@ provar sessão revogada/limpeza/permissão concedida no guard STYNX. Três
 observações adicionais pedem prova da ordem real dos interceptors, proveniência
 compartilhada e claims Cognito. Tarefa escalada para nova tríade focal;
 nenhum PR foi aberto.
+O Architect fixou o contrato da tríade focal em `6745d3fe`: rejeição definitiva
+de credencial usa `InvalidCredentialError`, falhas de JWKS/configuração se
+propagam, e ambos os guards produzem um marcador compartilhado de proveniência.
+O Inspector entregou os sensores em `854ad19e`: os dois ordenamentos reais de
+interceptors, ID gerado visto no guard/handler/resposta, erros de verificação,
+claims Cognito, permissão concedida, sessão revogada e identidade anterior.
+As falhas observadas no código anterior são específicas ao contrato; `lint:tests`
+passou. O Architect atualizou `law/trace.json` em `2902e545`, com
+`pnpm check:trace --print` verde em 393/393. O Engineer iniciou o reparo focal;
+CI e novo delivery-review ainda estão pendentes.
 
 ## Escopo condicional
 

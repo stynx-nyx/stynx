@@ -257,19 +257,21 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 2. Os containers da referência devem continuar saudáveis; usar as quatro
    variáveis `STYNX_TEST_PG_*` acima nos gates locais. Chromium Playwright
    1223 já está instalado no host.
-3. O CTG-0001 está implementado até `e6330a81`; baseline de API, trace
-   387/387, RLS negativo/smoke e `pnpm ci:stynx` passaram. Delivery-review
-   Opus 5.5 ciclo 1 retornou REVIEW com três bloqueios de sensores e seis
-   achados adicionais. Registrar contrato Architect, acrescentar testes
-   Inspector, fazer rebind Architect, corrigir código Engineer, repetir gates
-   e obter PASS de delivery-review antes de PR e merge.
+3. O CTG-0001 passou CI completo até `f340aca5`, com trace 393/393,
+   PostgreSQL/RLS reais e delivery-review Opus 5.5 ciclo 2 em REVIEW. A
+   tríade focal tem contrato Architect `6745d3fe`, sensores Inspector
+   `854ad19e` e rebind Architect `2902e545`. O Engineer corrige distinção
+   de erro de credencial/infraestrutura, proveniência compartilhada e claims
+   Cognito; depois repetir gates e obter PASS de delivery-review antes de PR
+   e merge.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
 5. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador do grupo
-   fixo. O CI local verde refere-se a `e6330a81`, antes dos reparos da revisão.
+   fixo. O último CI completo verde refere-se a `f340aca5`, antes da segunda
+   rodada de sensores e do reparo focal em andamento.
 
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
-autorizado pelo Owner). Um delivery-review retornou REVIEW. Nenhum PR, merge,
-RC ou release final foi iniciado. Publicar
+autorizado pelo Owner). Dois delivery-reviews retornaram REVIEW. Nenhum PR,
+merge, RC ou release final foi iniciado. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.
