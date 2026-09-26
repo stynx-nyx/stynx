@@ -23,8 +23,10 @@ export function decodeJwtClaims(token: string): {
   signature: Buffer;
   signingInput: string;
 } {
-  const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
-  if (!encodedHeader || !encodedPayload || !encodedSignature) {
+  const segments = token.split('.');
+  const [encodedHeader, encodedPayload, encodedSignature] = segments;
+  if (segments.length !== 3 || !encodedHeader || !encodedPayload || !encodedSignature ||
+    !segments.every((segment) => /^[A-Za-z0-9_-]+$/u.test(segment))) {
     throw new InvalidCredentialError('JWT is malformed');
   }
 
@@ -36,7 +38,10 @@ export function decodeJwtClaims(token: string): {
   try {
     header = JSON.parse(base64UrlDecode(encodedHeader)) as Record<string, unknown>;
     payload = JSON.parse(base64UrlDecode(encodedPayload)) as Record<string, unknown>;
-    if (!header || typeof header !== 'object' || !payload || typeof payload !== 'object') throw new Error('JWT is malformed');
+    if (!header || typeof header !== 'object' || Array.isArray(header) ||
+      !payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      throw new Error('JWT is malformed');
+    }
   } catch {
     throw new InvalidCredentialError('JWT is malformed');
   }
