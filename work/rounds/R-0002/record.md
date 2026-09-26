@@ -198,6 +198,15 @@ os três pins continuam SHA exato e o CI novo passou. Uma nota não
 bloqueante recomenda estabilizar o link de migração com a tag `v1.5.0`
 após a final. Push e CI remoto ainda pendentes.
 
+O PR #272 passou todos os checks obrigatórios no SHA `52a01eaa` e foi
+mesclado com merge commit
+`e09bd6c00d56881fb5208a5e8fccfd6de3c0186a` em 2026-09-26.
+O maestro registrou a prova DEVAI `evidence record --kind generic`
+da rodada (sequência 1) e executou `audit observe --at` nesse SHA
+como Auditor; a observação concluiu sem promoção e a cadeia de
+evidências passou em `evidence verify --scope chain`. Os artefatos foram
+commitados separadamente em `07b3cb47` na branch de preparação da RC.
+
 ## Escopo condicional
 
 UPS-SIG, UPS-OBX e UPS-OFS estão fora da release enquanto a §8 da especificação

@@ -214,6 +214,9 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- DEVAI `audit observe` do merge: `policy-issue` — primeira chamada
+  observou o SHA mesclado enquanto HEAD local ainda apontava ao PR;
+  avançar a worktree ao merge commit exato e repetir uma vez; concluiu.
 - CI local após override `adm-zip`: `reference-gap` — três sensores D21,
   D22 e D16.1 congelam o SHA antigo do `package.json` raiz; Inspector
   substitui somente esses três digests pelo SHA exato após o override,
@@ -305,13 +308,13 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 2. Os containers da referência devem continuar saudáveis; usar as quatro
    variáveis `STYNX_TEST_PG_*` acima nos gates locais. Chromium Playwright
    1223 já está instalado no host.
-3. O CTG-0001 passou CI completo em `e4253237`, com trace 393/393,
-   PostgreSQL/RLS reais, baseline API 44/44, auth 234/234, tenancy 39/39,
-   testes 97/97, integração 51/51 e build 48/48 tarefas. A correção da janela
-   JWKS e os sensores do ciclo 4 estão commitados em papéis separados. Resta
-   O delivery-review ciclo 5 retornou PASS, com uma recomendação não
-   bloqueante para sensoriar o fast path de concorrência; abrir PR e aguardar
-   CI remoto antes de merge.
+3. O CTG-0001 foi mesclado no PR #272 em
+   `e09bd6c00d56881fb5208a5e8fccfd6de3c0186a`. O último CI local
+   completo passou com trace 393/393, PostgreSQL/RLS reais, baseline API
+   44/44, auth 234/234, tenancy 39/39, testes 97/97, integração 51/51 e
+   build 48/48 tarefas; todos os checks obrigatórios remotos passaram.
+   Delivery-review Opus ciclos 5 e 6: PASS. DEVAI evidence record e
+   audit observe do merge concluídos. Preparar RC1 em pre mode.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
 5. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador do grupo
    fixo. `pnpm api:baselines:write` e `pnpm package-readmes:write` não
@@ -321,6 +324,6 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
 autorizado pelo Owner). Delivery-reviews: REVIEW nos ciclos 1–4; PASS nos
-ciclos 5 e 6 (delta dos checks do PR). O PR #272 está aberto; merge, RC e
-release final não foram iniciados. Publicar
+ciclos 5 e 6 (delta dos checks do PR). O PR #272 foi mesclado; RC e release
+final não foram publicados. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.
