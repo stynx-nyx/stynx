@@ -69,6 +69,18 @@ O delivery-review Opus 5.5 via ponte DETRAN, ciclo 1, retornou `REVIEW`:
 três lacunas bloqueantes de sensores HTTP (duas ordens de módulo, ambos os
 guards reais e provas de contexto) e seis achados adicionais de contrato,
 código ou fixture RLS. O PR fica pendente do reparo, novo CI e PASS.
+O contrato de reparo foi commitado em `d3a1b3db`, `51c2ca1b` e `8db9a681`.
+Os Inspectors Codex acrescentaram oito arquivos de sensor em `bc9a8559`:
+ordens HTTP core/tenancy, guards reais com tenancy, apps auth/backend sem
+tenancy, bootstrap herdado, permissão nominal, cabeçalho configurado,
+comparação de UUID e controle positivo/negativo de RLS como `stynx_app`.
+Dois 500 iniciais eram montagem de fixture (guard sem `@Injectable()` e stub
+de `SessionService` ausente) e foram corrigidos sem tocar produto. Os novos
+sensores deixam explícitas as falhas de produto de entitlement, sessão
+verificada backend, `@ReadOnly`, permissão nominal, marcador herdado e caixa
+do UUID. `pnpm lint:tests` passou após correção de um import não usado
+capturado pelo hook. A entrega do Engineer e novo rebind de trace seguem
+pendentes.
 
 ## Escopo condicional
 

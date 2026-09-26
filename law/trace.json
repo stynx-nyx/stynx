@@ -13,7 +13,8 @@
       "DEVAI 1.2.13 deterministic inventory for exact tracked source bytes.",
       "The 495 tracked test-path census is partitioned into 380 executable tests and 115 non-executable fixtures or support modules.",
       "Fourteen tracked verification scripts and configuration attestations complete the 509-item governed test surface.",
-      "STYNX 1.5.0 CTG-0001 Architect rebind adds six executable tenancy context sensors and refreshes six existing assertion projections."
+      "STYNX 1.5.0 CTG-0001 Architect rebind adds six executable tenancy context sensors and refreshes six existing assertion projections.",
+      "STYNX 1.5.0 CTG-0001 delivery-review rebind adds six HTTP/permission sensors and refreshes two assertion projections."
     ]
   },
   "invariants": [
@@ -3852,16 +3853,16 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 4,
-      "assertion_digest_sha256": "84765e90e137e6164c0466408e4400e7da44dd6e57eec4019ba9ad62b3749daa"
+      "assertion_count": 9,
+      "assertion_digest_sha256": "21a0fa3d9944caf7a0b9afaf8501587d95f2ec96c0c0d42bb641a3b30863f1d9"
     },
     {
       "path": "packages/tenancy/test/integration/public-tenant-route.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 24,
-      "assertion_digest_sha256": "74cb6938c2307551e98c73f41114e1f263335f381dfefdc8def15f8e0e3f1ac9"
+      "assertion_count": 31,
+      "assertion_digest_sha256": "fb1d1c18a44da306591d3f84372891549fcf97dcb47e52e9cc8c90c20aac33c5"
     },
     {
       "path": "packages/tenancy/test/unit/public-tenant-options.spec.ts",
@@ -3878,6 +3879,54 @@
       "lifecycle": "supported",
       "assertion_count": 1,
       "assertion_digest_sha256": "bfb6cde200be17ead6458b69089b68ae8502962959fa18c673f9dca012d75a90"
+    },
+    {
+      "path": "packages/auth/test/unit/public-tenant-guards.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "fad524fa39feba1b1668636337b0bad97e9e5cfa1e5545f27d54d2362fefe840"
+    },
+    {
+      "path": "packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 9,
+      "assertion_digest_sha256": "75f7cdae16dcc5f86e17f5bb4a56c0894d24ce274c275a585a054e85f7d3f532"
+    },
+    {
+      "path": "packages/backend/test/integration/auth-context-request-context.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "0c3d825ed57807b7d45b801bd49809e4406839be4278b68a025ef5769ce010f6"
+    },
+    {
+      "path": "packages/backend/test/unit/inherited-public-tenant-bootstrap.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "69f46b86b28d839b7fe23ec63c0335b2f2843e09e9ea8959699609d2d33df0ce"
+    },
+    {
+      "path": "packages/tenancy/test/integration/tenancy-context-order.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 2,
+      "assertion_digest_sha256": "28da3f9390fb5ad0747b486ac52f72af7652646de8e71470d66178cb7d756b48"
+    },
+    {
+      "path": "packages/tenancy/test/unit/public-tenant-permission.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "9ca96dd08ad288623859ceb896e8295741b76151470320a5384e368c7e2f20d3"
     }
   ],
   "suites": {

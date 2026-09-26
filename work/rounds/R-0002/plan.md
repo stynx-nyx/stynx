@@ -214,6 +214,7 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Commit Inspector do reparo CTG-0001: `sensor-error` — hook ESLint encontrou import `Module` não usado no novo sensor de duas ordens; Inspector remove o import e repete o commit uma vez.
 - Delivery-review CTG-0001 ciclo 1: `sensor-error` — faltam provas HTTP de duas ordens de módulos, ambos os guards reais, cabeçalhos configurados, RLS positivo e casos de contexto; Inspector acrescenta sensores, Architect faz rebind e repete uma vez.
 - Delivery-review CTG-0001 ciclo 1: `plant-bug` — entitlement de principal verificado, alcance global de tenancy e descoberta de marcador herdado exigem reparos de código após contrato Architect e sensores Inspector; Engineer corrige e repete uma vez.
 - Engineer CTG-0001 autenticação opcional: `plant-bug` — `catch` amplo
