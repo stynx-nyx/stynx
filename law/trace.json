@@ -18,7 +18,8 @@
       "STYNX 1.5.0 CTG-0001 Architect rebind pins legacy-public and optional-auth stale identity regression sensors.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins public-tenant marker precedence and stale-claims negatives.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins credential classification, shared provenance, Cognito claims, interceptor order, and generated request ID sensors.",
-      "STYNX 1.5.0 CTG-0001 Architect rebind aligns typed-credential fixtures and symbol assertions after Inspector sensor triage."
+      "STYNX 1.5.0 CTG-0001 Architect rebind aligns typed-credential fixtures and symbol assertions after Inspector sensor triage.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins served interceptor order, JWKS source/rotation, typed JOSE, revoked session, and provenance sensors from delivery review 3."
     ]
   },
   "invariants": [
@@ -1321,8 +1322,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 33,
-      "assertion_digest_sha256": "39347d09c722f2815548e3a786ea1c944d8329599f0e765c4f437aafb3bd57fa"
+      "assertion_count": 36,
+      "assertion_digest_sha256": "0679f8d722911351d4a3a190c8999181c2ee11498569f656b3db36175505e584"
     },
     {
       "path": "packages/auth/test/unit/decorators-runtime.spec.ts",
@@ -1385,8 +1386,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 39,
-      "assertion_digest_sha256": "c863dfda7308fa94c8e940534808d8d4b5ca2a16a1170044a2236c49ac7806a4"
+      "assertion_count": 45,
+      "assertion_digest_sha256": "31b3a0399bc0f33b7fc8a3abd5db760ae20a3a1b597f48297b0745028a47cf10"
     },
     {
       "path": "packages/auth/test/unit/utils.spec.ts",
@@ -1401,8 +1402,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 48,
-      "assertion_digest_sha256": "76b79a1792142b37851a8e0382990900a3004e4555d313d7f0a9bf68ee2dd165"
+      "assertion_count": 67,
+      "assertion_digest_sha256": "50d971cd229794be48d8e38b367e1220442e8d064b832dd9f2e2aaeda45ea292"
     },
     {
       "path": "packages/backend/test/unit/audit-export.spec.ts",
@@ -1425,8 +1426,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "ed5b47108c19b52b927ddea490c8ff4a3e108c1f3c9950d1cf9d09a71faea4b9"
+      "assertion_count": 32,
+      "assertion_digest_sha256": "d021f3360b6a0a2e25dcf33165f6d013f3f52b0178468d56c2b4807a212f4cd9"
     },
     {
       "path": "packages/backend/test/unit/auth-export.spec.ts",
@@ -3865,8 +3866,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 33,
-      "assertion_digest_sha256": "702ab6765a9e909ef216e628a3432b936e70f4c91e8a1876bda06981a5bfff94"
+      "assertion_count": 35,
+      "assertion_digest_sha256": "43398b3081cef21b2d103615ce8e8382727d5fda86c0e7a90a54ee3911f7d97c"
     },
     {
       "path": "packages/tenancy/test/unit/public-tenant-options.spec.ts",
@@ -3897,8 +3898,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 13,
-      "assertion_digest_sha256": "16f359c5ea0e5ad0e520df7efca9f6c65c3a49adfe28a06511de8ed20057b079"
+      "assertion_count": 17,
+      "assertion_digest_sha256": "a77979f673289bebc32cdae8a63ef3b028900d323093d7e5c4f31d44fe2c2b00"
     },
     {
       "path": "packages/backend/test/integration/auth-context-request-context.integration.spec.ts",
@@ -3921,8 +3922,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "4d0c7836ba81892835bbbe4c061b9cf81a4ef7372528f6f25b6a314d67a030c1"
+      "assertion_count": 8,
+      "assertion_digest_sha256": "59d5ff6d3707649961ed05358e9b12fae1e28a1550c48f28e5a3c717ca86a9d4"
     },
     {
       "path": "packages/tenancy/test/unit/public-tenant-permission.spec.ts",

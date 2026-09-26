@@ -214,6 +214,10 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Reparo JWKS CTG-0001: `sensor-error` — um teste antigo juntava JWKS
+  inicialmente vazio a sucesso após refresh, contrariando o novo contrato de
+  falha de fonte; Inspector separou o negativo de chaves vazias do teste de
+  claims opcionais com JWK RSA utilizável e repetiu a suíte focal.
 - Delivery-review CTG-0001 ciclo 3: `sensor-error` — fixture invertia a
   lista global de interceptors após `app.init()`, tarde demais para a cadeia
   das rotas do Nest; Inspector força a ordem antes do registro e observa a
