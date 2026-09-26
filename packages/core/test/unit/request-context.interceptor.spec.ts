@@ -246,4 +246,38 @@ describe('RequestContextInterceptor', () => {
     expect(seed.sessionId).toBe(undefined);
     expect(seed.startedAt).toBeInstanceOf(Date);
   });
+
+  it('enriches an active pre-guard context without reopening it or replacing its request id', async () => {
+    const seed: RequestContextState = {
+      requestId: '0190abcd-1234-7abc-89ab-0123456789ab',
+      startedAt: new Date('2026-09-26T12:00:00.000Z'),
+      locale: 'pt-BR',
+    };
+    const requestContext = new (await import('../../src/request-context')).RequestContext(cls as never);
+    const { context, response } = makeContext({}, {
+      tenantId: '0197481e-6f84-77e4-8d6d-41f0b6fca9c1',
+      principal: { id: '0197481e-7294-7c53-8b03-5c36d7c2831a' },
+      stynxClaims: { sid: 'session-1' },
+    });
+    let observed: RequestContextState | undefined;
+    const handler: CallHandler = {
+      handle: () => {
+        observed = requestContext.snapshot();
+        return of('ok');
+      },
+    };
+
+    await mutator.runWithRequestContext(seed, async () => {
+      await run(interceptor.intercept(context, handler));
+    });
+
+    expect(observed).toMatchObject({
+      requestId: seed.requestId,
+      tenantId: '0197481e-6f84-77e4-8d6d-41f0b6fca9c1',
+      actorId: '0197481e-7294-7c53-8b03-5c36d7c2831a',
+      sessionId: 'session-1',
+      locale: 'pt-BR',
+    });
+    expect(response.setHeader).toHaveBeenCalledWith('X-Request-Id', seed.requestId);
+  });
 });

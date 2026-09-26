@@ -6,7 +6,10 @@ import {
   type Type,
 } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { ClsModule } from 'nestjs-cls';
+import { ClsModule, ClsService } from 'nestjs-cls';
+import { BadRequestException } from '@nestjs/common';
+import { generateRequestId, normalizeRequestId } from './request-id';
+import type { CoreClsStore } from './request-context';
 import type { ZodTypeAny } from 'zod';
 import {
   loadStynxConfiguration,
@@ -30,7 +33,25 @@ type ModuleImport = Type<unknown> | ForwardReference | DynamicModule | Promise<D
 // module context, which makes those duplicate roots fail during application
 // boot. Keep one descriptor for the process and let every STYNX core import
 // reference it.
-const STYNX_CLS_MODULE = ClsModule.forRoot({ global: true });
+const STYNX_CLS_MODULE = ClsModule.forRoot({
+  global: true,
+  middleware: {
+    mount: true,
+    setup: (cls: ClsService<CoreClsStore>, request: { headers: Record<string, unknown>; res?: { setHeader(name: string, value: string): void } }) => {
+      const supplied = request.headers['x-request-id'];
+      const requestId = supplied === undefined ? generateRequestId() : normalizeRequestId(supplied);
+      if (!requestId) throw new BadRequestException('X-Request-Id must be a valid UUIDv7');
+      const rawLocale = request.headers['accept-language'];
+      const locale = typeof rawLocale === 'string' ? rawLocale.split(',')[0]?.trim() : undefined;
+      new RequestContextMutator(cls).initialize({
+        requestId,
+        startedAt: new Date(),
+        ...(locale ? { locale } : {}),
+      });
+      request.res?.setHeader('X-Request-Id', requestId);
+    },
+  },
+});
 
 function createConfigProvider(): Provider {
   return {

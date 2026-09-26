@@ -1,18 +1,30 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { createPublicKey } from 'node:crypto';
 import { SessionJwtSigningService } from '@stynx-nyx/sessions';
+import { InvalidCredentialError } from '@stynx-nyx/contracts';
 import { STYNX_AUTH_OPTIONS } from './tokens';
 import type { ResolvedStynxAuthModuleOptions, StynxAccessTokenClaims } from './types';
-import { verifyJwtWithJwk } from './utils';
+import { decodeJwtClaims, verifyJwtWithJwk } from './utils';
 
 interface CachedKeySet {
   expiresAt: number;
-  keys: Array<Record<string, string | undefined> & { kid: string }>;
+  version: number;
+  source: SessionJwtSigningService | string;
+  forcedRefreshStartedAt?: number;
+  keys: Array<Record<string, string | undefined>>;
+}
+
+interface RefreshState {
+  lastStartedAt?: number;
+  inFlight?: Promise<CachedKeySet>;
 }
 
 @Injectable()
 export class StynxJwtValidator {
   private cache?: CachedKeySet;
+  private cacheVersion = 0;
+  private readonly refreshStates = new Map<SessionJwtSigningService | string, RefreshState>();
 
   constructor(
     private readonly moduleRef: ModuleRef,
@@ -21,49 +33,45 @@ export class StynxJwtValidator {
   ) {}
 
   async validate(token: string): Promise<StynxAccessTokenClaims> {
+    // Token syntax is independent of the availability of signing keys.
+    const decoded = decodeJwtClaims(token);
+    if (decoded.header.alg !== 'RS256') throw new InvalidCredentialError('JWT is malformed');
     const signingService = this.moduleRef.get(SessionJwtSigningService, { strict: false });
-    try {
-      return await this.verify(token, false, signingService);
-    } catch (error) {
-      if (!signingService) {
-        throw error;
-      }
-      return this.verify(token, true, signingService);
-    }
+    const initial = await this.resolveKeys(false, signingService);
+    const payload = this.verifySignature(token, initial.keys);
+    if (payload) return this.validateClaims(payload);
+
+    const refreshed = await this.refreshAfterSignatureMiss(initial, signingService);
+    const retriedPayload = this.verifySignature(token, refreshed.keys);
+    if (!retriedPayload) throw new InvalidCredentialError('STYNX access token verification failed');
+    return this.validateClaims(retriedPayload);
   }
 
-  private async verify(
-    token: string,
-    forceRefresh: boolean,
-    signingService?: SessionJwtSigningService,
-  ): Promise<StynxAccessTokenClaims> {
-    const decoded = await this.resolveKeys(forceRefresh, signingService);
-    const payload = decoded.keys
-      .map((key) => {
-        try {
-          return verifyJwtWithJwk(token, key as Record<string, string | undefined>);
-        } catch {
-          return null;
-        }
-      })
-      .find((value): value is Record<string, unknown> => value !== null);
-
-    if (!payload) {
-      throw new Error('STYNX access token verification failed');
+  private verifySignature(token: string, keys: CachedKeySet['keys']): Record<string, unknown> | null {
+    for (const key of keys) {
+      try {
+        return verifyJwtWithJwk(token, key);
+      } catch (error) {
+        if (!(error instanceof InvalidCredentialError)) throw error;
+      }
     }
+    return null;
+  }
+
+  private validateClaims(payload: Record<string, unknown>): StynxAccessTokenClaims {
     if (payload.iss !== this.options.stynx.issuer) {
-      throw new Error('STYNX token issuer mismatch');
+      throw new InvalidCredentialError('STYNX token issuer mismatch');
     }
     if (this.options.stynx.audience && payload.aud !== this.options.stynx.audience) {
-      throw new Error('STYNX token audience mismatch');
+      throw new InvalidCredentialError('STYNX token audience mismatch');
     }
 
     const nowSeconds = Math.floor(Date.now() / 1000);
     if (typeof payload.exp === 'number' && payload.exp <= nowSeconds) {
-      throw new Error('STYNX token expired');
+      throw new InvalidCredentialError('STYNX token expired');
     }
     if (typeof payload.nbf === 'number' && payload.nbf > nowSeconds + 5) {
-      throw new Error('STYNX token not active yet');
+      throw new InvalidCredentialError('STYNX token not active yet');
     }
 
     return {
@@ -78,37 +86,87 @@ export class StynxJwtValidator {
     };
   }
 
+  private async refreshAfterSignatureMiss(
+    initial: CachedKeySet,
+    signingService?: SessionJwtSigningService,
+  ): Promise<CachedKeySet> {
+    const state = this.refreshStates.get(initial.source) ?? {};
+    this.refreshStates.set(initial.source, state);
+    if (state.inFlight) return state.inFlight;
+
+    const newer = this.cache;
+    if (newer?.source === initial.source && newer.version > initial.version &&
+      newer.forcedRefreshStartedAt !== undefined && newer.forcedRefreshStartedAt === state.lastStartedAt) {
+      return newer;
+    }
+    const now = Date.now();
+    if (state.lastStartedAt !== undefined && now - state.lastStartedAt < 30_000) {
+      const candidate = newer?.source === initial.source && newer.version > initial.version ? newer : initial;
+      if (candidate.forcedRefreshStartedAt === state.lastStartedAt) return candidate;
+      throw new Error('STYNX JWKS refresh suppressed after signature miss');
+    }
+    state.lastStartedAt = now;
+    const refresh = this.resolveKeys(true, signingService, now);
+    state.inFlight = refresh;
+    try {
+      return await refresh;
+    } finally {
+      if (state.inFlight === refresh) delete state.inFlight;
+    }
+  }
+
   private async resolveKeys(
     forceRefresh: boolean,
     signingService?: SessionJwtSigningService,
+    forcedRefreshStartedAt?: number,
   ): Promise<CachedKeySet> {
     const now = Date.now();
-    if (!forceRefresh && this.cache && this.cache.expiresAt > now) {
+    const source = signingService ?? this.options.stynx.jwksUri;
+    if (!source) throw new Error('No STYNX JWKS source configured');
+    if (!forceRefresh && this.cache?.source === source && this.cache.expiresAt > now) {
       return this.cache;
     }
+    const startedAtVersion = this.cacheVersion;
 
+    let jwks: unknown;
     if (signingService) {
-      const jwks = await signingService.getJwks();
-      this.cache = {
-        keys: jwks.keys as Array<Record<string, string | undefined> & { kid: string }>,
-        expiresAt: now + 12 * 60 * 60 * 1000,
-      };
+      jwks = await signingService.getJwks();
+    } else {
+      const response = await fetch(source as string);
+      if (!response.ok) throw new Error(`Failed to load STYNX JWKS: ${response.status}`);
+      jwks = await response.json();
+    }
+
+    const rawKeys = jwks && typeof jwks === 'object' && 'keys' in jwks ? jwks.keys : undefined;
+    if (!Array.isArray(rawKeys) || rawKeys.length === 0) {
+      throw new Error('STYNX JWKS contains no usable verification keys');
+    }
+    const keys = rawKeys.filter((key): key is Record<string, string | undefined> => this.isUsableKey(key));
+    if (keys.length === 0) throw new Error('STYNX JWKS contains no usable verification keys');
+    if (!forceRefresh && this.cache?.source === source && this.cache.version > startedAtVersion) {
       return this.cache;
     }
-
-    if (!this.options.stynx.jwksUri) {
-      throw new Error('No STYNX JWKS source configured');
-    }
-
-    const response = await fetch(this.options.stynx.jwksUri);
-    if (!response.ok) {
-      throw new Error(`Failed to load STYNX JWKS: ${response.status}`);
-    }
-    const jwks = await response.json() as { keys: Array<Record<string, string | undefined> & { kid: string }> };
     this.cache = {
-      keys: jwks.keys,
-      expiresAt: now + 12 * 60 * 60 * 1000,
+      source,
+      keys,
+      version: ++this.cacheVersion,
+      ...(forcedRefreshStartedAt !== undefined ? { forcedRefreshStartedAt } : {}),
+      expiresAt: Date.now() + 12 * 60 * 60 * 1000,
     };
     return this.cache;
+  }
+
+  private isUsableKey(key: unknown): boolean {
+    if (!key || typeof key !== 'object') return false;
+    const jwk = key as Record<string, unknown>;
+    if (jwk.kty !== 'RSA' || typeof jwk.n !== 'string' || !jwk.n || typeof jwk.e !== 'string' || !jwk.e) return false;
+    if (jwk.use !== undefined && jwk.use !== 'sig') return false;
+    if (jwk.alg !== undefined && jwk.alg !== 'RS256') return false;
+    try {
+      createPublicKey({ key: jwk, format: 'jwk' });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

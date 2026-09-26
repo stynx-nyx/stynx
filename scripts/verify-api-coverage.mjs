@@ -376,7 +376,7 @@ function namedQueryParameters(fragment) {
 function isPublicOperation(text, decoratorIndex, routePath) {
   if (routePath === '/' || routePath.startsWith('/health') || routePath.startsWith('/ready')) return true;
   const decoratorWindow = text.slice(Math.max(0, decoratorIndex - 500), decoratorIndex);
-  return /@Public\(\)/u.test(decoratorWindow);
+  return /@(?:Public|PublicTenantRoute)\s*\(/u.test(decoratorWindow);
 }
 
 function writeOpenApiContract(file, operations) {

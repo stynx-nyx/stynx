@@ -149,7 +149,11 @@ describe('StynxTenancyModule integration', () => {
       .set('x-test-user-id', '0197481e-7294-7c53-8b03-5c36d7c2831a')
       .expect(400)
       .expect(({ body }) => {
-        expect(String(body.message)).toContain('Tenant context is required');
+        expect(body).toEqual({
+          message: 'Tenant context is required: provide X-Tenant-Id, a tenant bearer claim, or a matching subdomain',
+          error: 'Bad Request',
+          statusCode: 400,
+        });
       });
 
     await request(app.getHttpServer())
@@ -165,6 +169,22 @@ describe('StynxTenancyModule integration', () => {
       .expect(403)
       .expect(({ body }) => {
         expect(body.message).toBe('TENANT_ACCESS_DENIED');
+      });
+  });
+
+  it('keeps protected header and verified-claim disagreement fail-closed with the exact denial body', async () => {
+    await request(app.getHttpServer())
+      .get('/protected')
+      .set('x-test-user-id', '0197481e-7294-7c53-8b03-5c36d7c2831a')
+      .set('x-tenant-id', '0197481e-6f84-77e4-8d6d-41f0b6fca9c1')
+      .set('x-test-claim-tenant-id', '0197481e-6f84-77e4-8d6d-41f0b6fca9c2')
+      .expect(403)
+      .expect(({ body }) => {
+        expect(body).toEqual({
+          message: 'TENANT_ACCESS_DENIED',
+          error: 'Forbidden',
+          statusCode: 403,
+        });
       });
   });
 

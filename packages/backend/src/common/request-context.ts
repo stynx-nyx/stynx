@@ -15,6 +15,8 @@ export interface RequestLike {
   principal?: Principal;
   principalContext?: RequestPrincipalContext;
   tenantId?: string;
+  verifiedSessionId?: string;
+  verifiedTenantEntitlement?: (tenantId: string) => Promise<boolean> | boolean;
   correlationId?: string;
   requestId?: string;
   pgClient?: unknown;

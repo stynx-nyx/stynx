@@ -1,4 +1,5 @@
 import { createHash, createPublicKey, verify as verifySignature } from 'node:crypto';
+import { InvalidCredentialError } from '@stynx-nyx/contracts';
 
 export { headerToString } from '@stynx-nyx/contracts';
 
@@ -22,17 +23,31 @@ export function decodeJwtClaims(token: string): {
   signature: Buffer;
   signingInput: string;
 } {
-  const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
-  if (!encodedHeader || !encodedPayload || !encodedSignature) {
-    throw new Error('JWT is malformed');
+  const segments = token.split('.');
+  const [encodedHeader, encodedPayload, encodedSignature] = segments;
+  if (segments.length !== 3 || !encodedHeader || !encodedPayload || !encodedSignature ||
+    !segments.every((segment) => /^[A-Za-z0-9_-]+$/u.test(segment))) {
+    throw new InvalidCredentialError('JWT is malformed');
   }
 
   const signatureNormalized = encodedSignature.replace(/-/g, '+').replace(/_/g, '/');
   const signaturePadded = signatureNormalized.padEnd(Math.ceil(signatureNormalized.length / 4) * 4, '=');
 
+  let header: Record<string, unknown>;
+  let payload: Record<string, unknown>;
+  try {
+    header = JSON.parse(base64UrlDecode(encodedHeader)) as Record<string, unknown>;
+    payload = JSON.parse(base64UrlDecode(encodedPayload)) as Record<string, unknown>;
+    if (!header || typeof header !== 'object' || Array.isArray(header) ||
+      !payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      throw new Error('JWT is malformed');
+    }
+  } catch {
+    throw new InvalidCredentialError('JWT is malformed');
+  }
   return {
-    header: JSON.parse(base64UrlDecode(encodedHeader)) as Record<string, unknown>,
-    payload: JSON.parse(base64UrlDecode(encodedPayload)) as Record<string, unknown>,
+    header,
+    payload,
     signature: Buffer.from(signaturePadded, 'base64'),
     signingInput: `${encodedHeader}.${encodedPayload}`,
   };
@@ -51,7 +66,7 @@ export function verifyJwtWithJwk(
     decoded.signature,
   );
   if (!valid) {
-    throw new Error('JWT signature verification failed');
+    throw new InvalidCredentialError('JWT signature verification failed');
   }
   return decoded.payload;
 }

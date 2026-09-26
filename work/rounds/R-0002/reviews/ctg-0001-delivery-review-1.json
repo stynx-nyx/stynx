@@ -1,0 +1,60 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages/tenancy/test/integration/public-tenant-route.integration.spec.ts",
+      "issue": "No test runs a Nest app with core and tenancy registered in both orders. DETRAN §3 sets this as the UPS-TEN-01 proof: 'E2E Nest real com as duas ordens forçadas: 200 em ambas, nenhum RequestContextMissingError'. The contract's Verification boundary and the Inspector prompt (02-ctg-0001-inspector.md:10) require it too. Existing coverage is partial: request-context-pre-guard.integration.spec.ts imports only StynxCoreModule, core.module.spec.ts checks descriptor identity, and the public-route app imports only StynxDataModule followed by StynxTenancyModule, so only one order is exercised. Nothing grep-matches an order or reverse test in packages/core/test or packages/tenancy/test.",
+      "required_change": "As Inspector, add an HTTP integration test that builds the app twice, with core/tenancy module and APP_INTERCEPTOR registration forced into each order. In both apps, a guard should read RequestContext before the interceptors, and both a protected route and a @PublicTenantRoute should return 200 with one requestId and no RequestContextMissingError. Then have an Architect rebind law/trace.json."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/backend/src/auth/auth-context.guard.ts",
+      "issue": "The new AuthContextGuard public-tenant branch (lines 46-57) has no behavioral test apart from the case where principal mapping throws. Nothing tests: verified success setting request.principal; invalid, absent or null-principal tokens staying public; the non-optional marker returning without verifying. The verifiedTenantClaim → TENANCY:CONFLICT:host-claim path is also untested; grep finds no verifiedTenantClaim in packages/*/test. The only HTTP test uses a fake VerifiedOptionalAuthGuard, so neither real guard is ever combined with TenantContextInterceptor. That leaves the host/claim conflict and 'no downgrade' guarantees for DETRAN's AuthContextGuard path unproven.",
+      "required_change": "Add Inspector sensors that run the real AuthContextGuard (stub TokenVerifier) and the real StynxAuthGuard (stub validator, sessions and permissions) together with StynxTenancyModule over HTTP. Cover: verified member in the Host tenant → 200 with the verified actor; verified claim for tenant B under Host A → exact host-claim 400; verified actor without membership → exact 403; invalid or absent token → nominal actor with empty grants; non-optional route with a valid token → nominal actor. Rebind the trace afterwards."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/core/test/integration/request-context-pre-guard.integration.spec.ts",
+      "issue": "Several sensors listed in the contract Verification boundary and required by the Inspector prompt are missing. (1) An invalid X-Request-Id raised in the CLS middleware setup (core.module.ts:344) is never shown to return 400 through StynxErrorFilter; it goes via next(e), not an interceptor. (2) Nothing checks over HTTP that several transitive core imports produce exactly one requestId. (3) There is no auth-only or AuthContextGuard-only app without tenancy showing post-guard actorId, tenantId and sessionId reaching the handler; only a unit test of the interceptor exists. (4) Nothing asserts that PermissionGuard denies the nominal public actor, which the prompt requires as proof of 'no inherited roles or permissions'. (5) A configured non-default headerName (X-Portal-Tenant) is never tested for the host-header conflict message at runtime.",
+      "required_change": "As Inspector, add integration tests for items (1)–(5), using existing helpers. As Architect, bind them in law/trace.json."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/src/auth/auth-context.guard.ts",
+      "issue": "On an optionalAuth public-tenant route, a verified principal skips the consumer's TenantEntitlementPolicy. Only protected routes call isEntitled (lines 116-124). The contract says a valid bearer 'follows the complete authenticated flow', so this is a possible authorization downgrade compared with protected routes for apps that rely on entitlement policy beyond membership.",
+      "required_change": "Either call tenantEntitlementPolicy.isEntitled({principal, tenantId: hostTenant}) after tenancy selects the Host tenant, or have the Architect state explicitly in tenancy-context-1.5.md that entitlement policy does not apply on public-tenant routes."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/tenancy/src/tenancy.module.ts",
+      "issue": "StynxTenancyModule.forRoot now returns global: true, which makes every tenancy export global (options, membership cache, invite sender, provisioner, and the re-exported core). This published behavior change is not in the contract, the changeset or the migration note, and the bootstrap checks don't need it because they use moduleRef.get with strict: false.",
+      "required_change": "Remove global: true, or have the Architect record and justify it in the contract, and have the Engineer mention it in the changeset."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/tenancy/test/integration/public-tenant-route.integration.spec.ts",
+      "issue": "The RLS negative (audit-read under Host B returns rows: [] as stynx_app) has no positive control. There is no read of the same row under Host A as stynx_app, so an audit.events policy that hid every row from stynx_app would pass it without testing anything.",
+      "required_change": "Add a read under Host A as stynx_app that returns the written event_id, and keep the Host B read returning an empty result."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/auth/src/public-tenant-bootstrap.ts",
+      "issue": "The marker-discovery loop is copied three times (auth PublicTenantBootstrap, AuthContextGuard.onApplicationBootstrap, tenancy PublicTenantConfigurationCheck). Each copy inspects only the controller's own prototype methods, so a @PublicTenantRoute handler inherited from a base controller escapes the check that the app fails initialization.",
+      "required_change": "Walk the prototype chain (or use Nest's MetadataScanner) in all three checks, preferably through one shared helper, and add a test for an inherited handler."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/tenancy/src/tenant-context.interceptor.ts",
+      "issue": "The public Host/header and Host/claim comparisons are raw, case-sensitive string comparisons (lines 570-572). The same tenant UUID in upper case in X-Tenant-Id therefore gets a host-header conflict. This fails closed, so it is safe, but the rule isn't documented.",
+      "required_change": "Normalize both sides to lower case before comparing, or document exact-match semantics in the contract."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/auth/src/stynx-auth.guard.ts",
+      "issue": "When an optional token verifies but its session has been revoked (line 52), the request silently becomes the anonymous nominal actor. This is defensible as 'invalid token state' but untested, and on protected routes the same case returns 401 ('STYNX session is no longer active'). The optional branch also never sets stynxReadonly for @ReadOnly.",
+      "required_change": "Add a sensor that pins the intended revoked-session behavior on optionalAuth routes, and decide on and document how @ReadOnly combines with @PublicTenantRoute."
+    }
+  ],
+  "summary": "CTG-0001 cannot open a PR yet; the defects are repairable, so the verdict is REVIEW rather than FAIL. The implementation broadly matches the contract and OD-S15-01. Core mounts a shared CLS middleware before guards, with setup seeding the request context and checking the UUIDv7. Tenancy selects the tenant from the raw Host only, rejects a missing or unresolved Host with the existing 400 body, and requires an active tenant. It raises core StynxError 400 for host-header and host-claim conflicts, uses the nominal actor for anonymous or invalid tokens, and returns 403 when a verified actor has no membership. Both guards check the marker before the generic public early return, and the protected paths are unchanged. TenantResolverContext gains host and path, actorId is validated as UUID v4 or v7, the route scripts recognize the marker, and the migration note covers removing the DETRAN prototype patch. No DETRAN code was copied. Git history shows role-by-path discipline was kept: Architect commits touch law/, docs and baselines; Inspector commits touch tests only; the Engineer commit touches src, scripts and the changeset. The changed test lines only tighten assertions. check:trace reports 387/387 locally. The CI log shows public-tenant-route.integration (8 tests) passing against real PostgreSQL, and rls-negative passing. The gaps are in the sensors. The MUST proof for UPS-TEN-01 (two forced registration orders) is missing. The real AuthContextGuard and StynxAuthGuard optional-auth branches are never tested together with tenancy, and the AuthContextGuard host-claim path has no test at all. Several Verification-boundary cases are also missing, including the nominal actor being denied by PermissionGuard and the middleware's X-Request-Id 400 going through the filter. A green gate therefore doesn't yet prove the TEN-01 and TEN-03 guarantees for DETRAN's AuthContextGuard consumer path."
+}

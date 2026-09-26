@@ -2,7 +2,9 @@ import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
+import { STYNX_PUBLIC_TENANT_OPTIONS } from '@stynx-nyx/contracts';
 import { TenantContextInterceptor } from './tenant-context.interceptor';
+import { PublicTenantConfigurationCheck } from './public-tenant-configuration.check';
 import { MembershipAccessCache } from './membership-cache';
 import { TENANT_SYSTEM_OPERATION_SINK_PROVIDER, TenantSystemOperationSink } from './tenant-system-operation.sink';
 import { TenancyController } from './tenancy.controller';
@@ -21,6 +23,7 @@ import { resolveTenancyOptions, type StynxTenancyModuleOptions } from './types';
 @Module({})
 export class StynxTenancyModule {
   static forRoot(options: StynxTenancyModuleOptions): DynamicModule {
+    const resolved = resolveTenancyOptions(options);
     return {
       module: StynxTenancyModule,
       imports: [
@@ -33,8 +36,9 @@ export class StynxTenancyModule {
       providers: [
         {
           provide: STYNX_TENANCY_OPTIONS,
-          useValue: resolveTenancyOptions(options),
+          useValue: resolved,
         },
+        ...(resolved.publicTenant ? [{ provide: STYNX_PUBLIC_TENANT_OPTIONS, useValue: resolved.publicTenant }] : []),
         {
           provide: STYNX_TENANT_MEMBERSHIP_CACHE,
           useFactory: (resolved: ReturnType<typeof resolveTenancyOptions>) =>
@@ -63,6 +67,7 @@ export class StynxTenancyModule {
           useValue: null,
         },
         TenantContextInterceptor,
+        PublicTenantConfigurationCheck,
         TenantSystemOperationSink,
         TenancyPlatformAdminGuard,
         TenancyService,
@@ -70,6 +75,7 @@ export class StynxTenancyModule {
       exports: [
         StynxCoreModule,
         STYNX_TENANCY_OPTIONS,
+        ...(resolved.publicTenant ? [STYNX_PUBLIC_TENANT_OPTIONS] : []),
         STYNX_TENANT_MEMBERSHIP_CACHE,
         STYNX_TENANT_PREFIX_PROVISIONER,
         STYNX_TENANT_INVITE_SENDER,

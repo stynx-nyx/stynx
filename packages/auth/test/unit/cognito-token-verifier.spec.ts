@@ -9,6 +9,7 @@
 //   - early-throw header-shape validation
 
 import { CognitoTokenVerifier } from '../../src/cognito-token-verifier';
+import * as contracts from '@stynx-nyx/contracts';
 
 describe('CognitoTokenVerifier — constructor', () => {
   it('defaults jwksUri to <issuer>/.well-known/jwks.json', () => {
@@ -60,7 +61,9 @@ describe('CognitoTokenVerifier — header-shape early validation', () => {
   const v = new CognitoTokenVerifier({ issuer: 'https://i' });
 
   it('throws on undefined header', async () => {
-    await expect(v.verifyAuthorizationHeader(undefined)).rejects.toThrow('Missing bearer token');
+    const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as (new (message: string) => Error) | undefined;
+    expect(InvalidCredentialError).toBeTypeOf('function');
+    await expect(v.verifyAuthorizationHeader(undefined)).rejects.toBeInstanceOf(InvalidCredentialError!);
   });
 
   it('throws on header without Bearer prefix', async () => {
@@ -137,6 +140,37 @@ describe('CognitoTokenVerifier — header-shape early validation', () => {
         claims: expect.objectContaining({ sub: 'subject-1' }),
       },
     });
+  });
+});
+
+describe('CognitoTokenVerifier — JOSE failure classification', () => {
+  async function signedToken(): Promise<string> {
+    const { SignJWT, generateKeyPair } = await import('jose');
+    const { privateKey } = await generateKeyPair('RS256');
+    return new SignJWT({ sub: 'subject-1' })
+      .setProtectedHeader({ alg: 'RS256' })
+      .setIssuer('https://issuer.example.test')
+      .sign(privateKey);
+  }
+
+  it('maps definitive JOSE validation codes to InvalidCredentialError but propagates key-source failures', async () => {
+    const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as new (message: string) => Error;
+    const token = await signedToken();
+    for (const code of ['ERR_JWT_EXPIRED', 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED', 'ERR_JWT_CLAIM_VALIDATION_FAILED', 'ERR_JWT_INVALID', 'ERR_JWS_INVALID', 'ERR_JOSE_ALG_NOT_ALLOWED']) {
+      const verifier = new CognitoTokenVerifier({ issuer: 'https://issuer.example.test' }) as unknown as { jwks: () => Promise<unknown>; verifyAuthorizationHeader(value: string): Promise<unknown> };
+      verifier.jwks = async () => { throw Object.assign(new Error(code), { code }); };
+      await expect(verifier.verifyAuthorizationHeader(`Bearer ${token}`)).rejects.toBeInstanceOf(InvalidCredentialError);
+    }
+    for (const code of ['ERR_JWKS_TIMEOUT', 'ERR_JWKS_NO_MATCHING_KEY']) {
+      const verifier = new CognitoTokenVerifier({ issuer: 'https://issuer.example.test' }) as unknown as { jwks: () => Promise<unknown>; verifyAuthorizationHeader(value: string): Promise<unknown> };
+      const failure = Object.assign(new Error(code), { code });
+      verifier.jwks = async () => { throw failure; };
+      await expect(verifier.verifyAuthorizationHeader(`Bearer ${token}`)).rejects.toBe(failure);
+    }
+    const fetchFailure = new Error('Cognito JWKS fetch rejected');
+    const fetchRejectingVerifier = new CognitoTokenVerifier({ issuer: 'https://issuer.example.test' }) as unknown as { jwks: () => Promise<unknown>; verifyAuthorizationHeader(value: string): Promise<unknown> };
+    fetchRejectingVerifier.jwks = async () => { throw fetchFailure; };
+    await expect(fetchRejectingVerifier.verifyAuthorizationHeader(`Bearer ${token}`)).rejects.toBe(fetchFailure);
   });
 });
 

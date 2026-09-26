@@ -77,4 +77,35 @@ describe('StynxCoreModule', () => {
 
     expect(first.imports?.[0]).toBe(second.imports?.[0]);
   });
+
+  it('mounts the shared CLS request seed before guards and keeps it on one descriptor', () => {
+    const first = StynxCoreModule.forRoot({
+      appName: 'first-consumer',
+      schema: z.object({}),
+    });
+    const second = StynxCoreModule.forRoot({
+      appName: 'second-consumer',
+      schema: z.object({}),
+    });
+
+    const clsModuleDescriptor = first.imports?.[0] as {
+      imports?: Array<{
+        providers?: Array<{ provide?: unknown; useValue?: { middleware?: unknown } }>;
+      }>;
+    };
+    const clsRootDescriptor = clsModuleDescriptor.imports?.[0];
+    const clsOptions = clsRootDescriptor?.providers?.find(
+      (provider) => provider.useValue && typeof provider.useValue === 'object',
+    )?.useValue;
+
+    expect(clsOptions).toEqual(
+      expect.objectContaining({
+        middleware: expect.objectContaining({
+          mount: true,
+          setup: expect.any(Function),
+        }),
+      }),
+    );
+    expect(second.imports?.[0]).toBe(first.imports?.[0]);
+  });
 });
