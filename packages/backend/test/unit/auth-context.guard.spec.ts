@@ -1,5 +1,6 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
+import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard';
 
 function ctx(request: Record<string, unknown>): ExecutionContext {
@@ -25,6 +26,34 @@ describe('AuthContextGuard', () => {
     await expect(guard.canActivate(ctx({ headers: {} }))).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+  });
+
+  it('fails closed when principal mapping fails after an optional public-tenant token verifies', async () => {
+    const verifier = {
+      verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),
+    };
+    const mapper = { map: vi.fn(() => { throw new Error('principal mapping failed'); }) };
+    const reflector = {
+      getAllAndOverride: vi.fn((token: symbol) =>
+        token === STYNX_PUBLIC_TENANT_ROUTE ? { optionalAuth: true } : undefined,
+      ),
+    };
+    const guard = new AuthContextGuard(
+      verifier as never,
+      mapper as never,
+      undefined,
+      undefined,
+      reflector as never,
+    );
+    const request: Record<string, unknown> = { headers: { authorization: 'Bearer verified-token' } };
+    const context = {
+      getHandler: () => class Handler {},
+      getClass: () => class Controller {},
+      switchToHttp: () => ({ getRequest: () => request }),
+    } as unknown as ExecutionContext;
+
+    await expect(guard.canActivate(context)).rejects.toThrow('principal mapping failed');
+    expect(request).not.toHaveProperty('principal');
   });
 
   it('attaches principal + compatibility user/actor + tenantId on the request', async () => {

@@ -98,6 +98,16 @@ describe('StynxAuthGuard', () => {
     });
   });
 
+  it('fails closed when permission resolution fails after an optional token verifies', async () => {
+    const { guard, permissionCache } = createGuard({ publicTenantRoute: { optionalAuth: true } });
+    permissionCache.getForSession.mockRejectedValueOnce(new Error('permission cache unavailable'));
+    const request = { headers: { authorization: 'Bearer verified-token' } };
+
+    await expect(guard.canActivate(createExecutionContext(request))).rejects.toThrow('permission cache unavailable');
+    expect(request).not.toHaveProperty('stynxClaims');
+    expect(request).not.toHaveProperty('principal');
+  });
+
   it('rejects missing bearer tokens and inactive sessions', async () => {
     await expect(createGuard().guard.canActivate(createExecutionContext({ headers: {} }))).rejects.toMatchObject({
       message: 'Missing STYNX bearer token',
