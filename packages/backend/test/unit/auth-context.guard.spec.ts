@@ -68,6 +68,7 @@ describe('AuthContextGuard', () => {
     ]) {
       const request: Record<string, unknown> = {
         headers: {},
+        stynxClaims: { sub: 'stale-claim-actor', tenantId: 'stale-claim-tenant', sid: 'stale-claim-session' },
         principal: PRINCIPAL,
         user: { id: 'stale-user' },
         actor: { id: 'stale-actor' },
@@ -82,7 +83,7 @@ describe('AuthContextGuard', () => {
       } as unknown as ExecutionContext;
       const guard = new AuthContextGuard(verifier as never, undefined, undefined, undefined, reflector as never);
       await expect(guard.canActivate(context)).resolves.toBe(true);
-      for (const property of ['principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim']) {
+      for (const property of ['stynxClaims', 'principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim']) {
         expect(request).not.toHaveProperty(property);
       }
     }

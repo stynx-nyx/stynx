@@ -9,7 +9,7 @@ import { SessionService } from '@stynx-nyx/sessions';
 import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import { PermissionGuard } from '../../src/permission.guard';
 import { StynxAuthGuard } from '../../src/stynx-auth.guard';
-import { STYNX_PERMISSION_ROUTE, STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE } from '../../src/decorators';
+import { STYNX_PERMISSION_ROUTE, STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from '../../src/decorators';
 import { PublicTenantRoute } from '../../src/decorators';
 import { StynxAuthModule } from '../../src/auth.module';
 import { PermissionCache } from '../../src/permission-cache';
@@ -64,6 +64,19 @@ describe('public tenant guard boundaries', () => {
     }) } as unknown as Reflector;
     const guard = new PermissionGuard(reflector);
     expect(() => guard.canActivate(context({ headers: {}, principal: { permissions: [] } }))).toThrow(ForbiddenException);
+  });
+
+  it('denies a nominal public-tenant actor even when System metadata is also present', () => {
+    const reflector = { getAllAndOverride: vi.fn((key: symbol) => {
+      if (key === STYNX_PUBLIC_TENANT_ROUTE) return { optionalAuth: true };
+      if (key === STYNX_PUBLIC_ROUTE || key === STYNX_SYSTEM_ROUTE) return true;
+      if (key === STYNX_PERMISSION_ROUTE) return 'records:read';
+      return false;
+    }) } as unknown as Reflector;
+
+    expect(() => new PermissionGuard(reflector).canActivate(context({ headers: {} }))).toThrow(
+      new ForbiddenException('Missing permission records:read'),
+    );
   });
 
   it('keeps simple Public routes permissive even when they declare a permission', () => {

@@ -1,6 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import {
   PermissionGuard,
   STYNX_PERMISSION_ROUTE,
@@ -20,6 +21,7 @@ describe('PermissionGuard on public tenant routes', () => {
     const reflector = {
       getAllAndOverride: vi.fn((key: symbol) => {
         if (key === STYNX_PUBLIC_ROUTE) return true;
+        if (key === STYNX_PUBLIC_TENANT_ROUTE) return { optionalAuth: true };
         if (key === STYNX_PERMISSION_ROUTE) return 'records:read:*';
         return undefined;
       }),
