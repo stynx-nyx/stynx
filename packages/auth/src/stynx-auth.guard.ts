@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
+import { STYNX_PUBLIC_TENANT_ROUTE, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
 import { SessionService } from '@stynx-nyx/sessions';
 import { PermissionCache } from './permission-cache';
 import { StynxJwtValidator } from './stynx-jwt.validator';
@@ -32,6 +33,30 @@ export class StynxAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const publicTenant = this.reflector.getAllAndOverride<PublicTenantRouteOptions | boolean>(STYNX_PUBLIC_TENANT_ROUTE, [context.getHandler(), context.getClass()]);
+    if (publicTenant !== undefined && publicTenant !== false) {
+      const request = context.switchToHttp().getRequest<RequestLike>();
+      (request as RequestLike & { publicTenantRoute: boolean; publicTenantOptionalAuth: boolean }).publicTenantRoute = true;
+      (request as RequestLike & { publicTenantOptionalAuth: boolean }).publicTenantOptionalAuth = publicTenant === true ? false : Boolean(publicTenant.optionalAuth);
+      if (!publicTenant || publicTenant === true || !publicTenant.optionalAuth) return true;
+      const authorization = headerToString(request.headers.authorization);
+      if (!authorization?.startsWith('Bearer ')) return true;
+      let claims: Awaited<ReturnType<StynxJwtValidator['validate']>>;
+      try {
+        claims = await this.validator.validate(authorization.slice('Bearer '.length).trim());
+      } catch {
+        // An invalid optional credential remains anonymous.
+        return true;
+      }
+      const sessionService = this.moduleRef.get(SessionService, { strict: false });
+      if (sessionService && !await sessionService.get(claims.sid)) return true;
+      const permissions = await this.permissionCache.getForSession(claims);
+      request.stynxClaims = claims;
+      request.principal = { id: claims.sub, roles: [], permissions: permissions.permissions, tenants: [claims.tenantId], claims: claims.claims };
+      request.user = { id: claims.sub, permissions: permissions.permissions, tenants: [claims.tenantId], claims: claims.claims };
+      request.actor = request.user;
+      return true;
+    }
     if (this.reflector.getAllAndOverride<boolean>(STYNX_PUBLIC_ROUTE, [context.getHandler(), context.getClass()])) {
       return true;
     }

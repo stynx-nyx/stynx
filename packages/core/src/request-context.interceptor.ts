@@ -52,6 +52,18 @@ export class RequestContextInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<RequestLike>();
     const response = context.switchToHttp().getResponse<ResponseLike>();
+    const activeRequestId = this.requestContextMutator.currentRequestId();
+    if (activeRequestId) {
+      const tenantId = request.tenantId ?? request.stynxClaims?.tenantId;
+      const actorId = request.stynxClaims?.sub ?? request.principal?.id ?? request.actor?.id ?? request.user?.id;
+      this.requestContextMutator.patch({
+        ...(tenantId ? { tenantId } : {}),
+        ...(actorId ? { actorId } : {}),
+        ...(request.stynxClaims?.sid ? { sessionId: request.stynxClaims.sid } : {}),
+      });
+      response.setHeader('X-Request-Id', activeRequestId);
+      return next.handle();
+    }
     const requestedId = extractHeader(request.headers['x-request-id']);
     const requestId = requestedId ? normalizeRequestId(requestedId) : undefined;
 
