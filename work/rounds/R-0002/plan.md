@@ -214,6 +214,11 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Reparo focal CTG-0001: `sensor-error` — fixtures antigos simulavam
+  credencial definitivamente inválida com `Error` genérico, e `toHaveProperty`
+  do Vitest não aceita chave `symbol`; Inspector troca só essas fixtures por
+  `InvalidCredentialError` e asserção direta do marcador, preservando os
+  negativos de falha de infraestrutura, e repete uma vez.
 - Delivery-review CTG-0001 ciclo 2: `plant-bug` — catch amplo em dois verificadores rebaixa indisponibilidade JWKS/serviço a ator nominal, e tenancy aceita principal sem proveniência; escalar ao Architect para discriminar credencial inválida, infraestrutura e fonte de claim, depois nova tríade focal.
 - Delivery-review CTG-0001 ciclo 2: `sensor-error` — faltam negativos de sessão revogada, identidade anterior e grant verificado, além de prova explícita de inversão APP_INTERCEPTOR/id gerado; Inspector acrescenta, Architect faz rebind e repete uma vez na tarefa escalada.
 - Revisão interna CTG-0001 de marcadores combinados: `plant-bug` — @System ainda contornava @Permission em rota pública com tenant e AuthContextGuard deixava stynxClaims anterior com token inválido; Inspector adicionou sensores, Engineer corrige uma vez.
