@@ -12,6 +12,7 @@ import { StynxJwtValidator } from './stynx-jwt.validator';
 import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from './decorators';
 import type { RequestLike } from './types';
 import { headerToString } from './utils';
+import { clearVerifiedPrincipal, markVerifiedPrincipal } from './verified-principal';
 
 function responseLike(request: RequestLike): { setHeader(name: string, value: string): void } | null {
   const candidate = (request.res ?? request.response) as { setHeader?: (name: string, value: string) => void } | undefined;
@@ -36,8 +37,19 @@ export class StynxAuthGuard implements CanActivate {
     const publicTenant = this.reflector.getAllAndOverride<PublicTenantRouteOptions | boolean>(STYNX_PUBLIC_TENANT_ROUTE, [context.getHandler(), context.getClass()]);
     if (publicTenant !== undefined && publicTenant !== false) {
       const request = context.switchToHttp().getRequest<RequestLike>();
+      clearVerifiedPrincipal(request);
+      delete request.stynxClaims;
+      delete request.principal;
+      delete request.user;
+      delete request.actor;
+      delete request.tenantId;
+      delete (request as RequestLike & { verifiedSessionId?: string }).verifiedSessionId;
+      delete (request as RequestLike & { verifiedTenantClaim?: string }).verifiedTenantClaim;
+      delete (request as RequestLike & { verifiedTenantEntitlement?: unknown }).verifiedTenantEntitlement;
+      delete (request as RequestLike & { principalContext?: unknown }).principalContext;
       (request as RequestLike & { publicTenantRoute: boolean; publicTenantOptionalAuth: boolean }).publicTenantRoute = true;
       (request as RequestLike & { publicTenantOptionalAuth: boolean }).publicTenantOptionalAuth = publicTenant === true ? false : Boolean(publicTenant.optionalAuth);
+      request.stynxReadonly = Boolean(this.reflector.getAllAndOverride<boolean>(STYNX_READONLY_ROUTE, [context.getHandler(), context.getClass()]));
       if (!publicTenant || publicTenant === true || !publicTenant.optionalAuth) return true;
       const authorization = headerToString(request.headers.authorization);
       if (!authorization?.startsWith('Bearer ')) return true;
@@ -55,6 +67,7 @@ export class StynxAuthGuard implements CanActivate {
       request.principal = { id: claims.sub, roles: [], permissions: permissions.permissions, tenants: [claims.tenantId], claims: claims.claims };
       request.user = { id: claims.sub, permissions: permissions.permissions, tenants: [claims.tenantId], claims: claims.claims };
       request.actor = request.user;
+      markVerifiedPrincipal(request);
       return true;
     }
     if (this.reflector.getAllAndOverride<boolean>(STYNX_PUBLIC_ROUTE, [context.getHandler(), context.getClass()])) {
@@ -101,6 +114,7 @@ export class StynxAuthGuard implements CanActivate {
       claims: claims.claims,
     };
     request.actor = request.user;
+    markVerifiedPrincipal(request);
     response?.setHeader('X-Stynx-Auth-Verify-Ms', (performance.now() - startedAt).toFixed(3));
     return true;
   }

@@ -1,6 +1,6 @@
 import { Inject, Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { ModulesContainer } from '@nestjs/core';
-import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
+import { hasPublicTenantRoute } from '@stynx-nyx/contracts';
 import { STYNX_TENANCY_OPTIONS } from './tokens';
 import type { ResolvedStynxTenancyModuleOptions } from './types';
 
@@ -17,13 +17,7 @@ export class PublicTenantConfigurationCheck implements OnApplicationBootstrap {
       for (const wrapper of module.controllers.values()) {
         const controller = wrapper.metatype;
         if (!controller) continue;
-        const prototype = controller.prototype as object;
-        const marked = Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, controller) !== undefined ||
-          Object.getOwnPropertyNames(prototype).some((name) => {
-            const handler = Object.getOwnPropertyDescriptor(prototype, name)?.value;
-            return typeof handler === 'function' && Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, handler) !== undefined;
-          });
-        if (marked) throw new Error('PublicTenantRoute requires StynxTenancyModule publicTenant options');
+        if (hasPublicTenantRoute(controller)) throw new Error('PublicTenantRoute requires StynxTenancyModule publicTenant options');
       }
     }
   }

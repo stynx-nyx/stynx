@@ -54,7 +54,7 @@ export class TenantContextInterceptor implements NestInterceptor {
           const patch = {
             ...(tenantId !== undefined ? { tenantId } : {}),
             ...(actorId !== undefined ? { actorId } : {}),
-            ...(request.publicTenantOptionalAuth && request.stynxClaims?.sid ? { sessionId: request.stynxClaims.sid } : {}),
+            ...(request.publicTenantOptionalAuth && (request.stynxClaims?.sid || request.verifiedSessionId) ? { sessionId: request.stynxClaims?.sid ?? request.verifiedSessionId } : {}),
           };
           const run = () => {
             subscription = next.handle().subscribe({
@@ -85,12 +85,19 @@ export class TenantContextInterceptor implements NestInterceptor {
       const candidate = await this.options.publicTenant?.resolveHost({ ...(host ? { host } : {}), path });
       if (!candidate) throw new BadRequestException(`Tenant context is required: provide ${this.options.headerName}, a tenant bearer claim, or a matching subdomain`);
       if (!isUuidV7(candidate)) throw new BadRequestException('Tenant identifier must be a valid UUIDv7');
-      if (headerTenantId && headerTenantId !== candidate) throw new StynxError(`Tenant source conflict: Host and ${this.options.headerName} disagree`, { status: 400, code: 'TENANCY:CONFLICT:host-header' });
+      if (headerTenantId && headerTenantId.toLowerCase() !== candidate.toLowerCase()) throw new StynxError(`Tenant source conflict: Host and ${this.options.headerName} disagree`, { status: 400, code: 'TENANCY:CONFLICT:host-header' });
       const verifiedClaim = request.publicTenantOptionalAuth ? request.stynxClaims?.tenantId ?? request.verifiedTenantClaim : undefined;
-      if (verifiedClaim && verifiedClaim.trim() !== candidate) throw new StynxError('Tenant source conflict: Host and authenticated claim disagree', { status: 400, code: 'TENANCY:CONFLICT:host-claim' });
+      if (verifiedClaim && verifiedClaim.trim().toLowerCase() !== candidate.toLowerCase()) throw new StynxError('Tenant source conflict: Host and authenticated claim disagree', { status: 400, code: 'TENANCY:CONFLICT:host-claim' });
       if (!await this.isActiveTenant(candidate)) throw new ForbiddenException('TENANT_ACCESS_DENIED');
       const verifiedActor = request.publicTenantOptionalAuth ? request.stynxClaims?.sub ?? request.principal?.id : undefined;
       if (verifiedActor && !await this.hasActiveMembership(verifiedActor, candidate)) throw new ForbiddenException('TENANT_ACCESS_DENIED');
+      if (verifiedActor && request.verifiedTenantEntitlement) {
+        try {
+          if (!await request.verifiedTenantEntitlement(candidate)) throw new ForbiddenException('Principal is not entitled for tenant context');
+        } catch {
+          throw new ForbiddenException('Principal is not entitled for tenant context');
+        }
+      }
       const actorId = verifiedActor ?? this.options.publicTenant?.actorId;
       if (!actorId) throw new Error('PublicTenantRoute requires StynxTenancyModule publicTenant options');
       request.tenantId = candidate;

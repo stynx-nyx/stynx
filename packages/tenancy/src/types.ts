@@ -93,6 +93,8 @@ export interface RequestLike {
   publicTenantRoute?: boolean;
   publicTenantOptionalAuth?: boolean;
   verifiedTenantClaim?: string;
+  verifiedSessionId?: string;
+  verifiedTenantEntitlement?: (tenantId: string) => Promise<boolean> | boolean;
 }
 
 export function resolveTenancyOptions(

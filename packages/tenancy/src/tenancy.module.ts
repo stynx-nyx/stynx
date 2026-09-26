@@ -26,7 +26,6 @@ export class StynxTenancyModule {
     const resolved = resolveTenancyOptions(options);
     return {
       module: StynxTenancyModule,
-      global: true,
       imports: [
         StynxCoreModule.forRoot({
           appName: 'tenancy',
