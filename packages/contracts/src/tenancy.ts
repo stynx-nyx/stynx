@@ -9,6 +9,7 @@ export interface TenantResolverContext {
 
 export const STYNX_PUBLIC_TENANT_ROUTE = Symbol('STYNX_PUBLIC_TENANT_ROUTE');
 export const STYNX_PUBLIC_TENANT_OPTIONS = Symbol('STYNX_PUBLIC_TENANT_OPTIONS');
+export const STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL = Symbol('STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL');
 export interface PublicTenantRouteOptions { optionalAuth?: boolean }
 
 export function hasPublicTenantRoute(controller: { prototype: object }): boolean {

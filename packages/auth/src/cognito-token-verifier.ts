@@ -9,7 +9,9 @@ import { URL } from 'node:url';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import type { JWTPayload, JWTVerifyGetKey } from 'jose';
-import type { AuthVerificationResult, Principal, TokenVerifier } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, type AuthVerificationResult, type Principal, type TokenVerifier } from '@stynx-nyx/contracts';
+
+const INVALID_TOKEN_CODES = new Set(['ERR_JWT_CLAIM_VALIDATION_FAILED', 'ERR_JWT_EXPIRED', 'ERR_JWT_INVALID', 'ERR_JWS_INVALID', 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED', 'ERR_JOSE_ALG_NOT_ALLOWED']);
 
 export interface CognitoTokenVerifierOptions {
   issuer: string;
@@ -47,12 +49,21 @@ export class CognitoTokenVerifier implements TokenVerifier {
   async verifyAuthorizationHeader(value: string | string[] | undefined): Promise<AuthVerificationResult> {
     const authorization = Array.isArray(value) ? value[0] : value;
     if (!authorization?.startsWith('Bearer ')) {
-      throw new Error('Missing bearer token');
+      throw new InvalidCredentialError('Missing bearer token');
     }
 
     const token = authorization.slice('Bearer '.length).trim();
     const { jwtVerify } = await import('jose');
-    const verification = await jwtVerify(token, await this.resolveJwks(), { issuer: this.options.issuer });
+    const jwks = await this.resolveJwks();
+    let verification: Awaited<ReturnType<typeof jwtVerify>>;
+    try {
+      verification = await jwtVerify(token, jwks, { issuer: this.options.issuer });
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && INVALID_TOKEN_CODES.has(String(error.code))) {
+        throw new InvalidCredentialError(error instanceof Error ? error.message : 'Invalid bearer token');
+      }
+      throw error;
+    }
     const payload = verification.payload;
 
     this.assertAudience(payload);
@@ -87,7 +98,7 @@ export class CognitoTokenVerifier implements TokenVerifier {
   private resolvePrincipalId(payload: JWTPayload): string {
     const candidate = payload.sub ?? this.readString(payload, 'cognito:username') ?? this.readString(payload, 'username');
     if (!candidate) {
-      throw new Error('Token missing principal identifier');
+      throw new InvalidCredentialError('Token missing principal identifier');
     }
     return candidate;
   }
@@ -126,7 +137,7 @@ export class CognitoTokenVerifier implements TokenVerifier {
       azp === expected;
 
     if (!matches) {
-      throw new Error('Token audience mismatch');
+      throw new InvalidCredentialError('Token audience mismatch');
     }
   }
 
@@ -134,7 +145,7 @@ export class CognitoTokenVerifier implements TokenVerifier {
     if (!this.options.enforceTokenUse) return;
     const tokenUse = this.readString(payload, 'token_use');
     if (tokenUse !== this.options.enforceTokenUse) {
-      throw new Error('Token use mismatch');
+      throw new InvalidCredentialError('Token use mismatch');
     }
   }
 

@@ -14,7 +14,7 @@ import type {
   TokenVerifier,
 } from '@stynx-nyx/contracts';
 import { headerToString } from '@stynx-nyx/contracts';
-import { STYNX_PUBLIC_TENANT_ROUTE, hasPublicTenantRoute, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, hasPublicTenantRoute, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
 import { ModulesContainer, Reflector, ModuleRef } from '@nestjs/core';
 import { STYNX_PUBLIC_TENANT_OPTIONS } from '@stynx-nyx/contracts';
 import { DefaultPrincipalMapper } from './default-principal-mapper';
@@ -52,6 +52,7 @@ export class AuthContextGuard implements CanActivate {
     const publicTenant = this.reflector?.getAllAndOverride<PublicTenantRouteOptions | boolean>(STYNX_PUBLIC_TENANT_ROUTE, targets)
       ?? targets.map((target) => Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, target)).find((value) => value !== undefined);
     if (publicTenant !== undefined && publicTenant !== false) {
+      Reflect.deleteProperty(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL);
       delete (request as RequestLike & { stynxClaims?: unknown }).stynxClaims;
       delete request.principal;
       delete request.principalContext;
@@ -64,24 +65,41 @@ export class AuthContextGuard implements CanActivate {
       (request as RequestLike & { publicTenantRoute: boolean; publicTenantOptionalAuth: boolean }).publicTenantRoute = true;
       (request as RequestLike & { publicTenantOptionalAuth: boolean }).publicTenantOptionalAuth = publicTenant === true ? false : Boolean(publicTenant.optionalAuth);
       if (!publicTenant || publicTenant === true || !publicTenant.optionalAuth) return true;
+      const authorization = headerToString(request.headers['authorization']);
+      if (!authorization?.match(/^Bearer +\S+$/u)) return true;
       let result: Awaited<ReturnType<TokenVerifier['verifyAuthorizationHeader']>>;
       try {
-        result = await this.tokenVerifier.verifyAuthorizationHeader(request.headers['authorization'] as string | string[] | undefined);
-      } catch { return true; }
-      if (!result?.principal) return true;
+        result = await this.tokenVerifier.verifyAuthorizationHeader(authorization);
+      } catch (error) {
+        if (error instanceof InvalidCredentialError) return true;
+        throw error;
+      }
+      if (result === null) return true;
+      if (!result?.principal || typeof result.principal.id !== 'string' || !result.principal.id) {
+        throw new UnauthorizedException('Token verification returned no principal');
+      }
       const principal = this.mapper.map(result);
+      if (!principal || typeof principal.id !== 'string' || !principal.id || !Array.isArray(principal.tenants)) {
+        throw new UnauthorizedException('Token verification returned no principal');
+      }
       request.principal = principal;
       const verifiedSessionId = principal.claims?.sid;
       if (typeof verifiedSessionId === 'string') request.verifiedSessionId = verifiedSessionId;
       if (this.tenantEntitlementPolicy) {
         request.verifiedTenantEntitlement = (tenantId: string) => this.tenantEntitlementPolicy!.isEntitled({ principal, tenantId });
       }
-      const tenantClaim = principal.claims?.tenant_id ?? principal.claims?.tenantId;
+      const tenantClaim = [principal.claims?.tenant_id, principal.claims?.tenantId, principal.claims?.['custom:tenant_id'], principal.claims?.['https://stynx.dev/tenant']]
+        .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
+        ?? (() => {
+          const tenants = [...new Set(principal.tenants.map((value) => value.trim().toLowerCase()).filter(Boolean))];
+          return tenants.length === 1 ? tenants[0] : undefined;
+        })();
       if (typeof tenantClaim === 'string') {
         (request as RequestLike & { verifiedTenantClaim?: string }).verifiedTenantClaim = tenantClaim;
       }
       request.user = { id: principal.id, roles: principal.roles, permissions: principal.permissions, tenants: principal.tenants, claims: principal.claims };
       request.actor = request.user;
+      Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
       return true;
     }
     const result = await this.tokenVerifier.verifyAuthorizationHeader(

@@ -16,6 +16,13 @@ export class AuthenticationError extends StynxError {
   }
 }
 
+export class InvalidCredentialError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidCredentialError';
+  }
+}
+
 export class AuthorizationError extends StynxError {
   constructor(message: string, details?: Record<string, unknown>) {
     super(message, 'AUTHORIZATION_ERROR', details);

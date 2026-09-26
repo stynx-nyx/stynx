@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
-import { STYNX_PUBLIC_TENANT_ROUTE, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
 import { SessionService } from '@stynx-nyx/sessions';
 import { PermissionCache } from './permission-cache';
 import { StynxJwtValidator } from './stynx-jwt.validator';
@@ -38,6 +38,7 @@ export class StynxAuthGuard implements CanActivate {
     if (publicTenant !== undefined && publicTenant !== false) {
       const request = context.switchToHttp().getRequest<RequestLike>();
       clearVerifiedPrincipal(request);
+      Reflect.deleteProperty(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL);
       delete request.stynxClaims;
       delete request.principal;
       delete request.user;
@@ -52,13 +53,17 @@ export class StynxAuthGuard implements CanActivate {
       request.stynxReadonly = Boolean(this.reflector.getAllAndOverride<boolean>(STYNX_READONLY_ROUTE, [context.getHandler(), context.getClass()]));
       if (!publicTenant || publicTenant === true || !publicTenant.optionalAuth) return true;
       const authorization = headerToString(request.headers.authorization);
-      if (!authorization?.startsWith('Bearer ')) return true;
+      const token = authorization?.match(/^Bearer +(\S+)$/u)?.[1];
+      if (!token) return true;
       let claims: Awaited<ReturnType<StynxJwtValidator['validate']>>;
       try {
-        claims = await this.validator.validate(authorization.slice('Bearer '.length).trim());
-      } catch {
-        // An invalid optional credential remains anonymous.
-        return true;
+        claims = await this.validator.validate(token);
+      } catch (error) {
+        if (error instanceof InvalidCredentialError) return true;
+        throw error;
+      }
+      if (!claims || typeof claims.sub !== 'string' || !claims.sub || typeof claims.sid !== 'string' || !claims.sid || typeof claims.tenantId !== 'string' || !claims.tenantId) {
+        throw new UnauthorizedException('Token verification returned malformed claims');
       }
       const sessionService = this.moduleRef.get(SessionService, { strict: false });
       if (sessionService && !await sessionService.get(claims.sid)) return true;
@@ -68,6 +73,7 @@ export class StynxAuthGuard implements CanActivate {
       request.user = { id: claims.sub, permissions: permissions.permissions, tenants: [claims.tenantId], claims: claims.claims };
       request.actor = request.user;
       markVerifiedPrincipal(request);
+      Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
       return true;
     }
     if (this.reflector.getAllAndOverride<boolean>(STYNX_PUBLIC_ROUTE, [context.getHandler(), context.getClass()])) {

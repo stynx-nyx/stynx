@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { SessionJwtSigningService } from '@stynx-nyx/sessions';
+import { InvalidCredentialError } from '@stynx-nyx/contracts';
 import { STYNX_AUTH_OPTIONS } from './tokens';
 import type { ResolvedStynxAuthModuleOptions, StynxAccessTokenClaims } from './types';
 import { verifyJwtWithJwk } from './utils';
@@ -25,7 +26,7 @@ export class StynxJwtValidator {
     try {
       return await this.verify(token, false, signingService);
     } catch (error) {
-      if (!signingService) {
+      if (!signingService || !(error instanceof InvalidCredentialError)) {
         throw error;
       }
       return this.verify(token, true, signingService);
@@ -42,28 +43,29 @@ export class StynxJwtValidator {
       .map((key) => {
         try {
           return verifyJwtWithJwk(token, key as Record<string, string | undefined>);
-        } catch {
-          return null;
+        } catch (error) {
+          if (error instanceof InvalidCredentialError) return null;
+          throw error;
         }
       })
       .find((value): value is Record<string, unknown> => value !== null);
 
     if (!payload) {
-      throw new Error('STYNX access token verification failed');
+      throw new InvalidCredentialError('STYNX access token verification failed');
     }
     if (payload.iss !== this.options.stynx.issuer) {
-      throw new Error('STYNX token issuer mismatch');
+      throw new InvalidCredentialError('STYNX token issuer mismatch');
     }
     if (this.options.stynx.audience && payload.aud !== this.options.stynx.audience) {
-      throw new Error('STYNX token audience mismatch');
+      throw new InvalidCredentialError('STYNX token audience mismatch');
     }
 
     const nowSeconds = Math.floor(Date.now() / 1000);
     if (typeof payload.exp === 'number' && payload.exp <= nowSeconds) {
-      throw new Error('STYNX token expired');
+      throw new InvalidCredentialError('STYNX token expired');
     }
     if (typeof payload.nbf === 'number' && payload.nbf > nowSeconds + 5) {
-      throw new Error('STYNX token not active yet');
+      throw new InvalidCredentialError('STYNX token not active yet');
     }
 
     return {
