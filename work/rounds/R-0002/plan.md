@@ -320,6 +320,7 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
-autorizado pelo Owner). Delivery-reviews: REVIEW nos ciclos 1–4; PASS no
-ciclo 5. Nenhum PR, merge, RC ou release final foi iniciado. Publicar
+autorizado pelo Owner). Delivery-reviews: REVIEW nos ciclos 1–4; PASS nos
+ciclos 5 e 6 (delta dos checks do PR). O PR #272 está aberto; merge, RC e
+release final não foram iniciados. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.

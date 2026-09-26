@@ -191,6 +191,13 @@ CI integral passou em `43093989`: trace 393/393, API 44/44, auth
 `/private/tmp/stynx-s15-ctg1-ci-pr-repair3.log`. Review do delta e
 novo push pendentes.
 
+O delivery-review Opus 5.5 ciclo 6 retornou `PASS` para o delta do PR,
+confirmando o veredito do ciclo 5. O reviewer verificou que o fixture
+mantém o token byte a byte, o override é dependência de desenvolvimento,
+os três pins continuam SHA exato e o CI novo passou. Uma nota não
+bloqueante recomenda estabilizar o link de migração com a tag `v1.5.0`
+após a final. Push e CI remoto ainda pendentes.
+
 ## Escopo condicional
 
 UPS-SIG, UPS-OBX e UPS-OFS estão fora da release enquanto a §8 da especificação
