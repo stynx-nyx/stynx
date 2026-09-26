@@ -351,9 +351,9 @@ function collectPermissions(decorators) {
     .filter((decorator) => decoratorName(decorator) === 'Permission')
     .map((decorator) => firstStringLiteral(decoratorArgs(decorator)))
     .filter(Boolean);
-  for (const marker of ['Public', 'System', 'ReadOnly']) {
+  for (const marker of ['Public', 'System', 'ReadOnly', 'PublicTenantRoute']) {
     if (decorators.some((decorator) => decoratorName(decorator) === marker)) {
-      permissions.push(marker.toLowerCase());
+      permissions.push(marker === 'PublicTenantRoute' ? 'public-tenant' : marker.toLowerCase());
     }
   }
   return [...new Set(permissions)].join(';');

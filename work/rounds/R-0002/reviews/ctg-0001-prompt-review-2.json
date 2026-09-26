@@ -1,0 +1,54 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The contract sets the public-route nominal actor to a free-form `actorId: string` and seeds it into RequestContext.actorId. Database.applySessionState (packages/data/src/database.ts:~236) forwards RequestContext.actorId into `app.actor_id`, and platform SQL casts that value with `NULLIF(current_setting('app.actor_id', true), '')::uuid`. The casts are in packages/data/migrations/platform/0008_audit.sql:295, 0017_audit_row_identifier.sql:21, 0014_flow.sql:600 and 0018_worklist.sql:236. A non-UUID nominal actor such as a 'portal-public' label would therefore make every audited, flow or worklist write on a @PublicTenantRoute fail with 22P02. Tenancy already requires UUIDv7 for tenant ids. Neither the Architect nor the Inspector prompt constrains or tests this.",
+      "required_change": "In the plan's F1 contract and 01-ctg-0001-architect.md, require `publicTenant.actorId` to be a valid UUID (state whether v7 is required), validated fail-fast at module init. In 02-ctg-0001-inspector.md, add a boot-time rejection test for a non-UUID actorId and a real-PostgreSQL test in which an audited write on a public tenant route records the nominal actor under tenant A's RLS."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/01-ctg-0001-architect.md",
+      "issue": "docs/meta/development-contract.md rule 2 makes INV-RBAC-001 mandatory for new API surfaces: an endpoint must be role-bound or carry an explicit public marker. The route tooling only recognizes the literal `@Public()`: scripts/list-routes.mjs:354 matches the decorator names Public, System and ReadOnly, and scripts/verify-api-coverage.mjs:379 uses the regex `/@Public\\(\\)/`. StynxAuthGuard also returns early on STYNX_PUBLIC_ROUTE (packages/auth/src/stynx-auth.guard.ts), which would skip the optionalAuth token branch. The prompt does not say whether @PublicTenantRoute composes @Public() or how it satisfies INV-RBAC-001.",
+      "required_change": "Have the contract decide how @PublicTenantRoute relates to STYNX_PUBLIC_ROUTE. Either it composes @Public() and the guards check the public-tenant metadata first, or the route tooling learns the new marker. In the second case, the scripts change is routed to the right role and INV-RBAC-001 is amended by the Architect."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The contract does not say which module owns the `publicTenant` options. It is also silent on how backend AuthContextGuard, which hard-codes `x-tenant-id` (packages/backend/src/auth/auth-context.guard.ts, resolveTenant), gets the configurable header name. The public route's tenant active-state lookup needs tenancy.tenants, so an AuthContextGuard-only app without @stynx-nyx/tenancy has no defined path for it.",
+      "required_change": "In the Architect contract, name the module and options that own `publicTenant`. Define the header-name source for AuthContextGuard. State whether @PublicTenantRoute requires the tenancy module or fails at boot without it."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/02-ctg-0001-inspector.md",
+      "issue": "Two expected outcomes are not pinned. (1) A valid, verified token whose actor has no membership in the Host-selected tenant on an optionalAuth route: plan.md implies 403 TENANT_ACCESS_DENIED, but the Engineer could instead downgrade to public mode. (2) Plain @Public() routes that are not @PublicTenantRoute still reach TenantContextInterceptor.resolveActorId and claimTenantId, which read the unverified `parseBearerTenantClaims` (packages/tenancy/src/tenant-context.interceptor.ts). The contract does not say whether that legacy path is left alone.",
+      "required_change": "Add the valid-token/no-membership optionalAuth case to the Inspector prompt with its exact expected body, and never allow a downgrade to the nominal actor. Have the Architect state explicitly whether the unverified-claim fallback on plain @Public() routes is in scope; leaving it unchanged is acceptable for UPS-TEN-05 if documented."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/01-ctg-0001-architect.md",
+      "issue": "The Inspector must assert 'exact' bodies, but the runtime shapes differ from the catalog. StynxErrorFilter passes HttpException responses through raw, and StynxError bodies are `{code,message,context}`. The existing missing-tenant 400 is a bare BadRequestException message with no code. law/schemas/error-envelope.schema.json and docs/framework/contracts/errors.json both describe a `{statusCode,errorCode,message,requestId}` envelope instead.",
+      "required_change": "Require the contract to give the literal JSON body for each of: missing tenant (existing, unchanged), TENANT_ACCESS_DENIED (unchanged), and TENANCY:CONFLICT:host-header / host-claim (new). Also name the exception class the Engineer must throw so those bodies are produced. Do not modify law/schemas in this CTG unless an ADR says so."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "F1 claims the ClsModule middleware mount point covers 'Express e Fastify em Nest 11'. Only @nestjs/platform-express 11.2.3 is installed, so Fastify cannot be tested. Adding it would touch byte-frozen manifests and the lockfile. The mechanism itself is feasible: in nestjs-cls 6.3.0, ClsRootModule.configure mounts ClsMiddleware once via getMiddlewareMountPoint ('/' on Express 5), and errors thrown in setup go to next(e), then the global StynxErrorFilter.",
+      "required_change": "Restrict the verified claim to Express, or mark Fastify as untested support in the contract."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/record.md",
+      "issue": "record.md still says 'Bootstrap interrompido: pnpm ci:stynx vermelho', while plan.md §Linha de base records a green provisioned baseline and a passing devai doctor.",
+      "required_change": "Update record.md's state to match plan.md before dispatch."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The nine-CTG order covers every U1–U15 requirement as MUST, with SIG/OBX/OFS gated on §8, which has no addenda as of 2026-09-26. However, the spec's UPS-AUTHZ-07 is described as feeding the SSE type filter (UPS-SSE-06), and SSE (CTG 2) precedes AUTHZ (CTG 3).",
+      "required_change": "When writing the CTG-2 contract, keep SSE-06's filter callback independent of AUTHZ-07, or record that the dependency lands in CTG 3."
+    }
+  ],
+  "summary": "All eight cycle-1 findings are repaired. (1) Post-guard enrichment now uses RequestContextMutator.patch and covers auth-only and AuthContextGuard apps. (2) The shared ClsModule.forRoot middleware with mount and setup is named, and it is feasible with nestjs-cls 6.3.0 on Nest 11 Express. (3) Host×claim rejection is added. (4) The Inspector now covers forged tokens, the nominal actor, code equality, rls-negative/rls-smoke and core.module.spec. (5) INV-TENANCY-001 and its trace binding are added. (6) Tenant active-state, raw Host, configurable header and metadata placement are decided. (7) The Engineer's migration note and manifest freeze are fixed. (8) Model ids are reconciled, and the conflict code matches the errorCode pattern. Option (b) and Host/header rejection follow OD-S15-01, and no new Owner decision is needed. Role-by-path assignments match Constitution Art. 6 and the development contract, and the prompts form a complete Architect→Inspector→Engineer triplet. One concrete blocker remains: the nominal public actor is an unconstrained string, but platform SQL casts app.actor_id to uuid, so audited, flow and worklist writes on public tenant routes would fail. The fix is a one-line contract constraint plus a test. The rest is nonblocking."
+}

@@ -83,6 +83,16 @@ export class RequestContext {
 export class RequestContextMutator {
   constructor(private readonly cls: ClsService<CoreClsStore>) {}
 
+  currentRequestId(): string | undefined {
+    return this.cls.get<RequestContextState>(REQUEST_CONTEXT_KEY)?.requestId;
+  }
+
+  initialize(seed: RequestContextState): void {
+    if (this.cls.get<RequestContextState>(REQUEST_CONTEXT_KEY) === undefined) {
+      this.cls.set(REQUEST_CONTEXT_KEY, seed);
+    }
+  }
+
   runWithRequestContext<T>(
     seed: RequestContextState,
     fn: () => Promise<T> | T,

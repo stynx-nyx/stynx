@@ -25,6 +25,7 @@ describe('TenantContextInterceptor', () => {
     allowed?: boolean;
     cached?: boolean | undefined;
     allowSubdomain?: boolean;
+    publicTenant?: { resolveHost: (context: { host?: string; path: string }) => string | undefined; actorId: string };
   } = {}) {
     const txQuery = vi.fn().mockResolvedValue({ rows: [{ allowed: options.allowed ?? true }] });
     const database = {
@@ -60,7 +61,8 @@ describe('TenantContextInterceptor', () => {
         membershipCacheTtlMs: 5_000,
         membershipCacheMaxEntries: 1_000,
         platformAdminEnvFlag: 'STYNX_TENANCY_PLATFORM_ADMIN',
-      },
+        ...(options.publicTenant ? { publicTenant: options.publicTenant } : {}),
+      } as never,
     );
 
     return { interceptor, txQuery, database, membershipCache, requestContextMutator };
@@ -181,6 +183,44 @@ describe('TenantContextInterceptor', () => {
         stynxClaims: { sub: '018f53e4-28a1-7cd8-a0ff-5b22c3a07112', tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07113' },
       }),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('selects a public tenant only from raw Host and rejects a contradictory configured header', async () => {
+    const hostResolver = vi.fn(({ host, path }: { host?: string; path: string }) =>
+      host === 'a.portal.test' && path === '/portal/records' ? TENANT_ID : undefined,
+    );
+    const { interceptor, membershipCache } = createInterceptor({
+      publicTenant: {
+        resolveHost: hostResolver,
+        actorId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      },
+    });
+
+    await expect(
+      (interceptor as never).resolveAndValidate({
+        headers: { host: 'a.portal.test' },
+        originalUrl: '/portal/records',
+        publicTenantRoute: true,
+      }),
+    ).resolves.toEqual({
+      tenantId: TENANT_ID,
+      actorId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      public: true,
+    });
+    expect(hostResolver).toHaveBeenCalledWith({ host: 'a.portal.test', path: '/portal/records' });
+    expect(membershipCache.get).not.toHaveBeenCalled();
+
+    await expect(
+      (interceptor as never).resolveAndValidate({
+        headers: { host: 'a.portal.test', 'x-tenant-id': '0197481e-6f84-77e4-8d6d-41f0b6fca9c2' },
+        originalUrl: '/portal/records',
+        publicTenantRoute: true,
+      }),
+    ).rejects.toMatchObject({
+      status: 400,
+      code: 'TENANCY:CONFLICT:host-header',
+      message: 'Tenant source conflict: Host and X-Tenant-Id disagree',
+    });
   });
 
   it('uses cached membership decisions and resolves tenant ids from subdomains', async () => {

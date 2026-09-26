@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-08-27T00:38:35-03:00",
+    "last_updated": "2026-09-26",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -12,7 +12,16 @@
     "provenance": [
       "DEVAI 1.2.13 deterministic inventory for exact tracked source bytes.",
       "The 495 tracked test-path census is partitioned into 380 executable tests and 115 non-executable fixtures or support modules.",
-      "Fourteen tracked verification scripts and configuration attestations complete the 509-item governed test surface."
+      "Fourteen tracked verification scripts and configuration attestations complete the 509-item governed test surface.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind adds six executable tenancy context sensors and refreshes six existing assertion projections.",
+      "STYNX 1.5.0 CTG-0001 delivery-review rebind adds six HTTP/permission sensors and refreshes two assertion projections.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins legacy-public and optional-auth stale identity regression sensors.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins public-tenant marker precedence and stale-claims negatives.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins credential classification, shared provenance, Cognito claims, interceptor order, and generated request ID sensors.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind aligns typed-credential fixtures and symbol assertions after Inspector sensor triage.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins served interceptor order, JWKS source/rotation, typed JOSE, revoked session, and provenance sensors from delivery review 3.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins recently refreshed JWKS classification, failed refresh propagation, and public HTTP outage sensors from delivery review 4.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind preserves the fake-JWT guard sensor after remote Semgrep fixture repair."
     ]
   },
   "invariants": [
@@ -70,6 +79,24 @@
             "The tracked script participates in the canonical sec verification surface."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/tenancy/test/unit/public-tenant-route-tooling.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "@PublicTenantRoute is explicitly public in route inventory without allowing unmarked routes"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/tenancy/test/integration/public-tenant-route.integration.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "public-tenant route requires configured tenancy and never grants token-derived permissions to anonymous actors"
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": []
@@ -495,6 +522,107 @@
         "packages/backend/src",
         "domain/demo-bookmark/api/src",
         "docs/framework/contracts/errors.json"
+      ]
+    },
+    {
+      "id": "INV-TENANCY-001",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-TENANCY-001.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/tenancy-context-1.5.md",
+          "anchor": "requirements"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "int",
+          "path": "packages/core/test/integration/request-context-pre-guard.integration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "one request context and UUIDv7 request id exist before a Nest guard reads them"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/core/test/unit/core.module.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": ["the shared CLS descriptor mounts middleware once before interceptors"],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/core/test/unit/request-context.interceptor.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": ["the interceptor enriches an active context without replacing its seed"],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/auth/test/unit/stynx-auth.guard.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "optional public-tenant authentication never trusts missing or invalid tokens"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/backend/test/unit/public-tenant-bootstrap.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "backend-only public tenant marker fails bootstrap without tenancy module"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/tenancy/test/unit/public-tenant-options.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "nominal actor must be a valid UUID and public tenancy options are required"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/tenancy/test/unit/public-tenant-route-tooling.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": ["public tenant marker is classified as an explicit public route"],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/tenancy/test/integration/public-tenant-route.integration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "Host-only tenant selection rejects conflicting sources and inactive tenants",
+            "optional verified actor requires membership without public downgrade",
+            "nominal UUID actor is recorded by audit under tenant A and tenant B reader RLS cannot see the row"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/tenancy/test/integration/tenancy.module.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "legacy protected membership and missing-tenant errors retain exact bodies"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": [
+        "packages/core/src",
+        "packages/contracts/src",
+        "packages/auth/src",
+        "packages/backend/src/auth",
+        "packages/tenancy/src",
+        "scripts/list-routes.mjs",
+        "scripts/verify-api-coverage.mjs"
       ]
     }
   ],
@@ -1194,10 +1322,10 @@
     {
       "path": "packages/auth/test/unit/cognito-token-verifier.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 32,
-      "assertion_digest_sha256": "e19798b55920e33594c2da24c483ee58c7d29ebb8c0146965fb5c416e61c31ef"
+      "assertion_count": 36,
+      "assertion_digest_sha256": "0679f8d722911351d4a3a190c8999181c2ee11498569f656b3db36175505e584"
     },
     {
       "path": "packages/auth/test/unit/decorators-runtime.spec.ts",
@@ -1258,10 +1386,10 @@
     {
       "path": "packages/auth/test/unit/stynx-auth.guard.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 18,
-      "assertion_digest_sha256": "341907d8940a63acb96154c814032f7e901b0c3139c57009b5b1d36ac44d4148"
+      "assertion_count": 45,
+      "assertion_digest_sha256": "336471f68eb40299362b88dee45a7aa8d3a8a909b345cb451986fef6963758fc"
     },
     {
       "path": "packages/auth/test/unit/utils.spec.ts",
@@ -1274,10 +1402,10 @@
     {
       "path": "packages/auth/test/unit/validators.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 45,
-      "assertion_digest_sha256": "a5d9e07108b2a3b21c278f9360a8549eee19c67825cb2a20cb0d207980a96c54"
+      "assertion_count": 73,
+      "assertion_digest_sha256": "9a4ce5a6ad496c92d7b292df2459d646487ce921ca9f6ef72a3ed7edf5e65574"
     },
     {
       "path": "packages/backend/test/unit/audit-export.spec.ts",
@@ -1298,10 +1426,10 @@
     {
       "path": "packages/backend/test/unit/auth-context.guard.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 18,
-      "assertion_digest_sha256": "6d56492cfc3d2f2bacd67a4f19da18747745cf512430ad8f7fd42d272359d135"
+      "assertion_count": 32,
+      "assertion_digest_sha256": "d021f3360b6a0a2e25dcf33165f6d013f3f52b0178468d56c2b4807a212f4cd9"
     },
     {
       "path": "packages/backend/test/unit/auth-export.spec.ts",
@@ -1586,10 +1714,10 @@
     {
       "path": "packages/core/test/unit/core.module.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 8,
-      "assertion_digest_sha256": "ab6f3bbc61088c35acbbb0f4a8212f44a8e5c3351dc9418f8a97065add80fce1"
+      "assertion_count": 10,
+      "assertion_digest_sha256": "07aa01c690c7d9b1da000283bbc2fe2518ea3abc97e4decc1abe956282a3bb31"
     },
     {
       "path": "packages/core/test/unit/error.filter.spec.ts",
@@ -1602,10 +1730,10 @@
     {
       "path": "packages/core/test/unit/request-context.interceptor.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "1b5785cdd6bff792a5d22a2b1a6d6faf2d52f4fca964a338a6348d197fc2fc89"
+      "assertion_count": 28,
+      "assertion_digest_sha256": "d778e4d0cb44ca3f2a952cec7646d749b5486f502f9b6774418547f48fad429b"
     },
     {
       "path": "packages/core/test/unit/request-context.spec.ts",
@@ -2600,10 +2728,10 @@
     {
       "path": "packages/tenancy/test/integration/tenancy.module.spec.ts",
       "suite": "int",
-      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 23,
-      "assertion_digest_sha256": "412f836c4fd4b2271f2cea6a5683e89f7a4cf61430b89cc34b20edb0aa8c8574"
+      "assertion_count": 26,
+      "assertion_digest_sha256": "9c7736ea2abd80f61b7bdc33d41cd47f8133e8aa59dcc0b98f99c4db9eed176d"
     },
     {
       "path": "packages/tenancy/test/unit/barrel-load.spec.ts",
@@ -2648,10 +2776,10 @@
     {
       "path": "packages/tenancy/test/unit/tenant-context.interceptor.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 31,
-      "assertion_digest_sha256": "eb691980a638325dd673f791c658410df654e6a89dbc38f4c26b449891668246"
+      "assertion_count": 35,
+      "assertion_digest_sha256": "548df16a6670ae1a1ced6c1a061658ffe5d4729ceab661d564b63ea48e99c4c2"
     },
     {
       "path": "packages/tenancy/test/unit/utils.spec.ts",
@@ -3710,6 +3838,102 @@
       "lifecycle": "supported",
       "assertion_count": 186,
       "assertion_digest_sha256": "c377c70131f57fd5ed64c20482545a8f82e04474083bcd8040aaf5380b43b35f"
+    },
+    {
+      "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "e324b127f7d228011edc471ab4620f0a0292c484ed240d7eac79ef3c67315b1d"
+    },
+    {
+      "path": "packages/backend/test/unit/public-tenant-bootstrap.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "7aa340b105c6f48dc748f4773d70129bb6a6b0259f7abd1821c5fec6309865a6"
+    },
+    {
+      "path": "packages/core/test/integration/request-context-pre-guard.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 9,
+      "assertion_digest_sha256": "21a0fa3d9944caf7a0b9afaf8501587d95f2ec96c0c0d42bb641a3b30863f1d9"
+    },
+    {
+      "path": "packages/tenancy/test/integration/public-tenant-route.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 35,
+      "assertion_digest_sha256": "43398b3081cef21b2d103615ce8e8382727d5fda86c0e7a90a54ee3911f7d97c"
+    },
+    {
+      "path": "packages/tenancy/test/unit/public-tenant-options.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 4,
+      "assertion_digest_sha256": "4c87133f279d0c2e7a9d9d12397d116e6d3ad297e64b5f4f31487eb98ddf5604"
+    },
+    {
+      "path": "packages/tenancy/test/unit/public-tenant-route-tooling.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "bfb6cde200be17ead6458b69089b68ae8502962959fa18c673f9dca012d75a90"
+    },
+    {
+      "path": "packages/auth/test/unit/public-tenant-guards.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 9,
+      "assertion_digest_sha256": "af29c34ea383965dd5b9c131f98293a176ac8b54f44c6272dc426e15796f157a"
+    },
+    {
+      "path": "packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 18,
+      "assertion_digest_sha256": "7c43f249132719df67f2abbe1a7adacb335420ed1cef2d7de8f70a04f70c57ef"
+    },
+    {
+      "path": "packages/backend/test/integration/auth-context-request-context.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "0c3d825ed57807b7d45b801bd49809e4406839be4278b68a025ef5769ce010f6"
+    },
+    {
+      "path": "packages/backend/test/unit/inherited-public-tenant-bootstrap.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "69f46b86b28d839b7fe23ec63c0335b2f2843e09e9ea8959699609d2d33df0ce"
+    },
+    {
+      "path": "packages/tenancy/test/integration/tenancy-context-order.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "59d5ff6d3707649961ed05358e9b12fae1e28a1550c48f28e5a3c717ca86a9d4"
+    },
+    {
+      "path": "packages/tenancy/test/unit/public-tenant-permission.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "5b9bff1561c3637fc4ef3de24d049aae0787a2492fc2c91ff7c570f3573ad336"
     }
   ],
   "suites": {

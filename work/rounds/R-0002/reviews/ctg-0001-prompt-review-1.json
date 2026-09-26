@@ -1,0 +1,54 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The F1 contract removes the global RequestContextInterceptor and seeds the context in middleware. At that point no guard has populated request.stynxClaims, principal, actor, user or tenantId yet. Today packages/core/src/request-context.interceptor.ts reads all of these when it seeds tenantId, actorId and sessionId. After the change, only ActorContextInterceptor patches the context (packages/auth/src/actor-context.interceptor.ts), and only when stynxClaims exist. Apps that use backend AuthContextGuard (packages/backend/src/auth/auth-context.guard.ts sets request.principal and request.tenantId) or have no tenancy module would silently lose RequestContext.actorId and tenantId. This breaks backward compatibility (UPS-TEN-05) and the downstream RLS and audit context.",
+      "required_change": "State in the F1 contract that a post-guard core step patches tenantId, actorId and sessionId from trusted request fields using RequestContextMutator.patch, which already exists, instead of opening a new scope. It must cover StynxAuthGuard, AuthContextGuard, and apps without tenancy. Any retained RequestContextInterceptor must patch, not re-open, when hasActiveContext() is true. Add Inspector tests asserting the actorId, tenantId and sessionId the handler sees for auth-only and backend-AuthContextGuard apps."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "Nest/CLS feasibility is not pinned down. StynxCoreModule.forRoot is imported transitively with different options (tenancy passes appName 'tenancy', auth passes 'auth'), so each import makes a distinct module instance. A NestModule.configure-based middleware would therefore mount several times. The shared STYNX_CLS_MODULE comment (packages/core/src/core.module.ts:26-33) already records how duplicate CLS roots break Nest 11. A middleware that throws 400 for an invalid X-Request-Id also runs before any CLS scope exists, and StynxErrorFilter must still shape that response.",
+      "required_change": "The Architect contract must name the mechanism: either the shared ClsModule.forRoot({ global: true, middleware: { mount: true, setup } }) descriptor, or an idempotent core middleware that skips when hasActiveContext() is true. It must also name the Nest 11 route pattern. The Inspector must test all of the following: exactly one requestId per request with several core imports; the X-Request-Id response header equals RequestContext.requestId; a valid UUIDv7 X-Request-Id is echoed; an invalid one returns 400 through StynxErrorFilter."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The contract does not say what happens when Host resolves tenant A and a valid bearer token on an optionalAuth route carries tenantId B. StynxAuthGuard sets request.tenantId = claims.tenantId (packages/auth/src/stynx-auth.guard.ts). The 'full authenticated flow' could then serve B on a Host-A public route, or skip the membership check for A. This violates the UPS-TEN-02 'never B' proof and OD-S15-01's fail-closed rule.",
+      "required_change": "Applying the already decided OD-S15-01 rejection rule (no new Owner decision), the F1 contract must state that on @PublicTenantRoute any disagreement between the Host tenant and the token claim is rejected fail-closed with the documented code. It must also state that a valid token's actor goes through the normal membership check against the Host tenant. Add matching Inspector negatives."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/02-ctg-0001-inspector.md",
+      "issue": "Several §3 proofs and plan items are missing from the Inspector list. (1) A forged or unsigned token carrying a member's sub and tenantId on an optionalAuth route must yield public mode with no actor or tenant from its claims; TenantContextInterceptor currently trusts parseBearerTenantClaims for claimTenantId and actorId (packages/tenancy/src/tenant-context.interceptor.ts, resolveAndValidate and resolveActorId). (2) The nominal actor must be seeded into RequestContext and must never inherit roles or permissions; PermissionGuard must deny. (3) request.tenantId must be seeded on public routes. (4) The public-route missing-tenant 400 must use the same code as the existing missing-tenant 400. (5) Exact TENANT_ACCESS_DENIED and TENANT_SOURCE_CONFLICT bodies. (6) pnpm check:rls-negative and pnpm check:rls-smoke, both named in the UPS-TEN-05 proof and both present in package.json.",
+      "required_change": "Add these cases and commands to 02-ctg-0001-inspector.md, with expected status and code per case. Also require an updated assertion for the core.module unit spec, which today expects APP_INTERCEPTOR (packages/core/test/unit/core.module.spec.ts:23). The update must encode the new middleware registration and must not delete that coverage."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/01-ctg-0001-architect.md",
+      "issue": "The triplet is incomplete under Constitution Art. 24 and Art. 11. The Architect task yields only a docs/ contract and no invariant. law/invariants has no tenancy or request-context invariant; only INV-CORE-001, INV-RBAC-001 and others exist. The planned law/trace.json rebind would therefore bind the new tenancy sensors only to umbrella invariants.",
+      "required_change": "Have the Architect author (or amend) a law/invariants/INV-TENANCY-001-style invariant covering UPS-TEN-01…06, including statement, severity, scope.code_areas and verification. The docs contract becomes its authority anchor. Tell the maestro to bind the Inspector tests to that invariant in the Architect trace commit."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "Several contract points are undefined. Public routes skip membership, and with it the tenant is_active/state check embedded in the membership query, so a suspended tenant could be served publicly. The Host source is not fixed: TenantContextInterceptor reads headers.host, request.host or request.hostname, and hostname follows X-Forwarded-Host under trust proxy. The conflict check must use the configurable headerName (tenancy options), not the hard-coded x-tenant-id used by AuthContextGuard. The contract also does not say which guards (StynxAuthGuard, AuthContextGuard) honor @PublicTenantRoute.",
+      "required_change": "In the F1 contract, decide and document: the tenant active-state check on public routes; the Host source and proxy trust; conflict detection through the configured headerName; the guards that honor the decorator. Place the metadata key in contracts or core so tenancy and auth do not form a dependency cycle (lint:cycles, lint:deps)."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/03-ctg-0001-engineer.md",
+      "issue": "UPS-TEN-06 is directed to packages-web/MIGRATING.md, which says it is scoped to the Angular package family, while the tenancy and core changes are backend. That path is also outside the Art. 6 packages/ Engineer prefix. The prompt uses 'F1' without defining it. It does not name the plan's local gates (check:rls-negative, test:int with the STYNX_TEST_PG_* variables). It does not forbid touching root or reference package.json files, which are byte-frozen in test/scripts/local-rc-blocker-contract.test.mjs.",
+      "required_change": "Put the Engineer's migration text in the fixed-group changeset (the CHANGELOG source). Have the Architect own any backend migration prose under docs/. Define F1 as law/ and docs/. List the focused and integration commands. Forbid edits to package.json, reference/api/package.json and reference/web/package.json unless the maestro approves."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/02-ctg-0001-inspector.md",
+      "issue": "The Inspector model id gpt-5.6-terra is still unreconciled; plan.md §Leitura says the 5.6 ids must be reconciled before dispatch. The new error code TENANT_SOURCE_CONFLICT is also not registered in docs/framework/contracts/errors.json.",
+      "required_change": "Resolve the worker model ids before dispatch. Have the Architect register TENANT_SOURCE_CONFLICT (and confirm TENANT_ACCESS_DENIED) in docs/framework/contracts/errors.json or state explicitly why it is not registered."
+    }
+  ],
+  "summary": "Option (b), Host×header rejection and the nine-CTG order are faithful to OD-S15-01; the order covers every U1–U15 requirement, and SIG/OBX/OFS are gated on §8. Role-by-path assignments do not conflict with the constitution or docs/meta/development-contract.md. Dispatch is not yet safe: moving context seeding to middleware drops the actor and tenant seeding that the current interceptor performs; the middleware mounting and idempotency are unspecified; Host-A plus token-B on optionalAuth routes is undefined; the Inspector list omits the forged-token, nominal-actor, code-equality and RLS-script proofs; the Architect produces no invariant for the triplet. All of these can be fixed in the prompts and the plan."
+}

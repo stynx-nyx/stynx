@@ -13,6 +13,7 @@ import { PermissionGuard } from './permission.guard';
 import { PermissionQueryService } from './permission-query.service';
 import { RedisPermissionCacheBackend } from './redis-permission-cache-backend';
 import { StynxAuthGuard } from './stynx-auth.guard';
+import { PublicTenantBootstrap } from './public-tenant-bootstrap';
 import { StynxJwtValidator } from './stynx-jwt.validator';
 import { STYNX_AUTH_OPTIONS, STYNX_PERMISSION_CACHE_BACKEND } from './tokens';
 import { resolveAuthOptions, type StynxAuthModuleOptions } from './types';
@@ -55,6 +56,7 @@ export class StynxAuthModule {
         EffectiveHashComputer,
         StynxAuthService,
         StynxAuthGuard,
+        PublicTenantBootstrap,
         PermissionGuard,
       ],
       exports: [
