@@ -294,7 +294,9 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
    PostgreSQL/RLS reais, baseline API 44/44, auth 234/234, tenancy 39/39,
    testes 97/97, integração 51/51 e build 48/48 tarefas. A correção da janela
    JWKS e os sensores do ciclo 4 estão commitados em papéis separados. Resta
-   obter delivery-review PASS antes de PR e merge.
+   O delivery-review ciclo 5 retornou PASS, com uma recomendação não
+   bloqueante para sensoriar o fast path de concorrência; abrir PR e aguardar
+   CI remoto antes de merge.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
 5. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador do grupo
    fixo. `pnpm api:baselines:write` e `pnpm package-readmes:write` não
@@ -303,6 +305,6 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
-autorizado pelo Owner). Quatro delivery-reviews retornaram REVIEW; o quinto
-está pendente. Nenhum PR, merge, RC ou release final foi iniciado. Publicar
+autorizado pelo Owner). Delivery-reviews: REVIEW nos ciclos 1–4; PASS no
+ciclo 5. Nenhum PR, merge, RC ou release final foi iniciado. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.

@@ -153,6 +153,12 @@ SHA passou: API 44/44, auth 234/234, tenancy PostgreSQL 39/39, testes
 mantém 1.4.0 → 1.5.0 minor. Check DEVAI forbidden-actions passou sem
 findings. Quinto delivery-review pendente; nenhum PR aberto.
 
+O quinto delivery-review Opus 5.5 via ponte DETRAN retornou `PASS` em
+`reviews/ctg-0001-delivery-review-5.json`, resolvendo todos os achados
+do ciclo 4. Uma observação não bloqueante recomenda um teste de interleaving
+para o fast path de cache JWKS já conferido pelo reviewer no código. Não
+há desvio MUST conhecido no CTG-0001. PR e CI remoto pendentes.
+
 ## Escopo condicional
 
 UPS-SIG, UPS-OBX e UPS-OFS estão fora da release enquanto a §8 da especificação
