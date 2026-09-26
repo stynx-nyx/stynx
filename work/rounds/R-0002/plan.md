@@ -218,6 +218,12 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
   `rc` deixou os 44 pacotes em `1.5.0` estável após Changesets gerar
   `2.0.0-rc.0` por inferência de peers; corrigir a projeção do grupo
   fixo antes de qualquer publicação, com sensor Inspector e novo review.
+- Prompt-review RC1 ciclo 1: `plant-bug` — o ensaio de versionamento
+  consumiu `tenancy-context-15` em `.changeset/pre.json` mesmo após a
+  restauração dos manifestos. Reposto `changesets: []`, exatamente como
+  `pre enter rc`; commitar esse estado inicial para reprodução. A rota de
+  publicação existente fixa `--tag latest`; RC exige triade separada para
+  selecionar `rc` e provar que `latest` é recusado antes do recibo Owner.
 - DEVAI `audit observe` do merge: `policy-issue` — primeira chamada
   observou o SHA mesclado enquanto HEAD local ainda apontava ao PR;
   avançar a worktree ao merge commit exato e repetir uma vez; concluiu.
@@ -340,15 +346,38 @@ versionador continua corrigindo a promoção major causada por peers
 `workspace:*`, mas não pode descartar o sufixo `rc`. Todos os 44 pacotes
 publicáveis, o manifesto raiz, o template e os CHANGELOGs devem concordar
 com a mesma versão. A invocação repetida sem changeset novo não cria outra
-RC. Um novo changeset estável acrescentado em pre mode produz `rc.2`,
-sem avançar a base minor; `pre exit` produz a final `1.5.0`. Entradas
-malformadas ou tag divergente falham fechadas. O fluxo estável já testado
-permanece válido.
+RC. O estado de entrada é o `pre.json` de `pre enter rc`, com
+`changesets: []`; arquivos `.md` consumidos permanecem no disco. Em modo
+`pre`, somente IDs ausentes de `pre.json.changesets` são pendentes. O
+Changesets gera `rc.0` na primeira execução, mas a decisão OD-S15-01
+exige `rc.1`. Um changeset posterior patch/minor mantém a base 1.5.0 e
+incrementa o ordinal; um major posterior falha fechado, aguardando OD
+do Owner. Em modo `exit`, todos os changesets, consumidos ou novos,
+compõem o maior bump a partir do `initialVersions` do grupo fixo: o
+resultado sem sufixo é 1.5.0 neste caso. Estado estável sem `pre.json`
+segue a regra existente. Drift significa membro do grupo fixo ausente
+de `initialVersions` ou diferente do 1.4.0 unificado; tag atual diversa
+de `pre.json.tag`; ou base prerelease diversa da base recalculada.
+Entradas malformadas falham fechadas. Entradas privadas e externas em
+`initialVersions` não compõem o grupo fixo.
+
+Uma versão prerelease só pode ser publicada com dist-tag `rc`, obtida de
+`pre.json.tag`; `latest` deve ser recusado para prerelease. O script atual
+`scripts/publish-release-plan.mjs` fixa `--tag latest` e o candidate
+`1.4.0`; portanto publicação permanece bloqueada até triade própria
+reparar a rota, incluir sensor Inspector e obter delivery-review. O
+pedido de recibo Owner citará `--tag rc`, comando e SHA exatos.
 
 Tríade focal: Architect fixa este contrato e os prompts; reviewer Opus
 5.5 faz prompt-review antes do despacho; Inspector escreve sensores de
 plano e reescrita de CHANGELOG no fixture de versão; Engineer ajusta
 `scripts/lib/fixed-group-version.mjs` e `scripts/version-packages.mjs`
 até o red/green. Architect rebinda `law/trace.json` se necessário.
-Nenhum workflow será editado. A preparação, CI e revisão de entrega da
-RC ocorrerão antes da solicitação de recibo para publicar.
+O Engineer roda somente testes focais e `pnpm release:preview` contra
+`pre.json` reposto, sem executar versionamento real. Após green, o maestro
+executa `pnpm version-packages`; Inspector rebinda os três SHA-256 exatos
+em `test/scripts/local-rc-blocker-contract.test.mjs` que congelam o
+manifesto raiz, e Architect rebinda `law/trace.json` após edições de
+testes. O fluxo estável já testado permanece válido. Nenhum workflow será
+editado. A preparação, CI e revisão de entrega da RC ocorrerão antes da
+solicitação de recibo para publicar.

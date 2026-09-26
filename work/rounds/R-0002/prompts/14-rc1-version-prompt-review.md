@@ -5,11 +5,15 @@ You are Claude Code Opus 5.5, independent read-only reviewer. Review
 Inspector and Engineer prompts `12-rc1-version-inspector.md` and
 `13-rc1-version-engineer.md` before any worker dispatch. The Owner's
 OD-S15-01 requires `1.5.0-rc.1` after CTG-0001. The worktree is at the
-merged CTG-0001 plus DEVAI evidence; `.changeset/pre.json` is untracked
-pre mode state from `pnpm changeset pre enter rc`. The first
+merged CTG-0001 plus DEVAI evidence; `.changeset/pre.json` is the reset
+pre mode state from `pnpm changeset pre enter rc`, to be committed with
+this revised plan. The first
 `pnpm version-packages` incorrectly produced stable 1.5.0 after
 Changesets generated 2.0.0-rc.0; the generated files were restored,
-leaving pre mode active. No publication occurred.
+and the consumed changeset ID was reset in pre.json after your cycle-1
+finding. No publication occurred. The current publication script fixes
+`--tag latest`; the plan blocks publication until a separate triad
+repairs it and proves `--tag rc`.
 
 Check the current versioner and fixtures to ensure the planned tests
 separate stable, first RC, subsequent RC, no-op, and exit cases without

@@ -8,13 +8,24 @@ Do not edit tests, generated manifests, `law/`, work records, workflows,
 or DETRAN. Start only after Inspector sensors are recorded and red.
 
 Implement `work/rounds/R-0002/plan.md` §Contrato de versionamento RC1.
-Read the actual Changesets `.changeset/pre.json` shape in this worktree
-without modifying it. Keep stable fixed-group behavior and the 44-package
+Read the committed `pre enter rc` state in `.changeset/pre.json` in this
+worktree without modifying it. Keep stable fixed-group behavior and the 44-package
 roster. In `pre` mode, project the first candidate as 1.5.0-rc.1 and
 subsequent candidates as rc.2, rc.3 only with a new changeset; do not
 allow `changeset version` to replace prerelease with stable 1.5.0 or
-major 2.0.0. In `pre exit`, project final stable 1.5.0. Reject malformed
-pre state or mismatched tag/version. Keep preview read-only.
+major 2.0.0. Consumed `.md` files remain on disk; identify pending IDs
+by subtracting `pre.json.changesets`. In `pre exit` (`mode: exit`),
+project final stable 1.5.0 from the initial stable version and highest
+bump across all changesets. A later declared major in pre mode fails
+closed pending Owner OD. Reject malformed pre state or mismatched
+tag/version/base, ignoring non-group initialVersions. Keep the existing
+stable path and preview read-only. Use exact prerelease heading matching;
+correct category headings if an over-promoted generated section says
+`Major Changes` for a minor release.
 
-Run focused script tests and `pnpm release:preview`. Report source diff
+Run only focused script tests and `pnpm release:preview`; the latter
+must show 1.4.0 → 1.5.0-rc.1 against the reset pre.json. The maestro
+owns the real `pnpm version-packages` run after green, and Inspector
+will then rebind the three exact root-manifest SHA-256 sensors in
+`test/scripts/local-rc-blocker-contract.test.mjs`. Report source diff
 and results; do not run Git, commit, push, open a PR, or publish.
