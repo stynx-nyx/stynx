@@ -179,6 +179,18 @@ o destino pela nota de migração no repositório; o build isolado do site
 passou, e novo CI integral está pendente. A falha foi classificada como `plant-bug` em
 `plan.md` §Triagem, sem alteração de workflow ou teste.
 
+O CI seguinte chegou aos testes de scripts e achou três pins D21/D22/D16.1
+do SHA anterior do `package.json` raiz. O Inspector refez somente esses
+três pins em `43093989` para o SHA exato
+`5d4fc38a8f4e538aa2bda99e37b20cdbe13c5ab1f8149622f18e45dd256467fd`,
+sem alterar a comparação, os outros caminhos ou os testes de comportamento.
+Os três testes focais passaram; lint de scripts e trace 393/393 passaram.
+CI integral passou em `43093989`: trace 393/393, API 44/44, auth
+234/234, tenancy PostgreSQL 39/39, testes 97/97 tarefas, integração
+51/51 e build 48/48; log
+`/private/tmp/stynx-s15-ctg1-ci-pr-repair3.log`. Review do delta e
+novo push pendentes.
+
 ## Escopo condicional
 
 UPS-SIG, UPS-OBX e UPS-OFS estão fora da release enquanto a §8 da especificação

@@ -214,6 +214,11 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- CI local após override `adm-zip`: `reference-gap` — três sensores D21,
+  D22 e D16.1 congelam o SHA antigo do `package.json` raiz; Inspector
+  substitui somente esses três digests pelo SHA exato após o override,
+  mantendo todos os demais pins e a asserção de igualdade. Precedente
+  histórico do próprio STYNX: `2b1257e5`.
 - CI local após reparos do PR #272: `plant-bug` — o contrato novo tinha link
   relativo válido no checkout, mas inválido após cópia para `site-docs`;
   Architect aponta à nota de migração no repositório e repete o build uma vez.
