@@ -45,6 +45,12 @@ Worker Inspector `gpt-5.6-terra` entregou sensores F3, commit
 implementação; `pnpm lint:tests`, `check:rls-negative` e `check:rls-smoke`
 passaram. `pnpm check:trace --print` projetou seis novos sensores e seis
 digests alterados; o rebind Architect em `law/trace.json` passou com 387/387.
+O primeiro rebind foi commitado em `7170c89c`. O Engineer `gpt-6-sol` iniciou
+F2. A revisão dos sensores identificou duas falhas de teste, sem alteração de
+produto para acomodá-las: a role superusuária que contornava RLS em auditoria
+e a localização aninhada das opções de `nestjs-cls`. O Inspector corrigiu as
+duas em `1cd9bee7`; a integração pública com PostgreSQL passou 35/35,
+`lint:tests` passou e o novo rebind do trace passou 387/387.
 
 ## Escopo condicional
 

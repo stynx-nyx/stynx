@@ -1709,7 +1709,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 10,
-      "assertion_digest_sha256": "2599ab31b868e656e157e96b121a677288be26fbdca1676d3a3f603724d06168"
+      "assertion_digest_sha256": "07aa01c690c7d9b1da000283bbc2fe2518ea3abc97e4decc1abe956282a3bb31"
     },
     {
       "path": "packages/core/test/unit/error.filter.spec.ts",
@@ -3861,7 +3861,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 24,
-      "assertion_digest_sha256": "0f87a1191ae45341af8414ac809d607d892b029864592e8ddf5160ff8a44a130"
+      "assertion_digest_sha256": "74cb6938c2307551e98c73f41114e1f263335f381dfefdc8def15f8e0e3f1ac9"
     },
     {
       "path": "packages/tenancy/test/unit/public-tenant-options.spec.ts",

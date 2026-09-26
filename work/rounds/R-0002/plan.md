@@ -214,6 +214,15 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Inspector CTG-0001 CLS: `sensor-error` — o unit test procurou `useValue`
+  de opções em `ClsModule.forRoot().providers`, mas `nestjs-cls` 6.2.1 as
+  guarda no import aninhado `ClsRootModule`; corrigir a introspecção e repetir
+  uma vez. O teste real de pre-guard já passou, sem provider fictício.
+- Inspector CTG-0001 RLS: `sensor-error` — os pools do helper usam o
+  superusuário `postgres`, que contorna FORCE RLS; `stynx_reader` não tem
+  acesso a `audit.events`. Na transação de leitura do teste, usar
+  `SET LOCAL ROLE stynx_app` e verificar `current_user` antes da consulta B;
+  repetir a prova uma vez sem reduzir a asserção de isolamento.
 - Inspector CTG-0001: `sensor-error` — `lint:tests` R19-W06 recusou import
   relativo de `auth/src` no novo teste de integração; corrigir pelo alias do
   pacote e repetir o gate uma vez.
@@ -244,8 +253,10 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
    F1 está no commit Architect `94d62ccb`; os sensores F3 estão no commit
    Inspector `c6f8b7fd`. `pnpm check:trace --print` revelou seis arquivos
    novos e seis digests alterados; o rebind está pronto, com 387/387 testes
-   vinculados. Fazer commit Architect de `law/trace.json`, `plan.md` e
-   `record.md`, então despachar Engineer do CTG-0001.
+   vinculados. O rebind Architect foi commitado em `7170c89c` e o Engineer
+   foi despachado. Dois sensores precisaram correções de fixture/descritor,
+   commit Inspector `1cd9bee7`; o novo rebind Architect volta a passar
+   387/387. Concluir o commit deste rebind e aguardar os gates do Engineer.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
 
 ## Reviews, PRs e publicações
