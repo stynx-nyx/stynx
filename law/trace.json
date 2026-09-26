@@ -20,7 +20,8 @@
       "STYNX 1.5.0 CTG-0001 Architect rebind pins credential classification, shared provenance, Cognito claims, interceptor order, and generated request ID sensors.",
       "STYNX 1.5.0 CTG-0001 Architect rebind aligns typed-credential fixtures and symbol assertions after Inspector sensor triage.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins served interceptor order, JWKS source/rotation, typed JOSE, revoked session, and provenance sensors from delivery review 3.",
-      "STYNX 1.5.0 CTG-0001 Architect rebind pins recently refreshed JWKS classification, failed refresh propagation, and public HTTP outage sensors from delivery review 4."
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins recently refreshed JWKS classification, failed refresh propagation, and public HTTP outage sensors from delivery review 4.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind preserves the fake-JWT guard sensor after remote Semgrep fixture repair."
     ]
   },
   "invariants": [
@@ -1388,7 +1389,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 45,
-      "assertion_digest_sha256": "31b3a0399bc0f33b7fc8a3abd5db760ae20a3a1b597f48297b0745028a47cf10"
+      "assertion_digest_sha256": "336471f68eb40299362b88dee45a7aa8d3a8a909b345cb451986fef6963758fc"
     },
     {
       "path": "packages/auth/test/unit/utils.spec.ts",
