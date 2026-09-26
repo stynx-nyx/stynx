@@ -1,7 +1,7 @@
 # R-0002 — plano e checkpoint da STYNX 1.5.0
 
-**Papel atual:** Architect. **Estado:** bootstrap verde; prompt-review do
-CTG-0001 PASS; F1 e sensores Inspector commitados, trace rebind concluído.
+**Papel atual:** Architect. **Estado:** bootstrap e CI local verdes;
+delivery-review do CTG-0001 em reparo após REVIEW.
 **Worktree:**
 `/Users/aarusso/Development/stynx-worktrees/release-1-5-0`, branch
 `feat/release-1-5-0`.
@@ -214,6 +214,8 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Delivery-review CTG-0001 ciclo 1: `sensor-error` — faltam provas HTTP de duas ordens de módulos, ambos os guards reais, cabeçalhos configurados, RLS positivo e casos de contexto; Inspector acrescenta sensores, Architect faz rebind e repete uma vez.
+- Delivery-review CTG-0001 ciclo 1: `plant-bug` — entitlement de principal verificado, alcance global de tenancy e descoberta de marcador herdado exigem reparos de código após contrato Architect e sensores Inspector; Engineer corrige e repete uma vez.
 - Engineer CTG-0001 autenticação opcional: `plant-bug` — `catch` amplo
   rebaixava token já verificado a público quando cache/mapeamento falhava;
   Inspector acrescentou negativas em `7d513da7`, Engineer restringe o
@@ -244,34 +246,24 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 ## Retomada
 
 1. **Retomar esta worktree e esta rodada; não recriar nem replanejar.** A
-   linha de base está verde e o contrato do CTG-0001 está acima. Nenhum
-   arquivo de produto/teste foi alterado, nenhum commit, PR ou publicação foi
-   criado antes do despacho Architect. Prompt-review foi executado três vezes
-   por Opus 5.5 via ponte, com REVIEW, REVIEW, PASS.
+   linha de base e o CI local da entrega CTG-0001 estão verdes. Prompt-review
+   foi executado três vezes por Opus 5.5 via ponte, com REVIEW, REVIEW, PASS.
 2. Os containers da referência devem continuar saudáveis; usar as quatro
    variáveis `STYNX_TEST_PG_*` acima nos gates locais. Chromium Playwright
    1223 já está instalado no host.
-3. Os prompts da tríade estão preparados e corrigidos após dois REVIEW.
-   O Owner autorizou explicitamente uma terceira verificação excepcional em
-   2026-09-26 (mensagem: “Autorizado”). O prompt 05 retornou PASS. O contrato
-   F1 está no commit Architect `94d62ccb`; os sensores F3 estão no commit
-   Inspector `c6f8b7fd`. `pnpm check:trace --print` revelou seis arquivos
-   novos e seis digests alterados; o rebind está pronto, com 387/387 testes
-   vinculados. O rebind Architect foi commitado em `7170c89c` e o Engineer
-   foi despachado. Dois sensores precisaram correções de fixture/descritor,
-   commit Inspector `1cd9bee7`; o novo rebind Architect volta a passar
-   387/387. Concluir o commit deste rebind e aguardar os gates do Engineer.
+3. O CTG-0001 está implementado até `e6330a81`; baseline de API, trace
+   387/387, RLS negativo/smoke e `pnpm ci:stynx` passaram. Delivery-review
+   Opus 5.5 ciclo 1 retornou REVIEW com três bloqueios de sensores e seis
+   achados adicionais. Registrar contrato Architect, acrescentar testes
+   Inspector, fazer rebind Architect, corrigir código Engineer, repetir gates
+   e obter PASS de delivery-review antes de PR e merge.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
-5. Engineer CTG-0001 foi commitado em `2a94cac0` após os novos negativos
-   passarem. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador
-   do grupo fixo. `pnpm api:baselines:write` atualizou os hashes das
-   declarações afetadas; `pnpm package-readmes:write` não alterou arquivos.
-   Fazer commit Architect do baseline e deste checkpoint, rodar `pnpm
-ci:stynx`, solicitar delivery-review Opus 5.5 e só então abrir o PR.
+5. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador do grupo
+   fixo. O CI local verde refere-se a `e6330a81`, antes dos reparos da revisão.
 
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
-autorizado pelo Owner). Nenhum
-delivery-review, PR, merge, RC ou release final foi iniciado. Publicar
+autorizado pelo Owner). Um delivery-review retornou REVIEW. Nenhum PR, merge,
+RC ou release final foi iniciado. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.

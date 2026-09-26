@@ -62,6 +62,13 @@ auth 23/23 e tenancy PostgreSQL 35/35 passaram. O commit F2 é `2a94cac0`.
 inferência major do `changeset status` bruto; `scripts/version-packages.mjs`
 trata essa promoção indevida. `pnpm api:baselines:write` atualizou as
 declarações públicas e `pnpm package-readmes:write` teve zero mudanças.
+O rebind da API pública e o checkpoint foram commitados em `e6330a81`.
+`pnpm ci:stynx` passou nesse HEAD com PostgreSQL real em `127.0.0.1:55432`:
+incluiu 51 tarefas de integração, 48 de build, RLS negativo e smoke.
+O delivery-review Opus 5.5 via ponte DETRAN, ciclo 1, retornou `REVIEW`:
+três lacunas bloqueantes de sensores HTTP (duas ordens de módulo, ambos os
+guards reais e provas de contexto) e seis achados adicionais de contrato,
+código ou fixture RLS. O PR fica pendente do reparo, novo CI e PASS.
 
 ## Escopo condicional
 
