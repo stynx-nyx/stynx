@@ -15,7 +15,8 @@
       "Fourteen tracked verification scripts and configuration attestations complete the 509-item governed test surface.",
       "STYNX 1.5.0 CTG-0001 Architect rebind adds six executable tenancy context sensors and refreshes six existing assertion projections.",
       "STYNX 1.5.0 CTG-0001 delivery-review rebind adds six HTTP/permission sensors and refreshes two assertion projections.",
-      "STYNX 1.5.0 CTG-0001 Architect rebind pins legacy-public and optional-auth stale identity regression sensors."
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins legacy-public and optional-auth stale identity regression sensors.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins public-tenant marker precedence and stale-claims negatives."
     ]
   },
   "invariants": [
@@ -1423,7 +1424,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 22,
-      "assertion_digest_sha256": "702e4e07325f7737af4e665726260067843b0778d97973b9e1b8cece60513138"
+      "assertion_digest_sha256": "309f52a684f012ffab0a109df1709f01f18b17ad0042c3d1de1aa59cb8fbdc12"
     },
     {
       "path": "packages/backend/test/unit/auth-export.spec.ts",
@@ -3886,8 +3887,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 8,
-      "assertion_digest_sha256": "b2a80d73122e62c6e250c73f3528de03314e7fb4f1ced6151750adb03408c441"
+      "assertion_count": 9,
+      "assertion_digest_sha256": "af29c34ea383965dd5b9c131f98293a176ac8b54f44c6272dc426e15796f157a"
     },
     {
       "path": "packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts",
@@ -3927,7 +3928,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 1,
-      "assertion_digest_sha256": "9ca96dd08ad288623859ceb896e8295741b76151470320a5384e368c7e2f20d3"
+      "assertion_digest_sha256": "5b9bff1561c3637fc4ef3de24d049aae0787a2492fc2c91ff7c570f3573ad336"
     }
   ],
   "suites": {
