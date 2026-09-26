@@ -991,6 +991,12 @@
       "commit": "1e323f3c4971c218813640b91f6837ceb0e0dd12",
       "authorized_by": "Owner",
       "reason": "Owner direction of 2026-09-26 to wire the DEVAI ledger gate (ADR-DEVAI-ADOPTION-0004). Adds .github/workflows/devai-local-rc-verify.yml as the byte-exact workflow DEVAI 1.5.6 generates: push-to-main and workflow_dispatch only, contents/packages read and checks write, verifier materialized from the DEVAI-designated @aarusso-nyx/devai@1.5.4 package with the protected provenance duplicate, no STYNX product command, and a verified-local-rc check-run. No existing workflow changes."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "1e323f3c4971c218813640b91f6837ceb0e0dd12",
+      "authorized_by": "Owner",
+      "reason": "The DEVAI 1.5.6 generated devai-local-rc-verify.yml resets its own runner-temporary verifier directory with rm -rf \"$control\" (control=$RUNNER_TEMP/devai-verifier-package) before materializing the pinned verifier package. The target is an ephemeral runner path created by the same step, never repository content or uncommitted work; the workflow must stay byte-identical to the DEVAI generator, so the line cannot be rewritten."
     }
   ]
 }
