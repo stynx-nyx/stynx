@@ -1,6 +1,7 @@
 import { createSign, generateKeyPairSync } from 'node:crypto';
 import type { ModuleRef } from '@nestjs/core';
 import type { Mock } from 'vitest';
+import * as contracts from '@stynx-nyx/contracts';
 
 vi.mock('../../src/utils', async () => {
   const actual = await vi.importActual('../../src/utils');
@@ -25,6 +26,19 @@ describe('auth validators', () => {
       createRemoteJWKSet: expect.any(Function),
       jwtVerify: expect.any(Function),
     });
+  });
+
+  it('classifies definitive STYNX credential failures separately from JWKS configuration failures', async () => {
+    const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as (new (message: string) => Error) | undefined;
+    expect(InvalidCredentialError).toBeTypeOf('function');
+    const noJwks = new StynxJwtValidator({ get: vi.fn(() => undefined) } as unknown as ModuleRef, {
+      stynx: { issuer: 'https://stynx.test' }, permissions: { dbFallbackOnRedisDown: true },
+    } as never);
+    await expect(noJwks.validate('token')).rejects.not.toBeInstanceOf(InvalidCredentialError!);
+    const invalidSignature = new StynxJwtValidator({ get: vi.fn(() => ({ getJwks: async () => ({ keys: [] }) })) } as unknown as ModuleRef, {
+      stynx: { issuer: 'https://stynx.test' }, permissions: { dbFallbackOnRedisDown: true },
+    } as never);
+    await expect(invalidSignature.validate('token')).rejects.toBeInstanceOf(InvalidCredentialError!);
   });
 
   it('validates cognito access tokens and authorization headers', async () => {

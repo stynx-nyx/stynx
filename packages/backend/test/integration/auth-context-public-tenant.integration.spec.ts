@@ -1,8 +1,8 @@
 import { Controller, Get, Module, Req, UseGuards } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { PublicTenantRoute } from '@stynx-nyx/auth';
-import { PermissionCache, StynxAuthGuard, StynxJwtValidator } from '@stynx-nyx/auth';
+import { Permission, PublicTenantRoute } from '@stynx-nyx/auth';
+import { PermissionCache, PermissionGuard, StynxAuthGuard, StynxJwtValidator } from '@stynx-nyx/auth';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
 import { SessionService } from '@stynx-nyx/sessions';
@@ -40,6 +40,12 @@ class BackendPublicController {
   optional(@Req() req: RequestState) {
     return { tenantId: req.tenantId, actorId: this.context.actorId, sessionId: this.context.sessionId, principalId: req.principal?.id };
   }
+
+  @Get('/permissioned')
+  @PublicTenantRoute({ optionalAuth: true })
+  @Permission('records:read')
+  @UseGuards(StynxAuthGuard, PermissionGuard)
+  permissioned() { return { status: 'granted' }; }
 }
 
 @Controller('/auth-public')
@@ -71,6 +77,9 @@ const tokenVerifier = {
     if (token === 'Bearer member') return { principal: { id: MEMBER, roles: ['member'], permissions: ['records:read'], tenants: [TENANT_A], claims: { tenant_id: TENANT_A, sid: 'member-session' } } };
     if (token === 'Bearer conflict') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_B], claims: { tenant_id: TENANT_B, sid: 'conflict-session' } } };
     if (token === 'Bearer outsider') return { principal: { id: OUTSIDER, roles: ['member'], permissions: [], tenants: [TENANT_A], claims: { tenant_id: TENANT_A, sid: 'outsider-session' } } };
+    if (token === 'Bearer cognito-conflict') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_A], claims: { 'custom:tenant_id': TENANT_B } } };
+    if (token === 'Bearer sole-list-conflict') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_B], claims: {} } };
+    if (token === 'Bearer multi-list') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_A, TENANT_B], claims: {} } };
     if (token === 'Bearer entitlement-deny') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_A], claims: { tenant_id: TENANT_A, entitlement: 'deny' } } };
     if (token === 'Bearer entitlement-throw') return { principal: { id: MEMBER, roles: ['member'], permissions: [], tenants: [TENANT_A], claims: { tenant_id: TENANT_A, entitlement: 'throw' } } };
     return null;
@@ -80,6 +89,7 @@ const tokenVerifier = {
 @Module({ controllers: [BackendPublicController, AuthPublicController], providers: [
   AuthContextGuard,
   StynxAuthGuard,
+  PermissionGuard,
   { provide: STYNX_TOKEN_VERIFIER, useValue: tokenVerifier },
   { provide: STYNX_TENANT_ENTITLEMENT_POLICY, useValue: { isEntitled: async ({ principal }: { principal: { claims?: Record<string, unknown> } }) => {
     if (principal.claims?.entitlement === 'throw') throw new Error('policy unavailable');
@@ -156,5 +166,24 @@ describe('AuthContextGuard public tenant HTTP contract', () => {
       .expect(400).expect({ code: 'TENANCY:CONFLICT:host-claim', message: 'Tenant source conflict: Host and authenticated claim disagree' });
     await request(app.getHttpServer()).get('/auth-public/optional').set('host', 'a.portal.test').set('authorization', 'Bearer outsider')
       .expect(403).expect({ message: 'TENANT_ACCESS_DENIED', error: 'Forbidden', statusCode: 403 });
+  });
+
+  it('requires a StynxAuthGuard-verified grant on a permissioned public tenant route', async () => {
+    await request(app.getHttpServer()).get('/backend-public/permissioned').set('host', 'a.portal.test').set('authorization', 'Bearer member')
+      .expect(200).expect({ status: 'granted' });
+    for (const authorization of [undefined, 'Bearer invalid']) {
+      const call = request(app.getHttpServer()).get('/backend-public/permissioned').set('host', 'a.portal.test');
+      if (authorization) call.set('authorization', authorization);
+      await call.expect(403).expect({ message: 'Missing permission records:read', error: 'Forbidden', statusCode: 403 });
+    }
+  });
+
+  it('uses Cognito-shaped and sole-list tenant claims for Host conflict while leaving a multi-list unselected', async () => {
+    for (const authorization of ['Bearer cognito-conflict', 'Bearer sole-list-conflict']) {
+      await request(app.getHttpServer()).get('/backend-public/optional').set('host', 'a.portal.test').set('authorization', authorization)
+        .expect(400).expect({ code: 'TENANCY:CONFLICT:host-claim', message: 'Tenant source conflict: Host and authenticated claim disagree' });
+    }
+    await request(app.getHttpServer()).get('/backend-public/optional').set('host', 'a.portal.test').set('authorization', 'Bearer multi-list')
+      .expect(200).expect({ tenantId: TENANT_A, actorId: MEMBER, principalId: MEMBER });
   });
 });

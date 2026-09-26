@@ -5,6 +5,7 @@ import { RequestContext } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import request from 'supertest';
 import { PublicTenantRoute, StynxAuthModule } from '@stynx-nyx/auth';
+import { STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL } from '@stynx-nyx/contracts';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 import { StynxTenancyModule } from '../../src/tenancy.module';
 
@@ -29,14 +30,21 @@ class VerifiedOptionalAuthGuard implements CanActivate {
     if (token === 'Bearer verified-a') {
       request.stynxClaims = { sub: VERIFIED_MEMBER_A, tenantId: TENANT_A, sid: 'session-a' };
       request.principal = { id: VERIFIED_MEMBER_A, roles: ['member'], permissions: ['records:read'] };
+      Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
     }
     if (token === 'Bearer verified-b') {
       request.stynxClaims = { sub: VERIFIED_MEMBER_A, tenantId: TENANT_B, sid: 'session-b' };
       request.principal = { id: VERIFIED_MEMBER_A, roles: ['member'], permissions: ['records:read'] };
+      Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
     }
     if (token === 'Bearer verified-no-membership') {
       request.stynxClaims = { sub: VERIFIED_WITHOUT_MEMBERSHIP, tenantId: TENANT_A, sid: 'session-none' };
       request.principal = { id: VERIFIED_WITHOUT_MEMBERSHIP, roles: ['member'], permissions: ['records:read'] };
+      Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
+    }
+    if (token === 'Bearer upstream-unverified') {
+      request.stynxClaims = { sub: VERIFIED_MEMBER_A, tenantId: TENANT_A, sid: 'forged-session' };
+      request.principal = { id: VERIFIED_MEMBER_A, roles: ['member'], permissions: ['records:read'] };
     }
     // Any forged or malformed text intentionally provides no verified identity.
     return true;
@@ -222,6 +230,21 @@ describe('public tenant route contract', () => {
           roles: [],
           permissions: [],
         });
+      });
+  });
+
+  it('uses the nominal actor when upstream claims and principal lack shared verification provenance', async () => {
+    await request(app.getHttpServer())
+      .get('/portal/optional')
+      .set('host', 'a.portal.test')
+      .set('authorization', 'Bearer upstream-unverified')
+      .expect(200)
+      .expect({
+        requestTenantId: TENANT_A,
+        tenantId: TENANT_A,
+        actorId: NOMINAL_ACTOR,
+        roles: ['member'],
+        permissions: ['records:read'],
       });
   });
 

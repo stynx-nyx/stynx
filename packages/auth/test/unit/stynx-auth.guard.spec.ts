@@ -1,6 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
+import * as contracts from '@stynx-nyx/contracts';
 import { SessionService } from '@stynx-nyx/sessions';
 import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from '../../src/decorators';
 import { StynxAuthGuard } from '../../src/stynx-auth.guard';
@@ -106,6 +107,41 @@ describe('StynxAuthGuard', () => {
     await expect(guard.canActivate(createExecutionContext(request))).rejects.toThrow('permission cache unavailable');
     expect(request).not.toHaveProperty('stynxClaims');
     expect(request).not.toHaveProperty('principal');
+  });
+
+  it('uses a nominal identity for a revoked optional session and clears all prior identity fields', async () => {
+    const { guard } = createGuard({ publicTenantRoute: { optionalAuth: true }, activeSession: false });
+    const request: Record<string, unknown> = {
+      headers: { authorization: 'Bearer revoked' },
+      stynxClaims: { sub: 'stale' }, principal: { id: 'stale' }, user: { id: 'stale' }, actor: { id: 'stale' },
+      tenantId: 'stale-tenant', verifiedSessionId: 'stale-session', verifiedTenantClaim: 'stale-claim',
+    };
+    await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
+    for (const property of ['stynxClaims', 'principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim']) {
+      expect(request).not.toHaveProperty(property);
+    }
+  });
+
+  it('propagates an optional verifier infrastructure failure instead of downgrading it to nominal', async () => {
+    const { guard, validator } = createGuard({ publicTenantRoute: { optionalAuth: true } });
+    validator.validate.mockRejectedValueOnce(new Error('JWKS endpoint unavailable'));
+    await expect(guard.canActivate(createExecutionContext({ headers: { authorization: 'Bearer valid' } }))).rejects.toThrow('JWKS endpoint unavailable');
+  });
+
+  it('uses the shared typed credential error and provenance marker only after optional verification', async () => {
+    const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as (new (message: string) => Error) | undefined;
+    const marker = (contracts as Record<string, unknown>).STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as symbol | undefined;
+    expect(InvalidCredentialError).toBeTypeOf('function');
+    expect(typeof marker).toBe('symbol');
+    const invalid = createGuard({ publicTenantRoute: { optionalAuth: true } });
+    invalid.validator.validate.mockRejectedValueOnce(new InvalidCredentialError!('bad signature'));
+    const invalidRequest = { headers: { authorization: 'Bearer invalid' } };
+    await expect(invalid.guard.canActivate(createExecutionContext(invalidRequest))).resolves.toBe(true);
+    expect(invalidRequest).not.toHaveProperty(marker!);
+    const verified = createGuard({ publicTenantRoute: { optionalAuth: true } });
+    const verifiedRequest = { headers: { authorization: 'Bearer valid' } };
+    await expect(verified.guard.canActivate(createExecutionContext(verifiedRequest))).resolves.toBe(true);
+    expect(verifiedRequest).toHaveProperty(marker!, true);
   });
 
   it('rejects missing bearer tokens and inactive sessions', async () => {

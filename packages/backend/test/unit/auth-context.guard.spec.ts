@@ -1,6 +1,7 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
 import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
+import * as contracts from '@stynx-nyx/contracts';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard';
 
 function ctx(request: Record<string, unknown>): ExecutionContext {
@@ -87,6 +88,32 @@ describe('AuthContextGuard', () => {
         expect(request).not.toHaveProperty(property);
       }
     }
+  });
+
+  it('treats null optional verification as nominal but fails closed for undefined or malformed results and infrastructure errors', async () => {
+    const reflector = { getAllAndOverride: vi.fn((token: symbol) => token === STYNX_PUBLIC_TENANT_ROUTE ? { optionalAuth: true } : undefined) };
+    const context = {
+      getHandler: () => class Handler {}, getClass: () => class Controller {},
+      switchToHttp: () => ({ getRequest: () => ({ headers: { authorization: 'Bearer token' } }) }),
+    } as unknown as ExecutionContext;
+    await expect(new AuthContextGuard({ verifyAuthorizationHeader: async () => null } as never, undefined, undefined, undefined, reflector as never).canActivate(context)).resolves.toBe(true);
+    for (const verifier of [
+      { verifyAuthorizationHeader: async () => undefined },
+      { verifyAuthorizationHeader: async () => ({}) },
+      { verifyAuthorizationHeader: async () => { throw new Error('JWKS unavailable'); } },
+    ]) {
+      await expect(new AuthContextGuard(verifier as never, undefined, undefined, undefined, reflector as never).canActivate(context)).rejects.toThrow();
+    }
+  });
+
+  it('uses the contracts provenance marker only for a verified optional principal', async () => {
+    const marker = (contracts as Record<string, unknown>).STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as symbol | undefined;
+    expect(typeof marker).toBe('symbol');
+    const reflector = { getAllAndOverride: vi.fn((token: symbol) => token === STYNX_PUBLIC_TENANT_ROUTE ? { optionalAuth: true } : undefined) };
+    const request: Record<string, unknown> = { headers: { authorization: 'Bearer verified' } };
+    const context = { getHandler: () => class Handler {}, getClass: () => class Controller {}, switchToHttp: () => ({ getRequest: () => request }) } as unknown as ExecutionContext;
+    await expect(new AuthContextGuard({ verifyAuthorizationHeader: async () => ({ principal: PRINCIPAL }) } as never, undefined, undefined, undefined, reflector as never).canActivate(context)).resolves.toBe(true);
+    expect(request).toHaveProperty(marker!, true);
   });
 
   it('attaches principal + compatibility user/actor + tenantId on the request', async () => {

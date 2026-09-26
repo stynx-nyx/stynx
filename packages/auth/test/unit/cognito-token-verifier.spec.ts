@@ -9,6 +9,7 @@
 //   - early-throw header-shape validation
 
 import { CognitoTokenVerifier } from '../../src/cognito-token-verifier';
+import * as contracts from '@stynx-nyx/contracts';
 
 describe('CognitoTokenVerifier — constructor', () => {
   it('defaults jwksUri to <issuer>/.well-known/jwks.json', () => {
@@ -60,7 +61,9 @@ describe('CognitoTokenVerifier — header-shape early validation', () => {
   const v = new CognitoTokenVerifier({ issuer: 'https://i' });
 
   it('throws on undefined header', async () => {
-    await expect(v.verifyAuthorizationHeader(undefined)).rejects.toThrow('Missing bearer token');
+    const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as (new (message: string) => Error) | undefined;
+    expect(InvalidCredentialError).toBeTypeOf('function');
+    await expect(v.verifyAuthorizationHeader(undefined)).rejects.toBeInstanceOf(InvalidCredentialError!);
   });
 
   it('throws on header without Bearer prefix', async () => {
