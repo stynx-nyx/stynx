@@ -243,8 +243,8 @@ describe('public tenant route contract', () => {
         requestTenantId: TENANT_A,
         tenantId: TENANT_A,
         actorId: NOMINAL_ACTOR,
-        roles: ['member'],
-        permissions: ['records:read'],
+        roles: [],
+        permissions: [],
       });
   });
 

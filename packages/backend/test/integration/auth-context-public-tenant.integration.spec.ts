@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { Permission, PublicTenantRoute } from '@stynx-nyx/auth';
 import { PermissionCache, PermissionGuard, StynxAuthGuard, StynxJwtValidator } from '@stynx-nyx/auth';
+import { InvalidCredentialError } from '@stynx-nyx/contracts';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
 import { SessionService } from '@stynx-nyx/sessions';
@@ -65,7 +66,7 @@ const jwtValidator = {
     if (token === 'member') return { sid: 'member-session', sub: MEMBER, tenantId: TENANT_A, claims: {} };
     if (token === 'conflict') return { sid: 'conflict-session', sub: MEMBER, tenantId: TENANT_B, claims: {} };
     if (token === 'outsider') return { sid: 'outsider-session', sub: OUTSIDER, tenantId: TENANT_A, claims: {} };
-    throw new Error('invalid token');
+    throw new InvalidCredentialError('invalid token');
   }),
 };
 const permissionCache = { getForSession: vi.fn(async () => ({ permissions: ['records:read'] })) };

@@ -113,7 +113,7 @@ describe('AuthContextGuard', () => {
     const request: Record<string, unknown> = { headers: { authorization: 'Bearer verified' } };
     const context = { getHandler: () => class Handler {}, getClass: () => class Controller {}, switchToHttp: () => ({ getRequest: () => request }) } as unknown as ExecutionContext;
     await expect(new AuthContextGuard({ verifyAuthorizationHeader: async () => ({ principal: PRINCIPAL }) } as never, undefined, undefined, undefined, reflector as never).canActivate(context)).resolves.toBe(true);
-    expect(request).toHaveProperty(marker!, true);
+    expect(Reflect.get(request, marker!)).toBe(true);
   });
 
   it('attaches principal + compatibility user/actor + tenantId on the request', async () => {

@@ -1,6 +1,7 @@
 import { createSign, generateKeyPairSync } from 'node:crypto';
 import type { ModuleRef } from '@nestjs/core';
 import type { Mock } from 'vitest';
+import { InvalidCredentialError } from '@stynx-nyx/contracts';
 import * as contracts from '@stynx-nyx/contracts';
 
 vi.mock('../../src/utils', async () => {
@@ -192,7 +193,7 @@ describe('auth validators', () => {
           exp: Math.floor(Date.now() / 1000) + 60,
         };
       }
-      throw new Error('invalid');
+      throw new InvalidCredentialError('invalid');
     });
 
     const validator = new StynxJwtValidator(moduleRef, {
@@ -282,7 +283,7 @@ describe('auth validators', () => {
           exp: Math.floor(Date.now() / 1000) + 60,
         };
       }
-      throw new Error('invalid');
+      throw new InvalidCredentialError('invalid');
     });
 
     const validator = new StynxJwtValidator(moduleRef, {
@@ -306,7 +307,7 @@ describe('auth validators', () => {
       if (key.kid === 'good') {
         return { iss: 'https://stynx.test' };
       }
-      throw new Error('invalid key');
+      throw new InvalidCredentialError('invalid key');
     });
     const validator = new StynxJwtValidator(moduleRef, {
       stynx: { issuer: 'https://stynx.test' },

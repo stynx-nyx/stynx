@@ -1,6 +1,6 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
-import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import * as contracts from '@stynx-nyx/contracts';
 import { SessionService } from '@stynx-nyx/sessions';
 import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from '../../src/decorators';
@@ -83,7 +83,7 @@ describe('StynxAuthGuard', () => {
     expect(missingRequest).not.toHaveProperty('principal');
 
     const invalid = createGuard({ publicTenantRoute: { optionalAuth: true } });
-    invalid.validator.validate.mockRejectedValueOnce(new Error('invalid signature'));
+    invalid.validator.validate.mockRejectedValueOnce(new InvalidCredentialError('invalid signature'));
     const invalidRequest = { headers: { authorization: 'Bearer forged-token' } };
     await expect(invalid.guard.canActivate(createExecutionContext(invalidRequest))).resolves.toBe(true);
     expect(invalidRequest).not.toHaveProperty('stynxClaims');
@@ -137,11 +137,11 @@ describe('StynxAuthGuard', () => {
     invalid.validator.validate.mockRejectedValueOnce(new InvalidCredentialError!('bad signature'));
     const invalidRequest = { headers: { authorization: 'Bearer invalid' } };
     await expect(invalid.guard.canActivate(createExecutionContext(invalidRequest))).resolves.toBe(true);
-    expect(invalidRequest).not.toHaveProperty(marker!);
+    expect(Reflect.get(invalidRequest, marker!)).toBe(undefined);
     const verified = createGuard({ publicTenantRoute: { optionalAuth: true } });
     const verifiedRequest = { headers: { authorization: 'Bearer valid' } };
     await expect(verified.guard.canActivate(createExecutionContext(verifiedRequest))).resolves.toBe(true);
-    expect(verifiedRequest).toHaveProperty(marker!, true);
+    expect(Reflect.get(verifiedRequest, marker!)).toBe(true);
   });
 
   it('rejects missing bearer tokens and inactive sessions', async () => {
