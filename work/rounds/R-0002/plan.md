@@ -1,7 +1,8 @@
 # R-0002 — plano e checkpoint da STYNX 1.5.0
 
 **Papel atual:** Architect. **Estado:** bootstrap verde; prompt-review do
-CTG-0001 PASS após exceção do Owner; worker Architect despachado. **Worktree:**
+CTG-0001 PASS; F1 e sensores Inspector commitados, trace rebind concluído.
+**Worktree:**
 `/Users/aarusso/Development/stynx-worktrees/release-1-5-0`, branch
 `feat/release-1-5-0`.
 
@@ -213,6 +214,9 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Inspector CTG-0001: `sensor-error` — `lint:tests` R19-W06 recusou import
+  relativo de `auth/src` no novo teste de integração; corrigir pelo alias do
+  pacote e repetir o gate uma vez.
 - Commit Architect CTG-0001: `policy-issue` — commitlint recusou o escopo
   `tenancy`, ausente da enumeração; repetir uma vez com o escopo `repo`.
 - Baseline 2026-09-26: `reference-gap` — infraestrutura PostgreSQL local
@@ -236,8 +240,12 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
    1223 já está instalado no host.
 3. Os prompts da tríade estão preparados e corrigidos após dois REVIEW.
    O Owner autorizou explicitamente uma terceira verificação excepcional em
-   2026-09-26 (mensagem: “Autorizado”). Executar o prompt 05 com Opus 5.5 pela
-   ponte. O resultado foi PASS; despachar a tríade em ordem topológica.
+   2026-09-26 (mensagem: “Autorizado”). O prompt 05 retornou PASS. O contrato
+   F1 está no commit Architect `94d62ccb`; os sensores F3 estão no commit
+   Inspector `c6f8b7fd`. `pnpm check:trace --print` revelou seis arquivos
+   novos e seis digests alterados; o rebind está pronto, com 387/387 testes
+   vinculados. Fazer commit Architect de `law/trace.json`, `plan.md` e
+   `record.md`, então despachar Engineer do CTG-0001.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
 
 ## Reviews, PRs e publicações

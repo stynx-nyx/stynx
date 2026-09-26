@@ -22,8 +22,8 @@ plan_path: 'plan.md'
 
 Bootstrap verde após provisionar os serviços Docker da referência e o Chromium
 headless do Playwright. `pnpm ci:stynx` passou com PostgreSQL na porta 55432 e
-`pnpm exec devai doctor` retornou `ok: true`. Nenhuma mudança de produto,
-teste, commit ou publicação ocorreu. Ver `plan.md` §Linha de base.
+`pnpm exec devai doctor` retornou `ok: true` antes da tríade. Ver `plan.md`
+§Linha de base.
 
 ## Revisões
 
@@ -37,8 +37,14 @@ em 2026-09-26 (“Autorizado”); executar prompt 05 pela ponte antes de qualque
 despacho.
 O terceiro prompt-review excepcional retornou `PASS`, com três observações
 não bloqueantes incorporadas ao contrato Architect. Despacho liberado.
-Worker Architect `gpt-6-sol` do CTG-0001 despachado para o contrato F1; ainda
-não há resultado ou commit.
+Worker Architect `gpt-6-sol` entregou F1, commit
+`94d62ccb637a4fb6d5e5942a383235145d7e1a9b` com autoria `DEVAI Architect`.
+Worker Inspector `gpt-5.6-terra` entregou sensores F3, commit
+`c6f8b7fde4b450a3b4a5a8857b334b13af7617d4` com autoria
+`DEVAI Inspector`. Testes focalizados falham como esperado antes da
+implementação; `pnpm lint:tests`, `check:rls-negative` e `check:rls-smoke`
+passaram. `pnpm check:trace --print` projetou seis novos sensores e seis
+digests alterados; o rebind Architect em `law/trace.json` passou com 387/387.
 
 ## Escopo condicional
 
