@@ -99,7 +99,7 @@ describe('auth validators', () => {
     await expect(validator.validate(await signedStynxToken(wrong.privateKey, 'wrong'))).rejects.toBeInstanceOf(InvalidCredentialError);
   });
 
-  it('refreshes a stale jwksUri cache once for a rotated valid token and propagates refresh failure', async () => {
+  it('refreshes a stale jwksUri cache once for a rotated valid token', async () => {
     const { generateKeyPair } = await import('jose');
     const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
     const old = await generateKeyPair('RS256');
@@ -109,12 +109,38 @@ describe('auth validators', () => {
     (verifyJwtWithJwk as Mock).mockImplementation((token: string, key: Record<string, string>) => actual.verifyJwtWithJwk(token, key));
     const originalFetch = global.fetch;
     const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ keys: [oldJwk] }) }).mockResolvedValueOnce({ ok: true, json: async () => ({ keys: [freshJwk] }) });
-    global.fetch = fetchMock as never;
-    const validator = new StynxJwtValidator({ get: vi.fn(() => undefined) } as unknown as ModuleRef, { stynx: { issuer: 'https://stynx.test', jwksUri: 'https://jwks.test' }, permissions: { dbFallbackOnRedisDown: true } } as never);
-    await expect(validator.validate(await signedStynxToken(old.privateKey, 'old'))).resolves.toMatchObject({ sub: 'user-1' });
-    await expect(validator.validate(await signedStynxToken(fresh.privateKey, 'fresh'))).resolves.toMatchObject({ sub: 'user-1' });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    global.fetch = originalFetch;
+    try {
+      global.fetch = fetchMock as never;
+      const validator = new StynxJwtValidator({ get: vi.fn(() => undefined) } as unknown as ModuleRef, { stynx: { issuer: 'https://stynx.test', jwksUri: 'https://jwks.test' }, permissions: { dbFallbackOnRedisDown: true } } as never);
+      await expect(validator.validate(await signedStynxToken(old.privateKey, 'old'))).resolves.toMatchObject({ sub: 'user-1' });
+      await expect(validator.validate(await signedStynxToken(fresh.privateKey, 'fresh'))).resolves.toMatchObject({ sub: 'user-1' });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  it('propagates a jwksUri forced-refresh failure after warming its cache', async () => {
+    const { generateKeyPair } = await import('jose');
+    const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+    const old = await generateKeyPair('RS256');
+    const rotated = await generateKeyPair('RS256');
+    const oldJwk = { ...(await crypto.subtle.exportKey('jwk', old.publicKey)), kid: 'old', alg: 'RS256', use: 'sig' } as Record<string, string>;
+    (verifyJwtWithJwk as Mock).mockImplementation((token: string, key: Record<string, string>) => actual.verifyJwtWithJwk(token, key));
+    const failure = new Error('remote JWKS refresh unavailable');
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ keys: [oldJwk] }) })
+      .mockRejectedValueOnce(failure);
+    const originalFetch = global.fetch;
+    try {
+      global.fetch = fetchMock as never;
+      const validator = new StynxJwtValidator({ get: vi.fn(() => undefined) } as unknown as ModuleRef, { stynx: { issuer: 'https://stynx.test', jwksUri: 'https://jwks.test' }, permissions: { dbFallbackOnRedisDown: true } } as never);
+      await expect(validator.validate(await signedStynxToken(old.privateKey, 'old'))).resolves.toMatchObject({ sub: 'user-1' });
+      await expect(validator.validate(await signedStynxToken(rotated.privateKey, 'rotated'))).rejects.toBe(failure);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 
   it('coalesces concurrent forced refreshes and suppresses another ambiguous refresh for 30 seconds', async () => {
@@ -145,7 +171,7 @@ describe('auth validators', () => {
       expect(service.getJwks).toHaveBeenCalledTimes(2);
 
       const unknownToken = await signedStynxToken(unknown.privateKey, 'unknown');
-      await expect(validator.validate(unknownToken)).rejects.not.toBeInstanceOf(InvalidCredentialError);
+      await expect(validator.validate(unknownToken)).rejects.toBeInstanceOf(InvalidCredentialError);
       expect(service.getJwks).toHaveBeenCalledTimes(2);
 
       now.mockReturnValue(1_030_001);
@@ -159,14 +185,39 @@ describe('auth validators', () => {
     }
   });
 
+  it('keeps a failed refresh and its suppressed retry as key-source failures', async () => {
+    const { generateKeyPair } = await import('jose');
+    const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+    const old = await generateKeyPair('RS256');
+    const unknown = await generateKeyPair('RS256');
+    const oldJwk = { ...(await crypto.subtle.exportKey('jwk', old.publicKey)), kid: 'old', alg: 'RS256', use: 'sig' } as Record<string, string>;
+    (verifyJwtWithJwk as Mock).mockImplementation((token: string, key: Record<string, string>) => actual.verifyJwtWithJwk(token, key));
+    const refreshFailure = new Error('JWKS refresh unavailable');
+    const service = { getJwks: vi.fn().mockResolvedValueOnce({ keys: [oldJwk] }).mockRejectedValue(refreshFailure) };
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+    try {
+      const validator = new StynxJwtValidator({ get: vi.fn(() => service) } as unknown as ModuleRef, { stynx: { issuer: 'https://stynx.test' }, permissions: { dbFallbackOnRedisDown: true } } as never);
+      await validator.validate(await signedStynxToken(old.privateKey, 'old'));
+      const unknownToken = await signedStynxToken(unknown.privateKey, 'unknown');
+      await expect(validator.validate(unknownToken)).rejects.toBe(refreshFailure);
+      await expect(validator.validate(unknownToken)).rejects.not.toBeInstanceOf(InvalidCredentialError);
+      expect(service.getJwks).toHaveBeenCalledTimes(2);
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   it('treats malformed, empty, and unusable jwksUri responses as infrastructure failures', async () => {
     const originalFetch = global.fetch;
-    for (const body of [{}, { keys: 'not-an-array' }, { keys: [] }, { keys: [{ kid: 'unusable' }] }]) {
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => body }) as never;
-      const validator = new StynxJwtValidator({ get: vi.fn(() => undefined) } as unknown as ModuleRef, { stynx: { issuer: 'https://stynx.test', jwksUri: 'https://jwks.test' }, permissions: { dbFallbackOnRedisDown: true } } as never);
-      await expect(validator.validate(STRUCTURAL_TOKEN)).rejects.not.toBeInstanceOf(InvalidCredentialError);
+    try {
+      for (const body of [{}, { keys: 'not-an-array' }, { keys: [] }, { keys: [{ kid: 'unusable' }] }]) {
+        global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => body }) as never;
+        const validator = new StynxJwtValidator({ get: vi.fn(() => undefined) } as unknown as ModuleRef, { stynx: { issuer: 'https://stynx.test', jwksUri: 'https://jwks.test' }, permissions: { dbFallbackOnRedisDown: true } } as never);
+        await expect(validator.validate(STRUCTURAL_TOKEN)).rejects.not.toBeInstanceOf(InvalidCredentialError);
+      }
+    } finally {
+      global.fetch = originalFetch;
     }
-    global.fetch = originalFetch;
   });
 
   it('validates cognito access tokens and authorization headers', async () => {

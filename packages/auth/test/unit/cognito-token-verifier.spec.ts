@@ -156,7 +156,7 @@ describe('CognitoTokenVerifier — JOSE failure classification', () => {
   it('maps definitive JOSE validation codes to InvalidCredentialError but propagates key-source failures', async () => {
     const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as new (message: string) => Error;
     const token = await signedToken();
-    for (const code of ['ERR_JWT_EXPIRED', 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED', 'ERR_JWT_CLAIM_VALIDATION_FAILED']) {
+    for (const code of ['ERR_JWT_EXPIRED', 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED', 'ERR_JWT_CLAIM_VALIDATION_FAILED', 'ERR_JWT_INVALID', 'ERR_JWS_INVALID', 'ERR_JOSE_ALG_NOT_ALLOWED']) {
       const verifier = new CognitoTokenVerifier({ issuer: 'https://issuer.example.test' }) as unknown as { jwks: () => Promise<unknown>; verifyAuthorizationHeader(value: string): Promise<unknown> };
       verifier.jwks = async () => { throw Object.assign(new Error(code), { code }); };
       await expect(verifier.verifyAuthorizationHeader(`Bearer ${token}`)).rejects.toBeInstanceOf(InvalidCredentialError);

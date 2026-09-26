@@ -73,6 +73,7 @@ const jwtValidator = {
     if (token === 'conflict') return { sid: 'conflict-session', sub: MEMBER, tenantId: TENANT_B, claims: {} };
     if (token === 'outsider') return { sid: 'outsider-session', sub: OUTSIDER, tenantId: TENANT_A, claims: {} };
     if (token === 'revoked') return { sid: 'revoked-session', sub: MEMBER, tenantId: TENANT_A, claims: {} };
+    if (token === 'jwks-outage') throw new Error('JWKS unavailable');
     throw new InvalidCredentialError('invalid token');
   }),
 };
@@ -176,6 +177,11 @@ describe('AuthContextGuard public tenant HTTP contract', () => {
       .expect(400).expect({ code: 'TENANCY:CONFLICT:host-claim', message: 'Tenant source conflict: Host and authenticated claim disagree' });
     await request(app.getHttpServer()).get('/auth-public/optional').set('host', 'a.portal.test').set('authorization', 'Bearer outsider')
       .expect(403).expect({ message: 'TENANT_ACCESS_DENIED', error: 'Forbidden', statusCode: 403 });
+  });
+
+  it('propagates a STYNX JWKS outage over the optional HTTP route', async () => {
+    await request(app.getHttpServer()).get('/auth-public/optional').set('host', 'a.portal.test').set('authorization', 'Bearer jwks-outage')
+      .expect(500);
   });
 
   it('requires a StynxAuthGuard-verified grant on a permissioned public tenant route', async () => {
