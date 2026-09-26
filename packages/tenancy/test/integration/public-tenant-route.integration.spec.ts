@@ -21,6 +21,7 @@ type PublicRequest = {
   tenantId?: string;
   principal?: { id: string; roles: string[]; permissions: string[] };
   stynxClaims?: { sub: string; tenantId: string; sid?: string };
+  verifiedTenantClaim?: string;
 };
 
 class VerifiedOptionalAuthGuard implements CanActivate {
@@ -44,6 +45,11 @@ class VerifiedOptionalAuthGuard implements CanActivate {
     }
     if (token === 'Bearer upstream-unverified') {
       request.stynxClaims = { sub: VERIFIED_MEMBER_A, tenantId: TENANT_A, sid: 'forged-session' };
+      request.principal = { id: VERIFIED_MEMBER_A, roles: ['member'], permissions: ['records:read'] };
+    }
+    if (token === 'Bearer upstream-unverified-tenant-b') {
+      request.stynxClaims = { sub: VERIFIED_MEMBER_A, tenantId: TENANT_B, sid: 'forged-session-b' };
+      request.verifiedTenantClaim = TENANT_B;
       request.principal = { id: VERIFIED_MEMBER_A, roles: ['member'], permissions: ['records:read'] };
     }
     // Any forged or malformed text intentionally provides no verified identity.
@@ -238,6 +244,21 @@ describe('public tenant route contract', () => {
       .get('/portal/optional')
       .set('host', 'a.portal.test')
       .set('authorization', 'Bearer upstream-unverified')
+      .expect(200)
+      .expect({
+        requestTenantId: TENANT_A,
+        tenantId: TENANT_A,
+        actorId: NOMINAL_ACTOR,
+        roles: [],
+        permissions: [],
+      });
+  });
+
+  it('ignores an unmarked tenant-B upstream claim under Host A without raising a host-claim conflict', async () => {
+    await request(app.getHttpServer())
+      .get('/portal/optional')
+      .set('host', 'a.portal.test')
+      .set('authorization', 'Bearer upstream-unverified-tenant-b')
       .expect(200)
       .expect({
         requestTenantId: TENANT_A,

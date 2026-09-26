@@ -1,4 +1,5 @@
 import { CanActivate, Controller, Get, Injectable, Req, UseGuards } from '@nestjs/common';
+import type { CallHandler, NestInterceptor } from '@nestjs/common';
 import type { ExecutionContext, INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PublicTenantRoute } from '@stynx-nyx/auth';
@@ -47,20 +48,39 @@ class OrderProbeController {
   }
 }
 
-type GlobalInterceptor = { constructor: { name: string } };
-type BuiltApp = { app: INestApplication; guard: PreInterceptorProbeGuard; interceptorNames: string[] };
+type GlobalInterceptor = NestInterceptor & { constructor: { name: string } };
+type BuiltApp = {
+  app: INestApplication;
+  guard: PreInterceptorProbeGuard;
+  interceptorNames: string[];
+  interceptorCalls: string[];
+};
 
-function forceGlobalInterceptorOrder(app: INestApplication, order: 'core-first' | 'tenancy-first'): string[] {
+function forceAndObserveGlobalInterceptorOrder(
+  app: INestApplication,
+  order: 'core-first' | 'tenancy-first',
+): { names: string[]; calls: string[] } {
   // Tenancy imports core itself, so import order alone leaves core registered first.
-  // The fixture orders Nest's already-registered, real interceptor instances before serving requests.
+  // Before route registration, order Nest's actual APP_INTERCEPTOR instances and wrap them.
   const runtime = app as unknown as { config: { getGlobalInterceptors(): GlobalInterceptor[] } };
   const interceptors = runtime.config.getGlobalInterceptors();
   const core = interceptors.find((interceptor) => interceptor.constructor.name === 'RequestContextInterceptor');
   const tenancy = interceptors.find((interceptor) => interceptor.constructor.name === 'TenantContextInterceptor');
   if (!core || !tenancy) throw new Error('Expected core and tenancy APP_INTERCEPTOR registrations');
+  const ordered = order === 'core-first' ? [core, tenancy] : [tenancy, core];
   const remaining = interceptors.filter((interceptor) => interceptor !== core && interceptor !== tenancy);
-  interceptors.splice(0, interceptors.length, ...(order === 'core-first' ? [core, tenancy] : [tenancy, core]), ...remaining);
-  return interceptors.map((interceptor) => interceptor.constructor.name);
+  interceptors.splice(0, interceptors.length, ...ordered, ...remaining);
+
+  const calls: string[] = [];
+  for (const interceptor of ordered) {
+    const name = interceptor.constructor.name;
+    const original = interceptor.intercept.bind(interceptor);
+    interceptor.intercept = (context: ExecutionContext, next: CallHandler) => {
+      calls.push(name);
+      return original(context, next);
+    };
+  }
+  return { names: interceptors.map((interceptor) => interceptor.constructor.name), calls };
 }
 
 async function buildApp(postgres: PostgresTestDatabase, order: 'core-first' | 'tenancy-first'): Promise<BuiltApp> {
@@ -88,11 +108,13 @@ async function buildApp(postgres: PostgresTestDatabase, order: 'core-first' | 't
     providers: [PreInterceptorProbeGuard],
   }).compile();
   const app = moduleRef.createNestApplication();
+  const forced = forceAndObserveGlobalInterceptorOrder(app, order);
   await app.init();
   return {
     app,
     guard: moduleRef.get(PreInterceptorProbeGuard),
-    interceptorNames: forceGlobalInterceptorOrder(app, order),
+    interceptorNames: forced.names,
+    interceptorCalls: forced.calls,
   };
 }
 
@@ -127,6 +149,7 @@ describe('core and tenancy interceptor registration order', () => {
 
       for (const path of ['/order/protected', '/order/public']) {
         built.guard.seenRequestId = undefined;
+        built.interceptorCalls.length = 0;
         const call = request(built.app.getHttpServer()).get(path);
         if (path.endsWith('protected')) call.set('x-probe-member', 'true').set('x-tenant-id', TENANT_A);
         else call.set('host', 'a.order.test');
@@ -134,6 +157,11 @@ describe('core and tenancy interceptor registration order', () => {
           const generatedId = headers['x-request-id'];
           expect(generatedId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u);
           expect(built.guard.seenRequestId).toBe(generatedId);
+          expect(built.interceptorCalls).toEqual(
+            order === 'core-first'
+              ? ['RequestContextInterceptor', 'TenantContextInterceptor']
+              : ['TenantContextInterceptor', 'RequestContextInterceptor'],
+          );
           expect(body).toMatchObject({ requestId: generatedId, tenantId: TENANT_A });
         });
       }
