@@ -81,6 +81,12 @@ verificada backend, `@ReadOnly`, permissão nominal, marcador herdado e caixa
 do UUID. `pnpm lint:tests` passou após correção de um import não usado
 capturado pelo hook. A entrega do Engineer e novo rebind de trace seguem
 pendentes.
+O rebind dos oito sensores passou 393/393 em `7fb91e18`. A revisão interna do
+diff Engineer revelou dois riscos não cobertos: regressão de `@Public()`
+legado com `@Permission` e identidade residual em `AuthContextGuard` opcional
+com token ausente/inválido. O Inspector os fixou em sensores que falham no
+código atual, commit `d9bfda3e`. O contrato foi precisado em `adbdb3cd`;
+rebind Architect e correção Engineer seguem.
 
 ## Escopo condicional
 

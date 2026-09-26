@@ -14,7 +14,8 @@
       "The 495 tracked test-path census is partitioned into 380 executable tests and 115 non-executable fixtures or support modules.",
       "Fourteen tracked verification scripts and configuration attestations complete the 509-item governed test surface.",
       "STYNX 1.5.0 CTG-0001 Architect rebind adds six executable tenancy context sensors and refreshes six existing assertion projections.",
-      "STYNX 1.5.0 CTG-0001 delivery-review rebind adds six HTTP/permission sensors and refreshes two assertion projections."
+      "STYNX 1.5.0 CTG-0001 delivery-review rebind adds six HTTP/permission sensors and refreshes two assertion projections.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins legacy-public and optional-auth stale identity regression sensors."
     ]
   },
   "invariants": [
@@ -1421,8 +1422,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 20,
-      "assertion_digest_sha256": "847a5b8e6ddfd7c92aedaf9d8f3e00a226ca027f2676106c669aa1c1bce72669"
+      "assertion_count": 22,
+      "assertion_digest_sha256": "702e4e07325f7737af4e665726260067843b0778d97973b9e1b8cece60513138"
     },
     {
       "path": "packages/backend/test/unit/auth-export.spec.ts",
@@ -3885,8 +3886,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "fad524fa39feba1b1668636337b0bad97e9e5cfa1e5545f27d54d2362fefe840"
+      "assertion_count": 8,
+      "assertion_digest_sha256": "b2a80d73122e62c6e250c73f3528de03314e7fb4f1ced6151750adb03408c441"
     },
     {
       "path": "packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts",
