@@ -56,6 +56,38 @@ describe('AuthContextGuard', () => {
     expect(request).not.toHaveProperty('principal');
   });
 
+  it('clears identity seeded before optional authentication when the bearer is absent or invalid', async () => {
+    const reflector = {
+      getAllAndOverride: vi.fn((token: symbol) =>
+        token === STYNX_PUBLIC_TENANT_ROUTE ? { optionalAuth: true } : undefined,
+      ),
+    };
+    for (const verifier of [
+      { verifyAuthorizationHeader: vi.fn(async () => null) },
+      { verifyAuthorizationHeader: vi.fn(async () => { throw new Error('invalid'); }) },
+    ]) {
+      const request: Record<string, unknown> = {
+        headers: {},
+        principal: PRINCIPAL,
+        user: { id: 'stale-user' },
+        actor: { id: 'stale-actor' },
+        tenantId: 'stale-tenant',
+        verifiedSessionId: 'stale-session',
+        verifiedTenantClaim: 'stale-claim',
+      };
+      const context = {
+        getHandler: () => class Handler {},
+        getClass: () => class Controller {},
+        switchToHttp: () => ({ getRequest: () => request }),
+      } as unknown as ExecutionContext;
+      const guard = new AuthContextGuard(verifier as never, undefined, undefined, undefined, reflector as never);
+      await expect(guard.canActivate(context)).resolves.toBe(true);
+      for (const property of ['principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim']) {
+        expect(request).not.toHaveProperty(property);
+      }
+    }
+  });
+
   it('attaches principal + compatibility user/actor + tenantId on the request', async () => {
     const verifier = {
       verifyAuthorizationHeader: vi.fn(async () => ({ principal: PRINCIPAL })),

@@ -66,6 +66,16 @@ describe('public tenant guard boundaries', () => {
     expect(() => guard.canActivate(context({ headers: {}, principal: { permissions: [] } }))).toThrow(ForbiddenException);
   });
 
+  it('keeps simple Public routes permissive even when they declare a permission', () => {
+    const reflector = { getAllAndOverride: vi.fn((key: symbol) => {
+      if (key === STYNX_PUBLIC_ROUTE) return true;
+      if (key === STYNX_PUBLIC_TENANT_ROUTE) return false;
+      if (key === STYNX_PERMISSION_ROUTE) return 'records:read';
+      return false;
+    }) } as unknown as Reflector;
+    expect(new PermissionGuard(reflector).canActivate(context({ headers: {} }))).toBe(true);
+  });
+
   it('rejects bootstrap when an inherited PublicTenantRoute handler has no tenancy module', async () => {
     const testing = await Test.createTestingModule({
       imports: [StynxAuthModule.forRoot({})],
