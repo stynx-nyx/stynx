@@ -19,7 +19,8 @@
       "STYNX 1.5.0 CTG-0001 Architect rebind pins public-tenant marker precedence and stale-claims negatives.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins credential classification, shared provenance, Cognito claims, interceptor order, and generated request ID sensors.",
       "STYNX 1.5.0 CTG-0001 Architect rebind aligns typed-credential fixtures and symbol assertions after Inspector sensor triage.",
-      "STYNX 1.5.0 CTG-0001 Architect rebind pins served interceptor order, JWKS source/rotation, typed JOSE, revoked session, and provenance sensors from delivery review 3."
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins served interceptor order, JWKS source/rotation, typed JOSE, revoked session, and provenance sensors from delivery review 3.",
+      "STYNX 1.5.0 CTG-0001 Architect rebind pins recently refreshed JWKS classification, failed refresh propagation, and public HTTP outage sensors from delivery review 4."
     ]
   },
   "invariants": [
@@ -1402,8 +1403,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 67,
-      "assertion_digest_sha256": "50d971cd229794be48d8e38b367e1220442e8d064b832dd9f2e2aaeda45ea292"
+      "assertion_count": 73,
+      "assertion_digest_sha256": "9a4ce5a6ad496c92d7b292df2459d646487ce921ca9f6ef72a3ed7edf5e65574"
     },
     {
       "path": "packages/backend/test/unit/audit-export.spec.ts",
@@ -3898,8 +3899,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 17,
-      "assertion_digest_sha256": "a77979f673289bebc32cdae8a63ef3b028900d323093d7e5c4f31d44fe2c2b00"
+      "assertion_count": 18,
+      "assertion_digest_sha256": "7c43f249132719df67f2abbe1a7adacb335420ed1cef2d7de8f70a04f70c57ef"
     },
     {
       "path": "packages/backend/test/integration/auth-context-request-context.integration.spec.ts",
