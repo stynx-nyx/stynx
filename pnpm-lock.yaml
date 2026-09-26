@@ -68,8 +68,8 @@ importers:
   .:
     devDependencies:
       '@aarusso-nyx/devai':
-        specifier: 1.5.0
-        version: 1.5.0(ws@8.21.0)(zod@3.25.76)
+        specifier: 1.5.6
+        version: 1.5.6(ws@8.21.0)(zod@3.25.76)
       '@angular-eslint/eslint-plugin':
         specifier: 22.0.0
         version: 22.0.0(@typescript-eslint/utils@8.70.0(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3)
@@ -2450,8 +2450,8 @@ packages:
     resolution: {integrity: sha512-7mJJl+wf1AByoT0PknQiQfOPnVNT4fevGrUBVWO4HXsnYn1aQPyRyrELYrNUFleUBM++KzMKN6QaxHPk0t/6/g==}
     engines: {node: '>=11'}
 
-  '@aarusso-nyx/devai@1.5.0':
-    resolution: {integrity: sha512-xJoiua6Q4omdQt6adrcTpc8K2YXyGRkNnbvF6ePFghHfLsXnaGuUS/lxsNqTp1d+N+13M9rg6DQhbIUAnDhUYA==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.5.0/f87a6e78976f6844a6bf4f281d7e4e72df49f31b}
+  '@aarusso-nyx/devai@1.5.6':
+    resolution: {integrity: sha512-8hU4Krnuy5mEg98dqAs5za9v9+/5L8KbH/GCftkVLyqmpE1ipQqm0ux/2Ltinx9ZkeaBDdXFhwwjkUy3rwJg4A==, tarball: https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.5.6/6cfa2d77138e41d50b6864eddfc983a35f25de68}
     engines: {node: '>=24.0.0'}
     hasBin: true
 
@@ -13355,7 +13355,7 @@ snapshots:
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
 
-  '@aarusso-nyx/devai@1.5.0(ws@8.21.0)(zod@3.25.76)':
+  '@aarusso-nyx/devai@1.5.6(ws@8.21.0)(zod@3.25.76)':
     dependencies:
       '@types/node': 24.13.4
       ajv: 8.20.0
