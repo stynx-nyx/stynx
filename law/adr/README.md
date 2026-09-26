@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [DEVAI 1.5.6 patch adoption](2026-09-26-devai-1.5.6-adoption.md)
 - [DEVAI 1.5.0 adoption and external mutation hardening](2026-09-15-devai-1.5.0-adoption.md)
 - [Mobile/offline E6 promotion from TEAT](ADR-MOBILE-OFFLINE-0001-teat-promotion.md)
 - [Canonical 1.x package line and registry anomaly correction](ADR-VERSION-LINE-0001.md)
