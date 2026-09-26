@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-TENANCY-001",
+  "domain": "TENANCY",
+  "severity": "hard-fail",
+  "type": "tenancy",
+  "title": "HTTP request context and public tenant selection remain isolated",
+  "statement": "Every HTTP request using STYNX core and tenancy MUST have one context scope before guards and interceptors. Public tenant routes MUST select an active tenant solely from raw Host, reject conflicting header or verified claim, and use either the configured nominal actor without inherited permissions or a verified actor with active membership. Protected routes retain fail-closed membership enforcement and established behavior.",
+  "rationale": "A guard can run before global interceptors, and a public route must never derive tenant or actor authority from an unverified token or another tenant's header.",
+  "status": "active",
+  "lifecycle": "supported",
+  "verification": {
+    "required_suites": ["unit", "int", "e2e"],
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Nest HTTP ordering and guard behavior, boot validation, exact errors, and two-tenant PostgreSQL RLS and audited writes are executable observations."
+    }
+  },
+  "authority_docs": {
+    "docs": [{ "doc": "docs/framework/contracts/tenancy-context-1.5.md", "anchor": "requirements" }]
+  },
+  "scope": {
+    "components": ["core", "contracts", "auth", "backend", "tenancy"],
+    "code_areas": [
+      "packages/core/src",
+      "packages/contracts/src",
+      "packages/auth/src",
+      "packages/backend/src/auth",
+      "packages/tenancy/src"
+    ]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": [
+    "stynx",
+    "tenancy",
+    "request-context",
+    "rls",
+    "UPS-TEN-01",
+    "UPS-TEN-02",
+    "UPS-TEN-03",
+    "UPS-TEN-04",
+    "UPS-TEN-05",
+    "UPS-TEN-06"
+  ],
+  "measurable_via": ["check", "sense inventory", "audit observe"]
+}

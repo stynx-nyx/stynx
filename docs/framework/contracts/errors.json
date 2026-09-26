@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.0.0",
   "title": "stynx baseline error contract",
-  "description": "Stable error response envelope every stynx endpoint produces via @stynx-nyx/core's StynxErrorFilter. Adopters extending with domain-specific errors author per-module *.errors.json files that reference this baseline.",
+  "description": "Baseline error catalog. The current StynxErrorFilter passes Nest HttpException bodies through and emits core StynxError as {code,message,context?}; the envelope below is an architectural target, not the literal runtime shape of every response. Adopters extending with domain-specific errors author per-module *.errors.json files that reference this baseline.",
   "envelope": {
     "shape": {
       "type": "object",
@@ -30,6 +30,36 @@
     "filter": "packages/core/src/error.filter.ts (StynxErrorFilter)"
   },
   "baseline_errors": [
+    {
+      "errorCode": "TENANCY:CONFLICT:host-header",
+      "statusCode": 400,
+      "retriable": false,
+      "exception": "@stynx-nyx/core StynxError",
+      "runtimeBody": {
+        "code": "TENANCY:CONFLICT:host-header",
+        "message": "Tenant source conflict: Host and X-Tenant-Id disagree"
+      },
+      "description": "On a public tenant route, raw Host selects the tenant and the configured tenant header disagrees. Header name in the message follows configuration; a registered translator may localize the message."
+    },
+    {
+      "errorCode": "TENANCY:CONFLICT:host-claim",
+      "statusCode": 400,
+      "retriable": false,
+      "exception": "@stynx-nyx/core StynxError",
+      "runtimeBody": {
+        "code": "TENANCY:CONFLICT:host-claim",
+        "message": "Tenant source conflict: Host and authenticated claim disagree"
+      },
+      "description": "On an optional-auth public tenant route, a verified bearer tenant claim disagrees with the tenant selected by raw Host. A registered translator may localize the message."
+    },
+    {
+      "errorCode": "TENANT_ACCESS_DENIED",
+      "statusCode": 403,
+      "retriable": false,
+      "exception": "ForbiddenException",
+      "runtimeBody": { "message": "TENANT_ACCESS_DENIED", "error": "Forbidden", "statusCode": 403 },
+      "description": "Existing protected-route denial for absent or inactive membership, or a verified actor without membership in the public Host tenant. Never downgrade that verified actor to the nominal public actor."
+    },
     {
       "errorCode": "VALIDATION:BAD_REQUEST:*",
       "statusCode": 400,
@@ -98,5 +128,5 @@
     "owner": "Architect (Constitution Article 6 — docs/framework/contracts/ is Architect-substrate).",
     "promoted_during": "stynx U5 batch (2026-05-17) to close F1×T8 spec_robustness_targets in INV-ERROR-001's measurement chain."
   },
-  "invariant_references": ["INV-ERROR-001"]
+  "invariant_references": ["INV-ERROR-001", "INV-TENANCY-001"]
 }
