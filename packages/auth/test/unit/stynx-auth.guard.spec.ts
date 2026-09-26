@@ -1,5 +1,6 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
+import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import { SessionService } from '@stynx-nyx/sessions';
 import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from '../../src/decorators';
 import { StynxAuthGuard } from '../../src/stynx-auth.guard';
@@ -19,6 +20,7 @@ describe('StynxAuthGuard', () => {
     publicRoute?: boolean;
     systemRoute?: boolean;
     readonlyRoute?: boolean;
+    publicTenantRoute?: boolean | { optionalAuth?: boolean };
     activeSession?: boolean;
     sessionProvider?: boolean;
   } = {}) {
@@ -36,6 +38,7 @@ describe('StynxAuthGuard', () => {
     const reflector = {
       getAllAndOverride: vi.fn((key: symbol) => {
         if (key === STYNX_PUBLIC_ROUTE) return Boolean(options.publicRoute);
+        if (key === STYNX_PUBLIC_TENANT_ROUTE) return options.publicTenantRoute ?? false;
         if (key === STYNX_SYSTEM_ROUTE) return Boolean(options.systemRoute);
         if (key === STYNX_READONLY_ROUTE) return Boolean(options.readonlyRoute);
         return false;
@@ -69,6 +72,30 @@ describe('StynxAuthGuard', () => {
     const systemGuard = createGuard({ systemRoute: true });
     await expect(systemGuard.guard.canActivate(systemContext)).resolves.toBe(true);
     expect(systemGuard.reflector.getAllAndOverride).toHaveBeenCalledWith(STYNX_SYSTEM_ROUTE, ['handler', 'controller']);
+  });
+
+  it('handles optional public-tenant authentication before the generic public early return', async () => {
+    const missing = createGuard({ publicTenantRoute: { optionalAuth: true } });
+    const missingRequest = { headers: {} };
+    await expect(missing.guard.canActivate(createExecutionContext(missingRequest))).resolves.toBe(true);
+    expect(missing.validator.validate).not.toHaveBeenCalled();
+    expect(missingRequest).not.toHaveProperty('principal');
+
+    const invalid = createGuard({ publicTenantRoute: { optionalAuth: true } });
+    invalid.validator.validate.mockRejectedValueOnce(new Error('invalid signature'));
+    const invalidRequest = { headers: { authorization: 'Bearer forged-token' } };
+    await expect(invalid.guard.canActivate(createExecutionContext(invalidRequest))).resolves.toBe(true);
+    expect(invalidRequest).not.toHaveProperty('stynxClaims');
+    expect(invalidRequest).not.toHaveProperty('principal');
+
+    const verified = createGuard({ publicTenantRoute: { optionalAuth: true } });
+    const verifiedRequest = { headers: { authorization: 'Bearer verified-token' } };
+    await expect(verified.guard.canActivate(createExecutionContext(verifiedRequest))).resolves.toBe(true);
+    expect(verified.validator.validate).toHaveBeenCalledWith('verified-token');
+    expect(verifiedRequest).toMatchObject({
+      stynxClaims: { sub: 'user-1', tenantId: 'tenant-1', sid: 'sid-1' },
+      principal: { id: 'user-1' },
+    });
   });
 
   it('rejects missing bearer tokens and inactive sessions', async () => {

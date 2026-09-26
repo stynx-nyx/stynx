@@ -48,10 +48,17 @@ describe('AuthContextGuard', () => {
       resolve: vi.fn(async () => 't-resolved'),
     };
     const guard = new AuthContextGuard(verifier as never, undefined, tenantResolver as never);
-    const request: Record<string, unknown> = { headers: { 'x-tenant-id': 't-header' } };
+    const request: Record<string, unknown> = {
+      headers: { 'x-tenant-id': 't-header', host: 'a.portal.test' },
+      originalUrl: '/portal/records?view=current',
+    };
     await guard.canActivate(ctx(request));
     expect(tenantResolver.resolve).toHaveBeenCalledWith(
-      expect.objectContaining({ headerTenantId: 't-header' }),
+      expect.objectContaining({
+        headerTenantId: 't-header',
+        host: 'a.portal.test',
+        path: '/portal/records',
+      }),
     );
     expect(request.tenantId).toBe('t-resolved');
   });
