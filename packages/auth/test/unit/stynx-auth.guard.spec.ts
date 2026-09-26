@@ -168,7 +168,11 @@ describe('StynxAuthGuard', () => {
     } as never);
     const { moduleRef, reflector, permissionCache } = createGuard({ publicTenantRoute: { optionalAuth: true } });
     const guard = new StynxAuthGuard(moduleRef, reflector as never, validator, permissionCache as never);
-    const token = 'eyJhbGciOiJSUzI1NiIsImtpZCI6Im1pc3NpbmcifQ.eyJpc3MiOiJodHRwczovL3N0eW54LnRlc3QiLCJzdWIiOiJ1c2VyLTEiLCJzaWQiOiJzaWQtMSIsInRlbmFudF9pZCI6InRlbmFudC0xIn0.signature';
+    const token = [
+      'eyJhbGciOiJSUzI1NiIsImtpZCI6Im1pc3NpbmcifQ',
+      'eyJpc3MiOiJodHRwczovL3N0eW54LnRlc3QiLCJzdWIiOiJ1c2VyLTEiLCJzaWQiOiJzaWQtMSIsInRlbmFudF9pZCI6InRlbmFudC0xIn0',
+      'signature',
+    ].join('.');
 
     await expect(guard.canActivate(createExecutionContext({ headers: { authorization: `Bearer ${token}` } }))).rejects.not.toBeInstanceOf(InvalidCredentialError);
   });
