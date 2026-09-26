@@ -51,6 +51,11 @@ produto para acomodá-las: a role superusuária que contornava RLS em auditoria
 e a localização aninhada das opções de `nestjs-cls`. O Inspector corrigiu as
 duas em `1cd9bee7`; a integração pública com PostgreSQL passou 35/35,
 `lint:tests` passou e o novo rebind do trace passou 387/387.
+O review de código apontou downgrade indevido para público após falha de cache
+ou mapper em um token já verificado. O Inspector acrescentou duas negativas
+em `7d513da7`; elas falham na implementação inicial como esperado. O
+Engineer está corrigindo a causa. O rebind Architect atualizado continua
+387/387.
 
 ## Escopo condicional
 

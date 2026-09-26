@@ -214,6 +214,10 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Engineer CTG-0001 autenticação opcional: `plant-bug` — `catch` amplo
+  rebaixava token já verificado a público quando cache/mapeamento falhava;
+  Inspector acrescentou negativas em `7d513da7`, Engineer restringe o
+  tratamento de erro e repete os testes uma vez.
 - Inspector CTG-0001 CLS: `sensor-error` — o unit test procurou `useValue`
   de opções em `ClsModule.forRoot().providers`, mas `nestjs-cls` 6.2.1 as
   guarda no import aninhado `ClsRootModule`; corrigir a introspecção e repetir

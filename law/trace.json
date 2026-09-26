@@ -1380,8 +1380,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "930ef6f9446ad27eedcb8b9b4ef2b87091400032bca3c786ef5b5d83e660f543"
+      "assertion_count": 30,
+      "assertion_digest_sha256": "5cd759e438c0fdec0d3c1bbfc9f4ee8c0fb432b50abe20895a1ddb9eefa485fe"
     },
     {
       "path": "packages/auth/test/unit/utils.spec.ts",
@@ -1420,8 +1420,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 18,
-      "assertion_digest_sha256": "90415fd3d491e99c3871860c93c54fbf1ee954d63373641c37978bd8e8818b86"
+      "assertion_count": 20,
+      "assertion_digest_sha256": "847a5b8e6ddfd7c92aedaf9d8f3e00a226ca027f2676106c669aa1c1bce72669"
     },
     {
       "path": "packages/backend/test/unit/auth-export.spec.ts",
