@@ -1099,6 +1099,30 @@
       "commit": "9da0da675ff74fb26a2676789121811c1bd00181",
       "authorized_by": "Owner",
       "reason": "Owner authorization 2026-09-27 to resume R-0002 binds this exact Architect evidence commit. The match is a quotation inside the preserved independent review verdict; this commit performed no package publication and grants no release dispatch receipt."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "65f982a5a39e644a0dc66ea7e6813540d333be5a",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-27 for this exact CTG-0002 integration commit. The match imports the already reviewed main-owned verifier workflow; its cleanup is confined to a runner-temporary directory. This merge executed no deletion."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "65f982a5a39e644a0dc66ea7e6813540d333be5a",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-27 for this exact CTG-0002 integration commit. The merge imports the already merged main workflow governed by ADR-DEVAI-ADOPTION-0004/0005 and makes no independent workflow edit."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "65f982a5a39e644a0dc66ea7e6813540d333be5a",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-27 for this exact CTG-0002 integration commit. The match is publication command text imported from main; the merge published no package and grants no release dispatch receipt."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "65f982a5a39e644a0dc66ea7e6813540d333be5a",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-27 for this exact CTG-0002 integration commit. The merge imports reviewed main-owned DEVAI policy and trace materialization without weakening the invariant set."
     }
   ]
 }
