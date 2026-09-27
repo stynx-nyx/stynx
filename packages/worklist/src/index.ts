@@ -9,6 +9,7 @@ export * from './ports';
 export * from './row-utils';
 export * from './sql-errors';
 export * from './strategies';
+export * from './tenant-business-calendar';
 export * from './types';
 export * from './validation';
 export * from './worklist-items.service';
