@@ -1238,7 +1238,8 @@ test('RC1 publication uses only pure dist-tag helpers and preserves latest durin
     distTags: { latest: '1.4.0', rc: '1.5.0-rc.1', legacy: '0.9.0' },
   }));
   for (const [distTags, code] of [
-    [{ latest: '1.4.0' }, 'PUBLICATION_DIST_TAG_UNKNOWN'],
+    [{ latest: '1.4.0', legacy: '0.9.0' }, 'PUBLICATION_DIST_TAG_UNKNOWN'],
+    [{ latest: '1.4.0', rc: '1.5.0-rc.1' }, 'PUBLICATION_DIST_TAG_DRIFT'],
     [{ latest: '1.5.0-rc.1', rc: '1.5.0-rc.1' }, 'PUBLICATION_DIST_TAG_DRIFT'],
     [{ latest: '1.4.0', rc: '1.5.0-rc.1', legacy: '0.9.1' }, 'PUBLICATION_DIST_TAG_DRIFT'],
   ]) {
