@@ -680,7 +680,8 @@ describe('SessionService', () => {
 
   it('exchanges sessions without carrying optional device metadata or create metadata', async () => {
     const now = new Date('2026-05-18T12:00:00.000Z');
-    const store = new StaticSessionStore({
+    const store = new InMemorySessionStore();
+    await store.createSession({
       sid: 'session-1',
       userId: 'user-1',
       tenantId: 'tenant-1',
