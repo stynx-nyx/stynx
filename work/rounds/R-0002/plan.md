@@ -415,3 +415,37 @@ ativam a versão final; após `changeset version`, validar versão gerada
 `pre.json.changesets` ganhou exatamente os IDs pendentes antes de
 reescrever manifestos. A correção do primeiro `rc.0` para `rc.1` também
 se aplica se não houver promoção major de peers.
+
+## Contrato da rota de publicação RC1
+
+Após gerar e revisar o candidato `1.5.0-rc.1`, rebinder a política
+Architect `law/policy/registry-version-anomalies.json` à OD-S15-01:
+`next_unified_version` e `anomalies[0].allowed_candidate` exatos para
+`1.5.0-rc.1`, mantendo pacote, versão 2.0.0, version ID, evidências,
+`allowed_effects` e o escopo singular da exceção. A decisão registra
+que `latest` permanece em 1.4.0 durante a RC; a condição de fechamento
+da candidata RC exige `rc` → `1.5.0-rc.1`. O digest fixado em
+`scripts/lib/registry-version-policy.mjs` acompanha exatamente os bytes
+da política, por Engineer em commit separado de `law/`.
+
+O candidato publicado deve ser o mesmo em todos os 44 manifestos,
+política, plano de publicação, checagem de monotonicidade e recibos.
+Para versão prerelease, a rota deriva a dist-tag exclusivamente de
+`.changeset/pre.json` (`mode: pre`, `tag: rc`) e recusa ausência, tag
+divergente, `latest` ou versão estável; `npm publish` recebe `--tag rc`.
+Para versão final estável, após `pre exit`, a rota permite somente
+`latest` com pre state ausente ou concluído de forma válida. O plano e
+os recibos incluem a dist-tag e o SHA/tree exatos; a verificação após
+publicação exige que o pacote RC esteja em `rc` e que `latest` não tenha
+sido movido. Pré-flight de registry desconhecido ou resultado ambíguo
+falha fechado, preservando stop-on-first-failure e a regra de novo
+recibo Owner para recuperação parcial. A exceção angular-profile@2.0.0
+continua restrita ao único pacote/version ID.
+
+O workflow `release.yml` permanece intocado: já usa
+`--candidate-from-policy`, exige dispatch de `main` no SHA exato,
+opt-in Owner e token. Inspector prova o candidato, a monotonicidade,
+dist-tag e negativas; Engineer ajusta apenas scripts de política e
+publicação. Prompt-review Opus antes do despacho, delivery-review e CI
+antes do PR. Publicação só após merge, recibo Owner por ação/SHA e
+disparo explícito com `publish:true`; o pedido citará a dist-tag `rc`.
