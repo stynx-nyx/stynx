@@ -1,8 +1,9 @@
 # Migrate jobs consumers to STYNX 1.5
 
 OD-S15-01 accepts the breaking jobs change for the coordinated 1.5.0 line.
-Do not consume CTG-0004 at an intermediate RC: DETRAN pins it only after all
-1.5 CTGs merge in topological order.
+DETRAN may develop and test against a `1.5.0-rc.N` that includes CTG-0004.
+A DETRAN merge requires the final `1.5.0` pin and the completed §7
+conformance row after all CTGs merge in topological order.
 
 Call `JobsPort` methods inside an active tenant and actor `RequestContext`.
 Pass the same `tenantId` as that context. Supply `UpsertScheduleInput.actorId`
