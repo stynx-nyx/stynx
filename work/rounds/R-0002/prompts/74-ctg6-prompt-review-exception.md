@@ -2,7 +2,7 @@
 
 Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
 
-**Dispatch checkpoint:** The ordinary two-cycle maximum is exhausted. This cycle 3 prompt is prepared only; the maestro must obtain an explicit Owner exception before dispatching it. A prepared prompt is not a review receipt or a PASS. Inspector dispatch remains blocked until this exceptional review returns PASS and CTG-0002/0003/0004/0005 approved heads are integrated with SHAs, review receipts, and gates recorded in `ctg-0006-plan.md`.
+**Cycle 3 receipt:** The Owner exception above authorized this prompt's dispatch. It ran and returned REVIEW in `reviews/ctg6-prompt-review-3.json`; it is not a PASS. Inspector dispatch remains blocked until a separately authorized review returns PASS and CTG-0002/0003/0004/0005 approved heads are integrated with SHAs, review receipts, and gates recorded in `ctg-0006-plan.md`. The cycle-3 exception does not authorize a fourth review.
 
 You are the independent, read-only Claude Code Opus 5.5 reviewer. Review `docs/framework/contracts/web-kit-1.5.md`, `work/rounds/R-0002/ctg-0006-plan.md`, and prompts 70–72 against both prior receipts, especially `reviews/ctg6-prompt-review-2.json`. Read DETRAN C-0002 §6.3–6.6, OD-S15-01 and §7 read only; inspect actual STYNX source and authority files. Do not edit files or mutate Git.
 
