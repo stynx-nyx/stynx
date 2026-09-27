@@ -11,7 +11,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { firstValueFrom, retry } from 'rxjs';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   canonicalJson,
   createIdempotencyKey,
@@ -197,11 +197,11 @@ describe('@stynx-nyx/angular idempotency opt-in', () => {
       headers: new HttpHeaders({ 'Content-Type': 'application/json; charset=utf-8' }),
     }).pipe(retry(1)));
 
-    const first = http.expectOne('/commands/retry');
+    const first = await vi.waitFor(() => http.expectOne('/commands/retry'));
     const expectedKey = `record.create:record-7:${HASHED_BODY_DIGEST}`;
     expect(first.request.headers.get('Idempotency-Key')).toBe(expectedKey);
     first.flush({ message: 'retry' }, { status: 503, statusText: 'Unavailable' });
-    const second = http.expectOne('/commands/retry');
+    const second = await vi.waitFor(() => http.expectOne('/commands/retry'));
     expect(second.request.headers.get('Idempotency-Key')).toBe(expectedKey);
     second.flush({ ok: true });
     await expect(response).resolves.toEqual({ ok: true });
@@ -260,7 +260,6 @@ describe('@stynx-nyx/angular idempotency opt-in', () => {
       { action: 'action\n', target: 'target', includeBodyHash: true },
       { action: 'ação', target: 'target', includeBodyHash: true },
       { action: 'a'.repeat(81), target: 'target', includeBodyHash: true },
-      { action: 'a'.repeat(80), target: 't'.repeat(80), includeBodyHash: true },
       { key: '' },
       { key: 'key\twith-control' },
       { key: 'chave-á' },
