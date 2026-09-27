@@ -181,6 +181,13 @@ RLS negativo, `pnpm test:int`,
 Antes de PR: `pnpm ci:stynx` e `pnpm ci:reference-apps` verdes e delivery-review
 Opus 5.5 PASS. Registrar desvios e símbolos reais na conformidade.
 
+## Triagem
+
+- Inspector Angular, primeira leitura dos sensores: `sensor-error` —
+  faltam asserções diretas para `tick$` no polling, `data:` multilinha,
+  204 seguido de novo request sem cursor e 401 terminal após replay.
+  Completar uma vez antes do commit, preservando os sensores existentes.
+
 ## Retomada
 
 Este contrato é preparatório, em worktree separada da candidata RC1.
