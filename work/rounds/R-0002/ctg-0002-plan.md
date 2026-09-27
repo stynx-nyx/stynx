@@ -187,6 +187,20 @@ Opus 5.5 PASS. Registrar desvios e símbolos reais na conformidade.
   faltam asserções diretas para `tick$` no polling, `data:` multilinha,
   204 seguido de novo request sem cursor e 401 terminal após replay.
   Completar uma vez antes do commit, preservando os sensores existentes.
+- Inspector Angular, execução com implementação: `sensor-error` —
+  `HttpClient`/refresh são assíncronos, o backend de teste deve ser o
+  último provider e efeitos de Signal exigem flush antes da asserção.
+  Sensores corrigidos, sem reduzir a cobertura; 9/9 focados verdes.
+- Inspector backend, limite de payload: `sensor-error` — a fixture de
+  20 bytes descartava também o evento normal; 64 bytes retêm o normal
+  e descartam o evento grande, preservando a regra de limite.
+- Inspector E2E backend: `sensor-error` — a fixture Nest isolava o
+  controller dos providers SSE, dependia de metadata de injeção ausente,
+  não registrava `SessionService`, usava UUIDv4 rejeitado pela tenancy e
+  ligava um runner nulo ao serviço. Ligação corrigida ao `Database` real;
+  A positivo, B invisível por FORCE RLS e conflito tenant/claim negativo
+  passam em PostgreSQL real. A ausência do header não é negativa válida
+  porque o claim autenticado resolve o tenant.
 
 ## Retomada
 
