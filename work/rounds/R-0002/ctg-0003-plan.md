@@ -90,6 +90,22 @@ Faltam delivery-review, PR e sincronizar a base após o merge CTG-0002.
 RC1 e RC2 continuam sujeitos a recibos Owner por versão, comando e
 SHA exato antes de qualquer publicação.
 
+Após o REVIEW do delivery cycle 1, os Inspectors acrescentaram sensores
+de tenant forjado, `forRoot({global:true})`, switch Redis real e store
+customizado em `96ad72b6`, `66881300` e `ab6b5af3`. O Architect
+rebinda a trace 407/407 em `06599b88`. Os Engineers corrigiram a
+autorização em `1bbdfbbd` e sessão/fator em `19d38031`; o Architect
+rebinda API 44/44 em `2b3787e3`. A documentação de migração e o
+changeset foram corrigidos em `9da63f09`. No HEAD `b3502c4b`,
+`pnpm ci:stynx` passou integralmente com exit 0 no log
+`/private/tmp/stynx-s15-ctg3-ci-delivery2.log`;
+`pnpm ci:reference-apps` passou com exit 0 no log
+`/private/tmp/stynx-s15-ctg3-consumer-delivery2.log`; e
+`devai check --only forbidden-actions --strict --since-ref 20f10f53`
+passou sem findings. O prompt do segundo delivery-review é
+`prompts/49-ctg3-delivery-review-2.md`. Faltam seu veredito, integração
+do CTG-0002 já mesclado, post-integration review e PR.
+
 ## Triagem
 
 - Engineer autorização após sensores: `sensor-error` — o teste negava `ops:caser` mesmo com concessão `ops:*`, e o resolver do fixture herdava o alvo de classe em rotas que pretendiam devolver alvo vazio/indefinido. Inspector corrigiu em `02089520`, junto à contagem obsoleta de providers; os testes focados passaram.
