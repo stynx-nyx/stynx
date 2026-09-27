@@ -34,3 +34,5 @@ After both predecessors are integrated, the Architect must compare the frozen CT
 ## Verification and release evidence
 
 Run focused unit, integration and real database tests, `pnpm check:rls-negative`, `pnpm check:rls-smoke`, API baseline comparison, `pnpm check:trace`, and the affected package build/typecheck/lint. Then run `pnpm ci:stynx` and reference consumers at the reviewed HEAD. Record transaction role and connection proof, exact red/green commands, DDL/seed/test disposition, migration application from empty database, conformance mapping of UPS-TXN-01…05 to published symbols and tests, and any explicit uncertainty. The release remains subject to the R-0002 RC/final policy.
+
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.

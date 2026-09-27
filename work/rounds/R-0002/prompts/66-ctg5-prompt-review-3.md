@@ -1,5 +1,7 @@
 # Cross-family prompt review — CTG-0005, exceptional cycle 3
 
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
+
 This prompt is prepared for an Owner-authorized exception to the R-0002
 two-cycle prompt-review limit. Do not run it until the Owner grants that
 specific exception.
