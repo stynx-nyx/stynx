@@ -23,8 +23,12 @@ Put the testing alias before the root package alias and point it to
 `packages-web/angular/testing/index.ts`. Use app-supplied
 `sessionActive: Signal<boolean>` for logout; no angular-auth import.
 Through real interceptors, prove 429 Retry-After survives, SSE errors
-create no banner, and 401 refresh/replay precedes terminal stop. Assert
-`globalThis.EventSource` is never constructed.
+create no banner, and 401 refresh/replay precedes terminal stop.
+Assert the SSE HttpContextToken survives the replayed request and that
+its failure still preserves Retry-After without a banner. Treat XHR
+`partialText` as cumulative and assert only new suffix is parsed;
+fake-clock sensors cover byte and age ceilings that close/reopen with
+Last-Event-ID. Assert `globalThis.EventSource` is never constructed.
 
 Preserve existing assertions. Run focused red tests and lint. Do not
 run Git, commit, push, publish or open PR.

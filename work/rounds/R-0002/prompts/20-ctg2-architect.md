@@ -22,10 +22,15 @@ Fix `sessionActive: Signal<boolean>` as a required app-supplied config
 port, avoiding an angular→angular-auth cycle. Specify an SSE
 `HttpContextToken`: ErrorInterceptor keeps status/Retry-After and
 suppresses banners; AuthInterceptor refresh/replay precedes terminal
-401 stop. Bind E2E to reference/api test:int with non-superuser role,
-no tenant WHERE and no inherited tick ALS. Fix port/scope generics,
-HTTP preflight order/errors, flush/buffering, metrics sink and the
-canonical angular/testing entry.
+401 stop, including context-token preservation on replay. Bind E2E to
+`@stynx-nyx/reference-api test:int` and `ci:reference-apps`, not root
+`test:int`, with non-superuser role, no tenant WHERE and no inherited
+tick ALS. Fix port/scope generics, HTTP preflight order/errors,
+flush/buffering and metrics sink. Define an XHR cumulative partialText
+offset and configurable byte/age ceiling with reconnect cursor. The
+canonical testing entry imports primary symbols only through the
+package specifier. Document a concrete application wiring example for
+the required `sessionActive` signal and its upstream signature deviation.
 
 Report concrete symbols and file/line evidence. Do not execute Git,
 commit, push, publish, open PR or write DETRAN.

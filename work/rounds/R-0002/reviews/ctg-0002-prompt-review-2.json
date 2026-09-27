@@ -1,0 +1,42 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0002-plan.md",
+      "issue": "The cycle-1 repair that puts the E2E 'under test:int' rests on a false gate. Root `pnpm test:int` is `turbo run test:int --concurrency=1 --filter='./packages/*'` (package.json:18), and `reference/api` lives under `reference/*`. The root `test` filter also leaves out `reference/*`. So neither `pnpm test:int` nor `pnpm ci:stynx` ever runs `reference/api/test/integration/*.spec.ts`. The reference/api E2E only runs through `pnpm ci:reference-apps` (package.json:43) and the path-filtered `.github/workflows/reference-apps.yml` job `reference-api` (`pnpm --filter @stynx-nyx/reference-api test` and `test:int`). The plan asks the maestro to 'confirmar que pnpm test:int executou este E2E' and treats `ci:stynx` as the pre-PR gate; that confirmation cannot succeed. The baseline 'integração 51/51' also counts packages only. Prompt 21 ('whose test:int already includes…') and prompt 23 ('runs the existing E2E sensor') repeat the same assumption.",
+      "required_change": "Rewrite the gate list in the plan and in prompts 21 and 23. The E2E is proven by `pnpm --filter @stynx-nyx/reference-api test:int` (focused) and by `pnpm ci:reference-apps`, run together with `pnpm ci:stynx`. The PR must show the `reference-apps / reference-api` check green; the new file under `reference/api/**` triggers it. Record that `ci:stynx` and root `test:int` do not cover this E2E. The maestro must capture focused output naming the new spec file before the delivery-review. Do not change the turbo filter or workflows, since that needs an Owner receipt and is out of scope."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/21-ctg2-inspector-backend.md",
+      "issue": "The RLS fixture mechanics are underspecified in a way that can make the negative proof vacuous. `createPostgresTestDatabase` (packages/data/test/support/postgres.ts) connects as `STYNX_TEST_PG_USER`, which defaults to the OS user, usually a superuser, for every `connectionString(...)`. `data.Database.tx` only sets the `app.tenant_id`, `app.actor_id` and `app.role` GUCs from ALS and never runs SET ROLE. Suppose the test source runs `SET LOCAL ROLE stynx_app` on a raw pg client outside `data.Database.tx`. The GUCs are then never set, every read returns zero rows, and 'skipping the port yields zero rows' passes trivially. `stynx_app` is also a cluster role created only by migrations (`database/migrations/000_migrate-check-preseed.sql`, reference migrations), so it may not exist on a fresh local cluster or a template.",
+      "required_change": "Require four things. (1) The fixture source reads via `data.Database.tx(..., { role: 'app' })` and issues `SET LOCAL ROLE stynx_app` inside that same transaction. (2) The policy uses `current_setting('app.tenant_id', true)`, the same GUC data sets. (3) The fixture creates `stynx_app` idempotently (NOLOGIN or NOINHERIT NOBYPASSRLS), grants membership to the connecting user, and grants SELECT/INSERT on the fixture table. (4) Positive A-visible resume and tick-delivery assertions run in the same spec as the negative ones, so a vacuous zero-row setup fails. To clear ALS, exit both the core RequestContext storage and data's CLS transaction key."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0002-plan.md",
+      "issue": "The canonical testing entry direction is risky under ng-packagr. `packages-web/angular/testing/index.ts` is the secondary entry (`testing/ng-package.json`; `package.json` exports `./testing`). `src/testing/index.ts` is currently an unreferenced `export {}`. If `src/testing/index.ts` re-exports from `../../testing`, or `testing/index.ts` imports `../src/...` relatively, the build crosses entry points. ng-packagr rejects that, or it duplicates the primary code into the testing FESM and moves `stynx-nyx-angular-testing.d.ts` unexpectedly.",
+      "required_change": "The Architect contract must state three rules. (1) `testing/index.ts` imports primary symbols only through the `@stynx-nyx/angular` specifier. (2) `src/testing/index.ts` stays out of the primary barrel: either leave it untouched or have it re-export only through the package specifier. (3) `pnpm --filter @stynx-nyx/angular build` must emit both FESM bundles, and prompt 24 gates on this before the baseline rebind in prompt 26."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/24-ctg2-engineer-angular.md",
+      "issue": "The `HttpClient` progress transport, `observe: 'events'` with `responseType: 'text'`, delivers a cumulative `partialText` on the XHR backend installed by `HttpClientModule` in `provide-defaults.ts`. On a long-lived live stream this buffer grows without bound, and the parser has to diff by offset. Neither the contract nor the sensors bound it. Also, the interceptor order is `RequestId → Auth → Error` (provide-defaults.ts:84–94), so the SSE token must survive `request.clone` on the 401 replay. No sensor asserts this.",
+      "required_change": "The contract should require three things. (1) The parser consumes `partialText` by offset. (2) The transport closes and reopens with `Last-Event-ID` after a configurable byte or age ceiling, with a fake-clock sensor. (3) An Inspector sensor asserts that the replayed post-refresh request still carries the SSE `HttpContextToken`, so a replayed-request failure also creates no banner and keeps `Retry-After`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0002-plan.md",
+      "issue": "The required app-supplied `sessionActive: Signal<boolean>` deviates from the upstream UPS-NGSSE naming and signature. DETRAN C-0002 §10 applies the consumption rule: a missing item puts the consumer CTG in checkpoint, with no shim. The plan records the deviation only in its own text. No example shows how the app wires `StynxSessionService.active` into the config.",
+      "required_change": "Add a conformance-table row that names the deviation and its reason: the dependency direction, since `angular-auth` depends on `angular`. Add a documented wiring snippet in `sse-1.5.md` and the Angular README, where `package-readmes:write` regenerates it. The maestro flags the row to the Owner at the delivery-review, so DETRAN's consumer can accept the signature."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/26-ctg2-architect-rebind.md",
+      "issue": "The trace rebind is scoped to 'only the new governed tests'. Several things move assertion projections: Inspector edits to existing specs (for example `error.interceptor` or `auth.interceptor` tests extended for the SSE token), sensor repairs after delivery-review, and the vitest-config alias change. The prompt covers none of them. It also does not say whether `reference/api` tests are inside the `check:trace` scope.",
+      "required_change": "Rebind every entry that `pnpm check:trace --print` reports, including changed existing specs, not only new files. Re-run prompt 26 after any post-review test repair. State explicitly whether the new `reference/api` spec is traced."
+    }
+  ],
+  "summary": "Most cycle-1 repairs are in place: an app-supplied `sessionActive` that avoids an angular-auth cycle; an SSE `HttpContextToken` that keeps raw `HttpErrorResponse`/`Retry-After`, where `AuthInterceptor`'s `isUnauthorized` still accepts it for refresh/replay; the E2E hosted in `reference/api`, which already has backend, data, pg, supertest and platform-express resolved from src aliases; FORCE RLS with `stynx_app` (rolsuper and rolbypassrls false), no tenant WHERE, and cleared or changed tick ALS; the structural `withRequestContext` port matching `data.Database` (database.ts:156); canonical testing entry and alias locks; and changeset, readme, trace and baseline ownership. One blocking defect remains. Root `pnpm test:int`, and therefore `ci:stynx`, filters `./packages/*` only, so the `reference/api` E2E never runs through the gate the plan requires. The plan and prompts 21 and 23 must bind proof to `reference-api test:int` / `ci:reference-apps` and the `reference-apps` PR check. The nonblocking items tighten the RLS fixture against vacuous passes, ng-packagr entry boundaries, unbounded `partialText`, recording the deviation, and trace rebind scope."
+}
