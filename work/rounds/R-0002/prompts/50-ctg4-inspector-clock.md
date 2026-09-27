@@ -1,0 +1,7 @@
+# Inspector — CTG-0004 cron, worker and scheduler clock
+
+Role Inspector. Read STYNX authorities in AGENTS.md order, ADR-JOBS-0002, `docs/framework/contracts/jobs-actor-timezone-1.5.md`, and DETRAN C-0002 §6.1 read-only. Work only in the CTG-0004 worktree, under `packages/jobs/test/unit/cron-and-backoff.spec.ts`, `worker.spec.ts`, or a new jobs unit spec. Do not edit another Inspector's files.
+
+Before implementation, fix failing UPS-JOB-03/04 tests: UTC two-argument compatibility; canonical IANA normalization; offset/abbreviation/invalid rejection; New York 2026-03-08 gap and 2026-11-01 ambiguous hour, including wildcard hour, `after` between occurrences, multiple gap matches collapsing to one run and deduplication with a normal match; a historical São Paulo transition; strict monotonicity and timezone-change recomputation. Require full-ICU Node and explicit tzdata-dependent fixtures. Drive injected TimerPort/clock for worker and scheduler: optional `unref`, idempotent start, disabled start, exact clear, overlapping callback skip, stop during in-flight tick, and retry with injected random or asserted backoff bounds without sleeps. Test actorless/revoked actor never calls a handler and is terminal without retry. Preserve all existing tests and demonstrate expected red results.
+
+Do not edit production, law, baselines, generated files, changesets, Git/gh, workflows, publish, or DETRAN. Report paths, commands, results and sensor errors.

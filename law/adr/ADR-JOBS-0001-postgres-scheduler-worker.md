@@ -10,6 +10,7 @@ tags: [stynx, jobs, background-work, data-layer, e2]
 # ADR-JOBS-0001 — Postgres-backed scheduler and worker runtime for `@stynx-nyx/jobs`
 
 **Status:** Accepted architecture decision.
+**Amendment:** [ADR-JOBS-0002](ADR-JOBS-0002-actor-tenant-local-clock.md) supersedes this ADR's handler-context, actorless execution, and UTC-cron decisions for 1.5. The historical text below remains for provenance.
 **Contract:** [`docs/framework/contracts/jobs-api.md`](../../docs/framework/contracts/jobs-api.md).
 **Round:** Phase 1 W1.1 (stynx platform round), delivering deferred extension E2.
 
