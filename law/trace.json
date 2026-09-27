@@ -1119,6 +1119,22 @@
       "assertion_digest_sha256": "75afe43f29981f63886cc1fc31d272adeb2aa241cc1036c8e52041814c79ed29"
     },
     {
+      "path": "packages-web/angular/test/event-stream-http.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 26,
+      "assertion_digest_sha256": "84f0e10b00f0dccf695bd2d17ce521d7701becc51d0b067743e98bb1449ee6a5"
+    },
+    {
+      "path": "packages-web/angular/test/event-stream-lifecycle.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 26,
+      "assertion_digest_sha256": "453e9b4197a2eabb1dab5d91fe1b5c5636ce87719df3f8265ae9a0eae67d514d"
+    },
+    {
       "path": "packages-web/angular/test/provider-depth.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
