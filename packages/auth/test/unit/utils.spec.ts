@@ -1,3 +1,4 @@
+import { InvalidCredentialError } from '@stynx-nyx/contracts';
 import { base64UrlDecode, base64UrlEncode, computePermissionsHash, decodeJwtClaims, expandPermissionWildcards, headerToString, verifyJwtWithJwk } from '../../src/utils';
 
 describe('auth utils', () => {
@@ -81,5 +82,21 @@ describe('auth utils', () => {
       'alpha:read',
       'alpha:write',
     ]);
+  });
+
+  it('rejects JWT segments that decode to JSON values other than plain objects', () => {
+    const header = base64UrlEncode(JSON.stringify({ alg: 'RS256' }));
+    const payload = base64UrlEncode(JSON.stringify({ sub: 'user-1' }));
+    const signature = base64UrlEncode('signature');
+    for (const [encodedHeader, encodedPayload] of [
+      [base64UrlEncode('null'), payload],
+      [base64UrlEncode('"RS256"'), payload],
+      [base64UrlEncode('[{"alg":"RS256"}]'), payload],
+      [header, base64UrlEncode('null')],
+      [header, base64UrlEncode('42')],
+      [header, base64UrlEncode('[{"sub":"user-1"}]')],
+    ]) {
+      expect(() => decodeJwtClaims(`${encodedHeader}.${encodedPayload}.${signature}`)).toThrow(new InvalidCredentialError('JWT is malformed'));
+    }
   });
 });

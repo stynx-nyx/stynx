@@ -280,4 +280,71 @@ describe('RequestContextInterceptor', () => {
     });
     expect(response.setHeader).toHaveBeenCalledWith('X-Request-Id', seed.requestId);
   });
+  describe('when a pre-guard request context is already active', () => {
+    const activeSeed: RequestContextState = {
+      requestId: '0190abcd-1234-7abc-89ab-0123456789ab',
+      startedAt: new Date('2026-09-26T12:00:00.000Z'),
+    };
+
+    async function enrich(extras: Record<string, unknown>): Promise<{
+      observed: RequestContextState | undefined;
+      setHeader: Mock;
+    }> {
+      const { RequestContext } = await import('../../src/request-context');
+      const requestContext = new RequestContext(cls as never);
+      const { context, response } = makeContext({ 'x-request-id': 'ignored-while-active' }, extras);
+      let observed: RequestContextState | undefined;
+      const handler: CallHandler = {
+        handle: () => {
+          observed = requestContext.snapshot();
+          return of('ok');
+        },
+      };
+      await mutator.runWithRequestContext(activeSeed, async () => {
+        await run(interceptor.intercept(context, handler));
+      });
+      return { observed, setHeader: response.setHeader };
+    }
+
+    it('falls back to stynxClaims.tenantId and verifiedSessionId when request.tenantId and sid are absent', async () => {
+      const { observed, setHeader } = await enrich({
+        stynxClaims: { tenantId: 'tenant-claims', sub: 'sub-claims' },
+        verifiedSessionId: 'verified-session',
+      });
+      expect(observed).toStrictEqual({
+        requestId: activeSeed.requestId,
+        startedAt: activeSeed.startedAt,
+        tenantId: 'tenant-claims',
+        actorId: 'sub-claims',
+        sessionId: 'verified-session',
+      });
+      expect(setHeader).toHaveBeenCalledWith('X-Request-Id', activeSeed.requestId);
+    });
+
+    it('falls back to actor.id and then user.id for the actor', async () => {
+      const fromActor = await enrich({ actor: { id: 'actor-2' }, user: { id: 'user-2' } });
+      expect(fromActor.observed).toStrictEqual({
+        requestId: activeSeed.requestId,
+        startedAt: activeSeed.startedAt,
+        actorId: 'actor-2',
+      });
+
+      const fromUser = await enrich({ user: { id: 'user-3' } });
+      expect(fromUser.observed).toStrictEqual({
+        requestId: activeSeed.requestId,
+        startedAt: activeSeed.startedAt,
+        actorId: 'user-3',
+      });
+    });
+
+    it('leaves the active context unchanged when no tenant, actor or session is derivable', async () => {
+      const { observed, setHeader } = await enrich({});
+      expect(observed).toStrictEqual({
+        requestId: activeSeed.requestId,
+        startedAt: activeSeed.startedAt,
+      });
+      expect(setHeader).toHaveBeenCalledTimes(1);
+      expect(setHeader).toHaveBeenCalledWith('X-Request-Id', activeSeed.requestId);
+    });
+  });
 });
