@@ -291,7 +291,9 @@ describe('StynxEventStreamService (UPS-SSE-01…10)', () => {
     ]));
     expect(drops).toEqual(rows.slice(0, 5).map((value) => value.id));
     expect(service.counters()).toMatchObject({ drops: 5, frames: 1 });
+    await scheduler.fire(1);
     expect(events.cursors.at(-1)).toEqual({ createdAt: rows.at(-1)!.createdAt, id: 'good-after-poison' });
+    expect(service.counters()).toMatchObject({ drops: 5, frames: 1 });
     await module.close();
   });
 
