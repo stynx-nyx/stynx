@@ -51,9 +51,10 @@ describe('StynxEventStreamService lifecycle with the published test double', () 
     stream.start();
     transport.emitProgress('id: 1\nevent: domain.audit\ndata: {"ok":true}\n\n');
     transport.emitProgress('id: 1\nevent: domain.audit\ndata: {"ok":true}\n\nid: 2\nevent: domain.skip\ndata: {}\n\n');
+    transport.emitProgress('id: 2\nevent: domain.audit\ndata: {"unexpected":true}\n\n');
 
     expect(events).toEqual([{ id: '1', event: 'audit', data: { ok: true } }]);
-    expect(stream.lastEventId()).toBe('1');
+    expect(stream.lastEventId()).toBe('2');
     transport.respond(204);
     expect(stream.lastEventId()).toBe(null);
     expect(clock.nextTimeoutDelay()).toBe(1_000);
@@ -106,9 +107,66 @@ describe('StynxEventStreamService lifecycle with the published test double', () 
     expect(transport.connections).toHaveLength(1);
   });
 
+  it('parses a completed frame in the chunk that crosses the byte ceiling before reopening', () => {
+    // UPS-NGSSE-04/05: a frame in the crossing progress suffix advances the reconnect cursor.
+    const accepted = 'id: within-limit\nevent: audit\ndata: {"ok":true}\n\n';
+    const { stream, transport, clock } = createStream({
+      maxConnectionBytes: new TextEncoder().encode(accepted).length + 1,
+    });
+    const events: unknown[] = [];
+    stream.events$.subscribe((event) => events.push(event));
+    stream.start();
+
+    transport.emitProgress(`${accepted}: ${'x'.repeat(32)}\n`);
+
+    expect(events).toEqual([{ id: 'within-limit', event: 'audit', data: { ok: true } }]);
+    expect(stream.lastEventId()).toBe('within-limit');
+    expect(transport.connections).toHaveLength(2);
+    expect(transport.lastRequest().lastEventId).toBe('within-limit');
+    expect(stream.status()).toBe('live');
+    expect(stream.polling()).toBe(false);
+    expect(clock.nextTimeoutDelay()).toBe(40_000);
+  });
+
+  it('advances the cursor for valid client-filtered frames without emitting them', () => {
+    // UPS-NGSSE-09: client name filters affect events$, not replay progress.
+    const filtered = 'id: filtered\nevent: domain.skip\ndata: {"ok":true}\n\n';
+    const { stream, transport } = createStream({
+      types: ['audit'],
+      eventPrefix: 'domain.',
+      maxConnectionBytes: new TextEncoder().encode(filtered).length + 1,
+    });
+    const events: unknown[] = [];
+    stream.events$.subscribe((event) => events.push(event));
+    stream.start();
+
+    transport.emitProgress(`${filtered}: ${'x'.repeat(32)}\n`);
+
+    expect(events).toEqual([]);
+    expect(stream.lastEventId()).toBe('filtered');
+    expect(transport.connections).toHaveLength(2);
+    expect(transport.lastRequest().lastEventId).toBe('filtered');
+    expect(stream.status()).toBe('live');
+  });
+
+  it('counts a byte ceiling without a valid identified JSON frame as a failure', () => {
+    const { stream, transport, clock } = createStream({ maxConnectionBytes: 40 });
+    const events: unknown[] = [];
+    stream.events$.subscribe((event) => events.push(event));
+    stream.start();
+
+    transport.emitProgress('id: invalid\ndata: not-json\n\ndata: {}\n\n: padding padding padding\n');
+
+    expect(events).toEqual([]);
+    expect(stream.lastEventId()).toBe(null);
+    expect(stream.status()).toBe('reconnecting');
+    expect(transport.connections).toHaveLength(1);
+    expect(clock.nextTimeoutDelay()).toBe(1_000);
+  });
+
   it('backs off when an oversized frame cannot advance the cursor and falls back to polling', () => {
     // UPS-NGSSE-04: a connection that cannot accept a frame must count toward recovery fallback.
-    const frame = `id: oversized\nevent: audit\ndata: ${JSON.stringify({ value: 'x'.repeat(64) })}\n\n`;
+    const frame = `id: oversized\nevent: audit\ndata: ${JSON.stringify({ value: 'x'.repeat(64) })}\n`;
     const { stream, transport, clock } = createStream({
       maxConnectionBytes: 32,
       failuresBeforePolling: 2,
