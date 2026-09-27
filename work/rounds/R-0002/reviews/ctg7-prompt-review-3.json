@@ -1,0 +1,24 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "UPS-HOOK-02 names the supported route shape as `@Public()` + `@UseGuards(WebhookSignatureGuard)` but does not say which `@Public()` or which global auth guard. `StynxAuthGuard` in `@stynx-nyx/auth` returns early when it sees `STYNX_PUBLIC_ROUTE` (stynx-auth.guard.ts:79). The backend `AuthContextGuard` (packages/backend/src/auth/auth-context.guard.ts:49-162) has no `@Public()` check: outside `@PublicTenantRoute` it calls `verifyAuthorizationHeader` and throws 401 without a principal. Global guards run before `@UseGuards`, so a host that registers `AuthContextGuard` as its `APP_GUARD` rejects a bearer-less webhook before the HMAC check. DETRAN itself wraps both guards behind its own public metadata. Prompt 80's E2E does not mount any global auth guard, so the host path that will actually be used is never proven.",
+      "required_change": "State that the shape relies on `@stynx-nyx/auth` `Public()` with `StynxAuthGuard`, or with no global auth guard. Record that the backend `AuthContextGuard` ignores `@Public()`, so hosts using it must exempt the route in a wrapper. In prompt 80, mount `StynxAuthGuard` as `APP_GUARD` in the core+tenancy E2E and show that a bearer-less webhook reaches the HMAC guard and gets 200."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "The contract clears `STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL` on entry and excludes `@PublicTenantRoute`, which is correct. It does not say that this CTG1 provenance marker, and the private `markVerifiedPrincipal` symbol in auth, only govern `@PublicTenantRoute` (tenant-context.interceptor.ts:54,93; permission.guard.ts:33). It also does not forbid `onVerified` from setting them. The ordinary `@Public()` route is governed by `stynxClaims` precedence (lines 130, 177), not by the marker.",
+      "required_change": "Add one sentence: `onVerified` must not set `STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL` or any auth verified-principal marker; those markers only apply to `@PublicTenantRoute`, and this route selects tenant and actor only through `stynxClaims`. In prompt 80, assert that the marker is still absent after a successful `onVerified`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/80-ctg7-inspector-hook.md",
+      "issue": "Tenancy compares header and claim with strict `!==` after trim (tenant-context.interceptor.ts:146). A header with the same UUID in upper case therefore returns 403, while the contract says an equal header 'apenas corrobora'. Separately, the contract does not say how an empty-string signature or timestamp header is classified: `MISSING_HEADER` or `INVALID_*`.",
+      "required_change": "Require `onVerified` to emit lowercase canonical UUIDs. Define 'igual' as exact equality after trim, with the case-variant header documented as 403. Classify `''` explicitly (recommended: `MISSING_HEADER`) and add both vectors to prompt 80."
+    }
+  ],
+  "summary": "The cycle-2 blocker is closed and holds against the code. The guard clears every prior identity field on entry. After HMAC and replay, `onVerified` fills `stynxClaims.sub` and `.tenantId` from signed data. In the non-public path, `TenantContextInterceptor` takes `X-Tenant-Id ?? stynxClaims.tenantId ?? bearer` (line 130), so a claim that is present keeps the unverified bearer out. It returns 403 when header and claim differ (line 146), puts `stynxClaims.sub` first for the actor (line 177), and requires membership (line 155). Core `RequestContextInterceptor` and auth `ActorContextInterceptor` both read `stynxClaims` first. The `OPTIONAL_TENANCY_PATHS` list matches utils.ts, and prompt 80 covers no header, divergent header, forged bearer, missing membership and the ban on `principal`/`tenantId` as the only identity channel. Headers: the timestamp must match `/^\\d{10}$/` with no relaxation, lookup is lowercase, arrays and whitespace are rejected with stable codes, and no array uses its first element. `businessDays` must be a safe integer in 0..366, with sensors in prompt 81. The Angular rejection of undefined/function/symbol properties is stated as its own policy, and plan §7 records it together with the code-point versus UTF-16 ordering deviation from DETRAN's `Object.keys().sort()`; prompt 82 has matching vectors. CTG5 reached PASS in cycle 3 and its canonical rules match this contract (code-point order, `-0` becomes `0`, NaN/sparse/undefined rejected, top-level null rejected). 7C still needs the Architect reconciliation and recorded SHAs from the plan. This PASS approves the contract and prompts only. It does not dispatch the Inspector, authorize publication, or lift the CTG5 dependency on 7C."
+}
