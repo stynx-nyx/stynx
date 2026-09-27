@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [verified-local-rc gates pull requests instead of remote product tiers](2026-09-27-verified-local-rc-cutover.md)
 - [DEVAI 1.6.0 adoption for RC task-policy parity](2026-09-26-devai-1.6.0-adoption.md)
 - [DEVAI 1.5.6 patch adoption](2026-09-26-devai-1.5.6-adoption.md)
 - [DEVAI 1.5.0 adoption and external mutation hardening](2026-09-15-devai-1.5.0-adoption.md)
