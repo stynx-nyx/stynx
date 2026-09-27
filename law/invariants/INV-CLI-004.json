@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-CLI-004",
+  "domain": "CLI",
+  "severity": "gate",
+  "type": "cli-generator",
+  "title": "Generated SQL preserves tenant row isolation",
+  "statement": "Every generated table MUST have a non-null tenant_id referencing tenancy.tenants, a tenant index, FORCE row-level security, and policies whose USING and WITH CHECK predicates match app.tenant_id; generated DDL MUST grant only the specified platform roles and fail before table or grant changes when its target schema already exists.",
+  "rationale": "The database remains the final isolation boundary even if application-level filters are wrong.",
+  "status": "active",
+  "lifecycle": "supported",
+  "verification": {
+    "required_suites": ["int"],
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Real PostgreSQL tests apply generated DDL after platform migrations, inspect grants and RLS catalogs, assert missing-tenant and cross-tenant app-role reads and writes fail, and prove an existing target schema is untouched."
+    }
+  },
+  "authority_docs": {
+    "docs": [
+      {
+        "doc": "docs/framework/contracts/cli-generator-1.5.md",
+        "anchor": "output-and-safety"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["cli", "data"],
+    "code_areas": ["packages/cli/src"]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["stynx", "UPS-CLI-01", "CTG-0008", "generator"],
+  "measurable_via": ["check", "sense inventory", "audit observe"]
+}

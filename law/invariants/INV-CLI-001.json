@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-CLI-001",
+  "domain": "CLI",
+  "severity": "gate",
+  "type": "cli-generator",
+  "title": "Safe blueprint parsing and output ownership",
+  "statement": "A module generation request MUST accept only the bounded STYNX 1.5 JSON dialect and safe identifiers, paths, and schema names; it MUST reject unknown or unsafe input and every pre-existing output destination without changing that destination or leaving a partial result.",
+  "rationale": "Strict preflight and staging prevent blueprint content or collisions from controlling source, SQL, or existing files.",
+  "status": "active",
+  "lifecycle": "supported",
+  "verification": {
+    "required_suites": ["unit", "int"],
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "CLI parser and generator tests reject malformed and expanded JSON, unsafe names, reserved schemas, path/symlink collisions, and injected output failures; the packed CLI repeats pre-existing destination negatives."
+    }
+  },
+  "authority_docs": {
+    "docs": [
+      {
+        "doc": "docs/framework/contracts/cli-generator-1.5.md",
+        "anchor": "input-dialect"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["cli"],
+    "code_areas": ["packages/cli/src"]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["stynx", "UPS-CLI-01", "CTG-0008", "generator"],
+  "measurable_via": ["check", "sense inventory", "audit observe"]
+}
