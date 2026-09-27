@@ -30,6 +30,12 @@ function validHoliday(value: unknown): value is string {
   return date.getUTCFullYear() === year && date.getUTCMonth() + 1 === month && date.getUTCDate() === day;
 }
 
+function isReadonlySet(value: unknown): value is ReadonlySet<string> {
+  return value !== null && typeof value === 'object'
+    && typeof (value as ReadonlySet<unknown>).has === 'function'
+    && typeof (value as ReadonlySet<unknown>)[Symbol.iterator] === 'function';
+}
+
 function civilParts(ordinal: number): { year: number; month: number; day: number; key: string } {
   const date = new Date(ordinal * DAY_MS);
   const year = date.getUTCFullYear();
@@ -110,7 +116,7 @@ export class TenantBusinessCalendar implements WorklistBusinessCalendar {
         ...(input.calendarKey === undefined ? {} : { calendarKey: input.calendarKey }),
         year,
       });
-      if (!(supplied instanceof Set)) {
+      if (!isReadonlySet(supplied)) {
         throw new WorklistInputError('Tenant holidays must be a set of civil dates');
       }
       for (const holiday of supplied) {
