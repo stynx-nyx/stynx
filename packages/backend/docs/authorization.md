@@ -22,6 +22,15 @@ global authorization guard. The guard reads `request.tenantId` only when an
 earlier authentication guard has established the tenant from verified identity
 and entitlement; a raw tenant header is not authorization context.
 
+For a local `@UseGuards(AuthorizationGuard)`, Nest first injects evaluator and
+options from the guard's module when they are available. If they are absent,
+the guard looks up the exported `STYNX_AUTHZ_POLICY_EVALUATOR` and
+`STYNX_AUTHZ_OPTIONS` tokens across the application. If no module registered
+either token, it uses `DefaultPolicyEvaluator` and empty options. An
+application with several `forRoot` registrations should import the intended
+configuration into the module that owns the local guard; the app-wide fallback
+does not choose a registration by route.
+
 ## Options
 
 | Option              | Behavior                                                                                                                                |
