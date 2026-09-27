@@ -1452,7 +1452,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 39,
-      "assertion_digest_sha256": "626acb7e368f49b52a272886ce9ffb7469572011af267a78ec181f18749463e2"
+      "assertion_digest_sha256": "02537efd6229d175add7181aaa94c9e930bf2221c841f11d8c6c8d6a10d270b8"
     },
     {
       "path": "packages-web/angular/test/provider-depth.spec.ts",
