@@ -787,8 +787,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "235c271011bf7d71ef759426ac1b3146ec54b18b1ea7e691b9a41ba9f9161653"
+      "assertion_count": 27,
+      "assertion_digest_sha256": "b16f4d854be02a65f5ca5934c0e7b880b27a9ea0152194e4ede9e2f80c02d40b"
     },
     {
       "path": "packages-web/angular-flow/test/components.spec.ts",
@@ -1288,8 +1288,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 46,
-      "assertion_digest_sha256": "b9e415df4787493f5a9c4d271d40359e01657e42281d408bd6b8b07ace3d6019"
+      "assertion_count": 52,
+      "assertion_digest_sha256": "b530dabeb4514136ab885637152e723b470b4de46ea7ddf5ef08b6729c49800c"
     },
     {
       "path": "packages/auth/test/integration/auth.module.spec.ts",
@@ -1329,7 +1329,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 26,
-      "assertion_digest_sha256": "76401941abf4eb7009e51587136119e206b0d7a5fc1be875f6b01e89ba009868"
+      "assertion_digest_sha256": "e81168d06fbeb36a405de090b64036e4a8c2c32870b35993577693df1148786c"
     },
     {
       "path": "packages/auth/test/unit/barrel-load.spec.ts",
@@ -1497,7 +1497,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 228,
-      "assertion_digest_sha256": "5dd9cd1e3796bab91488a69418f7ec3794063ff47be956cd23a11ca2d5ba1b9a"
+      "assertion_digest_sha256": "fa01d8cd0faeda14de94b934ffcd81c7d7bc46d415b432a86ebeead68eaa3a1d"
     },
     {
       "path": "packages/backend/test/unit/common-export.spec.ts",
@@ -2687,7 +2687,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 78,
-      "assertion_digest_sha256": "c37db96ac03c02ae88801829ea80c7f22ecb85270c21b168486182240b3fc3e6"
+      "assertion_digest_sha256": "6503bc5d9ec4ec7bdfc44ce05cc5954c60a4d2cee98bb42afc7f609f34e871b5"
     },
     {
       "path": "packages/signature/test/unit/digest.spec.ts",
@@ -4034,6 +4034,78 @@
       "lifecycle": "supported",
       "assertion_count": 28,
       "assertion_digest_sha256": "93108b44d22fd6a9e218c99538c859c10de53c3dfc60a8c13c00b327b9deed0c"
+    },
+    {
+      "path": "packages/auth/test/unit/session-policy-auth.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "ac5937886ca5abff6186fc1abacd1c53d85ea08c5d63eff4c3e4e67ae5a73eb6"
+    },
+    {
+      "path": "packages/backend/test/integration/authorization-app-guard.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 38,
+      "assertion_digest_sha256": "cc0d4e8c7c8104c4ae006961caddb4ec6f7507b2926735ac03ff58e088307a5a"
+    },
+    {
+      "path": "packages/backend/test/unit/authorization-module-contract.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 9,
+      "assertion_digest_sha256": "2e807218d3f5487ad7762d64c8a729689eb516bda8e3bb2b7bb76cf44fac3b0d"
+    },
+    {
+      "path": "packages/backend/test/unit/authorization-policy-contract.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "1d7bd3de1eca1fbdeb0510304b1df9745c673fb1a9e2440cda0ea3ea6f01eaf9"
+    },
+    {
+      "path": "packages/contracts/test/authorization-context.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 4,
+      "assertion_digest_sha256": "2cd493eca565254add6aaa4b4fdbf2205767c52dacfa52cf21203c1db4177273"
+    },
+    {
+      "path": "packages/sessions/test/integration/session-policy-redis.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 30,
+      "assertion_digest_sha256": "5c9adc1e6f012dcdc83b650feb6def99fbfe5a9d08a61ed568e81e8d6e26f94d"
+    },
+    {
+      "path": "packages/sessions/test/unit/session-policy-bootstrap.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 3,
+      "assertion_digest_sha256": "aa198f60a0e906fac06a0948e64850e20f370d1eb6a0259e42063001c28fe31f"
+    },
+    {
+      "path": "packages/sessions/test/unit/session-policy.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 44,
+      "assertion_digest_sha256": "da278027c1d996585fbccc1099186575236b8670acf51768297cf785720a1cef"
+    },
+    {
+      "path": "reference/api/test/integration/session-readiness.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 4,
+      "assertion_digest_sha256": "9d8d6d8a4baf15af7f74c1725110af1fbacad1554acdd354d9060ac5f3968508"
     }
   ],
   "suites": {
