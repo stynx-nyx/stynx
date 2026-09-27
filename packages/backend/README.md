@@ -94,6 +94,38 @@ For convenience, `@stynx-nyx/backend` re-exports the full `@stynx-nyx/contracts`
 | `ClaimFirstTenantEntitlementPolicy` | Default `TenantEntitlementPolicy`: checks JWT claim first, DB-fallback second.   |
 | `SqlTenantEntitlementFallback`      | Default DB-fallback for entitlement check.                                       |
 
+## Server-sent events
+
+`StynxEventStreamModule.forRoot({ contextRunner: database })` binds the SSE service to the concrete `Database` from `@stynx-nyx/data`. That class exposes `withRequestContext(scope, fn)`; the abstract `Database` from `@stynx-nyx/core` does not. Supply the data database instance used by the route, optionally with a scheduler and metrics sink. `StynxEventStreamService.open()` receives a tenant/actor scope, a pluggable `EventStreamSource`, and route options such as `project`, `tickMs`, and `batchSize`.
+
+```ts
+import { Controller, Get, Req, Res } from '@nestjs/common';
+import { StynxEventStreamModule, StynxEventStreamService } from '@stynx-nyx/backend';
+import { Database } from '@stynx-nyx/data';
+
+// In the application composition root, using its concrete data Database:
+function eventStreamModule(database: Database) {
+  return StynxEventStreamModule.forRoot({ contextRunner: database });
+}
+
+@Controller()
+class EventsController {
+  constructor(private readonly streams: StynxEventStreamService) {}
+
+  @Get('events')
+  async events(@Req() request: SseRequest, @Res() response: SseResponse) {
+    await this.streams.open(request, response, eventSource, {
+      scope: { tenantId: request.tenantId, actorId: request.actorId },
+      project: (row) => row.payload,
+      tickMs: 1_000,
+      batchSize: 100,
+    });
+  }
+}
+```
+
+Here `database`, `eventSource`, `SseRequest`, and `SseResponse` are supplied by the application. The route uses manual `@Res()` response handling and must avoid response-mapping, buffering, or serialization interceptors that delay frames. Its source must enforce tenant isolation with PostgreSQL RLS, including `ENABLE ROW LEVEL SECURITY` and `FORCE ROW LEVEL SECURITY` on replay tables. `listSince` returns rows strictly after `(createdAt, id)`, ordered by `(createdAt ASC, id ASC)`; `findById` and `now` run inside the same captured tenant/actor request context, including on reconnect and scheduled ticks. The outbox's current upsert table is not an append-only replay source.
+
 ## Configuration
 
 Each submodule has its own `.forRoot()` options. See the per-submodule pages linked above.

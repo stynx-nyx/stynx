@@ -158,9 +158,15 @@ class EventStreamSessionBridge {
 }
 
 // In application providers, with the same bridge signal:
-function eventStreamProviders(authProvider: AuthProvider) {
+function eventStreamProviders(
+  authProvider: AuthProvider,
+  resolveTenant: () => Promise<string | null>,
+) {
   return [
-    provideStynxDefaults({ angular: { apiBaseUrl: '/api', sessionMode: 'bearer', authProvider } }),
+    provideStynxDefaults({
+      angular: { apiBaseUrl: '/api', sessionMode: 'bearer', authProvider },
+      tenancy: { defaultTenantResolver: resolveTenant },
+    }),
     provideAppInitializer(() => {
       inject(EventStreamSessionBridge);
     }),
@@ -174,6 +180,8 @@ function eventStreamProviders(authProvider: AuthProvider) {
 ```
 
 `StynxEventStreamService` exposes `status`, `polling`, and `lastEventId` signals, parsed `events$`, and polling `tick$`. The HTTP transport receives intercepted bearer and tenant headers. It reconnects with `Last-Event-ID`, bounds each connection's received bytes and age, and stops when the session signal becomes false. Tests can replace the transport and clock with `FakeStynxEventStreamTransport` and `FakeStynxEventStreamClock` from `@stynx-nyx/angular/testing`.
+
+The application must resolve or set its current tenant through `TenantContextService` before starting the stream. `TenantInterceptor` then supplies `X-Tenant-Id`; the SSE service does not derive it from event data.
 
 ## Related packages
 
