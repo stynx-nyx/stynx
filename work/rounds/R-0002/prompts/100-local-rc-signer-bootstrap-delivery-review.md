@@ -17,8 +17,11 @@ checks or local RC mutation policy, exact signer-ID continuity, and that the
 removed no-release changeset does not hide a package release. Verify that the
 one-time required-check exception is documented as an exact Owner-controlled
 bootstrap action; all other checks and review must pass before it is used.
-Inspect focused/full gate evidence in the worktree and identify any missing
-proof. The old main trust store cannot verify -03 until this branch merges;
+Inspect focused gate output and the full local `pnpm ci:stynx` exit-0 log at
+`/private/tmp/stynx-s15-signer-bootstrap-ci-merge.log` (candidate before this
+prompt-only evidence note: `ac178d3179f3b5f4316d96f5bce5b220a571d803`).
+Inspect the checks on PR #283 and identify any missing proof. The old main
+trust store cannot verify -03 until this branch merges;
 do not suggest forging `verified-local-rc` or disabling the check.
 
 Return exactly one JSON object without Markdown:
