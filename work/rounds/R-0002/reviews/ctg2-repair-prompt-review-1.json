@@ -1,0 +1,48 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "Inspector A may use the 'existing pack consumer sensor if it provides the same proof'. The only existing one is scripts/verify-consumer-fixtures.mjs. Inspector A does not own that file, and it runs only through release:consumer-fixtures, which is not part of ci:stynx or ci:reference-apps. It also needs a networked pnpm install. Taking this route would edit an unowned file and move the UPS-TEST-01 proof outside the gate the maestro runs and the trace binds, so the blocking consumer-resolution finding could close without a gated sensor.",
+      "required_change": "Remove the alternative. Require the new test/scripts/angular-testing-consumer.test.mjs, which node --test ./*.test.mjs picks up in stynx-script-tests under pnpm test and therefore ci:stynx. State that scripts/verify-consumer-fixtures.mjs, root package.json and the release:* scripts are out of scope for every worker."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "The prompt does not say how the consumer sensor gets reliable, offline-safe artifacts. stynx-script-tests does not depend on @stynx-nyx/angular, so turbo's ^build does not build Angular first. A test that runs ng-packagr into packages-web/angular/dist can race the parallel @stynx-nyx/angular#build under pnpm test. A consumer install from the registry (as verify-consumer-fixtures does) needs the network.",
+      "required_change": "Tell Inspector A to build or pack into a temp directory, or to pnpm pack an explicitly built package without writing the shared dist concurrently. Install the consumer offline by linking the workspace's @angular/*, rxjs, @stynx-nyx/sdk and the primary @stynx-nyx/angular (no registry). Resolve through the tarball's exports map with a node ESM import and tsc under moduleResolution bundler and node16. Assert failure when either dist/fesm2022/stynx-nyx-angular-testing.mjs or dist/types/stynx-nyx-angular-testing.d.ts is removed from the packed copy."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "Engineer A is told to handle 'consumer gate script integration if Inspector's new test is not already in stynx-script-tests'. test/scripts/*.test.mjs is already globbed, so any other integration means editing root package.json or a workflow. Root package.json breaks the byte freeze in local-rc-blocker-contract.test.mjs, which needs an Inspector rebind. A workflow edit needs an Owner FORBID-CI-WITHOUT-ADR receipt. Neither belongs to the Engineer role.",
+      "required_change": "Delete the Engineer A gate-integration clause. State that no worker edits package.json, reference/api/package.json, reference/web/package.json or .github/workflows. If gate wiring turns out to be needed, send it back to the Architect or Owner."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "Engineer B owns 'reference fixture wiring necessary for Inspector B tests'. The only reference SSE fixture (RlsSource, StreamController, Scheduler, DDL) lives inside reference/api/test/integration/reference-sse.rls.integration.spec.ts, which Inspector B owns and Engineers may not edit. The clause is either empty or an opening to add unneeded code under reference/api/src.",
+      "required_change": "State that the empty-scope test route, the RlsSource query spy/counter and the scheduler ambient-context wrapper all live in the Inspector B spec. Engineer B owns only packages/backend/src/event-stream/** and does not edit reference/api."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "The Inspector B sensors are less specific than the review. (a) The a-recent resume does not require asserting that a-recent itself is not re-sent, which is the strict-cursor check. (b) 'No source SQL' for the empty tenant and empty actor cases has no concrete mechanism. (c) The poison-row list leaves out a project() that returns undefined. It also does not require that an unsafe id writes no ': dropped' marker, or that the metrics sink's dropped() is called and counters().drops goes up. (d) The ambient-context tick does not require asserting that the ambient context is B or empty at fire time.",
+      "required_change": "Add these assertions. The a-recent stream contains a-tick and no a-recent, a-expired or b-* frame. For empty scope, a spy or counter on the RlsSource now, findById and listSince calls stays at zero. The poison cases include undefined, an unsafe id or event with no marker and no CR/LF, and safe ids with ': dropped <id>'. Every poison case checks drops, the sink's dropped() and later-row delivery. Fire the tick inside database.withRequestContext({tenantId: tenantB, ...}) and assert the snapshot shows B."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "'Bounded dedup memory' has no size and no observable behaviour. sse-1.5.md defines no config for it. Engineer A could add a public StynxEventStreamConfig field, which is an unplanned public-API baseline change, or pick an arbitrary bound the sensor cannot pin. The 204 floor says '1-second', but the contract floor is initialMs (default 1_000).",
+      "required_change": "Pin an internal, non-exported bound, for example the last N IDs with N stated in the prompt. The sensor shows that an ID inside the window is still deduplicated across reconnect and that the retained set never exceeds N, observed through a documented test seam or eviction behaviour, with no new public config. Phrase the 204 sensor as delay >= initialMs, with the default 1_000 and one custom initialMs case. The byte sensor encodes only the new suffix, and the ceiling triggers correctly with multibyte characters split across chunks."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "The README finding is only covered by Engineer A's 'Angular/backend README documentation as needed'. The required content is missing: tenancy in the Angular provideStynxDefaults example, and backend README coverage of StynxEventStreamModule.forRoot, the data Database versus core Database, @Res() without interceptors, and source ordering and RLS obligations. The .changeset/sse-stream-15.md reference to 'the package README' is not assigned to anyone. Engineer A editing the backend README while Engineer B edits backend source is disjoint but undeclared.",
+      "required_change": "List the README items explicitly. Name the hand-editable paths: packages-web/angular/README.md and packages/backend/README.md outside the generated section. Assign .changeset/sse-stream-15.md to Engineer A. State that pnpm package-readmes:write and package-readmes:check run afterwards by the maestro."
+    }
+  ],
+  "summary": "All four worker assignments cover both blocking findings, and every nonblocking one maps to a worker: poison rows, shutdown, dedup, bytes, 204, auth-terminal, ALS and README. Inspector, Engineer and maestro/Architect duties are separated, sensors come first, and tests are preserved. The main defect is Inspector A's option to use the existing pack consumer script. That file is unowned and not in ci:stynx, so the UPS-TEST-01 fix could land ungated. Also: the Engineer A gate-wiring clause could touch frozen package.json or workflows; the Engineer B fixture ownership is empty or ambiguous; several sensors are underspecified (dedup bound, no-SQL spy, poison-row assertions, offline and race-free consumer build). Tighten these before dispatch."
+}
