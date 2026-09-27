@@ -348,7 +348,11 @@ describe('UPS-HOOK-02 webhook guard HTTP contract', () => {
       technicalActorId: ACTOR,
       eventId: 'event-5',
     });
-    await signedCall(app, noMembershipBody)
+    // A fresh application has a fresh membership cache; this probes missing
+    // membership without asserting immediate invalidation of an earlier grant.
+    const deniedApp = await createApp(new SharedReplayStore(), { tenancy: true });
+    apps.push(deniedApp);
+    await signedCall(deniedApp, noMembershipBody)
       .expect(403)
       .expect((response) => expect(response.body.message).toBe('TENANT_ACCESS_DENIED'));
   });
