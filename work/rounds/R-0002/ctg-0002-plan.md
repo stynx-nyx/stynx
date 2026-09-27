@@ -183,6 +183,11 @@ Opus 5.5 PASS. Registrar desvios e símbolos reais na conformidade.
 
 ## Triagem
 
+- Integração completa da reference API: `sensor-error` — o E2E SSE
+  esperava o frame após 10 ms, embora a consulta PostgreSQL pudesse
+  demorar mais sob carga; a asserção falhava sem fechar o stream e
+  prendia o teardown. Inspector passou a aguardar até 5 s e fecha o
+  stream em `finally`; 61/61 integrações passaram.
 - Primeiro CI CTG-0002: `plant-bug` — `lint:cycles` detectou o serviço
   SSE importando tokens do seu próprio módulo Nest, que por sua vez
   importa o serviço. Engineer moveu os tokens para arquivo próprio;
