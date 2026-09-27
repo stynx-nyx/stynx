@@ -27,6 +27,7 @@ Architect faz contrato e prompts; reviewer externo Opus 5.5 em `prompt-review` a
 
 - Inspector 7A: `sensor-error` — o primeiro E2E importava marcadores privados de auth; o Inspector removeu os imports, manteve prova pública do marcador CTG1 e verifica a ausência do símbolo privado por reflexão, sem semear esse símbolo por API interna. Lint/Prettier passaram; vermelho restante é somente export do helper/guard ainda ausente.
 - Inspector 7B: `sensor-error` — expectativas iniciais contavam o dia de partida em Auckland/Los Angeles e calculavam 65 h no DST de retorno; corrigidas para data civil excluída, fim exclusivo e 61 h. Uma expectativa de Los Angeles persistiu no primeiro reparo e o teste Nest omitia os providers globais de `Database`/`RequestContext`; corrigidos pelo Inspector em `6756110f`, sem alterar DI de produção. Os 23 testes focais de clock/calendário passaram.
+- Inspector 7C: `sensor-error` — a primeira prova esperava transporte síncrono de um digest Web Crypto assíncrono e tratava 80+80+66 caracteres como se excedessem 255; corrigida em `daf86360` para aguardar o request e retirar o caso aritmeticamente impossível, sem reduzir os limites de 80/255 nem outros negativos. Trace rebindo em `eeab50c7`; o Engineer reportou 12/12 sensores focais verdes após a tentativa seguinte.
 
 ## Retomada
 
