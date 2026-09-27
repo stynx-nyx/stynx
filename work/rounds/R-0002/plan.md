@@ -233,6 +233,7 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 ## Triagem
 
 - RC1 `release:consumer-fixtures` após reparo do status: `sensor-error` — uma instalação temporária do fixture TEAT omitiu dois pacotes apesar de o pack dos 44 ter concluído; nova execução com fixture preservado passou 44/44 e três consumidores, sem mudança de código.
+- Reparo CTG-0002 poison row: `sensor-error` — `source().cursors` registra o cursor de entrada de `listSince` na primeira leitura; o sensor exige um segundo tick para observar o avanço após os drops. Inspector corrige o sensor sem alterar implementação nem enfraquecer as provas de drop/métricas.
 
 - PR #276 `release-drafts`: `plant-bug` — `release:status` tratou a RC já versionada como alteração ordinária e o Changesets recusou os 44 manifestos sem changesets pendentes. O contrato acima define uma exceção fechada para pre mode versionado; testar antes de implementar.
 
