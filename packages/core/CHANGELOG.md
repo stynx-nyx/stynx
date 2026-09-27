@@ -1,5 +1,7 @@
 # @stynx-nyx/core
 
+## 1.5.0-rc.2
+
 ## 1.5.0-rc.1
 
 ### Minor Changes
