@@ -1,0 +1,24 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "law/policy/forbidden-action-authorizations.json",
+      "issue": "The integration merge 65f982a5a39e644a0dc66ea7e6813540d333be5a has no Owner receipt yet. The plan (work/rounds/R-0002/plan.md step 15) says DEVAI strict needs FORBID-RM-RF, FORBID-CI-WITHOUT-ADR, FORBID-PUBLISH and FORBID-MUTATE-INVARIANTS receipts bound to that exact SHA. A grep for 65f982a5 in the policy file returns nothing. This is authority debt carried in from main, not an SSE defect, but the pre-push hook will reject the updated PR #278 until it is paid.",
+      "required_change": "The Owner issues the four exact-SHA receipts. They are bound under law/policy/ as a DEVAI Architect commit. Then rerun DEVAI strict, pnpm check:trace and the ci:stynx gates before pushing."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The triage line for 65f982a5 still says 'O CI completo está em segunda execução' (the full CI is on its second run). That run has since passed: full pnpm ci:stynx and pnpm ci:reference-apps passed after integration, and flow passed 60/60 when run alone. The plan does not record this final result.",
+      "required_change": "An Architect checkpoint records that the post-integration ci:stynx and ci:reference-apps passed, with the log path and HEAD, and closes the flow Testcontainers sensor-error as a transient timeout."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/README.md",
+      "issue": "This carries over from delivery-review-2 and is still unfixed. The README example (line 108) and .changeset/sse-stream-15.md still show StynxEventStreamModule.forRoot({ contextRunner: database }), which needs a concrete Database instance when the module is defined. There is no forRootAsync. reference-sse.rls.integration.spec.ts uses a lazy structural adapter instead.",
+      "required_change": "In a later docs pass, show the lazy adapter { withRequestContext: (scope, fn) => database.withRequestContext(scope, fn) } or add a forRootAsync/useExisting option, then run pnpm package-readmes:write."
+    }
+  ],
+  "summary": "Main integration did not regress the delivery-review-2 PASS. The merge only overlapped with the SSE branch in law/trace.json and plan.md. Since 20f10f53, the only changes under packages, packages-web, reference, docs/framework and .changeset are version and changelog bumps, the pdf README regenerations and .changeset/pre.json. No SSE source or test changed: the backend event-stream service/module, the Angular event-stream and testing entrypoint, reference-sse.rls.integration.spec.ts and angular-testing-consumer.test.mjs are all unchanged. The tenancy-context sources are also unchanged; tenancy-context-15 was consumed into RC1. So the proofs of tenancy context ordering, true FORCE RLS with two tenants as non-superuser stynx_app, resume/gap/poison-row behavior and shutdown still hold as reviewed. Checks run at HEAD 3447f73f: pnpm check:trace gives 398/398 bound, and the merged trace keeps all four SSE bindings. pnpm api:baselines matched 44/44. For release state, .changeset/pre.json is in rc pre mode with tenancy-context-15 consumed and sse-stream-15 pending. version-packages --preview plans minor 1.5.0-rc.1 -> 1.5.0-rc.2. The gitignored .changeset/status.json shows 2.0.0-rc.2 from Changesets' peer inference, but the fixed-group rewrite in scripts/lib/fixed-group-version.mjs corrects that, so release state is compatible. The two post-merge commits only edit plan.md and are authored by DEVAI Architect. The user reports that ci:stynx and ci:reference-apps passed after integration. The remaining items are the pending Owner receipts for the merge SHA, which gate the push, plus documentation cleanup."
+}
