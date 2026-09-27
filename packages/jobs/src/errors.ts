@@ -2,6 +2,30 @@ import { StynxError } from '@stynx-nyx/core';
 
 export class StynxJobsError extends StynxError {}
 
+export class JobTenantMismatchError extends StynxJobsError {
+  constructor(tenantId: string, callerTenantId: string) {
+    super('Job tenant does not match the active tenant', { code: 'JOB_TENANT_MISMATCH', status: 403, context: { tenantId, callerTenantId } });
+  }
+}
+
+export class JobActorMembershipError extends StynxJobsError {
+  constructor(tenantId: string, actorId: string) {
+    super('Job actor has no active tenant membership', { code: 'JOB_ACTOR_MEMBERSHIP', status: 403, context: { tenantId, actorId } });
+  }
+}
+
+export class JobActorAssignmentDeniedError extends StynxJobsError {
+  constructor(tenantId: string, actorId: string) {
+    super('Technical actor assignment denied', { code: 'JOB_ACTOR_ASSIGNMENT_DENIED', status: 403, context: { tenantId, actorId } });
+  }
+}
+
+export class ScheduleActorRequiredError extends StynxJobsError {
+  constructor() {
+    super('An active technical actor is required for an enabled schedule', { code: 'SCHEDULE_ACTOR_REQUIRED', status: 400 });
+  }
+}
+
 export class JobNotFoundError extends StynxJobsError {
   constructor(jobId: string) {
     super(`Job not found: ${jobId}`, {

@@ -1,4 +1,4 @@
-/** Recurring schedule cadence. Cron uses a 5-field UTC expression; interval is a fixed period. */
+/** Recurring schedule cadence. Cron uses a 5-field local expression; interval is a fixed period. */
 export type ScheduleKind = 'cron' | 'interval';
 
 /** Lifecycle status of a claimable `jobs.jobs` row. */
@@ -45,6 +45,8 @@ export interface ScheduleRecord {
   name: string;
   jobType: string;
   kind: ScheduleKind;
+  actorId: string | null;
+  timezone: string;
   cronExpression: string | null;
   intervalSeconds: number | null;
   payload: Record<string, unknown>;
@@ -65,11 +67,7 @@ export interface EnqueueJobInput {
   payload?: Record<string, unknown>;
   /** Required: jobs are always tenant-owned and protected by RLS (I5). */
   tenantId: string;
-  /**
-   * Required for the handler to run under tenant `RequestContext` (see
-   * `JobHandlerContext`). Without it the handler still runs, but only under
-   * `withSystemContext` — it must scope its own writes explicitly.
-   */
+  /** Defaults to the active caller actor. An active tenant membership is required. */
   actorId?: string;
   /** Absolute execution time. Mutually exclusive with `delayMs`. */
   runAt?: Date;
@@ -86,8 +84,12 @@ export interface UpsertScheduleInput {
   name: string;
   jobType: string;
   tenantId: string;
+  /** Technical actor with active membership in the tenant. */
+  actorId: string;
   kind: ScheduleKind;
-  /** Required when `kind === 'cron'`. 5-field UTC expression: minute hour day-of-month month day-of-week. */
+  /** Canonical IANA timezone, defaulting to UTC. */
+  timezone?: string;
+  /** Required when `kind === 'cron'`. 5-field local expression: minute hour day-of-month month day-of-week. */
   cronExpression?: string;
   /** Required when `kind === 'interval'`. Must be a positive integer. */
   intervalSeconds?: number;
@@ -116,6 +118,17 @@ export type JobHandler<TPayload = Record<string, unknown>> = (
   context: JobHandlerContext,
 ) => Promise<void>;
 
+export type JobExecutionResult =
+  | { status: 'executed' }
+  | { status: 'not_executable'; reason: 'missing_actor' | 'inactive_actor_membership' };
+
+export interface TimerHandle { unref?(): void }
+export interface TimerPort {
+  setInterval(callback: () => void, ms: number): TimerHandle;
+  clearInterval(handle: TimerHandle): void;
+}
+export interface ClockPort { now(): number }
+
 /**
  * The narrow port other packages depend on to schedule work through
  * `@stynx-nyx/jobs` without reaching into its storage. `@stynx-nyx/worklist`
@@ -133,6 +146,8 @@ export interface JobsPort {
 }
 
 export interface WorkerOptions {
+  timer?: TimerPort;
+  clock?: ClockPort;
   enabled?: boolean;
   pollIntervalMs?: number;
   batchSize?: number;
@@ -142,12 +157,14 @@ export interface WorkerOptions {
 }
 
 export interface SchedulerOptions {
+  timer?: TimerPort;
   enabled?: boolean;
   pollIntervalMs?: number;
   batchSize?: number;
 }
 
 export interface StynxJobsModuleOptions {
+  authorizeTechnicalActor?: (request: { tenantId: string; callerActorId: string; technicalActorId: string; permission: 'jobs.assignTechnicalActor' }) => Promise<boolean>;
   worker?: WorkerOptions;
   scheduler?: SchedulerOptions;
   /**

@@ -2,10 +2,10 @@ import { InvalidCronExpressionError } from './errors';
 
 /**
  * A minimal 5-field cron parser and next-run calculator: `minute hour
- * day-of-month month day-of-week`, evaluated in UTC. Supports `*`, single
+ * day-of-month month day-of-week`, evaluated in the selected timezone. Supports `*`, single
  * values, comma lists, `a-b` ranges, and `/n` steps (on `*` or a range) in
  * each field — "cron-ish" per the E2 requirement, not the full POSIX cron
- * grammar (no `L`/`W`/`#`, no named months/days, no timezone).
+ * grammar (no `L`/`W`/`#`, no named months/days).
  *
  * Day-of-month and day-of-week combine with OR semantics when both are
  * restricted (cron convention); when only one is restricted the other is
@@ -104,32 +104,92 @@ export function parseCronExpression(expression: string): ParsedCron {
 
 const MAX_SEARCH_MINUTES = 60 * 24 * 366 * 5; // ~5 years of minute-steps as a search ceiling
 
+interface WallMinute {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+}
+
+function wallMinute(date: Date, formatter: Intl.DateTimeFormat): WallMinute {
+  const parts = formatter.formatToParts(date);
+  const number = (type: string): number => Number(parts.find(part => part.type === type)?.value);
+  return { year: number('year'), month: number('month'), day: number('day'), hour: number('hour'), minute: number('minute') };
+}
+
+function wallTime(wall: WallMinute): number {
+  return Date.UTC(wall.year, wall.month - 1, wall.day, wall.hour, wall.minute);
+}
+
+function matches(parsed: ParsedCron, wall: WallMinute): boolean {
+  const localDate = new Date(wallTime(wall));
+  const domMatches = parsed.dayOfMonth.has(wall.day);
+  const dowMatches = parsed.dayOfWeek.has(localDate.getUTCDay());
+  const dayMatches = parsed.dayOfMonthRestricted && parsed.dayOfWeekRestricted
+    ? domMatches || dowMatches
+    : domMatches && dowMatches;
+  return parsed.minute.has(wall.minute) && parsed.hour.has(wall.hour) && parsed.month.has(wall.month) && dayMatches;
+}
+
+function timezoneFormatter(timezone: string): Intl.DateTimeFormat {
+  if (timezone !== 'UTC' && !/^[A-Za-z_]+\/[A-Za-z_]+(?:\/[A-Za-z_]+)*$/u.test(timezone)) {
+    throw new RangeError(`Invalid IANA timezone: ${timezone}`);
+  }
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    hourCycle: 'h23',
+  });
+}
+
 /**
  * Compute the next UTC minute-boundary matching `expression` strictly after
  * `after`. Throws `InvalidCronExpressionError` if the expression is
  * malformed or (pathologically) matches nothing within the search ceiling.
  */
-export function nextCronRunAt(expression: string, after: Date): Date {
+export function nextCronRunAt(expression: string, after: Date, timezone = 'UTC'): Date {
   const parsed = parseCronExpression(expression);
+  const formatter = timezone === 'UTC' ? undefined : timezoneFormatter(timezone);
   let candidate = new Date(after.getTime());
   candidate.setUTCSeconds(0, 0);
   candidate = new Date(candidate.getTime() + 60_000);
 
   for (let step = 0; step < MAX_SEARCH_MINUTES; step += 1) {
-    const minute = candidate.getUTCMinutes();
-    const hour = candidate.getUTCHours();
-    const dayOfMonth = candidate.getUTCDate();
-    const month = candidate.getUTCMonth() + 1;
-    const dayOfWeek = candidate.getUTCDay();
+    const wall = formatter ? wallMinute(candidate, formatter) : {
+      year: candidate.getUTCFullYear(), month: candidate.getUTCMonth() + 1, day: candidate.getUTCDate(),
+      hour: candidate.getUTCHours(), minute: candidate.getUTCMinutes(),
+    };
 
-    const domMatches = parsed.dayOfMonth.has(dayOfMonth);
-    const dowMatches = parsed.dayOfWeek.has(dayOfWeek);
-    const dayMatches =
-      parsed.dayOfMonthRestricted && parsed.dayOfWeekRestricted
-        ? domMatches || dowMatches
-        : domMatches && dowMatches;
+    if (formatter) {
+      const previous = wallMinute(new Date(candidate.getTime() - 60_000), formatter);
+      const missingMinutes = Math.round((wallTime(wall) - wallTime(previous)) / 60_000) - 1;
+      if (missingMinutes > 0) {
+        for (let skipped = 1; skipped <= missingMinutes; skipped += 1) {
+          const missingDate = new Date(wallTime(previous) + skipped * 60_000);
+          if (matches(parsed, {
+            year: missingDate.getUTCFullYear(), month: missingDate.getUTCMonth() + 1,
+            day: missingDate.getUTCDate(), hour: missingDate.getUTCHours(), minute: missingDate.getUTCMinutes(),
+          })) return candidate;
+        }
+      }
+    }
 
-    if (parsed.minute.has(minute) && parsed.hour.has(hour) && parsed.month.has(month) && dayMatches) {
+    if (matches(parsed, wall)) {
+      if (formatter) {
+        // A backward offset change repeats local minutes. Skip the first UTC
+        // occurrence; a second matching occurrence is found by the UTC scan.
+        const tomorrow = new Date(candidate.getTime() + 24 * 60 * 60_000);
+        const offsetDrop = wallTime(wall) - candidate.getTime()
+          - (wallTime(wallMinute(tomorrow, formatter)) - tomorrow.getTime());
+        if (offsetDrop > 0) {
+          const later = wallMinute(new Date(candidate.getTime() + offsetDrop), formatter);
+          if (wallTime(later) === wallTime(wall)) {
+            candidate = new Date(candidate.getTime() + 60_000);
+            continue;
+          }
+        }
+      }
       return candidate;
     }
     candidate = new Date(candidate.getTime() + 60_000);
