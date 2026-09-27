@@ -232,6 +232,7 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
 
+- CTG-0002 linear `ci:reference-apps`: `sensor-error` — a fixture SSE clonou `stynx_int_tpl` já migrado e tentou recriar schemas `tenancy`/`auth`; o mesmo teste focal passou com banco vazio. Inspector fixa `useTemplate:false` somente nessa fixture e repete integração/RLS, preservando PostgreSQL real e os dois tenants.
 - CI CTG-0002 após integrar `main` em `65f982a5`: `sensor-error` — o Testcontainers do teste de integração `@stynx-nyx/flow` excedeu 10 s aguardando portas do PostgreSQL sob a carga do CI local; o pacote passou isolado, 60/60 testes, sem alteração de código. Em `3447f73f`, a segunda execução completa de `pnpm ci:stynx` passou (`/private/tmp/stynx-s15-ctg2-postmain-ci-retry.log`), assim como `pnpm ci:reference-apps` (`/private/tmp/stynx-s15-ctg2-postmain-reference-ci.log`). O delivery-review Opus após a integração deu PASS em `reviews/ctg2-postmain-delivery-review.json`; os recibos Owner do merge ainda bloqueiam o push.
 - RC1 `release:consumer-fixtures` após reparo do status: `sensor-error` — uma instalação temporária do fixture TEAT omitiu dois pacotes apesar de o pack dos 44 ter concluído; nova execução com fixture preservado passou 44/44 e três consumidores, sem mudança de código.
 - CI CTG-0002 após reparo Angular: `reference-gap` — o build emitiu novo digest para `types/stynx-nyx-angular.d.ts`; Architect confirmou a mudança e executou `pnpm api:baselines:write` para rebinder o baseline, sem edição manual de artefato gerado.
