@@ -266,9 +266,17 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
       expect(resumed.body()).not.toContain('id: b-tick\n');
     } finally { resumed.close(); }
 
+    const listQueries = vi.spyOn(source, 'listSince');
     const foreign = await openStream(address.port, 'b-private');
     try {
+      await vi.waitFor(() => expect(scheduler.jobs.filter((job) => job.period === 5 && !job.cancelled)).toHaveLength(1));
+      await vi.waitFor(() => expect(listQueries.mock.calls.length).toBeGreaterThan(0));
+      await Promise.all(listQueries.mock.results.map((result) => result.value));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const callsBeforeTick = listQueries.mock.calls.length;
       await scheduler.fire(5);
+      await vi.waitFor(() => expect(listQueries.mock.calls.length).toBeGreaterThan(callsBeforeTick));
+      await Promise.all(listQueries.mock.results.slice(callsBeforeTick).map((result) => result.value));
       expect(foreign.body()).not.toContain('id: a-recent\n');
       expect(foreign.body()).not.toContain('id: a-tick\n');
       expect(foreign.body()).not.toContain('id: b-private\n');
@@ -282,7 +290,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
       await vi.waitFor(() => expect(foreign.body()).toContain('id: a-after-foreign\n'), { timeout: 5_000, interval: 20 });
       expect(foreign.body()).not.toContain('id: b-private\n');
       expect(foreign.body()).not.toContain('id: b-tick\n');
-    } finally { foreign.close(); }
+    } finally { listQueries.mockRestore(); foreign.close(); }
 
     // A conflicting tenant claim is rejected before stream headers on the real Nest route.
     const rejected = await new Promise<{ status: number | undefined; contentType: string | undefined }>((resolve, reject) => {
