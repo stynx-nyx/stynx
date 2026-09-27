@@ -1,5 +1,5 @@
 import '@angular/compiler';
-import { Injector, runInInjectionContext } from '@angular/core';
+import { Injector, TemplateRef, ViewContainerRef, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { Router } from '@angular/router';
@@ -7,6 +7,7 @@ import { TenantContextService } from '@stynx-nyx/angular';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANCY_WINDOW } from '@stynx-nyx/angular-tenancy';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { stynxPermissionGuard } from '../src/permission.guard';
+import { StynxHasPermissionDirective } from '../src/has-permission.directive';
 import { StynxSessionService } from '../src/session.service';
 import {
   STYNX_ANGULAR_AUTH_OPTIONS,
@@ -80,6 +81,68 @@ afterEach(() => {
 });
 
 describe('@stynx-nyx/angular-auth W04 identity contract depth', () => {
+  it('uses case-insensitive hierarchical grants and literal required-side wildcards', async () => {
+    const tenantContext = createTenantContext();
+    tenantContext.setTenant('tenant-a', 'manual');
+    const token = createJwt({
+      sub: 'actor-1',
+      tenant_id: 'tenant-a',
+      permissions: ['OPS:*', 'profile:read'],
+    });
+    const backend: StynxAuthBackend = {
+      exchangeCognitoToken: vi.fn(async () => ({
+        sid: 'sid-1', accessToken: token, accessTokenExpiresAt: 'later', refreshToken: 'refresh',
+        expiresAt: 'later', idleExpiresAt: 'later',
+      })),
+      switchTenant: vi.fn(async () => { throw new Error('not used'); }),
+      logout: vi.fn(async () => undefined),
+    };
+    const service = createSessionService(tenantContext, {
+      checkAuth: vi.fn(async () => ({
+        isAuthenticated: true, accessToken: createJwt({ sub: 'upstream', tenant_id: 'tenant-a' }),
+        idToken: '', userData: {}, configId: 'default',
+      })),
+      authorize: vi.fn(), logoff: vi.fn(async () => undefined),
+      forceRefreshSession: vi.fn(async () => ({ isAuthenticated: false, accessToken: '', idToken: '', userData: {}, configId: 'default' })),
+    }, backend, authOptions());
+
+    await service.completeLogin();
+    expect(service.hasAllPermissions(['ops:read', 'OPS:CASE:write'])).toBe(true);
+    expect(service.hasAnyPermissions(['inf:x', 'profile:READ'])).toBe(true);
+    expect(service.hasAllPermissions(['ops'])).toBe(false);
+    expect(service.hasAllPermissions(['ops2:read'])).toBe(false);
+    expect(service.hasAllPermissions(['ops:caser'])).toBe(false);
+    expect(service.hasAllPermissions(['ops:*'])).toBe(true);
+    expect(service.hasAllPermissions(['ops:case:*'])).toBe(false);
+    expect(service.hasAnyPermissions(['inf:x'])).toBe(false);
+
+    const routeInjector = Injector.create({
+      parent: TestBed.inject(Injector),
+      providers: [
+        { provide: StynxSessionService, useValue: service },
+        { provide: Router, useValue: { parseUrl: (url: string) => `URL:${url}` } },
+        { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: authOptions({ permissionDeniedPath: '/denied' }) },
+      ],
+    });
+    expect(runInInjectionContext(routeInjector, () => stynxPermissionGuard('ops:case:write')({} as never, {} as never))).toBe(true);
+    expect(runInInjectionContext(routeInjector, () => stynxPermissionGuard('inf:x')({} as never, {} as never))).toBe('URL:/denied');
+
+    const view = { createEmbeddedView: vi.fn(), clear: vi.fn() };
+    const directiveInjector = Injector.create({
+      parent: routeInjector,
+      providers: [
+        { provide: TemplateRef, useValue: {} },
+        { provide: ViewContainerRef, useValue: view },
+      ],
+    });
+    const directive = runInInjectionContext(directiveInjector, () => new StynxHasPermissionDirective());
+    directive.stynxHasPermission = 'ops:case:write';
+    expect(view.createEmbeddedView).toHaveBeenCalledTimes(1);
+    directive.stynxHasPermission = 'inf:x';
+    expect(view.clear).toHaveBeenCalledTimes(1);
+    directive.ngOnDestroy();
+  });
+
   it('exposes current actor claims and scope-derived permissions after credential exchange', async () => {
     const tenantContext = createTenantContext();
     tenantContext.setTenant('tenant-a', 'manual');
