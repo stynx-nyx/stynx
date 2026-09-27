@@ -389,3 +389,19 @@ desde `a46ecb88` passaram. `release:consumer-fixtures` falhou em uma
 instalação temporária TEAT e passou na repetição, com 44 tarballs e
 três fixtures (log `/private/tmp/stynx-s15-rc1-consumer-fixtures-retry.log`).
 Nenhum pacote foi publicado.
+
+## CTG-0007 — checkpoint de prompt-review, ciclo 2
+
+Opus 5.5 retornou `REVIEW` em `reviews/ctg7-prompt-review-2.json`: o bloqueio
+foi a passagem HMAC→tenancy incompatível com o `TenantContextInterceptor`
+real, que ignora `request.tenantId` na seleção e prioriza bearer decodificado
+sem assinatura sobre `principal` para ator. O Architect fixou o canal
+`onVerified` → `request.stynxClaims.{sub,tenantId}` após HMAC/replay, limpeza
+de identidade na entrada, conflito header/claim 403, negativos de bearer
+forjado e os caminhos `OPTIONAL_TENANCY_PATHS` excluídos. Também fechou
+formato/header de timestamp e assinatura, validação de `businessDays` e
+o desvio Angular de propriedades omitidas/ordem Unicode versus DETRAN.
+Contrato e prompts 80–82 foram atualizados; prompt 86 prepara o ciclo 3
+excepcional. O limite de dois `REVIEW` foi atingido. A exceção Owner para
+executar prompt 86 está pendente; nenhum terceiro review ou worker foi
+despachado. Nenhum código F2, teste F3 ou DETRAN foi editado neste reparo.
