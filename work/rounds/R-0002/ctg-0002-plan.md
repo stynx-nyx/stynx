@@ -49,21 +49,25 @@ sessionId?:string}, fn: () => Promise<T>): Promise<T>`; type test
   `reportProgress: true`, `responseType: 'text'` e parser incremental.
 - `TenantContextService.tenantId()` e `tenantChanged$` são as fontes
   reais de tenant. Para evitar ciclo (`angular-auth` depende de
-  `angular`), `provideStynxEventStream` exige `sessionActive:
-Signal<boolean>` fornecido pela aplicação, que pode ligar
+  `angular`), `provideStynxEventStream` exige a opção
+  `sessionActive: Signal<boolean>` fornecida pela aplicação, que pode ligar
   `StynxSessionService.active` real; transição para falso é logout e
   interrompe o fluxo. É desvio de assinatura da proposta upstream.
   `@stynx-nyx/angular/testing` já é secondary entry exportada, porém
-  vazia: `packages-web/angular/testing/index.ts` é a entrada canônica;
-  `src/testing/index.ts` apenas reexporta a mesma superfície, sem
-  duplicar implementação.
+  vazia: `packages-web/angular/testing/index.ts` é a entrada canônica
+  e importa símbolos primários somente pelo specifier
+  `@stynx-nyx/angular`, nunca por caminho relativo entre entry points.
+  `src/testing/index.ts` fica fora do barrel primário: pode permanecer
+  vazio ou reexportar apenas pelo specifier público. O build emite os
+  dois bundles FESM.
 - O transporte SSE marca cada request com `HttpContextToken` próprio.
   `ErrorInterceptor` preserva `HttpErrorResponse`/headers e suprime
   `ErrorBannerService` para esse contexto; assim `Retry-After` de 429
   chega ao cliente. `AuthInterceptor` mantém refresh e replay de 401;
   só o 401 terminal após essa tentativa leva a `stopped`. Sensores
   usam a cadeia real de interceptores e provam cabeçalhos, refresh,
-  ausência de banner e Retry-After.
+  ausência de banner e Retry-After, inclusive no request clonado após
+  refresh: o token de contexto SSE deve sobreviver ao replay.
 
 ## Critérios de prova
 
@@ -91,29 +95,55 @@ e `data:` multilinha. Dedup por ID, 204 limpa cursor, stale 20 s×2,
 Troca de tenant fecha/reabre sem cursor; logout para. `types` e
 `eventPrefix` filtram sem transformar payload em texto de apresentação.
 Fake transport/clock publicado cobre frames, HTTP errors e close.
+O `partialText` do HttpClient/XHR é cumulativo: consumir só o sufixo
+novo por offset. Limitar bytes/idade por configuração; fechar e reabrir
+com Last-Event-ID antes de crescimento ilimitado. Sensores com relógio
+falso provam ambos os limites.
 
-E2E MUST: Nest + PostgreSQL reais com RLS FORCE e papéis não superuser,
-tenants A/B e eventos distintos. Abrir e executar tick como A;
-nenhum evento B aparece. `Last-Event-ID` de B é desconhecido para A;
-ID A recente retoma; ID A expirado retorna 204. Provar cada leitura
-no escopo explícito e a limpeza após close. Usar `pnpm
-check:rls-negative`, `pnpm test:int` e CI completo.
+E2E MUST: Nest + PostgreSQL reais com RLS FORCE e papel sem superuser,
+tenants A/B e eventos distintos. Abrir e executar tick como A; nenhum
+evento B aparece. `Last-Event-ID` de B é desconhecido para A; ID A
+recente retoma; ID A expirado retorna 204. Positivos A-visível, resume
+e tick rodam no mesmo spec dos negativos, impedindo prova de zero linhas
+vazia. Provar cada leitura no escopo explícito e a limpeza após close.
 O E2E vive em `reference/api/test/integration/*.spec.ts`, host que já
-tem backend, data, Nest HTTP, pg, supertest e `test:int` no grafo, sem
-novo manifesto/lockfile. O fixture cria tabela no banco de teste com
-ENABLE + FORCE RLS, owner diferente de `stynx_app`, política USING/WITH
-CHECK; não muda `database/ddl`. A conexão de leitura usa `SET LOCAL ROLE
-stynx_app` e afirma `current_user`, `rolsuper=false`,
-`rolbypassrls=false`. `findById`/`listSince` não têm WHERE por tenant:
-o isolamento vem da policy. A rota HTTP monta middleware/guard reais
-do CTG-0001 e captura `RequestContext` real. O scheduler falso executa
-ticks após limpar ALS ou sob tenant B, de modo que pular a porta
-`withRequestContext` resulte em zero linhas/erro; incluir essa prova
-negativa. Usar template PostgreSQL local quando disponível
-(`STYNX_TEST_PG_TEMPLATE`) e as quatro variáveis `STYNX_TEST_PG_*` da
-rodada; confirmar que `pnpm test:int` executou este E2E antes do
-delivery-review. Sensor Angular reprova construção de
-`globalThis.EventSource`.
+tem backend, data, Nest HTTP, pg e supertest, sem novo manifesto ou
+lockfile. Fixture cria `stynx_app` idempotentemente como NOLOGIN,
+NOINHERIT e NOBYPASSRLS, concede membership ao usuário conector e
+SELECT/INSERT na tabela. Tabela de teste tem ENABLE + FORCE RLS, owner
+diferente de `stynx_app`, política USING/WITH CHECK baseada em
+`current_setting('app.tenant_id', true)`; não muda `database/ddl`. Fonte
+lê por `data.Database.tx(..., { role: 'app' })` e executa `SET LOCAL
+ROLE stynx_app` **na mesma transação** que recebeu GUCs de data. Afirma
+`current_user`, `rolsuper=false`, `rolbypassrls=false`. SQL de
+`findById`/`listSince` não contém WHERE por tenant: isolamento vem da
+policy. Rota HTTP monta middleware/guard reais do CTG-0001 e captura
+`RequestContext` real. Scheduler falso executa ticks após limpar tanto
+storage do RequestContext core quanto chave CLS transacional de data,
+ou sob tenant B; pular `withRequestContext` deve produzir zero
+linhas/erro no sensor negativo. Usar template PostgreSQL local quando
+disponível (`STYNX_TEST_PG_TEMPLATE`) e `STYNX_TEST_PG_*` da rodada.
+
+`pnpm test:int` raiz e `pnpm ci:stynx` filtram `./packages/*`: **não**
+executam o E2E de `reference/api`. Capturar saída focada que nomeie o
+novo spec em `pnpm --filter @stynx-nyx/reference-api test:int` e rodar
+`pnpm ci:reference-apps` junto com `pnpm ci:stynx` antes do
+delivery-review. Exigir check remoto `reference-apps / reference-api`
+verde antes do merge. O novo arquivo sob `reference/api/**` aciona o
+workflow existente; nenhuma edição de CI. Sensor Angular reprova
+construção de `globalThis.EventSource`.
+
+## Desvio conhecido para conformidade
+
+| ID           | Versão   | Símbolo real previsto                                         | Desvio e motivo                                                                                                                             | Prova                                      |
+| ------------ | -------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| UPS-NGSSE-08 | pendente | `provideStynxEventStream({ sessionActive: Signal<boolean> })` | A aplicação liga `StynxSessionService.active` à configuração; `angular-auth` depende de `angular`, então o pacote base não pode importá-lo. | Logout fecha o fluxo e entra em `stopped`. |
+
+O Architect documenta no contrato um exemplo de ligação do signal.
+Depois da API estabilizar, o Engineer incorpora o exemplo ao
+`packages-web/angular/README.md` fora da seção gerada e roda
+`pnpm package-readmes:write`. O maestro comunica o desvio ao Owner no
+delivery-review e registra símbolos efetivos na conformidade final.
 
 ## Tríade e locks
 
@@ -132,15 +162,20 @@ delivery-review. Sensor Angular reprova construção de
    backend não edita arquivos Angular e vice-versa. `angular/testing`
    fica no bloco Angular. Um único PR reúne o CTG após os dois blocos.
 
-Depois de sensores: maestro Architect rebinda `law/trace.json` via
-`pnpm check:trace --print`, em commit `DEVAI Architect`. Depois de API:
+Depois de sensores: maestro Architect rebinda **todos** os arquivos
+indicados por `pnpm check:trace --print`, inclusive specs existentes
+alterados e o novo `reference/api` rastreado pelo verificador, em
+`law/trace.json`, commit `DEVAI Architect`; repetir depois de qualquer
+reparo de testes. Depois de API:
 maestro Architect confirma e rebinda `pnpm api:baselines:write` para
 backend raiz, angular e `stynx-nyx-angular-testing.d.ts`, em commit
 Architect. Depois dos dois blocos, maestro Engineer cria **um**
 changeset minor do grupo fixo e executa `pnpm package-readmes:write`
 e `package-readmes:check`, commitando gerados como Engineer. Banco:
-RLS negativo e `pnpm test:int`; `pnpm lint:deps` para metadata.
-Antes de PR: `pnpm ci:stynx` verde e delivery-review
+RLS negativo, `pnpm test:int`,
+`pnpm --filter @stynx-nyx/reference-api test:int` e
+`pnpm ci:reference-apps`; `pnpm lint:deps` para metadata.
+Antes de PR: `pnpm ci:stynx` e `pnpm ci:reference-apps` verdes e delivery-review
 Opus 5.5 PASS. Registrar desvios e símbolos reais na conformidade.
 
 ## Retomada
@@ -154,5 +189,7 @@ PostgreSQL em `127.0.0.1:55432`: trace 393/393, testes 97/97,
 integração 51/51, build 48/48 e doctor verde. Log:
 `/private/tmp/stynx-s15-ctg2-baseline-ci.log`.
 
-Prompt-review ciclo 1: REVIEW. Contrato e locks reparados antes do
-segundo ciclo; nenhum worker de implementação foi despachado.
+Prompt-review ciclos 1 e 2: REVIEW. No segundo, a dependência de
+`reference/api` em `test:int` raiz era falsa; o plano foi corrigido
+para o gate real. Nenhum worker de implementação foi despachado.
+Terceira submissão requer autorização excepcional do Owner.

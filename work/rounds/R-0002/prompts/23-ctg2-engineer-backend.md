@@ -19,7 +19,9 @@ connected comment; do not buffer frames. Provide injectable metrics
 sink plus queryable counters. Keep the source generic so policy filters
 reach SQL. No ambient timer context, no default outbox replay source,
 no shim or DETRAN code. E2E remains in reference/api; this worker
-edits backend source only, then runs the existing E2E sensor. Make
-focused unit/E2E sensors green, including real PostgreSQL/RLS. Report
+edits backend source only, then runs the E2E sensor with
+`pnpm --filter @stynx-nyx/reference-api test:int`; root `test:int` and
+`ci:stynx` do not include reference/api. Make focused unit/E2E sensors
+green, including real PostgreSQL/RLS. Report
 API symbols, diffs and gates; do not execute Git, commit, push,
 publish or open PR.
