@@ -65,7 +65,7 @@ export class StynxEventStreamService implements OnModuleDestroy {
   }
 
   onModuleDestroy(): void {
-    for (const close of this.connectionClosers) close();
+    for (const shutdown of this.connectionClosers) shutdown();
   }
 
   async open<TRow extends EventStreamRow, TScope extends StynxSseScope, TPayload>(
@@ -153,16 +153,26 @@ export class StynxEventStreamService implements OnModuleDestroy {
       closed = true;
       for (const schedule of schedules) schedule.cancel();
       release();
-      this.connectionClosers.delete(close);
+      this.connectionClosers.delete(shutdown);
       this.active -= 1;
       this.closed += 1;
       metric((sink) => sink.closed(scope));
+    };
+    const shutdown = () => {
+      close();
+      try { response.end(); } catch { this.logger.warn('SSE response shutdown failed'); }
     };
 
     const write = (chunk: string) => {
       if (closed) return;
       response.write(chunk);
       response.flush?.();
+    };
+    const drop = (id: string) => {
+      // An unsafe identifier must never be reflected into an SSE comment.
+      if (safeLine(id)) write(`: dropped ${id}\n\n`);
+      this.drops += 1;
+      metric((sink) => sink.dropped(scope, id));
     };
 
     const tick = async () => {
@@ -174,17 +184,28 @@ export class StynxEventStreamService implements OnModuleDestroy {
           const rows = await source.listSince(cursor, scope, batchSize);
           for (const row of rows) {
             if (closed) break;
-            if (!safeLine(row.id) || !safeLine(row.event)) throw new Error('Invalid SSE source frame field');
-            if (await options.filter?.(row, scope) === false) {
+            let filtered: boolean;
+            let payload: string | undefined;
+            try {
+              if (!safeLine(row.id) || !safeLine(row.event)) throw new Error('Invalid SSE source frame field');
+              filtered = await options.filter?.(row, scope) === false;
+              if (!filtered) {
+                payload = JSON.stringify(await options.project(row, scope));
+                if (payload === undefined) throw new Error('SSE projection is not JSON serializable');
+              }
+            } catch {
+              drop(row.id);
               cursor = { createdAt: row.createdAt, id: row.id };
               continue;
             }
-            const payload = JSON.stringify(await options.project(row, scope));
+            if (closed) break;
+            if (filtered) {
+              cursor = { createdAt: row.createdAt, id: row.id };
+              continue;
+            }
             if (payload === undefined) throw new Error('SSE projection is not JSON serializable');
             if (maxPayloadBytes !== undefined && Buffer.byteLength(payload, 'utf8') > maxPayloadBytes) {
-              write(`: dropped ${row.id}\n\n`);
-              this.drops += 1;
-              metric((sink) => sink.dropped(scope, row.id));
+              drop(row.id);
             } else {
               write(`id: ${row.id}\nevent: ${row.event}\ndata: ${payload}\n\n`);
               this.frames += 1;
@@ -203,7 +224,7 @@ export class StynxEventStreamService implements OnModuleDestroy {
     try {
       this.active += 1;
       this.opened += 1;
-      this.connectionClosers.add(close);
+      this.connectionClosers.add(shutdown);
       request.on('close', () => { if (disconnected) close(); });
       response.on('close', close);
       response.statusCode = 200;
