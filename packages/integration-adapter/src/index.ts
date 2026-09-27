@@ -15,6 +15,7 @@ import type {
 } from './types';
 
 export * from './types';
+export * from './webhook-signature';
 
 const DEFAULT_RETRY_POLICY: RetryPolicy = {
   maxAttempts: 1,

@@ -33,6 +33,7 @@
     "@stynx-nyx/core": "workspace:*",
     "@stynx-nyx/data": "workspace:*",
     "@stynx-nyx/idempotency": "workspace:*",
+    "@stynx-nyx/integration-adapter": "workspace:*",
     "@stynx-nyx/ratelimit": "workspace:*"
   },
   "peerDependencies": {

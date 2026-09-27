@@ -10,6 +10,8 @@ export * from './event-stream/types';
 export * from './event-stream/tokens';
 export * from './event-stream/event-stream.module';
 export * from './event-stream/event-stream.service';
+export * from './webhook-signature/webhook-signature.guard';
+export * from './webhook-signature/webhook-signature.module';
 
 export * from './auth/constants';
 export * from './auth/default-principal-mapper';

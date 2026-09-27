@@ -1115,6 +1115,9 @@ importers:
       '@stynx-nyx/idempotency':
         specifier: workspace:*
         version: link:../idempotency
+      '@stynx-nyx/integration-adapter':
+        specifier: workspace:*
+        version: link:../integration-adapter
       '@stynx-nyx/ratelimit':
         specifier: workspace:*
         version: link:../ratelimit
