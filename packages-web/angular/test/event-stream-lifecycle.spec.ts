@@ -55,9 +55,9 @@ describe('StynxEventStreamService lifecycle with the published test double', () 
     expect(events).toEqual([{ id: '1', event: 'audit', data: { ok: true } }]);
     expect(stream.lastEventId()).toBe('1');
     transport.respond(204);
-    expect(stream.lastEventId()).toBeNull();
+    expect(stream.lastEventId()).toBe(null);
     clock.advanceBy(1_000);
-    expect(transport.lastRequest().lastEventId).toBeNull();
+    expect(transport.lastRequest().lastEventId).toBe(null);
   });
 
   it('uses exponential capped and fixed retries, then polling, and recovers on the first complete frame', () => {
