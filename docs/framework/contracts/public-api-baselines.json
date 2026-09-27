@@ -17,7 +17,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-testing.d.ts": "40adbfacff8501e98c4432e2c2acb35de59e8bd04b9a18facef58aefdacde47f",
-        "types/stynx-nyx-angular.d.ts": "3f5045e6844418992220b1ef7a4b53b22006fdb974796b633d2f138a9cdc49ed"
+        "types/stynx-nyx-angular.d.ts": "68670ba8095c8cf254785bb6129c733d0284d4405a5ba802a28b49912e31946b"
       }
     },
     "@stynx-nyx/angular-audit": {
