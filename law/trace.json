@@ -22,7 +22,8 @@
       "STYNX 1.5.0 CTG-0001 Architect rebind pins served interceptor order, JWKS source/rotation, typed JOSE, revoked session, and provenance sensors from delivery review 3.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins recently refreshed JWKS classification, failed refresh propagation, and public HTTP outage sensors from delivery review 4.",
       "STYNX 1.5.0 CTG-0001 Architect rebind preserves the fake-JWT guard sensor after remote Semgrep fixture repair.",
-      "STYNX 1.5.0 Architect rebind pins both admitted local RC public signers and the replacement signer used by export and publication."
+      "STYNX 1.5.0 Architect rebind pins both admitted local RC public signers and the replacement signer used by export and publication.",
+      "STYNX 1.5.0 CTG-0002 Architect rebind pins SSE edge, HTTP, source-export and backend behavior sensors after coverage repair."
     ]
   },
   "invariants": [
@@ -1123,8 +1124,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 29,
-      "assertion_digest_sha256": "2fcf9ebe7d7999a757f81f80b6b65ee5bb3a0e0f9018997b251964c1773b24f5"
+      "assertion_count": 33,
+      "assertion_digest_sha256": "22d7eac4d94054c3efbad68bbeca5e8b677994e502d99466494eb24c349a3c6e"
+    },
+    {
+      "path": "packages-web/angular/test/event-stream-edges.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 48,
+      "assertion_digest_sha256": "af9d7166b5620cda7474ce2c57a6fd2fc80adca0cc785cefd2cd372dbfd2d647"
     },
     {
       "path": "packages-web/angular/test/event-stream-lifecycle.spec.ts",
@@ -1147,8 +1156,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 92,
-      "assertion_digest_sha256": "214a4fa79d4cbe020f8596a0459a44084a887b6694738645f1902f87861aa1b3"
+      "assertion_count": 93,
+      "assertion_digest_sha256": "3b94187ce072ba710ad949f87107b74d13d1fa82c529b2d465be7cc334825fd2"
     },
     {
       "path": "packages-web/sdk/test/runtime.spec.ts",
@@ -1521,12 +1530,20 @@
       "assertion_digest_sha256": "3a24612e4ca209657d5290cf55f075a56b6189645e5a26500dbd30a1f633b901"
     },
     {
+      "path": "packages/backend/test/unit/event-stream-export.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 5,
+      "assertion_digest_sha256": "eb300c136008698dfcc1511954fbca19d7e1d144a86275cc844c81e9616b8efd"
+    },
+    {
       "path": "packages/backend/test/unit/event-stream.service.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 53,
-      "assertion_digest_sha256": "c503134cb068b8b940060badb8faa14a3d2e6f34c61ddafa28b2ea5f3ca9ec90"
+      "assertion_count": 88,
+      "assertion_digest_sha256": "aa58f16cf3082156e3df906d5a5bc3b8182b99feda32812fac59da3be7048cc7"
     },
     {
       "path": "packages/backend/test/unit/idempotency-export.spec.ts",
