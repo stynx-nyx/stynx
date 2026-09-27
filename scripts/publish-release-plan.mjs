@@ -6,6 +6,14 @@ import { basename, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
 import { registryVersionPolicyConstants } from './lib/registry-version-policy.mjs';
+import { readPendingChangesets, readPreState } from './lib/fixed-group-version.mjs';
+import {
+  assertNoPendingPreChangesets,
+  buildNpmPublishArgs,
+  selectPublicationDistTag,
+  validatePreflightDistTags,
+  verifyPostPublishDistTags,
+} from './lib/publication-dist-tag.mjs';
 
 const repoRoot = process.cwd();
 // The unified candidate version is bound once, in the registry version policy,
@@ -19,9 +27,18 @@ const candidateSha = git(['rev-parse', 'HEAD']);
 const candidateTree = git(['rev-parse', 'HEAD^{tree}']);
 const workflowRun = process.env.GITHUB_RUN_ID ?? null;
 const packages = discoverPublishablePackages(repoRoot);
+const preState = readPreState(repoRoot);
+const distTag = selectPublicationDistTag({ version, preState });
+assertNoPendingPreChangesets({
+  preState,
+  changesetIds: readPendingChangesets(repoRoot).map(({ file }) => file.slice('.changeset/'.length, -'.md'.length)),
+});
 
 if (packages.length !== 44)
   fail('PUBLICATION_ROSTER_DRIFT', `expected 44 packages, found ${packages.length}`);
+if (packages[0]?.name !== '@stynx-nyx/angular') {
+  fail('PUBLICATION_ROSTER_DRIFT', 'the first package must be the angular canary');
+}
 if (!/^[0-9a-f]{40}$/u.test(candidateSha) || !/^[0-9a-f]{40}$/u.test(candidateTree)) {
   fail(
     'PUBLICATION_CANDIDATE_INVALID',
@@ -33,11 +50,31 @@ if (git(['status', '--porcelain']) !== '')
 mkdirSync(tarballRoot, { recursive: true });
 mkdirSync(receiptRoot, { recursive: true });
 
-const planEntries = [];
+// Observe the complete registry state for every package before the first publish.
+const preflightDistTags = new Map();
 for (const entry of packages) {
   if (entry.manifest.version !== version) {
     fail('PUBLICATION_VERSION_DRIFT', `${entry.name}: expected exact ${version}`);
   }
+  const observed = registryMetadata(entry.name);
+  if (observed.kind === 'unknown') {
+    fail('PUBLICATION_PREFLIGHT_UNKNOWN', `${entry.name}: registry state is unknown`);
+  }
+  if (observed.kind === 'published') {
+    fail('PUBLICATION_CANDIDATE_COLLISION', `${entry.name}@${version} already exists`);
+  }
+  const tags = registryDistTags(entry.name);
+  if (tags.kind !== 'known') {
+    fail('PUBLICATION_DIST_TAG_UNKNOWN', `${entry.name}: registry dist-tags are unreadable`);
+  }
+  preflightDistTags.set(entry.name, validatePreflightDistTags({
+    preflightLatest: registryVersionPolicyConstants.preflightLatestVersion,
+    distTags: tags.value,
+  }));
+}
+
+const planEntries = [];
+for (const entry of packages) {
   const packed = runJson('corepack', [
     'pnpm',
     '--dir',
@@ -58,6 +95,8 @@ for (const entry of packages) {
     tarball: basename(tarball),
     integrity: `sha512-${createHash('sha512').update(bytes).digest('base64')}`,
     shasum: createHash('sha1').update(bytes).digest('hex'),
+    dist_tag: distTag,
+    preflight_dist_tags: preflightDistTags.get(entry.name),
   });
 }
 
@@ -68,6 +107,7 @@ const plan = {
   candidate_tree: candidateTree,
   package_count: planEntries.length,
   version,
+  dist_tag: distTag,
   registry,
   'stop-on-first-failure': true,
   partial_publication_recovery: 'new-exact-owner-authorization-required',
@@ -76,37 +116,30 @@ const plan = {
 writeJson(resolve(artifactRoot, 'publication-plan.json'), plan);
 
 for (const entry of planEntries) {
-  const observed = registryMetadata(entry.package);
-  if (observed.kind === 'unknown') {
-    fail('PUBLICATION_PREFLIGHT_UNKNOWN', `${entry.package}: registry state is unknown`);
-  }
-  if (observed.kind === 'published') {
-    fail('PUBLICATION_CANDIDATE_COLLISION', `${entry.package}@${version} already exists`);
-  }
-}
-
-for (const entry of planEntries) {
   const attemptedAt = new Date().toISOString();
   const tarball = resolve(tarballRoot, entry.tarball);
-  // --tag latest is explicit because the registry refuses to move latest
-  // implicitly while the adjudicated angular-profile 2.0.0 sits above the
-  // canonical line; the anomaly closure condition requires latest to resolve
-  // to the unified version.
   const result = spawnSync(
     'npm',
-    ['publish', tarball, '--registry', registry, '--access', 'restricted', '--tag', 'latest'],
+    buildNpmPublishArgs({ tarball, registry, tag: distTag, version }),
     { cwd: repoRoot, env: publishEnvironment(), encoding: 'utf8', stdio: 'inherit' },
   );
-  const observed = registryMetadata(entry.package);
+  const visibility = observePublishedCandidate(entry);
+  const observed = visibility.metadata;
   const receipt = {
     schemaVersion: '1.0.0',
     kind: 'publication-receipt',
     package: entry.package,
     version,
+    dist_tag: distTag,
+    preflight_dist_tags: entry.preflight_dist_tags,
+    visibility_observations: visibility.observations,
+    reread_count: visibility.observations.length - 1,
     outcome:
-      result.status === 0 && observed.kind === 'published'
+      result.status === 0 && visibility.error === null && observed.kind === 'published' &&
+      observed.integrity === entry.integrity && observed.shasum === entry.shasum
         ? 'verified-published'
-        : observed.kind === 'published'
+        : result.status !== 0 && visibility.error === null && observed.kind === 'published' &&
+          observed.integrity === entry.integrity && observed.shasum === entry.shasum
           ? 'ambiguous-command-verified-published'
           : 'failed-or-unknown',
     expected_integrity: entry.integrity,
@@ -121,10 +154,12 @@ for (const entry of planEntries) {
   writeJson(resolve(receiptRoot, `${String(entry.order).padStart(2, '0')}.json`), receipt);
   const verified =
     result.status === 0 &&
+    visibility.error === null &&
     observed.kind === 'published' &&
     observed.integrity === entry.integrity &&
     observed.shasum === entry.shasum;
   if (!verified) {
+    if (visibility.error) fail(visibility.error.code, `${entry.package}: ${visibility.error.message}`);
     fail(
       'PUBLICATION_STOP_FIRST',
       `${entry.package}: stopped on first failure or ambiguous outcome; partial recovery requires a new Owner authorization`,
@@ -138,6 +173,62 @@ for (const entry of planEntries) {
 }
 
 process.stdout.write(`Published and verified ordered ${planEntries.length}-package plan.\n`);
+
+function observePublishedCandidate(entry) {
+  const observations = [];
+  for (let reread = 0; reread <= 5; reread += 1) {
+    if (reread > 0) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2_000);
+    const metadata = registryMetadata(entry.package);
+    const tags = registryDistTags(entry.package);
+    observations.push({
+      reread,
+      metadata_kind: metadata.kind,
+      dist_tags: tags.kind === 'known' ? tags.value : null,
+    });
+    if (metadata.kind === 'unknown' || tags.kind !== 'known') {
+      return { metadata, observations, error: { code: 'PUBLICATION_DIST_TAG_UNKNOWN', message: 'registry metadata is unreadable after publish' } };
+    }
+    let tagError = null;
+    try {
+      verifyPostPublishDistTags({
+        candidate: version,
+        preflightLatest: registryVersionPolicyConstants.preflightLatestVersion,
+        preflightDistTags: entry.preflight_dist_tags,
+        distTags: tags.value,
+      });
+    } catch (error) {
+      if (error?.code === 'PUBLICATION_DIST_TAG_DRIFT') {
+        return { metadata, observations, error };
+      }
+      if (error?.code !== 'PUBLICATION_DIST_TAG_UNKNOWN') throw error;
+      tagError = error;
+    }
+    if (metadata.kind === 'published' && tagError === null) {
+      return { metadata, observations, error: null };
+    }
+    if (reread === 5) {
+      return {
+        metadata,
+        observations,
+        error: tagError ?? { code: 'PUBLICATION_DIST_TAG_UNKNOWN', message: 'candidate version did not become visible' },
+      };
+    }
+  }
+}
+
+function registryDistTags(packageName) {
+  const result = spawnSync(
+    'npm',
+    ['view', packageName, 'dist-tags', '--json', '--registry', registry],
+    { cwd: repoRoot, env: publishEnvironment(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+  );
+  if (result.status !== 0) return { kind: 'unknown' };
+  try {
+    return { kind: 'known', value: JSON.parse(result.stdout) };
+  } catch {
+    return { kind: 'unknown' };
+  }
+}
 
 function registryMetadata(packageName) {
   const result = spawnSync(
