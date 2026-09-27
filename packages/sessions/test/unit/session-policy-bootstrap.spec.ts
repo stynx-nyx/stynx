@@ -34,7 +34,7 @@ describe('UPS-SES-01/02 module boot validation', () => {
         .compile();
       const app = moduleRef.createNestApplication();
       try { await app.init(); } finally { await app.close(); }
-    }).rejects.toThrow('Single-session policy requires an atomic SessionStore.createWithPolicy');
+    }).rejects.toThrow(/tenant switching and session policy.*SessionStore\.createWithPolicy/);
   });
 
   it('rejects a legacy custom store at module boot with default single-session mode off', async () => {
@@ -52,7 +52,7 @@ describe('UPS-SES-01/02 module boot validation', () => {
         .compile();
       const app = moduleRef.createNestApplication();
       try { await app.init(); } finally { await app.close(); }
-    }).rejects.toThrow('Single-session policy requires an atomic SessionStore.createWithPolicy');
+    }).rejects.toThrow(/tenant switching and session policy.*SessionStore\.createWithPolicy/);
   });
 
   it.each([[[]], [['  ']]])('rejects empty accepted factor values %s', async (acceptedValues) => {

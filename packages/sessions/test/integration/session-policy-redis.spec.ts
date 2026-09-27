@@ -135,6 +135,9 @@ describe('UPS-SES-01 Redis atomic single-session policy', () => {
       });
 
       expect(switched.revokedSessionId).toBe(prior.sid);
+      if (mode === 'revoke-existing') {
+        expect(switched.bundle.revokedSessionIds).not.toContain(expiredTarget.sid);
+      }
       expect(switched.bundle.sid).not.toBe(expiredTarget.sid);
       await expect(a.session.get(switched.bundle.sid)).resolves.toMatchObject({ status: 'active' });
     },

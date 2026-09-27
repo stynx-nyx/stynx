@@ -74,6 +74,19 @@ class AuthorizationMatrixController {
   localPublic() { return { route: 'local-public' }; }
 }
 
+@Controller('/authorization-legacy-local')
+class LegacyLocalAuthorizationController {
+  @Get('/present')
+  @UseGuards(AuthorizationGuard)
+  @RequirePermissions(['records:read'])
+  present() { return { route: 'present' }; }
+
+  @Get('/absent')
+  @UseGuards(AuthorizationGuard)
+  @RequirePermissions(['records:write'])
+  absent() { return { route: 'absent' }; }
+}
+
 function authorizationOptions(evaluate: (context: Record<string, unknown>) => boolean, overrides: Record<string, unknown> = {}) {
   return {
     global: true,
@@ -378,6 +391,29 @@ describe('authorization consumer injection and local guard options', () => {
     try {
       await request(app.getHttpServer()).get('/authorization-matrix/local-public')
         .set('authorization', 'Bearer verified').expect(200).expect({ route: 'local-public' });
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+describe('authorization local guard without module registration', () => {
+  it('boots and applies the default evaluator to present and absent permissions', async () => {
+    @Module({ controllers: [LegacyLocalAuthorizationController] })
+    class LegacyLocalAuthorizationModule {}
+    const testing = await Test.createTestingModule({
+      imports: [StynxCoreModule.forRoot({ appName: 'authorization-legacy-local', schema: z.object({}) }), LegacyLocalAuthorizationModule],
+    }).compile();
+    const app = testing.createNestApplication();
+    app.use((req: { principal?: typeof actor }, _res: unknown, next: () => void) => {
+      req.principal = actor;
+      next();
+    });
+
+    try {
+      await app.init();
+      await request(app.getHttpServer()).get('/authorization-legacy-local/present').expect(200).expect({ route: 'present' });
+      await request(app.getHttpServer()).get('/authorization-legacy-local/absent').expect(403);
     } finally {
       await app.close();
     }
