@@ -187,7 +187,10 @@ export function resolveSessionsOptions(
     singleSession: { mode: options.singleSession?.mode ?? 'off' },
     ...(options.strongFactor ? { strongFactor: {
       claimName: options.strongFactor.claimName ?? 'amr',
-      acceptedValues: options.strongFactor.acceptedValues,
+      acceptedValues: options.strongFactor.acceptedValues
+        .filter((value): value is string => typeof value === 'string')
+        .map((value) => value.trim().toLowerCase())
+        .filter(Boolean),
     } } : {}),
     issuer: options.issuer,
     ...(options.audience !== undefined ? { audience: options.audience } : {}),
