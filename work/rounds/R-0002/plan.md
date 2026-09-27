@@ -221,8 +221,13 @@ A rota deve emitir status vazio apenas para uma candidata pre mode `rc`
 com marcador explícito de commit de versionamento na primeira linha de
 história, 44 manifestos publicados alterados a uma versão prerelease
 única, versões iniciais iguais às do `origin/main`, changesets consumidos
-listados e presentes, e nenhum changeset pendente. Uma alteração
-ordinária sem changeset continua falhando pelo Changesets. O Inspector
+listados e presentes, e nenhum changeset pendente. O marcador deve
+nomear o mesmo core semântico da candidata; alterações em `packages/`,
+`packages-web/` ou `.changeset/` após o commit de versionamento
+invalidam a exceção. Para RC posterior, o baseline pode ser outra RC
+do mesmo core, com ordinal estritamente crescente e `pre.json`
+contínuo. Uma alteração ordinária sem changeset continua falhando pelo
+Changesets. O Inspector
 fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
