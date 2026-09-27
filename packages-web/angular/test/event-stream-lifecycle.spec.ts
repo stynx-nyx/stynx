@@ -202,10 +202,16 @@ describe('StynxEventStreamService lifecycle with the published test double', () 
 
     clock.advanceBy(40_000);
     expect(transport.lastRequest().lastEventId).toBe('9');
+    transport.emitProgress('id: 10\nevent: audit\ndata: {}\n\n');
+    expect(stream.lastEventId()).toBe('10');
+    const beforeByteCeiling = transport.connections.length;
     transport.emitProgress('id: ten\nevent: audit\ndata: {"oversized":true}\n\n');
-    expect(transport.lastRequest().lastEventId).toBe('9');
+    expect(transport.connections).toHaveLength(beforeByteCeiling + 1);
+    expect(transport.lastRequest().lastEventId).toBe('10');
+    expect(stream.status()).toBe('live');
     clock.advanceBy(5_000);
-    expect(transport.lastRequest().lastEventId).toBe('9');
+    expect(transport.connections).toHaveLength(beforeByteCeiling + 2);
+    expect(transport.lastRequest().lastEventId).toBe('10');
 
     transport.close();
     expect(stream.status()).toBe('reconnecting');
