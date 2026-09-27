@@ -15,7 +15,12 @@ and their existing sensors. Add focused tests for:
 1. Exact candidate `1.5.0-rc.1` on the 44-package roster and exact
    anomaly exception only for angular-profile@2.0.0; 1.4.0 history,
    rc.0, an already published rc.1, stable 1.5.0 and any other 2.0.0
-   must retain their correct monotonicity outcomes. Policy digest
+   must retain their correct monotonicity outcomes: history with 1.4.0
+   or rc.0 passes; rc.1 already present gives
+   `REGISTRY_CANDIDATE_EXISTS`; stable 1.5.0 or 1.5.1 history gives
+   `REGISTRY_CANONICAL_LINE_NOT_MONOTONIC`; a different 2.0.0 gives
+   `REGISTRY_UNADJUDICATED_VERSION`; candidate argument 1.4.0 or
+   1.5.0 is unsupported against the rc.1 policy. Policy digest
    mismatch, missing policy and widened exception fail closed.
    Update the existing literal candidate assertion to rc.1 rather than
    removing it; retain stable-release negatives.
@@ -35,14 +40,23 @@ and their existing sensors. Add focused tests for:
 preflightLatest,distTags})` verifies registry `rc` resolves to the
    candidate and `latest` remains at its preflight value; unknown tags
    fail `PUBLICATION_DIST_TAG_UNKNOWN`, mutation fails
-   `PUBLICATION_DIST_TAG_DRIFT`. Verify the publisher calls these pure
+   `PUBLICATION_DIST_TAG_DRIFT`. Full preflight metadata may contain
+   historical keys; every key except `rc` must be byte-identical after
+   publish. Malformed/unreadable metadata alone means UNKNOWN. A missing
+   rc/version may be reread at most five times two seconds apart with
+   every result recorded; changed pre-existing tags fail immediately.
+   Verify the publisher calls these pure
    helpers without importing/executing it.
 4. Existing exact-main workflow guard and `--candidate-from-policy`
    remain unchanged. `assertNoPendingPreChangesets({preState,
 changesetIds})` rejects an unconsumed `.md` at the candidate SHA;
    the 44 manifests, pre mode and exact tag are required before
-   changesets/action can take its publish branch. No sensor may invoke
-   real `npm publish`.
+   changesets/action can take its publish branch. This check applies
+   only in `--registry-monotonicity` and publisher preflight; default
+   `release:policy` must still pass with a pending changeset in pre mode.
+   Preflight requires `latest` exactly 1.4.0 in all 44 packages.
+   No `v1.5.0-rc.1` Git tag is created; the forbidden-range base remains
+   stable `v1.4.0`. No sensor may invoke real `npm publish`.
 
 After test changes, the maestro Architect rebinds `law/trace.json` using
 `pnpm check:trace --print` in a separate commit.

@@ -217,6 +217,12 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 - Prompt-review publicação RC1 ciclo 1: `reference-gap` — plano sem
   módulo puro testável para dist-tag/argumentos/pós-check e com pre-state
   de final ambíguo; contrato e prompts reparados para segundo ciclo.
+- Prompt-review publicação RC1 ciclo 2: `policy-issue` — a exigência de
+  nenhum changeset pendente no `release:policy` padrão bloquearia PRs
+  normais durante pre mode; restringida à verificação de publicação.
+  Dois ciclos REVIEW consumidos; solicitar autorização excepcional do
+  Owner antes de terceiro prompt-review. Nenhum worker da rota foi
+  despachado.
 - Sensores RC1 após primeiro despacho Inspector: `sensor-error` — os
   casos de plano/pre-state ficaram red como esperado, mas faltou prova
   da pós-condição de `changeset version` (IDs consumidos, tag e ordinal
@@ -445,14 +451,23 @@ permite somente `latest` com `pre.json` ausente; sua presença em
 qualquer modo com candidato estável falha fechada. No SHA candidato RC,
 todos os 44 manifestos são 1.5.0-rc.1, `pre.json` está commitado em
 `mode: pre`, `tag: rc`, e nenhum ID `.md` fica pendente fora de
-`pre.json.changesets`; `release:policy` e o preflight de publicação
-recusam drift, evitando que changesets/action escolha criar PR em vez
-de publicar. O plano e
+`pre.json.changesets`; somente `verify-release-policy.mjs
+--registry-monotonicity` e o preflight de publicação recusam
+pendências. O `release:policy` padrão aceita changesets novos para
+futuros CTGs/RCs. Assim, a candidata exata evita que changesets/action
+escolha criar PR em vez de publicar. O plano e
 os recibos incluem a dist-tag e o SHA/tree exatos; a verificação após
 publicação exige que o pacote RC esteja em `rc` e que `latest` não tenha
-sido movido. O preflight lê `dist-tags` completos (`latest` e `rc`
-existente) de cada pacote e falha se qualquer tag for desconhecida ou
-ambígua. O primeiro pacote é o canário do comportamento GitHub Packages;
+sido movido. O preflight lê e registra o objeto completo de `dist-tags`
+de cada pacote, permite chaves históricas válidas, mas exige `latest`
+exatamente 1.4.0 nos 44 antes da primeira mutação; metadados ilegíveis
+ou malformados são `PUBLICATION_DIST_TAG_UNKNOWN`. Após publicar, cada
+chave anterior exceto `rc` permanece byte a byte igual e `rc` aponta à
+candidata. Se a versão/`rc` ainda não estiver visível, a rota pode reler
+até cinco vezes, com intervalo fixo de dois segundos, registrando
+tentativas e resultados no recibo; alteração de `latest` ou outra tag
+anterior é `PUBLICATION_DIST_TAG_DRIFT` imediata. O primeiro pacote é o
+canário do comportamento GitHub Packages;
 se a registry mover `latest`, a publicação para imediatamente. Restaurar
 `latest` seria nova mutação e exigiria recibo Owner próprio. Pré-flight
 de registry desconhecido ou resultado ambíguo
@@ -477,4 +492,6 @@ ajusta scripts de política e publicação. Architect rebinda
 do despacho, delivery-review e CI
 antes do PR. Publicação só após merge, recibo Owner por ação/SHA e
 disparo explícito com `publish:true`; o pedido citará dist-tag `rc`,
-SHA/tree e que o primeiro pacote é canário.
+SHA/tree e que o primeiro pacote é canário. A RC não cria tag Git
+`v1.5.0-rc.1`; o `since_ref` de forbidden-actions permanece na última
+tag estável `v1.4.0`.

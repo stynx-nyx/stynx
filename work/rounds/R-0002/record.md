@@ -229,5 +229,16 @@ a rota atual que fixa `--tag latest` e `candidate 1.4.0`.
 O terceiro prompt-review excepcional retornou **PASS** em
 `reviews/rc1-version-prompt-review-3.json`; quatro observações não
 bloqueantes foram incorporadas ao contrato dos workers antes do despacho.
+O Inspector registrou testes RC1 em `61bc7a4f` (cinco falhas esperadas,
+duas provas de reescrita verdes); Architect rebindou o trace em
+`8c444f40`. Engineer corrigiu o versionador em `fb49616b` (36/36
+testes, preview 1.4.0 → 1.5.0-rc.1). `pnpm version-packages` gerou os
+44 pacotes em 1.5.0-rc.1 e foi commitado em `1e9bf5c4`; Inspector
+rebindou exatamente três pins do manifesto raiz em `f4bbcb2d`.
+`pnpm release:preview` ficou no-op, `pnpm release:policy` e trace
+393/393 passaram. CI integral e delivery-review seguem em execução.
+Prompt-review da rota de publicação retornou REVIEW nos ciclos 1 e 2;
+o contrato foi reparado, mas o limite de ciclos exige nova autorização
+do Owner antes de uma terceira submissão. Nenhuma publicação ocorreu.
 
 Nenhum pacote foi publicado e nenhum recibo de publicação foi recebido.
