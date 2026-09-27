@@ -67,6 +67,11 @@ class AuthorizationMatrixController {
   @RequirePermissions(['records:write'])
   localDenied() { return { route: 'local-denied' }; }
 
+  @Get('/local-present')
+  @UseGuards(AuthorizationGuard)
+  @RequirePermissions(['records:read'])
+  localPresent() { return { route: 'local-present' }; }
+
   @Get('/local-public')
   @UseGuards(AuthorizationGuard)
   @SetMetadata(PUBLIC_KEY, true)
@@ -348,8 +353,8 @@ class EvaluatorConsumer {
 }
 
 describe('authorization consumer injection and local guard options', () => {
-  async function createLocalOptionsApp(): Promise<INestApplication> {
-    const localEvaluator = { evaluate: vi.fn(() => false) };
+  async function createLocalOptionsApp(evaluate = vi.fn(() => false)): Promise<INestApplication> {
+    const localEvaluator = { evaluate };
     const localAuthz = authorizationOptions(localEvaluator.evaluate);
     @Module({ imports: [AuthContextAppGuardModule, StynxAuthorizationModule.forRoot({ ...localAuthz, global: false } as never)], controllers: [AuthorizationMatrixController] })
     class LocalAuthorizationModule {}
@@ -383,6 +388,26 @@ describe('authorization consumer injection and local guard options', () => {
         });
     } finally {
       await app.close();
+    }
+  });
+
+  it('uses the configured local evaluator when it disagrees with the default on a present permission', async () => {
+    const defaultApp = await createApp([AuthContextAppGuardModule]);
+    const customEvaluate = vi.fn(() => false);
+    const customApp = await createLocalOptionsApp(customEvaluate);
+    try {
+      await request(defaultApp.getHttpServer()).get('/authorization-matrix/local-present')
+        .set('authorization', 'Bearer verified').expect(200).expect({ route: 'local-present' });
+      await request(customApp.getHttpServer()).get('/authorization-matrix/local-present')
+        .set('authorization', 'Bearer verified').expect(403).expect({
+          statusCode: 403, errorCode: 'AUTHZ:DENIED:policy', message: 'Access denied by policy.',
+          target: { resource: 'class-resource', action: 'class-action' },
+        });
+      expect(customEvaluate).toHaveBeenCalledWith(expect.objectContaining({
+        requirements: { permissions: { permissions: ['records:read'], mode: 'all' } },
+      }));
+    } finally {
+      await Promise.all([defaultApp.close(), customApp.close()]);
     }
   });
 
