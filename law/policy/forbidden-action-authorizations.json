@@ -1129,6 +1129,12 @@
       "commit": "88a17ccf626417a789d07e6b33c11fac8202dfe6",
       "authorized_by": "Owner",
       "reason": "Owner decision of 2026-09-26 that verified-local-rc replace the heavy remote pull-request jobs, executed 2026-09-27 under the Owner explicit mandate to perform the required changes (ADR-DEVAI-ADOPTION-0006). Removes the unit-tests, integration-tests, stynx-tier-gate, and build jobs from ci.yml, re-parents doctor onto typecheck, and deletes reference-apps-not-applicable.yml, whose only purpose was to satisfy the no-longer-required reference-web-e2e check. The signed local RC closure executes all removed work; audit.yml keeps the weekly remote matrix."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "207b73d004f86f397f607fa993745ca427e9c0c4",
+      "authorized_by": "Owner",
+      "reason": "Rebase-merged form of 88a17ccf626417a789d07e6b33c11fac8202dfe6 (PR #280, ADR-DEVAI-ADOPTION-0006): removes the remote product tiers from ci.yml and retires reference-apps-not-applicable.yml. GitHub rewrote the SHA while preserving content and author; this binds the same 2026-09-27 Owner mandate to the commit on main."
     }
   ]
 }
