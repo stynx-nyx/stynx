@@ -214,6 +214,17 @@ não contiver adenda confirmatória da R-0021 com nível decidido pelo Owner.
 Na leitura de 2026-09-26, a §8 não continha adendas. Conferir novamente antes
 de congelar o escopo.
 
-## Publicações
+## Preparação RC1 e publicações
 
-Nenhuma. Não houve recibo de publicação, versionamento ou tentativa de publicar.
+Após o merge CTG-0001, `pnpm changeset pre enter rc` foi executado. Um
+ensaio de `pnpm version-packages` expôs bug do versionador: o Changesets
+gerou `2.0.0-rc.0` e a regra local corrigiu para `1.5.0` estável. Os
+arquivos gerados foram restaurados; `pre.json` voltou ao estado de
+entrada com `changesets: []` e foi commitado em `c011d259`. O
+prompt-review Opus do reparo recebeu REVIEW em dois ciclos, ambos
+registrados em `reviews/rc1-version-prompt-review-{1,2}.json`. O
+contrato corrigido aguarda autorização para terceiro review excepcional;
+nenhum worker RC foi despachado. A publicação RC também requer corrigir
+a rota atual que fixa `--tag latest` e `candidate 1.4.0`.
+
+Nenhum pacote foi publicado e nenhum recibo de publicação foi recebido.

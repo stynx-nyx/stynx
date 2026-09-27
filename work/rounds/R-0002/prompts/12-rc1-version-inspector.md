@@ -23,18 +23,29 @@ sensors that prove:
    `pre.json.changesets`, it is a no-op despite consumed `.md` files.
 3. `pre exit` (`mode: exit`) from 1.5.0-rc.N projects stable 1.5.0
    from the fixed-group `initialVersions` advanced by the highest bump
-   across all `.md` changesets, including consumed ones.
+   across all `.md` changesets, including consumed ones. A new major
+   that changes the recomputed base fails closed pending Owner OD.
 4. A later declared major in pre mode fails closed pending an Owner OD.
-   Malformed `pre`, `exit`, or absent/stable state, tag mismatch, or
-   version base drift fails closed. Drift is a missing or divergent
-   fixed-group `initialVersions` member, prerelease tag mismatch, or
-   prerelease base mismatch; ignore non-group entries.
+   Malformed pre.json fails closed: unknown mode, missing or non-string
+   tag, missing or non-object initialVersions, non-array changesets,
+   and invalid JSON. An absent pre.json follows the existing stable rule.
+   Drift also fails closed: missing or divergent fixed-group
+   initialVersions member, prerelease tag/base mismatch, stable 1.4.0
+   with a consumed ID (the failed cycle-1 state), prerelease manifest
+   with no consumed IDs, or any consumed ID missing its `.md` file in
+   pre or exit mode. Ignore non-group initialVersions entries.
 5. Rewriting a generated over-promoted prerelease changes only the new
    changelog section and sibling dependency version lines; stable history
-   and unrelated package references remain intact. Match exact headings
+   and unrelated package references remain intact. Place a prior
+   `## 1.5.0-rc.1` section below the newly generated one and assert
+   the prior section stays byte-identical when the new one becomes rc.2.
+   Match exact headings
    so `rc.1` cannot match `rc.10`; check that a corrected minor RC
    section has no false `Major Changes` category, or explicitly codify
    existing stable-release category behavior.
+
+Extend the existing preview-writes-nothing fixture to hash
+`.changeset/pre.json` as well as manifests, changelogs and template.
 
 Preserve the existing stable-flow tests and all other assertions. Run the
 focused test with Node's test-name filter and script lint. The expected

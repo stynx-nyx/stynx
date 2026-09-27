@@ -224,6 +224,11 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
   `pre enter rc`; commitar esse estado inicial para reprodução. A rota de
   publicação existente fixa `--tag latest`; RC exige triade separada para
   selecionar `rc` e provar que `latest` é recusado antes do recibo Owner.
+- Prompt-review RC1 ciclo 2: `plant-bug` — faltava detectar divergência
+  entre IDs consumidos em `pre.json`, arquivos `.md` e versão dos
+  manifestos; contrato e sensores foram ampliados. O limite de dois
+  ciclos REVIEW foi atingido; terceiro review só com autorização
+  excepcional do Owner. Nenhum worker da tríade RC foi despachado.
 - DEVAI `audit observe` do merge: `policy-issue` — primeira chamada
   observou o SHA mesclado enquanto HEAD local ainda apontava ao PR;
   avançar a worktree ao merge commit exato e repetir uma vez; concluiu.
@@ -329,6 +334,13 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 5. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador do grupo
    fixo. `pnpm api:baselines:write` e `pnpm package-readmes:write` não
    produziram diff; o check DEVAI de ações proibidas passou sem findings.
+6. RC1: `pre enter rc` está commitado com `changesets: []` em `c011d259`.
+   O ensaio inicial de `version-packages` foi revertido sem publicação.
+   Prompt-review Opus retornou REVIEW nos ciclos 1 e 2. As correções do
+   ciclo 2 estão preparadas neste checkpoint; solicitar autorização
+   excepcional antes de um terceiro prompt-review. Só despachar Inspector
+   após PASS. A rota de publicação `--tag latest` permanece bloqueada
+   para RC até tríade separada e revisão de entrega.
 
 ## Reviews, PRs e publicações
 
@@ -360,6 +372,15 @@ de `initialVersions` ou diferente do 1.4.0 unificado; tag atual diversa
 de `pre.json.tag`; ou base prerelease diversa da base recalculada.
 Entradas malformadas falham fechadas. Entradas privadas e externas em
 `initialVersions` não compõem o grupo fixo.
+Em `pre`, manifesto estável igual ao `initialVersion` do grupo exige
+`pre.json.changesets` vazio; manifesto prerelease exige lista não vazia.
+Cada ID consumido deve ter seu `.changeset/<id>.md` presente tanto em
+`pre` quanto em `exit`. Em `exit`, a base recalculada deve igualar a base
+do manifesto prerelease; um major novo que a mude falha fechado até OD
+do Owner. `pre.json` inválido (modo desconhecido, tag ausente/não string,
+`initialVersions` ausente/não objeto, `changesets` não array ou JSON
+inválido) falha fechado; se o arquivo não existir, aplica-se sem
+alteração o fluxo estável.
 
 Uma versão prerelease só pode ser publicada com dist-tag `rc`, obtida de
 `pre.json.tag`; `latest` deve ser recusado para prerelease. O script atual
