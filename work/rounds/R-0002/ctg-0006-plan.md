@@ -46,3 +46,5 @@ For IFM, test the `@RequireIfMatch()` method decorator plus `@IfMatchRevision()`
 ## Retomada
 
 Architect cycle-2 REVIEW repair. The two ordinary review cycles are exhausted; prompt 74 is prepared for a separately Owner-authorized exceptional cycle 3 and has not been dispatched. Inspector dispatch remains blocked until that review returns PASS **and** the predecessor integration table contains approved SHAs, review receipts and passing gates. The predecessors are not yet integrated here. No Inspector, PR, merge, versioning, or publication may proceed on this checkpoint.
+
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
