@@ -192,4 +192,6 @@ integração 51/51, build 48/48 e doctor verde. Log:
 Prompt-review ciclos 1 e 2: REVIEW. No segundo, a dependência de
 `reference/api` em `test:int` raiz era falsa; o plano foi corrigido
 para o gate real. Nenhum worker de implementação foi despachado.
-Terceira submissão requer autorização excepcional do Owner.
+O Owner autorizou excepcionalmente o terceiro ciclo em 2026-09-26,
+após o checkpoint que identificou os dois REVIEW e o SHA corrigido
+`c89e24db`. Este consentimento cobre apenas revisão do plano/prompts.
