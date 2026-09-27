@@ -357,3 +357,14 @@ da rodada manda parar após FAIL escalado. PR #276 não foi atualizado nem
 mesclado; nenhum pacote foi publicado. A retomada deve vincular recibos
 Owner para os dois pares exatos, confirmar zero achados no SHA reparado
 e solicitar novo review antes do push.
+
+A retomada autorizada pelo Owner vinculou os dois recibos de evidência
+do commit `c4b926b76f6716b82f0e2d68f1a3210d78acb692` em
+`7eee34de599a137b7d896669f0007442a106feb0`. DEVAI strict desde
+`a46ecb88bf5796a8fa4d142c2daf8b52c25a549f` passou nesse SHA
+com zero findings e 16 recibos aplicados (log
+`/private/tmp/stynx-s15-rc1-resume-forbidden.log`). O terceiro
+delivery-review Opus do delta de main retornou **PASS** em
+`reviews/rc1-main-integration-delivery-review-3.json`; confirmou a
+correção e a validade do CI integral de `84743f85`. Os JSONs originais
+dos ciclos 2 e 3 são preservados integralmente como evidência.

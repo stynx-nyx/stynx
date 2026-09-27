@@ -425,6 +425,15 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     consumidora do entry Angular testing). Há seis melhorias não
     bloqueantes. Nenhum PR CTG-0002 foi aberto.
 
+13. Retomada autorizada em 2026-09-27: os dois recibos do
+    commit `c4b926b7` foram vinculados em `7eee34de`; DEVAI strict
+    passou (zero achados, 16 recibos aplicados). O terceiro
+    delivery-review Opus do delta retornou PASS. Preservar os
+    vereditos originais; o commit de evidência que os inclui poderá
+    produzir novos achados por texto citado e deverá ter recibo
+    exato antes do push. Então repetir DEVAI strict, enviar PR #276,
+    aguardar CI remoto e mesclar.
+
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
