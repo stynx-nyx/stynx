@@ -62,6 +62,10 @@ class AuthorizationMatrixController {
   @SetMetadata(TARGET_KEY, { resource: 'partial-resource' })
   partialTarget() { return { route: 'partial-target' }; }
 
+  @Get('/action-only-target')
+  @SetMetadata(TARGET_KEY, { action: 'read' })
+  actionOnlyTarget() { return { route: 'action-only-target' }; }
+
   @Get('/local-denied')
   @UseGuards(AuthorizationGuard)
   @RequirePermissions(['records:write'])
@@ -233,6 +237,10 @@ describe('authorization APP_GUARD HTTP contract', () => {
     const partialContext = evaluator.evaluate.mock.calls.at(-1)?.[0];
     expect(partialContext).toMatchObject({ resource: 'partial-resource', requirements: {} });
     expect(partialContext).not.toHaveProperty('action');
+    await request(targetApp.getHttpServer()).get('/authorization-matrix/action-only-target').set('authorization', 'Bearer verified').expect(200);
+    const actionOnlyContext = evaluator.evaluate.mock.calls.at(-1)?.[0];
+    expect(actionOnlyContext).toMatchObject({ action: 'read', requirements: {} });
+    expect(actionOnlyContext).not.toHaveProperty('resource');
     const calls = evaluator.evaluate.mock.calls.length;
     await request(targetApp.getHttpServer()).get('/authorization-matrix/empty-target').set('authorization', 'Bearer verified').expect(200);
     await request(targetApp.getHttpServer()).get('/authorization-matrix/undefined-target')
