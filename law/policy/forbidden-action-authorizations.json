@@ -985,6 +985,18 @@
       "commit": "ad8e9daf35ddf96ef15b638387832da93f14ac7c",
       "authorized_by": "Owner",
       "reason": "Records the Owner authorization for the squash-merge commit of PR #266, which restored the trace assertion-binding verifier and updated its canonical trace materialization. The merge commit touches law/trace.json but preserves the governed invariant population and all assertion checks; this receipt binds the already reviewed Architect-owned trace change to the SHA that landed on main."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "bd20578c095e80bd4c7eb3b6a98857c53e223df4",
+      "authorized_by": "Owner",
+      "reason": "Owner direction of 2026-09-26 to wire the DEVAI ledger gate (ADR-DEVAI-ADOPTION-0004/0005), landed as a linear rebuild of PR #271 and #274. Adds .github/workflows/devai-local-rc-verify.yml as the byte-exact workflow DEVAI generates: push-to-main and workflow_dispatch only, contents/packages read and checks write, verifier materialized from the DEVAI-designated @aarusso-nyx/devai@1.5.4 package with the protected provenance duplicate, no STYNX product command, and a verified-local-rc check-run. No existing workflow changes."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "bd20578c095e80bd4c7eb3b6a98857c53e223df4",
+      "authorized_by": "Owner",
+      "reason": "The DEVAI-generated devai-local-rc-verify.yml resets its own runner-temporary verifier directory with rm -rf \"$control\" (control=$RUNNER_TEMP/devai-verifier-package) before materializing the pinned verifier package. The target is an ephemeral runner path created by the same step, never repository content or uncommitted work; the workflow must stay byte-identical to the DEVAI generator."
     }
   ]
 }
