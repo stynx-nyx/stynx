@@ -1340,8 +1340,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 36,
-      "assertion_digest_sha256": "0679f8d722911351d4a3a190c8999181c2ee11498569f656b3db36175505e584"
+      "assertion_count": 38,
+      "assertion_digest_sha256": "15655fdadb25de340853fe5fe27ede47f31cf3759f59f23471fc53f45409633a"
     },
     {
       "path": "packages/auth/test/unit/decorators-runtime.spec.ts",
@@ -1412,8 +1412,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 24,
-      "assertion_digest_sha256": "7b6977c7d0bc29c8c62c500c2619fcddf506d5c31cfb3f331967957276538a1d"
+      "assertion_count": 25,
+      "assertion_digest_sha256": "3ed8b227765fe5895ad50a788ef2d81c4abcaceb0ca2c97d8fbd3b6b8756d3cb"
     },
     {
       "path": "packages/auth/test/unit/validators.spec.ts",
@@ -1422,6 +1422,14 @@
       "lifecycle": "supported",
       "assertion_count": 73,
       "assertion_digest_sha256": "9a4ce5a6ad496c92d7b292df2459d646487ce921ca9f6ef72a3ed7edf5e65574"
+    },
+    {
+      "path": "packages/auth/test/unit/stynx-jwt-validator-key-refresh.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "22db70ed7a25f4ce7917356d3c661a711eabc61c620d655fae63da65b688f151"
     },
     {
       "path": "packages/backend/test/unit/audit-export.spec.ts",
@@ -1446,6 +1454,14 @@
       "lifecycle": "supported",
       "assertion_count": 32,
       "assertion_digest_sha256": "d021f3360b6a0a2e25dcf33165f6d013f3f52b0178468d56c2b4807a212f4cd9"
+    },
+    {
+      "path": "packages/backend/test/unit/auth-context.guard-branches.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 26,
+      "assertion_digest_sha256": "e9ee82d056448999ca6502557e616bd061cf225cb19b006ae2b5207afce66019"
     },
     {
       "path": "packages/backend/test/unit/auth-export.spec.ts",
@@ -1692,8 +1708,16 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 14,
-      "assertion_digest_sha256": "e7e1c640473677599d5488291d6efe6c825238aff145177d64ad0f0e9f1c84ce"
+      "assertion_count": 20,
+      "assertion_digest_sha256": "9bfd2c134545535b418085df8da2f6f578381027339f30a766c39038a83d8afd"
+    },
+    {
+      "path": "packages/contracts/test/tenancy.spec.ts",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 15,
+      "assertion_digest_sha256": "27118cae6d2da1593c0ebefdf7aafe5a1b91cc10571ba42f6e4a8b2bb1f084a9"
     },
     {
       "path": "packages/contracts/test/headers.spec.ts",
@@ -1756,16 +1780,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 28,
-      "assertion_digest_sha256": "d778e4d0cb44ca3f2a952cec7646d749b5486f502f9b6774418547f48fad429b"
+      "assertion_count": 35,
+      "assertion_digest_sha256": "e232e7ae67cc2555fe1d41e0a5db87240b7bb48d14a261dd94ad551a0e642199"
     },
     {
       "path": "packages/core/test/unit/request-context.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 25,
-      "assertion_digest_sha256": "d2cf0721a117278abde9880ac06b7702a41ee6cd1b2b311cbab7b70d1a2f5de2"
+      "assertion_count": 30,
+      "assertion_digest_sha256": "63e6e30160419682611fa4a470d6f0f2f1cd92f8f0c439bb67e134826e113024"
     },
     {
       "path": "packages/core/test/unit/request-id.spec.ts",
@@ -3932,8 +3956,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 9,
-      "assertion_digest_sha256": "af29c34ea383965dd5b9c131f98293a176ac8b54f44c6272dc426e15796f157a"
+      "assertion_count": 19,
+      "assertion_digest_sha256": "7284085e8bc1ff1998e028f0369454e9f770b7375dddaa1e0090013320b8740d"
     },
     {
       "path": "packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts",
@@ -3974,6 +3998,22 @@
       "lifecycle": "supported",
       "assertion_count": 1,
       "assertion_digest_sha256": "5b9bff1561c3637fc4ef3de24d049aae0787a2492fc2c91ff7c570f3573ad336"
+    },
+    {
+      "path": "packages/tenancy/test/unit/public-tenant-configuration.check.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 4,
+      "assertion_digest_sha256": "b54a253df1c222a3e920501ef8ef85801eed38957014cabe6b98aa94fe96f29d"
+    },
+    {
+      "path": "packages/tenancy/test/unit/public-tenant-interceptor.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 28,
+      "assertion_digest_sha256": "93108b44d22fd6a9e218c99538c859c10de53c3dfc60a8c13c00b327b9deed0c"
     }
   ],
   "suites": {

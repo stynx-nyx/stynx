@@ -3,6 +3,7 @@ import {
   AuthenticationError,
   AuthorizationError,
   IdentityAdminError,
+  InvalidCredentialError,
 } from '../src/errors';
 
 describe('@stynx-nyx/contracts errors', () => {
@@ -28,6 +29,20 @@ describe('@stynx-nyx/contracts errors', () => {
       expect(e).toBeInstanceOf(StynxError);
       expect(e.code).toBe('AUTHENTICATION_ERROR');
       expect(e.name).toBe('AuthenticationError');
+    });
+  });
+
+  describe('InvalidCredentialError', () => {
+    it('is a plain Error with its own name and no StynxError code', () => {
+      const e = new InvalidCredentialError('credential rejected');
+      expect(e).toBeInstanceOf(Error);
+      expect(e).not.toBeInstanceOf(StynxError);
+      expect(e.name).toBe('InvalidCredentialError');
+      expect(e.message).toBe('credential rejected');
+      expect('code' in e).toBe(false);
+      expect(() => {
+        throw e;
+      }).toThrow('credential rejected');
     });
   });
 
