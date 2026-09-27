@@ -86,6 +86,13 @@ For convenience, `@stynx-nyx/backend` re-exports the full `@stynx-nyx/contracts`
 
 ### Default policy implementations
 
+`StynxAuthorizationModule.forRoot({ global: true })` installs the
+`AuthorizationGuard` as an `APP_GUARD`; it stays local by default. For global
+use, import the authentication APP_GUARD module before authorization so the
+principal and verified tenant are available when policy runs. See
+[`docs/authorization.md`](docs/authorization.md) for target resolution and
+denial options.
+
 | Export                              | Description                                                                      |
 | ----------------------------------- | -------------------------------------------------------------------------------- |
 | `DefaultPrincipalMapper`            | Maps a JWT claim set to the canonical `Principal` shape. Swappable.              |

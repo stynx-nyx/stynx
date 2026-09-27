@@ -2,41 +2,45 @@
 title: backend/authorization
 ---
 
-# `StynxAuthorizationModule` — role + permission predicate evaluator
+# `StynxAuthorizationModule`
 
-`StynxAuthorizationModule` is the authorization layer sibling to `backend/auth`. It evaluates `@RequirePermissions(...)` and `@Permission(...)` decorator metadata against the principal's resolved permission set (cached by `@stynx-nyx/auth`'s `PermissionCache`).
-
-## When to mount
-
-Whenever you use the declarative permission decorators. The module is mounted automatically when `StynxBackendAuthModule` is present; you can mount it explicitly if you want a custom policy evaluator.
-
-## Wiring
+`StynxAuthorizationModule` evaluates `@RequireRoles` and
+`@RequirePermissions` metadata using the request principal. It is local by
+default: mount `AuthorizationGuard` on the routes that need it. Set `global: true`
+to register the same guard as an `APP_GUARD`.
 
 ```ts
-import { StynxAuthorizationModule, DefaultPolicyEvaluator } from '@stynx-nyx/backend';
+import { StynxAuthorizationModule } from '@stynx-nyx/backend';
 
-StynxAuthorizationModule.forRoot({
-  evaluator: DefaultPolicyEvaluator,
-  // OR a custom evaluator:
-  // evaluator: MyPolicyEvaluator,
-});
+StynxAuthorizationModule.forRoot({ global: true });
 ```
 
-The default `DefaultPolicyEvaluator` is a string-membership check against `Principal.permissions`. Custom evaluators can implement RBAC + ABAC + tenant-conditional policies.
+For global authorization, register the authentication guard as an earlier
+`APP_GUARD` and import its module before the authorization module. A
+controller-level authentication guard runs too late to supply identity to a
+global authorization guard. The guard reads `request.tenantId` only when an
+earlier authentication guard has established the tenant from verified identity
+and entitlement; a raw tenant header is not authorization context.
 
-## Configuration
+## Options
 
-| Option       | Type                                  | Default                  | Description                                                                 |
-| ------------ | ------------------------------------- | ------------------------ | --------------------------------------------------------------------------- |
-| `evaluator`  | `Type<PolicyEvaluator>`               | `DefaultPolicyEvaluator` | The class implementing the evaluation strategy.                             |
-| `predicates` | `Record<string, PermissionPredicate>` | `{}`                     | Per-permission predicate overrides (e.g. `'orders:read': (p, ctx) => ...`). |
+| Option              | Behavior                                                                                                                                |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `policyEvaluator`   | Custom `PolicyEvaluator` instance; defaults to `DefaultPolicyEvaluator`. The `STYNX_AUTHZ_POLICY_EVALUATOR` token is always injectable. |
+| `global`            | Register `AuthorizationGuard` globally when `true`; defaults to local.                                                                  |
+| `resolveTarget`     | Resolve an optional resource/action target from the Nest execution context. A partial target is passed unchanged.                       |
+| `publicMetadataKey` | Method-first, then class metadata key that skips authorization when true.                                                               |
+| `onDeny`            | Return an `Error` to throw on a missing principal or denied policy. The default is `ForbiddenException`.                                |
 
-## Common pitfalls
+An undecorated route with no resolved target is skipped. Decorated routes use
+the class name and handler name as the fallback target. A resolved target,
+including one with only `resource` or `action`, is evaluated even without
+STYNX permission metadata. Custom evaluator and denial errors propagate to
+the application's exception filters unchanged.
 
-- **Mounting without `backend/auth`** — the policy evaluator runs against `Principal.permissions`, which is populated by `@stynx-nyx/auth`'s guard. Without that, every request has an undefined principal.
-- **Custom evaluator throwing instead of returning false** — throws bubble as 500 from the guard; return `false` for denial.
-
-## Related
-
-- [`@stynx-nyx/auth`](/docs/packages/auth/) — provides `@Permission` decorator + permission cache.
-- [`backend/auth`](/docs/packages/backend/auth/) — sibling submodule; mount first.
+The default evaluator compares roles case insensitively and exactly. It
+compares permissions case insensitively and accepts a granted `*` or a final
+segment wildcard such as `ops:*`. `ops:*` grants `ops:read` and
+`ops:case:read`, but not `ops` or `ops2:read`. A required wildcard remains
+literal. The separate `@stynx-nyx/auth` `PermissionGuard` retains exact
+matching.

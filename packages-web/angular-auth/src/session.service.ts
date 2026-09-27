@@ -21,6 +21,17 @@ const INACTIVE_STATE: StynxSessionState = {
   claims: null,
 };
 
+function permissionMatches(granted: string, required: string): boolean {
+  const grant = granted.toLowerCase();
+  const need = required.toLowerCase();
+  if (grant === need) return true;
+  if (need.includes('*')) return false;
+  if (grant === '*') return true;
+  if (!/^[^:*]+(?::[^:*]+)*:\*$/u.test(grant)) return false;
+  const prefix = grant.slice(0, -1);
+  return need.startsWith(prefix) && need.length > prefix.length;
+}
+
 @Injectable()
 export class StynxSessionService implements AuthProvider {
   private readonly tenantContext = inject(TenantContextService);
@@ -115,13 +126,13 @@ export class StynxSessionService implements AuthProvider {
   }
 
   hasAllPermissions(required: string[]): boolean {
-    const granted = new Set(this.stateSignal().permissions);
-    return required.every((permission) => granted.has(permission));
+    const granted = this.stateSignal().permissions;
+    return required.every((permission) => granted.some((grant) => permissionMatches(grant, permission)));
   }
 
   hasAnyPermissions(required: string[]): boolean {
-    const granted = new Set(this.stateSignal().permissions);
-    return required.some((permission) => granted.has(permission));
+    const granted = this.stateSignal().permissions;
+    return required.some((permission) => granted.some((grant) => permissionMatches(grant, permission)));
   }
 
   snapshot(): StynxSessionState {
