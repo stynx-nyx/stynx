@@ -41,3 +41,5 @@ Run focused jobs unit/integration and platform migration tests including root `t
 ## Retomada
 
 At `4ba8f66f`, cycle 2 returned REVIEW (receipt `reviews/ctg4-prompt-review-2.json`). The Architect repaired its two blocking and three nonblocking findings in the contract, plan, prompts 50–53, and migration note; `prompts/56-ctg4-prompt-review-3.md` is the exact exceptional cycle 3 review request. The two ordinary cycles are exhausted. An explicit Owner exception for cycle 3 is **pending**: do not run that review without it. No CTG-0004 Inspector or Engineer dispatch is permitted while the exception is pending or without a recorded Opus prompt-review PASS after the authorized review. Record the cycle 2 receipt in an Architect commit when Git work is authorized. A REVIEW is not a PASS.
+
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
