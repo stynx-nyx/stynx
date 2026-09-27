@@ -1135,6 +1135,12 @@
       "commit": "207b73d004f86f397f607fa993745ca427e9c0c4",
       "authorized_by": "Owner",
       "reason": "Rebase-merged form of 88a17ccf626417a789d07e6b33c11fac8202dfe6 (PR #280, ADR-DEVAI-ADOPTION-0006): removes the remote product tiers from ci.yml and retires reference-apps-not-applicable.yml. GitHub rewrote the SHA while preserving content and author; this binds the same 2026-09-27 Owner mandate to the commit on main."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "d88c92e6bbc7513c2253ee7d1579942743560750",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-27 for all actions needed to complete campaign C-0002, including exact DEVAI receipts. This CTG-0002 merge imported the already Owner-approved verified-local-RC workflow cutover governed by ADR-DEVAI-ADOPTION-0006; it did not independently edit the workflow."
     }
   ]
 }
