@@ -1,6 +1,6 @@
 # CTG-0005 — transactional audit and idempotency
 
-**Current role:** Architect. **State:** prompt-review cycle 1 REVIEW repaired; no Inspector/Engineer dispatched. **Topological predecessors:** CTG-0003 authz/session and CTG-0004 jobs. **Source:** DETRAN C-0002 §6.2 (read only), UPS-TXN-01…05, all MUST under OD-S15-01.
+**Current role:** Architect. **State:** prompt-review cycles 1 and 2 REVIEW; cycle-2 findings repaired, Owner exception needed before any third prompt review; no Inspector/Engineer dispatched. **Topological predecessors:** CTG-0003 authz/session and CTG-0004 jobs. **Source:** DETRAN C-0002 §6.2 (read only), UPS-TXN-01…05, all MUST under OD-S15-01.
 
 ## Boundary and locks
 
@@ -15,6 +15,8 @@ Inspector prompt 61 is **blocked** until both rows are complete and recorded her
 | 0003 authz/session | pending             | pending                          | pending         | blocked |
 | 0004 jobs          | pending             | pending                          | pending         | blocked |
 
+After both predecessors are integrated, the Architect must compare the frozen CTG-0003/0004 contracts and implemented behavior with this contract's assumptions: `RequestContext.actorId` as trusted default scope, the configured nominal or verified actor on a public route, and nested command transaction role/tenant/actor constraints. Record that reconciliation here with source SHAs before Inspector dispatch. If any assumption changes, amend the contract and obtain a new cross-family prompt-review PASS on the amended version. A predecessor row alone is insufficient.
+
 ## Baseline and design decisions
 
 - `Database.tx` uses CLS for a live client and savepoints, but its nested branch does not validate requested role or identity against the actual connection. `TxOptions` lacks `requireActor`. The application role already requires tenant and actor.
@@ -27,7 +29,7 @@ Inspector prompt 61 is **blocked** until both rows are complete and recorded her
 1. **Architect:** finalize this contract and prompts; after Inspector test paths exist, bind real sensors to applicable existing invariants in `law/trace.json` in an Architect commit. Creating a new invariant needs a separate Owner receipt under the forbidden-action policy. If schema changes are needed, specify them before Engineer migration work. Obtain cross-family prompt PASS before dispatch.
 2. **Inspector:** write failing sensors first in `packages/audit/test`, `packages/idempotency/test`, `packages/data/test`, `test/db`, and the Nest HTTP integration harness where PostgreSQL dependencies already exist (`packages/audit/test` or a root integration test). A backend test may require a `devDependency`; route its manifest/lockfile edit to the Engineer after the red sensor is saved. Prove real app-role audit, RLS, rollback, same connection, replay, canonical JSON, route/tenant isolation, 409, status and actor handling. Preserve legacy sensors. Hand back red result/inventory.
 3. **Engineer:** implement the approved surface in `packages/contracts`, `packages/audit`, `packages/backend`, `packages/idempotency`, `packages/data`, with migration 0020, canonical DDL and seeds as applicable. Own required `package.json` and lockfile edits, fixed-group changeset and consumer migration note. Do not edit tests or law.
-4. **Architect maestro:** perform trace and API baseline rebinds in **separate Architect-role commits**; law commits are authored `DEVAI Architect`. **Engineer maestro:** perform package README write/check and implementation commits. Then run focused/full gates, independent delivery review, PR/release. No Inspector/Engineer dispatch until cycle-2 prompt PASS and both predecessor rows above are complete.
+4. **Architect maestro:** perform trace and API baseline rebinds in **separate Architect-role commits**; law commits are authored `DEVAI Architect`. **Engineer maestro:** perform package README write/check and implementation commits. Then run focused/full gates, independent delivery review, PR/release. No Inspector/Engineer dispatch until a valid prompt-review PASS (including any Owner-authorized exception to the two-cycle limit), both predecessor rows above, and the reconciliation checkpoint are complete.
 
 ## Verification and release evidence
 
