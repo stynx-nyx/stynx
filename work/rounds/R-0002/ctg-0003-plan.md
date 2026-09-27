@@ -73,14 +73,22 @@ de tenant e prova de concorrência real no Redis.
 
 ## Retomada
 
-Contrato e prompts preparados na worktree isolada
-`/Users/aarusso/.codex/worktrees/ctg3-authz-session/stynx`.
-Ainda não houve despacho de implementação, testes nem PR. A base é
-empilhada sobre CTG-0002 e deve ser sincronizada após os merges
-anteriores. RC1 e RC2 continuam sujeitos a recibos Owner por versão,
-comando e SHA exato antes de qualquer publicação.
+Contrato e prompts aprovados por Opus no ciclo 2 na worktree isolada
+`/Users/aarusso/.codex/worktrees/ctg3-authz-session/stynx`. Inspectors
+fixaram 11 sensores no commit `972592b0`; o rebind inicial da trace
+foi `1ab1315b`. O Engineer de autorização entregou `dd7f1e15`, com
+backend focado 84/84, Angular 59/59 e contracts 15/15. O Engineer de
+sessão concluiu a implementação, ainda a commitar separadamente.
+Correções de sensores estão em `02089520` e `ee60a6ac`; a trace
+407/407 foi rebinda novamente. Falta executar gates integrais,
+delivery-review, PR e sincronizar a base após o merge CTG-0002.
+RC1 e RC2 continuam sujeitos a recibos Owner por versão, comando e
+SHA exato antes de qualquer publicação.
 
 ## Triagem
+
+- Engineer autorização após sensores: `sensor-error` — o teste negava `ops:caser` mesmo com concessão `ops:*`, e o resolver do fixture herdava o alvo de classe em rotas que pretendiam devolver alvo vazio/indefinido. Inspector corrigiu em `02089520`, junto à contagem obsoleta de providers; os testes focados passaram.
+- Engineer sessão após sensores: `sensor-error` — dois testes antigos esperavam revogação fora da transição atômica e outro usava store customizado sem essa operação. Inspector fixou `priorSessionId` e ausência de `revoke` separado, e usou o store in-memory atômico no teste positivo em `ee60a6ac`; auth 9/9 e sessions 27/27 passaram. Architect rebinda os seis digests alterados em `law/trace.json`.
 
 - Prompt-review CTG-0003 ciclo 1: `sensor-error` — a ponte DETRAN
   recusou a saída não JSON e removeu o bruto; a execução direta
