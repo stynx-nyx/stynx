@@ -73,6 +73,18 @@ de tenant e prova de concorrência real no Redis.
 
 ## Retomada
 
+Após o delivery-review ciclo 2, o Inspector fixou o E2E de guard local sem
+importar o módulo, a exclusão de SID expirado no Redis e a mensagem de boot
+em `fa659bde`; o Architect rebinda `law/trace.json` 407/407 em
+`f8f3ae5f`; o Engineer corrigiu o fallback de `ModuleRef.get` e a mensagem
+em `f7ca3bb4`. `pnpm ci:stynx` passou integralmente (exit 0) no log
+`/private/tmp/stynx-s15-ctg3-ci-delivery3.log`, assim como
+`pnpm ci:reference-apps` (exit 0) em
+`/private/tmp/stynx-s15-ctg3-consumer-delivery3.log`. DEVAI forbidden
+strict desde `20f10f53` não encontrou ações. O prompt 52 solicita o
+delivery-review ciclo 3; ainda faltam PASS, integração pós CTG-0002,
+PR e merge.
+
 Contrato e prompts aprovados por Opus no ciclo 2 na worktree isolada
 `/Users/aarusso/.codex/worktrees/ctg3-authz-session/stynx`. Inspectors
 fixaram 11 sensores no commit `972592b0`; o rebind inicial da trace
