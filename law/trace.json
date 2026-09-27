@@ -4238,7 +4238,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 28,
-      "assertion_digest_sha256": "2399500b8f257a638faaf588ba26af12959678b9785643358691df5b5c82386f"
+      "assertion_digest_sha256": "a627e8702442946016da302560545a7aec8ef9409977cd172b319594b0907380"
     },
     {
       "path": "packages/worklist/test/unit/strategies.spec.ts",
@@ -4590,7 +4590,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 43,
-      "assertion_digest_sha256": "d3e46f6955ee54698727d5e6e145f18534bedda1bcf81b6af8c7e8f1088eacc8"
+      "assertion_digest_sha256": "f72af95773b516a89007f116b65c0f341881b7ea0fc3037b95c19b74b9e44f66"
     },
     {
       "path": "packages/core/test/unit/clock.spec.ts",
