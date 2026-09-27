@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Inject, Injectable, Optional } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import type { PolicyEvaluator } from '@stynx-nyx/contracts';
+import { ModuleRef, Reflector } from '@nestjs/core';
+import { STYNX_VERIFIED_TENANT_ID, type PolicyEvaluator } from '@stynx-nyx/contracts';
 import { getPrincipalFromRequest, type RequestLike } from '../common/request-context';
 import { DefaultPolicyEvaluator } from './default-policy-evaluator';
 import { STYNX_AUTHZ_METADATA, STYNX_AUTHZ_OPTIONS, STYNX_AUTHZ_POLICY_EVALUATOR } from './constants';
@@ -10,15 +10,22 @@ import type { AuthorizationTarget, StynxAuthorizationModuleOptions } from './aut
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
   private readonly evaluator: PolicyEvaluator;
+  private readonly options: StynxAuthorizationModuleOptions;
 
   constructor(
     private readonly reflector: Reflector,
     @Optional() @Inject(STYNX_AUTHZ_POLICY_EVALUATOR)
     evaluator?: PolicyEvaluator,
     @Optional() @Inject(STYNX_AUTHZ_OPTIONS)
-    private readonly options: StynxAuthorizationModuleOptions = {},
+    options?: StynxAuthorizationModuleOptions,
+    @Optional() private readonly moduleRef?: ModuleRef,
   ) {
-    this.evaluator = evaluator ?? new DefaultPolicyEvaluator();
+    this.evaluator = evaluator
+      ?? this.moduleRef?.get<PolicyEvaluator>(STYNX_AUTHZ_POLICY_EVALUATOR, { strict: false })
+      ?? new DefaultPolicyEvaluator();
+    this.options = options
+      ?? this.moduleRef?.get<StynxAuthorizationModuleOptions>(STYNX_AUTHZ_OPTIONS, { strict: false })
+      ?? {};
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -52,6 +59,7 @@ export class AuthorizationGuard implements CanActivate {
         ?? new ForbiddenException('Missing request principal for authorization evaluation');
     }
 
+    const verifiedTenantId = Reflect.get(request, STYNX_VERIFIED_TENANT_ID) as unknown;
     const allowed = await this.evaluator.evaluate({
       principal,
       requirements: {
@@ -59,7 +67,9 @@ export class AuthorizationGuard implements CanActivate {
         ...(metadata?.permissions ? { permissions: metadata.permissions } : {}),
       },
       ...target,
-      ...(request.tenantId ? { tenantId: request.tenantId } : {}),
+      ...(typeof verifiedTenantId === 'string' && verifiedTenantId.length > 0
+        ? { tenantId: verifiedTenantId }
+        : {}),
     });
 
     if (!allowed) {

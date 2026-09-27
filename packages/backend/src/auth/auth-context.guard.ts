@@ -14,7 +14,7 @@ import type {
   TokenVerifier,
 } from '@stynx-nyx/contracts';
 import { headerToString } from '@stynx-nyx/contracts';
-import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, hasPublicTenantRoute, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, hasPublicTenantRoute, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
 import { ModulesContainer, Reflector, ModuleRef } from '@nestjs/core';
 import { STYNX_PUBLIC_TENANT_OPTIONS } from '@stynx-nyx/contracts';
 import { DefaultPrincipalMapper } from './default-principal-mapper';
@@ -48,6 +48,7 @@ export class AuthContextGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestLike>();
+    Reflect.deleteProperty(request, STYNX_VERIFIED_TENANT_ID);
     const targets = [context.getHandler?.(), context.getClass?.()].filter((target) => typeof target === 'function') as Array<(...args: unknown[]) => unknown>;
     const publicTenant = this.reflector?.getAllAndOverride<PublicTenantRouteOptions | boolean>(STYNX_PUBLIC_TENANT_ROUTE, targets)
       ?? targets.map((target) => Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, target)).find((value) => value !== undefined);
@@ -143,6 +144,7 @@ export class AuthContextGuard implements CanActivate {
 
     const tenantId = await this.resolveTenant(request, principal.tenants);
     if (tenantId) {
+      let verified = principal.tenants.includes(tenantId);
       if (this.tenantEntitlementPolicy) {
         const entitled = await this.tenantEntitlementPolicy.isEntitled({
           principal,
@@ -151,12 +153,14 @@ export class AuthContextGuard implements CanActivate {
         if (!entitled) {
           throw new ForbiddenException('Principal is not entitled for tenant context');
         }
+        verified = true;
       }
       request.tenantId = tenantId;
       request.principalContext = {
         ...request.principalContext,
         tenantId,
       };
+      if (verified) Reflect.set(request, STYNX_VERIFIED_TENANT_ID, tenantId);
     }
 
     return true;

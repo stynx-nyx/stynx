@@ -22,7 +22,7 @@ export class StynxAuthorizationModule {
     return {
       module: StynxAuthorizationModule,
       providers,
-      exports: [AuthorizationGuard, STYNX_AUTHZ_POLICY_EVALUATOR],
+      exports: [AuthorizationGuard, STYNX_AUTHZ_OPTIONS, STYNX_AUTHZ_POLICY_EVALUATOR],
     };
   }
 }
