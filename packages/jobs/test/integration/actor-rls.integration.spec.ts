@@ -153,9 +153,9 @@ describe('UPS-JOB-01/02 actorful execution under real PostgreSQL RLS', () => {
       await mutator.runWithRequestContext({
         requestId: randomUUID(), startedAt: new Date(), tenantId: tenant2, actorId: foreignActor,
       }, async () => {
-        await expect(service.getJob(tenant1JobId, tenant2)).resolves.toBeNull();
+        await expect(service.getJob(tenant1JobId, tenant2)).resolves.toEqual(null);
         await expect(service.cancel(tenant1JobId, tenant2)).resolves.toBe(false);
-        await expect(service.getSchedule(schedule.id, tenant2)).resolves.toBeNull();
+        await expect(service.getSchedule(schedule.id, tenant2)).resolves.toEqual(null);
       });
 
       const deniedService = new JobsService(repository, moduleRef.get(RequestContext), {
