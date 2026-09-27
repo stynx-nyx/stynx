@@ -139,6 +139,8 @@ do CTG-0002 já mesclado, post-integration review e PR.
 
 ## Triagem
 
+- CI pós-replay CTG-0003 em `8ecf3df4`: `reference-gap` — o checkout ainda tinha `node_modules/@aarusso-nyx/devai@1.5.0` da base antiga, enquanto `pnpm-lock.yaml` fixa 1.6.0; `pnpm install --frozen-lockfile` alinhou o ambiente e `pnpm --filter stynx-script-tests test` passou 125/125 mais validação de scripts. Nenhum código ou teste foi alterado.
+
 - Engineer autorização após sensores: `sensor-error` — o teste negava `ops:caser` mesmo com concessão `ops:*`, e o resolver do fixture herdava o alvo de classe em rotas que pretendiam devolver alvo vazio/indefinido. Inspector corrigiu em `02089520`, junto à contagem obsoleta de providers; os testes focados passaram.
 - Engineer sessão após sensores: `sensor-error` — dois testes antigos esperavam revogação fora da transição atômica e outro usava store customizado sem essa operação. Inspector fixou `priorSessionId` e ausência de `revoke` separado, e usou o store in-memory atômico no teste positivo em `ee60a6ac`; auth 9/9 e sessions 27/27 passaram. Architect rebinda os seis digests alterados em `law/trace.json`.
 - CI integral tentativa 1: `sensor-error` — 15 asserções novas de mera existência violavam WAVE-05A/CW-1. Inspector as tornou comparações exatas, reparou a matriz `it.each` do fator vazio, e as suítes focadas e `lint:tests` passaram; Architect rebinda quatro projeções de trace.
