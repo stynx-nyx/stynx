@@ -23,7 +23,8 @@
       "STYNX 1.5.0 CTG-0001 Architect rebind pins recently refreshed JWKS classification, failed refresh propagation, and public HTTP outage sensors from delivery review 4.",
       "STYNX 1.5.0 CTG-0001 Architect rebind preserves the fake-JWT guard sensor after remote Semgrep fixture repair.",
       "STYNX 1.5.0 Architect rebind pins both admitted local RC public signers and the replacement signer used by export and publication.",
-      "STYNX 1.5.0 CTG-0002 Architect rebind pins SSE edge, HTTP, source-export and backend behavior sensors after coverage repair."
+      "STYNX 1.5.0 CTG-0002 Architect rebind pins SSE edge, HTTP, source-export and backend behavior sensors after coverage repair.",
+      "STYNX 1.5.0 CTG-0002 Architect rebind pins filtered cursor progress and byte-ceiling lifecycle sensors."
     ]
   },
   "invariants": [
@@ -1132,16 +1133,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 48,
-      "assertion_digest_sha256": "af9d7166b5620cda7474ce2c57a6fd2fc80adca0cc785cefd2cd372dbfd2d647"
+      "assertion_count": 52,
+      "assertion_digest_sha256": "14b82fd9b3c7a0595bffeb284548c2aec13edce527ce77200c1164216d135b15"
     },
     {
       "path": "packages-web/angular/test/event-stream-lifecycle.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 51,
-      "assertion_digest_sha256": "4e0f3cc2c557f69e3c9416c5c092c2d5cf7f6ca8076011faa3179c713d3162bc"
+      "assertion_count": 69,
+      "assertion_digest_sha256": "25334a4a1cf0078069ea8cfee1788fd7a9e36a393d236ecad85e5db17c1cfaa2"
     },
     {
       "path": "packages-web/angular/test/provider-depth.spec.ts",
