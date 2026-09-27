@@ -37,6 +37,24 @@ describe('UPS-SES-01/02 module boot validation', () => {
     }).rejects.toThrow('Single-session policy requires an atomic SessionStore.createWithPolicy');
   });
 
+  it('rejects a legacy custom store at module boot with default single-session mode off', async () => {
+    const store = new InMemorySessionStore();
+    const legacyStore = Object.fromEntries(
+      Object.getOwnPropertyNames(Object.getPrototypeOf(store))
+        .filter((name) => name !== 'constructor' && name !== 'createWithPolicy')
+        .map((name) => [name, (...args: unknown[]) => (store as unknown as Record<string, (...args: unknown[]) => unknown>)[name](...args)]),
+    );
+    await expect(async () => {
+      const moduleRef = await Test.createTestingModule({
+        imports: [StynxSessionsModule.forRoot(base)],
+      }).overrideProvider(RedisSessionStore).useValue(legacyStore)
+        .overrideProvider(STYNX_SESSION_STORE).useValue(legacyStore)
+        .compile();
+      const app = moduleRef.createNestApplication();
+      try { await app.init(); } finally { await app.close(); }
+    }).rejects.toThrow('Single-session policy requires an atomic SessionStore.createWithPolicy');
+  });
+
   it.each([[[]], [['  ']]])('rejects empty accepted factor values %s', async (acceptedValues) => {
     await expect(async () => {
       const moduleRef = await Test.createTestingModule({

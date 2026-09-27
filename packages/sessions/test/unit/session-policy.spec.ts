@@ -126,6 +126,20 @@ describe('UPS-SES-02 verified strong factor', () => {
     expect(entries).toEqual([]);
   });
 
+  it('does not accept blank configured values or empty tokens from a whitespace-padded claim', async () => {
+    const { service, store, entries } = harness({ strongFactor: { acceptedValues: ['', 'mfa'] } });
+    await expect(service.create('u', 't', 'c', {}, { verifiedFactorClaims: { amr: ' pwd ' } } as never))
+      .rejects.toBeInstanceOf(StrongFactorRequiredError);
+    expect(store.sessionCount()).toBe(0);
+    expect(entries).toEqual([]);
+  });
+
+  it('accepts a whitespace-padded valid factor claim', async () => {
+    const { service } = harness({ strongFactor: { acceptedValues: ['mfa'] } });
+    const created = await service.create('u', 't', 'c', {}, { verifiedFactorClaims: { amr: ' MFA ' } } as never);
+    await expect(service.get(created.sid)).resolves.toMatchObject({ strongFactorVerifiedAt: expect.any(String) });
+  });
+
   it('carries the original verified timestamp across two switches', async () => {
     const { service } = harness({ strongFactor: { acceptedValues: ['mfa'] } });
     const first = await service.create('u', 't1', 'c', {}, { verifiedFactorClaims: { amr: 'mfa' } } as never);
