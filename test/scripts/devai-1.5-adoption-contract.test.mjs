@@ -29,7 +29,7 @@ function taskClosure(descriptor, roots) {
   return closure;
 }
 
-test('DEVAI 1.5.0 identity, Constitution 1.0.1, and profile 1.4.0 stay exact', () => {
+test('DEVAI 1.6.0 identity, Constitution 1.0.1, and profile 1.4.0 stay exact', () => {
   const expectedConstitutionDigest =
     'ff8c4f099a284b1b42f980742b20c849379ba4e3f357905f36a87648ae3fdeae';
   const identity = readJson('law/policy/devai-package-identity.json');
@@ -48,24 +48,24 @@ test('DEVAI 1.5.0 identity, Constitution 1.0.1, and profile 1.4.0 stay exact', (
     description: identity.description,
     registry: 'https://npm.pkg.github.com',
     package: '@aarusso-nyx/devai',
-    version: '1.5.0',
+    version: '1.6.0',
     tarball:
-      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.5.0/f87a6e78976f6844a6bf4f281d7e4e72df49f31b',
+      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.6.0/d67263cb9d84b116fa4637acc8dc22c74f3d3a2a',
     integrity:
-      'sha512-xJoiua6Q4omdQt6adrcTpc8K2YXyGRkNnbvF6ePFghHfLsXnaGuUS/lxsNqTp1d+N+13M9rg6DQhbIUAnDhUYA==',
-    shasum: 'f87a6e78976f6844a6bf4f281d7e4e72df49f31b',
-    sha256: 'c431c4de9a4e37f11cff8a11894e3fe3f9242383c57f84fad1bdb99c373be25b',
-    source_commit: '8912735a670d20263f842f3f6f0bf575cc71081b',
-    source_tree: '9764d36707368bbe3f7a8e0417af5d40901c6220',
-    signed_tag_object: '037e426917daed66c2bff8604c3d56906ea00fef',
+      'sha512-WarRgd01xFBxf296+iGGcZMXfg90UmHyCKRQJUyX0RSSVICJZDcI1mJBIp/EytnoNMLUfiJQl2mWC0f4qz9q9g==',
+    shasum: 'd67263cb9d84b116fa4637acc8dc22c74f3d3a2a',
+    sha256: 'e42831712152e630cf54fcf6dbd204039ae7e1d7fb3ec57e5fe5ff08ea1755d1',
+    source_commit: '349894356a89e16d92bcb57581e97ca5fc89a2eb',
+    source_tree: '436a88f657d2329b9980eb4aa2c265c9d2261e76',
+    signed_tag_object: 'd71cf93113ba26b362f673e76debda5b861f06e3',
   });
-  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '1.5.0');
-  assert.equal(installedManifest.version, '1.5.0');
+  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '1.6.0');
+  assert.equal(installedManifest.version, '1.6.0');
   assert.deepEqual(project.constitution, {
     version: '1.0.1',
     sha256: expectedConstitutionDigest,
   });
-  assert.equal(project.devai_version, '1.5.0');
+  assert.equal(project.devai_version, '1.6.0');
   assert.equal(
     createHash('sha256').update(pinnedConstitution).digest('hex'),
     expectedConstitutionDigest,
@@ -155,4 +155,72 @@ test('manual mutation command, 38 Stryker targets, and threshold floor remain in
 test('remote workflows and their transitive npm scripts never execute mutation', () => {
   const result = verifyNoRemoteMutationWorkflows(repoRoot);
   assert.equal(result.workflowCount > 0, true);
+});
+
+test('trusted local RC ledger gate pins the DEVAI-designated verifier and admitted controls', () => {
+  const verifierPolicy = readJson(
+    'node_modules/@aarusso-nyx/devai/dist/law/policy/trusted-local-rc-verifier-package.json',
+  );
+  const workflow = readFileSync(
+    join(repoRoot, '.github/workflows/devai-local-rc-verify.yml'),
+    'utf8',
+  );
+  const trust = readJson('law/policy/devai-local-rc-trust-store.json');
+  const toolchain = readJson('law/policy/devai-local-rc-toolchain.json');
+  const environment = readJson('law/policy/devai-local-rc-environment.json');
+  const manifest = readJson('package.json');
+  const project = readJson('.devai/config/project.json');
+
+  assert.equal(verifierPolicy.package.version, '1.5.4');
+  assert.equal(
+    verifierPolicy.verifier.provenance_sha256,
+    '1035c8aad52f4b2beb6a6f010106a4d1866c92dadf3fbae1c6e36e1a4d2ceddf',
+  );
+  for (const pinned of [
+    verifierPolicy.package.tarball,
+    verifierPolicy.package.shasum_sha1,
+    verifierPolicy.package.integrity_sri,
+    verifierPolicy.package.release_source.commit,
+    verifierPolicy.package.release_source.tree,
+    verifierPolicy.verifier.provenance_sha256,
+    verifierPolicy.verifier.source_commit,
+    'vars.DEVAI_LEDGER_VERIFIER_PROVENANCE_SHA256',
+    'binding=exact-tree',
+    '--arg name verified-local-rc',
+  ]) {
+    assert.equal(workflow.includes(pinned), true, `workflow must pin ${pinned}`);
+  }
+  assert.doesNotMatch(workflow, /pull_request|pnpm |npm run|test:mutation/u);
+
+  assert.deepEqual(
+    trust.trustedSigners.map((signer) => signer.signerId),
+    ['stynx-inspector-workstation-02'],
+  );
+  assert.deepEqual(trust.revokedSignerIds, []);
+  assert.match(trust.trustedSigners[0].publicKeyPem, /^-----BEGIN PUBLIC KEY-----\n/u);
+  assert.doesNotMatch(JSON.stringify(trust), /PRIVATE/u);
+
+  assert.deepEqual(Object.keys(toolchain).sort(), [
+    'node',
+    'pnpm',
+    'postgres',
+    'typescript',
+    'vitest',
+  ]);
+  assert.equal(environment.NODE_AUTH_TOKEN, null, 'no registry credential digest is admitted');
+  for (const value of Object.values(environment)) {
+    assert.equal(value === null || /^sha256:[0-9a-f]{64}$/u.test(value), true);
+  }
+
+  assert.equal(manifest.scripts['devai:rc:prepare'], 'node scripts/devai-local-rc.mjs prepare');
+  assert.equal(manifest.scripts['devai:rc:publish'], 'node scripts/devai-local-rc.mjs publish');
+  assert.deepEqual(project.ci_economy.attested_rc, {
+    profile: 'rc',
+    transport: 'protected-tag-v1',
+    tag_prefix: 'devai-local-evidence/',
+    binding: 'exact-tree',
+    required_check: 'verified-local-rc',
+    failure_mode: 'fail-closed',
+    local_only_nodes: ['test:mutation'],
+  });
 });
