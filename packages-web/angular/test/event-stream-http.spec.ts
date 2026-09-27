@@ -154,6 +154,7 @@ describe('StynxEventStreamService HTTP transport', () => {
     logout.stream.start();
     const request = await expectRequest(logout.http, '/api/stream');
     logout.sessionActive.set(false);
+    TestBed.flushEffects();
     expect(logout.stream.status()).toBe('stopped');
     expect(request.cancelled).toBe(true);
   });

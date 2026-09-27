@@ -128,6 +128,7 @@ describe('StynxEventStreamService lifecycle with the published test double', () 
     transport.close();
     expect(stream.status()).toBe('reconnecting');
     sessionActive.set(false);
+    TestBed.flushEffects();
     expect(stream.status()).toBe('stopped');
     expect(transport.cancelled()).toBe(true);
   });
