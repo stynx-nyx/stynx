@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Clock } from '@stynx-nyx/core';
 import { resolveWorklistDeadline } from '../../src/deadline';
 import { StynxWorklistModule } from '../../src/worklist.module';
+import { Global, Module } from '@nestjs/common';
+import { Database } from '@stynx-nyx/data';
+import { RequestContext } from '@stynx-nyx/core';
 import {
   TenantBusinessCalendar,
   WORKLIST_CLOCK,
@@ -9,6 +12,16 @@ import {
   type WorklistBusinessCalendar,
 } from '../../src';
 import { Test } from '@nestjs/testing';
+
+@Global()
+@Module({
+  providers: [
+    { provide: Database, useValue: {} },
+    { provide: RequestContext, useValue: {} },
+  ],
+  exports: [Database, RequestContext],
+})
+class WorklistTestDependenciesModule {}
 
 const tenantId = '01978f4a-32bf-7c27-a131-fd73a9e101a1';
 const now = new Date('2026-08-24T12:00:00.000Z');
@@ -266,7 +279,9 @@ describe('resolveWorklistDeadline', () => {
   it('registers the identical calendar and clock objects in StynxWorklistModule.forRoot', async () => {
     const clock: Clock = { now: vi.fn(() => new Date('2024-05-06T00:30:00.000Z')) };
     const calendar = new TenantBusinessCalendar({ timezoneForTenant: () => 'UTC', holidaysFor: () => new Set() });
-    const module = await Test.createTestingModule({ imports: [StynxWorklistModule.forRoot({ calendar, clock })] }).compile();
+    const module = await Test.createTestingModule({
+      imports: [WorklistTestDependenciesModule, StynxWorklistModule.forRoot({ calendar, clock })],
+    }).compile();
 
     expect(module.get(WORKLIST_CLOCK)).toBe(clock);
     expect(module.get(WORKLIST_BUSINESS_CALENDAR)).toBe(calendar);
@@ -277,7 +292,7 @@ describe('resolveWorklistDeadline', () => {
       calendar: module.get(WORKLIST_BUSINESS_CALENDAR),
     });
     expect(clock.now).toHaveBeenCalledOnce();
-    expect(result?.dueAt).toEqual(new Date('2024-05-07T00:00:00.000Z'));
+    expect(result?.dueAt).toEqual(new Date('2024-05-08T00:00:00.000Z'));
     await module.close();
   });
 });

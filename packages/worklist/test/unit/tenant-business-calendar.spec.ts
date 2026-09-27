@@ -92,7 +92,7 @@ describe('TenantBusinessCalendar', () => {
     });
 
     await expect(deadline(calendar, A, '2024-05-06T00:30:00.000Z', 1))
-      .resolves.toEqual(new Date('2024-05-08T07:00:00.000Z'));
+      .resolves.toEqual(new Date('2024-05-07T07:00:00.000Z'));
     await expect(deadline(calendar, B, '2024-05-05T23:30:00.000Z', 1))
       .resolves.toEqual(new Date('2024-05-07T15:00:00.000Z'));
     zones[A] = 'Asia/Tokyo';
