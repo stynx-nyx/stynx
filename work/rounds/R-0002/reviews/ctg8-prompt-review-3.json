@@ -1,0 +1,36 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0008-plan.md",
+      "issue": "The integration topology can report a cached PASS that no database run observed. `turbo.json` defines `test:int` with default caching (`dependsOn: [\"build\",\"^build\"]` and declared outputs). The task hash for `@stynx-nyx/cli#test:int` covers only files under `packages/cli`, its `^build` graph (only `@stynx-nyx/privacy`), the global dependencies, and hashed env. It does not cover `test/packages/cli-generator/run-integration.mjs`, the full-CRUD blueprint, or the `@stynx-nyx/auth`/`data`/`core` sources that the runner packs. `DATABASE_URL` and the `STYNX_TEST_PG_*` variables are pass-through, so they are not hashed either. Once one DB-backed run succeeds, a later `pnpm test:int` or `pnpm --filter @stynx-nyx/cli test:int` hits the cache and replays PASS. That happens after Inspector changes to the runner, after edits to auth/data/core, and with no PostgreSQL available. The focused filter also does not build auth/data/core before packing them. This contradicts the rule that a skipped or unavailable database is unobserved, never PASS.",
+      "required_change": "Make the packed-consumer lane non-cacheable and complete. For example, extend Engineer 8C's lock to one package-level `packages/cli/turbo.json` (`extends: [\"//\"]`, `tasks.test:int.cache: false`), or require every gate invocation to use `--force` and record a cache-miss marker. Also require the runner itself to build every packed package before `pnpm pack`, as `scripts/verify-consumer-fixtures.mjs` does with `pnpm build`, or to verify fresh `dist` for each one. The delivery review (prompt 93) must reject a turbo `cache hit, replaying logs` result for `@stynx-nyx/cli#test:int` as evidence."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "The reserved-schema derivation scans only `packages/*/migrations/**/*.sql`. The derived set (archive, audit, auth, core, data, flow, jobs, notifications, offline, outbox, storage, tenancy, worklist) matches the pinned list exactly. However, `database/migrations/000_migrate-check-preseed.sql` dynamically runs `CREATE SCHEMA IF NOT EXISTS %I` for a literal array that includes `demo` and `sample`, and grants default privileges there. `reference/api/migrations` also creates `sample` and `profile`. If the Inspector's fresh test database is preseeded, a blueprint namespace `sample` or `demo` passes validation, and `CREATE SCHEMA IF NOT EXISTS ... AUTHORIZATION stynx_owner` silently reuses a pre-existing schema that already carries other privileges. The 'dynamic name fails derivation' sensor never sees this file because it is out of scope.",
+      "required_change": "State the derivation scope explicitly. Either include `database/migrations/**` (parsing the literal ARRAY, or reserving `demo`/`sample` explicitly) and document why `reference/**` migrations are excluded, or state that the fixture database is never preseeded and add a negative for `sample`/`demo`. Add a generated-DDL guard, or an Inspector probe, that fails when the target schema already exists before the DDL is applied."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/91-ctg8-inspector.md",
+      "issue": "The `INV-RBAC-001` structural route check is required for the generated controller, but the existing structural tooling (`scripts/list-routes.mjs` `collectRoutes`) scans only `packages`, `reference/api/src` and `domain/demo-bookmark/api/src` under a repo root. It also ignores `fixtures`/`test` path parts, and `scripts/**` is locked. The prompt does not say how to apply the check to output in an external temporary consumer.",
+      "required_change": "Name the mechanism: either import the exported `collectRoutes({ repoRoot })` against a staged layout whose generated controller sits under a scanned root, or run a test-local structural assertion that every generated handler has a non-empty exact `@Permission`, no `@Public`/`STYNX_PUBLIC_ROUTE`, and no allow-list entry. Either way, `scripts/**` stays unchanged."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/91-ctg8-inspector.md",
+      "issue": "The prompt requires `pnpm install --offline` in the consumer. The pattern it cites, `scripts/verify-consumer-fixtures.mjs`, installs online with tarball `pnpm.overrides`, and the repo `.npmrc` routes `@stynx-nyx` to the GitHub registry. An offline install fails whenever any transitive third-party version resolved for the consumer is missing from the local store. It also needs overrides for every transitive `@stynx-nyx` tarball.",
+      "required_change": "Require `pnpm.overrides` to map every packed `@stynx-nyx/*` package (including transitive ones such as privacy) to its tarball, and require a registry-free store populated by the frozen workspace install. Classify an offline resolution failure as an environment/unobserved result, not a sensor or plant failure."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0008-plan.md",
+      "issue": "The plan contradicts itself. Sequence step 1 and the Resume state still say the cycle-3 Owner exception is pending and prompt 96 must not be dispatched, while the appended 2026-09-27 Owner decision says the exception is authorized and supersedes those checkpoints.",
+      "required_change": "In an Architect F1 edit, update step 1 and the Resume state to cite the recorded Owner decision. Keep the remaining gates unchanged: Opus PASS, the Architect INV-CLI-001 checkpoint, and the CTG-0007 merged SHA/review/gate receipt."
+    }
+  ],
+  "summary": "All cycle-2 findings are repaired in substance. The slug algorithm yields `src/example.*` and `database/ops_example.sql`. Permission keys use the validated entity table (`ops.example_record.list/get`), and duplicate keys across resources are rejected. `offline` is excluded, and the pinned set exactly equals the schemas that `packages/*/migrations` create, with an equality sensor. The STYNX-only full-CRUD blueprint covers all six types, nullable/default variants, five-route deny/allow, DTO rejections, context-tenant create, and zero-row tenant-B update/delete. Direct SQL negatives use `stynx_app`, `set_config`, catalog predicates, and missing tenant/actor probes. The runner stays outside the stub-aliased `**/*.spec.ts` unit population and is wired through `packages/cli` `test:int` into the root `test:int`/`ci:stynx` without touching frozen manifests. The triplet, CTG-0007 hard predecessor, no-DETRAN-copy rule, path safety and rename residual, deterministic `--check`, baseline/README ownership, and role separation hold, and no constitutional conflict was found. One blocker remains: turbo caching of `@stynx-nyx/cli#test:int`, whose hash excludes the out-of-package runner, the packed dependency sources, and the DB env, can replay a stale PASS with no database run. That contradicts the rule that an unobserved database result is never PASS."
+}
