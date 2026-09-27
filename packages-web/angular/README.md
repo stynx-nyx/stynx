@@ -51,6 +51,46 @@ import { StynxAngularModule } from '@stynx-nyx/angular';
 export class AppModule {}
 ```
 
+### Opt-in idempotency keys for commands
+
+STYNX 1.5 adds `provideStynxIdempotency()` and
+`STYNX_IDEMPOTENCY_COMMAND`. Register the provider once with
+`provideHttpClient(withInterceptorsFromDi())`, then mark each command
+request explicitly:
+
+```ts
+import {
+  HttpClient,
+  HttpContext,
+  provideHttpClient,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
+import { provideStynxIdempotency, STYNX_IDEMPOTENCY_COMMAND } from '@stynx-nyx/angular';
+
+const providers = [provideHttpClient(withInterceptorsFromDi()), provideStynxIdempotency()];
+function createRecord(http: HttpClient) {
+  const context = new HttpContext().set(STYNX_IDEMPOTENCY_COMMAND, {
+    action: 'record.create',
+    target: 'record-7',
+    includeBodyHash: true,
+  });
+  return http.post(
+    '/records',
+    { title: 'Example' },
+    {
+      context,
+      headers: { 'Content-Type': 'application/json' },
+    },
+  );
+}
+```
+
+The body-hash form requires a plain JSON object or array. For a bodyless
+DELETE, use `{ key: stableOperationKey }` instead. Existing
+`Idempotency-Key` headers win; GET, HEAD, SSE, and unmarked requests are
+unchanged. `canonicalJson` uses Unicode code-point key order and rejects
+values that JSON would silently omit; `sha256Hex` requires Web Crypto.
+
 ## Public API surface
 
 ### Providers
