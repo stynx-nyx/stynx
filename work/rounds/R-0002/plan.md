@@ -214,6 +214,8 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Reparo CTG-0002 poison row: `sensor-error` — `source().cursors` registra o cursor de entrada de `listSince` na primeira leitura; o sensor exige um segundo tick para observar o avanço após os drops. Inspector corrige o sensor sem alterar implementação nem enfraquecer as provas de drop/métricas.
+
 - Delivery-review CTG-0002 ciclo 1: `sensor-error` — faltavam provas de retomada/preflight em PostgreSQL/RLS real e resolução consumidora da entry Angular testing. Prompt de reparo aprovado por Opus no ciclo 2; Inspectors acrescentam sensores sem alterar produção, Engineers corrigem após os commits de testes.
 
 - CI local após override `adm-zip`: `reference-gap` — três sensores D21,
