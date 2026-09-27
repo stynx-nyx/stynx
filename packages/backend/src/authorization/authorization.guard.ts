@@ -57,9 +57,10 @@ export class AuthorizationGuard implements CanActivate {
       return true;
     }
 
-    const target: AuthorizationTarget = hasTarget ? resolved! : metadata
-      ? { resource: context.getClass().name, action: context.getHandler().name }
-      : {};
+    const target: AuthorizationTarget = hasTarget ? resolved! : {
+      resource: context.getClass().name,
+      action: context.getHandler().name,
+    };
 
     const request = context.switchToHttp().getRequest<RequestLike>();
     const principal = getPrincipalFromRequest(request);
