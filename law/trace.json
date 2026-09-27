@@ -1124,7 +1124,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 26,
-      "assertion_digest_sha256": "4da875389a24c22969fa7c9e04b3b783167258e56475a966482bb9170d9de25a"
+      "assertion_digest_sha256": "be626f9251da64c3ef9e0d8146ab3f7fa63d4b338d128415817ae4aeef52c471"
     },
     {
       "path": "packages-web/angular/test/event-stream-lifecycle.spec.ts",
@@ -1132,7 +1132,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 26,
-      "assertion_digest_sha256": "e02dca17357ac26e2b1c06bcbd30394c40f22d43026e916cc3580255005e48ae"
+      "assertion_digest_sha256": "f2edab9931bc6877684850eb3bab4e7512a0f047d578e3ffb0f7f6d6d613c6cb"
     },
     {
       "path": "packages-web/angular/test/provider-depth.spec.ts",
