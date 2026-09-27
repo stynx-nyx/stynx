@@ -1123,16 +1123,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "be626f9251da64c3ef9e0d8146ab3f7fa63d4b338d128415817ae4aeef52c471"
+      "assertion_count": 29,
+      "assertion_digest_sha256": "2fcf9ebe7d7999a757f81f80b6b65ee5bb3a0e0f9018997b251964c1773b24f5"
     },
     {
       "path": "packages-web/angular/test/event-stream-lifecycle.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "f2edab9931bc6877684850eb3bab4e7512a0f047d578e3ffb0f7f6d6d613c6cb"
+      "assertion_count": 33,
+      "assertion_digest_sha256": "ce3e80fe351d97438982ab135ef17c3e4760a7d0345fc5eb85d00680c2f89834"
     },
     {
       "path": "packages-web/angular/test/provider-depth.spec.ts",
@@ -1525,8 +1525,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 38,
-      "assertion_digest_sha256": "80f41baa8d023f7bf11129504a08fc2692a20244939e977187bed8831b6e1d5b"
+      "assertion_count": 53,
+      "assertion_digest_sha256": "c503134cb068b8b940060badb8faa14a3d2e6f34c61ddafa28b2ea5f3ca9ec90"
     },
     {
       "path": "packages/backend/test/unit/idempotency-export.spec.ts",
@@ -2907,8 +2907,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 15,
-      "assertion_digest_sha256": "d9fa7a11b28dc27931c8090496982b5a6c59ed51d5a5d38fb7df0545047174ed"
+      "assertion_count": 37,
+      "assertion_digest_sha256": "dfae0cdb7cd1a5ee511303899bccd97da26c3e73f26b18393c8aeb4606d3b993"
     },
     {
       "path": "reference/api/test/integration/reference-api.unit-coverage.spec.ts",
@@ -3879,6 +3879,14 @@
       "lifecycle": "supported",
       "assertion_count": 849,
       "assertion_digest_sha256": "71801aee9cb0a5b24422f82cd257f3a9768c43b23ac9d058868c126133677b9b"
+    },
+    {
+      "path": "test/scripts/angular-testing-consumer.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "64145864aa0211131ff257228162bbd8328f7028b8cf488dd4504463f5725263"
     },
     {
       "path": "test/scripts/k6-check-summary.test.mjs",
