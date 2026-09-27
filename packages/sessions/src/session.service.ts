@@ -57,7 +57,7 @@ export class SessionService implements OnModuleInit {
 
   onModuleInit(): void {
     if (!this.store.createWithPolicy) {
-      throw new Error('tenant switching and session policy require an atomic SessionStore.createWithPolicy, including when single-session mode is off; see the custom store migration note');
+      throw new Error('Custom stores must support tenant switching and session policy with atomic SessionStore.createWithPolicy, even when single-session mode is off; see the @stynx-nyx/sessions README section "STYNX 1.5.0 configuration and migration".');
     }
     if (this.options.strongFactor && this.options.strongFactor.acceptedValues.length === 0) {
       throw new Error('Strong-factor policy requires an accepted value');
