@@ -216,7 +216,7 @@ describe('StynxAuthService', () => {
     ]);
   });
 
-  it('switches tenant, revokes the old session, and invalidates the old sid', async () => {
+  it('switches tenant atomically with the prior sid and invalidates its cache', async () => {
     permissionQueries.resolveForUser.mockResolvedValue({
       membershipId: 'membership-3',
       permissions: ['document:read:*'],
@@ -238,9 +238,9 @@ describe('StynxAuthService', () => {
       'tenant-3',
       'cognito-3',
       { browser: true },
-      { membershipId: 'membership-3', permsHash: 'hash-3' },
+      { membershipId: 'membership-3', permsHash: 'hash-3', priorSessionId: 'sid-old' },
     );
-    expect(sessionService.revoke).toHaveBeenCalledWith('sid-old');
+    expect(sessionService.revoke).not.toHaveBeenCalled();
     expect(permissionCache.invalidateSid).toHaveBeenCalledWith('sid-old');
   });
 
@@ -260,7 +260,7 @@ describe('StynxAuthService', () => {
       'tenant-local',
       'user-local',
       {},
-      { membershipId: 'membership-local', permsHash: 'hash-local' },
+      { membershipId: 'membership-local', permsHash: 'hash-local', priorSessionId: 'sid-old' },
     );
   });
 
