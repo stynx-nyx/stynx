@@ -18,12 +18,19 @@ unavailable.
 
 ## Context
 
-`verified-local-rc` is required on `main`, and its trust store currently admits
-only `stynx-inspector-workstation-02`. The corresponding private key and
+`verified-local-rc` is required on `main`, and before this decision its trust
+store admitted only `stynx-inspector-workstation-02`. The corresponding private key and
 workstation controls are unavailable. No receipt can be produced for a changed
 candidate by that signer. A commit admitting a replacement signer therefore
 cannot obtain its own required check through the existing trust path. Loss of
 access does not, by itself, establish key compromise.
+
+The first workstation-03 preparation exposed a local port collision:
+`127.0.0.1:5432` reaches a Docker Desktop proxy for a different PostgreSQL
+16.4 service, while the intended local Postgres.app 18.2 server is reachable
+on `::1:5432`. On this workstation, `localhost` resolves to `::1` first and
+works with the database test helper's URL construction. The focal database
+suite passed 3/3 against that local server before rebinding its controls.
 
 ## Decision
 
@@ -39,7 +46,18 @@ access does not, by itself, establish key compromise.
    or misuse. If custody investigation finds compromise, the Owner must make a
    separate revocation decision and assess affected receipts. Retaining its
    admission does not authorize use of an unaccounted-for private key.
-3. Allow one Owner-directed bootstrap exception solely for the exact merge that
+   Workstation-02's environment controls remain historical inputs; they are
+   not valid for a new workstation-03 candidate.
+3. Bind `law/policy/devai-local-rc-environment.json` to the exact supported
+   controls generated for workstation-03 with `localhost` database URLs and
+   test PostgreSQL host. Only the digests for `DATABASE_URL`,
+   `STYNX_DATABASE_URL`, and `STYNX_TEST_PG_HOST` change. The law file contains
+   SHA-256 digests, not credentials. The toolchain control remains unchanged.
+   RC preparation must match these committed controls exactly. The local
+   database service must be checked as the intended Postgres.app instance
+   before a run; a change in `localhost` resolution that reaches the IPv4
+   proxy is a preflight failure, not an alternate server choice.
+4. Allow one Owner-directed bootstrap exception solely for the exact merge that
    admits workstation-03 and aligns the RC exporter and publisher with its
    signer ID. The Owner-controlled action must identify the actor, pull request,
    exact commit and tree, affected `main` ref, reason, and recovery evidence
@@ -48,7 +66,7 @@ access does not, by itself, establish key compromise.
    check for that merge; all other required checks and review requirements must
    pass. Record the action and post-condition afterward. No standing bypass,
    general relaxation of branch protection, or release-tag exception follows.
-4. After the bootstrap merge, prepare and publish a fresh signed RC receipt for
+5. After the bootstrap merge, prepare and publish a fresh signed RC receipt for
    the exact resulting candidate with workstation-03. Verify
    `verified-local-rc` on the pull-request head or exact-tree `main` candidate
    as applicable, and confirm the ordinary required-check policy remains in
