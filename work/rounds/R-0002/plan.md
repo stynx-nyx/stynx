@@ -458,6 +458,25 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     produzir novos achados por texto citado e deverá ter recibo
     exato antes do push. Então repetir DEVAI strict, enviar PR #276,
     aguardar CI remoto e mesclar.
+14. O PR #276 passou todos os checks remotos e foi mesclado em
+    `a3c8164524f15a74da264952162066446350b575`.
+    DEVAI strict pós-merge passou sem achados; política, proveniência,
+    monotonicidade autenticada dos 44 pacotes e três fixtures de
+    consumo passaram. O opt-in Owner do workflow permanece `false`.
+    Publicar RC1 exige recibo separado do Owner para o SHA exato e
+    a habilitação desse opt-in.
+15. O PR #278 do CTG-0002 SSE foi aberto em `20f10f53`, após CI local e
+    delivery-review Opus PASS. A branch incorporou a nova `main` pelo
+    merge `65f982a5a39e644a0dc66ea7e6813540d333be5a`; o único
+    conflito foi a união das linhas de triagem neste plano. Trace
+    398/398, API baseline 44/44 e READMEs gerados passaram. DEVAI
+    strict identificou quatro recibos de autoridade necessários no
+    merge de integração: `FORBID-RM-RF`, `FORBID-CI-WITHOUT-ADR`,
+    `FORBID-PUBLISH` e `FORBID-MUTATE-INVARIANTS`, todos vinculados ao
+    SHA `65f982a5a39e644a0dc66ea7e6813540d333be5a`. São
+    ocorrências do conteúdo incorporado de `main`, não execuções
+    adicionais. Aguardar recibo Owner exato, vincular em `law/policy/`,
+    repetir DEVAI strict e os gates antes de atualizar o PR.
 
 ## Reviews, PRs e publicações
 
