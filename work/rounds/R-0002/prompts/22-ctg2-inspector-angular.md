@@ -3,7 +3,9 @@
 Role: Inspector. Worktree:
 `/Users/aarusso/.codex/worktrees/ctg2-sse/stynx`.
 The maestro alone runs Git. Start after the Architect contract is
-recorded. Edit only `packages-web/angular/test/` and tests for the
+recorded. Edit only `packages-web/angular/test/`,
+`packages-web/angular/vitest.config.ts`, `tsconfig.spec.json` if
+needed, and tests for the
 published `angular/testing` secondary entry in that package; do not
 edit backend files, source, generated files, law, workflows or DETRAN.
 
@@ -17,6 +19,12 @@ dedup/Last-Event-ID, 204 reset, stale 20 s×2, 401/403 stop, 429
 Retry-After, 0/5xx count, tenant switch without cursor and logout stop.
 Test the public `@stynx-nyx/angular/testing` fake transport for frame,
 HTTP error, close and controlled time.
+Put the testing alias before the root package alias and point it to
+`packages-web/angular/testing/index.ts`. Use app-supplied
+`sessionActive: Signal<boolean>` for logout; no angular-auth import.
+Through real interceptors, prove 429 Retry-After survives, SSE errors
+create no banner, and 401 refresh/replay precedes terminal stop. Assert
+`globalThis.EventSource` is never constructed.
 
 Preserve existing assertions. Run focused red tests and lint. Do not
 run Git, commit, push, publish or open PR.
