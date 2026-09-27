@@ -170,6 +170,7 @@ test('trusted local RC ledger gate pins the DEVAI-designated verifier and admitt
   const environment = readJson('law/policy/devai-local-rc-environment.json');
   const manifest = readJson('package.json');
   const project = readJson('.devai/config/project.json');
+  const localRcScript = readFileSync(join(repoRoot, 'scripts/devai-local-rc.mjs'), 'utf8');
 
   assert.equal(verifierPolicy.package.version, '1.5.4');
   assert.equal(
@@ -192,13 +193,43 @@ test('trusted local RC ledger gate pins the DEVAI-designated verifier and admitt
   }
   assert.doesNotMatch(workflow, /pull_request|pnpm |npm run|test:mutation/u);
 
-  assert.deepEqual(
-    trust.trustedSigners.map((signer) => signer.signerId),
-    ['stynx-inspector-workstation-02'],
-  );
+  assert.deepEqual(trust.trustedSigners, [
+    {
+      signerId: 'stynx-inspector-workstation-02',
+      publicKeyPem:
+        '-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6cwlyFPuBL/efzudmLlme8kUw/IgchJkyBQtulzF34o=\n-----END PUBLIC KEY-----\n',
+    },
+    {
+      signerId: 'stynx-inspector-workstation-03',
+      publicKeyPem:
+        '-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcRwyrPeNji9XGCGPciFEBg7u1pqEIbyI8MWrBSGDYhE=\n-----END PUBLIC KEY-----\n',
+    },
+  ]);
   assert.deepEqual(trust.revokedSignerIds, []);
-  assert.match(trust.trustedSigners[0].publicKeyPem, /^-----BEGIN PUBLIC KEY-----\n/u);
+  for (const signer of trust.trustedSigners) {
+    assert.match(
+      signer.publicKeyPem,
+      /^-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA[A-Za-z0-9+/]{43}=\n-----END PUBLIC KEY-----\n$/u,
+      `${signer.signerId} must be admitted with an Ed25519 public key`,
+    );
+  }
   assert.doesNotMatch(JSON.stringify(trust), /PRIVATE/u);
+
+  assert.match(
+    localRcScript,
+    /const signerId = 'stynx-inspector-workstation-03';/u,
+    'local RC exports must use the recovered signer',
+  );
+  assert.match(
+    localRcScript,
+    /export-cli\.js[\s\S]*?'--signer-id',\s*signerId,/u,
+    'the RC export must pass the pinned recovered signer ID',
+  );
+  assert.match(
+    localRcScript,
+    /publish-cli\.js[\s\S]*?'--signer-id',\s*signerId,/u,
+    'the RC publisher must pass the pinned recovered signer ID',
+  );
 
   assert.deepEqual(Object.keys(toolchain).sort(), [
     'node',
