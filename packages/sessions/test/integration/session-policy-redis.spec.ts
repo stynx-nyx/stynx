@@ -1,6 +1,7 @@
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
 import { RedisSessionStore } from '../../src/redis-session-store';
+import { RefreshTokenReuseDetectedError } from '../../src/errors';
 import { SessionJwtSigningService } from '../../src/jwt-signing.service';
 import { SessionService } from '../../src/session.service';
 import { resolveSessionsOptions, type SessionMirror, type StynxSessionsModuleOptions } from '../../src/types';
@@ -64,8 +65,9 @@ describe('UPS-SES-01 Redis atomic single-session policy', () => {
     } else {
       expect(fulfilled).toHaveLength(2);
       const revoked = fulfilled.find((item) => item.value.sid !== active[0]?.sid);
-      expect(revoked).toBeDefined();
-      await expect(b.session.refresh(revoked!.value.refreshToken)).rejects.toBeDefined();
+      expect(revoked?.value).toMatchObject({ sid: expect.any(String), refreshToken: expect.any(String) });
+      expect(revoked!.value.sid).not.toBe(active[0]?.sid);
+      await expect(b.session.refresh(revoked!.value.refreshToken)).rejects.toThrow(RefreshTokenReuseDetectedError);
     }
   });
 });

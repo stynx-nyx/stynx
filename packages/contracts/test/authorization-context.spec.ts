@@ -21,6 +21,6 @@ describe('PolicyEvaluationContext tenant and principal contract', () => {
       principal: { id: 'actor-1', roles: [], permissions: [], tenants: [], claims: {} },
       requirements: {},
     };
-    expect(context.tenantId).toBeUndefined();
+    expect(context.tenantId).toBe(undefined);
   });
 });
