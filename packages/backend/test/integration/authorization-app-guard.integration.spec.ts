@@ -366,7 +366,7 @@ describe('authorization consumer injection and local guard options', () => {
       await request(app.getHttpServer()).get('/authorization-matrix/local-denied')
         .set('authorization', 'Bearer verified').expect(403).expect({
           statusCode: 403, errorCode: 'AUTHZ:DENIED:policy', message: 'Access denied by policy.',
-          target: { resource: 'AuthorizationMatrixController', action: 'localDenied' },
+          target: { resource: 'class-resource', action: 'class-action' },
         });
     } finally {
       await app.close();
