@@ -191,7 +191,10 @@ export class StynxEventStreamService<T = unknown> {
     this.offset = 0;
     this.receivedBytes = 0;
     this.pendingHighSurrogate = '';
-    const parser = new FrameParser((id, event, data) => this.deliver(id, event, data), () => this.armStale(generation));
+    let cursorAdvanced = false;
+    const parser = new FrameParser((id, event, data) => {
+      if (this.deliver(id, event, data)) cursorAdvanced = true;
+    }, () => this.armStale(generation));
     const request = { url: this.config.url, lastEventId: this.cursorState(), context: new HttpContext().set(STYNX_SSE_REQUEST, true) };
     this.statusState.set(this.pollingTimer ? 'polling' : this.consecutiveFailures ? 'reconnecting' : 'live');
     this.armStale(generation);
@@ -213,7 +216,8 @@ export class StynxEventStreamService<T = unknown> {
           }
           this.receivedBytes += this.textEncoder.encode(complete).length;
           if (this.receivedBytes >= (this.config.maxConnectionBytes ?? 1_048_576)) {
-            this.reopenPlanned(generation);
+            if (cursorAdvanced) this.reopenPlanned(generation);
+            else this.failed(generation);
             return;
           }
           parser.feed(suffix);
@@ -227,12 +231,12 @@ export class StynxEventStreamService<T = unknown> {
     });
   }
 
-  private deliver(id: string, event: string, data: string): void {
-    if (!id || this.seen.has(id)) return;
+  private deliver(id: string, event: string, data: string): boolean {
+    if (!id || this.seen.has(id)) return false;
     const prefix = this.config.eventPrefix;
-    if (prefix && !event.startsWith(prefix)) return;
+    if (prefix && !event.startsWith(prefix)) return false;
     const name = prefix ? event.slice(prefix.length) : event;
-    if (this.config.types && !this.config.types.includes(name)) return;
+    if (this.config.types && !this.config.types.includes(name)) return false;
     try {
       const parsed = JSON.parse(data) as T;
       this.cursorState.set(id);
@@ -245,7 +249,8 @@ export class StynxEventStreamService<T = unknown> {
       this.failures = []; this.consecutiveFailures = 0;
       this.clearTimers();
       this.statusState.set('live');
-    } catch { /* Invalid JSON is ignored. */ }
+      return true;
+    } catch { /* Invalid JSON is ignored. */ return false; }
   }
 
   private armStale(generation: number): void {
