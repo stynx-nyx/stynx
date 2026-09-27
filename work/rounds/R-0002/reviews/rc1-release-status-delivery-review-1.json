@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "scripts/run-release-preparation.mjs",
+      "issue": "versionedPreModeContext only checks manifests, pre.json and changeset files. It does not check what changed after the version commit, unlike classifyReleaseContext, which runs validateFollowUpChanges for the 'ci: version packages' route. If someone later edits package source (for example packages/*/src) on top of the version commit without a changeset, the candidate still gets empty status and skips draft generation. That change would then ship as 1.5.0-rc.1 with no changeset. Nothing like this is in the current branch: no package or packages-web paths differ between 1e9bf5c4 and HEAD. So the approved contract is met today, but the exception is looser than 'an ordinary change without a changeset still fails'.",
+      "required_change": "Pass the changes between the version commit and headCommit into isVersionedPreModeCandidate. Reject any change under packages/, packages-web/ or .changeset/ other than status.json, or send it through the same allow-list that validateFollowUpChanges uses. Add an Inspector negative test for a package source edit made after the version commit."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/lib/release-context.mjs",
+      "issue": "Nothing ties the candidate's rc version to the marker commit or to the base version. The regex for the version-commit subject accepts any X.Y.Z, and candidateRootVersion only has to match the rc pattern. So a subject naming 9.9.9, or a candidate at 1.5.0-rc.7, would still be accepted. The consumed-changeset set is compared with the files on disk but not with the prerelease ordinal.",
+      "required_change": "Take X.Y.Z from the matched commit subject and require candidateRootVersion to start with that X.Y.Z plus '-rc.'. Add negative tests for a subject that doesn't match the version and for a base/target mismatch."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/lib/release-context.mjs",
+      "issue": "This will block future RCs. Once rc.1 merges, origin/main's root version is 1.5.0-rc.1, which fails the stableVersion check on baseRootVersion. A later rc.2 versioning PR would therefore be classified ordinary and fail Changesets status the same way PR #276 did. The versionCommits.length === 1 rule would likewise reject a second RC version commit on one branch. RC1 is not affected, and the contract is deliberately narrow.",
+      "required_change": "Before cutting rc.2, have Architect extend the contract so the base can itself be a pre-mode rc version. In that case, check package base versions against origin/main's manifests rather than initialVersions, and require the rc ordinal to increase."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "issue": "The new test covers only the pure predicate. The runtime wrapper's logic has no behavioural test: the commit-subject regex, the uniqueness rule for version commits, the packages|packages-web manifest filter, readdir filtering that treats status.json and config.json as non-changesets, missing pre.json, and malformed pre.json. Malformed pre.json currently throws a SyntaxError that isn't a ReleaseContextError. That still fails closed, but there is no policy code to report.",
+      "required_change": "Add Inspector negatives for the wrapper, either as fixture-repo or source assertions: no pre.json leads to ordinary, zero or two marker commits lead to ordinary, and malformed pre.json fails closed. Optionally wrap JSON.parse in a ReleaseContextError with a stable code."
+    }
+  ],
+  "summary": "The repair is correct for PR #276's RC1 and does not block the release lane. The exception is only reached after classifyReleaseContext returns ordinary. It needs all of the following: exactly one RC version-marker commit on first-parent history since origin/main, a stable root version at the base and an rc root version at the candidate, pre.json in mode pre with tag rc, exactly 44 unique public manifests all modified, every base version equal to its initialVersions entry, every candidate version equal to the root rc version, and consumed changesets matching the .md files on disk exactly with no duplicates and none pending. Ordinary PRs without pre.json or a marker commit still run Changesets status and fail closed. The synthetic merge checkout is handled because candidateHead resolves the second parent, and origin/main is an ancestor of HEAD. Current state is consistent: root 1.5.0-rc.1, one consumed changeset tenancy-context-15, no pending changesets. I found no false positive on the current candidate and no false negative that would block RC1. The remaining gaps are fail-open follow-up edits after the version commit, the missing link between the subject and the rc version, future RCs whose base is itself an rc, and tests that don't exercise the runtime wrapper; none blocks RC1. All inspection was read-only, and nothing was published."
+}

@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "scripts/run-release-preparation.mjs",
+      "issue": "Cycle-1 gap 4 is still open. No test drives the runtime wrapper versionedPreModeContext, and the wrapper now does more: it extracts the marker core with a capture group, computes follow-up changes from the version-marker commit to headCommit, and reads the base .changeset/pre.json only when the base root is an rc. The predicate tests would still pass if the wrapper passed the wrong commit range to parseChanges, used the wrong capture index, or picked basePreState incorrectly. A malformed candidate pre.json still throws a raw SyntaxError instead of a ReleaseContextError with a policy code. A base rc without pre.json reaches a failing git show and exits as RELEASE_PREPARATION_COMMAND, which fails closed but reports no specific policy code.",
+      "required_change": "Inspector adds wrapper-level coverage, either with fixture repos or source-shape assertions like the existing expectedManifestSet match. It should pin: parseChanges called from versionCommits[0].sha to headCommit; versionCommitVersion taken from capture group 1; basePreState read only for an rc base; zero or two marker commits returning null. Engineer wraps both pre.json parses in a ReleaseContextError with stable codes."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/lib/release-context.mjs",
+      "issue": "On the later-RC path, continuity is checked with basePreState.initialVersions?.[name] === preState.initialVersions?.[name]. If both pre.json files lack initialVersions, or both lack an entry for a package, undefined equals undefined and the check passes. The stable-base path does not have this weakness because baseVersion is always a string.",
+      "required_change": "On the rc-base path, require preState.initialVersions[name] to be a string that matches stableVersion before comparing it with the base entry. Add a negative test where initialVersions is missing from both base and candidate pre state."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "issue": "From a stable base, the predicate requires the candidate core to be strictly greater than the base, but no negative test pins this. The existing 'same version as base' case now fails only because it takes the rc-base branch with basePreState null, not because of the ordering check. The rc-base branch rejects a core change such as 1.5.0-rc.1 to 1.6.0-rc.0, and that is also untested.",
+      "required_change": "Add negatives for base 1.4.0 with candidate 1.4.0-rc.1, base 1.4.0 with candidate 1.3.0-rc.1 (versionCommitVersion set to match the candidate core in both), and base 1.5.0-rc.1 with candidate 1.6.0-rc.1. Then have the Architect rebind the trace."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/lib/release-context.mjs",
+      "issue": "The follow-up guard rejects only paths under packages/, packages-web/ and .changeset/ other than status.json. Every other path is allowed after the version commit. That includes pnpm-lock.yaml, which is modified on this branch, and scripts/ or reference/ edits. The ordinary 'ci: version packages' route instead uses the allowedVersionFollowUpPaths allow-list. All 44 publishable manifests sit under packages/ or packages-web/, so no published source can change without detection. Only the lockfile can change resolution without a changeset.",
+      "required_change": "No change needed for RC1. If the Architect wants to tighten this, include pnpm-lock.yaml in the rejected follow-up set, or record in plan.md that a lockfile edit after versioning is an accepted non-published consequence."
+    }
+  ],
+  "summary": "I checked all four cycle-1 gaps. Gap 1 (edits after versioning) is fixed: any change under packages/, packages-web/ or .changeset/ after the version-marker commit now makes the RC exception fail. All 44 publishable manifests live under those two package directories, so no published source can ship without a changeset. Gap 2 (marker and version not tied together) is fixed: the core named in the marker must equal the candidate's core; from a stable base the candidate core must be strictly greater; from an rc base the core must match and the ordinal must strictly increase. Gap 3 (future rc.2) is fixed: an rc base is accepted only with a base pre.json in pre mode with tag rc, base consumed changesets that are a subset of the candidate's, per-package initialVersions equal between base and candidate, and base package versions equal to the base root rc. After rc.1 merges, an rc.2 branch counts only its own marker because the range starts at origin/main. Gap 4 (wrapper tests and malformed pre.json handling) remains open and is nonblocking. Current RC1 is consistent: base 1.4.0, candidate 1.5.0-rc.1, one marker commit 1e9bf5c4 naming 1.5.0, and no packages/, packages-web/ or .changeset/ paths other than status.json in the follow-up diff. Tenancy-context-15 is the only changeset on disk and matches the consumed set. Ordinary PRs still fail closed: without pre.json or exactly one marker commit the exception returns null and Changesets status runs. Any wrong mode or tag, missing manifest, pending changeset, core drift, non-advancing ordinal or broken continuity also returns null. I found no false positive. The only loose spots are the undefined-equals-undefined continuity check, the unguarded lockfile, and the missing wrapper tests, and none blocks RC1. The focused test file passes 43/43 at HEAD. I made no edits, Git changes, publication or workflow dispatch."
+}

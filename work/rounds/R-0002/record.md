@@ -368,3 +368,24 @@ delivery-review Opus do delta de main retornou **PASS** em
 `reviews/rc1-main-integration-delivery-review-3.json`; confirmou a
 correção e a validade do CI integral de `84743f85`. Os JSONs originais
 dos ciclos 2 e 3 são preservados integralmente como evidência.
+
+## Reparo do gate release-drafts do PR #276
+
+O check remoto `release-drafts` falhou no primeiro push de #276: o
+Changesets tratou o candidato RC já versionado como 44 mudanças sem
+changeset pendente. O Architect fixou no plano a classificação estreita
+para pre mode versionado; Inspector registrou negativos antes da
+implementação; Engineer corrigiu `run-release-preparation.mjs` e
+`release-context.mjs`; Architect rebindou trace. A revisão Opus ciclo 1
+retornou PASS com recomendações para RCs futuras; estas foram
+implementadas em commits separados por papel. O ciclo 2 retornou PASS
+em `reviews/rc1-release-status-delivery-review-2.json`. Os 43 testes
+focados passaram; `pnpm release:status` e `pnpm release:drafts` passaram
+com zero drafts pendentes. O CI integral no SHA
+`c8435e1fc5cea085de5f1f08127e1f274ebf689e` concluiu com exit 0
+(log `/private/tmp/stynx-s15-rc1-release-status-final-ci.log`), incluindo
+RLS e doctor. `release:policy`, `release:provenance` e DEVAI strict
+desde `a46ecb88` passaram. `release:consumer-fixtures` falhou em uma
+instalação temporária TEAT e passou na repetição, com 44 tarballs e
+três fixtures (log `/private/tmp/stynx-s15-rc1-consumer-fixtures-retry.log`).
+Nenhum pacote foi publicado.
