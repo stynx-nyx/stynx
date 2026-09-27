@@ -1,5 +1,11 @@
 # @stynx-nyx/pdf-a
 
+## 1.5.0-rc.3
+
+### Patch Changes
+
+- @stynx-nyx/logging@1.5.0-rc.3
+
 ## 1.5.0-rc.2
 
 ### Patch Changes
