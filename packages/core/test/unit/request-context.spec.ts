@@ -146,4 +146,27 @@ describe('RequestContext', () => {
       },
     );
   });
+  it('initializes the request context only when none is active', () => {
+    const cls = new FakeClsService();
+    const requestContext = new RequestContext(cls as never);
+    const mutator = new RequestContextMutator(cls as never);
+    const first = {
+      requestId: '018f5502-9f95-7c6b-8c74-d1173ec95f14',
+      startedAt: new Date('2026-01-01T00:00:00.000Z'),
+      tenantId: 'tenant-first',
+    };
+
+    expect(requestContext.hasActiveContext()).toBe(false);
+    mutator.initialize(first);
+    expect(requestContext.hasActiveContext()).toBe(true);
+    expect(requestContext.snapshot()).toStrictEqual(first);
+
+    mutator.initialize({
+      requestId: '018f5502-9f95-7c6b-8c74-d1173ec95f15',
+      startedAt: new Date('2026-02-02T00:00:00.000Z'),
+      tenantId: 'tenant-second',
+    });
+    expect(mutator.currentRequestId()).toBe('018f5502-9f95-7c6b-8c74-d1173ec95f14');
+    expect(requestContext.snapshot()).toStrictEqual(first);
+  });
 });

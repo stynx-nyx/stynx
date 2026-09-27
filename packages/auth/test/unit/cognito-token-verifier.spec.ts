@@ -172,6 +172,16 @@ describe('CognitoTokenVerifier — JOSE failure classification', () => {
     fetchRejectingVerifier.jwks = async () => { throw fetchFailure; };
     await expect(fetchRejectingVerifier.verifyAuthorizationHeader(`Bearer ${token}`)).rejects.toBe(fetchFailure);
   });
+
+  it('maps a non-Error rejection carrying a definitive JOSE code to a generic invalid bearer token error', async () => {
+    const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as new (message: string) => Error;
+    const token = await signedToken();
+    const verifier = new CognitoTokenVerifier({ issuer: 'https://issuer.example.test' }) as unknown as { jwks: () => Promise<unknown>; verifyAuthorizationHeader(value: string): Promise<unknown> };
+    verifier.jwks = async () => { throw { code: 'ERR_JWT_EXPIRED' }; };
+    const rejection = verifier.verifyAuthorizationHeader(`Bearer ${token}`);
+    await expect(rejection).rejects.toBeInstanceOf(InvalidCredentialError);
+    await expect(rejection).rejects.toThrow('Invalid bearer token');
+  });
 });
 
 describe('CognitoTokenVerifier — payload branch helpers', () => {
