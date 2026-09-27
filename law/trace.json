@@ -27,7 +27,8 @@
       "STYNX 1.5.0 CTG-0002 Architect rebind pins filtered cursor progress and byte-ceiling lifecycle sensors.",
       "STYNX 1.5.0 CTG-0002 Architect rebind pins stale-generation multi-frame lifecycle sensors.",
       "STYNX 1.5.0 CTG-0003 Architect rebind pins authorization and session coverage sensors, including readiness and Redis policy replies.",
-      "STYNX 1.5.0 CTG-0004 Architect rebind pins actor/RLS, migration, timezone, DST and worker sensors."
+      "STYNX 1.5.0 CTG-0004 Architect rebind pins actor/RLS, migration, timezone, DST and worker sensors.",
+      "STYNX 1.5.0 CTG-0004 Architect rebind pins jobs coverage sensors for actor, timezone and timer boundaries."
     ]
   },
   "invariants": [
@@ -3762,24 +3763,24 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "2fcc86aa8ea664ae3ed3e43f22a9842621665d7a535eaa255fd804f9256de553"
+      "assertion_count": 28,
+      "assertion_digest_sha256": "72a4877e898594dfbaaf7e310e03e99d5561f56811777b816c67cff19df11b70"
     },
     {
       "path": "packages/jobs/test/unit/jobs-depth.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 34,
-      "assertion_digest_sha256": "cb45601156d9facba15f796b5246195e574547ed7be2c6f5d4ba8eafffe66535"
+      "assertion_count": 40,
+      "assertion_digest_sha256": "f797d34f3964213cafb05ed66810d541edd4eb8b734b34b8a281d21d0d107f91"
     },
     {
       "path": "packages/jobs/test/unit/jobs-lifecycle-contract.spec.ts",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 52,
-      "assertion_digest_sha256": "ef1611229b74c7cc7794c69058d3a707d0ab4e3aa57dd4416905378d135ef79e"
+      "assertion_count": 55,
+      "assertion_digest_sha256": "1b0f44fca700c04064c61484f666413c2b8aaf1ecd91d03e627e499211782532"
     },
     {
       "path": "packages/jobs/test/unit/jobs-repository-contract.spec.ts",
@@ -3794,8 +3795,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 65,
-      "assertion_digest_sha256": "e6a94ea169325ce99fc72773de42f44c380da79ee5568ab54127dfe918afb7b9"
+      "assertion_count": 71,
+      "assertion_digest_sha256": "d91af4d3771b9d80c76911399f54b04be7aa52c3bfac80314973c80e57609235"
     },
     {
       "path": "packages/jobs/test/unit/worker.spec.ts",
