@@ -232,7 +232,7 @@ describe('StynxEventStreamService (UPS-SSE-01…10)', () => {
       scope,
       tickMs: 1,
       batchSize: 10,
-      maxPayloadBytes: 20,
+      maxPayloadBytes: 64,
       filter: (value) => value.id !== 'a-ignored',
       project: (value) => value.id === dropped.id ? { huge: 'x'.repeat(100) } : value.body,
     });
