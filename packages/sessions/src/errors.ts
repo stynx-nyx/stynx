@@ -16,6 +16,16 @@ export class SessionExpiredError extends Error {
   }
 }
 
+export class SessionConflictError extends Error {
+  readonly code = 'SESSION_CONFLICT';
+  constructor() { super('SESSION_CONFLICT'); }
+}
+
+export class StrongFactorRequiredError extends Error {
+  readonly code = 'STRONG_FACTOR_REQUIRED';
+  constructor() { super('STRONG_FACTOR_REQUIRED'); }
+}
+
 export class SessionSigningKeyError extends Error {
   constructor(message: string) {
     super(message);

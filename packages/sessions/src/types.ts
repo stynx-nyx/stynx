@@ -21,6 +21,7 @@ export interface SessionRecord {
   expiresAt: string;
   idleExpiresAt: string;
   revokedAt?: string;
+  strongFactorVerifiedAt?: string;
 }
 
 export interface RefreshTokenLookup {
@@ -46,6 +47,7 @@ export interface IssuedAccessToken {
 
 export interface SessionBundle {
   sid: string;
+  revokedSessionIds?: string[];
   accessToken: string;
   accessTokenExpiresAt: string;
   refreshToken: string;
@@ -56,6 +58,19 @@ export interface SessionBundle {
 export interface SessionCreateMetadata {
   membershipId?: string;
   permsHash?: string;
+  verifiedFactorClaims?: Record<string, unknown>;
+  priorSessionId?: string;
+}
+
+export type SingleSessionMode = 'off' | 'revoke-existing' | 'reject-new';
+export interface SessionPolicyResult {
+  created: SessionRecord;
+  revoked: SessionRecord[];
+}
+export interface SessionPolicyOptions {
+  mode: SingleSessionMode;
+  now: string;
+  priorSessionId?: string;
 }
 
 export interface SessionExchangeOptions {
@@ -82,6 +97,8 @@ export interface SessionExchangeResult {
 
 export interface SessionStore {
   createSession(record: SessionRecord): Promise<void>;
+  createWithPolicy?(record: SessionRecord, options: SessionPolicyOptions): Promise<SessionPolicyResult>;
+  probeReadiness?(): Promise<boolean>;
   getSession(sid: string): Promise<SessionRecord | null>;
   lookupRefreshToken(hash: string): Promise<RefreshTokenLookup | null>;
   rotateRefreshToken(
@@ -116,6 +133,8 @@ export interface StynxSessionSigningKeySet {
 }
 
 export interface StynxSessionsModuleOptions {
+  singleSession?: { mode: SingleSessionMode };
+  strongFactor?: { claimName?: string; acceptedValues: string[] };
   issuer: string;
   audience?: string;
   redis: {
@@ -138,6 +157,8 @@ export interface StynxSessionsModuleOptions {
 }
 
 export interface ResolvedStynxSessionsModuleOptions {
+  singleSession: { mode: SingleSessionMode };
+  strongFactor?: { claimName: string; acceptedValues: string[] };
   issuer: string;
   audience?: string;
   redis: {
@@ -163,6 +184,11 @@ export function resolveSessionsOptions(
   options: StynxSessionsModuleOptions,
 ): ResolvedStynxSessionsModuleOptions {
   return {
+    singleSession: { mode: options.singleSession?.mode ?? 'off' },
+    ...(options.strongFactor ? { strongFactor: {
+      claimName: options.strongFactor.claimName ?? 'amr',
+      acceptedValues: options.strongFactor.acceptedValues,
+    } } : {}),
     issuer: options.issuer,
     ...(options.audience !== undefined ? { audience: options.audience } : {}),
     redis: {

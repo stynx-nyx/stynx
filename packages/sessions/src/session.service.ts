@@ -1,7 +1,8 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import {
   InvalidRefreshTokenError,
+  StrongFactorRequiredError,
   RefreshTokenReuseDetectedError,
   SessionExchangeError,
   SessionExpiredError,
@@ -43,7 +44,7 @@ interface RevokedSession {
 }
 
 @Injectable()
-export class SessionService {
+export class SessionService implements OnModuleInit {
   constructor(
     @Inject(STYNX_SESSIONS_OPTIONS)
     private readonly options: ResolvedStynxSessionsModuleOptions,
@@ -54,6 +55,15 @@ export class SessionService {
     private readonly mirror: SessionMirror,
   ) {}
 
+  onModuleInit(): void {
+    if (this.options.singleSession.mode !== 'off' && !this.store.createWithPolicy) {
+      throw new Error('Single-session policy requires an atomic SessionStore.createWithPolicy');
+    }
+    if (this.options.strongFactor && !this.options.strongFactor.acceptedValues.some((value) => typeof value === 'string' && value.trim().length > 0)) {
+      throw new Error('Strong-factor policy requires an accepted value');
+    }
+  }
+
   async create(
     userId: string,
     tenantId: string,
@@ -62,6 +72,27 @@ export class SessionService {
     metadata: SessionCreateMetadata = {},
   ): Promise<SessionBundle> {
     const now = this.now();
+    const prior = metadata.priorSessionId ? await this.store.getSession(metadata.priorSessionId) : null;
+    if (metadata.priorSessionId && (!prior || prior.userId !== userId)) {
+      throw new SessionExchangeError('SESSION_OWNER_MISMATCH', 'Prior session does not belong to actor');
+    }
+    if (prior) {
+      try { this.assertActive(prior, now); } catch {
+        throw new SessionExchangeError('SESSION_NOT_ACTIVE', 'Prior session is not active');
+      }
+    }
+    let factorVerifiedAt = prior?.strongFactorVerifiedAt;
+    if (this.options.strongFactor && !prior) {
+      const { claimName, acceptedValues } = this.options.strongFactor;
+      const raw = metadata.verifiedFactorClaims?.[claimName];
+      const values = typeof raw === 'string' ? raw.split(/[,\s]+/) : raw;
+      if (!Array.isArray(values) || !values.every((value) => typeof value === 'string')
+        || !values.some((value) => acceptedValues.some((accepted) => accepted.trim().toLowerCase() === value.trim().toLowerCase()))) {
+        throw new StrongFactorRequiredError();
+      }
+      factorVerifiedAt = now.toISOString();
+    }
+    if (this.options.strongFactor && !factorVerifiedAt) throw new StrongFactorRequiredError();
     const refreshToken = createRefreshToken();
     const expiresAt = addSeconds(now, this.options.timeouts.absoluteSeconds).toISOString();
     const idleExpiresAt = minIso(
@@ -83,10 +114,27 @@ export class SessionService {
       lastTouchedAt: now.toISOString(),
       expiresAt,
       idleExpiresAt,
+      ...(factorVerifiedAt ? { strongFactorVerifiedAt: factorVerifiedAt } : {}),
       ...(Object.keys(deviceMeta).length > 0 ? { deviceMeta } : {}),
     };
 
-    await this.store.createSession(record);
+    const mode = this.options.singleSession.mode;
+    if ((mode !== 'off' || metadata.priorSessionId) && !this.store.createWithPolicy) {
+      throw new Error('Atomic session transition unavailable');
+    }
+    const revoked = mode === 'off' && !metadata.priorSessionId
+      ? (await this.store.createSession(record), [])
+      : (await this.store.createWithPolicy!(record, {
+        mode,
+        now: now.toISOString(),
+        ...(metadata.priorSessionId ? { priorSessionId: metadata.priorSessionId } : {}),
+      })).revoked;
+    for (const scope of new Set(revoked.map((old) => `${old.userId}:${old.tenantId}`))) {
+      await this.store.publishInvalidation(scope);
+    }
+    for (const old of revoked) {
+      await this.appendMirror(old, 'revoked', now.toISOString());
+    }
     await this.mirror.append({
       sid: record.sid,
       tenantId: record.tenantId,
@@ -96,7 +144,8 @@ export class SessionService {
       createdAt: record.createdAt,
     });
 
-    return this.bundle(record, refreshToken, now);
+    const bundle = await this.bundle(record, refreshToken, now);
+    return revoked.length ? { ...bundle, revokedSessionIds: revoked.map((old) => old.sid) } : bundle;
   }
 
   async refresh(refreshToken: string): Promise<SessionBundle> {
@@ -229,8 +278,6 @@ export class SessionService {
       );
     }
 
-    await this.revokeInternal(options.sessionId, 'revoked', undefined);
-
     const bundle = await this.create(
       options.actorUserId,
       options.newTenantId,
@@ -239,6 +286,7 @@ export class SessionService {
       {
         ...(options.membershipId !== undefined ? { membershipId: options.membershipId } : {}),
         ...(options.permsHash !== undefined ? { permsHash: options.permsHash } : {}),
+        priorSessionId: options.sessionId,
       },
     );
 
