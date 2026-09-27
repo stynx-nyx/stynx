@@ -74,15 +74,27 @@ de tenant e prova de concorrência real no Redis.
 
 ## Retomada
 
-No replay sobre o CTG-0002, `pnpm ci:stynx` e `pnpm ci:reference-apps`
-passaram no head `48065ba6` (logs
-`/private/tmp/stynx-s15-ctg3-48065ba6-{ci,reference}.log`). O Inspector
-acrescentou a prova E2E da precedência do avaliador local em `474faa71`
-(15/15 focados); o Engineer corrigiu a mensagem de migração do store em
-`fe12c299` (bootstrap 4/4, lint e typecheck); o Architect rebinda o novo
-sensor em `9ad2ff98` (`pnpm check:trace --print`: 414/414). Antes do PR,
-reaplicar este branch sobre o merge da RC2, executar gates completos e
-obter novo delivery-review Opus no head integrado.
+O branch foi reaplicado sem conflitos sobre o merge RC2 `137ff2b3`. Os
+commits integrados `58f1e0dd` (Inspector), `0adbc166` (Engineer) e
+`8f7fce7f` (Architect) fixam o E2E de precedência local, a mensagem de
+migração e a trace. No head `bdbc1869`, `pnpm ci:stynx` e
+`pnpm ci:reference-apps` passaram nos logs
+`/private/tmp/stynx-s15-ctg3-bdbc1869-{ci,reference}.log` (referência
+63/63); `pnpm check:trace --print` passou 414/414, baselines e READMEs
+44/44; política, proveniência, fixtures 44/44 em três consumidores,
+status/drafts e DEVAI forbidden-actions strict passaram no log
+`/private/tmp/stynx-s15-ctg3-bdbc1869-release.log`.
+
+O delivery-review Opus pós-RC2 no mesmo head retornou `PASS` por fallback
+direto `claude -p`; a ponte recusou sua saída com cerca JSON inválida. O
+review apontou três notas não bloqueantes, preservadas em
+`reviews/ctg3-postrc2-delivery-review.json` na worktree da rodada: fallback
+entre módulos pouco documentado/testado, checkpoint com SHAs antigos e
+limite Redis Cluster já declarado. O Architect documentou a resolução em
+`597631d2`; o Inspector provou um guard local em módulo B usando o único
+avaliador registrado no módulo A em `3877fff1` (E2E 16/16); o Architect
+rebinda a trace de 41 para 44 asserções em `57f43eba` (414/414). Repetir
+gates no head final, obter revisão Opus do reparo e abrir o PR antes do merge.
 
 Replay pós-CTG-0002 em 2026-09-27: os 37 commits exclusivos da CTG-0003
 foram reaplicados sobre `ce652143`; quatro commits históricos somente de
