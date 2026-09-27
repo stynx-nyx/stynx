@@ -489,6 +489,24 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     A documentação SSE recebeu o exemplo de adapter lazy em `0b77dd45`
     e `package-readmes:check` passou. O PR #278 remoto ainda está no
     HEAD anterior; atualizar somente depois dos recibos pendentes.
+17. O Owner autorizou os quatro recibos exatos para `65f982a5` e eles foram
+    vinculados no commit Architect `70b9ddc0`; DEVAI strict deu zero achados.
+    A CTG-0002 integrou a cobertura de tenancy de `main` em `6c3c9303`.
+    `pnpm ci:stynx` e `pnpm ci:reference-apps` passaram em
+    `/private/tmp/stynx-s15-ctg2-main-a2f-ci.log` e
+    `/private/tmp/stynx-s15-ctg2-main-a2f-reference.log`.
+18. O `main` avançou de novo com a troca do gate de PR por
+    `verified-local-rc` (ADR-DEVAI-ADOPTION-0006). A CTG-0002 integrou
+    esse delta no merge Architect `d88c92e6`; o conflito de política foi
+    resolvido preservando os quatro recibos de `65f982a5` e o recibo
+    upstream de `88a17ccf`. `pnpm ci:stynx` passou em
+    `/private/tmp/stynx-s15-ctg2-main-8d7-ci.log`. DEVAI strict desde o
+    head remoto de #278 apontou dois recibos ainda ausentes de
+    `FORBID-CI-WITHOUT-ADR`: o upstream `207b73d0` e este merge
+    `d88c92e6`. O PR upstream #281 prepara o primeiro; o segundo requer
+    recibo Owner exato antes do push. Não atualizar #278 até ambos serem
+    reconhecidos por DEVAI strict. O gate remoto agora também exige
+    evidência assinada `verified-local-rc` para o head do PR.
 
 ## Reviews, PRs e publicações
 
