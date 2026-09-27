@@ -1124,7 +1124,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 26,
-      "assertion_digest_sha256": "84f0e10b00f0dccf695bd2d17ce521d7701becc51d0b067743e98bb1449ee6a5"
+      "assertion_digest_sha256": "4da875389a24c22969fa7c9e04b3b783167258e56475a966482bb9170d9de25a"
     },
     {
       "path": "packages-web/angular/test/event-stream-lifecycle.spec.ts",
@@ -1132,7 +1132,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 26,
-      "assertion_digest_sha256": "453e9b4197a2eabb1dab5d91fe1b5c5636ce87719df3f8265ae9a0eae67d514d"
+      "assertion_digest_sha256": "e02dca17357ac26e2b1c06bcbd30394c40f22d43026e916cc3580255005e48ae"
     },
     {
       "path": "packages-web/angular/test/provider-depth.spec.ts",
@@ -2907,8 +2907,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 14,
-      "assertion_digest_sha256": "ded4af51bcdecda2dcbf693c4a98fcf0bb1056ab52c653e0370fcd088ebdf926"
+      "assertion_count": 15,
+      "assertion_digest_sha256": "0ecabd59f0c6b3aa692a5ca61692d7244d48d78cc290ddc971a733d3889d5300"
     },
     {
       "path": "reference/api/test/integration/reference-api.unit-coverage.spec.ts",
