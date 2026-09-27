@@ -238,6 +238,7 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 - `ci:reference-apps` pré-integração CTG-0004: `reference-gap` — o branch empilhado ainda usa o fixture SSE anterior à correção `useTemplate: false` do CTG-0002; repetir após replay sobre o merge do PR #285, preservando o fixture corrigido.
 - Follow-up datado 2026-09-27, CTG-0004 delivery-review ciclo 2: otimizar a busca de cron local para expressões esparsas, evitando varredura minuto a minuto dentro da transação owner com `FOR UPDATE SKIP LOCKED`. Não bloqueia o contrato UPS-JOB-01…04 nem o replay, mas requer teste de desempenho e de DST antes de alterar o algoritmo.
 - Follow-up datado 2026-09-27, CTG-0004 delivery-review ciclo 2: impedir que um `jobs.schedules.timezone` inválido escrito diretamente pela role owner bloqueie todos os lotes de `materialize`; avaliar validação DDL ou isolamento por linha e acrescentar prova PostgreSQL real. A API de serviço já valida o fuso e o reviewer classificou o caso de escrita direta como não bloqueante.
+- CI CTG-0004 após os sensores do ciclo 2: `sensor-error` — `lint:tests` recusou duas asserções `.toBeNull()`; Inspector manteve a mesma comparação de valor com `.toEqual(null)` em `8f75e9a7`, integração PostgreSQL passou e Architect refez o digest de trace antes de repetir o CI.
 
 - CI CTG-0002 após reparo Angular: `reference-gap` — o build emitiu novo digest para `types/stynx-nyx-angular.d.ts`; Architect confirmou a mudança e executou `pnpm api:baselines:write` para rebinder o baseline, sem edição manual de artefato gerado.
 

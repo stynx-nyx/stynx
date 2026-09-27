@@ -3740,7 +3740,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 49,
-      "assertion_digest_sha256": "180e1e437f9dcc6726a1db9a4290c8050ce561ffc1f1ed5bc29838e2478156c7"
+      "assertion_digest_sha256": "8d4dd46353299b5717f4a17129d2050b0e74e06fdfbbdebb3105bd5b37ac436b"
     },
     {
       "path": "packages/jobs/test/integration/module.integration.spec.ts",
