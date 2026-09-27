@@ -214,6 +214,9 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Prompt-review publicação RC1 ciclo 1: `reference-gap` — plano sem
+  módulo puro testável para dist-tag/argumentos/pós-check e com pre-state
+  de final ambíguo; contrato e prompts reparados para segundo ciclo.
 - Sensores RC1 após primeiro despacho Inspector: `sensor-error` — os
   casos de plano/pre-state ficaram red como esperado, mas faltou prova
   da pós-condição de `changeset version` (IDs consumidos, tag e ordinal
@@ -423,8 +426,12 @@ Architect `law/policy/registry-version-anomalies.json` à OD-S15-01:
 `next_unified_version` e `anomalies[0].allowed_candidate` exatos para
 `1.5.0-rc.1`, mantendo pacote, versão 2.0.0, version ID, evidências,
 `allowed_effects` e o escopo singular da exceção. A decisão registra
-que `latest` permanece em 1.4.0 durante a RC; a condição de fechamento
-da candidata RC exige `rc` → `1.5.0-rc.1`. O digest fixado em
+data 2026-09-26, baseline merge
+`e09bd6c00d56881fb5208a5e8fccfd6de3c0186a`, tree
+`d5f28e558de386713b3573646ff71f58e37c2b65`, supersede a decisão
+de 2026-09-15 para 1.4.0, e declara que `latest` permanece em 1.4.0
+durante a RC; a condição de fechamento da candidata RC exige `rc` →
+`1.5.0-rc.1` e `latest` → 1.4.0. O digest fixado em
 `scripts/lib/registry-version-policy.mjs` acompanha exatamente os bytes
 da política, por Engineer em commit separado de `law/`.
 
@@ -433,11 +440,22 @@ política, plano de publicação, checagem de monotonicidade e recibos.
 Para versão prerelease, a rota deriva a dist-tag exclusivamente de
 `.changeset/pre.json` (`mode: pre`, `tag: rc`) e recusa ausência, tag
 divergente, `latest` ou versão estável; `npm publish` recebe `--tag rc`.
-Para versão final estável, após `pre exit`, a rota permite somente
-`latest` com pre state ausente ou concluído de forma válida. O plano e
+Para versão final estável, após `pre exit` e versionamento, a rota
+permite somente `latest` com `pre.json` ausente; sua presença em
+qualquer modo com candidato estável falha fechada. No SHA candidato RC,
+todos os 44 manifestos são 1.5.0-rc.1, `pre.json` está commitado em
+`mode: pre`, `tag: rc`, e nenhum ID `.md` fica pendente fora de
+`pre.json.changesets`; `release:policy` e o preflight de publicação
+recusam drift, evitando que changesets/action escolha criar PR em vez
+de publicar. O plano e
 os recibos incluem a dist-tag e o SHA/tree exatos; a verificação após
 publicação exige que o pacote RC esteja em `rc` e que `latest` não tenha
-sido movido. Pré-flight de registry desconhecido ou resultado ambíguo
+sido movido. O preflight lê `dist-tags` completos (`latest` e `rc`
+existente) de cada pacote e falha se qualquer tag for desconhecida ou
+ambígua. O primeiro pacote é o canário do comportamento GitHub Packages;
+se a registry mover `latest`, a publicação para imediatamente. Restaurar
+`latest` seria nova mutação e exigiria recibo Owner próprio. Pré-flight
+de registry desconhecido ou resultado ambíguo
 falha fechado, preservando stop-on-first-failure e a regra de novo
 recibo Owner para recuperação parcial. A exceção angular-profile@2.0.0
 continua restrita ao único pacote/version ID.
@@ -445,7 +463,18 @@ continua restrita ao único pacote/version ID.
 O workflow `release.yml` permanece intocado: já usa
 `--candidate-from-policy`, exige dispatch de `main` no SHA exato,
 opt-in Owner e token. Inspector prova o candidato, a monotonicidade,
-dist-tag e negativas; Engineer ajusta apenas scripts de política e
-publicação. Prompt-review Opus antes do despacho, delivery-review e CI
+dist-tag e negativas em módulo puro sem efeitos colaterais
+`scripts/lib/publication-dist-tag.mjs`, com
+`selectPublicationDistTag({version,preState})`,
+`buildNpmPublishArgs({tarball,registry,tag})`,
+`verifyPostPublishDistTags({candidate,preflightLatest,distTags})` e
+`assertNoPendingPreChangesets({preState,changesetIds})`. Erros tipados
+`PUBLICATION_DIST_TAG_INVALID`, `PUBLICATION_DIST_TAG_UNKNOWN` e
+`PUBLICATION_DIST_TAG_DRIFT`. O script de publicação usa essas funções;
+testes nunca o importam, pois ele tem efeitos colaterais. Engineer
+ajusta scripts de política e publicação. Architect rebinda
+`law/trace.json` depois dos testes Inspector. Prompt-review Opus antes
+do despacho, delivery-review e CI
 antes do PR. Publicação só após merge, recibo Owner por ação/SHA e
-disparo explícito com `publish:true`; o pedido citará a dist-tag `rc`.
+disparo explícito com `publish:true`; o pedido citará dist-tag `rc`,
+SHA/tree e que o primeiro pacote é canário.

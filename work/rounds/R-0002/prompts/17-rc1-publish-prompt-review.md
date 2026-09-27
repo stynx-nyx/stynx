@@ -9,6 +9,10 @@ candidate SHA. The existing release workflow is forbidden to edit
 without its own Owner receipt; it already reads candidate from the
 policy and guards exact-main dispatch. The current policy binds 1.4.0,
 while the publisher hard-codes `--tag latest`.
+This is cycle 2. Cycle 1 returned REVIEW because the Inspector had no
+pure importable seam, plus findings on full dist-tag preflight,
+owner_decision rebind, stable publish-time pre state, pending IDs and
+trace rebind. The revised contract and prompts include those points.
 
 Inspect the actual policy, scripts, tests and workflow. Identify any
 incorrect assumption about GitHub Packages dist-tags, Changesets pre
