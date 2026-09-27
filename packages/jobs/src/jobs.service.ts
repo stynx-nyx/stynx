@@ -8,6 +8,8 @@ import { JobsRepository } from './jobs.repository';
 import { nextCronRunAt, parseCronExpression } from './cron';
 import type { EnqueueJobInput, JobRecord, JobsPort, ScheduleRecord, StynxJobsModuleOptions, UpsertScheduleInput } from './types';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
+
 function canonicalTimezone(value: string): string {
   // Bare abbreviations and numeric offsets are ambiguous and depend on host tzdata.
   if ((value !== 'UTC' && !value.includes('/')) || /^Etc\/GMT[+-]/u.test(value)) throw new InvalidScheduleError('timezone must be a canonical IANA name');
@@ -44,6 +46,8 @@ export class JobsService implements JobsPort {
 
   async enqueue(input: EnqueueJobInput): Promise<JobRecord> {
     if (!input.jobType?.trim() || !input.tenantId || (input.runAt && input.delayMs !== undefined) || (input.delayMs !== undefined && input.delayMs < 0)) throw new InvalidJobInputError('jobType, tenantId, and a non-negative exclusive delay/runAt are required');
+    if (input.actorId === '') throw new InvalidJobInputError('actorId is required');
+    if (input.actorId !== undefined && !UUID_PATTERN.test(input.actorId)) throw new InvalidJobInputError('actorId must be a UUID');
     const caller = this.caller(input.tenantId);
     const actorId = input.actorId ?? caller.actorId;
     if (!actorId) throw new InvalidJobInputError('actorId is required');
@@ -64,7 +68,7 @@ export class JobsService implements JobsPort {
   async upsertSchedule(input: UpsertScheduleInput): Promise<ScheduleRecord> {
     if (!input.tenantId || !input.name?.trim() || !input.jobType?.trim()) throw new InvalidScheduleError('tenantId, name, and jobType are required');
     if (!input.actorId?.trim()) throw new ScheduleActorRequiredError();
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(input.actorId)) throw new InvalidScheduleError('actorId must be a UUID');
+    if (!UUID_PATTERN.test(input.actorId)) throw new InvalidScheduleError('actorId must be a UUID');
     const timezone = canonicalTimezone(input.timezone ?? 'UTC');
     const now = new Date(); let nextRunAt: Date;
     if (input.kind === 'cron' && input.cronExpression && !input.intervalSeconds) { parseCronExpression(input.cronExpression); nextRunAt = nextCronRunAt(input.cronExpression, now, timezone); }

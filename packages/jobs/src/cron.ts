@@ -132,15 +132,17 @@ function matches(parsed: ParsedCron, wall: WallMinute): boolean {
   return parsed.minute.has(wall.minute) && parsed.hour.has(wall.hour) && parsed.month.has(wall.month) && dayMatches;
 }
 
-function timezoneFormatter(timezone: string): Intl.DateTimeFormat {
-  if (timezone !== 'UTC' && !/^[A-Za-z_]+\/[A-Za-z_]+(?:\/[A-Za-z_]+)*$/u.test(timezone)) {
-    throw new RangeError(`Invalid IANA timezone: ${timezone}`);
+function timezoneFormatter(timezone: string, expression: string): Intl.DateTimeFormat {
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+      hourCycle: 'h23',
+    });
+  } catch (error) {
+    if (error instanceof RangeError) throw new InvalidCronExpressionError(expression);
+    throw error;
   }
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
-    hourCycle: 'h23',
-  });
 }
 
 /**
@@ -150,7 +152,7 @@ function timezoneFormatter(timezone: string): Intl.DateTimeFormat {
  */
 export function nextCronRunAt(expression: string, after: Date, timezone = 'UTC'): Date {
   const parsed = parseCronExpression(expression);
-  const formatter = timezone === 'UTC' ? undefined : timezoneFormatter(timezone);
+  const formatter = timezone === 'UTC' ? undefined : timezoneFormatter(timezone, expression);
   let candidate = new Date(after.getTime());
   candidate.setUTCSeconds(0, 0);
   candidate = new Date(candidate.getTime() + 60_000);
