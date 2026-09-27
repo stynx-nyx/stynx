@@ -7,6 +7,15 @@ import { STYNX_AUTHZ_METADATA, STYNX_AUTHZ_OPTIONS, STYNX_AUTHZ_POLICY_EVALUATOR
 import type { AuthzMetadata } from './decorators';
 import type { AuthorizationTarget, StynxAuthorizationModuleOptions } from './authorization.types';
 
+function optionalProvider<T>(moduleRef: ModuleRef | undefined, token: symbol): T | undefined {
+  if (!moduleRef) return undefined;
+  try {
+    return moduleRef.get<T>(token, { strict: false });
+  } catch {
+    return undefined;
+  }
+}
+
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
   private readonly evaluator: PolicyEvaluator;
@@ -21,10 +30,10 @@ export class AuthorizationGuard implements CanActivate {
     @Optional() private readonly moduleRef?: ModuleRef,
   ) {
     this.evaluator = evaluator
-      ?? this.moduleRef?.get<PolicyEvaluator>(STYNX_AUTHZ_POLICY_EVALUATOR, { strict: false })
+      ?? optionalProvider<PolicyEvaluator>(this.moduleRef, STYNX_AUTHZ_POLICY_EVALUATOR)
       ?? new DefaultPolicyEvaluator();
     this.options = options
-      ?? this.moduleRef?.get<StynxAuthorizationModuleOptions>(STYNX_AUTHZ_OPTIONS, { strict: false })
+      ?? optionalProvider<StynxAuthorizationModuleOptions>(this.moduleRef, STYNX_AUTHZ_OPTIONS)
       ?? {};
   }
 
