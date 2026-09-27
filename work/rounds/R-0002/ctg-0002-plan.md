@@ -15,9 +15,9 @@ CTG. Não copiar código do DETRAN.
   concreta `@stynx-nyx/data` declara
   `Database.withRequestContext({tenantId,actorId,sessionId?}, fn)`.
   O backend SSE recebe uma porta estrutural de contexto com essa
-  operação, com assinatura
-  `withRequestContext<T>(scope: {tenantId:string; actorId:string;
-sessionId?:string}, fn: () => Promise<T>): Promise<T>`; type test
+  operação, com assinatura `withRequestContext<T>(scope, fn): Promise<T>`;
+  o escopo contém `tenantId: string`, `actorId: string`,
+  `sessionId?: string`, e `fn` tem tipo `() => Promise<T>`; type test
   prova atribuição estrutural de data.Database. O teste de integração
   a liga ao Database de data. Não
   alegar que backend já depende de data nem usar AsyncLocalStorage
@@ -113,8 +113,8 @@ NOINHERIT e NOBYPASSRLS, concede membership ao usuário conector e
 SELECT/INSERT na tabela. Tabela de teste tem ENABLE + FORCE RLS, owner
 diferente de `stynx_app`, política USING/WITH CHECK baseada em
 `current_setting('app.tenant_id', true)`; não muda `database/ddl`. Fonte
-lê por `data.Database.tx(..., { role: 'app' })` e executa `SET LOCAL
-ROLE stynx_app` **na mesma transação** que recebeu GUCs de data. Afirma
+lê por `data.Database.tx(..., { role: 'app' })` e executa o comando
+`SET LOCAL ROLE stynx_app` **na mesma transação** que recebeu GUCs de data. Afirma
 `current_user`, `rolsuper=false`, `rolbypassrls=false`. SQL de
 `findById`/`listSince` não contém WHERE por tenant: isolamento vem da
 policy. Rota HTTP monta middleware/guard reais do CTG-0001 e captura
