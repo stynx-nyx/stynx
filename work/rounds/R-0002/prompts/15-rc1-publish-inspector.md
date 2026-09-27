@@ -20,10 +20,16 @@ and their existing sensors. Add focused tests for:
    `REGISTRY_CANDIDATE_EXISTS`; stable 1.5.0 or 1.5.1 history gives
    `REGISTRY_CANONICAL_LINE_NOT_MONOTONIC`; a different 2.0.0 gives
    `REGISTRY_UNADJUDICATED_VERSION`; candidate argument 1.4.0 or
-   1.5.0 is unsupported against the rc.1 policy. Policy digest
+   1.5.0 is unsupported against the rc.1 policy:
+   `loadRegistryAnomalyPolicy` gives
+   `REGISTRY_ANOMALY_POLICY_UNSUPPORTED`, while
+   `validateRegistryCensus` gives `REGISTRY_CANDIDATE_UNSUPPORTED`.
+   Policy digest
    mismatch, missing policy and widened exception fail closed.
-   Update the existing literal candidate assertion to rc.1 rather than
-   removing it; retain stable-release negatives.
+   Update the existing literal candidate assertion to rc.1 and the
+   supersedes assertion to date 2026-09-15/version 1.4.0; update the
+   Owner decision date comment. Do not remove those assertions or the
+   existing 1.2.0 rebaseline negative; retain stable-release negatives.
 2. Import only the side-effect-free
    `scripts/lib/publication-dist-tag.mjs`, never the publisher script.
    Its `selectPublicationDistTag({version,preState})` derives `rc` only from valid

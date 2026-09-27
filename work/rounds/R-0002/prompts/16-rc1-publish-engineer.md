@@ -21,7 +21,11 @@ and error codes in the plan. Do not let tests import the side-effectful
 publisher. Include dist-tag and SHA/tree in the plan and receipts.
 Before publication, read every package's full dist-tags object and
 record all keys; permit valid historical keys but require `latest`
-exactly 1.4.0 across the roster before the first mutation. Reject
+to match policy `preflight_latest_version` (exact 1.4.0) across the
+roster before the first mutation. Export it through
+`registryVersionPolicyConstants` and check the policy field in
+`loadRegistryAnomalyPolicy`; do not add a second literal to the
+publisher or pure dist-tag module. Reject
 unreadable/malformed metadata. After each RC publish verify `rc` points
 to the candidate and every other pre-existing tag remains byte-identical.
 Allow at most five recorded rereads, two seconds apart, only while the
@@ -32,8 +36,8 @@ Use `assertNoPendingPreChangesets` only in the
 `verify-release-policy.mjs --registry-monotonicity` branch and
 publication preflight. Default-mode `release:policy` must continue to
 accept pending changesets for subsequent RC development. An unconsumed
-changeset prevents a publication candidate from
-candidate from silently entering the action's version-PR branch.
+changeset prevents a publication candidate from silently entering the
+action's version-PR branch.
 Preserve 44-package ordering,
 integrity/shasum checks, unknown-state failure, stop-on-first-failure
 and partial-recovery authorization requirement.

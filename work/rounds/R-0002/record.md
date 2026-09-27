@@ -270,3 +270,8 @@ da campanha após o relatório que identificou explicitamente os quatro
 SHAs DEVAI e os terceiros ciclos de review. O maestro vincula esta
 decisão aos quatro recibos exatos e aos dois prompt-reviews excepcionais.
 O recibo de publicação continuará separado, com comando e SHA finais.
+O terceiro prompt-review excepcional da rota de publicação retornou
+**PASS**. Os ajustes não bloqueantes foram vinculados aos sensores,
+ao campo `preflight_latest_version`, ao canário
+`@stynx-nyx/angular` e à regra de não enviar o commit intermediário
+com digest ainda não rebindado.

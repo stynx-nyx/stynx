@@ -466,6 +466,14 @@ da política, por Engineer em commit separado de `law/`.
 
 O candidato publicado deve ser o mesmo em todos os 44 manifestos,
 política, plano de publicação, checagem de monotonicidade e recibos.
+A política Architect fixa `preflight_latest_version: "1.4.0"`; o
+loader confere esse campo contra
+`registryVersionPolicyConstants.preflightLatestVersion`. O publisher
+consome a constante, sem outro literal de versão. O commit Architect
+da política tem digest temporariamente divergente e **não** é
+candidato nem será enviado isoladamente; o Engineer rebinda o digest
+em commit próprio. Só o HEAD combinado, após sensores e trace, passa
+por CI e pode ser enviado ao PR.
 Para versão prerelease, a rota deriva a dist-tag exclusivamente de
 `.changeset/pre.json` (`mode: pre`, `tag: rc`) e recusa ausência, tag
 divergente, `latest` ou versão estável; `npm publish` recebe `--tag rc`.
@@ -489,8 +497,10 @@ chave anterior exceto `rc` permanece byte a byte igual e `rc` aponta à
 candidata. Se a versão/`rc` ainda não estiver visível, a rota pode reler
 até cinco vezes, com intervalo fixo de dois segundos, registrando
 tentativas e resultados no recibo; alteração de `latest` ou outra tag
-anterior é `PUBLICATION_DIST_TAG_DRIFT` imediata. O primeiro pacote é o
-canário do comportamento GitHub Packages;
+anterior é `PUBLICATION_DIST_TAG_DRIFT` imediata. O primeiro pacote é
+`@stynx-nyx/angular`, canário do comportamento GitHub Packages. O
+plano de publicação registra todas as suas dist-tags anteriores,
+byte a byte, antes da primeira mutação;
 se a registry mover `latest`, a publicação para imediatamente. Restaurar
 `latest` seria nova mutação e exigiria recibo Owner próprio. Pré-flight
 de registry desconhecido ou resultado ambíguo
@@ -518,3 +528,7 @@ disparo explícito com `publish:true`; o pedido citará dist-tag `rc`,
 SHA/tree e que o primeiro pacote é canário. A RC não cria tag Git
 `v1.5.0-rc.1`; o `since_ref` de forbidden-actions permanece na última
 tag estável `v1.4.0`.
+
+Prompt-review excepcional ciclo 3 da rota: **PASS**, com ajustes não
+bloqueantes incorporados em prompts 15/16 e neste contrato antes do
+rebind da política.
