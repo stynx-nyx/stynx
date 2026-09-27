@@ -3813,7 +3813,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 50,
-      "assertion_digest_sha256": "ba281e3d740557b39515eae38cc195f8f739b1d1e79605c352660e6666d898af"
+      "assertion_digest_sha256": "74353be84ae8d613a34107644659ea82f3aa271b7c58ac67bca1cf8f375c4434"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
