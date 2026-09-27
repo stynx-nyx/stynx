@@ -1,8 +1,9 @@
 # CTG-0003 — autorização e sessão
 
-**Papel:** Architect. **Base de preparação:** CTG-0002 `20f10f53`,
-PR #278 aberto; integrar os merges de #276 e #278 antes de publicar
-ou mesclar este CTG. **Fonte:** DETRAN C-0002 rev.2 §4, §7 e §8,
+**Papel:** Architect. **Base de preparação histórica:** CTG-0002 `20f10f53`,
+PR #278 depois encerrado. O CTG-0002 foi integrado pelo PR #285 no SHA
+`ce6521438584db70f67e62f48d95048acd88be8b`; este branch foi
+reaplicado sobre esse SHA antes da entrega. **Fonte:** DETRAN C-0002 rev.2 §4, §7 e §8,
 HEAD somente leitura `220a40202bf4ab17a5ce28b882ad96d60755842f`.
 OD-S15-01 torna UPS-AUTHZ-01…07 e UPS-SES-01…03 todos MUST.
 
@@ -72,6 +73,15 @@ de tenant e prova de concorrência real no Redis.
   evidência DEVAI e audit observe no merge.
 
 ## Retomada
+
+Replay pós-CTG-0002 em 2026-09-27: os 37 commits exclusivos da CTG-0003
+foram reaplicados sobre `ce652143`; quatro commits históricos somente de
+`law/trace.json` foram omitidos porque conflitavam com os sensores SSE já
+integrados. O Architect refez o vínculo sobre o estado final: 414/414 testes
+executáveis, com 9 entradas novas e 5 digests atualizados; baselines API
+44/44, READMEs 44/44 e `release:policy` passaram. O delivery-review do
+branch empilhado permanece histórico; executar gates e review pós-integração
+no novo head antes de abrir e mesclar o PR CTG-0003.
 
 O Opus delivery-review ciclo 3 retornou `PASS` em
 `reviews/ctg3-delivery-review-3.json`, com quatro apontamentos não
