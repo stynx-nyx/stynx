@@ -35,7 +35,6 @@ function configure(sessionActive = signal(true)) {
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(withInterceptorsFromDi()),
-      provideHttpClientTesting(),
       provideStynxDefaults({
         angular: {
           apiBaseUrl: '/api',
@@ -49,6 +48,7 @@ function configure(sessionActive = signal(true)) {
         pollingIntervalMs: 5_000,
         sessionActive: sessionActive.asReadonly(),
       }),
+      provideHttpClientTesting(),
     ],
   });
   const tenants = TestBed.inject(TenantContextService);
