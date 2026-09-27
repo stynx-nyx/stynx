@@ -997,6 +997,18 @@
       "commit": "bd20578c095e80bd4c7eb3b6a98857c53e223df4",
       "authorized_by": "Owner",
       "reason": "The DEVAI-generated devai-local-rc-verify.yml resets its own runner-temporary verifier directory with rm -rf \"$control\" (control=$RUNNER_TEMP/devai-verifier-package) before materializing the pinned verifier package. The target is an ephemeral runner path created by the same step, never repository content or uncommitted work; the workflow must stay byte-identical to the DEVAI generator."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "17d87afaf386d68b75c67c458d519c0ef2e14274",
+      "authorized_by": "Owner",
+      "reason": "Rebase-merged form of bd20578c095e80bd4c7eb3b6a98857c53e223df4 (PR #275): adds .github/workflows/devai-local-rc-verify.yml, the byte-exact DEVAI-generated trusted local RC verifier (ADR-DEVAI-ADOPTION-0004/0005). GitHub rewrote the SHA while preserving content and author; this binds the same 2026-09-26 Owner decision to the commit on main."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "17d87afaf386d68b75c67c458d519c0ef2e14274",
+      "authorized_by": "Owner",
+      "reason": "Rebase-merged form of bd20578c095e80bd4c7eb3b6a98857c53e223df4 (PR #275): the generated workflow resets only its ephemeral runner-temporary verifier directory with rm -rf \"$control\" (control=$RUNNER_TEMP/devai-verifier-package), as already authorized for the pre-merge SHA."
     }
   ]
 }
