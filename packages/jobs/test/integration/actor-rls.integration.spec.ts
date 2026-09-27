@@ -1,10 +1,10 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'node:crypto';
 import type { Client } from 'pg';
-import { RequestContextMutator, SystemContext, SystemContextRequiredError } from '@stynx-nyx/core';
+import { RequestContext, RequestContextMutator, SystemContext, SystemContextRequiredError } from '@stynx-nyx/core';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
 import { createPostgresTestDatabase } from '../../../data/test/support/postgres';
-import { JobActorMembershipError, JobsRegistry, JobsService, JobsWorker, ScheduleActorRequiredError, StynxJobsModule } from '../../src';
+import { JobActorAssignmentDeniedError, JobActorMembershipError, JobTenantMismatchError, JobsRegistry, JobsService, JobsWorker, ScheduleActorRequiredError, StynxJobsModule } from '../../src';
 import { JobsRepository } from '../../src/jobs.repository';
 
 const tenant1 = '11111111-1111-4111-8111-111111111111';
@@ -107,6 +107,16 @@ describe('UPS-JOB-01/02 actorful execution under real PostgreSQL RLS', () => {
       });
       registry.register('jobs.actor-proof', handler);
 
+      // Caller/input mismatch is rejected by JobsService before it opens a database transaction.
+      await mutator.runWithRequestContext({
+        requestId: randomUUID(), startedAt: new Date(), tenantId: tenant1, actorId: caller,
+      }, async () => {
+        const txSpy = vi.spyOn(database, 'tx');
+        await expect(service.getJob(randomUUID(), tenant2)).rejects.toBeInstanceOf(JobTenantMismatchError);
+        expect(txSpy).not.toHaveBeenCalled();
+        txSpy.mockRestore();
+      });
+
       const schedule = await mutator.runWithRequestContext({
         requestId: randomUUID(), startedAt: new Date(), tenantId: tenant1, actorId: caller,
       }, () => service.upsertSchedule({
@@ -117,10 +127,12 @@ describe('UPS-JOB-01/02 actorful execution under real PostgreSQL RLS', () => {
       expect(schedule.timezone).toBe('UTC');
 
       // Exercise the complete caller-facing port through the role-separated app pool.
+      let tenant1JobId = '';
       await mutator.runWithRequestContext({
         requestId: randomUUID(), startedAt: new Date(), tenantId: tenant1, actorId: caller,
       }, async () => {
         const oneShot = await service.enqueue({ tenantId: tenant1, jobType: 'jobs.actor-proof' });
+        tenant1JobId = oneShot.id;
         expect(oneShot.actorId).toBe(caller);
         expect((await service.getJob(oneShot.id, tenant1))?.id).toBe(oneShot.id);
         await expect(service.cancel(oneShot.id, tenant1)).resolves.toBe(true);
@@ -136,6 +148,36 @@ describe('UPS-JOB-01/02 actorful execution under real PostgreSQL RLS', () => {
         await service.deleteSchedule(forCrud.id, tenant1);
         await expect(service.getSchedule(forCrud.id, tenant1)).resolves.toEqual(null);
       });
+
+      // A valid tenant-2 caller can access the port but cannot read or cancel tenant-1 rows.
+      await mutator.runWithRequestContext({
+        requestId: randomUUID(), startedAt: new Date(), tenantId: tenant2, actorId: foreignActor,
+      }, async () => {
+        await expect(service.getJob(tenant1JobId, tenant2)).resolves.toBeNull();
+        await expect(service.cancel(tenant1JobId, tenant2)).resolves.toBe(false);
+        await expect(service.getSchedule(schedule.id, tenant2)).resolves.toBeNull();
+      });
+
+      const deniedService = new JobsService(repository, moduleRef.get(RequestContext), {
+        authorizeTechnicalActor: async () => false,
+      });
+      const callbacklessService = new JobsService(repository, moduleRef.get(RequestContext), {});
+      await mutator.runWithRequestContext({
+        requestId: randomUUID(), startedAt: new Date(), tenantId: tenant1, actorId: caller,
+      }, async () => {
+        const rejectedInput = {
+          tenantId: tenant1, jobType: 'jobs.callback-denial', actorId: technicalActor,
+          idempotencyKey: 'callback-denied',
+        };
+        await expect(deniedService.enqueue(rejectedInput)).rejects.toBeInstanceOf(JobActorAssignmentDeniedError);
+        await expect(callbacklessService.enqueue({
+          ...rejectedInput, jobType: 'jobs.callback-missing', idempotencyKey: 'callback-missing',
+        })).rejects.toBeInstanceOf(JobActorAssignmentDeniedError);
+      });
+      const deniedRows = await admin.query<{ count: number }>(`
+        select count(*)::int as count from jobs.jobs
+        where tenant_id=$1 and job_type in ('jobs.callback-denial','jobs.callback-missing')`, [tenant1]);
+      expect(deniedRows.rows).toEqual([{ count: 0 }]);
 
       await admin.query(`update jobs.schedules set next_run_at=clock_timestamp()-interval '1 minute' where id=$1`, [schedule.id]);
       const due = await repository.inSystem('jobs materialize actor proof', () => repository.materialize(1));
@@ -216,9 +258,11 @@ describe('UPS-JOB-01/02 actorful execution under real PostgreSQL RLS', () => {
       // 0019 leaves one-shot jobs nullable so the worker must dispose of historical actorless rows.
       const actorlessId = randomUUID();
       await admin.query(`insert into jobs.jobs(id,tenant_id,job_type,run_at,actor_id)
-        values ($1,$2,'jobs.actor-proof',clock_timestamp()-interval '1 minute',null)`, [actorlessId, tenant1]);
+        values ($1,$2,'jobs.unregistered-actorless',clock_timestamp()-interval '1 minute',null)`, [actorlessId, tenant1]);
+      const registryLookup = vi.spyOn(registry, 'get');
       await expect(worker.tick()).resolves.toBe(1);
       expect(handler).toHaveBeenCalledTimes(1);
+      expect(registryLookup).not.toHaveBeenCalled();
       const actorless = await admin.query<{ status: string; dead_letter_reason: string; locked_by: string | null; locked_until: Date | null }>(`
         select status::text, dead_letter_reason, locked_by, locked_until from jobs.jobs where id=$1`, [actorlessId]);
       expect(actorless.rows).toEqual([{

@@ -32,14 +32,12 @@ describe('platform jobs migration and explicit seed', () => {
       `);
       expect(rows.rows.length).toBeGreaterThan(0);
       expect(rows.rows[0]).toEqual({
-        tenant_id: rows.rows[0]!.tenant_id,
-        actor_id: rows.rows[0]!.actor_id,
+        tenant_id: '01900000-0000-4000-8000-000000000001',
+        actor_id: '01900000-0000-4000-8000-000000000002',
         timezone: 'UTC',
         is_enabled: true,
         membership_active: true,
       });
-      expect(rows.rows[0]?.tenant_id).toMatch(/^[0-9a-f-]{36}$/u);
-      expect(rows.rows[0]?.actor_id).toMatch(/^[0-9a-f-]{36}$/u);
 
       const checks = await client.query<{ convalidated: boolean; definition: string }>(`
         select convalidated, pg_get_constraintdef(c.oid) as definition

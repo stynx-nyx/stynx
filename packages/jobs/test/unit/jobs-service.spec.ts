@@ -2,12 +2,14 @@ import {
   DEFAULT_BACKOFF_POLICY,
   DEFAULT_MAX_ATTEMPTS,
   InvalidJobInputError,
+  InvalidCronExpressionError,
   InvalidScheduleError,
   JobsService,
   normalizeBackoff,
   JobTenantMismatchError,
   JobActorMembershipError,
   JobActorAssignmentDeniedError,
+  nextCronRunAt,
 } from '../../src';
 import { RequestContext, RequestContextMutator, RequestContextMissingError } from '@stynx-nyx/core';
 import { ActorContextMissingError, TenantContextMissingError } from '@stynx-nyx/data';
@@ -140,6 +142,17 @@ describe('JobsService behavioral contract', () => {
       'Invalid job input: jobType, tenantId, and a non-negative exclusive delay/runAt are required',
     );
     expect(repository.enqueue).not.toHaveBeenCalled();
+  });
+
+  it('rejects an explicit enqueue actor that is not a UUID before membership lookup', async () => {
+    const harness = createHarness();
+
+    await expect(inTenant(harness, 'tenant-1', () => harness.service.enqueue({
+      tenantId: 'tenant-1', jobType: 'email', actorId: 'not-a-uuid',
+    }))).rejects.toBeInstanceOf(InvalidJobInputError);
+
+    expect(harness.repository.isActiveTenantMember).not.toHaveBeenCalled();
+    expect(harness.repository.enqueue).not.toHaveBeenCalled();
   });
 
   it('accepts every valid inclusive backoff boundary', () => {
@@ -328,6 +341,40 @@ describe('JobsService behavioral contract', () => {
       .rejects.toThrow('Invalid job input: actorId is required');
     expect(repository.upsertSchedule).not.toHaveBeenCalled();
     expect(repository.enqueue).not.toHaveBeenCalled();
+  });
+
+  it('accepts a canonical hyphenated IANA zone for a cron schedule', async () => {
+    const harness = createHarness();
+    const cron = {
+      tenantId: 'tenant-1', name: 'zone-cron', jobType: 'report', kind: 'cron' as const,
+      cronExpression: '0 9 * * *', actorId: actor1, timezone: 'America/Port-au-Prince',
+    };
+
+    await expect(inTenant(harness, 'tenant-1', () => harness.service.upsertSchedule(cron))).resolves.toBe(schedule);
+    expect(harness.repository.upsertSchedule).toHaveBeenCalledWith(expect.objectContaining({
+      timezone: 'America/Port-au-Prince',
+      nextRunAt: expect.any(Date),
+    }));
+  });
+
+  it('accepts a canonical hyphenated IANA zone in the direct cron calculator', () => {
+    expect(nextCronRunAt('0 9 * * *', now, 'America/Port-au-Prince')).toBeInstanceOf(Date);
+  });
+
+  it('accepts an IANA zone with a digit in the direct cron calculator', () => {
+    expect(nextCronRunAt('0 9 * * *', now, 'Etc/GMT0')).toBeInstanceOf(Date);
+  });
+
+  it('returns a typed cron error for an invalid direct timezone', () => {
+    expect(() => nextCronRunAt('0 9 * * *', now, 'Mars/Olympus')).toThrow(InvalidCronExpressionError);
+  });
+
+  it('types invalid IANA timezone errors as invalid schedules', async () => {
+    const harness = createHarness();
+    await expect(inTenant(harness, 'tenant-1', () => harness.service.upsertSchedule({
+      tenantId: 'tenant-1', name: 'bad-zone', jobType: 'report', kind: 'cron',
+      cronExpression: '0 9 * * *', actorId: actor1, timezone: 'Mars/Olympus',
+    }))).rejects.toBeInstanceOf(InvalidScheduleError);
   });
 
   it('routes schedule reads and state transitions with exact tenant guards', async () => {
