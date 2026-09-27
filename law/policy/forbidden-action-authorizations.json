@@ -1087,6 +1087,18 @@
       "commit": "c4b926b76f6716b82f0e2d68f1a3210d78acb692",
       "authorized_by": "Owner",
       "reason": "Owner authorization 2026-09-27 to resume R-0002 binds this exact Architect evidence commit. The match quotes a prior independent review of publication command text; this commit executed no package publication and grants no dispatch receipt."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "9da0da675ff74fb26a2676789121811c1bd00181",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-27 to resume R-0002 binds this exact Architect evidence commit. The match is a quotation inside the preserved independent review verdict; this commit performed no deletion."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "9da0da675ff74fb26a2676789121811c1bd00181",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-27 to resume R-0002 binds this exact Architect evidence commit. The match is a quotation inside the preserved independent review verdict; this commit performed no package publication and grants no release dispatch receipt."
     }
   ]
 }
