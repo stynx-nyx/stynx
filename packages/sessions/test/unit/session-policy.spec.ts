@@ -2,6 +2,7 @@ import { generateKeyPairSync } from 'node:crypto';
 import { InMemorySessionStore } from '../../src/in-memory-session-store';
 import { SessionJwtSigningService } from '../../src/jwt-signing.service';
 import { SessionService } from '../../src/session.service';
+import { RefreshTokenReuseDetectedError, SessionConflictError, StrongFactorRequiredError } from '../../src/errors';
 import { resolveSessionsOptions, type SessionMirror, type SessionMirrorEntry, type StynxSessionsModuleOptions } from '../../src/types';
 
 // UPS-SES-01/02: policy is evaluated against active records in the target tenant.
@@ -42,8 +43,8 @@ describe('UPS-SES-01 single-session policy', () => {
     const otherTenant = await service.create('u', 'other', 'c');
     const first = await service.create('u', 't', 'c');
     const second = await service.create('u', 't', 'c');
-    await expect(service.get(first.sid)).resolves.toBeNull();
-    await expect(service.refresh(first.refreshToken)).rejects.toBeDefined();
+    await expect(service.get(first.sid)).resolves.toBe(null);
+    await expect(service.refresh(first.refreshToken)).rejects.toThrow(RefreshTokenReuseDetectedError);
     await expect(service.get(second.sid)).resolves.toMatchObject({ status: 'active' });
     await expect(service.get(otherTenant.sid)).resolves.toMatchObject({ status: 'active' });
     expect(entries).toContainEqual(expect.objectContaining({ sid: first.sid, status: 'revoked' }));
@@ -55,7 +56,7 @@ describe('UPS-SES-01 single-session policy', () => {
     const { service, store, entries } = harness({ singleSession: { mode: 'reject-new' } });
     const first = await service.create('u', 't', 'c');
     const count = entries.length;
-    await expect(service.create('u', 't', 'c')).rejects.toBeDefined();
+    await expect(service.create('u', 't', 'c')).rejects.toThrow(SessionConflictError);
     await expect(service.get(first.sid)).resolves.toMatchObject({ status: 'active' });
     await expect(service.refresh(first.refreshToken)).resolves.toMatchObject({ sid: first.sid });
     expect(entries).toHaveLength(count);
@@ -78,8 +79,8 @@ describe('UPS-SES-01 single-session policy', () => {
     const prior = await service.create('u', 't', 'c');
     const switched = await service.exchange({ sessionId: prior.sid, actorUserId: 'u', newTenantId: 't' });
     expect(switched.revokedSessionId).toBe(prior.sid);
-    await expect(service.get(prior.sid)).resolves.toBeNull();
-    await expect(service.refresh(prior.refreshToken)).rejects.toBeDefined();
+    await expect(service.get(prior.sid)).resolves.toBe(null);
+    await expect(service.refresh(prior.refreshToken)).rejects.toThrow(RefreshTokenReuseDetectedError);
     await expect(service.get(switched.bundle.sid)).resolves.toMatchObject({ status: 'active' });
     expect(entries).toContainEqual(expect.objectContaining({ sid: prior.sid, status: 'revoked' }));
   });
@@ -88,7 +89,7 @@ describe('UPS-SES-01 single-session policy', () => {
     const { service } = harness({ singleSession: { mode: 'reject-new' } });
     const prior = await service.create('u', 'source', 'c');
     const target = await service.create('u', 'target', 'c');
-    await expect(service.exchange({ sessionId: prior.sid, actorUserId: 'u', newTenantId: 'target' })).rejects.toBeDefined();
+    await expect(service.exchange({ sessionId: prior.sid, actorUserId: 'u', newTenantId: 'target' })).rejects.toThrow(SessionConflictError);
     await expect(service.get(prior.sid)).resolves.toMatchObject({ status: 'active' });
     await expect(service.get(target.sid)).resolves.toMatchObject({ status: 'active' });
   });
@@ -120,7 +121,7 @@ describe('UPS-SES-02 verified strong factor', () => {
 
   it.each([undefined, 123, { value: 'mfa' }, 'password', ['pwd', 42]])('rejects unverified or malformed factor %s before a write', async (value) => {
     const { service, store, entries } = harness({ strongFactor: { acceptedValues: ['mfa'] } });
-    await expect(service.create('u', 't', 'c', { amr: 'mfa' }, { verifiedFactorClaims: { amr: value } } as never)).rejects.toBeDefined();
+    await expect(service.create('u', 't', 'c', { amr: 'mfa' }, { verifiedFactorClaims: { amr: value } } as never)).rejects.toThrow(StrongFactorRequiredError);
     expect(store.sessionCount()).toBe(0);
     expect(entries).toEqual([]);
   });
@@ -131,7 +132,7 @@ describe('UPS-SES-02 verified strong factor', () => {
     const marker = (await service.get(first.sid) as { strongFactorVerifiedAt?: string }).strongFactorVerifiedAt;
     const second = await service.exchange({ sessionId: first.sid, actorUserId: 'u', newTenantId: 't2' });
     const third = await service.exchange({ sessionId: second.bundle.sid, actorUserId: 'u', newTenantId: 't3' });
-    expect((await service.get(second.bundle.sid))).toBeNull();
+    expect((await service.get(second.bundle.sid))).toBe(null);
     expect((await service.get(third.bundle.sid) as { strongFactorVerifiedAt?: string }).strongFactorVerifiedAt).toBe(marker);
   });
 
@@ -146,7 +147,7 @@ describe('UPS-SES-02 verified strong factor', () => {
       strongFactor: { acceptedValues: ['mfa'] },
     } as StynxSessionsModuleOptions);
     const strictService = new SessionService(strictOptions, store, new SessionJwtSigningService(strictOptions), mirror);
-    await expect(strictService.exchange({ sessionId: old.sid, actorUserId: 'u', newTenantId: 't2' })).rejects.toBeDefined();
+    await expect(strictService.exchange({ sessionId: old.sid, actorUserId: 'u', newTenantId: 't2' })).rejects.toThrow(StrongFactorRequiredError);
     await expect(oldService.get(old.sid)).resolves.toMatchObject({ status: 'active' });
   });
 

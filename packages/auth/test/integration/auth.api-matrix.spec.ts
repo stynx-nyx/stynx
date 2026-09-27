@@ -383,7 +383,7 @@ describe('StynxAuthController API error matrix', () => {
         .expect(201);
 
       expect(switched.body.sid).not.toBe(session.sid);
-      expect(await authService.inspectPermissions(session.sid)).toBeNull();
+      expect(await authService.inspectPermissions(session.sid)).toBe(null);
       expect(await authService.inspectPermissions(switched.body.sid)).toMatchObject({ tenantId: TENANT_ONE });
       await request(app.getHttpServer())
         .post('/sessions/switch')

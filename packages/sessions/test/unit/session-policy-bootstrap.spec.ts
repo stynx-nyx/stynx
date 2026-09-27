@@ -34,10 +34,10 @@ describe('UPS-SES-01/02 module boot validation', () => {
         .compile();
       const app = moduleRef.createNestApplication();
       try { await app.init(); } finally { await app.close(); }
-    }).rejects.toBeDefined();
+    }).rejects.toThrow('Single-session policy requires an atomic SessionStore.createWithPolicy');
   });
 
-  it.each([[], ['  ']])('rejects empty accepted factor values %s', async (acceptedValues) => {
+  it.each([[[]], [['  ']]])('rejects empty accepted factor values %s', async (acceptedValues) => {
     await expect(async () => {
       const moduleRef = await Test.createTestingModule({
         imports: [StynxSessionsModule.forRoot({ ...base, strongFactor: { acceptedValues } } as StynxSessionsModuleOptions)],
@@ -46,6 +46,6 @@ describe('UPS-SES-01/02 module boot validation', () => {
         .compile();
       const app = moduleRef.createNestApplication();
       try { await app.init(); } finally { await app.close(); }
-    }).rejects.toBeDefined();
+    }).rejects.toThrow('Strong-factor policy requires an accepted value');
   });
 });
