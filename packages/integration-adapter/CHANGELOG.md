@@ -1,5 +1,7 @@
 # @stynx-nyx/integration-adapter
 
+## 1.5.0-rc.3
+
 ## 1.5.0-rc.2
 
 ## 1.5.0-rc.1
