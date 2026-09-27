@@ -1,7 +1,7 @@
 # Cross-family delivery-review — STYNX 1.5.0-rc.2 versioning
 
 You are Claude Code Opus 5.5, independent read-only reviewer. Review
-`codex/release-1-5-0-rc2` against merged main CTG2
+`codex/release-1-5-0-rc2-canonical` against merged main CTG2
 `ce6521438584db70f67e62f48d95048acd88be8b`. The worktree is
 `/Users/aarusso/.codex/worktrees/ctg2-sse/stynx`. Review the native
 Changesets pre-mode ordinal transition, the 44 fixed-group package
