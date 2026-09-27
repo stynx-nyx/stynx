@@ -24,6 +24,34 @@ pnpm add @stynx-nyx/auth
 
 **Node:** 24.x.
 
+## STYNX 1.5.0 session exchange
+
+`StynxAuthModule.forRoot(options)` accepts `cognito`, `stynx`,
+`redis`, and `permissions` options; see the exported
+`StynxAuthModuleOptions` type. The actual session endpoints are
+`POST /sessions`, `POST /sessions/switch`, and
+`POST /sessions/logout`. Session creation validates a Cognito **access**
+token and passes its verified claims to `SessionService`. Configure
+`StynxSessionsModule.forRoot({ strongFactor: { claimName,
+acceptedValues } })` with a claim that your Cognito access token actually
+contains. In particular, `amr` or `acr` may be absent; if the chosen
+claim has no accepted value, session creation fails with
+`STRONG_FACTOR_REQUIRED`. Request body `deviceMeta` never supplies
+factor proof.
+
+The sessions package now requires every custom `SessionStore` to
+implement atomic `createWithPolicy` before upgrade, including hosts
+using the default `singleSession.mode: 'off'`. The service validates this
+at module startup because tenant switching always uses an atomic
+transition. For a bounded Redis readiness probe, compose
+`createSessionStoreReadinessIndicator` from
+`@stynx-nyx/sessions` with the existing health module.
+
+## Legacy configuration examples
+
+The examples below describe an earlier STYNX API. Use the exported
+1.5.0 option types and endpoint names above for new integrations.
+
 ## Quick start
 
 ```ts
