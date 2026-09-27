@@ -214,6 +214,12 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Delivery-review da rota RC1 ciclo 1: `sensor-error` — faltavam
+  negativos diretos do preflight de dist-tags, canário, limite de
+  releituras e tag estável; Inspector ampliou sensores, Engineer ligou
+  validação pura do roster e recibos com motivo de parada. O reviewer
+  também identificou referência errada à última tag estável, corrigida
+  abaixo antes do segundo ciclo.
 - Sensores publicação RC1 após Inspector: `sensor-error` — o primeiro
   red não exercita mutação de tag histórica, modo padrão com changeset
   pendente nem preservação de `--access restricted`; completar essas
@@ -530,8 +536,10 @@ do despacho, delivery-review e CI
 antes do PR. Publicação só após merge, recibo Owner por ação/SHA e
 disparo explícito com `publish:true`; o pedido citará dist-tag `rc`,
 SHA/tree e que o primeiro pacote é canário. A RC não cria tag Git
-`v1.5.0-rc.1`; o `since_ref` de forbidden-actions permanece na última
-tag estável `v1.4.0`.
+`v1.5.0-rc.1`; a última tag estável publicada e alcançável é
+`v1.3.1`, que resolve a `a46ecb88bf5796a8fa4d142c2daf8b52c25a549f`.
+O resolver autenticado confirmou essa referência e o DEVAI strict
+desde ela passou com zero findings antes do segundo delivery-review.
 
 Prompt-review excepcional ciclo 3 da rota: **PASS**, com ajustes não
 bloqueantes incorporados em prompts 15/16 e neste contrato antes do
