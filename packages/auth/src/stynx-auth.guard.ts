@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
-import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
 import { SessionService } from '@stynx-nyx/sessions';
 import { PermissionCache } from './permission-cache';
 import { StynxJwtValidator } from './stynx-jwt.validator';
@@ -34,9 +34,10 @@ export class StynxAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<RequestLike>();
+    Reflect.deleteProperty(request, STYNX_VERIFIED_TENANT_ID);
     const publicTenant = this.reflector.getAllAndOverride<PublicTenantRouteOptions | boolean>(STYNX_PUBLIC_TENANT_ROUTE, [context.getHandler(), context.getClass()]);
     if (publicTenant !== undefined && publicTenant !== false) {
-      const request = context.switchToHttp().getRequest<RequestLike>();
       clearVerifiedPrincipal(request);
       Reflect.deleteProperty(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL);
       delete request.stynxClaims;
@@ -83,7 +84,6 @@ export class StynxAuthGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<RequestLike>();
     const response = responseLike(request);
     const startedAt = performance.now();
     const authorization = headerToString(request.headers.authorization);
@@ -121,6 +121,7 @@ export class StynxAuthGuard implements CanActivate {
     };
     request.actor = request.user;
     markVerifiedPrincipal(request);
+    Reflect.set(request, STYNX_VERIFIED_TENANT_ID, claims.tenantId);
     response?.setHeader('X-Stynx-Auth-Verify-Ms', (performance.now() - startedAt).toFixed(3));
     return true;
   }

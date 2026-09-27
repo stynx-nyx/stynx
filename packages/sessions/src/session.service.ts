@@ -56,10 +56,10 @@ export class SessionService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    if (this.options.singleSession.mode !== 'off' && !this.store.createWithPolicy) {
+    if (!this.store.createWithPolicy) {
       throw new Error('Single-session policy requires an atomic SessionStore.createWithPolicy');
     }
-    if (this.options.strongFactor && !this.options.strongFactor.acceptedValues.some((value) => typeof value === 'string' && value.trim().length > 0)) {
+    if (this.options.strongFactor && this.options.strongFactor.acceptedValues.length === 0) {
       throw new Error('Strong-factor policy requires an accepted value');
     }
   }
@@ -85,9 +85,12 @@ export class SessionService implements OnModuleInit {
     if (this.options.strongFactor && !prior) {
       const { claimName, acceptedValues } = this.options.strongFactor;
       const raw = metadata.verifiedFactorClaims?.[claimName];
-      const values = typeof raw === 'string' ? raw.split(/[,\s]+/) : raw;
+      const values = typeof raw === 'string' ? raw.split(/[,\s]+/).filter(Boolean) : raw;
       if (!Array.isArray(values) || !values.every((value) => typeof value === 'string')
-        || !values.some((value) => acceptedValues.some((accepted) => accepted.trim().toLowerCase() === value.trim().toLowerCase()))) {
+        || !values.some((value) => {
+          const normalized = value.trim().toLowerCase();
+          return normalized.length > 0 && acceptedValues.includes(normalized);
+        })) {
         throw new StrongFactorRequiredError();
       }
       factorVerifiedAt = now.toISOString();
