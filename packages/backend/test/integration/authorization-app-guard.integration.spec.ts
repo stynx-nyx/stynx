@@ -443,4 +443,36 @@ describe('authorization local guard without module registration', () => {
       await app.close();
     }
   });
+
+  it('uses the app-wide forRoot evaluator when the local guard lives in another module', async () => {
+    const evaluate = vi.fn(() => false);
+    @Module({ imports: [StynxAuthorizationModule.forRoot({ policyEvaluator: { evaluate } })] })
+    class ConfiguredAuthorizationModule {}
+    @Module({ controllers: [LegacyLocalAuthorizationController] })
+    class LegacyLocalAuthorizationModule {}
+    const testing = await Test.createTestingModule({
+      imports: [
+        StynxCoreModule.forRoot({ appName: 'authorization-cross-module-local', schema: z.object({}) }),
+        ConfiguredAuthorizationModule,
+        LegacyLocalAuthorizationModule,
+      ],
+    }).compile();
+    const app = testing.createNestApplication();
+    app.use((req: { principal?: typeof actor }, _res: unknown, next: () => void) => {
+      req.principal = actor;
+      next();
+    });
+
+    try {
+      await app.init();
+      await request(app.getHttpServer()).get('/authorization-legacy-local/present').expect(403);
+      expect(evaluate).toHaveBeenCalledTimes(1);
+      expect(evaluate).toHaveBeenCalledWith(expect.objectContaining({
+        principal: actor,
+        requirements: { permissions: { permissions: ['records:read'], mode: 'all' } },
+      }));
+    } finally {
+      await app.close();
+    }
+  });
 });
