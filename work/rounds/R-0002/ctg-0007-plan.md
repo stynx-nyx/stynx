@@ -25,10 +25,11 @@ Architect faz contrato e prompts; reviewer externo Opus 5.5 em `prompt-review` a
 
 ## Triagem
 
-Sem falhas registradas antes do despacho.
+- Inspector 7A: `sensor-error` — o primeiro E2E importava marcadores privados de auth; o Inspector removeu os imports, manteve prova pública do marcador CTG1 e verifica a ausência do símbolo privado por reflexão, sem semear esse símbolo por API interna. Lint/Prettier passaram; vermelho restante é somente export do helper/guard ainda ausente.
+- Inspector 7B: `sensor-error` — expectativas iniciais contavam o dia de partida em Auckland/Los Angeles e calculavam 65 h no DST de retorno; corrigidas para data civil excluída, fim exclusivo e 61 h. `deadline.spec.ts` usa agora o barrel público. Vermelho restante é somente `TenantBusinessCalendar`/clock ainda ausente.
 
 ## Retomada
 
-Contrato e prompts ajustados após `prompt-review` ciclos 1 e 2 `REVIEW`. O bloqueio de tenancy e os três ajustes não bloqueantes do ciclo 2 foram reparados em F1/prompts. Prompt 86 excepcional foi autorizado pelo Owner e recebeu `PASS` do Opus 5.5 em `reviews/ctg7-prompt-review-3.json`. Nenhum Inspector/Engineer foi despachado; precedência e reconciliação CTG5 permanecem pendentes.
+Contrato e prompts ajustados após `prompt-review` ciclos 1 e 2 `REVIEW`. O bloqueio de tenancy e os três ajustes não bloqueantes do ciclo 2 foram reparados em F1/prompts. Prompt 86 excepcional foi autorizado pelo Owner e recebeu `PASS` do Opus 5.5 em `reviews/ctg7-prompt-review-3.json`. Inspectors 7A e 7B foram despachados após PASS e seus testes foram commitados separadamente em `44e11b55` e `9ee9b7fa`. O trace foi rebindo em `7aaa23c0`: 397/397 testes, sem novo invariante, DEVAI strict zero achados desde `a3c81645`. Engineers 7D e 7E estão em execução em locks distintos. O Inspector 7C e Engineer 7F aguardam reconciliação do contrato CTG5; merge continua dependente de CTGs 1–6.
 
 Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
