@@ -1,0 +1,12 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "method": "claude -p --permission-mode plan --output-format json",
+  "fallbackReason": "DETRAN bridge returned non-JSON and removed raw output",
+  "prompt": "work/rounds/R-0002/prompts/44-ctg3-prompt-review.md",
+  "prompt_sha256": "860f35f7979cc6ee94aaea093eedf57cd5b26ba46b6d2ac8bac13b6c838224b2",
+  "output": "work/rounds/R-0002/reviews/ctg3-prompt-review-1.json",
+  "output_sha256": "8023b3560cf0ef736c789a414161022cd99ab4b8a00736cf964979cea91112f3",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg3-authz-session/stynx",
+  "recorded_at": "2026-09-27T04:10:25.431Z"
+}
