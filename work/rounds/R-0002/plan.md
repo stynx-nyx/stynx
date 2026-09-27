@@ -212,7 +212,22 @@ está liberado. Delivery-review Opus 5.5, CI verde e PASS antes
 de merge.
 Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
+## Contrato de status RC versionada no PR #276
+
+O job remoto `release-drafts` chama `pnpm release:status`. O Changesets
+`status --since origin/main` rejeita a candidata RC já versionada porque
+as 44 versões mudaram e o único changeset foi consumido em `pre.json`.
+A rota deve emitir status vazio apenas para uma candidata pre mode `rc`
+com marcador explícito de commit de versionamento na primeira linha de
+história, 44 manifestos publicados alterados a uma versão prerelease
+única, versões iniciais iguais às do `origin/main`, changesets consumidos
+listados e presentes, e nenhum changeset pendente. Uma alteração
+ordinária sem changeset continua falhando pelo Changesets. O Inspector
+fixa positivos e negativos; Engineer implementa sem editar workflow.
+
 ## Triagem
+
+- PR #276 `release-drafts`: `plant-bug` — `release:status` tratou a RC já versionada como alteração ordinária e o Changesets recusou os 44 manifestos sem changesets pendentes. O contrato acima define uma exceção fechada para pre mode versionado; testar antes de implementar.
 
 - Delivery-review da rota RC1 ciclo 1: `sensor-error` — faltavam
   negativos diretos do preflight de dist-tags, canário, limite de
