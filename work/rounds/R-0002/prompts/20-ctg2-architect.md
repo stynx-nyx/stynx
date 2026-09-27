@@ -18,6 +18,14 @@ model cannot be called a replay log. Document the configured Angular
 HttpClient/interceptor prerequisite, actual tenant/session signals,
 and the existing empty angular/testing secondary entry. Make the two
 tenant PostgreSQL/RLS proof and all negative states unambiguous.
+Fix `sessionActive: Signal<boolean>` as a required app-supplied config
+port, avoiding an angular→angular-auth cycle. Specify an SSE
+`HttpContextToken`: ErrorInterceptor keeps status/Retry-After and
+suppresses banners; AuthInterceptor refresh/replay precedes terminal
+401 stop. Bind E2E to reference/api test:int with non-superuser role,
+no tenant WHERE and no inherited tick ALS. Fix port/scope generics,
+HTTP preflight order/errors, flush/buffering, metrics sink and the
+canonical angular/testing entry.
 
 Report concrete symbols and file/line evidence. Do not execute Git,
 commit, push, publish, open PR or write DETRAN.

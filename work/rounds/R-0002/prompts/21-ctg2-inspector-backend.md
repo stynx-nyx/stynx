@@ -3,8 +3,8 @@
 Role: Inspector. Worktree:
 `/Users/aarusso/.codex/worktrees/ctg2-sse/stynx`.
 The maestro alone runs Git. Start after the Architect contract is
-recorded. Edit only new or existing files under `packages/backend/test/`
-and, if a dedicated DB fixture is necessary, `test/db/`. Coordinate
+recorded. Edit only `packages/backend/test/` for units and
+`reference/api/test/integration/` for HTTP/PostgreSQL E2E. Coordinate
 file ownership with the Angular Inspector; do not edit source,
 generated files, law, work records, workflows or DETRAN.
 
@@ -17,7 +17,16 @@ cleanup, 429/Retry-After, payload drop marker, metrics and wire
 contract. E2E Nest uses PostgreSQL FORCE RLS with two tenants and
 non-superuser role; prove B event/ID never leaks into A, unknown B ID
 starts at DB now, visible expired A ID returns 204 empty, and missing
-tenant fails before source access. Use test doubles only for scheduler
+tenant 400 and missing actor 401 fail before source/headers. The host
+is reference/api, whose test:int already includes backend, data, pg,
+supertest and Nest HTTP; do not add manifests or lockfile. Assert
+current_user `stynx_app` has rolsuper=false and rolbypassrls=false;
+fixture table has FORCE RLS and different owner; source SQL has no
+tenant WHERE. Run fake ticks with ambient ALS cleared or changed to B
+and include a negative source-without-context-port proof. Mount the
+real CTG-0001 middleware/guard. Prove preflight order,
+flushed/no-buffer frames and structural assignment of data.Database
+to the port. Use test doubles only for scheduler
 and unrelated boundary dependencies, not for RLS proof.
 
 Preserve existing assertions. Run focused red tests, lint, RLS negative
