@@ -6,8 +6,12 @@ Inspector and Engineer prompts `12-rc1-version-inspector.md` and
 `13-rc1-version-engineer.md` before any worker dispatch. The Owner's
 OD-S15-01 requires `1.5.0-rc.1` after CTG-0001. The worktree is at the
 merged CTG-0001 plus DEVAI evidence; `.changeset/pre.json` is the reset
-pre mode state from `pnpm changeset pre enter rc`, to be committed with
-this revised plan. The first
+pre mode state from `pnpm changeset pre enter rc`, committed in
+`c011d259`. This is the third prompt-review, exceptionally authorized
+by the Owner after two REVIEW results. In cycle 2 you identified
+manifest/consumed-ID drift. The plan and worker prompts now require
+negative sensors for that drift, including missing consumed files and
+exit-mode base mismatch. The first
 `pnpm version-packages` incorrectly produced stable 1.5.0 after
 Changesets generated 2.0.0-rc.0; the generated files were restored,
 and the consumed changeset ID was reset in pre.json after your cycle-1

@@ -223,8 +223,8 @@ arquivos gerados foram restaurados; `pre.json` voltou ao estado de
 entrada com `changesets: []` e foi commitado em `c011d259`. O
 prompt-review Opus do reparo recebeu REVIEW em dois ciclos, ambos
 registrados em `reviews/rc1-version-prompt-review-{1,2}.json`. O
-contrato corrigido aguarda autorização para terceiro review excepcional;
-nenhum worker RC foi despachado. A publicação RC também requer corrigir
+Owner autorizou o terceiro prompt-review excepcional do RC1; nenhum
+worker RC foi despachado até seu veredito. A publicação RC requer corrigir
 a rota atual que fixa `--tag latest` e `candidate 1.4.0`.
 
 Nenhum pacote foi publicado e nenhum recibo de publicação foi recebido.

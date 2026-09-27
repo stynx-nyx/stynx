@@ -337,8 +337,9 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 6. RC1: `pre enter rc` está commitado com `changesets: []` em `c011d259`.
    O ensaio inicial de `version-packages` foi revertido sem publicação.
    Prompt-review Opus retornou REVIEW nos ciclos 1 e 2. As correções do
-   ciclo 2 estão preparadas neste checkpoint; solicitar autorização
-   excepcional antes de um terceiro prompt-review. Só despachar Inspector
+   ciclo 2 estão preparadas neste checkpoint. O Owner autorizou
+   expressamente o terceiro prompt-review excepcional em resposta ao
+   checkpoint de `053091a0`. Só despachar Inspector
    após PASS. A rota de publicação `--tag latest` permanece bloqueada
    para RC até tríade separada e revisão de entrega.
 
