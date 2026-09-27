@@ -20,7 +20,10 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import test from 'node:test';
 
-import { collectPublicPackages } from '../../scripts/lib/release-version-policy.mjs';
+import {
+  collectPublicPackages,
+  validateReleaseVersionPolicy,
+} from '../../scripts/lib/release-version-policy.mjs';
 import {
   fetchRegistryCensus,
   loadRegistryAnomalyPolicy,
@@ -496,12 +499,13 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 });
 
 test('Architect anomaly policy is required at its exact approved digest', () => {
-  // The Owner's 2026-09-15 decision names 1.4.0 as the next unified version
-  // (superseding 1.3.1); the 1.2.0 rebaseline target stays historical and is
-  // no longer a valid candidate.
-  assert.equal(currentCandidate, '1.4.0');
+  // The Owner's 2026-09-26 RC decision names 1.5.0-rc.1 and supersedes the
+  // 2026-09-15 1.4.0 candidate; 1.2.0 remains historical rebaseline data.
+  assert.equal(currentCandidate, '1.5.0-rc.1');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
-  assert.equal(anomalyPolicy.owner_decision.supersedes.next_unified_version, '1.3.1');
+  assert.equal(anomalyPolicy.owner_decision.supersedes.date, '2026-09-15');
+  assert.equal(anomalyPolicy.owner_decision.supersedes.next_unified_version, '1.4.0');
+  assert.equal(anomalyPolicy.preflight_latest_version, '1.4.0');
   assert.notEqual(currentCandidate, unifiedRebaselineTarget);
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');
@@ -1160,6 +1164,126 @@ test('publication uses an ordered 44-package plan, durable per-package receipts,
   const verifier = repositorySource('scripts/verify-release-policy.mjs');
   assert.match(verifier, /--candidate-from-policy/u);
   assert.match(verifier, /registryVersionPolicyConstants\.candidate/u);
+});
+
+test('RC1 registry monotonicity accepts only the exact prerelease candidate and its singular anomaly', () => {
+  assert.equal(packageNames.length, 44);
+  assert.equal(registryVersionPolicyConstants.candidate, '1.5.0-rc.1');
+  assert.equal(registryVersionPolicyConstants.preflightLatestVersion, '1.4.0');
+  assert.equal(anomalyPolicy.anomalies.length, 1);
+  assert.deepEqual(
+    anomalyPolicy.anomalies.map(({ package: name, version }) => [name, version]),
+    [['@stynx-nyx/angular-profile', '2.0.0']],
+  );
+
+  for (const version of ['1.4.0', '1.5.0-rc.0']) {
+    const history = validRegistryCensus();
+    history.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', version]));
+    assert.deepEqual(validate({ registryStatesByPackage: history }), {
+      anomalyMatches: 1, absentPackageCount: 0, packageCount: 44, publishedPackageCount: 44,
+    });
+  }
+
+  for (const [version, code] of [
+    ['1.5.0-rc.1', 'REGISTRY_CANDIDATE_EXISTS'],
+    ['1.5.0', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['1.5.1', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
+  ]) {
+    const history = validRegistryCensus();
+    history.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', version]));
+    assertPolicyError(() => validate({ registryStatesByPackage: history }), code);
+  }
+
+  for (const candidate of ['1.4.0', '1.5.0']) {
+    assertPolicyError(() => loadRegistryAnomalyPolicy(repoRoot, candidate), 'REGISTRY_ANOMALY_POLICY_UNSUPPORTED');
+    assertPolicyError(() => validate({ candidate }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
+  }
+});
+
+test('RC1 policy bytes bind to the Architect prerelease decision before registry observation', () => {
+  assert.doesNotThrow(() => loadRegistryAnomalyPolicy(repoRoot, '1.5.0-rc.1'));
+});
+
+test('RC1 publication uses only pure dist-tag helpers and preserves latest during rc publication', async () => {
+  const publication = await import('../../scripts/lib/publication-dist-tag.mjs');
+  const preState = { mode: 'pre', tag: 'rc', changesets: ['tenancy'] };
+  assert.equal(publication.selectPublicationDistTag({ version: '1.5.0-rc.1', preState }), 'rc');
+  assert.equal(publication.selectPublicationDistTag({ version: '1.5.0', preState: undefined }), 'latest');
+  for (const input of [
+    { version: '1.5.0-rc.1', preState: undefined },
+    { version: '1.5.0-rc.1', preState: { ...preState, tag: 'beta' } },
+    { version: '1.5.0-rc.1', preState: { ...preState, tag: 'latest' } },
+    { version: '1.5.0', preState },
+    { version: '1.5.0', preState: { ...preState, mode: 'exit' } },
+  ]) {
+    assert.throws(
+      () => publication.selectPublicationDistTag(input),
+      (error) => error?.code === 'PUBLICATION_DIST_TAG_INVALID',
+    );
+  }
+  assert.deepEqual(
+    publication.buildNpmPublishArgs({
+      tarball: 'fixture.tgz', registry: 'https://npm.pkg.github.com', tag: 'rc', version: '1.5.0-rc.1',
+    }),
+    ['publish', 'fixture.tgz', '--registry', 'https://npm.pkg.github.com', '--tag', 'rc', '--access', 'restricted'],
+  );
+  assert.throws(
+    () => publication.buildNpmPublishArgs({ tarball: 'fixture.tgz', registry: 'https://npm.pkg.github.com', tag: 'latest', version: '1.5.0-rc.1' }),
+    (error) => error?.code === 'PUBLICATION_DIST_TAG_INVALID',
+  );
+  assert.doesNotThrow(() => publication.verifyPostPublishDistTags({
+    candidate: '1.5.0-rc.1', preflightLatest: '1.4.0',
+    preflightDistTags: { latest: '1.4.0', legacy: '0.9.0' },
+    distTags: { latest: '1.4.0', rc: '1.5.0-rc.1', legacy: '0.9.0' },
+  }));
+  for (const [distTags, code] of [
+    [{ latest: '1.4.0' }, 'PUBLICATION_DIST_TAG_UNKNOWN'],
+    [{ latest: '1.5.0-rc.1', rc: '1.5.0-rc.1' }, 'PUBLICATION_DIST_TAG_DRIFT'],
+    [{ latest: '1.4.0', rc: '1.5.0-rc.1', legacy: '0.9.1' }, 'PUBLICATION_DIST_TAG_DRIFT'],
+  ]) {
+    assert.throws(
+      () => publication.verifyPostPublishDistTags({
+        candidate: '1.5.0-rc.1', preflightLatest: '1.4.0',
+        preflightDistTags: { latest: '1.4.0', legacy: '0.9.0' }, distTags,
+      }),
+      (error) => error?.code === code,
+    );
+  }
+  assert.doesNotThrow(() => publication.assertNoPendingPreChangesets({ preState, changesetIds: ['tenancy'] }));
+  assert.throws(
+    () => publication.assertNoPendingPreChangesets({ preState, changesetIds: ['tenancy', 'future-ctg'] }),
+    (error) => error?.code === 'PUBLICATION_DIST_TAG_INVALID',
+  );
+
+  const publisher = repositorySource('scripts/publish-release-plan.mjs');
+  assert.match(publisher, /publication-dist-tag\.mjs/u);
+  assert.match(publisher, /candidate_sha/u);
+  assert.match(publisher, /candidate_tree/u);
+  assert.match(publisher, /stop-on-first-failure/u);
+});
+
+test('RC1 default planning keeps a future pre-mode changeset while publication preflight alone refuses it', () => {
+  const fixture = createFixedGroupFixture({
+    version: '1.5.0-rc.1',
+    changesets: {
+      'consumed.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nConsumed.\n",
+      'future.md': "---\n'@stynx-nyx/fixture-core': patch\n---\n\nFuture CTG.\n",
+    },
+  });
+  try {
+    writeRcPreState(fixture, { changesets: ['consumed'] });
+    const before = readFileSync(join(fixture.root, '.changeset', 'pre.json'), 'utf8');
+    assert.deepEqual(
+      validateReleaseVersionPolicy(fixture.root, { fixed: [fixture.names] }),
+      [],
+    );
+    const plan = planFixedGroupVersion(fixture.root, { fixed: [fixture.names] });
+    assert.equal(plan.expected, '1.5.0-rc.2');
+    assert.equal(readFileSync(join(fixture.root, '.changeset', 'pre.json'), 'utf8'), before);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
 });
 
 // Fixed-group version rule (see scripts/lib/fixed-group-version.mjs): the
