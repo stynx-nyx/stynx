@@ -226,5 +226,8 @@ registrados em `reviews/rc1-version-prompt-review-{1,2}.json`. O
 Owner autorizou o terceiro prompt-review excepcional do RC1; nenhum
 worker RC foi despachado até seu veredito. A publicação RC requer corrigir
 a rota atual que fixa `--tag latest` e `candidate 1.4.0`.
+O terceiro prompt-review excepcional retornou **PASS** em
+`reviews/rc1-version-prompt-review-3.json`; quatro observações não
+bloqueantes foram incorporadas ao contrato dos workers antes do despacho.
 
 Nenhum pacote foi publicado e nenhum recibo de publicação foi recebido.

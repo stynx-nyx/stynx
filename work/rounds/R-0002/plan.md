@@ -403,3 +403,11 @@ manifesto raiz, e Architect rebinda `law/trace.json` após edições de
 testes. O fluxo estável já testado permanece válido. Nenhum workflow será
 editado. A preparação, CI e revisão de entrega da RC ocorrerão antes da
 solicitação de recibo para publicar.
+
+Prompt-review excepcional ciclo 3: **PASS**. As observações de execução
+ficam vinculantes para a tríade: em `exit`, IDs já consumidos ainda
+ativam a versão final; após `changeset version`, validar versão gerada
+(tag/ordinal em `pre`, versão estável em `exit`) e conferir que
+`pre.json.changesets` ganhou exatamente os IDs pendentes antes de
+reescrever manifestos. A correção do primeiro `rc.0` para `rc.1` também
+se aplica se não houver promoção major de peers.

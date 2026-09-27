@@ -29,6 +29,13 @@ mode, a recomputed base different from the current prerelease base
 fails closed. Reject malformed pre.json; absent pre.json retains the
 stable flow. Preserve prior RC changelog sections byte-for-byte when
 rewriting the newly generated section.
+In exit mode, the script's no-op branch must use the exit plan, including
+consumed group changesets. After `changeset version`, validate the
+generated version before rewriting: in pre mode its tag must match
+`pre.json.tag` and its ordinal must be 0 for the first RC or current+1
+for a later RC; in exit mode it must be stable. Before any rewrite in
+pre mode, verify `pre.json.changesets` equals its previous IDs plus
+exactly the newly pending IDs, with unchanged mode and tag.
 
 Run only focused script tests and `pnpm release:preview`; the latter
 must show 1.4.0 → 1.5.0-rc.1 against the reset pre.json. The maestro
