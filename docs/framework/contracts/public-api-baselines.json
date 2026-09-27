@@ -1283,16 +1283,16 @@
         "data/src/types.d.ts": "2396489c933e07d6f2023bf0cf8575d07e03373498de3425a46273730716a925",
         "jobs/src/backoff.d.ts": "e43a0865e476470d8b1b00a918c18dd76a8769ec27fe5ca56ad1fc047b4f444f",
         "jobs/src/constants.d.ts": "1e6d90e0c1de96eb8f5af3e890e90d40ad55423639754330a6bd9513792cf93f",
-        "jobs/src/cron.d.ts": "73b862e933e49f3d9e9128861bf6cdd270a3da1e1340ce64e341c285d8fdc158",
-        "jobs/src/errors.d.ts": "e16d618db3717c8f0fe79e15afe351d96a6602b8da638c8cfc266ba83a64caef",
+        "jobs/src/cron.d.ts": "1ad9c8f26a7b62cb25139e19610e8eb82e6a37faee6b4b1592436902fd7269aa",
+        "jobs/src/errors.d.ts": "ad92cb66ed1ddc22865ba3b71ab5a5b10bb6942b3d9871ba5451d1d9b0d40324",
         "jobs/src/index.d.ts": "9d7059cd42c5db4ba1d15e961900e079d12bc1dc386db9354401a47eb5e1e344",
         "jobs/src/jobs.module.d.ts": "0c2c9dcf63db06b1cbc566b539fe6bb0a61c2862afa8e21726d4d410f3d8a183",
         "jobs/src/jobs.registry.d.ts": "106d33ca5bf2b77db9e26c04e881bd52b145b584ef7744be55be8667a4a40da4",
-        "jobs/src/jobs.repository.d.ts": "f4310e0031fea0812606890e0ae8e503c16a80a67872abb4da07a9e0d40aec9e",
-        "jobs/src/jobs.scheduler.d.ts": "590aa644f441c31bde4c5c8ee3f6b4f013c7848890918b02aff7256b86bda52b",
-        "jobs/src/jobs.service.d.ts": "e36752f5bb0fbce60577bdd6270595edf8430ef27fcc26ab0a6844ed338c068a",
-        "jobs/src/jobs.worker.d.ts": "2e0f3dba1cdcde211072ea44799450742ac0745a9c606cf6a06451da28a3ae8f",
-        "jobs/src/types.d.ts": "685f5e66c21df368430e811da3fc5fc99473fc7dc7a3668f77acfcd4f2e8276e"
+        "jobs/src/jobs.repository.d.ts": "b3217639e04687aab4e558edc9425190383ab969cc120b5daf21465ce21d4f44",
+        "jobs/src/jobs.scheduler.d.ts": "34c6f384bf10f041497deba71d60d8722d19427b7945ef2cca60e6cd7803cd4f",
+        "jobs/src/jobs.service.d.ts": "94e266d54dea24b6a1b6925def3b71cfc739f59e487bbb88fd5719ba2cd75e68",
+        "jobs/src/jobs.worker.d.ts": "19daeae1cd234768823e3cbd08faf2e9176817298b51822328e5cc23d73d9809",
+        "jobs/src/types.d.ts": "f8eb063fc88207dcf2e847bf46fa0428e332946feb91ff5b9774fccc80dd5108"
       }
     },
     "@stynx-nyx/logging": {

@@ -26,7 +26,8 @@
       "STYNX 1.5.0 CTG-0002 Architect rebind pins SSE edge, HTTP, source-export and backend behavior sensors after coverage repair.",
       "STYNX 1.5.0 CTG-0002 Architect rebind pins filtered cursor progress and byte-ceiling lifecycle sensors.",
       "STYNX 1.5.0 CTG-0002 Architect rebind pins stale-generation multi-frame lifecycle sensors.",
-      "STYNX 1.5.0 CTG-0003 Architect rebind pins authorization and session coverage sensors, including readiness and Redis policy replies."
+      "STYNX 1.5.0 CTG-0003 Architect rebind pins authorization and session coverage sensors, including readiness and Redis policy replies.",
+      "STYNX 1.5.0 CTG-0004 Architect rebind pins actor/RLS, migration, timezone, DST and worker sensors."
     ]
   },
   "invariants": [
@@ -1849,8 +1850,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 16,
-      "assertion_digest_sha256": "98fcc537d486d1524c1df7fd4b31cc117fdbedd08f7cdff11121f1c8d537502d"
+      "assertion_count": 24,
+      "assertion_digest_sha256": "9f746f14e49e347de0b7446a59781356dee3e67e540f3e3b99fbe1bacf616b1f"
     },
     {
       "path": "packages/data/test/integration/soft-delete.spec.ts",
@@ -3733,6 +3734,14 @@
       "assertion_digest_sha256": "2e727059c778fa4bd5990ebb64687c1a0d63d58994d139dc04ab0d72eed410b1"
     },
     {
+      "path": "packages/jobs/test/integration/actor-rls.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 40,
+      "assertion_digest_sha256": "79b6333c8bad14319b91624f5e1b651ef50d23327223662e68215da9a345d1cc"
+    },
+    {
       "path": "packages/jobs/test/integration/module.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001"],
@@ -3741,52 +3750,60 @@
       "assertion_digest_sha256": "aeb2afc0ae3adad2adb9e92a115acadddcd12a2a66d6326d2d1e3d1b700c93ba"
     },
     {
+      "path": "test/db/platform-jobs-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 9,
+      "assertion_digest_sha256": "9842d8d093fef3da6bcda8f171124e8c81bd07b67f3527e1a88a57b298887068"
+    },
+    {
       "path": "packages/jobs/test/unit/cron-and-backoff.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 6,
-      "assertion_digest_sha256": "7a78c3cabf14d75dd9ab93ae283457d602f0454ced7bd336f266741fdc5ab141"
+      "assertion_count": 26,
+      "assertion_digest_sha256": "2fcc86aa8ea664ae3ed3e43f22a9842621665d7a535eaa255fd804f9256de553"
     },
     {
       "path": "packages/jobs/test/unit/jobs-depth.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "adbcf9447411c93b0c0dac0936b6f68003bccbd9c863e5c7a7fc4f4825288dce"
+      "assertion_count": 34,
+      "assertion_digest_sha256": "cb45601156d9facba15f796b5246195e574547ed7be2c6f5d4ba8eafffe66535"
     },
     {
       "path": "packages/jobs/test/unit/jobs-lifecycle-contract.spec.ts",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "cc5160ea61e5c85c8b46515f70a1c9afdc9d8f5fba88537e7244fedcdbc2cab2"
+      "assertion_count": 52,
+      "assertion_digest_sha256": "ef1611229b74c7cc7794c69058d3a707d0ab4e3aa57dd4416905378d135ef79e"
     },
     {
       "path": "packages/jobs/test/unit/jobs-repository-contract.spec.ts",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 36,
-      "assertion_digest_sha256": "7f2aed22cf345487d8dda52723d660a950e3bfe507363de271172622f75350f9"
+      "assertion_count": 51,
+      "assertion_digest_sha256": "d2ed8d731e3ac8cc2599228d01af9e51f7ecda89dbe61242a3cd7bbeb8da31e7"
     },
     {
       "path": "packages/jobs/test/unit/jobs-service.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 40,
-      "assertion_digest_sha256": "b1c3d1ee7760ebb3d6af0cf23699168531c37c31310889920227fe9068ad709c"
+      "assertion_count": 65,
+      "assertion_digest_sha256": "e6a94ea169325ce99fc72773de42f44c380da79ee5568ab54127dfe918afb7b9"
     },
     {
       "path": "packages/jobs/test/unit/worker.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 4,
-      "assertion_digest_sha256": "7efd05befeb97861aa5e3de674fb3d34db319164dd2427c27648f01189a97fec"
+      "assertion_count": 35,
+      "assertion_digest_sha256": "c06471cf9cccd86da81fafe4c31f715cc35c3fcc4fc85aea2d35ea3c5d7ab3d4"
     },
     {
       "path": "packages/notifications/test/integration/notifications.database.spec.ts",
