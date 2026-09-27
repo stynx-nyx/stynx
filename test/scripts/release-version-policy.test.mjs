@@ -41,6 +41,7 @@ import {
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 import {
   classifyReleaseContext,
+  isVersionedPreModeCandidate,
   releaseContextConstants,
   ReleaseContextError,
 } from '../../scripts/lib/release-context.mjs';
@@ -207,6 +208,51 @@ test('ordinary changed publishable packages without a Changeset remain ordinary 
     baseCommit: preparedBaseCommit,
     headCommit: preparedHeadCommit,
   });
+});
+
+test('versioned RC status accepts only the complete consumed fixed-group candidate', () => {
+  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+    name,
+    manifestPath: relative(repoRoot, manifestPath),
+    baseVersion: '1.4.0',
+    candidateVersion: '1.5.0-rc.1',
+  }));
+  assert.equal(packageStates.length, 44);
+  const input = {
+    baseRootVersion: '1.4.0',
+    candidateRootVersion: '1.5.0-rc.1',
+    hasVersionCommit: true,
+    packageStates,
+    changedManifestPaths: packageStates.map(({ manifestPath }) => manifestPath),
+    changesetIdsOnDisk: ['tenancy-context-15'],
+    preState: {
+      mode: 'pre',
+      tag: 'rc',
+      initialVersions: Object.fromEntries(packageStates.map(({ name }) => [name, '1.4.0'])),
+      changesets: ['tenancy-context-15'],
+    },
+  };
+  assert.equal(isVersionedPreModeCandidate(input), true);
+
+  for (const [label, mutate] of [
+    ['no version commit', (value) => { value.hasVersionCommit = false; }],
+    ['wrong mode', (value) => { value.preState.mode = 'exit'; }],
+    ['wrong tag', (value) => { value.preState.tag = 'latest'; }],
+    ['stable candidate', (value) => { value.candidateRootVersion = '1.5.0'; }],
+    ['same version as base', (value) => { value.baseRootVersion = '1.5.0-rc.1'; }],
+    ['one package omitted', (value) => { value.packageStates.pop(); }],
+    ['one package not versioned', (value) => { value.packageStates[43].candidateVersion = '1.4.0'; }],
+    ['one base mismatch', (value) => { value.packageStates[0].baseVersion = '1.3.1'; }],
+    ['one changed manifest omitted', (value) => { value.changedManifestPaths.pop(); }],
+    ['one unexpected manifest', (value) => { value.changedManifestPaths.push('packages/unrelated/package.json'); }],
+    ['no consumed changeset', (value) => { value.preState.changesets = []; }],
+    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('new-work'); }],
+    ['missing consumed file', (value) => { value.changesetIdsOnDisk = []; }],
+  ]) {
+    const invalid = structuredClone(input);
+    mutate(invalid);
+    assert.equal(isVersionedPreModeCandidate(invalid), false, label);
+  }
 });
 
 test('version rebaseline permits only the three generated dependency README consequences', () => {
