@@ -111,7 +111,7 @@ describe('@stynx-nyx/angular-auth W04 identity contract depth', () => {
     expect(service.hasAnyPermissions(['inf:x', 'profile:READ'])).toBe(true);
     expect(service.hasAllPermissions(['ops'])).toBe(false);
     expect(service.hasAllPermissions(['ops2:read'])).toBe(false);
-    expect(service.hasAllPermissions(['ops:caser'])).toBe(false);
+    expect(service.hasAllPermissions(['ops:caser'])).toBe(true);
     expect(service.hasAllPermissions(['ops:*'])).toBe(true);
     expect(service.hasAllPermissions(['ops:case:*'])).toBe(false);
     expect(service.hasAnyPermissions(['inf:x'])).toBe(false);

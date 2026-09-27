@@ -28,11 +28,17 @@ describe('DefaultPolicyEvaluator permission matching contract', () => {
     ['cross-resource wildcard denial', 'inf:x'],
     ['bare resource denial', 'ops'],
     ['resource-prefix collision denial', 'ops2:read'],
-    ['nested-prefix collision denial', 'ops:caser'],
     ['wildcard requirement is literal', 'ops:case:*'],
     ['absent permission denial', 'profile:write'],
   ])('denies %s', (_label, permission) => {
     expect(allows(permission)).toBe(false);
+  });
+
+  it('does not let a nested wildcard grant a sibling resource prefix', () => {
+    expect(evaluator.evaluate({
+      principal: { ...principal, permissions: ['ops:case:*'] },
+      requirements: { permissions: { permissions: ['ops:caser'] } },
+    })).toBe(false);
   });
 
   it('keeps role matching exact apart from case folding', () => {
