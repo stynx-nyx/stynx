@@ -39,3 +39,5 @@ No failure classified before dispatch. Each failure entering feedback is classif
 ## Resume state
 
 Cycle-2 REVIEW repairs are prepared. Owner exception for cycle 3 remains pending; do not dispatch prompt 96 or workers until authorized, then require prompt-review PASS, Architect invariant checkpoint, and CTG-0007 integration receipt before Inspector dispatch. No implementation, tests, PR, merge, versioning, or publication is authorized by this plan alone.
+
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.

@@ -1,5 +1,7 @@
 # CTG-0008 cross-family prompt review — exceptional cycle 3
 
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
+
 Role: **read-only reviewer** from a distinct model family. This prompt is prepared only; dispatch requires the Owner's explicit exception to the plan's two-cycle review limit. Do not infer that approval from this file. Do not edit files, dispatch workers, run Git mutations, or implement the generator.
 
 Read in order the repository authority entrypoints (`README.md`, `law/constitution.md`, `.devai/pin/constitution.md`, `law/adr`, `law/schemas`, `docs/meta/development-contract.md`), then cycle-1 and cycle-2 review receipts, `docs/framework/contracts/cli-generator-1.5.md`, `work/rounds/R-0002/ctg-0008-plan.md`, and prompts 90–93. Inspect current CLI/data/auth public APIs, migration-created schemas, root and package test scripts, and the tiny DETRAN sample read only. Decide whether each cycle-2 blocking and pertinent nonblocking finding is actually repaired in the proposed contract and role instructions. Do not demand that all 50 DETRAN blueprints be accepted.
