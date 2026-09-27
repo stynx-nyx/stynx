@@ -297,3 +297,12 @@ duráveis em `48629e1f`; Architect rebindou trace e plano em
 `v1.3.1` (`a46ecb88bf5796a8fa4d142c2daf8b52c25a549f`), e
 DEVAI strict desde esse SHA passou sem findings. Segundo
 delivery-review pendente de CI integral no HEAD reparado.
+
+O CI integral do RC1 reparado passou (exit 0) no log
+`/private/tmp/stynx-s15-rc1-review2-ci.log`. O delivery-review Opus da
+rota RC1 ciclo 2 retornou **PASS** em
+`reviews/rc1-publish-delivery-review-2.json`, com três sugestões
+opcionais de sensores/recibo e sem bloqueio. O escopo aprovado inclui
+preflight de 44 dist-tags, canário angular, proteção de `latest`,
+releituras limitadas e recibo de parada com status do comando. PR de
+preparação e recibo específico de publicação ainda pendentes.

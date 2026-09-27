@@ -1,0 +1,24 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "issue": "The check that no v* Git tag is created still only matches source text. It asserts that the publisher does not match /git\\(\\['tag',\\s*`v/ and that release.yml does not match /git tag\\s+v\\d/. A tag built another way would get past both regexes, for example an array variable, a string literal 'v…', or gh release create. The behavioural half of the check is sound: parseStableVersionTag rejects 'v1.5.0-rc.1', and the tag template `${entry.package}@${version}` is pinned.",
+      "required_change": "Optional: move per-package tag construction into an exported pure helper in publication-dist-tag.mjs, then assert that for every roster entry it returns `${name}@1.5.0-rc.1` and never matches /^v\\d/."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "issue": "The roster negatives cover a missing canary and a swapped canary (ROSTER_DRIFT), and version drift on the first entry only (VERSION_DRIFT). There is no case for the duplicate-name branch, and none for version drift on a later entry.",
+      "required_change": "Optional: add a 44-entry roster with a duplicated name, which should fail with PUBLICATION_ROSTER_DRIFT, and a roster whose last entry is at 1.5.0, which should fail with PUBLICATION_VERSION_DRIFT."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/publish-release-plan.mjs",
+      "issue": "stop_code keeps only the first applicable cause. If visibility.error is set (DRIFT or UNKNOWN) and the integrity or shasum also differs, stop_code records only the dist-tag code. The mismatch can still be worked out from the expected_* and observed integrity/shasum fields in the same receipt, so the fail-closed behaviour is unaffected.",
+      "required_change": "Optional: add an artifact_matches boolean to the receipt so the Owner can see the integrity status directly."
+    }
+  ],
+  "summary": "Both blocking findings from cycle 1 are resolved at HEAD 570f9304.\n\n(1) Preflight: the new tests call validatePreflightDistTags directly. latest set to 2.0.0, 1.5.0-rc.1 or 1.3.1 fails with DRIFT. A missing latest, null, [], {}, {latest:1} and {'':'1.4.0'} each fail with UNKNOWN. The baseline is read from registryVersionPolicyConstants.preflightLatestVersion, and the test asserts it equals 1.4.0.\n\n(2) Publisher control flow: roster validation is now the pure function validatePublicationRoster. It is tested behaviourally against the real 44-package discovery (angular first, all at 1.5.0-rc.1) and against a missing canary, a swapped canary and version drift. publicationPlanConstants pins the canary, a count of 44, a limit of 5 rereads and a 2000 ms delay, and the publisher now uses these constants instead of literals. verifyPostPublishDistTags reports UNKNOWN when an old rc keeps its value and DRIFT when rc moves to 1.5.0-rc.0. parseStableVersionTag rejects v1.5.0-rc.1.\n\nFail-closed path: no regression found. verified requires command status 0 and a null stopCode. stopCode is non-null for dist-tag drift or unknown, integrity mismatch, non-visibility and a non-zero command status. The receipt is written before fail(), and it now records command_status and the exact stop_code. Tags are created only after verification, and only as package@version. latest cannot be passed for an RC, and preflight still checks all 44 packages before any mutation.\n\nRange: the plan now names v1.3.1. That tag resolves locally to a46ecb88bf5796a8fa4d142c2daf8b52c25a549f, and no v1.4.x or v1.5.x tag exists. I did not rerun the strict DEVAI check from that SHA myself. Trace and .github: pnpm check:trace reports 393/393 bound, and there are no changes under .github.\n\nTests: I reran release-version-policy at HEAD and got 42/42 passing. CI: the full ci:stynx log is complete. It contains both new tests, passing, reaches doctor, and ends with ok:true. The only commits after the code change that log covers touch law/trace.json and work/ documentation.\n\nThe remaining items are optional hardening of sensors that only match source text. Nothing has been published; publication still needs the Owner's action-specific receipt after merge."
+}
