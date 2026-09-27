@@ -24,6 +24,7 @@ const actor = {
 @SetMetadata(TARGET_KEY, { resource: 'class-resource', action: 'class-action' })
 class AuthorizationMatrixController {
   @Get('/plain')
+  @SetMetadata(TARGET_KEY, undefined)
   plain() { return { route: 'plain' }; }
 
   @Get('/decorated')
@@ -51,6 +52,7 @@ class AuthorizationMatrixController {
   emptyTarget() { return { route: 'empty-target' }; }
 
   @Get('/undefined-target')
+  @SetMetadata(TARGET_KEY, undefined)
   undefinedTarget() { return { route: 'undefined-target' }; }
 
   @Get('/partial-target')
@@ -66,7 +68,9 @@ function authorizationOptions(evaluate: (context: Record<string, unknown>) => bo
     resolveTarget: (context: { getHandler(): Function; getClass(): Function }) => {
       const handler = context.getHandler();
       const controller = context.getClass();
-      return Reflect.getMetadata(TARGET_KEY, handler) ?? Reflect.getMetadata(TARGET_KEY, controller);
+      return Reflect.hasOwnMetadata(TARGET_KEY, handler)
+        ? Reflect.getOwnMetadata(TARGET_KEY, handler)
+        : Reflect.getMetadata(TARGET_KEY, controller);
     },
     onDeny: (_context: unknown, target: unknown, principal: unknown) => {
       const hasPrincipal = Boolean(principal);

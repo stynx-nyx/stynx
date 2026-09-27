@@ -545,7 +545,7 @@ describe('backend module wiring branches', () => {
       tenantResolver: {} as never,
       tenantEntitlementPolicy: {} as never,
     }).providers).toHaveLength(5);
-    expect(StynxAuthorizationModule.forRoot({ policyEvaluator: {} as never }).providers).toHaveLength(2);
+    expect(StynxAuthorizationModule.forRoot({ policyEvaluator: {} as never }).providers).toHaveLength(3);
     expect(StynxAuditModule.forRoot({ sink: {} as never, metadataRedactionPolicy: {} as never }).providers).toHaveLength(3);
 
     const pipelineAll = StynxPlatformPipelineModule.forRoot();
