@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { request as httpRequest } from 'node:http';
+import { vi } from 'vitest';
 import { Controller, Get, Inject, Req, Res, UseGuards } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
@@ -215,17 +216,19 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
     });
     expect(stream.contentType).toContain('text/event-stream');
     expect(stream.body()).toContain(': connected\n\n');
-    const liveAdmin = await postgres.connectAsAdmin();
     try {
-      await liveAdmin.query(`insert into sse_fixture.event_stream (id, tenant_id, created_at, event, payload) values
-        ('a-tick', $1, clock_timestamp() + interval '1 second', 'record.changed', jsonb_build_object('tenant', 'A', 'value', 'tick')),
-        ('b-tick', $2, clock_timestamp() + interval '1 second', 'record.changed', jsonb_build_object('tenant', 'B', 'value', 'private'))`, [tenantA, tenantB]);
-    } finally { await liveAdmin.end(); }
-    await scheduler.fire(5);
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(stream.body()).toContain('id: a-tick');
-    expect(stream.body()).not.toContain('b-tick');
-    stream.close();
+      const liveAdmin = await postgres.connectAsAdmin();
+      try {
+        await liveAdmin.query(`insert into sse_fixture.event_stream (id, tenant_id, created_at, event, payload) values
+          ('a-tick', $1, clock_timestamp() + interval '1 second', 'record.changed', jsonb_build_object('tenant', 'A', 'value', 'tick')),
+          ('b-tick', $2, clock_timestamp() + interval '1 second', 'record.changed', jsonb_build_object('tenant', 'B', 'value', 'private'))`, [tenantA, tenantB]);
+      } finally { await liveAdmin.end(); }
+      await scheduler.fire(5);
+      await vi.waitFor(() => expect(stream.body()).toContain('id: a-tick'), { timeout: 5_000, interval: 20 });
+      expect(stream.body()).not.toContain('b-tick');
+    } finally {
+      stream.close();
+    }
 
     const statusFor = async (lastEventId: string) => new Promise<number>((resolve, reject) => {
       const client = httpRequest({ host: '127.0.0.1', port: address.port, path: '/_sse', headers: { host: 'reference-api.test', authorization: 'Bearer test-a', 'x-tenant-id': tenantA, 'last-event-id': lastEventId } }, (response) => {
