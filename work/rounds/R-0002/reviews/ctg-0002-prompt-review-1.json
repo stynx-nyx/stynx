@@ -1,0 +1,60 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/24-ctg2-engineer-angular.md",
+      "issue": "The plan treats `StynxSessionService.active/active$` as the logout signal. That service lives in `packages-web/angular-auth/src/session.service.ts`, and `@stynx-nyx/angular-auth` depends on `@stynx-nyx/angular` (`packages-web/angular-auth/package.json:45`). `@stynx-nyx/angular` cannot import it without creating a cycle, which `lint:cycles` and `lint:deps` would flag. The only auth seam `@stynx-nyx/angular` has is `STYNX_AUTH_PROVIDER`/`AuthProvider` (`packages-web/sdk/src/auth-provider.ts:3-8`). It only exposes getAccessToken/refresh/loginRedirect/onAuthFailure and has no session-state signal. As written, NGSSE-08 'logout -> stopped' cannot be built inside the Engineer's file lock.",
+      "required_change": "The Architect contract must define a session-state port. Options: a new InjectionToken, for example `STYNX_SESSION_STATE` with `active: Signal<boolean>`, declared in `@stynx-nyx/angular` and provided by angular-auth; or an optional `sessionActive` input in `provideStynxEventStream` config. Then either extend the Angular Engineer lock to cover the one angular-auth provider file plus its test, or have the Inspector test logout through the token alone. Record this as a deviation from the proposal's naming."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0002-plan.md",
+      "issue": "A real HttpClient makes '429 -> max(backoff, Retry-After)' impossible as planned. `ErrorInterceptor` (`packages-web/angular/src/error.interceptor.ts`) turns every `HttpErrorResponse` into `createStynxSdkError(status, error.error)`, which throws away the response headers, so the client never sees Retry-After. The same interceptor calls `ErrorBannerService.show` on every 0/5xx/429 reconnect failure. `AuthInterceptor` also runs refresh-and-replay on 401 (`auth.interceptor.ts`), so 401 does not map straight to `stopped`.",
+      "required_change": "The contract must fix how SSE requests pass through the interceptor chain. Options: an `HttpContextToken` that the SSE transport sets, so `ErrorInterceptor` suppresses the banner and keeps the headers/status (for example by attaching them to the mapped error); or documented extraction of `Retry-After` from a preserved `HttpErrorResponse`. Specify that 401 means 'refresh failed or already retried' and that the terminal state is `stopped`. Add Inspector sensors for three things: Retry-After is honored through the real interceptor stack; SSE reconnects show no banner; 401 goes refresh -> replay -> stop."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/21-ctg2-inspector-backend.md",
+      "issue": "The E2E harness cannot be built inside the declared locks. First, `packages/backend/package.json` has no `test:int` script, so `pnpm test:int` (turbo `--filter='./packages/*'`) never runs a backend E2E. Its `vitest.config.ts` puts `test/**/*.spec.ts` in plain `pnpm test`, which has no Postgres. Second, the backend has neither `pg`, `@nestjs/platform-express`/supertest, nor `@stynx-nyx/data` as dependencies: its node_modules has only contracts/idempotency/ratelimit and @nestjs common/core/testing. The Inspector may only edit `packages/backend/test/` and `test/db/`, so it cannot add a manifest, `vitest.int.config.ts`, or `pnpm-lock.yaml` change. The backend Engineer may edit the manifest only 'if a public export requires it'.",
+      "required_change": "The Architect must choose the E2E location and give one role an explicit lock on the harness files. Options: a backend `test:int` script, `vitest.int.config.ts`, devDependencies on `@stynx-nyx/data`, `pg`, and a Nest HTTP adapter, plus the `pnpm-lock.yaml` update; or a host package that already runs Postgres int tests (for example data or testing). Assign that lock to the Inspector before the red phase. If devDependencies change, add `pnpm package-readmes:write` if needed and `lint:deps` to the gate list."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/21-ctg2-inspector-backend.md",
+      "issue": "There are three loopholes in the RLS proof. (1) `packages/data/test/support/postgres.ts` connects as the local OS user, usually a superuser. `data.Database` only sets `app.role` and `app.tenant_id` GUCs and never runs SET ROLE. Superusers and BYPASSRLS roles skip RLS even with FORCE, so the 'B never reaches A' test could pass while proving nothing. (2) If the test source's `listSince`/`findById` SQL contains `WHERE tenant_id = $scope`, the test proves an application filter, not RLS. (3) The tick timer is created inside the opening request's AsyncLocalStorage/CLS, so a tick inherits tenant A's ambient context. A tick that skips `withRequestContext` would still pass.",
+      "required_change": "Require the test to check `SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user` and assert both are false for the app connection. The fixture table must be created in the test database (not canonical `database/ddl`) with ENABLE + FORCE RLS, a tenant policy with USING and WITH CHECK, and an owner different from the app role. The test's `EventStreamSource` must not filter by tenant in SQL. Ticks must run with the ambient context cleared or pointed at tenant B, for example a fake scheduler that calls back through `AsyncLocalStorage.exit` or a fresh context. Add a negative sensor: a source reading without the port gets zero rows or an error. The connection should open through a real Nest app with the CTG-0001 request-context middleware and guard, so tenant and actor are captured from the real `RequestContext`, not a hand-built scope."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/22-ctg2-inspector-angular.md",
+      "issue": "`packages-web/angular/vitest.config.ts` aliases only `@stynx-nyx/sdk`, `@stynx-nyx/angular` and `@stynx-nyx/angular-tenancy`. It has no `@stynx-nyx/angular/testing` alias, and the `@stynx-nyx/angular` alias points at `src/index.ts`, so the specifier `@stynx-nyx/angular/testing` fails to resolve. The Inspector lock (`packages-web/angular/test/`) forbids editing the config, so TEST-01 cannot be tested through its published specifier. There are also two empty testing entries (`packages-web/angular/testing/index.ts` and `packages-web/angular/src/testing/index.ts`), and the contract does not say which one is canonical.",
+      "required_change": "Extend the Angular Inspector lock to cover the one `vitest.config.ts` alias (`@stynx-nyx/angular/testing` -> `testing/index.ts`, placed before the bare `@stynx-nyx/angular` alias) and the `tsconfig.spec.json` include, if needed. The Architect contract must name `packages-web/angular/testing/index.ts` (the ng-packagr secondary entry) as canonical and say what happens to `src/testing/index.ts`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/23-ctg2-engineer-backend.md",
+      "issue": "The prompts contradict the plan. The plan says the 'Engineer acrescenta changeset do grupo fixo e executa `pnpm package-readmes:write`'. Prompts 23 and 24 say the maestro creates the changeset, forbid generated files, and never mention `package-readmes:write`. The trace rebind (`pnpm check:trace --print` -> `law/trace.json`) and `pnpm api:baselines:write` are Architect duties, but no Architect follow-up prompt exists. Prompt 20 limits the Architect to `sse-1.5.md`.",
+      "required_change": "Settle ownership in one place. Add Architect follow-up prompts: one for the trace rebind after sensors are red, and one for the baselines after implementation, covering `@stynx-nyx/backend` root, `@stynx-nyx/angular`, and `stynx-nyx-angular-testing.d.ts`, with `law/` commits authored as DEVAI Architect. Say who creates the fixed-group changeset and who runs `package-readmes:write`/`package-readmes:check`, and allow those generated files for that role."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0002-plan.md",
+      "issue": "`data.Database.withRequestContext` requires `actorId: string` (`packages/data/src/database.ts:156-158`), and `requestContextMutator!` throws when it is not configured. The plan does not say what happens with a missing actor, which HTTP status a missing tenant returns, or the preflight order (tenant/actor check -> 429 limit -> Last-Event-ID resolution/204 -> headers/`: connected`). UPS-SSE-06's 'scope estendido' generic is also not covered.",
+      "required_change": "The contract should do four things. (1) Fix the port type as `{ withRequestContext<T>(scope: { tenantId: string; actorId: string; sessionId?: string }, fn: () => Promise<T>): Promise<T> }` so `data.Database` is structurally assignable, and prove that with a type test. (2) Define the error codes and statuses for missing tenant and missing actor, all returned before headers. (3) Fix the preflight order. (4) Make the source and scope generic (`TScope extends StynxSseScope`) so filters can move into SQL."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0002-plan.md",
+      "issue": "Three wire details are unspecified. The backend pipeline or compression interceptors could buffer a manual `@Get` response, and there is no `flushHeaders`/`X-Accel-Buffering` requirement. The UPS-SSE-09 metrics surface ('logging/health') is not chosen. The 'never EventSource' rule has no sensor.",
+      "required_change": "Contract: require flushed headers and no response transform on the SSE route. Name the metrics sink, either a logging port or a health indicator, with concrete counters. Inspector: add a guard that fails if `globalThis.EventSource` is constructed, and a test that the backend interceptor chain does not buffer frames."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/23-ctg2-engineer-backend.md",
+      "issue": "The Engineer must make the real PostgreSQL/RLS E2E green, but no provisioning is stated: `STYNX_TEST_PG_*` env, template DB (`STYNX_TEST_PG_TEMPLATE`), and non-superuser role creation. The E2E is also missing from the `ci:stynx` gate list unless it is wired into `test:int`.",
+      "required_change": "Document the local and CI Postgres provisioning in the contract, including how the app role is created and granted. State that `pnpm test:int` includes the new E2E, and have the maestro confirm this with focused output before the delivery-review."
+    }
+  ],
+  "summary": "The contract is directionally right: structural withRequestContext port, no OBX default, HttpClient with no EventSource, empty testing entry. It is not dispatch-ready. Four problems block it. Logout via StynxSessionService is unreachable from @stynx-nyx/angular because of the package dependency direction. ErrorInterceptor discards Retry-After and raises banners on SSE failures. The backend E2E has no test:int, deps or lockfile path inside the Inspector's lock. The RLS proof can be bypassed by a superuser test connection, a tenant WHERE clause, or tick context inherited through ALS. Ownership of the changeset, readmes, trace and baselines also contradicts itself across the plan and prompts."
+}
