@@ -215,12 +215,13 @@ export class StynxEventStreamService<T = unknown> {
             complete = complete.slice(0, -1);
           }
           this.receivedBytes += this.textEncoder.encode(complete).length;
+          parser.feed(suffix);
+          if (generation !== this.generation || !this.active) return;
           if (this.receivedBytes >= (this.config.maxConnectionBytes ?? 1_048_576)) {
             if (cursorAdvanced) this.reopenPlanned(generation);
             else this.failed(generation);
             return;
           }
-          parser.feed(suffix);
         } else if (event.type === HttpEventType.Response) {
           if (event.status === 204) { this.cursorState.set(null); this.seen.clear(); }
           this.failed(generation, undefined, event.status === 204);
@@ -233,24 +234,24 @@ export class StynxEventStreamService<T = unknown> {
 
   private deliver(id: string, event: string, data: string): boolean {
     if (!id || this.seen.has(id)) return false;
+    let parsed: T;
+    try { parsed = JSON.parse(data) as T; }
+    catch { /* Invalid JSON is ignored. */ return false; }
     const prefix = this.config.eventPrefix;
-    if (prefix && !event.startsWith(prefix)) return false;
     const name = prefix ? event.slice(prefix.length) : event;
-    if (this.config.types && !this.config.types.includes(name)) return false;
-    try {
-      const parsed = JSON.parse(data) as T;
-      this.cursorState.set(id);
-      this.seen.add(id);
-      if (this.seen.size > DEDUP_WINDOW) {
-        const oldest = this.seen.values().next().value;
-        if (oldest !== undefined) this.seen.delete(oldest);
-      }
+    this.cursorState.set(id);
+    this.seen.add(id);
+    if (this.seen.size > DEDUP_WINDOW) {
+      const oldest = this.seen.values().next().value;
+      if (oldest !== undefined) this.seen.delete(oldest);
+    }
+    this.failures = []; this.consecutiveFailures = 0;
+    this.clearTimers();
+    this.statusState.set('live');
+    if ((!prefix || event.startsWith(prefix)) && (!this.config.types || this.config.types.includes(name))) {
       this.eventSubject.next({ id, event: name, data: parsed });
-      this.failures = []; this.consecutiveFailures = 0;
-      this.clearTimers();
-      this.statusState.set('live');
-      return true;
-    } catch { /* Invalid JSON is ignored. */ return false; }
+    }
+    return true;
   }
 
   private armStale(generation: number): void {
