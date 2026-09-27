@@ -1,5 +1,7 @@
 # Prompt-review externo — CTG-0007, ciclo 3 excepcional
 
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
+
 Você é o reviewer **Claude Code Opus 5.5**, família distinta da Codex executora. Modo `prompt-review`. Este prompt está **preparado, não autorizado para despacho**: o limite de dois `REVIEW` foi atingido e o Owner deve conceder exceção explícita antes de qualquer execução. Quando autorizado, faça somente leitura nesta worktree e no DETRAN; não edite, não execute Git mutante e não despache workers.
 
 Leia os pareceres `work/rounds/R-0002/reviews/ctg7-prompt-review-1.json` e `ctg7-prompt-review-2.json`. Reavalie `docs/framework/contracts/utilities-1.5.md`, `work/rounds/R-0002/ctg-0007-plan.md` e prompts `80`–`83` com foco nos reparos do ciclo 2. Compare com `packages/tenancy/src/tenant-context.interceptor.ts`, `packages/tenancy/src/utils.ts`, `packages/core/src/request-context.interceptor.ts`, `docs/framework/contracts/tenancy-context-1.5.md`, `packages/auth/src/stynx-auth.guard.ts`, `packages/backend/src/auth/auth-context.guard.ts`, C-0002 §6.7–6.9/§7/§8, código de consumidor DETRAN apenas para leitura e contrato CTG5 UPS-TXN-03.

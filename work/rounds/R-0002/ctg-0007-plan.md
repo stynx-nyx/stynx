@@ -30,3 +30,5 @@ Sem falhas registradas antes do despacho.
 ## Retomada
 
 Contrato e prompts ajustados após `prompt-review` ciclos 1 e 2 `REVIEW`. O bloqueio de tenancy e os três ajustes não bloqueantes do ciclo 2 foram reparados em F1/prompts. Prompt 86 excepcional está preparado, mas depende de autorização Owner para terceiro review; nenhum review/worker foi despachado e não há implementação/teste iniciado neste CTG.
+
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
