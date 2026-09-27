@@ -29,5 +29,23 @@ next local civil date after the requested number of business days. Consumers
 that previously treated due dates as a same-day instant must adapt their
 comparison and display logic.
 
-The Angular idempotency helper will be documented after its CTG-0005 wire
-contract and implementation are reconciled.
+## Angular command idempotency
+
+Register `provideStynxIdempotency()` once alongside
+`provideHttpClient(withInterceptorsFromDi())`. Existing
+`provideStynxAngular()` or `StynxAngularModule.forRoot()` registrations do
+not turn it on. Mark each mutating request with an `HttpContext` value for
+`STYNX_IDEMPOTENCY_COMMAND`. Use `{ key: stableOperationKey }` for a key
+already owned by the host, including DELETE without a body. For a JSON
+object or array body, use `{ action, target, includeBodyHash: true }` and set
+`Content-Type: application/json`; the interceptor computes
+`<action>:<target>:<sha256(canonicalJson(body))>`. The same request and retry
+reuse the key. A caller's existing `Idempotency-Key` header takes precedence.
+
+`canonicalJson` sorts object keys by Unicode code point and rejects values
+that would be silently omitted or changed by JSON serialization, including
+`undefined` properties. DETRAN's existing UTF-16 key sort and empty-string
+body hash differ; align producer and consumer before reusing stored keys.
+The CTG-0005 server computes its own method/path/body fingerprint and returns
+409 on key reuse with a different parsed body. The HTTP integration proof of
+that 409 remains pending until CTG-0005 is implemented.
