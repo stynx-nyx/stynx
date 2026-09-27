@@ -59,6 +59,7 @@ function makeClient() {
   };
   const client = {
     isOpen: true,
+    isReady: true,
     on: vi.fn(),
     connect: vi.fn(async () => undefined),
     quit: vi.fn(async () => undefined),
@@ -70,6 +71,8 @@ function makeClient() {
       for (const value of valuesToRemove) sets.get(key)?.delete(value);
     }),
     publish: vi.fn(async () => 1),
+    eval: vi.fn(async (): Promise<unknown> => '{"revoked":[]}'),
+    ping: vi.fn(async () => 'PONG'),
     values,
     sets,
     multiTx,
@@ -152,5 +155,66 @@ describe('RedisSessionStore', () => {
 
     await expect(store.listSessionIdsByUser('user-1')).resolves.toEqual(['active']);
     expect(client.sRem).toHaveBeenCalledWith('test:sessions_by_user:user-1', ['stale']);
+  });
+
+  it('interprets atomic policy replies and preserves the replaced session', async () => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    const previous = record({ sid: 'previous' });
+    client.eval.mockResolvedValueOnce(JSON.stringify({ revoked: [previous] }));
+
+    await expect(store.createWithPolicy(record(), {
+      mode: 'revoke-existing',
+      priorSessionId: previous.sid,
+      now: '2026-05-18T12:01:00.000Z',
+    })).resolves.toEqual({ created: record(), revoked: [previous] });
+    expect(client.eval).toHaveBeenCalledWith(expect.any(String), {
+      keys: [],
+      arguments: [
+        'test',
+        JSON.stringify(record()),
+        'revoke-existing',
+        'previous',
+        '2026-05-18T12:01:00.000Z',
+        String(Math.ceil(Date.parse(record().expiresAt) / 1000)),
+      ],
+    });
+
+    client.eval.mockResolvedValueOnce('{}');
+    await expect(store.createWithPolicy(record(), {
+      mode: 'off', now: '2026-05-18T12:01:00.000Z',
+    })).resolves.toEqual({ created: record(), revoked: [] });
+  });
+
+  it('rejects malformed policy replies and maps conflict and inactive-prior errors', async () => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    const policy = { mode: 'reject-new' as const, now: '2026-05-18T12:01:00.000Z' };
+
+    for (const [reply, message] of [
+      [null, 'Invalid Redis policy reply'],
+      ['{"error":"conflict"}', 'SESSION_CONFLICT'],
+      ['{"error":"prior"}', 'Prior session is not active'],
+      ['{"revoked":{}}', 'Invalid Redis policy result'],
+    ] as const) {
+      client.eval.mockResolvedValueOnce(reply);
+      await expect(store.createWithPolicy(record(), policy)).rejects.toThrow(message);
+    }
+  });
+
+  it('reports readiness from client state and Redis ping', async () => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    client.isReady = false;
+    await expect(store.probeReadiness()).resolves.toBe(false);
+    expect(client.ping).not.toHaveBeenCalled();
+
+    client.isReady = true;
+    await expect(store.probeReadiness()).resolves.toBe(true);
+    client.ping.mockResolvedValueOnce('LOADING');
+    await expect(store.probeReadiness()).resolves.toBe(false);
   });
 });
