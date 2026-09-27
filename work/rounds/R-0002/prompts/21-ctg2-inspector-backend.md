@@ -20,7 +20,12 @@ starts at DB now, visible expired A ID returns 204 empty, and missing
 tenant 400 and missing actor 401 fail before source/headers. The host
 is reference/api, whose own test:int has backend, data, pg, supertest
 and Nest HTTP; root `pnpm test:int` and `ci:stynx` exclude this host.
-Do not add manifests or lockfile. Create the `stynx_app` role
+Reuse `createPostgresTestDatabase` from
+`packages/data/test/support/postgres` as the per-run database fixture;
+it honors `STYNX_TEST_PG_TEMPLATE` and `STYNX_TEST_PG_*`. The same spec
+runs through reference-api `test` and `test:int`, so role/grant setup
+must be idempotent across repeated runs in one cluster. Do not add
+manifests or lockfile. Create the `stynx_app` role
 idempotently as NOLOGIN, NOINHERIT, NOBYPASSRLS and grant membership to
 the connecting user plus SELECT/INSERT on the fixture table. Run
 source reads in `data.Database.tx(..., { role: 'app' })` with `SET LOCAL
