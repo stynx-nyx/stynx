@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-09-26",
+    "last_updated": "2026-09-27",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -21,7 +21,8 @@
       "STYNX 1.5.0 CTG-0001 Architect rebind aligns typed-credential fixtures and symbol assertions after Inspector sensor triage.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins served interceptor order, JWKS source/rotation, typed JOSE, revoked session, and provenance sensors from delivery review 3.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins recently refreshed JWKS classification, failed refresh propagation, and public HTTP outage sensors from delivery review 4.",
-      "STYNX 1.5.0 CTG-0001 Architect rebind preserves the fake-JWT guard sensor after remote Semgrep fixture repair."
+      "STYNX 1.5.0 CTG-0001 Architect rebind preserves the fake-JWT guard sensor after remote Semgrep fixture repair.",
+      "STYNX 1.5.0 Architect rebind pins both admitted local RC public signers and the replacement signer used by export and publication."
     ]
   },
   "invariants": [
@@ -3836,8 +3837,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 50,
-      "assertion_digest_sha256": "74353be84ae8d613a34107644659ea82f3aa271b7c58ac67bca1cf8f375c4434"
+      "assertion_count": 53,
+      "assertion_digest_sha256": "aa69f51c143290f4134cd565add595657d5f1218dba0e17467633c4888124604"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
