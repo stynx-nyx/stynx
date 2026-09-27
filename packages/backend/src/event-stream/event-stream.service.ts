@@ -101,7 +101,7 @@ export class StynxEventStreamService implements OnModuleDestroy {
     const release = () => {
       if (!reserved) return;
       reserved = false;
-      const remaining = (this.slots.get(slotKey) ?? 1) - 1;
+      const remaining = this.slots.get(slotKey)! - 1;
       if (remaining > 0) this.slots.set(slotKey, remaining);
       else this.slots.delete(slotKey);
     };
@@ -203,11 +203,12 @@ export class StynxEventStreamService implements OnModuleDestroy {
               cursor = { createdAt: row.createdAt, id: row.id };
               continue;
             }
-            if (payload === undefined) throw new Error('SSE projection is not JSON serializable');
-            if (maxPayloadBytes !== undefined && Buffer.byteLength(payload, 'utf8') > maxPayloadBytes) {
+            // The projection was serialized above; failures were dropped there.
+            const serialized = payload!;
+            if (maxPayloadBytes !== undefined && Buffer.byteLength(serialized, 'utf8') > maxPayloadBytes) {
               drop(row.id);
             } else {
-              write(`id: ${row.id}\nevent: ${row.event}\ndata: ${payload}\n\n`);
+              write(`id: ${row.id}\nevent: ${row.event}\ndata: ${serialized}\n\n`);
               this.frames += 1;
               metric((sink) => sink.frame(scope));
             }
