@@ -478,6 +478,14 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     ocorrências do conteúdo incorporado de `main`, não execuções
     adicionais. Aguardar recibo Owner exato, vincular em `law/policy/`,
     repetir DEVAI strict e os gates antes de atualizar o PR.
+16. Após a integração, `ci:reference-apps` e o segundo `ci:stynx`
+    passaram; a primeira tentativa de CI sofreu timeout intermitente
+    do container PostgreSQL em `@stynx-nyx/flow`, e o teste focado
+    60/60 confirmou a triagem antes do rerun integral. O delivery-review
+    Opus pós-main retornou PASS em `reviews/ctg2-postmain-delivery-review.json`.
+    A documentação SSE recebeu o exemplo de adapter lazy em `0b77dd45`
+    e `package-readmes:check` passou. O PR #278 remoto ainda está no
+    HEAD anterior; atualizar somente depois dos recibos pendentes.
 
 ## Reviews, PRs e publicações
 
