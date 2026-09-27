@@ -2,6 +2,8 @@ import '@angular/compiler';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
+import { TenantContextService } from '@stynx-nyx/angular-tenancy';
+import { Subject } from 'rxjs';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   StynxEventStreamService,
@@ -16,12 +18,33 @@ import {
 beforeAll(() => TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting()));
 afterEach(() => TestBed.resetTestingModule());
 
-function createStream(overrides: Partial<StynxEventStreamConfig> = {}) {
+class ObservedClock extends FakeStynxEventStreamClock {
+  activeTimeouts = 0;
+
+  override setTimeout(fn: () => void, delayMs: number): { cancel(): void } {
+    this.activeTimeouts++;
+    let active = true;
+    const task = super.setTimeout(() => {
+      if (active) { active = false; this.activeTimeouts--; }
+      fn();
+    }, delayMs);
+    return { cancel: () => {
+      if (active) { active = false; this.activeTimeouts--; }
+      task.cancel();
+    } };
+  }
+}
+
+function createStream(
+  overrides: Partial<StynxEventStreamConfig> = {},
+  tenant?: { tenantId: () => string | null; tenantChanged$: Subject<void> },
+) {
   const sessionActive = signal(true);
   const transport = new FakeStynxEventStreamTransport();
-  const clock = new FakeStynxEventStreamClock();
+  const clock = new ObservedClock();
   TestBed.configureTestingModule({
     providers: [
+      ...(tenant ? [{ provide: TenantContextService, useValue: tenant }] : []),
       provideStynxEventStream({
         url: '/stream',
         pollingIntervalMs: 10_000,
@@ -36,6 +59,47 @@ function createStream(overrides: Partial<StynxEventStreamConfig> = {}) {
 }
 
 describe('StynxEventStreamService lifecycle with the published test double', () => {
+  it('ignores the rest of a progress suffix when a subscriber stops on its first frame', () => {
+    const { stream, transport, clock } = createStream();
+    const received: string[] = [];
+    stream.events$.subscribe(({ id }) => { received.push(id); stream.stop(); });
+    stream.start();
+
+    transport.emitProgress('id: first\ndata: {}\n\nid: second\ndata: {}\n\n');
+
+    expect(received).toEqual(['first']);
+    expect(stream.lastEventId()).toBe('first');
+    expect(stream.status()).toBe('stopped');
+    expect(transport.connections).toHaveLength(1);
+    expect(transport.cancelled()).toBe(true);
+    expect(clock.activeTimeouts).toBe(0);
+    clock.advanceBy(40_000);
+    expect(transport.connections).toHaveLength(1);
+  });
+
+  it('ignores old progress frames and timers after a subscriber changes tenant', () => {
+    const tenantChanged$ = new Subject<void>();
+    let tenantId: string | null = 'tenant-a';
+    const { stream, transport, clock } = createStream({}, { tenantId: () => tenantId, tenantChanged$ });
+    const received: string[] = [];
+    stream.events$.subscribe(({ id }) => {
+      received.push(id);
+      tenantId = 'tenant-b';
+      tenantChanged$.next();
+    });
+    stream.start();
+
+    transport.emitProgress('id: first\ndata: {}\n\nid: second\ndata: {}\n\n');
+
+    expect(received).toEqual(['first']);
+    expect(transport.connections).toHaveLength(2);
+    expect(transport.connections[0]?.cancelled).toBe(true);
+    expect(transport.lastRequest().lastEventId).toBe(null);
+    expect(stream.lastEventId()).toBe(null);
+    expect(stream.status()).toBe('live');
+    expect(clock.activeTimeouts).toBe(2);
+  });
+
   it('requires application polling and session configuration', () => {
     expect(() =>
       TestBed.configureTestingModule({
