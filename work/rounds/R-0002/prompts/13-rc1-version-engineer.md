@@ -36,6 +36,10 @@ generated version before rewriting: in pre mode its tag must match
 for a later RC; in exit mode it must be stable. Before any rewrite in
 pre mode, verify `pre.json.changesets` equals its previous IDs plus
 exactly the newly pending IDs, with unchanged mode and tag.
+Exponha a função interna pura
+`validateGeneratedVersionTransition({ beforePreState, afterPreState,
+current, generated, pendingIds })` para os sensores Inspector e chame-a
+após `changeset version`, antes de qualquer reescrita.
 
 Run only focused script tests and `pnpm release:preview`; the latter
 must show 1.4.0 → 1.5.0-rc.1 against the reset pre.json. The maestro

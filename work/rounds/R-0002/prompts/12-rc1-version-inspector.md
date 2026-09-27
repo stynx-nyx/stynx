@@ -55,6 +55,14 @@ expected stable 1.5.0 and non-empty `plan.changesets`, so the script
 cannot take its no-op path. Test that the pre-mode postcondition requires
 `pre.json.changesets` after versioning to equal prior IDs plus precisely
 the pending IDs.
+Para esta prova focal, exigir uma função interna exportada
+`validateGeneratedVersionTransition({ beforePreState, afterPreState,
+current, generated, pendingIds })` no módulo do versionador. Ela deve
+rejeitar tag ou ordinal gerado incorreto, versão gerada igual à atual,
+estado posterior com ID consumido faltante, extra ou removido, ou mudança
+de modo/tag. Aceita o primeiro `rc.0` nativo e depois `rc.(N+1)` antes
+da correção planejada. Importe o módulo como namespace para que a função
+ausente produza falha focal antes do Engineer.
 
 Preserve the existing stable-flow tests and all other assertions. Run the
 focused test with Node's test-name filter and script lint. The expected

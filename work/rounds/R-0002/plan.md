@@ -214,6 +214,10 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Sensores RC1 após primeiro despacho Inspector: `sensor-error` — os
+  casos de plano/pre-state ficaram red como esperado, mas faltou prova
+  da pós-condição de `changeset version` (IDs consumidos, tag e ordinal
+  gerado); uma complementação focal antes do commit Inspector.
 - RC1 após CTG-0001: `plant-bug` — `pnpm version-packages` em pre mode
   `rc` deixou os 44 pacotes em `1.5.0` estável após Changesets gerar
   `2.0.0-rc.0` por inferência de peers; corrigir a projeção do grupo
