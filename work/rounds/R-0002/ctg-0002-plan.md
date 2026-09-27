@@ -183,6 +183,10 @@ Opus 5.5 PASS. Registrar desvios e símbolos reais na conformidade.
 
 ## Triagem
 
+- Primeiro CI CTG-0002: `plant-bug` — `lint:cycles` detectou o serviço
+  SSE importando tokens do seu próprio módulo Nest, que por sua vez
+  importa o serviço. Engineer moveu os tokens para arquivo próprio;
+  `lint:cycles` passou e o baseline público foi rebindado.
 - Inspector Angular, primeira leitura dos sensores: `sensor-error` —
   faltam asserções diretas para `tick$` no polling, `data:` multilinha,
   204 seguido de novo request sem cursor e 401 terminal após replay.
