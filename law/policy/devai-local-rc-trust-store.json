@@ -4,6 +4,10 @@
     {
       "signerId": "stynx-inspector-workstation-02",
       "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6cwlyFPuBL/efzudmLlme8kUw/IgchJkyBQtulzF34o=\n-----END PUBLIC KEY-----\n"
+    },
+    {
+      "signerId": "stynx-inspector-workstation-03",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcRwyrPeNji9XGCGPciFEBg7u1pqEIbyI8MWrBSGDYhE=\n-----END PUBLIC KEY-----\n"
     }
   ],
   "revokedSignerIds": []
