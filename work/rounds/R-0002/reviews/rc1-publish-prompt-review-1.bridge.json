@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "work/rounds/R-0002/prompts/17-rc1-publish-prompt-review.md",
+  "prompt_sha256": "4987b1a99808d88a932a767b7d33d1f695e01f515f225c93fe700e800beb09b9",
+  "output": "work/rounds/R-0002/reviews/rc1-publish-prompt-review-1.json",
+  "output_sha256": "da6c2cfa9a4e9b74be002bdd9faa94c10ce6b69381fb30e32158b73b11befaa7",
+  "cwd": "/Users/aarusso/Development/stynx-worktrees/release-1-5-0",
+  "started_at": "2026-09-27T01:15:26Z",
+  "ended_at": "2026-09-27T01:17:38Z"
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "merge_sha": "e09bd6c00d56881fb5208a5e8fccfd6de3c0186a",
+  "previous_merge_sha": null,
+  "current": {
+    "count": 0,
+    "items": []
+  },
+  "deltas": {
+    "additions": [],
+    "completions": []
+  }
+}

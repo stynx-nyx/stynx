@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/record.md",
+      "issue": "The record still gives only the earlier strict result: zero findings and 14 receipts at 84743f8578bc42ee9fe75cf604c38da01bf03b32. It does not record the repaired result at 7eee34de599a137b7d896669f0007442a106feb0. At that SHA the strict check since a46ecb88bf5796a8fa4d142c2daf8b52c25a549f returns ok:true, zero findings and 16 applied receipts, including FORBID-RM-RF and FORBID-PUBLISH for c4b926b76f6716b82f0e2d68f1a3210d78acb692.",
+      "required_change": "Append an entry that names 7eee34de as the SHA checked, reports the 16 applied receipts, and records this cycle-3 verdict. Rerun the strict check on whatever evidence commit comes after that."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/reviews/rc1-main-integration-delivery-review-2.json",
+      "issue": "The untracked cycle-2 review JSON and the untracked cycle-2 prompt still contain the literal patterns matched by FORBID-RM-RF and FORBID-PUBLISH, in 2 lines. Committing them verbatim would bring back the cycle-2 regression on a new SHA. There are also untracked temporary files for cycle 3, with .raw and .formatted suffixes, in the reviews directory.",
+      "required_change": "Before committing these artifacts, redact the literal patterns and refer to them by policy ID, or else bind exact Owner receipts for the new evidence SHA. Delete the temporary files instead of committing them, and rerun the strict check before pushing."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "Checkpoint item 12 in commit 35e8e922 records the status of CTG-0002 SSE, which is a different worktree and deliverable. That puts unrelated scope into the R-0002 RC1 plan.",
+      "required_change": "Optionally move the CTG-0002 status into that round's own record, or mark it as cross-reference only."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "law/policy/forbidden-action-authorizations.json",
+      "issue": "Carried over from cycle 2: the reason for the 17d87afa receipt was changed in place between 84743f85 and HEAD rather than corrected by appending. The ledger's own tests do not flag this, and the change does not affect the gate.",
+      "required_change": "Use append-only corrections from now on, and optionally add a note that the bd20578c receipts are superseded."
+    }
+  ],
+  "summary": "The cycle-2 blocking finding is resolved. Commit 7eee34de, authored as DEVAI Architect, only adds two receipts: FORBID-RM-RF and FORBID-PUBLISH, each bound to the exact SHA c4b926b76f6716b82f0e2d68f1a3210d78acb692. Each reason says the match is quoted review text only, and neither receipt authorizes deletion, package publication or workflow dispatch. I reran the strict forbidden-actions check since a46ecb88 at HEAD 7eee34de on my own. It exited 0 with ok:true, zero findings and 16 applied receipts, including both new pairs, which matches the resume log. Since 84743f85, where the complete CI exited 0, only the ledger and round evidence under work/rounds/R-0002 have changed. No scripts, workflows, package manifests, tests or the trace changed, so the CI evidence and the earlier PASS publication route still hold. The script validator (test/scripts/validate.js) passes. I found no new blocking regression. HEAD 7eee34de has not been pushed; the remote branch is still at 48e534f7. RC1 has not been published and still needs its own Owner receipt naming the command and SHA."
+}

@@ -34,6 +34,75 @@ function fail(code, message) {
 }
 
 const semver = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
+const prerelease = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-([A-Za-z0-9-]+)\.(0|[1-9]\d*)$/u;
+
+function changesetId(file) {
+  return file.slice('.changeset/'.length, -'.md'.length);
+}
+
+function validatePreState(state) {
+  if (!state || typeof state !== 'object' || Array.isArray(state) ||
+    !['pre', 'exit'].includes(state.mode) || typeof state.tag !== 'string' ||
+    !/^[A-Za-z0-9-]+$/u.test(state.tag) || !state.initialVersions ||
+    typeof state.initialVersions !== 'object' || Array.isArray(state.initialVersions) ||
+    !Array.isArray(state.changesets) ||
+    state.changesets.some((id) => typeof id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(id)) ||
+    new Set(state.changesets).size !== state.changesets.length) {
+    fail('PRE_STATE_MALFORMED', 'Changesets prerelease state is malformed');
+  }
+  return state;
+}
+
+export function readPreState(repoRoot) {
+  const path = resolve(repoRoot, '.changeset', 'pre.json');
+  if (!existsSync(path)) return null;
+  try {
+    return validatePreState(JSON.parse(readFileSync(path, 'utf8')));
+  } catch (error) {
+    if (error instanceof FixedGroupVersionError) throw error;
+    fail('PRE_STATE_MALFORMED', 'Changesets prerelease state is not valid JSON');
+  }
+}
+
+export function validateGeneratedVersionTransition({ beforePreState, afterPreState, current, generated, pendingIds }) {
+  const before = validatePreState(beforePreState);
+  if (!Array.isArray(pendingIds) || (before.mode === 'pre' && pendingIds.length === 0) ||
+    pendingIds.some((id) => typeof id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(id)) ||
+    new Set(pendingIds).size !== pendingIds.length) {
+    fail('PRE_TRANSITION_INVALID', 'pending changeset IDs are malformed');
+  }
+  if (before.mode === 'exit') {
+    if (!semver.test(generated)) fail('PRE_TRANSITION_INVALID', 'exit must generate a stable version');
+    if (afterPreState !== null && afterPreState !== undefined) {
+      const after = validatePreState(afterPreState);
+      if (after.mode !== 'exit' || after.tag !== before.tag) {
+        fail('PRE_TRANSITION_INVALID', 'exit mode or tag changed during versioning');
+      }
+    }
+    return;
+  }
+  const after = validatePreState(afterPreState);
+  if (after.mode !== before.mode || after.tag !== before.tag ||
+    JSON.stringify(after.initialVersions) !== JSON.stringify(before.initialVersions)) {
+    fail('PRE_TRANSITION_INVALID', 'prerelease mode, tag, or initial versions changed during versioning');
+  }
+  const expectedIds = new Set([...before.changesets, ...pendingIds]);
+  if (expectedIds.size !== before.changesets.length + pendingIds.length ||
+    after.changesets.length !== expectedIds.size ||
+    after.changesets.some((id) => !expectedIds.has(id))) {
+    fail('PRE_TRANSITION_INVALID', 'Changesets did not consume exactly the pending IDs');
+  }
+  const match = prerelease.exec(generated);
+  const currentMatch = prerelease.exec(current);
+  if (currentMatch && currentMatch[4] !== before.tag) {
+    fail('PRE_TRANSITION_INVALID', 'current prerelease tag does not match pre state');
+  }
+  const expectedOrdinal = currentMatch ? Number(currentMatch[5]) + 1 : 0;
+  if (!match || match[4] !== before.tag || Number(match[5]) !== expectedOrdinal ||
+    (!currentMatch && !semver.test(current))) {
+    fail('PRE_TRANSITION_INVALID', 'Changesets generated an unexpected prerelease version');
+  }
+}
 
 export function parseChangesetFrontmatter(source, fileName = 'changeset') {
   const lines = source.split(/\r?\n/u);
@@ -140,12 +209,67 @@ export function planFixedGroupVersion(repoRoot, changesetConfig) {
     );
   }
   const current = unifiedVersion(repoRoot);
-  const changesets = readPendingChangesets(repoRoot);
+  const allChangesets = readPendingChangesets(repoRoot);
+  const preState = readPreState(repoRoot);
+  let changesets = allChangesets;
+  let initialVersion;
+  if (preState) {
+    const initialVersions = groupNames.map((name) => preState.initialVersions[name]);
+    if (initialVersions.some((version) => typeof version !== 'string' || !semver.test(version)) ||
+      new Set(initialVersions).size !== 1) {
+      fail('PRE_VERSION_DRIFT', 'fixed-group initial versions are missing or not unified');
+    }
+    [initialVersion] = initialVersions;
+    const availableIds = new Set(allChangesets.map(({ file }) => changesetId(file)));
+    if (preState.changesets.some((id) => !availableIds.has(id))) {
+      fail('PRE_CHANGESET_MISSING', 'a consumed prerelease changeset file is missing');
+    }
+    const currentPrerelease = prerelease.exec(current);
+    if (preState.mode === 'pre') {
+      if (semver.test(current)) {
+        if (current !== initialVersion || preState.changesets.length > 0) {
+          fail('PRE_VERSION_DRIFT', 'stable prerelease entry does not match initial state');
+        }
+      } else if (!currentPrerelease || currentPrerelease[4] !== preState.tag ||
+        preState.changesets.length === 0) {
+        fail('PRE_VERSION_DRIFT', 'current prerelease version or consumed changesets do not match pre state');
+      }
+      changesets = allChangesets.filter(({ file }) => !preState.changesets.includes(changesetId(file)));
+    } else if (!currentPrerelease || currentPrerelease[4] !== preState.tag ||
+      preState.changesets.length === 0) {
+      fail('PRE_VERSION_DRIFT', 'exit requires a matching current prerelease');
+    }
+    const allBump = computeFixedGroupBump(allChangesets, groupNames);
+    if (allBump === 'major' && preState.mode === 'pre') {
+      fail('PRE_MAJOR_REQUIRES_OWNER', 'a major prerelease bump requires Owner decision');
+    }
+    const base = allBump === null ? initialVersion : incrementVersion(initialVersion, allBump);
+    if (currentPrerelease && current.slice(0, current.indexOf('-')) !== base) {
+      fail('PRE_VERSION_DRIFT', 'current prerelease base differs from the declared fixed-group bump');
+    }
+    if (preState.mode === 'exit') {
+      return {
+        current,
+        bump: allBump,
+        expected: base,
+        preState,
+        pendingIds: allChangesets.filter(({ file }) => !preState.changesets.includes(changesetId(file))).map(({ file }) => changesetId(file)),
+        changesets: allChangesets.map(({ file, releases }) => ({
+          file,
+          types: [...new Set(releases.filter((r) => groupNames.includes(r.name)).map((r) => r.type))],
+        })),
+      };
+    }
+  }
   const bump = computeFixedGroupBump(changesets, groupNames);
+  const expected = preState
+    ? bump === null ? current : `${incrementVersion(initialVersion, computeFixedGroupBump(allChangesets, groupNames))}-${preState.tag}.${semver.test(current) ? 1 : Number(prerelease.exec(current)[5]) + 1}`
+    : bump === null ? current : incrementVersion(current, bump);
   return {
     current,
     bump,
-    expected: bump === null ? current : incrementVersion(current, bump),
+    expected,
+    ...(preState ? { preState, pendingIds: changesets.map(({ file }) => changesetId(file)) } : {}),
     changesets: changesets.map(({ file, releases }) => ({
       file,
       types: [...new Set(releases.filter((r) => groupNames.includes(r.name)).map((r) => r.type))],
@@ -153,7 +277,7 @@ export function planFixedGroupVersion(repoRoot, changesetConfig) {
   };
 }
 
-function rewriteChangelog(source, packageNames, from, to) {
+function rewriteChangelog(source, packageNames, from, to, bump) {
   const heading = `## ${from}`;
   const lines = source.split('\n');
   const start = lines.indexOf(heading);
@@ -166,14 +290,19 @@ function rewriteChangelog(source, packageNames, from, to) {
     'u',
   );
   lines[start] = `## ${to}`;
+  const targetVersion = /^(\d+)\.(\d+)\.(\d+)/u.exec(to);
+  const targetCategory = bump ?? (targetVersion?.[3] !== '0' ? 'patch' : targetVersion?.[2] !== '0' ? 'minor' : 'major');
   for (let index = start + 1; index < end; index += 1) {
+    if (lines[index] === '### Major Changes' && targetCategory && targetCategory !== 'major') {
+      lines[index] = `### ${targetCategory === 'minor' ? 'Minor' : 'Patch'} Changes`;
+    }
     const match = siblingLine.exec(lines[index]);
     if (match) lines[index] = `${match[1]}${match[2]}@${to}`;
   }
   return { source: lines.join('\n'), changed: true };
 }
 
-export function applyFixedGroupVersion(repoRoot, { from, to }) {
+export function applyFixedGroupVersion(repoRoot, { from, to, bump }) {
   if (from === to) return { manifests: 0, changelogs: 0 };
   const packages = collectPublicPackages(repoRoot);
   const packageNames = packages.map(({ manifest }) => manifest.name);
@@ -191,7 +320,7 @@ export function applyFixedGroupVersion(repoRoot, { from, to }) {
     manifests += 1;
     const changelogPath = resolve(manifestPath, '..', 'CHANGELOG.md');
     if (!existsSync(changelogPath)) continue;
-    const result = rewriteChangelog(readFileSync(changelogPath, 'utf8'), packageNames, from, to);
+    const result = rewriteChangelog(readFileSync(changelogPath, 'utf8'), packageNames, from, to, bump);
     if (result.changed) {
       writeFileSync(changelogPath, result.source);
       changelogs += 1;

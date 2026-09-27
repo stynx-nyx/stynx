@@ -2,6 +2,8 @@ const fullSha = /^[0-9a-f]{40}$/u;
 const versionCommitSubject = 'ci: version packages';
 const unifiedRebaselineVersion = '1.2.0';
 const releaseStatusCommand = 'node scripts/run-release-preparation.mjs --release-status';
+const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
+const rcVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-rc\.(0|[1-9]\d*)$/u;
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -122,6 +124,79 @@ function validateFollowUpChanges(changes, rootManifestFollowUpValid) {
       'version candidate changes root package.json beyond the release-preparation command',
     );
   }
+}
+
+/** A generated, already-versioned RC has no pending Changesets status to draft. */
+export function isVersionedPreModeCandidate({
+  baseRootVersion,
+  candidateRootVersion,
+  versionCommitVersion,
+  packageStates,
+  changedManifestPaths,
+  changesetIdsOnDisk,
+  followUpChanges,
+  basePreState,
+  preState,
+}) {
+  const baseStable = stableVersion.exec(baseRootVersion);
+  const baseRc = rcVersion.exec(baseRootVersion);
+  const candidateRc = rcVersion.exec(candidateRootVersion);
+  if (
+    (!baseStable && !baseRc) ||
+    !candidateRc ||
+    versionCommitVersion !== candidateRootVersion.slice(0, -(`-rc.${candidateRc[4]}`.length)) ||
+    preState?.mode !== 'pre' ||
+    preState.tag !== 'rc' ||
+    !Array.isArray(preState.changesets) ||
+    preState.changesets.length === 0 ||
+    !Array.isArray(packageStates) ||
+    packageStates.length !== 44 ||
+    !Array.isArray(changedManifestPaths) ||
+    !Array.isArray(changesetIdsOnDisk) ||
+    !Array.isArray(followUpChanges) ||
+    followUpChanges.some(({ path }) =>
+      /^(?:packages|packages-web|\.changeset)\//u.test(path) && path !== '.changeset/status.json',
+    )
+  ) return false;
+
+  if (baseStable) {
+    if (basePreState !== null) return false;
+    const base = baseStable.slice(1).map(Number);
+    const candidate = candidateRc.slice(1, 4).map(Number);
+    if (!candidate.some((part, index) =>
+      part > base[index] && candidate.slice(0, index).every((earlier, i) => earlier === base[i]),
+    )) return false;
+  } else {
+    if (
+      baseRc.slice(1, 4).some((part, index) => part !== candidateRc[index + 1]) ||
+      Number(candidateRc[4]) <= Number(baseRc[4]) ||
+      basePreState?.mode !== 'pre' ||
+      basePreState.tag !== 'rc' ||
+      !Array.isArray(basePreState.changesets) ||
+      basePreState.changesets.some((id) => !preState.changesets.includes(id))
+    ) return false;
+  }
+
+  const names = new Set(packageStates.map(({ name }) => name));
+  const paths = new Set(packageStates.map(({ manifestPath }) => manifestPath));
+  const changed = new Set(changedManifestPaths);
+  const consumed = new Set(preState.changesets);
+  const onDisk = new Set(changesetIdsOnDisk);
+  if (
+    names.size !== 44 || paths.size !== 44 || changed.size !== 44 ||
+    changedManifestPaths.length !== 44 || consumed.size !== preState.changesets.length ||
+    onDisk.size !== changesetIdsOnDisk.length || consumed.size !== onDisk.size ||
+    [...consumed].some((id) => !onDisk.has(id)) ||
+    [...paths].some((path) => !changed.has(path))
+  ) return false;
+
+  return packageStates.every(({ name, baseVersion, candidateVersion }) =>
+    candidateVersion === candidateRootVersion &&
+    (baseStable
+      ? baseVersion === preState.initialVersions?.[name]
+      : baseVersion === baseRootVersion &&
+        basePreState.initialVersions?.[name] === preState.initialVersions?.[name]),
+  );
 }
 
 export function classifyReleaseContext({

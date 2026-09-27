@@ -1,0 +1,24 @@
+{
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/reviews/rc1-main-integration-delivery-review.json",
+      "issue": "New regression in c4b926b7. The strict check `devai check --only forbidden-actions --strict --since-ref a46ecb88`, run at HEAD c4b926b7, now returns ok:false with two unreceipted findings on c4b926b76f6716b82f0e2d68f1a3210d78acb692: FORBID-RM-RF, matched on 'rm -rf', and FORBID-PUBLISH, matched on 'npm publish'. Both matches come from the cycle-1 review JSON that c4b926b7 committed: finding 2 quotes 'the rm -rf targets only $RUNNER_TEMP' and finding 4 quotes '`npm publish` in the dist-tag guard'. So the record's claim of 'zero findings, 14 receipts applied' is not true of this HEAD. The DEVAI pre-push hook should reject it; origin/feat/release-1-5-0-rc1 is still 48e534f7, 12 commits behind. The release lane would also fail on it after merge. The previous blocking finding is resolved, and a PASS cannot be given while the branch fails the forbidden-actions gate.",
+      "required_change": "Choose one: (a) Add Owner receipts to law/policy/forbidden-action-authorizations.json as an Architect-authored commit, one for FORBID-RM-RF@c4b926b76f6716b82f0e2d68f1a3210d78acb692 and one for FORBID-PUBLISH@c4b926b76f6716b82f0e2d68f1a3210d78acb692. Each reason must say the match is quoted review text only, with no command executed. (b) Without rewriting published history, rewrite the evidence text so it no longer contains the literal forbidden patterns before the commit is pushed. This is possible because c4b926b7 is not yet on the remote, but it needs Owner approval under the no-history-mutation rules. Then rerun strict forbidden-actions since a46ecb88, confirm ok:true, and correct the receipt count in record.md. Do not commit this cycle-2 review or its prompt verbatim if they quote these patterns, or bind receipts for them as well."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/record.md",
+      "issue": "The record says 'A checagem repetida retornou zero findings, com 14 recibos aplicados'. That was true only for the tree before c4b926b7. The statement that CI finished with exit 0 on 84743f85, including test:int, build and doctor/RLS, is accurate: the log command line includes those stages, and it ends with the doctor output ok:true and '[RLS] smoke check passed'.",
+      "required_change": "After the repair, update the entry to name the SHA the strict check was run on and the receipt count it applied."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "law/policy/forbidden-action-authorizations.json",
+      "issue": "The 17d87afa receipt reason was edited in place. That resolves the earlier inaccuracy about the 'reviewed before main merge' clause. But the ledger is described as append-only, and changing an existing receipt's text, even only its wording, is a mutation, not an append. The bd20578c receipts are still unused and have no supersession note.",
+      "required_change": "Prefer append-only corrections in the future. Optionally add a note that bd20578c is superseded by 17d87afa."
+    }
+  ],
+  "summary": "The previous blocking finding is resolved. The log /private/tmp/stynx-s15-rc1-postmain-ci.log runs the full ci:stynx chain through doctor and RLS smoke, with ok:true. The c4b926b7 diff only touches law receipt wording and R-0002 evidence, and the updated plan and record accurately describe the Owner session authorization, the six SHA/forbidden pairs, and the post-merge and separate publication receipts. However, c4b926b7 introduces a new blocking regression. The review JSON it commits quotes 'rm -rf' and 'npm publish', so strict DEVAI forbidden-actions since a46ecb88 now fails with two unreceipted findings on c4b926b7. This blocks the push and the release lane, and it contradicts the record's 'zero findings' claim. Bind exact Owner receipts or remove the literal patterns before merging PR #276."
+}

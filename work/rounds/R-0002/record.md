@@ -198,13 +198,194 @@ os três pins continuam SHA exato e o CI novo passou. Uma nota não
 bloqueante recomenda estabilizar o link de migração com a tag `v1.5.0`
 após a final. Push e CI remoto ainda pendentes.
 
+O PR #272 passou todos os checks obrigatórios no SHA `52a01eaa` e foi
+mesclado com merge commit
+`e09bd6c00d56881fb5208a5e8fccfd6de3c0186a` em 2026-09-26.
+O maestro registrou a prova DEVAI `evidence record --kind generic`
+da rodada (sequência 1) e executou `audit observe --at` nesse SHA
+como Auditor; a observação concluiu sem promoção e a cadeia de
+evidências passou em `evidence verify --scope chain`. Os artefatos foram
+commitados separadamente em `07b3cb47` na branch de preparação da RC.
+
 ## Escopo condicional
 
 UPS-SIG, UPS-OBX e UPS-OFS estão fora da release enquanto a §8 da especificação
 não contiver adenda confirmatória da R-0021 com nível decidido pelo Owner.
 Na leitura de 2026-09-26, a §8 não continha adendas. Conferir novamente antes
 de congelar o escopo.
+Nova conferência em 2026-09-26 no HEAD DETRAN
+`220a40202bf4ab17a5ce28b882ad96d60755842f`: §8 ainda declara
+"Sem adendas". UPS-SIG/OBX/OFS continuam condicionais e fora do escopo
+atual, sujeitas a nova leitura antes do congelamento final.
 
-## Publicações
+## Preparação RC1 e publicações
 
-Nenhuma. Não houve recibo de publicação, versionamento ou tentativa de publicar.
+Após o merge CTG-0001, `pnpm changeset pre enter rc` foi executado. Um
+ensaio de `pnpm version-packages` expôs bug do versionador: o Changesets
+gerou `2.0.0-rc.0` e a regra local corrigiu para `1.5.0` estável. Os
+arquivos gerados foram restaurados; `pre.json` voltou ao estado de
+entrada com `changesets: []` e foi commitado em `c011d259`. O
+prompt-review Opus do reparo recebeu REVIEW em dois ciclos, ambos
+registrados em `reviews/rc1-version-prompt-review-{1,2}.json`. O
+Owner autorizou o terceiro prompt-review excepcional do RC1; nenhum
+worker RC foi despachado até seu veredito. A publicação RC requer corrigir
+a rota atual que fixa `--tag latest` e `candidate 1.4.0`.
+O terceiro prompt-review excepcional retornou **PASS** em
+`reviews/rc1-version-prompt-review-3.json`; quatro observações não
+bloqueantes foram incorporadas ao contrato dos workers antes do despacho.
+O Inspector registrou testes RC1 em `61bc7a4f` (cinco falhas esperadas,
+duas provas de reescrita verdes); Architect rebindou o trace em
+`8c444f40`. Engineer corrigiu o versionador em `fb49616b` (36/36
+testes, preview 1.4.0 → 1.5.0-rc.1). `pnpm version-packages` gerou os
+44 pacotes em 1.5.0-rc.1 e foi commitado em `1e9bf5c4`; Inspector
+rebindou exatamente três pins do manifesto raiz em `f4bbcb2d`.
+`pnpm release:preview` ficou no-op, `pnpm release:policy` e trace
+393/393 passaram. CI integral e delivery-review seguem em execução.
+Prompt-review da rota de publicação retornou REVIEW nos ciclos 1 e 2;
+o contrato foi reparado, mas o limite de ciclos exige nova autorização
+do Owner antes de uma terceira submissão. Nenhuma publicação ocorreu.
+CI integral da candidata versionada passou com exit 0 no SHA
+`f4bbcb2d071dcbe08390987377c4d9af231aae88`, comando com
+`STYNX_TEST_PG_HOST=127.0.0.1`, porta `55432`, usuário/senha
+`postgres` e `pnpm ci:stynx`; log
+`/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393, scripts 114/114,
+test 97/97, integração 51/51, build 48/48 e doctor/RLS passaram.
+Delivery-review Opus do versionamento ciclo 1: **PASS** em
+`reviews/rc1-version-delivery-review-1.json`, com dois casos futuros
+não bloqueantes (changeset sem bump do grupo e categoria duplicada em
+CHANGELOG). Nenhum PR de preparação RC foi aberto.
+
+O check local `devai check --only forbidden-actions --strict --since-ref
+e09bd6c0` falhou com quatro achados: três `FORBID-PUBLISH` por texto
+literal em commits Architect de contrato `19730677`, `9ad74570` e
+`0106a12e`, sem execução de publicação; um
+`FORBID-MUTATE-INVARIANTS` no commit Auditor `07b3cb47` da evidência
+DEVAI exigida para o merge. A autoridade por SHA exato permanece
+pendente antes do PR/merge, além do recibo separado para publicar.
+
+Nenhum pacote foi publicado e nenhum recibo de publicação foi recebido.
+
+O Owner autorizou em 2026-09-26 as ações necessárias ao encerramento
+da campanha após o relatório que identificou explicitamente os quatro
+SHAs DEVAI e os terceiros ciclos de review. O maestro vincula esta
+decisão aos quatro recibos exatos e aos dois prompt-reviews excepcionais.
+O recibo de publicação continuará separado, com comando e SHA finais.
+O terceiro prompt-review excepcional da rota de publicação retornou
+**PASS**. Os ajustes não bloqueantes foram vinculados aos sensores,
+ao campo `preflight_latest_version`, ao canário
+`@stynx-nyx/angular` e à regra de não enviar o commit intermediário
+com digest ainda não rebindado.
+
+A rota RC1 foi implementada em `d3021993`, com os 44 pacotes na
+candidata `1.5.0-rc.1`, dist-tag `rc`, preflight completo e parada na
+primeira ambiguidade. O sensor Inspector e trace foram ajustados em
+`e9fc0a8b`/`c3072867`. O Owner vinculou em `3b20783a` os dois novos
+achados por texto de publicação em `fc79c3f5` e `d3021993`; DEVAI
+strict desde `e09bd6c0` passou sem findings. O CI integral passou no
+HEAD anterior à reparação da revisão, com log
+`/private/tmp/stynx-s15-rc1-final-ci.log`; release policy,
+provenance, consumer fixtures e monotonicidade autenticada dos 44
+pacotes passaram. Nenhum pacote foi publicado.
+
+Delivery-review Opus da rota RC1 ciclo 1: **REVIEW** em
+`reviews/rc1-publish-delivery-review-1.json`. Faltavam sensores
+diretos de preflight, canário e releituras; o review também corrigiu a
+afirmação sobre a última tag estável. Inspector ampliou os testes em
+`e499dc7b` (42/42 focados); Engineer ligou as constantes e os recibos
+duráveis em `48629e1f`; Architect rebindou trace e plano em
+`a3694267`. O resolver autenticado escolheu a tag estável publicada
+`v1.3.1` (`a46ecb88bf5796a8fa4d142c2daf8b52c25a549f`), e
+DEVAI strict desde esse SHA passou sem findings. Segundo
+delivery-review pendente de CI integral no HEAD reparado.
+
+O CI integral do RC1 reparado passou (exit 0) no log
+`/private/tmp/stynx-s15-rc1-review2-ci.log`. O delivery-review Opus da
+rota RC1 ciclo 2 retornou **PASS** em
+`reviews/rc1-publish-delivery-review-2.json`, com três sugestões
+opcionais de sensores/recibo e sem bloqueio. O escopo aprovado inclui
+preflight de 44 dist-tags, canário angular, proteção de `latest`,
+releituras limitadas e recibo de parada com status do comando. PR de
+preparação e recibo específico de publicação ainda pendentes.
+
+## Integração de main na preparação RC1 (2026-09-26/27)
+
+O Owner declarou nesta sessão: “Autorização concedida para qualquer ação
+necessária para o correto e completo encerramento dessa campanha”. Sob
+essa autorização, o maestro integrou `origin/main` `78a0f4ba` na branch do
+PR #276 pelo merge `3383be943ca960e6df7a80480e3bdec4cc4769f9`. O
+main já continha a adoção aceita de DEVAI 1.6.0 (ADR-DEVAI-ADOPTION-0004/0005)
+e o workflow local de verificação RC em `17d87afaf386d68b75c67c458d519c0ef2e14274`.
+O workflow foi incorporado com bytes idênticos aos do main; a rota STYNX
+`release.yml` não mudou. Nenhum pacote foi publicado.
+
+O check DEVAI strict desde a última tag estável publicada `v1.3.1`
+(`a46ecb88bf5796a8fa4d142c2daf8b52c25a549f`) apontou quatro
+ocorrências no merge `3383be94`: `FORBID-RM-RF`,
+`FORBID-CI-WITHOUT-ADR`, `FORBID-PUBLISH` e
+`FORBID-MUTATE-INVARIANTS`; e duas no commit upstream `17d87afa`:
+`FORBID-RM-RF` e `FORBID-CI-WITHOUT-ADR`. O Owner vinculou sua
+autorização a esses seis pares exatos por recibos em
+`law/policy/forbidden-action-authorizations.json`. A checagem repetida
+no SHA `84743f8578bc42ee9fe75cf604c38da01bf03b32` retornou zero
+findings, com 14 recibos aplicados. Os recibos de
+`FORBID-PUBLISH` cobrem apenas texto de comando em commits; a publicação
+de `1.5.0-rc.1` exige recibo separado com comando e SHA candidato finais.
+
+O Architect restaurou sete recibos R-0002 perdidos pela resolução do
+conflito de política e regenerou o SBOM (169 componentes). O Inspector
+rebindou três hashes do manifesto raiz no contrato local RC; a suíte
+correta `node --test` passou 66/66. Trace permaneceu 393/393.
+`release:policy`, `release:provenance` e `release:consumer-fixtures`
+passaram, incluindo 44 tarballs em três fixtures. A revisão Opus do
+delta de main, ciclo 1, retornou REVIEW unicamente por CI ainda ativo;
+seu veredito está em `reviews/rc1-main-integration-delivery-review.json`.
+O CI completo deste HEAD usa o log
+`/private/tmp/stynx-s15-rc1-postmain-ci.log`; concluiu com exit 0 no
+SHA `84743f8578bc42ee9fe75cf604c38da01bf03b32`, incluindo
+`test:int`, build e doctor/RLS. Depois do merge, rodar DEVAI strict sobre o SHA mesclado e
+vincular eventuais ocorrências exatas do merge antes do dispatch de
+`release.yml`.
+
+O segundo delivery-review Opus do delta de main retornou **FAIL** em
+`reviews/rc1-main-integration-delivery-review-2.json`, ainda local e não
+commitado. A prova de CI foi aceita, porém o commit de evidência
+`c4b926b76f6716b82f0e2d68f1a3210d78acb692` introduziu duas
+ocorrências de texto de comandos citados pela revisão anterior, sem
+recibos vinculados: `FORBID-RM-RF` e `FORBID-PUBLISH`. Portanto o check
+DEVAI strict voltou a falhar no HEAD posterior a `c4b926b7`. A regra
+da rodada manda parar após FAIL escalado. PR #276 não foi atualizado nem
+mesclado; nenhum pacote foi publicado. A retomada deve vincular recibos
+Owner para os dois pares exatos, confirmar zero achados no SHA reparado
+e solicitar novo review antes do push.
+
+A retomada autorizada pelo Owner vinculou os dois recibos de evidência
+do commit `c4b926b76f6716b82f0e2d68f1a3210d78acb692` em
+`7eee34de599a137b7d896669f0007442a106feb0`. DEVAI strict desde
+`a46ecb88bf5796a8fa4d142c2daf8b52c25a549f` passou nesse SHA
+com zero findings e 16 recibos aplicados (log
+`/private/tmp/stynx-s15-rc1-resume-forbidden.log`). O terceiro
+delivery-review Opus do delta de main retornou **PASS** em
+`reviews/rc1-main-integration-delivery-review-3.json`; confirmou a
+correção e a validade do CI integral de `84743f85`. Os JSONs originais
+dos ciclos 2 e 3 são preservados integralmente como evidência.
+
+## Reparo do gate release-drafts do PR #276
+
+O check remoto `release-drafts` falhou no primeiro push de #276: o
+Changesets tratou o candidato RC já versionado como 44 mudanças sem
+changeset pendente. O Architect fixou no plano a classificação estreita
+para pre mode versionado; Inspector registrou negativos antes da
+implementação; Engineer corrigiu `run-release-preparation.mjs` e
+`release-context.mjs`; Architect rebindou trace. A revisão Opus ciclo 1
+retornou PASS com recomendações para RCs futuras; estas foram
+implementadas em commits separados por papel. O ciclo 2 retornou PASS
+em `reviews/rc1-release-status-delivery-review-2.json`. Os 43 testes
+focados passaram; `pnpm release:status` e `pnpm release:drafts` passaram
+com zero drafts pendentes. O CI integral no SHA
+`c8435e1fc5cea085de5f1f08127e1f274ebf689e` concluiu com exit 0
+(log `/private/tmp/stynx-s15-rc1-release-status-final-ci.log`), incluindo
+RLS e doctor. `release:policy`, `release:provenance` e DEVAI strict
+desde `a46ecb88` passaram. `release:consumer-fixtures` falhou em uma
+instalação temporária TEAT e passou na repetição, com 44 tarballs e
+três fixtures (log `/private/tmp/stynx-s15-rc1-consumer-fixtures-retry.log`).
+Nenhum pacote foi publicado.

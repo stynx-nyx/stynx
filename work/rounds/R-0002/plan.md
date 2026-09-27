@@ -212,8 +212,77 @@ está liberado. Delivery-review Opus 5.5, CI verde e PASS antes
 de merge.
 Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
+## Contrato de status RC versionada no PR #276
+
+O job remoto `release-drafts` chama `pnpm release:status`. O Changesets
+`status --since origin/main` rejeita a candidata RC já versionada porque
+as 44 versões mudaram e o único changeset foi consumido em `pre.json`.
+A rota deve emitir status vazio apenas para uma candidata pre mode `rc`
+com marcador explícito de commit de versionamento na primeira linha de
+história, 44 manifestos publicados alterados a uma versão prerelease
+única, versões iniciais iguais às do `origin/main`, changesets consumidos
+listados e presentes, e nenhum changeset pendente. O marcador deve
+nomear o mesmo core semântico da candidata; alterações em `packages/`,
+`packages-web/` ou `.changeset/` após o commit de versionamento
+invalidam a exceção. Para RC posterior, o baseline pode ser outra RC
+do mesmo core, com ordinal estritamente crescente e `pre.json`
+contínuo. Uma alteração ordinária sem changeset continua falhando pelo
+Changesets. O Inspector
+fixa positivos e negativos; Engineer implementa sem editar workflow.
+
 ## Triagem
 
+- RC1 `release:consumer-fixtures` após reparo do status: `sensor-error` — uma instalação temporária do fixture TEAT omitiu dois pacotes apesar de o pack dos 44 ter concluído; nova execução com fixture preservado passou 44/44 e três consumidores, sem mudança de código.
+
+- PR #276 `release-drafts`: `plant-bug` — `release:status` tratou a RC já versionada como alteração ordinária e o Changesets recusou os 44 manifestos sem changesets pendentes. O contrato acima define uma exceção fechada para pre mode versionado; testar antes de implementar.
+
+- Delivery-review da rota RC1 ciclo 1: `sensor-error` — faltavam
+  negativos diretos do preflight de dist-tags, canário, limite de
+  releituras e tag estável; Inspector ampliou sensores, Engineer ligou
+  validação pura do roster e recibos com motivo de parada. O reviewer
+  também identificou referência errada à última tag estável, corrigida
+  abaixo antes do segundo ciclo.
+- Sensores publicação RC1 após Inspector: `sensor-error` — o primeiro
+  red não exercita mutação de tag histórica, modo padrão com changeset
+  pendente nem preservação de `--access restricted`; completar essas
+  asserções uma vez antes do commit Inspector, sem reduzir as demais.
+- RC1 forbidden-actions local: `policy-issue` — check desde
+  `e09bd6c0` apontou `FORBID-PUBLISH` em três commits só de contrato
+  (`19730677`, `9ad74570`, `0106a12e`) por texto literal de comando,
+  e `FORBID-MUTATE-INVARIANTS` no commit Auditor `07b3cb47` de
+  evidência DEVAI. Nenhuma publicação ocorreu; resolver a autoridade
+  por recibos exatos do Owner antes do PR/merge, sem apagar provas.
+- Prompt-review publicação RC1 ciclo 1: `reference-gap` — plano sem
+  módulo puro testável para dist-tag/argumentos/pós-check e com pre-state
+  de final ambíguo; contrato e prompts reparados para segundo ciclo.
+- Prompt-review publicação RC1 ciclo 2: `policy-issue` — a exigência de
+  nenhum changeset pendente no `release:policy` padrão bloquearia PRs
+  normais durante pre mode; restringida à verificação de publicação.
+  Dois ciclos REVIEW consumidos; solicitar autorização excepcional do
+  Owner antes de terceiro prompt-review. Nenhum worker da rota foi
+  despachado.
+- Sensores RC1 após primeiro despacho Inspector: `sensor-error` — os
+  casos de plano/pre-state ficaram red como esperado, mas faltou prova
+  da pós-condição de `changeset version` (IDs consumidos, tag e ordinal
+  gerado); uma complementação focal antes do commit Inspector.
+- RC1 após CTG-0001: `plant-bug` — `pnpm version-packages` em pre mode
+  `rc` deixou os 44 pacotes em `1.5.0` estável após Changesets gerar
+  `2.0.0-rc.0` por inferência de peers; corrigir a projeção do grupo
+  fixo antes de qualquer publicação, com sensor Inspector e novo review.
+- Prompt-review RC1 ciclo 1: `plant-bug` — o ensaio de versionamento
+  consumiu `tenancy-context-15` em `.changeset/pre.json` mesmo após a
+  restauração dos manifestos. Reposto `changesets: []`, exatamente como
+  `pre enter rc`; commitar esse estado inicial para reprodução. A rota de
+  publicação existente fixa `--tag latest`; RC exige triade separada para
+  selecionar `rc` e provar que `latest` é recusado antes do recibo Owner.
+- Prompt-review RC1 ciclo 2: `plant-bug` — faltava detectar divergência
+  entre IDs consumidos em `pre.json`, arquivos `.md` e versão dos
+  manifestos; contrato e sensores foram ampliados. O limite de dois
+  ciclos REVIEW foi atingido; terceiro review só com autorização
+  excepcional do Owner. Nenhum worker da tríade RC foi despachado.
+- DEVAI `audit observe` do merge: `policy-issue` — primeira chamada
+  observou o SHA mesclado enquanto HEAD local ainda apontava ao PR;
+  avançar a worktree ao merge commit exato e repetir uma vez; concluiu.
 - CI local após override `adm-zip`: `reference-gap` — três sensores D21,
   D22 e D16.1 congelam o SHA antigo do `package.json` raiz; Inspector
   substitui somente esses três digests pelo SHA exato após o override,
@@ -305,22 +374,240 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 2. Os containers da referência devem continuar saudáveis; usar as quatro
    variáveis `STYNX_TEST_PG_*` acima nos gates locais. Chromium Playwright
    1223 já está instalado no host.
-3. O CTG-0001 passou CI completo em `e4253237`, com trace 393/393,
-   PostgreSQL/RLS reais, baseline API 44/44, auth 234/234, tenancy 39/39,
-   testes 97/97, integração 51/51 e build 48/48 tarefas. A correção da janela
-   JWKS e os sensores do ciclo 4 estão commitados em papéis separados. Resta
-   O delivery-review ciclo 5 retornou PASS, com uma recomendação não
-   bloqueante para sensoriar o fast path de concorrência; abrir PR e aguardar
-   CI remoto antes de merge.
+3. O CTG-0001 foi mesclado no PR #272 em
+   `e09bd6c00d56881fb5208a5e8fccfd6de3c0186a`. O último CI local
+   completo passou com trace 393/393, PostgreSQL/RLS reais, baseline API
+   44/44, auth 234/234, tenancy 39/39, testes 97/97, integração 51/51 e
+   build 48/48 tarefas; todos os checks obrigatórios remotos passaram.
+   Delivery-review Opus ciclos 5 e 6: PASS. DEVAI evidence record e
+   audit observe do merge concluídos. Preparar RC1 em pre mode.
 4. Conferir de novo a §8 da especificação antes de congelar o escopo.
 5. `pnpm release:preview` confirmou 1.4.0 → 1.5.0 pelo versionador do grupo
    fixo. `pnpm api:baselines:write` e `pnpm package-readmes:write` não
    produziram diff; o check DEVAI de ações proibidas passou sem findings.
+6. RC1: `pre enter rc` está commitado com `changesets: []` em `c011d259`.
+   O ensaio inicial de `version-packages` foi revertido sem publicação.
+   Prompt-review Opus retornou REVIEW nos ciclos 1 e 2. As correções do
+   ciclo 2 estão preparadas neste checkpoint. O Owner autorizou
+   expressamente o terceiro prompt-review excepcional em resposta ao
+   checkpoint de `053091a0`. Só despachar Inspector
+   após PASS. A rota de publicação `--tag latest` permanece bloqueada
+   para RC até tríade separada e revisão de entrega.
+7. O CI integral da candidata versionada passou com exit 0 no SHA
+   `f4bbcb2d071dcbe08390987377c4d9af231aae88`: comando
+   `STYNX_TEST_PG_HOST=127.0.0.1 STYNX_TEST_PG_PORT=55432
+STYNX_TEST_PG_USER=postgres STYNX_TEST_PG_PASSWORD=postgres pnpm
+ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
+   testes de script 114/114, tarefas test 97/97, integração 51/51,
+   build 48/48, doctor/RLS verdes. Commits posteriores até
+   `5de7b18b` alteram somente documentos da rodada. Delivery-review
+   versionamento ciclo 1: PASS. PR de preparação RC ainda bloqueado
+   pelos achados DEVAI de autoridade; publicação exige outro recibo.
+8. O Owner autorizou excepcionalmente o terceiro prompt-review da rota
+   de publicação e os quatro recibos DEVAI de SHA já identificados,
+   em resposta ao checkpoint de 2026-09-26. Registrar os recibos
+   exatos em `law/policy/forbidden-action-authorizations.json` e
+   executar novamente o check antes de abrir PR. Esta autorização
+   não é o recibo de publicação: esse ato ainda exige comando e SHA
+   candidato finais.
+
+9. A preparação RC1 está no PR #276. `main` avançou para DEVAI 1.6.0
+   (`78a0f4ba`) e foi integrado por `3383be94`. Os recibos exatos de
+   `3383be94` e `17d87afa` foram vinculados; DEVAI strict desde
+   `a46ecb88` passou com zero achados. SBOM, hash do manifesto raiz e
+   testes locais foram rebindados por papéis separados. A revisão Opus
+   do delta retornou REVIEW somente porque o CI completo ainda executava.
+   O CI integral concluiu com exit 0 no SHA `84743f85`; o record
+   contém o log. Obter PASS no ciclo 2 e atualizar PR #276.
+10. Após o merge de #276, executar DEVAI strict no SHA mesclado antes de
+    pedir recibo de publicação. A ocorrência do merge, se houver,
+    precisa de recibo por SHA exato. A publicação `1.5.0-rc.1` continua
+    bloqueada até recibo Owner separado que nomeie comando e SHA.
+
+11. **Checkpoint de parada em 2026-09-27.** O delivery-review Opus
+    do delta de main, ciclo 2, retornou FAIL; ver o arquivo local
+    `reviews/rc1-main-integration-delivery-review-2.json`. O motivo
+    é o commit `c4b926b76f6716b82f0e2d68f1a3210d78acb692`,
+    que adicionou duas citações de comandos vedados no artefato de
+    revisão anterior, detectadas como `FORBID-RM-RF` e
+    `FORBID-PUBLISH`. A próxima retomada deve vincular recibos Owner
+    para esses dois pares exatos (texto de revisão, sem execução),
+    executar DEVAI strict desde `a46ecb88` e obter novo PASS antes
+    de push/merge. Não commitar o JSON de review do ciclo 2 sem
+    considerar que ele contém citações capazes de criar novos
+    achados. PR #276 remoto permanece no HEAD `48e534f7` e com
+    conflito; o trabalho local chegou a `c4b926b7` mais este
+    checkpoint. RC1 e final não foram publicados.
+12. O CTG-0002 SSE está na worktree
+    `/Users/aarusso/.codex/worktrees/ctg2-sse/stynx` em
+    `a72276fd`. CI local e `ci:reference-apps` passaram. O
+    delivery-review Opus ciclo 1 retornou REVIEW em
+    `reviews/ctg2-delivery-review-1.json`: faltam duas provas
+    obrigatórias (resume/preflight real PostgreSQL/RLS e resolução
+    consumidora do entry Angular testing). Há seis melhorias não
+    bloqueantes. Nenhum PR CTG-0002 foi aberto.
+
+13. Retomada autorizada em 2026-09-27: os dois recibos do
+    commit `c4b926b7` foram vinculados em `7eee34de`; DEVAI strict
+    passou (zero achados, 16 recibos aplicados). O terceiro
+    delivery-review Opus do delta retornou PASS. Preservar os
+    vereditos originais; o commit de evidência que os inclui poderá
+    produzir novos achados por texto citado e deverá ter recibo
+    exato antes do push. Então repetir DEVAI strict, enviar PR #276,
+    aguardar CI remoto e mesclar.
 
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
 autorizado pelo Owner). Delivery-reviews: REVIEW nos ciclos 1–4; PASS nos
-ciclos 5 e 6 (delta dos checks do PR). O PR #272 está aberto; merge, RC e
-release final não foram iniciados. Publicar
+ciclos 5 e 6 (delta dos checks do PR). O PR #272 foi mesclado; RC e release
+final não foram publicados. Publicar
 qualquer RC ou a final exige recibo Owner por ação e SHA exato.
+
+## Contrato de versionamento RC1
+
+O pre mode `rc` deve produzir `1.5.0-rc.1` para a primeira candidata,
+partindo do grupo fixo em `1.4.0` e do changeset minor de tenancy. O
+versionador continua corrigindo a promoção major causada por peers
+`workspace:*`, mas não pode descartar o sufixo `rc`. Todos os 44 pacotes
+publicáveis, o manifesto raiz, o template e os CHANGELOGs devem concordar
+com a mesma versão. A invocação repetida sem changeset novo não cria outra
+RC. O estado de entrada é o `pre.json` de `pre enter rc`, com
+`changesets: []`; arquivos `.md` consumidos permanecem no disco. Em modo
+`pre`, somente IDs ausentes de `pre.json.changesets` são pendentes. O
+Changesets gera `rc.0` na primeira execução, mas a decisão OD-S15-01
+exige `rc.1`. Um changeset posterior patch/minor mantém a base 1.5.0 e
+incrementa o ordinal; um major posterior falha fechado, aguardando OD
+do Owner. Em modo `exit`, todos os changesets, consumidos ou novos,
+compõem o maior bump a partir do `initialVersions` do grupo fixo: o
+resultado sem sufixo é 1.5.0 neste caso. Estado estável sem `pre.json`
+segue a regra existente. Drift significa membro do grupo fixo ausente
+de `initialVersions` ou diferente do 1.4.0 unificado; tag atual diversa
+de `pre.json.tag`; ou base prerelease diversa da base recalculada.
+Entradas malformadas falham fechadas. Entradas privadas e externas em
+`initialVersions` não compõem o grupo fixo.
+Em `pre`, manifesto estável igual ao `initialVersion` do grupo exige
+`pre.json.changesets` vazio; manifesto prerelease exige lista não vazia.
+Cada ID consumido deve ter seu `.changeset/<id>.md` presente tanto em
+`pre` quanto em `exit`. Em `exit`, a base recalculada deve igualar a base
+do manifesto prerelease; um major novo que a mude falha fechado até OD
+do Owner. `pre.json` inválido (modo desconhecido, tag ausente/não string,
+`initialVersions` ausente/não objeto, `changesets` não array ou JSON
+inválido) falha fechado; se o arquivo não existir, aplica-se sem
+alteração o fluxo estável.
+
+Uma versão prerelease só pode ser publicada com dist-tag `rc`, obtida de
+`pre.json.tag`; `latest` deve ser recusado para prerelease. O script atual
+`scripts/publish-release-plan.mjs` fixa `--tag latest` e o candidate
+`1.4.0`; portanto publicação permanece bloqueada até triade própria
+reparar a rota, incluir sensor Inspector e obter delivery-review. O
+pedido de recibo Owner citará `--tag rc`, comando e SHA exatos.
+
+Tríade focal: Architect fixa este contrato e os prompts; reviewer Opus
+5.5 faz prompt-review antes do despacho; Inspector escreve sensores de
+plano e reescrita de CHANGELOG no fixture de versão; Engineer ajusta
+`scripts/lib/fixed-group-version.mjs` e `scripts/version-packages.mjs`
+até o red/green. Architect rebinda `law/trace.json` se necessário.
+O Engineer roda somente testes focais e `pnpm release:preview` contra
+`pre.json` reposto, sem executar versionamento real. Após green, o maestro
+executa `pnpm version-packages`; Inspector rebinda os três SHA-256 exatos
+em `test/scripts/local-rc-blocker-contract.test.mjs` que congelam o
+manifesto raiz, e Architect rebinda `law/trace.json` após edições de
+testes. O fluxo estável já testado permanece válido. Nenhum workflow será
+editado. A preparação, CI e revisão de entrega da RC ocorrerão antes da
+solicitação de recibo para publicar.
+
+Prompt-review excepcional ciclo 3: **PASS**. As observações de execução
+ficam vinculantes para a tríade: em `exit`, IDs já consumidos ainda
+ativam a versão final; após `changeset version`, validar versão gerada
+(tag/ordinal em `pre`, versão estável em `exit`) e conferir que
+`pre.json.changesets` ganhou exatamente os IDs pendentes antes de
+reescrever manifestos. A correção do primeiro `rc.0` para `rc.1` também
+se aplica se não houver promoção major de peers.
+
+## Contrato da rota de publicação RC1
+
+Após gerar e revisar o candidato `1.5.0-rc.1`, rebinder a política
+Architect `law/policy/registry-version-anomalies.json` à OD-S15-01:
+`next_unified_version` e `anomalies[0].allowed_candidate` exatos para
+`1.5.0-rc.1`, mantendo pacote, versão 2.0.0, version ID, evidências,
+`allowed_effects` e o escopo singular da exceção. A decisão registra
+data 2026-09-26, baseline merge
+`e09bd6c00d56881fb5208a5e8fccfd6de3c0186a`, tree
+`d5f28e558de386713b3573646ff71f58e37c2b65`, supersede a decisão
+de 2026-09-15 para 1.4.0, e declara que `latest` permanece em 1.4.0
+durante a RC; a condição de fechamento da candidata RC exige `rc` →
+`1.5.0-rc.1` e `latest` → 1.4.0. O digest fixado em
+`scripts/lib/registry-version-policy.mjs` acompanha exatamente os bytes
+da política, por Engineer em commit separado de `law/`.
+
+O candidato publicado deve ser o mesmo em todos os 44 manifestos,
+política, plano de publicação, checagem de monotonicidade e recibos.
+A política Architect fixa `preflight_latest_version: "1.4.0"`; o
+loader confere esse campo contra
+`registryVersionPolicyConstants.preflightLatestVersion`. O publisher
+consome a constante, sem outro literal de versão. O commit Architect
+da política tem digest temporariamente divergente e **não** é
+candidato nem será enviado isoladamente; o Engineer rebinda o digest
+em commit próprio. Só o HEAD combinado, após sensores e trace, passa
+por CI e pode ser enviado ao PR.
+Para versão prerelease, a rota deriva a dist-tag exclusivamente de
+`.changeset/pre.json` (`mode: pre`, `tag: rc`) e recusa ausência, tag
+divergente, `latest` ou versão estável; `npm publish` recebe `--tag rc`.
+Para versão final estável, após `pre exit` e versionamento, a rota
+permite somente `latest` com `pre.json` ausente; sua presença em
+qualquer modo com candidato estável falha fechada. No SHA candidato RC,
+todos os 44 manifestos são 1.5.0-rc.1, `pre.json` está commitado em
+`mode: pre`, `tag: rc`, e nenhum ID `.md` fica pendente fora de
+`pre.json.changesets`; somente `verify-release-policy.mjs
+--registry-monotonicity` e o preflight de publicação recusam
+pendências. O `release:policy` padrão aceita changesets novos para
+futuros CTGs/RCs. Assim, a candidata exata evita que changesets/action
+escolha criar PR em vez de publicar. O plano e
+os recibos incluem a dist-tag e o SHA/tree exatos; a verificação após
+publicação exige que o pacote RC esteja em `rc` e que `latest` não tenha
+sido movido. O preflight lê e registra o objeto completo de `dist-tags`
+de cada pacote, permite chaves históricas válidas, mas exige `latest`
+exatamente 1.4.0 nos 44 antes da primeira mutação; metadados ilegíveis
+ou malformados são `PUBLICATION_DIST_TAG_UNKNOWN`. Após publicar, cada
+chave anterior exceto `rc` permanece byte a byte igual e `rc` aponta à
+candidata. Se a versão/`rc` ainda não estiver visível, a rota pode reler
+até cinco vezes, com intervalo fixo de dois segundos, registrando
+tentativas e resultados no recibo; alteração de `latest` ou outra tag
+anterior é `PUBLICATION_DIST_TAG_DRIFT` imediata. O primeiro pacote é
+`@stynx-nyx/angular`, canário do comportamento GitHub Packages. O
+plano de publicação registra todas as suas dist-tags anteriores,
+byte a byte, antes da primeira mutação;
+se a registry mover `latest`, a publicação para imediatamente. Restaurar
+`latest` seria nova mutação e exigiria recibo Owner próprio. Pré-flight
+de registry desconhecido ou resultado ambíguo
+falha fechado, preservando stop-on-first-failure e a regra de novo
+recibo Owner para recuperação parcial. A exceção angular-profile@2.0.0
+continua restrita ao único pacote/version ID.
+
+O workflow `release.yml` permanece intocado: já usa
+`--candidate-from-policy`, exige dispatch de `main` no SHA exato,
+opt-in Owner e token. Inspector prova o candidato, a monotonicidade,
+dist-tag e negativas em módulo puro sem efeitos colaterais
+`scripts/lib/publication-dist-tag.mjs`, com
+`selectPublicationDistTag({version,preState})`,
+`buildNpmPublishArgs({tarball,registry,tag,version})`,
+`verifyPostPublishDistTags({candidate,preflightLatest,preflightDistTags,distTags})` e
+`assertNoPendingPreChangesets({preState,changesetIds})`. Erros tipados
+`PUBLICATION_DIST_TAG_INVALID`, `PUBLICATION_DIST_TAG_UNKNOWN` e
+`PUBLICATION_DIST_TAG_DRIFT`. O script de publicação usa essas funções;
+testes nunca o importam, pois ele tem efeitos colaterais. Engineer
+ajusta scripts de política e publicação. Architect rebinda
+`law/trace.json` depois dos testes Inspector. Prompt-review Opus antes
+do despacho, delivery-review e CI
+antes do PR. Publicação só após merge, recibo Owner por ação/SHA e
+disparo explícito com `publish:true`; o pedido citará dist-tag `rc`,
+SHA/tree e que o primeiro pacote é canário. A RC não cria tag Git
+`v1.5.0-rc.1`; a última tag estável publicada e alcançável é
+`v1.3.1`, que resolve a `a46ecb88bf5796a8fa4d142c2daf8b52c25a549f`.
+O resolver autenticado confirmou essa referência e o DEVAI strict
+desde ela passou com zero findings antes do segundo delivery-review.
+
+Prompt-review excepcional ciclo 3 da rota: **PASS**, com ajustes não
+bloqueantes incorporados em prompts 15/16 e neste contrato antes do
+rebind da política.

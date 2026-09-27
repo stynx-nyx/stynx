@@ -20,7 +20,10 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import test from 'node:test';
 
-import { collectPublicPackages } from '../../scripts/lib/release-version-policy.mjs';
+import {
+  collectPublicPackages,
+  validateReleaseVersionPolicy,
+} from '../../scripts/lib/release-version-policy.mjs';
 import {
   fetchRegistryCensus,
   loadRegistryAnomalyPolicy,
@@ -38,6 +41,7 @@ import {
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 import {
   classifyReleaseContext,
+  isVersionedPreModeCandidate,
   releaseContextConstants,
   ReleaseContextError,
 } from '../../scripts/lib/release-context.mjs';
@@ -50,6 +54,7 @@ import {
   planFixedGroupVersion,
   readPendingChangesets,
 } from '../../scripts/lib/fixed-group-version.mjs';
+import * as fixedGroupVersion from '../../scripts/lib/fixed-group-version.mjs';
 import { typeOnlyCoverageExclusions } from '../../tools/repo-config/coverage-population.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
@@ -203,6 +208,77 @@ test('ordinary changed publishable packages without a Changeset remain ordinary 
     baseCommit: preparedBaseCommit,
     headCommit: preparedHeadCommit,
   });
+});
+
+test('versioned RC status accepts only the complete consumed fixed-group candidate', () => {
+  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+    name,
+    manifestPath: relative(repoRoot, manifestPath),
+    baseVersion: '1.4.0',
+    candidateVersion: '1.5.0-rc.1',
+  }));
+  assert.equal(packageStates.length, 44);
+  const input = {
+    baseRootVersion: '1.4.0',
+    candidateRootVersion: '1.5.0-rc.1',
+    versionCommitVersion: '1.5.0',
+    packageStates,
+    changedManifestPaths: packageStates.map(({ manifestPath }) => manifestPath),
+    changesetIdsOnDisk: ['tenancy-context-15'],
+    followUpChanges: [],
+    basePreState: null,
+    preState: {
+      mode: 'pre',
+      tag: 'rc',
+      initialVersions: Object.fromEntries(packageStates.map(({ name }) => [name, '1.4.0'])),
+      changesets: ['tenancy-context-15'],
+    },
+  };
+  assert.equal(isVersionedPreModeCandidate(input), true);
+
+  for (const [label, mutate] of [
+    ['no version commit', (value) => { value.versionCommitVersion = null; }],
+    ['marker core drift', (value) => { value.versionCommitVersion = '9.9.9'; }],
+    ['wrong mode', (value) => { value.preState.mode = 'exit'; }],
+    ['wrong tag', (value) => { value.preState.tag = 'latest'; }],
+    ['stable candidate', (value) => { value.candidateRootVersion = '1.5.0'; }],
+    ['same version as base', (value) => { value.baseRootVersion = '1.5.0-rc.1'; }],
+    ['one package omitted', (value) => { value.packageStates.pop(); }],
+    ['one package not versioned', (value) => { value.packageStates[43].candidateVersion = '1.4.0'; }],
+    ['one base mismatch', (value) => { value.packageStates[0].baseVersion = '1.3.1'; }],
+    ['one changed manifest omitted', (value) => { value.changedManifestPaths.pop(); }],
+    ['one unexpected manifest', (value) => { value.changedManifestPaths.push('packages/unrelated/package.json'); }],
+    ['no consumed changeset', (value) => { value.preState.changesets = []; }],
+    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('new-work'); }],
+    ['missing consumed file', (value) => { value.changesetIdsOnDisk = []; }],
+    ['source changed after versioning', (value) => { value.followUpChanges = [{ status: 'M', path: 'packages/core/src/index.ts' }]; }],
+    ['new changeset after versioning', (value) => { value.followUpChanges = [{ status: 'A', path: '.changeset/late.md' }]; }],
+  ]) {
+    const invalid = structuredClone(input);
+    mutate(invalid);
+    assert.equal(isVersionedPreModeCandidate(invalid), false, label);
+  }
+
+  const laterRc = structuredClone(input);
+  laterRc.baseRootVersion = '1.5.0-rc.1';
+  laterRc.candidateRootVersion = '1.5.0-rc.2';
+  laterRc.packageStates.forEach((entry) => {
+    entry.baseVersion = '1.5.0-rc.1';
+    entry.candidateVersion = '1.5.0-rc.2';
+  });
+  laterRc.preState.changesets.push('sse-stream-15');
+  laterRc.changesetIdsOnDisk.push('sse-stream-15');
+  laterRc.basePreState = structuredClone(input.preState);
+  assert.equal(isVersionedPreModeCandidate(laterRc), true, 'rc.2 advances from rc.1');
+
+  const repeatedRc = structuredClone(laterRc);
+  repeatedRc.candidateRootVersion = '1.5.0-rc.1';
+  repeatedRc.packageStates.forEach((entry) => { entry.candidateVersion = '1.5.0-rc.1'; });
+  assert.equal(isVersionedPreModeCandidate(repeatedRc), false, 'ordinal must advance');
+
+  const discontinuousPre = structuredClone(laterRc);
+  discontinuousPre.basePreState.initialVersions[packageStates[0].name] = '1.3.0';
+  assert.equal(isVersionedPreModeCandidate(discontinuousPre), false, 'pre mode initial versions remain bound');
 });
 
 test('version rebaseline permits only the three generated dependency README consequences', () => {
@@ -495,12 +571,13 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 });
 
 test('Architect anomaly policy is required at its exact approved digest', () => {
-  // The Owner's 2026-09-15 decision names 1.4.0 as the next unified version
-  // (superseding 1.3.1); the 1.2.0 rebaseline target stays historical and is
-  // no longer a valid candidate.
-  assert.equal(currentCandidate, '1.4.0');
+  // The Owner's 2026-09-26 RC decision names 1.5.0-rc.1 and supersedes the
+  // 2026-09-15 1.4.0 candidate; 1.2.0 remains historical rebaseline data.
+  assert.equal(currentCandidate, '1.5.0-rc.1');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
-  assert.equal(anomalyPolicy.owner_decision.supersedes.next_unified_version, '1.3.1');
+  assert.equal(anomalyPolicy.owner_decision.supersedes.date, '2026-09-15');
+  assert.equal(anomalyPolicy.owner_decision.supersedes.next_unified_version, '1.4.0');
+  assert.equal(anomalyPolicy.preflight_latest_version, '1.4.0');
   assert.notEqual(currentCandidate, unifiedRebaselineTarget);
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.package, '@stynx-nyx/angular-profile');
@@ -1161,6 +1238,201 @@ test('publication uses an ordered 44-package plan, durable per-package receipts,
   assert.match(verifier, /registryVersionPolicyConstants\.candidate/u);
 });
 
+test('RC1 registry monotonicity accepts only the exact prerelease candidate and its singular anomaly', () => {
+  assert.equal(packageNames.length, 44);
+  assert.equal(registryVersionPolicyConstants.candidate, '1.5.0-rc.1');
+  assert.equal(registryVersionPolicyConstants.preflightLatestVersion, '1.4.0');
+  assert.equal(anomalyPolicy.anomalies.length, 1);
+  assert.deepEqual(
+    anomalyPolicy.anomalies.map(({ package: name, version }) => [name, version]),
+    [['@stynx-nyx/angular-profile', '2.0.0']],
+  );
+
+  for (const version of ['1.4.0', '1.5.0-rc.0']) {
+    const history = validRegistryCensus();
+    history.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', version]));
+    assert.deepEqual(validate({ registryStatesByPackage: history }), {
+      anomalyMatches: 1, absentPackageCount: 0, packageCount: 44, publishedPackageCount: 44,
+    });
+  }
+
+  for (const [version, code] of [
+    ['1.5.0-rc.1', 'REGISTRY_CANDIDATE_EXISTS'],
+    ['1.5.0', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['1.5.1', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
+  ]) {
+    const history = validRegistryCensus();
+    history.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', version]));
+    assertPolicyError(() => validate({ registryStatesByPackage: history }), code);
+  }
+
+  for (const candidate of ['1.4.0', '1.5.0']) {
+    assertPolicyError(() => loadRegistryAnomalyPolicy(repoRoot, candidate), 'REGISTRY_ANOMALY_POLICY_UNSUPPORTED');
+    assertPolicyError(() => validate({ candidate }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
+  }
+});
+
+test('RC1 policy bytes bind to the Architect prerelease decision before registry observation', () => {
+  assert.doesNotThrow(() => loadRegistryAnomalyPolicy(repoRoot, '1.5.0-rc.1'));
+});
+
+test('RC1 publication uses only pure dist-tag helpers and preserves latest during rc publication', async () => {
+  const publication = await import('../../scripts/lib/publication-dist-tag.mjs');
+  const preState = { mode: 'pre', tag: 'rc', changesets: ['tenancy'] };
+  assert.equal(publication.selectPublicationDistTag({ version: '1.5.0-rc.1', preState }), 'rc');
+  assert.equal(publication.selectPublicationDistTag({ version: '1.5.0', preState: undefined }), 'latest');
+  for (const input of [
+    { version: '1.5.0-rc.1', preState: undefined },
+    { version: '1.5.0-rc.1', preState: { ...preState, tag: 'beta' } },
+    { version: '1.5.0-rc.1', preState: { ...preState, tag: 'latest' } },
+    { version: '1.5.0', preState },
+    { version: '1.5.0', preState: { ...preState, mode: 'exit' } },
+  ]) {
+    assert.throws(
+      () => publication.selectPublicationDistTag(input),
+      (error) => error?.code === 'PUBLICATION_DIST_TAG_INVALID',
+    );
+  }
+  assert.deepEqual(
+    publication.buildNpmPublishArgs({
+      tarball: 'fixture.tgz', registry: 'https://npm.pkg.github.com', tag: 'rc', version: '1.5.0-rc.1',
+    }),
+    ['publish', 'fixture.tgz', '--registry', 'https://npm.pkg.github.com', '--tag', 'rc', '--access', 'restricted'],
+  );
+  assert.throws(
+    () => publication.buildNpmPublishArgs({ tarball: 'fixture.tgz', registry: 'https://npm.pkg.github.com', tag: 'latest', version: '1.5.0-rc.1' }),
+    (error) => error?.code === 'PUBLICATION_DIST_TAG_INVALID',
+  );
+  assert.doesNotThrow(() => publication.verifyPostPublishDistTags({
+    candidate: '1.5.0-rc.1', preflightLatest: '1.4.0',
+    preflightDistTags: { latest: '1.4.0', legacy: '0.9.0' },
+    distTags: { latest: '1.4.0', rc: '1.5.0-rc.1', legacy: '0.9.0' },
+  }));
+  for (const [distTags, code] of [
+    [{ latest: '1.4.0', legacy: '0.9.0' }, 'PUBLICATION_DIST_TAG_UNKNOWN'],
+    [{ latest: '1.4.0', rc: '1.5.0-rc.1' }, 'PUBLICATION_DIST_TAG_DRIFT'],
+    [{ latest: '1.5.0-rc.1', rc: '1.5.0-rc.1' }, 'PUBLICATION_DIST_TAG_DRIFT'],
+    [{ latest: '1.4.0', rc: '1.5.0-rc.1', legacy: '0.9.1' }, 'PUBLICATION_DIST_TAG_DRIFT'],
+  ]) {
+    assert.throws(
+      () => publication.verifyPostPublishDistTags({
+        candidate: '1.5.0-rc.1', preflightLatest: '1.4.0',
+        preflightDistTags: { latest: '1.4.0', legacy: '0.9.0' }, distTags,
+      }),
+      (error) => error?.code === code,
+    );
+  }
+  assert.doesNotThrow(() => publication.assertNoPendingPreChangesets({ preState, changesetIds: ['tenancy'] }));
+  assert.throws(
+    () => publication.assertNoPendingPreChangesets({ preState, changesetIds: ['tenancy', 'future-ctg'] }),
+    (error) => error?.code === 'PUBLICATION_DIST_TAG_INVALID',
+  );
+
+  const publisher = repositorySource('scripts/publish-release-plan.mjs');
+  assert.match(publisher, /publication-dist-tag\.mjs/u);
+  assert.match(publisher, /candidate_sha/u);
+  assert.match(publisher, /candidate_tree/u);
+  assert.match(publisher, /stop-on-first-failure/u);
+});
+
+test('RC1 preflight rejects every unknown or moved latest dist-tag before publication', async () => {
+  const { validatePreflightDistTags } = await import('../../scripts/lib/publication-dist-tag.mjs');
+  const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
+  assert.equal(preflightLatest, '1.4.0');
+  assert.deepEqual(validatePreflightDistTags({
+    preflightLatest,
+    distTags: { latest: '1.4.0', legacy: '0.9.0' },
+  }), { latest: '1.4.0', legacy: '0.9.0' });
+  for (const latest of ['2.0.0', '1.5.0-rc.1', '1.3.1']) {
+    assert.throws(
+      () => validatePreflightDistTags({ preflightLatest, distTags: { latest } }),
+      (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT',
+    );
+  }
+  for (const distTags of [
+    { rc: '1.5.0-rc.1' }, null, [], {}, { latest: 1 }, { '': '1.4.0' },
+  ]) {
+    assert.throws(
+      () => validatePreflightDistTags({ preflightLatest, distTags }),
+      (error) => error?.code === 'PUBLICATION_DIST_TAG_UNKNOWN',
+    );
+  }
+});
+
+test('RC1 publication roster, old rc visibility, bounded rereads, and stable-only release tags', async () => {
+  const publication = await import('../../scripts/lib/publication-dist-tag.mjs');
+  const { discoverPublishablePackages } = await import('../../scripts/lib/publishable-packages.mjs');
+  const { parseStableVersionTag } = await import('../../scripts/resolve-release-forbidden-range.mjs');
+  const packages = discoverPublishablePackages(repoRoot);
+  assert.equal(packages.length, 44);
+  assert.equal(packages[0].name, '@stynx-nyx/angular');
+  assert.equal(packages.every((entry) => entry.manifest.version === '1.5.0-rc.1'), true);
+  assert.doesNotThrow(() => publication.validatePublicationRoster(packages, '1.5.0-rc.1'));
+  for (const roster of [packages.slice(1), [packages[1], packages[0], ...packages.slice(2)]]) {
+    assert.throws(
+      () => publication.validatePublicationRoster(roster, '1.5.0-rc.1'),
+      (error) => error?.code === 'PUBLICATION_ROSTER_DRIFT',
+    );
+  }
+  assert.throws(
+    () => publication.validatePublicationRoster([
+      { ...packages[0], manifest: { ...packages[0].manifest, version: '1.5.0' } }, ...packages.slice(1),
+    ], '1.5.0-rc.1'),
+    (error) => error?.code === 'PUBLICATION_VERSION_DRIFT',
+  );
+  assert.equal(publication.publicationPlanConstants.canaryPackage, '@stynx-nyx/angular');
+  assert.equal(publication.publicationPlanConstants.packageCount, 44);
+  assert.equal(publication.publicationPlanConstants.maxVisibilityRereads, 5);
+  assert.equal(publication.publicationPlanConstants.visibilityRereadDelayMs, 2_000);
+  for (const [rc, code] of [
+    ['1.4.0-rc.9', 'PUBLICATION_DIST_TAG_UNKNOWN'],
+    ['1.5.0-rc.0', 'PUBLICATION_DIST_TAG_DRIFT'],
+  ]) {
+    assert.throws(
+      () => publication.verifyPostPublishDistTags({
+        candidate: '1.5.0-rc.1',
+        preflightLatest: registryVersionPolicyConstants.preflightLatestVersion,
+        preflightDistTags: { latest: '1.4.0', rc: '1.4.0-rc.9' },
+        distTags: { latest: '1.4.0', rc },
+      }),
+      (error) => error?.code === code,
+    );
+  }
+  assert.throws(() => parseStableVersionTag('v1.5.0-rc.1'), /malformed stable release tag/u);
+  const publisher = repositorySource('scripts/publish-release-plan.mjs');
+  const workflow = repositorySource('.github/workflows/release.yml');
+  assert.match(publisher, /publicationPlanConstants\.maxVisibilityRereads/u);
+  assert.match(publisher, /publicationPlanConstants\.visibilityRereadDelayMs/u);
+  assert.match(publisher, /validatePublicationRoster\(packages, version\)/u);
+  assert.match(publisher, /const tag = `\$\{entry\.package\}@\$\{version\}`/u);
+  assert.doesNotMatch(publisher, /git\(\['tag',\s*`v/u);
+  assert.doesNotMatch(workflow, /git tag\s+v\d/u);
+});
+
+test('RC1 default planning keeps a future pre-mode changeset while publication preflight alone refuses it', () => {
+  const fixture = createFixedGroupFixture({
+    version: '1.5.0-rc.1',
+    changesets: {
+      'consumed.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nConsumed.\n",
+      'future.md': "---\n'@stynx-nyx/fixture-core': patch\n---\n\nFuture CTG.\n",
+    },
+  });
+  try {
+    writeRcPreState(fixture, { changesets: ['consumed'] });
+    const before = readFileSync(join(fixture.root, '.changeset', 'pre.json'), 'utf8');
+    assert.deepEqual(
+      validateReleaseVersionPolicy(fixture.root, { fixed: [fixture.names] }),
+      [],
+    );
+    const plan = planFixedGroupVersion(fixture.root, { fixed: [fixture.names] });
+    assert.equal(plan.expected, '1.5.0-rc.2');
+    assert.equal(readFileSync(join(fixture.root, '.changeset', 'pre.json'), 'utf8'), before);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
 // Fixed-group version rule (see scripts/lib/fixed-group-version.mjs): the
 // release unit's next version is the current unified version advanced by the
 // highest bump type a pending changeset declares for a group member. Changesets'
@@ -1194,6 +1466,27 @@ function createFixedGroupFixture({ version = '1.3.0', changesets = [] } = {}) {
     writeFileSync(join(root, '.changeset', file), body);
   }
   return { root, names };
+}
+
+function writeRcPreState(fixture, {
+  mode = 'pre',
+  tag = 'rc',
+  initialVersion = '1.4.0',
+  changesets = [],
+  initialVersions,
+} = {}) {
+  writeJson(join(fixture.root, '.changeset', 'pre.json'), {
+    mode,
+    tag,
+    initialVersions: initialVersions ?? Object.fromEntries(
+      fixture.names.map((name) => [name, initialVersion]),
+    ),
+    changesets,
+  });
+}
+
+function assertAnyFixedGroupError(callback) {
+  assert.throws(callback, (error) => error instanceof FixedGroupVersionError);
 }
 
 function assertFixedGroupError(callback, code) {
@@ -1339,6 +1632,234 @@ test('an over-promoted generated version is rewritten in manifests and the new c
   }
 });
 
+test('RC1 pre mode starts at rc.1 and advances only for changesets not already consumed', () => {
+  const initial = createFixedGroupFixture({
+    version: '1.4.0',
+    changesets: { 'tenancy.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nTenancy.\n" },
+  });
+  try {
+    writeRcPreState(initial);
+    const plan = planFixedGroupVersion(initial.root, { fixed: [initial.names] });
+    assert.equal(plan.current, '1.4.0');
+    assert.equal(plan.bump, 'minor');
+    assert.equal(plan.expected, '1.5.0-rc.1');
+    assert.notEqual(plan.expected, '1.5.0');
+    assert.notEqual(plan.expected, '2.0.0-rc.0');
+  } finally {
+    rmSync(initial.root, { recursive: true, force: true });
+  }
+
+  const subsequent = createFixedGroupFixture({
+    version: '1.5.0-rc.1',
+    changesets: {
+      'tenancy.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nConsumed tenancy.\n",
+      'follow-up.md': "---\n'@stynx-nyx/fixture-core': patch\n---\n\nFollow-up.\n",
+    },
+  });
+  try {
+    writeRcPreState(subsequent, { changesets: ['tenancy'] });
+    const plan = planFixedGroupVersion(subsequent.root, { fixed: [subsequent.names] });
+    assert.equal(plan.expected, '1.5.0-rc.2');
+    assert.equal(plan.bump, 'patch');
+    assert.deepEqual(plan.changesets, [{ file: '.changeset/follow-up.md', types: ['patch'] }]);
+
+    writeRcPreState(subsequent, { changesets: ['tenancy', 'follow-up'] });
+    const noOp = planFixedGroupVersion(subsequent.root, { fixed: [subsequent.names] });
+    assert.equal(noOp.bump, null);
+    assert.equal(noOp.expected, '1.5.0-rc.1');
+    assert.deepEqual(noOp.changesets, []);
+  } finally {
+    rmSync(subsequent.root, { recursive: true, force: true });
+  }
+});
+
+test('RC1 exit consumes retained changesets and rejects a recomputed major base', () => {
+  const fixture = createFixedGroupFixture({
+    version: '1.5.0-rc.2',
+    changesets: { 'tenancy.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nConsumed tenancy.\n" },
+  });
+  try {
+    writeRcPreState(fixture, { mode: 'exit', changesets: ['tenancy'] });
+    const plan = planFixedGroupVersion(fixture.root, { fixed: [fixture.names] });
+    assert.equal(plan.bump, 'minor');
+    assert.equal(plan.expected, '1.5.0');
+    assert.notEqual(plan.changesets.length, 0);
+
+    writeFileSync(join(fixture.root, '.changeset', 'owner-od-required.md'), "---\n'@stynx-nyx/fixture-sdk': major\n---\n\nMajor.\n");
+    assertAnyFixedGroupError(() => planFixedGroupVersion(fixture.root, { fixed: [fixture.names] }));
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('RC1 fails closed for malformed pre state, drift, and missing retained changesets', () => {
+  const invalidStates = [
+    { mode: 'unknown', tag: 'rc', initialVersions: {}, changesets: [] },
+    { mode: 'pre', initialVersions: {}, changesets: [] },
+    { mode: 'pre', tag: 1, initialVersions: {}, changesets: [] },
+    { mode: 'pre', tag: 'rc', changesets: [] },
+    { mode: 'pre', tag: 'rc', initialVersions: [], changesets: [] },
+    { mode: 'pre', tag: 'rc', initialVersions: {}, changesets: {} },
+  ];
+  for (const state of invalidStates) {
+    const fixture = createFixedGroupFixture({ version: '1.4.0' });
+    try {
+      writeJson(join(fixture.root, '.changeset', 'pre.json'), state);
+      assertAnyFixedGroupError(() => planFixedGroupVersion(fixture.root, { fixed: [fixture.names] }));
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+
+  const invalidJson = createFixedGroupFixture({ version: '1.4.0' });
+  try {
+    writeFileSync(join(invalidJson.root, '.changeset', 'pre.json'), '{ invalid json');
+    assertAnyFixedGroupError(() => planFixedGroupVersion(invalidJson.root, { fixed: [invalidJson.names] }));
+  } finally {
+    rmSync(invalidJson.root, { recursive: true, force: true });
+  }
+
+  const drift = createFixedGroupFixture({
+    version: '1.5.0-rc.1',
+    changesets: { 'retained.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nRetained.\n" },
+  });
+  try {
+    writeRcPreState(drift, { changesets: ['retained'], initialVersions: { [drift.names[0]]: '1.4.0' } });
+    assertAnyFixedGroupError(() => planFixedGroupVersion(drift.root, { fixed: [drift.names] }));
+    writeRcPreState(drift, { changesets: ['missing'] });
+    assertAnyFixedGroupError(() => planFixedGroupVersion(drift.root, { fixed: [drift.names] }));
+    writeRcPreState(drift, { tag: 'beta', changesets: ['retained'] });
+    assertAnyFixedGroupError(() => planFixedGroupVersion(drift.root, { fixed: [drift.names] }));
+  } finally {
+    rmSync(drift.root, { recursive: true, force: true });
+  }
+});
+
+test('RC1 rejects pre-mode majors and prerelease manifest drift before a generated version can be rewritten', () => {
+  const major = createFixedGroupFixture({
+    version: '1.5.0-rc.1',
+    changesets: { 'major.md': "---\n'@stynx-nyx/fixture-core': major\n---\n\nOwner decision required.\n" },
+  });
+  try {
+    writeRcPreState(major);
+    assertAnyFixedGroupError(() => planFixedGroupVersion(major.root, { fixed: [major.names] }));
+  } finally {
+    rmSync(major.root, { recursive: true, force: true });
+  }
+
+  for (const { version, changesets } of [
+    { version: '1.5.0-beta.1', changesets: ['retained'] },
+    { version: '1.4.0', changesets: ['retained'] },
+    { version: '1.5.0-rc.1', changesets: [] },
+  ]) {
+    const fixture = createFixedGroupFixture({
+      version,
+      changesets: { 'retained.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nRetained.\n" },
+    });
+    try {
+      writeRcPreState(fixture, { changesets });
+      assertAnyFixedGroupError(() => planFixedGroupVersion(fixture.root, { fixed: [fixture.names] }));
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+});
+
+test('RC1 applies the native rc.0 result as rc.1 and rewrites exact sibling references', () => {
+  const fixture = createFixedGroupFixture({ version: '1.5.0-rc.0' });
+  try {
+    for (const name of fixture.names) {
+      const directory = join(fixture.root, 'packages', name.split('/')[1]);
+      writeFileSync(join(directory, 'CHANGELOG.md'), `# ${name}\n\n## 1.5.0-rc.0\n\n### Minor Changes\n\n- Candidate.\n\n### Patch Changes\n\n- Updated dependencies\n  - ${fixture.names[0]}@1.5.0-rc.0\n`);
+    }
+    assert.deepEqual(applyFixedGroupVersion(fixture.root, { from: '1.5.0-rc.0', to: '1.5.0-rc.1' }), {
+      manifests: fixture.names.length,
+      changelogs: fixture.names.length,
+    });
+    for (const name of fixture.names) {
+      const directory = join(fixture.root, 'packages', name.split('/')[1]);
+      assert.equal(JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')).version, '1.5.0-rc.1');
+      const changelog = readFileSync(join(directory, 'CHANGELOG.md'), 'utf8');
+      assert.match(changelog, /^## 1\.5\.0-rc\.1$/mu);
+      assert.match(changelog, new RegExp(`^ {2}- ${fixture.names[0].replace('/', '\\/')}@1\\.5\\.0-rc\\.1$`, 'mu'));
+    }
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('RC1 validates Changesets pre-state transition before correcting the generated candidate', () => {
+  const firstBefore = {
+    mode: 'pre', tag: 'rc', initialVersions: { '@stynx-nyx/fixture-auth': '1.4.0' }, changesets: [],
+  };
+  const firstAfter = { ...firstBefore, changesets: ['tenancy'] };
+  assert.doesNotThrow(() => fixedGroupVersion.validateGeneratedVersionTransition({
+    beforePreState: firstBefore,
+    afterPreState: firstAfter,
+    current: '1.4.0',
+    generated: '1.5.0-rc.0',
+    pendingIds: ['tenancy'],
+  }));
+
+  const nextBefore = { ...firstAfter };
+  const nextAfter = { ...nextBefore, changesets: ['tenancy', 'follow-up'] };
+  assert.doesNotThrow(() => fixedGroupVersion.validateGeneratedVersionTransition({
+    beforePreState: nextBefore,
+    afterPreState: nextAfter,
+    current: '1.5.0-rc.1',
+    generated: '1.5.0-rc.2',
+    pendingIds: ['follow-up'],
+  }));
+
+  const invalidTransitions = [
+    { generated: '1.5.0-beta.2' },
+    { generated: '1.5.0-rc.3' },
+    { generated: '1.5.0-rc.1' },
+    { afterPreState: { ...nextBefore, changesets: ['tenancy'] } },
+    { afterPreState: { ...nextBefore, changesets: ['tenancy', 'follow-up', 'extra'] } },
+    { afterPreState: { ...nextBefore, changesets: ['follow-up'] } },
+    { afterPreState: { ...nextAfter, mode: 'exit' } },
+    { afterPreState: { ...nextAfter, tag: 'beta' } },
+  ];
+  for (const invalid of invalidTransitions) {
+    assert.throws(() => fixedGroupVersion.validateGeneratedVersionTransition({
+      beforePreState: nextBefore,
+      afterPreState: nextAfter,
+      current: '1.5.0-rc.1',
+      generated: '1.5.0-rc.2',
+      pendingIds: ['follow-up'],
+      ...invalid,
+    }));
+  }
+});
+
+test('RC1 rewrite changes only the generated rc section and preserves exact rc.1 history', () => {
+  const fixture = createFixedGroupFixture({ version: '1.5.0-rc.1' });
+  try {
+    for (const name of fixture.names) {
+      const directory = join(fixture.root, 'packages', name.split('/')[1]);
+      const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'));
+      manifest.version = '2.0.0-rc.2';
+      writeJson(join(directory, 'package.json'), manifest);
+      const prior = `## 1.5.0-rc.1\n\n### Minor Changes\n\n- Prior RC history.\n`;
+      writeFileSync(join(directory, 'CHANGELOG.md'), `# ${name}\n\n## 2.0.0-rc.2\n\n### Minor Changes\n\n- New patch.\n\n### Patch Changes\n\n- Updated dependencies\n  - ${fixture.names[0]}@2.0.0-rc.2\n  - @stynx-nyx/outside@2.0.0-rc.2\n\n${prior}`);
+    }
+    applyFixedGroupVersion(fixture.root, { from: '2.0.0-rc.2', to: '1.5.0-rc.2' });
+    for (const name of fixture.names) {
+      const directory = join(fixture.root, 'packages', name.split('/')[1]);
+      const prior = `## 1.5.0-rc.1\n\n### Minor Changes\n\n- Prior RC history.\n`;
+      const changelog = readFileSync(join(directory, 'CHANGELOG.md'), 'utf8');
+      assert.match(changelog, /^## 1\.5\.0-rc\.2$/mu);
+      assert.doesNotMatch(changelog, /^### Major Changes$/mu);
+      assert.match(changelog, new RegExp(`^ {2}- ${fixture.names[0].replace('/', '\\/')}@1\\.5\\.0-rc\\.2$`, 'mu'));
+      assert.match(changelog, /^ {2}- @stynx-nyx\/outside@2\.0\.0-rc\.2$/mu);
+      assert.equal(changelog.slice(changelog.indexOf('## 1.5.0-rc.1')), prior);
+    }
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
 test('the release unit is versioned by the fixed-group script and previews without writing', () => {
   const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
   assert.equal(
@@ -1357,6 +1878,7 @@ test('the release unit is versioned by the fixed-group script and previews witho
     const hash = createHash('sha256');
     const files = [
       join(repoRoot, 'package.json'),
+      join(repoRoot, '.changeset', 'pre.json'),
       join(repoRoot, 'tools', 'create-stynx-app', 'template', 'package.json'),
       ...collectPublicPackages(repoRoot).flatMap(({ manifestPath }) => [
         manifestPath,
