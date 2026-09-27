@@ -161,6 +161,8 @@ do CTG-0002 já mesclado, post-integration review e PR.
 
 ## Triagem
 
+- Assinatura local pós-RC2 no head `932318b7`: `plant-bug` — o nó `docs` falhou porque a cópia do README backend no Docusaurus não contém o destino relativo `docs/authorization.md`. O Engineer ligou o guia por URL estável no trecho manual do README em `966b6ad7`; `pnpm package-readmes:write` e `pnpm devai:docs` passaram (`/private/tmp/stynx-s15-ctg3-docs-repair.log`, EXIT=0). Repetir a assinatura no novo head e obter revisão curta do reparo; nenhum teste foi afrouxado.
+
 - CI pós-replay CTG-0003 em `8ecf3df4`: `reference-gap` — o checkout ainda tinha `node_modules/@aarusso-nyx/devai@1.5.0` da base antiga, enquanto `pnpm-lock.yaml` fixa 1.6.0; `pnpm install --frozen-lockfile` alinhou o ambiente e `pnpm --filter stynx-script-tests test` passou 125/125 mais validação de scripts. Nenhum código ou teste foi alterado.
 
 - Engineer autorização após sensores: `sensor-error` — o teste negava `ops:caser` mesmo com concessão `ops:*`, e o resolver do fixture herdava o alvo de classe em rotas que pretendiam devolver alvo vazio/indefinido. Inspector corrigiu em `02089520`, junto à contagem obsoleta de providers; os testes focados passaram.
