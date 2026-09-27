@@ -2,7 +2,7 @@ import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainer
 import { Test } from '@nestjs/testing';
 import { StynxHealthModule, StynxHealthService } from '@stynx-nyx/health';
 import { createSessionStoreReadinessIndicator, RedisSessionStore } from '@stynx-nyx/sessions';
-import { resolveSessionsOptions } from '../../../../packages/sessions/src/types';
+import { resolveSessionsOptions } from '@stynx-nyx/sessions';
 
 // UPS-SES-03: the existing health composition sees Redis reconnect state promptly.
 describe('session store readiness composition', () => {
