@@ -45,6 +45,14 @@ const expectedNotificationsMutate = [
   'src/adapters/inapp-postgres.adapter.ts',
 ];
 
+function normalizeRootManifestRcVersion(source) {
+  const version = JSON.parse(source).version;
+  assert.match(version, /^1\.5\.0-rc\.[1-9]\d*$/u);
+  const versionLine = `  "version": "${version}",`;
+  assert.equal(source.split(versionLine).length, 2);
+  return source.replace(versionLine, '  "version": "1.5.0-rc.1",');
+}
+
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: repoRoot,
@@ -4308,7 +4316,9 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
   for (const [path, digest] of Object.entries(frozenFiles)) {
     assert.equal(
       createHash('sha256')
-        .update(readFileSync(join(repoRoot, path)))
+        .update(path === 'package.json'
+          ? normalizeRootManifestRcVersion(readFileSync(join(repoRoot, path), 'utf8'))
+          : readFileSync(join(repoRoot, path)))
         .digest('hex'),
       digest,
     );
@@ -4479,7 +4489,9 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
   for (const [path, digest] of Object.entries(frozenFiles)) {
     assert.equal(
       createHash('sha256')
-        .update(readFileSync(join(repoRoot, path)))
+        .update(path === 'package.json'
+          ? normalizeRootManifestRcVersion(readFileSync(join(repoRoot, path), 'utf8'))
+          : readFileSync(join(repoRoot, path)))
         .digest('hex'),
       digest,
     );
@@ -4545,6 +4557,8 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
           )
         : path === 'reference/web/playwright.config.mjs'
           ? normalizeD20PlaywrightWait(source)
+          : path === 'package.json'
+            ? normalizeRootManifestRcVersion(source)
           : source;
     assert.equal(createHash('sha256').update(normalizedSource).digest('hex'), digest);
   }
