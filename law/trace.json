@@ -4048,8 +4048,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 38,
-      "assertion_digest_sha256": "cc0d4e8c7c8104c4ae006961caddb4ec6f7507b2926735ac03ff58e088307a5a"
+      "assertion_count": 41,
+      "assertion_digest_sha256": "2947ee96530ea6f8f9096cc7e6dc309861c26c199d399d48982e1b89d2bc9a43"
     },
     {
       "path": "packages/backend/test/unit/authorization-module-contract.spec.ts",
