@@ -32,12 +32,16 @@ de tenant e prova de concorrência real no Redis.
    escrever no repositório DETRAN.
 2. Inspector A: backend/contracts/Angular auth, testes de
    UPS-AUTHZ-01…07, com presença **e** ausência. Lock em
-   `packages/backend/test`, `packages-web/angular-auth/test` e specs
-   de autorização; não tocar sessions/auth nem arquivos governados.
+   `packages/backend/test`, `packages/contracts/test` e
+   `packages-web/angular-auth/test`; não tocar sessions/auth nem
+   arquivos governados.
 3. Inspector B: `packages/sessions/test` e `packages/auth/test`, prova
    dos modos, concorrência Redis, fator validado e prontidão. Não
-   tocar os caminhos do Inspector A. Testes devem falhar no produto
-   atual pelos motivos esperados, sem enfraquecer testes existentes.
+   tocar os caminhos do Inspector A. A composição health fica em
+   `reference/api/test/integration/session-readiness.integration.spec.ts`,
+   usando o manifesto existente; o Inspector B detém esse arquivo.
+   Testes devem falhar no produto atual pelos motivos esperados,
+   sem enfraquecer testes existentes.
 4. Engineer A implementa autorização no backend/contracts/Angular após
    os sensores A; Engineer B implementa sessões/auth após sensores B.
    Ambos seguem o contrato, sem shim e sem código do DETRAN.
@@ -48,6 +52,13 @@ de tenant e prova de concorrência real no Redis.
    `pnpm api:baselines:write` e confirma o diff, em commits Architect.
    Maestro Engineer cria changeset minor do grupo fixo e roda
    `pnpm package-readmes:write`/check. Generated tooling só por gerador.
+   A reference API permanece nos defaults de autorização/sessão; seu
+   CI prova compatibilidade, enquanto o sensor de composição opt-in
+   fica no arquivo de integração acima.
+6. Maestro Architect preenche as linhas UPS-AUTHZ-01…07 e
+   UPS-SES-01…03 da tabela de conformidade §7 com versão publicada,
+   símbolos reais, testes e desvios, incluindo a semântica exata do
+   guard separado de `@stynx-nyx/auth`.
 
 ## Gates
 
@@ -68,3 +79,15 @@ Ainda não houve despacho de implementação, testes nem PR. A base é
 empilhada sobre CTG-0002 e deve ser sincronizada após os merges
 anteriores. RC1 e RC2 continuam sujeitos a recibos Owner por versão,
 comando e SHA exato antes de qualquer publicação.
+
+## Triagem
+
+- Prompt-review CTG-0003 ciclo 1: `sensor-error` — a ponte DETRAN
+  recusou a saída não JSON e removeu o bruto; a execução direta
+  `claude -p` com o mesmo prompt produziu um veredito JSON
+  `REVIEW`, preservado com recibo de fallback. Cinco lacunas de
+  contrato foram identificadas: ordem real de guards, switch real,
+  formato configurável de fator, definição de sessão ativa na
+  transição Redis e timeout de prontidão. O Architect reparou
+  contrato e prompts para o segundo ciclo; nenhum worker de escrita
+  foi despachado.
