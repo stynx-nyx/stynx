@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/src/authorization/authorization.guard.ts",
+      "issue": "The fallback looks up the options and evaluator with `ModuleRef.get(..., { strict: false })`. That lookup can return a provider from a different module. Take an app where some other module imports `StynxAuthorizationModule.forRoot(...)`, while the module that uses `@UseGuards(AuthorizationGuard)` does not. The local guard then silently picks up that other module's options, `onDeny` and custom evaluator. When there are several `forRoot` registrations, it takes whichever was registered first. The cycle-2 review already raised this. No sensor covers it.",
+      "required_change": "Document the resolution order in the backend README and the contract: directly injected, then the first provider found app-wide, then the default. Alternatively, drop the non-strict fallback now that the tokens are exported. An Inspector could add a Nest E2E where one module registers `forRoot` and another uses the local guard, asserting whichever behavior is chosen."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/test/integration/authorization-app-guard.integration.spec.ts",
+      "issue": "In the local-options app, the local custom evaluator always returns false and the route requires `records:write`, which the default evaluator would also deny. The local cases therefore prove that `onDeny` and `publicMetadataKey` reach the local guard, but not that the custom evaluator is the one being used. The no-module case checks only the 403 status, not the default `ForbiddenException` body.",
+      "required_change": "Add a local `@UseGuards` route whose permission the default evaluator would deny but the custom evaluator allows (or the reverse), and assert the outcome or the call to `evaluate`. Optionally assert the default 403 body in the no-module case."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/sessions/src/session.service.ts",
+      "issue": "The boot message now correctly says that tenant switching and session policy need `SessionStore.createWithPolicy` even when single-session mode is off. It then points to 'the custom store migration note', but no section by that name exists. The note is a paragraph under the README section 'STYNX 1.5.0 configuration and migration'. The message also starts with a lowercase letter, unlike the other boot errors.",
+      "required_change": "Point to `@stynx-nyx/sessions` README, section 'STYNX 1.5.0 configuration and migration', or the contract path, and capitalize the message. The regex assertions in the bootstrap spec would still match."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0003-plan.md",
+      "issue": "The cycle-3 Inspector commit `fa659bde` and Engineer commit `f7ca3bb4` are authored by 'Antonio Russo'. The earlier CTG-0003 role commits use 'DEVAI Inspector' and 'DEVAI Engineer'. The role separation is therefore visible only in the plan text. Neither commit touches `law/`, so this breaks no rule. The plan also does not record that the new no-module E2E was run red at `fa659bde` before the fix. It must have failed, because Nest 11 `ModuleRef.get` throws `UnknownElementException` in the guard constructor during `app.init()`.",
+      "required_change": "In the plan, record the role for each of the two commits and include the red-run output (or the log path) of the no-module E2E at `fa659bde`. Keep the role author identities for any further repair commits."
+    }
+  ],
+  "summary": "I found no remaining blockers. The one cycle-2 blocker is fixed: `f7ca3bb4` wraps both `ModuleRef.get` fallbacks in try/catch, so `?? new DefaultPolicyEvaluator()` and `?? {}` can now run. The Inspector's E2E, committed before the fix, has a module that registers only a controller with `@UseGuards(AuthorizationGuard)`. It never imports `StynxAuthorizationModule`, and `StynxCoreModule` does not provide the authz tokens. The app boots, the route requiring `records:read` returns 200 with the body, and the route requiring `records:write` returns 403 for a principal holding only `records:read`. Configured local options still work: `forRoot({global:false})` in the consuming module injects the exported tokens directly, and the `onDeny` envelope and public-key bypass are asserted. Consumer injection of the default and custom evaluator is asserted. On real Redis, `revoke-existing` now asserts that `bundle.revokedSessionIds` does not contain the idle-expired target SID, and `session.service.ts:151` builds that list only from revoked records. The boot message names tenant switching and session policy and says it applies with mode off. Two bootstrap assertions cover it, including the legacy store with default options. The cycle-1 blockers remain closed: verified-tenant marker with forged-header negatives with and without the middleware, real `forRoot({global:true})` ordering in both orders, real-Redis exchange branches, and failure at boot for legacy stores. The `ci-delivery3` log dates from after `f7ca3bb4`, and only plan and prompt files changed after it. In that log `check:trace` binds 407/407 and `api:baselines` matches 44. Backend passes 346/346 with `authorization-app-guard` at 14 tests, sessions passes 122/122 plus test:int 14/14 with `session-policy-redis` at 11, and the bootstrap spec passes 4 tests. The consumer log has no FAIL or ELIFECYCLE and includes `session-readiness`. The Architect authored the trace rebind `f8f3ae5f`. No API surface changed in cycle 3, so the baselines and the changeset (five packages in the fixed group, custom-store migration documented) remain valid. The `package.json`, `scripts` and `.github` diffs against main come from CTG-0002. There are no DETRAN edits. All ten requirements, UPS-AUTHZ-01…07 and UPS-SES-01…03, are met in source and sensors. This PASS covers the stacked branch only. A post-integration review is still required after CTG-0002 merges and this branch is rebased onto it."
+}
