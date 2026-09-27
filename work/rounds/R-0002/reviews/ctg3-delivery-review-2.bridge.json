@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "work/rounds/R-0002/prompts/49-ctg3-delivery-review-2.md",
+  "prompt_sha256": "fd9858f428a6fe075bd342ed59f94980e64e3be00d974b5ff451e1df81139ffb",
+  "output": "work/rounds/R-0002/reviews/ctg3-delivery-review-2.json",
+  "output_sha256": "1cfe8b401ed85fac90e68e510c23dda4e18247c53a6210cd2596f461284d39ec",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg3-authz-session/stynx",
+  "started_at": "2026-09-27T05:38:13Z",
+  "ended_at": "2026-09-27T05:40:44Z"
+}
