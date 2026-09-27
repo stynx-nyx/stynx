@@ -20,6 +20,10 @@ branches:
         required_approving_review_count: 1
         dismiss_stale_reviews: true
         require_code_owner_reviews: true
+      # Owner decision, 2026-09-27 (ADR-DEVAI-ADOPTION-0006): unit, integration,
+      # tier-gate, build, and reference-web E2E execution moved into the signed
+      # local RC closure. verified-local-rc is the remote gate for all of it;
+      # audit.yml keeps the weekly remote recalibration.
       required_status_checks:
         strict: true
         contexts:
@@ -28,10 +32,6 @@ branches:
           - lint
           - typecheck
           - migration-lint
-          - unit-tests
-          - integration-tests
-          - stynx-tier-gate
-          - build (ubuntu-latest)
-          - reference-web-e2e
+          - verified-local-rc
           - package-policy
           - dependency-audit
