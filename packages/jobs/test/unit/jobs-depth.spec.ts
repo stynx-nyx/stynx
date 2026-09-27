@@ -14,6 +14,7 @@ import {
   parseCronExpression,
 } from '../../src';
 import { JobsRepository } from '../../src/jobs.repository';
+import type { JobExecutionResult } from '../../src/types';
 
 const now = new Date('2026-08-25T00:00:00.000Z');
 const job = {
@@ -34,7 +35,7 @@ const job = {
   lastError: null,
   deadLetterReason: null,
   idempotencyKey: null,
-  actorId: 'actor-1',
+  actorId: '10000000-0000-4000-8000-000000000001',
   createdAt: now,
   updatedAt: now,
 };
@@ -50,6 +51,8 @@ const schedule = {
   priority: 1,
   maxAttempts: 2,
   backoff: { baseMs: 1, maxMs: 10, multiplier: 2 },
+  actorId: '10000000-0000-4000-8000-000000000001',
+  timezone: 'UTC',
   isEnabled: true,
   nextRunAt: now,
   lastEnqueuedAt: null,
@@ -152,8 +155,13 @@ describe('jobs repository, registry, scheduler, and validation depth', () => {
     const handler = vi.fn(async () => undefined);
 
     await expect(repository.inSystem('test', async () => 42)).resolves.toBe(42);
-    await repository.executeHandler(job, handler);
-    await repository.executeHandler({ ...job, actorId: null }, handler);
+    const systemContextCallsBeforeExecution = database.withSystemContext.mock.calls.length;
+    await expect(repository.executeHandler(job, handler)).resolves.toEqual({ status: 'executed' });
+    await expect(repository.executeHandler({ ...job, actorId: null }, handler)).resolves.toEqual({
+      status: 'not_executable',
+      reason: 'missing_actor',
+    });
+    expect(database.withSystemContext).toHaveBeenCalledTimes(systemContextCallsBeforeExecution);
     await expect(
       repository.enqueue({
         tenantId: 'tenant-1',
@@ -180,6 +188,8 @@ describe('jobs repository, registry, scheduler, and validation depth', () => {
         priority: 1,
         maxAttempts: 2,
         backoff: schedule.backoff,
+        actorId: '10000000-0000-4000-8000-000000000001',
+        timezone: 'UTC',
         nextRunAt: now,
         isEnabled: true,
       }),
@@ -189,7 +199,7 @@ describe('jobs repository, registry, scheduler, and validation depth', () => {
     await repository.deleteSchedule('schedule-1', 'tenant-1');
     await expect(repository.materialize(5)).resolves.toHaveLength(2);
     expect(database.withRequestContext).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledTimes(2);
+    expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it('drives scheduler and worker lifecycle defaults without leaking timers', async () => {
@@ -232,16 +242,28 @@ describe('jobs repository, registry, scheduler, and validation depth', () => {
       priority: 1,
       maxAttempts: 1,
       backoff: { baseMs: 1, maxMs: 2, multiplier: 2 },
+      actorId: '10000000-0000-4000-8000-000000000001',
+      timezone: 'UTC',
       nextRunAt: now,
-      createdBy: 'actor-1',
+      createdBy: '10000000-0000-4000-8000-000000000001',
       isEnabled: false,
     });
 
-    const failed = vi.fn();
+    let activeSystemReason: string | undefined;
+    const failed = vi.fn(async () => {
+      expect(activeSystemReason).toBe('jobs worker record job outcome');
+    });
     const workerRepository = {
-      inSystem: vi.fn(async (_reason: string, fn: () => unknown) => fn()),
-      claim: vi.fn(async () => [{ ...job, attempts: 2, maxAttempts: 2, actorId: null }]),
-      executeHandler: vi.fn(async (_item: unknown, handler: () => unknown) => handler()),
+      inSystem: vi.fn(async (reason: string, fn: () => unknown) => {
+        const previous = activeSystemReason;
+        activeSystemReason = reason;
+        try { return await fn(); } finally { activeSystemReason = previous; }
+      }),
+      claim: vi.fn(async () => [{ ...job, attempts: 2, maxAttempts: 2 }]),
+      executeHandler: vi.fn(async (_item: unknown, handler: () => unknown): Promise<JobExecutionResult> => {
+        await handler();
+        return { status: 'executed' };
+      }),
       succeed: vi.fn(),
       fail: failed,
     };
@@ -249,5 +271,7 @@ describe('jobs repository, registry, scheduler, and validation depth', () => {
     registry.register('test', async () => Promise.reject('string failure'));
     await new JobsWorker(workerRepository as never, registry, { workerId: 'worker' }).tick();
     expect(failed).toHaveBeenCalledWith('job-1', 'worker', 'string failure', null);
+    expect(workerRepository.inSystem).toHaveBeenNthCalledWith(1, 'jobs worker claim due jobs', expect.any(Function));
+    expect(workerRepository.inSystem).toHaveBeenNthCalledWith(2, 'jobs worker record job outcome', expect.any(Function));
   });
 });
