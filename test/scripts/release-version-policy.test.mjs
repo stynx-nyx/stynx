@@ -1360,25 +1360,29 @@ test('RC1 preflight rejects every unknown or moved latest dist-tag before public
   }
 });
 
-test('RC1 publication roster, old rc visibility, bounded rereads, and stable-only release tags', async () => {
+test('current RC publication roster, old rc visibility, bounded rereads, and stable-only release tags', async () => {
   const publication = await import('../../scripts/lib/publication-dist-tag.mjs');
   const { discoverPublishablePackages } = await import('../../scripts/lib/publishable-packages.mjs');
   const { parseStableVersionTag } = await import('../../scripts/resolve-release-forbidden-range.mjs');
+  const candidate = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')).version;
+  const rcMatch = /^1\.5\.0-rc\.([1-9]\d*)$/u.exec(candidate);
+  assert.ok(rcMatch, 'the current publication roster must be on the 1.5.0 RC line');
+  const previousCandidate = `1.5.0-rc.${Number(rcMatch[1]) - 1}`;
   const packages = discoverPublishablePackages(repoRoot);
   assert.equal(packages.length, 44);
   assert.equal(packages[0].name, '@stynx-nyx/angular');
-  assert.equal(packages.every((entry) => entry.manifest.version === '1.5.0-rc.1'), true);
-  assert.doesNotThrow(() => publication.validatePublicationRoster(packages, '1.5.0-rc.1'));
+  assert.equal(packages.every((entry) => entry.manifest.version === candidate), true);
+  assert.doesNotThrow(() => publication.validatePublicationRoster(packages, candidate));
   for (const roster of [packages.slice(1), [packages[1], packages[0], ...packages.slice(2)]]) {
     assert.throws(
-      () => publication.validatePublicationRoster(roster, '1.5.0-rc.1'),
+      () => publication.validatePublicationRoster(roster, candidate),
       (error) => error?.code === 'PUBLICATION_ROSTER_DRIFT',
     );
   }
   assert.throws(
     () => publication.validatePublicationRoster([
       { ...packages[0], manifest: { ...packages[0].manifest, version: '1.5.0' } }, ...packages.slice(1),
-    ], '1.5.0-rc.1'),
+    ], candidate),
     (error) => error?.code === 'PUBLICATION_VERSION_DRIFT',
   );
   assert.equal(publication.publicationPlanConstants.canaryPackage, '@stynx-nyx/angular');
@@ -1386,20 +1390,20 @@ test('RC1 publication roster, old rc visibility, bounded rereads, and stable-onl
   assert.equal(publication.publicationPlanConstants.maxVisibilityRereads, 5);
   assert.equal(publication.publicationPlanConstants.visibilityRereadDelayMs, 2_000);
   for (const [rc, code] of [
-    ['1.4.0-rc.9', 'PUBLICATION_DIST_TAG_UNKNOWN'],
+    [previousCandidate, 'PUBLICATION_DIST_TAG_UNKNOWN'],
     ['1.5.0-rc.0', 'PUBLICATION_DIST_TAG_DRIFT'],
   ]) {
     assert.throws(
       () => publication.verifyPostPublishDistTags({
-        candidate: '1.5.0-rc.1',
+        candidate,
         preflightLatest: registryVersionPolicyConstants.preflightLatestVersion,
-        preflightDistTags: { latest: '1.4.0', rc: '1.4.0-rc.9' },
+        preflightDistTags: { latest: '1.4.0', rc: previousCandidate },
         distTags: { latest: '1.4.0', rc },
       }),
       (error) => error?.code === code,
     );
   }
-  assert.throws(() => parseStableVersionTag('v1.5.0-rc.1'), /malformed stable release tag/u);
+  assert.throws(() => parseStableVersionTag(`v${candidate}`), /malformed stable release tag/u);
   const publisher = repositorySource('scripts/publish-release-plan.mjs');
   const workflow = repositorySource('.github/workflows/release.yml');
   assert.match(publisher, /publicationPlanConstants\.maxVisibilityRereads/u);
