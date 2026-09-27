@@ -6,6 +6,9 @@
 export * from '@stynx-nyx/contracts';
 
 export * from './common/request-context';
+export * from './event-stream/types';
+export * from './event-stream/event-stream.module';
+export * from './event-stream/event-stream.service';
 
 export * from './auth/constants';
 export * from './auth/default-principal-mapper';
