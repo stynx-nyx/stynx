@@ -1,0 +1,54 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "reference/api/test/integration/reference-sse.rls.integration.spec.ts",
+      "issue": "The real PostgreSQL/RLS spec does not cover everything sse-1.5.md requires for UPS-SSE-04/05. First, it never shows that A's recent ID ('a-recent') resumes: statusFor only covers 'a-expired' (204) and 'b-private' (200). Second, for 'b-private' it checks only for HTTP 200. It never checks that the stream then starts at the database now() and does not replay A or B rows. Third, the missing-scope check sends a conflicting x-tenant-id and gets a 403 from the tenancy guard. The service's own 400 SSE_TENANT_REQUIRED and 401 SSE_ACTOR_REQUIRED paths, and the rule that they fail before any SQL, are never exercised against the real Database. Right now only the unit test with a fake source covers resume and missing scope.",
+      "required_change": "In the same Nest/PostgreSQL scenario: (a) open with Last-Event-ID 'a-recent', read the body, and assert that rows after a-recent (e.g. a-tick) stream while 'a-expired' and any b-* rows do not; (b) for 'b-private', read the body after a scheduler tick and assert that no a-recent or b-private frame appears before a newly inserted A row; (c) add a route variant or controller branch that passes an empty tenantId and an empty actorId to open(). Assert 400/SSE_TENANT_REQUIRED and 401/SSE_ACTOR_REQUIRED with no text/event-stream header, and assert that no source query ran (e.g. a spy on RlsSource methods or pg_stat_statements/log). Then have the Architect rebind law/trace.json."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages-web/angular/testing/index.ts",
+      "issue": "UPS-TEST-01 requires the built dist/fesm2022/stynx-nyx-angular-testing.mjs and dist/types/stynx-nyx-angular-testing.d.ts to resolve from a package consumer. ng-packagr does build the entry: the CI log shows 'Built @stynx-nyx/angular/testing' and the artifacts exist. However, no script or test in scripts/ or test/scripts/ resolves '@stynx-nyx/angular/testing' from a packed or consumer context. The STYNX tests reach it only through the vitest alias and a tsconfig paths mapping to source.",
+      "required_change": "Add a consumer-resolution check, such as an existing pack/consumer smoke extended for this entry, or a test/scripts check that packs @stynx-nyx/angular. It should import FakeStynxEventStreamTransport and FakeStynxEventStreamClock through the package exports map (ESM runtime plus TypeScript moduleResolution bundler/node16) and fail if either artifact is missing. Bind it in law/trace.json."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/src/event-stream/event-stream.service.ts",
+      "issue": "Poison-row liveness. Suppose a row has an unsafe id or event, or project() throws, or project() returns a non-serializable value. The whole tick then throws, and the cursor stays before that row. Every later tick fails on the same row, so all later events for that connection are blocked for good, and only a 'tick failed' warning is logged. The contract treats source read errors as transient, but projection and field errors are deterministic.",
+      "required_change": "Keep 'read error leaves the cursor unchanged' for listSince failures. For per-row failures (invalid frame field, projection throw or undefined), handle the row as a drop: write ': dropped <id>' only if the id is safe, increment drops, call the metric sink, advance the cursor, and continue. Add a unit test."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/src/event-stream/event-stream.service.ts",
+      "issue": "onModuleDestroy() calls close() for each connection. close() cancels schedules and releases slots but never calls response.end(). On app.close(), open SSE sockets stay open with no heartbeat, and Node's server.close() can wait on them indefinitely during shutdown.",
+      "required_change": "Keep a per-connection end handler. On module destroy, call response.end() after close() (guarded), or have close() accept an 'end response' flag. Add a unit test that module.close() ends open responses."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages-web/angular/src/event-stream.ts",
+      "issue": "Three client issues. (1) The dedup Set 'seen' grows without bound for the life of a same-tenant session. (2) The byte ceiling re-encodes the entire cumulative partialText on every progress event, which is O(n²) up to 1 MiB. (3) A 204 when consecutiveFailures is 0 computes a backoff of initialMs × 2^-1, i.e. 500 ms, below the documented 1 s minimum.",
+      "required_change": "(1) Bound 'seen', e.g. keep a sliding window or LRU sized to the replay batch. (2) Accumulate a running byte count from TextEncoder on the suffix only. (3) Clamp the exponent to at least 0 so the minimum backoff is initialMs. Add lifecycle tests."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages-web/angular/src/event-stream.ts",
+      "issue": "Terminal auth is detected only when the error is an HttpErrorResponse with status 401 or 403. If authProvider.refresh() rejects, or the chain surfaces the sdk UnauthorizedError (which AuthInterceptor already treats as unauthorized), the error is counted as an ordinary failure. The stream then retries and polls forever instead of entering 'stopped'.",
+      "required_change": "Treat UnauthorizedError from @stynx-nyx/sdk (and a rejected refresh surfaced as an auth failure) as terminal, the same as a 401 after refresh. Add an HTTP-chain test where refresh rejects."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "reference/api/test/integration/reference-sse.rls.integration.spec.ts",
+      "issue": "The contract asks the fake scheduled tick to explicitly clear the core request-context storage and the data transaction CLS, or to fire under tenant B, before running. Today scheduler.fire() just runs in the test's ambient context. Nothing asserts that the context is empty, or wrong, at fire time. So the 'no inherited ALS' guarantee rests on vitest's context rather than an explicit sensor.",
+      "required_change": "Fire the tick inside database.withRequestContext({tenantId: tenantB, ...}), or inside an explicit ALS exit/clear. Assert that a-tick is still delivered and b-tick is not."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages-web/angular/README.md",
+      "issue": "The README example calls provideStynxDefaults without tenancy. The client does start without TenantContextService, but it then sends no X-Tenant-Id, which conflicts with the contract prerequisite (provideStynxAngular plus tenancy). Separately, the backend package README does not document StynxEventStreamModule.forRoot, the data Database as contextRunner, or the manual @Res() route requirement, and the changeset points readers to 'the package README' for server wiring.",
+      "required_change": "Add tenancy to the Angular README example. Document the backend wiring (data Database, not core Database; @Res() without interceptors; source ordering/RLS obligations) in the backend README, and regenerate with pnpm package-readmes:write if applicable."
+    }
+  ],
+  "summary": "The backend service follows the contract: preflight order, a fresh withRequestContext on each tick, the data Database as runner, a 204 for an expired cursor with no headers, a strict cursor, serialized ticks, idempotent slot release, and complete framing with drop markers and metrics. The Angular client uses the intercepted HttpClient, bearer refresh and replay, the tenant and request-ID headers, raw Retry-After, banner suppression, bounded reconnect, polling, and tenant and session stop. Exported names match sse-1.5.md. law/trace.json passes locally (397 bound). The final ci:stynx and ci:reference-apps logs are green, including reference-sse.rls.integration.spec.ts and rls-negative. Two contract-required observations are still missing, so this needs repair and another delivery-review: the real-RLS spec lacks A-recent resume, B-ID body non-disclosure and service-level missing-scope checks, and there is no consumer-resolution check for the @stynx-nyx/angular/testing APF artifacts."
+}
