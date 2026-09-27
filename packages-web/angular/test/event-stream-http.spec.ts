@@ -22,13 +22,16 @@ import {
   provideStynxEventStream,
 } from '@stynx-nyx/angular';
 import { TenantContextService } from '@stynx-nyx/angular-tenancy';
+import { FakeStynxEventStreamClock } from '@stynx-nyx/angular/testing';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting()));
 afterEach(() => TestBed.resetTestingModule());
 
-function configure(sessionActive = signal(true)) {
+function configure(sessionActive = signal(true), rejectRefresh = false) {
   let token = 'expired';
+  const clock = new FakeStynxEventStreamClock();
   const refresh = vi.fn(async () => {
+    if (rejectRefresh) throw new Error('refresh rejected');
     token = 'fresh';
     return token;
   });
@@ -47,6 +50,7 @@ function configure(sessionActive = signal(true)) {
         url: '/api/stream',
         pollingIntervalMs: 5_000,
         sessionActive: sessionActive.asReadonly(),
+        clock,
       }),
       provideHttpClientTesting(),
     ],
@@ -58,6 +62,7 @@ function configure(sessionActive = signal(true)) {
     http: TestBed.inject(HttpTestingController),
     banner: TestBed.inject(ErrorBannerService),
     refresh,
+    clock,
     sessionActive,
   };
 }
@@ -157,6 +162,19 @@ describe('StynxEventStreamService HTTP transport', () => {
     TestBed.flushEffects();
     expect(logout.stream.status()).toBe('stopped');
     expect(request.cancelled).toBe(true);
+  });
+
+  it('stops when the real interceptor chain rejects an authorization refresh', async () => {
+    const { stream, http, refresh, clock, banner } = configure(signal(true), true);
+    stream.start();
+    const request = await expectRequest(http, '/api/stream');
+    request.flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(stream.status()).toBe('stopped'));
+    expect(banner.current()).toBe(null);
+    clock.advanceBy(60_000);
+    http.expectNone('/api/stream');
   });
 
   it('cancels and reopens on tenant changes without carrying a cross-tenant cursor', async () => {
