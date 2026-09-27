@@ -36,3 +36,8 @@ Run focused jobs unit/integration and platform migration tests including root `t
 
 - Prompt-review CTG-0004 cycle 1 bridge failure: `sensor-error` — the DETRAN bridge rejected a non-pure-JSON Opus response and removed the raw output. Direct Opus receipt supplied the review.
 - Direct Opus `ctg4-prompt-review-1.json`: `reference-gap` — REVIEW with seven blocking and three nonblocking findings. Architect repairs ADR authority, tenant CRUD, actor membership, actorless invariants, file ownership, real jobs migration harness, positive write evidence, DST/timer edges, and topological release obligations before Inspector dispatch. A second independent prompt review is required.
+- Bridge Opus `ctg4-prompt-review-2.json`: `reference-gap` — REVIEW with two blocking and three nonblocking findings. Existing jobs unit specs that assert superseded behavior lack an Inspector lock; the cross-worker `executeHandler` outcome, dead-letter transition, and public timing and authorization names are not pinned. No CTG-0004 Inspector or Engineer has been dispatched. The two allowed prompt-review cycles are exhausted; escalation to the Owner is pending before any third review or worker dispatch.
+
+## Retomada
+
+At `4ba8f66f`, cycle 2 returned REVIEW (receipt `reviews/ctg4-prompt-review-2.json`). Record this review receipt in an Architect commit. Wait for the Owner's decision on a third prompt-review cycle. If approved, amend the four existing jobs unit spec locks and superseded assertions, pin the cross-worker API, clarify injected clock and platform migration test setup, and correct the RC migration note. Obtain Opus PASS before Inspector dispatch. Do not treat a REVIEW as PASS.

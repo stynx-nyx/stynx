@@ -1,0 +1,36 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0004-plan.md",
+      "issue": "No Inspector owns four existing jobs unit specs, and each encodes behavior that the MUST contract supersedes:\n- packages/jobs/test/unit/jobs-repository-contract.spec.ts (L71-95) asserts that executeHandler runs inside database.withSystemContext('jobs execute email'). It also asserts that a job with actorId null still invokes the handler.\n- jobs-service.spec.ts asserts that every tenant operation runs through repository.inSystem ('enqueues ... under the system boundary', L36-46, L116-304).\n- jobs-depth.spec.ts (L155-156, L240-254) runs an actorless claimed job through the handler and the ordinary fail/retry path.\n- jobs-lifecycle-contract.spec.ts (L145-180) exercises worker execution through the old executeHandler shape.\n\nThe Inspector A lock covers only cron-and-backoff.spec.ts, worker.spec.ts and a new spec. The Inspector B lock covers only integration, migrations.spec and test/db. Prompts 50/51 say 'preserve all existing tests', and Engineers may not edit tests. The implementation therefore cannot pass `pnpm test`/`ci:stynx` without someone either breaking a lock or weakening a sensor.",
+      "required_change": "Add jobs-service.spec.ts, jobs-repository-contract.spec.ts, jobs-depth.spec.ts and jobs-lifecycle-contract.spec.ts to an Inspector lock. Suggested split: service and repository specs to B, depth and lifecycle specs to A.\n\nIn prompts 50/51, explicitly authorize replacing only the assertions that ADR-JOBS-0002 supersedes (system-context handler, actorless handler execution, inSystem tenant CRUD) with inverted, equal-or-stronger assertions. Every other assertion stays intact. Record in the plan that these edits move trace projections the Architect must rebind."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/jobs-actor-timezone-1.5.md",
+      "issue": "The contract says only that executeHandler 'returns a typed non-executable outcome' and that the worker 'performs the terminal owner-role transition'. It names neither the outcome type nor the repository dead-letter method or signature.\n\nThe existing repository.fail(id, workerId, error, retryAt) writes dead_letter_reason = error text. It cannot express the fixed reasons 'missing_actor' or 'inactive_actor_membership' without a new API.\n\nInspectors write red tests before Engineer B lands types.ts. Inspector A must therefore mock these names in worker.spec.ts, which in effect lets the Inspector define the A/B interface. Engineers may not edit tests, so any mismatch loops back to the Architect. This is the residual of cycle-1 finding 5 ('no stated interface between them').",
+      "required_change": "Pin the interface in the contract and restate it in prompts 50–53:\n- The exact executeHandler return type, e.g. `Promise<{ status: 'executed' } | { status: 'not_executable'; reason: 'missing_actor' | 'inactive_actor_membership' }>`, or name exported type aliases for it.\n- The exact owner-role repository transition, e.g. `deadLetter(id, workerId, reason)` versus an extended fail signature.\n- The exported names TimerPort, TimerHandle, the clock type, the WorkerOptions/SchedulerOptions field names, the authorizeTechnicalActor option location on StynxJobsModuleOptions, and the typed error class names.\n\nInspectors then test against the published names, and Engineer B implements exactly those names."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/jobs-actor-timezone-1.5.md",
+      "issue": "`clock?: { now(): number }` is said to supply 'schedule decisions', but it is wired only into WorkerOptions/SchedulerOptions.\n- JobsRepository.materialize selects due rows with SQL clock_timestamp().\n- JobsService.upsertSchedule computes nextRunAt from new Date().\n\nAn injected scheduler clock therefore controls neither behavior, so deterministic scheduler tests could assert something the design cannot deliver.",
+      "required_change": "State exactly what the clock governs. Either materialize receives `now` from the injected clock and uses it for due selection and nextRunAt, or due selection stays on the database clock and scheduler determinism covers only timer registration and ticking. Also state whether JobsService takes a clock for nextRunAt or keeps using wall time."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/51-ctg4-inspector-database.md",
+      "issue": "The new test/db/platform-jobs-migration.spec.ts must apply the platform migrations. test/db has no @stynx-nyx/data dependency, alias or Nest wiring. The existing runtime/fixtures.ts applies only top-level database/ddl and database/seed, since readdir is non-recursive. That correctly keeps database/seed/platform/ out of the legacy loader, but nothing says how the spec gets a migrated schema. test/db/vitest.config.ts and package.json are also outside every lock.",
+      "required_change": "Tell Inspector B how to get a migrated schema. Option 1: call createPostgresTestDatabase(prefix, { useTemplate: false }) and apply packages/data/migrations/platform/*.sql lexically, then the explicit seed, through the admin client, as runtime/fixtures.ts does. Option 2: import StynxMigrationRunner relatively. State that no test/db config or package edits are expected, or assign them."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/meta/migration/stynx-1.5-jobs.md",
+      "issue": "'Do not consume CTG-0004 at an intermediate RC' contradicts OD-S15-01 (C-0002 §10). That decision allows DETRAN rounds to develop and test on 1.5.0-rc.N and forbids only merging on an RC pin.",
+      "required_change": "Reword: DETRAN may develop and test against a 1.5.0-rc.N containing CTG-0004, but merges only with the final 1.5.0 pin and the completed §7 conformance row."
+    }
+  ],
+  "summary": "Cycle-1 findings are resolved:\n- ADR-JOBS-0002 amends ADR-JOBS-0001; jobs-api.md and the contract index are updated; `pnpm check:trace` passes at HEAD.\n- Tenant CRUD now runs on the app role with the tenant-mismatch check, and the actor is bound to membership in the tenant (auth.memberships.is_active, RLS readable in tenant) with an authorization callback.\n- The actorless invariant is enforced by DDL, resume and materialize checks, and dead-lettering.\n- An ownership table exists, and the harness is the real platform migration and roles.\n- The positive FORCE-RLS handler write is required, and the DST and timer edge cases and release obligations are covered.\n- Rule 3 is met: the seed under database/seed/platform/ is not picked up by the legacy loader, and the new test/db platform spec is added.\n\nAll four UPS-JOB requirements are covered as MUST. Two new blocking gaps remain before Inspector dispatch:\n1. Four existing jobs unit specs assert the superseded system-context and actorless-handler behavior, and no Inspector lock covers them.\n2. The executeHandler outcome and dead-letter API are unnamed, yet Inspector A must mock them before Engineer B defines them."
+}
