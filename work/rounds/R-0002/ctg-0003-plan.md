@@ -73,6 +73,15 @@ de tenant e prova de concorrência real no Redis.
 
 ## Retomada
 
+O Opus delivery-review ciclo 3 retornou `PASS` em
+`reviews/ctg3-delivery-review-3.json`, com quatro apontamentos não
+bloqueantes. O Inspector atuou em `fa659bde` e o Engineer em
+`f7ca3bb4`; o E2E sem módulo foi executado vermelho antes do reparo,
+falhando com `UnknownElementException` em `app.init()`. A prova verde
+está nos logs de CI e de consumidor citados abaixo. Este PASS vale para
+a branch empilhada; revisão pós-integração CTG-0002, PR, CI remoto e
+merge ainda faltam.
+
 Após o delivery-review ciclo 2, o Inspector fixou o E2E de guard local sem
 importar o módulo, a exclusão de SID expirado no Redis e a mensagem de boot
 em `fa659bde`; o Architect rebinda `law/trace.json` 407/407 em
