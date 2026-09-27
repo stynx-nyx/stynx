@@ -91,17 +91,41 @@ class StreamController {
 
   @Get()
   async get(
-    @Req() request: StynxSseRequest,
+    @Req() request: StynxSseRequest & { query?: { probe?: string } },
     @Res() response: StynxSseResponse,
   ): Promise<void> {
     const captured = this.requestContext.snapshot();
+    const tenantId = request.query?.probe === 'empty-tenant' ? '' : captured.tenantId ?? '';
+    const actorId = request.query?.probe === 'empty-actor' ? '' : captured.actorId ?? '';
     await this.streams.open(request, response, this.source, {
-      scope: { tenantId: captured.tenantId ?? '', actorId: captured.actorId ?? '', ...(captured.sessionId ? { sessionId: captured.sessionId } : {}) },
+      scope: { tenantId, actorId, ...(captured.sessionId ? { sessionId: captured.sessionId } : {}) },
       tickMs: 5,
       batchSize: 10,
       project: (row) => row.payload,
     });
   }
+}
+
+function openStream(port: number, lastEventId?: string): Promise<{ body(): string; contentType: string | undefined; close(): void }> {
+  return new Promise((resolve, reject) => {
+    const client = httpRequest({
+      host: '127.0.0.1', port, path: '/_sse',
+      headers: {
+        host: 'reference-api.test', authorization: 'Bearer test-a', 'x-tenant-id': tenantA,
+        ...(lastEventId ? { 'last-event-id': lastEventId } : {}),
+      },
+    });
+    client.once('response', (response) => {
+      let body = '';
+      response.on('data', (chunk: Buffer) => {
+        body += chunk.toString('utf8');
+        if (body.includes(': connected\n\n')) resolve({ body: () => body, contentType: response.headers['content-type'], close: () => client.destroy() });
+      });
+      response.once('end', () => reject(new Error(`stream ended before handshake: HTTP ${response.statusCode}, content-type ${response.headers['content-type']}, body ${body}`)));
+    });
+    client.once('error', reject);
+    client.end();
+  });
 }
 
 function quoteIdentifier(value: string): string {
@@ -145,7 +169,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
       await admin.query('grant select, insert on sse_fixture.event_stream to stynx_app');
       await admin.query(`insert into sse_fixture.event_stream (id, tenant_id, created_at, event, payload) values
         ('a-expired', $1, clock_timestamp() - interval '25 hours', 'record.changed', jsonb_build_object('tenant', 'A', 'value', 'expired')),
-        ('a-recent', $1, clock_timestamp() - interval '1 minute', 'record.changed', jsonb_build_object('tenant', 'A', 'value', 'recent')),
+        ('a-recent', $1, date_trunc('milliseconds', clock_timestamp() - interval '1 minute'), 'record.changed', jsonb_build_object('tenant', 'A', 'value', 'recent')),
         ('b-private', $2, clock_timestamp() - interval '1 minute', 'record.changed', jsonb_build_object('tenant', 'B', 'value', 'private'))`, [tenantA, tenantB]);
     } finally { await admin.end(); }
 
@@ -201,29 +225,20 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
 
     const address = app.getHttpServer().address();
     if (!address || typeof address === 'string') throw new Error('Nest HTTP listener is unavailable');
-    const stream = await new Promise<{ body(): string; contentType: string | undefined; close(): void }>((resolve, reject) => {
-      const client = httpRequest({ host: '127.0.0.1', port: address.port, path: '/_sse', headers: { host: 'reference-api.test', authorization: 'Bearer test-a', 'x-tenant-id': tenantA } });
-      client.once('response', (response) => {
-        let body = '';
-        response.on('data', (chunk: Buffer) => {
-          body += chunk.toString('utf8');
-          if (body.includes(': connected\n\n')) resolve({ body: () => body, contentType: response.headers['content-type'], close: () => client.destroy() });
-        });
-        response.once('end', () => reject(new Error(`stream ended before handshake: HTTP ${response.statusCode}, content-type ${response.headers['content-type']}, body ${body}`)));
-      });
-      client.once('error', reject);
-      client.end();
-    });
+    const stream = await openStream(address.port);
     expect(stream.contentType).toContain('text/event-stream');
     expect(stream.body()).toContain(': connected\n\n');
     try {
       const liveAdmin = await postgres.connectAsAdmin();
       try {
         await liveAdmin.query(`insert into sse_fixture.event_stream (id, tenant_id, created_at, event, payload) values
-          ('a-tick', $1, clock_timestamp() + interval '1 second', 'record.changed', jsonb_build_object('tenant', 'A', 'value', 'tick')),
-          ('b-tick', $2, clock_timestamp() + interval '1 second', 'record.changed', jsonb_build_object('tenant', 'B', 'value', 'private'))`, [tenantA, tenantB]);
+          ('a-tick', $1, clock_timestamp(), 'record.changed', jsonb_build_object('tenant', 'A', 'value', 'tick')),
+          ('b-tick', $2, clock_timestamp(), 'record.changed', jsonb_build_object('tenant', 'B', 'value', 'private'))`, [tenantA, tenantB]);
       } finally { await liveAdmin.end(); }
-      await scheduler.fire(5);
+      await database.withRequestContext({ tenantId: tenantB, actorId: actorA }, async () => {
+        expect(moduleRef.get(RequestContext).snapshot().tenantId).toBe(tenantB);
+        await scheduler.fire(5);
+      });
       await vi.waitFor(() => expect(stream.body()).toContain('id: a-tick'), { timeout: 5_000, interval: 20 });
       expect(stream.body()).not.toContain('b-tick');
     } finally {
@@ -241,7 +256,33 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
     // A's expired cursor ends cleanly. B's ID is intentionally indistinguishable from unknown;
     // both remain streams (200) and never disclose B.
     await expect(statusFor('a-expired')).resolves.toBe(204);
-    await expect(statusFor('b-private')).resolves.toBe(200);
+
+    const resumed = await openStream(address.port, 'a-recent');
+    try {
+      await vi.waitFor(() => expect(resumed.body()).toContain('id: a-tick\n'), { timeout: 5_000, interval: 20 });
+      expect(resumed.body()).not.toContain('id: a-recent\n');
+      expect(resumed.body()).not.toContain('id: a-expired\n');
+      expect(resumed.body()).not.toContain('id: b-private\n');
+      expect(resumed.body()).not.toContain('id: b-tick\n');
+    } finally { resumed.close(); }
+
+    const foreign = await openStream(address.port, 'b-private');
+    try {
+      await scheduler.fire(5);
+      expect(foreign.body()).not.toContain('id: a-recent\n');
+      expect(foreign.body()).not.toContain('id: a-tick\n');
+      expect(foreign.body()).not.toContain('id: b-private\n');
+      expect(foreign.body()).not.toContain('id: b-tick\n');
+      const liveAdmin = await postgres.connectAsAdmin();
+      try {
+        await liveAdmin.query(`insert into sse_fixture.event_stream (id, tenant_id, created_at, event, payload)
+          values ('a-after-foreign', $1, clock_timestamp(), 'record.changed', jsonb_build_object('tenant', 'A', 'value', 'new'))`, [tenantA]);
+      } finally { await liveAdmin.end(); }
+      await scheduler.fire(5);
+      await vi.waitFor(() => expect(foreign.body()).toContain('id: a-after-foreign\n'), { timeout: 5_000, interval: 20 });
+      expect(foreign.body()).not.toContain('id: b-private\n');
+      expect(foreign.body()).not.toContain('id: b-tick\n');
+    } finally { foreign.close(); }
 
     // A conflicting tenant claim is rejected before stream headers on the real Nest route.
     const rejected = await new Promise<{ status: number | undefined; contentType: string | undefined }>((resolve, reject) => {
@@ -252,5 +293,44 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
     });
     expect(rejected.status).toBe(403);
     expect(rejected.contentType).not.toContain('text/event-stream');
+  });
+
+  it('rejects empty tenant and actor at the service route before any RLS source query', async () => {
+    const source = moduleRef.get(RlsSource);
+    const now = vi.spyOn(source, 'now');
+    const findById = vi.spyOn(source, 'findById');
+    const listSince = vi.spyOn(source, 'listSince');
+    const address = app.getHttpServer().address();
+    if (!address || typeof address === 'string') throw new Error('Nest HTTP listener is unavailable');
+    const rejectedFor = (probe: string) => new Promise<{ status: number | undefined; code: string | undefined; contentType: string | undefined }>((resolve, reject) => {
+      const client = httpRequest({
+        host: '127.0.0.1', port: address.port, path: `/_sse?probe=${probe}`,
+        headers: { host: 'reference-api.test', authorization: 'Bearer test-a', 'x-tenant-id': tenantA },
+      }, (response) => {
+        response.resume();
+        response.once('end', () => resolve({
+          status: response.statusCode,
+          code: response.headers['x-stynx-error-code'] as string | undefined,
+          contentType: response.headers['content-type'],
+        }));
+      });
+      client.once('error', reject);
+      client.end();
+    });
+    try {
+      const noTenant = await rejectedFor('empty-tenant');
+      const noActor = await rejectedFor('empty-actor');
+      expect(noTenant).toMatchObject({ status: 400, code: 'SSE_TENANT_REQUIRED' });
+      expect(noActor).toMatchObject({ status: 401, code: 'SSE_ACTOR_REQUIRED' });
+      expect(noTenant.contentType ?? '').not.toContain('text/event-stream');
+      expect(noActor.contentType ?? '').not.toContain('text/event-stream');
+      expect(now).not.toHaveBeenCalled();
+      expect(findById).not.toHaveBeenCalled();
+      expect(listSince).not.toHaveBeenCalled();
+    } finally {
+      now.mockRestore();
+      findById.mockRestore();
+      listSince.mockRestore();
+    }
   });
 });
