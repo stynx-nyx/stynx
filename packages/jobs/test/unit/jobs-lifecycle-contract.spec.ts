@@ -46,6 +46,10 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+async function settleMicrotasks(): Promise<void> {
+  for (let index = 0; index < 8; index++) await Promise.resolve();
+}
+
 describe('jobs scheduler and worker lifecycle contract', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -92,6 +96,7 @@ describe('jobs scheduler and worker lifecycle contract', () => {
     expect(repository.materialize).toHaveBeenCalledTimes(1);
     expect(repository.inSystem).toHaveBeenCalledWith('jobs scheduler materialize due schedules', expect.any(Function));
     expect(repository.materialize).toHaveBeenCalledWith(25);
+    await settleMicrotasks();
     scheduler.stop();
     expect(timer.port.clearInterval).toHaveBeenCalledTimes(1);
     expect(timer.port.clearInterval).toHaveBeenCalledWith(timer.handles[0]);
@@ -185,6 +190,7 @@ describe('jobs scheduler and worker lifecycle contract', () => {
     expect(timer.handles[0]?.unref).toHaveBeenCalledTimes(1);
     timer.callbacks[0]?.();
     expect(repository.claim).toHaveBeenCalledTimes(1);
+    await settleMicrotasks();
     worker.stop();
     expect(timer.port.clearInterval).toHaveBeenCalledWith(timer.handles[0]);
     worker.onModuleInit();
@@ -208,7 +214,9 @@ describe('jobs scheduler and worker lifecycle contract', () => {
       succeed: vi.fn(async () => { outcomeFinished.resolve(); }),
       fail: vi.fn(async () => undefined),
     };
-    const worker = new JobsWorker(repository as never, new JobsRegistry(), {
+    const registry = new JobsRegistry();
+    registry.register('email', async () => undefined);
+    const worker = new JobsWorker(repository as never, registry, {
       workerId: 'worker-1',
       timer: timer.port,
       clock: { now: () => now.getTime() } satisfies ClockPort,
@@ -254,12 +262,20 @@ describe('jobs scheduler and worker lifecycle contract', () => {
     expect(repository.fail).not.toHaveBeenCalled();
 
     registry.get = vi.fn(() => async () => Promise.reject(new Error('boom')));
-    await new JobsWorker(repository as never, registry, { workerId: 'worker-1' }).tick();
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    try {
+      await new JobsWorker(repository as never, registry, {
+        workerId: 'worker-1',
+        clock: { now: () => now.getTime() },
+      }).tick();
+    } finally {
+      random.mockRestore();
+    }
     expect(repository.fail).toHaveBeenLastCalledWith('job-1', 'worker-1', 'boom', expect.any(Date));
     expect(repository.inSystem).toHaveBeenNthCalledWith(3, 'jobs worker claim due jobs', expect.any(Function));
     expect(repository.inSystem).toHaveBeenNthCalledWith(4, 'jobs worker record job outcome', expect.any(Function));
     const retryAt = repository.fail.mock.calls.at(-1)?.[3] as Date;
-    expect(retryAt.getTime()).toBeGreaterThan(now.getTime());
+    expect(retryAt.getTime()).toBe(now.getTime() + 500);
     expect(repository.succeed).toHaveBeenCalledTimes(1);
   });
 

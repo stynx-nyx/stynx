@@ -124,6 +124,7 @@ describe('jobs repository, registry, scheduler, and validation depth', () => {
 
   it('executes every repository boundary including actor and system contexts', async () => {
     const query = vi.fn(async (sql: string) => {
+      if (sql.includes('from auth.memberships')) return { rows: [{ member: 1 }], rowCount: 1 };
       if (sql.includes('from jobs.schedules where is_enabled'))
         return {
           rows: [
@@ -161,6 +162,10 @@ describe('jobs repository, registry, scheduler, and validation depth', () => {
       status: 'not_executable',
       reason: 'missing_actor',
     });
+    expect(query).toHaveBeenCalledWith(
+      'select 1 from auth.memberships where tenant_id=$1::uuid and user_id=$2::uuid and is_active=true limit 1',
+      [job.tenantId, job.actorId],
+    );
     expect(database.withSystemContext).toHaveBeenCalledTimes(systemContextCallsBeforeExecution);
     await expect(
       repository.enqueue({
