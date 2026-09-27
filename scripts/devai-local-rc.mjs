@@ -23,7 +23,7 @@ import { canonicalize } from './lib/mutation-roster.mjs';
 const repoRoot = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 const command = process.argv[2];
 const localRcTaskTimeoutMs = 6 * 60 * 60 * 1000;
-const signerId = 'stynx-inspector-workstation-02';
+const signerId = 'stynx-inspector-workstation-03';
 const lawToolchain = 'law/policy/devai-local-rc-toolchain.json';
 const lawEnvironment = 'law/policy/devai-local-rc-environment.json';
 const lawTrustStore = 'law/policy/devai-local-rc-trust-store.json';
