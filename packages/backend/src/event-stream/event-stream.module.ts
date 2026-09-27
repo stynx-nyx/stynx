@@ -1,10 +1,7 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { StynxEventStreamService } from './event-stream.service';
+import { STYNX_SSE_CONTEXT_RUNNER, STYNX_SSE_METRICS, STYNX_SSE_SCHEDULER } from './tokens';
 import type { EventStreamContextRunner, EventStreamMetricsSink, EventStreamScheduler } from './types';
-
-export const STYNX_SSE_CONTEXT_RUNNER = Symbol('STYNX_SSE_CONTEXT_RUNNER');
-export const STYNX_SSE_SCHEDULER = Symbol('STYNX_SSE_SCHEDULER');
-export const STYNX_SSE_METRICS = Symbol('STYNX_SSE_METRICS');
 
 export interface StynxEventStreamModuleOptions {
   contextRunner: EventStreamContextRunner;
