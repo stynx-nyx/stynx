@@ -1039,6 +1039,42 @@
       "commit": "570f93042fab247f009b3ed02d8fd5752b0b4443",
       "authorized_by": "Owner",
       "reason": "Owner authorization in the R-0002 session on 2026-09-26 binds this exact Architect commit recording the independent publication review and its quoted command text. It executes no package publication and does not replace the later action-specific publication receipt."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "3383be943ca960e6df7a80480e3bdec4cc4769f9",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the R-0002 integration of reviewed main into RC1. The matched rm -rf text belongs to the main-owned verifier workflow and operates only on a runner-temporary directory."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "3383be943ca960e6df7a80480e3bdec4cc4769f9",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact integration of the already merged main workflow. ADR-DEVAI-ADOPTION-0004/0005 governs the trusted local RC verifier; this merge makes no independent workflow edit."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "3383be943ca960e6df7a80480e3bdec4cc4769f9",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact integration commit containing package publication command text. This merge executed no package publication and grants no receipt for a later dispatch."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "3383be943ca960e6df7a80480e3bdec4cc4769f9",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact Architect integration commit bringing main-owned generated DEVAI configuration and accepted adoption ADRs into the RC1 branch."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "17d87afaf386d68b75c67c458d519c0ef2e14274",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact upstream workflow commit already merged on main. The matched rm -rf removes only its own runner-temporary verifier directory."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "17d87afaf386d68b75c67c458d519c0ef2e14274",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact upstream trusted local RC verifier workflow commit, governed by the accepted DEVAI adoption ADRs and reviewed before main merge."
     }
   ]
 }
