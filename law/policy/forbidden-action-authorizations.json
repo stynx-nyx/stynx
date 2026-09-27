@@ -1099,6 +1099,12 @@
       "commit": "9da0da675ff74fb26a2676789121811c1bd00181",
       "authorized_by": "Owner",
       "reason": "Owner authorization 2026-09-27 to resume R-0002 binds this exact Architect evidence commit. The match is a quotation inside the preserved independent review verdict; this commit performed no package publication and grants no release dispatch receipt."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "88a17ccf626417a789d07e6b33c11fac8202dfe6",
+      "authorized_by": "Owner",
+      "reason": "Owner decision of 2026-09-26 that verified-local-rc replace the heavy remote pull-request jobs, executed 2026-09-27 under the Owner explicit mandate to perform the required changes (ADR-DEVAI-ADOPTION-0006). Removes the unit-tests, integration-tests, stynx-tier-gate, and build jobs from ci.yml, re-parents doctor onto typecheck, and deletes reference-apps-not-applicable.yml, whose only purpose was to satisfy the no-longer-required reference-web-e2e check. The signed local RC closure executes all removed work; audit.yml keeps the weekly remote matrix."
     }
   ]
 }
