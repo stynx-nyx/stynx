@@ -1,0 +1,5 @@
+# Engineer — exact RC3 registry candidate
+
+Role Engineer. Work in `/Users/aarusso/Development/stynx` on branch `codex/rc3-version` after the Inspector's red tests and Architect's policy JSON commit. Read `work/rounds/R-0002/rc3-registry-policy-contract.md`, the Inspector test delta, `scripts/lib/registry-version-policy.mjs`, and the new `law/policy/registry-version-anomalies.json` bytes.
+
+Edit only `scripts/lib/registry-version-policy.mjs`: advance `registryVersionPolicyConstants.candidate` to `1.5.0-rc.3` and pin the SHA-256 of the exact Architect-owned anomaly policy bytes. Keep the 44-package roster, `latest=1.4.0`, canonical-major check, authenticated census, exact angular-profile anomaly and all failure codes. Do not broaden the exception to future RCs or stable releases. Run focused tests and authenticated registry preflight; report results. Do not edit tests, law, workflows, generated files or publication controls. Do not use Git, commit, push or open a PR; the maestro owns Git.
