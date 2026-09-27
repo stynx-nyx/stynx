@@ -57,5 +57,5 @@
     "@stynx-internal/migration-linter": "0.2.0",
     "@stynx-internal/tsconfig": "0.2.0"
   },
-  "changesets": []
+  "changesets": ["tenancy-context-15"]
 }

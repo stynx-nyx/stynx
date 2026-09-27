@@ -1,5 +1,18 @@
 # @stynx-nyx/notifications
 
+## 1.5.0-rc.1
+
+### Patch Changes
+
+- Updated dependencies [2a94cac]
+  - @stynx-nyx/core@1.5.0-rc.1
+  - @stynx-nyx/contracts@1.5.0-rc.1
+  - @stynx-nyx/data@1.5.0-rc.1
+  - @stynx-nyx/i18n@1.5.0-rc.1
+  - @stynx-nyx/logging@1.5.0-rc.1
+  - @stynx-nyx/preferences@1.5.0-rc.1
+  - @stynx-nyx/integration-adapter@1.5.0-rc.1
+
 ## 1.4.0
 
 ### Minor Changes

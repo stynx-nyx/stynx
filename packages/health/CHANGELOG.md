@@ -1,5 +1,12 @@
 # @stynx-nyx/health
 
+## 1.5.0-rc.1
+
+### Patch Changes
+
+- Updated dependencies [2a94cac]
+  - @stynx-nyx/core@1.5.0-rc.1
+
 ## 1.4.0
 
 ### Minor Changes

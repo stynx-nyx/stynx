@@ -1,5 +1,13 @@
 # @stynx-nyx/idempotency
 
+## 1.5.0-rc.1
+
+### Patch Changes
+
+- Updated dependencies [2a94cac]
+  - @stynx-nyx/contracts@1.5.0-rc.1
+  - @stynx-nyx/data@1.5.0-rc.1
+
 ## 1.4.0
 
 ### Minor Changes
