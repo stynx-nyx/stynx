@@ -1,0 +1,30 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "/private/tmp/stynx-s15-rc1-postmain-ci.log",
+      "issue": "The full ci:stynx run on HEAD 84743f85 had not finished when this review was written. Its process tree was still in `pnpm test` (api:baselines, then turbo test), with test:int, build and doctor still to run. Every stage before that passed, including check:trace, lint, typecheck and the 72 turbo tasks, and the log shows no failure so far. The post-merge code therefore has no complete CI result yet. That result is the merge gate, and the earlier PASS was based on one (stynx-s15-rc1-review2-ci.log, exit 0).",
+      "required_change": "Wait for the ci:stynx run to exit. Confirm it exited 0 and ran through `pnpm run doctor`, then record the log path and exit status in work/rounds/R-0002/record.md before opening or merging the PR. If any stage fails, repair it with a role-separated commit and run CI again on the repaired HEAD."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/record.md",
+      "issue": "The committed round record ends at the rc1-publish-delivery-review-2 PASS. It does not record the Owner's decision to integrate main at 3383be94. It also does not record the Owner decision behind the six new receipts: FORBID-RM-RF, FORBID-CI-WITHOUT-ADR, FORBID-PUBLISH and FORBID-MUTATE-INVARIANTS at 3383be94, and FORBID-RM-RF and FORBID-CI-WITHOUT-ADR at 17d87afa. AUTHORIZATION.md says the R-0002 grant does not cover publishing or editing workflows. Each receipt says 'Owner authorization 2026-09-26', but nothing in the repository ties that statement to an Owner decision. The receipt contents do match the facts: the workflow is byte-identical since 17d87afa, the rm -rf targets only $RUNNER_TEMP, and ADR-DEVAI-ADOPTION-0004/0005 are accepted.",
+      "required_change": "Add an Architect entry to record.md. It should record the Owner decision to integrate origin/main 78a0f4ba into RC1, list the six exact SHA/forbidden_id pairs, and state that no package was published. Also record the strict forbidden-actions result since a46ecb88: 14 receipts applied, zero findings."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "law/policy/forbidden-action-authorizations.json",
+      "issue": "The 17d87afa receipt says the workflow commit was 'reviewed before main merge', and nothing in the repository supports that. Separately, the receipts inherited from main for FORBID-CI-WITHOUT-ADR and FORBID-RM-RF name bd20578c095e80bd4c7eb3b6a98857c53e223df4. That object does not exist in this repository; it looks like a SHA from before the linear rebuild. devai lists both receipts as unused, and the real workflow commit is 17d87afa, which only this branch covers. Main's own release lane will not pass forbidden-actions over 17d87afa until this branch lands.",
+      "required_change": "Either cite the review artifact in the 17d87afa receipt or remove the 'reviewed before main merge' clause. Optionally add a note that the bd20578c receipts are superseded by the 17d87afa receipts. Do not delete them, because the ledger is append-only."
+    },
+    {
+      "severity": "nonblocking",
+      "file": ".github/workflows/release.yml",
+      "issue": "The release lane runs `devai check --only forbidden-actions --strict` from the last unified release to the candidate. The diff from origin/main to HEAD adds publication command text in 142 files, for example `npm publish` in the dist-tag guard and the docs. The 3383be94 merge shows that devai also scans merge commits. The PR's merge commit on main will therefore probably need its own post-merge FORBID-PUBLISH receipt, and possibly a FORBID-MUTATE-INVARIANTS receipt, following the precedent of 75b9966a. That receipt is separate from the action-specific publication receipt the Owner must still give before dispatch.",
+      "required_change": "In the PR and the round plan, note that after merge the Owner must bind the exact merge SHA before release.yml is dispatched. Then run `devai check --only forbidden-actions --strict --since-ref <last release>` on main before asking for the publication receipt."
+    }
+  ],
+  "summary": "The merge keeps the RC1 publication route unchanged. All 44 packages and the root are at 1.5.0-rc.1. The only merge changes to the lockfile are main's @aarusso-nyx/devai 1.5.0→1.6.0 bump and semver 7.8.5, and project.json and authority policy match devai 1.6.0. The local-RC scripts are separate: they push evidence tags and dispatch the verifier workflow, and do not publish to npm. release.yml is unchanged, and the verifier workflow is byte-identical to main's 17d87afa. I reran strict forbidden-actions since a46ecb88: zero findings, 14 receipts applied, including the seven restored R-0002 receipts and the six new ones. I reran local-rc-blocker-contract: 66/66 pass. The rebound package.json digest is used consistently across the three test sites. I found no regression from the earlier PASS. The verdict is REVIEW, not PASS, only because the full post-merge ci:stynx run was still in its test stage. Committed evidence also does not yet ground the new Owner receipts, and the post-merge receipt step should be made explicit."
+}

@@ -306,3 +306,41 @@ opcionais de sensores/recibo e sem bloqueio. O escopo aprovado inclui
 preflight de 44 dist-tags, canário angular, proteção de `latest`,
 releituras limitadas e recibo de parada com status do comando. PR de
 preparação e recibo específico de publicação ainda pendentes.
+
+## Integração de main na preparação RC1 (2026-09-26/27)
+
+O Owner declarou nesta sessão: “Autorização concedida para qualquer ação
+necessária para o correto e completo encerramento dessa campanha”. Sob
+essa autorização, o maestro integrou `origin/main` `78a0f4ba` na branch do
+PR #276 pelo merge `3383be943ca960e6df7a80480e3bdec4cc4769f9`. O
+main já continha a adoção aceita de DEVAI 1.6.0 (ADR-DEVAI-ADOPTION-0004/0005)
+e o workflow local de verificação RC em `17d87afaf386d68b75c67c458d519c0ef2e14274`.
+O workflow foi incorporado com bytes idênticos aos do main; a rota STYNX
+`release.yml` não mudou. Nenhum pacote foi publicado.
+
+O check DEVAI strict desde a última tag estável publicada `v1.3.1`
+(`a46ecb88bf5796a8fa4d142c2daf8b52c25a549f`) apontou quatro
+ocorrências no merge `3383be94`: `FORBID-RM-RF`,
+`FORBID-CI-WITHOUT-ADR`, `FORBID-PUBLISH` e
+`FORBID-MUTATE-INVARIANTS`; e duas no commit upstream `17d87afa`:
+`FORBID-RM-RF` e `FORBID-CI-WITHOUT-ADR`. O Owner vinculou sua
+autorização a esses seis pares exatos por recibos em
+`law/policy/forbidden-action-authorizations.json`. A checagem repetida
+retornou zero findings, com 14 recibos aplicados. Os recibos de
+`FORBID-PUBLISH` cobrem apenas texto de comando em commits; a publicação
+de `1.5.0-rc.1` exige recibo separado com comando e SHA candidato finais.
+
+O Architect restaurou sete recibos R-0002 perdidos pela resolução do
+conflito de política e regenerou o SBOM (169 componentes). O Inspector
+rebindou três hashes do manifesto raiz no contrato local RC; a suíte
+correta `node --test` passou 66/66. Trace permaneceu 393/393.
+`release:policy`, `release:provenance` e `release:consumer-fixtures`
+passaram, incluindo 44 tarballs em três fixtures. A revisão Opus do
+delta de main, ciclo 1, retornou REVIEW unicamente por CI ainda ativo;
+seu veredito está em `reviews/rc1-main-integration-delivery-review.json`.
+O CI completo deste HEAD usa o log
+`/private/tmp/stynx-s15-rc1-postmain-ci.log`; concluiu com exit 0 no
+SHA `84743f8578bc42ee9fe75cf604c38da01bf03b32`, incluindo
+`test:int`, build e doctor/RLS. Depois do merge, rodar DEVAI strict sobre o SHA mesclado e
+vincular eventuais ocorrências exatas do merge antes do dispatch de
+`release.yml`.

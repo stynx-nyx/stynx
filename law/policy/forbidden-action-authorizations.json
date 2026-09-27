@@ -1074,7 +1074,7 @@
       "forbidden_id": "FORBID-CI-WITHOUT-ADR",
       "commit": "17d87afaf386d68b75c67c458d519c0ef2e14274",
       "authorized_by": "Owner",
-      "reason": "Owner authorization 2026-09-26 for the exact upstream trusted local RC verifier workflow commit, governed by the accepted DEVAI adoption ADRs and reviewed before main merge."
+      "reason": "Owner authorization 2026-09-26 for the exact upstream trusted local RC verifier workflow commit, governed by the accepted DEVAI adoption ADRs and already accepted on main before this integration."
     }
   ]
 }

@@ -389,6 +389,19 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
    não é o recibo de publicação: esse ato ainda exige comando e SHA
    candidato finais.
 
+9. A preparação RC1 está no PR #276. `main` avançou para DEVAI 1.6.0
+   (`78a0f4ba`) e foi integrado por `3383be94`. Os recibos exatos de
+   `3383be94` e `17d87afa` foram vinculados; DEVAI strict desde
+   `a46ecb88` passou com zero achados. SBOM, hash do manifesto raiz e
+   testes locais foram rebindados por papéis separados. A revisão Opus
+   do delta retornou REVIEW somente porque o CI completo ainda executava.
+   O CI integral concluiu com exit 0 no SHA `84743f85`; o record
+   contém o log. Obter PASS no ciclo 2 e atualizar PR #276.
+10. Após o merge de #276, executar DEVAI strict no SHA mesclado antes de
+    pedir recibo de publicação. A ocorrência do merge, se houver,
+    precisa de recibo por SHA exato. A publicação `1.5.0-rc.1` continua
+    bloqueada até recibo Owner separado que nomeie comando e SHA.
+
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
