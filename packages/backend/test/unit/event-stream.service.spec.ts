@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { vi } from 'vitest';
 import {
   StynxEventStreamModule,
   StynxEventStreamService,
@@ -239,11 +240,76 @@ describe('StynxEventStreamService (UPS-SSE-01…10)', () => {
     events.failNextList = true;
     await Promise.all([scheduler.fire(1), scheduler.fire(1)]);
     expect(response.ended).toBe(0);
+    expect(events.cursors).toEqual([
+      { createdAt: new Date('2026-09-26T12:00:00.000Z'), id: '' },
+    ]);
     await scheduler.fire(1);
+    expect(events.cursors[1]).toEqual(events.cursors[0]);
     expect(response.writes).toContain(': dropped a-2\n\n');
     expect(response.writes.some((chunk) => chunk.includes('x'.repeat(100)))).toBe(false);
     expect(service.counters()).toMatchObject({ drops: 1 });
     await module.close();
+  });
+
+  it('drops deterministic poison rows, advances to later rows, and reports every drop', async () => {
+    const rows = [
+      row('unsafe\nID', '2026-09-26T12:00:01.000Z'),
+      { ...row('bad-event', '2026-09-26T12:00:02.000Z'), event: 'bad\revent' },
+      row('projection-throws', '2026-09-26T12:00:03.000Z'),
+      row('projection-undefined', '2026-09-26T12:00:04.000Z'),
+      row('projection-circular', '2026-09-26T12:00:05.000Z'),
+      row('good-after-poison', '2026-09-26T12:00:06.000Z'),
+    ];
+    const drops: string[] = [];
+    const events = source(rows);
+    const { service, module, scheduler } = await serviceWith(undefined, undefined, {
+      opened: () => undefined,
+      frame: () => undefined,
+      dropped: (_captured, id) => drops.push(id),
+      closed: () => undefined,
+    });
+    const response = new FakeResponse();
+    await service.open(new FakeRequest(), response, events, {
+      scope, tickMs: 1, batchSize: 10,
+      project: (value) => {
+        if (value.id === 'projection-throws') throw new Error('deterministic projection failure');
+        if (value.id === 'projection-undefined') return undefined;
+        if (value.id === 'projection-circular') { const cycle: { self?: object } = {}; cycle.self = cycle; return cycle; }
+        return value.body;
+      },
+    });
+    await scheduler.fire(1);
+    await vi.waitFor(() => expect(response.writes.join('')).toContain('id: good-after-poison\n'));
+    expect(response.writes.join('')).not.toContain('unsafe\nID');
+    expect(response.writes.join('')).not.toContain('bad\revent');
+    expect(response.writes).not.toContain(': dropped unsafe\nID\n\n');
+    expect(response.writes).toEqual(expect.arrayContaining([
+      ': dropped bad-event\n\n',
+      ': dropped projection-throws\n\n',
+      ': dropped projection-undefined\n\n',
+      ': dropped projection-circular\n\n',
+    ]));
+    expect(drops).toEqual(rows.slice(0, 5).map((value) => value.id));
+    expect(service.counters()).toMatchObject({ drops: 5, frames: 1 });
+    expect(events.cursors.at(-1)).toEqual({ createdAt: rows.at(-1)!.createdAt, id: 'good-after-poison' });
+    await module.close();
+  });
+
+  it('ends every open response and releases timers and slots on module shutdown', async () => {
+    const { service, module, scheduler } = await serviceWith();
+    const events = source([]);
+    const responses = [new FakeResponse(), new FakeResponse()];
+    for (const response of responses) {
+      await service.open(new FakeRequest(), response, events, {
+        scope, tickMs: 1, batchSize: 1, maxConnectionsPerActor: 2,
+        project: (value) => value.body,
+      });
+    }
+    expect(service.counters()).toMatchObject({ active: 2, opened: 2 });
+    await module.close();
+    expect(responses.map((response) => response.ended)).toEqual([1, 1]);
+    expect(scheduler.jobs.every((job) => job.cancelled)).toBe(true);
+    expect(service.counters()).toMatchObject({ active: 0, closed: 2 });
   });
 
   it('enforces actor quota, releases it exactly once across both close signals, and rejects invalid numeric limits', async () => {
