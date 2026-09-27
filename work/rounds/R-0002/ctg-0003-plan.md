@@ -74,6 +74,16 @@ de tenant e prova de concorrência real no Redis.
 
 ## Retomada
 
+No replay sobre o CTG-0002, `pnpm ci:stynx` e `pnpm ci:reference-apps`
+passaram no head `48065ba6` (logs
+`/private/tmp/stynx-s15-ctg3-48065ba6-{ci,reference}.log`). O Inspector
+acrescentou a prova E2E da precedência do avaliador local em `474faa71`
+(15/15 focados); o Engineer corrigiu a mensagem de migração do store em
+`fe12c299` (bootstrap 4/4, lint e typecheck); o Architect rebinda o novo
+sensor em `9ad2ff98` (`pnpm check:trace --print`: 414/414). Antes do PR,
+reaplicar este branch sobre o merge da RC2, executar gates completos e
+obter novo delivery-review Opus no head integrado.
+
 Replay pós-CTG-0002 em 2026-09-27: os 37 commits exclusivos da CTG-0003
 foram reaplicados sobre `ce652143`; quatro commits históricos somente de
 `law/trace.json` foram omitidos porque conflitavam com os sensores SSE já
