@@ -214,6 +214,12 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- RC1 forbidden-actions local: `policy-issue` — check desde
+  `e09bd6c0` apontou `FORBID-PUBLISH` em três commits só de contrato
+  (`19730677`, `9ad74570`, `0106a12e`) por texto literal de comando,
+  e `FORBID-MUTATE-INVARIANTS` no commit Auditor `07b3cb47` de
+  evidência DEVAI. Nenhuma publicação ocorreu; resolver a autoridade
+  por recibos exatos do Owner antes do PR/merge, sem apagar provas.
 - Prompt-review publicação RC1 ciclo 1: `reference-gap` — plano sem
   módulo puro testável para dist-tag/argumentos/pós-check e com pre-state
   de final ambíguo; contrato e prompts reparados para segundo ciclo.
@@ -355,6 +361,16 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
    checkpoint de `053091a0`. Só despachar Inspector
    após PASS. A rota de publicação `--tag latest` permanece bloqueada
    para RC até tríade separada e revisão de entrega.
+7. O CI integral da candidata versionada passou com exit 0 no SHA
+   `f4bbcb2d071dcbe08390987377c4d9af231aae88`: comando
+   `STYNX_TEST_PG_HOST=127.0.0.1 STYNX_TEST_PG_PORT=55432
+STYNX_TEST_PG_USER=postgres STYNX_TEST_PG_PASSWORD=postgres pnpm
+ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
+   testes de script 114/114, tarefas test 97/97, integração 51/51,
+   build 48/48, doctor/RLS verdes. Commits posteriores até
+   `0106a12e` alteram somente documentos da rodada. Delivery-review
+   versionamento ciclo 1: PASS. PR de preparação RC ainda bloqueado
+   pelos achados DEVAI de autoridade; publicação exige outro recibo.
 
 ## Reviews, PRs e publicações
 

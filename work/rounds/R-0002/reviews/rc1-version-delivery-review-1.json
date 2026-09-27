@@ -1,0 +1,24 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "scripts/lib/fixed-group-version.mjs",
+      "issue": "When pre.json is in pre mode and a new pending changeset declares no fixed-group release (an empty changeset, or one that names only non-group packages), planFixedGroupVersion returns bump=null and expected=current, but plan.changesets is non-empty. version-packages.mjs therefore runs `changeset version`. Changesets adds the ID to pre.json and leaves the group at the current ordinal, so validateGeneratedVersionTransition throws PRE_TRANSITION_INVALID because the ordinal is not current+1. This fails closed, but only after Changesets has already changed .changeset/pre.json and possibly other files in the working tree. The rc.1 output is not affected.",
+      "required_change": "In pre mode, make planFixedGroupVersion throw before Changesets is invoked when there are pending IDs but the computed group bump is null. Add an Inspector fixture for this case, and rebind trace afterwards."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/lib/fixed-group-version.mjs",
+      "issue": "rewriteChangelog changes a `### Major Changes` heading into the target category without checking whether the section already has that heading, so a section could end up with two `### Minor Changes` or two `### Patch Changes` headings. In the flows this branch supports, Changesets writes `Major Changes` only when a changeset declares major, and pre and exit modes fail closed on a major, so this path is currently unreachable. The generated rc.1 sections contain no Major headings.",
+      "required_change": "Merge the entries under an existing heading of the target category, or fail closed when that heading already exists. Cover it with a fixture in a later versioning triad."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "/private/tmp/stynx-s15-rc1-ci.log",
+      "issue": "The log records neither the commit SHA nor the exit status. It started at 22:19:39, after f4bbcb2d (22:19:26). The commits after it (9ad74570, 6bf3e064, 0106a12e) touch only work/rounds/R-0002. The `&&` chain ran all the way to `doctor` with ok:true, and the log shows check:trace ok (393/393), stynx-script-tests 114/114, and Turbo task summaries of 48/72/97/51/48 successful. That makes it a finished pass, not a gate still running, but the pass is inferred from the log rather than recorded.",
+      "required_change": "Record the exact HEAD SHA, the command and exit status 0 in work/rounds/R-0002/record.md before opening the release-prep PR, and require the remote ci:stynx run on the PR head to be green."
+    }
+  ],
+  "summary": "The versioning triad meets the contract. The fixed group has exactly 44 members and matches the 44 public @stynx-nyx manifests, all at 1.5.0-rc.1. The root manifest and the create-stynx-app template are at 1.5.0-rc.1, and the pdf, pdf-a and pdf-a-vera-docker peer ranges and their three generated READMEs follow. The SBOM diff changes only versions and serial/digest values. pre.json is mode pre, tag rc, with the group initialVersions unified at 1.4.0 and consumed IDs [tenancy-context-15]. That changeset declares minor for core, contracts, auth, backend and tenancy, and its CTG-0001 tenancy entry (2a94cac) appears in those five CHANGELOGs, with no 2.0.0, rc.0 or Major remnants in any new section. I checked the installed Changesets pre-mode source (@changesets/assemble-release-plan 6.0.10). The validator correctly expects native rc.0 on first entry and current+1 later, the same tag, unchanged mode and initialVersions, and consumed IDs equal to the previous IDs plus exactly the pending ones, all checked before any rewrite. The plan projects rc.1 first, rc.N+1 only for unconsumed changesets, a no-op when nothing is pending, stable 1.5.0 on exit using all retained changesets, and fails closed on malformed state, drift, missing consumed files and majors. Prior RC sections are preserved byte-for-byte, and the stable path is unchanged apart from the unreachable heading correction. The three root SHA-256 freeze entries match package.json on disk. At HEAD, check:trace reports 393/393, the focused release-version-policy suite passes 36/36, and --preview reports a no-op at 1.5.0-rc.1 without writing anything. record.md states that nothing was published and no receipt was received; publication stays outside this review."
+}

@@ -240,5 +240,23 @@ rebindou exatamente três pins do manifesto raiz em `f4bbcb2d`.
 Prompt-review da rota de publicação retornou REVIEW nos ciclos 1 e 2;
 o contrato foi reparado, mas o limite de ciclos exige nova autorização
 do Owner antes de uma terceira submissão. Nenhuma publicação ocorreu.
+CI integral da candidata versionada passou com exit 0 no SHA
+`f4bbcb2d071dcbe08390987377c4d9af231aae88`, comando com
+`STYNX_TEST_PG_HOST=127.0.0.1`, porta `55432`, usuário/senha
+`postgres` e `pnpm ci:stynx`; log
+`/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393, scripts 114/114,
+test 97/97, integração 51/51, build 48/48 e doctor/RLS passaram.
+Delivery-review Opus do versionamento ciclo 1: **PASS** em
+`reviews/rc1-version-delivery-review-1.json`, com dois casos futuros
+não bloqueantes (changeset sem bump do grupo e categoria duplicada em
+CHANGELOG). Nenhum PR de preparação RC foi aberto.
+
+O check local `devai check --only forbidden-actions --strict --since-ref
+e09bd6c0` falhou com quatro achados: três `FORBID-PUBLISH` por texto
+literal em commits Architect de contrato `19730677`, `9ad74570` e
+`0106a12e`, sem execução de publicação; um
+`FORBID-MUTATE-INVARIANTS` no commit Auditor `07b3cb47` da evidência
+DEVAI exigida para o merge. A autoridade por SHA exato permanece
+pendente antes do PR/merge, além do recibo separado para publicar.
 
 Nenhum pacote foi publicado e nenhum recibo de publicação foi recebido.
