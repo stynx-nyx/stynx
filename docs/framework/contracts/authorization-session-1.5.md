@@ -116,16 +116,17 @@ An authenticated `priorSessionId` used for a switch is excluded from
 the conflict set, including a same-tenant switch. No other tenant's
 session is revoked merely due to the policy. The transition must be
 atomic in both Redis and in-memory stores, including concurrent
-creates across processes. Add a `SessionStore.createWithPolicy(record,
+creates across processes. Add an optional `SessionStore.createWithPolicy?(record,
 {mode,now,priorSessionId?})` operation returning created/revoked
 records or a typed conflict, with one Redis server-side script (or
 WATCH/MULTI retry). It reads the user index, checks target tenant and
 activeness, and completes each revoke with the same key deletion,
 user/tenant index removal, and used refresh lookup as `revokeSession`,
 then writes the new session and lookup. Mirror entries and
-invalidation are emitted after commit from returned records. Custom
-stores must implement the operation before opting in and fail closed
-otherwise. No process-local lock or list-then-create is sufficient.
+invalidation are emitted after commit from returned records. Existing
+custom stores retain source compatibility; when the mode is not `off`,
+the module fails at boot if this method is absent. No process-local
+lock or list-then-create is sufficient.
 Default `off` and no prior session retain the existing create path.
 
 `strongFactor` is disabled by default. If enabled, `acceptedValues`
@@ -143,7 +144,8 @@ numeric, object, or unmatched values fail. `StynxAuthService` takes
 The real switch boundary is `StynxAuthService.switchTenant` through
 `exchangeExistingIdentity`; it passes `priorSessionId = actor.sid`.
 Before any write, `SessionService` loads that prior record and proves
-same user, active state and verified factor marker. A successful
+same user and active state. The verified factor marker is required
+only when `strongFactor` is enabled. A successful
 switch copies the marker's original timestamp into the new record,
 enabling a second switch without trusting a client field. It uses
 the atomic store transition to revoke the prior sid and create the
@@ -152,13 +154,16 @@ new one together, removing the current post-create revoke. Direct
 conflict in the target tenant (other than the prior sid), absent
 factor, or any policy denial happens before **any** revoke/create;
 the old session remains active. A failed write must not leave both
-old and new active or neither active. Existing auth clients need no
-request shape change.
+old and new active or neither active. After commit,
+`StynxAuthService` invalidates permission-cache entries for the prior
+sid and every returned revoked sid, preserving the effect of its
+former post-create revoke. Existing auth clients need no request
+shape change.
 
 The package exports `createSessionStoreReadinessIndicator(store,
 {timeoutMs?})`, a structural `StynxHealthIndicator` named
 `stynx-session-store`; default timeout is 500 ms. Its `check()` runs
-a read-only `SessionStore.probeReadiness?()` when available and is
+a read-only optional `SessionStore.probeReadiness?()` when available and is
 bounded by that timeout; otherwise it probes a fixed nonexistent
 session key through `getSession`. `RedisSessionStore.probeReadiness`
 checks `client.isReady` first (immediate down during reconnect) and
@@ -167,8 +172,9 @@ hanging readiness. The in-memory store returns up. Failure returns
 `down` with a safe reason. Hosts pass the indicator to the existing
 `StynxHealthModule.forRoot(options, indicators)` API. The composition
 test lives in `reference/api/test/integration`, whose manifest already
-depends on both packages; it starts its own Redis fixture and verifies
-down within the timeout after disconnect, then up after reconnect.
+depends on both packages; it starts its own Redis container, pauses
+it rather than quitting the client, verifies down within the timeout
+while the client reconnects, and verifies up after unpause.
 No sessions→health runtime dependency or manifest edit is needed.
 
 ## Proof and release binding

@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/authorization-session-1.5.md",
+      "issue": "The switch rule says SessionService must prove the 'verified factor marker' on the prior session. It does not say this check applies only when strongFactor is enabled. If strongFactor is off, or the prior session was created before the host opted in, a literal reading would deny every switch.",
+      "required_change": "Make the marker check conditional on strongFactor being enabled. A prior session with no marker is denied only under an enabled policy. Add an Inspector B sensor showing that a switch succeeds when strongFactor is off."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/authorization-session-1.5.md",
+      "issue": "Today, switchTenant calls permissionCache.invalidateSid(actor.sid) after it revokes the prior session (packages/auth/src/auth.service.ts:92). The contract removes that post-create revoke but does not say that permission-cache invalidation of the prior sid still happens after commit. It also does not say that sids revoked under revoke-existing get the same invalidation.",
+      "required_change": "State that permission-cache invalidation runs after commit for the prior sid and for every returned revoked record. Add an assertion for it to the /sessions/switch sensors in prompts 41 and 43."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/authorization-session-1.5.md",
+      "issue": "Adding createWithPolicy and probeReadiness to the public SessionStore interface is described only as 'custom stores must implement before opting in'. The contract does not say both methods are optional members. Adding them as required members would break existing custom store implementations at compile time.",
+      "required_change": "Declare createWithPolicy? and probeReadiness? as optional members. When mode is not 'off' and createWithPolicy is missing, the module fails at boot (fail closed). Cover that boot failure with a sensor."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/41-ctg3-inspector-session.md",
+      "issue": "The readiness sensor says 'disconnect/reconnect' the Redis fixture. The prior review's requirement was to stop or pause the real container, not call client.quit(), which does not exercise node-redis reconnect and offline-queue behavior.",
+      "required_change": "Require stopping or pausing the testcontainers Redis container, not a client quit. Assert 'down' within timeoutMs while the client is reconnecting, then 'up' after the container restarts."
+    }
+  ],
+  "summary": "All five blocking issues from cycle 1 are repaired. (1) Tenant is now read at guard time only from request.tenantId set by AuthContextGuard or StynxAuthGuard, the APP_GUARD registration order is documented, and real-guard sensors run in both orders. (2) The switch boundary is named as switchTenant/exchangeExistingIdentity with priorSessionId=actor.sid; ownership, activity and marker are checked before any write; the prior sid is excluded from conflicts and revoked atomically with the create; the marker carries over for chained switches. (3) The strong-factor claim name is configurable, with string or array values, comma/whitespace splitting, case folding and a boot-time check for empty configuration. (4) Active is defined by status plus absolute and idle expiry on the service clock, enforced in one server-side script or WATCH/MULTI unit with every revokeSession effect, and proved by concurrency tests in real Redis. (5) Readiness has a 500 ms default timeout, returns down immediately when isReady is false, uses PING, and its composition test lives in reference/api integration, whose manifest already depends on sessions and health. The three nonblocking issues are resolved: wildcard, case and required-side literal semantics, including the exact auth PermissionGuard; exact 401/403 status and body, partial targets and exception propagation; and per-worker locks, the §7 conformance task and reference/api kept on defaults. The remaining notes are clarifications that Inspectors can absorb, so Inspector dispatch is permitted."
+}
