@@ -1,6 +1,6 @@
 # CTG-0005 — transactional audit and idempotency
 
-**Current role:** Architect. **State:** prompt-review cycles 1 and 2 REVIEW; cycle-2 findings repaired, Owner exception needed before any third prompt review; no Inspector/Engineer dispatched. **Topological predecessors:** CTG-0003 authz/session and CTG-0004 jobs. **Source:** DETRAN C-0002 §6.2 (read only), UPS-TXN-01…05, all MUST under OD-S15-01.
+**Current role:** Architect. **State:** Owner authorized exceptional prompt-review cycle 3 on 2026-09-27; Opus returned PASS with nonblocking refinements, now incorporated. Inspector/Engineer await predecessor integration and reconciliation. **Topological predecessors:** CTG-0003 authz/session and CTG-0004 jobs. **Source:** DETRAN C-0002 §6.2 (read only), UPS-TXN-01…05, all MUST under OD-S15-01.
 
 ## Boundary and locks
 
@@ -36,3 +36,5 @@ After both predecessors are integrated, the Architect must compare the frozen CT
 Run focused unit, integration and real database tests, `pnpm check:rls-negative`, `pnpm check:rls-smoke`, API baseline comparison, `pnpm check:trace`, and the affected package build/typecheck/lint. Then run `pnpm ci:stynx` and reference consumers at the reviewed HEAD. Record transaction role and connection proof, exact red/green commands, DDL/seed/test disposition, migration application from empty database, conformance mapping of UPS-TXN-01…05 to published symbols and tests, and any explicit uncertainty. The release remains subject to the R-0002 RC/final policy.
 
 Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
+
+Prompt-review cycle 3: `reviews/ctg5-prompt-review-3.json` returned PASS. The Express wire-byte and filter-order clarifications are incorporated; this approval is conditional on CTG-0003/0004 integration and reconciliation before Inspector dispatch.
