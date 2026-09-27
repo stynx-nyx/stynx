@@ -214,6 +214,8 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Delivery-review CTG-0002 ciclo 1: `sensor-error` — faltavam provas de retomada/preflight em PostgreSQL/RLS real e resolução consumidora da entry Angular testing. Prompt de reparo aprovado por Opus no ciclo 2; Inspectors acrescentam sensores sem alterar produção, Engineers corrigem após os commits de testes.
+
 - CI local após override `adm-zip`: `reference-gap` — três sensores D21,
   D22 e D16.1 congelam o SHA antigo do `package.json` raiz; Inspector
   substitui somente esses três digests pelo SHA exato após o override,

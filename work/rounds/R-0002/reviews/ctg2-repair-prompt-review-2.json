@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "Inspector A item 1 asks for an 'isolated temporary copy/build' but never says where the artifacts come from. turbo.json already makes stynx-script-tests#test depend on @stynx-nyx/angular#build, so under pnpm test and ci:stynx the shared dist is complete before the sensor starts. A worker could still run ng-packagr inside node --test. That is slow, may need its own tsconfig and peer setup, and adds nothing.",
+      "required_change": "State that the sensor copies or packs the turbo-built packages-web/angular/dist (with its package.json exports map) into a mkdtemp directory, for example with pnpm pack --pack-destination <tmp>. It must not run ng-packagr or write under packages-web/angular. The negative cases delete fesm2022/stynx-nyx-angular-testing.mjs and types/stynx-nyx-angular-testing.d.ts only in the temp copy."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "The prompt says the consumer test must exist and fail on missing artifacts. It does not forbid t.skip, t.todo, or an early return when the built dist, the workspace peers or tsc are missing. A skip passes node --test silently, so UPS-TEST-01 could still close ungated.",
+      "required_change": "Add: the consumer sensor must not skip, todo or return early for any reason. A missing dist, peer or TypeScript binary is an assertion failure. The consumer package.json declares type module so the node16 compile really exercises the exports conditions."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "'Write failing sensors first … report expected failures' applies to Inspector A item 1 too. The testing entry is already built with the correct exports, so the positive consumer case will probably pass at once. A worker might distort the sensor to make it red.",
+      "required_change": "Note that the consumer-resolution positive case may pass immediately, because the defect was the missing gated sensor, not a broken build. Its negative artifact-removal cases are the required red/green proof. Inspector A reports the pass/fail status as observed."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/29-ctg2-repair-workers.md",
+      "issue": "Engineer A's 'package/test-entry wiring' is open-ended. It is not limited to named files, and package.json is excluded later only by a general rule.",
+      "required_change": "List the wiring paths explicitly, for example packages-web/angular/ng-package.json, packages-web/angular/testing/** and packages-web/angular/src/**. Restate that the exports map in packages-web/angular/package.json is frozen, and that any needed change goes back to the Architect."
+    }
+  ],
+  "summary": "All six first-cycle findings are repaired. (1) The consumer sensor is now mandatory at test/scripts/angular-testing-consumer.test.mjs. It is collected by stynx-script-tests (node --test ./*.test.mjs) under pnpm test, which runs in ci:stynx; the verify-consumer-fixtures alternative is gone and that script is out of scope. (2) The sensor is race-free and offline: it uses a temp copy, makes no registry access, links workspace peers, resolves through the exports map (ESM import plus tsc bundler/node16), and has separate FESM and d.ts removal negatives. turbo already orders @stynx-nyx/angular#build before the script tests. (3) Scopes are disjoint: Inspector B has the RLS spec and backend unit spec; Inspector A has two Angular specs and the new script test; Engineer B has packages/backend/src/event-stream/** and no reference/api; Engineer A has the Angular implementation, the hand-editable READMEs and the changeset. No worker may touch package.json, workflows, law/ or Git. (4) The RLS and lifecycle sensors can be run as written: a-recent resume with no a-recent, a-expired or B frames; b-private body non-disclosure; empty tenant and actor giving 400/401 with no SSE headers and zero now/findById/listSince calls; ambient B snapshot at tick time; poison rows with safe/unsafe markers and metrics; shutdown ending responses; a 1024-ID dedup window checked by eviction; suffix-only multibyte byte accounting; 204 delay >= initialMs; terminal SDK/refresh auth. (5) Every README and changeset item is named and assigned to Engineer A, and the maestro regenerates generated sections. Remaining points are tightening only."
+}
