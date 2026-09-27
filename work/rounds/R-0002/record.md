@@ -213,6 +213,10 @@ UPS-SIG, UPS-OBX e UPS-OFS estão fora da release enquanto a §8 da especificaç
 não contiver adenda confirmatória da R-0021 com nível decidido pelo Owner.
 Na leitura de 2026-09-26, a §8 não continha adendas. Conferir novamente antes
 de congelar o escopo.
+Nova conferência em 2026-09-26 no HEAD DETRAN
+`220a40202bf4ab17a5ce28b882ad96d60755842f`: §8 ainda declara
+"Sem adendas". UPS-SIG/OBX/OFS continuam condicionais e fora do escopo
+atual, sujeitas a nova leitura antes do congelamento final.
 
 ## Preparação RC1 e publicações
 
