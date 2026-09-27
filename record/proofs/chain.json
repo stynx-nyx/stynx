@@ -1,5 +1,5 @@
 {
-  "head": "a456f4e4bab40fcedcbb0a5e9cba853516c89f999fd46c8b0f37db43e110fbe5",
+  "head": "ac402e8029b9f0012daedea4a973437395017f0bb744fae4a2c4f8b143c774d7",
   "records": [
     {
       "schemaVersion": "1.0.0",
@@ -165,6 +165,84 @@
       "notes": ["classification=sensor_error", "route=fix_sensor_adapter"],
       "previous_run_hash": "a60598bea397b445e5530f6726f8a21124afb111633ac411a3ad1cd1776af7b7",
       "manifest_hash": "a456f4e4bab40fcedcbb0a5e9cba853516c89f999fd46c8b0f37db43e110fbe5"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-2bc7d361f6add164",
+      "timestamp": "2026-09-26T23:49:11.497Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "evidence.record.generic",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stynx-worktrees/release-1-5-0",
+        "git": {
+          "head_sha": "52a01eaa25e9d3ba479d4c7f9667f410cad9d211",
+          "dirty_files": ["record/proofs/work/generic/R-0002.jsonl"]
+        }
+      },
+      "artifacts": [],
+      "notes": ["round_id=R-0002", "proof_sequence=1"],
+      "previous_run_hash": "a456f4e4bab40fcedcbb0a5e9cba853516c89f999fd46c8b0f37db43e110fbe5",
+      "manifest_hash": "2760330c6cf08f3089d87aa19ad279a107ca8b028c2a09fcafa965becf29af9e",
+      "sequence": 5,
+      "previous_hash": "a456f4e4bab40fcedcbb0a5e9cba853516c89f999fd46c8b0f37db43e110fbe5"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-d1bc98738e74dd66",
+      "timestamp": "2026-09-26T23:49:56.320Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "audit.observe",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stynx-worktrees/release-1-5-0",
+        "git": {
+          "head_sha": "e09bd6c00d56881fb5208a5e8fccfd6de3c0186a",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/assessment.json",
+            ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/backlog.json",
+            ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/inventory.json",
+            ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/scorecard.json",
+            ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/status.json",
+            "record/proofs/work/generic/R-0002.jsonl"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/inventory.json",
+          "sha256": "8820e619564c5561fa84e4dbc4b0995e4631bd3b4529045d031fe552746c2bb3",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/scorecard.json",
+          "sha256": "72a018b98f6f9af87e2ff60e148038ebbefa3d2cbb92935e34cb0b019beecdce",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/backlog.json",
+          "sha256": "f8d5a2b0f51e1032f326847c862d9c6b58fe5673e65df614902ecbaeb838dc8a",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/assessment.json",
+          "sha256": "cb9cfe8f38286ec0108b35c67535fe68c1fb46a22a7c3cd37e723777b0413b33",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/e09bd6c00d56881fb5208a5e8fccfd6de3c0186a/status.json",
+          "sha256": "d24de29c1801b731c7631372c18a550e8935afbef89b0f26898f8ddc02de8ab3",
+          "kind": "audit"
+        }
+      ],
+      "notes": ["exact_sha=e09bd6c00d56881fb5208a5e8fccfd6de3c0186a", "readiness_promoting=false"],
+      "previous_run_hash": "2760330c6cf08f3089d87aa19ad279a107ca8b028c2a09fcafa965becf29af9e",
+      "manifest_hash": "ac402e8029b9f0012daedea4a973437395017f0bb744fae4a2c4f8b143c774d7",
+      "sequence": 6,
+      "previous_hash": "2760330c6cf08f3089d87aa19ad279a107ca8b028c2a09fcafa965becf29af9e"
     }
   ]
 }

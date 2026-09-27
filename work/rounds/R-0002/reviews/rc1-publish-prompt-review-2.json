@@ -1,0 +1,42 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/16-rc1-publish-engineer.md",
+      "issue": "The contract and the Engineer prompt put assertNoPendingPreChangesets into the read-only release policy check (default-mode scripts/verify-release-policy.mjs, which release:policy runs). release-prep.yml runs `node scripts/verify-release-policy.mjs` in default mode on every pull_request and main push that touches .changeset/**. In Changesets pre mode, a feature PR that adds a new changeset is the normal way to get to rc.2 or the final release. With this assertion, every such PR, and the following main push, would fail release-prep for the whole RC period. The 'no pending changeset' state is only correct at the publication candidate SHA; it is not a repository invariant.",
+      "required_change": "Limit assertNoPendingPreChangesets to publication paths: `verify-release-policy.mjs --registry-monotonicity` (which release.yml runs only when publish is enabled) and the preflight in publish-release-plan.mjs. Do not add it to default mode. Fix the plan text '`release:policy` e o preflight de publicação recusam drift' to match. Add an Inspector sensor proving that default-mode verification still passes with a pending changeset in pre mode."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The preflight only 'records' each package's `latest` and any `rc`. The closure condition and OD-S15-01 need `latest` = 1.4.0 before and after. If a package already had drifted `latest` (angular-profile carries 2.0.0 above the line, and the existing publisher comment records non-standard implicit `latest` behaviour on this registry), the run would publish without complaint and then 'verify' that the drift did not change.",
+      "required_change": "Make the preflight assert that dist-tags.latest === '1.4.0' (the previous unified version, taken from the policy supersedes record or pre.json.initialVersions) for all 44 packages before the first mutation. Any other value fails closed with PUBLICATION_DIST_TAG_DRIFT."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/15-rc1-publish-inspector.md",
+      "issue": "'Unknown tags fail PUBLICATION_DIST_TAG_UNKNOWN' is undefined. Registry packages can carry historical dist-tags other than latest and rc. If 'unknown' means any extra key, the preflight may fail on legitimate state. Or, worse, the post-check may fail after the first mutation because a tag the preflight never classified is present.",
+      "required_change": "Define the post-check as a comparison of the full dist-tags object against the preflight snapshot: every key except `rc` must be byte-identical, and `rc` must equal the candidate. Unreadable or malformed metadata is UNKNOWN. Decide explicitly whether extra preflight keys are allowed (and recorded) or rejected before any publish."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "GitHub Packages metadata right after `npm publish` may briefly lack the new version or the rc tag. Under stop-immediately-on-drift, one stale read after package 1 halts the run, and a partial publication then needs a new Owner receipt. Nothing in the contract separates 'rc not yet visible' from 'latest moved'.",
+      "required_change": "Allow a bounded, recorded re-read (fixed attempts and delay, all written into the receipt) only for rc/version still absent. A moved `latest` or any changed pre-existing tag fails DRIFT at once, without retry."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/15-rc1-publish-inspector.md",
+      "issue": "Item 1 says a stable 1.5.0 and an already published rc.1 'retain their correct monotonicity outcomes' but does not name them. With the constant rebound to rc.1, validateRegistryCensus rejects a stable 1.5.0 candidate argument with REGISTRY_CANDIDATE_UNSUPPORTED. compareSemver is not exported, so ordering can only be tested through registry fixtures.",
+      "required_change": "List the expected codes. Registry history with 1.4.0 or 1.5.0-rc.0 is accepted. History containing 1.5.0-rc.1 gives REGISTRY_CANDIDATE_EXISTS. History containing 1.5.0 or 1.5.1 gives REGISTRY_CANONICAL_LINE_NOT_MONOTONIC. A second 2.0.0 on another package gives REGISTRY_UNADJUDICATED_VERSION. A candidate argument of 1.4.0 or 1.5.0 against the rc.1 policy gives REGISTRY_ANOMALY_POLICY_UNSUPPORTED or REGISTRY_CANDIDATE_UNSUPPORTED."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/resolve-release-forbidden-range.mjs",
+      "issue": "The forbidden-actions job lists every `v*` tag reachable from the candidate, and parseStableVersionTag throws on anything that is not stable semver. A manual or automated `v1.5.0-rc.1` release tag would break the forbidden-actions job for every later release, including the final 1.5.0. The publisher correctly emits only `@stynx-nyx/<pkg>@1.5.0-rc.1` tags, but the contract does not forbid a v-prefixed RC tag.",
+      "required_change": "State in the contract and in the Owner receipt request that the RC creates no `v1.5.0-rc.1` tag, and that the forbidden-range since_ref stays at the latest stable `v1.4.0`. Optionally add an Inspector sensor for this."
+    }
+  ],
+  "summary": "The authority chain holds. release.yml needs no edit: it reads the candidate via --candidate-from-policy, checks exact-main, SHA, opt-in and token, and hands off to changesets/action. In pre mode, the action's pre-state filtering makes consumed IDs non-pending, so it takes the publish branch, and it marks GitHub Releases as prerelease for versions containing '-'. The SemVer comparator orders 1.4.0 < 1.5.0-rc.1 < 1.5.0 < 2.0.0. The digest check and the exact single-exception checks fail closed. The owner_decision and closure_condition rebind, the pure seam, pre.json-absent for stable, and the trace rebind from cycle 1 are all addressed. One blocking error remains: the no-pending-changeset precondition is put in default-mode release:policy, which release-prep runs on every changeset-bearing PR during the RC period. The other findings tighten the dist-tag preflight and post-check semantics, name the monotonicity expectations, and rule out a v-prefixed RC tag."
+}

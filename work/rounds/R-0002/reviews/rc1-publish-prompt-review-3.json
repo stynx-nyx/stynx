@@ -1,0 +1,42 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "issue": "The test 'Architect anomaly policy is required at its exact approved digest' (around line 499) checks both `currentCandidate === '1.4.0'` and `owner_decision.supersedes.next_unified_version === '1.3.1'`. Prompt 15 only asks the Inspector to update the literal candidate assertion. Once the policy is rebound, `supersedes` becomes the 2026-09-15/1.4.0 decision, so the second assertion will fail if it is left as it is.",
+      "required_change": "In prompt 15, tell the Inspector to update the `supersedes` assertion to date 2026-09-15 and version 1.4.0, and to update the comment on the Owner decision date. Keep the assertion that the 1.2.0 rebaseline target is rejected."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/15-rc1-publish-inspector.md",
+      "issue": "The prompt says candidate argument 1.4.0 or 1.5.0 is 'unsupported' but gives no error code. In the real code the entry point decides the code: `loadRegistryAnomalyPolicy` fails first with `REGISTRY_ANOMALY_POLICY_UNSUPPORTED`, `validateRegistryCensus` fails with `REGISTRY_CANDIDATE_UNSUPPORTED`, and the verify-release-policy CLI fails earlier on manifest version drift. A test that doesn't name the code can pass for the wrong reason.",
+      "required_change": "Name the expected code for each entry point: `loadRegistryAnomalyPolicy` gives `REGISTRY_ANOMALY_POLICY_UNSUPPORTED`, and `validateRegistryCensus` gives `REGISTRY_CANDIDATE_UNSUPPORTED`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The contract requires preflight `latest` to be exactly 1.4.0 and says the Owner decision records this, but it doesn't name a policy field for it. The Engineer could hard-code 1.4.0 in `publish-release-plan.mjs` or `publication-dist-tag.mjs`. That would add a second literal outside the digest-pinned policy, which goes against the existing single-source rule ('The unified candidate version is bound once').",
+      "required_change": "Either record the expected preflight `latest` (1.4.0) as an explicit field in the Architect policy, checked by `loadRegistryAnomalyPolicy` and exported through `registryVersionPolicyConstants`, or state that it is a constant exported only from `scripts/lib/registry-version-policy.mjs` and consumed from there."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The canary is the first package in roster order. Discovery order puts `@stynx-nyx/angular` first, not angular-profile. If GitHub Packages moves `latest` when a prerelease is published with `--tag rc`, one package's `latest` changes before the stop fires. The contract accepts this and requires a separate Owner receipt to restore it, but the publication request doesn't name the package.",
+      "required_change": "Have the Owner publication request and the plan name `@stynx-nyx/angular` as the canary. Record its preflight dist-tags in the plan artifact before the first mutation, so a later restoration receipt can cite the exact prior bytes."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The Architect policy rebind and the Engineer digest rebind go in separate commits. The commit between them has a policy whose digest doesn't match `anomalyPolicySha256`, so the digest test and `--registry-monotonicity` fail at that commit.",
+      "required_change": "State that the intermediate commit is never pushed, or never a candidate SHA, on its own. The pair is verified together, and only the combined head, after the Inspector commit and the trace rebind, is gated by `ci:stynx`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/16-rc1-publish-engineer.md",
+      "issue": "A sentence is garbled: 'An unconsumed changeset prevents a publication candidate from candidate from silently entering the action's version-PR branch.'",
+      "required_change": "Change it to: 'An unconsumed changeset prevents a publication candidate from silently entering the action's version-PR branch.'"
+    }
+  ],
+  "summary": "I checked the contract against the actual code and found no wrong assumption that should block the Architect rebind. compareSemver already orders 1.4.0 < 1.5.0-rc.0 < 1.5.0-rc.1 < 1.5.0, and 2.0.0 still goes through the single angular-profile exception. REGISTRY_CANDIDATE_EXISTS, REGISTRY_CANONICAL_LINE_NOT_MONOTONIC and REGISTRY_UNADJUDICATED_VERSION behave as the prompts describe. The digest is pinned in registryVersionPolicyConstants and rebinding it is Engineer scope. In pre mode, changesets/action ignores the ids listed in pre.json.changesets, so the committed pre.json lets the candidate reach the publish branch. The only pending changeset, tenancy-context-15, is already consumed there. release.yml can publish the RC without edits: it uses --candidate-from-policy, the exact-main/SHA guard and Owner opt-in, and the only `latest` literal is in publish-release-plan.mjs. All 44 CHANGELOGs have a 1.5.0-rc.1 entry, so createGithubReleases can create the per-package prerelease Releases. resolve-release-forbidden-range.mjs lists v* tags and throws on non-stable tags, so the ban on a v1.5.0-rc.1 tag is required and correct. Whether GitHub Packages keeps latest when publishing with --tag rc is unconfirmed, but the fail-closed canary covers it. Remaining findings are sensor precision and wording fixes."
+}

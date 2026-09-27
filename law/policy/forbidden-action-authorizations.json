@@ -985,6 +985,120 @@
       "commit": "ad8e9daf35ddf96ef15b638387832da93f14ac7c",
       "authorized_by": "Owner",
       "reason": "Records the Owner authorization for the squash-merge commit of PR #266, which restored the trace assertion-binding verifier and updated its canonical trace materialization. The merge commit touches law/trace.json but preserves the governed invariant population and all assertion checks; this receipt binds the already reviewed Architect-owned trace change to the SHA that landed on main."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "bd20578c095e80bd4c7eb3b6a98857c53e223df4",
+      "authorized_by": "Owner",
+      "reason": "Owner direction of 2026-09-26 to wire the DEVAI ledger gate (ADR-DEVAI-ADOPTION-0004/0005), landed as a linear rebuild of PR #271 and #274. Adds .github/workflows/devai-local-rc-verify.yml as the byte-exact workflow DEVAI generates: push-to-main and workflow_dispatch only, contents/packages read and checks write, verifier materialized from the DEVAI-designated @aarusso-nyx/devai@1.5.4 package with the protected provenance duplicate, no STYNX product command, and a verified-local-rc check-run. No existing workflow changes."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "bd20578c095e80bd4c7eb3b6a98857c53e223df4",
+      "authorized_by": "Owner",
+      "reason": "The DEVAI-generated devai-local-rc-verify.yml resets its own runner-temporary verifier directory with rm -rf \"$control\" (control=$RUNNER_TEMP/devai-verifier-package) before materializing the pinned verifier package. The target is an ephemeral runner path created by the same step, never repository content or uncommitted work; the workflow must stay byte-identical to the DEVAI generator."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "197306770533af3d3ebc67683f1f2c2b81850aad",
+      "authorized_by": "Owner",
+      "reason": "Owner decision 2026-09-26 after the R-0002 checkpoint: authorizes the exact Architect contract commit containing publication command text. The commit executes no package publication and grants no publication receipt."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "9ad745703e72a909493998025f1975dc35750751",
+      "authorized_by": "Owner",
+      "reason": "Owner decision 2026-09-26 after the R-0002 checkpoint: authorizes the exact Architect prompt repair commit containing publication command text. The commit executes no package publication and grants no publication receipt."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "0106a12ed2eaf4ca5d235b98fc87e3838c0cdc12",
+      "authorized_by": "Owner",
+      "reason": "Owner decision 2026-09-26 after the R-0002 checkpoint: authorizes the exact Architect second-review repair commit containing publication command text. The commit executes no package publication and grants no publication receipt."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "07b3cb47eb674fc6e200656ce020ec4250643885",
+      "authorized_by": "Owner",
+      "reason": "Owner decision 2026-09-26 after the R-0002 checkpoint: authorizes the exact Auditor DEVAI evidence and audit-observation commit for CTG-0001 merge. It preserves the governed invariant population and records the required proof without weakening a gate."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "fc79c3f52c9ca8660e9068222f5d0f7891bca39f",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-26 binds this exact Architect review-note commit containing publication command text. It does not execute or authorize package publication."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "d302199367fe0c40c5b951d70328ee10dc0df5f4",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-26 binds this exact Engineer implementation commit containing the guarded package publication command. No publication was executed; the eventual release dispatch requires its own action-specific receipt."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "570f93042fab247f009b3ed02d8fd5752b0b4443",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-26 binds this exact Architect commit recording the independent publication review and its quoted command text. It executes no package publication and does not replace the later action-specific publication receipt."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "3383be943ca960e6df7a80480e3bdec4cc4769f9",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the R-0002 integration of reviewed main into RC1. The matched rm -rf text belongs to the main-owned verifier workflow and operates only on a runner-temporary directory."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "3383be943ca960e6df7a80480e3bdec4cc4769f9",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact integration of the already merged main workflow. ADR-DEVAI-ADOPTION-0004/0005 governs the trusted local RC verifier; this merge makes no independent workflow edit."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "3383be943ca960e6df7a80480e3bdec4cc4769f9",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact integration commit containing package publication command text. This merge executed no package publication and grants no receipt for a later dispatch."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "3383be943ca960e6df7a80480e3bdec4cc4769f9",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact Architect integration commit bringing main-owned generated DEVAI configuration and accepted adoption ADRs into the RC1 branch."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "17d87afaf386d68b75c67c458d519c0ef2e14274",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact upstream workflow commit already merged on main. The matched rm -rf removes only its own runner-temporary verifier directory."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "17d87afaf386d68b75c67c458d519c0ef2e14274",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-26 for the exact upstream trusted local RC verifier workflow commit, governed by the accepted DEVAI adoption ADRs and already accepted on main before this integration."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "c4b926b76f6716b82f0e2d68f1a3210d78acb692",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-27 to resume R-0002 binds this exact Architect evidence commit. The match quotes a prior independent review of runner-temporary cleanup; this commit executed no deletion."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "c4b926b76f6716b82f0e2d68f1a3210d78acb692",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-27 to resume R-0002 binds this exact Architect evidence commit. The match quotes a prior independent review of publication command text; this commit executed no package publication and grants no dispatch receipt."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "9da0da675ff74fb26a2676789121811c1bd00181",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-27 to resume R-0002 binds this exact Architect evidence commit. The match is a quotation inside the preserved independent review verdict; this commit performed no deletion."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "9da0da675ff74fb26a2676789121811c1bd00181",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-09-27 to resume R-0002 binds this exact Architect evidence commit. The match is a quotation inside the preserved independent review verdict; this commit performed no package publication and grants no release dispatch receipt."
     }
   ]
 }

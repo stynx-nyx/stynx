@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "trustedSigners": [
+    {
+      "signerId": "stynx-inspector-workstation-02",
+      "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6cwlyFPuBL/efzudmLlme8kUw/IgchJkyBQtulzF34o=\n-----END PUBLIC KEY-----\n"
+    }
+  ],
+  "revokedSignerIds": []
+}

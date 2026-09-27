@@ -16,7 +16,9 @@ import { fileURLToPath } from 'node:url';
 import {
   applyFixedGroupVersion,
   planFixedGroupVersion,
+  readPreState,
   unifiedVersion,
+  validateGeneratedVersionTransition,
 } from './lib/fixed-group-version.mjs';
 import { syncReleaseVersion, validateReleaseVersionPolicy } from './lib/release-version-policy.mjs';
 
@@ -50,10 +52,20 @@ if (preview) {
 run('pnpm', ['exec', 'changeset', 'version']);
 
 const generated = unifiedVersion(repoRoot);
+if (plan.preState) {
+  validateGeneratedVersionTransition({
+    beforePreState: plan.preState,
+    afterPreState: readPreState(repoRoot),
+    current: plan.current,
+    generated,
+    pendingIds: plan.pendingIds,
+  });
+}
 if (generated !== plan.expected) {
   const { manifests, changelogs } = applyFixedGroupVersion(repoRoot, {
     from: generated,
     to: plan.expected,
+    bump: plan.bump,
   });
   console.log(
     `[version-packages] changeset version produced ${generated}; rewrote ${manifests} manifests and ${changelogs} changelogs to the fixed-group version ${plan.expected}.`,

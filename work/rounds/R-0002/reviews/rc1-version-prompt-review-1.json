@@ -1,0 +1,48 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": ".changeset/pre.json",
+      "issue": "The untracked pre.json is not in the state `pre enter rc` leaves behind. It already lists `\"changesets\": [\"tenancy-context-15\"]`, which the failed `pnpm version-packages` run wrote. Only manifests and CHANGELOGs were restored, so the premise that 'generated files were restored, leaving pre mode active' is wrong. Changesets now treats tenancy-context-15 as already released. A re-run of `changeset version` finds no unreleased changesets, and a versioner that correctly filters by pre.json would plan a no-op instead of 1.5.0-rc.1.",
+      "required_change": "Before the Engineer's `pnpm release:preview` and before any RC versioning run, the maestro must reset pre.json to the exact pre-enter state (`mode: pre`, `tag: rc`, the same initialVersions, `changesets: []`), either by regenerating it or editing it. Record this in plan.md Triagem. Commit the pre-enter state as its own reviewed artifact so the RC input is reproducible and not untracked."
+    },
+    {
+      "severity": "blocking",
+      "file": "scripts/publish-release-plan.mjs",
+      "issue": "Line 97 publishes every tarball with a hard-coded `--tag latest`. The RC1 contract has no safety constraint on the npm dist-tag. Publishing 1.5.0-rc.1 through the existing lane would move `latest` to a prerelease for all 44 packages, and the registry comment says `latest` cannot easily be moved back.",
+      "required_change": "Add a contract clause: a prerelease version must publish only under the `rc` dist-tag (taken from pre.json.tag), never `latest`, and the lane must refuse a prerelease with `latest`. Either extend the Engineer's file scope to publish-release-plan.mjs, with an Inspector sensor, or record that publication stays blocked until a separate triad fixes it. The Owner receipt request must name the dist-tag."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/12-rc1-version-inspector.md",
+      "issue": "The sensors do not pin how Changesets pre mode behaves on disk. (1) In pre mode, consumed changeset .md files stay in `.changeset/` and are listed in `pre.json.changesets`. `readPendingChangesets` reads every .md file, so 'no new changeset is a no-op' only holds if pending means 'not listed in pre.json.changesets'. (2) Changesets numbers the first prerelease `rc.0`, not `rc.1`, because its preVersion is -1+1 from a stable current. The Owner's rc.1 therefore diverges from Changesets on purpose and must be stated. (3) On `pre exit` (mode `exit`), every changeset, including the consumed ones, is pending. A naive `incrementVersion(current, bump)` would either reject `1.5.0-rc.N` or produce 1.6.0.",
+      "required_change": "Make the fixtures model a real pre.json and leave consumed changeset files on disk. Require these sensors: pending in pre mode = .md ids not in pre.json.changesets; the first RC is rc.1 even though Changesets generates 1.5.0-rc.0 or 2.0.0-rc.0; the next RC is rc.(N+1) from the current manifest's prerelease number, whether Changesets generates 2.0.0-rc.(N+1) or rc.N. Exit mode projects the base = fixed-group initialVersions advanced by the highest declared bump across all changesets (consumed plus new), with no prerelease suffix. Add negative sensors for the mode values pre, exit, and absent (stable)."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "'A new stable changeset added in pre mode produces rc.2 without advancing the minor base' conflicts with the fixed-group rule when the new changeset declares a group major. The rule is 'a major is a major only when a changeset says so'. As written, the contract could suppress a declared major, which weakens that rule.",
+      "required_change": "Restate it: during pre mode, the RC base is always the fixed-group initialVersion advanced by the highest bump declared across all pre changesets. A later patch or minor keeps the base at 1.5.0 and increments rc.N. A later declared major moves the base to 2.0.0 with the next rc number, or fails closed pending an Owner decision. Pick one option and add a sensor for it."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/13-rc1-version-engineer.md",
+      "issue": "Edits are limited to two files, but the contract says the root manifest, template and CHANGELOGs must agree. Any run that writes a version to the root package.json and reference manifests breaks the SHA-256 byte freeze in test/scripts/local-rc-blocker-contract.test.mjs. `ci:stynx` then fails with no rebinding owner named. The prompts also do not say whether the Engineer may run the real `pnpm version-packages`, which mutates generated manifests, as opposed to only `--preview`.",
+      "required_change": "State that the Engineer runs only focused tests and `pnpm release:preview`, which must print 1.4.0 -> 1.5.0-rc.1 against the reset pre.json. The real versioning run belongs to the maestro after green. Add a named Inspector step that rebinds the three byte-freeze digest sites per changed manifest after the RC version is written, plus the Architect's `law/trace.json` rebind after the test edit."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/lib/fixed-group-version.mjs",
+      "issue": "`semver` and `incrementVersion` accept only stable x.y.z versions. `rewriteChangelog` escapes only dots in `from` and rewrites only the `## <from>` heading and sibling lines. Rewriting 2.0.0 to 1.5.0 leaves `### Major Changes` category headings in place, and prerelease identifiers need exact matching so `rc.1` does not match inside `rc.10`.",
+      "required_change": "Keep the stable regex and stable-path tests unchanged, and add a separate strict prerelease parser that allows only `<x.y.z>-<tag>.<n>` with the tag equal to pre.json.tag. Escape `from` with the full regex-escape helper and anchor the heading exactly. Add a sensor that the `## 1.5.0-rc.1` section keeps no `Major Changes` category, or that this is explicitly accepted as it is for stable releases."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/12-rc1-version-inspector.md",
+      "issue": "'Version base drift' is undefined. pre.json.initialVersions also covers private packages and image-size, which are outside the fixed group.",
+      "required_change": "Define drift as follows: any fixed-group member missing from initialVersions or at a value other than the one stable unified version; the current manifest prerelease tag differs from pre.json.tag; or the current prerelease base differs from the recomputed base. Non-group entries are ignored."
+    }
+  ],
+  "summary": "The two prompts cover the requested cases, but three assumptions are wrong. The on-disk pre.json already marks tenancy-context-15 as consumed, so RC1 would be a no-op. Changesets numbers the first prerelease rc.0, not rc.1, and in pre mode consumed changeset files stay on disk. Pre exit also needs a base computed from initialVersions. Separately, the publish lane hard-codes `--tag latest`, so an RC would take over latest. The contract also leaves the declared-major case ambiguous and names no owner for the byte-freeze and trace rebinds. Repair the plan and prompts before dispatching the Inspector."
+}

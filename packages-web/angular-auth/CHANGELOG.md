@@ -1,5 +1,13 @@
 # @stynx-nyx/angular-auth
 
+## 1.5.0-rc.1
+
+### Patch Changes
+
+- @stynx-nyx/sdk@1.5.0-rc.1
+- @stynx-nyx/angular@1.5.0-rc.1
+- @stynx-nyx/angular-i18n@1.5.0-rc.1
+
 ## 1.4.0
 
 ### Minor Changes

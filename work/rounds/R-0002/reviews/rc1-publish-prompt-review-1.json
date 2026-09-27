@@ -1,0 +1,42 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/16-rc1-publish-engineer.md",
+      "issue": "Prompt 15 asks for sensors on a 'pure dist-tag selector', on the npm publish argument vector, and on the RC post-check. Today all of that logic sits inside scripts/publish-release-plan.mjs, which runs git/pack/publish and process.exit when it is imported, so a test cannot import it safely. The Engineer may edit only three existing files and cannot create a lib module. Neither prompt names the module path or the exported function signatures, so the Inspector would be guessing an API that the Engineer is then not allowed to create.",
+      "required_change": "Add the test seam to the contract and to both prompts: a new side-effect-free module such as scripts/lib/publication-dist-tag.mjs exporting e.g. selectPublicationDistTag({version, preState}), buildNpmPublishArgs({tarball, registry, tag}) and verifyPostPublishDistTags({candidate, preflightLatest, distTags}), with exact error codes. Add that file to the Engineer's allowed list. Have publish-release-plan.mjs import it and state that no sensor imports publish-release-plan.mjs itself."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The contract assumes GitHub Packages honours `npm publish --tag rc` without touching `latest`. That is unproven here, and the existing comment in publish-release-plan.mjs already records non-standard `latest` behaviour on this registry. Because the post-check only runs after a publish, a moved `latest` would be found after the first package has changed, leaving a partial state. Also, registryMetadata() only calls `npm view pkg@version`; it never reads dist-tags.",
+      "required_change": "Require the preflight to read and record every package's `latest` (and any existing `rc`) from the full dist-tags metadata, and treat an unreadable or ambiguous dist-tag as failed-or-unknown. State that restoring `latest` (`npm dist-tag add`) is a registry mutation that needs its own Owner receipt under partial-recovery. Record in the receipt request that the first package is the canary for GitHub Packages dist-tag behaviour."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "law/policy/registry-version-anomalies.json",
+      "issue": "The rebind lists what stays the same (package, 2.0.0, version ID, evidence, allowed_effects, scope) but not what happens to `owner_decision`. That block still states that the next unified version is exactly 1.4.0 (dated 2026-09-15), and the loader does not validate it. Rebinding only next_unified_version and allowed_candidate would leave the policy contradicting itself about authority.",
+      "required_change": "Require the Architect to replace owner_decision with the OD-S15-01 record: date, the merged baseline/tree, a statement that 1.5.0-rc.1 is published under dist-tag rc while latest stays 1.4.0, and supersedes {2026-09-15, 1.4.0}. Also rewrite closure_condition to name rc→1.5.0-rc.1 and latest→1.4.0. After that, the Engineer rebinds anomalyPolicySha256 to those exact bytes."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/15-rc1-publish-inspector.md",
+      "issue": "'Stable final path selects latest only with valid exited/absent pre state' is not a real publish-time state. Running `changeset version` in exit mode deletes .changeset/pre.json. A committed pre.json with mode:exit at publish time means versioning did not run, so the manifests are still prerelease.",
+      "required_change": "Say that `latest` requires a stable candidate with pre.json absent. pre.json present in either mode together with a stable candidate fails closed, and a prerelease candidate needs mode:pre with a tag equal to the version's prerelease identifier (rc)."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The claim that the workflow can publish without edits holds only if changesets/action takes its publish branch. In pre mode the action filters out IDs already listed in pre.json.changesets, so the consumed tenancy-context-15.md does not count as pending. Any unconsumed .changeset/*.md at the candidate SHA would send the action to the version-PR branch, and it would silently not publish. The action marks GitHub Releases as prerelease on its own when the version contains '-'.",
+      "required_change": "Add a precondition to the contract and to the receipt request: at the candidate SHA, the set of pending changesets (IDs not in pre.json.changesets) is empty, pre.json is committed with mode:pre and tag:rc, and all 44 manifests are 1.5.0-rc.1. Add this as an Inspector negative or a publish-preflight check."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/15-rc1-publish-inspector.md",
+      "issue": "Editing test/scripts/release-version-policy.test.mjs moves its assertion projection, so `pnpm check:trace` in ci:stynx will fail. The publication contract and prompts do not schedule the Architect rebind of law/trace.json. The existing assertion `currentCandidate === '1.4.0'` (around line 502) and the pinned policy digest both have to move to rc.1.",
+      "required_change": "Add to the sequence: after the Inspector red and the Engineer green, an Architect commit rebinds law/trace.json (`pnpm check:trace --print`). Tell the Inspector to update the 1.4.0 candidate assertion instead of deleting it, and to keep the stable-release negatives."
+    }
+  ],
+  "summary": "The authority chain is sound. release.yml needs no edit: it reads the candidate via --candidate-from-policy and guards exact-main/SHA/opt-in. The SemVer comparator already orders 1.4.0 < 1.5.0-rc.1 < 2.0.0, and the angular-profile exception stays singular. The pre.json state (mode pre, tag rc) supports deriving the dist-tag. The blocking gap is that the prompts leave no testable seam: the selector, argument, and post-check logic lives in a script that runs publication when imported, and the Engineer cannot create a module for it. Before dispatch, the contract should also cover the GitHub Packages dist-tag risk, the owner_decision rebind, publish-time pre state, and the trace rebind."
+}

@@ -1,0 +1,36 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The drift definition doesn't catch the failure that already happened: pre.json and the manifests can disagree about how many changesets were consumed. In the cycle-1 dirty state, pre.json listed tenancy-context-15 while all manifests were still at stable 1.4.0. Under the new contract only IDs missing from pre.json.changesets are pending. So `planFixedGroupVersion` would find nothing pending and print 'no pending changesets; the release unit stays at 1.4.0'. `scripts/version-packages.mjs` would then exit 0, which is a silent no-op when it should refuse. Two related cases are also unhandled: an ID in pre.json.changesets with no .md file on disk, and a current prerelease manifest when pre.json.changesets is empty. The first case matters most in exit mode: a deleted consumed file quietly drops its bump from the 'highest bump across all changesets' calculation.",
+      "required_change": "Add these to the drift/fail-closed clause in the plan and to both prompts: (a) in pre mode, if the current manifest is stable (equal to the fixed-group initialVersion), pre.json.changesets must be empty, otherwise fail closed; (b) if the current manifest is a prerelease, pre.json.changesets must be non-empty and its recomputed base must match; (c) every ID in pre.json.changesets must have a matching .changeset/<id>.md, otherwise fail closed, in both pre and exit mode. Inspector item 4 needs a sensor for each, including the exact cycle-1 state: stable 1.4.0 with a consumed ID must fail, not no-op."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/12-rc1-version-inspector.md",
+      "issue": "Item 4 reads 'Malformed `pre`, `exit`, or absent/stable state … fails closed'. It can be read as saying the absent (stable) state fails closed, which contradicts 'estado estável sem pre.json segue a regra existente'. That would break the existing stable-flow tests at lines 1253–1298.",
+      "required_change": "Reword to: malformed pre.json fails closed (unknown mode, missing or non-string tag, missing or non-object initialVersions, non-array changesets, invalid JSON). When pre.json is absent, the existing stable rule applies unchanged."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/12-rc1-version-inspector.md",
+      "issue": "The exit-mode sensor (item 3) doesn't say what happens when the highest bump is a major. For example, a major changeset added after `pre exit` would project 2.0.0 stable with no Owner OD. The plan's 'prerelease base mismatch' drift rule covers this only if it is also applied in exit mode, and neither prompt says so.",
+      "required_change": "State in both prompts that in exit mode the recomputed base must equal the current 1.5.0-rc.N base, otherwise fail closed. This means a major in exit mode also waits for an Owner OD. Add a sensor for it."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/12-rc1-version-inspector.md",
+      "issue": "Item 5 protects stable history but not earlier RC sections. On a subsequent RC, the generated section can repeat the previous heading (e.g. Changesets emits `## 1.5.0-rc.1` again from current rc.1). `rewriteChangelog` uses `lines.indexOf` on the first match, so only the older `## 1.5.0-rc.1` section and its sibling lines prove that the new section alone was rewritten. The existing heading and sibling matching is already exact-line, so the rc.1-vs-rc.10 concern is met today.",
+      "required_change": "Add a fixture with an existing `## 1.5.0-rc.1` section below the newly generated section. Assert that only the top section becomes `## 1.5.0-rc.2` and that the prior RC section stays byte-identical."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "issue": "The preview-writes-nothing test (line 1342) hashes manifests, CHANGELOGs and the template, but not `.changeset/pre.json`. The versioner now reads pre.json, and `changeset version` mutates it, so a preview that rewrote pre.json would pass unnoticed.",
+      "required_change": "Have the Inspector add `.changeset/pre.json` to the `writableState` file list (append only, no assertion removed), or add an equivalent sensor on the pre-mode fixture that preview leaves pre.json byte-identical."
+    }
+  ],
+  "summary": "Most cycle-1 repairs landed. pre.json is committed at the exact `pre enter rc` state (tag rc, all 44 fixed-group members at 1.4.0, changesets []). rc.1 is stated as an intentional divergence from Changesets' rc.0. Pending is defined by subtracting pre.json.changesets. Exit mode computes from initialVersions. A later major in pre mode fails closed. Publication is blocked, since publish-release-plan.mjs hard-codes `--tag latest` and candidate 1.4.0. The Engineer is limited to preview, and the byte-freeze and trace rebinds have named owners. syncReleaseVersion changes only the root manifest (reference manifests use workspace:*), so a single-file rebind is correct. One safety gap remains: nothing requires the manifest state to match pre.json.changesets or requires consumed IDs to exist on disk. Without that check, the dirty state already seen in cycle 1 would pass as a silent no-op. Add that sensor before dispatching the Inspector."
+}

@@ -1,5 +1,7 @@
 # @stynx-nyx/feature-flags
 
+## 1.5.0-rc.1
+
 ## 1.4.0
 
 ### Minor Changes

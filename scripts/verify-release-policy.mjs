@@ -11,6 +11,8 @@ import {
   validateRegistryCensus,
 } from './lib/registry-version-policy.mjs';
 import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
+import { readPendingChangesets, readPreState } from './lib/fixed-group-version.mjs';
+import { assertNoPendingPreChangesets, selectPublicationDistTag } from './lib/publication-dist-tag.mjs';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
@@ -63,6 +65,16 @@ errors.push(
   ),
 );
 if (registryMode) {
+  try {
+    const preState = readPreState(repoRoot);
+    selectPublicationDistTag({ version: candidate, preState });
+    assertNoPendingPreChangesets({
+      preState,
+      changesetIds: readPendingChangesets(repoRoot).map(({ file }) => file.slice('.changeset/'.length, -'.md'.length)),
+    });
+  } catch (error) {
+    errors.push(`${error.code ?? 'PUBLICATION_DIST_TAG_INVALID'}: ${error.message}`);
+  }
   if (packages.length !== registryVersionPolicyConstants.packageCount) {
     errors.push(
       `registry validation requires exactly ${registryVersionPolicyConstants.packageCount} publishable packages`,

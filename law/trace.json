@@ -3844,8 +3844,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 36,
-      "assertion_digest_sha256": "deb75b87d6ca42f4fedd4ce534cb955d4b41d84511674167b4af03b4379b828c"
+      "assertion_count": 50,
+      "assertion_digest_sha256": "74353be84ae8d613a34107644659ea82f3aa271b7c58ac67bca1cf8f375c4434"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
@@ -3876,8 +3876,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 186,
-      "assertion_digest_sha256": "c377c70131f57fd5ed64c20482545a8f82e04474083bcd8040aaf5380b43b35f"
+      "assertion_count": 266,
+      "assertion_digest_sha256": "60429660a6602df4d7934d0942e7d10d3b6d41ceba0797ff92ea8ff6afdf7796"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",

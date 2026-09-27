@@ -1,5 +1,11 @@
 # @stynx-nyx/signature
 
+## 1.5.0-rc.1
+
+### Patch Changes
+
+- @stynx-nyx/integration-adapter@1.5.0-rc.1
+
 ## 1.4.0
 
 ### Minor Changes

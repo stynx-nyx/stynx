@@ -4,8 +4,9 @@ import { resolve } from 'node:path';
 
 export const registryVersionPolicyConstants = Object.freeze({
   anomalyPolicyPath: 'law/policy/registry-version-anomalies.json',
-  anomalyPolicySha256: '01d0ec7aeadb4c2dcd97ffa963e239b8ba6c7d4101fd17a761ec3b5fc7c278de',
-  candidate: '1.4.0',
+  anomalyPolicySha256: 'c99255cc37b0b12553d91b2d7fe8bd802284c3472d323ebdc6a41d47b213db3b',
+  candidate: '1.5.0-rc.1',
+  preflightLatestVersion: '1.4.0',
   canonicalMajor: 1,
   packageCount: 44,
   registryUrl: 'https://npm.pkg.github.com',
@@ -53,6 +54,7 @@ export function loadRegistryAnomalyPolicy(repoRoot, candidate) {
     policy.policy_id !== 'stynx.registry-version-anomalies' ||
     policy.canonical_line !== '1.x' ||
     policy.next_unified_version !== registryVersionPolicyConstants.candidate ||
+    policy.preflight_latest_version !== registryVersionPolicyConstants.preflightLatestVersion ||
     candidate !== policy.next_unified_version ||
     !Array.isArray(anomalies) ||
     anomalies.length !== 1

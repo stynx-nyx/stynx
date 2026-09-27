@@ -1,5 +1,21 @@
 # @stynx-nyx/tenancy
 
+## 1.5.0-rc.1
+
+### Minor Changes
+
+- 2a94cac: Initialize one request context before guards, add explicit public tenant routes with Host-based tenant selection and optional verified authentication, and reject conflicting tenant sources. The fixed STYNX package group advances together.
+
+  Backend migration: replace application-specific public request seeds and global interceptor-order patches with `StynxTenancyModule.forRoot({ publicTenant: { resolveHost, actorId } })` and `@PublicTenantRoute()`. Keep the application's Host allow-list and configure proxy Host forwarding explicitly. The nominal `actorId` must be a valid UUID. Remove DETRAN prototype helpers `patchTenantContextInterceptorOrdering`, `seedPortalPublicRequest`, `request.portalPublic`, and `portalRequestHostStorage` after adopting this API.
+
+### Patch Changes
+
+- Updated dependencies [2a94cac]
+  - @stynx-nyx/core@1.5.0-rc.1
+  - @stynx-nyx/contracts@1.5.0-rc.1
+  - @stynx-nyx/data@1.5.0-rc.1
+  - @stynx-nyx/idempotency@1.5.0-rc.1
+
 ## 1.4.0
 
 ### Minor Changes

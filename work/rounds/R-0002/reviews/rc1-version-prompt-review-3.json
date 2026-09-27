@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "scripts/version-packages.mjs",
+      "issue": "The script exits early with 'no pending changesets' whenever plan.changesets is empty (line 31). The contract defines pending as IDs not already listed in pre.json.changesets, so in `mode: exit` with only consumed changesets (the normal pre-exit case) the script would do nothing and never produce stable 1.5.0. Inspector item 3 only checks the plan projection, so no sensor covers this script-level early exit.",
+      "required_change": "In 13-rc1-version-engineer.md, require that in exit mode the no-op branch is keyed on the exit plan (all group changesets, consumed or new), not on unconsumed IDs. In 12-rc1-version-inspector.md, add a sensor that an exit-mode fixture with only consumed IDs yields a non-null bump and expected 1.5.0, with plan.changesets not empty."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/12-rc1-version-inspector.md",
+      "issue": "Item 2 says Changesets may generate '2.0.0-rc.2 or rc.1' for the subsequent RC. From a current 1.5.0-rc.1, Changesets' pre-version logic (current ordinal + 1 for a matching tag) always yields ordinal 2. A bare 'rc.1' is ambiguous. If it means 1.5.0-rc.1, generated would equal the current version. rewriteChangelog locates the section with lines.indexOf, which cannot tell a new section from the prior byte-identical `## 1.5.0-rc.1` section the item 5 fixture keeps.",
+      "required_change": "Change the item 2 inputs to generated '2.0.0-rc.2' or '1.5.0-rc.2'. Add a fail-closed sensor for a generated version that equals the current prerelease or has a wrong tag. Require the Engineer to validate the generated version before rewriting: in pre mode, tag equals pre.json.tag and ordinal is 0 (first RC) or current+1 (later RC); in exit mode, the version is stable."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "Nothing checks that `changeset version` actually recorded the newly pending IDs in pre.json.changesets before the versioner rewrites manifests to 1.5.0-rc.N. The cycle-1 failure shows that an unrecognized pre state can be hidden by the rewrite. The drift rule would only catch it on the next run, after a committed bad state.",
+      "required_change": "Add a postcondition to §Contrato de versionamento RC1 and the Engineer prompt: after `changeset version` in pre mode, pre.json.changesets must equal the prior IDs plus exactly the pending IDs, and tag/mode must be unchanged. Otherwise fail closed before rewriting."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/12-rc1-version-inspector.md",
+      "issue": "Item 1 checks the plan's expected 1.5.0-rc.1 but has no apply-path sensor for Changesets' native first RC `1.5.0-rc.0`, the case with no peer over-promotion. Here only the ordinal is corrected, and the rewrite must still update heading and sibling lines from rc.0 to rc.1.",
+      "required_change": "Add an applyFixedGroupVersion sensor from '1.5.0-rc.0' to '1.5.0-rc.1' next to the 2.0.0-rc.0 case, with exact-heading assertions."
+    }
+  ],
+  "summary": "The contract now correctly models Changesets pre.json: consumed .md files stay on disk, pending IDs are the ones missing from pre.json.changesets, the base comes from initialVersions plus the highest bump across all changesets, and the ordinal is current+1 with the rc.0→rc.1 correction per OD-S15-01. The cycle-2 drift sensors are present (stable manifest vs consumed IDs, missing consumed .md in pre and exit, exit base mismatch, malformed or absent pre.json, tag mismatch, non-group initialVersions ignored). Stable, first RC, later RC, no-op and exit cases are separated without weakening the fixed-group roster rule. release-version-policy.mjs accepts a prerelease expectedVersion and ^1.5.0-rc.N ranges. The root-manifest freeze has exactly three sites (local-rc-blocker-contract.test.mjs:4301/4472/4532), and the reference manifests use workspace:* so the sync leaves them alone. Publication stays blocked behind --tag rc. The remaining gaps are exit-path script behavior and validating the generated version and pre.json after `changeset version`; none blocks RC1 Inspector dispatch."
+}
