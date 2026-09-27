@@ -22,6 +22,16 @@ The `StynxPlatformPipelineModule` is the foundation: it's the global request-pip
 
 ## Purpose
 
+For inbound webhooks, `StynxWebhookSignatureModule.forRoot(options)` provides
+`WebhookSignatureGuard`. Enable Nest `rawBody: true`, provide a shared atomic
+replay store in the options, and apply the guard to the route. Its
+`onVerified` callback runs only after HMAC and replay verification; establish
+tenant or actor identity there only from signed fields or a trusted sender
+mapping. Rejections return 401, replay-store outages 503, and callback or
+clock failures 500. See the
+[STYNX 1.5 utility contract](../../docs/framework/contracts/utilities-1.5.md)
+for the tenancy handoff and guard order.
+
 A STYNX app needs auth + authorization + audit + idempotency + rate-limit + DB-context + storage + admin endpoints + SLA monitoring all wired together with the right interceptor ordering and DI-token bindings. Doing this by hand from the underlying `@stynx-nyx/auth`, `@stynx-nyx/audit`, etc. packages is mechanical but order-sensitive. `@stynx-nyx/backend`'s submodules pre-bind the canonical wiring so you import once and get the right pipeline.
 
 You reach for `@stynx-nyx/backend` immediately after `@stynx-nyx/core` when building a new app. Adopters porting from a legacy stack typically wire submodules incrementally as they migrate routes.
@@ -280,6 +290,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/core`: `workspace:*`
 - `@stynx-nyx/data`: `workspace:*`
 - `@stynx-nyx/idempotency`: `workspace:*`
+- `@stynx-nyx/integration-adapter`: `workspace:*`
 - `@stynx-nyx/ratelimit`: `workspace:*`
 
 ### Optional dependencies

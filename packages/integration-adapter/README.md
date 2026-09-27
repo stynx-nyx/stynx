@@ -4,6 +4,15 @@
 
 ## Purpose
 
+STYNX 1.5 also provides `verifyWebhookSignature` for inbound signed webhooks.
+Pass the original `rawBody: Buffer`, Node's lowercase `headers`, a secret,
+clock, maximum timestamp skew, namespace, and a shared atomic replay store.
+The default signature is `sha256=<64 hex digits>` over
+`<Unix-seconds timestamp>.<raw body>`. A successful result carries the
+timestamp and reserved replay key; a rejection carries a stable reason.
+Configure `message` when authenticated tenant or event fields must be covered
+by the HMAC. Keep the replay store shared across instances.
+
 Apps making 3rd-party HTTP calls accumulate bespoke retry + circuit-break + idempotency-cache code. Each implementation has subtly different semantics, observability output, and failure modes. `@stynx-nyx/integration-adapter` resolves it by providing the contract and the typed telemetry event shape; implementations wrap their HTTP client (axios, undici, native fetch) in the contract.
 
 You reach for it when authoring a new outbound integration in your STYNX app.
