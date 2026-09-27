@@ -232,7 +232,7 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
 
-- CI CTG-0002 após integrar `main` em `65f982a5`: `sensor-error` — o Testcontainers do teste de integração `@stynx-nyx/flow` excedeu 10 s aguardando portas do PostgreSQL sob a carga do CI local; o pacote passou isolado, 60/60 testes, sem alteração de código. O CI completo está em segunda execução.
+- CI CTG-0002 após integrar `main` em `65f982a5`: `sensor-error` — o Testcontainers do teste de integração `@stynx-nyx/flow` excedeu 10 s aguardando portas do PostgreSQL sob a carga do CI local; o pacote passou isolado, 60/60 testes, sem alteração de código. Em `3447f73f`, a segunda execução completa de `pnpm ci:stynx` passou (`/private/tmp/stynx-s15-ctg2-postmain-ci-retry.log`), assim como `pnpm ci:reference-apps` (`/private/tmp/stynx-s15-ctg2-postmain-reference-ci.log`). O delivery-review Opus após a integração deu PASS em `reviews/ctg2-postmain-delivery-review.json`; os recibos Owner do merge ainda bloqueiam o push.
 
 - CI CTG-0002 após reparo Angular: `reference-gap` — o build emitiu novo digest para `types/stynx-nyx-angular.d.ts`; Architect confirmou a mudança e executou `pnpm api:baselines:write` para rebinder o baseline, sem edição manual de artefato gerado.
 
