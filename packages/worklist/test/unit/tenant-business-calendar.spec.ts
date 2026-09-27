@@ -32,6 +32,24 @@ async function deadline(
 }
 
 describe('TenantBusinessCalendar', () => {
+  it('accepts a structural ReadonlySet returned by the holiday source', async () => {
+    const backing = new Set(['2024-07-04']);
+    const holidays: ReadonlySet<string> = {
+      size: backing.size,
+      has: backing.has.bind(backing),
+      forEach: backing.forEach.bind(backing),
+      entries: backing.entries.bind(backing),
+      keys: backing.keys.bind(backing),
+      values: backing.values.bind(backing),
+      [Symbol.iterator]: backing[Symbol.iterator].bind(backing),
+      [Symbol.toStringTag]: 'Set',
+    };
+    const calendar = makeCalendar({ [A]: 'UTC' }, { [`${A}:2024`]: holidays });
+
+    await expect(deadline(calendar, A, '2024-07-03T12:00:00Z', 1))
+      .resolves.toEqual(new Date('2024-07-06T00:00:00Z'));
+  });
+
   it('uses each tenant’s timezone and supplied holidays, passing calendarKey to the source', async () => {
     const timezoneForTenant = vi.fn((tenantId: string) => tenantId === A ? 'America/New_York' : 'Pacific/Auckland');
     const holidaysFor = vi.fn(({ tenantId, year }: { tenantId: string; calendarKey?: string; year: number }) =>
