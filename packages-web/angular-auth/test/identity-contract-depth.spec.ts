@@ -204,6 +204,32 @@ describe('@stynx-nyx/angular-auth W04 identity contract depth', () => {
     directive.ngOnDestroy();
   });
 
+  it('accepts a global grant for a concrete permission but not a wildcard requirement', async () => {
+    const tenantContext = createTenantContext();
+    tenantContext.setTenant('tenant-a', 'manual');
+    const token = createJwt({ sub: 'actor-1', tenant_id: 'tenant-a', permissions: ['*'] });
+    const service = createSessionService(tenantContext, {
+      checkAuth: vi.fn(async () => ({
+        isAuthenticated: true, accessToken: createJwt({ sub: 'upstream', tenant_id: 'tenant-a' }),
+        idToken: '', userData: {}, configId: 'default',
+      })),
+      authorize: vi.fn(), logoff: vi.fn(async () => undefined),
+      forceRefreshSession: vi.fn(async () => ({ isAuthenticated: false, accessToken: '', idToken: '', userData: {}, configId: 'default' })),
+    }, {
+      exchangeCognitoToken: vi.fn(async () => ({
+        sid: 'sid-1', accessToken: token, accessTokenExpiresAt: 'later', refreshToken: 'refresh',
+        expiresAt: 'later', idleExpiresAt: 'later',
+      })),
+      switchTenant: vi.fn(async () => { throw new Error('not used'); }),
+      logout: vi.fn(async () => undefined),
+    }, authOptions());
+
+    await service.completeLogin();
+
+    expect(service.hasAllPermissions(['any:concrete:permission'])).toBe(true);
+    expect(service.hasAllPermissions(['any:*'])).toBe(false);
+  });
+
   it('exposes current actor claims and scope-derived permissions after credential exchange', async () => {
     const tenantContext = createTenantContext();
     tenantContext.setTenant('tenant-a', 'manual');

@@ -58,4 +58,11 @@ describe('DefaultPolicyEvaluator permission matching contract', () => {
       requirements: { permissions: { permissions: ['inf:x'] } },
     })).toBe(true);
   });
+
+  it('treats an explicit empty permission requirement as satisfied', () => {
+    expect(evaluator.evaluate({
+      principal: { ...principal, permissions: [] },
+      requirements: { permissions: { permissions: [] } },
+    })).toBe(true);
+  });
 });

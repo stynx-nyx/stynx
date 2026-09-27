@@ -244,6 +244,72 @@ describe('StynxAuthService', () => {
     expect(permissionCache.invalidateSid).toHaveBeenCalledWith('sid-old');
   });
 
+  it('invalidates every session displaced by a Cognito exchange before priming the replacement', async () => {
+    cognitoValidator.validateAccessToken.mockResolvedValue({
+      sub: 'cognito-7',
+      email: 'user7@example.com',
+      claims: {},
+    });
+    permissionQueries.resolveForUser.mockResolvedValue({
+      membershipId: 'membership-7',
+      permissions: ['document:read'],
+      hash: 'hash-7',
+      generation: 7,
+    });
+    const { service, sessionService } = createService({
+      userLookupRows: [{ id: 'user-7', external_subject: 'cognito-7', email: 'user7@example.com' }],
+    });
+    sessionService.create.mockResolvedValue({ ...sessionBundle, revokedSessionIds: ['sid-a', 'sid-b'] });
+
+    await service.exchangeCognitoToken('token', 'tenant-7');
+
+    expect(permissionCache.invalidateSid).toHaveBeenCalledTimes(2);
+    expect(permissionCache.invalidateSid).toHaveBeenNthCalledWith(1, 'sid-a');
+    expect(permissionCache.invalidateSid).toHaveBeenNthCalledWith(2, 'sid-b');
+    expect(permissionCache.prime).toHaveBeenCalledTimes(1);
+    expect(permissionCache.invalidateSid.mock.invocationCallOrder[1]).toBeLessThan(
+      permissionCache.prime.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('does not invalidate the prior sid twice when the session store reports it revoked', async () => {
+    permissionQueries.resolveForUser.mockResolvedValue({
+      membershipId: 'membership-8',
+      permissions: ['document:read'],
+      hash: 'hash-8',
+      generation: 8,
+    });
+    const { service, sessionService } = createService();
+    sessionService.create.mockResolvedValue({
+      ...sessionBundle,
+      revokedSessionIds: ['sid-old', 'sid-other'],
+    });
+
+    await service.switchTenant({ sid: 'sid-old', sub: 'user-8' }, 'tenant-8');
+
+    expect(permissionCache.invalidateSid).toHaveBeenCalledTimes(2);
+    expect(permissionCache.invalidateSid).toHaveBeenNthCalledWith(1, 'sid-old');
+    expect(permissionCache.invalidateSid).toHaveBeenNthCalledWith(2, 'sid-other');
+  });
+
+  it('creates a fresh session for an existing identity without a prior-session transition', async () => {
+    permissionQueries.resolveForUser.mockResolvedValue({
+      membershipId: 'membership-9',
+      permissions: ['document:read'],
+      hash: 'hash-9',
+      generation: 9,
+    });
+    const { service, sessionService } = createService();
+
+    await expect(service.exchangeExistingIdentity('user-9', undefined, 'tenant-9')).resolves.toEqual(sessionBundle);
+
+    expect(sessionService.create).toHaveBeenCalledWith(
+      'user-9', 'tenant-9', 'user-9', {},
+      { membershipId: 'membership-9', permsHash: 'hash-9' },
+    );
+    expect(permissionCache.invalidateSid).not.toHaveBeenCalled();
+  });
+
   it('uses the stynx subject when switching without a cognito subject', async () => {
     permissionQueries.resolveForUser.mockResolvedValue({
       membershipId: 'membership-local',
