@@ -326,7 +326,8 @@ ocorrências no merge `3383be94`: `FORBID-RM-RF`,
 `FORBID-RM-RF` e `FORBID-CI-WITHOUT-ADR`. O Owner vinculou sua
 autorização a esses seis pares exatos por recibos em
 `law/policy/forbidden-action-authorizations.json`. A checagem repetida
-retornou zero findings, com 14 recibos aplicados. Os recibos de
+no SHA `84743f8578bc42ee9fe75cf604c38da01bf03b32` retornou zero
+findings, com 14 recibos aplicados. Os recibos de
 `FORBID-PUBLISH` cobrem apenas texto de comando em commits; a publicação
 de `1.5.0-rc.1` exige recibo separado com comando e SHA candidato finais.
 
@@ -344,3 +345,15 @@ SHA `84743f8578bc42ee9fe75cf604c38da01bf03b32`, incluindo
 `test:int`, build e doctor/RLS. Depois do merge, rodar DEVAI strict sobre o SHA mesclado e
 vincular eventuais ocorrências exatas do merge antes do dispatch de
 `release.yml`.
+
+O segundo delivery-review Opus do delta de main retornou **FAIL** em
+`reviews/rc1-main-integration-delivery-review-2.json`, ainda local e não
+commitado. A prova de CI foi aceita, porém o commit de evidência
+`c4b926b76f6716b82f0e2d68f1a3210d78acb692` introduziu duas
+ocorrências de texto de comandos citados pela revisão anterior, sem
+recibos vinculados: `FORBID-RM-RF` e `FORBID-PUBLISH`. Portanto o check
+DEVAI strict voltou a falhar no HEAD posterior a `c4b926b7`. A regra
+da rodada manda parar após FAIL escalado. PR #276 não foi atualizado nem
+mesclado; nenhum pacote foi publicado. A retomada deve vincular recibos
+Owner para os dois pares exatos, confirmar zero achados no SHA reparado
+e solicitar novo review antes do push.

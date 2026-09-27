@@ -402,6 +402,29 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     precisa de recibo por SHA exato. A publicação `1.5.0-rc.1` continua
     bloqueada até recibo Owner separado que nomeie comando e SHA.
 
+11. **Checkpoint de parada em 2026-09-27.** O delivery-review Opus
+    do delta de main, ciclo 2, retornou FAIL; ver o arquivo local
+    `reviews/rc1-main-integration-delivery-review-2.json`. O motivo
+    é o commit `c4b926b76f6716b82f0e2d68f1a3210d78acb692`,
+    que adicionou duas citações de comandos vedados no artefato de
+    revisão anterior, detectadas como `FORBID-RM-RF` e
+    `FORBID-PUBLISH`. A próxima retomada deve vincular recibos Owner
+    para esses dois pares exatos (texto de revisão, sem execução),
+    executar DEVAI strict desde `a46ecb88` e obter novo PASS antes
+    de push/merge. Não commitar o JSON de review do ciclo 2 sem
+    considerar que ele contém citações capazes de criar novos
+    achados. PR #276 remoto permanece no HEAD `48e534f7` e com
+    conflito; o trabalho local chegou a `c4b926b7` mais este
+    checkpoint. RC1 e final não foram publicados.
+12. O CTG-0002 SSE está na worktree
+    `/Users/aarusso/.codex/worktrees/ctg2-sse/stynx` em
+    `a72276fd`. CI local e `ci:reference-apps` passaram. O
+    delivery-review Opus ciclo 1 retornou REVIEW em
+    `reviews/ctg2-delivery-review-1.json`: faltam duas provas
+    obrigatórias (resume/preflight real PostgreSQL/RLS e resolução
+    consumidora do entry Angular testing). Há seis melhorias não
+    bloqueantes. Nenhum PR CTG-0002 foi aberto.
+
 ## Reviews, PRs e publicações
 
 Três ciclos de prompt-review foram executados: REVIEW, REVIEW, PASS (terceiro
