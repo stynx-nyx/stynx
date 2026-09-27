@@ -8,6 +8,7 @@ import {
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import type { TestRequest } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
@@ -61,8 +62,16 @@ function configure(sessionActive = signal(true)) {
   };
 }
 
+async function expectRequest(http: HttpTestingController, url: string): Promise<TestRequest> {
+  let request: TestRequest | undefined;
+  await vi.waitFor(() => {
+    request = http.expectOne(url);
+  });
+  return request!;
+}
+
 describe('StynxEventStreamService HTTP transport', () => {
-  it('uses intercepted HttpClient progress requests, never native EventSource, and parses cumulative text once', () => {
+  it('uses intercepted HttpClient progress requests, never native EventSource, and parses cumulative text once', async () => {
     const eventSource = globalThis.EventSource;
     const EventSourceSpy = vi.fn();
     Object.defineProperty(globalThis, 'EventSource', { configurable: true, value: EventSourceSpy });
@@ -72,7 +81,7 @@ describe('StynxEventStreamService HTTP transport', () => {
       stream.events$.subscribe((event) => received.push(event));
       stream.start();
 
-      const request = http.expectOne('/api/stream');
+      const request = await expectRequest(http, '/api/stream');
       expect(request.request.context.get(STYNX_SSE_REQUEST)).toBe(true);
       expect(request.request.headers.get('Authorization')).toBe('Bearer expired');
       expect(request.request.headers.get('X-Tenant-Id')).toBe('tenant-a');
@@ -92,10 +101,10 @@ describe('StynxEventStreamService HTTP transport', () => {
   it('keeps the SSE context through 401 refresh/replay and suppresses banners while preserving Retry-After', async () => {
     const { stream, http, banner, refresh } = configure();
     stream.start();
-    const first = http.expectOne('/api/stream');
+    const first = await expectRequest(http, '/api/stream');
     first.flush({ errorCode: 'AUTH:UNAUTHENTICATED:expired', message: 'expired' }, { status: 401, statusText: 'Unauthorized' });
 
-    const replay = http.expectOne('/api/stream');
+    const replay = await expectRequest(http, '/api/stream');
     expect(refresh).toHaveBeenCalledOnce();
     expect(replay.request.context.get(STYNX_SSE_REQUEST)).toBe(true);
     expect(replay.request.headers.get('Authorization')).toBe('Bearer fresh');
@@ -118,7 +127,7 @@ describe('StynxEventStreamService HTTP transport', () => {
         context: new HttpContext().set(STYNX_SSE_REQUEST, true),
       }),
     );
-    const request = http.expectOne('/api/stream-probe');
+    const request = await expectRequest(http, '/api/stream-probe');
     request.flush({ errorCode: 'RATELIMIT:THROTTLED:stream', message: 'wait' }, {
       status: 429,
       statusText: 'Too Many Requests',
@@ -134,8 +143,8 @@ describe('StynxEventStreamService HTTP transport', () => {
   it('stops after terminal authorization and when the application logout signal turns false', async () => {
     const terminal = configure();
     terminal.stream.start();
-    terminal.http.expectOne('/api/stream').flush(null, { status: 401, statusText: 'Unauthorized' });
-    const replay = terminal.http.expectOne('/api/stream');
+    (await expectRequest(terminal.http, '/api/stream')).flush(null, { status: 401, statusText: 'Unauthorized' });
+    const replay = await expectRequest(terminal.http, '/api/stream');
     expect(terminal.refresh).toHaveBeenCalledOnce();
     replay.flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(terminal.stream.status()).toBe('stopped');
@@ -143,23 +152,23 @@ describe('StynxEventStreamService HTTP transport', () => {
     TestBed.resetTestingModule();
     const logout = configure();
     logout.stream.start();
-    const request = logout.http.expectOne('/api/stream');
+    const request = await expectRequest(logout.http, '/api/stream');
     logout.sessionActive.set(false);
     expect(logout.stream.status()).toBe('stopped');
     expect(request.cancelled).toBe(true);
   });
 
-  it('cancels and reopens on tenant changes without carrying a cross-tenant cursor', () => {
+  it('cancels and reopens on tenant changes without carrying a cross-tenant cursor', async () => {
     const { stream, http } = configure();
     const tenants = TestBed.inject(TenantContextService);
     stream.start();
-    const first = http.expectOne('/api/stream');
+    const first = await expectRequest(http, '/api/stream');
     first.event({ type: HttpEventType.DownloadProgress, partialText: 'id: a\nevent: audit\ndata: {}\n\n' } as never);
     expect(stream.lastEventId()).toBe('a');
 
     tenants.setTenant('tenant-b');
     expect(first.cancelled).toBe(true);
-    const second = http.expectOne('/api/stream');
+    const second = await expectRequest(http, '/api/stream');
     expect(second.request.headers.get('X-Tenant-Id')).toBe('tenant-b');
     expect(second.request.headers.has('Last-Event-ID')).toBe(false);
     expect(stream.lastEventId()).toBeNull();
