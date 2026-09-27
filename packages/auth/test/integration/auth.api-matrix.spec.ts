@@ -372,6 +372,26 @@ describe('StynxAuthController API error matrix', () => {
   });
 
   describe('POST /sessions/switch', () => {
+    it('permits a same-tenant switch with strong factor disabled and invalidates the prior sid cache', async () => {
+      const session = await sessionFor();
+      expect(await authService.inspectPermissions(session.sid)).toMatchObject({ sid: session.sid });
+
+      const switched = await request(app.getHttpServer())
+        .post('/sessions/switch')
+        .set('authorization', `Bearer ${session.accessToken}`)
+        .send({ tenantId: TENANT_ONE })
+        .expect(201);
+
+      expect(switched.body.sid).not.toBe(session.sid);
+      expect(await authService.inspectPermissions(session.sid)).toBeNull();
+      expect(await authService.inspectPermissions(switched.body.sid)).toMatchObject({ tenantId: TENANT_ONE });
+      await request(app.getHttpServer())
+        .post('/sessions/switch')
+        .set('authorization', `Bearer ${session.accessToken}`)
+        .send({ tenantId: TENANT_TWO })
+        .expect(401);
+    });
+
     it('returns 200/201 after rotating into the requested tenant', async () => {
       const session = await sessionFor();
 
