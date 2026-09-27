@@ -13,8 +13,12 @@ process-local lock. `StynxAuthService.switchTenant` passes actor.sid
 through its actual `exchangeExistingIdentity` path. Match strong-factor
 policy against a configurable claim in validated Cognito claims,
 parsing string/array values; carry only a server-derived marker through
-chained switches, never client `deviceMeta`. Denial occurs before any
-create/revoke. Expose a read-only structural health indicator with
+chained switches, never client `deviceMeta`. Require the marker only
+when strongFactor is enabled. Invalidate permission-cache entries
+for prior and all returned revoked sids after commit. Keep new store
+methods optional for existing custom stores; opt-in without atomic
+support fails at boot. Denial occurs before any create/revoke. Expose
+a read-only structural health indicator with
 bounded timeout and immediate Redis-not-ready response. Run focused
 tests including real Redis integration and
 relevant lint/typecheck. Do not edit backend/contracts/angular-auth,
