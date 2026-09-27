@@ -1,5 +1,11 @@
 # @stynx-nyx/pdf
 
+## 1.5.0-rc.2
+
+### Patch Changes
+
+- @stynx-nyx/signature@1.5.0-rc.2
+
 ## 1.5.0-rc.1
 
 ### Patch Changes

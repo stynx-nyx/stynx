@@ -1,5 +1,16 @@
 # @stynx-nyx/offline-sync
 
+## 1.5.0-rc.2
+
+### Patch Changes
+
+- Updated dependencies [138f7f0]
+  - @stynx-nyx/backend@1.5.0-rc.2
+  - @stynx-nyx/auth@1.5.0-rc.2
+  - @stynx-nyx/core@1.5.0-rc.2
+  - @stynx-nyx/data@1.5.0-rc.2
+  - @stynx-nyx/idempotency@1.5.0-rc.2
+
 ## 1.5.0-rc.1
 
 ### Patch Changes

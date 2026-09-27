@@ -1,5 +1,11 @@
 # @stynx-nyx/logging
 
+## 1.5.0-rc.2
+
+### Patch Changes
+
+- @stynx-nyx/core@1.5.0-rc.2
+
 ## 1.5.0-rc.1
 
 ### Patch Changes
