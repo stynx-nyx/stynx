@@ -42,7 +42,10 @@ export class AuthInterceptor implements HttpInterceptor {
               return this.rethrowInZone(error);
             }
 
-            return from(Promise.resolve(authProvider.refresh())).pipe(
+            return from(Promise.resolve().then(() => authProvider.refresh())).pipe(
+              catchError((refreshError: unknown) => this.rethrowInZone(
+                request.context?.get(STYNX_SSE_REQUEST) ? error : refreshError,
+              )),
               switchMap((refreshedToken) => {
                 if (!refreshedToken) {
                   if (!request.context?.get(STYNX_SSE_REQUEST)) this.showReloginBanner(authProvider);

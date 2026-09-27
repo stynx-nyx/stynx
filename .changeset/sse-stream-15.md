@@ -12,5 +12,7 @@ doubles. The fixed STYNX package group advances together.
 Consumers supply an RLS-scoped event source and a session-active Signal;
 configure `StynxEventStreamModule.forRoot({ contextRunner: database })` on
 the server and `provideStynxEventStream(...)` in Angular. The real public
-symbols and full wiring are documented in the package README and
+symbols and full wiring are documented in
+`packages/backend/README.md#server-sent-events`,
+`packages-web/angular/README.md#server-sent-events`, and
 `docs/framework/contracts/sse-1.5.md`.
