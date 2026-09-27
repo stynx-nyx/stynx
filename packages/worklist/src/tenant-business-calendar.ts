@@ -12,6 +12,7 @@ export interface TenantBusinessCalendarSource {
 
 const DAY_MS = 86_400_000;
 const MAX_CIVIL_DATES = 1_098;
+const OFFSET_TIMEZONE = /^[+-]\d{2}(?::?\d{2})?$/;
 
 function civilDay(year: number, month: number, day: number): number {
   const date = new Date(0);
@@ -90,7 +91,7 @@ export class TenantBusinessCalendar implements WorklistBusinessCalendar {
     }
 
     const timezone = await this.source.timezoneForTenant(input.tenantId);
-    if (typeof timezone !== 'string' || timezone.length === 0) {
+    if (typeof timezone !== 'string' || timezone.length === 0 || OFFSET_TIMEZONE.test(timezone)) {
       throw new WorklistInputError('Tenant timezone must be a valid IANA timezone');
     }
     let formatter: Intl.DateTimeFormat;
