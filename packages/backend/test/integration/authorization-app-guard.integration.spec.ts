@@ -1,4 +1,4 @@
-import { Controller, Get, HttpException, Module, SetMetadata } from '@nestjs/common';
+import { Controller, Get, HttpException, Module, SetMetadata, UseGuards, Inject, Injectable } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { StynxCoreModule } from '@stynx-nyx/core';
@@ -12,6 +12,9 @@ import { StynxAuthModule } from '../../src/auth/auth.module';
 import { RequirePermissions } from '../../src/authorization/decorators';
 import { StynxAuthorizationModule } from '../../src/authorization/authorization.module';
 import { AuthorizationGuard } from '../../src/authorization/authorization.guard';
+import { STYNX_AUTHZ_POLICY_EVALUATOR } from '../../src/authorization/constants';
+import { DefaultPolicyEvaluator } from '../../src/authorization/default-policy-evaluator';
+import { createTenantLifecycleMiddleware } from '../../src/db-context/tenant-lifecycle.middleware';
 
 const PUBLIC_KEY = Symbol('consumer-public-route');
 const TARGET_KEY = Symbol('consumer-authorization-target');
@@ -58,6 +61,17 @@ class AuthorizationMatrixController {
   @Get('/partial-target')
   @SetMetadata(TARGET_KEY, { resource: 'partial-resource' })
   partialTarget() { return { route: 'partial-target' }; }
+
+  @Get('/local-denied')
+  @UseGuards(AuthorizationGuard)
+  @RequirePermissions(['records:write'])
+  localDenied() { return { route: 'local-denied' }; }
+
+  @Get('/local-public')
+  @UseGuards(AuthorizationGuard)
+  @SetMetadata(PUBLIC_KEY, true)
+  @RequirePermissions(['records:write'])
+  localPublic() { return { route: 'local-public' }; }
 }
 
 function authorizationOptions(evaluate: (context: Record<string, unknown>) => boolean, overrides: Record<string, unknown> = {}) {
@@ -89,10 +103,9 @@ function authorizationOptions(evaluate: (context: Record<string, unknown>) => bo
 }
 
 function authorizationAppGuard(evaluate: (context: Record<string, unknown>) => boolean, overrides: Record<string, unknown> = {}) {
-  const options = { ...authorizationOptions(evaluate, overrides), global: false } as never;
+  const options = authorizationOptions(evaluate, overrides) as never;
   @Module({
     imports: [StynxAuthorizationModule.forRoot(options)],
-    providers: [{ provide: NEST_APP_GUARD, useExisting: AuthorizationGuard }],
   })
   class AuthorizationAppGuardModule {}
   return AuthorizationAppGuardModule;
@@ -130,13 +143,14 @@ class AuthContextAppGuardModule {}
 })
 class StynxAuthAppGuardModule {}
 
-async function createApp(imports: unknown[]): Promise<INestApplication> {
+async function createApp(imports: unknown[], options: { tenantLifecycle?: boolean } = {}): Promise<INestApplication> {
   @Module({ imports: imports as never, controllers: [AuthorizationMatrixController] })
   class MatrixModule {}
   const testing = await Test.createTestingModule({
     imports: [StynxCoreModule.forRoot({ appName: 'authorization-matrix', schema: z.object({}) }), MatrixModule],
   }).compile();
   const app = testing.createNestApplication();
+  if (options.tenantLifecycle) app.use(createTenantLifecycleMiddleware({ enforceTenantUuid: false }));
   await app.init();
   return app;
 }
@@ -217,6 +231,8 @@ describe('real authentication APP_GUARD ordering', () => {
   let deniedWithPrincipal: INestApplication;
   let evaluatorThrows: INestApplication;
   let denyFactoryThrows: INestApplication;
+  let spoofedTenantApp: INestApplication;
+  let middlewareSpoofedTenantApp: INestApplication;
   const observed: Record<string, unknown>[] = [];
   const captureEvaluator = { evaluate: vi.fn((context: Record<string, unknown>) => { observed.push(context); return true; }) };
 
@@ -226,6 +242,8 @@ describe('real authentication APP_GUARD ordering', () => {
     authzFirst = await createApp([authz(), AuthContextAppGuardModule]);
     stynxAuthFirst = await createApp([StynxAuthAppGuardModule, authz()]);
     stynxAuthzFirst = await createApp([authz(), StynxAuthAppGuardModule]);
+    spoofedTenantApp = await createApp([AuthContextAppGuardModule, authz()]);
+    middlewareSpoofedTenantApp = await createApp([AuthContextAppGuardModule, authz()], { tenantLifecycle: true });
     const denyEvaluator = { evaluate: vi.fn(() => false) };
     deniedWithPrincipal = await createApp([
       AuthContextAppGuardModule,
@@ -247,6 +265,7 @@ describe('real authentication APP_GUARD ordering', () => {
     await Promise.all([
       authContextFirst, authzFirst, stynxAuthFirst, stynxAuthzFirst, deniedWithPrincipal,
       evaluatorThrows, denyFactoryThrows,
+      spoofedTenantApp, middlewareSpoofedTenantApp,
     ].map((instance) => instance?.close()));
   });
 
@@ -263,6 +282,16 @@ describe('real authentication APP_GUARD ordering', () => {
         statusCode: 401, errorCode: 'AUTH:UNAUTHENTICATED:missing-principal',
         message: 'Authentication is required.', target: { resource: 'class-resource', action: 'class-action' },
       });
+  });
+
+  it('never treats an unentitled tenant header as verified, with or without tenant lifecycle middleware', async () => {
+    const start = observed.length;
+    for (const app of [spoofedTenantApp, middlewareSpoofedTenantApp]) {
+      await request(app.getHttpServer()).get('/authorization-matrix/decorated')
+        .set('authorization', 'Bearer verified').set('x-tenant-id', 'tenant-outside-principal').expect(200);
+    }
+    expect(observed.slice(start)).toHaveLength(2);
+    for (const context of observed.slice(start)) expect(context).not.toHaveProperty('tenantId');
   });
 
   it('preserves the exact custom 403 status and body returned by onDeny', async () => {
@@ -297,5 +326,60 @@ describe('real authentication APP_GUARD ordering', () => {
         statusCode: 401, errorCode: 'AUTH:UNAUTHENTICATED:missing-principal',
         message: 'Authentication is required.', target: { resource: 'class-resource', action: 'class-action' },
       });
+  });
+});
+
+@Injectable()
+class EvaluatorConsumer {
+  constructor(@Inject(STYNX_AUTHZ_POLICY_EVALUATOR) readonly evaluator: unknown) {}
+}
+
+describe('authorization consumer injection and local guard options', () => {
+  async function createLocalOptionsApp(): Promise<INestApplication> {
+    const localEvaluator = { evaluate: vi.fn(() => false) };
+    const localAuthz = authorizationOptions(localEvaluator.evaluate);
+    @Module({ imports: [AuthContextAppGuardModule, StynxAuthorizationModule.forRoot({ ...localAuthz, global: false } as never)], controllers: [AuthorizationMatrixController] })
+    class LocalAuthorizationModule {}
+    return createApp([LocalAuthorizationModule]);
+  }
+
+  it('injects the default and configured evaluator from the consumer module', async () => {
+    const supplied = { evaluate: vi.fn(() => true) };
+    @Module({ imports: [StynxAuthorizationModule.forRoot()], providers: [EvaluatorConsumer], exports: [EvaluatorConsumer] })
+    class DefaultEvaluatorConsumerModule {}
+    @Module({ imports: [StynxAuthorizationModule.forRoot({ policyEvaluator: supplied })], providers: [EvaluatorConsumer], exports: [EvaluatorConsumer] })
+    class CustomEvaluatorConsumerModule {}
+
+    const defaultTesting = await Test.createTestingModule({ imports: [DefaultEvaluatorConsumerModule] }).compile();
+    const customTesting = await Test.createTestingModule({ imports: [CustomEvaluatorConsumerModule] }).compile();
+    try {
+      expect(defaultTesting.get(EvaluatorConsumer).evaluator).toBeInstanceOf(DefaultPolicyEvaluator);
+      expect(customTesting.get(EvaluatorConsumer).evaluator).toBe(supplied);
+    } finally {
+      await Promise.all([defaultTesting.close(), customTesting.close()]);
+    }
+  });
+
+  it('applies the configured denial envelope to a local @UseGuards instance', async () => {
+    const app = await createLocalOptionsApp();
+    try {
+      await request(app.getHttpServer()).get('/authorization-matrix/local-denied')
+        .set('authorization', 'Bearer verified').expect(403).expect({
+          statusCode: 403, errorCode: 'AUTHZ:DENIED:policy', message: 'Access denied by policy.',
+          target: { resource: 'AuthorizationMatrixController', action: 'localDenied' },
+        });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('applies the configured public-key bypass to a local @UseGuards instance', async () => {
+    const app = await createLocalOptionsApp();
+    try {
+      await request(app.getHttpServer()).get('/authorization-matrix/local-public')
+        .set('authorization', 'Bearer verified').expect(200).expect({ route: 'local-public' });
+    } finally {
+      await app.close();
+    }
   });
 });
