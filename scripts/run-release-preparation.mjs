@@ -101,9 +101,8 @@ function versionRebaselineValid(baseCommit, versionCommit, changes) {
 function versionedPreModeContext(baseCommit, headCommit, commits) {
   const prePath = resolve(repoRoot, '.changeset/pre.json');
   if (!existsSync(prePath)) return null;
-  const versionCommits = commits.filter(({ subject }) =>
-    /^chore\(repo\): version (?:first )?\d+\.\d+\.\d+ release candidate$/u.test(subject),
-  );
+  const markerPattern = /^chore\(repo\): version (?:first )?(\d+\.\d+\.\d+) release candidate$/u;
+  const versionCommits = commits.filter(({ subject }) => markerPattern.test(subject));
   if (versionCommits.length !== 1) return null;
 
   const publicPackages = collectPublicPackages(repoRoot);
@@ -120,16 +119,22 @@ function versionedPreModeContext(baseCommit, headCommit, commits) {
     .filter(({ status, path }) => status === 'M' && /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(path))
     .map(({ path }) => path);
   const preState = JSON.parse(readFileSync(prePath, 'utf8'));
+  const baseRootVersion = readGitJson(baseCommit, 'package.json').version;
+  const basePreState = /-rc\.\d+$/u.test(baseRootVersion)
+    ? readGitJson(baseCommit, '.changeset/pre.json')
+    : null;
   const changesetIdsOnDisk = readdirSync(resolve(repoRoot, '.changeset'))
     .filter((name) => name.endsWith('.md') && name !== 'README.md')
     .map((name) => name.slice(0, -3));
   if (!isVersionedPreModeCandidate({
-    baseRootVersion: readGitJson(baseCommit, 'package.json').version,
+    baseRootVersion,
     candidateRootVersion: JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')).version,
-    hasVersionCommit: true,
+    versionCommitVersion: markerPattern.exec(versionCommits[0].subject)[1],
     packageStates,
     changedManifestPaths,
     changesetIdsOnDisk,
+    followUpChanges: parseChanges(versionCommits[0].sha, headCommit),
+    basePreState,
     preState,
   })) return null;
 
