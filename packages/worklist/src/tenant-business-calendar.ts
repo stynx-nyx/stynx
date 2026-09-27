@@ -105,6 +105,9 @@ export class TenantBusinessCalendar implements WorklistBusinessCalendar {
     } catch {
       throw new WorklistInputError('Tenant timezone must be a valid IANA timezone');
     }
+    if (OFFSET_TIMEZONE.test(formatter.resolvedOptions().timeZone)) {
+      throw new WorklistInputError('Tenant timezone must be a valid IANA timezone');
+    }
 
     if (input.businessDays === 0) return new Date(input.startAt);
 
