@@ -20,6 +20,7 @@ export interface AuthorizationRequirements {
 export interface PolicyEvaluationContext {
   principal: Principal;
   requirements: AuthorizationRequirements;
+  tenantId?: string;
   resource?: string;
   action?: string;
 }
