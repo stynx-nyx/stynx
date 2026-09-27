@@ -27,13 +27,13 @@ import { FakeStynxEventStreamClock } from '@stynx-nyx/angular/testing';
 beforeAll(() => TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting()));
 afterEach(() => TestBed.resetTestingModule());
 
-function configure(sessionActive = signal(true), rejectRefresh = false) {
+function configure(sessionActive = signal(true), rejectRefresh = false, emptyRefresh = false) {
   let token = 'expired';
   const clock = new FakeStynxEventStreamClock();
   const refresh = vi.fn(async () => {
     if (rejectRefresh) throw new Error('refresh rejected');
     token = 'fresh';
-    return token;
+    return emptyRefresh ? null : token;
   });
   TestBed.configureTestingModule({
     providers: [
@@ -191,5 +191,26 @@ describe('StynxEventStreamService HTTP transport', () => {
     expect(second.request.headers.get('X-Tenant-Id')).toBe('tenant-b');
     expect(second.request.headers.has('Last-Event-ID')).toBe(false);
     expect(stream.lastEventId()).toBe(null);
+  });
+
+  it('preserves the last event ID header on reconnect', async () => {
+    const { stream, http, clock } = configure();
+    stream.start();
+    const first = await expectRequest(http, '/api/stream');
+    first.event({ type: HttpEventType.DownloadProgress, partialText: 'id: saved\ndata: {}\n\n' } as never);
+    first.flush('', { status: 200, statusText: 'OK' });
+    clock.advanceBy(1_000);
+    const next = await expectRequest(http, '/api/stream');
+    expect(next.request.headers.get('Last-Event-ID')).toBe('saved');
+    next.flush('', { status: 200, statusText: 'OK' });
+  });
+
+  it('suppresses the login banner when an SSE refresh returns no token', async () => {
+    const { stream, http, banner, refresh } = configure(signal(true), false, true);
+    stream.start();
+    (await expectRequest(http, '/api/stream')).flush(null, { status: 401, statusText: 'Unauthorized' });
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(stream.status()).toBe('stopped'));
+    expect(banner.current()).toBe(null);
   });
 });

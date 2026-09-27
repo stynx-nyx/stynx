@@ -1,17 +1,17 @@
 import { Test } from '@nestjs/testing';
 import { vi } from 'vitest';
-import {
-  StynxEventStreamModule,
-  StynxEventStreamService,
-  type EventStreamContextRunner,
-  type EventStreamCursor,
-  type EventStreamMetricsSink,
-  type EventStreamRow,
-  type EventStreamScheduler,
-  type EventStreamSource,
-  type StynxSseRequest,
-  type StynxSseResponse,
-} from '@stynx-nyx/backend';
+import { StynxEventStreamModule } from '../../src/event-stream/event-stream.module';
+import { StynxEventStreamService } from '../../src/event-stream/event-stream.service';
+import type {
+  EventStreamContextRunner,
+  EventStreamCursor,
+  EventStreamMetricsSink,
+  EventStreamRow,
+  EventStreamScheduler,
+  EventStreamSource,
+  StynxSseRequest,
+  StynxSseResponse,
+} from '../../src/event-stream/types';
 import type { Database } from '@stynx-nyx/data';
 
 type Scope = { tenantId: string; actorId: string; sessionId?: string; policy: 'visible' | 'hidden' };
@@ -329,6 +329,188 @@ describe('StynxEventStreamService (UPS-SSE-01…10)', () => {
     first.close();
     expect(service.counters().closed).toBe(1);
     await expect(service.open(new FakeRequest(), new FakeResponse(), events, { scope, tickMs: 0, batchSize: 1, project: (value) => value.body })).rejects.toThrow();
+    await module.close();
+  });
+
+  it('rejects ambiguous replay headers and accepts a single header array case insensitively', async () => {
+    const { service, module } = await serviceWith();
+    const events = source([row('replay', '2026-09-26T11:59:00.000Z')]);
+    for (const headers of [
+      { 'Last-Event-ID': 'replay', 'last-event-id': 'replay' },
+      { 'last-event-id': ['replay', 'other'] },
+      { 'last-event-id': [] },
+      { 'last-event-id': [undefined] } as unknown as StynxSseRequest['headers'],
+      { 'last-event-id': '' },
+      { 'last-event-id': 'x'.repeat(4_097) },
+      { 'last-event-id': 'bad\0id' },
+    ]) {
+      const response = new FakeResponse();
+      await service.open(new FakeRequest(headers), response, events, { scope, project: (value) => value.body });
+      expect(response.statusCode).toBe(400);
+      expect(response.headers.get('x-stynx-error-code')).toBe('SSE_INVALID_LAST_EVENT_ID');
+      expect(response.writes).toEqual([]);
+    }
+    expect(events.calls).toEqual([]);
+    const accepted = new FakeResponse();
+    await service.open(new FakeRequest({ 'LaSt-EvEnT-Id': ['replay'] }), accepted, events, {
+      scope, project: (value) => value.body,
+    });
+    expect(events.calls).toContain('find:replay:tenant-a:visible');
+    expect(accepted.statusCode).toBe(200);
+    await module.close();
+  });
+
+  it('validates finite positive and integral configuration before opening a stream', async () => {
+    const { service, module } = await serviceWith();
+    const events = source([]);
+    const invalid = [
+      { heartbeatMs: 0 }, { replayWindowMs: -1 }, { tickMs: Number.NaN },
+      { batchSize: Number.POSITIVE_INFINITY }, { batchSize: 1.5 },
+      { retryAfterSeconds: 0 }, { retryMs: 0 }, { maxPayloadBytes: -1 },
+      { maxConnectionsPerActor: 0 }, { maxConnectionsPerActor: 1.5 },
+    ];
+    for (const override of invalid) {
+      const response = new FakeResponse();
+      await expect(service.open(new FakeRequest(), response, events, {
+        scope, project: (value) => value.body, ...override,
+      })).rejects.toThrow(RangeError);
+      expect(response.writes).toEqual([]);
+    }
+    expect(events.calls).toEqual([]);
+    await module.close();
+  });
+
+  it('returns 503 for failed cursor preflight and suppresses a response after disconnect', async () => {
+    const { service, module } = await serviceWith();
+    const response = new FakeResponse();
+    const failing = source([]);
+    failing.now = async () => { throw new Error('clock unavailable'); };
+    await service.open(new FakeRequest(), response, failing, { scope, project: (value) => value.body });
+    expect(response.statusCode).toBe(503);
+    expect(response.headers.get('x-stynx-error-code')).toBe('SSE_SOURCE_UNAVAILABLE');
+    expect(response.writes).toEqual([]);
+
+    const request = new FakeRequest();
+    const disconnected = new FakeResponse();
+    const pending = source([]);
+    pending.now = async () => { request.close(); throw new Error('disconnected during clock read'); };
+    await service.open(request, disconnected, pending, { scope, project: (value) => value.body });
+    expect(disconnected.writes).toEqual([]);
+    expect(disconnected.ended).toBe(0);
+
+    const afterClockRequest = new FakeRequest();
+    const afterClock = new FakeResponse();
+    const afterClockSource = source([]);
+    afterClockSource.now = async () => { afterClockRequest.close(); return new Date('2026-09-26T12:00:00.000Z'); };
+    await service.open(afterClockRequest, afterClock, afterClockSource, { scope, project: (value) => value.body });
+    expect(afterClock.writes).toEqual([]);
+    expect(service.counters().active).toBe(0);
+    await module.close();
+  });
+
+  it('does not close a complete non-aborted request and closes an aborted one', async () => {
+    const { service, module } = await serviceWith();
+    const request = new FakeRequest() as FakeRequest & { complete: boolean; aborted: boolean };
+    request.complete = true;
+    request.aborted = false;
+    const response = new FakeResponse();
+    await service.open(request, response, source([]), { scope, project: (value) => value.body });
+    request.close();
+    expect(service.counters().active).toBe(1);
+    request.aborted = true;
+    request.close();
+    expect(service.counters().active).toBe(0);
+    await module.close();
+  });
+
+  it('filters rows before projection and advances past filtered rows', async () => {
+    const { service, module, scheduler } = await serviceWith();
+    const events = source([row('hidden-by-filter', '2026-09-26T12:00:01.000Z'), row('visible', '2026-09-26T12:00:02.000Z')]);
+    const projected: string[] = [];
+    const response = new FakeResponse();
+    await service.open(new FakeRequest(), response, events, {
+      scope, tickMs: 1,
+      filter: async (value) => value.id !== 'hidden-by-filter',
+      project: (value) => { projected.push(value.id); return value.body; },
+    });
+    await scheduler.fire(1);
+    expect(projected).toEqual(['visible']);
+    expect(response.writes.join('')).not.toContain('hidden-by-filter');
+    expect(response.writes.join('')).toContain('id: visible\n');
+    await scheduler.fire(1);
+    expect(events.cursors.at(-1)).toEqual({ createdAt: new Date('2026-09-26T12:00:02.000Z'), id: 'visible' });
+    await module.close();
+  });
+
+  it('contains metrics and shutdown failures without losing counters or release', async () => {
+    const { service, module, scheduler } = await serviceWith(undefined, undefined, {
+      opened: () => { throw new Error('metrics down'); },
+      frame: () => { throw new Error('metrics down'); },
+      dropped: () => { throw new Error('metrics down'); },
+      closed: () => { throw new Error('metrics down'); },
+    });
+    const response = new FakeResponse();
+    const events = source([row('good', '2026-09-26T12:00:01.000Z'), row('bad\nid', '2026-09-26T12:00:02.000Z')]);
+    await service.open(new FakeRequest(), response, events, { scope, tickMs: 1, project: (value) => value.body });
+    await scheduler.fire(1);
+    expect(service.counters()).toMatchObject({ active: 1, frames: 1, drops: 1 });
+    response.end = () => { throw new Error('socket already gone'); };
+    await module.close();
+    expect(service.counters()).toMatchObject({ active: 0, closed: 1 });
+  });
+
+  it('closes and releases a stream when opening headers fail', async () => {
+    const { service, module } = await serviceWith();
+    const response = new FakeResponse();
+    response.setHeader = () => { throw new Error('socket write failed'); };
+    await service.open(new FakeRequest(), response, source([]), { scope, project: (value) => value.body });
+    expect(response.ended).toBe(1);
+    expect(service.counters()).toMatchObject({ active: 0, opened: 1, closed: 1 });
+    await module.close();
+  });
+
+  it('suppresses expired-cursor rejection when the client disconnects during preflight', async () => {
+    const { service, module } = await serviceWith();
+    const request = new FakeRequest({ 'last-event-id': 'old' });
+    const response = new FakeResponse();
+    const events = source([row('old', '2026-09-25T11:00:00.000Z')]);
+    events.now = async () => { request.close(); return new Date('2026-09-26T12:00:00.000Z'); };
+    await service.open(request, response, events, { scope, project: (value) => value.body });
+    expect(response.statusCode).toBe(200);
+    expect(response.writes).toEqual([]);
+    expect(response.ended).toBe(0);
+    expect(service.counters().active).toBe(0);
+    await module.close();
+  });
+
+  it('prevents heartbeat writes after close and stops rows after a read-time disconnect', async () => {
+    const { service, module, scheduler } = await serviceWith();
+    const request = new FakeRequest();
+    const response = new FakeResponse();
+    const events = source([row('after-close', '2026-09-26T12:00:01.000Z')]);
+    events.listSince = async () => { request.close(); return [row('after-close', '2026-09-26T12:00:01.000Z')]; };
+    await service.open(request, response, events, { scope, tickMs: 1, project: (value) => value.body });
+    await scheduler.fire(1);
+    expect(response.writes.join('')).not.toContain('after-close');
+    const before = response.writes.length;
+    for (const job of scheduler.jobs) job.tick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(response.writes).toHaveLength(before);
+    expect(service.counters().active).toBe(0);
+    await module.close();
+  });
+
+  it('stops a pending projection before writing when the client disconnects', async () => {
+    const { service, module, scheduler } = await serviceWith();
+    const request = new FakeRequest();
+    const response = new FakeResponse();
+    await service.open(request, response, source([row('pending', '2026-09-26T12:00:01.000Z')]), {
+      scope, tickMs: 1,
+      project: async (value) => { request.close(); return value.body; },
+    });
+    await scheduler.fire(1);
+    expect(response.writes.join('')).not.toContain('id: pending');
+    expect(service.counters()).toMatchObject({ active: 0, frames: 0, closed: 1 });
     await module.close();
   });
 });
