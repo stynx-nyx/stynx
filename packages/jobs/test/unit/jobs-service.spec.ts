@@ -309,6 +309,27 @@ describe('JobsService behavioral contract', () => {
     expect(repository.upsertSchedule).not.toHaveBeenCalled();
   });
 
+  it('rejects blank and malformed technical actors and non-canonical timezones', async () => {
+    const harness = createHarness();
+    const { repository, service } = harness;
+    const base = { tenantId: 'tenant-1', name: 'daily', jobType: 'report', kind: 'interval' as const, intervalSeconds: 60 };
+
+    await expect(inTenant(harness, 'tenant-1', () => service.upsertSchedule({ ...base, actorId: ' ' })))
+      .rejects.toThrow('An active technical actor is required for an enabled schedule');
+    await expect(inTenant(harness, 'tenant-1', () => service.upsertSchedule({ ...base, actorId: 'not-a-uuid' })))
+      .rejects.toThrow('Invalid schedule: actorId must be a UUID');
+
+    for (const timezone of ['EST', 'Etc/GMT+5', 'Invalid/Zone']) {
+      await expect(inTenant(harness, 'tenant-1', () => service.upsertSchedule({ ...base, actorId: actor1, timezone })))
+        .rejects.toThrow('Invalid schedule: timezone must be a canonical IANA name');
+    }
+
+    await expect(inTenant(harness, 'tenant-1', () => service.enqueue({ tenantId: 'tenant-1', jobType: 'email', actorId: '' })))
+      .rejects.toThrow('Invalid job input: actorId is required');
+    expect(repository.upsertSchedule).not.toHaveBeenCalled();
+    expect(repository.enqueue).not.toHaveBeenCalled();
+  });
+
   it('routes schedule reads and state transitions with exact tenant guards', async () => {
     const harness = createHarness();
     const { repository, service } = harness;

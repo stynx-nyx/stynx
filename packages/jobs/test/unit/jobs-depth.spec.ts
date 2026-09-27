@@ -207,6 +207,42 @@ describe('jobs repository, registry, scheduler, and validation depth', () => {
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
+  it('refuses execution when the persisted actor membership has been revoked', async () => {
+    const query = vi.fn(async () => ({ rows: [], rowCount: 0 }));
+    const trx = { query };
+    const database = {
+      tx: vi.fn(async (fn: (value: typeof trx) => unknown) => fn(trx)),
+      withRequestContext: vi.fn(async (_context: unknown, fn: () => unknown) => fn()),
+    };
+    const repository = new JobsRepository(database as never);
+    const handler = vi.fn();
+
+    await expect(repository.executeHandler(job, handler)).resolves.toEqual({
+      status: 'not_executable',
+      reason: 'inactive_actor_membership',
+    });
+    expect(database.withRequestContext).toHaveBeenCalledWith(
+      { tenantId: job.tenantId, actorId: job.actorId },
+      expect.any(Function),
+    );
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('only allows resuming actor-backed schedules and updates absent schedule rows', async () => {
+    const rows: Array<{ actorId: string | null }> = [{ actorId: null }];
+    const query = vi.fn(async (sql: string) => sql.startsWith('select actor_id')
+      ? { rows: rows.splice(0), rowCount: 1 }
+      : { rows: [], rowCount: 0 });
+    const trx = { query };
+    const database = { tx: vi.fn(async (fn: (value: typeof trx) => unknown) => fn(trx)) };
+    const repository = new JobsRepository(database as never);
+
+    await expect(repository.setScheduleEnabled('legacy', 'tenant-1', true)).rejects.toThrow('An active technical actor is required for an enabled schedule');
+    await repository.setScheduleEnabled('missing', 'tenant-1', true);
+    expect(query).toHaveBeenCalledTimes(3);
+    expect(query.mock.calls[2]?.[0]).toContain('set is_enabled=$3');
+  });
+
   it('drives scheduler and worker lifecycle defaults without leaking timers', async () => {
     vi.useFakeTimers();
     const repository = {

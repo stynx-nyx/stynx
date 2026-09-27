@@ -44,6 +44,13 @@ describe('cron and retry primitives', () => {
     ).toBe('2026-11-01T06:30:00.000Z');
   });
 
+  it('keeps the ordinary matching minute when no repeated wall minute follows it', () => {
+    expect(nextCronRunAt('30 1 * * *', new Date('2026-11-02T05:00:00.000Z'), 'America/New_York').toISOString())
+      .toBe('2026-11-02T06:30:00.000Z');
+    expect(nextCronRunAt('30 0 * * *', new Date('2026-11-01T04:00:00.000Z'), 'America/New_York').toISOString())
+      .toBe('2026-11-01T04:30:00.000Z');
+  });
+
   it('collapses New York spring-gap matches and deduplicates the first valid local minute', () => {
     const after = new Date('2026-03-08T06:59:00.000Z');
     expect(nextCronRunAt('0,30 2 * * *', after, 'America/New_York').toISOString()).toBe(

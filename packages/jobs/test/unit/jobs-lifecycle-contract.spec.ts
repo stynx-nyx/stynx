@@ -142,6 +142,25 @@ describe('jobs scheduler and worker lifecycle contract', () => {
     expect(timer.port.clearInterval).toHaveBeenCalledWith(timer.handles[0]);
   });
 
+  it('swallows a scheduler poll failure and permits the next timer tick', async () => {
+    const timer = controlledTimer();
+    const repository = {
+      inSystem: vi.fn(async () => { throw new Error('database unavailable'); }),
+      materialize: vi.fn(),
+    };
+    const scheduler = new JobsScheduler(repository as never, { timer: timer.port });
+
+    scheduler.start();
+    timer.callbacks[0]?.();
+    await settleMicrotasks();
+    timer.callbacks[0]?.();
+    await settleMicrotasks();
+
+    expect(repository.inSystem).toHaveBeenCalledTimes(2);
+    scheduler.stop();
+    new JobsScheduler(repository as never, { timer: timer.port }).stop();
+  });
+
   it('claims with exact worker options and produces a nonempty generated worker id', async () => {
     const repository = {
       inSystem: vi.fn(async (_reason: string, fn: () => unknown) => fn()),
@@ -201,6 +220,22 @@ describe('jobs scheduler and worker lifecycle contract', () => {
     expect(timer.port.clearInterval).toHaveBeenLastCalledWith(timer.handles[1]);
     timer.callbacks[1]?.();
     expect(repository.claim).toHaveBeenCalledTimes(2);
+  });
+
+  it('swallows a worker poll failure and permits the next timer tick', async () => {
+    const timer = controlledTimer();
+    const repository = { inSystem: vi.fn(async () => { throw new Error('database unavailable'); }), claim: vi.fn() };
+    const worker = new JobsWorker(repository as never, new JobsRegistry(), { timer: timer.port });
+
+    worker.start();
+    timer.callbacks[0]?.();
+    await settleMicrotasks();
+    timer.callbacks[0]?.();
+    await settleMicrotasks();
+
+    expect(repository.inSystem).toHaveBeenCalledTimes(2);
+    worker.stop();
+    new JobsWorker(repository as never, new JobsRegistry()).stop();
   });
 
   it('finishes an in-flight worker outcome after stop and skips subsequent timer callbacks', async () => {
@@ -297,5 +332,32 @@ describe('jobs scheduler and worker lifecycle contract', () => {
     await new JobsWorker(repository as never, registry, { workerId: 'worker-1' }).tick();
     expect(repository.fail).toHaveBeenCalledWith('job-1', 'worker-1', 'terminal failure', null);
     expect(repository.succeed).not.toHaveBeenCalled();
+  });
+
+  it('uses the system clock when calculating a retry without an injected clock', async () => {
+    const systemNow = 1_800_000_000_000;
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(systemNow);
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    const repository = {
+      inSystem: vi.fn(async (_reason: string, fn: () => unknown) => fn()),
+      claim: vi.fn(async () => [job]),
+      executeHandler: vi.fn(async (_item: unknown, handler: () => unknown): Promise<JobExecutionResult> => {
+        await handler();
+        return { status: 'executed' };
+      }),
+      fail: vi.fn(),
+      succeed: vi.fn(),
+    };
+    const registry = new JobsRegistry();
+    registry.register('email', async () => { throw new Error('transient'); });
+
+    try {
+      await new JobsWorker(repository as never, registry, { workerId: 'worker-1' }).tick();
+    } finally {
+      nowSpy.mockRestore();
+      randomSpy.mockRestore();
+    }
+
+    expect(repository.fail).toHaveBeenCalledWith('job-1', 'worker-1', 'transient', new Date(systemNow + 500));
   });
 });
