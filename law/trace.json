@@ -4237,8 +4237,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 21,
-      "assertion_digest_sha256": "a0c2d71f55886f54e9b6ac9994d76de090a069d55ca6133434ac4e4adaacd403"
+      "assertion_count": 28,
+      "assertion_digest_sha256": "2399500b8f257a638faaf588ba26af12959678b9785643358691df5b5c82386f"
     },
     {
       "path": "packages/worklist/test/unit/strategies.spec.ts",
@@ -4583,6 +4583,38 @@
       "lifecycle": "supported",
       "assertion_count": 5,
       "assertion_digest_sha256": "f693a6f0c6072cc79d858d8267f249831a04f8e4cb4aecfeae06b929ee158ea3"
+    },
+    {
+      "path": "packages/backend/test/integration/webhook-signature.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 43,
+      "assertion_digest_sha256": "d3e46f6955ee54698727d5e6e145f18534bedda1bcf81b6af8c7e8f1088eacc8"
+    },
+    {
+      "path": "packages/core/test/unit/clock.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "5c29109c8e2bc653e454f8cef72fe6371cc33ea1afdc2eddd6a2c3016888ac31"
+    },
+    {
+      "path": "packages/integration-adapter/test/unit/webhook-signature.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 30,
+      "assertion_digest_sha256": "5beecf6e8af9b6eec23f7e5fbfe1fc8c8975af3273482f69ece22e2dcb97e3ad"
+    },
+    {
+      "path": "packages/worklist/test/unit/tenant-business-calendar.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 22,
+      "assertion_digest_sha256": "c9900f558e388c618b0de6f817a19b3a0620fd61414a40e5cff99f37754410e2"
     }
   ],
   "suites": {
