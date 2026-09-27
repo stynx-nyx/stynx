@@ -230,3 +230,14 @@ após o checkpoint que identificou os dois REVIEW e o SHA corrigido
 `c89e24db`. Este consentimento cobre apenas revisão do plano/prompts.
 O terceiro ciclo retornou **PASS** com três ajustes não bloqueantes de
 lock e fixture, incorporados antes do despacho Architect.
+
+O delivery-review ciclo 1 retornou REVIEW por duas lacunas de prova:
+retomada/preflight em PostgreSQL com RLS real e resolução consumidora da
+entrada `@stynx-nyx/angular/testing`. Inspectors adicionaram as provas;
+Engineers repararam backend e Angular. O CI integral reparado passou em
+`faff15e2` (`/private/tmp/stynx-s15-ctg2-repair-final-ci-2.log`), bem
+como `ci:reference-apps` e API baseline 44/44. O delivery-review ciclo
+2 retornou **PASS** em `reviews/ctg2-delivery-review-2.json`, com duas
+observações não bloqueantes sobre o exemplo README e o empacotamento do
+sensor Angular. Integrar o RC1 mesclado, repetir gates afetados e abrir
+o PR único do CTG-0002.

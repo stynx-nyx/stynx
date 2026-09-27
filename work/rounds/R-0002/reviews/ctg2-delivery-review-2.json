@@ -1,0 +1,18 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/README.md",
+      "issue": "The example calls `StynxEventStreamModule.forRoot({ contextRunner: database })` inside a helper `eventStreamModule(database)`. That only works if the app already has a concrete data `Database` instance when the module is defined. A normal Nest composition root has no instance yet, and there is no `forRootAsync`. The real RLS spec avoids this with a lazy adapter: `{ withRequestContext: (scope, fn) => database.withRequestContext(scope, fn) }`, bound once the app resolves `Database`.",
+      "required_change": "In a later docs pass, change the README example to the lazy structural adapter used in `reference-sse.rls.integration.spec.ts`, or add a `forRootAsync`/`useExisting` option. Then run `pnpm package-readmes:write`. This does not block the PR."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "test/scripts/angular-testing-consumer.test.mjs",
+      "issue": "The test is described as 'packed', but it copies `packages-web/angular/dist` into the consumer's `node_modules` instead of running `pnpm pack` and installing the tarball. It proves both APF artifacts resolve through the dist exports map at runtime and under Bundler/Node16 TypeScript, and that removing either artifact makes it fail. It would not catch a `files`/`.npmignore` rule that leaves the artifacts out of the published tarball.",
+      "required_change": "Optionally, pack the dist into a tarball and extract it into the consumer before resolving, or rename the test to say 'built dist'. This does not block the PR."
+    }
+  ],
+  "summary": "Both blocking findings from review 1 are fixed. (1) `reference-sse.rls.integration.spec.ts` now runs one real Nest app against PostgreSQL with FORCE RLS as non-superuser `stynx_app`. Resuming with `Last-Event-ID` a-recent streams a-tick, with no a-recent, a-expired or b-* frames. An a-expired ID returns 204. A b-private ID resets the cursor to database `now()`: no earlier A or B rows appear after an observed tick, and only the newly inserted a-after-foreign streams. The scheduler fires under tenant B's request context and still delivers A rows only. A conflicting tenant claim gets 403, not an event stream. The `empty-tenant` and `empty-actor` routes return 400 `SSE_TENANT_REQUIRED` and 401 `SSE_ACTOR_REQUIRED`, without event-stream headers, and spies show `now`, `findById` and `listSince` are never called. (2) `angular-testing-consumer.test.mjs` resolves `@stynx-nyx/angular/testing` from built dist at ESM runtime and under TypeScript Bundler and Node16. It fails when either the FESM or the d.ts is removed. Turbo builds `@stynx-nyx/angular` before `stynx-script-tests`, and all three tests pass in final-ci-2. The nonblocking findings are fixed. Poison rows (unsafe id or event, projection throw, undefined or circular result) now become drops. Drop markers are safe, metrics are reported, and the cursor moves past the row; source read errors still leave the cursor unchanged. Module shutdown ends every open response, cancels timers and releases slots, with unit tests for both. On the Angular side: dedup is bounded to 1024 IDs; byte counting is incremental and handles split surrogates; the 204 retry delay is clamped to at least `initialMs`; `UnauthorizedError` and a rejected refresh stop the stream with no banner; tenancy was added to the Angular README; the backend README covers wiring, `@Res()` and RLS. The CI logs show trace 398/398, reference-sse (2 tests) passing in the reference CI, and the full `ci:stynx` chain completing at the reviewed HEAD, faff15e2."
+}
