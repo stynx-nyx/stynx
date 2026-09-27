@@ -39,6 +39,12 @@ stays the symbol already present in the backend barrel.
 It also exports `STYNX_AUTHZ_OPTIONS` from the dynamic module so a
 consumer's local `@UseGuards(AuthorizationGuard)` instance receives
 `resolveTarget`, `publicMetadataKey`, and `onDeny`.
+For a local guard, direct token injection takes precedence. If the owning
+module does not import a `forRoot` registration, the guard looks up those
+tokens across the application; with no registration it uses
+`DefaultPolicyEvaluator` and empty options. With several registrations, the
+app-wide fallback is not route-specific; the host imports the intended
+configuration into the local guard's module for deterministic behavior.
 
 The guard checks `publicMetadataKey` at method before class and skips
 public routes before asking for a principal. It then reads existing
