@@ -29,28 +29,27 @@ resource "github_branch_protection" "main" {
   required_status_checks {
     strict = true
     # One entry per required job name across .github/workflows/ci.yml,
-    # semantic-pr-title.yml, reference-apps.yml and release-prep.yml.
-    # Reconciled to the live rule set on 2026-09-12 (post-DEVAI-1.4.5 gate
-    # names; `evidence/verify` was retired with the local governance).
+    # semantic-pr-title.yml, release-prep.yml and the verified-local-rc
+    # check-run posted by devai-local-rc-verify.yml. Reconciled to the live
+    # rule set on 2026-09-27 (ADR-DEVAI-ADOPTION-0006: verified-local-rc
+    # replaces unit-tests, integration-tests, stynx-tier-gate,
+    # build (ubuntu-latest) and reference-web-e2e).
     contexts = [
       "install",
       "lint",
       "typecheck",
-      "unit-tests",
-      "integration-tests",
-      "stynx-tier-gate",
-      "build (ubuntu-latest)",
       "semantic-pr-title",
       "migration-lint",
-      "reference-web-e2e",
       "package-policy",
       "dependency-audit",
+      "verified-local-rc",
     ]
   }
 
   required_pull_request_reviews {
     dismiss_stale_reviews = true
-    # Owner decision 2026-09-12: the repository is maintained by one person.
+    # Owner decision 2026-09-12, made definitive 2026-09-27
+    # (ADR-BRANCH-PROTECTION-0001): the repository is maintained by one person.
     # GitHub never counts the PR author's own approval, and a code-owner review
     # requirement is enforced independently of the approval count, so both are
     # off. Merges still require every status check below (strict, up to date)
