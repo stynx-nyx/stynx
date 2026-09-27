@@ -1,0 +1,66 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "The contract says the generated controller emits no authorization decorator and that the host supplies a permission policy. The actual `PermissionGuard` (packages/auth/src/permission.guard.ts) returns true when a route has no `STYNX_PERMISSION_ROUTE` metadata. So every generated list/get/create/update/delete route would be open to any authenticated principal. That conflicts with INV-RBAC-001 (default deny: an unbound endpoint gates release) and with development-contract engineering rule 2. No mechanism is named for the host to 'supply' a policy.",
+      "required_change": "Have the generator emit a deterministic `@Permission('<namespace>.<slug>.<operation>')` from `@stynx-nyx/auth` on every generated handler. Build the key only from validated identifiers, with no grants and no `@Public`. Keep the `auth.rbac` annotations inert. Add Inspector probes: a principal without the permission gets 403, one with it succeeds, and the INV-RBAC-001 structural check passes on the generated controller."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "The contract does not say which PostgreSQL schema the generated tables go in, whether the DDL creates that schema, or which schema grants it emits. It only reserves 'reserved SQL identifiers'. A namespace such as `tenancy`, `auth`, `core`, `audit`, `storage`, `archive`, `outbox`, `public`, `pg_*` or `information_schema` could place generated tables and policies inside platform schemas. The output path `database/<namespace>_<slug>.sql` does not settle this either.",
+      "required_change": "State the rule: the schema is exactly `<namespace>`, created with `CREATE SCHEMA IF NOT EXISTS <ns> AUTHORIZATION stynx_owner`, `REVOKE ALL ... FROM PUBLIC`, and USAGE for stynx_app/stynx_reader, following the 0018_outbox.sql pattern. Every table, index and policy name is schema-qualified and quoted. Reject namespaces that match any schema created by platform migrations, `public`, `information_schema`, the `pg_` prefix and PostgreSQL reserved words, and add Inspector negatives for these."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "The tenant column rule is ambiguous against the sample. The sample declares `{\"name\":\"tenant_id\",\"type\":\"uuid\"}` as an ordinary field and also declares `indexes:[{columns:[\"tenant_id\"]}]`. The contract says every entity 'has' tenant_id and that the DDL adds a tenancy FK and a tenant index, but never says whether tenant_id must be declared, may be omitted and injected, or may carry `nullable`/`default`. It also does not say how the declared tenant index is deduplicated against the mandatory one, or that tenant_id and id are excluded from writable DTO fields. The phrase '`indexes` consists only of unique objects ... optionally `unique: true`' contradicts itself.",
+      "required_change": "Specify the rules explicitly. `id` must be declared exactly `{name:\"id\",type:\"uuid\",default:\"gen_random_uuid()\"}`. `tenant_id` must be declared exactly `{name:\"tenant_id\",type:\"uuid\"}`, with no nullable or default, and is rejected if missing or altered. The generator adds `REFERENCES tenancy.tenants(id)`. A declared index identical to the mandatory tenant index yields one index with a deterministic name. id and tenant_id are never writable DTO fields. Reword the indexes rule to 'distinct index objects; `unique` optional boolean'. Add Inspector probes for a missing or altered tenant_id or id."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0008-plan.md",
+      "issue": "The contract, plan and prompt 91 require the consumer fixture to invoke the 'published' CLI and 'published STYNX package exports'. R-0002 AUTHORIZATION.md explicitly excludes publication, RC included, and the plan says no publication is in scope. As written, the fixture cannot be satisfied without an unauthorized forbidden action. The plan also does not say where the fixture harness lives or which role owns changes to `scripts/verify-consumer-fixtures.mjs`, the existing pack-based consumer verifier.",
+      "required_change": "Redefine 'published' as 'pnpm-packed tarballs of the built workspace packages installed into a temporary consumer outside the workspace, with no registry access'. That matches the existing `scripts/verify-consumer-fixtures.mjs` pattern. Update the contract, plan and prompts 91–93 to match. Name the fixture harness path, for example `test/packages/cli-generator/**` under the Inspector. If `scripts/**` must change, assign that path to a role explicitly in the lock table."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0008-plan.md",
+      "issue": "The contract requires a 'separately testable' generation function. If the Engineer exports it from `packages/cli/src/index.ts`, `docs/framework/contracts/public-api-baselines.json` moves, and the API baseline gate listed in step 5 fails. Prompt 92 forbids the Engineer from touching baselines. No Architect rebind step comes after the Engineer, and the only trace rebind is placed after the Inspector. The owner of `pnpm package-readmes:write` output is also not assigned.",
+      "required_change": "Either state that `packages/cli/src/index.ts` exports stay unchanged, with generator internals reachable from tests by path, or add an Architect step after Engineer 8C: confirm the intended declaration change, run `pnpm api:baselines:write`, and rerun `pnpm check:trace --print` to rebind. Name the role that runs `pnpm package-readmes:write`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "'Refuses ... a path with symlink components' breaks ordinary use on macOS, where tmpdir and many workspaces sit under `/var` → `/private/var`. Inspector tests in `os.tmpdir()` would fail on the maintainer's darwin host.",
+      "required_change": "Specify this: `realpath` the caller-selected existing parent once. Reject only when the final `--out` component (or anything the generator creates or reuses below that parent) is a symlink, or when the resolved destination leaves the resolved parent. Test both a symlinked final component and a symlinked ancestor."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "'A collision discovered at rename fails closed' is not guaranteed by POSIX `rename(2)` / Node `fs.rename`. On Linux, renaming a directory onto an existing empty directory silently replaces it. That creates a race window between the absence check and the rename.",
+      "required_change": "Either name a primitive that fails on an existing target, or state the exact guarantee: pre-existing files, directories and symlinks are refused before staging, and a race-created empty directory is the documented residual. Have the Inspector test only the guaranteed states."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "'Typed request/response DTOs and validates the exposed ID and writable fields' does not name a validation mechanism or the consumer dependencies. Generated code could then pull in libraries the fixture does not declare, or depend on internal STYNX paths.",
+      "required_change": "Name the mechanism: either the class-validator/ValidationPipe stack already declared by STYNX packages, or dependency-free emitted guards. List the exact peer packages the generated module imports (`@nestjs/common`, `@stynx-nyx/core` RequestContext, `@stynx-nyx/data` Database/Transaction, `@stynx-nyx/auth` Permission) so the fixture package.json is fixed."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/91-ctg8-inspector.md",
+      "issue": "`Database.tx` with role 'app' throws `TenantContextMissingError` and also `ActorContextMissingError` when actorId is absent. The prompt covers only missing tenant context. It also does not require the RLS negative to connect as `stynx_app` rather than the migration owner. stynx_owner is BYPASSRLS, so an owner-connected check would pass vacuously.",
+      "required_change": "Add a missing-actor fail-closed probe. Require the direct SQL negatives to run on a `stynx_app` connection with `app.tenant_id` set via `set_config`, and assert `relforcerowsecurity` and the policy `qual`/`with_check` from `pg_class`/`pg_policies`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/90-ctg8-architect.md",
+      "issue": "The prompt says to follow 'the local invariant schema', but `law/schemas` contains only the error-envelope schema. The Architect has to guess the INV-CLI-001 shape.",
+      "required_change": "Name the authoritative invariant schema, for example the DEVAI-pinned schema or `law/invariants/INV-RBAC-001.json` as the structural exemplar, and the required fields (severity 'gate', verification.required_suites, authority_docs anchor)."
+    }
+  ],
+  "summary": "The triplet is complete: CTG-0007 is a hard stop before Inspector dispatch, role and path locks are mostly feasible, the DETRAN no-copy rule is explicit, and the named data APIs exist (`Database.tx` role 'app', `Transaction.query(text, values)`, `RequestContext` from @stynx-nyx/core). The RLS predicate matches the platform migrations. Five repairable gaps block dispatch. (1) Generated routes have no permission binding, and the actual PermissionGuard lets unbound routes through, which conflicts with INV-RBAC-001. (2) The PostgreSQL schema namespace is unspecified and could land in platform schemas. (3) The tenant_id and index rules are ambiguous against the sample. (4) Requiring a 'published' CLI conflicts with the R-0002 no-publication authorization. (5) No role owns the API baseline and README rebind after the Engineer."
+}
