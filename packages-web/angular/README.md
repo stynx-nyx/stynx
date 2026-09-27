@@ -137,6 +137,44 @@ export class HeaderComponent {
 - **`apiBaseUrl` not set** — the SDK makes relative-path requests against the app's own origin, returning 404s. Always set it.
 - **Calling `provideHttpClient()` without `withInterceptors`** when mixing custom interceptors — order matters; STYNX's interceptors should run in the registered order.
 
+## Server-sent events
+
+Configure the normal bearer, tenant, and request-ID interceptors before the stream. Pass an application-owned session signal; `@stynx-nyx/angular` does not depend on `@stynx-nyx/angular-auth`.
+
+```ts
+import { Injectable, effect, inject, provideAppInitializer, signal } from '@angular/core';
+import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { provideStynxDefaults, provideStynxEventStream } from '@stynx-nyx/angular';
+import type { AuthProvider } from '@stynx-nyx/sdk';
+
+const sessionActive = signal(false);
+
+@Injectable({ providedIn: 'root' })
+class EventStreamSessionBridge {
+  private readonly session = inject(StynxSessionService);
+  constructor() {
+    effect(() => sessionActive.set(this.session.active()));
+  }
+}
+
+// In application providers, with the same bridge signal:
+function eventStreamProviders(authProvider: AuthProvider) {
+  return [
+    provideStynxDefaults({ angular: { apiBaseUrl: '/api', sessionMode: 'bearer', authProvider } }),
+    provideAppInitializer(() => {
+      inject(EventStreamSessionBridge);
+    }),
+    provideStynxEventStream({
+      url: '/api/stream',
+      pollingIntervalMs: 15_000,
+      sessionActive: sessionActive.asReadonly(),
+    }),
+  ];
+}
+```
+
+`StynxEventStreamService` exposes `status`, `polling`, and `lastEventId` signals, parsed `events$`, and polling `tick$`. The HTTP transport receives intercepted bearer and tenant headers. It reconnects with `Last-Event-ID`, bounds each connection's received bytes and age, and stops when the session signal becomes false. Tests can replace the transport and clock with `FakeStynxEventStreamTransport` and `FakeStynxEventStreamClock` from `@stynx-nyx/angular/testing`.
+
 ## Related packages
 
 - [`@stynx-nyx/sdk`](/docs/packages-web/sdk/) — the generated REST client this package wires.
