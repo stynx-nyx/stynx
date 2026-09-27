@@ -3934,6 +3934,22 @@
       "lifecycle": "supported",
       "assertion_count": 1,
       "assertion_digest_sha256": "5b9bff1561c3637fc4ef3de24d049aae0787a2492fc2c91ff7c570f3573ad336"
+    },
+    {
+      "path": "packages/tenancy/test/unit/public-tenant-configuration.check.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 4,
+      "assertion_digest_sha256": "b54a253df1c222a3e920501ef8ef85801eed38957014cabe6b98aa94fe96f29d"
+    },
+    {
+      "path": "packages/tenancy/test/unit/public-tenant-interceptor.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 28,
+      "assertion_digest_sha256": "93108b44d22fd6a9e218c99538c859c10de53c3dfc60a8c13c00b327b9deed0c"
     }
   ],
   "suites": {
