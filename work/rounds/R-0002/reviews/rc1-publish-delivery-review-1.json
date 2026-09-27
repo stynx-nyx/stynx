@@ -1,0 +1,36 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "issue": "No test checks the check that runs before any publish. validatePreflightDistTags is only called inside verifyPostPublishDistTags, and always with the same valid snapshot {latest:'1.4.0',legacy:'0.9.0'}. Several failure cases are never tested: latest set to something other than 1.4.0 (for example 2.0.0 or 1.5.0-rc.1), latest missing, and malformed dist-tags input (null, an array, {}, non-string values, an empty tag name). Inspector prompt 15 requires sensors for 'Preflight requires latest exactly 1.4.0 in all 44 packages' and 'Malformed/unreadable metadata alone means UNKNOWN'. As it stands, checkedDistTags or the latest comparison could be loosened, and the suite would still pass while the check that stops the run before any mutation had been removed.",
+      "required_change": "Inspector adds direct validatePreflightDistTags cases. Each of these must fail with PUBLICATION_DIST_TAG_DRIFT: latest='2.0.0', latest='1.5.0-rc.1', latest='1.3.1'. Each of these must fail with PUBLICATION_DIST_TAG_UNKNOWN: a missing latest, null, [], {}, {latest:1}, {'':'1.4.0'}. Also assert that the preflight baseline comes from registryVersionPolicyConstants.preflightLatestVersion and not from a literal. Architect then rebinds law/trace.json."
+    },
+    {
+      "severity": "blocking",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "issue": "Several route requirements are only enforced in the publisher source, and no test covers them: angular publishes first as the canary (packages[0] === '@stynx-nyx/angular'); rereads are capped at five, two seconds apart, and every attempt is recorded; a changed pre-existing tag fails with no retry; the publisher never passes 'latest' when publishing an RC; and no v1.5.0-rc.1 Git tag is created. The only publisher test matches four strings in the source (publication-dist-tag.mjs, candidate_sha, candidate_tree, stop-on-first-failure), which just mirrors the implementation. verifyPostPublishDistTags is also never tested for the case where rc already existed and still has its old value (it should report UNKNOWN and reread) versus rc moving to some other version (it should report DRIFT immediately). The one DRIFT case that includes rc only fails because the legacy tag is missing.",
+      "required_change": "Add these sensors. (1) Behavioural: discoverPublishablePackages(repoRoot)[0].name === '@stynx-nyx/angular', the roster has 44 entries, and every entry is at 1.5.0-rc.1. (2) verifyPostPublishDistTags with preflight {latest:'1.4.0',rc:'1.4.0-rc.9'}: an unchanged rc gives UNKNOWN, and rc='1.5.0-rc.0' gives DRIFT. (3) Tie the reread bound and canary guard to named constants or exported pure helpers, and assert their values. (4) Assert that release.yml and the publisher never create a tag matching /^v\\d+\\.\\d+\\.\\d+-/, and that parseStableVersionTag rejects 'v1.5.0-rc.1'. Rebind the trace afterwards."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/plan.md",
+      "issue": "The contract (line 534) and Inspector prompt 15 say forbidden-actions keeps since_ref at the stable tag v1.4.0. No v1.4.0 tag exists, locally or on origin; the highest v* tag is v1.3.1. That means resolve-release-forbidden-range.mjs will choose v1.3.1, or fail, when the release lane runs. The strict forbidden-actions PASS used --since-ref e09bd6c0, which is narrower than the range the lane will actually check.",
+      "required_change": "Correct the since_ref statement. Before asking for the Owner publication receipt, run devai check --only forbidden-actions --strict --since-ref with the same ref resolve-release-forbidden-range.mjs would pick, or have the Owner decide whether to create an annotated v1.4.0 tag and stable Release first."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/publish-release-plan.mjs",
+      "issue": "When the run stops, the per-package receipt records only outcome 'failed-or-unknown'. It does not record the npm publish exit status or the stop code (PUBLICATION_DIST_TAG_DRIFT, PUBLICATION_DIST_TAG_UNKNOWN or integrity mismatch), which appear only on stderr. That makes Owner recovery decisions depend on the job logs rather than the durable artifact.",
+      "required_change": "Add command_status: result.status and stop_code: visibility.error?.code ?? (integrity mismatch ? 'PUBLICATION_INTEGRITY_MISMATCH' : null) to the receipt."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "scripts/lib/publication-dist-tag.mjs",
+      "issue": "checkedDistTags accepts any tag name and any non-empty string value, including values that are not semver and a pre-existing tag that already points at the candidate. The snapshot is kept byte-for-byte, so this cannot move latest, but it does accept unexpected registry metadata without surfacing it.",
+      "required_change": "Optionally require dist-tag values to be valid semver, and reject a preflight snapshot where any tag already equals the candidate."
+    }
+  ],
+  "summary": "The implementation matches the route contract. The candidate is exactly 44 packages at 1.5.0-rc.1 with angular first. The policy SHA-256 is c99255cc…3db3b and matches the constant. pre.json is in pre mode with tag rc, and its only consumed ID is tenancy-context-15, which matches the only pending changeset. The dist-tag is chosen from pre.json, and buildNpmPublishArgs rejects latest for an RC. Dist-tags for all 44 packages are read, with latest required to equal 1.4.0, before anything is published. After each publish, every tag except rc must be unchanged, rereads stop after five, and the run stops at the first unverified package. Publish outcomes are checked against integrity and shasum. Only per-package @version tags are created, never v*. release.yml is unchanged, and no v1.5.0-rc.1 tag or rc publication exists. From code review I found no route by which the publisher could move latest. If the registry itself moved latest, the angular canary would show it as DRIFT and stop after one package, and restoring latest would need a separate Owner action. I reran these at HEAD 3b20783a: release-version-policy tests 40/40, release:policy PASS, and forbidden-actions --strict since e09bd6c0 ok:true with no findings. The ci:stynx log was written after d3021993; the only later commit adds receipts under law/ and has no failure markers. I did not rerun the authenticated 44-package monotonicity gate, so I cannot confirm it. Repair is needed because the sensors for the checks that run before publication and for the publisher's control flow either do not exist or only match source strings. The fail-closed preflight, the canary, and the reread bound are not proven by behavioural tests."
+}

@@ -275,3 +275,25 @@ O terceiro prompt-review excepcional da rota de publicação retornou
 ao campo `preflight_latest_version`, ao canário
 `@stynx-nyx/angular` e à regra de não enviar o commit intermediário
 com digest ainda não rebindado.
+
+A rota RC1 foi implementada em `d3021993`, com os 44 pacotes na
+candidata `1.5.0-rc.1`, dist-tag `rc`, preflight completo e parada na
+primeira ambiguidade. O sensor Inspector e trace foram ajustados em
+`e9fc0a8b`/`c3072867`. O Owner vinculou em `3b20783a` os dois novos
+achados por texto de publicação em `fc79c3f5` e `d3021993`; DEVAI
+strict desde `e09bd6c0` passou sem findings. O CI integral passou no
+HEAD anterior à reparação da revisão, com log
+`/private/tmp/stynx-s15-rc1-final-ci.log`; release policy,
+provenance, consumer fixtures e monotonicidade autenticada dos 44
+pacotes passaram. Nenhum pacote foi publicado.
+
+Delivery-review Opus da rota RC1 ciclo 1: **REVIEW** em
+`reviews/rc1-publish-delivery-review-1.json`. Faltavam sensores
+diretos de preflight, canário e releituras; o review também corrigiu a
+afirmação sobre a última tag estável. Inspector ampliou os testes em
+`e499dc7b` (42/42 focados); Engineer ligou as constantes e os recibos
+duráveis em `48629e1f`; Architect rebindou trace e plano em
+`a3694267`. O resolver autenticado escolheu a tag estável publicada
+`v1.3.1` (`a46ecb88bf5796a8fa4d142c2daf8b52c25a549f`), e
+DEVAI strict desde esse SHA passou sem findings. Segundo
+delivery-review pendente de CI integral no HEAD reparado.
