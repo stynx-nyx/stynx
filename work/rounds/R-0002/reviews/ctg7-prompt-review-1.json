@@ -1,0 +1,66 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "UPS-HOOK-01 mixes time units. The timestamp is defined in Unix seconds, but the window check `Math.abs(now - timestamp) <= maxSkewMs` and `expiresAt = max(now, timestamp + maxSkewMs) + 1 ms` add or subtract that value directly against milliseconds. Read literally, `timestamp + maxSkewMs` lands near 1970, so `expiresAt` collapses to `now + 1 ms` and the replay reservation expires almost at once. The prose intent is clear, but the formulas as written disagree with it, and Inspector 7A (prompt 80) will write the window and `expiresAt` assertions from these formulas. The unit of `WebhookVerificationResult.timestamp` is also not stated.",
+      "required_change": "Rewrite both formulas with explicit units: `tsMs = timestampSeconds * 1000`; accept when `Math.abs(clock.now().getTime() - tsMs) <= maxSkewMs`; `expiresAt = new Date(max(nowMs, tsMs + maxSkewMs) + 1)`. State that `result.timestamp` is in seconds (or rename it `timestampSeconds`). Add a worked example (skew 300000 ms, ts = 1700000000) that 7A must assert."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "The contract accepts the `sha256=` prefix and the hex digits in any case. The default replay key is 'digest da assinatura mais timestamp' without saying whether that digest is the raw header string or the decoded or recomputed HMAC bytes. If it is keyed on the header text, an attacker can resend a captured request with the hex re-cased (for example `SHA256=ABCD…`) and get a new replay key, bypassing replay protection. Separately, a host `replayKey` callback built from headers such as tenant or eventId is only safe when `message()` also signs those headers. With the default message (`<ts>.` + rawBody), a caller can change eventId to escape replay detection, or change the tenant header that `onVerified` might read.",
+      "required_change": "Normatively define the default replay key as `replayNamespace + ':' + timestampSeconds + ':' + lowercase hex of the recomputed (verified) HMAC`, never the raw header text. Require that any field used by `replayKey()` or `onVerified` be covered by `message()`, and document this as a host obligation. Add 7A sensors for: an upper-case or re-prefixed signature replay is rejected as REPLAY; with the default message, a tampered eventId or tenant header neither creates a new replay key nor reaches `onVerified` as trusted identity."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "UPS-CAL-02 output semantics conflict with the consumer and with current worklist code. (a) N ≥ 1 returns 00:00 local of the target date. That is the start of the due day, so the due day itself is excluded, whereas the DETRAN deadline engine explicitly includes the due day ('excluem o dia do marco e incluem o do vencimento'). (b) For zero days, 'retorna a data civil de partida no mesmo ponto de início local' is ambiguous. If it means 00:00 local of the start date, the result is earlier than `startAt`, and `resolveWorklistDeadline` (packages/worklist/src/deadline.ts) then throws `WorklistInputError('business calendar returned a deadline before its start')`. (c) The constructor dependency `clock: Clock` has no stated use, because `addBusinessDays` receives `startAt`.",
+      "required_change": "Architect must pin the instant semantics and reconcile them with the DETRAN consumer before 7B. Recommended: dueAt = first valid local instant of the civil day after the Nth business day (exclusive end of the due day), with the same DST rules; businessDays = 0 returns `startAt` unchanged. Alternatively, keep 00:00-of-target and record it as a deviation in the §7 conformity row. Either state what `clock` is used for or remove it from the constructor. Add a 7B sensor that runs through `resolveWorklistDeadline` for 0 and N days in tenants whose start date is behind or ahead of UTC."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "UPS-NGIDEM-01 leaves key and hash ambiguities that the brief says must be resolved before any Inspector runs. (1) Which `HttpRequest.body` types are hashable is not defined: string (already-serialized JSON would be hashed as a JSON string literal, which does not match the server's parsed-body fingerprint), FormData, Blob, ArrayBuffer, HttpParams, or undefined/null, as on a DELETE with no body under `includeBodyHash`. (2) The characters allowed in `action` and `target` are unconstrained: a ':' inside either field makes the `<action>:<target>:<hash>` split ambiguous, and non-ASCII or control characters are invalid header values. There is no maximum length compatible with the server store. (3) Canonical treatment of NaN/±Infinity (JSON.stringify gives null) and -0, sparse array holes, the argument passed to `toJSON(key)`, and Map/Set (which serialize to {}) is not stated. The first three must match what the server hashes after `JSON.parse` of the wire body. (4) The failure mode is unstated when `crypto.subtle` is unavailable (insecure context, SSR).",
+      "required_change": "Add to the contract: (1) `includeBodyHash` accepts only JSON-serializable plain values sent with a JSON content type; strings, binary, FormData and HttpParams are a configuration error; undefined/null body either hashes `canonicalJson(null)` or is rejected, pick one explicitly. (2) `action` and `target` must be non-empty visible ASCII without ':', with a documented maximum key length aligned to UPS-TXN-03 and the idempotency store. (3) Non-finite numbers become `null`, -0 becomes `0`, holes become `null`; the shared CTG5 vector set must include these, plus key order, Unicode, arrays, `toJSON` and null. (4) If Web Crypto is missing, fail with a typed error, never send a key without the hash. Mirror these cases in prompt 82."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "The guard and tenancy interplay is unspecified. After guards, core's `RequestContextInterceptor` trusts `request.tenantId` and `request.principal` (tenancy-context-1.5.md), so whatever `onVerified` sets becomes trusted context. How a plain `@Public()` webhook route behaves when `StynxTenancyModule` is mounted (missing-tenant 400? membership check for a technical actor?) is not defined. That leaves no clear path to replace the DETRAN `RenachWebhookGuard`, which sets `principal` with SYSTEM_INTEGRATION and `tenantId`.",
+      "required_change": "Define the supported route shape (plain `@Public()` plus the webhook guard, or another marker) and what tenancy does with a tenant set by `onVerified`. Add a 7A E2E with tenancy and core mounted: an unauthenticated `X-Tenant-Id` alone never sets context; a tenant set by `onVerified` after verification reaches `RequestContext` as specified."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "DETRAN wire compatibility gaps for UPS-HOOK: the consumer strips an optional `sha256=` and so accepts bare hex, while the contract requires the prefix. The contract does not say whether `message(input)` receives the timestamp as the original header string or a number. `StynxWebhookSignatureModule.forRoot` has a single configuration, while `replayNamespace` implies several integrations per app. The HTTP status for a missing rawBody and for clock or `message()` callback errors is unspecified.",
+      "required_change": "Either make the signature prefix configurable or record the deviation in the §7 row. Pass the validated original timestamp string to `message()`. Specify how multiple configurations work (named tokens, or a `forFeature` / per-route guard factory) or state that only one is supported. Set explicit statuses: missing rawBody gives 401 MISSING_RAW_BODY (or 500 as a configuration error); any thrown non-store error gives 500/503, never 200."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "How the Angular opt-in works through `StynxAngularModule.forRoot` is left open ('ou provider equivalente'), as is how SSE requests are detected. Existing interceptors are class-based `HTTP_INTERCEPTORS`, so hosts using `provideHttpClient()` need `withInterceptorsFromDi()`.",
+      "required_change": "Fix the exact API: either `forRoot({ idempotency: true })` or importing `provideStynxIdempotency()` alongside it, with a rule that duplicate registration is deduplicated or throws. Define SSE as `Accept: text/event-stream` (skip, or configuration error if marked). Document the `withInterceptorsFromDi` requirement."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/utilities-1.5.md",
+      "issue": "The calendar has no termination bound: with a holiday set covering every weekday, or a very large N, the civil-day walk can run without limit. Validation of holiday strings returned by the consumer is also unstated.",
+      "required_change": "Set a maximum `businessDays` and a maximum number of scanned years or days, beyond which a typed error is thrown. Require every holiday string to be a real `YYYY-MM-DD` date, with an invalid entry treated as a fail-closed error. Add both cases to prompt 81."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/80-ctg7-inspector-hook.md",
+      "issue": "The concurrency sensor proves atomicity within one process only. The multi-instance claim is not exercised across two Nest apps sharing a store. Backend tests will also be red on module resolution until 7D declares the `integration-adapter` dependency, which could hide semantic failures.",
+      "required_change": "Require two `INestApplication` instances sharing one atomic store double, with parallel identical requests where exactly one gets 200. Ask 7A to report module-resolution red separately from semantic red, and to import only public package entry points."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0007-plan.md",
+      "issue": "C-0002 §7 expects S-1.5 to return conformity rows for HOOK/CAL/NGIDEM (package, real symbols, tests, deviations), but the plan does not list this output. The existing `docs/framework/contracts/integration-adapter.md` and `worklist-api.md`, and a migration note path, are not named for update.",
+      "required_change": "Add to checkpoint 5 a STYNX-side conformity record (no DETRAN write) with symbols, tests and deviations: signature prefix, top-level undefined rejected versus DETRAN's '', Clock versus DETRAN's `today(tz)`. Name the docs to update and a `docs/meta/migration/stynx-1.5-utilities.md` target."
+    }
+  ],
+  "summary": "Scope, role and lock separation, the manifest/lockfile ownership (7D), trace and baseline rebinds, the fixed-group changeset, READMEs, the CI gates, DETRAN being read-only, and the CTG5 gate on 7C are all correctly planned. Package boundaries check out against current code: `integration-adapter` has no dependencies and no Nest; `backend` can add it without a cycle; `worklist` already depends on `core`; `WorklistBusinessCalendar.addBusinessDays` and `WorklistClock` match; Angular uses `HTTP_INTERCEPTORS` in both providers. Before any Inspector runs, four contract ambiguities must be fixed: seconds/ms units in the HMAC window and expiry, a replay-key definition that header case variants can bypass, calendar deadline semantics that contradict the consumer's inclusive due day and `resolveWorklistDeadline`'s start check, and underspecified hashable body types and key character set for the Angular key and its CTG5 alignment."
+}

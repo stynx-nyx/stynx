@@ -17,11 +17,11 @@ Architect faz contrato e prompts; reviewer externo Opus 5.5 em `prompt-review` a
 
 ## Checkpoints
 
-1. Reviewer lê contrato e prompts, retorna JSON `PASS|REVIEW|FAIL` com evidências. Até dois ciclos `REVIEW`; `FAIL` ou limite exigem escalada. Registrar artefato em `reviews/`.
+1. Reviewer lê contrato e prompts, retorna JSON `PASS|REVIEW|FAIL` com evidências. Ciclo 1 retornou `REVIEW` em `reviews/ctg7-prompt-review-1.json`; contrato e prompts 80–83 foram reparados antes de novo despacho. Ciclo 2 usa `prompts/85-ctg7-prompt-review-2.md`. Até dois ciclos `REVIEW`; `FAIL` ou limite exigem escalada. Registrar artefato em `reviews/`.
 2. Inspector adiciona testes sem enfraquecer existentes. Primeiro ciclo: falhas novas por símbolo ausente/semântica faltante, lint de testes e `pnpm check:trace --print`. Architect rebind `law/trace.json` após confirmar projeção.
 3. Engineer implementa contra sensores; lint/typecheck/test focais. Falha recebe linha em §Triagem (`plant-bug|sensor-error|policy-issue|reference-gap`), uma nova tentativa, depois escalada.
-4. Architect rebind API com `pnpm api:baselines:write` após validar mudanças públicas; Engineer changeset do grupo fixo, documentação de uso e `pnpm package-readmes:write/check`.
-5. `pnpm ci:stynx`, `pnpm ci:reference-apps`, `pnpm check:trace --print`, `pnpm api:baselines`, DEVAI forbidden-actions e Opus `delivery-review` PASS; PR único do CTG7, merge apenas após CTG6. Evidência DEVAI no merge conforme R-0001.
+4. Architect rebind API com `pnpm api:baselines:write` após validar mudanças públicas e edita `docs/framework/contracts/integration-adapter.md`, `docs/framework/contracts/worklist-api.md` e `docs/meta/migration/stynx-1.5-utilities.md`. Engineer entrega changeset do grupo fixo e conteúdo de uso nos READMEs de pacote F2; `pnpm package-readmes:write/check` nos READMEs gerados sob coordenação do maestro.
+5. `pnpm ci:stynx`, `pnpm ci:reference-apps`, `pnpm check:trace --print`, `pnpm api:baselines`, DEVAI forbidden-actions e Opus `delivery-review` PASS; PR único do CTG7, merge apenas após CTG6. Entregar registro de conformidade STYNX de C-0002 §7 com linhas separadas para HOOK, CAL e NGIDEM: pacote publicado, símbolos reais, testes e desvio. Incluir expressamente prefixo obrigatório `sha256=` versus bare hex DETRAN, rejeição de corpo indefinido no hash Angular versus `''` no consumidor, e `Clock.now()` versus `today(tz)` do DETRAN. Esse registro não edita DETRAN. Evidência DEVAI no merge conforme R-0001.
 
 ## Triagem
 
@@ -29,4 +29,4 @@ Sem falhas registradas antes do despacho.
 
 ## Retomada
 
-Contrato e prompts propostos, aguardando prompt-review externo e merge topológico. Não há implementação/teste iniciado neste CTG.
+Contrato e prompts ajustados após `prompt-review` ciclo 1 `REVIEW`; aguardam ciclo 2 externo e merge topológico. Não há implementação/teste iniciado neste CTG.
