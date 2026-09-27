@@ -232,6 +232,8 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
 
+- CI CTG-0002 após integrar `main` em `65f982a5`: `sensor-error` — o Testcontainers do teste de integração `@stynx-nyx/flow` excedeu 10 s aguardando portas do PostgreSQL sob a carga do CI local; o pacote passou isolado, 60/60 testes, sem alteração de código. O CI completo está em segunda execução.
+
 - CI CTG-0002 após reparo Angular: `reference-gap` — o build emitiu novo digest para `types/stynx-nyx-angular.d.ts`; Architect confirmou a mudança e executou `pnpm api:baselines:write` para rebinder o baseline, sem edição manual de artefato gerado.
 
 - Reparo CTG-0002 poison row: `sensor-error` — `source().cursors` registra o cursor de entrada de `listSince` na primeira leitura; o sensor exige um segundo tick para observar o avanço após os drops. Inspector corrige o sensor sem alterar implementação nem enfraquecer as provas de drop/métricas.
