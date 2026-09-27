@@ -96,17 +96,25 @@ For convenience, `@stynx-nyx/backend` re-exports the full `@stynx-nyx/contracts`
 
 ## Server-sent events
 
-`StynxEventStreamModule.forRoot({ contextRunner: database })` binds the SSE service to the concrete `Database` from `@stynx-nyx/data`. That class exposes `withRequestContext(scope, fn)`; the abstract `Database` from `@stynx-nyx/core` does not. Supply the data database instance used by the route, optionally with a scheduler and metrics sink. `StynxEventStreamService.open()` receives a tenant/actor scope, a pluggable `EventStreamSource`, and route options such as `project`, `tickMs`, and `batchSize`.
+`StynxEventStreamModule.forRoot({ contextRunner })` binds the SSE service to a request-context runner. The concrete `Database` from `@stynx-nyx/data` exposes `withRequestContext(scope, fn)`; the abstract `Database` from `@stynx-nyx/core` does not. When the Nest module is declared before its data provider is instantiated, use a lazy adapter and bind the concrete database during bootstrap, before serving requests. The module also accepts a scheduler and metrics sink. `StynxEventStreamService.open()` receives a tenant/actor scope, a pluggable `EventStreamSource`, and route options such as `project`, `tickMs`, and `batchSize`.
 
 ```ts
-import { Controller, Get, Req, Res } from '@nestjs/common';
-import { StynxEventStreamModule, StynxEventStreamService } from '@stynx-nyx/backend';
+import { Controller, Get, Module, Req, Res } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import {
+  StynxEventStreamModule,
+  StynxEventStreamService,
+  type EventStreamContextRunner,
+} from '@stynx-nyx/backend';
 import { Database } from '@stynx-nyx/data';
 
-// In the application composition root, using its concrete data Database:
-function eventStreamModule(database: Database) {
-  return StynxEventStreamModule.forRoot({ contextRunner: database });
-}
+let dataDatabase: Database | undefined;
+const contextRunner: EventStreamContextRunner = {
+  withRequestContext(scope, fn) {
+    if (!dataDatabase) throw new Error('SSE database is not bound');
+    return dataDatabase.withRequestContext(scope, fn);
+  },
+};
 
 @Controller()
 class EventsController {
@@ -122,9 +130,20 @@ class EventsController {
     });
   }
 }
+
+@Module({
+  imports: [StynxEventStreamModule.forRoot({ contextRunner })],
+  controllers: [EventsController],
+})
+class EventsModule {}
+
+// In bootstrap, after AppModule has registered Database and EventsModule:
+const app = await NestFactory.create(AppModule);
+dataDatabase = app.get(Database);
+await app.listen(3000);
 ```
 
-Here `database`, `eventSource`, `SseRequest`, and `SseResponse` are supplied by the application. The route uses manual `@Res()` response handling and must avoid response-mapping, buffering, or serialization interceptors that delay frames. Its source must enforce tenant isolation with PostgreSQL RLS, including `ENABLE ROW LEVEL SECURITY` and `FORCE ROW LEVEL SECURITY` on replay tables. `listSince` returns rows strictly after `(createdAt, id)`, ordered by `(createdAt ASC, id ASC)`; `findById` and `now` run inside the same captured tenant/actor request context, including on reconnect and scheduled ticks. The outbox's current upsert table is not an append-only replay source.
+Here `AppModule` registers the data and events modules, while `eventSource`, `SseRequest`, and `SseResponse` are supplied by the application. The route uses manual `@Res()` response handling and must avoid response-mapping, buffering, or serialization interceptors that delay frames. Its source must enforce tenant isolation with PostgreSQL RLS, including `ENABLE ROW LEVEL SECURITY` and `FORCE ROW LEVEL SECURITY` on replay tables. `listSince` returns rows strictly after `(createdAt, id)`, ordered by `(createdAt ASC, id ASC)`; `findById` and `now` run inside the same captured tenant/actor request context, including on reconnect and scheduled ticks. The outbox's current upsert table is not an append-only replay source.
 
 ## Configuration
 
