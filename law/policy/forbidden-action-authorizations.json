@@ -985,6 +985,30 @@
       "commit": "ad8e9daf35ddf96ef15b638387832da93f14ac7c",
       "authorized_by": "Owner",
       "reason": "Records the Owner authorization for the squash-merge commit of PR #266, which restored the trace assertion-binding verifier and updated its canonical trace materialization. The merge commit touches law/trace.json but preserves the governed invariant population and all assertion checks; this receipt binds the already reviewed Architect-owned trace change to the SHA that landed on main."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "197306770533af3d3ebc67683f1f2c2b81850aad",
+      "authorized_by": "Owner",
+      "reason": "Owner decision 2026-09-26 after the R-0002 checkpoint: authorizes the exact Architect contract commit containing publication command text. The commit executes no package publication and grants no publication receipt."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "9ad745703e72a909493998025f1975dc35750751",
+      "authorized_by": "Owner",
+      "reason": "Owner decision 2026-09-26 after the R-0002 checkpoint: authorizes the exact Architect prompt repair commit containing publication command text. The commit executes no package publication and grants no publication receipt."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "0106a12ed2eaf4ca5d235b98fc87e3838c0cdc12",
+      "authorized_by": "Owner",
+      "reason": "Owner decision 2026-09-26 after the R-0002 checkpoint: authorizes the exact Architect second-review repair commit containing publication command text. The commit executes no package publication and grants no publication receipt."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "07b3cb47eb674fc6e200656ce020ec4250643885",
+      "authorized_by": "Owner",
+      "reason": "Owner decision 2026-09-26 after the R-0002 checkpoint: authorizes the exact Auditor DEVAI evidence and audit-observation commit for CTG-0001 merge. It preserves the governed invariant population and records the required proof without weakening a gate."
     }
   ]
 }
