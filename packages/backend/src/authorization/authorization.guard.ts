@@ -5,7 +5,7 @@ import { getPrincipalFromRequest, type RequestLike } from '../common/request-con
 import { DefaultPolicyEvaluator } from './default-policy-evaluator';
 import { STYNX_AUTHZ_METADATA, STYNX_AUTHZ_OPTIONS, STYNX_AUTHZ_POLICY_EVALUATOR } from './constants';
 import type { AuthzMetadata } from './decorators';
-import type { AuthorizationTarget, StynxAuthorizationModuleOptions } from './authorization.module';
+import type { AuthorizationTarget, StynxAuthorizationModuleOptions } from './authorization.types';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {

@@ -1,22 +1,11 @@
-import { DynamicModule, ExecutionContext, Module, Provider } from '@nestjs/common';
+import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import type { PolicyEvaluator, Principal } from '@stynx-nyx/contracts';
 import { AuthorizationGuard } from './authorization.guard';
 import { DefaultPolicyEvaluator } from './default-policy-evaluator';
 import { STYNX_AUTHZ_OPTIONS, STYNX_AUTHZ_POLICY_EVALUATOR } from './constants';
+import type { StynxAuthorizationModuleOptions } from './authorization.types';
 
-export interface AuthorizationTarget {
-  resource?: string;
-  action?: string;
-}
-
-export interface StynxAuthorizationModuleOptions {
-  policyEvaluator?: PolicyEvaluator;
-  global?: boolean;
-  resolveTarget?: (ctx: ExecutionContext) => AuthorizationTarget | undefined;
-  publicMetadataKey?: string | symbol;
-  onDeny?: (ctx: ExecutionContext, target: AuthorizationTarget, principal: Principal | undefined) => Error;
-}
+export type { AuthorizationTarget, StynxAuthorizationModuleOptions } from './authorization.types';
 
 @Module({})
 export class StynxAuthorizationModule {
