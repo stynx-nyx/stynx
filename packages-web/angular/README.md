@@ -179,7 +179,7 @@ function eventStreamProviders(
 }
 ```
 
-`StynxEventStreamService` exposes `status`, `polling`, and `lastEventId` signals, parsed `events$`, and polling `tick$`. The HTTP transport receives intercepted bearer and tenant headers. It reconnects with `Last-Event-ID`, bounds each connection's received bytes and age, and stops when the session signal becomes false. Tests can replace the transport and clock with `FakeStynxEventStreamTransport` and `FakeStynxEventStreamClock` from `@stynx-nyx/angular/testing`.
+`StynxEventStreamService` exposes `status`, `polling`, and `lastEventId` signals, parsed `events$`, and polling `tick$`. The HTTP transport receives intercepted bearer and tenant headers. It reconnects with `Last-Event-ID`, bounds each connection's received bytes and age, and stops when the session signal becomes false. A byte ceiling reached before any accepted cursor advance on that connection counts as a failed attempt, with backoff and eventual polling at the configured failure threshold; this prevents repeated immediate reconnects on a first frame larger than the limit. Once the cursor has advanced, a byte ceiling reconnect is planned and does not count as a failure. Applications should set backend `maxPayloadBytes` sufficiently below client `maxConnectionBytes` to leave room for SSE framing and comments. Tests can replace the transport and clock with `FakeStynxEventStreamTransport` and `FakeStynxEventStreamClock` from `@stynx-nyx/angular/testing`.
 
 The application must resolve or set its current tenant through `TenantContextService` before starting the stream. `TenantInterceptor` then supplies `X-Tenant-Id`; the SSE service does not derive it from event data.
 
