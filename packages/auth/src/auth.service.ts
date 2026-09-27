@@ -58,8 +58,10 @@ export class StynxAuthService {
         {
           membershipId: permissions.membershipId,
           permsHash: permissions.hash,
+          ...(Object.keys(claims.claims).length > 0 ? { verifiedFactorClaims: claims.claims } : {}),
         },
       );
+      for (const sid of session.revokedSessionIds ?? []) await this.permissionCache.invalidateSid(sid);
       await this.permissionCache.prime(
         {
           sid: session.sid,
@@ -87,9 +89,10 @@ export class StynxAuthService {
       actor.cognitoSub,
       tenantId,
       deviceMeta,
+      actor.sid,
     );
-    await this.requireSessionService().revoke(actor.sid);
-    await this.permissionCache.invalidateSid(actor.sid);
+    // The store transition has committed before cache invalidation runs.
+    if (!session.revokedSessionIds?.includes(actor.sid)) await this.permissionCache.invalidateSid(actor.sid);
     return session;
   }
 
@@ -103,6 +106,7 @@ export class StynxAuthService {
     cognitoSub: string | undefined,
     tenantId: string,
     deviceMeta: Record<string, unknown> = {},
+    priorSessionId?: string,
   ): Promise<SessionBundle> {
     return this.runWithActorContext(tenantId, userId, async () => {
       await this.effectiveHashComputer.ensureMembershipHash(userId, tenantId);
@@ -115,8 +119,10 @@ export class StynxAuthService {
         {
           membershipId: permissions.membershipId,
           permsHash: permissions.hash,
+          ...(priorSessionId ? { priorSessionId } : {}),
         },
       );
+      for (const sid of session.revokedSessionIds ?? []) await this.permissionCache.invalidateSid(sid);
       await this.permissionCache.prime(
         {
           sid: session.sid,

@@ -4,7 +4,10 @@ import type {
   SessionRecord,
   SessionStatus,
   SessionStore,
+  SessionPolicyOptions,
+  SessionPolicyResult,
 } from './types';
+import { SessionConflictError, SessionExchangeError } from './errors';
 
 export class InMemorySessionStore implements SessionStore {
   readonly invalidationEvents = new EventEmitter();
@@ -24,6 +27,48 @@ export class InMemorySessionStore implements SessionStore {
     });
     this.addIndex(this.sessionsByUser, record.userId, record.sid);
     this.addIndex(this.sessionsByTenant, record.tenantId, record.sid);
+  }
+
+  async createWithPolicy(record: SessionRecord, options: SessionPolicyOptions): Promise<SessionPolicyResult> {
+    const now = Date.parse(options.now);
+    const prior = options.priorSessionId ? this.sessions.get(options.priorSessionId) : undefined;
+    if (options.priorSessionId && (!prior || prior.userId !== record.userId || !this.isActive(prior, now))) {
+      throw new SessionExchangeError('SESSION_NOT_ACTIVE', 'Prior session is not active for this user');
+    }
+    const conflicts = [...(this.sessionsByUser.get(record.userId) ?? [])]
+      .filter((sid) => sid !== options.priorSessionId)
+      .map((sid) => this.sessions.get(sid))
+      .filter((session): session is SessionRecord => !!session && session.tenantId === record.tenantId && this.isActive(session, now));
+    if (options.mode === 'reject-new' && conflicts.length > 0) {
+      throw new SessionConflictError();
+    }
+    const revoked: SessionRecord[] = [];
+    for (const session of [...(options.mode === 'revoke-existing' ? conflicts : []), ...(prior ? [prior] : [])]) {
+      this.sessions.delete(session.sid);
+      this.refreshLookups.set(session.refreshTokenHash, {
+        sid: session.sid,
+        familyId: session.refreshFamilyId,
+        state: 'used',
+      });
+      this.sessionsByUser.get(session.userId)?.delete(session.sid);
+      this.sessionsByTenant.get(session.tenantId)?.delete(session.sid);
+      revoked.push({ ...session, status: 'revoked', revokedAt: options.now, updatedAt: options.now });
+    }
+    this.sessions.set(record.sid, { ...record });
+    this.refreshLookups.set(record.refreshTokenHash, {
+      sid: record.sid,
+      familyId: record.refreshFamilyId,
+      state: 'active',
+    });
+    this.addIndex(this.sessionsByUser, record.userId, record.sid);
+    this.addIndex(this.sessionsByTenant, record.tenantId, record.sid);
+    return { created: { ...record }, revoked };
+  }
+
+  async probeReadiness(): Promise<boolean> { return true; }
+
+  private isActive(record: SessionRecord, now: number): boolean {
+    return record.status === 'active' && Date.parse(record.expiresAt) > now && Date.parse(record.idleExpiresAt) > now;
   }
 
   async getSession(sid: string): Promise<SessionRecord | null> {

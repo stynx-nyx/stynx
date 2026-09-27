@@ -8,6 +8,7 @@ export * from './in-memory-session-store';
 export * from './jwks.controller';
 export * from './jwt-signing.service';
 export * from './redis-session-store';
+export * from './readiness';
 export * from './session-mirror.writer';
 export * from './session.service';
 export * from './sessions.module';
