@@ -194,6 +194,17 @@ describe('event stream boundary behavior', () => {
     expect(stream.status()).toBe('stopped');
   });
 
+  it('does not reopen a connection after a subscriber stops during frame delivery', () => {
+    const { stream, transport } = setup({ maxConnectionBytes: 1 });
+    stream.events$.subscribe(() => stream.stop());
+    stream.start();
+    transport.emitProgress(frame('stop'));
+    expect(stream.lastEventId()).toBe('stop');
+    expect(stream.status()).toBe('stopped');
+    expect(transport.connections).toHaveLength(1);
+    expect(transport.cancelled()).toBe(true);
+  });
+
   it('guards stale recovery callbacks after cancellation and session loss', () => {
     const { stream, transport, sessionActive } = setup();
     const recovery = stream as unknown as {
@@ -242,13 +253,13 @@ describe('event stream boundary behavior', () => {
     expect(stream.lastEventId()).toBe('1024');
   });
 
-  it('rejects unrelated event names before parsing or advancing the cursor', () => {
+  it('filters unrelated event names from emission while advancing a valid cursor', () => {
     const { stream, transport } = setup({ eventPrefix: 'domain.' });
     const received: unknown[] = [];
     stream.events$.subscribe((event) => received.push(event));
     stream.start();
     transport.emitProgress('id: unrelated\nevent: system.audit\ndata: {}\n\n');
     expect(received).toEqual([]);
-    expect(stream.lastEventId()).toBe(null);
+    expect(stream.lastEventId()).toBe('unrelated');
   });
 });
