@@ -1009,6 +1009,18 @@
       "commit": "07b3cb47eb674fc6e200656ce020ec4250643885",
       "authorized_by": "Owner",
       "reason": "Owner decision 2026-09-26 after the R-0002 checkpoint: authorizes the exact Auditor DEVAI evidence and audit-observation commit for CTG-0001 merge. It preserves the governed invariant population and records the required proof without weakening a gate."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "fc79c3f52c9ca8660e9068222f5d0f7891bca39f",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-26 binds this exact Architect review-note commit containing publication command text. It does not execute or authorize package publication."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "d302199367fe0c40c5b951d70328ee10dc0df5f4",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-26 binds this exact Engineer implementation commit containing the guarded package publication command. No publication was executed; the eventual release dispatch requires its own action-specific receipt."
     }
   ]
 }
