@@ -115,7 +115,7 @@ describe('StynxEventStreamService HTTP transport', () => {
     });
 
     expect(stream.status()).toBe('reconnecting');
-    expect(banner.current()).toBeNull();
+    expect(banner.current()).toBe(null);
     expect(() => http.verify()).not.toThrow();
   });
 
@@ -137,7 +137,7 @@ describe('StynxEventStreamService HTTP transport', () => {
     const error = await pending.catch((reason: unknown) => reason);
     expect(error).toBeInstanceOf(HttpErrorResponse);
     expect((error as HttpErrorResponse).headers.get('Retry-After')).toBe('7');
-    expect(banner.current()).toBeNull();
+    expect(banner.current()).toBe(null);
   });
 
   it('stops after terminal authorization and when the application logout signal turns false', async () => {
@@ -172,6 +172,6 @@ describe('StynxEventStreamService HTTP transport', () => {
     const second = await expectRequest(http, '/api/stream');
     expect(second.request.headers.get('X-Tenant-Id')).toBe('tenant-b');
     expect(second.request.headers.has('Last-Event-ID')).toBe(false);
-    expect(stream.lastEventId()).toBeNull();
+    expect(stream.lastEventId()).toBe(null);
   });
 });
