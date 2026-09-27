@@ -1,5 +1,31 @@
 # @stynx-nyx/backend
 
+## 1.5.0-rc.3
+
+### Minor Changes
+
+- c6ddb66: Add opt-in global authorization with trusted tenant context, configurable
+  targets and denial envelopes, and case-insensitive hierarchical permission
+  grants in the backend and Angular auth package. Add atomic per-tenant session
+  policy, verified strong-factor handling, atomic tenant switch, and a bounded
+  Redis readiness indicator. The fixed STYNX package group advances together.
+
+  Consumers using `StynxAuthorizationModule.forRoot({ global: true })` must
+  register their authentication `APP_GUARD` first. Session policy remains off by
+  default; every custom session store must implement the atomic
+  `createWithPolicy` operation before upgrade, even when the policy is off,
+  because tenant switching always needs an atomic transition. The
+  session readiness indicator composes with the health module. See
+  `docs/framework/contracts/authorization-session-1.5.md` for the real symbols
+  and migration behavior.
+
+### Patch Changes
+
+- Updated dependencies [c6ddb66]
+  - @stynx-nyx/contracts@1.5.0-rc.3
+  - @stynx-nyx/idempotency@1.5.0-rc.3
+  - @stynx-nyx/ratelimit@1.5.0-rc.3
+
 ## 1.5.0-rc.2
 
 ### Minor Changes

@@ -1,5 +1,14 @@
 # @stynx-nyx/outbox
 
+## 1.5.0-rc.3
+
+### Patch Changes
+
+- Updated dependencies [c6ddb66]
+  - @stynx-nyx/contracts@1.5.0-rc.3
+  - @stynx-nyx/core@1.5.0-rc.3
+  - @stynx-nyx/data@1.5.0-rc.3
+
 ## 1.5.0-rc.2
 
 ### Patch Changes
