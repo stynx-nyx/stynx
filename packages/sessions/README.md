@@ -24,6 +24,62 @@ pnpm add @stynx-nyx/sessions
 
 **Node:** 24.x.
 
+## STYNX 1.5.0 configuration and migration
+
+The current module options are `StynxSessionsModuleOptions`. The module uses
+Redis by default and requires an issuer, Redis URL, and JWT signing key set
+(or a secret ID resolved by the host):
+
+```ts
+import { StynxSessionsModule } from '@stynx-nyx/sessions';
+
+StynxSessionsModule.forRoot({
+  issuer: 'https://api.example.com',
+  redis: { url: 'redis://redis.internal:6379' },
+  jwt: { keySet: { currentKid: '2026-09', keys: [loadSigningKey()] } },
+  singleSession: { mode: 'revoke-existing' },
+  strongFactor: { claimName: 'amr', acceptedValues: ['mfa'] },
+});
+```
+
+`singleSession.mode` defaults to `off`. Its other values are
+`revoke-existing` and `reject-new`; conflicts are scoped to the same user
+and target tenant. A tenant switch atomically revokes the originating
+session and creates the target session, even when the mode is `off`.
+`SessionConflictError.code` is `SESSION_CONFLICT` when `reject-new`
+finds an active conflict.
+
+Every custom `SessionStore` must implement
+`createWithPolicy(record, { mode, now, priorSessionId? })` before upgrading.
+`SessionService` checks this at module startup even with mode `off`,
+because tenant switching requires an atomic transition. The bundled
+`RedisSessionStore` and `InMemorySessionStore` implement it. The Redis
+policy script supports standalone Redis; Redis Cluster and routing proxies
+are not supported by this script.
+
+`strongFactor` is disabled by default. When enabled, `claimName` defaults
+to `amr`; `acr` or a custom verified claim can be selected. Accepted
+values are trimmed and compared without case. Blank values are discarded,
+and an empty resulting list fails at startup. Missing or unmatched verified
+claims raise `StrongFactorRequiredError` with code
+`STRONG_FACTOR_REQUIRED`. Factor values must come from a validated
+identity token through `verifiedFactorClaims`, never from request body
+metadata. A valid prior session carries its verified factor through an
+atomic tenant switch.
+
+For health readiness, compose
+`createSessionStoreReadinessIndicator(store, { timeoutMs?: number })`
+with `StynxHealthModule.forRoot(options, indicators)`. The default probe
+timeout is 500 ms. A custom store may implement `probeReadiness()`; otherwise
+the indicator uses a read-only lookup of a nonexistent session ID.
+
+The JWKS endpoint is `GET /.well-known/jwks.json`.
+
+## Legacy configuration examples
+
+The examples below describe an earlier STYNX API. Use the 1.5.0 options
+above when configuring a current host.
+
 ## Quick start
 
 ```ts
