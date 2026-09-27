@@ -6,6 +6,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 ## Accepted Decisions
 
 - [Local RC signer recovery after workstation key loss](2026-09-27-local-rc-signer-recovery.md)
+- [main requires no approving review and no code-owner review](2026-09-27-main-review-policy.md)
 - [verified-local-rc gates pull requests instead of remote product tiers](2026-09-27-verified-local-rc-cutover.md)
 - [DEVAI 1.6.0 adoption for RC task-policy parity](2026-09-26-devai-1.6.0-adoption.md)
 - [DEVAI 1.5.6 patch adoption](2026-09-26-devai-1.5.6-adoption.md)
