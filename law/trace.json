@@ -1521,6 +1521,14 @@
       "assertion_digest_sha256": "3a24612e4ca209657d5290cf55f075a56b6189645e5a26500dbd30a1f633b901"
     },
     {
+      "path": "packages/backend/test/unit/event-stream.service.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 38,
+      "assertion_digest_sha256": "80f41baa8d023f7bf11129504a08fc2692a20244939e977187bed8831b6e1d5b"
+    },
+    {
       "path": "packages/backend/test/unit/idempotency-export.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
@@ -2893,6 +2901,14 @@
       "lifecycle": "supported",
       "assertion_count": 129,
       "assertion_digest_sha256": "7a5e20b13c2ffc72f4ef030ee7b715004c5f87c7e539a64fb0dcd3d96b721ca3"
+    },
+    {
+      "path": "reference/api/test/integration/reference-sse.rls.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 14,
+      "assertion_digest_sha256": "ded4af51bcdecda2dcbf693c4a98fcf0bb1056ab52c653e0370fcd088ebdf926"
     },
     {
       "path": "reference/api/test/integration/reference-api.unit-coverage.spec.ts",
