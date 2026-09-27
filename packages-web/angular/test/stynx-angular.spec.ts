@@ -911,4 +911,17 @@ describe('@stynx-nyx/angular', () => {
     expect(errorIndex).toBeGreaterThanOrEqual(0);
     expect(authIndex).toBeGreaterThan(errorIndex);
   });
+
+  it('rethrows a non-SSE refresh failure rather than the original unauthorized response', async () => {
+    const refreshFailure = new Error('refresh unavailable');
+    const auth = createAuthInterceptor(
+      { apiBaseUrl: '/api', sessionMode: 'bearer' },
+      { getAccessToken: async () => 'expired', refresh: async () => { throw refreshFailure; } },
+    );
+    const unauthorized = new HttpErrorResponse({ status: 401 });
+    await expect(firstValueFrom(auth.intercept(
+      new FakeRequest() as never,
+      new FakeHandler([throwError(() => unauthorized)]) as never,
+    ))).rejects.toBe(refreshFailure);
+  });
 });
