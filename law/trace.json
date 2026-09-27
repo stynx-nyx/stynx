@@ -4597,8 +4597,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 43,
-      "assertion_digest_sha256": "f72af95773b516a89007f116b65c0f341881b7ea0fc3037b95c19b74b9e44f66"
+      "assertion_count": 51,
+      "assertion_digest_sha256": "16427a8dfababbf9f5979a48f14fe19acdedb5d5dd158550dbb0a00411aa9707"
     },
     {
       "path": "packages/core/test/unit/clock.spec.ts",
@@ -4613,16 +4613,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 30,
-      "assertion_digest_sha256": "5beecf6e8af9b6eec23f7e5fbfe1fc8c8975af3273482f69ece22e2dcb97e3ad"
+      "assertion_count": 35,
+      "assertion_digest_sha256": "56d858deafef499464a0a2cc01e68d94816098840f3428fa16aacafded1871a3"
     },
     {
       "path": "packages/worklist/test/unit/tenant-business-calendar.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 23,
-      "assertion_digest_sha256": "5cac24e00114328ed52f84320f9a740ac03cf7ad2e726e3e871bfb95da1c282a"
+      "assertion_count": 27,
+      "assertion_digest_sha256": "b5c2c3dc42eda31a357ac74d9be358ae268b15238cb9aceeb19823f3b2dd9f6c"
     }
   ],
   "suites": {
