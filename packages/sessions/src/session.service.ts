@@ -57,7 +57,7 @@ export class SessionService implements OnModuleInit {
 
   onModuleInit(): void {
     if (!this.store.createWithPolicy) {
-      throw new Error('Single-session policy requires an atomic SessionStore.createWithPolicy');
+      throw new Error('tenant switching and session policy require an atomic SessionStore.createWithPolicy, including when single-session mode is off; see the custom store migration note');
     }
     if (this.options.strongFactor && this.options.strongFactor.acceptedValues.length === 0) {
       throw new Error('Strong-factor policy requires an accepted value');
