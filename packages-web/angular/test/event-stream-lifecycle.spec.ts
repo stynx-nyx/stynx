@@ -106,6 +106,42 @@ describe('StynxEventStreamService lifecycle with the published test double', () 
     expect(transport.connections).toHaveLength(1);
   });
 
+  it('backs off when an oversized frame cannot advance the cursor and falls back to polling', () => {
+    // UPS-NGSSE-04: a connection that cannot accept a frame must count toward recovery fallback.
+    const frame = `id: oversized\nevent: audit\ndata: ${JSON.stringify({ value: 'x'.repeat(64) })}\n\n`;
+    const { stream, transport, clock } = createStream({
+      maxConnectionBytes: 32,
+      failuresBeforePolling: 2,
+      initialMs: 1_000,
+    });
+    const events: unknown[] = [];
+    stream.events$.subscribe((event) => events.push(event));
+    stream.start();
+
+    transport.emitProgress(frame);
+    expect(events).toEqual([]);
+    expect(stream.lastEventId()).toBe(null);
+    expect(transport.connections).toHaveLength(1);
+    expect(transport.cancelled()).toBe(true);
+    expect(stream.status()).toBe('reconnecting');
+    expect(clock.nextTimeoutDelay()).toBe(1_000);
+
+    clock.advanceBy(999);
+    expect(transport.connections).toHaveLength(1);
+    clock.advanceBy(1);
+    expect(transport.connections).toHaveLength(2);
+    expect(transport.lastRequest().lastEventId).toBe(null);
+
+    transport.emitProgress(frame);
+    expect(stream.status()).toBe('polling');
+    expect(stream.polling()).toBe(true);
+    expect(transport.connections).toHaveLength(3);
+
+    transport.emitProgress(frame);
+    expect(transport.connections).toHaveLength(3);
+    expect(clock.nextTimeoutDelay()).toBe(4_000);
+  });
+
   it('uses exponential capped and fixed retries, then polling, and recovers on the first complete frame', () => {
     const { stream, transport, clock } = createStream({ failuresBeforePolling: 2, initialMs: 1_000, maxMs: 30_000 });
     const ticks: number[] = [];
