@@ -1,6 +1,6 @@
 import { Logger, type OnModuleDestroy } from '@nestjs/common';
 import { Inject, Injectable } from '@nestjs/common';
-import { STYNX_SSE_CONTEXT_RUNNER, STYNX_SSE_METRICS, STYNX_SSE_SCHEDULER } from './event-stream.module';
+import { STYNX_SSE_CONTEXT_RUNNER, STYNX_SSE_METRICS, STYNX_SSE_SCHEDULER } from './tokens';
 import type {
   EventStreamContextRunner, EventStreamCursor, EventStreamMetricsSink, EventStreamRow,
   EventStreamScheduler, EventStreamSource, StynxEventStreamOptions, StynxSseRequest,
