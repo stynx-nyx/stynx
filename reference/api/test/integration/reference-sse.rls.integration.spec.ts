@@ -1,15 +1,16 @@
 import { randomUUID } from 'node:crypto';
 import { request as httpRequest } from 'node:http';
-import { Controller, Get, Module, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Inject, Req, Res, UseGuards } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { PermissionCache, StynxAuthGuard, StynxAuthModule, StynxJwtValidator } from '@stynx-nyx/auth';
 import { RequestContext } from '@stynx-nyx/core';
+import { SessionService } from '@stynx-nyx/sessions';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import {
   StynxEventStreamModule,
   StynxEventStreamService,
-  STYNX_SSE_CONTEXT_RUNNER,
+  type EventStreamContextRunner,
   type EventStreamCursor,
   type EventStreamRow,
   type EventStreamScheduler,
@@ -18,9 +19,9 @@ import {
 } from '@stynx-nyx/backend';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../packages/data/test/support/postgres';
 
-const tenantA = '00000000-0000-4000-8000-0000000000a1';
-const tenantB = '00000000-0000-4000-8000-0000000000b1';
-const actorA = '00000000-0000-4000-8000-0000000000a2';
+const tenantA = '00000000-0000-7000-8000-0000000000a1';
+const tenantB = '00000000-0000-7000-8000-0000000000b1';
+const actorA = '00000000-0000-7000-8000-0000000000a2';
 
 interface StreamRow extends EventStreamRow { payload: { tenant: string; value: string } }
 
@@ -39,7 +40,7 @@ class Scheduler implements EventStreamScheduler {
 
 /** The queries deliberately contain no tenant predicate: FORCE RLS is the sensor. */
 class RlsSource {
-  constructor(private readonly database: Database) {}
+  constructor(@Inject(Database) private readonly database: Database) {}
 
   async now(): Promise<Date> {
     return this.database.tx(async (trx) => {
@@ -82,9 +83,9 @@ class RlsSource {
 @UseGuards(StynxAuthGuard)
 class StreamController {
   constructor(
-    private readonly streams: StynxEventStreamService,
-    private readonly source: RlsSource,
-    private readonly requestContext: RequestContext,
+    @Inject(StynxEventStreamService) private readonly streams: StynxEventStreamService,
+    @Inject(RlsSource) private readonly source: RlsSource,
+    @Inject(RequestContext) private readonly requestContext: RequestContext,
   ) {}
 
   @Get()
@@ -101,9 +102,6 @@ class StreamController {
     });
   }
 }
-
-@Module({ controllers: [StreamController], providers: [RlsSource] })
-class StreamFixtureModule {}
 
 function quoteIdentifier(value: string): string {
   if (!/^[a-z_][a-z0-9_]*$/iu.test(value)) throw new Error('unexpected PostgreSQL role name');
@@ -151,7 +149,12 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
     } finally { await admin.end(); }
 
     scheduler = new Scheduler();
+    const contextRunner: EventStreamContextRunner = {
+      withRequestContext: (scope, fn) => database.withRequestContext(scope, fn),
+    };
     moduleRef = await Test.createTestingModule({
+      controllers: [StreamController],
+      providers: [RlsSource, { provide: SessionService, useValue: { get: async () => ({ id: 'sse' }) } }],
       imports: [
         StynxDataModule.forRoot({
           connections: {
@@ -163,12 +166,9 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
         }),
         StynxAuthModule.forRoot({ stynx: { issuer: 'https://sse.test' } }),
         StynxTenancyModule.forRoot({}),
-        StynxEventStreamModule.forRoot({ contextRunner: null as unknown as Database, scheduler }),
-        StreamFixtureModule,
+        StynxEventStreamModule.forRoot({ contextRunner, scheduler }),
       ],
     })
-      .overrideProvider(STYNX_SSE_CONTEXT_RUNNER)
-      .useFactory({ factory: (data: Database) => data, inject: [Database] })
       .overrideProvider(StynxJwtValidator)
       .useValue({ validate: async () => ({ sub: actorA, sid: randomUUID(), tenantId: tenantA, claims: {} }) })
       .overrideProvider(PermissionCache)
@@ -188,6 +188,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
   it('keeps A-positive replay/tick and B-negative RLS behavior in one real Nest/PostgreSQL scenario', async () => {
     const source = moduleRef.get(RlsSource);
     const runAsA = <T>(fn: () => Promise<T>) => database.withRequestContext({ tenantId: tenantA, actorId: actorA }, fn);
+    await expect(runAsA(() => source.now())).resolves.toBeInstanceOf(Date);
     await expect(runAsA(() => source.findById('a-recent'))).resolves.toMatchObject({ id: 'a-recent' });
     await expect(runAsA(() => source.findById('b-private'))).resolves.toBeNull();
     await expect(runAsA(() => source.listSince({ createdAt: new Date(0), id: '' }, { tenantId: tenantA, actorId: actorA }))).resolves.toEqual([
@@ -199,19 +200,20 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
 
     const address = app.getHttpServer().address();
     if (!address || typeof address === 'string') throw new Error('Nest HTTP listener is unavailable');
-    const stream = await new Promise<{ body(): string; close(): void }>((resolve, reject) => {
+    const stream = await new Promise<{ body(): string; contentType: string | undefined; close(): void }>((resolve, reject) => {
       const client = httpRequest({ host: '127.0.0.1', port: address.port, path: '/_sse', headers: { host: 'reference-api.test', authorization: 'Bearer test-a', 'x-tenant-id': tenantA } });
       client.once('response', (response) => {
-        expect(response.headers['content-type']).toContain('text/event-stream');
         let body = '';
         response.on('data', (chunk: Buffer) => {
           body += chunk.toString('utf8');
-          if (body.includes(': connected\n\n')) resolve({ body: () => body, close: () => client.destroy() });
+          if (body.includes(': connected\n\n')) resolve({ body: () => body, contentType: response.headers['content-type'], close: () => client.destroy() });
         });
+        response.once('end', () => reject(new Error(`stream ended before handshake: HTTP ${response.statusCode}, content-type ${response.headers['content-type']}, body ${body}`)));
       });
       client.once('error', reject);
       client.end();
     });
+    expect(stream.contentType).toContain('text/event-stream');
     expect(stream.body()).toContain(': connected\n\n');
     const liveAdmin = await postgres.connectAsAdmin();
     try {
@@ -238,14 +240,14 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
     await expect(statusFor('a-expired')).resolves.toBe(204);
     await expect(statusFor('b-private')).resolves.toBe(200);
 
-    // Both preflight failures return before SQL/stream headers on the real Nest route.
-    await new Promise<void>((resolve, reject) => {
-      const client = httpRequest({ host: '127.0.0.1', port: address.port, path: '/_sse', headers: { host: 'reference-api.test', authorization: 'Bearer test-a' } }, (response) => {
-        expect(response.statusCode).toBe(400);
-        expect(response.headers['content-type']).not.toContain('text/event-stream');
-        response.resume(); response.once('end', resolve);
+    // A conflicting tenant claim is rejected before stream headers on the real Nest route.
+    const rejected = await new Promise<{ status: number | undefined; contentType: string | undefined }>((resolve, reject) => {
+      const client = httpRequest({ host: '127.0.0.1', port: address.port, path: '/_sse', headers: { host: 'reference-api.test', authorization: 'Bearer test-a', 'x-tenant-id': tenantB } }, (response) => {
+        response.resume(); response.once('end', () => resolve({ status: response.statusCode, contentType: response.headers['content-type'] }));
       });
       client.once('error', reject); client.end();
     });
+    expect(rejected.status).toBe(403);
+    expect(rejected.contentType).not.toContain('text/event-stream');
   });
 });
