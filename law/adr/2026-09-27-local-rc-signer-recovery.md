@@ -60,9 +60,13 @@ suite passed 3/3 against that local server before rebinding its controls.
 4. Allow one Owner-directed bootstrap exception solely for the exact merge that
    admits workstation-03 and aligns the RC exporter and publisher with its
    signer ID. The Owner-controlled action must identify the actor, pull request,
-   exact commit and tree, affected `main` ref, reason, and recovery evidence
-   before execution, following Decision 8 of `2026-08-24-ci-economy.md`. The
-   exception applies only to the unsatisfiable `verified-local-rc` required
+   exact commit and tree, affected `main` ref, reason, recovery evidence, and
+   closure condition before execution, following Decision 8 of
+   `2026-08-24-ci-economy.md`. The closure condition is a fresh
+   workstation-03 receipt verified by `devai-local-rc-verify.yml` for the
+   resulting `main` candidate, with the ordinary strict required checks
+   confirmed back in force. The exception applies only to the unsatisfiable
+   `verified-local-rc` required
    check for that merge; all other required checks and review requirements must
    pass. Record the action and post-condition afterward. No standing bypass,
    general relaxation of branch protection, or release-tag exception follows.
