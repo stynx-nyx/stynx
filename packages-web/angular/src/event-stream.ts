@@ -193,8 +193,11 @@ export class StynxEventStreamService<T = unknown> {
     this.pendingHighSurrogate = '';
     let cursorAdvanced = false;
     const parser = new FrameParser((id, event, data) => {
+      if (generation !== this.generation || !this.active) return;
       if (this.deliver(id, event, data)) cursorAdvanced = true;
-    }, () => this.armStale(generation));
+    }, () => {
+      if (generation === this.generation && this.active) this.armStale(generation);
+    });
     const request = { url: this.config.url, lastEventId: this.cursorState(), context: new HttpContext().set(STYNX_SSE_REQUEST, true) };
     this.statusState.set(this.pollingTimer ? 'polling' : this.consecutiveFailures ? 'reconnecting' : 'live');
     this.armStale(generation);
