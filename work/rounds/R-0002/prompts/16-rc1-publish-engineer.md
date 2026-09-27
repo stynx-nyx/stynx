@@ -16,8 +16,10 @@ widening the angular-profile@2.0.0 exception or weakening authenticated
 registry census. Use the existing SemVer comparator. Derive `rc` from
 the committed pre mode state, fail closed on mismatch, and use the
 selected tag in `npm publish`; stable final candidates use `latest`
-only when pre.json is absent. Implement the exact pure function names
-and error codes in the plan. Do not let tests import the side-effectful
+only when pre.json is absent. Implement the exact pure function names,
+including the full `preflightDistTags` snapshot argument, and error
+codes in the plan. Keep `--access restricted` in the invocation.
+Do not let tests import the side-effectful
 publisher. Include dist-tag and SHA/tree in the plan and receipts.
 Before publication, read every package's full dist-tags object and
 record all keys; permit valid historical keys but require `latest`

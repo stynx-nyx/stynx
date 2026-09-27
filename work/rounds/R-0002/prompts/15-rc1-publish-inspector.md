@@ -38,17 +38,19 @@ and their existing sensors. Add focused tests for:
    either mode. The stable final path selects `latest` only when
    pre.json is absent. Assert typed errors
    `PUBLICATION_DIST_TAG_INVALID` for invalid state.
-3. `buildNpmPublishArgs({tarball,registry,tag})` uses the selected tag;
+3. `buildNpmPublishArgs({tarball,registry,tag,version})` uses the selected tag
+   and retains `--access restricted`;
    an RC cannot use
    `latest`. Publication plan and per-package receipts record candidate
    SHA/tree, version, tag, integrity, preflight/postflight dist-tags and
    stop-on-first-failure. `verifyPostPublishDistTags({candidate,
-preflightLatest,distTags})` verifies registry `rc` resolves to the
+preflightLatest,preflightDistTags,distTags})` verifies registry `rc` resolves to the
    candidate and `latest` remains at its preflight value; unknown tags
    fail `PUBLICATION_DIST_TAG_UNKNOWN`, mutation fails
    `PUBLICATION_DIST_TAG_DRIFT`. Full preflight metadata may contain
    historical keys; every key except `rc` must be byte-identical after
-   publish. Malformed/unreadable metadata alone means UNKNOWN. A missing
+   publish. Test a changed historical key as DRIFT. Malformed/unreadable
+   metadata alone means UNKNOWN. A missing
    rc/version may be reread at most five times two seconds apart with
    every result recorded; changed pre-existing tags fail immediately.
    Verify the publisher calls these pure
@@ -59,7 +61,8 @@ changesetIds})` rejects an unconsumed `.md` at the candidate SHA;
    the 44 manifests, pre mode and exact tag are required before
    changesets/action can take its publish branch. This check applies
    only in `--registry-monotonicity` and publisher preflight; default
-   `release:policy` must still pass with a pending changeset in pre mode.
+   `release:policy` must still pass with a pending changeset in pre mode;
+   include a behavior sensor for this, not just source matching.
    Preflight requires `latest` exactly 1.4.0 in all 44 packages.
    No `v1.5.0-rc.1` Git tag is created; the forbidden-range base remains
    stable `v1.4.0`. No sensor may invoke real `npm publish`.

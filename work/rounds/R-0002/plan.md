@@ -214,6 +214,10 @@ Somente depois preparar RC em pre mode e solicitar recibo Owner para publicar.
 
 ## Triagem
 
+- Sensores publicação RC1 após Inspector: `sensor-error` — o primeiro
+  red não exercita mutação de tag histórica, modo padrão com changeset
+  pendente nem preservação de `--access restricted`; completar essas
+  asserções uma vez antes do commit Inspector, sem reduzir as demais.
 - RC1 forbidden-actions local: `policy-issue` — check desde
   `e09bd6c0` apontou `FORBID-PUBLISH` em três commits só de contrato
   (`19730677`, `9ad74570`, `0106a12e`) por texto literal de comando,
@@ -514,8 +518,8 @@ opt-in Owner e token. Inspector prova o candidato, a monotonicidade,
 dist-tag e negativas em módulo puro sem efeitos colaterais
 `scripts/lib/publication-dist-tag.mjs`, com
 `selectPublicationDistTag({version,preState})`,
-`buildNpmPublishArgs({tarball,registry,tag})`,
-`verifyPostPublishDistTags({candidate,preflightLatest,distTags})` e
+`buildNpmPublishArgs({tarball,registry,tag,version})`,
+`verifyPostPublishDistTags({candidate,preflightLatest,preflightDistTags,distTags})` e
 `assertNoPendingPreChangesets({preState,changesetIds})`. Erros tipados
 `PUBLICATION_DIST_TAG_INVALID`, `PUBLICATION_DIST_TAG_UNKNOWN` e
 `PUBLICATION_DIST_TAG_DRIFT`. O script de publicação usa essas funções;
