@@ -25,7 +25,8 @@
       "STYNX 1.5.0 Architect rebind pins both admitted local RC public signers and the replacement signer used by export and publication.",
       "STYNX 1.5.0 CTG-0002 Architect rebind pins SSE edge, HTTP, source-export and backend behavior sensors after coverage repair.",
       "STYNX 1.5.0 CTG-0002 Architect rebind pins filtered cursor progress and byte-ceiling lifecycle sensors.",
-      "STYNX 1.5.0 CTG-0002 Architect rebind pins stale-generation multi-frame lifecycle sensors."
+      "STYNX 1.5.0 CTG-0002 Architect rebind pins stale-generation multi-frame lifecycle sensors.",
+      "STYNX 1.5.0 CTG-0003 Architect rebind pins authorization and session coverage sensors, including readiness and Redis policy replies."
     ]
   },
   "invariants": [
@@ -787,8 +788,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "b16f4d854be02a65f5ca5934c0e7b880b27a9ea0152194e4ede9e2f80c02d40b"
+      "assertion_count": 29,
+      "assertion_digest_sha256": "39bae6126e9fbec8f05e88b1c24d9a91c80b9e6408ba71a653ddc561917daf40"
     },
     {
       "path": "packages-web/angular-flow/test/components.spec.ts",
@@ -1328,8 +1329,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "e81168d06fbeb36a405de090b64036e4a8c2c32870b35993577693df1148786c"
+      "assertion_count": 37,
+      "assertion_digest_sha256": "1f76c57e23af58727583cec76702a9ef8407ab2c4d734cd485c99e0f001b6af7"
     },
     {
       "path": "packages/auth/test/unit/barrel-load.spec.ts",
@@ -2654,8 +2655,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
+      "assertion_count": 27,
+      "assertion_digest_sha256": "e2dd4d59b5a88af54a96891edc209d9c3685a170103187b3ad26ca636569bb71"
+    },
+    {
+      "path": "packages/sessions/test/unit/session-readiness-and-guards.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
       "assertion_count": 19,
-      "assertion_digest_sha256": "678d9077381ef56cb2335a2a155a2282799e1970fcea27393b0ddd205d38a452"
+      "assertion_digest_sha256": "1a3bbeb9748d02e736b8827f7ba2d0d451a812e20f3480620f84df13861c1508"
     },
     {
       "path": "packages/sessions/test/unit/session-control-depth.spec.ts",
@@ -4048,8 +4057,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 44,
-      "assertion_digest_sha256": "f22192fdb015ac2ef3d210630b29407693fe13d28439b7d984b8c122ec2b9e63"
+      "assertion_count": 47,
+      "assertion_digest_sha256": "bd39bc5dd968f5c520ac26e0df392f43e0d9237ddb73c31d907506d96e2e59a3"
     },
     {
       "path": "packages/backend/test/unit/authorization-module-contract.spec.ts",
@@ -4064,8 +4073,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 6,
-      "assertion_digest_sha256": "1d7bd3de1eca1fbdeb0510304b1df9745c673fb1a9e2440cda0ea3ea6f01eaf9"
+      "assertion_count": 7,
+      "assertion_digest_sha256": "b6dc6bd02f7721e7339b87d68de0b147aecbe79b2af4d2584523315fbd21f6e9"
     },
     {
       "path": "packages/contracts/test/authorization-context.spec.ts",
