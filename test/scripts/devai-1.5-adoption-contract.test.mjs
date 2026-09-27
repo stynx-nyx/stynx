@@ -29,7 +29,7 @@ function taskClosure(descriptor, roots) {
   return closure;
 }
 
-test('DEVAI 1.5.6 identity, Constitution 1.0.1, and profile 1.4.0 stay exact', () => {
+test('DEVAI 1.6.0 identity, Constitution 1.0.1, and profile 1.4.0 stay exact', () => {
   const expectedConstitutionDigest =
     'ff8c4f099a284b1b42f980742b20c849379ba4e3f357905f36a87648ae3fdeae';
   const identity = readJson('law/policy/devai-package-identity.json');
@@ -48,24 +48,24 @@ test('DEVAI 1.5.6 identity, Constitution 1.0.1, and profile 1.4.0 stay exact', (
     description: identity.description,
     registry: 'https://npm.pkg.github.com',
     package: '@aarusso-nyx/devai',
-    version: '1.5.6',
+    version: '1.6.0',
     tarball:
-      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.5.6/6cfa2d77138e41d50b6864eddfc983a35f25de68',
+      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.6.0/d67263cb9d84b116fa4637acc8dc22c74f3d3a2a',
     integrity:
-      'sha512-8hU4Krnuy5mEg98dqAs5za9v9+/5L8KbH/GCftkVLyqmpE1ipQqm0ux/2Ltinx9ZkeaBDdXFhwwjkUy3rwJg4A==',
-    shasum: '6cfa2d77138e41d50b6864eddfc983a35f25de68',
-    sha256: 'a2f4fbca03cac1a893f059eb0cacbc7466aa0dae1a5903ec99e60bdbe8618752',
-    source_commit: '0fe5689ce0091cdcb5675b576d9c5be2139ee4ef',
-    source_tree: 'e3abb760f20989d0e06721cdd96065814667259d',
-    signed_tag_object: '3aba4a1066282b77e2c0b4e233033a39dc477f56',
+      'sha512-WarRgd01xFBxf296+iGGcZMXfg90UmHyCKRQJUyX0RSSVICJZDcI1mJBIp/EytnoNMLUfiJQl2mWC0f4qz9q9g==',
+    shasum: 'd67263cb9d84b116fa4637acc8dc22c74f3d3a2a',
+    sha256: 'e42831712152e630cf54fcf6dbd204039ae7e1d7fb3ec57e5fe5ff08ea1755d1',
+    source_commit: '349894356a89e16d92bcb57581e97ca5fc89a2eb',
+    source_tree: '436a88f657d2329b9980eb4aa2c265c9d2261e76',
+    signed_tag_object: 'd71cf93113ba26b362f673e76debda5b861f06e3',
   });
-  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '1.5.6');
-  assert.equal(installedManifest.version, '1.5.6');
+  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '1.6.0');
+  assert.equal(installedManifest.version, '1.6.0');
   assert.deepEqual(project.constitution, {
     version: '1.0.1',
     sha256: expectedConstitutionDigest,
   });
-  assert.equal(project.devai_version, '1.5.6');
+  assert.equal(project.devai_version, '1.6.0');
   assert.equal(
     createHash('sha256').update(pinnedConstitution).digest('hex'),
     expectedConstitutionDigest,
