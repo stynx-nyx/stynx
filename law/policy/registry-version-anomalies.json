@@ -2,16 +2,16 @@
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.registry-version-anomalies",
   "canonical_line": "1.x",
-  "next_unified_version": "1.5.0-rc.1",
+  "next_unified_version": "1.5.0-rc.2",
   "preflight_latest_version": "1.4.0",
   "owner_decision": {
-    "date": "2026-09-26",
-    "repository_baseline": "e09bd6c00d56881fb5208a5e8fccfd6de3c0186a",
-    "repository_tree": "d5f28e558de386713b3573646ff71f58e37c2b65",
-    "statement": "The canonical STYNX line remains 1.x and the next unified candidate is exactly 1.5.0-rc.1 for the complete 44-package fixed release unit under OD-S15-01. Publish this prerelease only with the rc dist-tag; latest must remain at 1.4.0 throughout the RC publication. This decision does not authorize the final stable release or any correction to angular-profile 2.0.0.",
+    "date": "2026-09-27",
+    "repository_baseline": "ce6521438584db70f67e62f48d95048acd88be8b",
+    "repository_tree": "c2904d46661370253b5cabe8b42608c33c86d9a6",
+    "statement": "OD-S15-01 requires successive 1.5.0-rc.N candidates after stable CTG increments, and the Owner explicitly authorized all actions needed to complete this campaign. RC1 was published for all 44 packages from c78893281f765aef7d220d438975105597d3a9d3 in workflow run 36347940240. After CTG2 merged, the next unified candidate is exactly 1.5.0-rc.2 for the complete 44-package fixed release unit. Publish this prerelease only with the rc dist-tag and an action-specific exact-main-SHA receipt; latest must remain at 1.4.0 throughout RC publication. This decision does not authorize angular-profile 2.0.0 remediation.",
     "supersedes": {
-      "date": "2026-09-15",
-      "next_unified_version": "1.4.0"
+      "date": "2026-09-26",
+      "next_unified_version": "1.5.0-rc.1"
     }
   },
   "anomalies": [
@@ -27,12 +27,12 @@
         "observed_at": "2026-08-24T02:04:20.663Z"
       },
       "rationale": "The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.",
-      "allowed_candidate": "1.5.0-rc.1",
+      "allowed_candidate": "1.5.0-rc.2",
       "allowed_effects": ["registry-monotonicity-exception"],
       "permitted_remediation": ["retain-as-noncanonical-history"],
       "deletion_requires": "new-owner-authorization-naming-version-id-and-recovery-evidence",
       "deprecation_requires": "new-owner-authorization-naming-package-version-action-and-message",
-      "closure_condition": "Unified 1.5.0-rc.1 is verified for all 44 publishable packages, rc resolves to 1.5.0-rc.1, latest remains at 1.4.0, and angular-profile 2.0.0 remains immutable non-canonical history.",
+      "closure_condition": "Unified 1.5.0-rc.2 is verified for all 44 publishable packages, rc resolves to 1.5.0-rc.2, latest remains at 1.4.0, and angular-profile 2.0.0 remains immutable non-canonical history.",
       "applies_to_other_packages": false,
       "applies_to_other_versions": false
     }

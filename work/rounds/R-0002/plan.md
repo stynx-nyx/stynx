@@ -232,6 +232,9 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
 
+- RC2 delivery-review Opus ciclo 1: `policy-issue` — a política de anomalia e o publicador ainda fixavam `rc.1` apesar dos 44 manifestos em `rc.2`; Inspector acrescentou prova vermelha de igualdade e da transição `rc.1 → rc.2`, Architect vincula a decisão Owner existente à candidata exata, Engineer atualiza o candidato e o digest; repetir gates e review antes do PR.
+- RC2 `release:status`: `policy-issue` — o primeiro commit de versão tinha assunto fora do marcador canônico; o maestro reconstruiu a sequência local sem mudar a árvore e o gate passou com `chore(repo): version 1.5.0 release candidate`.
+
 - RC2 `ci:stynx`: `sensor-error` — os sensores congelavam a versão RC1 e o hash bruto do manifesto raiz; Inspector normalizou apenas a linha de versão RC e validou o roster de 44 pacotes contra a candidata corrente, 125+4 testes focais verdes; Architect rebinda `law/trace.json` (851 e 267 asserções).
 - RC2 `ci:reference-apps`/`release:consumer-fixtures` concorrentes: `sensor-error` — duas compilações disputaram `dist` no mesmo checkout; a repetição sequencial passou 62/62 testes de referência e 44 tarballs em três consumidores.
 - RC2 primeiro commit Inspector: `policy-issue` — o escopo Conventional Commit `release` não pertence ao enum do repositório; a nova tentativa usou `stynx-workspace` e passou sem alterar os testes.
