@@ -6,6 +6,7 @@ import { Observable, catchError, from, switchMap } from 'rxjs';
 import { STYNX_ANGULAR_OPTIONS, STYNX_AUTH_PROVIDER } from './tokens';
 import type { StynxAngularModuleOptions } from './types';
 import { ErrorBannerService } from './error-banner.service';
+import { STYNX_SSE_REQUEST } from './event-stream';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -44,7 +45,7 @@ export class AuthInterceptor implements HttpInterceptor {
             return from(Promise.resolve(authProvider.refresh())).pipe(
               switchMap((refreshedToken) => {
                 if (!refreshedToken) {
-                  this.showReloginBanner(authProvider);
+                  if (!request.context?.get(STYNX_SSE_REQUEST)) this.showReloginBanner(authProvider);
                   return from(Promise.resolve(authProvider.onAuthFailure?.(error))).pipe(
                     switchMap(() => this.rethrowInZone(error)),
                   );
