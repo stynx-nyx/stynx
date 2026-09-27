@@ -69,8 +69,8 @@ a public or failed authentication path and sets it from validated
 session `claims.tenantId` on the private path. The tenant lifecycle
 middleware can still enrich `request.tenantId` from a header but never
 sets this marker. An unverified header leaves the policy evaluation
-`tenantId` undefined. A
-Host-selected public tenant also remains undefined at guard time.
+`tenantId` undefined. A Host-selected public tenant also remains
+undefined at guard time.
 The existing `principal.claims` is passed unchanged. For `global:true`,
 the host must register its authentication guard as an earlier
 `APP_GUARD` and import that module before
