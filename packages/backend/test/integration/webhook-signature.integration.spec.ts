@@ -6,11 +6,12 @@ import { Test } from '@nestjs/testing';
 import { Public, StynxAuthGuard, StynxJwtValidator, PermissionCache } from '@stynx-nyx/auth';
 import { STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL } from '@stynx-nyx/contracts';
 import { RequestContext, StynxCoreModule } from '@stynx-nyx/core';
-import { Database } from '@stynx-nyx/data';
+import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import request from 'supertest';
 import { z } from 'zod';
 import { StynxWebhookSignatureModule, WebhookSignatureGuard } from '../../src';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 
 // UPS-HOOK-02: two separate Nest processes must share this atomic reservation.
 class SharedReplayStore {
@@ -69,17 +70,20 @@ function signedCall(app: INestApplication, body = BODY) {
 
 @Controller('/webhook')
 class WebhookController {
-  constructor(private readonly context: RequestContext) {}
+  constructor(private readonly context: RequestContext, private readonly database: Database) {}
 
   @Post('/events')
   @HttpCode(200)
   @Public()
   @UseGuards(WebhookSignatureGuard)
-  receive(@Req() req: WebhookRequest) {
+  async receive(@Req() req: WebhookRequest) {
     handled += 1;
     return {
       tenantId: this.context.tenantId,
       actorId: this.context.actorId,
+      ...(protectedRows && this.context.tenantId
+        ? { protectedRows: await protectedRows(this.database) }
+        : {}),
       claims: req.stynxClaims,
       verifiedPublicTenantPrincipal:
         Reflect.get(req, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL) === true,
@@ -93,6 +97,7 @@ const seenRequests: WebhookRequest[] = [];
 const verifiedSnapshots: Array<Record<string, unknown>> = [];
 let callbackCalls = 0;
 let activeMembership = true;
+let protectedRows: ((database: Database) => Promise<string[]>) | undefined;
 
 function databaseStub() {
   return {
@@ -141,11 +146,25 @@ function baseOptions(store: SharedReplayStore) {
 
 async function createApp(
   store: SharedReplayStore,
-  config: { rawBody?: boolean; tenancy?: boolean; options?: Record<string, unknown> } = {},
+  config: {
+    rawBody?: boolean;
+    tenancy?: boolean;
+    options?: Record<string, unknown>;
+    database?: unknown;
+    databaseUrl?: string;
+  } = {},
 ): Promise<INestApplication> {
   const module = await Test.createTestingModule({
     imports: [
       StynxCoreModule.forRoot({ appName: 'webhook-test', schema: z.object({}) }),
+      ...(config.databaseUrl ? [StynxDataModule.forRoot({
+        connections: {
+          owner: { connectionString: config.databaseUrl },
+          app: { connectionString: config.databaseUrl },
+          reader: { connectionString: config.databaseUrl },
+        },
+        migrations: { enabled: true },
+      })] : []),
       ...(config.tenancy ? [StynxTenancyModule.forRoot({})] : []),
       StynxWebhookSignatureModule.forRoot({ ...baseOptions(store), ...config.options }),
     ],
@@ -168,7 +187,7 @@ async function createApp(
           },
         },
       },
-      { provide: Database, useValue: databaseStub() },
+      ...(config.databaseUrl ? [] : [{ provide: Database, useValue: config.database ?? databaseStub() }]),
     ],
   }).compile();
   const app = module.createNestApplication({ rawBody: config.rawBody ?? true });
@@ -191,6 +210,7 @@ describe('UPS-HOOK-02 webhook guard HTTP contract', () => {
     activeMembership = true;
     seenRequests.length = 0;
     verifiedSnapshots.length = 0;
+    protectedRows = undefined;
   });
   afterEach(async () => {
     await Promise.all(apps.splice(0).map((app) => app.close()));
@@ -288,6 +308,16 @@ describe('UPS-HOOK-02 webhook guard HTTP contract', () => {
     }
   });
 
+  it('maps an invalid Date returned by clock.now to 500', async () => {
+    const app = await createApp(new SharedReplayStore(), {
+      options: { clock: { now: () => new Date(Number.NaN) } },
+    });
+    apps.push(app);
+
+    await signedCall(app).expect(500);
+    expect(handled).toBe(0);
+  });
+
   it('fails bootstrap for missing or invalid configuration', async () => {
     for (const invalid of [{ secret: '' }, { replayNamespace: '' }, { maxSkewMs: 0 }]) {
       await expect(createApp(new SharedReplayStore(), { options: invalid })).rejects.toThrow();
@@ -365,5 +395,82 @@ describe('UPS-HOOK-02 webhook guard HTTP contract', () => {
     apps.push(app);
     await signedCall(app).set('x-tenant-id', TENANT).expect(403);
     expect(handled).toBe(0);
+  });
+
+  it('hands signed technical actors to a real PostgreSQL RLS-protected handler without cross-tenant visibility', async () => {
+    let postgres: PostgresTestDatabase | undefined;
+    try {
+      postgres = await createPostgresTestDatabase('stynx_webhook_rls');
+      const app = await createApp(new SharedReplayStore(), {
+        tenancy: true,
+        databaseUrl: postgres.connectionString('webhook-rls-owner'),
+      });
+      apps.push(app);
+      const database = app.get(Database);
+      await database.withSystemContext('seed webhook RLS proof', async () => database.tx(async (trx) => {
+        await trx.query(`
+        insert into tenancy.tenants (id, slug, name, is_active)
+        values
+          ('${TENANT}', 'webhook-tenant-a', 'Webhook tenant A', true),
+          ('${OTHER_TENANT}', 'webhook-tenant-b', 'Webhook tenant B', true);
+        insert into auth.users (id, email)
+        values
+          ('${ACTOR}', 'webhook-actor-a@example.test'),
+          ('${OTHER_ACTOR}', 'webhook-actor-b@example.test');
+        insert into auth.memberships (tenant_id, user_id, is_active)
+        values
+          ('${TENANT}', '${ACTOR}', true),
+          ('${OTHER_TENANT}', '${OTHER_ACTOR}', true);
+        create schema webhook_rls;
+        create table webhook_rls.protected_rows (tenant_id uuid not null, label text not null);
+        alter table webhook_rls.protected_rows enable row level security;
+        alter table webhook_rls.protected_rows force row level security;
+        create policy tenant_scope on webhook_rls.protected_rows
+          using (tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid);
+        insert into webhook_rls.protected_rows (tenant_id, label)
+        values ('${TENANT}', 'signed-tenant-row'), ('${OTHER_TENANT}', 'other-tenant-row');
+        grant usage on schema webhook_rls to stynx_app;
+        grant select on webhook_rls.protected_rows to stynx_app;
+        `);
+      }, { role: 'owner' }));
+      protectedRows = async (requestDatabase) =>
+        requestDatabase.tx(async (trx) => {
+          await trx.query('set local role stynx_app');
+          const result = await trx.query<{ label: string }>(
+            'select label from webhook_rls.protected_rows order by label',
+          );
+          return result.rows.map((row) => row.label);
+        });
+      const own = await signedCall(app).expect(200);
+      expect(own.body).toMatchObject({
+        tenantId: TENANT,
+        actorId: ACTOR,
+        protectedRows: ['signed-tenant-row'],
+      });
+
+      const otherTenantBody = JSON.stringify({
+        tenantId: OTHER_TENANT,
+        technicalActorId: OTHER_ACTOR,
+        eventId: 'rls-other-tenant',
+      });
+      const otherTenant = await signedCall(app, otherTenantBody).expect(200);
+      expect(otherTenant.body).toMatchObject({
+        tenantId: OTHER_TENANT,
+        actorId: OTHER_ACTOR,
+        protectedRows: ['other-tenant-row'],
+      });
+
+      const nonmemberBody = JSON.stringify({
+        tenantId: OTHER_TENANT,
+        technicalActorId: ACTOR,
+        eventId: 'rls-nonmember',
+      });
+      await signedCall(app, nonmemberBody)
+        .expect(403)
+        .expect((response) => expect(response.body.message).toBe('TENANT_ACCESS_DENIED'));
+    } finally {
+      protectedRows = undefined;
+      await postgres?.dispose();
+    }
   });
 });

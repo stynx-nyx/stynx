@@ -257,15 +257,36 @@ describe('UPS-HOOK-01 verifyWebhookSignature', () => {
     }
   });
 
-  it('fails closed on store errors and invalid configuration without exposing secrets in errors', async () => {
+  it('fails closed on store errors without exposing the replay key or signature in errors', async () => {
+    const signature = sign();
+    const signatureHex = signature.slice('sha256='.length);
+    const replayKey = `provider-a:${timestamp}:${signatureHex}`;
     const store: WebhookReplayStore = {
       consume: vi.fn(async () => {
-        throw new Error('replay store unavailable');
+        throw new Error(`duplicate key ${replayKey}; signature ${signature}`);
       }),
     };
     await expect(verifyWebhookSignature(input(), options(store))).rejects.toThrow(
-      'replay store unavailable',
+      'Webhook replay store unavailable',
     );
+    await verifyWebhookSignature(input(), options(store)).catch((error: unknown) => {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).not.toContain(replayKey);
+      expect((error as Error).message).not.toContain(signature);
+      expect((error as Error).message).not.toContain(signatureHex);
+    });
+  });
+
+  it('throws when clock.now returns an invalid Date instead of classifying the signature window', async () => {
+    await expect(
+      verifyWebhookSignature(input(), {
+        ...options(new AtomicReplayStore()),
+        clock: { now: () => new Date(Number.NaN) },
+      }),
+    ).rejects.toThrow('Webhook clock returned an invalid Date');
+  });
+
+  it('rejects invalid configuration and propagates a throwing clock', async () => {
     for (const invalid of [
       { secret: '' },
       { secret: undefined },
