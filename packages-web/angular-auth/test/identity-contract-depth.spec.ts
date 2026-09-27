@@ -81,6 +81,67 @@ afterEach(() => {
 });
 
 describe('@stynx-nyx/angular-auth W04 identity contract depth', () => {
+  it('denies nested wildcard sibling prefixes through service, route guard, and directive', async () => {
+    const tenantContext = createTenantContext();
+    tenantContext.setTenant('tenant-a', 'manual');
+    const token = createJwt({ sub: 'actor-1', tenant_id: 'tenant-a', permissions: ['ops:case:*'] });
+    const backend: StynxAuthBackend = {
+      exchangeCognitoToken: vi.fn(async () => ({
+        sid: 'sid-1', accessToken: token, accessTokenExpiresAt: 'later', refreshToken: 'refresh',
+        expiresAt: 'later', idleExpiresAt: 'later',
+      })),
+      switchTenant: vi.fn(async () => { throw new Error('not used'); }),
+      logout: vi.fn(async () => undefined),
+    };
+    const service = createSessionService(tenantContext, {
+      checkAuth: vi.fn(async () => ({
+        isAuthenticated: true, accessToken: createJwt({ sub: 'upstream', tenant_id: 'tenant-a' }),
+        idToken: '', userData: {}, configId: 'default',
+      })),
+      authorize: vi.fn(), logoff: vi.fn(async () => undefined),
+      forceRefreshSession: vi.fn(async () => ({ isAuthenticated: false, accessToken: '', idToken: '', userData: {}, configId: 'default' })),
+    }, backend, authOptions());
+    await service.completeLogin();
+
+    expect(service.hasAllPermissions(['ops:case:read'])).toBe(true);
+    expect(service.hasAllPermissions(['ops:caser'])).toBe(false);
+    expect(service.hasAllPermissions(['ops:case'])).toBe(false);
+
+    const deniedPath = vi.fn((url: string) => `URL:${url}`);
+    const routeInjector = Injector.create({
+      parent: TestBed.inject(Injector),
+      providers: [
+        { provide: StynxSessionService, useValue: service },
+        { provide: Router, useValue: { parseUrl: deniedPath } },
+        { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: authOptions({ permissionDeniedPath: '/denied' }) },
+      ],
+    });
+    const permissionGuard = (permission: string) => runInInjectionContext(
+      routeInjector,
+      () => stynxPermissionGuard(permission)({} as never, {} as never),
+    );
+    expect(permissionGuard('ops:case:read')).toBe(true);
+    expect(permissionGuard('ops:caser')).toBe('URL:/denied');
+    expect(permissionGuard('ops:case')).toBe('URL:/denied');
+
+    const view = { createEmbeddedView: vi.fn(), clear: vi.fn() };
+    const directiveInjector = Injector.create({
+      parent: routeInjector,
+      providers: [
+        { provide: TemplateRef, useValue: {} },
+        { provide: ViewContainerRef, useValue: view },
+      ],
+    });
+    const directive = runInInjectionContext(directiveInjector, () => new StynxHasPermissionDirective());
+    directive.stynxHasPermission = 'ops:case:read';
+    directive.stynxHasPermission = 'ops:caser';
+    directive.stynxHasPermission = 'ops:case:read';
+    directive.stynxHasPermission = 'ops:case';
+    expect(view.createEmbeddedView).toHaveBeenCalledTimes(2);
+    expect(view.clear).toHaveBeenCalledTimes(2);
+    directive.ngOnDestroy();
+  });
+
   it('uses case-insensitive hierarchical grants and literal required-side wildcards', async () => {
     const tenantContext = createTenantContext();
     tenantContext.setTenant('tenant-a', 'manual');
