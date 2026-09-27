@@ -1,0 +1,48 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "The contract requires editing `reference/web/playwright.config.mjs` to add `shell/**/*.spec.ts` to the spa-only testMatch, and the plan gives that edit to root Engineer. That file is hash-frozen at several sites in `test/scripts/local-rc-blocker-contract.test.mjs`: the fixture archive list at line 143, the D20 normalized digest `3fbbb1a4…` at lines 4099–4105, and the D21/production frozen-file maps at 4299, 4470, 4530 and 4546–4549. The `serve-reference-api-stack` behavior is bound to those same frozen bytes. Any edit breaks `ci:stynx`. The plan's rebind clause covers only published package manifests, and none of the three role locks includes these RC-blocker sensors.",
+      "required_change": "Preferred: don't touch `playwright.config.mjs` or `scripts/verify-frontend-a11y-gate.mjs`. Put the shell spec in a category spa-only already runs (e.g. `reference/web/test/e2e/smoke/shell.spec.ts` or `i18n/shell.spec.ts`) and move the Inspector B lock to match. Otherwise, give Inspector an explicit rebind of every frozen playwright digest site in `local-rc-blocker-contract.test.mjs`, with a separate Inspector commit. Also confirm with the Architect that D20/D21 are not Owner-frozen RC controls under the 2026-08-24 campaign-controls ADR."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "The default keys `stynx.error.<kind>`, placed in `packages-web/angular-ui/src/i18n/{en,pt-BR}.json`, cannot pass `pnpm i18n:check`. `tools/i18n-extract.mjs` builds `keys.json` only from literal `'key' | stynxTranslate` / `i18n.translate('key')` calls, from `ui.`-namespaced string literals (angular-ui's namespace is `ui`), or from `` `ui.…${` `` dynamic prefixes. The keys are produced in `@stynx-nyx/angular`, and the banner translates a runtime `messageKey`, so angular-ui source never references them in an extractable way. `validateCatalog` then reports them as `catalog-stale-keys`. The shell label keys have no named namespace, so they risk the same failure.",
+      "required_change": "Rename the defaults to `ui.error.<kind>` and require angular-ui source to declare them literally, e.g. an exported `STYNX_ERROR_DEFAULT_KEYS` const of `ui.error.*` strings or a `` `ui.error.${kind}` `` dynamic prefix in angular-ui. The classifier then emits that same key. Name the shell keys `ui.shell.*`. Add a gate proving `pnpm i18n:extract && pnpm i18n:check` is clean with the new catalogs."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0006-plan.md",
+      "issue": "Engineer A must publish `classifyStynxError` and `StynxErrorClassificationOptions` from `@stynx-nyx/angular`. `packages-web/angular/src/index.ts` re-exports modules one by one and has no wildcard for new files, and it isn't in any lock: Engineer A's `error*.ts` pattern doesn't match `index.ts`. Engineer A therefore can't make the new NGERR-01 symbol public without breaking role separation.",
+      "required_change": "Add `packages-web/angular/src/index.ts` to Engineer A's lock, or require the classifier to be exported through an existing re-exported file. Also give the classifier an exact file name, e.g. `packages-web/angular/src/error-classification.ts`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "The contract says `requestId` is 'the resolved `request.requestId` from the core CLS middleware'. Core's middleware (`packages/core/src/core.module.ts:40-51`) stores it in CLS and sets the response header. Nothing in `packages/*/src` assigns `request.requestId`; backend only declares and reads it. The first source in the priority list is phantom, so body/header equality actually rests on reading the response `X-Request-Id`.",
+      "required_change": "Restate the priority as: CLS/RequestContext requestId (when reachable without a new core dependency) or the response `X-Request-Id` already set by core; then a UUIDv7-validated incoming header; then a generated id only when neither exists. Keep the equality sensors unchanged."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "The contract calls retry policy 'an unapproved envelope field', but `law/schemas/error-envelope.schema.json` explicitly allows an optional `retryable` boolean. The statement contradicts the law schema, although forbidding it is harmless.",
+      "required_change": "State that `retryable` is schema-permitted but optional. Either emit `retryable:false` consistently with the catalog's `retriable:false`, or omit it and say this is a choice."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "The `_VALIDATION_ERROR` suffix rule is ambiguous. 'Status-specific rows take precedence' is unclear given that the final row ('all remaining 4xx, other HTTP status') covers every HTTP status. For example, it is undefined whether 418 with `X_VALIDATION_ERROR` classifies as `validation` or `unknown`. That makes status × code table cells nondeterministic for Inspector.",
+      "required_change": "Define exactly when the suffix applies: only to statuses in the `unknown` row and to non-HTTP `StynxSdkError`s without a status. Otherwise say it never overrides any status row. Add one example row."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0006-plan.md",
+      "issue": "The required gate `pnpm --filter @stynx-nyx/reference-web test:e2e --project spa-only` still boots `serve-reference-api-stack.mjs`, which needs Docker compose and a built reference/api, because every project shares `webServer`. The plan presents it as SPA-only. The shell also needs angular-ui catalogs registered in `reference/web/src/app/core/reference-web-i18n.service.ts` and a routes file, neither of which is named in the root Engineer lock.",
+      "required_change": "Document the lane's prerequisites (Docker compose, a built reference/api). Name the exact reference/web routes and i18n-registration files in root Engineer's lock, using package-name catalog imports (`@stynx-nyx/angular-ui/catalogs/*.json`) rather than new source deep paths."
+    }
+  ],
+  "summary": "All 14 cycle-1 findings are repaired. Specifically: pre-Inspector predecessor integration table with the ETag replay check, raw CTG-0002 SSE bypass, requestId priority with header equality under StynxCoreModule, sdk errorCode/details mapping, frozen ErrorBannerState messageKey/message shape, complete status/prefix table, correct ng-packagr testing entrypoints with named adoption files, Pick-typed session stub bound to the CTG-0003 matcher, IFM tag grammar, catalog `retriable:false` registration, parity scope, router dependency, theme and storage behavior, fake Transaction query/execute scope with a role option, and i18n default locale. The scoped IFM filter design is feasible under Nest's filter precedence. Three repairable defects still block safe Inspector dispatch. First, the prescribed `playwright.config.mjs` edit breaks multiple RC-blocker hash sensors that no role owns. Second, the `stynx.error.*` defaults in the angular-ui catalogs would fail `i18n:check` as stale keys under the extractor's namespace rules. Third, `packages-web/angular/src/index.ts` is outside Engineer A's lock, so `classifyStynxError` can't be exported. Repair these, fill the integration table, and dispatch should be safe."
+}
