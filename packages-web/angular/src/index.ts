@@ -9,6 +9,7 @@ export * from './error-banner.service';
 export * from './error-classification';
 export * from './error.interceptor';
 export * from './event-stream';
+export * from './idempotency';
 export * from './provide-defaults';
 export * from './request-id.interceptor';
 export * from './request-id';
