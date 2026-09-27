@@ -56,8 +56,54 @@ describe('StynxEventStreamService lifecycle with the published test double', () 
     expect(stream.lastEventId()).toBe('1');
     transport.respond(204);
     expect(stream.lastEventId()).toBe(null);
+    expect(clock.nextTimeoutDelay()).toBe(1_000);
     clock.advanceBy(1_000);
     expect(transport.lastRequest().lastEventId).toBe(null);
+  });
+
+  it('keeps deduplication bounded to 1024 IDs across reconnects', () => {
+    const { stream, transport, clock } = createStream({ failuresBeforePolling: 100 });
+    const received: string[] = [];
+    stream.events$.subscribe((event) => received.push(event.id));
+    stream.start();
+    transport.emitProgress('id: oldest\nevent: audit\ndata: {}\n\n');
+
+    transport.error(500);
+    clock.advanceBy(1_000);
+    transport.emitProgress('id: oldest\nevent: audit\ndata: {}\n\n');
+    expect(received).toEqual(['oldest']);
+
+    const newerFrames = Array.from({ length: 1_024 }, (_, index) =>
+      `id: newer-${index}\nevent: audit\ndata: {}\n\n`,
+    ).join('');
+    transport.emitProgress(newerFrames);
+    transport.emitProgress('id: oldest\nevent: audit\ndata: {}\n\n');
+
+    expect(received).toHaveLength(1_026);
+    expect(received.at(-1)).toBe('oldest');
+  });
+
+  it('uses the configured initial delay as the minimum delay after a 204', () => {
+    const { stream, transport, clock } = createStream({ initialMs: 2_500 });
+    stream.start();
+    transport.respond(204);
+    expect(clock.nextTimeoutDelay()).toBe(2_500);
+  });
+
+  it('counts cumulative progress bytes once when a multibyte character crosses chunks', () => {
+    const frame = 'id: emoji\nevent: audit\ndata: {"value":"💩"}\n\n';
+    const maxConnectionBytes = new TextEncoder().encode(frame).length + 1;
+    const { stream, transport } = createStream({ maxConnectionBytes });
+    const received: unknown[] = [];
+    stream.events$.subscribe((event) => received.push(event));
+    stream.start();
+
+    const highSurrogateEnd = frame.indexOf('💩') + 1;
+    transport.emitProgress(frame.slice(0, highSurrogateEnd));
+    transport.emitProgress(frame.slice(highSurrogateEnd));
+
+    expect(received).toEqual([{ id: 'emoji', event: 'audit', data: { value: '💩' } }]);
+    expect(transport.connections).toHaveLength(1);
   });
 
   it('uses exponential capped and fixed retries, then polling, and recovers on the first complete frame', () => {
