@@ -21,11 +21,6 @@ verifyNoRemoteMutationWorkflows(repoRoot);
 // path lists must stay identical and the companion must expose every job.
 const pathFilteredRequiredChecks = [
   {
-    filtered: 'reference-apps.yml',
-    companion: 'reference-apps-not-applicable.yml',
-    requiredJobs: ['reference-web-e2e'],
-  },
-  {
     filtered: 'release-prep.yml',
     companion: 'release-prep-not-applicable.yml',
     requiredJobs: ['package-policy', 'dependency-audit'],
