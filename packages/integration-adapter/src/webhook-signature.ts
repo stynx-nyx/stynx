@@ -39,7 +39,7 @@ export type WebhookVerificationResult =
 /** Distinguishes a replay-store outage from errors in callbacks or the clock. */
 export class WebhookReplayStoreError extends Error {
   constructor(cause: unknown) {
-    super(cause instanceof Error ? cause.message : 'Webhook replay store unavailable', { cause });
+    super('Webhook replay store unavailable', { cause });
     this.name = 'WebhookReplayStoreError';
   }
 }
@@ -97,8 +97,10 @@ export async function verifyWebhookSignature(
   }
   const timestampSeconds = Number(timestampHeader);
   const tsMs = timestampSeconds * 1000;
-  const nowMs = options.clock.now().getTime();
-  if (!Number.isFinite(nowMs) || !Number.isFinite(tsMs) || Math.abs(nowMs - tsMs) > options.maxSkewMs) {
+  const now = options.clock.now();
+  const nowMs = now instanceof Date ? now.getTime() : Number.NaN;
+  if (!Number.isFinite(nowMs)) throw new Error('Webhook clock returned an invalid Date');
+  if (!Number.isFinite(tsMs) || Math.abs(nowMs - tsMs) > options.maxSkewMs) {
     return { verified: false, reason: 'OUTSIDE_WINDOW' };
   }
   if (typeof signatureHeader !== 'string' || !/^sha256=[0-9a-f]{64}$/iu.test(signatureHeader)) {
