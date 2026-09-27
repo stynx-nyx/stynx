@@ -1,0 +1,66 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages/backend/src/authorization/authorization.guard.ts",
+      "issue": "The guard forwards `request.tenantId` to the evaluator as `PolicyEvaluationContext.tenantId`. That value can be an unverified client header. When no `tenantEntitlementPolicy` is bound, `AuthContextGuard.resolveTenant` (packages/backend/src/auth/auth-context.guard.ts:180) returns the raw `x-tenant-id` header without checking it against `principal.tenants`. The guard then sets `request.tenantId = tenantId` without any entitlement check. `TenantLifecycleMiddleware` (packages/backend/src/db-context/tenant-lifecycle.middleware.ts:72) also copies the raw header into `request.tenantId` before any guard runs. The contract says 'an unverified header leaves tenantId undefined' and names 'AuthContextGuard after verified entitlement' as the source. The only negative sensor sends a spoofed header through `StynxAuthGuard`, which overwrites the value from token claims. The `AuthContextGuard` ordering case never sends `x-tenant-id`.",
+      "required_change": "Have the verifying guards record a verified tenant. `AuthContextGuard` should do this only after an entitlement policy has approved the tenant, or when the tenant is a member of `principal.tenants` or is the single principal tenant. `StynxAuthGuard` should do it from `claims.tenantId`. `AuthorizationGuard` should read only that verified value. Add an E2E case with `AuthContextGuard` first, no entitlement policy, and `x-tenant-id` set to a tenant outside `principal.tenants`, and assert that the evaluator receives no `tenantId`. Add another case with `TenantLifecycleMiddleware` applied."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/backend/test/integration/authorization-app-guard.integration.spec.ts",
+      "issue": "The real module option `StynxAuthorizationModule.forRoot({ global: true })` is never tested in a Nest app. `authorizationAppGuard()` forces `global: false` and registers its own `{ provide: APP_GUARD, useExisting: AuthorizationGuard }`. The global-guard ordering, reverse-order denial, 401/403 envelope, and exception-propagation results therefore prove a hand-built wiring, not the shipped `global` path. `global: true` is covered only by a provider-shape unit test (authorization-module-contract.spec.ts). No Nest app shows a consumer provider injecting `STYNX_AUTHZ_POLICY_EVALUATOR` for either the default or a custom evaluator, although the contract's Proof section requires both.",
+      "required_change": "Build the ordering matrix (AuthContextGuard and StynxAuthGuard, both import orders) with `StynxAuthorizationModule.forRoot({ ...options, global: true })` and no extra APP_GUARD provider. Add a Nest test in which a consumer service injects `STYNX_AUTHZ_POLICY_EVALUATOR` and receives a `DefaultPolicyEvaluator` by default and the supplied instance when one is configured."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/sessions/test/integration/session-policy-redis.spec.ts",
+      "issue": "The Redis Lua script is tested with real Redis only for two concurrent creates without a prior session. None of the script's switch branches run against real Redis. These are the prior-session check and `{error:'prior'}`, `revoke(prior)` with its refresh-lookup TTL, excluding `priorSid` from conflicts, the idle-expiry comparison on ISO strings, cross-tenant isolation, and a reject-new conflict leaving the prior session untouched. They are proven only by the in-memory store. The contract says 'Redis integration is required for the atomic policy; mocks alone cannot prove it', and the atomic tenant switch is part of UPS-SES-01…03.",
+      "required_change": "Add real-Redis cases through `SessionService.exchange` (priorSessionId) in both modes. Cover: a same-tenant switch that does not conflict with itself; the prior session revoked and its refresh token failing with `RefreshTokenReuseDetectedError`; a reject-new target-tenant conflict that leaves the prior session active and refreshable; an idle-expired record that does not count as a conflict (controlled clock); a session in another tenant surviving revoke-existing; and concurrent switch or create from two clients."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/sessions/src/session.service.ts",
+      "issue": "Existing custom stores break with default options. `exchange` now always passes `priorSessionId`, and `create` throws 'Atomic session transition unavailable' when the store has no `createWithPolicy`, even with `singleSession` off. A custom `SessionStore` that worked in 1.4 compiles and boots, then fails at runtime on every tenant switch (`/sessions/switch`, `SessionService.exchange`). The boot check in `onModuleInit` covers only mode ≠ off. The legacy exchange test in session.service.spec.ts was changed from `StaticSessionStore` to `InMemorySessionStore`, which removes the one sensor that would have exposed this. The changeset says only that 'hosts enabling it must use an atomic store implementation'.",
+      "required_change": "Make the requirement fail early and document it. Either fail at module boot when the store has no `createWithPolicy` (tenant switch now always needs it), or keep a documented compatibility path. Add a changeset and sessions README migration note saying custom stores must implement `createWithPolicy` to keep tenant switching. Add a sensor for a legacy custom store with default options that asserts the chosen behavior (boot error or documented runtime error), rather than replacing the legacy store in the old test."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/src/authorization/authorization.module.ts",
+      "issue": "`STYNX_AUTHZ_OPTIONS` is provided but not exported. When the guard is used locally (the default) via `@UseGuards(AuthorizationGuard)` in a consumer module, Nest builds the guard in that module's injector. It resolves the exported evaluator but not the options, so `@Optional()` falls back to `{}`. As a result `resolveTarget`, `publicMetadataKey` and `onDeny` are silently ignored in local mode.",
+      "required_change": "Export `STYNX_AUTHZ_OPTIONS`, or document that these options apply only to the module's own guard instance. Add a local-mode `@UseGuards(AuthorizationGuard)` E2E case that asserts the `onDeny` envelope and a public-key bypass."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/sessions/README.md",
+      "issue": "The package documentation does not cover the new public surface: `singleSession`, `strongFactor` (claimName, acceptedValues, parsing rules), `SessionStore.createWithPolicy?`, `probeReadiness?`, `createSessionStoreReadinessIndicator`, and the `SessionConflictError` and `StrongFactorRequiredError` types. The `@stynx-nyx/auth` docs do not explain that factor evidence comes only from claims of the validated Cognito access token.",
+      "required_change": "Document these options, errors, store obligations and readiness composition with `StynxHealthModule.forRoot(options, [indicator])`. Note that a Cognito access token may not carry `amr`/`acr`, so hosts must configure `claimName` to match a claim their token actually contains."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/sessions/src/redis-session-store.ts",
+      "issue": "`CREATE_WITH_POLICY` runs through `EVAL` with `keys: []` and builds every key inside the script. This works on a standalone Redis server but breaks on Redis Cluster and on proxies that route by declared keys.",
+      "required_change": "Document that the policy requires a standalone Redis or a single hash slot. Alternatively, declare the keys and use hash-tagged per-user keys."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/sessions/src/session.service.ts",
+      "issue": "Parsing of the strong-factor value keeps empty tokens: `' mfa'.split(/[,\\s]+/)` yields `['', 'mfa']`. Blank `acceptedValues` entries are also allowed as long as one entry is non-blank. With `acceptedValues: ['', 'mfa']`, a whitespace-padded claim such as `'pwd '` matches through the empty token.",
+      "required_change": "Drop empty tokens after splitting. Normalize `acceptedValues` at boot by trimming, lowercasing and dropping blank entries. Add a test for the blank-accepted-value case."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "reference/api/test/integration/session-readiness.integration.spec.ts",
+      "issue": "The file imports `resolveSessionsOptions` through a relative path into another package's source (`../../../../packages/sessions/src/types`). That function is already exported by `@stynx-nyx/sessions`, so the test skips the consumer boundary it is meant to exercise.",
+      "required_change": "Import `resolveSessionsOptions` from `@stynx-nyx/sessions`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages-web/angular-auth/test/identity-contract-depth.spec.ts",
+      "issue": "The Angular parity sensor has no nested-wildcard sibling denial. The backend asserts that `ops:case:*` does not grant `ops:caser`, but the Angular test grants only `OPS:*`. The Angular regex is a copy of the backend code, not shared code.",
+      "required_change": "Add a case where `ops:case:*` is granted: `ops:case:read` is allowed, and `ops:caser` and `ops:case` are denied, through `hasAllPermissions`, `stynxPermissionGuard` and `*stynxHasPermission`."
+    }
+  ],
+  "summary": "Most of the implementation follows the contract. Local defaults are preserved. The evaluator token is always bound. Public-then-metadata-then-resolver ordering, partial and empty targets, `onDeny` and exception propagation, case-insensitive grant wildcards with literal required-side wildcards in both backend and Angular, the Redis Lua script and in-memory atomic transitions, prior-sid exclusion, marker carry-over, the cache invalidation after commit, and the bounded readiness indicator with a real pause/unpause composition are all present. The logs show `ci:stynx`, `test:int`, the Redis policy and APP_GUARD specs, and the reference readiness spec passing. The changeset covers the five affected packages in the fixed group, and trace and baseline changes are authored by the Architect. No DETRAN, workflow or generated-tooling edits were found. Four blocking defects remain. (1) The authorization tenant can come from an unverified `x-tenant-id` through `AuthContextGuard` without an entitlement policy, or through `TenantLifecycleMiddleware`, contrary to the contract. (2) `forRoot({global:true})` and evaluator injection are never tested in a Nest app, because the E2E hand-wires its own APP_GUARD. (3) The atomic tenant switch branches of the Redis Lua script have no real-Redis test. (4) Existing custom stores lose tenant switching at runtime under default options, and this is neither caught at boot nor documented. All four can be repaired within this CTG, so the verdict is REVIEW rather than FAIL."
+}

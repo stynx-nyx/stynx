@@ -3,7 +3,8 @@
 This is the Architect contract for CTG-0003, UPS-AUTHZ-01…07 and
 UPS-SES-01…03 in DETRAN C-0002. OD-S15-01 makes every item required in
 1.5.0. The design extends the existing packages; it does not import
-consumer code. Defaults preserve existing applications until they opt in.
+consumer code. Defaults preserve existing applications using the built-in
+stores; hosts with custom session stores have the migration described below.
 
 ## Authorization
 
@@ -35,6 +36,9 @@ always binds and exports `STYNX_AUTHZ_POLICY_EVALUATOR`, using the
 supplied evaluator or `DefaultPolicyEvaluator`. Other services can
 inject the token without constructing a guard. The exported token
 stays the symbol already present in the backend barrel.
+It also exports `STYNX_AUTHZ_OPTIONS` from the dynamic module so a
+consumer's local `@UseGuards(AuthorizationGuard)` instance receives
+`resolveTarget`, `publicMetadataKey`, and `onDeny`.
 
 The guard checks `publicMetadataKey` at method before class and skips
 public routes before asking for a principal. It then reads existing
@@ -55,10 +59,17 @@ Nest filters retain its HTTP status and body.
 `PolicyEvaluationContext` in `@stynx-nyx/contracts` gains optional
 `tenantId`. At guard time the pre-guard core `RequestContext` normally
 contains request ID and time, not tenant: tenant enrichment occurs in
-interceptors later. The guard therefore reads only `request.tenantId`
-set by an earlier `AuthContextGuard` after verified entitlement, or by
-`StynxAuthGuard` from verified session claims. It never reads the raw
-tenant header; an unverified header leaves `tenantId` undefined. A
+interceptors later. The guard therefore reads only a verified marker
+keyed by the exported `STYNX_VERIFIED_TENANT_ID` symbol from
+`@stynx-nyx/contracts`. `AuthContextGuard` clears it at request entry
+and sets it only after the configured entitlement policy approves the
+selected tenant or, without a policy, the selected tenant exactly
+matches a member of `principal.tenants`. `StynxAuthGuard` clears it on
+a public or failed authentication path and sets it from validated
+session `claims.tenantId` on the private path. The tenant lifecycle
+middleware can still enrich `request.tenantId` from a header but never
+sets this marker. An unverified header leaves the policy evaluation
+`tenantId` undefined. A
 Host-selected public tenant also remains undefined at guard time.
 The existing `principal.claims` is passed unchanged. For `global:true`,
 the host must register its authentication guard as an earlier
@@ -124,13 +135,21 @@ activeness, and completes each revoke with the same key deletion,
 user/tenant index removal, and used refresh lookup as `revokeSession`,
 then writes the new session and lookup. Mirror entries and
 invalidation are emitted after commit from returned records. Existing
-custom stores retain source compatibility; when the mode is not `off`,
-the module fails at boot if this method is absent. No process-local
-lock or list-then-create is sufficient.
+custom stores retain source compatibility at the TypeScript interface
+but must implement `createWithPolicy` before upgrading if the host
+mounts tenant switching. `SessionService` fails at module boot when
+the method is absent, even with mode `off`, because every `exchange`
+now requires an atomic prior-session transition. This is an explicit
+custom-store migration requirement; built-in Redis and in-memory
+stores implement the method. No process-local lock or list-then-create
+is sufficient.
 Default `off` and no prior session retain the existing create path.
 
-`strongFactor` is disabled by default. If enabled, `acceptedValues`
-must contain a nonempty value at module boot. The configured
+`strongFactor` is disabled by default. If enabled, normalize
+`acceptedValues` by trimming and lowercasing every entry and dropping
+blank entries; fail at module boot when none remain. Split string
+claims on commas and whitespace, drop empty tokens, and compare only
+nonempty normalized values. The configured
 `claimName` defaults to `amr` and may be `acr` or another verified
 claim. The claim may be an array of strings or a string containing
 values separated by commas and/or whitespace. Trim and compare
@@ -179,20 +198,30 @@ No sessions→health runtime dependency or manifest edit is needed.
 
 ## Proof and release binding
 
-Nest E2E proves global guard registration after real authentication
+Nest E2E uses the actual `forRoot({global:true})` provider path and
+proves global guard registration after real authentication
 APP_GUARDs, the reverse-order denial, undecorated and public bypass,
 target precedence and partial targets, principal claims and tenant,
 custom 401/403 status **and JSON body** through `StynxErrorFilter`,
-and injectable default/custom evaluator. Backend and Angular tests
+and injectable default/custom evaluator. Include a no-entitlement-policy
+case with a forged tenant header outside `principal.tenants`, with and
+without `TenantLifecycleMiddleware`; neither reaches the evaluator as
+verified tenant. Local `@UseGuards(AuthorizationGuard)` tests prove the
+exported options. Backend and Angular tests
 exercise permission grants and absence, especially cross-resource
 denial, case, intermediate prefixes and required-side literal `*`.
 Session HTTP and service tests cover both single-session modes,
-same-tenant concurrent creation across multiple Redis clients,
-idle-expired non-conflict, cross-tenant isolation, refresh
+same-tenant concurrent creation and `exchange` across multiple real
+Redis clients, prior-sid exclusion, reject-new rollback, idle-expired
+non-conflict, cross-tenant isolation, refresh
 invalidation, verified-factor create and chained switch, spoofed
 device metadata, and readiness up/down. Redis integration is
 required for the atomic policy; mocks alone cannot prove it.
 Existing behavior is also tested with both policies disabled.
+The Redis policy script currently targets standalone Redis; Cluster
+or routing proxies are unsupported until keys are declared in one
+hash slot. Session and auth READMEs state the custom-store migration
+requirement, factor provenance, and readiness composition.
 
 Rebind public API baselines for changed packages, trace for changed
 tests, the fixed-group changeset, and generated package READMEs.
