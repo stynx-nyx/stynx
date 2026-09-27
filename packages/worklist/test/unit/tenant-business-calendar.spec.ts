@@ -102,6 +102,26 @@ describe('TenantBusinessCalendar', () => {
     expect(result.getTime() - new Date(start).getTime()).toBe(hours * 60 * 60 * 1_000);
   });
 
+  it('ends at the first valid instant after a due date when local midnight is skipped', async () => {
+    const calendar = makeCalendar({ [A]: 'Africa/Cairo' });
+    const start = '2024-04-24T12:00:00.000Z';
+    const result = await deadline(calendar, A, start, 1);
+
+    // The due date is April 25; Cairo skips midnight at the start of April 26.
+    expect(result).toEqual(new Date('2024-04-25T22:00:00.000Z'));
+    expect(result.getTime() - new Date(start).getTime()).toBe(34 * 60 * 60 * 1_000);
+  });
+
+  it('keeps the exclusive next-day boundary on civil dates across the repeated fall-back hour', async () => {
+    const calendar = makeCalendar({ [A]: 'America/New_York' });
+    const start = '2024-11-03T05:30:00.000Z'; // First 1:30 a.m. during the repeated hour.
+    const result = await deadline(calendar, A, start, 1);
+
+    // Sunday is excluded; Monday is due, so the exclusive boundary is Tuesday midnight EST.
+    expect(result).toEqual(new Date('2024-11-05T05:00:00.000Z'));
+    expect(result.getTime() - new Date(start).getTime()).toBe(47.5 * 60 * 60 * 1_000);
+  });
+
   it('uses the local date at UTC midnight boundaries and observes changed tenant timezones', async () => {
     const zones: Record<string, string> = { [A]: 'America/Los_Angeles', [B]: 'Asia/Tokyo' };
     const calendar = new TenantBusinessCalendar({
@@ -139,6 +159,7 @@ describe('TenantBusinessCalendar', () => {
       ['count above maximum', () => deadline(calendar, A, '2024-01-01T00:00:00Z', 367)],
       ['invalid holiday', () => deadline(makeCalendar({ [A]: 'UTC' }, { [`${A}:2024`]: new Set(['2024-02-30']) }), A, '2024-01-01T00:00:00Z', 1)],
       ['invalid zone', () => deadline(makeCalendar({ [A]: 'No/Such_Zone' }), A, '2024-01-01T00:00:00Z', 1)],
+      ['offset-form zone', () => deadline(makeCalendar({ [A]: '+03:00' }), A, '2024-01-01T00:00:00Z', 1)],
       ['invalid zone source', () => deadline(makeCalendar({}), A, '2024-01-01T00:00:00Z', 1)],
     ];
 
