@@ -221,10 +221,12 @@ test('versioned RC status accepts only the complete consumed fixed-group candida
   const input = {
     baseRootVersion: '1.4.0',
     candidateRootVersion: '1.5.0-rc.1',
-    hasVersionCommit: true,
+    versionCommitVersion: '1.5.0',
     packageStates,
     changedManifestPaths: packageStates.map(({ manifestPath }) => manifestPath),
     changesetIdsOnDisk: ['tenancy-context-15'],
+    followUpChanges: [],
+    basePreState: null,
     preState: {
       mode: 'pre',
       tag: 'rc',
@@ -235,7 +237,8 @@ test('versioned RC status accepts only the complete consumed fixed-group candida
   assert.equal(isVersionedPreModeCandidate(input), true);
 
   for (const [label, mutate] of [
-    ['no version commit', (value) => { value.hasVersionCommit = false; }],
+    ['no version commit', (value) => { value.versionCommitVersion = null; }],
+    ['marker core drift', (value) => { value.versionCommitVersion = '9.9.9'; }],
     ['wrong mode', (value) => { value.preState.mode = 'exit'; }],
     ['wrong tag', (value) => { value.preState.tag = 'latest'; }],
     ['stable candidate', (value) => { value.candidateRootVersion = '1.5.0'; }],
@@ -248,11 +251,34 @@ test('versioned RC status accepts only the complete consumed fixed-group candida
     ['no consumed changeset', (value) => { value.preState.changesets = []; }],
     ['pending changeset', (value) => { value.changesetIdsOnDisk.push('new-work'); }],
     ['missing consumed file', (value) => { value.changesetIdsOnDisk = []; }],
+    ['source changed after versioning', (value) => { value.followUpChanges = [{ status: 'M', path: 'packages/core/src/index.ts' }]; }],
+    ['new changeset after versioning', (value) => { value.followUpChanges = [{ status: 'A', path: '.changeset/late.md' }]; }],
   ]) {
     const invalid = structuredClone(input);
     mutate(invalid);
     assert.equal(isVersionedPreModeCandidate(invalid), false, label);
   }
+
+  const laterRc = structuredClone(input);
+  laterRc.baseRootVersion = '1.5.0-rc.1';
+  laterRc.candidateRootVersion = '1.5.0-rc.2';
+  laterRc.packageStates.forEach((entry) => {
+    entry.baseVersion = '1.5.0-rc.1';
+    entry.candidateVersion = '1.5.0-rc.2';
+  });
+  laterRc.preState.changesets.push('sse-stream-15');
+  laterRc.changesetIdsOnDisk.push('sse-stream-15');
+  laterRc.basePreState = structuredClone(input.preState);
+  assert.equal(isVersionedPreModeCandidate(laterRc), true, 'rc.2 advances from rc.1');
+
+  const repeatedRc = structuredClone(laterRc);
+  repeatedRc.candidateRootVersion = '1.5.0-rc.1';
+  repeatedRc.packageStates.forEach((entry) => { entry.candidateVersion = '1.5.0-rc.1'; });
+  assert.equal(isVersionedPreModeCandidate(repeatedRc), false, 'ordinal must advance');
+
+  const discontinuousPre = structuredClone(laterRc);
+  discontinuousPre.basePreState.initialVersions[packageStates[0].name] = '1.3.0';
+  assert.equal(isVersionedPreModeCandidate(discontinuousPre), false, 'pre mode initial versions remain bound');
 });
 
 test('version rebaseline permits only the three generated dependency README consequences', () => {
