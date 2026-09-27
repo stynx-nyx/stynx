@@ -1,4 +1,13 @@
 // Pure publication decisions shared by the release preflight and its sensors.
+import { registryVersionPolicyConstants } from './registry-version-policy.mjs';
+
+export const publicationPlanConstants = Object.freeze({
+  packageCount: registryVersionPolicyConstants.packageCount,
+  canaryPackage: '@stynx-nyx/angular',
+  maxVisibilityRereads: 5,
+  visibilityRereadDelayMs: 2_000,
+});
+
 export class PublicationDistTagError extends Error {
   constructor(code, message) {
     super(message);
@@ -24,6 +33,19 @@ function checkedDistTags(value) {
     fail('PUBLICATION_DIST_TAG_UNKNOWN', 'registry dist-tags are absent or malformed');
   }
   return value;
+}
+
+export function validatePublicationRoster(packages, version) {
+  if (!Array.isArray(packages) || packages.length !== publicationPlanConstants.packageCount ||
+    packages[0]?.name !== publicationPlanConstants.canaryPackage ||
+    new Set(packages.map((entry) => entry?.name)).size !== packages.length) {
+    fail('PUBLICATION_ROSTER_DRIFT', 'publication roster is incomplete, duplicated, or does not start with the angular canary');
+  }
+  for (const entry of packages) {
+    if (entry?.manifest?.version !== version) {
+      fail('PUBLICATION_VERSION_DRIFT', `${entry?.name ?? 'unknown package'}: expected exact ${version}`);
+    }
+  }
 }
 
 export function selectPublicationDistTag({ version, preState }) {

@@ -10,7 +10,9 @@ import { readPendingChangesets, readPreState } from './lib/fixed-group-version.m
 import {
   assertNoPendingPreChangesets,
   buildNpmPublishArgs,
+  publicationPlanConstants,
   selectPublicationDistTag,
+  validatePublicationRoster,
   validatePreflightDistTags,
   verifyPostPublishDistTags,
 } from './lib/publication-dist-tag.mjs';
@@ -27,6 +29,7 @@ const candidateSha = git(['rev-parse', 'HEAD']);
 const candidateTree = git(['rev-parse', 'HEAD^{tree}']);
 const workflowRun = process.env.GITHUB_RUN_ID ?? null;
 const packages = discoverPublishablePackages(repoRoot);
+validatePublicationRoster(packages, version);
 const preState = readPreState(repoRoot);
 const distTag = selectPublicationDistTag({ version, preState });
 assertNoPendingPreChangesets({
@@ -34,11 +37,6 @@ assertNoPendingPreChangesets({
   changesetIds: readPendingChangesets(repoRoot).map(({ file }) => file.slice('.changeset/'.length, -'.md'.length)),
 });
 
-if (packages.length !== 44)
-  fail('PUBLICATION_ROSTER_DRIFT', `expected 44 packages, found ${packages.length}`);
-if (packages[0]?.name !== '@stynx-nyx/angular') {
-  fail('PUBLICATION_ROSTER_DRIFT', 'the first package must be the angular canary');
-}
 if (!/^[0-9a-f]{40}$/u.test(candidateSha) || !/^[0-9a-f]{40}$/u.test(candidateTree)) {
   fail(
     'PUBLICATION_CANDIDATE_INVALID',
@@ -53,9 +51,6 @@ mkdirSync(receiptRoot, { recursive: true });
 // Observe the complete registry state for every package before the first publish.
 const preflightDistTags = new Map();
 for (const entry of packages) {
-  if (entry.manifest.version !== version) {
-    fail('PUBLICATION_VERSION_DRIFT', `${entry.name}: expected exact ${version}`);
-  }
   const observed = registryMetadata(entry.name);
   if (observed.kind === 'unknown') {
     fail('PUBLICATION_PREFLIGHT_UNKNOWN', `${entry.name}: registry state is unknown`);
@@ -125,6 +120,12 @@ for (const entry of planEntries) {
   );
   const visibility = observePublishedCandidate(entry);
   const observed = visibility.metadata;
+  const artifactMatches = observed.kind === 'published' &&
+    observed.integrity === entry.integrity && observed.shasum === entry.shasum;
+  const stopCode = visibility.error?.code ??
+    (observed.kind === 'published' && !artifactMatches ? 'PUBLICATION_INTEGRITY_MISMATCH' :
+      !artifactMatches ? 'PUBLICATION_VISIBILITY_UNKNOWN' :
+        result.status !== 0 ? 'PUBLICATION_COMMAND_AMBIGUOUS' : null);
   const receipt = {
     schemaVersion: '1.0.0',
     kind: 'publication-receipt',
@@ -134,12 +135,12 @@ for (const entry of planEntries) {
     preflight_dist_tags: entry.preflight_dist_tags,
     visibility_observations: visibility.observations,
     reread_count: visibility.observations.length - 1,
+    command_status: result.status,
+    stop_code: stopCode,
     outcome:
-      result.status === 0 && visibility.error === null && observed.kind === 'published' &&
-      observed.integrity === entry.integrity && observed.shasum === entry.shasum
+      result.status === 0 && stopCode === null
         ? 'verified-published'
-        : result.status !== 0 && visibility.error === null && observed.kind === 'published' &&
-          observed.integrity === entry.integrity && observed.shasum === entry.shasum
+        : result.status !== 0 && visibility.error === null && artifactMatches
           ? 'ambiguous-command-verified-published'
           : 'failed-or-unknown',
     expected_integrity: entry.integrity,
@@ -154,15 +155,11 @@ for (const entry of planEntries) {
   writeJson(resolve(receiptRoot, `${String(entry.order).padStart(2, '0')}.json`), receipt);
   const verified =
     result.status === 0 &&
-    visibility.error === null &&
-    observed.kind === 'published' &&
-    observed.integrity === entry.integrity &&
-    observed.shasum === entry.shasum;
+    stopCode === null;
   if (!verified) {
-    if (visibility.error) fail(visibility.error.code, `${entry.package}: ${visibility.error.message}`);
     fail(
-      'PUBLICATION_STOP_FIRST',
-      `${entry.package}: stopped on first failure or ambiguous outcome; partial recovery requires a new Owner authorization`,
+      stopCode ?? 'PUBLICATION_STOP_FIRST',
+      `${entry.package}: stopped on first failure or ambiguous outcome; partial recovery requires a new Owner authorization${visibility.error ? ` (${visibility.error.message})` : ''}`,
     );
   }
   // changesets/action reads each "New tag:" line, pushes that tag ref, and
@@ -176,8 +173,8 @@ process.stdout.write(`Published and verified ordered ${planEntries.length}-packa
 
 function observePublishedCandidate(entry) {
   const observations = [];
-  for (let reread = 0; reread <= 5; reread += 1) {
-    if (reread > 0) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2_000);
+  for (let reread = 0; reread <= publicationPlanConstants.maxVisibilityRereads; reread += 1) {
+    if (reread > 0) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, publicationPlanConstants.visibilityRereadDelayMs);
     const metadata = registryMetadata(entry.package);
     const tags = registryDistTags(entry.package);
     observations.push({
@@ -206,7 +203,7 @@ function observePublishedCandidate(entry) {
     if (metadata.kind === 'published' && tagError === null) {
       return { metadata, observations, error: null };
     }
-    if (reread === 5) {
+    if (reread === publicationPlanConstants.maxVisibilityRereads) {
       return {
         metadata,
         observations,
