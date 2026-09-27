@@ -3,6 +3,7 @@ import type { HttpEvent } from '@angular/common/http';
 import { DestroyRef, Injectable, InjectionToken, computed, effect, inject, makeEnvironmentProviders, signal } from '@angular/core';
 import type { EnvironmentProviders, Signal } from '@angular/core';
 import { TenantContextService } from '@stynx-nyx/angular-tenancy';
+import { UnauthorizedError } from '@stynx-nyx/sdk';
 import { Subject } from 'rxjs';
 import type { Observable, Subscription } from 'rxjs';
 
@@ -37,6 +38,7 @@ export interface StynxEventStreamConfig {
 
 export const STYNX_SSE_REQUEST = new HttpContextToken<boolean>(() => false);
 const SSE_CONFIG = new InjectionToken<StynxEventStreamConfig>('STYNX_SSE_CONFIG');
+const DEDUP_WINDOW = 1_024;
 
 const systemClock: StynxEventStreamClock = {
   now: () => Date.now(),
@@ -130,6 +132,9 @@ export class StynxEventStreamService<T = unknown> {
   private active = false;
   private generation = 0;
   private offset = 0;
+  private receivedBytes = 0;
+  private pendingHighSurrogate = '';
+  private readonly textEncoder = new TextEncoder();
   private seen = new Set<string>();
   private failures: number[] = [];
   private consecutiveFailures = 0;
@@ -184,6 +189,8 @@ export class StynxEventStreamService<T = unknown> {
     this.cancelConnection();
     const generation = this.generation;
     this.offset = 0;
+    this.receivedBytes = 0;
+    this.pendingHighSurrogate = '';
     const parser = new FrameParser((id, event, data) => this.deliver(id, event, data), () => this.armStale(generation));
     const request = { url: this.config.url, lastEventId: this.cursorState(), context: new HttpContext().set(STYNX_SSE_REQUEST, true) };
     this.statusState.set(this.pollingTimer ? 'polling' : this.consecutiveFailures ? 'reconnecting' : 'live');
@@ -197,7 +204,15 @@ export class StynxEventStreamService<T = unknown> {
           if (text.length < this.offset) this.offset = 0;
           const suffix = text.slice(this.offset);
           this.offset = text.length;
-          if (new TextEncoder().encode(text).length >= (this.config.maxConnectionBytes ?? 1_048_576)) {
+          let complete = this.pendingHighSurrogate + suffix;
+          this.pendingHighSurrogate = '';
+          const lastCode = complete.charCodeAt(complete.length - 1);
+          if (lastCode >= 0xd800 && lastCode <= 0xdbff) {
+            this.pendingHighSurrogate = complete.slice(-1);
+            complete = complete.slice(0, -1);
+          }
+          this.receivedBytes += this.textEncoder.encode(complete).length;
+          if (this.receivedBytes >= (this.config.maxConnectionBytes ?? 1_048_576)) {
             this.reopenPlanned(generation);
             return;
           }
@@ -222,6 +237,10 @@ export class StynxEventStreamService<T = unknown> {
       const parsed = JSON.parse(data) as T;
       this.cursorState.set(id);
       this.seen.add(id);
+      if (this.seen.size > DEDUP_WINDOW) {
+        const oldest = this.seen.values().next().value;
+        if (oldest !== undefined) this.seen.delete(oldest);
+      }
       this.eventSubject.next({ id, event: name, data: parsed });
       this.failures = []; this.consecutiveFailures = 0;
       this.clearTimers();
@@ -245,7 +264,8 @@ export class StynxEventStreamService<T = unknown> {
     if (generation !== this.generation || !this.active) return;
     this.cancelConnection();
     if (!this.config.sessionActive()) { this.stop(); return; }
-    if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403)) { this.stop(); return; }
+    if ((error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403))
+      || error instanceof UnauthorizedError) { this.stop(); return; }
     if (!freshCursor) {
       const now = this.clock.now();
       this.failures = this.failures.filter((time) => now - time <= (this.config.failureWindowMs ?? 60_000));
@@ -264,7 +284,7 @@ export class StynxEventStreamService<T = unknown> {
       return;
     }
     const base = this.config.initialMs ?? 1_000;
-    const backoff = this.config.retryMode === 'fixed' ? base : Math.min(this.config.maxMs ?? 30_000, base * 2 ** Math.min(this.consecutiveFailures - 1, 30));
+    const backoff = this.config.retryMode === 'fixed' ? base : Math.min(this.config.maxMs ?? 30_000, base * 2 ** Math.max(0, Math.min(this.consecutiveFailures - 1, 30)));
     const header = error instanceof HttpErrorResponse ? error.headers.get('Retry-After') : null;
     const seconds = header ? Number(header) : NaN;
     const date = header ? Date.parse(header) : NaN;
