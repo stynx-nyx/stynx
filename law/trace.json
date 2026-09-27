@@ -3739,8 +3739,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 40,
-      "assertion_digest_sha256": "79b6333c8bad14319b91624f5e1b651ef50d23327223662e68215da9a345d1cc"
+      "assertion_count": 49,
+      "assertion_digest_sha256": "180e1e437f9dcc6726a1db9a4290c8050ce561ffc1f1ed5bc29838e2478156c7"
     },
     {
       "path": "packages/jobs/test/integration/module.integration.spec.ts",
@@ -3755,8 +3755,8 @@
       "suite": "db",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 9,
-      "assertion_digest_sha256": "9842d8d093fef3da6bcda8f171124e8c81bd07b67f3527e1a88a57b298887068"
+      "assertion_count": 7,
+      "assertion_digest_sha256": "8974c0274839df4b634c8fb40f712899fc35bfb593fe2209c6b7aed77bb2f63b"
     },
     {
       "path": "packages/jobs/test/unit/cron-and-backoff.spec.ts",
@@ -3795,8 +3795,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 71,
-      "assertion_digest_sha256": "d91af4d3771b9d80c76911399f54b04be7aa52c3bfac80314973c80e57609235"
+      "assertion_count": 80,
+      "assertion_digest_sha256": "060fcac35589d60cb04b7ac7f4776ef793027e37255e501f71076eac1cc0c668"
     },
     {
       "path": "packages/jobs/test/unit/worker.spec.ts",

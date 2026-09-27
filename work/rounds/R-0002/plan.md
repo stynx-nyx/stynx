@@ -234,6 +234,10 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 - RC2 delivery-review Opus ciclo 1: `policy-issue` — a política de anomalia e o publicador ainda fixavam `rc.1` apesar dos 44 manifestos em `rc.2`; Inspector acrescentou prova vermelha de igualdade e da transição `rc.1 → rc.2`, Architect vincula a decisão Owner existente à candidata exata, Engineer atualiza o candidato e o digest; repetir gates e review antes do PR.
 - RC2 `release:status`: `policy-issue` — o primeiro commit de versão tinha assunto fora do marcador canônico; o maestro reconstruiu a sequência local sem mudar a árvore e o gate passou com `chore(repo): version 1.5.0 release candidate`.
+- Delivery-review CTG-0004 ciclo 1: `plant-bug` — `timezoneFormatter` rejeitava zonas IANA canônicas com hífen ou dígito e `enqueue` enviava ator explícito malformado ao PostgreSQL; Inspector registrou testes vermelhos em `24ef81a7`, Engineer corrigiu em `6493be3d`, e Architect refez o vínculo de trace. As provas PostgreSQL negativas e os valores fixos do seed também foram ampliados.
+- `ci:reference-apps` pré-integração CTG-0004: `reference-gap` — o branch empilhado ainda usa o fixture SSE anterior à correção `useTemplate: false` do CTG-0002; repetir após replay sobre o merge do PR #285, preservando o fixture corrigido.
+
+- CI CTG-0002 após reparo Angular: `reference-gap` — o build emitiu novo digest para `types/stynx-nyx-angular.d.ts`; Architect confirmou a mudança e executou `pnpm api:baselines:write` para rebinder o baseline, sem edição manual de artefato gerado.
 
 - RC2 `ci:stynx`: `sensor-error` — os sensores congelavam a versão RC1 e o hash bruto do manifesto raiz; Inspector normalizou apenas a linha de versão RC e validou o roster de 44 pacotes contra a candidata corrente, 125+4 testes focais verdes; Architect rebinda `law/trace.json` (851 e 267 asserções).
 - RC2 `ci:reference-apps`/`release:consumer-fixtures` concorrentes: `sensor-error` — duas compilações disputaram `dist` no mesmo checkout; a repetição sequencial passou 62/62 testes de referência e 44 tarballs em três consumidores.
