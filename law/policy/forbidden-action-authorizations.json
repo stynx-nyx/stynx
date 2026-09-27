@@ -1021,6 +1021,12 @@
       "commit": "d302199367fe0c40c5b951d70328ee10dc0df5f4",
       "authorized_by": "Owner",
       "reason": "Owner authorization in the R-0002 session on 2026-09-26 binds this exact Engineer implementation commit containing the guarded package publication command. No publication was executed; the eventual release dispatch requires its own action-specific receipt."
+    },
+    {
+      "forbidden_id": "FORBID-PUBLISH",
+      "commit": "570f93042fab247f009b3ed02d8fd5752b0b4443",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization in the R-0002 session on 2026-09-26 binds this exact Architect commit recording the independent publication review and its quoted command text. It executes no package publication and does not replace the later action-specific publication receipt."
     }
   ]
 }
