@@ -141,7 +141,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
   let app: import('@nestjs/common').INestApplication;
 
   beforeAll(async () => {
-    postgres = await createPostgresTestDatabase('reference_api_sse');
+    postgres = await createPostgresTestDatabase('reference_api_sse', { useTemplate: false });
     const admin = await postgres.connectAsAdmin();
     try {
       const connector = (await admin.query<{ current_user: string }>('select current_user')).rows[0]!.current_user;
