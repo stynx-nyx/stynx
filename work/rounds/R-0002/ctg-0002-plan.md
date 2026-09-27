@@ -123,6 +123,9 @@ storage do RequestContext core quanto chave CLS transacional de data,
 ou sob tenant B; pular `withRequestContext` deve produzir zero
 linhas/erro no sensor negativo. Usar template PostgreSQL local quando
 disponível (`STYNX_TEST_PG_TEMPLATE`) e `STYNX_TEST_PG_*` da rodada.
+Usar `createPostgresTestDatabase` de data como banco isolado por run;
+criação de roles/grants é idempotente porque os scripts `test` e
+`test:int` de reference-api executam o mesmo spec no mesmo cluster.
 
 `pnpm test:int` raiz e `pnpm ci:stynx` filtram `./packages/*`: **não**
 executam o E2E de `reference/api`. Capturar saída focada que nomeie o
@@ -195,3 +198,5 @@ para o gate real. Nenhum worker de implementação foi despachado.
 O Owner autorizou excepcionalmente o terceiro ciclo em 2026-09-26,
 após o checkpoint que identificou os dois REVIEW e o SHA corrigido
 `c89e24db`. Este consentimento cobre apenas revisão do plano/prompts.
+O terceiro ciclo retornou **PASS** com três ajustes não bloqueantes de
+lock e fixture, incorporados antes do despacho Architect.

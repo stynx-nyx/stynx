@@ -4,7 +4,8 @@ Role: Inspector. Worktree:
 `/Users/aarusso/.codex/worktrees/ctg2-sse/stynx`.
 The maestro alone runs Git. Start after the Architect contract is
 recorded. Edit only `packages-web/angular/test/`,
-`packages-web/angular/vitest.config.ts`, `tsconfig.spec.json` if
+`packages-web/angular/vitest.config.ts`,
+`packages-web/angular/tsconfig.spec.json` if
 needed, and tests for the
 published `angular/testing` secondary entry in that package; do not
 edit backend files, source, generated files, law, workflows or DETRAN.

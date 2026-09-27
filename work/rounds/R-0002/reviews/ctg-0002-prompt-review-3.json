@@ -1,0 +1,24 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/22-ctg2-inspector-angular.md",
+      "issue": "The Inspector's lock names `tsconfig.spec.json` without a path. The plan scopes it to the Angular package, but the prompt alone could be read as a root or other-package tsconfig. That would break the rule that the two Inspectors share no files.",
+      "required_change": "Write the lock as `packages-web/angular/tsconfig.spec.json` in prompt 22."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0002-plan.md",
+      "issue": "The `reference/api` `test` script uses a vitest include of `test/**/*.spec.ts`. `ci:reference-apps` and the `reference-apps / reference-api` job run `test` and then `test:int`, so the new PostgreSQL/RLS spec runs twice in each gate. That is harmless but slower. The double run also means the spec's fixture must be idempotent across runs in the same cluster: re-creating `stynx_app`, grants and the owner role must not fail.",
+      "required_change": "State in the plan or prompt 21 that the E2E fixture must be idempotent across repeated runs in one cluster. It should use a per-run database from `createPostgresTestDatabase`, as `reference-api.runtime.spec.ts:474` does, and a guarded `CREATE ROLE`. Also note that the spec runs under both `test` and `test:int`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/21-ctg2-inspector-backend.md",
+      "issue": "The prompt does not name the existing reuse point for PostgreSQL provisioning. `reference/api/test/integration/reference-api.runtime.spec.ts:31` already imports `createPostgresTestDatabase` from `packages/data/test/support/postgres`, which honors `STYNX_TEST_PG_TEMPLATE` (line 38) and `STYNX_TEST_PG_*`. Without that pointer, a worker might add testcontainers or a new helper.",
+      "required_change": "Point prompt 21 at `createPostgresTestDatabase` from `packages/data/test/support/postgres` as the required fixture base. The CI job already provides `STYNX_TEST_PG_*` with user `stynx`."
+    }
+  ],
+  "summary": "All cycle-1 and cycle-2 repairs hold against the code. The E2E is bound to `pnpm --filter @stynx-nyx/reference-api test:int`, `ci:reference-apps` and the path-filtered `reference-apps / reference-api` job, which provisions PostgreSQL 16 and `STYNX_TEST_PG_*`. Root `test:int` really does filter `./packages/*` (package.json:18), and the plan now says so. `reference/api` already depends on backend, data, core, Nest, pg and supertest, and aliases them to package sources, so no manifest or lockfile change is needed. The E2E has a precedent: `reference-api.runtime.spec.ts` already uses the data Postgres helper with template support. `reference/api` tests are inside the `check:trace` scope, since `law/trace.json` has 12 entries for them. The structural port matches `data.Database.withRequestContext` (`database.ts:156`), and core does not declare it. On the Angular side, `request.clone` in `auth.interceptor.ts:53` keeps `HttpContext`, so the SSE token surviving the replay is feasible. The `isUnauthorized` retry path and the existing one-retry guard keep terminal 401 behavior. The RLS fixture spells out every piece: a non-superuser NOLOGIN/NOINHERIT/NOBYPASSRLS role, SET LOCAL ROLE inside `data.Database.tx` with the GUCs, FORCE RLS with a different owner, no tenant WHERE, and positive and negative checks in the same spec. The timer ALS is cleared both in core and in data's CLS. The testing secondary-entry rules and the FESM build gate are stated, as are the cumulative `partialText` offset and ceilings. The `sessionActive` deviation row, the README and changeset ownership, the trace rebind of everything `--print` reports, and the backend/Angular/testing API baselines are covered. No role or file lock collides, UPS-OBX is excluded, and no workflow or DETRAN edits are required. The remaining items are nonblocking wording and reuse tightenings, so Architect dispatch can proceed."
+}
