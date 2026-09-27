@@ -264,3 +264,9 @@ DEVAI exigida para o merge. A autoridade por SHA exato permanece
 pendente antes do PR/merge, além do recibo separado para publicar.
 
 Nenhum pacote foi publicado e nenhum recibo de publicação foi recebido.
+
+O Owner autorizou em 2026-09-26 as ações necessárias ao encerramento
+da campanha após o relatório que identificou explicitamente os quatro
+SHAs DEVAI e os terceiros ciclos de review. O maestro vincula esta
+decisão aos quatro recibos exatos e aos dois prompt-reviews excepcionais.
+O recibo de publicação continuará separado, com comando e SHA finais.

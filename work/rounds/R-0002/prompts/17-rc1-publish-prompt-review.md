@@ -9,10 +9,13 @@ candidate SHA. The existing release workflow is forbidden to edit
 without its own Owner receipt; it already reads candidate from the
 policy and guards exact-main dispatch. The current policy binds 1.4.0,
 while the publisher hard-codes `--tag latest`.
-This is cycle 2. Cycle 1 returned REVIEW because the Inspector had no
-pure importable seam, plus findings on full dist-tag preflight,
-owner_decision rebind, stable publish-time pre state, pending IDs and
-trace rebind. The revised contract and prompts include those points.
+This is the exceptional cycle 3 authorized by the Owner on 2026-09-26.
+Cycles 1 and 2 both returned REVIEW. Cycle 2 found that pending
+changesets must fail only at publication time, since normal feature
+PRs in pre mode carry them. The revised contract and prompts keep
+default release:policy permissive, assert full dist-tag state and
+latest=1.4.0, bound registry visibility retries, name monotonicity
+errors, and forbid a v-prefixed RC Git tag.
 
 Inspect the actual policy, scripts, tests and workflow. Identify any
 incorrect assumption about GitHub Packages dist-tags, Changesets pre

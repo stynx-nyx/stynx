@@ -368,9 +368,16 @@ STYNX_TEST_PG_USER=postgres STYNX_TEST_PG_PASSWORD=postgres pnpm
 ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
    testes de script 114/114, tarefas test 97/97, integração 51/51,
    build 48/48, doctor/RLS verdes. Commits posteriores até
-   `0106a12e` alteram somente documentos da rodada. Delivery-review
+   `5de7b18b` alteram somente documentos da rodada. Delivery-review
    versionamento ciclo 1: PASS. PR de preparação RC ainda bloqueado
    pelos achados DEVAI de autoridade; publicação exige outro recibo.
+8. O Owner autorizou excepcionalmente o terceiro prompt-review da rota
+   de publicação e os quatro recibos DEVAI de SHA já identificados,
+   em resposta ao checkpoint de 2026-09-26. Registrar os recibos
+   exatos em `law/policy/forbidden-action-authorizations.json` e
+   executar novamente o check antes de abrir PR. Esta autorização
+   não é o recibo de publicação: esse ato ainda exige comando e SHA
+   candidato finais.
 
 ## Reviews, PRs e publicações
 
