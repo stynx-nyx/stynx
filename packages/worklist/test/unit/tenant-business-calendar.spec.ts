@@ -160,6 +160,7 @@ describe('TenantBusinessCalendar', () => {
       ['invalid holiday', () => deadline(makeCalendar({ [A]: 'UTC' }, { [`${A}:2024`]: new Set(['2024-02-30']) }), A, '2024-01-01T00:00:00Z', 1)],
       ['invalid zone', () => deadline(makeCalendar({ [A]: 'No/Such_Zone' }), A, '2024-01-01T00:00:00Z', 1)],
       ['offset-form zone', () => deadline(makeCalendar({ [A]: '+03:00' }), A, '2024-01-01T00:00:00Z', 1)],
+      ['Unicode minus offset-form zone', () => deadline(makeCalendar({ [A]: '−03:00' }), A, '2024-01-01T00:00:00Z', 1)],
       ['invalid zone source', () => deadline(makeCalendar({}), A, '2024-01-01T00:00:00Z', 1)],
     ];
 
