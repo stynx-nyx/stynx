@@ -50,7 +50,6 @@ export class JobsService implements JobsPort {
     if (input.actorId !== undefined && !UUID_PATTERN.test(input.actorId)) throw new InvalidJobInputError('actorId must be a UUID');
     const caller = this.caller(input.tenantId);
     const actorId = input.actorId ?? caller.actorId;
-    if (!actorId) throw new InvalidJobInputError('actorId is required');
     await this.authorizeActor(input.tenantId, actorId, caller.actorId);
     return this.repository.enqueue({ tenantId: input.tenantId, jobType: input.jobType, payload: input.payload ?? {}, runAt: input.runAt ?? new Date(Date.now() + (input.delayMs ?? 0)), priority: input.priority ?? 0, maxAttempts: input.maxAttempts ?? DEFAULT_MAX_ATTEMPTS, ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}), actorId });
   }
