@@ -2,6 +2,8 @@ const fullSha = /^[0-9a-f]{40}$/u;
 const versionCommitSubject = 'ci: version packages';
 const unifiedRebaselineVersion = '1.2.0';
 const releaseStatusCommand = 'node scripts/run-release-preparation.mjs --release-status';
+const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
+const rcVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-rc\.(0|[1-9]\d*)$/u;
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -122,6 +124,49 @@ function validateFollowUpChanges(changes, rootManifestFollowUpValid) {
       'version candidate changes root package.json beyond the release-preparation command',
     );
   }
+}
+
+/** A generated, already-versioned RC has no pending Changesets status to draft. */
+export function isVersionedPreModeCandidate({
+  baseRootVersion,
+  candidateRootVersion,
+  hasVersionCommit,
+  packageStates,
+  changedManifestPaths,
+  changesetIdsOnDisk,
+  preState,
+}) {
+  if (
+    !hasVersionCommit ||
+    !stableVersion.test(baseRootVersion) ||
+    !rcVersion.test(candidateRootVersion) ||
+    preState?.mode !== 'pre' ||
+    preState.tag !== 'rc' ||
+    !Array.isArray(preState.changesets) ||
+    preState.changesets.length === 0 ||
+    !Array.isArray(packageStates) ||
+    packageStates.length !== 44 ||
+    !Array.isArray(changedManifestPaths) ||
+    !Array.isArray(changesetIdsOnDisk)
+  ) return false;
+
+  const names = new Set(packageStates.map(({ name }) => name));
+  const paths = new Set(packageStates.map(({ manifestPath }) => manifestPath));
+  const changed = new Set(changedManifestPaths);
+  const consumed = new Set(preState.changesets);
+  const onDisk = new Set(changesetIdsOnDisk);
+  if (
+    names.size !== 44 || paths.size !== 44 || changed.size !== 44 ||
+    changedManifestPaths.length !== 44 || consumed.size !== preState.changesets.length ||
+    onDisk.size !== changesetIdsOnDisk.length || consumed.size !== onDisk.size ||
+    [...consumed].some((id) => !onDisk.has(id)) ||
+    [...paths].some((path) => !changed.has(path))
+  ) return false;
+
+  return packageStates.every(({ name, baseVersion, candidateVersion }) =>
+    baseVersion === preState.initialVersions?.[name] &&
+    candidateVersion === candidateRootVersion,
+  );
 }
 
 export function classifyReleaseContext({

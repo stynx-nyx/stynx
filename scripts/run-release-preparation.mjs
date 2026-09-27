@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   classifyReleaseContext,
+  isVersionedPreModeCandidate,
   releaseContextConstants,
   ReleaseContextError,
 } from './lib/release-context.mjs';
@@ -97,6 +98,52 @@ function versionRebaselineValid(baseCommit, versionCommit, changes) {
   );
 }
 
+function versionedPreModeContext(baseCommit, headCommit, commits) {
+  const prePath = resolve(repoRoot, '.changeset/pre.json');
+  if (!existsSync(prePath)) return null;
+  const versionCommits = commits.filter(({ subject }) =>
+    /^chore\(repo\): version (?:first )?\d+\.\d+\.\d+ release candidate$/u.test(subject),
+  );
+  if (versionCommits.length !== 1) return null;
+
+  const publicPackages = collectPublicPackages(repoRoot);
+  const packageStates = publicPackages.map(({ name, manifestPath }) => {
+    const path = relative(repoRoot, manifestPath);
+    return {
+      name,
+      manifestPath: path,
+      baseVersion: readGitJson(baseCommit, path).version,
+      candidateVersion: JSON.parse(readFileSync(manifestPath, 'utf8')).version,
+    };
+  });
+  const changedManifestPaths = parseChanges(baseCommit, headCommit)
+    .filter(({ status, path }) => status === 'M' && /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(path))
+    .map(({ path }) => path);
+  const preState = JSON.parse(readFileSync(prePath, 'utf8'));
+  const changesetIdsOnDisk = readdirSync(resolve(repoRoot, '.changeset'))
+    .filter((name) => name.endsWith('.md') && name !== 'README.md')
+    .map((name) => name.slice(0, -3));
+  if (!isVersionedPreModeCandidate({
+    baseRootVersion: readGitJson(baseCommit, 'package.json').version,
+    candidateRootVersion: JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')).version,
+    hasVersionCommit: true,
+    packageStates,
+    changedManifestPaths,
+    changesetIdsOnDisk,
+    preState,
+  })) return null;
+
+  return {
+    kind: 'versioned-pre-mode',
+    baseCommit,
+    headCommit,
+    versionCommit: versionCommits[0].sha,
+    packageCount: packageStates.length,
+    changesetCount: preState.changesets.length,
+    rebaseline: false,
+  };
+}
+
 function releaseContext() {
   const baseCommit = git(['rev-parse', 'origin/main']);
   // pull_request workflows are checked out at GitHub's synthetic merge commit.
@@ -124,7 +171,7 @@ function releaseContext() {
     ? versionRebaselineValid(baseCommit, marker.sha, versionChanges)
     : false;
 
-  return classifyReleaseContext({
+  const classified = classifyReleaseContext({
     baseCommit,
     headCommit,
     commits,
@@ -134,6 +181,9 @@ function releaseContext() {
     rootManifestFollowUpValid: marker ? rootManifestFollowUpValid(marker.sha, rebaseline) : false,
     versionRebaselineValid: rebaseline,
   });
+  return classified.kind === 'ordinary'
+    ? versionedPreModeContext(baseCommit, headCommit, commits) ?? classified
+    : classified;
 }
 
 function prepareReleaseStatus() {
