@@ -1,5 +1,21 @@
 # `@stynx-nyx/backend` — meta-package mounting 10 modular submodules into the STYNX backend pipeline
 
+## Revision preconditions (1.5)
+
+`@RequireIfMatch()` parses one strong quoted nonnegative integer ETag before
+the handler, and `@IfMatchRevision()` supplies that revision as a method
+parameter. An absent header yields a 428 law envelope; a malformed header or
+stale revision yields 412. The route owner must compare the supplied revision
+atomically with the stored value and throw `PreconditionFailedError` on a race.
+`@RevisionETag()` sets a strong ETag from a successful response body's safe
+integer `revision` without changing the body. Register
+`IfMatchExceptionFilter` explicitly on routes that throw the precondition
+errors without using `@RequireIfMatch()`.
+
+When combined with `@TransactionalCommand()`, validate the returned revision
+inside the command boundary before commit. The ETag is among the headers
+persisted for idempotent replay; no ETag is sent for a failed command.
+
 `@stynx-nyx/backend` is the canonical aggregation layer for a STYNX-based NestJS app. It is **not** a single module — it composes 10 independently-mountable submodules (auth, authorization, audit, db-context, idempotency, identity-admin, pipeline, rate-limit, sla, storage) that each wrap one (or one-and-a-half) corresponding `@stynx-nyx/<pkg>` package and apply backend-specific glue (interceptors, guards, DI-token rebinding). You import the submodules you need à la carte in your `AppModule`. The full integration pattern is: mount `StynxCoreModule` from `@stynx-nyx/core` first, then layer the `@stynx-nyx/backend` submodules.
 
 The `StynxPlatformPipelineModule` is the foundation: it's the global request-pipeline (rate-limit guard, SLA monitor, idempotency interceptor) every STYNX app wires once. Mount that first; the other submodules layer onto it.
