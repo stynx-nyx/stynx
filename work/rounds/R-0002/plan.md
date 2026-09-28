@@ -589,6 +589,12 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     a sequência de commits Architect → Inspector → Architect trace → Engineer
     → Architect baseline, gates focais e delivery-review PASS; só então
     importar a correção na branch cumulativa e seguir para o gate final.
+23. A adenda A1 §8.1 recebeu prévia condicional de lacunas e paralelismo em
+    `work/rounds/R-0002/ctg-0009-preflight.md`. SIG/OBX/OFS continuam fora da
+    implementação cumulativa até a decisão exata do Owner sobre o escopo.
+    Nenhum worker foi despachado para CTG9. Se incluída, a CTG9 segue a
+    mesma importação cumulativa, sem PR ou RC intermediário; o único gate
+    local/PR/remoto/publicação ocorre após todos os MUST confirmados.
 
 ## Reviews, PRs e publicações
 
