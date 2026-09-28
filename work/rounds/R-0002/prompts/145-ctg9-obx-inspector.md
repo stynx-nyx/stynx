@@ -45,8 +45,12 @@ Prove append→enqueue e domínio auditado→enqueue concorrendo com o cutover.
 Sincronize B segurando SHARE e pedindo advisory de A, C com UPDATE
 enfileirado atrás de B, e A segurando advisory e pedindo SHARE. Nesse
 cenário, o PostgreSQL pode conceder SHARE a A imediatamente: exija apenas
-terminação A/B dentro de deadline antes do commit de C, sem 40P01 ou
-evento/mensagem duplicado; 55P03 em A é alternativa permitida, não oráculo.
+terminação dentro de deadline, sem 40P01 ou evento/mensagem duplicado.
+Se SHARE for concedido, A e B confirmam antes de C. Se A receber 55P03,
+sua primeira tentativa reverte integralmente, B confirma antes de C, e
+o retry de A com a mesma chave pode terminar antes de C em LEGACY ou
+depois de C com `OutboxLegacyCutoverError` em NEW; 55P03 é permitido,
+não exigido nessa fila.
 Num sensor separado, C **já detém** UPDATE quando A, com advisory, pede
 `FOR SHARE NOWAIT`: exija 55P03 tipado, rollback integral e retry com a
 mesma chave, terminando em sucesso LEGACY ou `OutboxLegacyCutoverError`

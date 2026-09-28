@@ -757,6 +757,13 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     Prompt 146 ganhou cancelamento e leitura de recibos; Engineer registrou
     changeset de dependência signature e `workspace:*` em `c67774f9`.
     Pedir prompt-review focal 3 antes do despacho; ainda sem Inspector.
+43. A ponte DETRAN rejeitou o formato da resposta do prompt-review focal 3
+    (frase antes do JSON), sem veredito estruturado de ponte. O fallback
+    `claude -p` com o mesmo prompt/modelo e schema retornou **PASS** em
+    `reviews/ctg9-inspector-prompt-review-3.json`, liberando os três
+    Inspectors em paralelo. A única observação não bloqueante, ordem do
+    retry no ramo 55P03 da fila A/B/C, foi incorporada ao contrato e ao
+    prompt antes do despacho. Os sensores continuam pendentes de escrita.
 
 ## Reviews, PRs e publicações
 

@@ -751,3 +751,12 @@ cancelamento e leitura de recibos, e explicita onde rodam os sensores
 backend/audit. Em commit Engineer separado `c67774f9`, health passou a
 `workspace:*` e foi criado changeset para as dependências signature.
 Terceiro prompt-review focal autorizado pela OD ampla do Owner está pendente.
+
+A ponte DETRAN executou o prompt-review Inspector focal 3, mas saiu 4 ao
+receber uma frase de status antes do JSON. O motivo está em
+`reviews/ctg9-inspector-prompt-review-3.bridge-failure.md`. O maestro
+reexecutou `claude -p` com o mesmo prompt, Opus 5.5, modo plan e schema
+estruturado: **PASS** em `reviews/ctg9-inspector-prompt-review-3.json`.
+Uma observação editorial não bloqueante sobre o ramo 55P03 da fila A/B/C
+foi fechada no contrato e prompt OBX. O PASS libera somente testes Inspector,
+sem afirmar código ou conformidade CTG9.
