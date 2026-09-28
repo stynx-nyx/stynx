@@ -554,6 +554,13 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     seguida: delivery-review Opus PASS, importação na branch cumulativa e
     gates focais. Sob OD-S15-02, não abrir PR, publicar RC ou executar CI
     integral intermediário. O único gate final espera a decisão do item 20.
+23. O delivery-review Opus do envelope CTG5 retornou PASS no ciclo 1 em
+    `reviews/ctg5-envelope-delivery-review-1.json`, com recibo de hash pela
+    ponte DETRAN. O maestro conferiu os autores e papéis dos commits.
+    Importar o delta na branch cumulativa. Antes da final, reparar a perda
+    de observabilidade nos 500/503 convertidos: causa original, requestId e
+    stack no log servidor, com sensor de corpo público inalterado. Esse
+    achado foi não bloqueante apenas para a importação.
 
 ## Reviews, PRs e publicações
 

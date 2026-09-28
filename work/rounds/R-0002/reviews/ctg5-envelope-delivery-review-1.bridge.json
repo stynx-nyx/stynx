@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx/work/rounds/R-0002/prompts/110-ctg5-envelope-delivery-review.md",
+  "prompt_sha256": "ade9579d9456e846a50205fc655d31adf5ee56cd727f82b6c40084a619b8ee41",
+  "output": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx/work/rounds/R-0002/reviews/ctg5-envelope-delivery-review-1.json",
+  "output_sha256": "cc0df9f37c831131134a9a744b8ade31be8885e7e7ed98e6a206d2918b9c277b",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx",
+  "started_at": "2026-09-28T08:06:48Z",
+  "ended_at": "2026-09-28T08:10:33Z"
+}

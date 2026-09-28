@@ -480,3 +480,23 @@ do filtro CTG5. O gerador mudou três digests da mesma declaração em
 confirmou 44/44 pacotes. Este rebind e o registro compõem o próximo commit
 Architect. Ainda faltam delivery-review PASS e importação cumulativa;
 nenhum PR, RC ou CI integral foi iniciado nesta correção.
+
+## CTG5 — delivery-review do envelope (2026-09-28)
+
+O Opus 5.5, pela ponte DETRAN, revisou o patch desde `81681892` e retornou
+**PASS** em `reviews/ctg5-envelope-delivery-review-1.json`, com recibo
+`reviews/ctg5-envelope-delivery-review-1.bridge.json`. O prompt e a saída
+têm os SHA-256 registrados no recibo e foram conferidos pelo maestro.
+O reviewer não executou Git; o maestro verificou a sequência de autores:
+commits de contrato, trace, baselines e reviews como DEVAI Architect;
+sensores `380f302f` e `2ac1d54d` como DEVAI Inspector; implementação
+`62dfb561` como DEVAI Engineer. O veredito autoriza a importação ordenada
+sob OD-S15-02, sem PR/RC/CI integral intermediário.
+
+Achado não bloqueante para a importação, mas exigido antes da final: quando
+CTG5 converte falha interna em envelope público 500/503, preservar a causa
+e registrar requestId e stack no log do servidor, sem mudar o corpo público;
+adicionar sensor dessa invariância. Os demais achados são a ausência de prova
+HTTP para dois ramos defensivos inalcançáveis via core, duplicação local do
+regex de `errorCode` e observações de cobertura/autor. Não declarar a final
+pronta até o reparo de observabilidade e review correspondente.
