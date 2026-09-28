@@ -39,7 +39,8 @@
       "STYNX 1.5.0 CTG-0007 Architect rebind pins the Angular-generated idempotency key through live Nest HTTP and PostgreSQL RLS commit, replay and mismatch paths.",
       "STYNX 1.5.0 CTG-0008 Architect rebind pins blueprint safety, deterministic output, generated RBAC and PostgreSQL RLS sensors, including the packed external consumer.",
       "STYNX 1.5.0 CTG-0008 lint repair strengthens exact blueprint values and rebinds the generator assertion projection.",
-      "STYNX 1.5.0 CTG-0008 delivery-review Architect rebind pins staged rename cleanup, integer and route negatives, and inert annotation comparison without weakening existing sensors."
+      "STYNX 1.5.0 CTG-0008 delivery-review Architect rebind pins staged rename cleanup, integer and route negatives, and inert annotation comparison without weakening existing sensors.",
+      "STYNX 1.5.0 CTG-0008 final hardening Architect rebind pins negative PostgreSQL reserved and restricted SQL identifier vectors before implementation."
     ]
   },
   "invariants": [
@@ -4794,7 +4795,7 @@
       "invariant_ids": ["INV-RBAC-001", "INV-CLI-001", "INV-CLI-002", "INV-CLI-003", "INV-CLI-004"],
       "lifecycle": "supported",
       "assertion_count": 90,
-      "assertion_digest_sha256": "c4ee1d829efaf8a79d7e3b21ffcd62a5c8a245b1abc938a98c453299c3b8f2a9"
+      "assertion_digest_sha256": "99d99092c79b41b978a9a72bcbee6b8fd79b2350858a11268dac128d1f147f89"
     }
   ],
   "suites": {
