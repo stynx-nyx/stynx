@@ -371,4 +371,124 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
       await holder.end();
     }
   }, 15_000);
+
+  it('does not resend after a successful send whose persistence is blocked, and continues the next row', async () => {
+    const first = await append();
+    const second = await append();
+    let startFirst!: () => void;
+    let startSecond!: () => void;
+    let releaseFirst!: () => void;
+    let releaseSecond!: () => void;
+    const firstStarted = new Promise<void>((resolve) => {
+      startFirst = resolve;
+    });
+    const secondStarted = new Promise<void>((resolve) => {
+      startSecond = resolve;
+    });
+    const firstMayComplete = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const secondMayComplete = new Promise<void>((resolve) => {
+      releaseSecond = resolve;
+    });
+    const sent: string[] = [];
+    send = async (row) => {
+      sent.push(row.id);
+      if (row.id === first.id) {
+        startFirst();
+        await firstMayComplete;
+      } else {
+        startSecond();
+        await secondMayComplete;
+      }
+      return { provider: 'probe', protocol: 'HTTP' };
+    };
+    const dispatch = outbox.dispatchEventsDue(2);
+    await bounded(firstStarted);
+    const holder = await postgres.connectAsAdmin();
+    try {
+      await holder.query('begin');
+      await holder.query('lock table outbox.event_delivery in share row exclusive mode');
+      releaseFirst();
+      await bounded(secondStarted);
+      await holder.query('commit');
+      releaseSecond();
+      const outcomes = await bounded(dispatch);
+      expect(sent).toEqual([first.id, second.id]);
+      expect(outcomes[0]).toMatchObject({
+        row: { id: first.id },
+        dispatched: true,
+        reconciliationRequired: true,
+        error: expect.stringContaining('persistence unresolved'),
+      });
+      expect(outcomes[1]).toMatchObject({ row: { id: second.id }, dispatched: true });
+      expect(outcomes[1]?.reconciliationRequired ?? false).toBe(false);
+      const ledger = await holder.query<{ event_id: string; result: string }>(
+        `select event_id,result from outbox.event_attempts where tenant_id=$1 and event_id in ($2,$3)`,
+        [TENANT, first.id, second.id],
+      );
+      expect(ledger.rows.find((item) => item.event_id === first.id)?.result).toBe('CLAIMED');
+      expect(ledger.rows.find((item) => item.event_id === second.id)?.result).toBe('SENT');
+    } finally {
+      releaseFirst?.();
+      releaseSecond?.();
+      await holder.query('rollback').catch(() => undefined);
+      await holder.end();
+      await ack(first.id);
+      await ack(second.id);
+    }
+  }, 15_000);
+
+  it('never exposes URL credentials, query tokens, or fetch error secrets in failed-send evidence', async () => {
+    const event = await append();
+    const url = 'https://alice:pw-secret@provider.example.test/submit?token=query-secret';
+    const fetchImpl = vi.fn(async () => {
+      throw new Error('fetch-secret transport failure');
+    });
+    const http = new HttpOutboxDispatcher({
+      url,
+      headers: { Authorization: 'Bearer header-secret' },
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    send = (row) => http.sendEvent(row);
+    const outcomes = await bounded(outbox.dispatchEventsDue(1));
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(outcomes.map((item) => item.row.id)).toEqual([event.id]);
+    const admin = await postgres.connectAsAdmin();
+    try {
+      const evidence = await admin.query<{
+        provider: string;
+        error: string;
+        request_headers: Record<string, string>;
+      }>(
+        `select provider,error,request_headers from outbox.event_attempts
+          where tenant_id=$1 and event_id=$2 and attempt_ordinal=1`,
+        [TENANT, event.id],
+      );
+      const delivery = await admin.query<{ last_error: string }>(
+        `select last_error from outbox.event_delivery where tenant_id=$1 and event_id=$2`,
+        [TENANT, event.id],
+      );
+      expect(evidence.rows).toHaveLength(1);
+      expect(evidence.rows[0]?.provider).toBe('https://provider.example.test/submit');
+      expect(evidence.rows[0]?.request_headers.authorization).toBe('[redacted]');
+      const exposed = JSON.stringify({
+        outcome: outcomes[0],
+        attempt: evidence.rows[0],
+        projection: delivery.rows[0],
+      });
+      for (const secret of [
+        'alice',
+        'pw-secret',
+        'query-secret',
+        'fetch-secret',
+        'header-secret',
+      ]) {
+        expect(exposed).not.toContain(secret);
+      }
+    } finally {
+      await admin.end();
+      await ack(event.id);
+    }
+  }, 15_000);
 });

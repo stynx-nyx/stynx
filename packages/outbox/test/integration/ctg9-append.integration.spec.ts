@@ -1,6 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { Database, StynxDataModule, StynxPoolRegistry, type Transaction } from '@stynx-nyx/data';
+import {
+  AuditChainKeyMismatchError,
+  Database,
+  StynxDataModule,
+  StynxPoolRegistry,
+  type Transaction,
+} from '@stynx-nyx/data';
 import { OutboxService } from '../../src/outbox.service';
 import { StynxOutboxError } from '../../src/errors';
 import { StynxOutboxModule } from '../../src/outbox.module';
@@ -103,6 +109,41 @@ describe('CTG9 append-only outbox facts (PostgreSQL/RLS)', () => {
     await moduleRef?.close();
     await postgres?.dispose();
   }, 60_000);
+
+  it('restores caller lock_timeout when a caught chain-key mismatch leaves the transaction usable', async () => {
+    const key = `ctg9-mismatch-${randomUUID()}`;
+    const observed = await database.withRequestContext({ tenantId: TENANT_A, actorId: ACTOR }, () =>
+      database.tx(
+        async (trx) => {
+          await trx.query(`select set_config('lock_timeout','41ms',true)`);
+          await trx.query(`select set_config('stynx.audit_chain_key',$1,true)`, [TENANT_B]);
+          let failure: unknown;
+          try {
+            await append.appendInTransaction(trx, {
+              entity: 'ctg9.mismatch',
+              entityId: key,
+              idempotencyKey: key,
+              payload: { shouldRollback: true },
+            });
+          } catch (error) {
+            failure = error;
+          }
+          const setting = await trx.query<{ value: string }>(
+            `select current_setting('lock_timeout') as value`,
+          );
+          const facts = await trx.query<{ count: string }>(
+            'select count(*)::text as count from outbox.events where tenant_id=$1 and idempotency_key=$2',
+            [TENANT_A, key],
+          );
+          return { failure, lockTimeout: setting.rows[0]?.value, count: facts.rows[0]?.count };
+        },
+        { role: 'app', isolation: 'read committed', retry: false },
+      ),
+    );
+    expect(observed.failure).toBeInstanceOf(AuditChainKeyMismatchError);
+    expect(observed.lockTimeout).toBe('41ms');
+    expect(observed.count).toBe('0');
+  });
 
   it('restores caller lock_timeout and composes append with later audit and idempotency writes', async () => {
     const key = `ctg9-compose-${randomUUID()}`;

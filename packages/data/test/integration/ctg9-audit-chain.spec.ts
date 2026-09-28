@@ -249,4 +249,58 @@ describe('CTG9 shared audit chain on live PostgreSQL', () => {
       await client.end();
     }
   });
+  it('preserves published NULL-tenant visibility on both audit tables after 0021', async () => {
+    const key = `ctg9-null-rls-${Date.now()}`;
+    const admin = await postgres.connectAsAdmin();
+    try {
+      // Isolate the published NULL-tenant RLS predicate from optional direct-read grants.
+      await admin.query('grant usage on schema audit to stynx_app,stynx_reader');
+      await admin.query('grant select on audit.events,audit.log to stynx_app,stynx_reader');
+      await admin.query('select audit.ensure_monthly_partition(clock_timestamp())');
+      await admin.query(
+        `insert into audit.events (tenancy_id,operation,entity,entity_id,row_hash)
+         values (null,'CREATE','ctg9.null-rls',$1,'placeholder')`,
+        [key],
+      );
+      await admin.query(
+        `insert into audit.log (table_schema,table_name,row_id,operation,tenant_id)
+         values ('ctg9','null-rls',$1,'INSERT',null)`,
+        [key],
+      );
+    } finally {
+      await admin.end();
+    }
+
+    for (const role of ['stynx_app', 'stynx_reader'] as const) {
+      const client = await postgres.connectAsAdmin();
+      try {
+        await client.query('begin');
+        await client.query(`set local role ${role}`);
+        await client.query(`select set_config('app.tenant_id',$1,true)`, [TENANT]);
+        const identity = await client.query<{
+          current_user: string;
+          rolsuper: boolean;
+          rolbypassrls: boolean;
+        }>('select current_user,rolsuper,rolbypassrls from pg_roles where rolname=current_user');
+        expect(identity.rows).toEqual([
+          { current_user: role, rolsuper: false, rolbypassrls: false },
+        ]);
+        const events = await client.query<{ count: string }>(
+          `select count(*)::text as count from audit.events
+            where tenancy_id is null and entity='ctg9.null-rls' and entity_id=$1`,
+          [key],
+        );
+        const logs = await client.query<{ count: string }>(
+          `select count(*)::text as count from audit.log
+            where tenant_id is null and table_schema='ctg9' and row_id=$1`,
+          [key],
+        );
+        expect(events.rows[0]?.count).toBe('1');
+        expect(logs.rows[0]?.count).toBe('1');
+      } finally {
+        await client.query('rollback').catch(() => undefined);
+        await client.end();
+      }
+    }
+  });
 });
