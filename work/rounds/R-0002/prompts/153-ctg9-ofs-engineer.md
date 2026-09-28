@@ -47,6 +47,11 @@ Implemente UPS-OFS-01…04 até os sensores passarem:
   antes de adquirir pool. OFS importa só a interface da porta de eventos,
   não o pacote outbox. Janela de concorrência e handoff são resolvidos
   pelo host, com suspeita nos dois atos e ações de resolução tipadas.
+  O pool de integração usa `stynx_app` real, sem superuser/BYPASSRLS.
+  Recibos `received` sobrevivem fora da tx de aplicação; falha interna
+  ou da porta de evento reverte efeito/consumo/recibo final/evento daquele
+  item e deixa o irmão `applied`. Esgotado 40P01/40001, o item segue
+  `received`, o lote `open` com `responseStatus:null`, sem consumo.
 - Migration 0002 aditiva/backfill sem perder ID/status/hash, com constraint
   global antiga removida só após índice parcial E6 por hash e nova chave
   CTG9; `identity_mode` é server-owned e o E6 `ON CONFLICT` mira o índice

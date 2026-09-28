@@ -813,3 +813,11 @@ dois write sets de produção em paralelo, não código OFS nem conformidade.
 Os Engineers SIG e OBX/data foram despachados em paralelo após o PASS.
 O Inspector OFS corrigiu os três bloqueios do ciclo 3; prompt 159 pede
 review do delta antes de seu commit Inspector e do despacho Engineer OFS.
+
+Review do prompt 159: a ponte rejeitou JSON cercado e texto com aparente
+PASS; o fallback estruturado retornou **REVIEW** em
+`reviews/ctg9-ofs-sensor-delta-review-4.json`, por sensor PostgreSQL
+conectado como superuser. O veredito estruturado governa a rodada; o
+Inspector deve usar `stynx_app`/`stynx_reader` reais e verificar FORCE RLS
+antes de novo review. O prompt Engineer 153 ganhou oráculos explícitos
+de recibo, partial, 40P01 e papel app.
