@@ -65,3 +65,13 @@ CTG5. All work enters one cumulative branch and one final PR after CTG8.
 Current OD-S15-02 checkpoint (2026-09-28): Inspector B shell and published-helper sensors, their Engineer implementation, consumer adoption and the reference shell fixture are committed. The real Playwright shell fixture passed 2/2 with zero axe `serious`/`critical` findings. NGERR Inspector sensors are committed at `0ac9dccb` and bootstrap correction `684db971`; Engineer NGERR source is committed at `d5354aaf`. Full affected package tests passed: SDK 68/68, Angular 97/97, Angular UI 19/19, with typechecks passing. Generated i18n keys and the generator/Prettier ownership fix are committed at `648df30c` and `79b301f7`; `pnpm i18n:check` passes. `pnpm package-readmes:write` changed only the Angular UI README, committed at `aeeac841`. IFM/ETag and `createFakeTransaction` Inspector/Engineer tasks remain pending the CTG-0005 stable transaction/API checkpoint and this branch's ordered rebase. No CTG6 delivery review, full campaign CI, PR or published RC has occurred.
 
 CTG-0005 stable dependency checkpoint: this CTG-0006 branch was rebased without conflict onto `a8af3ac5` (CTG5 Architect trace/API rebind), whose source is `332af2f5`. `TransactionalCommand` retains `etag` in its four-header committed replay allowlist; `Database.tx` exports `requireActor`, and `Transaction.query`/`execute` retain their public signatures. CTG5 real HTTP 5/5, advanced HTTP 5/5, rollback/race 8/8, migration 4/4, complete backend tests, `pnpm test:int`, RLS negative/smoke, API baseline and trace all passed at that checkpoint. CTG5 delivery review and the later statement-timeout Inspector amendment remain to be incorporated before final import. The stable API/ETag prerequisite for CTG6 IFM and fake-transaction Inspector dispatch is now satisfied; preserve separate locks and rebase the final CTG5 delta before delivery review.
+
+Inspector IFM/ETag and fake-Transaction sensors are committed separately at
+`9b49718d`. The focused IFM tests are red for absent public exports; the fake
+Transaction tests are red 3/3 in `packages/testing` and 1/18 in
+`packages/data`, with the other 17 data tests passing. They are intentionally
+red pending Engineer implementation. Check the package graph before adding a
+`data` → `testing` dependency because `testing` already imports `data`.
+The branch still needs the final CTG5 delta (currently through `91db8feb`),
+Engineer IFM/fake implementation, F1 error-catalog ownership, trace/API rebind,
+changeset, focused gates and delivery-review. No CTG6 PR or RC publication.
