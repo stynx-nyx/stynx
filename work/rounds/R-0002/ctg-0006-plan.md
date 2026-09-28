@@ -6,12 +6,12 @@
 
 OD-S15-02 replaces this worktree's old per-CTG PR/RC/full-CI cadence. CTG-0002 SSE/testing and CTG-0003 auth/session are merged in `main`; CTG-0004 jobs has PASS on branch `3a69785a` and enters the cumulative campaign branch without its own PR. **Inspector B shell and published testing entrypoint sensors that do not import CTG5 `Transaction` may begin after revised flow prompt-review PASS and a CTG2/3 API checkpoint.** Their Engineer B counterparts may follow red tests on disjoint paths. Inspector A's IFM/ETag integration, `createFakeTransaction`, data-test adoption and final Angular interop wait for CTG5's stable Transaction/ETag checkpoint and an updated cumulative HEAD. Record SHAs and review receipts below; rebase only at stable checkpoints and rerun affected focused gates. The contract binds `ErrorInterceptor` including `STYNX_SSE_REQUEST`, `StynxSessionService` wildcard matching, and CTG5 `Transaction` semantics; Inspector must read the exact version of each file. CTG-0006 owns U8–U11 except UPS-TEST-01, already allocated to CTG-0002. One fixed-group changeset, no CTG6 PR or RC publication. No candidate UPS-SIG/OBX/OFS enters this CTG absent the §8 adenda.
 
-| Predecessor | Integrated SHA    | Review receipt                                                                 | Gate                                                                                                                   |
-| ----------- | ----------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| CTG-0002    | main `ce652143`   | PR #285 merged                                                                 | SSE/API checkpoint available                                                                                           |
-| CTG-0003    | main `48b42874`   | PR #287 merged                                                                 | wildcard/API checkpoint available                                                                                      |
-| CTG-0004    | branch `3a69785a` | `reviews/ctg4-final-delivery-review-2.json` in conformance worktree            | PASS; cumulative import pending                                                                                        |
-| CTG-0005    | branch `a8af3ac5` | `reviews/ctg5-predecessor-reconciliation-review-3.json` PASS; delivery pending | Transaction/public API and ETag replay allowlist checkpoint stable; focused real DB, backend and `test:int` gates pass |
+| Predecessor | Integrated SHA    | Review receipt                                                      | Gate                                                                                                                   |
+| ----------- | ----------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| CTG-0002    | main `ce652143`   | PR #285 merged                                                      | SSE/API checkpoint available                                                                                           |
+| CTG-0003    | main `48b42874`   | PR #287 merged                                                      | wildcard/API checkpoint available                                                                                      |
+| CTG-0004    | branch `3a69785a` | `reviews/ctg4-final-delivery-review-2.json` in conformance worktree | PASS; included in cumulative branch                                                                                    |
+| CTG-0005    | branch `e8931c57` | `reviews/ctg5-delivery-review-2.json` PASS                          | Transaction/public API and ETag replay allowlist checkpoint stable; focused real DB, backend and `test:int` gates pass |
 
 ## Role-separated work and locks
 
@@ -75,3 +75,22 @@ red pending Engineer implementation. Check the package graph before adding a
 The branch still needs the final CTG5 delta (currently through `91db8feb`),
 Engineer IFM/fake implementation, F1 error-catalog ownership, trace/API rebind,
 changeset, focused gates and delivery-review. No CTG6 PR or RC publication.
+
+CTG-0006 final predecessor reconciliation: CTG5 Opus delivery-review cycle 2
+returned PASS at `7e858d57`; two nonblocking HTTP provenance sensors were
+added at `81da44e3` and bound to trace at `e8931c57`. The cumulative CTG4
+branch advanced by fast-forward to `e8931c57`. This CTG6 branch rebased 39
+role-separated commits from `a8af3ac5` onto that exact CTG5 HEAD, resolving
+only the additive `law/trace.json` note conflict. `@RequireIfMatch()` and
+`@RevisionETag()` now have real Nest/PostgreSQL composition tests with
+`@TransactionalCommand`: 17/17 focused tests passed, including rollback,
+strong ETag persisted on commit and replay, and no ETag on failures. Architect
+bound the new 45-assertion projection; `pnpm check:trace --print` passes
+441/441, `pnpm lint:tests` passes and public API baselines match 44/44.
+The post-merge DEVAI hook in the cumulative worktree reports a missing
+worktree-local adapter script (`.git/worktrees/stynx2/devai/issue-post-merge-receipt.cjs`)
+even though the fast-forward succeeded. Triagem: `sensor-error`; repair its
+local installation or receipt setup before the final campaign merge, without
+editing a tracked workflow. Next: finish CTG6 focused gates and Opus delivery
+review on the exact rebased HEAD, then import CTG6 by fast-forward. No CTG6
+PR or RC publication.
