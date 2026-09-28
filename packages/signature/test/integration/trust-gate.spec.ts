@@ -8,6 +8,7 @@ import {
   appendDuplicatePrev,
   appendHybridXref,
   omitUpdatedCatalogFromXref,
+  listUpdatedCatalogInXref,
 } from '../fixtures/pki/xref-attacks';
 import {
   bltCmsSignature,
@@ -527,6 +528,14 @@ describe('concrete STYNX CMS verifier', () => {
       .rejects.toMatchObject({ message: 'Post-signature modification' });
   });
 
+  it('accepts the same appended DSS payload when the updated catalog is in final xref', async () => {
+    const signedDocument = listUpdatedCatalogInXref(bltSignedDocument);
+    const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({ ...input(), signedDocument });
+    expect(result.padesProfile).toBe('PAdES-B-LT');
+    expect(result.signedDocumentSha256).toBe(hex(signedDocument));
+  });
+
   it('accepts legal spaces inside the selected ByteRange brackets', async () => {
     const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
       .verifySignedArtifact({
@@ -694,6 +703,33 @@ describe('concrete STYNX CMS verifier', () => {
       });
     expect(result.padesProfile).toBe('PAdES-B-LT');
     expect(result.revocationSource).toBe('crl');
+  });
+
+  it('rejects post-TST revocation despite a pre-TST good OCSP response in the same DSS', async () => {
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes('pades-pre-good-post-revoked-source.pdf'),
+        signedDocument: bytes('pades-pre-good-post-revoked-blt.pdf'),
+        cmsSignature: bytes('pades-pre-good-post-revoked-blt.cms.der'),
+        profile: { ...profile, revocation: 'ocsp-or-crl' },
+      })).rejects.toMatchObject({
+        name: 'SignatureTrustError',
+        message: 'Certificate revoked',
+      });
+  });
+
+  it('falls back from stale to fresh signer OCSP in the same DSS', async () => {
+    const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes('pades-stale-fresh-ocsp-source.pdf'),
+        signedDocument: bytes('pades-stale-fresh-ocsp-blt.pdf'),
+        cmsSignature: bytes('pades-stale-fresh-ocsp-blt.cms.der'),
+        profile: { ...profile, revocation: 'ocsp' },
+      });
+    expect(result.padesProfile).toBe('PAdES-B-LT');
+    expect(result.revocationSource).toBe('ocsp');
   });
 
   it('keeps existing no-minimum mock signing and verification', async () => {

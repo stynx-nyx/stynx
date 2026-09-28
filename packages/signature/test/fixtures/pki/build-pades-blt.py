@@ -28,6 +28,7 @@ SIGNER_KIND = os.environ.get('STYNX_SIGNER_KIND', 'signer')
 ATTACHED_CMS = os.environ.get('STYNX_ATTACHED_CMS') == '1'
 PRE_TST_GOOD = os.environ.get('STYNX_PRE_TST_GOOD') == '1'
 STALE_SIGNER_OCSP = os.environ.get('STYNX_STALE_SIGNER_OCSP') == '1'
+INCLUDE_FRESH_SIGNER_OCSP = os.environ.get('STYNX_INCLUDE_FRESH_SIGNER_OCSP') == '1'
 if SIGNER_KIND not in ('signer', 'spoof'):
     raise ValueError('STYNX_SIGNER_KIND must be signer or spoof')
 if MANIFEST and (len(MANIFEST) != 64 or any(c not in '0123456789abcdef' for c in MANIFEST)):
@@ -171,6 +172,7 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
     if not PRE_TST_GOOD:
         generate_revocation()
     tsa_ocsp = (work / 'tsa-ocsp.der').read_bytes()
+    fresh_signer_ocsp = (work / f'{SIGNER_KIND}-ocsp.der').read_bytes()
     signer_ocsp = stale_signer_ocsp if STALE_SIGNER_OCSP else (work / f'{SIGNER_KIND}-ocsp.der').read_bytes()
     fresh_crl = (work / 'fresh.crl.der').read_bytes()
     if not B_B_ONLY:
@@ -208,7 +210,9 @@ def stream(data):
     marker = ' /Filter /FlateDecode' if COMPRESS_DSS else ''
     return f'<< /Length {len(payload)}{marker} >>\nstream\n'.encode() + payload + b'\nendstream'
 cert_refs = '10 0 R' if OMIT_TSA_REVOCATION else '10 0 R 14 0 R'
-ocsp_refs = '11 0 R' if OMIT_TSA_REVOCATION else '11 0 R 13 0 R'
+ocsp_refs = '11 0 R' + (' 15 0 R' if INCLUDE_FRESH_SIGNER_OCSP else '')
+if not OMIT_TSA_REVOCATION:
+    ocsp_refs += ' 13 0 R'
 crl_refs = '' if OMIT_TSA_REVOCATION else '12 0 R'
 if COMPACT_DSS:
     dss = f'<</Type/DSS/Certs[{cert_refs}]/OCSPs[{ocsp_refs}]/CRLs[{crl_refs}]/VRI<</{vri_key} 9 0 R>>>>'.encode()
@@ -225,6 +229,8 @@ objects = [
 ]
 if not OMIT_TSA_REVOCATION:
     objects.extend([(12, stream(crl)), (13, stream(tsa_ocsp)), (14, stream(tsa_certificate))])
+if INCLUDE_FRESH_SIGNER_OCSP:
+    objects.append((15, stream(fresh_signer_ocsp)))
 final, offsets = add_objects(revision, objects)
 final, _ = xref(final, offsets, signed_xref)
 (OUT / f'{PREFIX}-blt.pdf').write_bytes(final)

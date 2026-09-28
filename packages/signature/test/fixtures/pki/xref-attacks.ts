@@ -92,6 +92,7 @@ export function appendCatalogShadow(pdf: Uint8Array): Uint8Array {
 export function omitUpdatedCatalogFromXref(
   pdf: Uint8Array,
   header: 'glued' | 'comment-separated',
+  includeCatalog = false,
 ): Uint8Array {
   const original = Buffer.from(pdf);
   const text = original.toString('latin1');
@@ -118,8 +119,14 @@ export function omitUpdatedCatalogFromXref(
     return row(Number(match[1]) - (catalogEnd - signedEnd));
   });
   return Buffer.concat([body, Buffer.from(
-    `xref\n8 7\n${entries.join('')}` +
+    `xref\n${includeCatalog ? `1 1\n${row(signed.length + evidencedBody.length)}` : ''}` +
+    `8 7\n${entries.join('')}` +
     `trailer\n<< /Size 15 /Root 1 0 R /Prev ${previous} >>\n` +
     `startxref\n${body.length}\n%%EOF\n`,
   )]);
+}
+
+/** Exact omission payload, with the appended catalog declared in final xref. */
+export function listUpdatedCatalogInXref(pdf: Uint8Array): Uint8Array {
+  return omitUpdatedCatalogFromXref(pdf, 'glued', true);
 }
