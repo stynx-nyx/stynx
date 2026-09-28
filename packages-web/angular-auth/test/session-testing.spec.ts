@@ -44,7 +44,8 @@ describe('@stynx-nyx/angular-auth/testing', () => {
     expect(stub.active()).toBe(true);
     expect(stub.hasAllPermissions(['documents:read', 'reports:view'])).toBe(true);
     expect(stub.hasAnyPermissions(['admin:write', 'reports:view'])).toBe(true);
-    expect(stub.hasAllPermissions(['reports:*'])).toBe(false);
+    expect(stub.hasAllPermissions(['reports:*'])).toBe(true);
+    expect(stub.hasAllPermissions(['other:*'])).toBe(false);
 
     stub.setPermissions(['admin:*']);
     expect(stub.hasAllPermissions(['admin:write'])).toBe(true);
