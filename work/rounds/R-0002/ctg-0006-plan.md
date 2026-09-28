@@ -118,3 +118,20 @@ Os dez commits antigos com autor humano mantêm declaração constitucional por
 escopo e conteúdo, sem misturar papéis em um commit: **Engineer** em
 `6b499e97`, `11870f5c`, `2880b37c`, `1e9a59eb`, `fa75d850` e `71db8791`;
 **Inspector** em `44fd61b2`, `c13236c2`, `28c0666c` e `8f76fbe8`.
+
+Reparo do review ciclo 1: Inspector prendeu a identidade da classe no source
+do teste data (`a68f5f2b`), criou sensor de imports públicos dos dez arquivos
+de adoção (`6d01fe29`) e provou tema `system`, media changes, SSR, status vivo
+en/pt-BR e teclado no browser (`58649782`). Inspector também fixou o
+`requestId` do envelope legado em teste vermelho (`1b708385`); Engineer
+reparou o SDK em `20fdd291`. Architect rebindeou cinco projeções de trace em
+`f283b6a0`. Passaram `pnpm check:trace --print` 442/442, `pnpm lint:tests`,
+angular-ui 26/26, data 90/90, SDK 69/69, Playwright shell 2/2, i18n,
+READMEs, API baselines 44/44, builds Angular UI/reference-web e DEVAI
+forbidden strict sem achados. Um build Angular UI concorrente com
+`api:baselines` falhou por limpeza compartilhada de `dist` (`sensor-error`);
+repetido sequencialmente após o baseline, passou com typecheck/build do
+consumidor. A primeira tecla Tab na página de referência pode atingir os
+controles do header externo; o teste do componente prova que o skip link é
+o primeiro tabbable do shell. Próximo gate: Opus delivery-review ciclo 2 no
+HEAD exato; REVIEW/FAIL impede a importação.
