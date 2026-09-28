@@ -141,7 +141,7 @@
           "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
           "names": ["INV-RBAC-001"],
           "assertions": [
-            "look-alike, inherited, and imperative-only guards cannot attest a protected command actor"
+            "look-alike, inherited, and imperative-only guards cannot attest a protected command actor; cross-tenant Bearer rejects without key or audit"
           ],
           "mode": "gray_box"
         },
@@ -566,7 +566,7 @@
           "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
           "names": ["INV-CORE-001"],
           "assertions": [
-            "real HTTP commands commit only with resolved tenant and actor provenance; wrong module order fails before a transaction"
+            "real HTTP commands commit only with resolved tenant and actor provenance; wrong module order fails before a transaction; rejected commands omit the key header and committed replay echoes it"
           ],
           "mode": "gray_box"
         },
@@ -837,7 +837,7 @@
           "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
           "names": ["INV-TENANCY-001"],
           "assertions": [
-            "nominal, verified and protected commands preserve tenant and actor provenance across two real RLS tenants"
+            "nominal, verified and protected commands preserve tenant and actor provenance across two real RLS tenants; protected cross-tenant Bearer cannot write a key or audit row"
           ],
           "mode": "gray_box"
         },
@@ -4450,8 +4450,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "2f1edae608979f9e04e7e208343648d59489b33aa65e7d44de19ab32e46fcab5"
+      "assertion_count": 40,
+      "assertion_digest_sha256": "787c8a59f63bec64895012dcc1673f06dbfa9cbb9fbc6b0277f8bac724d52215"
     },
     {
       "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
