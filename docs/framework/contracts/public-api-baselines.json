@@ -17,7 +17,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-testing.d.ts": "40adbfacff8501e98c4432e2c2acb35de59e8bd04b9a18facef58aefdacde47f",
-        "types/stynx-nyx-angular.d.ts": "68670ba8095c8cf254785bb6129c733d0284d4405a5ba802a28b49912e31946b"
+        "types/stynx-nyx-angular.d.ts": "078935e54eaa78f721ecf1b548af46b7fb27e5325f528c2065e2fd71106621a0"
       }
     },
     "@stynx-nyx/angular-audit": {
@@ -66,8 +66,8 @@
         }
       },
       "declarationHashes": {
-        "types/stynx-nyx-angular-auth-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-auth.d.ts": "60c5fb037c71d0158c20cadbaf1cadbdd317de984540a6e66cd7c2b2d879eb7c"
+        "types/stynx-nyx-angular-auth-testing.d.ts": "5e5a8ab21a3e58bf0384d85c04eb976aa458d4b5fee3348789b97d075054577b",
+        "types/stynx-nyx-angular-auth.d.ts": "e6fce0f6b5f04fa1eb2e39785f5c9927eeff07eb279fbaf815fab06a3be23732"
       }
     },
     "@stynx-nyx/angular-flow": {
@@ -116,7 +116,7 @@
         }
       },
       "declarationHashes": {
-        "types/stynx-nyx-angular-i18n-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
+        "types/stynx-nyx-angular-i18n-testing.d.ts": "2ab4da38350d3161dba9a3c816fbcdcdbf6627c6f190fafe9109843efa999678",
         "types/stynx-nyx-angular-i18n.d.ts": "afc6ca09cfddff22982b5927b4a17d399dc36cfdcb4774805d10ab57ebcce840"
       }
     },
@@ -292,7 +292,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-ui-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-angular-ui.d.ts": "9e8c7b1339ac47cca075c1c8d7e6a6cea86821cc37c9605601ee7d33edcb2fdb"
+        "types/stynx-nyx-angular-ui.d.ts": "b4e522a01006fa9d5e6b36c2d6611b6d46e0c6a1185f2da307594ca56af3c266"
       }
     },
     "@stynx-nyx/audit": {
@@ -613,7 +613,8 @@
         "backend/src/identity-admin/identity-admin.service.d.ts": "9be8e7e5395a4e8e2efd28c7362f1c8f24b32abac981ccd96f8cb895e49ad556",
         "backend/src/identity-admin/integration-facades.d.ts": "c6b7e96335f530649e538e061efb680c357e295107eb3f7721562ba6cada6dcb",
         "backend/src/identity-admin/pg-local-sync.adapter.d.ts": "4b34ac0045d2531bc85d0d7755802861692e165354790a1c6c1df5b767e38508",
-        "backend/src/index.d.ts": "0ccbaee20efdc6ee7ca6e0d68a9c29980ba23df13daba6fe73da92bd74ce5940",
+        "backend/src/if-match/if-match.d.ts": "08b2eff0be591cf8c2b46969604553dd7aaeb0edd6e361ddb2200879d0cd3ead",
+        "backend/src/index.d.ts": "b857e220782097f47d95936a2a9563f73f6298b286fd9b8561eb921b4b8fa177",
         "backend/src/pipeline/platform-pipeline.module.d.ts": "643b7a422d5bd2cfb602491907159dcee76f12e7ecaaf212008d6a13185959a5",
         "backend/src/rate-limit/constants.d.ts": "482ab6c828fa70c589a8430353014e6cfea91c48f16da41feb4ab0a1ddae736b",
         "backend/src/rate-limit/pg-rate-limit.store.d.ts": "e1e5e542b59a6fde8ff79cacd997b5735b6273a961c4c329bd894c72034d3072",
@@ -909,7 +910,8 @@
         "backend/src/identity-admin/identity-admin.service.d.ts": "9be8e7e5395a4e8e2efd28c7362f1c8f24b32abac981ccd96f8cb895e49ad556",
         "backend/src/identity-admin/integration-facades.d.ts": "c6b7e96335f530649e538e061efb680c357e295107eb3f7721562ba6cada6dcb",
         "backend/src/identity-admin/pg-local-sync.adapter.d.ts": "4b34ac0045d2531bc85d0d7755802861692e165354790a1c6c1df5b767e38508",
-        "backend/src/index.d.ts": "0ccbaee20efdc6ee7ca6e0d68a9c29980ba23df13daba6fe73da92bd74ce5940",
+        "backend/src/if-match/if-match.d.ts": "08b2eff0be591cf8c2b46969604553dd7aaeb0edd6e361ddb2200879d0cd3ead",
+        "backend/src/index.d.ts": "b857e220782097f47d95936a2a9563f73f6298b286fd9b8561eb921b4b8fa177",
         "backend/src/pipeline/platform-pipeline.module.d.ts": "643b7a422d5bd2cfb602491907159dcee76f12e7ecaaf212008d6a13185959a5",
         "backend/src/sla/constants.d.ts": "879f08bac5eecc148b8d5e7b0cd49095356598b164c357d8df710b27be0e0013",
         "backend/src/sla/default-sla-category.resolver.d.ts": "eba781f1ebf8b23a69ea4aa7ca7e05cc998f1cb331fa0ce6659109c674604f0b",
@@ -1544,7 +1546,8 @@
         "backend/src/identity-admin/identity-admin.service.d.ts": "9be8e7e5395a4e8e2efd28c7362f1c8f24b32abac981ccd96f8cb895e49ad556",
         "backend/src/identity-admin/integration-facades.d.ts": "c6b7e96335f530649e538e061efb680c357e295107eb3f7721562ba6cada6dcb",
         "backend/src/identity-admin/pg-local-sync.adapter.d.ts": "4b34ac0045d2531bc85d0d7755802861692e165354790a1c6c1df5b767e38508",
-        "backend/src/index.d.ts": "0ccbaee20efdc6ee7ca6e0d68a9c29980ba23df13daba6fe73da92bd74ce5940",
+        "backend/src/if-match/if-match.d.ts": "08b2eff0be591cf8c2b46969604553dd7aaeb0edd6e361ddb2200879d0cd3ead",
+        "backend/src/index.d.ts": "b857e220782097f47d95936a2a9563f73f6298b286fd9b8561eb921b4b8fa177",
         "backend/src/pipeline/platform-pipeline.module.d.ts": "643b7a422d5bd2cfb602491907159dcee76f12e7ecaaf212008d6a13185959a5",
         "backend/src/sla/constants.d.ts": "879f08bac5eecc148b8d5e7b0cd49095356598b164c357d8df710b27be0e0013",
         "backend/src/sla/default-sla-category.resolver.d.ts": "eba781f1ebf8b23a69ea4aa7ca7e05cc998f1cb331fa0ce6659109c674604f0b",
@@ -2167,7 +2170,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-sdk-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-sdk.d.ts": "48178ce7721c12f2827d092f8cef98f6bdd7ee65c00785228656cc5f22d2c863"
+        "types/stynx-nyx-sdk.d.ts": "a2d924c97cdca97cd8cc758da4ce59e338d959edbd74699ffe4ff4a81ff2db04"
       }
     },
     "@stynx-nyx/sessions": {
@@ -2460,8 +2463,9 @@
         "testing/src/context.d.ts": "8ff587afd65df0ff9a4b332d9bc284711ddd63ac82e8e3fe271a83170a956c17",
         "testing/src/create-test-app.d.ts": "911a8ae3ae7cad5adb8fe343dce81e3ae82676ed51ec53b2bb8d4c98a828ab09",
         "testing/src/doctor.d.ts": "6b4fa9b212becbd8d09b4dbe9e10ca209bc3baee2d264af81d61cb000791fe49",
+        "testing/src/fake-transaction.d.ts": "e51799aa9b6cebe4914b112ab7a1f05a2cbaaf44b004573378fc8df9e782d36b",
         "testing/src/fixtures.d.ts": "5e8323605a330f5e81eaecef54668941e21d92eb219114fdb74d6bd4fa0593e7",
-        "testing/src/index.d.ts": "0615c1373a361b56b0265d3d977d486422077dabd55734e4d5bb1d97232eb8eb",
+        "testing/src/index.d.ts": "7dfa0fa2177902ce1135da90d9f77de719a6a4cd47c658f2a87ef4f668507686",
         "testing/src/lgpd-fixture.d.ts": "af76fa9d9ba94395f1d81a9a3514991f70a5f7fc57a077465a5db8acf15cb49a",
         "testing/src/matchers.d.ts": "9a5c914452f4738a7046b5395343b133bea3e72699ca9f00c95f881799196468",
         "testing/src/mint-test-session.d.ts": "ff09b79223d8f3db5491898ae7e3cba54ba4bf71d7cc53820821b47d6073242b",
