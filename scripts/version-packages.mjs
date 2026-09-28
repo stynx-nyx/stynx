@@ -21,6 +21,10 @@ import {
   validateGeneratedVersionTransition,
 } from './lib/fixed-group-version.mjs';
 import { syncReleaseVersion, validateReleaseVersionPolicy } from './lib/release-version-policy.mjs';
+import {
+  restorePrivateWorkspacePackages,
+  snapshotPrivateWorkspacePackages,
+} from './lib/private-workspace-version.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const preview = process.argv.includes('--preview');
@@ -49,7 +53,37 @@ if (preview) {
   process.exit(0);
 }
 
-run('pnpm', ['exec', 'changeset', 'version']);
+const privateSnapshot = snapshotPrivateWorkspacePackages(repoRoot);
+let changesetResult;
+let changesetError;
+let restorationError;
+try {
+  changesetResult = spawnSync('pnpm', ['exec', 'changeset', 'version'], {
+    cwd: repoRoot,
+    stdio: 'inherit',
+  });
+} catch (error) {
+  changesetError = error;
+} finally {
+  try {
+    restorePrivateWorkspacePackages(privateSnapshot);
+  } catch (error) {
+    restorationError = error;
+  }
+}
+
+if (changesetError || changesetResult?.error || changesetResult?.status !== 0 || restorationError) {
+  const status = changesetResult?.status ?? 1;
+  console.error(`[version-packages] Changesets version exit status ${changesetResult?.status ?? 'null'}${changesetResult?.signal ? ` (signal ${changesetResult.signal})` : ''}`);
+  if (changesetError || changesetResult?.error) {
+    console.error(`[version-packages] Changesets spawn error: ${(changesetError ?? changesetResult.error).message}`);
+  }
+  if (restorationError) {
+    console.error(`[version-packages] ${restorationError.message}:`);
+    for (const error of restorationError.errors ?? [restorationError]) console.error(`- ${error.message}`);
+  }
+  process.exit(status === 0 ? 1 : status);
+}
 
 const generated = unifiedVersion(repoRoot);
 if (plan.preState) {
