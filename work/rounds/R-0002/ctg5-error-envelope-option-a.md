@@ -12,9 +12,12 @@ não autoriza mudar o fio: `INV-ERROR-001.change_policy` requer aprovação huma
 texto falharam na validação de JSON (aspas não escapadas e cerca Markdown),
 sem recibo PASS. O fallback `claude -p` com o mesmo prompt e schema de saída
 gerou `reviews/ctg5-error-envelope-option-a-review-fallback.json` com
-`REVIEW` e oito achados. Esta revisão do plano cobre esses achados; nenhum
-Inspector ou Engineer foi despachado nesta proposta. Uma nova revisão válida
-e PASS continua necessária antes do despacho, além da decisão do Owner.
+`REVIEW` e oito achados. A revisão 2 retornou `REVIEW` com sete achados e a
+revisão 3 retornou `REVIEW` com quatro reparos exigidos e um achado
+informativo, registrados em `reviews/ctg5-error-envelope-option-a-review-2.json`
+e `-3.json`. Esta revisão do plano cobre os reparos; nenhum Inspector ou
+Engineer foi despachado nesta proposta. Uma nova revisão válida e PASS
+continua necessária antes do despacho, além da decisão do Owner.
 
 ## Decisão a registrar
 
@@ -85,28 +88,37 @@ contrato, sem emitir uma exceção crua e chamar o gate de verde.
 
 ### Outros caminhos da fronteira
 
-| Origem CTG5                                                                                              | Contrato proposto                                                                                                                           | Sensor                                                          |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Execução fora de HTTP                                                                                    | Erro de programação antes de haver resposta HTTP; não é envelope de endpoint                                                                | unitário do interceptor                                         |
-| `scope()` lança                                                                                          | sem SQL, 500 `COMMAND:CONFIGURATION:scope-callback-failed`                                                                                  | errors HTTP                                                     |
-| status HTTP inválido ou `persistStatus()` não booleano/lança                                             | rollback, 500 `COMMAND:CONFIGURATION:status-invalid` ou `COMMAND:CONFIGURATION:status-policy-invalid`                                       | errors HTTP + ausência de efeito durável                        |
-| `encodeBody` não serializa JSON                                                                          | rollback, 500 `COMMAND:CONFIGURATION:response-not-json`                                                                                     | errors HTTP + ausência de efeito durável                        |
-| `Database.tx(requireActor)` recusa identidade ou ator                                                    | rollback, 403 `COMMAND:FORBIDDEN:transaction-identity-mismatch` ou `COMMAND:FORBIDDEN:actor-missing`                                        | wrong-role e actorless HTTP                                     |
-| `metadataSelector`, `entityIdSelector` ou redaction lança                                                | rollback, 500 `COMMAND:CONFIGURATION:audit-metadata-failed`, `retryable:false`                                                              | errors HTTP + nenhum efeito durável                             |
-| `tenancyPort.get()` lança                                                                                | sem SQL, 500 `COMMAND:CONFIGURATION:tenancy-port-failed`, `retryable:false`                                                                 | errors HTTP com port que lança                                  |
-| Store, audit sink ou COMMIT falha com erro não `StynxDataError`                                          | rollback, 503 `COMMAND:DEPENDENCY:transaction-failed`, `retryable:false`, sem expor SQL/segredos                                            | faults HTTP com injeção de falha de store/audit/COMMIT          |
-| `StatementTimeoutError`, `SerializationFailureError`, `ReadOnlyViolationError` ou outro `StynxDataError` | preservar status e forma legada emitidos pelo `StynxErrorFilter`, inclusive 504 `STATEMENT_TIMEOUT`; não classificar como 503 CTG5 por tipo | faults statement-timeout 504 inalterado; sensor de erro de data |
-| Exceção própria do handler não selecionada                                                               | rollback; exceção continua sob o contrato HTTP do consumidor, sem mascarar por CTG5                                                         | teste existente de rollback/502                                 |
-| `CommittedCommandError` com `persistStatus=false`                                                        | rollback, `HttpException` com corpo/status exatos do consumidor; o 422 CTG5 não é o 422 legado de `@stynx-nyx/idempotency`                  | http.spec 307–310, bytes inalterados                            |
+| Origem CTG5                                                                                                                                  | Contrato proposto                                                                                                                                           | Sensor                                                                |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Execução fora de HTTP                                                                                                                        | Erro de programação antes de haver resposta HTTP; não é envelope de endpoint                                                                                | unitário do interceptor                                               |
+| `scope()` lança                                                                                                                              | sem SQL, 500 `COMMAND:CONFIGURATION:scope-callback-failed`                                                                                                  | errors HTTP                                                           |
+| status HTTP inválido ou `persistStatus()` não booleano/lança                                                                                 | rollback, 500 `COMMAND:CONFIGURATION:status-invalid` ou `COMMAND:CONFIGURATION:status-policy-invalid`                                                       | errors HTTP + ausência de efeito durável                              |
+| `encodeBody` não serializa JSON                                                                                                              | rollback, 500 `COMMAND:CONFIGURATION:response-not-json`                                                                                                     | errors HTTP + ausência de efeito durável                              |
+| `TransactionIdentityMismatchError` de `Database.tx(requireActor)`                                                                            | preservar 500 legado `TRANSACTION_IDENTITY_MISMATCH`; erro de configuração do pool, não 403 do cliente                                                      | wrong-role HTTP: status/corpo legados exatos e nenhum efeito durável  |
+| `metadataSelector`, `entityIdSelector` ou redaction lança                                                                                    | rollback, 500 `COMMAND:CONFIGURATION:audit-metadata-failed`, `retryable:false`                                                                              | errors HTTP + nenhum efeito durável                                   |
+| `tenancyPort.get()` lança                                                                                                                    | sem SQL, 500 `COMMAND:CONFIGURATION:tenancy-port-failed`, `retryable:false`                                                                                 | errors HTTP com port que lança                                        |
+| Setup (`pool.connect`, BEGIN, sessão), store, audit sink ou COMMIT falha com erro não `StynxDataError`                                       | rollback, 503 `COMMAND:DEPENDENCY:transaction-failed`, `retryable:false`, sem SQL/segredos                                                                  | faults HTTP de setup/store/audit/COMMIT                               |
+| `StatementTimeoutError`, `SerializationFailureError`, `ReadOnlyViolationError`, `TransactionIdentityMismatchError` ou outro `StynxDataError` | preservar status e forma legada de `StynxErrorFilter`, inclusive 504 `STATEMENT_TIMEOUT`, 503 `SERIALIZATION_FAILURE` e 500 `TRANSACTION_IDENTITY_MISMATCH` | faults timeout/serialização e wrong-role: status/corpo legados exatos |
+| Exceção própria do handler não selecionada                                                                                                   | rollback; exceção continua sob o contrato HTTP do consumidor, sem mascarar por CTG5                                                                         | teste existente de rollback/502                                       |
+| `CommittedCommandError` com `persistStatus=false`                                                                                            | rollback, `HttpException` com corpo/status exatos do consumidor; o 422 CTG5 não é o 422 legado de `@stynx-nyx/idempotency`                                  | http.spec 307–310, bytes inalterados                                  |
 
-O Engineer deve marcar a **fase de origem** dos erros dentro da fronteira:
-store, audit, callbacks da CTG5 e handler do consumidor. O callback do
-handler carrega seu erro em marcador interno até sair de `Database.tx`, para
-que um erro cru do consumidor não vire 503 da fronteira. Erros
-`StynxDataError` de qualquer fase continuam na rota legada; isso preserva o
-504 de timeout existente. Um erro não `StynxDataError` na fase COMMIT, como
-violação de restrição diferida, vira 503 genérico com `retryable:false`, sem
-afirmar que repetição é segura. Converter erros próprios CTG5 **após**
+O Engineer registra a **fase de origem** numa variável de closure, sem
+embrulhar nem modificar o erro que sai do handler. Fases: `setup` antes de
+`Database.tx`, `store`, `audit`, `ctg5-callback`, `handler`, e `commit` após
+o callback da transação retornar com sucesso. `Database.tx` precisa enxergar
+`error.code` original para mapear 57014 em 504 `STATEMENT_TIMEOUT` e
+40001/40P01 em 503 `SERIALIZATION_FAILURE`; o Inspector preserva os dois
+corpos legados. A classificação ocorre **depois** de `Database.tx` lançar.
+`TransactionalReservationTimeoutError` tem prioridade sobre o bucket 503 e
+continua 409 `in-progress`. `StynxDataError` de qualquer fase continua no
+filtro global legado, inclusive `TransactionIdentityMismatchError` 500 da
+fixture wrong-role. `ActorContextMissingError` não é alcançável a partir de
+uma rota HTTP CTG5 válida: o boundary recusa ator vazio antes de `Database.tx`
+e sempre usa role app; cobri-lo apenas em unitário defensivo de data. Um erro
+não `StynxDataError` na fase COMMIT, inclusive violação de restrição diferida,
+vira 503 genérico com `retryable:false`, sem afirmar que repetição é segura.
+Erro não `StynxDataError` na fase `handler` segue para o contrato do
+consumidor, sem reclassificação CTG5. Converter erros próprios CTG5 **após**
 rollback, não dentro da transação abortada. O filtro
 global preexistente continua com sua forma histórica para exceções externas
 e endpoints não marcados; registrar essa dívida em `errors.json`, sem
@@ -185,16 +197,22 @@ migração.
    estabeleceu, mesmo que RequestContext não seja injetável no módulo do
    controller. Dois pedidos concorrentes que
    recebem 409 devem ter IDs distintos, cada um igual ao próprio header.
-   Cobrir explicitamente cada linha da matriz de alcance e fortalecer os
-   testes `>=400`/`toMatchObject({code})` sem retirar seus controles de
-   domínio/auditoria/chave.
+   Cobrir explicitamente cada linha da matriz de alcance. Para rejeições
+   próprias CTG5, substituir `>=400`/`toMatchObject({code})` por status exato
+   e `toEqual` do envelope completo. Para caminhos `StynxDataError` legados,
+   fortalecer status/corpo **legados** exatos (`STATEMENT_TIMEOUT` 504,
+   `SERIALIZATION_FAILURE` 503 e wrong-role 500), sem acrescentar campos
+   CTG5. Nenhum controle de domínio/auditoria/chave pode ser retirado.
    Manter e executar os negativos de rollback, a prova de status replay e os
    sensores legados. Testes primeiro; nenhuma redução de cobertura.
 3. **Engineer:** após vermelho específico, alterar somente
    `packages/backend/src/transactional-command/**` e a prosa manual do README
    e changeset listados abaixo. Centralizar a criação de
-   todas as rejeições CTG5; fazer a validação do código no módulo/scan de
-   rota, resolver o ID no filtro apenas para `CommandRejectionResponse`, e
+   todas as rejeições próprias CTG5; usar variável de fase, sem envolver o
+   erro de handler nem apagar seu `code` antes de `Database.tx` mapeá-lo.
+   Dar prioridade a `TransactionalReservationTimeoutError` antes do bucket
+   genérico 503; fazer a validação do código no módulo/scan de rota e
+   resolver o ID no filtro apenas para `CommandRejectionResponse`, e
    manter `CommittedCommandResponse` com bytes UTF-8 e status exatos sem
    reescrever os corpos 502/422 escolhidos pelo consumidor. O filtro não
    guarda requestId em singleton. Engineer também atualiza a prosa manual
