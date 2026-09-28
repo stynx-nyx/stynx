@@ -235,7 +235,7 @@ describe('TenantContextInterceptor', () => {
         originalUrl: '/records',
         stynxClaims: { sub: '018f53e4-28a1-7cd8-a0ff-5b22c3a07112', tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07111' },
       }),
-    ).resolves.toEqual({ tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07111' });
+    ).resolves.toEqual({ tenantId: TENANT_ID, checkedActorId: ACTOR_ID });
 
     expect(membershipCache.get).toHaveBeenCalledTimes(1);
     expect(txQuery).not.toHaveBeenCalledTimes(1);
@@ -250,7 +250,7 @@ describe('TenantContextInterceptor', () => {
         originalUrl: '/records',
         principal: { id: '018f53e4-28a1-7cd8-a0ff-5b22c3a07112' },
       }),
-    ).resolves.toEqual({ tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07111' });
+    ).resolves.toEqual({ tenantId: TENANT_ID, checkedActorId: ACTOR_ID });
 
     expect(database.withSystemContext).toHaveBeenCalledWith('tenant membership validation', expect.any(Function));
     expect(database.tx).toHaveBeenCalledWith(expect.any(Function), { role: 'owner', readonly: true });
@@ -277,7 +277,7 @@ describe('TenantContextInterceptor', () => {
           tenantId: ' 018f53e4-28a1-7cd8-a0ff-5b22c3a07111 ',
         },
       }),
-    ).resolves.toEqual({ tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07111' });
+    ).resolves.toEqual({ tenantId: TENANT_ID, checkedActorId: ACTOR_ID });
     await expect(
       (interceptor as never).resolveAndValidate({ headers: {}, originalUrl: '/readyz' }),
     ).resolves.toEqual({});
@@ -292,7 +292,7 @@ describe('TenantContextInterceptor', () => {
         headers: { authorization: bearer({ sub: ACTOR_ID, tenant_id: TENANT_ID }) },
         originalUrl: '/records',
       }),
-    ).resolves.toEqual({ tenantId: TENANT_ID });
+    ).resolves.toEqual({ tenantId: TENANT_ID, checkedActorId: ACTOR_ID });
 
     expect(txQuery).toHaveBeenCalledWith(expect.stringContaining('from auth.memberships membership'), [
       ACTOR_ID,
@@ -310,7 +310,7 @@ describe('TenantContextInterceptor', () => {
         hostname: `${TENANT_ID}.example.test`,
         user: { id: ACTOR_ID },
       }),
-    ).resolves.toEqual({ tenantId: TENANT_ID });
+    ).resolves.toEqual({ tenantId: TENANT_ID, checkedActorId: ACTOR_ID });
   });
 
   it('rejects malformed tenant identifiers before membership lookup', async () => {
