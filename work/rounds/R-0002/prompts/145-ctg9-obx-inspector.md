@@ -31,10 +31,18 @@ ou evento desconhecido vai para quarentena owner-only sem FK de tenant;
 o ledger por evento mantém a FK e o `UNIQUE(message_id)` legado continua.
 Inclua timestamp escolhido para partição auditada de virada mensal.
 Prove append→enqueue e domínio auditado→enqueue concorrendo com o cutover,
-sem o ciclo de deadlock marker/clock/advisory; timeout ou deadlock injetado
+incluindo a fila de três transações advisory→marker, marker→advisory e
+cutover UPDATE. `FOR SHARE NOWAIT` falha 55P03 tipado sem deadlock e retry
+integral respeita a autoridade pós-corte. Trigger `audit.fn_row_change`
+habilitado pelo adotante em tabela tocada pelo cutover causa rejeição tipada
+antes da primeira mutação; DDL padrão não habilita o trigger. `now()`
+recusa transação ambiente e usa conexão curta independente. Timeout ou deadlock injetado
 faz rollback integral e retry idempotente. Falha do dispatcher legado após
 cutover espelha tentativa/ERROR/backoff. Evento nativo OFS despacha sem
 cutover enquanto a API legada continua entregando seus próprios itens.
+Segure marker UPDATE além de `lock_timeout` durante falha de envio legado:
+`recordDispatchFailure` repete só sua transação, não reenvia e o loop
+continua a processar os demais itens reivindicados.
 
 Data/audit: três writers e trigger concorrente, três eventos na mesma tx,
 BEGIN invertido, RR×RC e SERIALIZABLE×RC sem fork, erro de isolamento não

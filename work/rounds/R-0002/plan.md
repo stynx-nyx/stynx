@@ -731,6 +731,13 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     receberam reparos disjuntos do bloqueio e das observações de compatibilidade
     SIG/OFS. Corrigir preflight, obter delta PASS e só então prompt-review
     Inspector. Nenhum código de produto CTG9 foi alterado.
+40. O delta de lock order em `1df59635` recebeu delivery-review Opus ciclo 3
+    **PASS** em `reviews/ctg9-architect-lock-delta-review-3.json` pela ponte
+    DETRAN, liberando o prompt-review Inspector. Quatro observações OBX não
+    bloqueantes (trigger de audit habilitado pelo adotante, retry de falha de
+    dispatch sob lock, `now()` ambiente e fila de três partes) seguem em
+    fechamento contratual e sensores antes do despacho. Nenhum código de
+    produto CTG9 foi alterado.
 
 ## Reviews, PRs e publicações
 

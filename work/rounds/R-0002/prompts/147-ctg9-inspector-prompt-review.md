@@ -14,6 +14,9 @@ write sets devem ser disjuntos; shared trace/baselines/migrações ficam
 com maestro/Engineer. A migração legado, os envelopes HTTP e a
 composição CTG5 devem ter provas de regressão. Diferencie prova STYNX
 executável da paridade final que só o consumidor DETRAN pode afirmar.
+Confira os quatro sensores OBX do PASS Architect ciclo 3: trigger audit
+adotante no cutover, retry isolado de falha pós-corte, `now()` em transação
+ambiente e fila de três transações com NOWAIT/rollback.
 
 PASS libera apenas despacho Inspector. Retorne um único JSON válido sem
 Markdown:

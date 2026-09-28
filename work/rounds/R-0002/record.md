@@ -721,3 +721,12 @@ de eventos nativos sem corte, preservar headers de replay e resultado de
 lote em progresso, reaproveitar recibo legado idempotente e exigir
 reconhecimento explícito para verificador customizado em produção. Cada
 Architect recebeu a observação do seu pacote; nenhum Inspector foi despachado.
+
+O delta de ordem de locks foi commitado pelo Architect em `1df59635`. O
+delivery-review Opus 5.5 ciclo 3, pela ponte DETRAN, retornou **PASS** em
+`reviews/ctg9-architect-lock-delta-review-3.json`: contratos aptos ao
+prompt-review Inspector, sem atestar implementação. Quatro observações
+OBX não bloqueantes foram devolvidas ao Architect antes dos sensores:
+rejeitar corte em tabelas com trigger audit ativado pelo adotante, retry
+isolado de falha de dispatch, ordem de `now()` ambiente e corrida de
+três participantes no marker. Nenhum Inspector foi despachado ainda.

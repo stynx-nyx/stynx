@@ -231,15 +231,23 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    linhas legadas com `FOR UPDATE`. Marca cada linha migrada com o evento
    correspondente para que o dispatcher legado exclua apenas as marcadas
    e o ACK legado de SENT em voo atualize a projeção na mesma transação.
-   Append novo toma o marker de posse `FOR SHARE` antes de advisory/clock;
+   Append novo toma o marker de posse `FOR SHARE` antes de clock, com
+   `NOWAIT` quando o caller já detém advisory; entradas legadas tomam
+   `FOR SHARE NOWAIT` para desfazer a fila de três transações sem espera
+   circular. `55P03` exige rollback/retry integral com a mesma chave;
    cutover toma marker `FOR UPDATE`, depois linhas legadas e clocks, sem
-   audit writer/trigger na transação de corte. Assim, append→enqueue e
+   audit writer/trigger na transação de corte. Antes da primeira mutação,
+   verifica `pg_trigger`/`pg_proc` em todas as tabelas que alterará e
+   rejeita trigger audit instalado pelo adotante. Assim, append→enqueue e
    domínio auditado→enqueue concorrentes com o corte não formam o ciclo
    marker/clock/advisory; timeout/deadlock restante reverte toda a operação
    e exige retry idempotente. Eventos nativos do novo log são despacháveis
    em LEGACY e NEW; somente projeções migradas aguardam marker NEW.
    Falha de envio legado que retorna após o corte espelha tentativa e
-   ERROR/backoff novos quando ainda não houve ACK terminal.
+   ERROR/backoff novos quando ainda não houve ACK terminal. Esse registro
+   tem retry transacional próprio e não interrompe outros envios do lote.
+   `now()` usa transação curta independente e recusa transação ambiente
+   antes de tentar adquirir o clock.
    Sem cutover, o dispatcher e ACK legados continuam funcionais. Enqueue
    pós-cutover e tabelas customizadas têm política explícita no contrato.
    Na migração opt-in, os fatos legados expostos ao SSE recebem **novos**
