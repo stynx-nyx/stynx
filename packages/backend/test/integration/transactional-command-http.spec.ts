@@ -1,14 +1,27 @@
 import 'reflect-metadata';
 import {
-  Catch, Controller, HttpCode, HttpException, Post, UseGuards,
-  type ArgumentsHost, type ExceptionFilter, type NestInterceptor, type ExecutionContext, type CallHandler, type INestApplication,
+  Catch,
+  Controller,
+  HttpCode,
+  HttpException,
+  Post,
+  UseGuards,
+  type ArgumentsHost,
+  type ExceptionFilter,
+  type NestInterceptor,
+  type ExecutionContext,
+  type CallHandler,
+  type INestApplication,
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { AuditSqlSink } from '@stynx-nyx/audit';
 import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import {
+  createPostgresTestDatabase,
+  type PostgresTestDatabase,
+} from '../../../data/test/support/postgres';
 import { map } from 'rxjs';
 import request from 'supertest';
 import { z } from 'zod';
@@ -33,7 +46,9 @@ type CommandApi = {
 @Catch()
 class ConsumerCatchAll implements ExceptionFilter {
   catch(error: unknown, host: ArgumentsHost): void {
-    const response = host.switchToHttp().getResponse<{ status(code: number): { json(body: unknown): void } }>();
+    const response = host
+      .switchToHttp()
+      .getResponse<{ status(code: number): { json(body: unknown): void } }>();
     if (error instanceof HttpException && error.getStatus() !== 502) {
       response.status(error.getStatus()).json(error.getResponse());
       return;
@@ -46,10 +61,12 @@ class OuterMapper implements NestInterceptor {
   static successes = 0;
 
   intercept(_context: ExecutionContext, next: CallHandler) {
-    return next.handle().pipe(map((value: unknown) => {
-      OuterMapper.successes += 1;
-      return { consumerMapped: true, value };
-    }));
+    return next.handle().pipe(
+      map((value: unknown) => {
+        OuterMapper.successes += 1;
+        return { consumerMapped: true, value };
+      }),
+    );
   }
 }
 
@@ -73,10 +90,20 @@ describe('transactional command committed wire response over Nest HTTP and Postg
       async delegation() {
         handler();
         await this.database.tx(async (trx) => {
-          const result = await trx.query<{ current_user: string; role: string; tenant: string; actor: string }>(
+          const result = await trx.query<{
+            current_user: string;
+            role: string;
+            tenant: string;
+            actor: string;
+          }>(
             "select current_user, current_setting('app.role', true) as role, current_setting('app.tenant_id', true) as tenant, current_setting('app.actor_id', true) as actor",
           );
-          expect(result.rows[0]).toMatchObject({ current_user: 'stynx_app', role: 'app', tenant: TENANT, actor: ACTOR });
+          expect(result.rows[0]).toMatchObject({
+            current_user: 'stynx_app',
+            role: 'app',
+            tenant: TENANT,
+            actor: ACTOR,
+          });
         });
         throw new api.CommittedCommandError!(502, ERROR_BODY);
       }
@@ -107,16 +134,35 @@ describe('transactional command committed wire response over Nest HTTP and Postg
       }
     }
 
-    for (const method of ['delegation', 'plainError', 'unselected', 'unselectedSuccess', 'delegationById'] as const) {
+    for (const method of [
+      'delegation',
+      'plainError',
+      'unselected',
+      'unselectedSuccess',
+      'delegationById',
+    ] as const) {
       const descriptor = Object.getOwnPropertyDescriptor(CommandController.prototype, method)!;
-      api.TransactionalCommand!(method === 'unselected' || method === 'unselectedSuccess'
-        ? { persistStatus: () => false } : {})(CommandController.prototype, method, descriptor);
-      (Idempotent as unknown as (options: { transactional: true }) => MethodDecorator)({ transactional: true })(CommandController.prototype, method, descriptor);
-      backend.Audit({ action: `command.${method}`, entity: 'command', transactional: true } as never)(CommandController.prototype, method, descriptor);
+      api.TransactionalCommand!(
+        method === 'unselected' || method === 'unselectedSuccess'
+          ? { persistStatus: () => false }
+          : {},
+      )(CommandController.prototype, method, descriptor);
+      (Idempotent as unknown as (options: { transactional: true }) => MethodDecorator)({
+        transactional: true,
+      })(CommandController.prototype, method, descriptor);
+      backend.Audit({
+        action: `command.${method}`,
+        entity: 'command',
+        transactional: true,
+      } as never)(CommandController.prototype, method, descriptor);
     }
 
     postgres = await createPostgresTestDatabase('stynx_transactional_wire');
-    const legacyExecutor = { query: vi.fn(async () => { throw new Error('legacy audit executor must not be used'); }) };
+    const legacyExecutor = {
+      query: vi.fn(async () => {
+        throw new Error('legacy audit executor must not be used');
+      }),
+    };
     const auditSink = new AuditSqlSink(legacyExecutor, { mode: 'audit_write_function' });
     const testing = await Test.createTestingModule({
       imports: [
@@ -124,23 +170,40 @@ describe('transactional command committed wire response over Nest HTTP and Postg
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ctg5-wire-owner') },
-            app: { connectionString: asRole(postgres.connectionString('ctg5-wire-app'), 'stynx_app') },
-            reader: { connectionString: asRole(postgres.connectionString('ctg5-wire-reader'), 'stynx_reader') },
+            app: {
+              connectionString: asRole(postgres.connectionString('ctg5-wire-app'), 'stynx_app'),
+            },
+            reader: {
+              connectionString: asRole(
+                postgres.connectionString('ctg5-wire-reader'),
+                'stynx_reader',
+              ),
+            },
           },
           migrations: { enabled: true },
         }),
-        StynxAuthModule.forRoot({ tokenVerifier: {
-          verifyAuthorizationHeader: async () => ({ principal: {
-            id: ACTOR, roles: ['member'], permissions: [], tenants: [TENANT], claims: { tenant_id: TENANT },
-          } }),
-        } }),
-        StynxIdempotencyModule.forRoot({ backend: {
-          get: async () => null,
-          set: async () => undefined,
-          acquireLock: async () => true,
-          releaseLock: async () => undefined,
-          isLocked: async () => false,
-        } }),
+        StynxAuthModule.forRoot({
+          tokenVerifier: {
+            verifyAuthorizationHeader: async () => ({
+              principal: {
+                id: ACTOR,
+                roles: ['member'],
+                permissions: [],
+                tenants: [TENANT],
+                claims: { tenant_id: TENANT },
+              },
+            }),
+          },
+        }),
+        StynxIdempotencyModule.forRoot({
+          backend: {
+            get: async () => null,
+            set: async () => undefined,
+            acquireLock: async () => true,
+            releaseLock: async () => undefined,
+            isLocked: async () => false,
+          },
+        }),
         api.StynxTransactionalCommandModule!.forRoot({ auditSink }) as never,
       ],
       controllers: [CommandController],
@@ -151,8 +214,11 @@ describe('transactional command committed wire response over Nest HTTP and Postg
     await app.init();
     const admin = await postgres.connectAsAdmin();
     try {
-      await admin.query(`insert into tenancy.tenants (id, slug, name, is_active, created_at, updated_at)
-        values ($1, 'transactional-wire', 'Transactional wire', true, clock_timestamp(), clock_timestamp())`, [TENANT]);
+      await admin.query(
+        `insert into tenancy.tenants (id, slug, name, is_active, created_at, updated_at)
+        values ($1, 'transactional-wire', 'Transactional wire', true, clock_timestamp(), clock_timestamp())`,
+        [TENANT],
+      );
     } finally {
       await admin.end();
     }
@@ -165,9 +231,12 @@ describe('transactional command committed wire response over Nest HTTP and Postg
 
   it('emits and replays committed 502, UTF-8 JSON and allowed headers despite default POST 201 and consumer wrappers', async () => {
     OuterMapper.successes = 0;
-    const send = () => request(app!.getHttpServer()).post('/transactional-wire/delegation')
-      .set('authorization', 'Bearer verified').set('idempotency-key', 'wire-502')
-      .send({ name: 'ação' });
+    const send = () =>
+      request(app!.getHttpServer())
+        .post('/transactional-wire/delegation')
+        .set('authorization', 'Bearer verified')
+        .set('idempotency-key', 'wire-502')
+        .send({ name: 'ação' });
     const first = await send();
     const replay = await send();
     expect(first.status).toBe(502);
@@ -176,18 +245,24 @@ describe('transactional command committed wire response over Nest HTTP and Postg
     expect(replay.headers['content-type']).toBe(first.headers['content-type']);
     expect(first.text).toBe(JSON.stringify(ERROR_BODY));
     expect(replay.text).toBe(first.text);
-    expect(Object.entries(replay.headers).some(([name, value]) => /replay/iu.test(name) && value === 'true')).toBe(true);
-    expect(replay.headers['set-cookie']).toBeUndefined();
+    expect(
+      Object.entries(replay.headers).some(
+        ([name, value]) => /replay/iu.test(name) && value === 'true',
+      ),
+    ).toBe(true);
+    expect(Object.hasOwn(replay.headers, 'set-cookie')).toBe(false);
     expect(handler).toHaveBeenCalledTimes(1);
     expect(OuterMapper.successes).toBe(0);
     const admin = await postgres!.connectAsAdmin();
     try {
       const events = await admin.query<{ count: string }>(
-        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.delegation'", [TENANT],
+        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.delegation'",
+        [TENANT],
       );
       expect(Number(events.rows[0]?.count)).toBe(1);
       const keys = await admin.query<{ count: string }>(
-        'select count(*) from core.idempotency_keys where tenant_id = $1', [TENANT],
+        'select count(*) from core.idempotency_keys where tenant_id = $1',
+        [TENANT],
       );
       expect(Number(keys.rows[0]?.count)).toBe(1);
     } finally {
@@ -196,8 +271,12 @@ describe('transactional command committed wire response over Nest HTTP and Postg
   });
 
   it('rolls back a plain thrown 502 and lets the ordinary error path handle it', async () => {
-    const send = () => request(app!.getHttpServer()).post('/transactional-wire/plain-error')
-      .set('authorization', 'Bearer verified').set('idempotency-key', 'plain-502').send({ name: 'ação' });
+    const send = () =>
+      request(app!.getHttpServer())
+        .post('/transactional-wire/plain-error')
+        .set('authorization', 'Bearer verified')
+        .set('idempotency-key', 'plain-502')
+        .send({ name: 'ação' });
     const first = await send();
     const second = await send();
     expect(first.status).toBe(599);
@@ -207,11 +286,13 @@ describe('transactional command committed wire response over Nest HTTP and Postg
     const admin = await postgres!.connectAsAdmin();
     try {
       const events = await admin.query<{ count: string }>(
-        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.plainError'", [TENANT],
+        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.plainError'",
+        [TENANT],
       );
       expect(Number(events.rows[0]?.count)).toBe(0);
       const keys = await admin.query<{ count: string }>(
-        'select count(*) from core.idempotency_keys where tenant_id = $1', [TENANT],
+        'select count(*) from core.idempotency_keys where tenant_id = $1',
+        [TENANT],
       );
       expect(Number(keys.rows[0]?.count)).toBe(1);
     } finally {
@@ -220,19 +301,23 @@ describe('transactional command committed wire response over Nest HTTP and Postg
   });
 
   it('rolls back an unselected status without retaining a key or audit event', async () => {
-    const response = await request(app!.getHttpServer()).post('/transactional-wire/unselected')
-      .set('authorization', 'Bearer verified').set('idempotency-key', 'unselected-422')
+    const response = await request(app!.getHttpServer())
+      .post('/transactional-wire/unselected')
+      .set('authorization', 'Bearer verified')
+      .set('idempotency-key', 'unselected-422')
       .send({ name: 'invalid' });
     expect(response.status).toBe(422);
     expect(response.body).toEqual({ code: 'VALIDATION:BAD_REQUEST:command' });
     const admin = await postgres!.connectAsAdmin();
     try {
       const events = await admin.query<{ count: string }>(
-        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.unselected'", [TENANT],
+        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.unselected'",
+        [TENANT],
       );
       expect(Number(events.rows[0]?.count)).toBe(0);
       const keys = await admin.query<{ count: string }>(
-        "select count(*) from core.idempotency_keys where tenant_id = $1 and key like '%unselected-422%'", [TENANT],
+        "select count(*) from core.idempotency_keys where tenant_id = $1 and key like '%unselected-422%'",
+        [TENANT],
       );
       expect(Number(keys.rows[0]?.count)).toBe(0);
     } finally {
@@ -241,19 +326,23 @@ describe('transactional command committed wire response over Nest HTTP and Postg
   });
 
   it('commits an unselected successful response and audit while clearing its key', async () => {
-    const response = await request(app!.getHttpServer()).post('/transactional-wire/unselected-success')
-      .set('authorization', 'Bearer verified').set('idempotency-key', 'unselected-success')
+    const response = await request(app!.getHttpServer())
+      .post('/transactional-wire/unselected-success')
+      .set('authorization', 'Bearer verified')
+      .set('idempotency-key', 'unselected-success')
       .send({ accepted: true });
     expect(response.status).toBe(202);
     expect(response.body).toMatchObject({ consumerMapped: true, value: { accepted: true } });
     const admin = await postgres!.connectAsAdmin();
     try {
       const events = await admin.query<{ count: string }>(
-        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.unselectedSuccess'", [TENANT],
+        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.unselectedSuccess'",
+        [TENANT],
       );
       expect(Number(events.rows[0]?.count)).toBe(1);
       const keys = await admin.query<{ count: string }>(
-        "select count(*) from core.idempotency_keys where tenant_id = $1 and key like '%unselected-success%'", [TENANT],
+        "select count(*) from core.idempotency_keys where tenant_id = $1 and key like '%unselected-success%'",
+        [TENANT],
       );
       expect(Number(keys.rows[0]?.count)).toBe(0);
     } finally {
@@ -263,9 +352,12 @@ describe('transactional command committed wire response over Nest HTTP and Postg
 
   it('returns the configured conflict envelope for the same tenant, scope and key on different concrete paths', async () => {
     const before = handler.mock.calls.length;
-    const send = (id: string) => request(app!.getHttpServer()).post(`/transactional-wire/delegation/${id}`)
-      .set('authorization', 'Bearer verified').set('idempotency-key', 'same-route-template')
-      .send({ amount: 1 });
+    const send = (id: string) =>
+      request(app!.getHttpServer())
+        .post(`/transactional-wire/delegation/${id}`)
+        .set('authorization', 'Bearer verified')
+        .set('idempotency-key', 'same-route-template')
+        .send({ amount: 1 });
     await send('one').expect(502);
     const conflict = await send('two');
     expect(conflict.status).toBe(409);

@@ -3,16 +3,27 @@ import { randomUUID } from 'node:crypto';
 import { Controller, HttpException, Post, UseGuards, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuditSqlSink } from '@stynx-nyx/audit';
-import { type AuditEventEnvelope, type AuditTransactionExecutor, type TransactionalAuditSink } from '@stynx-nyx/contracts';
+import {
+  type AuditEventEnvelope,
+  type AuditTransactionExecutor,
+  type TransactionalAuditSink,
+} from '@stynx-nyx/contracts';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
-import { Idempotent, StynxIdempotencyModule, TransactionalIdempotencyStore } from '@stynx-nyx/idempotency';
+import {
+  Idempotent,
+  StynxIdempotencyModule,
+  TransactionalIdempotencyStore,
+} from '@stynx-nyx/idempotency';
 import request from 'supertest';
 import { z } from 'zod';
 import { Audit, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard';
 import { StynxAuthModule } from '../../src/auth/auth.module';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import {
+  createPostgresTestDatabase,
+  type PostgresTestDatabase,
+} from '../../../data/test/support/postgres';
 
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9d1';
 const ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2832a';
@@ -24,9 +35,12 @@ const asReaderRole = (connectionString: string): string =>
 const tick = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 class FaultingCompletionStore extends TransactionalIdempotencyStore {
-  override async complete(...args: Parameters<TransactionalIdempotencyStore['complete']>): Promise<void> {
+  override async complete(
+    ...args: Parameters<TransactionalIdempotencyStore['complete']>
+  ): Promise<void> {
     await super.complete(...args);
-    if (args[1].key === 'completion-fault') throw new Error('injected completion failure after durable update');
+    if (args[1].key === 'completion-fault')
+      throw new Error('injected completion failure after durable update');
   }
 }
 
@@ -37,6 +51,10 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
   let releaseRace: (() => void) | undefined;
   let raceEntered: (() => void) | undefined;
   let raceEnteredPromise: Promise<void>;
+  let releaseCommitRace: (() => void) | undefined;
+  let commitRaceEntered: (() => void) | undefined;
+  let releaseRollbackRace: (() => void) | undefined;
+  let rollbackRaceEntered: (() => void) | undefined;
   let auditEntered: (() => void) | undefined;
   let auditEnteredPromise: Promise<void>;
   const cacheSet = vi.fn(async () => undefined);
@@ -51,14 +69,29 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
 
       private async record(mode: string): Promise<void> {
         invocations.set(mode, countInvocations(mode) + 1);
-        await this.database.tx(async (trx) => {
-          const identity = await trx.query<{ current_user: string; role: string; tenant: string; actor: string }>(
-            "select current_user, current_setting('app.role', true) as role, current_setting('app.tenant_id', true) as tenant, current_setting('app.actor_id', true) as actor",
-          );
-          expect(identity.rows[0]).toEqual({ current_user: 'stynx_app', role: 'app', tenant: TENANT, actor: ACTOR });
-          await trx.query('insert into core.transactional_fault_probe (tenant_id, key, mode) values ($1, $2, $3)',
-            [TENANT, randomUUID(), mode]);
-        }, { role: 'app', requireActor: true });
+        await this.database.tx(
+          async (trx) => {
+            const identity = await trx.query<{
+              current_user: string;
+              role: string;
+              tenant: string;
+              actor: string;
+            }>(
+              "select current_user, current_setting('app.role', true) as role, current_setting('app.tenant_id', true) as tenant, current_setting('app.actor_id', true) as actor",
+            );
+            expect(identity.rows[0]).toEqual({
+              current_user: 'stynx_app',
+              role: 'app',
+              tenant: TENANT,
+              actor: ACTOR,
+            });
+            await trx.query(
+              'insert into core.transactional_fault_probe (tenant_id, key, mode) values ($1, $2, $3)',
+              [TENANT, randomUUID(), mode],
+            );
+          },
+          { role: 'app', requireActor: true },
+        );
       }
 
       @Post('/handler')
@@ -88,19 +121,27 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       @Post('/serialization')
       async serializationFault() {
         await this.record('serialization');
-        await this.database.tx(async (trx) => {
-          await trx.query("do $$ begin raise exception 'injected serialization failure' using errcode = '40001'; end $$");
-        }, { role: 'app', requireActor: true });
+        await this.database.tx(
+          async (trx) => {
+            await trx.query(
+              "do $$ begin raise exception 'injected serialization failure' using errcode = '40001'; end $$",
+            );
+          },
+          { role: 'app', requireActor: true },
+        );
         return { mustNotCommit: true };
       }
 
       @Post('/statement-timeout')
       async statementTimeout() {
         await this.record('statement-timeout');
-        await this.database.tx(async (trx) => {
-          await trx.query("select set_config('statement_timeout', '80ms', true)");
-          await trx.query('select pg_sleep(0.3)');
-        }, { role: 'app', requireActor: true });
+        await this.database.tx(
+          async (trx) => {
+            await trx.query("select set_config('statement_timeout', '80ms', true)");
+            await trx.query('select pg_sleep(0.3)');
+          },
+          { role: 'app', requireActor: true },
+        );
         return { mustNotCommit: true };
       }
 
@@ -108,8 +149,33 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       async race() {
         await this.record('race');
         raceEntered?.();
-        await new Promise<void>((resolve) => { releaseRace = resolve; });
+        await new Promise<void>((resolve) => {
+          releaseRace = resolve;
+        });
         return { winner: true };
+      }
+
+      @Post('/race-commit')
+      async raceCommit() {
+        await this.record('race-commit');
+        commitRaceEntered?.();
+        await new Promise<void>((resolve) => {
+          releaseCommitRace = resolve;
+        });
+        return { winner: true, payload: 'ação' };
+      }
+
+      @Post('/race-rollback')
+      async raceRollback() {
+        await this.record('race-rollback');
+        if (countInvocations('race-rollback') === 1) {
+          rollbackRaceEntered?.();
+          await new Promise<void>((resolve) => {
+            releaseRollbackRace = resolve;
+          });
+          throw new HttpException({ code: 'WINNER_ROLLED_BACK' }, 502);
+        }
+        return { acquired: true };
       }
 
       @Post('/audit-contention')
@@ -127,27 +193,52 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     }
 
     const commandMethods = [
-      'handlerFault', 'auditFault', 'completionFault', 'commitFault',
-      'serializationFault', 'statementTimeout', 'race', 'auditContention',
+      'handlerFault',
+      'auditFault',
+      'completionFault',
+      'commitFault',
+      'serializationFault',
+      'statementTimeout',
+      'race',
+      'raceCommit',
+      'raceRollback',
+      'auditContention',
     ] as const;
     for (const method of commandMethods) {
       const descriptor = Object.getOwnPropertyDescriptor(FaultController.prototype, method)!;
-      TransactionalCommand({ lockTimeoutMs: method === 'race' || method === 'auditContention' ? 120 : 5_000 })(
-        FaultController.prototype, method, descriptor,
-      );
+      TransactionalCommand({
+        lockTimeoutMs:
+          method === 'race' || method === 'auditContention'
+            ? 120
+            : method === 'raceCommit' || method === 'raceRollback'
+              ? 1_500
+              : 5_000,
+      })(FaultController.prototype, method, descriptor);
       Idempotent({ transactional: true })(FaultController.prototype, method, descriptor);
       Audit({ action: `command.${method}`, entity: 'command', transactional: true })(
-        FaultController.prototype, method, descriptor,
+        FaultController.prototype,
+        method,
+        descriptor,
       );
     }
 
     postgres = await createPostgresTestDatabase('stynx_transactional_faults');
-    const sqlSink = new AuditSqlSink({ query: async () => { throw new Error('legacy audit executor used'); } },
-      { mode: 'audit_write_function' });
+    const sqlSink = new AuditSqlSink(
+      {
+        query: async () => {
+          throw new Error('legacy audit executor used');
+        },
+      },
+      { mode: 'audit_write_function' },
+    );
     const auditSink: TransactionalAuditSink = {
-      async writeInTransaction(event: AuditEventEnvelope, executor: AuditTransactionExecutor): Promise<void> {
+      async writeInTransaction(
+        event: AuditEventEnvelope,
+        executor: AuditTransactionExecutor,
+      ): Promise<void> {
         await sqlSink.writeInTransaction(event, executor);
-        if (event.action === 'command.auditFault') throw new Error('injected audit failure after write');
+        if (event.action === 'command.auditFault')
+          throw new Error('injected audit failure after write');
       },
     };
     const testing = await Test.createTestingModule({
@@ -157,33 +248,51 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
           connections: {
             owner: { connectionString: postgres.connectionString('ctg5-fault-owner') },
             app: { connectionString: asAppRole(postgres.connectionString('ctg5-fault-app')) },
-            reader: { connectionString: asReaderRole(postgres.connectionString('ctg5-fault-reader')) },
+            reader: {
+              connectionString: asReaderRole(postgres.connectionString('ctg5-fault-reader')),
+            },
           },
           migrations: { enabled: true },
         }),
-        StynxAuthModule.forRoot({ tokenVerifier: {
-          verifyAuthorizationHeader: async () => ({ principal: {
-            id: ACTOR, roles: ['member'], permissions: [], tenants: [TENANT], claims: { tenant_id: TENANT },
-          } }),
-        } }),
-        StynxIdempotencyModule.forRoot({ backend: {
-          get: async () => null,
-          set: cacheSet,
-          acquireLock: async () => true,
-          releaseLock: async () => undefined,
-          isLocked: async () => false,
-        } }),
+        StynxAuthModule.forRoot({
+          tokenVerifier: {
+            verifyAuthorizationHeader: async () => ({
+              principal: {
+                id: ACTOR,
+                roles: ['member'],
+                permissions: [],
+                tenants: [TENANT],
+                claims: { tenant_id: TENANT },
+              },
+            }),
+          },
+        }),
+        StynxIdempotencyModule.forRoot({
+          backend: {
+            get: async () => null,
+            set: cacheSet,
+            acquireLock: async () => true,
+            releaseLock: async () => undefined,
+            isLocked: async () => false,
+          },
+        }),
         StynxTransactionalCommandModule.forRoot({ auditSink }),
       ],
       controllers: [FaultController],
-    }).overrideProvider(TransactionalIdempotencyStore).useClass(FaultingCompletionStore).compile();
+    })
+      .overrideProvider(TransactionalIdempotencyStore)
+      .useClass(FaultingCompletionStore)
+      .compile();
     app = testing.createNestApplication();
     await app.init();
 
     const admin = await postgres.connectAsAdmin();
     try {
-      await admin.query(`insert into tenancy.tenants (id, slug, name, is_active, created_at, updated_at)
-        values ($1, 'transactional-faults', 'Transactional faults', true, clock_timestamp(), clock_timestamp())`, [TENANT]);
+      await admin.query(
+        `insert into tenancy.tenants (id, slug, name, is_active, created_at, updated_at)
+        values ($1, 'transactional-faults', 'Transactional faults', true, clock_timestamp(), clock_timestamp())`,
+        [TENANT],
+      );
       await admin.query(`
         create table core.transactional_fault_probe (
           tenant_id uuid not null,
@@ -216,25 +325,59 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
 
   afterAll(async () => {
     releaseRace?.();
+    releaseCommitRace?.();
+    releaseRollbackRace?.();
     await app?.close();
     await postgres?.dispose();
   }, 60_000);
 
-  const send = (path: string, key: string) => request(app!.getHttpServer())
-    .post(`/transactional-faults/${path}`)
-    .set('authorization', 'Bearer verified')
-    .set('idempotency-key', key)
-    .send({ input: key });
+  const send = (path: string, key: string) =>
+    request(app!.getHttpServer())
+      .post(`/transactional-faults/${path}`)
+      .set('authorization', 'Bearer verified')
+      .set('idempotency-key', key)
+      .send({ input: key });
 
-  const assertNoDurableEffect = async (mode: string, key: string, auditOperation = `command.${mode}Fault`): Promise<void> => {
+  const waitForBlockedReservation = async (): Promise<void> => {
+    const admin = await postgres!.connectAsAdmin();
+    try {
+      const deadline = Date.now() + 1_000;
+      while (Date.now() < deadline) {
+        const result = await admin.query<{ blocked: string }>(`
+          select count(*) as blocked from pg_stat_activity
+           where datname = current_database()
+             and application_name = 'ctg5-fault-app'
+             and wait_event_type = 'Lock'
+             and query ilike '%insert into core.idempotency_keys%'
+        `);
+        if (Number(result.rows[0]?.blocked) > 0) return;
+        await tick(10);
+      }
+      throw new Error('Contender did not reach the durable reservation lock');
+    } finally {
+      await admin.end();
+    }
+  };
+
+  const assertNoDurableEffect = async (
+    mode: string,
+    key: string,
+    auditOperation = `command.${mode}Fault`,
+  ): Promise<void> => {
     const admin = await postgres!.connectAsAdmin();
     try {
       const domain = await admin.query<{ count: string }>(
-        'select count(*) from core.transactional_fault_probe where tenant_id = $1 and mode = $2', [TENANT, mode]);
+        'select count(*) from core.transactional_fault_probe where tenant_id = $1 and mode = $2',
+        [TENANT, mode],
+      );
       const audit = await admin.query<{ count: string }>(
-        'select count(*) from audit.events where tenancy_id = $1 and operation = $2', [TENANT, auditOperation]);
+        'select count(*) from audit.events where tenancy_id = $1 and operation = $2',
+        [TENANT, auditOperation],
+      );
       const keys = await admin.query<{ count: string }>(
-        'select count(*) from core.idempotency_keys where tenant_id = $1 and key like $2', [TENANT, `%:${key.length}:${key}`]);
+        'select count(*) from core.idempotency_keys where tenant_id = $1 and key like $2',
+        [TENANT, `%:${key.length}:${key}`],
+      );
       expect(Number(domain.rows[0]?.count)).toBe(0);
       expect(Number(audit.rows[0]?.count)).toBe(0);
       expect(Number(keys.rows[0]?.count)).toBe(0);
@@ -248,15 +391,19 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     ['audit', 'audit-fault'],
     ['completion', 'completion-fault'],
     ['commit', 'commit-fault'],
-  ])('rolls back domain, audit and key after %s failure, then permits a new attempt', async (mode, key) => {
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
-      const result = await send(mode, key);
-      expect(result.status).toBeGreaterThanOrEqual(500);
-      expect(result.status).not.toBe(409);
-      expect(countInvocations(mode)).toBe(attempt);
-      await assertNoDurableEffect(mode, key);
-    }
-  }, 30_000);
+  ])(
+    'rolls back domain, audit and key after %s failure, then permits a new attempt',
+    async (mode, key) => {
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        const result = await send(mode, key);
+        expect(result.status).toBeGreaterThanOrEqual(500);
+        expect(result.status).not.toBe(409);
+        expect(countInvocations(mode)).toBe(attempt);
+        await assertNoDurableEffect(mode, key);
+      }
+    },
+    30_000,
+  );
 
   it('surfaces serialization failure after one handler invocation with no committed effects', async () => {
     const response = await send('serialization', 'serialization-fault');
@@ -274,20 +421,29 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       expect(response.body).toMatchObject({ code: 'STATEMENT_TIMEOUT' });
       expect(response.body.code).not.toBe('IDEMPOTENCY_KEY_IN_PROGRESS');
       expect(countInvocations('statement-timeout')).toBe(attempt);
-      await assertNoDurableEffect('statement-timeout', 'statement-timeout-key', 'command.statementTimeout');
+      await assertNoDurableEffect(
+        'statement-timeout',
+        'statement-timeout-key',
+        'command.statementTimeout',
+      );
       expect(cacheSet.mock.calls.length).toBe(cachePublicationsBefore);
     }
   }, 30_000);
 
   it('bounds an identical-key reservation race and never invokes the losing handler', async () => {
-    raceEnteredPromise = new Promise<void>((resolve) => { raceEntered = resolve; });
+    raceEnteredPromise = new Promise<void>((resolve) => {
+      raceEntered = resolve;
+    });
     const winner = send('race', 'race-key').then((response) => response);
     await raceEnteredPromise;
     try {
       const startedAt = Date.now();
       const loser = await send('race', 'race-key');
       expect(loser.status).toBe(409);
-      expect(loser.body).toMatchObject({ code: 'IDEMPOTENCY_KEY_IN_PROGRESS', context: { key: 'race-key' } });
+      expect(loser.body).toMatchObject({
+        code: 'IDEMPOTENCY_KEY_IN_PROGRESS',
+        context: { key: 'race-key' },
+      });
       expect(Date.now() - startedAt).toBeLessThan(3_000);
       expect(countInvocations('race')).toBe(1);
     } finally {
@@ -301,15 +457,76 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     expect(countInvocations('race')).toBe(1);
   }, 30_000);
 
+  it('replays byte-identical committed output when the winner commits during the bounded wait', async () => {
+    const entered = new Promise<void>((resolve) => {
+      commitRaceEntered = resolve;
+    });
+    const winner = send('race-commit', 'race-commit-key').then((response) => response);
+    await entered;
+    const contender = send('race-commit', 'race-commit-key').then((response) => response);
+    try {
+      await waitForBlockedReservation();
+    } finally {
+      releaseCommitRace?.();
+    }
+    const committed = await winner;
+    const replay = await contender;
+    expect(committed.status).toBe(201);
+    expect(replay.status).toBe(201);
+    expect(replay.text).toBe(committed.text);
+    expect(replay.headers['content-type']).toBe(committed.headers['content-type']);
+    expect(replay.headers['idempotency-replayed']).toBe('true');
+    expect(countInvocations('race-commit')).toBe(1);
+  }, 30_000);
+
+  it('lets the contender acquire the same key after the waiting winner rolls back', async () => {
+    const entered = new Promise<void>((resolve) => {
+      rollbackRaceEntered = resolve;
+    });
+    const winner = send('race-rollback', 'race-rollback-key').then((response) => response);
+    await entered;
+    const contender = send('race-rollback', 'race-rollback-key').then((response) => response);
+    try {
+      await waitForBlockedReservation();
+    } finally {
+      releaseRollbackRace?.();
+    }
+    const failed = await winner;
+    const acquired = await contender;
+    expect(failed.status).toBe(502);
+    expect(acquired.status).toBe(201);
+    expect(acquired.body).toEqual({ acquired: true });
+    expect(Object.hasOwn(acquired.headers, 'idempotency-replayed')).toBe(false);
+    expect(countInvocations('race-rollback')).toBe(2);
+    const replay = await send('race-rollback', 'race-rollback-key');
+    expect(replay.status).toBe(201);
+    expect(replay.text).toBe(acquired.text);
+    expect(countInvocations('race-rollback')).toBe(2);
+    const admin = await postgres!.connectAsAdmin();
+    try {
+      const audit = await admin.query<{ count: string }>(
+        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.raceRollback'",
+        [TENANT],
+      );
+      expect(Number(audit.rows[0]?.count)).toBe(1);
+    } finally {
+      await admin.end();
+    }
+  }, 30_000);
+
   it('does not label audit hash-chain contention beyond lockTimeoutMs as an idempotency race', async () => {
     const admin = await postgres!.connectAsAdmin();
-    auditEnteredPromise = new Promise<void>((resolve) => { auditEntered = resolve; });
+    auditEnteredPromise = new Promise<void>((resolve) => {
+      auditEntered = resolve;
+    });
     await admin.query('begin');
     await admin.query('select pg_advisory_xact_lock(hashtextextended($1::text, 0))', [TENANT]);
     let responsePromise: Promise<{ status: number; body: unknown; text: string }> | undefined;
     try {
       const startedAt = Date.now();
-      responsePromise = send('audit-contention', 'audit-contention-key').then((response) => response);
+      responsePromise = send('audit-contention', 'audit-contention-key').then(
+        (response) => response,
+      );
       await auditEnteredPromise;
       await tick(260);
       await admin.query('commit');
