@@ -19,12 +19,15 @@ e PASS continua necessária antes do despacho, além da decisão do Owner.
 ## Decisão a registrar
 
 Se o Owner aprovar a opção A, **todas as rejeições geradas pela nova fronteira
-transacional**, inclusive os dois 409, passam ao envelope canônico. O
-`mismatchCode` continua configurável como `string`, mas
+transacional**, inclusive os dois 409, passam ao envelope canônico. Erros
+preexistentes de `@stynx-nyx/data` e erros escolhidos pelo consumidor são
+tratados separadamente abaixo. O `mismatchCode` continua configurável como `string`, mas
 deve obedecer ao padrão `errorCode` do schema. O valor padrão passa a
 `IDEMPOTENCY:CONFLICT:duplicate-key`, já enumerado em
 `docs/framework/contracts/errors.json`; a contenção usa
-`IDEMPOTENCY:CONFLICT:in-progress`. Não alterar o 422 legado nem a serialização
+`IDEMPOTENCY:CONFLICT:in-progress`. Não alterar o 422 legado
+`IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY`, nem o 422 não selecionado da CTG5 que
+repassa o corpo do consumidor, nem a serialização
 das respostas escolhidas pelo consumidor, inclusive o 502 persistido.
 
 O corpo exato do conflito de fingerprint é
@@ -44,8 +47,9 @@ auditoria ou domínio.
 
 As demais rejeições **novas** da CTG5 não são legado. Todas usam o mesmo
 construtor/filtro canônico, com mensagem pública fixa, `retryable:false` por
-padrão e sem `details` salvo se explicitamente descrito no catálogo. O 409 em
-progresso e o 503 de dependência são explicitamente `retryable:true`:
+padrão e sem `details` salvo se explicitamente descrito no catálogo. Só o 409
+em progresso é explicitamente `retryable:true`; o 503 genérico de transação
+usa `false` para não recomendar repetição de uma violação de restrição:
 
 | Código atual                             | Status | `errorCode` proposto                                  | Prova Inspector                                   |
 | ---------------------------------------- | -----: | ----------------------------------------------------- | ------------------------------------------------- |
@@ -81,19 +85,29 @@ contrato, sem emitir uma exceção crua e chamar o gate de verde.
 
 ### Outros caminhos da fronteira
 
-| Origem CTG5                                                  | Contrato proposto                                                                                     | Sensor                            |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | --------------------------------- |
-| Execução fora de HTTP                                        | Erro de programação antes de haver resposta HTTP; não é envelope de endpoint                          | unitário do interceptor           |
-| `scope()` lança                                              | rollback/nenhum SQL, 500 `COMMAND:CONFIGURATION:scope-callback-failed`                                | Nest HTTP com callback que lança  |
-| status HTTP inválido ou `persistStatus()` não booleano/lança | rollback, 500 `COMMAND:CONFIGURATION:status-invalid` ou `COMMAND:CONFIGURATION:status-policy-invalid` | HTTP + ausência de efeito durável |
-| `encodeBody` não serializa JSON                              | rollback, 500 `COMMAND:CONFIGURATION:response-not-json`                                               | HTTP + ausência de efeito durável |
-| `Database.tx(requireActor)` recusa identidade ou ator        | rollback, 403 `COMMAND:FORBIDDEN:transaction-identity-mismatch` ou `COMMAND:FORBIDDEN:actor-missing`  | wrong-role e actorless HTTP       |
-| Store, audit sink ou commit falha                            | rollback, 503 `COMMAND:DEPENDENCY:transaction-failed`, sem expor SQL/segredos; `retryable:true`       | fault HTTP com injeção de falha   |
-| Exceção própria do handler não selecionada                   | rollback; exceção continua sob o contrato HTTP do consumidor, sem mascarar por CTG5                   | teste existente de rollback/502   |
+| Origem CTG5                                                                                              | Contrato proposto                                                                                                                           | Sensor                                                          |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Execução fora de HTTP                                                                                    | Erro de programação antes de haver resposta HTTP; não é envelope de endpoint                                                                | unitário do interceptor                                         |
+| `scope()` lança                                                                                          | sem SQL, 500 `COMMAND:CONFIGURATION:scope-callback-failed`                                                                                  | errors HTTP                                                     |
+| status HTTP inválido ou `persistStatus()` não booleano/lança                                             | rollback, 500 `COMMAND:CONFIGURATION:status-invalid` ou `COMMAND:CONFIGURATION:status-policy-invalid`                                       | errors HTTP + ausência de efeito durável                        |
+| `encodeBody` não serializa JSON                                                                          | rollback, 500 `COMMAND:CONFIGURATION:response-not-json`                                                                                     | errors HTTP + ausência de efeito durável                        |
+| `Database.tx(requireActor)` recusa identidade ou ator                                                    | rollback, 403 `COMMAND:FORBIDDEN:transaction-identity-mismatch` ou `COMMAND:FORBIDDEN:actor-missing`                                        | wrong-role e actorless HTTP                                     |
+| `metadataSelector`, `entityIdSelector` ou redaction lança                                                | rollback, 500 `COMMAND:CONFIGURATION:audit-metadata-failed`, `retryable:false`                                                              | errors HTTP + nenhum efeito durável                             |
+| `tenancyPort.get()` lança                                                                                | sem SQL, 500 `COMMAND:CONFIGURATION:tenancy-port-failed`, `retryable:false`                                                                 | errors HTTP com port que lança                                  |
+| Store, audit sink ou COMMIT falha com erro não `StynxDataError`                                          | rollback, 503 `COMMAND:DEPENDENCY:transaction-failed`, `retryable:false`, sem expor SQL/segredos                                            | faults HTTP com injeção de falha de store/audit/COMMIT          |
+| `StatementTimeoutError`, `SerializationFailureError`, `ReadOnlyViolationError` ou outro `StynxDataError` | preservar status e forma legada emitidos pelo `StynxErrorFilter`, inclusive 504 `STATEMENT_TIMEOUT`; não classificar como 503 CTG5 por tipo | faults statement-timeout 504 inalterado; sensor de erro de data |
+| Exceção própria do handler não selecionada                                                               | rollback; exceção continua sob o contrato HTTP do consumidor, sem mascarar por CTG5                                                         | teste existente de rollback/502                                 |
+| `CommittedCommandError` com `persistStatus=false`                                                        | rollback, `HttpException` com corpo/status exatos do consumidor; o 422 CTG5 não é o 422 legado de `@stynx-nyx/idempotency`                  | http.spec 307–310, bytes inalterados                            |
 
-O Engineer deve distinguir erro originado pela fronteira de erro originado
-pelo handler para não reescrever um `HttpException` do consumidor. Converter
-erros CTG5 **após** rollback, não dentro da transação abortada. O filtro
+O Engineer deve marcar a **fase de origem** dos erros dentro da fronteira:
+store, audit, callbacks da CTG5 e handler do consumidor. O callback do
+handler carrega seu erro em marcador interno até sair de `Database.tx`, para
+que um erro cru do consumidor não vire 503 da fronteira. Erros
+`StynxDataError` de qualquer fase continuam na rota legada; isso preserva o
+504 de timeout existente. Um erro não `StynxDataError` na fase COMMIT, como
+violação de restrição diferida, vira 503 genérico com `retryable:false`, sem
+afirmar que repetição é segura. Converter erros próprios CTG5 **após**
+rollback, não dentro da transação abortada. O filtro
 global preexistente continua com sua forma histórica para exceções externas
 e endpoints não marcados; registrar essa dívida em `errors.json`, sem
 declarar que os erros próprios novos da CTG5 são legados.
@@ -111,6 +125,11 @@ substitui a rejeição tardia por requisição para esta opção. O Inspector mo
 Isso migra as fixtures para o novo contrato, sem apagar negativos. Preservar
 a validação dos demais callbacks/opções da CTG5. O padrão do runtime deve ter
 um sensor que o compare ao padrão lido do schema, para detectar deriva.
+`forRoot({ mismatchCode: 'bad' })` e `forRoot({ lockTimeoutMs: 0 })`
+falham sincronamente; `app.init()` recusa `mismatchCode` e `lockTimeoutMs`
+inválidos por rota, e `ttlMs` inválido em `@Idempotent` **de rota marcada**.
+O Engineer remove a rejeição runtime `COMMAND_MISMATCH_CODE_INVALID`;
+preserva somente as checagens defensivas de timeout/TTL com prova unitária.
 
 O escopo é **cada rejeição própria produzida por CTG5**, inclusive os caminhos
 fora de `reject()` classificados acima. O filtro global `StynxErrorFilter` e os erros realmente
@@ -126,12 +145,15 @@ migração.
 1. **Architect:** depois da aprovação Owner e do prompt-review independente
    PASS, emendar **todas** as referências antigas no
    `docs/framework/contracts/transactional-audit-idempotency-1.5.md`, o
-   `docs/framework/contracts/errors.json` (códigos/status/retryable,
-   `runtimeBody`, divergência do filtro global),
+   `docs/framework/contracts/errors.json` (códigos/status,
+   `retriable` do catálogo mapeado a `retryable` no fio, `runtimeBody`,
+   distinção entre CTG5/IFM canônicos e filtro global/data legados),
    `docs/meta/migration/stynx-1.5-transactional-commands.md` e a linha U5
    de `work/rounds/R-0002/conformance-1.5.0.md`. A nota deve explicar ao
    DETRAN a mudança `code` → `errorCode` e a restrição de `mismatchCode`;
-   `duplicate-key` cobre divergência de corpo, método ou caminho concreto.
+   `duplicate-key` cobre divergência de corpo, método ou caminho concreto;
+   enumerar `in-progress`, `transaction-failed` e os códigos `COMMAND:*`.
+   Registrar o desvio do padrão `mismatchCode` frente à proposta DETRAN.
    Após o commit Inspector, rebind de `law/trace.json` em commit Architect.
    Após o commit Engineer, confirmar o diff de `.d.ts` e executar
    `pnpm api:baselines:write` em outro commit Architect: a injeção opcional
@@ -147,14 +169,21 @@ migração.
    `transactional-command-filters.integration.spec.ts`,
    `transactional-command-errors.integration.spec.ts` e os unitários do
    contrato, mais `transactional-command-no-module.integration.spec.ts` e
-   `if-match-http.spec.ts` (ordens de decorador combinadas). A spec Angular
+   `if-match-http.spec.ts` (ordens de decorador combinadas). Esta última é
+   sensor da CTG6: lock emprestado à CTG5 somente para acrescentar asserções
+   de 409; as provas 412/428 existentes ficam sem alterações. A spec Angular
    nasceu na CTG7; nesta tríade sua edição fica sob lock explícito CTG5 e
    só fortalece as asserções de interoperabilidade, sem alterar produção
    Angular. Afirmar o corpo completo em cada ramo HTTP alcançável, igualdade
    com `X-Request-Id`, ausência de `code`/`context`, dois tenants, estado
    durável inalterado, configuração válida e recusas no bootstrap. O 503 sem
-   módulo deve ser provado com e sem core; sem core, `X-Request-Id` inválido
-   precisa ser substituído por UUIDv7 gerado. Dois pedidos concorrentes que
+   módulo deve ser provado com e sem core. A fixture **sem core** usa
+   controller sem guard, sem `StynxAuthModule` e sem módulo de comando; o
+   `CommandModuleRequiredInterceptor` barra a rota antes do handler. Nela,
+   `X-Request-Id` inválido precisa ser substituído por UUIDv7 gerado. Com
+   core, body.requestId deve coincidir com o header que o middleware core
+   estabeleceu, mesmo que RequestContext não seja injetável no módulo do
+   controller. Dois pedidos concorrentes que
    recebem 409 devem ter IDs distintos, cada um igual ao próprio header.
    Cobrir explicitamente cada linha da matriz de alcance e fortalecer os
    testes `>=400`/`toMatchObject({code})` sem retirar seus controles de
@@ -179,6 +208,16 @@ Gates focais: testes 409 HTTP/PostgreSQL, fault/race e interop Angular;
 `pnpm check:rls-negative`, `pnpm check:rls-smoke`,
 `pnpm check:trace --print`, `pnpm api:baselines`, lint/typecheck do backend,
 `pnpm package-readmes:check`, DEVAI strict e delivery-review Opus PASS. A
+nova `transactional-command-errors.integration.spec.ts` recebe binding em
+`law/trace.json` no commit Architect posterior ao Inspector. O `test:int`
+raiz **não** executa os specs backend, porque o pacote backend não possui
+script `test:int`; exigir log do task `@stynx-nyx/backend#test` no mesmo HEAD,
+nomeando `transactional-command-errors`, `no-module`, `if-match-http`,
+`http`, `advanced`, `faults`, `provenance`, `filters` e
+`angular-transactional-command-http` com PostgreSQL real, papel
+`stynx_app` e dois tenants. Manter sem alterações as provas 504 de timeout,
+502 persistido/replay, ambos os 422 e o filtro global. Exigir log vermelho
+do Inspector e verde do Engineer, sem alterar os negativos de rollback. A
 importação na branch cumulativa exige os testes existentes verdes e nenhum
 enfraquecimento. O único CI completo, PR, CI remoto e publicação permanecem
 no gate final OD-S15-02.
