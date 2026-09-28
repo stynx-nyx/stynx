@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { FILTERS_METADATA } from '@nestjs/common/constants';
+import { EXCEPTION_FILTERS_METADATA } from '@nestjs/common/constants';
 import * as backend from '../../src/index';
 import { STYNX_AUDIT_METADATA } from '../../src/audit/constants';
 
@@ -25,7 +25,7 @@ describe('transactional command public decorator', () => {
       create(): void {}
     }
     transactionalCommand!()(Controller.prototype, 'create', Object.getOwnPropertyDescriptor(Controller.prototype, 'create')!);
-    const filters = Reflect.getMetadata(FILTERS_METADATA, Controller.prototype.create) as unknown[] | undefined;
+    const filters = Reflect.getMetadata(EXCEPTION_FILTERS_METADATA, Controller.prototype.create) as unknown[] | undefined;
     expect(filters).toContain(publicApi.CommittedCommandResponseFilter);
   });
 

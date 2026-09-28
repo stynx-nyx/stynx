@@ -1,9 +1,8 @@
 import 'reflect-metadata';
 import {
-  Catch, Controller, HttpException, Post, UseGuards,
+  Catch, Controller, HttpCode, HttpException, Post, UseGuards,
   type ArgumentsHost, type ExceptionFilter, type NestInterceptor, type ExecutionContext, type CallHandler, type INestApplication,
 } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
@@ -20,6 +19,10 @@ import { StynxAuthModule } from '../../src/auth/auth.module';
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2831a';
 const ERROR_BODY = { code: 'DELEGATION_FAILED', message: 'Upstream unavailable' };
+// The test helper connects as the local admin; request pools must start as
+// actual application/reader roles to exercise the command identity check.
+const asRole = (connectionString: string, role: 'stynx_app' | 'stynx_reader'): string =>
+  `${connectionString}&options=${encodeURIComponent(`-c role=${role}`)}`;
 
 type CommandApi = {
   TransactionalCommand: (options?: Record<string, unknown>) => MethodDecorator;
@@ -29,9 +32,13 @@ type CommandApi = {
 
 @Catch()
 class ConsumerCatchAll implements ExceptionFilter {
-  catch(_error: unknown, host: ArgumentsHost): void {
-    host.switchToHttp().getResponse<{ status(code: number): { json(body: unknown): void } }>()
-      .status(599).json({ code: 'CONSUMER_FILTER_WON' });
+  catch(error: unknown, host: ArgumentsHost): void {
+    const response = host.switchToHttp().getResponse<{ status(code: number): { json(body: unknown): void } }>();
+    if (error instanceof HttpException && error.getStatus() !== 502) {
+      response.status(error.getStatus()).json(error.getResponse());
+      return;
+    }
+    response.status(599).json({ code: 'CONSUMER_FILTER_WON' });
   }
 }
 
@@ -80,6 +87,19 @@ describe('transactional command committed wire response over Nest HTTP and Postg
         throw new HttpException(ERROR_BODY, 502);
       }
 
+      @Post('/unselected')
+      unselected() {
+        handler();
+        throw new api.CommittedCommandError!(422, { code: 'VALIDATION:BAD_REQUEST:command' });
+      }
+
+      @Post('/unselected-success')
+      @HttpCode(202)
+      unselectedSuccess() {
+        handler();
+        return { accepted: true };
+      }
+
       @Post('/delegation/:id')
       delegationById() {
         handler();
@@ -87,9 +107,10 @@ describe('transactional command committed wire response over Nest HTTP and Postg
       }
     }
 
-    for (const method of ['delegation', 'plainError', 'delegationById'] as const) {
+    for (const method of ['delegation', 'plainError', 'unselected', 'unselectedSuccess', 'delegationById'] as const) {
       const descriptor = Object.getOwnPropertyDescriptor(CommandController.prototype, method)!;
-      api.TransactionalCommand!()(CommandController.prototype, method, descriptor);
+      api.TransactionalCommand!(method === 'unselected' || method === 'unselectedSuccess'
+        ? { persistStatus: () => false } : {})(CommandController.prototype, method, descriptor);
       (Idempotent as unknown as (options: { transactional: true }) => MethodDecorator)({ transactional: true })(CommandController.prototype, method, descriptor);
       backend.Audit({ action: `command.${method}`, entity: 'command', transactional: true } as never)(CommandController.prototype, method, descriptor);
     }
@@ -103,8 +124,8 @@ describe('transactional command committed wire response over Nest HTTP and Postg
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ctg5-wire-owner') },
-            app: { connectionString: postgres.connectionString('ctg5-wire-app') },
-            reader: { connectionString: postgres.connectionString('ctg5-wire-reader') },
+            app: { connectionString: asRole(postgres.connectionString('ctg5-wire-app'), 'stynx_app') },
+            reader: { connectionString: asRole(postgres.connectionString('ctg5-wire-reader'), 'stynx_reader') },
           },
           migrations: { enabled: true },
         }),
@@ -123,11 +144,9 @@ describe('transactional command committed wire response over Nest HTTP and Postg
         api.StynxTransactionalCommandModule!.forRoot({ auditSink }) as never,
       ],
       controllers: [CommandController],
-      providers: [
-        { provide: APP_FILTER, useClass: ConsumerCatchAll },
-      ],
     }).compile();
     app = testing.createNestApplication();
+    app.useGlobalFilters(new ConsumerCatchAll());
     app.useGlobalInterceptors(new OuterMapper());
     await app.init();
     const admin = await postgres.connectAsAdmin();
@@ -195,6 +214,48 @@ describe('transactional command committed wire response over Nest HTTP and Postg
         'select count(*) from core.idempotency_keys where tenant_id = $1', [TENANT],
       );
       expect(Number(keys.rows[0]?.count)).toBe(1);
+    } finally {
+      await admin.end();
+    }
+  });
+
+  it('rolls back an unselected status without retaining a key or audit event', async () => {
+    const response = await request(app!.getHttpServer()).post('/transactional-wire/unselected')
+      .set('authorization', 'Bearer verified').set('idempotency-key', 'unselected-422')
+      .send({ name: 'invalid' });
+    expect(response.status).toBe(422);
+    expect(response.body).toEqual({ code: 'VALIDATION:BAD_REQUEST:command' });
+    const admin = await postgres!.connectAsAdmin();
+    try {
+      const events = await admin.query<{ count: string }>(
+        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.unselected'", [TENANT],
+      );
+      expect(Number(events.rows[0]?.count)).toBe(0);
+      const keys = await admin.query<{ count: string }>(
+        "select count(*) from core.idempotency_keys where tenant_id = $1 and key like '%unselected-422%'", [TENANT],
+      );
+      expect(Number(keys.rows[0]?.count)).toBe(0);
+    } finally {
+      await admin.end();
+    }
+  });
+
+  it('commits an unselected successful response and audit while clearing its key', async () => {
+    const response = await request(app!.getHttpServer()).post('/transactional-wire/unselected-success')
+      .set('authorization', 'Bearer verified').set('idempotency-key', 'unselected-success')
+      .send({ accepted: true });
+    expect(response.status).toBe(202);
+    expect(response.body).toMatchObject({ consumerMapped: true, value: { accepted: true } });
+    const admin = await postgres!.connectAsAdmin();
+    try {
+      const events = await admin.query<{ count: string }>(
+        "select count(*) from audit.events where tenancy_id = $1 and operation = 'command.unselectedSuccess'", [TENANT],
+      );
+      expect(Number(events.rows[0]?.count)).toBe(1);
+      const keys = await admin.query<{ count: string }>(
+        "select count(*) from core.idempotency_keys where tenant_id = $1 and key like '%unselected-success%'", [TENANT],
+      );
+      expect(Number(keys.rows[0]?.count)).toBe(0);
     } finally {
       await admin.end();
     }

@@ -157,6 +157,11 @@ describe('transactional command migration 0020', () => {
     try {
       await applyMigrationsThrough(client);
       await client.query('reset role');
+      await client.query(`
+        insert into tenancy.tenants (id, slug, name)
+        values ($1::uuid, 'ctg5-tenant-a', 'CTG5 tenant A'),
+               ($2::uuid, 'ctg5-tenant-b', 'CTG5 tenant B')
+      `, [tenantA, tenantB]);
       await client.query('truncate core.idempotency_keys');
       await client.query(`
         insert into core.idempotency_keys (tenant_id, key, status)
@@ -226,6 +231,7 @@ describe('transactional command migration 0020', () => {
         if (name.includes('entity_id')) return "'ctg5-db-command-1'::text";
         if (name.includes('entity')) return "'test.transactional_command'::text";
         if (name.includes('metadata')) return "'{\"source\":\"ctg5\"}'::jsonb";
+        if (name.includes('old_data') || name.includes('new_data') || name.endsWith('_pk')) return 'null::jsonb';
         if (name.includes('request')) return "null::text";
         if (name.includes('ip') || name.includes('session')) return 'null::text';
         throw new Error(`Unexpected write_command_event parameter: ${arg}`);
