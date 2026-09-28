@@ -97,6 +97,32 @@
       "description": "Idempotency key already used for a different request body. Caller should not retry with the same key + different payload."
     },
     {
+      "errorCode": "PRECONDITION:FAILED:if-match",
+      "statusCode": 412,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend PreconditionFailedError",
+      "runtimeBody": {
+        "statusCode": 412,
+        "errorCode": "PRECONDITION:FAILED:if-match",
+        "message": "If-Match precondition failed",
+        "requestId": "<request UUIDv7>"
+      },
+      "description": "A present If-Match tag is malformed or does not match the current resource revision. The method-scoped IfMatchExceptionFilter emits the law envelope; safe details are optional."
+    },
+    {
+      "errorCode": "PRECONDITION:REQUIRED:if-match",
+      "statusCode": 428,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend PreconditionRequiredError",
+      "runtimeBody": {
+        "statusCode": 428,
+        "errorCode": "PRECONDITION:REQUIRED:if-match",
+        "message": "If-Match is required",
+        "requestId": "<request UUIDv7>"
+      },
+      "description": "A route marked with @RequireIfMatch() received no If-Match header. The method-scoped IfMatchExceptionFilter emits the law envelope; safe details are optional."
+    },
+    {
       "errorCode": "RATELIMIT:THROTTLED:per-tenant",
       "statusCode": 429,
       "retriable": true,
