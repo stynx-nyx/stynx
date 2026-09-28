@@ -31,7 +31,8 @@
       "STYNX 1.5.0 CTG-0004 Architect rebind pins actor/RLS, migration, timezone, DST and worker sensors.",
       "STYNX 1.5.0 CTG-0004 Architect rebind pins jobs coverage sensors for actor, timezone and timer boundaries.",
       "STYNX 1.5.0 CTG-0005 Architect rebind pins transactional actor, tenant RLS, audit, idempotency, rollback, race and HTTP replay sensors.",
-      "STYNX 1.5.0 CTG-0005 Architect rebind pins the real app-role statement-timeout rollback sensor."
+      "STYNX 1.5.0 CTG-0005 Architect rebind pins the real app-role statement-timeout rollback sensor.",
+      "STYNX 1.5.0 CTG-0005 delivery-review Architect rebind pins filter precedence, inherited guards, provenance bootstraps, and refreshed fault/HTTP assertions."
     ]
   },
   "invariants": [
@@ -123,6 +124,24 @@
           "names": ["INV-RBAC-001"],
           "assertions": [
             "marked HTTP command fails closed when transactional command module is absent"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "inherited transactional routes fail bootstrap without the built-in STYNX auth guard"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "look-alike, inherited, and imperative-only guards cannot attest a protected command actor"
           ],
           "mode": "gray_box"
         },
@@ -517,6 +536,15 @@
         },
         {
           "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "method filter precedence is validated before execution and committed response bytes survive replay"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
           "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
           "names": ["INV-CORE-001"],
           "assertions": [
@@ -530,6 +558,15 @@
           "names": ["INV-CORE-001"],
           "assertions": [
             "marked HTTP command fails closed when transactional command module is absent"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "real HTTP commands commit only with resolved tenant and actor provenance; wrong module order fails before a transaction"
           ],
           "mode": "gray_box"
         },
@@ -630,6 +667,15 @@
           "names": ["INV-ERROR-001"],
           "assertions": [
             "forced rollback, one-invocation serialization failure, bounded key race and audit lock isolation"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "consumer method filters cannot replace committed HTTP error status, body or replay"
           ],
           "mode": "gray_box"
         },
@@ -783,6 +829,15 @@
           "names": ["INV-TENANCY-001"],
           "assertions": [
             "committed 502/replay exact wire bytes, ordinary rollback and status-policy behavior on real app-role PostgreSQL"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "nominal, verified and protected commands preserve tenant and actor provenance across two real RLS tenants"
           ],
           "mode": "gray_box"
         },
@@ -4356,15 +4411,23 @@
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 48,
-      "assertion_digest_sha256": "88d36a096f4e620a662eebb9065d92f0a97a2b89f15d1232f29844275728b68d"
+      "assertion_digest_sha256": "7a0a98b91fe05d94b92ed361b044fc807d99948b86b04939ec655eb32dee1699"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 32,
-      "assertion_digest_sha256": "a641b6807979dbaa6b3b59ad2ea5816f9e5b08ff94996cec086a4813523d72c0"
+      "assertion_count": 47,
+      "assertion_digest_sha256": "6f9be01a7bc866201c74c36be0f9c17f8cda461182cf96bde5009f1944b1ae84"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 12,
+      "assertion_digest_sha256": "052558ea4c560cae5cb27a704d1e3ee16ba503aae5a7e09a9913e7e88460f05b"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
@@ -4372,7 +4435,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 34,
-      "assertion_digest_sha256": "ce88fed2918a4b6a4e2cb259afe48b108d8afa4bcabb6be65d2d4849eeaa712b"
+      "assertion_digest_sha256": "7492a2fdd177398bd19527a947258c8d47c19684c604698f830e07b690cac33c"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
@@ -4381,6 +4444,14 @@
       "lifecycle": "supported",
       "assertion_count": 4,
       "assertion_digest_sha256": "02c22edacaad2c73a179e8904cd289814ec899e5c0038f9089c811f79f100dde"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 27,
+      "assertion_digest_sha256": "2f1edae608979f9e04e7e208343648d59489b33aa65e7d44de19ab32e46fcab5"
     },
     {
       "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
@@ -4403,8 +4474,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 22,
-      "assertion_digest_sha256": "fbe6b61739c329dac3659fc10a6bd3cdf1c93d38d68c97d7ad909d50b62922ce"
+      "assertion_count": 23,
+      "assertion_digest_sha256": "b6fe541c38cff398c8c5409f67122f36841e9df2d012eb2486dee98bd86b53bb"
     },
     {
       "path": "test/db/transactional-commands-migration.spec.ts",
