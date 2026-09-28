@@ -68,12 +68,12 @@ export class JobsService implements JobsPort {
     if (!input.tenantId || !input.name?.trim() || !input.jobType?.trim()) throw new InvalidScheduleError('tenantId, name, and jobType are required');
     if (!input.actorId?.trim()) throw new ScheduleActorRequiredError();
     if (!UUID_PATTERN.test(input.actorId)) throw new InvalidScheduleError('actorId must be a UUID');
+    const caller = this.caller(input.tenantId);
     const timezone = canonicalTimezone(input.timezone ?? 'UTC');
     const now = new Date(); let nextRunAt: Date;
     if (input.kind === 'cron' && input.cronExpression && !input.intervalSeconds) { parseCronExpression(input.cronExpression); nextRunAt = nextCronRunAt(input.cronExpression, now, timezone); }
     else if (input.kind === 'interval' && Number.isInteger(input.intervalSeconds) && input.intervalSeconds! > 0 && !input.cronExpression) nextRunAt = new Date(now.getTime() + input.intervalSeconds! * 1000);
     else throw new InvalidScheduleError('cron requires cronExpression; interval requires positive intervalSeconds');
-    const caller = this.caller(input.tenantId);
     await this.authorizeActor(input.tenantId, input.actorId, caller.actorId);
     return this.repository.upsertSchedule({ tenantId: input.tenantId, name: input.name, jobType: input.jobType, actorId: input.actorId, timezone, kind: input.kind, ...(input.cronExpression ? { cronExpression: input.cronExpression } : {}), ...(input.intervalSeconds ? { intervalSeconds: input.intervalSeconds } : {}), payload: input.payload ?? {}, priority: input.priority ?? 0, maxAttempts: input.maxAttempts ?? DEFAULT_MAX_ATTEMPTS, backoff: normalizeBackoff(input.backoff ?? {}, DEFAULT_BACKOFF_POLICY), nextRunAt, ...(input.createdBy ? { createdBy: input.createdBy } : {}), isEnabled: input.isEnabled ?? true });
   }

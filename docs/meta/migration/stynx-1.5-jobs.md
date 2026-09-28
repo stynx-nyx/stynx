@@ -26,6 +26,16 @@ dead-letter without running. Deploy the migrated `@stynx-nyx/data` and
 dead letters. Existing handlers must use app-role tenant SQL and enforce any
 domain permissions their work requires.
 
+Persisted cron rows containing an invalid expression, impossible recurrence,
+or invalid timezone are disabled during scheduler materialization. The owning
+tenant sees `disabledReason: 'invalid_schedule'` through `getSchedule`; other
+due schedules continue to materialize. The invalid occurrence creates no job,
+and its `nextRunAt` and `lastEnqueuedAt` stay unchanged. To repair it, call
+`upsertSchedule` with the same tenant and name, a valid recurrence, and an
+active-member actor from an authorized tenant/actor context. A valid upsert
+clears the reason and can re-enable it. `resumeSchedule` returns
+`SCHEDULE_INVALID` until that repair; retrying resume alone cannot repair it.
+
 The platform migration has an explicit seed at
 `database/seed/platform/0019-jobs-actor-timezone.sql`. It is loaded by the
 new `test/db/platform-jobs-migration.spec.ts`, which exercises the active

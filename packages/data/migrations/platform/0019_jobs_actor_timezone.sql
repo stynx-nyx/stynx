@@ -6,6 +6,11 @@ ALTER TABLE jobs.schedules
 ALTER TABLE jobs.schedules
   ADD COLUMN timezone text NOT NULL DEFAULT 'UTC';
 
+ALTER TABLE jobs.schedules
+  ADD COLUMN disabled_reason text NULL,
+  ADD CONSTRAINT schedules_disabled_reason_known
+  CHECK (disabled_reason IS NULL OR disabled_reason = 'invalid_schedule');
+
 UPDATE jobs.schedules SET timezone = 'UTC' WHERE timezone IS NULL;
 UPDATE jobs.schedules SET is_enabled = false WHERE actor_id IS NULL AND is_enabled;
 

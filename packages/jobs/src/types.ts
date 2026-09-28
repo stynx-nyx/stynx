@@ -54,6 +54,8 @@ export interface ScheduleRecord {
   maxAttempts: number;
   backoff: BackoffPolicy;
   isEnabled: boolean;
+  /** Set when materialization disables an invalid persisted recurrence. */
+  disabledReason: string | null;
   nextRunAt: Date;
   lastEnqueuedAt: Date | null;
   createdBy: string | null;
