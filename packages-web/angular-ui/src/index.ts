@@ -5,6 +5,7 @@
  */
 export { EmptyStateComponent } from '@stynx-nyx/angular';
 export * from './banner.component';
+export * from './error-banner.component';
 export * from './confirm-dialog.component';
 export * from './icon/icon.component';
 export * from './loading-spinner.component';

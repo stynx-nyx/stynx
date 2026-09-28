@@ -1,7 +1,10 @@
 export interface StynxErrorPayload {
   code?: string;
+  errorCode?: string;
   message?: string;
   context?: Record<string, unknown>;
+  details?: Record<string, unknown>;
+  requestId?: string;
 }
 
 export class StynxSdkError extends Error {
@@ -36,11 +39,22 @@ function resolveMessage(status: number, payload: unknown): string {
 }
 
 function resolveCode(payload: unknown): string | undefined {
-  return isObject(payload) && typeof payload.code === 'string' ? payload.code : undefined;
+  if (!isObject(payload)) return undefined;
+  if (typeof payload.errorCode === 'string') return payload.errorCode;
+  return typeof payload.code === 'string' ? payload.code : undefined;
 }
 
 function resolveContext(payload: unknown): Record<string, unknown> | undefined {
-  return isObject(payload) && isObject(payload.context) ? payload.context : undefined;
+  if (!isObject(payload)) return undefined;
+  if (isObject(payload.context)) return payload.context;
+  const details = isObject(payload.details) ? payload.details : undefined;
+  const requestId = typeof payload.requestId === 'string' ? payload.requestId : undefined;
+  if (!details && !requestId) return undefined;
+  return {
+    ...details,
+    ...(requestId && !Object.prototype.hasOwnProperty.call(details ?? {}, 'requestId')
+      ? { requestId } : {}),
+  };
 }
 
 export function createStynxSdkError(status: number, payload?: unknown): StynxSdkError {

@@ -6,6 +6,7 @@
 export * from './auth.interceptor';
 export * from './empty-state.component';
 export * from './error-banner.service';
+export * from './error-classification';
 export * from './error.interceptor';
 export * from './event-stream';
 export * from './provide-defaults';
