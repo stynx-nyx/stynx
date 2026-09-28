@@ -210,9 +210,11 @@ item e serialização de auditoria antes do relógio; ainda não há PASS.
    rollback por item e RLS real.
    `migrations/0002_*.sql` faz backfill sem perder fila; DDL, teste de
    upgrade e `offline-sync-api.md` fixam a ordem de aplicação para adotantes
-   e identificam itens legados. Esta frente depende da correção do
-   envelope CTG5 aprovada pelo Owner; se outra solução for escolhida, os
-   409/422 da OFS são revistos antes do contrato.
+   e identificam itens legados. A correção do envelope CTG5 opção A foi
+   executada sob autoridade Architect para código não publicado, recebeu
+   delivery-review Opus PASS e foi integrada na branch cumulativa. Os
+   409/422 da OFS deverão respeitar esse contrato e os corpos legados
+   preservados. Isso não decide o escopo CTG9 nem autoriza substituir ADRs.
 
 Para qualquer DDL: atualizar migration, DDL canônica quando o repositório
 a mantiver para aquele schema, seed e `test/db`;
@@ -234,7 +236,7 @@ sensores vermelhos, até três tarefas sem lock comum. **Locks compartilhados
 serializados pelo maestro:** `packages/data`, migrations/DDL/seed/
 `test/db`, eventual `packages/backend` SSE, `law/trace.json`, baselines,
 `pnpm-lock.yaml`, changesets e READMEs gerados. Ordem de integração:
-correção autorizada do envelope CTG5 → contratos SIG/OBX/OFS; contrato de
+correção do envelope CTG5 (integrada) → contratos SIG/OBX/OFS; contrato de
 evento OBX antes de ligar o applier OFS ao seu porto; SIG independente;
 migrações e rebinds compartilhados sob lock. Importar somente checkpoints
 com PASS e gates focais na branch cumulativa, sem PR/RC intermediário. A
