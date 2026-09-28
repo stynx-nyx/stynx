@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "STYNX 1.5.0 final lint Architect rebind pins CTG9 SSE tenant denial, attached CMS bytes, incremental PDF ByteRange, readiness export and withdrawal hashes after stronger value assertions.",
       "STYNX 1.5.0 final-version Architect rebind pins private workspace manifest and CHANGELOG restoration through Changesets success, failure and spawn errors.",
       "STYNX 1.5.0 CTG-0009 Architect rebind pins signature trust/manifest/withdrawal, offline durable parity and upgrade, event-log ownership/RLS, audit chain, SSE bridge and adjusted legacy outbox assertions.",
       "DEVAI 1.2.13 deterministic inventory for exact tracked source bytes.",
@@ -4876,7 +4877,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 20,
-      "assertion_digest_sha256": "dceee76af3408aac5c34e4652c5ec0f2caca94af3220fb6fe585e77b58bd0d2e"
+      "assertion_digest_sha256": "7c01d11f80c2e27a7e3a58bb4b991bcedc2ff57841d242af334d4310110f6598"
     },
     {
       "path": "packages/data/test/integration/ctg9-audit-chain.spec.ts",
@@ -4931,24 +4932,24 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 63,
-      "assertion_digest_sha256": "814ee3d2dd4679247c485778fec96bffb1b8d9329c578f8287c2aca1a8932e2c"
+      "assertion_count": 64,
+      "assertion_digest_sha256": "93975ed083c6af1612d22fa3e73284d239418464c6a71bd7b9f38a976a8b4ab1"
     },
     {
       "path": "packages/signature/test/unit/manifest.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 41,
-      "assertion_digest_sha256": "4a0bf4dc5a26b09c642ff2b63dc4314710de3f57213dc52cadb7ea1506e74337"
+      "assertion_count": 45,
+      "assertion_digest_sha256": "1fc68fbcc9fef5edbaca8957b556457479019379d2ea98e45879480cd7744e38"
     },
     {
       "path": "packages/signature/test/unit/readiness.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 13,
-      "assertion_digest_sha256": "9e73f3dcb57e84a508d784025845f915bdcb6dab5d3bcca44c87efb79bced581"
+      "assertion_count": 14,
+      "assertion_digest_sha256": "0464b53ac038e4f00383241974c3ab629a399550f454e397fe739d7e1d5a88fb"
     },
     {
       "path": "packages/signature/test/unit/withdrawal.spec.ts",
@@ -4956,7 +4957,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 30,
-      "assertion_digest_sha256": "88ed280a45490d99f0801ff1f35ae77ea884dbe5236806f366a18f8322e94082"
+      "assertion_digest_sha256": "a334477b4f74590f391a9383c168e0a0713f0aea2001e69c434a8d3aaa810ccc"
     },
     {
       "path": "test/db/outbox-event-log-migration.spec.ts",

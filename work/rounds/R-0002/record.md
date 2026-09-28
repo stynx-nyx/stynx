@@ -1257,3 +1257,12 @@ em `reviews/final-ctg9-lint-prompt-review-2.structured.json`. As
 notas opcionais foram incorporadas: literal de 55 bytes para o CMS
 anexado, valor dos captures ByteRange sem `.not.toBeNull()`, classe de
 health e parâmetro de evidência obrigatório. Inspector liberado.
+
+O Inspector demonstrou três erros factuais no prompt/review contra as
+fixtures reais: eContent tem LF final e 56 bytes; o start do ByteRange
+é `0000000000`; o PDF B-LT recebe DSS incremental após o `%%EOF` da
+revisão assinada, portanto `after + tail < pdf.length`. Triagem
+`reference-gap` para as suposições de fixture do reviewer; o prompt
+192 foi corrigido retrospectivamente e os sensores verificam o valor
+real, sem alterar produção ou fixtures. Inspector `fc49e3d9` passou
+`pnpm lint:tests`, signature 182/182 e backend PostgreSQL 4/4.
