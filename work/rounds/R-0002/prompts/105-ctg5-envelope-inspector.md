@@ -1,10 +1,15 @@
 # CTG-0005 envelope — Inspector
 
-Declare **Inspector** (Constitution Art. 6). Dispatch only after the Owner
-records option A for `INV-ERROR-001`, the Architect amends the CTG5 contract
-and error catalog, and a cross-family prompt-review PASS covers this prompt.
-Read `ctg5-error-envelope-option-a.md`, its review-4 PASS receipt, the current
-Nest CTG5 source, and the existing tests. Do not execute Git, edit source,
+Declare **Inspector** (Constitution Art. 6). **Primeiro, verifique**
+`work/rounds/R-0002/authorization-ctg5-error-envelope.md`: deve registrar
+`authorized_by_role: Owner`, opção A e `INV-ERROR-001`; verifique também o
+commit Architect que emenda o contrato/catálogo e um prompt-review PASS deste
+prompt. Se qualquer evidência faltar, pare sem editar e reporte bloqueio.
+Leia `ctg5-error-envelope-option-a.md`, o PASS técnico review-4, o contrato
+Architect emendado e `docs/framework/contracts/errors.json` no commit
+registrado, além da fonte/testes CTG5. Para cada código, `runtimeBody` do
+catálogo e o contrato fixam mensagem, `retryable` e `details`; se faltar
+valor fixo, devolva `reference-gap`, sem inventá-lo. Do not execute Git, edit source,
 `law/`, manifests, workflows or DETRAN. Do not weaken or delete tests.
 
 Own only backend tests under `packages/backend/test/**`. Include the existing
@@ -17,7 +22,7 @@ Move the invalid `mismatchCode:''` provenance fixture to a separate
 `app.init()` refusal fixture; change the valid custom code fixture to
 `SCOPED:CONFLICT:command-mismatch` while keeping its configuration proof.
 
-For each reachable CTG5-owned 400/403/409/500/503 in the plan's matrix,
+For each reachable CTG5-owned 400/403/409/500/503 in **both** plan tables,
 assert exact status and `toEqual` of the complete canonical body, no
 `code`/`context`, body.requestId equal to `X-Request-Id`, and no domain,
 audit or key effect. Assert `retryable:true` only on in-progress 409;
@@ -25,8 +30,28 @@ generic transaction 503 uses false. Cover two concurrent 409 losers with
 different IDs and eventual replay. Build the no-module fixture both with
 core and without core; the latter has no guard, no StynxAuthModule and no
 command module. An invalid inbound request ID must become a generated UUIDv7.
+With core, body.requestId must equal the ID the core middleware placed in
+X-Request-Id, even when RequestContext is not injectable in the controller
+module.
 Combined If-Match routes retain 412/428 and get 409 in both decorator orders.
-Compare the runtime error-code regex to the law schema pattern in a sensor.
+Read the pattern from `law/schemas/error-envelope.schema.json` and compare
+the **behaviour** of `forRoot`/`app.init()` on the same accepted/rejected
+corpus; do not import or require a new public regex export.
+
+No novo spec de erros, cobrir explicitamente: scope callback 500
+`COMMAND:CONFIGURATION:scope-callback-failed`; tenancy port 500
+`COMMAND:CONFIGURATION:tenancy-port-failed`; status inválido 500
+`COMMAND:CONFIGURATION:status-invalid`; persistStatus inválido/lançando 500
+`COMMAND:CONFIGURATION:status-policy-invalid`; corpo de resposta não JSON
+500 `COMMAND:CONFIGURATION:response-not-json`; metadataSelector,
+entityIdSelector e redaction lançando 500
+`COMMAND:CONFIGURATION:audit-metadata-failed`. Todos sem efeito durável.
+Falhas de setup (pool.connect/BEGIN/sessão), store lookup/reserve, audit sink,
+store complete/clear e COMMIT que não são `StynxDataError` recebem 503
+`COMMAND:DEPENDENCY:transaction-failed`, `retryable:false`, sem domínio,
+auditoria ou chave. No unitário, cobrir execução fora de HTTP e os checks
+defensivos runtime de marcação, lockTimeoutMs e ttlMs; mismatchCode inválido
+é somente recusa de bootstrap, sem 500 runtime.
 
 Test `forRoot` invalid mismatchCode/lockTimeoutMs as synchronous throws;
 test route mismatchCode/lockTimeoutMs and `@Idempotent` ttlMs as `app.init()`
@@ -47,3 +72,6 @@ with two tenants. Record the **expected red** failures in new/strengthened
 sensors, exact command, output and counts. `pnpm test:int` alone is not
 sufficient: backend integration specs run under its `test` script. Hand the
 test paths to the Architect for `law/trace.json` rebind. No source edits.
+O resultado segue para delivery-review independente Opus PASS antes de
+qualquer importação cumulativa; CI completo, PR e publicação ficam no gate
+final da OD-S15-02.
