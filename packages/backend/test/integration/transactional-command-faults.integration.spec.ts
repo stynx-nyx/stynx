@@ -501,8 +501,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       @Audit({ action: 'command.setupFault', transactional: true })
       command() { return handler(); }
     }
-    const unavailable = new URL(postgres!.connectionString('ctg5-setup-unavailable'));
-    unavailable.port = '1';
+    const unavailable = `postgresql://localhost:1/${postgres!.database}`;
     const auditSink = new AuditSqlSink({ query: async () => { throw new Error('legacy audit path used'); } },
       { mode: 'audit_write_function' });
     const testing = await Test.createTestingModule({
@@ -510,7 +509,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
         StynxCoreModule.forRoot({ appName: 'transactional-setup-fault', schema: z.object({}) }),
         StynxDataModule.forRoot({ connections: {
           owner: { connectionString: postgres!.connectionString('ctg5-setup-owner') },
-          app: { connectionString: unavailable.toString() },
+          app: { connectionString: unavailable },
           reader: { connectionString: asReaderRole(postgres!.connectionString('ctg5-setup-reader')) },
         }, migrations: { enabled: false } }),
         StynxAuthModule.forRoot({ tokenVerifier: { verifyAuthorizationHeader: async () => ({ principal: {
@@ -647,7 +646,12 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       responsePromise = send('audit-contention', 'audit-contention-key').then(
         (response) => response,
       );
-      await auditEnteredPromise;
+      await Promise.race([
+        auditEnteredPromise,
+        responsePromise.then((response) => {
+          throw new Error(`Command returned before the audit handler: ${JSON.stringify(response.body)}`);
+        }),
+      ]);
       await tick(260);
       await admin.query('commit');
       const response = await responsePromise;
