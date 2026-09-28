@@ -2,9 +2,10 @@ import '@angular/compiler';
 import { ChangeDetectionStrategy, Component, Injector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, RouterOutlet, provideRouter } from '@angular/router';
-import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-nyx/angular-auth';
+import { STYNX_ANGULAR_AUTH_OPTIONS } from '@stynx-nyx/angular-auth';
+import { createStynxSessionStub, provideStynxSessionStub } from '@stynx-nyx/angular-auth/testing';
 import { StynxI18nService } from '@stynx-nyx/angular-i18n';
-import { Subject, of } from 'rxjs';
+import { Subject } from 'rxjs';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   StynxFlowDashboardComponent,
@@ -133,6 +134,10 @@ function activatedComponent(router: Router): unknown {
 
 async function configureRouterTest(allowed: boolean) {
   const api = createApi();
+  const session = createStynxSessionStub({
+    active: allowed,
+    permissions: allowed ? ['*'] : [],
+  });
   await TestBed.configureTestingModule({
     imports: [RouteHostComponent],
     providers: [
@@ -142,10 +147,7 @@ async function configureRouterTest(allowed: boolean) {
       ]),
       { provide: FlowApiService, useValue: api },
       { provide: StynxI18nService, useClass: FakeI18nService },
-      {
-        provide: StynxSessionService,
-        useValue: { active$: of(allowed), hasAllPermissions: vi.fn(() => allowed) },
-      },
+      provideStynxSessionStub(session),
       { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: { permissionDeniedPath: '/forbidden' } },
     ],
   }).compileComponents();
@@ -321,7 +323,9 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
   });
 
   it('exposes dashboard loading and clears stale errors while a request is pending', async () => {
-    let resolveRequest: (value: Awaited<ReturnType<FlowApiService['dashboardAnalytics']>>) => void = () => undefined;
+    let resolveRequest: (
+      value: Awaited<ReturnType<FlowApiService['dashboardAnalytics']>>,
+    ) => void = () => undefined;
     const api = createApi();
     (api.dashboardAnalytics as ReturnType<typeof vi.fn>).mockReturnValueOnce(
       new Promise((resolve) => {
@@ -455,7 +459,9 @@ describe('@stynx-nyx/angular-flow FE-G fan-out', () => {
   });
 
   it('exposes run-activity loading and clears stale errors while a request is pending', async () => {
-    let resolveRequest: (value: Awaited<ReturnType<FlowApiService['listRunActivity']>>) => void = () => undefined;
+    let resolveRequest: (
+      value: Awaited<ReturnType<FlowApiService['listRunActivity']>>,
+    ) => void = () => undefined;
     const api = createApi();
     (api.listRunActivity as ReturnType<typeof vi.fn>).mockReturnValueOnce(
       new Promise((resolve) => {

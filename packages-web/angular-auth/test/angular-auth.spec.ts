@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
+  type EnvironmentProviders,
   Injector,
   TemplateRef,
   ViewContainerRef,
@@ -13,6 +14,8 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { ROUTES, Router } from '@angular/router';
 import { STYNX_ANGULAR_OPTIONS, TenantContextService } from '@stynx-nyx/angular';
 import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { provideStynxI18nTesting } from '@stynx-nyx/angular-i18n/testing';
+import { createStynxSessionStub } from '@stynx-nyx/angular-auth/testing';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { of, Subject } from 'rxjs';
 import { parseJwtPayload, normalizePermissions } from '../src/jwt';
@@ -40,6 +43,20 @@ import {
   type TenancyOptions,
 } from '@stynx-nyx/angular-tenancy';
 import { renderComponent } from './support/test-bed';
+
+const authTestCatalogs = {
+  en: {
+    'auth.loginRedirect.completing': 'Completing sign in',
+    'auth.logoutButton.label': 'Sign out',
+    'auth.permissionDenied.actions.loginAgain': 'Log in again',
+    'auth.permissionDenied.message': 'You do not have permission to view this page.',
+    'auth.permissionDenied.title': 'Permission denied',
+  },
+};
+
+function authI18nProvider(): EnvironmentProviders {
+  return provideStynxI18nTesting(authTestCatalogs);
+}
 
 function createJwt(payload: Record<string, unknown>): string {
   const encode = (value: object) =>
@@ -181,54 +198,42 @@ afterEach(() => {
 
 describe('@stynx-nyx/angular-auth', () => {
   it('renders login redirect and completes the active browser callback URL', async () => {
-    const completeLogin = vi.fn(async () => undefined);
-    const fixture = await renderComponent(StynxLoginRedirectComponent, {
-      providers: [
-        { provide: StynxSessionService, useValue: { completeLogin } },
-        {
-          provide: StynxI18nService,
-          useValue: {
-            locale: () => 'en',
-            translate: (key: string) =>
-              ({ 'auth.loginRedirect.completing': 'Completing sign in' })[key] ?? key,
-          },
-        },
-      ],
-    });
+    const session = createStynxSessionStub();
+    await TestBed.configureTestingModule({
+      imports: [StynxLoginRedirectComponent],
+      providers: [{ provide: StynxSessionService, useValue: session }, authI18nProvider()],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(StynxLoginRedirectComponent);
+    fixture.detectChanges();
+    await TestBed.inject(StynxI18nService).initialize();
+    fixture.detectChanges();
     await fixture.whenStable();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toMatch(/Completing sign in/u);
-    expect(completeLogin).toHaveBeenCalledWith(window.location.href);
+    expect(session.calls.completeLogin).toHaveBeenCalledWith(window.location.href);
   });
 
   it('renders logout and permission directive behaviour through TestBed', async () => {
-    const logout = vi.fn(async () => undefined);
-    const logoutFixture = await renderComponent(StynxLogoutButtonComponent, {
-      providers: [
-        { provide: StynxSessionService, useValue: { logout } },
-        {
-          provide: StynxI18nService,
-          useValue: {
-            locale: () => 'en',
-            translate: (key: string) => ({ 'auth.logoutButton.label': 'Sign out' })[key] ?? key,
-          },
-        },
-      ],
-    });
+    const session = createStynxSessionStub();
+    await TestBed.configureTestingModule({
+      imports: [StynxLogoutButtonComponent],
+      providers: [{ provide: StynxSessionService, useValue: session }, authI18nProvider()],
+    }).compileComponents();
+    const logoutFixture = TestBed.createComponent(StynxLogoutButtonComponent);
+    logoutFixture.detectChanges();
+    await TestBed.inject(StynxI18nService).initialize();
+    logoutFixture.detectChanges();
     const button = (logoutFixture.nativeElement as HTMLElement).querySelector('button');
     button?.click();
     await logoutFixture.whenStable();
     expect(button?.textContent).toMatch(/Sign out/u);
-    expect(logout).toHaveBeenCalledTimes(1);
+    expect(session.calls.logout).toHaveBeenCalledTimes(1);
 
     const permissionFixture = await renderComponent(HasPermissionHostComponent, {
       providers: [
         {
           provide: StynxSessionService,
-          useValue: {
-            active$: of({ active: true }),
-            hasAllPermissions: (permissions: string[]) => permissions.includes('document:write:*'),
-          },
+          useValue: createStynxSessionStub({ active: true, permissions: ['document:write:*'] }),
         },
       ],
     });
@@ -929,39 +934,19 @@ describe('@stynx-nyx/angular-auth', () => {
     expect(deny).toBe('URL:/forbidden');
   });
 
-  it('ships the permission-denied component and default route provider', () => {
-    let redirectCalls = 0;
+  it('ships the permission-denied component and default route provider', async () => {
+    const session = createStynxSessionStub();
     TestBed.configureTestingModule({
       imports: [StynxPermissionDeniedComponent],
-      providers: [
-        {
-          provide: StynxI18nService,
-          useValue: {
-            locale: () => 'en',
-            translate: (key: string) =>
-              ({
-                'auth.permissionDenied.actions.loginAgain': 'Log in again',
-                'auth.permissionDenied.message': 'You do not have permission to view this page.',
-                'auth.permissionDenied.title': 'Permission denied',
-              })[key] ?? key,
-          },
-        },
-        {
-          provide: StynxSessionService,
-          useValue: {
-            loginRedirect: () => {
-              redirectCalls += 1;
-            },
-          },
-        },
-      ],
+      providers: [authI18nProvider(), { provide: StynxSessionService, useValue: session }],
     });
 
     const fixture = TestBed.createComponent(StynxPermissionDeniedComponent);
+    await TestBed.inject(StynxI18nService).initialize();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toMatch(/Permission denied/u);
     fixture.nativeElement.querySelector('button')?.click();
-    expect(redirectCalls).toBe(1);
+    expect(session.calls.loginRedirect).toHaveBeenCalledTimes(1);
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
@@ -1436,23 +1421,14 @@ describe('@stynx-nyx/angular-auth', () => {
 
   it('login redirect passes no callback URL when no browser window is available', async () => {
     const restoreWindow = setGlobalValue('window', undefined);
-    const sessionCalls: unknown[] = [];
+    const session = createStynxSessionStub();
     try {
       const injector = Injector.create({
-        providers: [
-          {
-            provide: StynxSessionService,
-            useValue: {
-              completeLogin: async (url?: string) => {
-                sessionCalls.push(['completeLogin', url]);
-              },
-            },
-          },
-        ],
+        providers: [{ provide: StynxSessionService, useValue: session }],
       });
 
       await runInInjectionContext(injector, () => new StynxLoginRedirectComponent()).ngOnInit();
-      expect(sessionCalls).toEqual([['completeLogin', undefined]]);
+      expect(session.calls.completeLogin).toHaveBeenCalledWith(undefined);
     } finally {
       restoreWindow();
     }
