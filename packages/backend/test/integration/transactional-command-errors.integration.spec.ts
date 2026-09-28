@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Controller, HttpCode, HttpException, Post, UseGuards, type CanActivate, type ExecutionContext,
+import { Controller, HttpCode, HttpException, Logger, Post, UseGuards, type CanActivate, type ExecutionContext,
   type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuditSqlSink } from '@stynx-nyx/audit';
@@ -164,11 +164,34 @@ describe('transactional command canonical configuration rejections over Nest HTT
   }
 
   it('maps a thrown scope callback to its exact canonical envelope before handler, audit, reservation or domain work', async () => {
-    const response = await request(app.getHttpServer()).post('/transactional-command-errors/scope-callback')
-      .set('authorization', 'Bearer verified').set('idempotency-key', 'scope-callback-key').send({ value: 1 });
-    expectEnvelope(response);
-    expect(handler).not.toHaveBeenCalled();
-    await assertNoDurableEffect();
+    const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    try {
+      const response = await request(app.getHttpServer()).post('/transactional-command-errors/scope-callback')
+        .set('authorization', 'Bearer verified').set('idempotency-key', 'scope-callback-key').send({ value: 1 });
+      expectEnvelope(response);
+      expect(errorLog).toHaveBeenCalledWith(
+        expect.stringContaining(`requestId=${response.headers['x-request-id']}`),
+        expect.stringContaining('scope callback failure'),
+      );
+      expect(response.text).not.toContain('scope callback failure');
+      expect(handler).not.toHaveBeenCalled();
+      await assertNoDurableEffect();
+    } finally { errorLog.mockRestore(); }
+  });
+
+  it('logs the original in-transaction callback stack while keeping the 500 envelope fixed', async () => {
+    const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    try {
+      const response = await request(app.getHttpServer()).post('/transactional-command-errors/persist-status-throws')
+        .set('authorization', 'Bearer verified').set('idempotency-key', 'policy-observability').send({ value: 1 });
+      expectEnvelope(response, 'COMMAND:CONFIGURATION:status-policy-invalid', 'Command status policy failed');
+      expect(errorLog).toHaveBeenCalledWith(
+        expect.stringContaining(`requestId=${response.headers['x-request-id']}`),
+        expect.stringContaining('policy failure'),
+      );
+      expect(response.text).not.toContain('policy failure');
+      await assertNoDurableEffect();
+    } finally { errorLog.mockRestore(); }
   });
 
   it.each([

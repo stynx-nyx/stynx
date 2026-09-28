@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
-import { Controller, HttpException, Post, UseGuards, type INestApplication } from '@nestjs/common';
+import { Controller, HttpException, Logger, Post, UseGuards, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuditSqlSink } from '@stynx-nyx/audit';
 import {
@@ -454,6 +454,20 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     },
     30_000,
   );
+
+  it('logs the original audit failure stack and request ID without exposing it in the 503 envelope', async () => {
+    const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    try {
+      const response = await send('audit', 'audit-observability');
+      expectDependencyEnvelope(response);
+      expect(errorLog).toHaveBeenCalledWith(
+        expect.stringContaining(`requestId=${response.headers['x-request-id']}`),
+        expect.stringContaining('injected audit failure after write'),
+      );
+      expect(response.text).not.toContain('injected audit failure after write');
+      await assertNoDurableEffect('audit', 'audit-observability');
+    } finally { errorLog.mockRestore(); }
+  });
 
   it('surfaces serialization failure after one handler invocation with no committed effects', async () => {
     const response = await send('serialization', 'serialization-fault');
