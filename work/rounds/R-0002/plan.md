@@ -232,6 +232,7 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
 
+- CTG5 envelope unitário defensivo pós-despacho: `sensor-error` — o sensor exigia o envelope completo em `HttpException.getResponse()` antes do filtro HTTP resolver `requestId`; limitar esse unitário a status e código interno e manter o envelope completo nos sensores HTTP, seguido de rebind Architect de trace.
 - CTG5 envelope Inspector tentativas 1–2: `reference-gap` — os sensores entregues provaram vermelho em PostgreSQL, mas ainda faltam caminhos 400/403/500/503, filtros, If-Match, unitários e controles duráveis exigidos pelo prompt 105; após a nova tentativa parcial, a conclusão dos sensores foi escalada ao maestro no papel Inspector antes de qualquer commit Inspector.
 - RC2 delivery-review Opus ciclo 1: `policy-issue` — a política de anomalia e o publicador ainda fixavam `rc.1` apesar dos 44 manifestos em `rc.2`; Inspector acrescentou prova vermelha de igualdade e da transição `rc.1 → rc.2`, Architect vincula a decisão Owner existente à candidata exata, Engineer atualiza o candidato e o digest; repetir gates e review antes do PR.
 - RC2 `release:status`: `policy-issue` — o primeiro commit de versão tinha assunto fora do marcador canônico; o maestro reconstruiu a sequência local sem mudar a árvore e o gate passou com `chore(repo): version 1.5.0 release candidate`.
