@@ -3,6 +3,7 @@ import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { X509Certificate } from '@peculiar/x509';
 import * as sig from '../../src';
+import { appendCatalogShadow, appendDuplicatePrev, appendHybridXref } from '../fixtures/pki/xref-attacks';
 import {
   bltCmsSignature,
   bltSignedDocument,
@@ -505,6 +506,18 @@ describe('concrete STYNX CMS verifier', () => {
     },
   );
 
+  it.each([
+    ['catalog shadow after fake endstream', appendCatalogShadow],
+    ['hybrid XRefStm type 1', (pdf: Uint8Array) => appendHybridXref(pdf, 1)],
+    ['hybrid XRefStm type 2', (pdf: Uint8Array) => appendHybridXref(pdf, 2)],
+    ['duplicate Prev trailer', appendDuplicatePrev],
+  ])('rejects %s with exact post-signature failure', async (_name, attack) => {
+    const signedDocument = attack(bltSignedDocument);
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({ ...input(), signedDocument }))
+      .rejects.toMatchObject({ message: 'Post-signature modification' });
+  });
+
   it('accepts legal spaces inside the selected ByteRange brackets', async () => {
     const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
       .verifySignedArtifact({
@@ -634,7 +647,10 @@ describe('concrete STYNX CMS verifier', () => {
         signedDocument: bytes(`${stem}-blt.pdf`),
         cmsSignature: bytes(`${stem}-blt.cms.der`),
         profile: { ...profile, revocation },
-      })).rejects.toBeInstanceOf(sig.SignatureError);
+      })).rejects.toMatchObject({
+        name: 'SignatureTrustError',
+        message: 'Certificate revoked',
+      });
   });
 
   it('rejects a signed PDF without an embedded timestamp even if a fetcher claims one', async () => {
@@ -656,6 +672,19 @@ describe('concrete STYNX CMS verifier', () => {
       input(),
     );
     expect(fallback.revocationSource).toBe('ocsp');
+  });
+
+  it('uses a fresh signed CRL when embedded signer OCSP predates the TST', async () => {
+    const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes('pades-stale-ocsp-fresh-crl-source.pdf'),
+        signedDocument: bytes('pades-stale-ocsp-fresh-crl-blt.pdf'),
+        cmsSignature: bytes('pades-stale-ocsp-fresh-crl-blt.cms.der'),
+        profile: { ...profile, revocation: 'ocsp-or-crl' },
+      });
+    expect(result.padesProfile).toBe('PAdES-B-LT');
+    expect(result.revocationSource).toBe('crl');
   });
 
   it('keeps existing no-minimum mock signing and verification', async () => {

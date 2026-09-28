@@ -27,6 +27,7 @@ ESS_SPOOF = os.environ.get('STYNX_ESS_SPOOF') == '1'
 SIGNER_KIND = os.environ.get('STYNX_SIGNER_KIND', 'signer')
 ATTACHED_CMS = os.environ.get('STYNX_ATTACHED_CMS') == '1'
 PRE_TST_GOOD = os.environ.get('STYNX_PRE_TST_GOOD') == '1'
+STALE_SIGNER_OCSP = os.environ.get('STYNX_STALE_SIGNER_OCSP') == '1'
 if SIGNER_KIND not in ('signer', 'spoof'):
     raise ValueError('STYNX_SIGNER_KIND must be signer or spoof')
 if MANIFEST and (len(MANIFEST) != 64 or any(c not in '0123456789abcdef' for c in MANIFEST)):
@@ -127,6 +128,11 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
                         f'V\t270928000000Z\t\t{serial}\tunknown\t/CN={subject}\n')
         (work / 'ocsp-index.txt').write_text(signer_index +
             'V\t270928000000Z\t\t03EA\tunknown\t/CN=STYNX Test TSA\n')
+        crl_signer_index = (f'R\t270928000000Z\t260928000000Z\t{serial}\tunknown\t/CN={subject}\n'
+                            if REVOKE_SIGNER_CRL else
+                            f'V\t270928000000Z\t\t{serial}\tunknown\t/CN={subject}\n')
+        (work / 'crl-index.txt').write_text(crl_signer_index +
+            'V\t270928000000Z\t\t03EA\tunknown\t/CN=STYNX Test TSA\n')
         for name in (SIGNER_KIND, 'tsa'):
             run(OPENSSL, 'ocsp', '-issuer', str(ROOT / 'root.cert.pem'),
                 '-cert', str(ROOT / f'{name}.cert.pem'), '-reqout', f'{name}.ocsp.req.der', '-no_nonce', cwd=work)
@@ -137,15 +143,16 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
         (work / 'crl.serial').write_text('01\n')
         (work / 'ca.cnf').write_text('\n'.join([
             '[ ca ]', 'default_ca = ca_default', '[ ca_default ]', f'dir = {work}',
-            'database = ocsp-index.txt', 'serial = ca.serial', 'crlnumber = crl.serial',
+            'database = crl-index.txt', 'serial = ca.serial', 'crlnumber = crl.serial',
             f'certificate = {ROOT / "root.cert.pem"}', f'private_key = {ROOT / "root.key.pem"}',
             'default_md = sha256', 'default_crl_days = 7', 'policy = policy_any',
             '[ policy_any ]', 'commonName = supplied',
         ]) + '\n')
         run(OPENSSL, 'ca', '-config', 'ca.cnf', '-gencrl', '-out', 'fresh.crl.pem', '-batch', cwd=work)
         run(OPENSSL, 'crl', '-in', 'fresh.crl.pem', '-outform', 'DER', '-out', 'fresh.crl.der', cwd=work)
-    if PRE_TST_GOOD:
+    if PRE_TST_GOOD or STALE_SIGNER_OCSP:
         generate_revocation()
+        stale_signer_ocsp = (work / f'{SIGNER_KIND}-ocsp.der').read_bytes()
         time.sleep(1.1)
     run('node', str(ROOT / 'cms-timestamp.cjs'), 'signature', 'base.cms.der', 'signature.bin', cwd=work)
     run(OPENSSL, 'ts', '-query', '-data', 'signature.bin', '-sha256', '-cert', '-out', 'request.tsq', cwd=work)
@@ -164,7 +171,7 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
     if not PRE_TST_GOOD:
         generate_revocation()
     tsa_ocsp = (work / 'tsa-ocsp.der').read_bytes()
-    signer_ocsp = (work / f'{SIGNER_KIND}-ocsp.der').read_bytes()
+    signer_ocsp = stale_signer_ocsp if STALE_SIGNER_OCSP else (work / f'{SIGNER_KIND}-ocsp.der').read_bytes()
     fresh_crl = (work / 'fresh.crl.der').read_bytes()
     if not B_B_ONLY:
         run('node', str(ROOT / 'cms-timestamp.cjs'), 'embed', 'base.cms.der',
@@ -193,7 +200,7 @@ certificate = (ROOT / f'{SIGNER_KIND}.cert.der').read_bytes()
 tsa_certificate = base64.b64decode(''.join(
     line for line in (ROOT / 'tsa.cert.pem').read_text().splitlines() if not line.startswith('-----')))
 ocsp = signer_ocsp
-crl = (ROOT / 'revoked.crl.der').read_bytes() if REVOKE_SIGNER_CRL else fresh_crl
+crl = fresh_crl
 if WRONG_SIGNER_OCSP:
     ocsp = tsa_ocsp
 def stream(data):
