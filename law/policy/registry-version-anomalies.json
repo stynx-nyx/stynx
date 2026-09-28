@@ -10,7 +10,7 @@
     "repository_tree": "6a32b33bfbc5281e055b595886b8cde3af65c23c",
     "statement": "OD-S15-01 requires successive 1.5.0-rc.N candidates after stable CTG increments, and the Owner explicitly authorized all actions needed to complete this campaign. RC2 was published for all 44 packages from 137ff2b308d6399b94c34df478ebdce259925b76 in workflow run 36356692969. After CTG3 merged, the next unified candidate is exactly 1.5.0-rc.3 for the complete 44-package fixed release unit. Publish this prerelease only with the rc dist-tag and an action-specific exact-main-SHA receipt; latest must remain at 1.4.0 throughout RC publication. This decision does not authorize angular-profile 2.0.0 remediation.",
     "supersedes": {
-      "date": "2026-09-26",
+      "date": "2026-09-27",
       "next_unified_version": "1.5.0-rc.2"
     }
   },
