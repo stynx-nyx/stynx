@@ -88,8 +88,6 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
   let commitRaceEntered: (() => void) | undefined;
   let releaseRollbackRace: (() => void) | undefined;
   let rollbackRaceEntered: (() => void) | undefined;
-  let auditEntered: (() => void) | undefined;
-  let auditEnteredPromise: Promise<void>;
   const cacheSet = vi.fn(async () => undefined);
 
   const countInvocations = (mode: string): number => invocations.get(mode) ?? 0;
@@ -223,7 +221,6 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       @Post('/audit-contention')
       async auditContention() {
         await this.record('audit-contention');
-        auditEntered?.();
         return { committed: true };
       }
 
@@ -635,23 +632,30 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
 
   it('does not label audit hash-chain contention beyond lockTimeoutMs as an idempotency race', async () => {
     const admin = await postgres!.connectAsAdmin();
-    auditEnteredPromise = new Promise<void>((resolve) => {
-      auditEntered = resolve;
-    });
+    const observer = await postgres!.connectAsAdmin();
     await admin.query('begin');
     await admin.query('select pg_advisory_xact_lock(hashtextextended($1::text, 0))', [TENANT]);
     let responsePromise: Promise<{ status: number; body: unknown; text: string }> | undefined;
+    let earlyResponse: { status: number; body: unknown } | undefined;
     try {
       const startedAt = Date.now();
       responsePromise = send('audit-contention', 'audit-contention-key').then(
-        (response) => response,
+        (response) => { earlyResponse = response; return response; },
       );
-      await Promise.race([
-        auditEnteredPromise,
-        responsePromise.then((response) => {
-          throw new Error(`Command returned before the audit handler: ${JSON.stringify(response.body)}`);
-        }),
-      ]);
+      const deadline = Date.now() + 1_000;
+      let blocked = false;
+      while (Date.now() < deadline) {
+        const activity = await observer.query<{ blocked: string }>(`
+          select count(*) as blocked from pg_stat_activity
+           where datname = current_database()
+             and application_name = 'ctg5-fault-app'
+             and wait_event_type = 'Lock' and wait_event = 'advisory'
+             and query ilike '%insert into core.idempotency_keys%'
+        `);
+        if (Number(activity.rows[0]?.blocked) > 0) { blocked = true; break; }
+        await tick(10);
+      }
+      expect(blocked, `early response: ${JSON.stringify(earlyResponse)}`).toBe(true);
       await tick(260);
       await admin.query('commit');
       const response = await responsePromise;
@@ -661,6 +665,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       expect(countInvocations('audit-contention')).toBe(1);
     } finally {
       await admin.query('rollback').catch(() => undefined);
+      await observer.end();
       await admin.end();
       await responsePromise?.catch(() => undefined);
     }
