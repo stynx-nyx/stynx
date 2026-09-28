@@ -1,8 +1,9 @@
 # R-0002 — plano e checkpoint da STYNX 1.5.0
 
 **Papel atual:** Architect. **Estado atual:** CTGs 5–8 implementadas e
-importadas sob OD-S15-02; aguardam decisões de escopo A1 §8.1 e envelope 409
-antes do único gate final. O estado histórico do bootstrap e das primeiras
+importadas sob OD-S15-02; a correção de conformidade do envelope CTG5 está
+em tríade isolada, e a decisão de escopo A1 §8.1 permanece pendente antes do
+único gate final. O estado histórico do bootstrap e das primeiras
 CTGs está preservado abaixo. **Branch cumulativa:**
 `/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx`,
 `feat/release-1-5-0-jobs`, checkpoint de código
@@ -96,8 +97,8 @@ despacho correspondente. Sem shim nem código copiado do DETRAN.
 Os checkpoints permitem desenvolvimento em paralelo, mas a importação na
 branch cumulativa ocorre em 5 → 6 → 7 → 8, cada grupo após delivery-review PASS
 e gates focais. A integração dessas quatro CTGs já ocorreu até `81681892`.
-Não repetir PRs, RCs ou CI completo por CTG. Próxima execução: resolver as
-duas decisões da §Retomada (A1 §8.1 e envelope 409), atualizar a conformidade,
+Não repetir PRs, RCs ou CI completo por CTG. Próxima execução: integrar a
+correção CTG5 após sua tríade e delivery-review PASS, decidir A1 §8.1 e atualizar a conformidade,
 versionar a candidata estável, executar `pnpm ci:stynx` e
 `pnpm ci:reference-apps` uma vez no HEAD consolidado, obter delivery-review
 final, abrir um PR, verificar CI remoto e publicar `1.5.0` com recibos exatos.
@@ -551,12 +552,15 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     `b28be30b`. A tabela de conformidade preliminar entrou em `58d85187`.
     O próximo CI completo, apps de referência, PR, CI remoto e publicação
     final ocorrem somente após congelar o escopo e versionar a candidata.
-20. Duas decisões Owner estão pendentes antes do congelamento: a adenda A1
+20. Uma decisão Owner permanece pendente antes do congelamento: a adenda A1
     §8.1 do DETRAN confirmou SIG/OBX/OFS como MUST, enquanto OD-S15-02
-    nomeou o encerramento após CTG8; e o 409 da CTG5 diverge do schema
-    canônico `law/schemas/error-envelope.schema.json`. Opus liberou a
-    importação de CTG7 mas declarou a divergência bloqueante para a final.
-    As duas escolhas foram solicitadas ao Owner e não devem ser presumidas.
+    nomeou o encerramento após CTG8. A divergência do envelope 409 da CTG5
+    segue correção Architect opção A em tríade isolada: apenas código CTG5
+    ainda não publicado é alinhado ao schema canônico existente, sem editar
+    `law/` ou corpos legados. O Opus confirmou PASS da classificação em
+    `reviews/ctg5-error-authority-classification-review-1.json` na worktree
+    isolada. A autorização geral do Owner não é apresentada como escolha
+    específica A/B; mudança de invariante ou fio publicado exige nova OD.
 21. O hook pós-merge local aponta para um issuer DEVAI ausente em cada
     worktree. No checkout principal, a correção foi ensaiada com
     `pnpm exec devai init bind --host-adapter post-merge --as-role architect --write`
@@ -569,26 +573,19 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     executar o merge e então restaurar apenas as mudanças locais dos quatro
     arquivos se a branch final não os alterar. Não incluir o binding de host
     particular no PR sem nova revisão da autoridade remota.
-22. A reconciliação do envelope CTG5 foi preparada **somente** na worktree
+22. A reconciliação do envelope CTG5 ocorre **somente** na worktree
     `/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx`, branch
-    `codex/ctg5-error-envelope`, HEAD `f39ff93e`. O plano isolado
-    `ctg5-error-envelope-option-a.md` cobre todos os erros próprios novos da
-    fronteira, preserva os erros legados de data e recebeu PASS técnico
-    condicional do Opus em `reviews/ctg5-error-envelope-option-a-review-4.json`.
-    Os prompts Inspector 105 e Engineer 106 receberam PASS técnico em
-    `reviews/ctg5-envelope-worker-prompt-review-2.json`; as duas precisões
-    baixas desse review foram incorporadas em `f39ff93e`. A ponte DETRAN
-    rejeitou duas saídas texto não JSON, por isso os reviews válidos usaram
-    `claude -p --json-schema` com o mesmo prompt e guardaram o digest do
-    resultado. **Nenhum código, teste ou contrato vigente foi alterado, e
-    nenhum worker foi despachado nessa correção.** Antes de importá-la ou
-    executar a tríade, falta o recibo exato do Owner para a opção A sob
-    `INV-ERROR-001`, no caminho
-    `work/rounds/R-0002/authorization-ctg5-error-envelope.md`. A decisão
-    de escopo A1 §8.1 também permanece pendente. Depois das decisões, seguir
-    a sequência de commits Architect → Inspector → Architect trace → Engineer
-    → Architect baseline, gates focais e delivery-review PASS; só então
-    importar a correção na branch cumulativa e seguir para o gate final.
+    `codex/ctg5-error-envelope`. O contrato Architect foi fixado em
+    `29dfa65f`; o prompt-review vinculado por SHA-256 dos prompts Inspector
+    105 e Engineer 106 retornou **PASS** no ciclo 4 em
+    `reviews/ctg5-envelope-worker-prompt-review-4.json`, com binding em
+    `379e933c`. O checkpoint anterior ao despacho Inspector é `cae8860a`.
+    O Inspector está escrevendo sensores vermelhos; depois, seguir os commits
+    Inspector → Architect trace → Engineer → Architect baseline, gates focais
+    e delivery-review PASS antes da importação cumulativa. A decisão de escopo
+    A1 §8.1 permanece pendente. O desvio de procedimento de uma leitura
+    `git show` pelo Inspector, sem mutação, foi comunicado ao maestro; Git
+    continuará exclusivo do maestro.
 23. A adenda A1 §8.1 recebeu prévia condicional de lacunas e paralelismo em
     `work/rounds/R-0002/ctg-0009-preflight.md`. SIG/OBX/OFS continuam fora da
     implementação cumulativa até a decisão exata do Owner sobre o escopo.
