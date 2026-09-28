@@ -102,7 +102,9 @@ export function parseCronExpression(expression: string): ParsedCron {
   };
 }
 
-const MAX_SEARCH_MINUTES = 60 * 24 * 366 * 5; // ~5 years of minute-steps as a search ceiling
+const MINUTE_MS = 60_000;
+const DAY_MS = 24 * 60 * MINUTE_MS;
+const MAX_SEARCH_MINUTES = 60 * 24 * 366 * 5; // preserve the existing five-year ceiling
 
 interface WallMinute {
   year: number;
@@ -120,6 +122,13 @@ function wallMinute(date: Date, formatter: Intl.DateTimeFormat): WallMinute {
 
 function wallTime(wall: WallMinute): number {
   return Date.UTC(wall.year, wall.month - 1, wall.day, wall.hour, wall.minute);
+}
+
+function utcWall(date: Date): WallMinute {
+  return {
+    year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate(),
+    hour: date.getUTCHours(), minute: date.getUTCMinutes(),
+  };
 }
 
 function matches(parsed: ParsedCron, wall: WallMinute): boolean {
@@ -155,49 +164,89 @@ function timezoneFormatter(timezone: string, expression: string): Intl.DateTimeF
 export function nextCronRunAt(expression: string, after: Date, timezone = 'UTC'): Date {
   const parsed = parseCronExpression(expression);
   const formatter = timezone === 'UTC' ? undefined : timezoneFormatter(timezone, expression);
-  let candidate = new Date(after.getTime());
-  candidate.setUTCSeconds(0, 0);
-  candidate = new Date(candidate.getTime() + 60_000);
+  const first = Math.floor(after.getTime() / MINUTE_MS) * MINUTE_MS + MINUTE_MS;
+  const last = first + (MAX_SEARCH_MINUTES - 1) * MINUTE_MS;
+  const startWall = formatter ? wallMinute(new Date(first), formatter) : utcWall(new Date(first));
+  const endWall = formatter ? wallMinute(new Date(last), formatter) : utcWall(new Date(last));
+  const firstDay = Date.UTC(startWall.year, startWall.month - 1, startWall.day);
+  const lastDay = Date.UTC(endWall.year, endWall.month - 1, endWall.day);
+  const hours = [...parsed.hour].sort((a, b) => a - b);
+  const minutes = [...parsed.minute].sort((a, b) => a - b);
 
-  for (let step = 0; step < MAX_SEARCH_MINUTES; step += 1) {
-    const wall = formatter ? wallMinute(candidate, formatter) : {
-      year: candidate.getUTCFullYear(), month: candidate.getUTCMonth() + 1, day: candidate.getUTCDate(),
-      hour: candidate.getUTCHours(), minute: candidate.getUTCMinutes(),
-    };
+  // Skip empty calendar dates before asking ICU about any timezone transitions.
+  for (let dayTime = firstDay; dayTime <= lastDay; dayTime += DAY_MS) {
+    const day = utcWall(new Date(dayTime));
+    if (!parsed.month.has(day.month) || !matchesDay(parsed, day)) continue;
 
+    const offsets = new Set<number>();
+    const transitions: Array<{ at: number; before: number; after: number }> = [];
     if (formatter) {
-      const previous = wallMinute(new Date(candidate.getTime() - 60_000), formatter);
-      const missingMinutes = Math.round((wallTime(wall) - wallTime(previous)) / 60_000) - 1;
-      if (missingMinutes > 0) {
-        for (let skipped = 1; skipped <= missingMinutes; skipped += 1) {
-          const missingDate = new Date(wallTime(previous) + skipped * 60_000);
-          if (matches(parsed, {
-            year: missingDate.getUTCFullYear(), month: missingDate.getUTCMonth() + 1,
-            day: missingDate.getUTCDate(), hour: missingDate.getUTCHours(), minute: missingDate.getUTCMinutes(),
-          })) return candidate;
+      // Every instant belonging to this local date is within this UTC window.
+      // Probe throughout it, then locate each observed change to the minute.
+      const windowStart = dayTime - DAY_MS;
+      const windowEnd = dayTime + 2 * DAY_MS;
+      const offsetAt = (time: number): number => wallTime(wallMinute(new Date(time), formatter)) - time;
+      let previousTime = windowStart;
+      let previousOffset = offsetAt(previousTime);
+      offsets.add(previousOffset);
+      for (let probe = windowStart + 6 * 60 * MINUTE_MS; probe <= windowEnd; probe += 6 * 60 * MINUTE_MS) {
+        const currentOffset = offsetAt(probe);
+        if (currentOffset !== previousOffset) {
+          let low = previousTime / MINUTE_MS;
+          let high = probe / MINUTE_MS;
+          while (high - low > 1) {
+            const middle = Math.floor((low + high) / 2);
+            if (offsetAt(middle * MINUTE_MS) === previousOffset) low = middle;
+            else high = middle;
+          }
+          transitions.push({ at: high * MINUTE_MS, before: previousOffset, after: currentOffset });
         }
+        offsets.add(currentOffset);
+        previousTime = probe;
+        previousOffset = currentOffset;
+      }
+    } else offsets.add(0);
+
+    let best: number | undefined;
+    for (const hour of hours) {
+      for (const minute of minutes) {
+        const wall: WallMinute = { ...day, hour, minute };
+        const local = wallTime(wall);
+        // A fold has two representations; only its later UTC occurrence runs.
+        let later: number | undefined;
+        for (const offset of offsets) {
+          const time = local - offset;
+          if (time < first || time > last) continue;
+          const resolved = formatter ? wallMinute(new Date(time), formatter) : utcWall(new Date(time));
+          if (wallTime(resolved) === local && (later === undefined || time > later)) later = time;
+        }
+        if (later !== undefined && (best === undefined || later < best)) best = later;
       }
     }
 
-    if (matches(parsed, wall)) {
-      if (formatter) {
-        // A backward offset change repeats local minutes. Skip the first UTC
-        // occurrence; a second matching occurrence is found by the UTC scan.
-        const tomorrow = new Date(candidate.getTime() + 24 * 60 * 60_000);
-        const offsetDrop = wallTime(wall) - candidate.getTime()
-          - (wallTime(wallMinute(tomorrow, formatter)) - tomorrow.getTime());
-        if (offsetDrop > 0) {
-          const later = wallMinute(new Date(candidate.getTime() + offsetDrop), formatter);
-          if (wallTime(later) === wallTime(wall)) {
-            candidate = new Date(candidate.getTime() + 60_000);
-            continue;
+    if (formatter) {
+      for (const transition of transitions) {
+        if (transition.after <= transition.before || transition.at < first || transition.at > last) continue;
+        // A forward jump collapses every matching missing minute to its first
+        // valid UTC minute. Check the missing wall range, including date changes.
+        for (let missing = transition.at + transition.before; missing < transition.at + transition.after; missing += MINUTE_MS) {
+          if (matches(parsed, utcWall(new Date(missing))) && (best === undefined || transition.at < best)) {
+            best = transition.at;
+            break;
           }
         }
       }
-      return candidate;
     }
-    candidate = new Date(candidate.getTime() + 60_000);
+    if (best !== undefined) return new Date(best);
   }
 
   throw new InvalidCronExpressionError(expression);
+}
+
+function matchesDay(parsed: ParsedCron, wall: WallMinute): boolean {
+  const domMatches = parsed.dayOfMonth.has(wall.day);
+  const dowMatches = parsed.dayOfWeek.has(new Date(wallTime(wall)).getUTCDay());
+  return parsed.dayOfMonthRestricted && parsed.dayOfWeekRestricted
+    ? domMatches || dowMatches
+    : domMatches && dowMatches;
 }
