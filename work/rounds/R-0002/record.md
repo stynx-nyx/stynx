@@ -1266,3 +1266,14 @@ revisão assinada, portanto `after + tail < pdf.length`. Triagem
 192 foi corrigido retrospectivamente e os sensores verificam o valor
 real, sem alterar produção ou fixtures. Inspector `fc49e3d9` passou
 `pnpm lint:tests`, signature 182/182 e backend PostgreSQL 4/4.
+
+Architect `8fea1702` rebindeu trace 472/472. O marcador local
+`3e4b709f` regenerou 105 arquivos e `release:status` o reconheceu.
+Segundo `pnpm ci:stynx`: gates API 142/215, SDK 211, RLS negativo
+7 tabelas, frontend e lint do monorepo passaram; `lint:tests` passou.
+`lint:deadcode` falhou apenas no runtime de fixture CLI copiado
+dinamicamente para um projeto externo. Triagem `sensor-error`: Knip
+não via o caminho como entrada estática. O marcador foi retirado
+localmente; Engineer `3a7a3825` declarou essa fixture como entrada
+do workspace `test/*`. `pnpm lint:deadcode` verde. Nenhum PR/push/
+publicação ocorreu.

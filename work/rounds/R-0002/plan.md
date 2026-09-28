@@ -1059,3 +1059,12 @@ ao pai `4baede04`, `pre.json mode=pre`, antes de qualquer PR/push.
 Inspector fortalece as seis asserções nos cinco arquivos indicados em
 prompt 192; Architect rebinda trace; Engineer regenera o marcador e
 repete o CI integral. Nenhum teste é enfraquecido.
+
+`sensor-error` — a segunda tentativa de CI, após marcador local
+`3e4b709f`, passou por `lint:tests` e parou em `lint:deadcode`: Knip
+não reconhecia `test/packages/cli-generator/consumer-runtime.ts`,
+copiado dinamicamente pelo fixture externo da CTG8. O marcador foi
+retirado localmente e a árvore restaurada ao pai. Engineer adicionou
+a fixture como entrada explícita do workspace `test/*` em
+`tools/repo-config/knip.config.ts` (`3a7a3825`); `pnpm lint:deadcode`
+passou. Regenerar marcador e repetir CI integral.
