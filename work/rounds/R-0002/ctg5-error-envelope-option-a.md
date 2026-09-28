@@ -15,9 +15,11 @@ gerou `reviews/ctg5-error-envelope-option-a-review-fallback.json` com
 `REVIEW` e oito achados. A revisão 2 retornou `REVIEW` com sete achados e a
 revisão 3 retornou `REVIEW` com quatro reparos exigidos e um achado
 informativo, registrados em `reviews/ctg5-error-envelope-option-a-review-2.json`
-e `-3.json`. Esta revisão do plano cobre os reparos; nenhum Inspector ou
-Engineer foi despachado nesta proposta. Uma nova revisão válida e PASS
-continua necessária antes do despacho, além da decisão do Owner.
+e `-3.json`. A revisão 4 retornou **PASS técnico condicional** em
+`reviews/ctg5-error-envelope-option-a-review-4.json`: os quatro reparos
+bloqueantes foram fechados; quatro precisões baixas foram incorporadas
+abaixo. Nenhum Inspector ou Engineer foi despachado nesta proposta. Esse
+PASS não substitui a escolha/recibo do Owner exigido por `INV-ERROR-001`.
 
 ## Decisão a registrar
 
@@ -103,14 +105,23 @@ contrato, sem emitir uma exceção crua e chamar o gate de verde.
 | `CommittedCommandError` com `persistStatus=false`                                                                                            | rollback, `HttpException` com corpo/status exatos do consumidor; o 422 CTG5 não é o 422 legado de `@stynx-nyx/idempotency`                                  | http.spec 307–310, bytes inalterados                                  |
 
 O Engineer registra a **fase de origem** numa variável de closure, sem
-embrulhar nem modificar o erro que sai do handler. Fases: `setup` antes de
-`Database.tx`, `store`, `audit`, `ctg5-callback`, `handler`, e `commit` após
-o callback da transação retornar com sucesso. `Database.tx` precisa enxergar
+embrulhar nem modificar o erro que sai do handler. Inicializar `phase='setup'`
+imediatamente antes de `this.database.tx(...)`; pool.connect, BEGIN, sessão e
+checagem de identidade acontecem dentro de `Database.tx` enquanto a fase
+continua `setup`. A primeira instrução do callback muda para `store`, e a
+última instrução antes do retorno muda para `commit`. As demais fases são
+`audit`, `ctg5-callback` e `handler`. `Database.tx` precisa enxergar
 `error.code` original para mapear 57014 em 504 `STATEMENT_TIMEOUT` e
 40001/40P01 em 503 `SERIALIZATION_FAILURE`; o Inspector preserva os dois
 corpos legados. A classificação ocorre **depois** de `Database.tx` lançar.
-`TransactionalReservationTimeoutError` tem prioridade sobre o bucket 503 e
-continua 409 `in-progress`. `StynxDataError` de qualquer fase continua no
+Classificar na ordem: (1) `CommandRejectionResponse`,
+`CommittedCommandResponse` e o `HttpException` do
+`persistStatus=false` passam sem reescrita; (2)
+`TransactionalReservationTimeoutError` vira 409 `in-progress`; (3)
+`StynxDataError` segue para o filtro global legado; (4) `setup`, `store`,
+`audit` e `commit` próprios viram 503 `transaction-failed`, e
+`ctg5-callback` vira o 500 `COMMAND:CONFIGURATION:*` correspondente; (5)
+`handler` segue contrato do consumidor. `StynxDataError` de qualquer fase continua no
 filtro global legado, inclusive `TransactionIdentityMismatchError` 500 da
 fixture wrong-role. `ActorContextMissingError` não é alcançável a partir de
 uma rota HTTP CTG5 válida: o boundary recusa ator vazio antes de `Database.tx`
@@ -203,6 +214,10 @@ migração.
    fortalecer status/corpo **legados** exatos (`STATEMENT_TIMEOUT` 504,
    `SERIALIZATION_FAILURE` 503 e wrong-role 500), sem acrescentar campos
    CTG5. Nenhum controle de domínio/auditoria/chave pode ser retirado.
+   Fixar em faults o erro do handler em 502 com corpo exato
+   `{code:'HANDLER_FAILED'}`, sem `errorCode`/`retryable`. Fixar as falhas
+   próprias de audit/completion/commit em 503 com envelope completo e manter
+   duas tentativas e `assertNoDurableEffect`.
    Manter e executar os negativos de rollback, a prova de status replay e os
    sensores legados. Testes primeiro; nenhuma redução de cobertura.
 3. **Engineer:** após vermelho específico, alterar somente
@@ -233,8 +248,11 @@ script `test:int`; exigir log do task `@stynx-nyx/backend#test` no mesmo HEAD,
 nomeando `transactional-command-errors`, `no-module`, `if-match-http`,
 `http`, `advanced`, `faults`, `provenance`, `filters` e
 `angular-transactional-command-http` com PostgreSQL real, papel
-`stynx_app` e dois tenants. Manter sem alterações as provas 504 de timeout,
-502 persistido/replay, ambos os 422 e o filtro global. Exigir log vermelho
+`stynx_app` e dois tenants. Manter sem enfraquecimento as provas 504 de
+timeout: é permitido fortalecer `toMatchObject` para `toEqual` do corpo
+legado completo `{code:'STATEMENT_TIMEOUT', message,
+context:{originalCode:'57014'}}`, preservando cache e estado durável.
+Manter 502 persistido/replay, ambos os 422 e o filtro global. Exigir log vermelho
 do Inspector e verde do Engineer, sem alterar os negativos de rollback. A
 importação na branch cumulativa exige os testes existentes verdes e nenhum
 enfraquecimento. O único CI completo, PR, CI remoto e publicação permanecem
