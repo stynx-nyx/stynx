@@ -8,4 +8,8 @@ Return only one valid JSON object:
 
 {"verdict":"PASS|REVIEW|FAIL","findings":[{"severity":"blocking|nonblocking","file":"path","issue":"specific issue","required_change":"concrete repair"}],"summary":"short rationale"}
 
-Use PASS only when the reviewed HEAD is safe for PR and merge after remote CI. No Markdown fences.
+Include the real statement-timeout rollback/retry sensor and distinguish a
+statement timeout from the bounded reservation-lock timeout. Under OD-S15-02,
+use PASS only when the reviewed CTG5 HEAD is safe for ordered import into the
+cumulative branch. Full local CI, one PR, remote CI, merge and final publication
+occur after CTG8. No Markdown fences.

@@ -50,3 +50,17 @@ Run focused unit, integration and real database tests, `pnpm check:rls-negative`
 Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
 
 Prompt-review cycle 3: `reviews/ctg5-prompt-review-3.json` returned PASS. The Express wire-byte and filter-order clarifications are incorporated; this approval is conditional on CTG-0003/0004 integration and reconciliation before Inspector dispatch.
+
+## Retomada — OD-S15-02
+
+CTG5 está implementada no branch cumulativo derivado do CTG4 PASS
+`3a69785a`. Inspector adicionou sensores de PostgreSQL/RLS, HTTP, rollback,
+concorrência e `statement_timeout`; Engineer entregou migração 0020 e o limite
+transacional; Architect vinculou API/trace. O checkpoint `91db8feb` tem
+`pnpm check:trace --print` 428/428 e a árvore limpa. Passaram os testes focais
+de backend, integração PostgreSQL, RLS negativo/smoke, baselines públicos,
+lint de migração e READMEs. O sensor de timeout passou 9/9 após os gates
+focais anteriores. Próximo passo: delivery-review Opus do HEAD exato com
+`prompts/64-ctg5-delivery-review.md`; reparar achados se houver, importar a
+CTG5 na branch cumulativa e rebater a CTG6 sobre o checkpoint final. Não abrir
+PR nem publicar RC nesta CTG.
