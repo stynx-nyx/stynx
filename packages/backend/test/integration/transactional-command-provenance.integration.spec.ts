@@ -72,6 +72,20 @@ class ProvenanceController {
   @Idempotent({ transactional: true })
   @Audit({ action: 'provenance.protected', transactional: true })
   protected() { return this.execute('protected'); }
+
+  @Post('/invalid-scope')
+  @PublicTenantRoute()
+  @TransactionalCommand({ scope: () => '' })
+  @Idempotent({ transactional: true })
+  @Audit({ action: 'provenance.invalid-scope', transactional: true })
+  invalidScope() { return this.execute('invalid-scope'); }
+
+  @Post('/invalid-option')
+  @PublicTenantRoute()
+  @TransactionalCommand({ scope: () => 'public', mismatchCode: '' })
+  @Idempotent({ transactional: true })
+  @Audit({ action: 'provenance.invalid-option', transactional: true })
+  invalidOption() { return this.execute('invalid-option'); }
 }
 
 function commandSink() {
@@ -145,8 +159,10 @@ describe('transactional command tenancy provenance over real Nest HTTP/PostgreSQ
       const replay = await request(app.getHttpServer()).post('/provenance-command/nominal').set('host', host)
         .set('idempotency-key', 'nominal-shared').send({ value: 1 });
       expect(first.status).toBe(201);
+      expect(first.headers['x-idempotency-key']).toBe('nominal-shared');
       expect(first.body).toMatchObject({ user: 'stynx_app', role: 'app', tenant, actor: NOMINAL_ACTOR });
       expect(replay.text).toBe(first.text);
+      expect(replay.headers['x-idempotency-key']).toBe('nominal-shared');
       expect(replay.headers['idempotency-replayed']).toBe('true');
     }
     expect(handlerCalls.filter((call) => call.route === 'nominal')).toHaveLength(2);
@@ -175,10 +191,39 @@ describe('transactional command tenancy provenance over real Nest HTTP/PostgreSQ
       .set('authorization', 'Bearer a').set('x-tenant-id', TENANT_A).set('idempotency-key', 'protected-a')
       .send({ value: 1 });
     expect(response.status).toBe(201);
+    expect(response.headers['x-idempotency-key']).toBe('protected-a');
     expect(response.body).toMatchObject({ user: 'stynx_app', role: 'app', tenant: TENANT_A, actor: ACTOR_A });
     expect((response.body.visibleAuditTenants as Array<string | null>).filter(Boolean)).toEqual([TENANT_A]);
     expect(response.body.visibleKeyTenants).toEqual([TENANT_A]);
     expect((await counts(postgres, 'provenance.protected')).events).toEqual([[TENANT_A, 1]]);
+  });
+
+  it('rejects a token for tenant A paired with tenant B before the handler, key or audit', async () => {
+    const before = handlerCalls.length;
+    const durableBefore = await counts(postgres, 'provenance.protected');
+    const response = await request(app.getHttpServer()).post('/provenance-command/protected')
+      .set('authorization', 'Bearer a').set('x-tenant-id', TENANT_B)
+      .set('idempotency-key', 'protected-cross-tenant').send({ value: 1 });
+    expect(response.status).toBe(403);
+    expect(response.headers).not.toHaveProperty('x-idempotency-key');
+    expect(handlerCalls).toHaveLength(before);
+    expect(await counts(postgres, 'provenance.protected')).toEqual(durableBefore);
+  });
+
+  it.each([
+    ['/invalid-scope', 400, 'COMMAND_SCOPE_INVALID', 'provenance.invalid-scope'],
+    ['/invalid-option', 500, 'COMMAND_MISMATCH_CODE_INVALID', 'provenance.invalid-option'],
+  ] as const)('rejects %s without echoing a key or writing an audit or reservation', async (path, status, code, action) => {
+    const before = handlerCalls.length;
+    const durableBefore = await counts(postgres, action);
+    const response = await request(app.getHttpServer()).post(`/provenance-command${path}`)
+      .set('host', 'a.portal.test').set('idempotency-key', `rejected-${status}`)
+      .send({ value: 1 });
+    expect(response.status).toBe(status);
+    expect(response.body).toMatchObject({ code });
+    expect(response.headers).not.toHaveProperty('x-idempotency-key');
+    expect(handlerCalls).toHaveLength(before);
+    expect(await counts(postgres, action)).toEqual(durableBefore);
   });
 
   it('fails core → command → tenancy ordering before the handler, audit event or key', async () => {
@@ -197,6 +242,7 @@ describe('transactional command tenancy provenance over real Nest HTTP/PostgreSQ
         .send({ value: 1 });
       expect(response.status).toBe(403);
       expect(response.body).toMatchObject({ code: 'COMMAND_TENANT_PROVENANCE_INVALID' });
+      expect(response.headers).not.toHaveProperty('x-idempotency-key');
       expect(handlerCalls).toHaveLength(before);
       expect(commandTx.mock.calls.filter(([, options]) => options?.requireActor === true)).toHaveLength(0);
       expect((await counts(postgres, 'provenance.protected')).keys).toEqual(keysBefore);
