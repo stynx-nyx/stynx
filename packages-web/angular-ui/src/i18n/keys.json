@@ -2,5 +2,17 @@
   "ui.confirmDialog.cancel",
   "ui.pagination.next",
   "ui.pagination.pageStatus",
-  "ui.pagination.previous"
+  "ui.pagination.previous",
+  "ui.shell.appTitle",
+  "ui.shell.collapseMenu",
+  "ui.shell.expandMenu",
+  "ui.shell.navigation",
+  "ui.shell.navigationChanged",
+  "ui.shell.skipToContent",
+  "ui.shell.status",
+  "ui.shell.themeChanged",
+  "ui.shell.themeDark",
+  "ui.shell.themeLight",
+  "ui.shell.themeSystem",
+  "ui.shell.themeToggle"
 ]

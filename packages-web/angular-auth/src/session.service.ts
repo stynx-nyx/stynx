@@ -21,7 +21,7 @@ const INACTIVE_STATE: StynxSessionState = {
   claims: null,
 };
 
-function permissionMatches(granted: string, required: string): boolean {
+export function permissionMatches(granted: string, required: string): boolean {
   const grant = granted.toLowerCase();
   const need = required.toLowerCase();
   if (grant === need) return true;
