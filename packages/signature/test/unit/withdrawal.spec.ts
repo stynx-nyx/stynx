@@ -70,7 +70,12 @@ const make = (physical = valid) => {
     trustVerifier,
   };
 };
-const assertValidReceipt = (result: any, method: string, verifiedAt = now) => {
+const assertValidReceipt = (
+  result: any,
+  method: string,
+  expectedEvidenceBytes: Uint8Array,
+  verifiedAt = now,
+) => {
   expect(result.status).toBe('valid');
   expect(result.evidence).toMatchObject({
     tenantId: 'tenant-a',
@@ -83,7 +88,10 @@ const assertValidReceipt = (result: any, method: string, verifiedAt = now) => {
     verifiedAt,
     proofRef: expect.any(String),
   });
-  expect(result.evidence.verifiedHashes).toBeDefined();
+  expect(result.evidence.verifiedHashes).toEqual({
+    documentSha256: hex(sourceDocument),
+    evidenceSha256: hex(expectedEvidenceBytes),
+  });
 };
 
 describe('withdrawal evidence', () => {
@@ -103,7 +111,7 @@ describe('withdrawal evidence', () => {
         signerPartyId: 'party-a',
       }),
     );
-    assertValidReceipt(result, 'physical_verified');
+    assertValidReceipt(result, 'physical_verified', evidenceBytes);
   });
 
   it('preserves receipt fields only after verifying the digital signature', async () => {
@@ -144,7 +152,7 @@ describe('withdrawal evidence', () => {
     const proof = await verifySignedArtifact.mock.results[0]?.value;
     expect(proof.tsaAt.getTime()).toBeGreaterThan(0);
     expect(resolvePartyCertificate).toHaveBeenCalledWith('tenant-a', 'party-a');
-    assertValidReceipt(result, 'digital_verified', proof.tsaAt);
+    assertValidReceipt(result, 'digital_verified', declarationCmsSignature, proof.tsaAt);
   });
 
   it('rejects reuse of a valid original document signature as withdrawal evidence', async () => {

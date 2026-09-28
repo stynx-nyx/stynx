@@ -156,7 +156,7 @@ describe('CTG9 PostgreSQL outbox SSE adapter through backend', () => {
     try {
       const first = await adapter.findById(rows[0]!.id, scopeA);
       expect(first?.id).toBe(rows[0]!.id);
-      expect(await adapter.findById(rows[0]!.id, scopeB)).toBeNull();
+      expect(await adapter.findById(rows[0]!.id, scopeB)).toBe(null);
       const cursor: EventStreamCursor = { createdAt: asDate(rows[0]!.createdAt), id: rows[0]!.id };
       const page1 = await adapter.listSince(cursor, scopeA, 1);
       expect(page1.map((row) => row.id)).toEqual([rows[1]!.id]);

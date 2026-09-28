@@ -443,8 +443,13 @@ describe('manifest-bound PDF fixture', () => {
     const text = pdf.toString('binary');
     expect(text).toContain(`/STYNXManifestSHA256 (${manifestSha256})`);
     const match = /\/ByteRange \[(\d+) (\d+) (\d+) (\d+)\]/u.exec(text);
-    expect(match).not.toBeNull();
+    expect(match?.[1]).toBe('0000000000');
     const [, start, before, after, tail] = match!;
+    expect(Number(before)).toBeLessThan(Number(after));
+    const signedRevisionEnd = Number(after) + Number(tail);
+    expect(pdf.subarray(0, signedRevisionEnd).toString('binary')).toMatch(/%%EOF\n$/u);
+    expect(signedRevisionEnd).toBeLessThan(pdf.length);
+    expect(pdf.subarray(signedRevisionEnd).toString('binary')).toContain('/DSS');
     const covered = Buffer.concat([
       pdf.subarray(Number(start), Number(start) + Number(before)),
       pdf.subarray(Number(after), Number(after) + Number(tail)),

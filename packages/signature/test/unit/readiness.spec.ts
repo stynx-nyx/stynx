@@ -139,7 +139,8 @@ describe('signature readiness', () => {
   it('keeps health independent of signature at the module boundary', async () => {
     const health = await import('@stynx-nyx/health');
     expect(health.StynxHealthModule).toEqual(expect.any(Function));
-    expect(api.SignatureHealthIntegration).toBeDefined();
+    expect(api.SignatureHealthIntegration).toEqual(expect.any(Function));
+    expect(api.SignatureHealthIntegration.name).toBe('SignatureHealthIntegration');
     const healthSrc = join(__dirname, '../../../health/src');
     for (const file of readdirSync(healthSrc).filter((x) => x.endsWith('.ts'))) {
       expect(readFileSync(join(healthSrc, file), 'utf8')).not.toMatch(

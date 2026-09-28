@@ -623,7 +623,10 @@ describe('concrete STYNX CMS verifier', () => {
       attachedCms.byteOffset, attachedCms.byteOffset + attachedCms.byteLength,
     ));
     const attached = new pkijs.SignedData({ schema: new pkijs.ContentInfo({ schema: parsed.result }).content });
-    expect(attached.encapContentInfo.eContent).toBeDefined();
+    expect(attached.encapContentInfo.eContentType).toBe('1.2.840.113549.1.7.1');
+    expect(Buffer.from(attached.encapContentInfo.eContent!.valueBlock.valueHexView)).toEqual(
+      Buffer.from('Unrelated CMS content, not the selected PDF ByteRange.\n'),
+    );
     await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
       .verifySignedArtifact({
         ...input(),
@@ -737,7 +740,7 @@ describe('concrete STYNX CMS verifier', () => {
     const legacy = { ...request, minimumSignatureLevel: undefined, trustProfile: undefined } as any;
     const result = await s.sign(legacy);
     expect(result.status).toBe('signed');
-    expect(result.evidence.signatureLevel).toBeUndefined();
+    expect(result.evidence.signatureLevel).toBe(undefined);
     const checked = await s.verify({
       tenantId: 'tenant-a',
       document: sourceDocument,
