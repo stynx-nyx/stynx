@@ -1,7 +1,7 @@
 # Jobs API contract
 
 For 1.5.0, [jobs-actor-timezone-1.5.md](jobs-actor-timezone-1.5.md) and
-[ADR-JOBS-0002](../../../law/adr/ADR-JOBS-0002-actor-tenant-local-clock.md)
+[ADR-JOBS-0002](/docs/adr/ADR-JOBS-0002-actor-tenant-local-clock)
 govern actor assignment, execution context, local cron, and timer behavior.
 
 `@stynx-nyx/jobs` is the E2 background-work contract. It stores tenant-owned

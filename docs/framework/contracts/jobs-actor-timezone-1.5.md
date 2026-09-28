@@ -1,6 +1,6 @@
 # Jobs 1.5: technical actor, tenant RLS, local cron, and clock
 
-**Authority:** DETRAN C-0002 rev.2 §6.1 UPS-JOB-01…04 and OD-S15-01 (all MUST); INV-RBAC-001; [ADR-JOBS-0002](../../../law/adr/ADR-JOBS-0002-actor-tenant-local-clock.md). This contract refines [jobs-api.md](jobs-api.md).
+**Authority:** DETRAN C-0002 rev.2 §6.1 UPS-JOB-01…04 and OD-S15-01 (all MUST); INV-RBAC-001; [ADR-JOBS-0002](/docs/adr/ADR-JOBS-0002-actor-tenant-local-clock). This contract refines [jobs-api.md](jobs-api.md).
 
 ## Tenant-facing API and actor assignment
 
