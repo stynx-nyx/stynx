@@ -95,3 +95,12 @@ pacote backend completo, `pnpm test:int`, RLS negativo/smoke,
 `pnpm package-readmes:check`, trace 430/430 e DEVAI forbidden strict desde
 `3a69785a` sem achados. Próximo gate: delivery-review Opus ciclo 2 no HEAD
 exato após este checkpoint; importar na branch cumulativa só com PASS.
+
+Delivery-review Opus ciclo 2 em `reviews/ctg5-delivery-review-2.json`
+retornou **PASS** para `7e858d57ca1fd72b0c7f0a3fb44dbfbbedcadc06`.
+Os dois bloqueios do ciclo 1 foram resolvidos. O reviewer identificou duas
+melhorias não bloqueantes de sensores para o hardening cumulativo: afirmar
+o header `x-idempotency-key` ausente nas rejeições e presente no commit/replay;
+e provar por HTTP/PostgreSQL que Bearer do tenant A não autoriza um comando
+protegido no tenant B. Inspector adiciona essas provas antes da importação
+final; Architect rebindeia trace. O receipt da ponte acompanha o veredito.
