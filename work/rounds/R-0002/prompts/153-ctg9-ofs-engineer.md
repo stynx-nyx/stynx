@@ -56,6 +56,9 @@ Implemente UPS-OFS-01…04 até os sensores passarem:
   `OfflineSyncUpgradeRequiredError`/`OFFLINE_SYNC_UPGRADE_REQUIRED` (503),
   sem SQLSTATE 42703 bruto. Prove E6 no banco 0001→0002, inclusive
   segundo cancel 409. Preserve asserções E6 existentes; setup usa 0002.
+  O guard não adiciona `trx.query` separado no caminho E6 unitário, cuja
+  sequência publicada é fixa; incorpore a verificação à query existente
+  ou mapeie sua falha SQL 0002 para o erro tipado.
 
 Rode sensores focais PostgreSQL/HTTP/RLS, testes existentes afetados, lint
 e typecheck offline-sync. Não altere testes para obter verde. Reporte

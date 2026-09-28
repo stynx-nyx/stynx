@@ -788,3 +788,19 @@ ordem de migration na própria suíte e INSERT CTG9 sem coluna de modo; o
 Architect fixou 0002 como pré-requisito para ambos os modos e a coluna
 física `identity_mode`, enquanto o Inspector atualiza somente setup E6 e
 sensores novos. Um novo review após congelar a árvore é obrigatório.
+
+Review focal ciclo 3: a ponte retornou JSON cercado de Markdown e prosa
+e saiu 4; fallback `claude -p` estruturado registrou REVIEW em
+`reviews/ctg9-ofs-mode-final-review-3.json`. Três sensores ainda não
+podiam provar implementação correta: 422 com sequência de lote já
+ocupada, ausência de escrita CTG9 pelo store real com leitura E6
+filtrada, e ausência de rollback PostgreSQL por item. O Inspector recebeu
+nova tentativa. Nenhum Engineer OFS foi despachado.
+
+Os sensores Inspector SIG e OBX/data/backend/audit foram commitados em
+`314d6ba6`, em commit de testes isolado. O hook ESLint e Prettier passou;
+`.gitattributes` marca PDFs PKI de teste como binários para preservar os
+bytes assinados. SIG tinha 121 vermelhos esperados e 10 verdes, com E6
+legado 11/11 verde. OBX tinha 19 vermelhos esperados e dois verdes no
+PostgreSQL local. Prompt-review 158 solicita despacho antecipado apenas
+dos Engineers SIG e OBX; OFS e rebind trace seguem pendentes.

@@ -25,6 +25,10 @@ identity resolver, legacy idempotency store, handoff or
 concurrency detector without the resolver fails at bootstrap with a typed
 configuration error; no port is silently ignored. With
 `mountControllers:false`, the service still uses the selected mode.
+The CTG9-only option keys are exactly `itemApplier`, `eventPort`,
+`agentResolver`, `legacyItemIdentityResolver`, `legacyIdempotencyStore`,
+`handoffPort`, `concurrencyDetector`, and `conflictResolver`; configuring
+any of them without `policyResolver` is an error.
 The typed bootstrap error is `OfflineSyncConfigurationError` with
 `code: OFFLINE_SYNC_CONFIGURATION_ERROR` and the invalid option name.
 
@@ -317,6 +321,10 @@ and CTG9. A 1.5.0 Postgres store opened against 0001 alone fails at its
 first DB operation, before queue DML, with `OfflineSyncUpgradeRequiredError`
 (`code: OFFLINE_SYNC_UPGRADE_REQUIRED`, HTTP 503), never raw PostgreSQL 42703. The in-memory store needs no schema check. The existing E6 PostgreSQL test harness applies
 0001→0002 while preserving every published assertion. The 0002 schema
+guard cannot add a separate `trx.query` to published E6 unit paths whose
+query sequence is fixed; fold the version check into an existing query or
+map a 0002-only SQL failure from that query to the typed upgrade error.
+The 0002 schema
 serves both modes concurrently. Add server-owned queue
 `identity_mode text NOT NULL DEFAULT 'e6' CHECK (identity_mode IN ('e6','ctg9'))`,
 backfill old rows as `e6`, retain the existing global unique
