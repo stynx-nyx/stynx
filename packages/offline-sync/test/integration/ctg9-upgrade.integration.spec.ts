@@ -686,7 +686,9 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) },
       {
         now: () => '2026-09-28T12:00:00.000Z',
-        policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
+        policyResolver: {
+          resolve: async () => ({ maxBatchItems: 150, reservationTtlMs: 60_000 }),
+        },
         itemApplier: applier,
         eventPort: { appendInTransaction: append, appendManyInTransaction: appendMany },
       } as never,
