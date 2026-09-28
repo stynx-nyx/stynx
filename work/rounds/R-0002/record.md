@@ -828,3 +828,18 @@ preflight passou no PostgreSQL antes do erro esperado de 0002 ausente.
 O 40P01 agora é levantado pelo SQL da transação. Após três saídas da
 ponte rejeitadas pelo mesmo formato, o ciclo 5 usa diretamente
 `claude -p` com o prompt 160 e JSON estruturado. O veredito está pendente.
+
+Durante a implementação SIG, o Engineer apontou dois oráculos impossíveis
+nos sensores: fase do hook Nest em `compile()` e `verifiedAt` local em vez
+de tempo TSA assinado. Triagem `sensor-error`; Inspector SIG corrige os
+testes, sem mover a validação de produção para depois do bootstrap nem
+fabricar o instante criptográfico.
+
+Review OFS ciclo 5 retornou **PASS** em
+`reviews/ctg9-ofs-app-role-review-5.json`. Uma nota opcional recomenda
+executar também o sensor 0001-only sob `stynx_app`; o maestro aplicará
+antes do commit Inspector. O PASS libera o commit dos sensores OFS e o
+prompt-review Engineer integrado, sem atestar implementação. Inspector
+SIG corrigiu os dois oráculos, com três arquivos/70 testes focais verdes.
+Engineer OBX apontou cinco oráculos de SQL exato no legado incompatíveis
+com marker de posse; Inspector OBX corrige preservando a semântica.
