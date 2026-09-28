@@ -12,6 +12,11 @@ Os aliases de `auth`, `backend`, `contracts`, `idempotency`, `ratelimit` e
 `c21ba672`. Nomeie sensores PostgreSQL `*.integration.spec.ts` para o
 Vitest int coletá-los. Não edite o helper compartilhado
 `packages/data/test/support/postgres.ts`.
+Configure a deterministic `OfflineSyncPolicyResolver` for every CTG9
+durable parity sensor. Without it, E6 behavior remains: hash dedup across
+different keys, second cancel 409, default TTL and 100-item maximum.
+Keep all existing E6 tests intact and add a no-resolver compatibility
+sensor. Never use body input to select a mode.
 
 UPS-OFS-01: PostgreSQL/RLS real com dois tenants; reserva concorrente sem
 sobreposição, TTL do catálogo por tenant/órgão/operação e expiração,

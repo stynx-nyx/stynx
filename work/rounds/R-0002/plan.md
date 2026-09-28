@@ -267,6 +267,7 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 - CTG9 Architect delivery-review ciclo 2: `plant-bug` contratual — uma transação pode obter advisory/clock no append, esperar o marker de corte no enqueue e formar ciclo com o cutover que segura marker e espera clock. Fixar ordem global marker → advisory → clock e manter audit fora da transação de corte; testar corrida. Também completar espelhamento de falha pós-corte, claim nativo, headers de replay, status in-progress, replay legado e verificador customizado em produção. Nenhum Inspector está liberado.
 - CTG9 Inspector prompt-review ciclo 1: `reference-gap` — testes de composição CTG5/`AuditSqlSink` não cabiam nos pacotes outbox/data, e PKI/health não estavam resolvíveis em signature. Provisionamento Engineer `c21ba672` adicionou dependências/aliases; prompts Inspector incluem backend/audit e reparos de matriz/negativos. Repetir prompt-review antes de despachar.
 - CTG9 Inspector prompt-review ciclo 2: `sensor-error` — o sensor A/B/C exigia 55P03 mesmo quando UPDATE só estava enfileirado e SHARE poderia ser concedido. Corrigido para término sem 40P01 nesse caso e 55P03 obrigatório apenas com UPDATE já detido. Acrescentar cancelamento/leitura de recibos OFS, diretórios de composição e changeset signature; Owner já autorizou prompt-reviews adicionais para completar a campanha.
+- CTG9 OFS E6×A1: `policy-issue` — sensores E6 exigem dedup por payload hash em outra chave e segundo cancelamento 409; A1 exige chave+hash e repetição terminal idempotente. Contrato Architect seleciona CTG9 quando `OfflineSyncPolicyResolver` é configurado no bootstrap e mantém E6 sem resolver. Testes legados ficam intactos; sensores CTG9 usam resolver determinístico. Review Opus focal antes de Engineer.
 
 - CTG5 envelope sensores pós-despacho: `sensor-error` — o unitário exigia o envelope completo em `HttpException.getResponse()` antes do filtro HTTP resolver `requestId`, e uma asserção antiga de proveniência ainda esperava `{code}`; o Inspector limitou o unitário a status/código interno e fortaleceu a prova HTTP do 403 completo, seguido de rebind Architect de trace.
 - CTG5 envelope Inspector tentativas 1–2: `reference-gap` — os sensores entregues provaram vermelho em PostgreSQL, mas ainda faltam caminhos 400/403/500/503, filtros, If-Match, unitários e controles duráveis exigidos pelo prompt 105; após a nova tentativa parcial, a conclusão dos sensores foi escalada ao maestro no papel Inspector antes de qualquer commit Inspector.
@@ -764,6 +765,13 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     Inspectors em paralelo. A única observação não bloqueante, ordem do
     retry no ramo 55P03 da fila A/B/C, foi incorporada ao contrato e ao
     prompt antes do despacho. Os sensores continuam pendentes de escrita.
+44. Três Inspectors foram despachados em write sets disjuntos após o PASS.
+    Os sensores OFS detectaram conflito de semântica publicado E6 versus
+    A1 para dedup por hash e segundo cancelamento. O Architect fixou modo
+    CTG9 na configuração de `OfflineSyncPolicyResolver`, mantendo testes
+    E6 sem resolver. O Inspector OFS foi orientado a prover resolver nos
+    sensores novos; contratos e prompts alterados aguardam review focal
+    155 antes de Engineer. SIG e OBX seguem independentes em testes.
 
 ## Reviews, PRs e publicações
 

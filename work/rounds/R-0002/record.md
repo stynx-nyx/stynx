@@ -760,3 +760,13 @@ estruturado: **PASS** em `reviews/ctg9-inspector-prompt-review-3.json`.
 Uma observação editorial não bloqueante sobre o ramo 55P03 da fila A/B/C
 foi fechada no contrato e prompt OBX. O PASS libera somente testes Inspector,
 sem afirmar código ou conformidade CTG9.
+
+Os Inspectors SIG, OBX/data e OFS foram despachados em paralelo após o PASS,
+com write sets exclusivos e sem Git. SIG montou fixture PKI real
+CMS/PAdES/TSA/OCSP/CRL; OBX obteve vermelhos PostgreSQL comportamentais
+de marker e audit; OFS obteve vermelhos de numeração/lote/HTTP/migration.
+OFS encontrou conflito entre sensores E6 publicados (dedup por hash em
+outra chave, segundo cancelamento 409) e a paridade da adenda A1. O
+Architect fixou modo CTG9 por `OfflineSyncPolicyResolver` no bootstrap,
+preservando E6 sem resolver e seus testes intactos. Contrato, ADR e prompts
+foram ajustados; review focal Opus está pendente antes de Engineer.

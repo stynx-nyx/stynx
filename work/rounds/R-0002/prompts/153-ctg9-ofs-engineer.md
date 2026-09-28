@@ -1,0 +1,47 @@
+# CTG9 OFS — Engineer implementation task
+
+Declare `Engineer` na primeira linha. Trabalhe na worktree cumulativa
+indicada pelo maestro. Leia `AGENTS.md` e autoridades,
+`ctg9-ofs-contract.md`, ADR-MOBILE-OFFLINE-0002,
+`docs/framework/contracts/offline-sync-api.md` e os sensores Inspector
+CTG9 commitados. DETRAN A1 §8.1 é somente leitura. Escreva somente
+`packages/offline-sync/src/**` e `packages/offline-sync/migrations/0002*`;
+o maestro possui Git, DDL/seed compartilhadas, manifests/lockfile,
+changesets, baselines, trace, READMEs gerados e RLS negativo em `test/db`.
+Não execute Git, commit, push, PR ou escrita no DETRAN. Não altere testes
+nem faça shim/cópia DETRAN.
+
+Implemente UPS-OFS-01…04 até os sensores passarem:
+
+- Portas públicas de agente/política/catálogo, applier/evento/concurrency/
+  handoff/resolução segundo contrato. Preserve as quatro rotas existentes,
+  envelopes/status e serviço legado. A configuração de
+  `OfflineSyncPolicyResolver` seleciona o modo CTG9 no bootstrap; sem ela,
+  preserve E6 inclusive dedup por hash em chaves diferentes, segundo cancel
+  409, TTL e limite publicados. Com resolver, aceite política
+  tenant/org/operação, inclusive >100 itens quando permitido; use key+hash
+  e repetição terminal idempotente. Bind condicional do controller de lote
+  mantém o decorator E6 no modo legado e a precedência nova no CTG9.
+- Numeração: reserva concorrente sem sobreposição, cancelamento só da cauda
+  não usada, bloqueio/fechamento/reconciliação/liquidação/consulta de cada
+  número, ator auditável distinto do agente de negócio.
+- Batch durável por tenant/dispositivo/deviceBatchId, sequência/conjunto
+  declarado, lease fenced para lote aberto, recibos por item e lote,
+  replay exato de status/body/headers e ponte somente leitura do store
+  idempotente legado. Header `Idempotency-Key` 400 ausente; domínio 409/422
+  antes de conflito de chave de transporte 422; in-progress 503 fixo.
+  Item legado sem chave fica `received` com código neutro e namespace
+  sintético reservado, nunca é aplicado implicitamente.
+- Um `Database.txIndependent` por item: domínio, consumo, recibo e uma
+  operação final da porta OBX na mesma `Transaction`, rollback total por
+  item e partial do lote. Rejeite transação envolvente e segunda conexão
+  antes de adquirir pool. OFS importa só a interface da porta de eventos,
+  não o pacote outbox. Janela de concorrência e handoff são resolvidos
+  pelo host, com suspeita nos dois atos e ações de resolução tipadas.
+- Migration 0002 aditiva/backfill sem perder ID/status/hash, com constraint
+  antiga removida só após a nova chave e RLS FORCE em tabelas novas.
+
+Rode sensores focais PostgreSQL/HTTP/RLS, testes existentes afetados, lint
+e typecheck offline-sync. Não altere testes para obter verde. Reporte
+símbolos reais, migration, riscos e gates; escale incompatibilidade real
+ao maestro para triagem Architect/Inspector.

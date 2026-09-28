@@ -19,13 +19,22 @@ The E6 routes use STYNX authentication, permission, audit, and HTTP idempotency 
 actor identity are derived from trusted `RequestContext`; a request body containing identity
 override fields is rejected.
 
+Configuring `OfflineSyncPolicyResolver` selects CTG9 durable parity mode at
+module bootstrap, including when `mountControllers:false`. Without that
+resolver, published E6 behavior remains: payload-hash dedup even with a
+different item key, repeated cancellation 409, configured/default 24 h TTL
+and 100-item maximum. CTG9 mode instead uses tenant+item key with hash
+integrity, durable receipts and idempotent repetition of completed cancel.
+The host cannot toggle mode with a request body.
+
 The four rows above are the existing route contract and remain compatible. CTG9 adds service
 operations for block, close, reconcile, settle, consumption and receipt reads. A mounted controller
 exposes corresponding tenant-scoped routes; a host that sets `mountControllers:false` maps its own
 TEAT/BOAT routes to the same service. Those adapters preserve their existing methods, paths,
-statuses, bodies and error codes, verified by before/after HTTP characterization. The batch route
-replaces its generic `@Idempotent('Idempotency-Key')` interceptor with OFS-specific in-service
-verification; the other three routes retain their published decorator behavior. The batch route
+statuses, bodies and error codes, verified by before/after HTTP characterization. In E6 mode,
+the existing batch controller retains `@Idempotent('Idempotency-Key')`. In CTG9 mode, the module
+mounts a controller at the same method/path/permission with OFS-specific in-service
+verification; the other three routes retain their published decorator behavior. The CTG9 batch route
 still requires a nonblank `Idempotency-Key` and returns the published 400 when absent. After
 authentication, context and header validation, OFS checks the durable `(tenant,device,batchId)`
 identity, sequence and declared item-key set first: a matching closed batch replays its original
