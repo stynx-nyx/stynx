@@ -27,7 +27,12 @@ import { FakeStynxEventStreamClock } from '@stynx-nyx/angular/testing';
 beforeAll(() => TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting()));
 afterEach(() => TestBed.resetTestingModule());
 
-function configure(sessionActive = signal(true), rejectRefresh = false, emptyRefresh = false) {
+function configure(
+  sessionActive = signal(true),
+  rejectRefresh = false,
+  emptyRefresh = false,
+  errorBoundary?: { messageKeysByCodePrefix?: Record<string, string>; fallbackMessageKey?: string; exclude?: (request: unknown, error: unknown) => boolean },
+) {
   let token = 'expired';
   const clock = new FakeStynxEventStreamClock();
   const refresh = vi.fn(async () => {
@@ -43,6 +48,7 @@ function configure(sessionActive = signal(true), rejectRefresh = false, emptyRef
           apiBaseUrl: '/api',
           sessionMode: 'bearer',
           authProvider: { getAccessToken: async () => token, refresh },
+          ...(errorBoundary ? { errorBoundary } : {}),
         },
         tenancy: { defaultTenantResolver: async () => 'tenant-a' },
       }),
@@ -125,7 +131,12 @@ describe('StynxEventStreamService HTTP transport', () => {
   });
 
   it('rethrows the original SSE HttpErrorResponse so Retry-After survives the real error interceptor', async () => {
-    const { http, banner } = configure();
+    const exclude = vi.fn(() => true);
+    const { http, banner } = configure(signal(true), false, false, {
+      messageKeysByCodePrefix: { RATELIMIT: 'app.errors.rateLimit' },
+      fallbackMessageKey: 'app.errors.fallback',
+      exclude,
+    });
     const client = TestBed.inject(HttpClient);
     const pending = firstValueFrom(
       client.get('/api/stream-probe', {
@@ -133,7 +144,8 @@ describe('StynxEventStreamService HTTP transport', () => {
       }),
     );
     const request = await expectRequest(http, '/api/stream-probe');
-    request.flush({ errorCode: 'RATELIMIT:THROTTLED:stream', message: 'wait' }, {
+    const payload = { errorCode: 'RATELIMIT:THROTTLED:stream', message: 'wait' };
+    request.flush(payload, {
       status: 429,
       statusText: 'Too Many Requests',
       headers: { 'Retry-After': '7' },
@@ -141,8 +153,11 @@ describe('StynxEventStreamService HTTP transport', () => {
 
     const error = await pending.catch((reason: unknown) => reason);
     expect(error).toBeInstanceOf(HttpErrorResponse);
+    expect((error as HttpErrorResponse).error).toBe(payload);
+    expect((error as HttpErrorResponse).status).toBe(429);
     expect((error as HttpErrorResponse).headers.get('Retry-After')).toBe('7');
     expect(banner.current()).toBe(null);
+    expect(exclude).not.toHaveBeenCalled();
   });
 
   it('stops after terminal authorization and when the application logout signal turns false', async () => {
