@@ -519,6 +519,31 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     recibo Owner exato antes do push. Não atualizar #278 até ambos serem
     reconhecidos por DEVAI strict. O gate remoto agora também exige
     evidência assinada `verified-local-rc` para o head do PR.
+19. OD-S15-02 substituiu o fluxo por CTG: CTGs 5–8 foram implementadas e
+    importadas em ordem na branch cumulativa, sem PR/RC intermediário. CTG7
+    recebeu PASS integrado em `22d976fb`; CTG8 recebeu PASS integrado em
+    `0c7eb2e0`, seguido do hardening de palavras-chave PostgreSQL 16 em
+    `b28be30b`. A tabela de conformidade preliminar entrou em `58d85187`.
+    O próximo CI completo, apps de referência, PR, CI remoto e publicação
+    final ocorrem somente após congelar o escopo e versionar a candidata.
+20. Duas decisões Owner estão pendentes antes do congelamento: a adenda A1
+    §8.1 do DETRAN confirmou SIG/OBX/OFS como MUST, enquanto OD-S15-02
+    nomeou o encerramento após CTG8; e o 409 da CTG5 diverge do schema
+    canônico `law/schemas/error-envelope.schema.json`. Opus liberou a
+    importação de CTG7 mas declarou a divergência bloqueante para a final.
+    As duas escolhas foram solicitadas ao Owner e não devem ser presumidas.
+21. O hook pós-merge local aponta para um issuer DEVAI ausente em cada
+    worktree. No checkout principal, a correção foi ensaiada com
+    `pnpm exec devai init bind --host-adapter post-merge --as-role architect --write`
+    seguida de `pnpm exec devai init bind --target . --adopter-policy law/policy/devai-adoption.json --as-role architect --write`;
+    `devai doctor` ficou `ok:true` e o adapter foi validado. Para manter
+    `main` limpo e não mudar sua política de host antes do PR, os quatro
+    arquivos rastreados resultantes foram restaurados. A chave privada e o
+    issuer permaneceram em `.git/devai/`. Reaplicar os dois binds no checkout
+    principal imediatamente antes do merge local final, conferir `doctor`,
+    executar o merge e então restaurar apenas as mudanças locais dos quatro
+    arquivos se a branch final não os alterar. Não incluir o binding de host
+    particular no PR sem nova revisão da autoridade remota.
 
 ## Reviews, PRs e publicações
 
