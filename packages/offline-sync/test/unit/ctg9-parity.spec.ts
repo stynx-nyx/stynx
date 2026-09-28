@@ -203,12 +203,15 @@ describe('CTG9 OFS service contract', () => {
     expect(await service.cancelNumberingReservation(first.reservationId)).toEqual(cancelled);
     const second = await service.reserveNumbering({
       orgUnitId: 'org-a',
-      deviceId: 'device-b',
+      deviceId: 'device-a',
       shiftId: 'shift-b',
       entityType: 'citation',
       requestedSize: 2,
     });
     expect(second.startNumber).toBe(1001);
+    const tailSync = await service.submitSyncBatch(batch('tail-without-reservation-id', [item('tail-key', 'tail-item', second.startNumber)]));
+    expect(tailSync.receipt.items[0]).toMatchObject({ queueItemId: 'tail-item', status: 'applied' });
+    expect((await service.getNumberingConsumption(second.reservationId)).consumption[0]).toMatchObject({ number: 1001, status: 'applied' });
     expect(
       (await service.getNumberingConsumption(first.reservationId)).consumption[0],
     ).toMatchObject({ number: 1000, status: 'applied' });
@@ -219,7 +222,7 @@ describe('CTG9 OFS service contract', () => {
     const noCoverage = await zero.service.submitSyncBatch(batch('zero-coverage', [item('zero-key', 'zero-item', 1000)]));
     expect(noCoverage.receipt.items[0]).toMatchObject({
       queueItemId: 'zero-item', status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
-      context: { number: 1000, reservationId: null },
+      context: expect.objectContaining({ number: 1000, reservationId: null, conflictId: expect.any(String), allowedActions: expect.any(Array) }),
     });
   });
 
@@ -234,7 +237,7 @@ describe('CTG9 OFS service contract', () => {
     const ambiguousResult = await ambiguous.service.submitSyncBatch(batch('ambiguous-coverage', [item('ambiguous-key', 'ambiguous-item', 1000)]));
     expect(ambiguousResult.receipt.items[0]).toMatchObject({
       status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_AMBIGUOUS',
-      context: { number: 1000, reservationId: null },
+      context: expect.objectContaining({ number: 1000, reservationId: null, conflictId: expect.any(String), allowedActions: expect.any(Array) }),
     });
   });
 
@@ -260,6 +263,20 @@ describe('CTG9 OFS service contract', () => {
     });
   });
 
+  it('UPS-OFS-01 accepts a late sync when createdLocallyAt was within reservation validity', async () => {
+    const late = harness({ itemApplier: { apply: async () => ({ serverEntityId: 'server-late' }) }, eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined } });
+    const reservation = await late.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'late', entityType: 'citation', requestedSize: 1, validUntil: '2026-09-29T12:00:00.000Z' });
+    const laterService = new OfflineSyncService(late.store, { current: () => late.scope }, {
+      now: () => '2026-09-30T12:00:00.000Z',
+      policyResolver: { resolve: async () => ({ reservationTtlMs: 86_400_000, maxBatchItems: 100 }) },
+      itemApplier: { apply: async () => ({ serverEntityId: 'server-late' }) },
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    } as never);
+    const result = await laterService.submitSyncBatch(batch('late-sync', [{ ...item('late-key', 'late-item', reservation.startNumber, reservation.reservationId), createdLocallyAt: '2026-09-28T12:00:00.000Z' }]));
+    expect(result.receipt.items[0]).toMatchObject({ queueItemId: 'late-item', status: 'applied' });
+    expect((await laterService.getNumberingConsumption(reservation.reservationId)).consumption[0]).toMatchObject({ status: 'applied' });
+  });
+
   it('UPS-OFS-01 records an already-applied number as a conflict without a second effect', async () => {
     const apply = vi.fn(async () => ({ serverEntityId: 'server-applied' }));
     const alreadyApplied = harness({
@@ -270,10 +287,10 @@ describe('CTG9 OFS service contract', () => {
     await alreadyApplied.service.submitSyncBatch(batch('first-consumption', [item('applied-number-key', 'first-consumption-item', 1000, appliedReservation.reservationId)]));
     const repeatedNumber = await alreadyApplied.service.submitSyncBatch(batch('repeated-consumption', [item('reused-number-key', 'reused-number-item', 1000, appliedReservation.reservationId)]));
     expect(repeatedNumber.receipt.items[0]).toMatchObject({
-      status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',
-      context: { number: 1000, reservationId: appliedReservation.reservationId },
+      status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',
+      context: expect.objectContaining({ number: 1000, reservationId: appliedReservation.reservationId, conflictId: expect.any(String), allowedActions: expect.any(Array) }),
     });
-    expect(alreadyApplied.store.getQueueItem(tenant, 'reused-number-item')?.status).toBe('conflict');
+    expect(alreadyApplied.store.getQueueItem(tenant, 'reused-number-item')?.status).toBe('rejected');
     expect(apply).toHaveBeenCalledOnce();
   });
 
@@ -385,6 +402,14 @@ describe('CTG9 OFS service contract', () => {
     expect(otherTenant.items[0]).not.toEqual(first.items[0]);
     expect(otherTenant.items[0]).toMatchObject({ status: 'received' });
     expect(applier.apply).not.toHaveBeenCalled();
+  });
+
+  it('UPS-OFS-02 returns the submitted queue ID and original identity for a declared cross-batch duplicate', async () => {
+    const { service } = harness();
+    await service.submitSyncBatch(batch('declared-first', [item('declared-shared', 'declared-queue-one')]));
+    const second = await service.submitSyncBatch(batch('declared-second', [item('declared-shared', 'declared-queue-two')]));
+    expect(second.receipt.items[0]).toMatchObject({ queueItemId: 'declared-queue-two', status: 'applied', context: { originalQueueItemId: 'declared-queue-one' } });
+    expect((await service.getSyncBatchReceipt('device-a', 'declared-second')).items[0]).toMatchObject({ queueItemId: 'declared-queue-two', context: { originalQueueItemId: 'declared-queue-one' } });
   });
 
   it('UPS-OFS-02 rejects an empty host legacy identity before storing or applying an item', async () => {

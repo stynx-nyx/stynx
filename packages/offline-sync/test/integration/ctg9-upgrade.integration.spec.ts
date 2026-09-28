@@ -751,7 +751,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     releaseApply();
     const [firstResult, secondResult] = await Promise.all([first, second]);
     expect(firstResult.items[0]).toMatchObject({ status: 'applied' });
-    expect(secondResult.items[0]).toMatchObject({ status: 'applied' });
+    expect(secondResult.items[0]).toMatchObject({ queueItemId: 'cross-device-second', status: 'applied' });
     expect(applied).toEqual(['cross-device-first']);
     const changed = { sharedKeyRace: 'different-payload' };
     const changedHash = `sha256:${createHash('sha256').update(JSON.stringify(changed)).digest('hex')}`;
@@ -766,6 +766,85 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     expect(await run('ctg9-cross-device-receipt', () => service.getSyncBatchReceipt('race-device-b', 'race-batch-b'))).toMatchObject({
       items: [{ queueItemId: 'cross-device-second', status: 'applied', context: { originalQueueItemId: 'cross-device-first' } }],
     });
+  }, 60_000);
+
+  it('classifies PostgreSQL reservation outcomes and persists open domain evidence', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    const store = new PostgresOfflineSyncStore(moduleRef);
+    const service = new OfflineSyncService(store, { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+      now: () => '2026-09-28T12:00:00.000Z',
+      policyResolver: { resolve: async () => ({ maxBatchItems: 150, reservationTtlMs: 86_400_000 }) },
+      itemApplier: { apply: async (_trx: unknown, current: { queueItemId: string }) => ({ serverEntityId: `server-${current.queueItemId}` }) },
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    } as never) as OfflineSyncService & {
+      getNumberingConsumption(id: string): Promise<{ consumption: Array<{ status: string }> }>;
+    };
+    const run = <T>(requestId: string, action: () => Promise<T>) => contexts.runWithRequestContext({
+      requestId, tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z'),
+    }, action);
+    const itemFor = (queueItemId: string, number: number, reservationId?: string, createdLocallyAt = '2026-09-28T12:00:00.000Z') => ({
+      queueItemId, entityType: 'citation', localEntityId: `local-${queueItemId}`, idempotencyKey: `key-${queueItemId}`,
+      payloadHash: hash, payloadJson: {}, reservedNumber: number, createdLocallyAt,
+      ...(reservationId ? { reservationId } : {}),
+    });
+    const submit = (batchId: string, deviceId: string, item: ReturnType<typeof itemFor>) => service.submitSyncBatch({ orgUnitId: 'org-a', deviceId, deviceBatchId: batchId, items: [item] });
+    const outcomes: Array<{ queueItemId: string; expected: string }> = [];
+    await run('ctg9-outcome-matrix', async () => {
+      const noCoverage = await submit('outcome-no-coverage', 'outcome-device', itemFor('outcome-no-coverage-item', 987654));
+      outcomes.push({ queueItemId: 'outcome-no-coverage-item', expected: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE' });
+      expect(noCoverage.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[0].expected });
+
+      const admin = await pg.connectAsAdmin();
+      try {
+        await admin.query(`insert into offline.numbering_ranges (id,tenant_id,org_unit_id,entity_type,series,start_number,end_number,next_number,status) values
+          ('20000000-0000-4000-8000-0000000000c1',$1::uuid,'org-a','citation','MATRIX-A',888800,888810,888800,'active'),
+          ('20000000-0000-4000-8000-0000000000c2',$1::uuid,'org-a','citation','MATRIX-B',888800,888810,888800,'active')`, [tenantA]);
+      } finally { await admin.end(); }
+      const a = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'outcome-ambiguous-device', shiftId: 'matrix-a', entityType: 'citation', series: 'MATRIX-A', requestedSize: 1 });
+      await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'outcome-ambiguous-device', shiftId: 'matrix-b', entityType: 'citation', series: 'MATRIX-B', requestedSize: 1 });
+      const ambiguous = await submit('outcome-ambiguous', 'outcome-ambiguous-device', itemFor('outcome-ambiguous-item', a.startNumber));
+      outcomes.push({ queueItemId: 'outcome-ambiguous-item', expected: 'OFFLINE_SYNC_NUMBERING_AMBIGUOUS' });
+      expect(ambiguous.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[1].expected });
+
+      const closed = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'outcome-closed-device', shiftId: 'matrix-closed', entityType: 'citation', requestedSize: 1 });
+      await service.closeNumberingReservation(closed.reservationId);
+      const closedResult = await submit('outcome-closed', 'outcome-closed-device', itemFor('outcome-closed-item', closed.startNumber, closed.reservationId));
+      outcomes.push({ queueItemId: 'outcome-closed-item', expected: 'OFFLINE_SYNC_NUMBERING_EXPIRED' });
+      expect(closedResult.items[0]).toMatchObject({ status: 'conflict', errorCode: outcomes[2].expected });
+
+      const expired = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'outcome-expired-device', shiftId: 'matrix-expired', entityType: 'citation', requestedSize: 1, validUntil: '2026-09-29T12:00:00.000Z' });
+      const expiredResult = await submit('outcome-expired', 'outcome-expired-device', itemFor('outcome-expired-item', expired.startNumber, expired.reservationId, '2026-09-30T12:00:00.000Z'));
+      outcomes.push({ queueItemId: 'outcome-expired-item', expected: 'OFFLINE_SYNC_NUMBERING_EXPIRED' });
+      expect(expiredResult.items[0]).toMatchObject({ status: 'conflict', errorCode: outcomes[3].expected });
+
+      const applied = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'outcome-applied-device', shiftId: 'matrix-applied', entityType: 'citation', requestedSize: 1 });
+      await submit('outcome-applied-first', 'outcome-applied-device', itemFor('outcome-applied-first-item', applied.startNumber, applied.reservationId));
+      const repeated = await submit('outcome-applied-repeat', 'outcome-applied-device', itemFor('outcome-applied-repeat-item', applied.startNumber, applied.reservationId));
+      outcomes.push({ queueItemId: 'outcome-applied-repeat-item', expected: 'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED' });
+      expect(repeated.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[4].expected });
+
+      const outOfScope = await submit('outcome-foreign-id', 'outcome-foreign-device', itemFor('outcome-foreign-item', a.startNumber, a.reservationId));
+      outcomes.push({ queueItemId: 'outcome-foreign-item', expected: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE' });
+      expect(outOfScope.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[5].expected });
+
+      const lateReservation = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'late-sync-device', shiftId: 'late-sync', entityType: 'citation', requestedSize: 1, validUntil: '2026-09-29T12:00:00.000Z' });
+      const lateService = new OfflineSyncService(store, { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+        now: () => '2026-09-30T12:00:00.000Z',
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
+        itemApplier: { apply: async (_trx: unknown, current: { queueItemId: string }) => ({ serverEntityId: `server-${current.queueItemId}` }) },
+        eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+      } as never);
+      const late = await run('ctg9-late-sync-positive', () => lateService.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'late-sync-device', deviceBatchId: 'late-sync-batch', items: [itemFor('late-sync-item', lateReservation.startNumber, lateReservation.reservationId, '2026-09-28T12:00:00.000Z')] }));
+      expect(late.items[0]).toMatchObject({ status: 'applied', queueItemId: 'late-sync-item' });
+    });
+    const admin = await pg.connectAsAdmin();
+    try {
+      const evidence = await admin.query<{ queue_item_id: string; evidence: Record<string, unknown> }>(`select queue_item_id,e.evidence from offline.sync_conflict_evidence e where tenant_id=$1::uuid and queue_item_id=any($2::text[])`, [tenantA, outcomes.map((o) => o.queueItemId)]);
+      expect(evidence.rows.map((row) => row.queue_item_id).sort()).toEqual(outcomes.map((o) => o.queueItemId).sort());
+      expect(evidence.rows.every((row) => Object.keys(row.evidence).length > 0)).toBe(true);
+      const open = await admin.query<{ status: string; count: number }>(`select c.status,count(*)::int as count from offline.sync_conflicts c join offline.sync_conflict_evidence e on e.tenant_id=c.tenant_id and e.conflict_id=c.id where c.tenant_id=$1::uuid and e.queue_item_id=any($2::text[]) group by c.status`, [tenantA, outcomes.map((o) => o.queueItemId)]);
+      expect(open.rows).toEqual([{ status: 'open', count: 6 }]);
+    } finally { await admin.end(); }
   }, 60_000);
 
   it('rejects duplicate declared or synthetic CTG9 item keys before PostgreSQL writes', async () => {
@@ -1011,6 +1090,29 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       expect((await store.getNumberingConsumption(scope, reservation.reservationId)).consumption.map((entry) => entry.status)).toEqual(['blocked', 'claimed-locally', 'blocked']);
       const expired = await store.reserveNumbering(scope, { orgUnitId: 'org-a', deviceId: 'expired-projection-device', shiftId: 'expired-projection-shift', entityType: 'citation', series: 'C', requestedSize: 2, validUntil: '2026-09-27T12:00:00.000Z' }, '2026-09-28T12:00:00.000Z', '2026-09-29T12:00:00.000Z');
       expect((await store.getNumberingConsumption(scope, expired.reservationId)).consumption.map((entry) => entry.status)).toEqual(['expired', 'expired']);
+
+      const service = new OfflineSyncService(store, { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+        now: () => '2026-09-28T12:00:00.000Z', policyResolver: { resolve: async () => ({ maxBatchItems: 150, reservationTtlMs: 86_400_000 }) },
+        itemApplier: { apply: async () => ({ serverEntityId: 'server-tail-reuse' }) },
+        eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+      } as never) as OfflineSyncService & { closeNumberingReservation(id: string): Promise<{ status: string }>; settleNumberingReservation(id: string): Promise<{ status: string }> };
+      const oldTailReservation = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'tail-reuse-device', shiftId: 'tail-old', entityType: 'citation', requestedSize: 3 });
+      await service.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'tail-reuse-device', deviceBatchId: 'tail-old-apply', items: [{ queueItemId: 'tail-old-applied', entityType: 'citation', localEntityId: 'tail-old-applied-local', idempotencyKey: 'tail-old-applied-key', payloadHash: hash, payloadJson: {}, reservedNumber: oldTailReservation.startNumber, reservationId: oldTailReservation.reservationId, createdLocallyAt: '2026-09-28T12:00:00.000Z' }] });
+      await service.cancelNumberingReservation(oldTailReservation.reservationId);
+      const replacement = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'tail-reuse-device', shiftId: 'tail-new', entityType: 'citation', requestedSize: 2 });
+      expect(replacement.startNumber).toBe(oldTailReservation.startNumber + 1);
+      const tail = await service.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'tail-reuse-device', deviceBatchId: 'tail-new-submit', items: [{ queueItemId: 'tail-new-item', entityType: 'citation', localEntityId: 'tail-new-local', idempotencyKey: 'tail-new-key', payloadHash: hash, payloadJson: {}, reservedNumber: replacement.startNumber, createdLocallyAt: '2026-09-28T12:00:00.000Z' }] });
+      expect(tail.items[0]).toMatchObject({ queueItemId: 'tail-new-item', status: 'applied' });
+
+      const closing = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'projection-terminal-device', shiftId: 'projection-terminal', entityType: 'citation', requestedSize: 3 });
+      await service.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'projection-terminal-device', deviceBatchId: 'projection-terminal-apply', items: [{ queueItemId: 'projection-terminal-applied', entityType: 'citation', localEntityId: 'projection-terminal-local', idempotencyKey: 'projection-terminal-key', payloadHash: hash, payloadJson: {}, reservedNumber: closing.startNumber, reservationId: closing.reservationId, createdLocallyAt: '2026-09-28T12:00:00.000Z' }] });
+      await store.reconcileNumberingReservation(scope, closing.reservationId, { claimedNumbers: [closing.startNumber + 1] }, '2026-09-28T12:00:00.000Z');
+      expect((await service.closeNumberingReservation(closing.reservationId)).status).toBe('consumed');
+      expect((await store.getNumberingConsumption(scope, closing.reservationId)).consumption.map((entry) => entry.status)).toEqual(['applied', 'claimed-locally', 'expired']);
+      const settling = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'projection-settle-device', shiftId: 'projection-settle', entityType: 'citation', requestedSize: 2 });
+      await store.reconcileNumberingReservation(scope, settling.reservationId, { claimedNumbers: [settling.startNumber] }, '2026-09-28T12:00:00.000Z');
+      expect((await service.settleNumberingReservation(settling.reservationId)).status).toBe('consumed');
+      expect((await store.getNumberingConsumption(scope, settling.reservationId)).consumption.map((entry) => entry.status)).toEqual(['claimed-locally', 'expired']);
     });
   }, 60_000);
 
