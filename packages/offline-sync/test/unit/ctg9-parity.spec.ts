@@ -337,7 +337,7 @@ describe('CTG9 OFS service contract', () => {
     expect(result.acceptedItems).toBe(101);
     expect(result.duplicateItems).toBe(0);
     expect((await service.getSyncBatchReceipt('device-a', 'large')).items).toHaveLength(101);
-    expect(resolve).toHaveBeenCalled();
+    expect(resolve).toHaveBeenCalledWith(expect.objectContaining({ tenantId: tenant, orgUnitId: 'org-a', operation: expect.any(String) }));
   });
 
   it('UPS-OFS-02 preserves batch identity, sequence and original tenant-scoped receipts', async () => {
@@ -366,7 +366,10 @@ describe('CTG9 OFS service contract', () => {
 
   it('UPS-OFS-02 stores unkeyed legacy items without applying them and reserves the synthetic namespace', async () => {
     const applier = { apply: vi.fn() };
-    const { service, store } = harness({ itemApplier: applier });
+    const { service, store } = harness({
+      itemApplier: applier,
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    });
     const legacy = { ...item('', 'legacy-1'), idempotencyKey: undefined };
     await service.submitSyncBatch(batch('legacy', [legacy] as never));
     const receipt = await service.getSyncBatchReceipt('device-a', 'legacy');
@@ -399,6 +402,7 @@ describe('CTG9 OFS service contract', () => {
     const { service, scope } = harness({
       legacyItemIdentityResolver: identity,
       itemApplier: applier,
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
     });
     const unkeyed = (queueItemId: string, localEntityId: string) => ({
       ...item('', queueItemId),
@@ -458,6 +462,7 @@ describe('CTG9 OFS service contract', () => {
     const { service, store } = harness({
       legacyItemIdentityResolver: { resolve: async () => '' },
       itemApplier: applier,
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
     });
     await expect(
       service.submitSyncBatch(
@@ -466,7 +471,7 @@ describe('CTG9 OFS service contract', () => {
         ] as never),
       ),
     ).rejects.toMatchObject({ status: 400 });
-    expect(store.getQueueItem(tenant, 'empty-identity-item')).toBeUndefined();
+    expect(store.getQueueItem(tenant, 'empty-identity-item')).toEqual(undefined);
     expect(applier.apply).not.toHaveBeenCalled();
   });
 
@@ -491,9 +496,9 @@ describe('CTG9 OFS service contract', () => {
     await expect(declared.service.submitSyncBatch(batch('same-declared-key', [
       item('duplicate-key', 'declared-one'), item('duplicate-key', 'declared-two'),
     ]))).rejects.toMatchObject({ status: 400 });
-    expect(declared.store.getQueueItem(tenant, 'declared-one')).toBeUndefined();
-    expect(declared.store.getQueueItem(tenant, 'declared-two')).toBeUndefined();
-    expect(applier.apply).not.toHaveBeenCalled();
+    expect(declared.store.getQueueItem(tenant, 'declared-one')).toEqual(undefined);
+    expect(declared.store.getQueueItem(tenant, 'declared-two')).toEqual(undefined);
+    expect(applier.apply).toHaveBeenCalledTimes(0);
 
     const synthetic = harness({
       itemApplier: applier,
@@ -503,9 +508,9 @@ describe('CTG9 OFS service contract', () => {
       { ...item('', 'synthetic-one'), idempotencyKey: undefined },
       { ...item('', 'synthetic-two'), idempotencyKey: undefined },
     ] as never))).rejects.toMatchObject({ status: 400 });
-    expect(synthetic.store.getQueueItem(tenant, 'synthetic-one')).toBeUndefined();
-    expect(synthetic.store.getQueueItem(tenant, 'synthetic-two')).toBeUndefined();
-    expect(applier.apply).not.toHaveBeenCalled();
+    expect(synthetic.store.getQueueItem(tenant, 'synthetic-one')).toEqual(undefined);
+    expect(synthetic.store.getQueueItem(tenant, 'synthetic-two')).toEqual(undefined);
+    expect(applier.apply).toHaveBeenCalledTimes(0);
   });
 
   it('UPS-OFS-02 continues after a queue ID reused by a later batch', async () => {
@@ -544,6 +549,41 @@ describe('CTG9 OFS service contract', () => {
     expect(second).toEqual(first);
     expect(applier.apply).toHaveBeenCalledTimes(1);
     expect((await service.getSyncBatchReceipt('device-a', 'same-open')).status).toBe('closed');
+  });
+
+  it('binds each transport key to its body while allowing byte-identical K2 resume of an open batch', async () => {
+    let fail = true;
+    const applier = { apply: vi.fn(async () => {
+      if (fail) throw new Error('retryable interruption');
+      return { serverEntityId: 'server-transport-resume' };
+    }) };
+    const events = { appendInTransaction: vi.fn(async () => undefined), appendManyInTransaction: vi.fn(async () => undefined) };
+    const { service } = harness({ itemApplier: applier, eventPort: events });
+    const reservation = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'transport-resume', entityType: 'citation', requestedSize: 2 });
+    const input = { ...batch('transport-resume-batch', [item('transport-resume-key', 'transport-resume-item', reservation.startNumber, reservation.reservationId)]), batchSequence: 1 };
+    const request = (transportIdempotencyKey: string, requestBody: unknown) => service.submitSyncBatch(input, { transportIdempotencyKey, method: 'POST', path: '/offline-sync/sync-batches', requestBody });
+    const body = { ...input, transportMetadata: { attempt: 1 } };
+    const first = await request('K1', body);
+    expect(first.receipt.status).toBe('open');
+    const changedFields = [
+      { ...input, items: [{ ...input.items[0]!, payloadJson: { changed: true } }] },
+      { ...input, items: [{ ...input.items[0]!, reservedNumber: reservation.startNumber + 1 }] },
+      { ...input, items: [{ ...input.items[0]!, reservationId: '10000000-0000-4000-8000-0000000000b1' }] },
+      { ...input, items: [{ ...input.items[0]!, createdLocallyAt: '2026-09-28T12:01:00.000Z' }] },
+    ];
+    for (const altered of changedFields) {
+      await expect(service.submitSyncBatch(altered, { transportIdempotencyKey: 'K2', method: 'POST', path: '/offline-sync/sync-batches', requestBody: { ...altered, transportMetadata: { attempt: 2 } } }))
+        .rejects.toMatchObject({ status: 409, code: 'OFFLINE_SYNC_BATCH_CONFLICT' });
+    }
+    expect(applier.apply).toHaveBeenCalledOnce();
+    expect(events.appendInTransaction).not.toHaveBeenCalled();
+    expect((await service.getNumberingConsumption(reservation.reservationId)).consumption[0]).toMatchObject({ status: 'available' });
+    fail = false;
+    const resumed = await request('K2', { ...input, transportMetadata: { attempt: 2 } });
+    expect(resumed).toMatchObject({ receipt: { status: 'closed' }, duplicateItems: first.duplicateItems, items: [{ queueItemId: 'transport-resume-item', status: 'applied' }] });
+    expect(applier.apply).toHaveBeenCalledTimes(2);
+    expect(events.appendInTransaction).toHaveBeenCalledOnce();
+    await expect(request('K2', { ...input, transportMetadata: { attempt: 3 } })).rejects.toMatchObject({ status: 422 });
   });
 
   it('UPS-OFS-03 applies items serially and passes the identical transaction to the final event operation', async () => {
@@ -619,7 +659,7 @@ describe('CTG9 OFS service contract', () => {
       ...batch('handoff-b', [item('handoff-key-b', 'b')]),
       deviceId: 'device-b',
     });
-    expect(handoff.permits).toHaveBeenCalled();
+    expect(handoff.permits).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ firstItemId: expect.any(String), secondItemId: expect.any(String) }), expect.anything());
     expect((await service.getSyncItemReceipt('handoff-key-a')).status).not.toBe('conflict');
     expect((await service.getSyncItemReceipt('handoff-key-b')).status).not.toBe('conflict');
     const disabledDetect = vi.fn();
@@ -672,7 +712,7 @@ describe('CTG9 OFS service contract', () => {
       ...batch('two', [item('key-b', 'queue-b')]),
       deviceId: 'device-b',
     });
-    expect(detect).toHaveBeenCalled();
+    expect(detect).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ queueItemId: expect.any(String) }), expect.anything());
     const first = await service.getSyncItemReceipt('key-a');
     const second = await service.getSyncItemReceipt('key-b');
     expect(first.status).toBe('conflict');
@@ -682,7 +722,7 @@ describe('CTG9 OFS service contract', () => {
     expect(first.context).toMatchObject({
       allowedActions: ['manual-review'], relatedQueueItemId: 'queue-b',
     });
-    expect(allowedActionsFor).toHaveBeenCalled();
+    expect(allowedActionsFor).toHaveBeenCalledWith(expect.anything(), expect.any(String), expect.anything());
     await expect(
       service.resolveConflict(conflictId as string, { resolution: 'device-wins' }),
     ).rejects.toMatchObject({ status: 409 });

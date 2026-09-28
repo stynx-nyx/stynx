@@ -4,10 +4,11 @@ import { resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
 import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import request from 'supertest';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
-import { RequestContextMutator } from '@stynx-nyx/core';
+import { RequestContextMutator, StynxCoreModule } from '@stynx-nyx/core';
 import type { IdempotencyStoredEntry, IdempotencyStore } from '@stynx-nyx/idempotency';
 import { OfflineSyncService } from '../../src/offline-sync.service';
 import { StynxOfflineSyncModule } from '../../src/offline-sync.module';
@@ -400,6 +401,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
           policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
           legacyIdempotencyStore: legacy as IdempotencyStore,
           itemApplier: applier,
+          eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
         } as never),
       ],
     }).compile();
@@ -484,7 +486,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       status: 'completed', requestFingerprint: decision.requestFingerprint, statusCode: 201,
       body: ack, headers: { 'x-legacy-ack': 'saved' }, expiresAt: Date.now() + 60_000,
     })), reserve: vi.fn(), persistResponse: vi.fn(), clearReservation: vi.fn() };
-    const module = await Test.createTestingModule({ imports: [StynxOfflineSyncModule.forRoot({
+    const module = await Test.createTestingModule({ imports: [StynxCoreModule.forRoot({ appName: 'ctg9-http-proof', schema: { safeParseAsync: async () => ({ success: true, data: {} }) } as never }), StynxOfflineSyncModule.forRoot({
       store: new PostgresOfflineSyncStore(moduleRef),
       context: { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) },
       policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
@@ -535,21 +537,18 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
   }, 60_000);
 
   it('returns retryable 503 and leaves an internal item failure open over HTTP', async () => {
-    const module = await Test.createTestingModule({ imports: [StynxOfflineSyncModule.forRoot({
+    let requestContexts!: RequestContextMutator;
+    const module = await Test.createTestingModule({ imports: [StynxCoreModule.forRoot({ appName: 'ctg9-http-proof', schema: { safeParseAsync: async () => ({ success: true, data: {} }) } as never }), StynxOfflineSyncModule.forRoot({
       store: new PostgresOfflineSyncStore(moduleRef),
       context: { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) },
       policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
       itemApplier: { apply: async () => { throw new Error('temporary upstream failure'); } },
       eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
     } as never)] })
-      .overrideGuard(StynxAuthGuard).useValue({ canActivate: () => true })
+      .overrideGuard(StynxAuthGuard).useValue({ canActivate: () => { requestContexts.patch({ tenantId: tenantA, actorId: 'actor-a' }); return true; } })
       .overrideGuard(PermissionGuard).useValue({ canActivate: () => true }).compile();
     const app: INestApplication = module.createNestApplication();
-    const contexts = moduleRef.get(RequestContextMutator);
-    app.use((_req: unknown, _res: unknown, next: () => void) => contexts.runWithRequestContext({
-      requestId: 'ctg9-internal-failure-http', tenantId: tenantA, actorId: 'actor-a',
-      startedAt: new Date('2026-09-28T12:00:00.000Z'),
-    }, next));
+    requestContexts = module.get(RequestContextMutator);
     await app.init();
     try {
       const body = { orgUnitId: 'org-a', deviceId: 'internal-failure-device', deviceBatchId: 'internal-failure-batch',
@@ -557,14 +556,15 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
           idempotencyKey: 'internal-failure-key', payloadHash: hash, payloadJson: {},
           createdLocallyAt: '2026-09-28T12:00:00.000Z' }] };
       const response = await request(app.getHttpServer()).post('/offline-sync/sync-batches')
+        .set('X-Request-Id', '0198d132-0000-7000-8000-000000000001')
         .set('Idempotency-Key', 'internal-failure-transport').send(body);
       expect(response.status).toBe(503);
       expect(response.headers['retry-after']).toBe('1');
-      expect(response.body).toMatchObject({ errorCode: 'OFFLINE_SYNC:BATCH:in-progress', retryable: true });
+      expect(response.body).toMatchObject({ errorCode: 'OFFLINE_SYNC:BATCH:in-progress', retryable: true, requestId: response.headers['x-request-id'] });
       const receiptService = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
         { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) },
         { policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) } } as never);
-      const receipt = await contexts.runWithRequestContext({ requestId: 'ctg9-internal-failure-receipt', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => receiptService.getSyncBatchReceipt(body.deviceId, body.deviceBatchId));
+      const receipt = await moduleRef.get(RequestContextMutator).runWithRequestContext({ requestId: 'ctg9-internal-failure-receipt', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => receiptService.getSyncBatchReceipt(body.deviceId, body.deviceBatchId));
       expect(receipt).toMatchObject({ status: 'open', responseStatus: null });
       expect(receipt.items).toMatchObject([{ queueItemId: 'internal-failure-item', status: 'received' }]);
     } finally { await app.close(); }
@@ -578,21 +578,21 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     }, action);
     const makeService = (apply: (queueItemId: string) => Promise<unknown>) => new OfflineSyncService(store,
       { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
-        now: () => '2026-09-28T12:00:00.000Z', policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
+        now: () => '2026-09-28T12:00:00.000Z', policyResolver: { resolve: async () => ({ maxBatchItems: 150, reservationTtlMs: 86_400_000 }) },
         itemApplier: { apply: async (_trx: unknown, current: { queueItemId: string }) => apply(current.queueItemId) },
         eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
       } as never);
     const closedService = makeService(async (queueItemId) => ({ serverEntityId: `server-${queueItemId}` }));
-    const closed = { orgUnitId: 'org-a', deviceId: '55p03-closed-device', deviceBatchId: '55p03-closed-batch', items: [
+    const closed = { orgUnitId: 'org-a', deviceId: '55p03-closed-device', deviceBatchId: '55p03-closed-batch', batchSequence: 1, items: [
       { queueItemId: '55p03-closed-original', entityType: 'citation', localEntityId: 'local-closed-original', idempotencyKey: '55p03-closed-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
     ] };
     await run('55p03-closed-create', () => closedService.submitSyncBatch(closed));
-    const lock = async (deviceId: string, runAttempt: () => Promise<unknown>, missingId: string) => {
+    const lock = async (deviceId: string, runAttempt: () => Promise<unknown>, missingId: string, expectedStatus = 409) => {
       const admin = await pg.connectAsAdmin();
       try {
         await admin.query('begin');
         await admin.query(`select pg_advisory_xact_lock(hashtextextended($1,0))`, [`${tenantA}:${deviceId}`]);
-        await expect(runAttempt()).rejects.toMatchObject({ status: 409 });
+        await expect(runAttempt()).rejects.toMatchObject({ status: expectedStatus });
         const untouched = await admin.query(`select id from offline.sync_queue_items where tenant_id=$1::uuid and id=$2`, [tenantA, missingId]);
         expect(untouched.rows).toEqual([]);
       } finally { await admin.query('rollback').catch(() => undefined); await admin.end(); }
@@ -600,6 +600,8 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     await lock(closed.deviceId, () => run('55p03-closed-divergent', () => closedService.submitSyncBatch({
       ...closed, items: [{ ...closed.items[0], queueItemId: '55p03-closed-undeclared', localEntityId: 'local-undeclared', idempotencyKey: '55p03-closed-other-key' }],
     })), '55p03-closed-undeclared');
+    await lock(closed.deviceId, () => run('55p03-sequence-divergent', () => closedService.submitSyncBatch({ ...closed, batchSequence: 2 })), '55p03-sequence-undeclared');
+    await lock(closed.deviceId, () => run('55p03-fingerprint-divergent', () => closedService.submitSyncBatch({ ...closed, extraTransportBody: 'changed-with-same-domain-context' })), '55p03-fingerprint-undeclared', 422);
 
     let failOnce = true;
     const openService = makeService(async (queueItemId) => {
@@ -613,6 +615,30 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     await lock(open.deviceId, () => run('55p03-open-divergent', () => openService.submitSyncBatch({
       ...open, items: [{ ...open.items[0], queueItemId: '55p03-open-undeclared', localEntityId: 'local-open-undeclared', idempotencyKey: '55p03-open-other-key' }],
     })), '55p03-open-undeclared');
+  }, 60_000);
+
+  it('enforces PostgreSQL sequence duplicate and gap statuses with the expected message', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+      { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) }, leaseWaitMs: 100,
+        itemApplier: { apply: async (_trx: unknown, current: { queueItemId: string }) => ({ serverEntityId: `server-${current.queueItemId}` }) },
+        eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+      } as never);
+    const run = <T>(requestId: string, action: () => Promise<T>) => contexts.runWithRequestContext({ requestId, tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, action);
+    const submit = (deviceBatchId: string, queueItemId: string, batchSequence: number) => service.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'pg-sequence-device', deviceBatchId, batchSequence, items: [{ queueItemId, entityType: 'citation', localEntityId: `local-${queueItemId}`, idempotencyKey: `key-${queueItemId}`, payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' }] });
+    await run('pg-sequence-first', () => submit('pg-sequence-one', 'pg-sequence-item-one', 1));
+    await expect(run('pg-sequence-duplicate', () => submit('pg-sequence-reused-one', 'pg-sequence-item-reused', 1))).rejects.toMatchObject({ status: 409, code: 'OFFLINE_SYNC_BATCH_CONFLICT' });
+    let gap: unknown;
+    try { await run('pg-sequence-gap', () => submit('pg-sequence-three', 'pg-sequence-item-three', 3)); } catch (error) { gap = error; }
+    expect(gap).toBeInstanceOf(HttpException);
+    expect((gap as HttpException).getStatus()).toBe(422);
+    expect((gap as HttpException).getResponse()).toEqual({ statusCode: 422, errorCode: 'OFFLINE_SYNC_BATCH_SEQUENCE', message: 'Expected batch sequence 2; received 3.', retryable: false });
+    const admin = await pg.connectAsAdmin();
+    try {
+      const absent = await admin.query(`select id from offline.sync_queue_items where tenant_id=$1::uuid and id in ('pg-sequence-item-reused','pg-sequence-item-three')`, [tenantA]);
+      expect(absent.rows).toEqual([]);
+    } finally { await admin.end(); }
   }, 60_000);
 
   it('keeps E6 store behavior against the upgraded schema when no resolver is configured', async () => {
@@ -1017,15 +1043,13 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       expect(interrupted).toMatchObject({ receipt: { status: 'open', responseStatus: null } });
       const admin = await pg.connectAsAdmin();
       try {
-        const before = await admin.query<{ lease_generation: string; lease_token: string }>(`select lease_generation,lease_token from offline.sync_batches where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`, [tenantA, batch.deviceId, batch.deviceBatchId]);
+        const before = await admin.query<{ lease_generation: string }>(`select lease_generation from offline.sync_batches where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`, [tenantA, batch.deviceId, batch.deviceBatchId]);
         await admin.query(`update offline.sync_batches set lease_token=gen_random_uuid(),lease_expires_at=clock_timestamp()-interval '1 second' where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`, [tenantA, batch.deviceId, batch.deviceBatchId]);
         const resumed = await service.submitSyncBatch(batch);
         expect(resumed).toMatchObject({ receipt: { status: 'closed', responseStatus: 201 }, items: [{ status: 'applied' }] });
         const after = await admin.query<{ lease_generation: string; status: string }>(`select lease_generation,status from offline.sync_batches where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`, [tenantA, batch.deviceId, batch.deviceBatchId]);
         expect(Number(after.rows[0]?.lease_generation)).toBe(Number(before.rows[0]?.lease_generation) + 1);
         expect(after.rows[0]?.status).toBe('closed');
-        const staleHolderWrite = await admin.query(`update offline.sync_batches set updated_at=clock_timestamp() where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 and lease_token=$4::uuid and lease_generation=$5`, [tenantA, batch.deviceId, batch.deviceBatchId, before.rows[0]?.lease_token, before.rows[0]?.lease_generation]);
-        expect(staleHolderWrite.rowCount).toBe(0);
       } finally { await admin.end(); }
     });
   }, 60_000);
@@ -1063,18 +1087,77 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     expect(JSON.parse(Buffer.from(durable.responseBodyBytes!).toString('utf8'))).toEqual(resumed);
   }, 60_000);
 
-  it('serializes simultaneous PostgreSQL submissions of the same open batch to one effect', async () => {
+  it('binds PostgreSQL K1 and K2 bodies, rejects altered effect context, and replays with K2 headers', async () => {
     const contexts = moduleRef.get(RequestContextMutator);
-    let enterApply!: () => void; let releaseApply!: () => void; let secondPolicy!: () => void;
-    const entered = new Promise<void>((resolve) => { enterApply = resolve; });
-    const blocked = new Promise<void>((resolve) => { releaseApply = resolve; });
-    const secondObserved = new Promise<void>((resolve) => { secondPolicy = resolve; });
-    const apply = vi.fn(async () => { enterApply(); await blocked; return { serverEntityId: 'server-same-pg-batch' }; });
-    let policyCalls = 0;
+    let fail = true;
+    const applier = { apply: vi.fn(async () => {
+      if (fail) throw new Error('retryable transport-ledger interruption');
+      return { serverEntityId: 'server-ledger-item' };
+    }) };
+    const append = vi.fn(async () => undefined);
     const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
       { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
-        policyResolver: { resolve: async () => { if (++policyCalls === 2) secondPolicy(); return { maxBatchItems: 150 }; } },
-        itemApplier: { apply }, eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+        now: () => '2026-09-28T12:00:00.000Z', policyResolver: { resolve: async () => ({ maxBatchItems: 150, reservationTtlMs: 86_400_000 }) },
+        itemApplier: applier, eventPort: { appendInTransaction: append, appendManyInTransaction: async () => undefined },
+      } as never);
+    const run = <T>(requestId: string, action: () => Promise<T>) => contexts.runWithRequestContext({ requestId, tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, action);
+    const reservation = await run('ledger-reserve', () => service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'transport-ledger-device', shiftId: 'transport-ledger', entityType: 'citation', requestedSize: 2 }));
+    const input = { orgUnitId: 'org-a', deviceId: 'transport-ledger-device', deviceBatchId: 'transport-ledger-batch', batchSequence: 1, items: [
+      { queueItemId: 'transport-ledger-item', entityType: 'citation', localEntityId: 'local-ledger-item', idempotencyKey: 'transport-ledger-key', payloadHash: hash, payloadJson: {}, reservedNumber: reservation.startNumber, reservationId: reservation.reservationId, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
+    ] };
+    const send = (requestId: string, key: string, requestBody: unknown, response?: { status: (code: number) => unknown; setHeader: (name: string, value: string) => unknown; getHeaders: () => Record<string, string> }, submission = input) => run(requestId, () => service.submitSyncBatch(submission, { transportIdempotencyKey: key, method: 'POST', path: '/offline-sync/sync-batches', requestBody, ...(response ? { response } : {}) }));
+    const first = await send('ledger-k1', 'K1', { ...input, transportMetadata: { delivery: 1 } });
+    expect(first.receipt.status).toBe('open');
+    const receiptBeforeAltered = await run('ledger-receipt-before', () => service.getSyncBatchReceipt(input.deviceId, input.deviceBatchId));
+    const before = await run('ledger-read-before', () => service.getNumberingConsumption(reservation.reservationId));
+    for (const altered of [
+      { ...input, items: [{ ...input.items[0]!, payloadJson: { altered: true } }] },
+      { ...input, items: [{ ...input.items[0]!, reservedNumber: reservation.startNumber + 1 }] },
+      { ...input, items: [{ ...input.items[0]!, reservationId: '00000000-0000-4000-8000-0000000000b1' }] },
+      { ...input, items: [{ ...input.items[0]!, createdLocallyAt: '2026-09-28T12:01:00.000Z' }] },
+    ]) {
+      await expect(send('ledger-altered', 'K2', altered, undefined, altered)).rejects.toMatchObject({ status: 409, code: 'OFFLINE_SYNC_BATCH_CONFLICT' });
+    }
+    expect(applier.apply).toHaveBeenCalledOnce();
+    expect(append).not.toHaveBeenCalled();
+    expect(await run('ledger-receipt-after', () => service.getSyncBatchReceipt(input.deviceId, input.deviceBatchId))).toEqual(receiptBeforeAltered);
+    expect(await run('ledger-read-after', () => service.getNumberingConsumption(reservation.reservationId))).toEqual(before);
+    const admin = await pg.connectAsAdmin();
+    try {
+      const bindings = await admin.query<{ transport_key: string; device_batch_id: string }>(`select transport_key,device_batch_id from offline.sync_batch_transport_keys where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`, [tenantA, input.deviceId, input.deviceBatchId]);
+      expect(bindings.rows).toHaveLength(1);
+    } finally { await admin.end(); }
+    fail = false;
+    const responseHeaders: Record<string, string> = { 'X-Request-Id': '0198d132-0000-7000-8000-000000000002' };
+    let replayStatus = 0;
+    const response = { status: (code: number) => { replayStatus = code; }, setHeader: (name: string, value: string) => { responseHeaders[name] = value; }, getHeaders: () => ({ 'x-request-id': responseHeaders['X-Request-Id']!, 'x-current-response': 'kept' }) };
+    const resumed = await send('ledger-k2', 'K2', { ...input, transportMetadata: { delivery: 2 } }, response);
+    expect(resumed).toMatchObject({ receipt: { status: 'closed' }, items: [{ status: 'applied' }] });
+    expect(applier.apply).toHaveBeenCalledTimes(2);
+    expect(append).toHaveBeenCalledOnce();
+    expect(replayStatus).toBe(0);
+    const replayHeaders: Record<string, string> = { 'X-Request-Id': '0198d132-0000-7000-8000-000000000003' };
+    let returnedStatus = 0;
+    const replayResponse = { status: (code: number) => { returnedStatus = code; }, setHeader: (name: string, value: string) => { replayHeaders[name] = value; }, getHeaders: () => ({ 'x-request-id': replayHeaders['X-Request-Id']! }) };
+    await expect(send('ledger-replay', 'K2', { ...input, transportMetadata: { delivery: 2 } }, replayResponse)).resolves.toEqual(resumed);
+    expect(returnedStatus).toBe(201);
+    expect(replayHeaders['X-Idempotency-Key']).toBe('K2');
+    expect(replayHeaders['Idempotency-Replayed']).toBe('true');
+    expect(replayHeaders['X-Request-Id']).toBe('0198d132-0000-7000-8000-000000000003');
+    await expect(send('ledger-changed', 'K2', { ...input, transportMetadata: { delivery: 3 } })).rejects.toMatchObject({ status: 422 });
+  }, 60_000);
+
+  it('serializes simultaneous PostgreSQL submissions of the same open batch to one effect', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    let enterApply!: () => void; let releaseApply!: () => void;
+    const entered = new Promise<void>((resolve) => { enterApply = resolve; });
+    const blocked = new Promise<void>((resolve) => { releaseApply = resolve; });
+    const append = vi.fn(async () => undefined);
+    const apply = vi.fn(async () => { enterApply(); await blocked; return { serverEntityId: 'server-same-pg-batch' }; });
+    const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+      { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) }, leaseWaitMs: 100,
+        itemApplier: { apply }, eventPort: { appendInTransaction: append, appendManyInTransaction: async () => undefined },
       } as never);
     const input = { orgUnitId: 'org-a', deviceId: 'same-pg-open-device', deviceBatchId: 'same-pg-open-batch', items: [
       { queueItemId: 'same-pg-open-item', entityType: 'citation', localEntityId: 'local-same-pg-open', idempotencyKey: 'same-pg-open-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
@@ -1082,14 +1165,84 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     const run = (requestId: string) => contexts.runWithRequestContext({ requestId, tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => service.submitSyncBatch(input));
     const first = run('same-pg-open-first');
     await entered;
-    const second = run('same-pg-open-second');
-    await secondObserved;
-    releaseApply();
-    const results = await Promise.allSettled([first, second]);
+    const second = run('same-pg-open-second').then(
+      (value) => ({ status: 'fulfilled' as const, value }),
+      (reason: unknown) => ({ status: 'rejected' as const, reason }),
+    );
+    let secondOutcome: Awaited<typeof second> | undefined;
+    const admin = await pg.connectAsAdmin();
+    try {
+      secondOutcome = await second;
+      expect(secondOutcome.status === 'fulfilled' ? secondOutcome.value : secondOutcome.reason).toMatchObject({ status: 503, code: 'OFFLINE_SYNC:BATCH:in-progress' });
+      const liveLease = await admin.query<{ count: number }>(`select count(*)::int as count from offline.sync_batches where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 and status='open' and lease_token is not null and lease_expires_at>clock_timestamp()`, [tenantA, input.deviceId, input.deviceBatchId]);
+      expect(liveLease.rows[0]?.count).toBe(1);
+    } finally { releaseApply(); await admin.end(); }
+    const results = await Promise.allSettled([first]);
     expect(apply).toHaveBeenCalledOnce();
-    expect(results.some((result) => result.status === 'fulfilled' && result.value.receipt.status === 'closed')).toBe(true);
+    expect(results[0]).toMatchObject({ status: 'fulfilled', value: { receipt: { status: 'closed' } } });
+    expect(secondOutcome?.status).toBe('rejected');
+    if (secondOutcome?.status === 'rejected') expect(secondOutcome.reason).toMatchObject({ status: 503, code: 'OFFLINE_SYNC:BATCH:in-progress' });
+    expect(append).toHaveBeenCalledOnce();
     const receipt = await run('same-pg-open-final-read');
     expect(receipt).toMatchObject({ receipt: { status: 'closed', items: [{ queueItemId: 'same-pg-open-item', status: 'applied' }] } });
+    const verify = await pg.connectAsAdmin();
+    try {
+      const attempts = await verify.query(`select queue_item_id from offline.sync_item_attempts where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`, [tenantA, input.deviceId, input.deviceBatchId]);
+      const receipts = await verify.query(`select queue_item_id from offline.sync_item_receipts where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`, [tenantA, input.deviceId, input.deviceBatchId]);
+      expect(attempts.rows).toEqual([]);
+      expect(receipts.rows).toEqual([{ queue_item_id: 'same-pg-open-item' }]);
+    } finally { await verify.end(); }
+  }, 60_000);
+
+  it('fences a stale PostgreSQL holder by captured lease token and generation before a resumed owner applies the next item', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    let heldTransaction!: () => void; let releaseTransaction!: () => void;
+    const transactionHeld = new Promise<void>((resolve) => { heldTransaction = resolve; });
+    const transactionGate = new Promise<void>((resolve) => { releaseTransaction = resolve; });
+    let originalToken: string | undefined; let originalGeneration: string | undefined;
+    const apply = vi.fn(async (_trx: unknown, current: { queueItemId: string }) => ({ serverEntityId: `server-${current.queueItemId}` }));
+    const append = vi.fn(async (trx: { query<T extends Record<string, unknown>>(sql: string, params?: unknown[]): Promise<{ rows: T[] }> }, event: { entityId: string }) => {
+      if (event.entityId === 'server-stale-holder-first-item') {
+        const before = await trx.query<{ lease_token: string; lease_generation: string }>(`select lease_token,lease_generation from offline.sync_batches where tenant_id=$1::uuid and device_id='stale-holder-device' and device_batch_id='stale-holder-batch'`, [tenantA]);
+        originalToken = before.rows[0]?.lease_token;
+        originalGeneration = before.rows[0]?.lease_generation;
+        expect(originalToken).toEqual(expect.any(String));
+        await trx.query(`update offline.sync_batches set lease_token=gen_random_uuid(),lease_generation=lease_generation+1,lease_expires_at=clock_timestamp()-interval '1 second' where tenant_id=$1::uuid and device_id='stale-holder-device' and device_batch_id='stale-holder-batch'`, [tenantA]);
+        heldTransaction();
+        await transactionGate;
+      }
+    });
+    const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+      { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) }, itemApplier: { apply },
+        eventPort: { appendInTransaction: append, appendManyInTransaction: async () => undefined },
+      } as never);
+    const input = { orgUnitId: 'org-a', deviceId: 'stale-holder-device', deviceBatchId: 'stale-holder-batch', items: [
+      { queueItemId: 'stale-holder-first-item', entityType: 'citation', localEntityId: 'local-stale-first', idempotencyKey: 'stale-holder-first-key', payloadHash: `sha256:${createHash('sha256').update('stale-first').digest('hex')}`, payloadJson: { item: 'first' }, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
+      { queueItemId: 'stale-holder-second-item', entityType: 'citation', localEntityId: 'local-stale-second', idempotencyKey: 'stale-holder-second-key', payloadHash: `sha256:${createHash('sha256').update('stale-second').digest('hex')}`, payloadJson: { item: 'second' }, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
+    ] };
+    const run = (requestId: string) => contexts.runWithRequestContext({ requestId, tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => service.submitSyncBatch(input));
+    const original = run('stale-holder-original');
+    await transactionHeld;
+    try { await transactionHeld; } finally { releaseTransaction(); }
+    await expect(original).rejects.toMatchObject({ status: 409, code: 'OFFLINE_SYNC_BATCH_CONFLICT' });
+    expect(apply.mock.calls.map(([, current]) => current.queueItemId)).toEqual(['stale-holder-first-item']);
+    expect(append).toHaveBeenCalledOnce();
+    const takeover = await run('stale-holder-takeover');
+    expect(takeover).toMatchObject({ receipt: { status: 'closed' } });
+    expect(apply.mock.calls.map(([, current]) => current.queueItemId)).toEqual(['stale-holder-first-item', 'stale-holder-second-item']);
+    expect(append).toHaveBeenCalledTimes(2);
+    expect(originalToken).toEqual(expect.any(String));
+    expect(originalGeneration).toEqual(expect.any(String));
+    const verify = await pg.connectAsAdmin();
+    try {
+      const staleWrite = await verify.query(`update offline.sync_batches set lease_expires_at=clock_timestamp() where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 and lease_token=$4::uuid and lease_generation=$5`, [tenantA, input.deviceId, input.deviceBatchId, originalToken, originalGeneration]);
+      expect(staleWrite.rowCount).toBe(0);
+      const state = await verify.query<{ lease_generation: string; status: string }>(`select lease_generation,status from offline.sync_batches where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`, [tenantA, input.deviceId, input.deviceBatchId]);
+      expect(state.rows).toEqual([{ lease_generation: String(Number(originalGeneration) + 2), status: 'closed' }]);
+      const items = await verify.query<{ id: string; status: string }>(`select id,status from offline.sync_queue_items where tenant_id=$1::uuid and id in ('stale-holder-first-item','stale-holder-second-item') order by id`, [tenantA]);
+      expect(items.rows).toEqual([{ id: 'stale-holder-first-item', status: 'applied' }, { id: 'stale-holder-second-item', status: 'applied' }]);
+    } finally { await verify.end(); }
   }, 60_000);
 
   it('continues after a post-migration E6 queue collision without applying or rewriting that legacy row', async () => {
@@ -1138,6 +1291,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
         policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) }, legacyIdempotencyStore: legacy as never,
         itemApplier: applier,
+        eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
       } as never);
     const input = { orgUnitId: 'org-a', deviceId: 'lazy-e6-device', deviceBatchId: 'lazy-e6-batch', items: [
       { queueItemId: 'lazy-e6-item', entityType: 'citation', localEntityId: 'local-lazy-e6', idempotencyKey: 'lazy-e6-key', payloadHash: lazyPayloadHash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
@@ -1333,7 +1487,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     const transactions = new Map<string, object>();
     const writeEvent = async (trx: ProbeTransaction) => {
       const queueItemId = itemByTransaction.get(trx);
-      expect(queueItemId).toBeTruthy();
+      expect(queueItemId).toEqual(expect.any(String));
       expect(trx).toBe(transactions.get(queueItemId!));
       await trx.query(
         `insert into offline.ctg9_item_effect_probe
