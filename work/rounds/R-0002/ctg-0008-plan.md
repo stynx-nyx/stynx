@@ -2,7 +2,17 @@
 
 **Current role:** Architect. **Scope:** UPS-CLI-01, MUST under OD-S15-01. **Contract:** `docs/framework/contracts/cli-generator-1.5.md`. **Source:** DETRAN C-0002 §6.10, §7 and §8, plus its tiny `BP-OPS-EXAMPLE-001.json`, read only. No DETRAN code or generated files are copied.
 
-## Topology
+## OD-S15-02 — current execution topology
+
+The Owner's 2026-09-27 flow decision supersedes the historical per-CTG PR, RC and predecessor-merge language below. CTG-0008 can run its isolated CLI sensors and implementation in parallel with CTG-0005/0006/0007 once the approved F1 invariants and this revised prompt-review are recorded. Before generated repository and consumer tests are finalized, the maestro pins the public `Database.tx`, `Transaction.query`, and `RequestContext` surface from the CTG-0005 checkpoint; any mismatch returns to Architect. CTG-0008 is imported into the single cumulative release branch **after** CTG-0007, with role-separated commits. There is no CTG-0008 PR, published RC, or full `pnpm ci:stynx` checkpoint. Run its focused tests and required real-DB/RLS integration checks in its isolated checkout; the maestro runs the one complete local CI and final delivery review on the cumulative tree after CTG-0008. One final PR, remote CI, merge and final publication follow that gate. Historical reviews and checkpoints remain evidence, but their former merge prerequisite is not a current dispatch gate.
+
+| Current prerequisite                   | Status / checkpoint                                             |
+| -------------------------------------- | --------------------------------------------------------------- |
+| Revised OD-S15-02 prompt-review        | Pending; required before new worker dispatch                    |
+| Architect four-invariant F1 checkpoint | Complete; recheck against CTG-0005 public data API              |
+| CTG-0007 merged SHA                    | Superseded; final import order is CTG-0005 → 0006 → 0007 → 0008 |
+
+## Historical topology (superseded by OD-S15-02)
 
 CTG-0008 follows CTG-0007. This preparation branch may contain only F1 planning. Before Inspector dispatch the maestro must record CTG-0007's merged SHA, approved prompt/delivery review receipts, and green integration gate here. If any predecessor is pending, Inspector and Engineer dispatch stop. CTG-0008 does not absorb CTG-0007 work. One triplet, one fixed-group changeset, one CTG-0008 PR after CTG-0007 merge. No release or publication action is in this scope.
 
@@ -20,7 +30,7 @@ CTG-0008 follows CTG-0007. This preparation branch may contain only F1 planning.
 
 The maestro alone runs Git and records separate role commits. Inspector does not edit source, snapshots to conceal failures, F1, or generated outputs. Engineer does not edit tests or F1. Architect does not edit code or tests. The generated SQL is an **output artifact of the CLI consumer fixture**, not a new canonical `database/ddl/` migration in STYNX. If implementation adds canonical DDL, stop for Architect scope amendment and follow `docs/meta/development-contract.md`: seeds and `test/db/` coverage are required. The CLI root public exports stay unchanged; internal generator functions are tested by source path, so no API baseline write is planned. If a public declaration change proves necessary, stop Engineer work for an Architect rebind checkpoint: review the intended API, run `pnpm api:baselines:write` under Architect authority, then rerun `pnpm check:trace --print`. Engineer writes the fixed-group `.changeset/*.md` for the package change and owns `pnpm package-readmes:write` and its generated `packages/cli/README.md`. The existing `scripts/verify-consumer-fixtures.mjs` remains unchanged; any proposed change to `scripts/**` requires an explicit Engineer lock amendment before writing.
 
-## Sequence and gates
+## Sequence and gates (historical; apply OD-S15-02 above)
 
 1. Cross-family Opus prompt-review reads this plan, contract and prompts 90–93 before any worker dispatch. Record a JSON PASS/REVIEW/FAIL receipt. Cycle 2 and the authorized cycle 3 returned REVIEW. The Owner's later 2026-09-27 decision authorized all further prompt reviews necessary to complete C-0002. The sixth review returned PASS; its nonblocking triage finding was repaired before worker dispatch. FAIL returns to the human.
 2. Architect 8A confirms the subset against current STYNX public APIs and the DETRAN sample, then writes `INV-CLI-001` with atomic security and reproducibility claims. The proposed contract is not ratified until this checkpoint. No unreviewed expansion to the 50 DETRAN blueprints.
@@ -37,6 +47,8 @@ The CLI command exists in help and uses `--blueprint` plus required `--out`; the
 No failure classified before dispatch. Each failure entering feedback is classified `plant-bug`, `sensor-error`, `policy-issue`, or `reference-gap` and routed under the authority chain; no role edits its own reference to make a gate pass.
 
 ## Resume state
+
+**Current checkpoint — OD-S15-02:** Revised review is pending. No CTG-0007 merge is required for Inspector/Engineer dispatch. Preserve the completed F1 invariant work, pin the CTG-0005 data API before dependent generated repository/consumer proof, then perform focused red/green and import this CTG last. The earlier per-CTG PR/RC/full-CI steps are superseded.
 
 The Owner's 2026-09-27 decision authorized prompt 96 as the exceptional third review; its receipt returned REVIEW. The earlier requirement for a separate Owner decision before a fourth review was superseded by the later 2026-09-27 Owner authorization for all actions needed to complete C-0002, including further CTG prompt-reviews. Inspector and Engineer dispatch remain blocked until an Opus prompt-review PASS, the Architect `INV-CLI-001` checkpoint, and the CTG-0007 merged SHA/review/gate receipt are recorded. No implementation, tests, PR, merge, versioning, or publication is authorized by this plan alone.
 

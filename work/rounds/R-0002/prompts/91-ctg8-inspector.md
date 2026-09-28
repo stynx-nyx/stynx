@@ -1,6 +1,6 @@
 # CTG-0008 Inspector — generator sensors first
 
-Role: **Inspector** under Constitution Article 6. Worktree: the CTG-0008 dedicated worktree supplied by the maestro. No Git commands. **Dispatch prerequisite:** prompt-review PASS, Architect invariant checkpoint, and CTG-0007 merged SHA/review/gate receipt recorded in `ctg-0008-plan.md`. Stop and report if any is missing.
+Role: **Inspector** under Constitution Article 6. Worktree: the CTG-0008 dedicated worktree supplied by the maestro. No Git commands. **Current dispatch prerequisite under OD-S15-02:** revised prompt-review PASS and the Architect four-invariant checkpoint. The CTG-0007 merged SHA is no longer a gate. Work only in the exclusive CLI test/fixture lock while other CTGs may proceed in separate worktrees. Pin the CTG-0005 public data API before finalizing tests that compile generated repositories or exercise the packed consumer; report a mismatch to the maestro for Architect resolution. Run focused red and required real-DB/RLS sensors; the one complete local CI occurs on the cumulative release tree after CTG-0008.
 
 Read the approved `docs/framework/contracts/cli-generator-1.5.md`, `INV-CLI-001` and any sibling invariant, the plan, existing CLI tests, platform DB helpers, and the tiny DETRAN sample read only. Write F3 tests under `packages/cli/test/**`, `test/db/**`, and consumer fixture harness/tests under `test/packages/cli-generator/**` only. Preserve all existing tests, assertions, thresholds and the test taxonomy.
 

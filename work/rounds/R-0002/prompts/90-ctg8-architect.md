@@ -1,5 +1,7 @@
 # CTG-0008 Architect — UPS-CLI-01 contract checkpoint
 
+**OD-S15-02 continuation:** The four atomic invariants and contract checkpoint are already drafted. Recheck their data-facing symbols against the CTG-0005 public API checkpoint before final generated repository and consumer proof. This CLI-only worktree may proceed in parallel with other CTGs. Report any API mismatch for an Architect rebind. The maestro imports CTG-0008 last into one cumulative branch; there is no CTG-specific PR, published RC or full local CI.
+
 Role: **Architect** under Constitution Article 6. Worktree: the CTG-0008 dedicated worktree supplied by the maestro. No Git commands.
 
 Read in order `README.md`, `law/constitution.md` and `.devai/pin/constitution.md`, `law/adr`, `law/schemas`, and `docs/meta/development-contract.md`. Then read `work/rounds/R-0002/ctg-0008-plan.md`, this contract, current `packages/cli/src/cli.ts`, `packages/data` public transaction and context exports, and `packages/data/migrations/platform/0018_outbox.sql`. Read DETRAN C-0002 §6.10 and `docs/framework/blueprints/BP-OPS-EXAMPLE-001.json` at `/Users/aarusso/Development/detran` **read only**. Do not copy its generator, helpers, DDL, or generated files.
