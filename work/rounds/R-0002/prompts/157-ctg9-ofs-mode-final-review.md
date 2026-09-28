@@ -18,7 +18,9 @@ erro de upgrade tipado em 0001, E6 hash filtrado por modo, tipos E6
 assignable e ausência de aplicação para item legado sem chave. Considere
 qualquer novo bloqueio concreto de prova ou implementação.
 
-Os sensores devem estar vermelhos por produção ausente, sem erro de setup
-ou oráculo impossível. PASS libera o commit Inspector e o prompt-review
+Os sensores devem estar vermelhos por produção ausente: a falta da
+migration 0002 pode interromper setup dos grupos PostgreSQL que a exigem,
+mas nenhum outro erro de fixture nem oráculo impossível é aceitável. PASS
+libera o commit Inspector e o prompt-review
 Engineer; não declara CTG9 implementada. Retorne JSON puro:
 `{"verdict":"PASS|REVIEW|FAIL","findings":[{"severity":"blocking|nonblocking","file":"path:line","issue":"fato concreto","required_change":"reparo específico"}],"summary":"resumo"}`.
