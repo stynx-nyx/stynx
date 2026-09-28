@@ -1,0 +1,60 @@
+{
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages/signature/src/cms-trust-verifier.ts:169",
+      "issue": "`padesProfile` na prova é cópia de `input.profile.requiredPadesProfile`, não algo derivado da evidência. O verificador não confere o SubFilter `ETSI.CAdES.detached` nem o atributo ESS signing-certificate-v2. Também não lê o signature-time-stamp embutido nos atributos não assinados do CMS, o que PAdES-B-T exige, nem a DSS/VRI com certificados/OCSP/CRL embutida no PDF, o que PAdES-B-LT exige. O TSA e a revocação vêm de fetchers externos sem argumento (linhas 108, 130-131). O fixture `test/fixtures/pki/build-pades.py` gera `/SubFilter /adbe.pkcs7.detached` sem DSS e um carimbo externo (`openssl ts -data pades.cms.der`), e mesmo assim `trust-gate.spec.ts:376` aceita `padesProfile:'PAdES-B-LT'`. Resultado: o perfil ADR-0018 (decisões e atas: PAdES-B-LT + TSA) não é provado. SIG-01 (matriz ADR-0018) e SIG-03 (PAdES por signatário, gravado em `manifest.ts:119`) recebem um nível PAdES autodeclarado, o que a ADR-SIGNATURE-0001 §2 proíbe.",
+      "required_change": "Derivar `padesProfile` só dos predicados verificados. B-B exige SubFilter ETSI.CAdES.detached e signing-certificate-v2 conferido contra o certificado do signatário. B-T exige id-aa-signatureTimeStampToken nos unsignedAttrs, com imprint sobre `SignerInfo.signature` e TSA com EKU timeStamping sob `tsaTrustAnchorsPem`. B-LT exige a DSS do PDF (Certs/OCSPs/CRLs, ou VRI) com evidência assinada e fresca para toda a cadeia do signatário e do TSA. Recusar com `SignatureTrustError`/`SignatureLevelNotMetError` quando o perfil exigido excede o alcançado. Se fetchers externos forem mantidos, só podem complementar evidência ausente e devem receber o artefato/certificado como argumento. O Inspector precisa acrescentar fixtures B-B e B-T que sejam rejeitados para um perfil B-LT."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/signature/src/cms-trust-verifier.ts:50",
+      "issue": "`coveredPdf` exige que o intervalo excluído pelo ByteRange seja só hex. A ISO 32000-1 §12.8.1 exclui o valor `/Contents` com os delimitadores `<` e `>`, e signatários reais (Adobe, iText, provedores ICP-Brasil) fazem assim. Todo PAdES real será recusado; só o fixture não padrão de `build-pades.py`, que exclui apenas o hex, passa. O `startsWith` também aceita um padding arbitrário depois do CMS sem exigir zeros.",
+      "required_change": "Aceitar o gap `<hex>` padrão, com delimitadores. Validar que o conteúdo é hex, que o CMS DER é um prefixo exato e que o restante é só padding `0`. Recusar ByteRanges duplicados ou múltiplos que não cubram o arquivo. O Inspector regenera o fixture no formato ISO e acrescenta um negativo com padding não zero."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/signature/src/signature.service.ts:120",
+      "issue": "O nível efetivo é só o `minimumSignatureLevel` do pedido. A linha 92 recusa apenas o pedido QUALIFIED com perfil ADVANCED. O inverso passa: perfil do consumidor com `minimumSignatureLevel:'QUALIFIED'` e pedido 'ADVANCED' aceita uma prova ADVANCED em `sign` e em `verify`. Um chamador contorna a matriz versionada de perfis (SIG-01, ADR-0018 'QUALIFIED when required'). `manifest.ts:113` usa o perfil e `withdrawal.ts` não confere nível nenhum.",
+      "required_change": "Calcular `effective = max(request.minimumSignatureLevel, profile.minimumSignatureLevel)` em `regulatedProfile` e usá-lo em `validateProof`. Em `SignatureWithdrawalVerifier` digital, exigir `proof.achievedLevel` ≥ `trustProfile.minimumSignatureLevel`. Acrescentar o sensor com pedido ADVANCED, perfil QUALIFIED e prova ADVANCED, que deve dar `SignatureLevelNotMetError`."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/signature/src/withdrawal.ts:49",
+      "issue": "Na retirada digital, `signerPartyId` vem do input e nunca é vinculado ao certificado verificado. Qualquer assinatura confiável de qualquer titular sobre o documento produz `valid` com a autoria declarada. Além disso, `evidenceBytes`/`evidenceRef` só passam por um parse ASN.1 (linha 35, rotulado 'EVIDENCE_NOT_SIGNED') e não são verificados nem ligados ao CMS. Como a assinatura verificada é sobre o próprio documento, uma assinatura original do documento serve como 'retirada'. A A1 §8.1 exige para SIG-04 o vínculo 'ao documento e autoria'.",
+      "required_change": "Exigir do consumidor um predicado ou mapa certificado→party (por exemplo `resolveParty(certificate, profile)`) e comparar com `signerPartyId`, recusando com `ineligible`/`tampered`. Exigir que a evidência digital seja um CMS assinado sobre uma declaração de retirada canônica: tenant, case, document, contentHash, party e evidenceRef. Seus bytes devem ser `evidenceBytes`, verificados pelo `createCmsTrustVerifier`, com `evidenceSha256` ligado ao `proofRef`. O Inspector acrescenta negativos: certificado de outra parte e assinatura do documento reaproveitada como retirada."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/signature/src/cms-trust-verifier.ts:175",
+      "issue": "Falha de fetcher TSA/OCSP/CRL, ou seja, evidência indisponível ('TSA token unavailable' e 'Signed revocation evidence unavailable' nas linhas 109 e 160, e exceções de rede genéricas reembrulhadas na linha 177), vira `SignatureTrustError`. Com isso `SignatureService.verify` (`signature.service.ts:168`) devolve `invalid`, e `withdrawal.ts:60` devolve `tampered`. A ADR-SIGNATURE-0001 §3 exige distinguir evidência inválida de indeterminada/indisponível. O sensor `trust-gate.spec.ts:219` só cobre isso com um verificador mockado.",
+      "required_change": "Introduzir um tipo distinto para indisponibilidade (por exemplo `SignatureEvidenceUnavailableError extends SignatureCapabilityError`) para fetcher ausente, vazio ou que lança, e para timeout. Mapeá-lo para `unknown` em `verify`, `unavailable` em withdrawal e `unavailable` em `verifyManifest`. Reservar `SignatureTrustError` para evidência criptograficamente inválida. Adicionar o sensor com o verificador real e o fetcher OCSP lançando erro, que deve dar status `unknown`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/signature/src/cms-trust-verifier.ts:142",
+      "issue": "CertID OCSP, verificação de CRL (linha 155) e `getCertificateStatus` usam `anchors[0]` como emissor direto do signatário. Não há suporte a ACs intermediárias, e `chainSha256` registra as âncoras, não o caminho validado. Cadeias ICP-Brasil reais (Raiz → AC intermediária → titular) sempre falharão fechadas. O `TimeStampResp.status` e o EKU timeStamping do TSA também não são checados.",
+      "required_change": "Construir o caminho com `pkijs.CertificateChainValidationEngine` usando os certificados do CMS mais as âncoras. Usar o emissor real do signatário para CertID e CRL, registrar em `chainSha256` o caminho completo, exigir `status.status ∈ {granted, grantedWithMods}` e o EKU id-kp-timeStamping crítico no signatário do TST."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/signature/src/signature.service.ts:72",
+      "issue": "`recent` só exige `checkedAt > 0`: uma observação de capacidade com dias de idade conta como pronta. Fora de produção, `capabilities()` (`cms-trust-verifier.ts:75`) declara `pades:true` e `tsa:!!fetchTsa` sem sondar nada. `lta:false` é honesto e B-LTA é recusado, o que satisfaz o MUST de SIG-02 para o perfil DETRAN B-LT + TSA, que não exige LTA, desde que B-LT passe a ser efetivamente provado (primeiro achado).",
+      "required_change": "Aplicar um limite de idade configurável (por exemplo `maxCapabilityAgeMs`) a `checkedAt` relativo a `now`. Documentar no contrato que `lta` é sempre false até existir verificação de DocTimeStamp/archive-timestamp e que perfis B-LTA ficam down."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/signature/src/manifest.ts:130",
+      "issue": "`appendVerifiedSigner` depende de um `WeakMap` em memória indexado pelo objeto devolvido por `prepare*`. Um manifesto persistido e relido (atas assinadas por signatários em requisições distintas) não aceita mais signatários ('Source document unavailable'). `verifyManifest` também não recebe tenant/document esperados, então o isolamento de tenant fica inteiramente com o chamador.",
+      "required_change": "Aceitar `sourceDocument` (e `snapshot`) explicitamente em `appendVerifiedSigner`, validando o hash contra o manifesto. Acrescentar `expectedTenantId`/`expectedDocumentId` opcionais em `verifyManifest`, retornando `tampered` quando divergirem, e cobrir com sensor de round-trip JSON."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/signature/src/readiness.ts:31",
+      "issue": "`SignatureHealthIntegration` monta o indicador com uma `SignatureService` própria, fora do DI. O witness só prova que `forRoot` foi chamado, não que o indicador está no `StynxHealthModule` que serve `/readiness` da aplicação. O sensor de integração previsto no contrato (`test/integration/signature-health.spec.ts`: check falho ou timeout deixa `/readiness` down) não existe.",
+      "required_change": "Injetar a `SignatureService` do módulo no indicador (factory com `inject`). O Inspector adiciona o spec de integração HTTP `/readiness` down/up. A aresta signature → health está correta: health não importa signature."
+    }
+  ],
+  "summary": "FAIL. Os 153 testes e o `tsc --noEmit` do pacote passam. As APIs e exports exigidos estão presentes: `createCmsTrustVerifier` com marca privada em WeakSet, `consumerOwnedVerifier`, `verifierKind` sobrescrito pelo serviço, `SignatureReadinessIndicator`/`SignatureHealthIntegration`, `SignatureManifestService` com JCS e hash encadeado, e `SignatureWithdrawalVerifier` com os 8 campos da porta. O legado sem mínimo continua compatível com E6, e a dependência é só signature→health. Mock, CMS sintético e época zero falham fechados. A verificação CMS sobre o ByteRange, a cadeia e o OID de política, o imprint TSA e OCSP/CRL assinados e frescos são reais, mas no escopo do fixture. Sobre LTA: `lta:false` com recusa de B-LTA é honesto e satisfaz o MUST de SIG-02 para o perfil DETRAN ADR-0018, que é B-LT + TSA e não exige LTA; essa parte não é lacuna. A lacuna bloqueante é outra: o próprio PAdES-B-LT não é provado. `padesProfile` ecoa o perfil pedido, não há checagem de SubFilter CAdES, signature-time-stamp embutido nem DSS, e TSA/revocação vêm de fetchers externos sem contexto. Os fixtures são adbe.pkcs7 sem DSS e usam um ByteRange não ISO, que recusaria PDFs reais. Também bloqueiam: o nível mínimo do perfil é contornável por um pedido ADVANCED; a retirada digital não vincula autoria (certificado→party) nem a evidência de retirada; e indisponibilidade de evidência é reportada como inválida/adulterada, contra a ADR §3. Este FAIL não libera o commit SIG; publicação fica fora de escopo."
+}
