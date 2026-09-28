@@ -9,12 +9,19 @@ describe('platform jobs migration and explicit seed', () => {
     const client = await database.connectAsAdmin();
     try {
       const migrations = resolve(__dirname, '../../packages/data/migrations/platform');
-      for (const filename of (await readdir(migrations)).filter((file) => file.endsWith('.sql')).sort()) {
+      const migrationFiles = (await readdir(migrations)).filter((file) => file.endsWith('.sql')).sort();
+      expect(migrationFiles).toContain('0019_jobs_actor_timezone.sql');
+      const jobsMigration = await readFile(resolve(migrations, '0019_jobs_actor_timezone.sql'), 'utf8');
+      expect(jobsMigration).toMatch(/disabled_reason\s+text/iu);
+      expect(jobsMigration).toMatch(/constraint\s+schedules_disabled_reason_known/iu);
+      for (const filename of migrationFiles) {
         await client.query(await readFile(resolve(migrations, filename), 'utf8'));
         if (filename === '0002_extensions.sql') await client.query('set role stynx_owner');
       }
       const seed = resolve(__dirname, '../../database/seed/platform/0019-jobs-actor-timezone.sql');
-      await client.query(await readFile(seed, 'utf8'));
+      const seedSql = await readFile(seed, 'utf8');
+      expect(seedSql).toMatch(/disabled_reason/iu);
+      await client.query(seedSql);
       await client.query('reset role');
 
       const rows = await client.query<{
@@ -23,8 +30,9 @@ describe('platform jobs migration and explicit seed', () => {
         timezone: string;
         is_enabled: boolean;
         membership_active: boolean;
+        disabled_reason: string | null;
       }>(`
-        select s.tenant_id::text, s.actor_id::text, s.timezone, s.is_enabled,
+        select s.tenant_id::text, s.actor_id::text, s.timezone, s.is_enabled, s.disabled_reason,
                m.is_active as membership_active
         from jobs.schedules s
         join auth.memberships m on m.tenant_id = s.tenant_id and m.user_id = s.actor_id
@@ -37,7 +45,24 @@ describe('platform jobs migration and explicit seed', () => {
         timezone: 'UTC',
         is_enabled: true,
         membership_active: true,
+        disabled_reason: null,
       });
+
+      const reasonColumn = await client.query<{ data_type: string; is_nullable: string }>(`
+        select data_type, is_nullable from information_schema.columns
+        where table_schema='jobs' and table_name='schedules' and column_name='disabled_reason'
+      `);
+      expect(reasonColumn.rows).toEqual([{ data_type: 'text', is_nullable: 'YES' }]);
+      const reasonConstraint = await client.query<{ convalidated: boolean; definition: string }>(`
+        select convalidated, pg_get_constraintdef(oid) as definition from pg_constraint
+        where conrelid='jobs.schedules'::regclass and conname='schedules_disabled_reason_known'
+      `);
+      expect(reasonConstraint.rows).toEqual([{
+        convalidated: true,
+        definition: "CHECK (((disabled_reason IS NULL) OR (disabled_reason = 'invalid_schedule'::text)))",
+      }]);
+      await expect(client.query(`update jobs.schedules set disabled_reason='other' where name='seed-heartbeat'`))
+        .rejects.toMatchObject({ code: '23514' });
 
       const checks = await client.query<{ convalidated: boolean; definition: string }>(`
         select convalidated, pg_get_constraintdef(c.oid) as definition

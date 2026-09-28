@@ -377,6 +377,19 @@ describe('JobsService behavioral contract', () => {
     }))).rejects.toBeInstanceOf(InvalidScheduleError);
   });
 
+  it('requires a caller before evaluating an invalid timezone', async () => {
+    const harness = createHarness();
+    const request = {
+      tenantId: 'tenant-1', name: 'bad-zone-without-caller', jobType: 'report',
+      kind: 'cron' as const, cronExpression: '0 9 * * *', actorId: actor1,
+      timezone: 'Mars/Olympus',
+    };
+
+    await expect(harness.service.upsertSchedule(request)).rejects.toBeInstanceOf(RequestContextMissingError);
+    expect(harness.repository.isActiveTenantMember).not.toHaveBeenCalled();
+    expect(harness.repository.upsertSchedule).not.toHaveBeenCalled();
+  });
+
   it('routes schedule reads and state transitions with exact tenant guards', async () => {
     const harness = createHarness();
     const { repository, service } = harness;

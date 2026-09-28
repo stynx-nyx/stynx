@@ -96,6 +96,21 @@ describe('Stynx platform migrations', () => {
       expect(constraint.rows).toHaveLength(1);
       expect(constraint.rows[0]?.convalidated).toBe(true);
       expect(constraint.rows[0]?.definition).toContain('actor_id IS NOT NULL');
+      const reasonColumn = await client.query<{ data_type: string; is_nullable: string }>(`
+        select data_type, is_nullable from information_schema.columns
+        where table_schema='jobs' and table_name='schedules' and column_name='disabled_reason'
+      `);
+      expect(reasonColumn.rows).toEqual([{ data_type: 'text', is_nullable: 'YES' }]);
+      const reasonConstraint = await client.query<{ convalidated: boolean; definition: string }>(`
+        select convalidated, pg_get_constraintdef(oid) as definition from pg_constraint
+        where conrelid='jobs.schedules'::regclass and conname='schedules_disabled_reason_known'
+      `);
+      expect(reasonConstraint.rows).toEqual([{
+        convalidated: true,
+        definition: "CHECK (((disabled_reason IS NULL) OR (disabled_reason = 'invalid_schedule'::text)))",
+      }]);
+      await expect(client.query(`update jobs.schedules set disabled_reason='other' where id=$1`, [scheduleId]))
+        .rejects.toMatchObject({ code: '23514' });
       const actorFk = await client.query<{ confdeltype: string }>(`
         select confdeltype from pg_constraint where conrelid='jobs.schedules'::regclass
           and contype='f' and pg_get_constraintdef(oid) like '%actor_id%'
