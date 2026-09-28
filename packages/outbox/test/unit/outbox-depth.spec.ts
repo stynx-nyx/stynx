@@ -827,11 +827,19 @@ describe('OutboxService depth', () => {
       dispatcher: { send: vi.fn(async () => Promise.reject(new Error('offline'))) },
     });
     await expect(dispatch.service.dispatchDue()).rejects.toMatchObject({ context: { id: row.id } });
-    expect(dispatch.database.tx).toHaveBeenNthCalledWith(2, expect.any(Function), {
-      role: 'owner',
-      readonly: false,
-      retry: false,
-    });
+    expect(dispatch.database.tx).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Function),
+      expect.objectContaining({
+        role: 'owner',
+        readonly: false,
+        retry: false,
+        deadlineMs: expect.any(Number),
+      }),
+    );
+    const failureDeadline = dispatch.database.tx.mock.calls[1]?.[1]?.deadlineMs;
+    expect(failureDeadline).toBeGreaterThan(0);
+    expect(failureDeadline).toBeLessThanOrEqual(5_000);
 
     await expect(
       createService(vi.fn(async () => ({ rows: [] }))).service.retry(row.id),

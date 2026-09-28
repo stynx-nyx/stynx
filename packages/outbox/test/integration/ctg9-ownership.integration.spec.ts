@@ -150,7 +150,7 @@ describe('CTG9 legacy ownership barrier (PostgreSQL)', () => {
       expect((failure as Error | undefined)?.constructor.name).toBe(
         'OutboxOwnershipContentionError',
       );
-      expect((failure as { code?: string } | undefined)?.code).toBeDefined();
+      expect((failure as { code?: string } | undefined)?.code).toBe('OUTBOX_OWNERSHIP_CONTENTION');
 
       const absent = await holder.query<{ count: string }>(
         'select count(*)::text as count from outbox.messages where tenant_id = $1 and idempotency_key = $2',
@@ -291,6 +291,78 @@ describe('CTG9 legacy ownership barrier (PostgreSQL)', () => {
         [TENANT, key],
       );
       expect(target.rows).toEqual([{ status: 'PENDING', attempts: 0 }]);
+    } finally {
+      await holder.query('rollback').catch(() => undefined);
+      await holder.end();
+    }
+  }, 15_000);
+
+  it('returns typed ACK and retry contention, then routes a post-cutover ACK to both ledgers', async () => {
+    const key = `ctg9-ack-race-${randomUUID()}`;
+    const holder = await postgres.connectAsAdmin();
+    try {
+      const inserted = await holder.query<{ id: string }>(
+        `insert into outbox.messages (tenant_id,entity,entity_id,payload,idempotency_key)
+         values ($1,'ctg9.ack-race',$2,'{}'::jsonb,$2) returning id`,
+        [TENANT, key],
+      );
+      const legacyId = inserted.rows[0]!.id;
+      await holder.query('begin');
+      await holder.query('select id from outbox.legacy_ownership for update');
+      await expect(
+        outbox.ack({
+          entity: 'ctg9.ack-race',
+          entityId: key,
+          tenantId: TENANT,
+          status: 'ACKED',
+        }),
+      ).rejects.toMatchObject({ code: 'OUTBOX_OWNERSHIP_CONTENTION', status: 503 });
+      await expect(outbox.retry(legacyId, { immediate: true })).rejects.toMatchObject({
+        code: 'OUTBOX_OWNERSHIP_CONTENTION',
+        status: 503,
+      });
+      const unchanged = await holder.query<{ status: string; attempts: number }>(
+        'select status,attempts from outbox.messages where id=$1',
+        [legacyId],
+      );
+      expect(unchanged.rows).toEqual([{ status: 'PENDING', attempts: 0 }]);
+      const acks = await holder.query<{ count: string }>(
+        'select count(*)::text as count from outbox.acknowledgements where message_id=$1',
+        [legacyId],
+      );
+      expect(acks.rows[0]?.count).toBe('0');
+      await holder.query('commit');
+
+      await outbox.cutoverLegacyMessages();
+      const acked = await outbox.ack({
+        entity: 'ctg9.ack-race',
+        entityId: key,
+        tenantId: TENANT,
+        status: 'ACKED',
+      });
+      expect(acked.id).toBe(legacyId);
+      expect(acked.status).toBe('ACKED');
+      const linked = await holder.query<{ migrated_event_id: string; status: string }>(
+        'select migrated_event_id,status from outbox.messages where id=$1',
+        [legacyId],
+      );
+      expect(linked.rows[0]).toMatchObject({ status: 'ACKED' });
+      expect(linked.rows[0]?.migrated_event_id).toMatch(/^[0-9a-f]{8}-[0-9a-f-]{27}$/u);
+      const delivery = await holder.query<{ status: string }>(
+        `select status from outbox.event_delivery where tenant_id=$1 and event_id=$2`,
+        [TENANT, linked.rows[0]!.migrated_event_id],
+      );
+      expect(delivery.rows).toEqual([{ status: 'ACKED' }]);
+      const ackCounts = await holder.query<{ legacy: string; fresh: string }>(
+        `select (select count(*)::text from outbox.acknowledgements where message_id=$1) as legacy,
+                (select count(*)::text from outbox.event_acks where tenant_id=$2 and event_id=$3) as fresh`,
+        [legacyId, TENANT, linked.rows[0]!.migrated_event_id],
+      );
+      expect(ackCounts.rows).toEqual([{ legacy: '1', fresh: '1' }]);
+      await expect(outbox.retry(legacyId, { immediate: true })).rejects.toMatchObject({
+        code: 'OUTBOX_LEGACY_CUTOVER',
+        status: 409,
+      });
     } finally {
       await holder.query('rollback').catch(() => undefined);
       await holder.end();
