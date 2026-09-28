@@ -45,6 +45,11 @@ abaixo são uma proposta Architect para nova verificação, sem implementação.
 O ciclo 3 em `reviews/ctg9-conditional-contract-review-3.json` confirmou essa
 ordem de tuplas, mas identificou sentinela `id=''`, leitura de réplica atrasada
 e ordem de locks no lote OFS; os reparos estão especificados abaixo.
+O ciclo 4 em `reviews/ctg9-conditional-contract-review-4.json` confirmou o
+reparo desses casos, mas mostrou que `Database.tx` aninha em SAVEPOINT sob
+transação ambiente e que o audit hash chain ainda pode inverter locks com o
+relógio outbox. A prévia abaixo passa a exigir uma fronteira top-level por
+item e serialização de auditoria antes do relógio; ainda não há PASS.
 
 ## Contratos e provas necessários se o Owner incluir CTG9
 
@@ -75,17 +80,28 @@ e ordem de locks no lote OFS; os reparos estão especificados abaixo.
    a linha até o commit, inclusive na primeira corrida.
    Todo `created_at` do **novo log** é arredondado a milissegundos, como o
    `Date` de `EventStreamCursor`; o `id` é UUIDv7 ordenável, com o mesmo
-   milissegundo e uma sequência global monotônica PostgreSQL com `CACHE 1`,
-   obtida **sob o lock** e codificada nos bits ordenáveis, inclusive quando
-   vários tenants ou eventos
+   milissegundo e uma sequência global monotônica PostgreSQL `bigint`
+   `CACHE 1 NO CYCLE`, obtida **sob o lock**. O valor inteiro não negativo
+   completo (até 63 bits) ocupa os 74 bits ordenáveis `rand_a‖rand_b` do
+   UUIDv7, sem módulo ou truncamento, inclusive quando vários tenants ou eventos
    compartilham um milissegundo. Sob o lock, o timestamp atribuído é
    `max(clock_timestamp() arredondado, último_ms)`; a sequência ordena os
-   empates sem colisão global. Na exaustão do espaço codificável, avançar o
-   milissegundo lógico ou falhar antes da escrita sem perder o evento; não
-   introduzir um limite de taxa silencioso. SQL e objeto JS comparam a
+   empates sem colisão global. Exaustão de `NO CYCLE` falha antes da escrita
+   sem perder o evento; não introduzir um limite de taxa silencioso. SQL e
+   objeto JS comparam a
    **mesma** tupla `(ms,id)`; UUID aleatório v4 não atende. O lock é adquirido
-   após os locks de domínio, imediatamente antes do append; nenhuma escrita
-   de domínio ocorre depois dele na **mesma transação de item**. O applier OFS
+   após os locks de domínio e depois do lock da cadeia de auditoria do tenant,
+   imediatamente antes do append; nenhuma escrita de domínio ocorre depois
+   dele na **mesma transação de item**. A migração forward de plataforma
+   deve fazer `audit.write` adquirir no início o mesmo advisory lock por
+   tenant que `audit.write_command_event` já usa. O append adquire esse
+   advisory lock **antes** do relógio; triggers auditados, comando CTG5,
+   log/ledger/recibo auditado e append passam a seguir cadeia de auditoria
+   → relógio, inclusive quando a cadeia ainda não tem linha. O advisory lock
+   é reentrante no mesmo tx; nenhuma chamada auditada pode adquirir a cadeia
+   pela primeira vez depois de deter o relógio. Um teste cruza comando CTG5
+   que faz append com escrita de domínio auditada que também faz append.
+   O applier OFS
    não mantém uma transação externa entre itens: cada item bem-sucedido
    confirma domínio, consumo, recibo e evento juntos; cada falha reverte
    somente seu item e o lote continua em outra transação. Testar dois lotes
@@ -94,14 +110,19 @@ e ordem de locks no lote OFS; os reparos estão especificados abaixo.
    reduzir throughput. O append usa isolamento READ COMMITTED. Se um chamador fornecer RR ou
    SERIALIZABLE, falhar fechado com erro tipado antes de escrever ou propagar
    40001 sem perda, com retry no limite externo do comando; não capturar e
-   continuar dentro da transação abortada.
+   continuar dentro da transação abortada. Validar na conexão efetiva SQL
+   `current_setting('transaction_isolation') = 'read committed'` e
+   `transaction_read_only = off`; opções JS de uma `Database.tx` aninhada não
+   bastam para impor essas condições.
    `EventStreamSource.now(scope)` também adquire o mesmo lock, atualiza o
    relógio com `max(clock_ms, agora_ms)` e devolve o valor confirmado; assim
    uma conexão entre append e commit espera, e qualquer append posterior
    recebe tupla maior. Eventos já confirmados no mesmo milissegundo podem
    reaparecer na conexão sem `Last-Event-ID`; o contrato assume entrega
    pelo menos uma vez, sem perda. `now`, `findById` e `listSince` do adapter
-   usam o **primário**, papel app com `replica:false`; `now` tem grant de
+   usam o **primário**, papel app com `replica:false`, e verificam na conexão
+   efetiva `pg_is_in_recovery() = false`; uma transação ambiente em réplica
+   falha fechada. `now` tem grant de
    UPDATE na tabela do relógio com FORCE RLS, e as leituras nunca usam o pool
    reader/replica que pode atrasar. O novo log e seu mapa de IDs legados não
    são purgados na 1.5.0; um `Last-Event-ID` desconhecido mantém a semântica
@@ -114,9 +135,14 @@ e ordem de locks no lote OFS; os reparos estão especificados abaixo.
    lados do `OR` fora da ordem escrita. UUIDs são comparados como UUID,
    nunca como texto.
    `enqueue` legado não escreve no novo log sem o lock; na migração, os fatos
-   legados expostos ao SSE recebem ordem total e relógio inicial, com
-   mapeamento id/estado/ACK preservado; `findById` resolve também IDs legados
-   pelo mapa de migração para permitir reconexão. O despacho por agregado
+   legados expostos ao SSE recebem **novos** IDs UUIDv7 pela mesma sequência
+   na ordem total de migração, com `created_at` arredondado a ms, relógio
+   inicial ≥ último timestamp e sequência ajustada acima do maior valor
+   migrado. O ID v4 legado fica só no mapa persistente de migração;
+   `findById(legacyId)` devolve a nova tupla para permitir reconexão, e
+   estado/ACK original são preservados. `findById` classifica ID UUIDv7
+   canônico, ID legado presente no mapa e desconhecido; ID malformado não
+   pode causar cast SQL ou erro silencioso. O despacho por agregado
    reivindica
    somente o evento **não terminal** mais antigo, incluindo PENDING, lease
    SENT sem ACK final e ERROR aguardando retry, sob schedulers concorrentes.
@@ -138,8 +164,10 @@ e ordem de locks no lote OFS; os reparos estão especificados abaixo.
    crash/reclaim, dois eventos do mesmo agregado, dois tenants, atraso de
    commit/cursor, nova conexão sem `Last-Event-ID` e append no mesmo
    milissegundo, mais que `batchSize` nesse milissegundo, ausência de leitura
-   de réplica, RR/40001 sem perda, retry, ACK válido/inválido, corrida da
-   primeira linha de relógio e migração sem perda. A migração de plataforma
+   de réplica (inclusive `withReplica` ambiente), RR/40001 sem perda,
+   Last-Event-ID UUIDv7/legado/malformado, migração v4 seguida por append no
+   mesmo milissegundo, lock de audit vs relógio, retry, ACK válido/inválido,
+   corrida da primeira linha de relógio e migração sem perda. A migração de plataforma
    usa o próximo número livre **≥0021**, sob lock do maestro, sem editar
    0018–0020. O adapter SSE pode implementar `EventStreamSource` no pacote
    outbox sem alterar `packages/backend` se o cursor permanecer.
@@ -158,15 +186,25 @@ e ordem de locks no lote OFS; os reparos estão especificados abaixo.
    crash parcial e replay de lote fechado devolvendo o recibo. Lote legado
    sem sequência continua aceito; item sem chave usa a chave sintética
    existente, fica `received` com `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED` e não
-   aplica domínio. Nova porta de applier opera **uma transação independente
-   por item** com `Database.tx`/`Transaction` da CTG5 para efeito, consumo,
-   recibo e evento; não há transação externa de domínio retendo locks entre
+   aplica domínio. Nova porta de applier opera **uma transação top-level
+   independente por item** com `Database.tx`/`Transaction` da CTG5 para
+   efeito, consumo, recibo e evento. `Database.tx` hoje usa SAVEPOINT quando
+   encontra `TX_CONTEXT_KEY`; o contrato exige uma API pública de data para
+   afirmar ausência de transação ambiente e falhar fechado com erro tipado
+   **antes** do primeiro item. O endpoint de lote não usa
+   `@TransactionalCommand`: sua identidade/idempotência vem do recibo de
+   lote durável; um adotante que o monte sob o interceptor recebe essa
+   rejeição tipada, sem abrir conexão extra, consumir pool ou escrever
+   parcialmente. Não há transação externa de domínio retendo locks entre
    itens. O lote preserva resultado parcial e retoma pelo recibo durável;
    evento sai por porta injetada
    pelo consumidor, sem dependência direta OFS→OBX. O contrato precisa fixar
    precedência entre idempotência HTTP atual e recibo de domínio, inclusive
    com `mountControllers:false`, para não mascarar 409/422 nem recusar
-   clientes legados. Inspector cobre HTTP TEAT/BOAT, mais de 100 itens,
+   clientes legados. Inspector cobre o endpoint normal e um endpoint
+   indevidamente montado sob `@TransactionalCommand` (erro tipado sem efeitos
+   nem exaustão do pool), além de dois lotes cruzados com item 1 confirmado
+   antes de começar o item 2. Cobre HTTP TEAT/BOAT, mais de 100 itens,
    sequência repetida/lacuna, ACK perdido, handoff, janela desligada,
    resolução permitida/proibida, concorrência e deadlock de lotes cruzados,
    rollback por item e RLS real.

@@ -605,13 +605,15 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     e `pnpm version-packages` para gerar a candidata estável, então executar
     o único gate integral da OD-S15-02. O estado detalhado está em
     `record.md` §Retomada consolidada.
-25. A prévia condicional CTG9 foi revisada três vezes pelo Opus, todas com
-    `REVIEW`, nos arquivos `reviews/ctg9-conditional-contract-review-{1,2,3}.json`.
-    A ponte DETRAN gerou JSON válido nos ciclos 1 e 3; no ciclo 2 rejeitou
-    cerca Markdown e foi usado `claude -p --json-schema` com o mesmo prompt.
+25. A prévia condicional CTG9 foi revisada quatro vezes pelo Opus, todas com
+    `REVIEW`, nos arquivos `reviews/ctg9-conditional-contract-review-{1,2,3,4}.json`.
+    A ponte DETRAN gerou JSON válido nos ciclos 1 e 3; nos ciclos 2 e 4
+    rejeitou cerca Markdown/JSON inválido e foi usado
+    `claude -p --json-schema` com o mesmo prompt.
     O Architect incorporou no preflight os achados sobre autoridade Owner,
     assinatura, outbox, offline, precisão do cursor, sentinela inicial,
-    réplica e locks. Não há PASS de prompt-review de workers CTG9, e nenhum
+    réplica, locks de auditoria e transação top-level por item. Não há PASS
+    de prompt-review de workers CTG9, e nenhum
     worker foi despachado. Os contratos continuam condicionados à decisão
     de escopo A1 e aos ADRs/aprovações humanas listados no preflight.
 

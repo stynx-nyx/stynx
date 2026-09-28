@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "mode": "claude -p --permission-mode plan --output-format json --json-schema",
+  "reason": "DETRAN bridge rejected Markdown-fenced and malformed JSON (exit 4); same prompt used for structured fallback",
+  "prompt": "work/rounds/R-0002/prompts/133-ctg9-conditional-contract-review-4.md",
+  "prompt_sha256": "53c4bcc935863714aa8bdad4ed46cdf4a7d755eed1d9c98f57b367158046a3e2",
+  "output": "work/rounds/R-0002/reviews/ctg9-conditional-contract-review-4.json",
+  "output_sha256": "8d7766cf3d743b2d874b70482fe406719658a4b3a5c87bc66d8a5a176b2dc3c7",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx"
+}

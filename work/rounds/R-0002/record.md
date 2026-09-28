@@ -461,3 +461,16 @@ segura e transação independente por item, além dos negativos requeridos.
 Esta prévia não é contrato aprovado nem prompt-review de workers. As decisões
 Owner de escopo e de substituição das autoridades existentes seguem pendentes;
 nenhum worker CTG9, código, DDL ou versão de pacote foi alterado.
+
+Ciclo 4: `REVIEW` em `reviews/ctg9-conditional-contract-review-4.json`.
+A ponte rejeitou texto cercado por Markdown com JSON malformado, então
+`claude -p --json-schema` produziu o recibo estruturado com o mesmo prompt.
+O achado de maior alcance foi confirmado no código: `Database.tx` sob CLS
+ativo cria SAVEPOINT, e a CTG5 mantém uma transação externa durante o handler;
+logo não havia independência por item. Também faltava incluir o lock da
+cadeia de auditoria na ordem total antes do relógio outbox. A prévia agora
+exige endpoint de lote fora de `@TransactionalCommand`, erro tipado se houver
+transação ambiente, serialização de `audit.write` antes do relógio por
+migração forward, sequência `CACHE 1 NO CYCLE` sem truncamento, migração de
+IDs v4 para UUIDv7 com mapa, e checagens na conexão efetiva. Ainda não há
+PASS condicional nem autorização de escopo; não houve alteração de produto.
