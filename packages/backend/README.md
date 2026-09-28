@@ -152,6 +152,32 @@ await app.listen(3000);
 
 Here `AppModule` registers the data and events modules, while `eventSource`, `SseRequest`, and `SseResponse` are supplied by the application. The route uses manual `@Res()` response handling and must avoid response-mapping, buffering, or serialization interceptors that delay frames. Its source must enforce tenant isolation with PostgreSQL RLS, including `ENABLE ROW LEVEL SECURITY` and `FORCE ROW LEVEL SECURITY` on replay tables. `listSince` returns rows strictly after `(createdAt, id)`, ordered by `(createdAt ASC, id ASC)`; `findById` and `now` run inside the same captured tenant/actor request context, including on reconnect and scheduled ticks. The source must also provide commit-monotonic visibility: no row may first become visible at or before the opening or advanced cursor. A timestamp assigned before commit without a commit-order guarantee or stable visibility watermark can make the strict cursor miss that row permanently, breaking at-least-once delivery. The outbox's current upsert table is not an append-only replay source. A default outbox adapter awaits a separate UPS-OBX decision on append-only storage, commit-order visibility, retention and RLS; using the current upsert table risks lost events.
 
+## Transactional commands
+
+Apply platform migration `0020_transactional_commands.sql` and mount
+`StynxTransactionalCommandModule.forRoot({ auditSink })` with a sink that supports
+`writeInTransaction`. Mark each protected method with `@TransactionalCommand()`,
+`@Idempotent({ transactional: true })`, `@Audit({ action, entity,
+transactional: true })`, and a built-in STYNX auth guard via route/class
+`@UseGuards` or a Nest `APP_GUARD` provider. Imperative `app.useGlobalGuards()`
+does not supply the bootstrap provenance check. Public tenant commands also
+require `StynxTenancyModule` and `@PublicTenantRoute()`.
+
+The application pool must connect as `stynx_app`. Before handler SQL, the
+boundary checks its live database role, tenant and actor against the verified
+request context. Domain SQL, the audit event and the idempotency completion
+share that transaction. `CommittedCommandError(statusCode, body, headers?)`
+selects an error response for commit and replay; a plain thrown exception
+rolls back. `persistStatus` can exclude a marked response. An unselected
+successful response commits its domain and audit work but clears the key;
+an unselected error rolls back.
+
+Replays preserve the exact UTF-8 JSON body, status and these response headers:
+`location`, `retry-after`, `cache-control`, `etag`. Cookies, hop-by-hop and
+request-specific headers are never stored. The default scope is the trusted
+actor ID; a public route must choose its scope explicitly. A repeated key
+with a different method, concrete path or JSON body returns HTTP 409.
+
 ## Configuration
 
 Each submodule has its own `.forRoot()` options. See the per-submodule pages linked above.
