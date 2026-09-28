@@ -95,4 +95,26 @@ describe('JobsRepository invalid schedule transaction boundary', () => {
     await expect(repository.materialize(1)).rejects.toBe(sqlError);
     expect(committed).toEqual([]);
   });
+
+  it('rejects an unrepaired actorful schedule on resume without updating its enabled state', async () => {
+    const query = vi.fn(async (sql: string, _params?: unknown[]) => {
+      if (sql.includes('from jobs.schedules')) return {
+        rows: [{ actorId: 'actor-a', disabledReason: 'invalid_schedule' }],
+      };
+      return { rows: [] };
+    });
+    const database = { tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn({ query })) };
+    const repository = new JobsRepository(database as never);
+
+    await expect(repository.setScheduleEnabled('bad-schedule', 'tenant-a', true))
+      .rejects.toMatchObject({
+        code: 'SCHEDULE_INVALID',
+        message: 'Invalid schedule: repair the invalid schedule with an authorized upsert before resuming',
+      });
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('for update'), ['bad-schedule', 'tenant-a'],
+    );
+    expect(query.mock.calls.some(([sql]) => sql.includes('update jobs.schedules'))).toBe(false);
+  });
 });

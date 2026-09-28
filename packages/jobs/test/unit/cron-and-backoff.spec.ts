@@ -67,6 +67,19 @@ describe('cron and retry primitives', () => {
     ).toBe('2026-03-09T06:00:00.000Z');
   });
 
+  it.each([
+    ['0 2 8 3 1', 'day-of-month'],
+    ['0 2 9 3 0', 'day-of-week'],
+  ])('applies restricted DOM/DOW OR through the New York spring gap via %s (%s)', (expression) => {
+    const after = new Date('2026-03-08T06:59:00.000Z');
+    const startedAt = performance.now();
+    const next = nextCronRunAt(expression, after, 'America/New_York');
+    const elapsedMs = performance.now() - startedAt;
+
+    expect(next.toISOString()).toBe('2026-03-08T07:00:00.000Z');
+    expect(elapsedMs).toBeLessThanOrEqual(500);
+  });
+
   it('returns the exact New York hourly boundary after the spring transition', () => {
     expect(nextCronRunAt('0 * * * *', new Date('2026-03-08T04:00:00Z'), 'America/New_York').toISOString()).toBe(
       '2026-03-08T05:00:00.000Z',
