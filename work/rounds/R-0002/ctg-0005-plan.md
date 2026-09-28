@@ -83,3 +83,15 @@ Disposição DDL/seed: 0020 altera apenas a migração platform de comandos e o
 wrapper de auditoria; `database/ddl/02-audit.sql` e as seeds raiz não recebem
 essa alteração. `test/db/transactional-commands-migration.spec.ts` é o sensor
 da migração aplicada desde banco vazio e dos privilégios de app/owner.
+
+Reparo do ciclo 1: Inspector registrou filtros/ordens, proveniência HTTP com
+PostgreSQL e duas corridas em `674c43e3`; Engineer corrigiu precedência,
+header vazio, métodos herdados e documentou o REVOKE em `6b536038`;
+Architect registrou a disposição DDL/seed em `ffbf3426` e rebindeou trace
+em `f9fa42d6`. As provas focais passaram: proveniência 6/6, filtros 5/5,
+falhas/corridas 11/11, tenancy unitária 6/6. Após os reparos passaram o
+pacote backend completo, `pnpm test:int`, RLS negativo/smoke,
+`pnpm lint:migrations`, `pnpm lint:tests`, API baselines 44/44,
+`pnpm package-readmes:check`, trace 430/430 e DEVAI forbidden strict desde
+`3a69785a` sem achados. Próximo gate: delivery-review Opus ciclo 2 no HEAD
+exato após este checkpoint; importar na branch cumulativa só com PASS.
