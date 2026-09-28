@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "mode": "claude -p --permission-mode plan --output-format json --json-schema",
+  "reason": "DETRAN bridge rejected two malformed text JSON responses (unescaped content; Markdown fence)",
+  "prompt": "work/rounds/R-0002/prompts/107-ctg5-envelope-worker-prompt-review.md",
+  "prompt_sha256": "6c328c39cd2cf3e2ecb3866806966043532ebc970e446b030d9891ea6b8ea7c9",
+  "output": "work/rounds/R-0002/reviews/ctg5-envelope-worker-prompt-review-1.json",
+  "output_sha256": "3efa13d52a5c7022aac23b5774d5e1fa93ba3246529c51ca8bcd82e2d879bb43",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx"
+}

@@ -1,0 +1,42 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/http-outbox-dispatcher.ts:14",
+      "issue": "`publicProvider` corta userinfo, query e fragmento, mas mantém o `pathname` inteiro. Esse valor vai para `event_attempts.provider` e entra nas mensagens de erro, que são gravadas em `error`/`last_error` e devolvidas no outcome. Há provedores que põem o segredo no próprio path do webhook, como `/services/T0/B0/<token>`. Nesse caso o segredo vai para o ledger. O pedido deste ciclo (userinfo, query, header, erro de fetch) está atendido. O path com segredo ficou de fora.",
+      "required_change": "Aceitar em `HttpOutboxDispatcherOptions` uma função `evidenceProvider(url)`, ou reduzir o valor a origin + primeiro segmento do path. Documentar na migração que o path é gravado em claro. Estender o sensor `never exposes URL credentials…` com um token no path."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:459",
+      "issue": "A redação vale só para o `HttpOutboxDispatcher`. `errorMessage(transportError)` (459 e 631) grava sem alteração a mensagem de qualquer `OutboxDispatcherPort` de terceiro. Um adaptador próprio que repasse o erro bruto de `fetch`, com URL, token ou corpo, expõe esses dados em `event_attempts.error`, `event_delivery.last_error`, `outbox.messages.last_error` e no outcome. O JSDoc do port (types.ts:106-118) não avisa sobre isso.",
+      "required_change": "Documentar no port que a mensagem lançada é gravada e devolvida como veio e que o adaptador precisa sanitizá-la. Opcionalmente, tratar no serviço como não confiável toda mensagem que não venha de um erro de dispatcher conhecido."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:173",
+      "issue": "O `lock_timeout` agora é restaurado corretamente. O `try/finally` (142-169) cobre o `AuditChainKeyMismatchError` capturado. Se o SQL já abortou a transação, o 25P02 da restauração é engolido e o erro original sobe. O sensor ctg9-append:113 prova '41ms' e count 0. Sobra um caso: a validação de `entity/entityId/idempotencyKey` (173) e o conflito de conteúdo (194) são checados um evento por vez, depois que os eventos anteriores do mesmo lote já foram gravados. Um chamador que capture esse erro JS e confirme a mesma transação grava um lote parcial. Isso contraria o contrato §11: 'A transação confirma ou reverte o conjunto'.",
+      "required_change": "Validar a forma de todos os eventos antes de qualquer escrita. Para o conflito, pré-checar as chaves antes do primeiro INSERT, ou documentar no JSDoc que um erro tipado de append exige rollback. Opcionalmente, selar a transação como no modo estrito."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:636",
+      "issue": "A corrida de ACK na tabela custom está resolvida, em leitura estática. O UPDATE com `status<>'ACKED'` vem vazio, a releitura terminal (702-709) agora vale para qualquer tabela e devolve a linha ACKED sem lançar erro. Um `OutboxNotFoundError` residual da tabela custom vira outcome `reconciliationRequired`, e o loop segue. Porém a classificação continua estreita. Um erro de persistência que não seja retentável ainda aborta `dispatchDue`, por exemplo queda de conexão, 57P01, ou `OutboxNotFoundError` na tabela da plataforma, esse último fixado por outbox-depth.spec.ts. Nesse caso as linhas legadas já reclamadas ficam SENT para sempre, porque o caminho legado não tem reclaim por lease. Também não há sensor da corrida de ACK na tabela custom, nem PostgreSQL nem unitário. Trata-se de prova pendente, não de defeito no ramo pedido.",
+      "required_change": "Transformar em outcome `reconciliationRequired` qualquer erro de persistência depois de uma falha de envio e deixar o loop continuar. O Inspector adiciona um sensor de tabela custom: ACK confirmado entre o `send` e o `recordDispatchFailure`, com duas linhas reclamadas, a segunda enviada e a primeira devolvida como ACKED."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/event-stream-source.ts:42",
+      "issue": "A admissão está correta e provada em PostgreSQL (ctg9-sse-admission). Com 6 waiters há 1 `pools.app.connect`, todos falham tipados com 503 `SSE_SOURCE_UNAVAILABLE`, e o tenant B continua sendo atendido. Porém o próprio holder, ao estourar o `lock_timeout` no relógio, propaga um 55P03 cru. O sensor 126 fixa `code:'55P03'`. Ele só vira 503 porque o backend mapeia qualquer falha da fonte.",
+      "required_change": "Opcional: mapear o 55P03 do preflight para `OutboxClockAdmissionTimeoutError`, ou para um erro tipado de fonte, e ajustar a asserção do sensor."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/test/integration/ctg9-failure-deadline.integration.spec.ts:84",
+      "issue": "Avaliação dos sensores novos, todos PostgreSQL real com papéis não-superuser e sem BYPASSRLS verificados. (a) Pós-envio (ctg9-delivery:375): SHARE ROW EXCLUSIVE em `event_delivery` bloqueia a persistência do 1º evento. Resultado: `dispatched:true, reconciliationRequired:true`, ledger ainda CLAIMED, nenhum reenvio (`sent=[first,second]`) e o 2º evento SENT. Isso prova o ramo. (b) Marker longo (este arquivo): FOR UPDATE no marker durante `recordDispatchFailure`, com NOWAIT, deadline de 350 ms e backoff. A linha 1 sai como `reconciliationRequired`, a linha 2 é enviada e tudo leva menos de 2 s. Cumpre o §33 do contrato. (c) Admissão SSE concorrente: ver o achado anterior. (d) RLS NULL-tenant (data/ctg9-audit-chain:252): app e reader, com um tenant definido, veem as linhas NULL em `audit.events` e `audit.log`. Os GRANTs de SELECT ficam no banco isolado do teste e isolam só o predicado. Confirma que a 0021 não toca essas policies, o que o grep também confirma. (e) Redação (ctg9-delivery:442): userinfo, query, header e texto do fetch não aparecem em outcome, attempt ou projeção. Todos são sensores válidos. Nenhum revelou defeito de código.",
+      "required_change": "O Architect rebinda `law/trace.json` para esses sensores (`pnpm check:trace --print`). As lacunas classificadas no ciclo 3 que continuam sem sensor ainda bloqueiam qualquer declaração MUST ou publicação: `verify_current_epoch` com mais de 1000 linhas, diagnósticos HASH_MISMATCH/FORK/TEMPORAL_MISORDER, append com C já detendo UPDATE, `ackEvent` contra cutover, trigger auditado por classe de tabela e vários eventos no mesmo ms acima de `batchSize`. Elas não bloqueiam este commit."
+    }
+  ],
+  "summary": "PASS. Libera só o commit da fonte OBX, nos bytes lidos neste ciclo. Não declara MUST nem publicação. A revisão foi só leitura estática: nenhum teste rodou, não usei Git, não escrevi no DETRAN, e `ci:stynx`/`pnpm check:trace` ainda precisam rodar sobre esses bytes. Os três pontos pedidos estão confirmados. (1) Redação: `send` e `sendEvent` descartam o erro original do `fetch` e das funções de opção e montam a mensagem só com origin+path e o status HTTP. Headers fora da lista segura viram `[redacted]`, e o timeout gera uma mensagem fixa. Nada de userinfo, query, header secreto ou erro bruto de fetch chega a `error`, `last_error`, `provider` ou ao outcome, e o sensor PostgreSQL prova isso. (2) `lock_timeout`: o `try/finally` restaura o valor do chamador quando o erro é JS e a transação continua usável. Quando o SQL abortou, o erro original é preservado. O sensor prova '41ms' com zero fatos gravados. (3) Corrida de ACK na tabela custom: a releitura terminal devolve a linha ACKED, e um NotFound residual vira outcome por linha. As linhas já reclamadas continuam sendo processadas. Os sensores novos (pós-envio, marker longo, admissão SSE com N waiters, RLS NULL-tenant e redação) são válidos e não revelaram defeito. Pendências, nenhuma bloqueante. Defeitos de código: o path da URL é gravado em claro; mensagens de dispatchers de terceiros são gravadas sem sanitização; um lote de append pode ficar parcial se o chamador capturar o erro e confirmar; erros de persistência não retentáveis ainda abortam o lote legado. Provas pendentes: a corrida de ACK na tabela custom não tem sensor, o `trace.json` precisa ser rebindado, e as lacunas da matriz do ciclo 3 bloqueiam qualquer MUST ou publicação."
+}

@@ -1,0 +1,60 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0007-plan.md",
+      "issue": "Deferred integration gate, not a present defect. The HTTP 409 proof between CTG-0005 and CTG-0007 (same key, different parsed body) does not exist on this stacked branch. packages-web/angular/test/idempotency.spec.ts covers only the client side: canonical vectors, the key format '<action>:<target>:<sha256>' and the reconciled wire assumptions (code-point key order, -0 becomes 0, toJSON resolved before the server parses, no key for a missing or null body). The plan, the migration note and the changeset all say this proof is pending before the CTG-0007 PR.",
+      "required_change": "Once CTG-0005 is integrated, add a real HTTP test that sends one Angular-generated key with two different JSON bodies to a CTG-0005 transactional command and expects 409. Rerun ci:stynx and ci:reference-apps, then do the fresh delivery review before the PR merges."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/test/integration/webhook-signature.integration.spec.ts",
+      "issue": "The Nest E2E mounts the real core, tenancy, StynxAuthGuard and two apps, but Database is databaseStub(). Membership is 'allowed' whenever the SQL text contains 'auth.memberships' and the parameters match. No test runs the webhook's technical-actor handoff against real PostgreSQL with RLS or UUIDv7 validation. The approved Inspector prompt 80 and contract §Provas did not require it, and ci:stynx's test:int and check:rls-negative stayed green. However, development-contract rule 2 asks for tenant isolation and RLS on every new API surface.",
+      "required_change": "Add a test:int case (backend or tenancy int config) that uses a real seeded PostgreSQL. A signed webhook should set stynxClaims to an active technical-actor membership, and the handler should read an RLS-protected table. Assert that only the signed tenant's rows are visible, that a nonmember gets 403, and that another tenant's rows stay invisible."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/integration-adapter/src/webhook-signature.ts",
+      "issue": "WebhookReplayStoreError copies cause.message into its own message. The default replay key contains the lowercase hex of the verified HMAC, which is the signature. A Redis or SQL store whose error text echoes the key (for example a unique-violation detail) would put the signature into the error message. The contract forbids signatures in errors. The guard is safe because it maps this to a generic 503, but anyone calling the helper directly and logging the error would leak it.",
+      "required_change": "Always use a fixed message such as 'Webhook replay store unavailable' and keep the original error only as `cause`. Add a unit assertion that the error message never contains the key or signature."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/integration-adapter/src/webhook-signature.ts",
+      "issue": "If clock.now() returns an invalid Date, nowMs is NaN and the request gets a 401 OUTSIDE_WINDOW rejection. The contract says a clock error must propagate (500), not be reported as a signature or window rejection.",
+      "required_change": "Throw a configuration error when clock.now() does not return a valid Date, so the guard maps it to 500. Add a sensor for it."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/worklist/src/tenant-business-calendar.ts",
+      "issue": "The timezone check relies only on Intl.DateTimeFormat. On Node 24 that accepts offset identifiers: timezoneForTenant returning '+03:00' produced 2024-01-02T21:00:00.000Z instead of a WorklistInputError. The contract requires an IANA zone.",
+      "required_change": "Reject offset-form identifiers and require an IANA name (resolvedOptions().timeZone matching an IANA pattern or Intl.supportedValuesOf('timeZone')), throwing WorklistInputError. Add a negative sensor."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/worklist/test/unit/tenant-business-calendar.spec.ts",
+      "issue": "The DST vectors use America/New_York, where changes happen at 02:00, so local midnight always exists. No test covers the contract rule for a skipped local midnight. The code handles it: probing the built dist with Africa/Cairo, start 2024-04-24, 1 business day, returned 2024-04-25T22:00:00Z, which is 01:00 local on 2024-04-26. But nothing in the tests locks this behavior.",
+      "required_change": "Have the Inspector add a vector for a skipped-midnight zone (for example Africa/Cairo 2024-04-26 or America/Santiago) and one for a repeated hour, then rebind trace."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages-web/angular/src/idempotency.ts",
+      "issue": "The body-hash variant requires an explicit Content-Type request header. Angular HttpClient does not put application/json on the HttpRequest; the backend adds it later. So an ordinary http.post(url, obj, {context}) fails with a TypeError. The README and migration note document this, so it matches the contract, but it is an ergonomic trap.",
+      "required_change": "Consider accepting request.detectContentTypeHeader() === 'application/json' when no Content-Type header is set, with a matching sensor. Otherwise keep the current documentation."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages-web/angular/src/idempotency.ts",
+      "issue": "The key is recomputed from request.body on each subscription. Retries of an unchanged request give the same key (tested). If the caller mutates the body object between attempts, the retry sends a different key.",
+      "required_change": "Optionally compute the key once per HttpRequest instance (for example a WeakMap keyed by the request) so retries always reuse the first key."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "/private/tmp/stynx-s15-ctg7-final-reference.log",
+      "issue": "The consumer log ends at '> node scripts/build-web.mjs', which prints nothing, and it records no exit status. There is no error or ELIFECYCLE line, and the API tests (60/60) and reference-web tsc passed, but the log alone cannot prove the final step exited 0.",
+      "required_change": "Append an explicit exit-code marker (for example `; echo EXIT=$?`) when capturing gate logs, and rerun at the post-predecessor review."
+    }
+  ],
+  "summary": "All five MUST requirements are implemented as exported symbols with matching behavior. UPS-HOOK-01: raw-Buffer HMAC over '<ts>.'+rawBody, strict /^\\d{10}$/ Unix-seconds timestamp with inclusive boundaries, string[] headers rejected, sha256= with 64 hex compared by timingSafeEqual after format checks, a single atomic consume with key namespace:ts:hmacHex, and expiresAt = max(now, ts+skew)+1. UPS-HOOK-02: the guard clears every listed identity field and the marker, maps rejections to 401, store failures to 503 and callback/clock errors to 500, validates at bootstrap, and hands off through stynxClaims under real Nest tenancy (403 on header mismatch or uppercase UUID, forged bearer ignored). UPS-CAL-01/02: Clock, SystemClock, STYNX_CLOCK and provideStynxClock; the calendar walks local civil days, excludes the start day, ends at the exclusive next local midnight via instant search (DST checked, skipped midnight probed), treats 0 days as a copy of the start, uses typed WorklistInputError for bad inputs, caps at 366 business days and 1098 civil dates with reason calendar_exhausted, and has only consumer-supplied holidays. UPS-NGIDEM-01: opt-in only via provideStynxIdempotency with duplicate detection; applies to POST/PUT/PATCH/DELETE only, skips GET/HEAD/SSE/unmarked; an existing header wins; strict JSON checks, code-point key order, toJSON(key), Web Crypto error before sending, 80/255 limits. Outbox ACK and unmarked requests are unchanged. Changeset (five packages, fixed group), backend dependency and lockfile, README generator check (0 changes), public API baselines (44/44) and trace (398/398) are consistent. The final ci:stynx log at 505cb6db shows every stage green, and only plan docs changed afterwards. Remaining work: the CTG-0005 409 proof is a declared later integration gate, and the real-PostgreSQL/RLS webhook handoff test should be added. No blocking defects found in the current composition."
+}

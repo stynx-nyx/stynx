@@ -1,4 +1,5 @@
 import { JobsRepository } from '../../src/jobs.repository';
+import { ScheduleActorRequiredError } from '../../src/errors';
 
 const now = new Date('2026-08-26T10:00:00.000Z');
 const later = new Date('2026-08-26T11:00:00.000Z');
@@ -40,6 +41,8 @@ const cronSchedule = {
   nextRunAt: now,
   lastEnqueuedAt: null,
   createdBy: 'actor-1',
+  actorId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  timezone: 'UTC',
   createdAt: now,
   updatedAt: now,
 };
@@ -57,8 +60,8 @@ function createDatabase(query: ReturnType<typeof vi.fn>) {
 }
 
 describe('JobsRepository persistence and context contract', () => {
-  it('preserves system and request context while supplying the complete handler context', async () => {
-    const { database } = createDatabase(vi.fn());
+  it('keeps handlers in the persisted tenant and actor request context', async () => {
+    const { database } = createDatabase(vi.fn(async () => ({ rows: [{ active: true }], rowCount: 1 })));
     const repository = new JobsRepository(database as never);
     const handler = vi.fn(async () => undefined);
 
@@ -68,11 +71,8 @@ describe('JobsRepository persistence and context contract', () => {
       expect.any(Function),
     );
 
-    await repository.executeHandler(job, handler);
-    expect(database.withSystemContext).toHaveBeenLastCalledWith(
-      'jobs execute email',
-      expect.any(Function),
-    );
+    await expect(repository.executeHandler(job, handler)).resolves.toEqual({ status: 'executed' });
+    expect(database.withSystemContext).toHaveBeenCalledTimes(1);
     expect(database.withRequestContext).toHaveBeenCalledWith(
       { tenantId: 'tenant-1', actorId: 'actor-1' },
       expect.any(Function),
@@ -87,12 +87,11 @@ describe('JobsRepository persistence and context contract', () => {
       scheduleId: null,
     });
 
-    await repository.executeHandler({ ...job, actorId: null }, handler);
+    await expect(repository.executeHandler({ ...job, actorId: null }, handler)).resolves.toEqual({
+      status: 'not_executable', reason: 'missing_actor',
+    });
     expect(database.withRequestContext).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenLastCalledWith(
-      job.payload,
-      expect.objectContaining({ actorId: null }),
-    );
+    expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it('binds exact job insert, claim, completion, failure, read, and cancellation queries', async () => {
@@ -195,6 +194,8 @@ describe('JobsRepository persistence and context contract', () => {
         backoff: { baseMs: 10, maxMs: 100, multiplier: 2 },
         nextRunAt: now,
         createdBy: 'actor-1',
+        actorId: cronSchedule.actorId,
+        timezone: 'UTC',
         isEnabled: true,
       }),
     ).resolves.toBe(cronSchedule);
@@ -213,6 +214,8 @@ describe('JobsRepository persistence and context contract', () => {
       2,
       now,
       'actor-1',
+      cronSchedule.actorId,
+      'UTC',
       true,
     ]);
 
@@ -245,7 +248,7 @@ describe('JobsRepository persistence and context contract', () => {
       intervalSeconds: 90,
     };
     const query = vi.fn(async (sql: string) => {
-      if (sql.includes('from jobs.schedules where is_enabled'))
+      if (sql.includes('from jobs.schedules') && sql.includes('actor_id is not null'))
         return { rows: [cronSchedule, intervalSchedule] };
       if (sql.includes('insert into jobs.jobs')) return { rows: [job] };
       return { rows: [] };
@@ -259,6 +262,7 @@ describe('JobsRepository persistence and context contract', () => {
       expect.stringContaining('order by next_run_at asc limit $1 for update skip locked'),
       [2],
     );
+    expect(query.mock.calls[0]?.[0]).toContain('actor_id is not null');
     expect(query).toHaveBeenNthCalledWith(2, expect.stringContaining('insert into jobs.jobs'), [
       'tenant-1',
       'schedule-1',
@@ -268,7 +272,7 @@ describe('JobsRepository persistence and context contract', () => {
       2,
       4,
       'schedule:schedule-1:2026-08-26T10:00:00.000Z',
-      null,
+      cronSchedule.actorId,
     ]);
     expect(query).toHaveBeenNthCalledWith(
       3,
@@ -286,5 +290,42 @@ describe('JobsRepository persistence and context contract', () => {
       ['schedule-2', new Date(now.getTime() + 90_000)],
     );
     expect(database.tx).toHaveBeenLastCalledWith(expect.any(Function), { role: 'owner' });
+  });
+
+  it('checks active tenant membership through app SQL before actor execution', async () => {
+    const query = vi.fn(async () => ({ rows: [{ active: true }], rowCount: 1 }));
+    const { database } = createDatabase(query);
+    const repository = new JobsRepository(database as never);
+    await expect(repository.isActiveTenantMember('tenant-1', 'actor-1')).resolves.toBe(true);
+    expect(database.tx).toHaveBeenLastCalledWith(expect.any(Function));
+    expect(query).toHaveBeenLastCalledWith(
+      expect.stringContaining('from auth.memberships'), ['tenant-1', 'actor-1'],
+    );
+    const sql = query.mock.lastCall?.[0] as string;
+    expect(sql).toContain('tenant_id');
+    expect(sql).toContain('user_id');
+    expect(sql).toContain('is_active');
+  });
+
+  it('dead-letters non-executable jobs directly and forbids resuming actorless schedules', async () => {
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes('from jobs.schedules')) return { rows: [{ ...cronSchedule, actorId: null }], rowCount: 1 };
+      return { rows: [], rowCount: 1 };
+    });
+    const { database } = createDatabase(query);
+    const repository = new JobsRepository(database as never);
+    await repository.deadLetter('job-1', 'worker-1', 'missing_actor');
+    expect(query).toHaveBeenLastCalledWith(
+      expect.stringContaining("status='dead_letter'"), ['job-1', 'worker-1', 'missing_actor'],
+    );
+    expect(database.tx).toHaveBeenLastCalledWith(expect.any(Function), { role: 'owner' });
+    expect(query.mock.lastCall?.[0]).toContain('locked_by=null');
+    expect(query.mock.lastCall?.[0]).toContain('locked_until=null');
+
+    await expect(repository.setScheduleEnabled('schedule-1', 'tenant-1', true))
+      .rejects.toBeInstanceOf(ScheduleActorRequiredError);
+    expect(query).not.toHaveBeenCalledWith(expect.stringContaining('set is_enabled=true'), [
+      'schedule-1', 'tenant-1', true,
+    ]);
   });
 });

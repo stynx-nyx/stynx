@@ -1,0 +1,18 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "low",
+      "file": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+      "issue": "The new code has a second guard: the try/catch around COMMAND_LOGGER.error, meant to stop a logger transport failure from replacing the response. No test covers it. Every test in the file mocks Logger.prototype.error to return undefined, so no test makes the logger throw and then checks that the canonical 500 envelope and X-Request-Id still arrive. Reading the source, the guard is correct. It is simply not proven by a test.",
+      "required_change": "Optional, and it does not block this follow-up. If the Inspector wants the claim sensed, add a case that mocks Logger.prototype.error to throw and asserts expectEnvelope plus assertNoDurableEffect. That would need an Architect rebind of law/trace.json."
+    },
+    {
+      "severity": "info",
+      "file": "law/trace.json",
+      "issue": "The entry for transactional-command-errors.integration.spec.ts was rebound from 12/6d7ea133… to 15/2d60fac7…. This matches three added assertion sites: two errorLog message toContain checks and the new opaque test's expectation block. I could not confirm the DEVAI Architect authorship of 39ea92a7 without running Git, which this review forbids. The only evidence is the record.md entry and the commit subject.",
+      "required_change": "None for this review. Keep confirming commit authorship and `pnpm check:trace` at the consolidated gate under OD-S15-02."
+    }
+  ],
+  "summary": "Source review of CommittedCommandResponseFilter.catch (transactional-command.ts:143-153). Neither reading the cause nor logging can now escape the 5xx logging branch. The branch has two parts. The first try block covers the exception.cause read, the `instanceof Error` check (including a Proxy getPrototypeOf trap), the cause.stack getter and both String(cause) coercions. If any of these throws, trace falls back to exception.stack. The second try block covers building the log message and calling COMMAND_LOGGER.error, so a transport failure is swallowed. Both catches are narrow, and all header, body and reply code sits outside them, so the response path matches the version before the change. For a normal Error cause the logic is the same as before: cause.stack, falling back to String(cause), is logged with the message `Transactional command rejection <errorCode> requestId=<id>`. The strengthened scope-callback and status-policy tests now assert the errorCode in that message as well as the requestId and original stack text. For the Object.create(null) cause, String() throws, trace stays the CommandRejectionResponse stack, and the body is built only from statusCode, errorCode, message, requestId, optional details and retryable. So no cause or stack can reach the wire. expectEnvelope checks the body with exact toEqual, requires X-Request-Id to be a UUIDv7 equal to body.requestId, and assertNoDurableEffect is checked. Behaviour below 500, including 409 mismatch and in-progress, still skips logging and is untouched. The CommittedCommandResponse legacy/replay branch is untouched, and reject() and data or consumer paths are not in the diff. The exported API is unchanged because the edit is inside a method body, and CommandRejectionResponse is not exported. Tests were only added or strengthened, none removed or loosened. The maestro's green results (focal 13/13, backend 502/502) fit this reading. Full CI, PR, remote CI and publication remain deferred under OD-S15-02."
+}

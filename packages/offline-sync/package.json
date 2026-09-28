@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/offline-sync",
-  "version": "1.5.0-rc.3",
+  "version": "1.5.0",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Tenant-isolated NestJS numbering reservation and offline sync services for stynx",
@@ -48,6 +48,8 @@
   "devDependencies": {
     "@nestjs/testing": "^11.1.26",
     "@types/node": "24.13.4",
+    "@types/supertest": "^7.2.0",
+    "supertest": "^7.2.2",
     "typescript": "^6.0.3"
   },
   "repository": {

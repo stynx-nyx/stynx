@@ -11,6 +11,16 @@ export const STYNX_PUBLIC_TENANT_ROUTE = Symbol('STYNX_PUBLIC_TENANT_ROUTE');
 export const STYNX_PUBLIC_TENANT_OPTIONS = Symbol('STYNX_PUBLIC_TENANT_OPTIONS');
 export const STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL = Symbol('STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL');
 export const STYNX_VERIFIED_TENANT_ID = Symbol('STYNX_VERIFIED_TENANT_ID');
+/** Read-only completion proof emitted by the STYNX tenancy interceptor. */
+export const STYNX_RESOLVED_TENANT_COMMAND_CONTEXT = Symbol('STYNX_RESOLVED_TENANT_COMMAND_CONTEXT');
+export interface ResolvedTenantCommandContext {
+  tenantId: string;
+  actorId: string;
+  mode: 'protected' | 'nominal' | 'verified';
+}
+export interface ResolvedTenantCommandContextPort {
+  get(request: object): ResolvedTenantCommandContext | undefined;
+}
 export interface PublicTenantRouteOptions { optionalAuth?: boolean }
 
 export function hasPublicTenantRoute(controller: { prototype: object }): boolean {

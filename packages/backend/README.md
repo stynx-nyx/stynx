@@ -1,10 +1,36 @@
 # `@stynx-nyx/backend` — meta-package mounting 10 modular submodules into the STYNX backend pipeline
 
+## Revision preconditions (1.5)
+
+`@RequireIfMatch()` parses one strong quoted nonnegative integer ETag before
+the handler, and `@IfMatchRevision()` supplies that revision as a method
+parameter. An absent header yields a 428 law envelope; a malformed header or
+stale revision yields 412. The route owner must compare the supplied revision
+atomically with the stored value and throw `PreconditionFailedError` on a race.
+`@RevisionETag()` sets a strong ETag from a successful response body's safe
+integer `revision` without changing the body. Register
+`IfMatchExceptionFilter` explicitly on routes that throw the precondition
+errors without using `@RequireIfMatch()`.
+
+When combined with `@TransactionalCommand()`, validate the returned revision
+inside the command boundary before commit. The ETag is among the headers
+persisted for idempotent replay; no ETag is sent for a failed command.
+
 `@stynx-nyx/backend` is the canonical aggregation layer for a STYNX-based NestJS app. It is **not** a single module — it composes 10 independently-mountable submodules (auth, authorization, audit, db-context, idempotency, identity-admin, pipeline, rate-limit, sla, storage) that each wrap one (or one-and-a-half) corresponding `@stynx-nyx/<pkg>` package and apply backend-specific glue (interceptors, guards, DI-token rebinding). You import the submodules you need à la carte in your `AppModule`. The full integration pattern is: mount `StynxCoreModule` from `@stynx-nyx/core` first, then layer the `@stynx-nyx/backend` submodules.
 
 The `StynxPlatformPipelineModule` is the foundation: it's the global request-pipeline (rate-limit guard, SLA monitor, idempotency interceptor) every STYNX app wires once. Mount that first; the other submodules layer onto it.
 
 ## Purpose
+
+For inbound webhooks, `StynxWebhookSignatureModule.forRoot(options)` provides
+`WebhookSignatureGuard`. Enable Nest `rawBody: true`, provide a shared atomic
+replay store in the options, and apply the guard to the route. Its
+`onVerified` callback runs only after HMAC and replay verification; establish
+tenant or actor identity there only from signed fields or a trusted sender
+mapping. Rejections return 401, replay-store outages 503, and callback or
+clock failures 500. See the
+[STYNX 1.5 utility contract](../../docs/framework/contracts/utilities-1.5.md)
+for the tenancy handoff and guard order.
 
 A STYNX app needs auth + authorization + audit + idempotency + rate-limit + DB-context + storage + admin endpoints + SLA monitoring all wired together with the right interceptor ordering and DI-token bindings. Doing this by hand from the underlying `@stynx-nyx/auth`, `@stynx-nyx/audit`, etc. packages is mechanical but order-sensitive. `@stynx-nyx/backend`'s submodules pre-bind the canonical wiring so you import once and get the right pipeline.
 
@@ -152,6 +178,46 @@ await app.listen(3000);
 
 Here `AppModule` registers the data and events modules, while `eventSource`, `SseRequest`, and `SseResponse` are supplied by the application. The route uses manual `@Res()` response handling and must avoid response-mapping, buffering, or serialization interceptors that delay frames. Its source must enforce tenant isolation with PostgreSQL RLS, including `ENABLE ROW LEVEL SECURITY` and `FORCE ROW LEVEL SECURITY` on replay tables. `listSince` returns rows strictly after `(createdAt, id)`, ordered by `(createdAt ASC, id ASC)`; `findById` and `now` run inside the same captured tenant/actor request context, including on reconnect and scheduled ticks. The source must also provide commit-monotonic visibility: no row may first become visible at or before the opening or advanced cursor. A timestamp assigned before commit without a commit-order guarantee or stable visibility watermark can make the strict cursor miss that row permanently, breaking at-least-once delivery. The outbox's current upsert table is not an append-only replay source. A default outbox adapter awaits a separate UPS-OBX decision on append-only storage, commit-order visibility, retention and RLS; using the current upsert table risks lost events.
 
+## Transactional commands
+
+Apply platform migration `0020_transactional_commands.sql` and mount
+`StynxTransactionalCommandModule.forRoot({ auditSink })` with a sink that supports
+`writeInTransaction`. Mark each protected method with `@TransactionalCommand()`,
+`@Idempotent({ transactional: true })`, `@Audit({ action, entity,
+transactional: true })`, and a built-in STYNX auth guard via route/class
+`@UseGuards` or a Nest `APP_GUARD` provider. Imperative `app.useGlobalGuards()`
+does not supply the bootstrap provenance check. Public tenant commands also
+require `StynxTenancyModule` and `@PublicTenantRoute()`.
+
+The application pool must connect as `stynx_app`. Before handler SQL, the
+boundary checks its live database role, tenant and actor against the verified
+request context. Domain SQL, the audit event and the idempotency completion
+share that transaction. `CommittedCommandError(statusCode, body, headers?)`
+selects an error response for commit and replay; a plain thrown exception
+rolls back. `persistStatus` can exclude a marked response. An unselected
+successful response commits its domain and audit work but clears the key;
+an unselected error rolls back.
+
+Replays preserve the exact UTF-8 JSON body, status and these response headers:
+`location`, `retry-after`, `cache-control`, `etag`. Cookies, hop-by-hop and
+request-specific headers are never stored. The default scope is the trusted
+actor ID; a public route must choose its scope explicitly. A repeated key
+with a different method, concrete path or JSON body returns HTTP 409.
+
+The default mismatch code is `IDEMPOTENCY:CONFLICT:duplicate-key`; a custom
+`mismatchCode` must match the `errorCode` pattern in the STYNX error-envelope
+schema. The module checks its code and lock timeout in `forRoot`, then checks
+marked route overrides and idempotency TTLs at application bootstrap.
+
+Rejections produced by this command boundary use the canonical envelope
+`{ statusCode, errorCode, message, requestId, retryable }`; key conflicts also
+include `details: { key }`. The response `X-Request-Id` equals `requestId`.
+An in-progress key returns retryable HTTP 409, while a failed transaction
+dependency returns nonretryable HTTP 503. Consumers migrating from the
+pre-release CTG5 shape should read `errorCode` instead of `code` and `details`
+instead of `context`. Data-layer errors, the legacy idempotency 422 and
+consumer-selected responses retain their existing bodies.
+
 ## Configuration
 
 Each submodule has its own `.forRoot()` options. See the per-submodule pages linked above.
@@ -235,7 +301,10 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 ### Runtime dependencies
 
 - `@stynx-nyx/contracts`: `workspace:*`
+- `@stynx-nyx/core`: `workspace:*`
+- `@stynx-nyx/data`: `workspace:*`
 - `@stynx-nyx/idempotency`: `workspace:*`
+- `@stynx-nyx/integration-adapter`: `workspace:*`
 - `@stynx-nyx/ratelimit`: `workspace:*`
 
 ### Optional dependencies

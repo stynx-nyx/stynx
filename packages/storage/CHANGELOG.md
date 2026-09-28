@@ -1,5 +1,18 @@
 # @stynx-nyx/storage
 
+## 1.5.0
+
+### Patch Changes
+
+- Updated dependencies [c6ddb66]
+- Updated dependencies [42bbb43]
+- Updated dependencies [2a94cac]
+- Updated dependencies [7eec2d7]
+- Updated dependencies [8a800c2]
+  - @stynx-nyx/contracts@1.5.0
+  - @stynx-nyx/data@1.5.0
+  - @stynx-nyx/core@1.5.0
+
 ## 1.5.0-rc.3
 
 ### Patch Changes

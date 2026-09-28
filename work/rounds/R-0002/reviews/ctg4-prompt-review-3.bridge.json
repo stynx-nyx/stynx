@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "work/rounds/R-0002/prompts/56-ctg4-prompt-review-3.md",
+  "prompt_sha256": "0e9d471d9f9cfe9687e8abdb238855609154dc0a6366359936788ef6f43b4bf5",
+  "output": "work/rounds/R-0002/reviews/ctg4-prompt-review-3.json",
+  "output_sha256": "21fbf0c121d764a951f480d8cafeb38fd60f518b15643766637b2fc3e4b0cb38",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx",
+  "started_at": "2026-09-27T14:58:29Z",
+  "ended_at": "2026-09-27T15:03:24Z"
+}

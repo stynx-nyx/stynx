@@ -7,6 +7,7 @@ export default createVitestConfig({
   include: ['test/**/*.spec.ts'],
   alias: {
     '@stynx-nyx/integration-adapter': resolve(__dirname, '../integration-adapter/src/index.ts'),
+    '@stynx-nyx/health': resolve(__dirname, '../health/src/index.ts'),
   },
   coverageThreshold: { statements: 0, branches: 0, functions: 0, lines: 0 },
 });

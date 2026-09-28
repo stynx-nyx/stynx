@@ -6,5 +6,6 @@ import type { OfflineSyncConflictResolutionStrategy } from './OfflineSyncConflic
 export type ResolveSyncConflictInput = {
     description?: string;
     resolution: OfflineSyncConflictResolutionStrategy;
+    userRef?: string;
 };
 

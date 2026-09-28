@@ -1,0 +1,78 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:28",
+      "issue": "The preflight never separates decisions an Architect can fix now from decisions that need the Owner, which the review brief explicitly asks for. Several planned changes are breaking under the repository's own law. INV-OFFLINE-001 has change_policy.breaking_change_requires = human_approval + adr (law/invariants/INV-OFFLINE-001.json). docs/framework/contracts/offline-sync-api.md:27 publishes '(tenant_id, payload_hash) is unique' as an invariant. ADR-OUTBOX-0001 (law/adr/ADR-OUTBOX-0001-transactional-outbox-promotion.md:146-161) decides upsert and 'one outstanding message per aggregate'. A1 §8.1 says new limits need an Owner decision. OD-S15-01 requires the Owner to approve the level set by the addendum.",
+      "required_change": "Add a decision table. Owner: CTG9 inclusion in 1.5.0 and approval of the A1 level; supersession of ADR-OUTBOX-0001 and ADR-MOBILE-OFFLINE-0001 and the breaking change to INV-OFFLINE-001 and offline-sync-api.md (item uniqueness by payload hash, the 100-item limit, legacy items with synthetic keys); any new limit; any change to the SSE cursor shape. Architect: commit-watermark strategy, canonicalization scheme, ledger schema, migration numbering, package dependency direction, port names. Mark each future contract as blocked until its Owner row is decided."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:37",
+      "issue": "OBX: the preflight does not say that append mode breaks the per-(tenant, aggregate) ordering guarantee. That guarantee is trivially true today only because there is one row per aggregate (ADR-OUTBOX-0001). With several events per aggregate, dispatchDue claims with FOR UPDATE SKIP LOCKED and ORDER BY created_at, called from concurrent schedulers (packages/outbox/src/outbox.service.ts:183-190), and can send a later event before an earlier one. ack() correlates by (entity, entityId) (outbox.service.ts:342-358), so it becomes ambiguous for every aggregate with more than one event. The default idempotencyKey `${entity}:${entityId}` (outbox.service.ts:75) makes a second append of the same aggregate fail.",
+      "required_change": "The OBX contract must: (a) keep enqueue/upsert as the legacy API and add a separate append that requires an explicit idempotencyKey; (b) define dispatch ordering per aggregate, e.g. claim only the oldest pending row per (tenant, entity, entity_id) or use an advisory lock, and prove it with two concurrent schedulers; (c) correlate new ACKs by event id or idempotencyKey plus tenant, and fail closed with the existing ambiguity error for legacy ACKs; (d) require a superseding ADR decided by the Owner."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:42",
+      "issue": "OBX-02: testing 'real RLS with two tenants' does not prove the ledger's tenant binding. dispatchDue, ack and retry run under withSystemContext with role 'owner', which bypasses RLS (packages/data/migrations/platform/0018_outbox.sql:107-112). outbox.acknowledgements references only message_id, not (tenant_id, message_id), so a row whose tenant differs from its event is structurally possible. UNIQUE(message_id) with ON CONFLICT DO NOTHING keeps only the first ACK, so a later ACK after a retry is lost. claimDue sets SENT before send() and outside the send transaction, so a crash leaves the row SENT forever with no lease or reclaim, which is exactly the loss A1 forbids.",
+      "required_change": "The contract must require: a composite FK (tenant_id, event_id) → messages(tenant_id, id) on the attempts ledger and on ACKs, with tenant_id derived from the event rather than the input; one ledger row per attempt carrying the exact request/response hashes and provider protocol; an explicit ACK state machine (a later positive ACK after ERROR, a duplicate ACK is idempotent, an invalid ACK is recorded and rejected); a claim lease/visibility timeout with reclaim of stuck SENT rows, proven by a crash between claim and send; and SQL tests of owner paths that assert the FK and tenant binding, not just RLS."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:31",
+      "issue": "SIG-03 asks for a 'manifest with canonical bytes' but does not say the existing canonicalJson (packages/signature/src/digest.ts:15-28) is unsafe to reuse. A Date serializes to '{}' (Object.keys(date) is empty). An undefined property emits the literal text 'undefined'. NaN and -0 collapse to 'null'. Uint8Array serializes as an index map. There is no normalization of strings or numbers and no scheme version. Two different manifests can share a digest, and an invalid one can be produced.",
+      "required_change": "Architect decision: canonicalization by RFC 8785 (JCS) or an equivalent closed scheme with a declared version (e.g. manifestVersion + canonicalization id). Reject non-JSON types (Date, undefined, bigint, binary, non-finite numbers) with a typed error, and represent instants as validated RFC 3339 UTC. Bind the manifest to document sha256, manifest sha256, tenant and signer order. Tests: tampering of each field, instant at epoch zero rejected, and fixed vectors for the canonical bytes."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:30",
+      "issue": "SIG-01/02: the preflight does not say where the signature level comes from or how a simulated backend is kept from being declared fit. Today the module accepts any options.backend. createMockSignatureBackend is public and fabricates CMS, TSA and revocation evidence (packages/signature/src/index.ts:25-51). HttpSignatureProviderClient defaults pathPrefix to '/mock' (packages/signature/src/http-provider-client.ts:67). ProviderBackedSignatureBackend fills in local time, a synthetic CMS, and allowCrlFallback=true by default (packages/signature/src/provider-backend.ts:31,44,61). If the level were whatever the provider reports, a mock could claim QUALIFIED.",
+      "required_change": "The contract must fix that: the achieved level is derived from verified evidence (ICP-Brasil chain and policy, TSA and revocation actually present), not self-reported by the provider; every backend declares signed capabilities including simulated:true; readiness and sign fail closed for a simulated backend or the '/mock' prefix outside an explicit test profile; there is no local-time or synthetic-CMS fallback when level ≥ ADVANCED. The ADR-0018 profile matrix is expressed as a generic STYNX policy input with a consumer-side test."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:21",
+      "issue": "OFS-02: the preflight describes the current queue as 'deduplicated by hash' but does not require removing UNIQUE(tenant_id, payload_hash) (packages/offline-sync/migrations/0001_offline_sync.sql:82). A1 requires idempotency by tenant+key+hash. Under the current constraint, two legitimate items with the same bytes collide, and the case 'same key, different hash' cannot be told apart from 'same hash, different key'. The rule is also normative in offline-sync-api.md:27.",
+      "required_change": "Specify: identity (tenant_id, idempotency_key) with the hash as an integrity check (divergence → conflict or rejected receipt); remove or relax the hash uniqueness through an additive migration and a documented breaking change (Owner row); prove same key + same hash → replay, same key + different hash → 409/conflict, different key + same hash → two items."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:38",
+      "issue": "The commit-order risk is identified correctly (created_at is clock_timestamp() and id is a random v4 UUID, 0018_outbox.sql:30,45), but no strategy is chosen. EventStreamSource already exposes now(scope) and listSince(cursor) (packages/backend/src/event-stream/types.ts:21-28), so a watermark can be implemented inside the outbox source without touching backend SSE.",
+      "required_change": "Recommendation for the Architect: keep the (createdAt, id) cursor public, and have listSince return only rows below a watermark derived from pg_snapshot_xmin(pg_current_snapshot()) with an xid8 column recorded at insert, or use a stability window with a documented bound. Prove it with two concurrent transactions committing out of order. That keeps packages/backend out of the change unless the contract shows otherwise."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:50",
+      "issue": "OFS-02/03: the batch state machine is not defined. Nothing specifies where the batch receipt and sequence are persisted if items commit in separate transactions, how to resume after a crash mid-batch, how to tell a replay of a closed batch (return the stored receipt) from a repeated sequence (409), or how to serialize concurrent submissions of the same (tenant, device, sequence). The controller's @Idempotent requires the Idempotency-Key header (packages/idempotency/src/idempotency.interceptor.ts:128) and caches the response before domain semantics apply. That may reject legacy clients or mask 409/422.",
+      "required_change": "Define: a batch table with unique (tenant, device_id, device_batch_id) and (tenant, device_id, batch_sequence), a lock or unique constraint for concurrency, per-item transactions (or savepoints) plus a batch-closing record, resume semantics, and precedence between the HTTP idempotency layer and the domain receipt for consumers that mount their own controller (mountControllers:false)."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:47",
+      "issue": "The business agent must not come from the request body: the controller rejects agentId/agent_id (packages/offline-sync/src/offline-sync.controller.ts:14-23,66-77), and today agentId equals actorId. TTL uses the global reservationTtlMs option of 24h (packages/offline-sync/src/offline-sync.service.ts:46-48) and ignores input.validUntil.",
+      "required_change": "Specify ports OfflineSyncAgentResolver (a trusted agent resolved by the app, distinct from the actor) and OfflineSyncPolicyResolver (TTL and concurrency window per operation/tenant with an injectable clock), with a fallback that preserves the current policy when the parameter is missing, and tests that the body still cannot override identity."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:45",
+      "issue": "'Migration after 0018' is imprecise: 0019_jobs_actor_timezone.sql and 0020_transactional_commands.sql already exist, and there are duplicate prefixes (0012, 0018). There is no canonical DDL under database/ddl for outbox.* or offline.*; the offline migration lives in the package and the adopter applies it (offline-sync-api.md 'Adopters must apply').",
+      "required_change": "The maestro assigns the next free number (≥0021) under the shared lock. Name the exact migration, test/db and seed files. For offline-sync, ship migrations/0002_*.sql with backfill (legacy items with no sequence/key stay 'received' + LEGACY_ITEM_NOT_APPLIED) and document the adopter upgrade order."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:35",
+      "issue": "'Integrate an indicator in packages/health' implies a new health → signature dependency. Health depends only on core, and StynxHealthIndicator is structural (packages/health/src/tokens.ts:6-9). OFS→OBX is also not specified as a port or a package dependency.",
+      "required_change": "Architect: export the indicator from @stynx-nyx/signature, implementing the interface structurally (with no new dependency, pnpm-lock or health lock), or justify the dependency. Keep the OFS applier's event as a port injected by the consumer, not a direct import of outbox."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:53",
+      "issue": "OFS-03 depends on the CTG5 Transaction and on the envelope correction (409/422) that still awaits the Owner's receipt (plan.md item 22). The preflight does not list this cross-dependency in the integration order.",
+      "required_change": "Add it to the integration order: the OFS contract refers to the CTG5 surface (0020_transactional_commands) and to the envelope after option A; if the Owner does not approve option A, the OFS error codes need to be revised."
+    }
+  ],
+  "summary": "The ten gaps in the preflight are correctly identified against the code, and the preflight does not assume the Owner's decision. It is not yet enough to prepare safe contracts. It does not separate Owner decisions (breaking changes to INV-OFFLINE-001, offline-sync-api.md and ADR-OUTBOX-0001; new limits; A1 level) from Architect decisions. It leaves out that append breaks per-aggregate ordering and ACK correlation. It relies on RLS for owner paths that bypass it, with no composite FK, a single ACK per message, and no lease for stuck SENT rows. It does not flag that the existing canonicalJson is unsafe for manifests. It does not define where the signature level comes from or how to block mocks. It does not require removing hash-based uniqueness from the offline queue. The remaining items are precision issues (watermark, batch state machine, agent/TTL ports, migration numbering, dependency direction, CTG5 dependency). None of them is a real authority conflict."
+}

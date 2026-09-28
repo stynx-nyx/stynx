@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "work/rounds/R-0002/prompts/171-ctg9-obx-delivery-review-4.md",
+  "prompt_sha256": "ec81719f02092698e6dd3553f6699b93dba79dd4e587a5598d18960da0115675",
+  "output": "work/rounds/R-0002/reviews/ctg9-obx-delivery-review-4.json",
+  "output_sha256": "714d4999fae090990bc5bc36613370b9934b243b2cf1fa08393f45d239bda2ec",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx",
+  "started_at": "2026-09-28T17:46:56Z",
+  "ended_at": "2026-09-28T17:49:27Z"
+}

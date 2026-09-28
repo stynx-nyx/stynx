@@ -2,13 +2,21 @@ import '@angular/compiler';
 import { Injector, runInInjectionContext } from '@angular/core';
 import { Router } from '@angular/router';
 import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-nyx/angular-auth';
+import { createStynxSessionStub } from '@stynx-nyx/angular-auth/testing';
 import * as flow from '../src';
-import { StynxFlowDashboardComponent, StynxFlowOpenTasksComponent, StynxFlowRunSummaryComponent } from '../src/analytics.component';
+import {
+  StynxFlowDashboardComponent,
+  StynxFlowOpenTasksComponent,
+  StynxFlowRunSummaryComponent,
+} from '../src/analytics.component';
 import { StynxFlowFillsComponent } from '../src/flow-fills.component';
 import { StynxFlowFormsComponent } from '../src/flow-forms.component';
 import { StynxFlowGraphDesignerComponent } from '../src/flow-graph-designer.component';
 import { StynxFlowRunActivityComponent } from '../src/flow-run-activity.component';
-import { StynxFlowMyTasksInboxComponent, StynxFlowTaskListComponent } from '../src/flow-tasks.component';
+import {
+  StynxFlowMyTasksInboxComponent,
+  StynxFlowTaskListComponent,
+} from '../src/flow-tasks.component';
 import { StynxFlowWaiversComponent } from '../src/flow-waivers.component';
 import { FLOW_ROUTES, flowRoutes } from '../src/routes';
 
@@ -37,32 +45,40 @@ describe('@stynx-nyx/angular-flow exports and routes', () => {
 
   it('keeps PORM-derived route concepts and STYNX route names visible', () => {
     const paths = flowRoutes().map((route) => route.path);
-    expect(paths).toEqual(expect.arrayContaining([
-      'scopes/:scopeId/graphs/:graphId',
-      'forms',
-      'forms/:formId',
-      'forms/:formId/fills/:fillId',
-      'fills',
-      'fills/:fillId',
-      'assignments',
-      'my-tasks',
-      'tasks/:taskId',
-      'waivers',
-      'open-tasks',
-      'summary',
-      'policies',
-    ]));
+    expect(paths).toEqual(
+      expect.arrayContaining([
+        'scopes/:scopeId/graphs/:graphId',
+        'forms',
+        'forms/:formId',
+        'forms/:formId/fills/:fillId',
+        'fills',
+        'fills/:fillId',
+        'assignments',
+        'my-tasks',
+        'tasks/:taskId',
+        'waivers',
+        'open-tasks',
+        'summary',
+        'policies',
+      ]),
+    );
   });
 
   it('keeps each flow route mounted to the intended component and guarded permission surface', () => {
     const routes = flowRoutes();
 
-    expect(routes.map((route) => ({
-      path: route.path,
-      component: route.component,
-      guardCount: route.canActivate?.length ?? 0,
-    }))).toEqual([
-      { path: 'scopes/:scopeId/graphs/:graphId', component: StynxFlowGraphDesignerComponent, guardCount: 1 },
+    expect(
+      routes.map((route) => ({
+        path: route.path,
+        component: route.component,
+        guardCount: route.canActivate?.length ?? 0,
+      })),
+    ).toEqual([
+      {
+        path: 'scopes/:scopeId/graphs/:graphId',
+        component: StynxFlowGraphDesignerComponent,
+        guardCount: 1,
+      },
       { path: 'forms', component: StynxFlowFormsComponent, guardCount: 1 },
       { path: 'forms/:formId', component: StynxFlowFormsComponent, guardCount: 1 },
       { path: 'forms/:formId/fills/:fillId', component: StynxFlowFillsComponent, guardCount: 1 },
@@ -81,10 +97,12 @@ describe('@stynx-nyx/angular-flow exports and routes', () => {
   });
 
   it('binds every route guard to its exact permission', () => {
-    const hasAllPermissions = vi.fn(() => true);
+    const session = createStynxSessionStub({ active: true, permissions: ['*'] });
+    const hasAllPermissions = vi.fn(session.hasAllPermissions);
+    session.hasAllPermissions = hasAllPermissions;
     const injector = Injector.create({
       providers: [
-        { provide: StynxSessionService, useValue: { hasAllPermissions } },
+        { provide: StynxSessionService, useValue: session },
         { provide: Router, useValue: { parseUrl: vi.fn() } },
         { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: {} },
       ],

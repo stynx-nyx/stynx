@@ -14,7 +14,7 @@ import type {
   TokenVerifier,
 } from '@stynx-nyx/contracts';
 import { headerToString } from '@stynx-nyx/contracts';
-import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, hasPublicTenantRoute, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, hasPublicTenantRoute, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
 import { ModulesContainer, Reflector, ModuleRef } from '@nestjs/core';
 import { STYNX_PUBLIC_TENANT_OPTIONS } from '@stynx-nyx/contracts';
 import { DefaultPrincipalMapper } from './default-principal-mapper';
@@ -28,6 +28,7 @@ import type { RequestLike } from '../common/request-context';
 
 @Injectable()
 export class AuthContextGuard implements CanActivate {
+  static readonly [STYNX_BUILTIN_AUTH_GUARD] = true;
   private readonly mapper: PrincipalMapper;
 
   constructor(
@@ -49,6 +50,7 @@ export class AuthContextGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestLike>();
     Reflect.deleteProperty(request, STYNX_VERIFIED_TENANT_ID);
+    delete (request as RequestLike & { stynxClaims?: unknown }).stynxClaims;
     const targets = [context.getHandler?.(), context.getClass?.()].filter((target) => typeof target === 'function') as Array<(...args: unknown[]) => unknown>;
     const publicTenant = this.reflector?.getAllAndOverride<PublicTenantRouteOptions | boolean>(STYNX_PUBLIC_TENANT_ROUTE, targets)
       ?? targets.map((target) => Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, target)).find((value) => value !== undefined);

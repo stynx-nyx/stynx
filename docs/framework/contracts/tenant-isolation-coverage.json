@@ -11,6 +11,11 @@
       ]
     },
     {
+      "surface": "offline-sync-ctg9-ledger",
+      "file": "test/db/offline-sync-durable-migration.spec.ts",
+      "patterns": ["sync_batch_transport_keys", "'tenant_id', 'transport_key'", "code: '42501'"]
+    },
+    {
       "surface": "auth",
       "file": "test/db/runtime/auth/rls-policies.runtime.spec.ts",
       "patterns": [

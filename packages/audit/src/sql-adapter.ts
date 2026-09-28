@@ -1,4 +1,4 @@
-import type { AuditEventEnvelope, AuditSink } from '@stynx-nyx/contracts';
+import type { AuditEventEnvelope, AuditSink, AuditTransactionExecutor, TransactionalAuditSink } from '@stynx-nyx/contracts';
 
 export interface SqlExecutor {
   query(sql: string, params?: unknown[]): Promise<unknown>;
@@ -51,7 +51,7 @@ export interface AuditSqlReaderOptions {
   table?: string;
 }
 
-export class AuditSqlSink implements AuditSink {
+export class AuditSqlSink implements AuditSink, TransactionalAuditSink {
   constructor(
     private readonly executor: SqlExecutor,
     private readonly options: AuditSqlSinkOptions,
@@ -64,6 +64,32 @@ export class AuditSqlSink implements AuditSink {
     }
 
     await this.writeUsingTable(event);
+  }
+
+  async writeInTransaction(event: AuditEventEnvelope, executor: AuditTransactionExecutor): Promise<void> {
+    if (this.options.mode !== 'audit_write_function') {
+      throw new Error('Transactional commands require audit_write_function mode');
+    }
+    const pk = event.pk ?? (event.entityId ? { id: event.entityId } : undefined);
+    await executor.query(
+      `SELECT audit.write_command_event(
+        $1::text, $2::text, $3::text, $4::jsonb,
+        $5::text, $6::text, $7::text,
+        $8::jsonb, $9::jsonb, $10::jsonb
+      )`,
+      [
+        event.action,
+        event.entity,
+        event.entityId ?? null,
+        JSON.stringify(event.metadata ?? {}),
+        event.ipAddress ?? null,
+        null,
+        event.requestId ?? event.correlationId ?? null,
+        event.oldData ? JSON.stringify(event.oldData) : null,
+        event.newData ? JSON.stringify(event.newData) : null,
+        pk ? JSON.stringify(pk) : null,
+      ],
+    );
   }
 
   private async writeUsingFunction(event: AuditEventEnvelope): Promise<void> {

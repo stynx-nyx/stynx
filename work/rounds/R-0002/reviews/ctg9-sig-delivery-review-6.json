@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "packages/signature/test/integration/trust-gate.spec.ts:514",
+      "issue": "Fixture/sensor gap: the two new negatives (`omitUpdatedCatalogFromXref` glued and comment-separated) only assert the generic message 'Post-signature modification'. That message is also raised by the `PDFDocument.load` failure (pdf-trust-evidence.ts:207), by line 215, and by line 217. The sensor therefore does not prove the rejection came from the new rule at line 96-97 (catalog entry in the final xref with offset < revisionEnd). By inspection it does come from there: `checkFinalXref` runs before the catalog comparisons, and pdf-lib tolerates both headers. No test pins this, though.",
+      "required_change": "Inspector: add a unit sensor that isolates the branch. Either expose an internal reason or diagnostic cause in the SignatureTrustError, or add a positive control: the same payload with the catalog listed correctly in the final xref (offset of the `1 0 obj` header after `endobj`) must be accepted. That proves the rejection comes from the xref omission and not from parsing."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/signature/src/pdf-trust-evidence.ts:43",
+      "issue": "Carried over from review 5 and unchanged: a final section that is an xref stream, or a hybrid /XRefStm in the final trailer (line 72-73 with allowUnsupported=false), is reported as 'Post-signature modification' (SignatureTrustError → tampered). An unsupported format is indeterminacy, not proof of modification. It is still fail-closed.",
+      "required_change": "Emit SignatureTrustUnavailableError ('Unsupported PDF xref stream' / 'hybrid xref') for an unsupported format in the appended revisions too. Keep 'Post-signature modification' for actual divergence, or record the choice in the SIG contract."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/signature/test/fixtures/pki/generate.sh:1",
+      "issue": "Fixture gap carried over: the PKI is still two-level (root→signer/TSA), with the root as OCSP responder. There is no sensor for an intermediate, a revoked intermediate, or a delegated responder without id-kp-OCSPSigning. The TSA chain now uses `checkDate: tst.genTime` (cms-trust-verifier.ts:255), after the TSTInfo is authenticated by `tsaData.verify`. There is still no fixture with a TSA certificate that has expired after genTime to prove that path.",
+      "required_change": "Generate a root→intermediate→signer/TSA PKI with negatives for a revoked intermediate and a delegated responder without the EKU. Add a positive with a TSA certificate that expires after genTime but before `now`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/signature/test/fixtures/pki/build-pades-blt.py:123",
+      "issue": "Fixture gap carried over: no single DSS combines a good pre-TST OCSP with a post-TST revoked CRL/OCSP. There is also no stale-OCSP→fresh-OCSP fallback under an OCSP-only profile. The code (verifyRevocation lines 134 and 155-157) keeps iterating over stale evidence and returns 'Certificate revoked' on fresh revoked evidence, which is correct by inspection.",
+      "required_change": "Add the pre-TST good + post-TST revoked fixture expecting 'Certificate revoked', and the OCSP-only fallback case expecting success."
+    }
+  ],
+  "summary": "PASS. Read-only review; I did not run the suite and did not write to DETRAN. The review-6 bridge-failure note says an earlier attempt of this review, rejected only for its fenced JSON, also returned PASS. The review-5 blocking defect is resolved in `packages/signature/src/pdf-trust-evidence.ts`. Lines 95-97 require the catalog's final xref entry to be in use, with the same generation and offset >= revisionEnd, so the DSS revision must update the catalog. The loop at lines 112-123 therefore parses the catalog at its real offset with the strict header `^N G obj\\b` and compares it structurally (sameObject) to `context.lookup(ref)`. Line 215 then compares that same object to `complete.catalog`, which is where DSS is read. Lines 100-104 keep /Root equal to the signed trailer. Lines 127-132 close the census: every indirect object in the pdf-lib context must have an in-use final xref entry with the same generation. When the offset is in the suffix, it must be the start of a parsed and compared interval. When it is in the prefix, it must be an original object at the same offset (lines 109-113), whose content is compared with the signed revision at lines 225-228. So the header regex no longer serves as a census, and `endobj1 0 obj` or `1%c\\n0%c\\nobj` without an xref entry fail at line 97. ObjStm objects and linear shadows need an xref entry or equal content. Intervals cannot overlap, and an XRef-type stream in the suffix fails. The fixture `omitUpdatedCatalogFromXref` correctly reproduces the review-5 counterexample in both variants. The two cases in `trust-gate.spec.ts:514-519` expect 'Post-signature modification'. Since review 5 only `pdf-trust-evidence.ts` and `cms-trust-verifier.ts` changed (by mtime). ByteRange/CMS (coveredPdf, detached id-data, ESS v2) is unchanged, as are the trailer checks (duplicates, /XRefStm, /Prev chained to the signed startxref), post-TST revocation, the evidence fallback, TSA anchors intersected with the profile, the manifest and withdrawal. No regressions reopened. The TSA chain now uses `checkDate: tst.genTime`, authenticated by `tsaData.verify`. What remains are fixture gaps and a non-blocking error classification: a branch-discriminating sensor, xref streams as Unavailable, a 3-level PKI and delegated responder, and pre-TST good plus post-TST revoked in the same DSS. PASS releases only the SIG commit. It does not declare conformance or authorize publication."
+}

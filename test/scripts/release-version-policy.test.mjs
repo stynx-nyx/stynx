@@ -41,6 +41,7 @@ import {
 import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 import {
   classifyReleaseContext,
+  isFinalVersionedCandidate,
   isVersionedPreModeCandidate,
   releaseContextConstants,
   ReleaseContextError,
@@ -76,7 +77,7 @@ const packageRoster = JSON.parse(
 // The registry census is validated against the current unified candidate
 // (registryVersionPolicyConstants.candidate), not the historical 1.2.0
 // rebaseline target that unified-rebaseline.mjs still describes.
-const currentCandidate = '1.5.0-rc.3';
+const currentCandidate = '1.5.0';
 const previousCandidate = '1.5.0-rc.2';
 
 const campaignPolicy = {
@@ -282,6 +283,100 @@ test('versioned RC status accepts only the complete consumed fixed-group candida
   assert.equal(isVersionedPreModeCandidate(discontinuousPre), false, 'pre mode initial versions remain bound');
 });
 
+test('final versioned candidate accepts a late single marker and exact generated release surface', () => {
+  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+    name,
+    manifestPath: relative(repoRoot, manifestPath),
+    baseVersion: '1.5.0-rc.3',
+    candidateVersion: '1.5.0',
+  }));
+  assert.equal(packageStates.length, 44);
+  const preState = {
+    mode: 'pre',
+    tag: 'rc',
+    initialVersions: Object.fromEntries(packageStates.map(({ name }) => [name, '1.4.0'])),
+    changesets: ['ctg9-signature', 'ctg9-outbox'],
+  };
+  const markerChanges = [
+    { status: 'D', path: '.changeset/pre.json' },
+    ...preState.changesets.map((id) => ({ status: 'D', path: `.changeset/${id}.md` })),
+    ...packageStates.flatMap(({ manifestPath }) => [
+      { status: 'M', path: manifestPath },
+      { status: 'M', path: manifestPath.replace(/package\.json$/u, 'CHANGELOG.md') },
+    ]),
+    ...[
+      'docs/meta/security/sbom.cdx.json',
+      'package.json',
+      'tools/create-stynx-app/template/package.json',
+      'packages/pdf/README.md',
+      'packages/pdf-a/README.md',
+      'packages/pdf-a-vera-docker/README.md',
+    ].map((path) => ({ status: 'M', path })),
+  ];
+  const input = {
+    baseRootVersion: '1.5.0-rc.3',
+    basePreState: preState,
+    markerCommits: [
+      { sha: 'a'.repeat(40), subject: 'docs(release): close CTG9 contract' },
+      { sha: 'b'.repeat(40), subject: 'test(release): probe final candidate' },
+      { sha: 'c'.repeat(40), subject: 'feat(release): classify final candidate' },
+      { sha: 'd'.repeat(40), subject: 'chore(repo): version 1.5.0 final release' },
+      { sha: 'e'.repeat(40), subject: 'docs(release): record review' },
+    ],
+    markerParentPreState: structuredClone(preState),
+    markerChanges,
+    followUpChanges: [
+      { status: 'A', path: 'work/rounds/R-0002/reviews/final-release.md' },
+      { status: 'M', path: 'law/policy/forbidden-action-authorizations.json' },
+    ],
+    candidateRootVersion: '1.5.0',
+    packageStates,
+    changesetIdsOnDisk: [],
+    preState: null,
+  };
+  assert.equal(isFinalVersionedCandidate(input), true);
+
+  for (const [label, mutate] of [
+    ['missing marker', (value) => { value.markerCommits.splice(3, 1); }],
+    ['duplicate marker', (value) => { value.markerCommits.push({ sha: 'f'.repeat(40), subject: 'chore(repo): version 1.5.0 final release' }); }],
+    ['wrong base', (value) => { value.baseRootVersion = '1.5.0-rc.2'; }],
+    ['wrong root version', (value) => { value.candidateRootVersion = '1.5.1'; }],
+    ['one base package drift', (value) => { value.packageStates[0].baseVersion = '1.5.0-rc.2'; }],
+    ['one final package drift', (value) => { value.packageStates[0].candidateVersion = '1.5.0-rc.3'; }],
+    ['43 manifests', (value) => { value.packageStates.pop(); }],
+    ['duplicate manifest', (value) => { value.packageStates[43] = structuredClone(value.packageStates[0]); }],
+    ['retained pre state', (value) => { value.preState = { mode: 'exit', tag: 'rc' }; }],
+    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('new-work'); }],
+    ['parent in exit mode', (value) => { value.markerParentPreState.mode = 'exit'; }],
+    ['parent initial version drift', (value) => { value.markerParentPreState.initialVersions[value.packageStates[0].name] = '1.3.0'; }],
+    ['parent changeset drift', (value) => { value.markerParentPreState.changesets.push('untracked'); }],
+    ['missing pre deletion', (value) => { value.markerChanges.shift(); }],
+    ['missing consumed changeset', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== '.changeset/ctg9-outbox.md'); }],
+    ['missing changelog', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath.replace(/package\.json$/u, 'CHANGELOG.md')); }],
+    ['missing root support', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== 'package.json'); }],
+    ['extra generated path', (value) => { value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' }); }],
+    ['source follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'packages/core/src/index.ts' }); }],
+    ['sensor follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'test/scripts/release-version-policy.test.mjs' }); }],
+    ['workflow follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' }); }],
+    ['other round follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'work/rounds/R-0001/review.md' }); }],
+    ['generated proof follow-up', (value) => { value.followUpChanges.push({ status: 'A', path: 'record/proofs/final.json' }); }],
+    ['deleted round note', (value) => { value.followUpChanges.push({ status: 'D', path: 'work/rounds/R-0002/reviews/old.md' }); }],
+    ['added policy authorization', (value) => { value.followUpChanges.push({ status: 'A', path: 'law/policy/forbidden-action-authorizations.json' }); }],
+  ]) {
+    const invalid = structuredClone(input);
+    mutate(invalid);
+    assert.equal(isFinalVersionedCandidate(invalid), false, label);
+  }
+});
+
+test('release preparation routes the final candidate to empty status and skips consumed drafts', () => {
+  const source = repositorySource('scripts/run-release-preparation.mjs');
+  assert.match(source, /isFinalVersionedCandidate/u);
+  assert.match(source, /if \(context\.kind === 'ordinary'\) \{\s*run\('pnpm', \[\s*'exec',\s*'changeset',\s*'status'/u);
+  assert.match(source, /JSON\.stringify\(\{ changesets: \[\], releases: \[\] \}, null, 2\)/u);
+  assert.match(source, /if \(context\.kind === 'ordinary'\) \{\s*run\('pnpm', \['run', 'release:drafts'\]\)/u);
+});
+
 test('version rebaseline permits only the three generated dependency README consequences', () => {
   assert.match(
     repositorySource('scripts/run-release-preparation.mjs'),
@@ -342,7 +437,7 @@ test('Architect policy and workspace structurally define exactly 44/44/0', () =>
   assert.equal(packageRoster.counts.approved_first_publications, 0);
 });
 
-test('RC3 registry policy candidate equals the root and all 44 publishable manifest versions', () => {
+test('final registry policy candidate equals the root and all 44 publishable manifest versions', () => {
   const candidate = currentCandidate;
   const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
   const publishablePackages = collectPublicPackages(repoRoot);
@@ -616,13 +711,13 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 test('Architect anomaly policy is required at its exact approved digest', () => {
   // The next unified candidate must be explicitly bound in the Architect
   // policy; 1.2.0 remains historical rebaseline data.
-  assert.equal(currentCandidate, '1.5.0-rc.3');
+  assert.equal(currentCandidate, '1.5.0');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
-  assert.equal(anomalyPolicy.owner_decision.date, '2026-09-27');
-  assert.equal(anomalyPolicy.owner_decision.repository_baseline, '48b42874a3a660e648e1567b36da8d71668185a0');
-  assert.equal(anomalyPolicy.owner_decision.repository_tree, '6a32b33bfbc5281e055b595886b8cde3af65c23c');
+  assert.equal(anomalyPolicy.owner_decision.date, '2026-09-28');
+  assert.equal(anomalyPolicy.owner_decision.repository_baseline, '493fcd959592d30055dcacabd57e4cc19505f2c6');
+  assert.equal(anomalyPolicy.owner_decision.repository_tree, '9ef2f9350a67fec3d20d6d631669e4207ef6b636');
   assert.deepEqual(anomalyPolicy.owner_decision.supersedes, {
-    date: '2026-09-27', next_unified_version: previousCandidate,
+    date: '2026-09-27', next_unified_version: '1.5.0-rc.3',
   });
   for (const phrase of ['44', previousCandidate, currentCandidate, 'exact-main-SHA', 'rc', 'latest', '1.4.0']) {
     assert.ok(anomalyPolicy.owner_decision.statement.includes(phrase), `Owner statement must name ${phrase}`);
@@ -631,7 +726,7 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
   assert.notEqual(currentCandidate, unifiedRebaselineTarget);
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.allowed_candidate, currentCandidate);
-  for (const phrase of ['44', currentCandidate, 'rc', 'latest', '1.4.0', 'angular-profile 2.0.0', 'immutable']) {
+  for (const phrase of ['44', currentCandidate, previousCandidate, 'rc', 'latest', 'angular-profile 2.0.0', 'immutable']) {
     assert.ok(anomaly.closure_condition.includes(phrase), `closure condition must name ${phrase}`);
   }
   const recordedRc2Anomaly = {
@@ -1318,7 +1413,7 @@ test('publication uses an ordered 44-package plan, durable per-package receipts,
   assert.match(verifier, /registryVersionPolicyConstants\.candidate/u);
 });
 
-test('RC3 registry monotonicity accepts RC2 history and only its singular anomaly', () => {
+test('final registry monotonicity accepts prerelease history and only its singular anomaly', () => {
   assert.equal(packageNames.length, 44);
   assert.equal(registryVersionPolicyConstants.candidate, currentCandidate);
   assert.equal(registryVersionPolicyConstants.previousCandidate, previousCandidate);
@@ -1339,23 +1434,23 @@ test('RC3 registry monotonicity accepts RC2 history and only its singular anomal
 
   for (const [version, code] of [
     [currentCandidate, 'REGISTRY_CANDIDATE_EXISTS'],
-    ['1.5.0-rc.4', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
-    ['1.5.0', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['1.5.0-rc.4', null],
     ['1.5.1', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
     ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
   ]) {
     const history = validRegistryCensus();
     history.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', previousCandidate, version]));
-    assertPolicyError(() => validate({ registryStatesByPackage: history }), code);
+    if (code === null) assert.doesNotThrow(() => validate({ registryStatesByPackage: history }));
+    else assertPolicyError(() => validate({ registryStatesByPackage: history }), code);
   }
 
-  for (const candidate of ['1.5.0-rc.1', previousCandidate, '1.5.0-rc.4', '1.5.0']) {
+  for (const candidate of ['1.5.0-rc.1', previousCandidate, '1.5.0-rc.4', '1.5.1']) {
     assertPolicyError(() => loadRegistryAnomalyPolicy(repoRoot, candidate), 'REGISTRY_ANOMALY_POLICY_UNSUPPORTED');
     assertPolicyError(() => validate({ candidate }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
   }
 });
 
-test('RC3 registry census requires RC2 in every published package after version checks', () => {
+test('final registry census requires RC2 in every published package after version checks', () => {
   const missingPrevious = validRegistryCensus();
   missingPrevious.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1']));
   assertPolicyError(
@@ -1370,7 +1465,7 @@ test('RC3 registry census requires RC2 in every published package after version 
   );
 });
 
-test('RC3 policy bytes bind to the Architect prerelease decision before registry observation', () => {
+test('final policy bytes bind to the Architect stable decision before registry observation', () => {
   assert.doesNotThrow(() => loadRegistryAnomalyPolicy(repoRoot, currentCandidate));
 });
 
@@ -1438,7 +1533,7 @@ test('RC2 publication uses only pure dist-tag helpers and preserves latest durin
   assert.match(publisher, /stop-on-first-failure/u);
 });
 
-test('RC3 preflight requires the RC2 tag and stable latest on every package', async () => {
+test('final preflight requires the RC2 tag and stable latest on every package', async () => {
   const { validatePreflightDistTags } = await import('../../scripts/lib/publication-dist-tag.mjs');
   const publisher = repositorySource('scripts/publish-release-plan.mjs');
   assert.match(publisher, /preflightRc:\s*registryVersionPolicyConstants\.previousCandidate/u);
@@ -1483,14 +1578,14 @@ test('RC3 preflight requires the RC2 tag and stable latest on every package', as
   );
 });
 
-test('RC3 publication moves only rc from RC2 while latest and other tags stay fixed', async () => {
+test('final publication moves only latest while RC2 and other tags stay fixed', async () => {
   const { verifyPostPublishDistTags } = await import('../../scripts/lib/publication-dist-tag.mjs');
   const preflightDistTags = { latest: '1.4.0', rc: previousCandidate, legacy: '0.9.0' };
   assert.doesNotThrow(() => verifyPostPublishDistTags({
     candidate: currentCandidate,
     preflightLatest: '1.4.0',
     preflightDistTags,
-    distTags: { latest: '1.4.0', rc: currentCandidate, legacy: '0.9.0' },
+    distTags: { latest: currentCandidate, rc: previousCandidate, legacy: '0.9.0' },
   }));
   assert.throws(() => verifyPostPublishDistTags({
     candidate: currentCandidate,
@@ -1498,20 +1593,24 @@ test('RC3 publication moves only rc from RC2 while latest and other tags stay fi
     preflightDistTags,
     distTags: { latest: currentCandidate, rc: currentCandidate, legacy: '0.9.0' },
   }), (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT');
+  assert.throws(() => verifyPostPublishDistTags({
+    candidate: currentCandidate,
+    preflightLatest: '1.4.0',
+    preflightDistTags,
+    distTags: { latest: '1.5.1', rc: previousCandidate, legacy: '0.9.0' },
+  }), (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT');
 });
 
-test('current RC publication roster, old rc visibility, bounded rereads, and stable-only release tags', async () => {
+test('final stable publication roster, rc2 visibility, bounded rereads, and stable release tags', async () => {
   const publication = await import('../../scripts/lib/publication-dist-tag.mjs');
   const { discoverPublishablePackages } = await import('../../scripts/lib/publishable-packages.mjs');
   const { parseStableVersionTag } = await import('../../scripts/resolve-release-forbidden-range.mjs');
-  const candidate = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')).version;
-  const rcMatch = /^1\.5\.0-rc\.([1-9]\d*)$/u.exec(candidate);
-  assert.ok(rcMatch, 'the current publication roster must be on the 1.5.0 RC line');
-  const previousCandidate = `1.5.0-rc.${Number(rcMatch[1]) - 1}`;
-  const packages = discoverPublishablePackages(repoRoot);
+  const candidate = currentCandidate;
+  const packages = discoverPublishablePackages(repoRoot).map((entry) => ({
+    ...entry, manifest: { ...entry.manifest, version: candidate },
+  }));
   assert.equal(packages.length, 44);
   assert.equal(packages[0].name, '@stynx-nyx/angular');
-  assert.equal(packages.every((entry) => entry.manifest.version === candidate), true);
   assert.doesNotThrow(() => publication.validatePublicationRoster(packages, candidate));
   for (const roster of [packages.slice(1), [packages[1], packages[0], ...packages.slice(2)]]) {
     assert.throws(
@@ -1521,7 +1620,7 @@ test('current RC publication roster, old rc visibility, bounded rereads, and sta
   }
   assert.throws(
     () => publication.validatePublicationRoster([
-      { ...packages[0], manifest: { ...packages[0].manifest, version: '1.5.0' } }, ...packages.slice(1),
+      { ...packages[0], manifest: { ...packages[0].manifest, version: '1.5.0-rc.3' } }, ...packages.slice(1),
     ], candidate),
     (error) => error?.code === 'PUBLICATION_VERSION_DRIFT',
   );
@@ -1543,7 +1642,8 @@ test('current RC publication roster, old rc visibility, bounded rereads, and sta
       (error) => error?.code === code,
     );
   }
-  assert.throws(() => parseStableVersionTag(`v${candidate}`), /malformed stable release tag/u);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 0n]);
+  assert.throws(() => parseStableVersionTag(`v${previousCandidate}`), /malformed stable release tag/u);
   const publisher = repositorySource('scripts/publish-release-plan.mjs');
   const workflow = repositorySource('.github/workflows/release.yml');
   assert.match(publisher, /publicationPlanConstants\.maxVisibilityRereads/u);

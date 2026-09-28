@@ -4,6 +4,7 @@ import { verifyOutboxAckSignature } from '../../src/ack-signature';
 import {
   OutboxAlreadyEnqueuedError,
   OutboxAmbiguousAckError,
+  OutboxLegacyCutoverError,
   OutboxNotFoundError,
 } from '../../src/errors';
 import { HttpOutboxDispatcher } from '../../src/http-outbox-dispatcher';
@@ -71,6 +72,16 @@ function createService(
 
 function compactSql(value: unknown): string {
   return String(value).replace(/\s+/gu, ' ').trim();
+}
+
+function expectMarkerBeforeLegacySql(sql: unknown, legacyOperation: string): void {
+  const normalized = compactSql(sql).toLowerCase();
+  expect(normalized).toContain(
+    'with ownership as materialized (select state from outbox.legacy_ownership where id=true for share nowait)',
+  );
+  expect(normalized.indexOf('outbox.legacy_ownership')).toBeLessThan(
+    normalized.indexOf(legacyOperation.toLowerCase()),
+  );
 }
 
 describe('outbox supporting behavior', () => {
@@ -372,13 +383,16 @@ describe('OutboxService depth', () => {
     expect(query.mock.calls[0]?.[0]).toContain(
       'do update set updated_at = now(), idempotency_key = excluded.idempotency_key',
     );
+    expectMarkerBeforeLegacySql(query.mock.calls[0]?.[0], 'insert into outbox.messages');
     expect(compactSql(query.mock.calls[0]?.[0])).toBe(
-      compactSql(`insert into outbox.messages (id, tenant_id, entity, entity_id, payload, metadata, status, idempotency_key, next_attempt_at)
-        values (
+      compactSql(`with ownership as materialized
+        (select state from outbox.legacy_ownership where id=true for share nowait)
+        insert into outbox.messages (id, tenant_id, entity, entity_id, payload, metadata, status, idempotency_key, next_attempt_at)
+        select
           gen_random_uuid(),
           nullif(current_setting('app.tenant_id', true), '')::uuid,
           $1, $2, $3::jsonb, $4::jsonb, 'PENDING', $5, null
-        )
+        from ownership where state='LEGACY'
         on conflict (tenant_id, entity, entity_id)
         do update set updated_at = now(), idempotency_key = excluded.idempotency_key
         returning ${outboxColumns()}`),
@@ -431,7 +445,7 @@ describe('OutboxService depth', () => {
         entityId: row.entityId,
         payload: row.payload,
       }),
-    ).rejects.toBeInstanceOf(OutboxNotFoundError);
+    ).rejects.toBeInstanceOf(OutboxLegacyCutoverError);
   });
 
   it('returns empty and dispatcher-free claims without transport calls', async () => {
@@ -464,10 +478,15 @@ describe('OutboxService depth', () => {
     expect(query.mock.calls[0]?.[0]).toContain('last_error = null');
     expect(query.mock.calls[0]?.[0]).toContain('next_attempt_at = null');
     expect(query.mock.calls[0]?.[1]).toEqual([0]);
+    expectMarkerBeforeLegacySql(query.mock.calls[0]?.[0], 'select id from outbox.messages');
     expect(compactSql(query.mock.calls[0]?.[0])).toBe(
-      compactSql(`with due as (
-        select id from outbox.messages
+      compactSql(`with ownership as materialized
+        (select state from outbox.legacy_ownership where id=true for share nowait),
+        due as (
+        select id from outbox.messages cross join ownership
         where status in ('PENDING', 'ERROR')
+          and ownership.state='LEGACY'
+          and migrated_event_id is null
           and coalesce(next_attempt_at, created_at) <= now()
         order by created_at asc
         limit $1
@@ -505,7 +524,8 @@ describe('OutboxService depth', () => {
     const query = vi
       .fn()
       .mockResolvedValueOnce({ rows: [sent] })
-      .mockResolvedValueOnce({ rows: [failed] });
+      .mockResolvedValueOnce({ rows: [failed] })
+      .mockResolvedValueOnce({ rows: [] });
     const { database, service } = createService(query, {
       backoff,
       dispatcher: { send: vi.fn(async () => Promise.reject(new Error(longMessage))) },
@@ -515,7 +535,12 @@ describe('OutboxService depth', () => {
       { row: failed, dispatched: false, error: longMessage },
     ]);
     expect(backoff.nextAttemptAt).toHaveBeenCalledWith(4, expect.any(Date));
+    expectMarkerBeforeLegacySql(query.mock.calls[1]?.[0], 'update outbox.messages');
     expect(query.mock.calls[1]?.[1]).toEqual([row.id, 'x'.repeat(4_000), nextAttemptAt]);
+    expect(query.mock.calls[2]?.[0]).toContain(
+      'select tenant_id,migrated_event_id from outbox.messages',
+    );
+    expect(query.mock.calls[2]?.[1]).toEqual([row.id]);
     expect(database.withSystemContext).toHaveBeenNthCalledWith(
       2,
       'outbox dispatch failure',
@@ -541,7 +566,8 @@ describe('OutboxService depth', () => {
     const failureQuery = vi
       .fn()
       .mockResolvedValueOnce({ rows: [sent] })
-      .mockResolvedValueOnce({ rows: [failed] });
+      .mockResolvedValueOnce({ rows: [failed] })
+      .mockResolvedValueOnce({ rows: [] });
     await createService(failureQuery, {
       dispatcher: {
         send: vi.fn(async () => {
@@ -605,8 +631,12 @@ describe('OutboxService depth', () => {
     });
     expect(query.mock.calls[1]?.[0]).toContain("status = 'PENDING'");
     expect(query.mock.calls[1]?.[0]).toContain('last_error = null');
+    expectMarkerBeforeLegacySql(
+      query.mock.calls[0]?.[0],
+      'select attempts,migrated_event_id from outbox.messages',
+    );
     expect(compactSql(query.mock.calls[0]?.[0])).toBe(
-      'select attempts from outbox.messages where id = $1',
+      'with ownership as materialized (select state from outbox.legacy_ownership where id=true for share nowait) select attempts,migrated_event_id from outbox.messages cross join ownership where id = $1',
     );
     expect(query.mock.calls[0]?.[1]).toEqual([row.id]);
     expect(compactSql(query.mock.calls[1]?.[0])).toBe(
@@ -644,6 +674,8 @@ describe('OutboxService depth', () => {
 
   it('records ERROR detail, rejects nonunique receipt failures, missing targets, and vanished updates', async () => {
     const errored = { ...row, status: 'ERROR' as const };
+    const nextAttemptAt = new Date('2026-08-25T10:00:00.000Z');
+    const backoff = { nextAttemptAt: vi.fn(() => nextAttemptAt) };
     const metrics = {
       incrementEnqueued: vi.fn(),
       incrementDispatched: vi.fn(),
@@ -651,16 +683,17 @@ describe('OutboxService depth', () => {
     };
     const query = vi
       .fn()
-      .mockResolvedValueOnce({ rows: [{ id: row.id, tenantId: row.tenantId }] })
+      .mockResolvedValueOnce({ rows: [{ id: row.id, tenantId: row.tenantId, attempts: 1 }] })
       .mockResolvedValueOnce({ rows: [errored] })
       .mockResolvedValueOnce({ rows: [] });
-    await createService(query, { metrics }).service.ack({
+    await createService(query, { metrics, backoff }).service.ack({
       entity: row.entity,
       entityId: row.entityId,
       status: 'ERROR',
       detail: 'rejected',
     });
-    expect(query.mock.calls[1]?.[1]).toEqual([row.id, 'ERROR', 'rejected']);
+    expect(query.mock.calls[1]?.[1]).toEqual([row.id, 'ERROR', 'rejected', nextAttemptAt]);
+    expect(backoff.nextAttemptAt).toHaveBeenCalledWith(1, expect.any(Date));
     expect(metrics.incrementAcked).toHaveBeenCalledWith(row.entity, 'error');
 
     const receiptFailure = new Error('receipt unavailable');
@@ -711,24 +744,27 @@ describe('OutboxService depth', () => {
       service.ack({ entity: row.entity, entityId: row.entityId, status: 'ACKED' }),
     ).resolves.toEqual(acked);
     expect(query.mock.calls[0]?.[1]).toEqual([row.entity, row.entityId]);
-    expect(query.mock.calls[1]?.[1]).toEqual([row.id, 'ACKED', null]);
+    expect(query.mock.calls[1]?.[1]).toEqual([row.id, 'ACKED', null, null]);
     expect(query.mock.calls[1]?.[0]).toContain('status = $2::outbox.message_status');
     expect(query.mock.calls[1]?.[0]).toContain('ack_time = now()');
     expect(query.mock.calls[1]?.[0]).toContain(
       "case when $2::text = 'ERROR' then $3 else null end",
     );
+    expect(query.mock.calls[1]?.[0]).toContain('next_attempt_at = $4');
     expect(query.mock.calls[1]?.[0]).toContain('where id = $1');
     expect(query.mock.calls[2]?.[1]).toEqual([row.tenantId, row.id, 'ACKED', null]);
     expect(query.mock.calls[2]?.[0]).toContain('insert into outbox.acknowledgements');
     expect(query.mock.calls[2]?.[0]).toContain('values (gen_random_uuid(), $1, $2, $3, $4, now())');
     expect(query.mock.calls[2]?.[0]).toContain('on conflict (message_id) do nothing');
+    expectMarkerBeforeLegacySql(query.mock.calls[0]?.[0], 'select id, tenant_id');
     expect(compactSql(query.mock.calls[0]?.[0])).toBe(
-      'select id, tenant_id as "tenantId" from outbox.messages where entity = $1 and entity_id = $2',
+      'with ownership as materialized (select state from outbox.legacy_ownership where id=true for share nowait) select id, tenant_id as "tenantId", attempts, migrated_event_id as "migratedEventId" from outbox.messages cross join ownership where entity = $1 and entity_id = $2 for update of messages',
     );
     expect(compactSql(query.mock.calls[1]?.[0])).toBe(
       compactSql(`update outbox.messages
         set status = $2::outbox.message_status, ack_time = now(),
             last_error = case when $2::text = 'ERROR' then $3 else null end,
+            next_attempt_at = $4,
             updated_at = now()
         where id = $1 returning ${outboxColumns()}`),
     );
@@ -770,6 +806,17 @@ describe('OutboxService depth', () => {
         { query: emptyEnqueueQuery } as OutboxSqlExecutor,
         { entity: row.entity, entityId: row.entityId, payload: row.payload },
       ),
+    ).rejects.toBeInstanceOf(OutboxLegacyCutoverError);
+    // A custom legacy table has no platform marker; retain its no-row
+    // OutboxNotFoundError context contract as a separate assertion.
+    await expect(
+      createService(emptyEnqueueQuery, {
+        module: { table: 'integration.custom_messages', ackTable: 'integration.custom_acks' },
+      }).service.enqueue({ query: emptyEnqueueQuery } as OutboxSqlExecutor, {
+        entity: row.entity,
+        entityId: row.entityId,
+        payload: row.payload,
+      }),
     ).rejects.toMatchObject({ context: { entity: row.entity, entityId: row.entityId } });
 
     await expect(
@@ -785,10 +832,16 @@ describe('OutboxService depth', () => {
       dispatcher: { send: vi.fn(async () => Promise.reject(new Error('offline'))) },
     });
     await expect(dispatch.service.dispatchDue()).rejects.toMatchObject({ context: { id: row.id } });
-    expect(dispatch.database.tx).toHaveBeenNthCalledWith(2, expect.any(Function), {
-      role: 'owner',
-      readonly: false,
-    });
+    expect(dispatch.database.tx).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Function),
+      expect.objectContaining({
+        role: 'owner',
+        readonly: false,
+        retry: false,
+        lockTimeoutMs: 250,
+      }),
+    );
 
     await expect(
       createService(vi.fn(async () => ({ rows: [] }))).service.retry(row.id),

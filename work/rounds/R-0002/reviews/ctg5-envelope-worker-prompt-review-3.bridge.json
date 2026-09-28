@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx/work/rounds/R-0002/prompts/108-ctg5-envelope-worker-prompt-review-3.md",
+  "prompt_sha256": "e05705563680c51e4718cfc340ff88a4499623b5a5ee478082bbbda4e1e78530",
+  "output": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx/work/rounds/R-0002/reviews/ctg5-envelope-worker-prompt-review-3.json",
+  "output_sha256": "e36ba680cc45555763d54de787e181f06e9792adf024f5a7be165f09a8ef5aa0",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx",
+  "started_at": "2026-09-28T07:16:27Z",
+  "ended_at": "2026-09-28T07:18:53Z"
+}

@@ -6,6 +6,7 @@ import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   classifyReleaseContext,
+  isFinalVersionedCandidate,
   isVersionedPreModeCandidate,
   releaseContextConstants,
   ReleaseContextError,
@@ -149,6 +150,83 @@ function versionedPreModeContext(baseCommit, headCommit, commits) {
   };
 }
 
+function finalVersionedContext(baseCommit, headCommit, commits) {
+  const markerSubject = releaseContextConstants.finalVersionCommitSubject;
+  const markers = commits.filter(({ subject }) => subject === markerSubject);
+  if (markers.length === 0) return null;
+  if (markers.length !== 1) {
+    throw new ReleaseContextError('RELEASE_CONTEXT_AMBIGUOUS', 'candidate has multiple final version markers');
+  }
+
+  const marker = markers[0];
+  const markerParent = git(['rev-parse', `${marker.sha}^`]);
+  const markerChanges = parseChanges(markerParent, marker.sha);
+  const parentChangesets = git(['ls-tree', '-r', '--name-only', markerParent, '.changeset'])
+    .split('\n')
+    .filter((path) => /^\.changeset\/[^/]+\.md$/u.test(path) && path !== '.changeset/README.md');
+  const deletedChangesets = markerChanges
+    .filter(({ status, path }) => status === 'D' && /^\.changeset\/[^/]+\.md$/u.test(path))
+    .map(({ path }) => path);
+  if (
+    parentChangesets.length === 0 ||
+    JSON.stringify([...parentChangesets].sort()) !== JSON.stringify([...deletedChangesets].sort())
+  ) {
+    throw new ReleaseContextError(
+      'RELEASE_CONTEXT_CHANGESETS',
+      'final marker must consume exactly every pending changeset from its parent',
+    );
+  }
+
+  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => {
+    const path = relative(repoRoot, manifestPath);
+    return {
+      name,
+      manifestPath: path,
+      baseVersion: readGitJson(baseCommit, path).version,
+      candidateVersion: readGitJson(headCommit, path).version,
+    };
+  });
+  const basePreState = readGitJson(baseCommit, '.changeset/pre.json');
+  const markerParentPreState = readGitJson(markerParent, '.changeset/pre.json');
+  const headFiles = git(['ls-tree', '-r', '--name-only', headCommit, '.changeset']).split('\n');
+  const changesetIdsOnDisk = headFiles
+    .filter((path) => /^\.changeset\/[^/]+\.md$/u.test(path) && path !== '.changeset/README.md')
+    .map((path) => path.slice('.changeset/'.length, -3));
+  const preState = headFiles.includes('.changeset/pre.json')
+    ? readGitJson(headCommit, '.changeset/pre.json')
+    : null;
+  const markerIndex = commits.findIndex(({ sha }) => sha === marker.sha);
+  const followUpChanges = commits.slice(markerIndex + 1).flatMap(({ sha }) =>
+    parseChanges(git(['rev-parse', `${sha}^`]), sha));
+  if (!isFinalVersionedCandidate({
+    baseRootVersion: readGitJson(baseCommit, 'package.json').version,
+    basePreState,
+    markerCommits: commits,
+    markerParentPreState,
+    markerChanges,
+    followUpChanges,
+    candidateRootVersion: readGitJson(headCommit, 'package.json').version,
+    packageStates,
+    changesetIdsOnDisk,
+    preState,
+  })) {
+    throw new ReleaseContextError(
+      'RELEASE_CONTEXT_FINAL_INVALID',
+      'final version candidate does not match its exact marker and follow-up contract',
+    );
+  }
+
+  return {
+    kind: 'final-versioned',
+    baseCommit,
+    headCommit,
+    versionCommit: marker.sha,
+    packageCount: packageStates.length,
+    changesetCount: deletedChangesets.length,
+    rebaseline: false,
+  };
+}
+
 function releaseContext() {
   const baseCommit = git(['rev-parse', 'origin/main']);
   // pull_request workflows are checked out at GitHub's synthetic merge commit.
@@ -187,7 +265,8 @@ function releaseContext() {
     versionRebaselineValid: rebaseline,
   });
   return classified.kind === 'ordinary'
-    ? versionedPreModeContext(baseCommit, headCommit, commits) ?? classified
+    ? versionedPreModeContext(baseCommit, headCommit, commits) ??
+      finalVersionedContext(baseCommit, headCommit, commits) ?? classified
     : classified;
 }
 

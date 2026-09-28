@@ -8,6 +8,7 @@ export default createVitestConfig({
   environment: 'jsdom',
   alias: {
     '@stynx-nyx/angular-ui': resolve(__dirname, '../angular-ui/src/index.ts'),
+    '@stynx-nyx/angular-i18n/testing': resolve(__dirname, 'testing/index.ts'),
     '@stynx-nyx/angular-i18n': resolve(__dirname, 'src/index.ts'),
     rxjs: resolve(__dirname, 'node_modules/rxjs/dist/cjs/index.js'),
     'rxjs/operators': resolve(__dirname, 'node_modules/rxjs/dist/cjs/operators/index.js'),

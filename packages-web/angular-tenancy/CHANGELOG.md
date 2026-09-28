@@ -1,5 +1,12 @@
 # @stynx-nyx/angular-tenancy
 
+## 1.5.0
+
+### Patch Changes
+
+- Updated dependencies [5aea8af]
+  - @stynx-nyx/angular-i18n@1.5.0
+
 ## 1.5.0-rc.3
 
 ### Patch Changes

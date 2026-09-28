@@ -1,0 +1,24 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "The contract tells the filter to call `httpAdapter.reply(response, storedBytesOrNull, storedStatus)` with stored 'UTF-8 JSON bytes'. In Nest 11.2.3, ExpressAdapter.reply (platform-express/adapters/express-adapter.js:68) sends `response.json(body)` for any object, and a Buffer counts as an object. A Buffer would therefore go out as `{\"type\":\"Buffer\",\"data\":[...]}`, not the stored bytes. The byte-equality sensor would catch this, but the wording leads the Engineer toward it.",
+      "required_change": "State that the filter passes the stored bytes to `reply` as a decoded UTF-8 string, after it has set `application/json; charset=utf-8`, so that Express `send` keeps them byte-exact. Alternatively, use `httpAdapter.status()` followed by `httpAdapter.end(response, bytes)`. Pass `null` for the no-body sentinel. State that only the Express adapter is supported, or give the Fastify equivalent."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "'The decorator must bind its filter last among method filters' is under-specified. `@UseFilters` appends metadata, and stacked method decorators apply bottom-up. RouterExceptionFilters.create reverses the list [global, class, method], so the filter bound last ends up first. Whether the filter comes out last depends on where `@TransactionalCommand` sits relative to any consumer `@UseFilters` on the same method.",
+      "required_change": "Rely on the boot-time conflict check that is already specified. At bootstrap, reject any other method-level or class-level filter whose `@Catch` list is empty or matches HttpException/CommittedCommandResponse, unless it comes after the STYNX filter in the reversed order. Add one Inspector case with a consumer method-level catch-all filter stacked in both decorator orders."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0005-plan.md",
+      "issue": "The header **State** still says 'Owner exception needed before any third prompt review'. The Owner note appended at the end, dated 2026-09-27, grants that exception and supersedes it, so the two contradict each other.",
+      "required_change": "Update the State line to record the Owner-authorized cycle 3 and its result, and keep the rule that Inspector and Engineer stay blocked until the predecessor rows and reconciliation are complete."
+    }
+  ],
+  "summary": "The cycle-2 blocker is closed. Selected committed outcomes and replays become CommittedCommandResponse, an HttpException subclass, only after commit or durable lookup. The method-scoped @Catch filter emits them through HttpAdapterHost and never returns to createHandleResponseFn, so the default 201 on a POST cannot overwrite the 502. Checked against Nest 11.2.3: ContextCreator.createContext orders filters [global, class, method], and RouterExceptionFilters reverses that list, so the method filter is selected before a consumer APP_FILTER catch-all. Outer mappers see an error notification. SlaMonitorInterceptor exists and is constrained. The Inspector must prove the default-201 POST committed 502 and its replay on the wire, with a global filter and a mapper registered. An unselected marker is converted to a plain HttpException only after rollback and leaves no key or audit event. The other cycle-2 findings are repaired. The wrapper does not rely on row_security, because stynx_owner is BYPASSRLS (0001_roles.sql:4); it validates tenant and actor from settings, derives actor_role from app.role, and has an other-tenant/NULL-tenant sensor. lock_timeout is set only around the reservation, the transaction is rolled back before IN_PROGRESS is returned, and audit/domain 55P03 is tested. Body absence is decided by HTTP framing, with a bodyless default-parser case. Predecessor reconciliation plus re-review is required. The cycle-1 blockers remain closed: app-role audit uses the 0020 definer wrapper and the same-connection TransactionalAuditSink port; identity is tenant+scope+key, with method and concrete path in the fingerprint and a 409 envelope; one app-role Database.tx with requireActor and retry:false (retry:false is honored at database.ts:85-96); a single committed marker, with plain thrown 502 rolling back; NULL-tenant isolation and two-tenant real-PostgreSQL RLS sensors. UPS-TXN-01…05 are all covered as MUST. The remaining items are wording refinements that the Inspector's byte-exact sensors would catch. This PASS is conditional. It does not authorize Inspector dispatch while the CTG-0003/0004 SHA, PASS, integrated-HEAD and reconciliation rows are pending."
+}

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-CLI-002",
+  "domain": "CLI",
+  "severity": "gate",
+  "type": "cli-generator",
+  "title": "Deterministic generated artifact bytes",
+  "statement": "For identical blueprint bytes, options, and generator version, module generation MUST emit byte-identical relative files and a digest manifest; check mode MUST detect missing, extra, or changed files without writing.",
+  "rationale": "Stable outputs and an honest read-only check allow the generated result to be reviewed and reproduced.",
+  "status": "active",
+  "lifecycle": "supported",
+  "verification": {
+    "required_suites": ["unit", "int"],
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": [],
+      "deterministic_check_available": true,
+      "rationale": "Generator unit tests compare independent output trees byte for byte and probe every check-mode drift state; packed-consumer tests verify manifest digests and read-only check behavior."
+    }
+  },
+  "authority_docs": {
+    "docs": [
+      {
+        "doc": "docs/framework/contracts/cli-generator-1.5.md",
+        "anchor": "output-and-safety"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["cli"],
+    "code_areas": ["packages/cli/src"]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["stynx", "UPS-CLI-01", "CTG-0008", "generator"],
+  "measurable_via": ["check", "sense inventory", "audit observe"]
+}

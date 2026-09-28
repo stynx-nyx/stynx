@@ -1,0 +1,14 @@
+[ tsa ]
+default_tsa = tsa_config1
+[ tsa_config1 ]
+dir = .
+serial = tsa.serial
+signer_cert = tsa.cert.pem
+signer_key = tsa.key.pem
+certs = root.cert.pem
+default_policy = 1.2.3.4.5.6.7
+digests = sha256
+accuracy = secs:1
+ordering = yes
+tsa_name = yes
+ess_cert_id_chain = no

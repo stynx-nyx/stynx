@@ -1,0 +1,66 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "law/adr/ADR-JOBS-0001-postgres-scheduler-worker.md",
+      "issue": "ADR-JOBS-0001 is an accepted ADR, and ADRs rank above docs/framework/contracts in the authority order. Lines 63-71 say every handler invocation runs inside Database.withSystemContext, and a handler without an actorId runs under system context only. The new contract says it supersedes only docs/framework/contracts/jobs-api.md. It reverses the ADR without amending it. jobs-api.md, the docs/framework/contracts/README.md index and the ADR's Contract link still describe the old model.",
+      "required_change": "Before Inspectors write, an Architect `law/` commit (authored as DEVAI Architect) must amend or supersede ADR-JOBS-0001. It must state that queue control runs in system context and handler work runs in tenant RequestContext on the app role, that actorless handlers never run, that cron is local IANA with the fall→later and gap→first-valid rules, and that the worker has an injectable timer port. Update jobs-api.md or mark it superseded, and index the new contract in docs/framework/contracts/README.md. List the trace rebind this causes."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/jobs-actor-timezone-1.5.md",
+      "issue": "The contract never defines the tenant boundary for JobsService tenant-scoped operations, and the current code cannot work there. Every JobsService tenant operation (enqueue, upsertSchedule, getJob, cancel, get/pause/resume/deleteSchedule) wraps repository.inSystem around Database.tx(), which uses the app role. RequestContextMutator.runWithSystemContext (packages/core/src/request-context.ts ~L108-133) rebuilds REQUEST_CONTEXT with only requestId, startedAt and actorId. tenantId is dropped, so Database.resolveExecutionContext('app') throws TenantContextMissingError against real PostgreSQL. No existing real-DB test catches this; the only integration spec checks module wiring. The contract's 'capture a trusted active RequestContext.actorId at enqueue time' is therefore unspecified in practice. It also does not say what happens when input.tenantId differs from the context tenant.",
+      "required_change": "State in the contract that tenant CRUD runs under the caller's active RequestContext on the app role, with no inSystem wrapper. input.tenantId must equal RequestContext.tenantId; a mismatch fails with a typed error before SQL, and the operation never switches or sets a tenant from input. The actor is captured from the caller's context before any system scope. Only materialize, claim, succeed and fail use owner/system. Prompt 51 must test every JobsService method end-to-end on real PostgreSQL, including a tenant-mismatch rejection. Prompt 53 must list the service restructuring."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/jobs-actor-timezone-1.5.md",
+      "issue": "The actor check is too weak. Platform auth.users is global (0005_auth.sql) and tenant membership lives in auth.memberships. The FK only proves the user exists, so a schedule in tenant A could carry a technical actor that belongs only to tenant B, or one whose membership was revoked later. The contract checks for 'nonempty UUID' only. It also does not say who may assign a technical actor distinct from the calling human (INV-RBAC-001).",
+      "required_change": "Require that UpsertScheduleInput.actorId and an explicit EnqueueJobInput.actorId have an active auth.memberships row in the target tenant, checked at upsert/enqueue with a typed error. Re-check at execution: an actor without membership dead-letters without invoking the handler. Say whether assigning an actor other than the caller requires a permission, and name it. Add real-PostgreSQL tests for a foreign-tenant actor and a revoked membership."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/jobs-actor-timezone-1.5.md",
+      "issue": "The actorless invariant is enforced only at migration time. After the migration:\n- resumeSchedule can re-enable a disabled legacy row that has no actor.\n- An actor_id FK ON DELETE SET NULL, copying jobs.actor_id, would leave enabled schedules without an actor.\n- 'The service and SQL' require an actor, but no SQL mechanism is named.\n- Legacy pending jobs already in the queue with no actor are not covered.\n- 'Failed/dead letter' is ambiguous, so the actorless path could retry forever.",
+      "required_change": "Specify the migration DDL exactly: `schedules.actor_id uuid` with ON DELETE RESTRICT (or an explicit alternative); disable actorless schedules; then add a validated CHECK (actor_id IS NOT NULL OR NOT is_enabled). Materialize filters on actor_id IS NOT NULL. resumeSchedule rejects an actorless schedule with a typed error, while an upsert that supplies an actor may re-enable it. An actorless claimed job goes straight to dead_letter with a fixed dead_letter_reason and no retry, and this also applies to pre-migration pending rows. Tests cover each path."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0004-plan.md",
+      "issue": "The file locks leave behaviour without an owner and overlap in places:\n- The actorless dead-letter and the claim/handler context split belong in jobs.worker.ts (Engineer A), but prompt 52 omits them. Prompt 53 assigns them to Engineer B, who may not edit that file.\n- executeHandler (repository, B) and tick (worker, A) together form the boundary, with no stated interface between them.\n- Seeds are assigned both to Inspector B (prompt 51 'ajuste seeds') and to Engineer B (prompt 53 'DDL/seed'), and Inspectors must not edit production.\n- The timezone must flow from materialize (repository, B) through nextCronRunAt (cron, A).\n- jobs.module.ts and jobs.scheduler.ts have no owner.",
+      "required_change": "Add an explicit file-ownership table and a serial handoff: B lands types.ts first (timer/clock port, actorId and timezone fields), then A starts. Give actorless dead-letter and the tick context split to A in prompt 52. Give B the executeHandler signature, service and materialize timezone passing. Remove seed editing from prompt 51. Assign module/scheduler files, or declare them out of scope."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/51-ctg4-inspector-database.md",
+      "issue": "The planned RLS evidence does not reach the jobs schema. scripts/verify-rls-negative.mjs and the test/db fixtures read only database/ddl, and database/ddl has no jobs schema; jobs lives only in packages/data/migrations/platform. So `pnpm check:rls-negative` and test/db DDL/seed tests prove nothing about jobs RLS. Prompt 51 points the Inspector at the wrong harness.",
+      "required_change": "Name the real harness in the contract and prompt 51: packages/data/test/support/postgres createPostgresTestDatabase plus StynxDataModule with migrations enabled and distinct owner/app/reader connection strings, as in packages/storage/test/integration/storage.module.spec.ts, under packages/jobs/test/integration. Adjust vitest.int.config aliases as needed. Also:\n- Have the Architect record how development-contract rule 3 (seeds and test/db) applies to a platform-only migration, or add jobs to database/ddl.\n- Include packages/data/test/integration/migrations.spec.ts in a lock if it gains assertions.\n- Do not count check:rls-negative as jobs evidence."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/51-ctg4-inspector-database.md",
+      "issue": "DETRAN §6.1 requires an E2E test in which the schedule handler writes a row carrying the technical actor_id, only in the job's tenant. Prompt 51 asks only that the handler 'sees' the GUC and that a cross-tenant write fails. The positive write-with-actor proof that feeds the §7 conformance table is missing. Checking that no system context exists is also weaker than it needs to be.",
+      "required_change": "Require the materialized-schedule handler to insert into a FORCE-RLS tenant table through Database.tx() (app role). Assert that the persisted row's tenant equals the job tenant and that its actor, from current_setting('app.actor_id') or the audit actor, equals the schedule's technical actor. Also assert current_user = stynx_app and that database.tx({role:'owner'}) inside the handler throws SystemContextRequiredError."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/jobs-actor-timezone-1.5.md",
+      "issue": "Several DST edge cases are unspecified:\n- Wildcard-hour expressions in the fall hour: under the later-occurrence rule, the first pass of that hour gets no runs.\n- Several gap matches collapsing into one run.\n- A shifted gap run landing on the same minute as a normal match.\n- An `after` that falls between the two occurrences of an ambiguous minute.\n- Recomputing nextRunAt when an upsert changes the timezone.\n- Canonicalizing zone names; offsets and abbreviations such as 'EST' are neither accepted nor rejected.\n- The concrete zones and dates the tests use, and the ICU/tzdata dependency.",
+      "required_change": "Add rules: wildcard fields follow the same later-occurrence rule; all gap matches of one gap produce a single run at the first valid minute, deduplicated with any normal match at that minute. Store the canonical Intl-resolved IANA name and reject offsets and abbreviations. Recompute nextRunAt on a timezone change. Name the test fixtures (e.g. America/New_York 2026-03-08 and 2026-11-01, plus historical America/Sao_Paulo) and state that full-ICU Node is required."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/jobs-actor-timezone-1.5.md",
+      "issue": "The timer port is incomplete for deterministic tests:\n- It does not model unref().\n- Retry timestamps still depend on Math.random jitter in computeBackoffMs.\n- Overlapping ticks and a stop() during an in-flight tick are undefined.\n- JobsScheduler keeps its native setInterval, which leaves the scheduler non-deterministic.",
+      "required_change": "Define the port shape, including an optional unref on the handle. Either inject a random source or have tests assert backoff bounds. Specify the in-flight tick behaviour. Either apply the same port to JobsScheduler or record it as an explicit deviation."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0004-plan.md",
+      "issue": "Release and topological gaps:\n- Making UpsertScheduleInput/JobsPort.upsertSchedule actorId required, and rejecting enqueue without an actor, breaks sources and behaviour for 1.4 consumers. The plan calls this only a 'changeset minor'.\n- The migration changes @stynx-nyx/data, but the changeset does not list it.\n- The base 82e8afcb holds only the CTG-0003 contract; the implementation is not there yet.\n- No migration filename is reserved, so CTG-0005 (TXN) could collide on 0019.",
+      "required_change": "Record acceptance of the breaking change under OD-S15-01. Add a migration note (docs/meta/migration/stynx-1.5-jobs.md) and include @stynx-nyx/jobs and @stynx-nyx/data in the fixed-group changeset. Reserve `0019_jobs_actor_timezone.sql`. State that this work rebases onto the implemented CTG-0001…0003 heads before the PR, and that DETRAN consumes it only at the final 1.5.0 pin."
+    }
+  ],
+  "summary": "Direction is right and all four MUST requirements are covered. Blockers must be fixed before Inspectors write:\n- The contract contradicts the accepted ADR-JOBS-0001 without amending it.\n- JobsService tenant operations already lose tenantId under inSystem, and the contract never defines their boundary.\n- The technical actor is not bound to tenant membership.\n- The actorless invariant is enforced only at migration time.\n- File locks leave the worker and seed work without a clear owner.\n- The named RLS gates and test/db harness do not reach the jobs platform migration.\n- The DETRAN handler-writes-with-actor E2E test is missing."
+}

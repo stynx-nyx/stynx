@@ -1,0 +1,42 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "test/packages/cli-generator/consumer-runtime.ts",
+      "issue": "The runtime logs in as `stynx_app` over TCP with `password: process.env.STYNX_TEST_PG_APP_PASSWORD` (lines 38-45). Nothing in the final CI path provides that password. `stynx_app` is created by `packages/data/migrations/platform/0001_roles.sql` as `LOGIN` with no password. `scripts/ci-local/inside.sh` (lines ~319-370) starts `postgres:16-alpine` with `POSTGRES_PASSWORD`, which means SCRAM auth on TCP, and exports only `STYNX_TEST_PG_HOST/PORT/USER/PASSWORD`. Root `turbo.json` `globalPassThroughEnv` and the `test:int` `passThroughEnv` also leave out `STYNX_TEST_PG_APP_PASSWORD`, so Turbo 2 strict env mode would drop it even if it were set. The local first-run failure in `/private/tmp/stynx-ctg8-final-packed-consumer.log` ('SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string') was fixed only by provisioning this workstation by hand. The same failure will happen when root `pnpm test:int` runs inside the single final `ci:stynx`. Calling it a one-off `sensor-error` in `ctg-0008-plan.md` §Triagem is therefore incomplete: the environment was fixed on one machine, not in the CI lanes that must run this sensor. The gate fails closed, so there is no false green, but importing this HEAD as-is will turn the final gate red.",
+      "required_change": "Before the final gate, make the sensor's database credentials reproducible in every lane that runs `@stynx-nyx/cli#test:int`. Either (a) provision a password for `stynx_app` in the ci-local integration job and the remote workflow, export `STYNX_TEST_PG_APP_PASSWORD`, and add it to Turbo pass-through (this needs Owner/Architect authority for workflow and `turbo.json` changes), or (b) as Inspector, derive the app-role credential inside the ephemeral test setup without mutating cluster-wide state outside the test. Then rerun the packed consumer through root `pnpm test:int` (Turbo, cache disabled) with only the CI-provided env, and record that log."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/cli/test/generate-module.spec.ts",
+      "issue": "No test simulates a write failure after the staging step has started. Plan step 3 lists 'output failure' as a required negative. The contract's acceptance evidence requires 'atomic failure' and says partial failures leave no target output. INV-CLI-001's verification rationale claims 'injected output failures', and trace binds INV-CLI-001 to this file. Every current negative fails during validation or preflight, before `mkdtempSync` runs. So nothing proves the stage directory is removed and `--out` stays absent when `writeFileSync` or `renameSync` fails. Reading `generate-module.ts` lines 476-488, the code looks correct, but the MUST proof is missing.",
+      "required_change": "Inspector adds a sensor that makes a staged write or the rename fail, for example with `vi.spyOn` on `node:fs`, or with an unwritable stage or a destination created during the run. It must assert that `--out` stays absent and that no `.stynx-generate-*` directory is left in the parent. Architect then rebinds `law/trace.json` using `pnpm check:trace --print`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "test/packages/cli-generator/run-integration.mjs",
+      "issue": "INV-CLI-001's rationale says 'the packed CLI repeats pre-existing destination negatives'. INV-CLI-002's says packed-consumer tests verify 'manifest digests and read-only check behavior'. The runner only generates two fresh outputs and runs one positive `--check`. It never refuses an existing output, never tests `--check` drift, and never checks manifest digests through the installed binary.",
+      "required_change": "Either add packed-binary probes (an existing `--out` is refused and its bytes are unchanged; `--check` fails on a modified file and writes nothing; manifest digests are recomputed), or have the Architect narrow the INV-CLI-001/002 rationale to the coverage that actually exists."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/cli/src/generate-module.ts",
+      "issue": "Some DTO guard and validator gaps fall short of contract wording, though none is a security defect. (1) The integer guard (line 364) and the blueprint integer default (line 144) accept any JS safe integer. PostgreSQL `INTEGER` is 32-bit, so out-of-range bodies give a 500 instead of 400, and defaults outside int32 produce DDL that fails when applied. The contract asks for 'length/range' checks. (2) `basePath:'/'` with resource `path:'/'` emits `@Get('//:id')`, which violates 'never a doubled slash'. (3) A declared `{columns:['tenant_id'],unique:true}` index gets the same deterministic name as the mandatory tenant index, so the DDL fails when applied. (4) `/a/:id` from one resource shadows a literal `/a/x` route from another, and the collision check misses it. (5) `sqlReserved` is a partial list, not the full set of PostgreSQL reserved words; all identifiers are quoted, so this is not exploitable. (6) `ensureNoSymlinkBelowParent` rejects an ancestor symlink whose target lies outside the directory containing the link (for example `~/work -> /Volumes/x`), but the contract says ancestor symlinks are allowed after realpath.",
+      "required_change": "Engineer adds int32 bounds to the guard and to defaults, normalizes route joins with `/` roots, rejects or renames a unique `tenant_id` index, detects `:id` shadowing, completes the reserved-word set, and aligns ancestor-symlink handling with the contract. Inspector adds matching negatives."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/cli/test/generate-module.spec.ts",
+      "issue": "Some sensors are weak. The 'inert annotations' test (lines 197-210) never compares the annotated and bare outputs, so metadata having no effect is not actually proven. In `consumer-runtime.ts`, the missing-tenant and missing-actor probes accept any thrown error. In `run-integration.mjs`, the preinstall override-equality assertion compares a set derived from `order` against `order` itself, so it cannot fail.",
+      "required_change": "Compare outputs with the digest header stripped. Match the specific `Database.tx` context error. Re-read the written consumer `package.json` and compare its overrides against the independently computed closure."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "The §Compatibility section still says 'one fixed-group changeset and one PR' and 'CTG-0007 must reach its approved integration checkpoint before CTG-0008 Inspector dispatch'. OD-S15-02 superseded both, and `ctg-0008-plan.md` records that. The DETRAN C-0002 §7 row for UPS-CLI-01 (symbol, tests, deviations such as the strict subset and no controller when `api` is absent) is not yet filled in.",
+      "required_change": "Architect adds an OD-S15-02 supersession note to the contract. The maestro fills in the §7 conformance row when final versioning happens."
+    }
+  ],
+  "summary": "Most of the proof is real and current: the packed consumer passed on current source (`packed-consumer-2.log`) with 9 tarballs built and packed from source, SHA-512 lockfile integrity, an unreachable loopback scope registry, compiled generated Nest routes with deny/allow for all 7 route checks, DTO rejections, create using the context tenant, a failure when the target schema already exists, and FORCE RLS on real PostgreSQL for two tenants. It ran through `pnpm --filter` without Turbo, and `packages/cli/turbo.json` keeps `test:int` uncached. The 75/75 unit run, 44/44 API baselines and DEVAI strict (`findings:[]`, exact `FORBID-DROP-PROD@0018f245` receipt applied for the uniquely named ephemeral DB drop only, commit is an ancestor of HEAD) are all confirmed. Root and reference manifests are untouched, and nothing is copied from DETRAN. Two blocking gaps keep this at REVIEW rather than PASS. First, the `stynx_app` TCP password from the first-run triage exists only on this workstation. CI provides no app-role password, and Turbo strict env drops `STYNX_TEST_PG_APP_PASSWORD`, so the final `ci:stynx` will fail at `test:int`. It fails closed, but it will fail. Second, the MUST sensor for a failure during staged output is missing. Fix both before importing CTG8 last into the cumulative branch."
+}

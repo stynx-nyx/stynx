@@ -10,6 +10,7 @@ export default createVitestConfig({
     '@stynx-nyx/sdk': resolve(__dirname, '../sdk/src/index.ts'),
     '@stynx-nyx/angular': resolve(__dirname, '../angular/src/index.ts'),
     '@stynx-nyx/angular-tenancy': resolve(__dirname, '../angular-tenancy/src/index.ts'),
+    '@stynx-nyx/angular-auth/testing': resolve(__dirname, '../angular-auth/testing/index.ts'),
     '@stynx-nyx/angular-auth': resolve(__dirname, '../angular-auth/src/index.ts'),
     '@stynx-nyx/angular-ui': resolve(__dirname, '../angular-ui/src/index.ts'),
     '@stynx-nyx/angular-trash': resolve(__dirname, 'src/index.ts'),

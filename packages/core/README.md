@@ -4,6 +4,11 @@
 
 ## Purpose
 
+STYNX 1.5 exports the injectable `Clock` port, `SystemClock`, `STYNX_CLOCK`,
+and `provideStynxClock(clock?)`. Provide a fake `Clock` for deterministic
+application tests. The same clock object can be bound to worklist's existing
+`WORKLIST_CLOCK` token when deadline calculations need the same time source.
+
 `@stynx-nyx/core` solves the _foundation_ problem in a multi-tenant NestJS app: every request needs a stable identifier, knowledge of the actor + tenant + session it runs under, a single canonical error shape that bubbles up consistently, schema-validated environment configuration, and a secret loader that doesn't leak credentials into logs. Each of these is solvable separately, but composing them ad-hoc across packages creates drift. `@stynx-nyx/core` resolves it once.
 
 You reach for `@stynx-nyx/core` when you are starting a new STYNX-based backend app, or when you are integrating an existing app onto STYNX and need the request-context substrate for tenant scoping, audit, idempotency, or rate-limit decisions downstream. It is **always the first** `@stynx-nyx/*` package wired in your `AppModule`.

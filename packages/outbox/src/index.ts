@@ -9,6 +9,7 @@ export * from './ack-signature';
 export * from './backoff';
 export * from './constants';
 export * from './errors';
+export * from './event-stream-source';
 export * from './http-outbox-dispatcher';
 export * from './metrics';
 export * from './outbox.module';

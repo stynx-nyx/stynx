@@ -24,6 +24,12 @@ export const $SessionBundle = {
             type: 'string',
             isRequired: true,
         },
+        revokedSessionIds: {
+            type: 'array',
+            contains: {
+                type: 'string',
+            },
+        },
         sid: {
             type: 'string',
             isRequired: true,

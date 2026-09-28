@@ -77,6 +77,29 @@ test('allows raw PostgreSQL imports in data and cli packages', async () => {
   }
 });
 
+test('allows published catalog exports while rejecting workspace source deep imports', async () => {
+  for (const locale of ['en', 'pt-BR']) {
+    const messages = await lintSnippet({
+      packageName: '@stynx-nyx/reference-web',
+      code: `import catalog from '@stynx-nyx/angular-ui/catalogs/${locale}.json';\nexport const labels = catalog;\n`,
+    });
+    assert.deepEqual(
+      messages.filter((message) => message.ruleId === 'no-restricted-imports'),
+      [],
+      `expected the public ${locale} catalog export to be allowed`,
+    );
+  }
+
+  const messages = await lintSnippet({
+    packageName: '@stynx-nyx/reference-web',
+    code: "import { hidden } from '@stynx-nyx/angular-ui/src/internal';\nexport const value = hidden;\n",
+  });
+  assert.ok(
+    messages.some((message) => message.ruleId === 'no-restricted-imports'),
+    'expected workspace source deep imports to remain forbidden',
+  );
+});
+
 test('activates boundaries plugin and internal dependency rule', () => {
   const previousPackageName = process.env.npm_package_name;
   process.env.npm_package_name = '@stynx-nyx/core';

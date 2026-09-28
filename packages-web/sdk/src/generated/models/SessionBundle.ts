@@ -8,6 +8,7 @@ export type SessionBundle = {
     expiresAt: string;
     idleExpiresAt: string;
     refreshToken: string;
+    revokedSessionIds?: Array<string>;
     sid: string;
 };
 

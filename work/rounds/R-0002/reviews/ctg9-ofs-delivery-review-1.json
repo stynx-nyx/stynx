@@ -1,0 +1,96 @@
+{
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:163",
+      "issue": "UPS-OFS-02/04: the existing-receipt read runs in its own transaction with no lock. The advisory lock at :106 is per `tenant:device`, so it does not serialize two devices that send the same key. The consequences depend on what the other contender has done. (a) If it has not committed yet, both see no receipt. The inserts at :172-175 are outside the try block. The loser gets a raw 23505 on `sync_queue_items (tenant_id,idempotency_key)` or on the receipts PK. That becomes a 500, and the batch stays `open` with the lease held for 30 s. (b) If the other device's receipt exists with status `received` (its batch is open, or it is in retry after 40P01), the condition at :164 lets execution through. It skips the insert and runs `itemApplier.apply` again under another batch. The update at :207 then turns the other batch's receipt into `applied`. The same effect is applied twice. This is the case the Engineer reports as unproven, and it is an implementation defect, not only a missing sensor.",
+      "required_change": "Inside the `txIndependent` for the item, before `apply`, lock the receipt with `select ... from offline.sync_item_receipts where tenant_id=$1 and idempotency_key=$2 for update`. Re-check that it belongs to `(device_id,device_batch_id)` of the current batch, that it is `received`, and that `payload_hash` matches. Otherwise return the committed receipt without calling the applier. Change the inserts at :172-175 to `insert ... on conflict do nothing`, then reread. A unique conflict must resolve by reading the committed receipt, never as a 500 or by re-running the applier."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:164",
+      "issue": "Integrity bypass. If a keyed item with the same key and a different `payloadHash` finds an existing receipt with status `received`, the condition `existing.status !== 'received' || !item.idempotencyKey` is false. The divergent-hash branch at :166 is skipped and the new payload is applied under the original key. The receipt keeps the old hash and changes to `applied`. The contract requires that same key with a different hash records a rejected attempt and applies nothing. Also, the rejected attempt at :166-168 appears only in the response bytes. It is never persisted, so `getSyncBatchReceipt` (itemReceipts :34-37) omits it.",
+      "required_change": "Compare `existing.payload_hash !== item.payloadHash` before any status check. In that case do not apply. Persist an attempt receipt that is scoped to the batch and does not overwrite the original, for example a table or column `offline.sync_item_attempts (tenant_id,device_id,device_batch_id,queue_item_id,idempotency_key,payload_hash,status='rejected',error_code='OFFLINE_SYNC_ITEM_INTEGRITY')`. Include it in `itemReceipts`."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:112",
+      "issue": "The lease has a fixed 30 s duration and is never renewed. The fence (:181-182) exists only inside the applier transaction. The queue-item and receipt inserts (:172-175) and the error-code write in the catch block (:216) run with no fence at all. A batch with more than 100 items or a slow applier passes 30 s. A concurrent retry then takes generation+1, and both holders keep writing receipts. Expiry at :111 is compared against the Node clock (`Date.now()`), while it is written with `clock_timestamp()` from the database. The wait loop (:149-153) never tries to take over an expired lease.",
+      "required_change": "In each item transaction, fence by `lease_token` and `lease_generation`, and extend the lease with `update ... set lease_expires_at=clock_timestamp()+interval ... where lease_token=$tok returning lease_generation`. Apply the same fence to the pre-item inserts and to the error-code write. Compare expiry in SQL (`lease_expires_at > clock_timestamp()`). In the wait loop, try the atomic takeover when the lease has expired."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:213",
+      "issue": "UPS-OFS-03: every non-retryable failure is handled the same way. The item stays `received` with an `error_code`, and the batch closes with status `closed` and `responseStatus` 201 (:222). A classified rejection never produces status `rejected`. An internal failure becomes a permanent 201 ACK that is replayed exactly, with the item still not terminal. On the 40P01/40001 path, the batch stays `open` with `responseStatus:null`, but the controller (ctg9-offline-sync.controller.ts:108-109) still returns HTTP 201 with a body, which a client will read as an ACK.",
+      "required_change": "Distinguish a classified rejection, for example an `OfflineSyncItemRejection` or `OfflineSyncError` with status 4xx from the applier. Persist it after rollback as `status='rejected'` with its code. For an unclassified error or 40P01/40001 after the retries are exhausted, keep the batch `open` and do not close it with 201. Return 503 `retryable:true` with `Retry-After`, or another non-ACK status that the contract states explicitly."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:201",
+      "issue": "UPS-OFS-01 consumption. (1) The reservation is chosen only by `device_id` and number range. It does not filter by `status`, `entity_type` or `series`, so a number can be consumed under a reservation that is `cancelled`, `blocked` or `expired`. (2) `on conflict do update set status='applied',server_entity_id=$4` overwrites a number that is already `applied` for another entity. That erases the applied evidence, which the contract forbids. (3) In postgres-offline-sync.store.ts:262-275, the tail released on cancel is computed only from `status='applied'`. It therefore also frees numbers that are `claimed-locally`, which can later be applied and reissued to another reservation.",
+      "required_change": "Filter the reservation by `entity_type=item.entityType`. When the reservation is not `reserved`/`expired`, or the number was already released, mark the item `conflict` or `rejected`. Change the upsert to `do update ... where numbering_consumption.status <> 'applied'` and treat 0 rows (a different entity already applied) as an item conflict. When cancelling, compute the tail from `max(number) where status in ('applied','claimed-locally')`."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:69",
+      "issue": "The consumption projection derives the state of numbers that have no row as `'available'` regardless of the reservation's state. `block` (:58, and the in-memory :289) updates only materialized `available` rows. Nothing ever inserts such rows, so block is a no-op in the projection. Numbers in `blocked`, `expired` or cancelled reservations (released tail) keep appearing as `available`, which breaks the distinction between available, blocked and expired that the contract requires.",
+      "required_change": "In `pgConsumption`, derive the default state from the reservation: `blocked` → 'blocked'; `expired`, or `valid_until` in the past → 'expired'; the released tail of a cancelled reservation → an explicit state. Otherwise → 'available'. Alternatively, materialize the whole interval when the reservation is created. Make the in-memory store match."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/migrations/0002_durable_sync.sql:88",
+      "issue": "The legacy batch and receipt backfill runs only once, at migration time. The upgraded E6 path (postgres-offline-sync.store.ts:296-305) keeps inserting queue rows without `sync_batches` or `sync_item_receipts`. When a host enables CTG9 on that database (the DETRAN R-0022 adoption) and a device re-sends a batch from the E6 era, pgSubmit treats it as a new batch. The insert at :173 then fails with a raw 23505 on `(tenant_id,idempotency_key)` or `(tenant_id,id)`, giving a 500 and leaving the batch open. That breaks the legacy bridge and the claim of no effect.",
+      "required_change": "In pgSubmit, when no batch row exists but `sync_queue_items` has rows for the same `(tenant,device,device_batch_id)` with `identity_mode='e6'`, create the batch lazily as `legacy_closed_unverified` together with its receipts, then follow the bridge path. Alternatively, have the E6 path on 0002 write the legacy header and receipts in the same transaction. Either way, map an item-key or queue-ID 23505 against an E6 row to the `legacy_closed_unverified` path or to a typed 409, never to a 500."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/ctg9-offline-sync.controller.ts:108",
+      "issue": "The transport path is hardcoded as `'/offline-sync/sync-batches'`. The published interceptor uses `originalUrl` without the query string (idempotency.interceptor.ts:78-83,223) for both `routeKey`/`compositeKey` and the fingerprint. With a global prefix or versioning, the OFS ledger and the legacy bridge (postgres-durable.ts:139-141) compute a different key and fingerprint. The legacy lookup then never matches (a permanent 409), and a CTG9 upgrade reclassifies existing keys, contrary to the contract.",
+      "required_change": "Pass `path: (req.originalUrl ?? req.url).split('?')[0]` and derive the userId the way `toUserId(request)` does. Add an HTTP sensor with a global prefix that proves the bridge replays a legacy ACK."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:123",
+      "issue": "Transport-key reuse with a different body returns the `OfflineSyncError` envelope with `errorCode:'OFFLINE_SYNC_BATCH_SEQUENCE'` (a code that means sequence gap). The published body is `UnprocessableEntityException('IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY')`. The same mismatch is in the in-memory store at :363. A missing header (controller :106) likewise returns an OFS envelope instead of the published `BadRequestException`. The sensors use `toMatchObject`, so they pass.",
+      "required_change": "Throw `new UnprocessableEntityException('IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY')` and `new BadRequestException('Idempotency-Key header is required for idempotent routes')`, byte-identical to the interceptor. Make the HTTP characterization compare the full body."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/transport.ts:29",
+      "issue": "`captureReplayableHeaders` reads `getHeaders()` inside the service, before the handler finishes. It captures everything set up to that point (`x-powered-by`, the original `x-request-id`, rate-limit headers) and misses headers set later by interceptors. It drops values that are not strings. On replay it overwrites the current request ID with the original one. There is no sensor for custom headers.",
+      "required_change": "Capture with the same semantics as the interceptor (`response.headers`) or with an explicit allowlist. Exclude request-id, rate-limit and framing headers. Inspector: add a replay sensor for a custom header and for request-id preservation."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:26",
+      "issue": "The 42703/42P01 → `OfflineSyncUpgradeRequiredError` mapping covers only the first transaction of pgSubmit and the E6 paths. `pgGetBatch`, `pgGetItem`, `pgTransition` (the update of `audit_actor_id`), `pgConsumption` and `pgReconcile` against 0001 return raw PostgreSQL errors.",
+      "required_change": "Wrap every `database.tx` and `txIndependent` call in the durable functions with `upgrade()`, or use a shared `txDurable` helper."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:98",
+      "issue": "`contextHash` uses `JSON.stringify` over the whole item objects. That includes `payloadJson`, `createdLocallyAt` and `reservedNumber`, in whatever key order the client sent. A lost-ACK replay with keys in a different order gets a 409 instead of a replay. The contract defines the context as org, agent, id, key, hash, entityType and localEntityId.",
+      "required_change": "Compute the hash with `stableStringify` over exactly the contracted fields, with hash as integrity."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:186",
+      "issue": "UPS-OFS-04 in PostgreSQL: detection runs only when an applier exists and after `apply`. A missing or disabled window produces no host warning. The pair is written to `sync_conflicts`, but `offline.sync_conflict_evidence` (0002:74-86) is never written: it has no related item and no `allowed_actions`. `resolveWithPort` (store :106-116) delegates everything to the port and does not record the resulting action or state on the receipt. Settle is an alias of close (store :93), and `reason`/`userRef` are discarded in every transition.",
+      "required_change": "Insert evidence (`related_queue_item_id`, `allowed_actions` from the port) and record the resolution and the resulting receipt state. Settle should record its own distinct state and its reason. Inspector: add PostgreSQL sensors for two-device suspicion, handoff, missing or disabled window, and permitted/forbidden action."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:156",
+      "issue": "The `itemApplier` without `eventPort` configuration error is thrown at request time, and only when the batch has keyed items, not at bootstrap. The legacy resolver only checks for empty with `!identity`; whitespace or a non-string passes. The legacy comparison (:135) sorts with `localeCompare`, while PostgreSQL uses `order by id` with the database collation, which can differ and cause a false 409.",
+      "required_change": "Move the check into `forRoot`. Validate that `typeof identity==='string' && identity.trim()`. Sort both sides with the same binary comparator, or use `order by id collate \"C\"` in SQL together with a plain `<` comparison in JavaScript."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:635",
+      "issue": "The PostgreSQL gaps listed by the Engineer that need an Inspector sensor before any MUST declaration: simultaneous submission of the same open batch; expired-lease takeover; same key from two devices; cancel with tail and `claimed-locally`; concurrency, handoff and action port; replay of custom headers; negative RLS across the new tables using app, reader and owner roles; and HTTP characterization of TEAT/BOAT before and after. The last one is host-owned and cannot be proven inside OFS.",
+      "required_change": "The Inspector writes these PostgreSQL and HTTP sensors after the blocking fixes. The TEAT/BOAT characterization belongs in the DETRAN or maestro lane before CTG9 is declared MUST."
+    }
+  ],
+  "summary": "I reviewed the 0002 migration, postgres-durable, the Postgres and in-memory stores, the service, the module and both controllers against the CTG9 contract and the published interceptor. Git and the tests were not run. The structure is present: the mode is chosen by `policyResolver`, and CTG9-only ports fail at bootstrap without it. Identity mode is server-owned and E6 keeps a partial hash index. E6 uses a SQL guard that maps 42703/42P01 to the typed 503. The enclosing-transaction check runs, and the item runs under `txIndependent(role app, read committed, strictItemMode)` with the final event last. The four E6 routes are preserved, with the CTG9 controller swapped in at bootstrap. RLS is ENABLE/FORCE with grants, and the in-progress 503 carries Retry-After. Several of the gaps the Engineer called 'unproven' are real PostgreSQL implementation defects: the same key across devices can be applied twice or crash with a raw 23505; a keyed item in `received` bypasses hash integrity; the lease is never renewed and fencing is partial; unclassified failures close the batch with a 201 ACK and there is no `rejected` status; numbering consumption ignores reservation state and overwrites `applied`, and cancel frees `claimed-locally` numbers; the consumption projection never shows blocked or expired; E6 rows written after 0002 are not bridged when CTG9 is adopted; and the hardcoded path breaks the legacy bridge under a global prefix. These must be fixed before the implementation commit. The PostgreSQL sensors for concurrency, lease, handoff, custom headers, full RLS and TEAT/BOAT are Inspector work before the MUST declaration. FAIL does not release the OFS commit."
+}

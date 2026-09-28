@@ -1,0 +1,36 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/105-ctg5-envelope-inspector.md:13",
+      "issue": "The Inspector's PASS guard still names `reviews/ctg5-envelope-worker-prompt-review-2.json`. That PASS was issued at HEAD 3f1df723 against the earlier prompt text. Its summary says neither worker may be dispatched without the Owner receipt `authorization-ctg5-error-envelope.md`. Commit 29dfa65f rewrote the prompt so that no Owner receipt is required. The guard therefore accepts a stale PASS for a different prompt, and that PASS contradicts the dispatch conditions now in force. A worker can pass the guard without any PASS on the current text, or stop because the two documents disagree.",
+      "required_change": "In a DEVAI Architect commit, replace the path with the current cycle's review (`reviews/ctg5-envelope-worker-prompt-review-3.json`, or whichever cycle returns PASS). Add a check that its `.bridge.json`/fallback receipt has a `prompt_sha256` equal to the SHA-256 of this file at the SHA recorded in `record.md`. If that receipt or digest is missing, the worker stops and reports `reference-gap`. State that review-2 is superseded."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/106-ctg5-envelope-engineer.md:14",
+      "issue": "The Engineer prompt has the same defect. It names the stale PASS `ctg5-envelope-worker-prompt-review-2.json`, which requires an Owner receipt that the new text says does not exist. It does not tie the PASS to the digest of the current prompt.",
+      "required_change": "Apply the same repair as in 105: name the current PASS and its bridge/fallback receipt, require `prompt_sha256` to match 106 at the recorded SHA, and mark review-2 as superseded."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md:45",
+      "issue": "Line 45 still says 'must not produce `IDEMPOTENCY_KEY_IN_PROGRESS`', which is the old code. Lines 9, 29 and 37 were amended to `IDEMPOTENCY:CONFLICT:in-progress`. Review-1 asked for line 45 to be amended too. The current audit-contention sensor (faults.spec:517-543) asserts `toEqual` on 201, so no test is left vacuous. The contract still contradicts itself on the code name.",
+      "required_change": "In the same Architect commit, replace the name with `IDEMPOTENCY:CONFLICT:in-progress` (no 409 in-progress)."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/105-ctg5-envelope-inspector.md:30",
+      "issue": "The prompt says 'Add assertions only' for the borrowed specs. But `angular-transactional-command-http.spec.ts:163` asserts `toEqual({code:'IDEMPOTENCY_KEY_CONFLICT',context:{key}})`, and `if-match-http`/`http`/`advanced` do the same for 409 (`http.spec:365`, `advanced:331/343/367`). Those assertions must be replaced by the complete envelope, or the Engineer's green is impossible without editing tests. Read literally, the prompt forbids that replacement.",
+      "required_change": "Explicitly allow replacing only the old-shape 409 assertions (`{code,context}` and `IDEMPOTENCY_KEY_*`) with an exact status plus `toEqual` of the canonical envelope, together with the `X-Request-Id` check. Keep the ban on changing 412/428, 422, 502, RLS and durable-effect assertions. Record each replacement as a strengthening of the assertion, not a weakening."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/errors.json:108",
+      "issue": "Legacy data errors 504/503/500 received their `runtimeBody`, but the legacy 422 of `@stynx-nyx/idempotency` is only mentioned in the `duplicate-key` description. It has no catalog entry of its own. Its actual body (`UnprocessableEntityException('IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY')` at `idempotency.interceptor.ts:183-186`) is not fixed, even though review-1 asked for 'legacy runtimeBody entries'.",
+      "required_change": "Add a legacy entry `IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY` with status 422, `retriable:false`, exception `@stynx-nyx/idempotency UnprocessableEntityException`, and `runtimeBody {message:'IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY',error:'Unprocessable Entity',statusCode:422}`. Describe it as a historical body outside the CTG5 envelope, following the pattern of `TENANT_ACCESS_DENIED`."
+    }
+  ],
+  "summary": "Commit 29dfa65f resolves the substance of the authority review. The classification is recorded as a non-breaking Architect decision under OD-S15-01. It does not attribute an A/B choice to the Owner and requires a specific Owner decision for any change to the schema, the legacy catalog or published bodies. No file under `law/` changed. The fallback receipt for the classification review is valid: `prompt_sha256` ef137f80… and `output_sha256` 331b3066… match the files, and the JSON parses. The contract sets the canonical 409 with a configurable `mismatchCode` under the schema regex, validated at bootstrap. The catalog covers every code currently emitted by `transactional-command.ts`, except `COMMAND_MISMATCH_CODE_INVALID`, which is removed by design. Each entry has a fixed message, `retryable`, `details` and status; only in-progress is `retryable:true`. Legacy 504/503/500 data errors and consumer bodies are kept separate. The migration note is present. Scopes are correct: the Inspector touches only tests and preserves 422/502/RLS and durable-effect proofs; the Engineer touches only `transactional-command/**` plus the README and changeset. The trace and baseline rebinds remain separate Architect commits, with focused gates, delivery-review and the single final OD-S15-02 gate. No fictitious Owner receipt appears. One blocker remains: the PASS guard in both prompts points to the superseded review-2, which required an Owner receipt that the new text rules out, and it does not bind the PASS to the current prompt's digest. Fix the PASS paths, then rerun the prompt-review. The Inspector may be dispatched only after the maestro records the exact SHA and worktree. Note: this review ran read-only `git show`/`git ls`/`shasum` commands to check the commit and digests. The prompt asked me not to run Git; no files were edited."
+}

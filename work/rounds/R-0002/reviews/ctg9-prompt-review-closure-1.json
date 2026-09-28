@@ -1,0 +1,66 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/137-ctg9-sig-architect.md:4",
+      "issue": "The SIG Architect prompt allows writes to `packages/signature/**`. Constitution Art. 6 (.devai/pin/constitution.md:95) assigns `packages/` to the Engineer (F2), so this breaks role separation. It also contradicts the prompt's own line 12, 'apenas contrato Architect, sem implementação'. The same line names `docs/framework/contracts/signature-api.md`, which does not exist. The indexed contract is `signature.md` (docs/framework/contracts/README.md:31), so the prompt would create a parallel contract document.",
+      "required_change": "Change the write set to `docs/framework/contracts/signature.md` and `work/rounds/R-0002/ctg9-sig-contract.md`. If the level and trust-policy decisions need to be durable, add an additive `law/adr/ADR-SIGNATURE-0001-*.md`. Remove `packages/signature/**`: the Engineer implements it later under its own prompt after the Inspector's red sensors."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/138-ctg9-obx-architect.md:37",
+      "issue": "The prompt asks for 'nomes públicos exatos' but says `appendMany`. The preflight fixes the name as `appendManyInTransaction` (ctg-0009-preflight.md:189), and OFS depends on that name in parallel.",
+      "required_change": "Replace `appendMany` with `appendManyInTransaction` and cite `appendInTransaction(trx,event)` exactly as in the preflight."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/138-ctg9-obx-architect.md:4",
+      "issue": "OBX takes on the data and audit contract: `Database.txIndependent`, the strict holder, `TxOptions.isolation` on the top-level tx, the post-append seal, the audit writers, the epochs and `verify_chain`. Its write set is only the outbox ADR and `outbox-api.md`. The current `Database.tx` and command-audit semantics live in `docs/framework/contracts/transactional-audit-idempotency-1.5.md`. As written, an outbox ADR would supersede a CTG5 contract without editing it, and OFS could end up redefining data semantics in `offline-sync-api.md`.",
+      "required_change": "Add `docs/framework/contracts/transactional-audit-idempotency-1.5.md` and `audit-events-api.md` to the OBX write set. Neither SIG nor OFS writes them, so no lock is shared. The OBX ADR states that it supersedes the CTG5 decisions it changes. In 139, OFS only cites the data/OBX names and does not redefine them."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/138-ctg9-obx-architect.md:22",
+      "issue": "A1 UPS-OBX-02 requires the storage migration to preserve pending items and history 'sem entrega duplicada ou perda de evento'. The prompt only asks for 'sem perda'. The contract accepts at-least-once delivery on reclaim (preflight:227), but the migration itself must not re-send an event that is SENT in flight or legacy-ACKed.",
+      "required_change": "Add to 138: the migration preserves SENT/lease and ACK state without re-dispatch, and the Inspector covers a SENT-in-flight event and an ACK-at-migration case with no second send."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:127",
+      "issue": "The writers' static isolation refusal uses 40001. `Database.tx` treats 40001 as retryable by default: 3 attempts with jitter (packages/data/src/database.ts:46-48,86,135-148), then throws `SerializationFailureError` ('failed after retrying serialization errors'). An RR/SERIALIZABLE caller fails deterministically on every attempt, and an external retry loops. This does not fork the chain, which is the requirement being closed, but the diagnosis is misleading.",
+      "required_change": "Keep 40001 as requested, but with a fixed MESSAGE/HINT/DETAIL that identifies the refusal (e.g. `audit_chain_requires_read_committed`). Map it in `packages/data` to a typed non-retryable error, or document that retrying with the same isolation is useless. The Inspector covers attempts=1 for that case."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/data/migrations/platform/0008_audit.sql:443",
+      "issue": "`verify_chain(p_tenancy_id, p_limit)` orders from the oldest row and applies LIMIT (default 1000). With the public signature kept (preflight:135-137), a tenant with more than p_limit legacy events never reaches the anchor. The 'valida a nova época' claim is then unprovable through that function. Its `lag()` over the whole chain would also mark the anchor (previous_hash=NULL) as invalid unless it partitions by epoch.",
+      "required_change": "The contract fixes the partitioning by epoch (`lag() OVER (PARTITION BY epoch ...)`, anchor = GENESIS) and adds an overload or new function that verifies from the current epoch's anchor. The Inspector covers a tenant with more than p_limit legacy rows plus a new epoch."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:186",
+      "issue": "The seal says 'rejeita qualquer query de escrita posterior', but the mechanism is not specified. Classifying SQL in JS misses CTEs, functions with side effects and triggers. PostgreSQL allows switching to read-only after writes (it only blocks read-only→read-write), and `mapTransactionError` already maps 25006 to `ReadOnlyViolationError` (database.ts:53-55).",
+      "required_change": "Specify the seal as `SET LOCAL transaction_read_only = on` in `appendInTransaction`/`appendManyInTransaction` right after the clock update, with the existing typed error. `lock_timeout` goes via `trx.query('SET LOCAL lock_timeout …')` in the adapter. `EventStreamService` already maps any `now()` failure to 503 `SSE_SOURCE_UNAVAILABLE` (packages/backend/src/event-stream/event-stream.service.ts:137-141), so no `packages/backend` or data TxOptions lock is needed."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:151",
+      "issue": "The `stynx.audit_chain_key` GUC is settable by any role via `set_config`. Session code can clear it after writing X and then write Y, which takes a second advisory. That still yields at worst a 40P01 PostgreSQL can detect, not a silent hang. The typed SQLSTATE for the key mismatch is not named. `write_command_event` today takes the advisory before calling `audit.write` (0020:110-113), so the new version must check the key before that first lock.",
+      "required_change": "Name the SQLSTATE and its mapped error in the contract. State that the check in `write_command_event` comes before its own advisory. Optionally also compare against the backend's advisory locks in `pg_locks` (pid=pg_backend_pid()) so a reset GUC does not bypass the binding. State that the GUC is self-protection, not a security boundary."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/137-ctg9-sig-architect.md:24",
+      "issue": "A1 UPS-SIG-01 requires proofs for the ADR-0018 profile matrix while 'mantendo os negativos dos adapters clínicos e de juntas'. UPS-SIG-04 requires preserving the results of the `verifyWithdrawalEvidence` port. The prompt mentions neither.",
+      "required_change": "Add to 137: map the negatives of DETRAN's clinical and board adapters and the `verifyWithdrawalEvidence` result set to typed STYNX results, with no DETRAN code copied."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "law/adr/README.md:7",
+      "issue": "The ADR index lists every accepted ADR. OBX and OFS both create new ADRs but do not have the index in their write sets. That is correct for parallelism, but without a rule the entries get forgotten or both workers edit the index.",
+      "required_change": "Record in the prompts or the plan that only the maestro adds the index entries (law/adr/README.md and, if needed, docs/framework/contracts/README.md), serially at import, in a DEVAI Architect commit."
+    }
+  ],
+  "summary": "The four review-7 blockers are closed in the contract, and the code confirms the premises. (1) Each of the three writers checks `transaction_isolation` before reading the head, fails with 40001 instead of forking, and uses advisory plus a monotonic timestamp under RC. RR×RC and SERIALIZABLE×RC are covered, along with the `(tenancy_id,occurred_at DESC,event_id DESC)` index, the partial index for NULL and the measured sentinel (preflight:116-148). (2) EXECUTE stays revoked from app (0020:17). The owner `AuditSqlSink` path (reference/api app.module.ts:299-309) writes the real tenant, and the local GUC binds the transaction to the first key before a second advisory (preflight:148-155). (3) Legacy data is classified by `previous_hash`, with no rehash or abort, a new epoch anchored with tips and diagnostics, and legacy never declared conforming. A legacy mismatch requires Owner review before publication (preflight:128-142). (4) The strict holder covers the domain effect in any role before `pool.connect`. `Database.tx` is the only pg acquisition site in-process, and legacy is preserved outside strict mode. `now()` gets lock_timeout/55P03→503, one preflight per tenant/process, and a seal with appendManyInTransaction (preflight:179-190, 271-286, 319-322). The remaining gaps are details for the OBX Architect: an epoch-aware verify_chain, a non-retryable 40001 refusal, the seal via transaction_read_only, and naming the GUC SQLSTATE. The three prompts' write sets are disjoint, with no shared lock between them. One blocker remains: prompt 137 gives the Architect writes to `packages/signature/**` (Engineer under Art. 6) and points at a non-existent `signature-api.md`. Minimum sequence: (a) fix the 137 write set to signature.md plus ctg9-sig-contract.md (plus an optional ADR), and add the SIG-01/04 A1 items; (b) in 138 fix `appendManyInTransaction`, add the transactional-audit-idempotency-1.5.md and audit-events-api.md docs, and require a migration with no duplicate delivery; (c) OBX and OFS can then be dispatched in parallel, with SIG after its textual repair, checked by a delta without a new full cycle. The maestro serializes the ADR index. This PASS/REVIEW releases only Architect work. Inspector and Engineer need their own prompts, sensors and delivery-review."
+}

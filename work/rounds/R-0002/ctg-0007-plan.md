@@ -1,0 +1,109 @@
+# CTG-0007 — utilitários
+
+**Papel desta fase:** Architect. **Escopo:** UPS-HOOK-01…02, UPS-CAL-01…02 e UPS-NGIDEM-01; todos MUST por OD-S15-01. Contrato: `docs/framework/contracts/utilities-1.5.md`. Base de leitura: C-0002 §6.7–6.9, §7 e §8; `README.md`, constituição/pin, ADRs, schemas, development-contract. DETRAN é somente leitura. OD-S15-02 elimina o PR/merge intermediário; a entrega já implementada nesta branch aguarda a prova HTTP 409 de CTG5 e integração cumulativa depois da CTG6.
+
+## API e locks
+
+| Tarefa | Papel     | Locks F2/F3                                                                                  | Entrega                                               |
+| ------ | --------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 7A     | Inspector | `packages/integration-adapter/test/**`, `packages/backend/test/**`                           | HMAC/guard, concorrência de replay, E2E Nest          |
+| 7B     | Inspector | `packages/core/test/**`, `packages/worklist/test/**`                                         | clock, fuso/DST, feriado do consumidor e dois tenants |
+| 7C     | Inspector | `packages-web/angular/test/**`                                                               | opt-in, métodos, retry, canônico e vetores CTG5       |
+| 7D     | Engineer  | `packages/integration-adapter/src/**`, `packages/backend/src/**`, seus manifestos e lockfile | verificador puro e guard Nest                         |
+| 7E     | Engineer  | `packages/core/src/**`, `packages/worklist/src/**`                                           | relógio e calendário                                  |
+| 7F     | Engineer  | `packages-web/angular/src/**`                                                                | helper/interceptor/provider Angular                   |
+
+Architect faz contrato e prompts; reviewer externo Opus 5.5 em `prompt-review` antes de qualquer Inspector. Inspectors 7A e 7B podem rodar com locks distintos após PASS. Inspector 7C só inicia depois do contrato UPS-TXN-03 do CTG5 ter prompt-review PASS e vetores de fio reconciliados por Architect; registrar SHAs e recibo nesta seção antes do despacho. Engineer 7D–7F roda após respectivos sensores vermelhos, sem modificar testes. O maestro é o único que executa Git e faz commits por papel; `law/` apenas com autoria `DEVAI Architect`. `packages/backend/package.json`/`pnpm-lock.yaml` por 7D não compartilham lock com 7E/7F, mas Engineer deve reavaliar dependências efetivas antes de editar.
+
+## Checkpoints
+
+1. Reviewer lê contrato e prompts, retorna JSON `PASS|REVIEW|FAIL` com evidências. Ciclo 1 retornou `REVIEW` em `reviews/ctg7-prompt-review-1.json`; contrato e prompts 80–83 foram reparados antes de novo despacho. Ciclo 2 usa `prompts/85-ctg7-prompt-review-2.md`. Até dois ciclos `REVIEW`; `FAIL` ou limite exigem escalada. O ciclo 2 retornou `REVIEW` (`reviews/ctg7-prompt-review-2.json`): um bloqueio no handoff HMAC→tenancy e três ajustes não bloqueantes. Contrato e prompts 80–82 reparados; terceiro prompt excepcional autorizado pelo Owner em 2026-09-27, executado com Opus 5.5 e `PASS` em `reviews/ctg7-prompt-review-3.json`. Os três achados não bloqueantes sobre guard global, marcadores e classificação de cabeçalhos foram incorporados ao contrato e ao prompt 80. O despacho de Inspector ainda depende dos predecessores e da reconciliação CTG5 para 7C.
+2. Inspector adiciona testes sem enfraquecer existentes. Primeiro ciclo: falhas novas por símbolo ausente/semântica faltante, lint de testes e `pnpm check:trace --print`. Architect rebind `law/trace.json` após confirmar projeção.
+3. Engineer implementa contra sensores; lint/typecheck/test focais. Falha recebe linha em §Triagem (`plant-bug|sensor-error|policy-issue|reference-gap`), uma nova tentativa, depois escalada.
+4. Architect rebind API com `pnpm api:baselines:write` após validar mudanças públicas e edita `docs/framework/contracts/integration-adapter.md`, `docs/framework/contracts/worklist-api.md` e `docs/meta/migration/stynx-1.5-utilities.md`. Engineer entrega changeset do grupo fixo e conteúdo de uso nos READMEs de pacote F2; `pnpm package-readmes:write/check` nos READMEs gerados sob coordenação do maestro.
+5. `pnpm check:trace --print`, `pnpm api:baselines`, testes focais, negativos RLS reais, DEVAI forbidden-actions e Opus `delivery-review` PASS após a prova HTTP 409 de CTG5; importar esta CTG na branch cumulativa depois da CTG6, sem PR/merge de CTG7 em `main`. O único `pnpm ci:stynx` completo, apps de referência, PR, remote CI e publicação final são diferidos para depois da CTG8. Entregar registro de conformidade STYNX de C-0002 §7 com linhas separadas para HOOK, CAL e NGIDEM: pacote publicado somente ao final, símbolos reais, testes e desvio. Incluir expressamente prefixo obrigatório `sha256=` versus bare hex DETRAN, rejeição de corpo indefinido no hash Angular versus `''` no consumidor, rejeição de propriedades `undefined`/função/símbolo que o JSON de fio omite, ordenação de chave por ponto de código Unicode versus UTF-16 do DETRAN (ambas podem mudar chaves em voo), e `Clock.now()` versus `today(tz)` do DETRAN. Esse registro não edita DETRAN. Evidência DEVAI no merge final conforme R-0001.
+
+## Triagem
+
+- Inspector 7A: `sensor-error` — o primeiro E2E importava marcadores privados de auth; o Inspector removeu os imports, manteve prova pública do marcador CTG1 e verifica a ausência do símbolo privado por reflexão, sem semear esse símbolo por API interna. Lint/Prettier passaram; vermelho restante é somente export do helper/guard ainda ausente.
+- Inspector 7B: `sensor-error` — expectativas iniciais contavam o dia de partida em Auckland/Los Angeles e calculavam 65 h no DST de retorno; corrigidas para data civil excluída, fim exclusivo e 61 h. Uma expectativa de Los Angeles persistiu no primeiro reparo e o teste Nest omitia os providers globais de `Database`/`RequestContext`; corrigidos pelo Inspector em `6756110f`, sem alterar DI de produção. Os 23 testes focais de clock/calendário passaram.
+- Inspector 7C: `sensor-error` — a primeira prova esperava transporte síncrono de um digest Web Crypto assíncrono e tratava 80+80+66 caracteres como se excedessem 255; corrigida em `daf86360` para aguardar o request e retirar o caso aritmeticamente impossível, sem reduzir os limites de 80/255 nem outros negativos. Trace rebindo em `eeab50c7`; o Engineer reportou 12/12 sensores focais verdes após a tentativa seguinte.
+
+## Retomada
+
+Contrato e prompts ajustados após `prompt-review` ciclos 1 e 2 `REVIEW`. O bloqueio de tenancy e os três ajustes não bloqueantes do ciclo 2 foram reparados em F1/prompts. Prompt 86 excepcional foi autorizado pelo Owner e recebeu `PASS` do Opus 5.5 em `reviews/ctg7-prompt-review-3.json`. Inspectors 7A e 7B foram despachados após PASS e seus testes foram commitados separadamente em `44e11b55` e `9ee9b7fa`. O trace foi rebindo em `7aaa23c0`: 397/397 testes, sem novo invariante, DEVAI strict zero achados desde `a3c81645`. Engineers 7D e 7E implementaram em locks distintos; integração-adapter 8/8, backend Nest 7/7, clock 3/3 e worklist 20/20 passaram após os reparos de sensor. O webhook negativo de membership agora usa app novo em `84872439`, pois `MembershipAccessCache` preserva a concessão positiva por 5 s. O rebind posterior de trace restaura 397/397. O Inspector 7C e Engineer 7F aguardam reconciliação do contrato CTG5; merge continua dependente de CTGs 1–6.
+
+Checkpoint 2026-09-27: Engineer 7D em `3f7b6579` e 7E em `88e4ee23`, cada um em commit próprio. Testes completos dos pacotes passaram: integration-adapter 22/22, backend 316/316, core 73/73 e worklist 74/74; `git diff --check` limpo. Architect confirmou os novos exports públicos e rebindo 44 baselines em `83b56676`; `pnpm api:baselines` passou. Naquele momento faltavam documentação de uso, changeset, `package-readmes:write`, gates completos e delivery-review depois de 7C/7F. Nenhum PR ou publicação de CTG7 foi feito.
+
+Checkpoint posterior: contratos e migração foram documentados em `044f9fbe`; READMEs e dependências geradas passaram em `22604357`/`5598fca8`; changeset do grupo fixo está em `fd03184f`. `pnpm ci:stynx` passou em `/private/tmp/stynx-s15-ctg7-partial-ci.log`, e `pnpm ci:reference-apps` passou com 60/60 testes da API de referência em `/private/tmp/stynx-s15-ctg7-partial-reference.log`. DEVAI forbidden-actions strict desde o merge-base passou sem achados; trace 397/397 e baselines 44/44. Esses gates cobrem 7A/7B/7D/7E; naquele momento 7C/7F e delivery-review ainda aguardavam CTG-0005 e precedência de merge.
+
+### Reconciliação de fio CTG-0005 → Inspector 7C
+
+Contrato CTG-0005 lido no HEAD `730cbaf2a264482f288936ddf9ed6a74ca81919c`, `docs/framework/contracts/transactional-audit-idempotency-1.5.md`; `reviews/ctg5-prompt-review-3.json` registra PASS do Opus 5.5, com três ajustes não bloqueantes já incorporados. Para o recorte 7C, a fonte de fio é o corpo HTTP JSON parseado antes dos pipes, não o objeto Angular original. Ambos os contratos ordenam chaves por ponto de código Unicode, preservam arrays, usam escaping JSON padrão e normalizam `-0` a `0`. `toJSON` executado no cliente é resolvido antes do parse do servidor. A variante Angular `includeBodyHash` exige corpo objeto/array JSON e `Content-Type: application/json`; portanto não gera chave para ausência de corpo nem `null`, que a CTG5 distingue por framing (e rejeita `null` no parser padrão). A variante `{ key }` cobre DELETE sem corpo. O hash Angular entra apenas na **chave** `<action>:<target>:<digest do corpo>`; a CTG5 calcula fingerprint independente de método, caminho concreto e corpo. A identidade durável CTG5 é tenant+scope+chave, e a reutilização da mesma chave com corpo diferente dá 409 `IDEMPOTENCY_KEY_CONFLICT` por padrão. Rejeitar propriedade `undefined`/função/símbolo no Angular é uma política de entrada mais estrita do que o JSON de fio, que a omitiria. Não há divergência de formato que impeça os testes unitários 7C. O sensor HTTP real de 409 aguarda a integração CTG5; Inspector 7C registra essa parte como pendência, sem presumir implementação ainda ausente.
+
+Inspector 7C entregou `packages-web/angular/test/idempotency.spec.ts` em `3e9c57bd`: 12 sensores, 10 vermelhos pela ausência dos novos exports e dois de comportamento legado verdes; lint passou. O trace Architect está em `5bfda802`, 398/398. Engineer 7F foi despachado apenas para `packages-web/angular/src/**`. Um sensor adicional de `ReadonlySet` estrutural ficou vermelho e foi reparado sem mudar a API: Inspector `ebbf2ee4`, Engineer `1c7ed199`, trace Architect `669b4bd7`; teste focal 9/9, typecheck/lint worklist e baseline público passaram. O CI integral será repetido após 7F.
+
+Engineer 7F entregou `7248fa3d` com 12/12 sensores Angular, 41/41 testes do pacote, lint, typecheck e build verdes. O ajuste `sensor-error` de espera assíncrona está em `daf86360`, com trace 398/398 em `eeab50c7`. O rebind da API pública Angular e a migração estão em `94d91c75`; o README e changeset do grupo fixo em `041e7b31`; `package-readmes:write/check` passaram para 44 pacotes. `pnpm ci:stynx` integral do HEAD `505cb6db` passou em `/private/tmp/stynx-s15-ctg7-final-ci.log`, incluindo PostgreSQL/RLS, `check:rls-negative`, testes, build e doctor. DEVAI forbidden-actions strict desde o merge-base passou sem achados. O prompt `87-ctg7-delivery-review.md` está pronto; a referência consumidora final ainda executava neste checkpoint. O sensor HTTP 409 entre CTG5 e CTG7 será feito após integração de CTG5, antes do PR CTG7.
+
+Gate final desta composição: `pnpm ci:reference-apps` passou com 60/60 testes da API de referência e build web em `/private/tmp/stynx-s15-ctg7-final-reference.log`. `pnpm release:policy` passou para 44 pacotes e 26 sourcemaps em `/private/tmp/stynx-s15-ctg7-release-policy.log`. O check DEVAI strict do HEAD retornou zero achados (`/private/tmp/stynx-s15-ctg7-devai-strict.json`). A entrega segue empilhada e não é PR até os predecessores e a prova HTTP 409; delivery-review da composição atual pode apontar reparos antecipados.
+
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This supersedes earlier pending-exception checkpoints. Inspector and Engineer dispatch still require an Opus PASS and all predecessor gates.
+
+### Delivery-review cycle 1 and repair dispatch
+
+Opus 5.5 returned **PASS** in `reviews/ctg7-delivery-review-1.json`, with bridge receipt beside it. The review confirmed all five exported MUST capabilities and the earlier full CI. Its HTTP 409 finding is a `reference-gap` deliberately deferred until CTG5 integration. The real PostgreSQL/RLS webhook handoff is also a `reference-gap`: the current Nest test uses a database stub, while the development contract requires a real tenant isolation proof. Inspector adds that integration case before CTG7 PR. Three present `plant-bug` findings are repaired after new red tests: the replay-store error must not echo a signature-bearing key; invalid clock output must raise an error (guard 500); offset-form timezone identifiers must be rejected as non-IANA. Inspector also locks the skipped-midnight and repeated-hour behavior with calendar vectors (`reference-gap`). Angular's explicit JSON Content-Type and body mutation behavior are documented contract choices; keep the current wire policy and do not change them in this repair. The reference-app gate is rerun with an explicit exit-status marker.
+
+Repair sequence: Inspector 7G owns only webhook unit/integration tests, Inspector 7H owns only worklist calendar tests; they may run concurrently. Root commits Inspector tests separately. Architect rebinds `law/trace.json` after tests change. Engineer 7I then owns webhook verifier and calendar implementation paths only, with no test edits. Root commits Engineer changes separately. Rerun focused suites, real `test:int`, negative RLS, full `ci:stynx`, `ci:reference-apps`, API/trace/readme checks and delivery-review after predecessor integration. Do not claim the existing PASS as final CTG7 delivery approval after repairs.
+
+Repair checkpoint: Inspector 7H calendar tests `7758460a` showed 10 pass / 1 expected red for `+03:00`; skipped-midnight and fall-back vectors passed. Inspector 7G webhook tests `d4f824b7` showed two expected adapter reds and one expected backend invalid-clock 401/500 red, while its migration-backed real PostgreSQL/RLS case passed for two active tenant actors and a nonmember 403. The test explicitly uses `stynx_app` for the protected query against a FORCE RLS table. Architect rebound the three assertion digests in `law/trace.json` at `21ee6efe`, 398/398, authored as `DEVAI Architect`. Engineer fixes are `9d6d5a25` (offset-form timezone rejection) and `5cb53fab` (fixed safe store error and invalid clock exception). Focal worklist 11/11, integration-adapter 10/10 and backend webhook integration 9/9 passed after rebuilding the adapter dist; worklist typecheck/lint and adapter build passed.
+
+At `5cb53fab`, `pnpm ci:stynx` passed with `CI_EXIT=0` in `/private/tmp/stynx-s15-ctg7-postreview-ci.log`, including integration and negative RLS gates. `pnpm ci:reference-apps` passed with `REFERENCE_EXIT=0` in `/private/tmp/stynx-s15-ctg7-postreview-reference.log`; the API reference ran 60/60 tests and web build exited 0. `pnpm api:baselines` passed 44/44, `pnpm check:trace --print` passed 398/398, `pnpm package-readmes:check` changed zero files, and DEVAI strict from `a3c81645` returned zero findings in `/private/tmp/stynx-s15-ctg7-postreview-devai-strict.json`. An early `release:policy` overlapped the reference build and saw empty Angular sourcemaps (`sensor-error` from concurrent build output); the sequential rerun after that build passed for 44 packages and 26 sourcemaps. Next: fresh Opus review of the repair delta, then defer the final CTG7 review/PR until CTG5's real HTTP 409 integration proof is available and CTGs 2–6 have cleared their gates.
+
+Opus delivery-review cycle 2 returned **PASS** at `reviews/ctg7-delivery-review-2.json`. It confirmed the verifier errors, clock response, DST vectors and migrated PostgreSQL/FORCE RLS test. One narrow `plant-bug` remains: Unicode U+2212 in `−03:00` is accepted by `Intl` as an offset and bypasses the raw ASCII denylist. Inspector will add that negative sensor, Engineer will reject the formatter's resolved offset identifier, and Architect will rebind trace. The reviewer also requested a captured sequential `release:policy` log with an explicit exit marker; repeat after this final local repair. The real HTTP 409 proof and final review remain after CTG5 integration. The RLS test deliberately uses `set local role stynx_app` because the local test pools connect through a superuser; app pool credential wiring is independently covered by the negative RLS gate.
+
+Unicode repair closed: Inspector sensor `fe7b5804` was red only for `−03:00` while `+03:00` remained green; Architect trace rebind `0fa488bc` preserved 398/398; Engineer `5fec364e` rejects offsets after `Intl` resolves the timezone. Focused calendar 11/11, worklist lint/typecheck, baselines 44/44, trace 398/398 and DEVAI strict zero findings passed at this state. Captured the sequential `pnpm release:policy` result in `/private/tmp/stynx-s15-ctg7-postreview-release-policy.log` with `RELEASE_POLICY_EXIT=0` (44 packages, 26 sourcemaps). The earlier full `ci:stynx` and `ci:reference-apps` evidence remains at `5cb53fab`; this three-line normalization repair was checked focally. Re-run both full gates and obtain a final delivery-review after the CTG5 HTTP 409 case and predecessor integration, before CTG7 PR/merge. No CTG7 PR or package publication has occurred.
+
+OD-S15-02 retoma desta branch `847d1b14` sem descartar seus commits.
+O requisito pendente é o teste real HTTP 409 de UPS-NGIDEM contra a CTG5
+e o delivery-review do delta integrado. Não repetir full CI por CTG: a
+única rodada integral será no HEAD final após CTG8. A importação para a
+branch cumulativa ocorre após CTG6; `packages/backend` e
+`packages-web/angular` exigem reconciliação serial de diffs. O prompt de
+continuação é `prompts/90-ctg7-interop-od-s15-02.md`; os prompts 80–89
+continuam como histórico de testes e reparos já executados.
+
+Checkpoint cumulativo de 2026-09-28: CTG7 foi rebaseada sobre CTG6
+`189b64bb` (Opus delivery-review ciclo 2 PASS) e herdou CTG5 final. Inspector
+adicionou em `cac2cbc4` um teste de fio real que usa
+`IdempotencyKeyInterceptor` Angular, requisição HTTP a Nest e PostgreSQL com
+RLS: corpo igual gera replay byte a byte, corpo divergente retorna 409, e
+handler, evento de auditoria e chave durável aparecem uma só vez. O teste
+passou 1/1; Architect vinculou trace em `b7c24a5f`, 448/448. Baselines
+44/44, `pnpm lint:tests`, README check, lint de dependências/ciclos e DEVAI
+strict passaram após o rebase. O próximo gate é delivery-review Opus do HEAD
+final após CTG6 concluir seu hardening menor; não há PR/RC de CTG7.
+
+Triagem `reference-gap`: o contrato CTG5 em
+`docs/framework/contracts/transactional-audit-idempotency-1.5.md` fixa o
+409 de mismatch como `{ code, context: { key } }`, e o teste HTTP segue esse
+contrato. `law/schemas/error-envelope.schema.json` descreve envelope canônico
+`{ statusCode, errorCode, message, requestId }` para todo 4xx/5xx. A regra
+genérica e o contrato específico são inconsistentes. Registrar no review
+final e no ledger de conformidade; reconciliar a autoridade antes de congelar
+1.5.0, sem enfraquecer o teste de 409 nem alterar o schema sem decisão
+constitucional. O requisito UPS-TXN-03 da especificação pede 409 com código
+configurável, sem fixar a forma do envelope.
+
+Review integrado do HEAD `21f518aa` em
+`reviews/ctg7-integrated-delivery-review-1.json`: **PASS** para importação
+ordenada após CTG6. `pnpm test:int` passou 51/51 tarefas no HEAD estável;
+`check:rls-negative` verificou 7 tabelas, `check:rls-smoke` passou, e o sensor
+HTTP Angular→Nest/PostgreSQL passou 1/1. Opus confirmou que a divergência
+do envelope 409 pertence ao contrato CTG5 e bloqueia a publicação final,
+não esta importação; uma decisão Owner sobre adequação à lei ou exceção por
+ADR foi solicitada. No CI final único, conferir que `backend#test` executou
+os sensores de webhook e interop, e repetir `release:policy` com saída
+explícita. Atribuição de papéis dos commits históricos com identidade Git
+humana: Inspector `17083e97`, `244fbcbb`, `07e90fd5`; Engineer
+`835d46a0`, `45be71c1`, `6a57075f`. A separação de arquivos por papel foi
+verificada pelo reviewer; commits novos usarão identidade DEVAI do papel.

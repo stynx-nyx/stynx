@@ -1,5 +1,13 @@
 # `@stynx-nyx/testing` — testcontainers-backed integration harness for STYNX apps
 
+## Unit transaction fake (1.5)
+
+`createFakeTransaction(script, { role })` returns an actual `Transaction`, a
+`queries` log and `enqueue(step)` for deterministic `query`/`execute` unit
+tests. Each script step is a result (`rows`, `rowCount`) or an `Error`; the fake
+records bound values and Drizzle's optional array row mode. Use real
+PostgreSQL tests for builders, RLS, savepoints and rollback behavior.
+
 `@stynx-nyx/testing` is the integration-test substrate for STYNX-based apps. It provides `createTestApp()` — a one-call factory that boots an isolated NestJS app backed by **real Docker containers** (Postgres via testcontainers, plus optional LocalStack for S3/SQS and a Cognito stub) wired to your modules. The returned `TestAppContext` exposes the NestJS app instance, a request-context mutator (so tests can assert behaviour under a specific tenant/actor), session helpers (`mintTestSession` produces a valid JWT against the test signing key), LGPD fixtures (PII-column seed data + erasure scenarios), and a family of archive-aware matchers that understand soft-delete + restore semantics.
 
 ## Purpose

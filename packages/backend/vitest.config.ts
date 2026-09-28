@@ -20,5 +20,6 @@ export default createVitestConfig({
     '@stynx-nyx/logging': resolve(__dirname, '../logging/src/index.ts'),
     '@stynx-nyx/i18n': resolve(__dirname, '../i18n/src/index.ts'),
     '@stynx-nyx/privacy': resolve(__dirname, '../privacy/src/index.ts'),
+    '@stynx-nyx/outbox': resolve(__dirname, '../outbox/src/index.ts'),
   },
 });

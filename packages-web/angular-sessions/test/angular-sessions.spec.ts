@@ -4,7 +4,9 @@ import type { EnvironmentInjector, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { createStynxSessionStub } from '@stynx-nyx/angular-auth/testing';
 import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { provideStynxI18nTesting } from '@stynx-nyx/angular-i18n/testing';
 import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { firstValueFrom } from 'rxjs';
 import { StynxActiveSessionsComponent } from '../src/active-sessions.component';
@@ -51,6 +53,10 @@ function createComponent(providers: Provider[]): StynxActiveSessionsComponent {
   return runInInjectionContext(injector, () => new StynxActiveSessionsComponent());
 }
 
+function sessionProvider(initial: Parameters<typeof createStynxSessionStub>[0]) {
+  return { provide: StynxSessionService, useValue: createStynxSessionStub(initial) };
+}
+
 beforeAll(() => {
   TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 });
@@ -90,29 +96,26 @@ describe('@stynx-nyx/angular-sessions', () => {
     const fixture = await renderComponent(StynxActiveSessionsComponent, {
       inputs: { adapter },
       providers: [
-        { provide: StynxSessionService, useValue: { snapshot: () => ({ sid: 'sid-current' }) } },
-        {
-          provide: StynxI18nService,
-          useValue: {
-            locale: () => 'en',
-            translate: (key: string) =>
-              ({
-                'sessions.active.actions.revoke': 'Revoke',
-                'sessions.active.actions.revokeOthers': 'Revoke other sessions',
-                'sessions.active.columns.createdAt': 'Created',
-                'sessions.active.columns.expiresAt': 'Expires',
-                'sessions.active.columns.lastIp': 'IP',
-                'sessions.active.columns.lastSeenAt': 'Last seen',
-                'sessions.active.columns.userAgent': 'Browser',
-                'sessions.active.current': 'This device',
-                'sessions.active.labels.thisDevice': 'This device',
-                'sessions.active.values.unknown': 'Unknown',
-              })[key] ?? key,
+        sessionProvider({ active: true, sid: 'sid-current' }),
+        provideStynxI18nTesting({
+          en: {
+            'sessions.active.actions.revoke': 'Revoke',
+            'sessions.active.actions.revokeOthers': 'Revoke other sessions',
+            'sessions.active.columns.createdAt': 'Created',
+            'sessions.active.columns.expiresAt': 'Expires',
+            'sessions.active.columns.lastIp': 'IP',
+            'sessions.active.columns.lastSeenAt': 'Last seen',
+            'sessions.active.columns.userAgent': 'Browser',
+            'sessions.active.current': 'This device',
+            'sessions.active.labels.thisDevice': 'This device',
+            'sessions.active.values.unknown': 'Unknown',
           },
-        },
+        }) as never,
         { provide: StynxToastService, useValue: { push: vi.fn() } },
       ],
     });
+    await TestBed.inject(StynxI18nService).initialize();
+    fixture.detectChanges();
 
     await fixture.componentInstance.load();
     fixture.detectChanges();
@@ -163,15 +166,11 @@ describe('@stynx-nyx/angular-sessions', () => {
       providers: [
         SdkSessionsAdapter,
         { provide: STYNX_SESSIONS_CLIENT, useValue: client },
-        {
-          provide: StynxSessionService,
-          useValue: {
-            snapshot: () => ({
-              sid: null,
-              accessToken: createJwt({ sid: 'sid-from-jwt' }),
-            }),
-          },
-        },
+        sessionProvider({
+          active: true,
+          sid: null,
+          accessToken: createJwt({ sid: 'sid-from-jwt' }),
+        }),
       ],
     });
 
@@ -268,10 +267,7 @@ describe('@stynx-nyx/angular-sessions', () => {
       providers: [
         SdkSessionsAdapter,
         { provide: STYNX_SESSIONS_CLIENT, useValue: client },
-        {
-          provide: StynxSessionService,
-          useValue: { snapshot: () => ({ accessToken: createJwt({ session_id: 'session-1' }) }) },
-        },
+        sessionProvider({ active: true, accessToken: createJwt({ session_id: 'session-1' }) }),
       ],
     });
     const adapter = injector.get(SdkSessionsAdapter);
@@ -323,15 +319,11 @@ describe('@stynx-nyx/angular-sessions', () => {
       providers: [
         SdkSessionsAdapter,
         { provide: STYNX_SESSIONS_CLIENT, useValue: client },
-        {
-          provide: StynxSessionService,
-          useValue: {
-            snapshot: () => ({
-              sid: 'sid-from-snapshot',
-              accessToken: createJwt({ sid: 'sid-from-token' }),
-            }),
-          },
-        },
+        sessionProvider({
+          active: true,
+          sid: 'sid-from-snapshot',
+          accessToken: createJwt({ sid: 'sid-from-token' }),
+        }),
       ],
     });
 
@@ -354,15 +346,7 @@ describe('@stynx-nyx/angular-sessions', () => {
       providers: [
         SdkSessionsAdapter,
         { provide: STYNX_SESSIONS_CLIENT, useValue: emptySidClient },
-        {
-          provide: StynxSessionService,
-          useValue: {
-            snapshot: () => ({
-              sid: null,
-              accessToken: createJwt({ sid: '' }),
-            }),
-          },
-        },
+        sessionProvider({ active: true, sid: null, accessToken: createJwt({ sid: '' }) }),
       ],
     });
 
@@ -378,12 +362,7 @@ describe('@stynx-nyx/angular-sessions', () => {
       providers: [
         SdkSessionsAdapter,
         { provide: STYNX_SESSIONS_CLIENT, useValue: camelCaseClient },
-        {
-          provide: StynxSessionService,
-          useValue: {
-            snapshot: () => ({ accessToken: createJwt({ sessionId: 'camel-session' }) }),
-          },
-        },
+        sessionProvider({ active: true, accessToken: createJwt({ sessionId: 'camel-session' }) }),
       ],
     });
     await expect(firstValueFrom(camelCaseInjector.get(SdkSessionsAdapter).list())).resolves.toEqual(
@@ -393,13 +372,7 @@ describe('@stynx-nyx/angular-sessions', () => {
 
   it('fails fast when the SDK adapter is used without a client provider', () => {
     const injector = Injector.create({
-      providers: [
-        SdkSessionsAdapter,
-        {
-          provide: StynxSessionService,
-          useValue: { snapshot: () => ({ sid: 'sid-current' }) },
-        },
-      ],
+      providers: [SdkSessionsAdapter, sessionProvider({ active: true, sid: 'sid-current' })],
     });
 
     const adapter = injector.get(SdkSessionsAdapter);
@@ -418,12 +391,7 @@ describe('@stynx-nyx/angular-sessions', () => {
     };
 
     const parent = Injector.create({
-      providers: [
-        {
-          provide: StynxSessionService,
-          useValue: { snapshot: () => ({ sid: 'sid-current' }) },
-        },
-      ],
+      providers: [sessionProvider({ active: true, sid: 'sid-current' })],
     });
     const defaultInjector = createEnvironmentInjector(
       [
@@ -496,7 +464,7 @@ describe('@stynx-nyx/angular-sessions', () => {
 
     const component = createComponent([
       { provide: STYNX_SESSIONS_ADAPTER, useValue: adapter },
-      { provide: StynxSessionService, useValue: { snapshot: () => ({ sid: 'sid-current' }) } },
+      sessionProvider({ active: true, sid: 'sid-current' }),
       { provide: StynxToastService, useValue: { push: vi.fn() } },
       { provide: StynxI18nService, useValue: { translate: (key: string) => key } },
     ]);
@@ -566,7 +534,7 @@ describe('@stynx-nyx/angular-sessions', () => {
 
     const component = createComponent([
       { provide: STYNX_SESSIONS_ADAPTER, useValue: adapter },
-      { provide: StynxSessionService, useValue: { snapshot: () => ({ sid: 'sid-current' }) } },
+      sessionProvider({ active: true, sid: 'sid-current' }),
       { provide: StynxToastService, useValue: toast },
       { provide: StynxI18nService, useValue: { translate: (key: string) => key } },
     ]);
@@ -609,7 +577,7 @@ describe('@stynx-nyx/angular-sessions', () => {
     };
     const component = createComponent([
       { provide: STYNX_SESSIONS_ADAPTER, useValue: adapter },
-      { provide: StynxSessionService, useValue: { snapshot: () => ({ sid: 'sid-current' }) } },
+      sessionProvider({ active: true, sid: 'sid-current' }),
       { provide: StynxToastService, useValue: { push: vi.fn() } },
       { provide: StynxI18nService, useValue: { translate: (key: string) => key } },
     ]);
@@ -638,7 +606,7 @@ describe('@stynx-nyx/angular-sessions', () => {
     const toast = { push: vi.fn() };
     const component = createComponent([
       { provide: STYNX_SESSIONS_ADAPTER, useValue: adapter },
-      { provide: StynxSessionService, useValue: { snapshot: () => ({ sid: 'sid-current' }) } },
+      sessionProvider({ active: true, sid: 'sid-current' }),
       { provide: StynxToastService, useValue: toast },
     ]);
 
@@ -649,7 +617,7 @@ describe('@stynx-nyx/angular-sessions', () => {
 
   it('throws a clear error when no adapter is provided', async () => {
     const component = createComponent([
-      { provide: StynxSessionService, useValue: { snapshot: () => ({ sid: 'sid-current' }) } },
+      sessionProvider({ active: true, sid: 'sid-current' }),
       { provide: StynxToastService, useValue: { push: vi.fn() } },
     ]);
 
@@ -681,7 +649,7 @@ describe('@stynx-nyx/angular-sessions', () => {
 
     const component = createComponent([
       { provide: STYNX_SESSIONS_ADAPTER, useValue: providerAdapter },
-      { provide: StynxSessionService, useValue: { snapshot: () => ({ sid: 'sid-input' }) } },
+      sessionProvider({ active: true, sid: 'sid-input' }),
       { provide: StynxToastService, useValue: { push: vi.fn() } },
       { provide: StynxI18nService, useValue: { translate: (key: string) => key } },
     ]);
@@ -711,7 +679,7 @@ describe('@stynx-nyx/angular-sessions', () => {
       revokeOthers: vi.fn(async () => undefined),
     };
     const component = createComponent([
-      { provide: StynxSessionService, useValue: { snapshot: () => ({ sid: 'sid-input-only' }) } },
+      sessionProvider({ active: true, sid: 'sid-input-only' }),
       { provide: StynxToastService, useValue: { push: vi.fn() } },
       { provide: StynxI18nService, useValue: { translate: (key: string) => key } },
     ]);

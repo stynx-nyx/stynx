@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { createFakeTransaction } from '@stynx-nyx/testing';
 import type { PoolClient, QueryResult } from 'pg';
 import {
   ArchiveMirrorMissingError,
@@ -56,25 +57,41 @@ describe('Transaction', () => {
     };
   };
 
-  it('delegates active read/write primitives and rejects all primitives after close', async () => {
-    const { tx, client, db } = createTx();
+  it('delegates active builder primitives and rejects them after close', () => {
+    const { tx, db } = createTx();
 
     expect(tx.select().from(documentVersions)).toEqual({ live: true });
     expect(tx.insert(documentVersions as never)).toEqual({ insert: true });
     expect(tx.update(documentVersions as never)).toEqual({ update: true });
     expect(tx.delete(documentVersions as never)).toEqual({ delete: true });
-    await expect(tx.execute(sql`select 1`)).resolves.toEqual({ rows: [{ ok: 1 }], rowCount: 1 });
-    await expect(tx.query('select 2', [2])).resolves.toEqual({ rows: [], rowCount: 0 });
     expect(db.select).toHaveBeenCalledTimes(1);
-    expect(client.query).toHaveBeenCalledWith('select 2', [2]);
 
     tx.close();
     expect(() => tx.select()).toThrow(TransactionRequiredError);
     expect(() => tx.insert(documentVersions as never)).toThrow(TransactionRequiredError);
     expect(() => tx.update(documentVersions as never)).toThrow(TransactionRequiredError);
     expect(() => tx.delete(documentVersions as never)).toThrow(TransactionRequiredError);
+  });
+
+  it('uses the published fake Transaction for query and execute and rejects both after close', async () => {
+    const fake = createFakeTransaction([
+      { rows: [{ ok: 1 }], rowCount: 1 },
+      { rows: [], rowCount: 0 },
+    ], { role: 'app' });
+    const tx: Transaction = fake.transaction;
+    expect(tx).toBeInstanceOf(Transaction);
+
+    await expect(tx.execute(sql`select 1`)).resolves.toEqual(expect.objectContaining({ rows: [{ ok: 1 }], rowCount: 1 }));
+    await expect(tx.query('select 2', [2])).resolves.toEqual(expect.objectContaining({ rows: [], rowCount: 0 }));
+    expect(fake.queries).toEqual([
+      expect.objectContaining({ text: 'select 1', values: [] }),
+      expect.objectContaining({ text: 'select 2', values: [2] }),
+    ]);
+
+    tx.close();
     await expect(tx.execute(sql`select 3`)).rejects.toBeInstanceOf(TransactionRequiredError);
     await expect(tx.query('select 4')).rejects.toBeInstanceOf(TransactionRequiredError);
+    expect(fake.queries).toHaveLength(2);
   });
 
   it('guards write operations for reader transactions', async () => {

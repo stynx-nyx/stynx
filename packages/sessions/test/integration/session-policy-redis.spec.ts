@@ -120,13 +120,14 @@ describe('UPS-SES-01 Redis atomic single-session policy', () => {
   it.each(['revoke-existing', 'reject-new'] as const)(
     '%s ignores idle-expired target records during exchange using the controlled clock',
     async (mode) => {
-      let now = new Date('2026-09-27T12:00:00.000Z');
+      const initialTime = new Date(Date.now() + 60_000);
+      let now = initialTime;
       const prefix = `stynx:ctg3:${randomUUID()}`;
       const a = await service(mode, prefix, () => now, 10);
       const b = await service(mode, prefix, () => now, 2);
       const prior = await a.session.create('u', 'source', 'c');
       const expiredTarget = await b.session.create('u', 'target', 'c');
-      now = new Date('2026-09-27T12:00:03.000Z');
+      now = new Date(initialTime.getTime() + 3_000);
 
       const switched = await b.session.exchange({
         sessionId: prior.sid,

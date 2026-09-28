@@ -1,0 +1,130 @@
+# CTG-0008 — STYNX module generator
+
+**Current role:** Architect. **Scope:** UPS-CLI-01, MUST under OD-S15-01. **Contract:** `docs/framework/contracts/cli-generator-1.5.md`. **Source:** DETRAN C-0002 §6.10, §7 and §8, plus its tiny `BP-OPS-EXAMPLE-001.json`, read only. No DETRAN code or generated files are copied.
+
+## OD-S15-02 — current execution topology
+
+The Owner's 2026-09-27 flow decision supersedes the historical per-CTG PR, RC and predecessor-merge language below. CTG-0008 can run its isolated CLI sensors and implementation in parallel with CTG-0005/0006/0007 once the approved F1 invariants and this revised prompt-review are recorded. Before generated repository and consumer tests are finalized, the maestro pins the public `Database.tx`, `Transaction.query`, and `RequestContext` surface from the CTG-0005 checkpoint; any mismatch returns to Architect. CTG-0008 is imported into the single cumulative release branch **after** CTG-0007, with role-separated commits. There is no CTG-0008 PR, published RC, or full `pnpm ci:stynx` checkpoint. Run its focused tests and required real-DB/RLS integration checks in its isolated checkout; the maestro runs the one complete local CI and final delivery review on the cumulative tree after CTG-0008. One final PR, remote CI, merge and final publication follow that gate. Historical reviews and checkpoints remain evidence, but their former merge prerequisite is not a current dispatch gate.
+
+| Current prerequisite                   | Status / checkpoint                                             |
+| -------------------------------------- | --------------------------------------------------------------- |
+| Revised OD-S15-02 prompt-review        | PASS, sixth Opus 5.5 cycle, `reviews/ctg8-prompt-review-6.json` |
+| Architect four-invariant F1 checkpoint | Complete; recheck against CTG-0005 public data API              |
+| CTG-0007 merged SHA                    | Superseded; final import order is CTG-0005 → 0006 → 0007 → 0008 |
+
+## Historical topology (superseded by OD-S15-02)
+
+CTG-0008 follows CTG-0007. This preparation branch may contain only F1 planning. Before Inspector dispatch the maestro must record CTG-0007's merged SHA, approved prompt/delivery review receipts, and green integration gate here. If any predecessor is pending, Inspector and Engineer dispatch stop. CTG-0008 does not absorb CTG-0007 work. One triplet, one fixed-group changeset, one CTG-0008 PR after CTG-0007 merge. No release or publication action is in this scope.
+
+| Predecessor | Merged SHA | Review receipts | Gate                       |
+| ----------- | ---------- | --------------- | -------------------------- |
+| CTG-0007    | Pending    | Pending         | Inspector dispatch blocked |
+
+## Role boundaries and locks
+
+| Task | Role      | Exclusive writable scope                                                                                                                                                                            | Deliverable                                          |
+| ---- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 8A   | Architect | `docs/framework/contracts/cli-generator-1.5.md`, `law/invariants/INV-CLI-001.json` through `INV-CLI-004.json`, Architect-owned `law/trace.json` rebind after Inspector                              | Final F1 contract, atomic invariants and trace       |
+| 8B   | Inspector | `packages/cli/test/**`, `test/db/**`, dedicated packed-consumer fixture harness under `test/packages/cli-generator/**`                                                                              | Red then green sensors, real PostgreSQL RLS negative |
+| 8C   | Engineer  | `packages/cli/src/**`, `packages/cli/package.json`, `packages/cli/turbo.json` and lockfile if necessary, one `.changeset/*.md`, generated `packages/cli/README.md` via `pnpm package-readmes:write` | CLI generator implementation and changeset           |
+
+The maestro alone runs Git and records separate role commits. Inspector does not edit source, snapshots to conceal failures, F1, or generated outputs. Engineer does not edit tests or F1. Architect does not edit code or tests. The generated SQL is an **output artifact of the CLI consumer fixture**, not a new canonical `database/ddl/` migration in STYNX. If implementation adds canonical DDL, stop for Architect scope amendment and follow `docs/meta/development-contract.md`: seeds and `test/db/` coverage are required. The CLI root public exports stay unchanged; internal generator functions are tested by source path, so no API baseline write is planned. If a public declaration change proves necessary, stop Engineer work for an Architect rebind checkpoint: review the intended API, run `pnpm api:baselines:write` under Architect authority, then rerun `pnpm check:trace --print`. Engineer writes the fixed-group `.changeset/*.md` for the package change and owns `pnpm package-readmes:write` and its generated `packages/cli/README.md`. The existing `scripts/verify-consumer-fixtures.mjs` remains unchanged; any proposed change to `scripts/**` requires an explicit Engineer lock amendment before writing.
+
+## Sequence and gates (OD-S15-02 supersedes only per-CTG PR/merge/full CI and CTG7-merge prerequisites; all other step 5 gates remain active)
+
+1. Cross-family Opus prompt-review reads this plan, contract and prompts 90–93 before any worker dispatch. Record a JSON PASS/REVIEW/FAIL receipt. Cycle 2 and the authorized cycle 3 returned REVIEW. The Owner's later 2026-09-27 decision authorized all further prompt reviews necessary to complete C-0002. The sixth review returned PASS; its nonblocking triage finding was repaired before worker dispatch. FAIL returns to the human.
+2. Architect 8A confirms the subset against current STYNX public APIs and the DETRAN sample, then writes `INV-CLI-001` with atomic security and reproducibility claims. The proposed contract is not ratified until this checkpoint. No unreviewed expansion to the 50 DETRAN blueprints.
+3. After revised flow prompt-review PASS and the four-invariant F1 checkpoint, Inspector 8B writes tests first. The generated repository and packed-consumer proof wait for the CTG5 public data API checkpoint. The tiny sample pins literal output names and `ops.example_record.list/get` permission keys. A separate STYNX-only full-CRUD blueprint exercises all supported field types, nullable/default variants, generated create/update/delete handlers, DTO guards, and distinct per-resource permissions. Negatives include malformed JSON, `offline`, `demo`, `sample`, all migration-created schemas in the package and repository migration trees, missing/altered `id` or `tenant_id`, duplicate indexes, unsafe names/paths, pre-existing output collision, existing target SQL schema, output failure, double slash, metadata non-effect, deterministic bytes, `--check`, per-route deny/allow and a test-local `INV-RBAC-001` structural check, and real PostgreSQL tenant isolation. The packed-consumer runner is `test/packages/cli-generator/run-integration.mjs`, not a `*.spec.ts` file in the stub-aliased `test/packages` unit config. On each invocation it recursively computes the local `@stynx-nyx/*` closure from the CLI and all other STYNX packages required by the fixture, following both `dependencies` and `peerDependencies` in package manifests; an unresolved STYNX edge fails closed. It builds that closure in dependency order from current source before `pnpm pack` and maps every packed name to its local tarball in consumer `pnpm.overrides`. The temporary consumer lives outside the workspace and has a `.npmrc` mapping `@stynx-nyx:registry` to a verified unreachable loopback endpoint. Install with `pnpm install --prefer-offline`, allowing third-party and Nest peer resolution from the normal registry on a fresh CI runner. Assert before install that the `pnpm.overrides` keys exactly equal the computed closure. Before executing the installed `stynx` binary, inspect its generated lockfile: every installed `@stynx-nyx/*` resolution must be a `file:` reference to the packed tarball and its integrity must equal the independently computed tarball SHA-512 SRI. A STYNX registry request, missing override, non-tarball resolution, or integrity mismatch is a sensor failure, never an environment skip. An install failure naming the loopback origin or identifying the failed fetch or resolution target itself as an `@stynx-nyx/*` package (its own metadata or tarball request) is a sensor failure even before a lockfile exists. A STYNX name appearing only as a parent in the dependency chain does not meet that rule. Send other network-shaped install failures to a separate third-party registry reachability probe; classify them as unobserved only when that probe also fails; every non-PASS outcome exits non-zero. The runner compiles and boots generated source and runs real-DB probes. It follows the existing `scripts/verify-consumer-fixtures.mjs` pack/install pattern without changing that script. Run the runner directly for focused red; report an unavailable database or failed third-party registry resolution as unobserved, never skipped PASS. Architect rebinds trace after `pnpm check:trace --print` in a separate F1 commit.
+4. Engineer 8C implements only the approved contract against those tests. Build a preflight plan before writes, stage to a sibling directory, refuse every pre-existing destination, and generate from validated data. Add `packages/cli/package.json` `test:int` invoking the Inspector-owned `../../test/packages/cli-generator/run-integration.mjs`. Add `packages/cli/turbo.json` with `{"extends":["//"],"tasks":{"test:int":{"cache":false}}}` so the real-DB lane executes on every focused and root integration invocation; the root and reference manifests remain byte-frozen. Do not add a `reference/**` fixture. Emit generated SQL with `CREATE SCHEMA` rather than `CREATE SCHEMA IF NOT EXISTS`, so a pre-existing namespace fails before any table or grant. Run `pnpm package-readmes:write` as Engineer for `packages/cli/README.md`. No DETRAN helper reuse. If CLI package dependencies/lockfile change, coordinate hash sensors and use frozen install.
+5. Architect checks the unchanged public API baseline (or performs the explicit rebind checkpoint above if required). Engineer’s fixed-group changeset accompanies the code. Then run focused CLI tests, `pnpm --filter @stynx-nyx/cli test:int`, full `pnpm test:int`, generated consumer package typecheck/build and Nest route tests for all five operations, PostgreSQL RLS negative against two tenants, `pnpm check:rls-negative`, `pnpm check:rls-smoke`, CLI lint/typecheck/build, trace, package README and API baseline checks, DEVAI forbidden strict, and cross-family delivery-review PASS. Verify `@stynx-nyx/cli#test:int` actually executed on every gate run, with no Turbo `cache hit, replaying logs` result. A missing database or unavailable third-party registry is unobserved and cannot be a green integration gate; a STYNX registry attempt or invalid local-tarball proof fails the sensor. Review output diff/manifest and confirm `--check` is byte-stable. Import CTG8 last into the cumulative branch after CTG7; then the maestro follows the conformance plan’s Gate final único: DETRAN §8 recheck, `changeset pre exit`, stable `1.5.0` versioning and registry-policy update precede the single full `pnpm ci:stynx`/`pnpm ci:reference-apps`, final PR and remote CI.
+
+## Acceptance evidence
+
+The CLI command exists in help and uses `--blueprint` plus required `--out`; the sample generates `src/example.*`, `database/ops_example.sql`, protected list/get routes bound to `ops.example_record.list` and `ops.example_record.get`, RLS DDL, and a manifest in a fresh directory. The STYNX-only full-CRUD blueprint generates, compiles, boots, and exercises all five operations, all supported scalar types and nullable/default variants, exact permission deny/allow, DTO rejection, context-tenant create, and tenant-B update/delete with zero affected tenant-A rows. Keys are unique across resources. Generated code uses `Database.tx(..., { role: 'app' })`, `Transaction.query`, trusted `RequestContext`, and bound parameter values. Direct `stynx_app` SQL with tenant A cannot read or mutate B's row; missing tenant and actor context fail closed. Test-local `INV-RBAC-001` structural coverage passes. Every generated table has FORCE RLS and both policy predicates. `offline`, `demo`, `sample`, and every migration-created schema in the package and repository migration trees are rejected as namespaces, with an exact migration-to-validator inventory check; generated DDL fails for any pre-existing namespace. Invalid paths, SQL tokens, unknown keys, unsafe defaults, pre-existing output including a final symlink, a symlinked descendant of the resolved parent, and partial failures leave no target output. Symlinked ancestors of the caller-selected parent are allowed after `realpath`; a race-created empty destination directory remains the documented POSIX rename residual. Repeated generation in two absent destinations yields identical relative file bytes. `--check` detects modification, addition and removal and does not write. The separate packed-tarball runner computes the recursive STYNX manifest closure, builds and packs current source, resolves public exports from an external consumer with complete tarball overrides, an unreachable STYNX scope registry, lockfile `file:` and SHA-512 SRI proof for every installed STYNX package, and no test aliases. Third-party resolution is allowed. The runner executes on every `packages/cli` `test:int` invocation with Turbo caching disabled. Direct SQL negatives use `stynx_app` with `app.tenant_id`, and catalog probes assert FORCE RLS and both policy clauses.
+
+## Triagem
+
+No failure classified before dispatch. Each failure entering feedback is classified `plant-bug`, `sensor-error`, `policy-issue`, or `reference-gap` and routed under the authority chain; no role edits its own reference to make a gate pass.
+
+- `sensor-error`: o primeiro ensaio pós-rebase do consumidor externo chegou ao
+  runtime, mas `stynx_app` não tinha senha para TCP no PostgreSQL local. O
+  papel de teste foi provisionado com senha local e `STYNX_TEST_PG_APP_PASSWORD`;
+  o mesmo sensor passou na tentativa seguinte, com 9 tarballs, SRI, Nest HTTP
+  e RLS real de dois tenants. O delivery-review revelou que esse reparo local
+  não reproduzia a lane CI. O Inspector alterou o harness para autenticar
+  com as credenciais já fornecidas pelo CI e selecionar o papel efetivo
+  `stynx_app` na conexão, com verificações de `session_user` e `current_user`;
+  o consumidor passou novamente sem `STYNX_TEST_PG_APP_PASSWORD`.
+- `policy-issue`: DEVAI strict identificou `FORBID-DROP-PROD` no commit
+  `0018f245e6137464f3388d0862e369ba894e1c99`, cujo comando é apenas a
+  limpeza do banco temporário criado pelo próprio sensor. Vincular recibo
+  Owner exato antes da revisão e repetir o check; nenhuma base de produção
+  participa do ensaio.
+
+## Resume state
+
+**Current checkpoint — OD-S15-02:** Revised prompt-review PASS is recorded. Inspector sensors were committed at `c777c4a8` and `50a882b2`; Engineer generator and its package integration gate/changeset at `fa76165e`, `8b4ee270`, and `546a7fac`. The packed external consumer gate `pnpm --filter @stynx-nyx/cli test:int` passed with current-source local tarballs, SHA-512 lockfile proof, generated Nest routes, and two-tenant real PostgreSQL RLS; `packages/cli` unit tests passed 75/75, typecheck/lint/build and package README check passed. Architect rebinding at `f3c59a67` added only the generator declaration baseline, passed `pnpm api:baselines` (44 packages) and `pnpm check:trace --print` (420/420), and ran `pnpm exec devai doctor` with `ok:true` (authority-enforcement advisory reports the existing missing local post-merge adapter key). No CTG-0007 merge is required for independent work. Recheck against CTG-0005 public data API, run the remaining focused/full integration gates and independent delivery review, then import CTG8 last. The earlier per-CTG PR/RC/full-CI steps are superseded.
+
+The Owner's 2026-09-27 decision authorized prompt 96 as the exceptional third review; its receipt returned REVIEW. The earlier requirement for a separate Owner decision before a fourth review was superseded by the later 2026-09-27 Owner authorization for all actions needed to complete C-0002, including further CTG prompt-reviews. That historical dispatch gate is superseded: revised OD-S15-02 prompt-review PASS and the Architect four-invariant checkpoint suffice for independent CLI work; CTG5 public data API is required before dependent repository/consumer proof. The old checkpoint did not authorize implementation at that time; this current plan authorizes focused work after its stated gates, with PR/merge/publication deferred to the final candidate.
+
+Owner decision 2026-09-27: explicitly authorized the exceptional third prompt-review for CTGs 4–8 in this R-0002 session. This superseded earlier pending-exception checkpoints. The former blanket predecessor gate is superseded by OD-S15-02 above.
+Owner decision 2026-09-27: the Owner explicitly authorized all actions needed to complete C-0002, including further CTG prompt-reviews. The prepared fourth Opus prompt-review `97-ctg8-prompt-review-4.md` was authorized for dispatch. This historical decision did not substitute for a PASS; current predecessor gates are stated in the OD-S15-02 checkpoint.
+Fourth Opus prompt-review returned **REVIEW** in `reviews/ctg8-prompt-review-4.json`: strict store-only installation could not resolve third-party peers on a clean CI store, and the hand-written closure list was incomplete. Classified `reference-gap`; the plan and prompts 91–93 now require recursive manifest closure, local tarball overrides, unreachable STYNX scope registry, `--prefer-offline` for third parties, and lockfile `file:` plus independent SHA-512 SRI proof before executing the installed CLI. That repair required another prompt review before Inspector dispatch.
+
+Fifth Opus prompt-review returned **REVIEW** in `reviews/ctg8-prompt-review-5.json`. Both findings were classified `reference-gap`: the contract still required strict store-only installation and misclassified resolution failures, while prompts 91–93 lacked a preinstall override-set assertion and a way to distinguish STYNX fetch failures from third-party outages. Commit `6b040e6a` repaired the contract, plan, and prompts 91–93 with the manifest closure and local tarball proof, loopback scope registry, `--prefer-offline`, preinstall override equality, a third-party reachability probe, and non-zero exit for every non-PASS outcome.
+
+Sixth Opus prompt-review returned **PASS** in `reviews/ctg8-prompt-review-6.json` with two nonblocking findings. Its triage note is addressed here by requiring the failed fetch or resolution target itself to be STYNX before labeling a network-shaped install failure a sensor failure; a STYNX name appearing only as a parent dependency is insufficient and goes to the separate third-party reachability probe. The stale resume wording was also corrected. The historical prompt-review PASS covered the behavioral contract; the revised flow review and Architect invariant checkpoint are current dispatch prerequisites. CTG7 integration is required for final import, not Inspector dispatch.
+
+Architect 8A checked `buildProgram`, `Database.tx`, `Transaction.query`, `RequestContext`, `StynxDataModule.forRoot`, `Permission`, `PermissionGuard`, and the platform migrations against the contract. The host must install the auth guard and data module; `@Permission` alone is metadata. Four atomic gate invariants now divide parsing/output ownership (`INV-CLI-001`), deterministic output/check (`002`), generated route and repository authority (`003`), and PostgreSQL RLS (`004`). Trace binding waits for Inspector test paths. CTG-0007 integration no longer blocks Inspector dispatch under OD-S15-02; final import remains ordered after CTG7.
+
+Post-rebase checkpoint: CTG8 HEAD `0faf544e` descends from the CTG7 integrated
+PASS receipt `22d976fb`. Trace passed 449/449, API baselines 44/44, CLI unit
+75/75, lint/typecheck/build, lint:tests and package README check. The packed
+consumer ran without Turbo cache and passed with 9 current-source tarballs,
+independent SRI lockfile proof, generated Nest HTTP routes and two-tenant
+PostgreSQL/RLS. RLS negative checked 7 tables and RLS smoke passed. The
+first packed-consumer attempt failed only from local test-role provisioning,
+recorded in §Triagem; the next attempt passed unchanged. Full CI and
+reference apps remain deferred to the single final candidate.
+
+Opus integrated delivery-review cycle 1 on `f2596db6` returned **REVIEW** in
+`reviews/ctg8-integrated-delivery-review-1.json`. Two blockers: the
+workstation-only `stynx_app` TCP password does not survive the strict Turbo
+CI environment, and no sensor forces failure after output staging begins.
+Inspector repairs the consumer harness with reproducible effective app-role
+PostgreSQL sessions and adds a staged failure cleanup sensor before Engineer
+touches implementation. The same Inspector lanes strengthen concrete
+nonblocking findings (packed output/check/digest proof, int32, path/index/
+route collisions, context error and inert metadata assertions) where relevant.
+The Architect then rebinds trace, and Engineer repairs confirmed plant bugs.
+Rerun the packed consumer through root `pnpm test:int` with only CI-provided
+PG variables, plus focused gates and independent review, before ordered CTG8
+import. The contract now records the OD-S15-02 supersession.
+
+Repair checkpoint: Inspector commit `d795db3e` adds the post-staging rename
+failure cleanup proof, strengthens inert metadata, packed output/check/digest
+and written override checks, and uses CI-provided credentials with effective
+`stynx_app` on both direct SQL and Database app pool. The focused packed
+consumer passed with `STYNX_TEST_PG_APP_PASSWORD` unset. Seven additional
+unit negatives were red only for missing generator behavior; Architect bound
+the new assertion projection in `260ff032` (trace 449/449). Engineer commit
+`bb6c5c19` repaired integer int32 bounds, root item route, tenant index
+collision, route shadowing and ancestor symlink handling. CLI unit passed
+83/83, including all seven new negatives. Root `pnpm test:int` passed
+52/52 tasks with only CI-provided PostgreSQL variables; its CLI task printed
+`cache bypass, force executing` and the external consumer PASS with nine
+tarballs, SRI, Nest HTTP and two-tenant RLS. API baselines 44/44, trace
+449/449, lint:tests, package READMEs, RLS negative/smoke and DEVAI strict
+zero findings passed. Request a fresh Opus delivery-review of this exact
+tree before cumulative import.
+
+Opus integrated delivery-review cycle 2 returned **PASS** for HEAD
+`b2ccc748` in `reviews/ctg8-integrated-delivery-review-2.json`. It confirmed
+the CI-credential app-role proof, real post-staging rename failure cleanup,
+83/83 CLI tests, trace 449/449, packed consumer and the role-separated
+Inspector/Architect/Engineer commits. The remaining reserved-word inventory
+is nonblocking for ordered import; complete it before the final gate if the
+release contract remains as written. In final CI, record the exact env and
+force real integration execution so cache entries from another worktree do
+not substitute for this cumulative tree. Fill the U15 ledger row with actual
+symbols, strict subset, optional controller and test-role startup deviation.

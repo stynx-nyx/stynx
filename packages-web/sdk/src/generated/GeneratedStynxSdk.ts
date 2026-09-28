@@ -5,6 +5,7 @@
 import type { BaseHttpRequest } from './core/BaseHttpRequest';
 import type { OpenAPIConfig } from './core/OpenAPI';
 import { FetchHttpRequest } from './core/FetchHttpRequest';
+import { Ctg9OfflineSyncService } from './services/Ctg9OfflineSyncService';
 import { DocumentsService } from './services/DocumentsService';
 import { FlowAgentRulesService } from './services/FlowAgentRulesService';
 import { FlowAnalyticsService } from './services/FlowAnalyticsService';
@@ -45,6 +46,7 @@ import { WorkItemLocksService } from './services/WorkItemLocksService';
 import { WorkItemsService } from './services/WorkItemsService';
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
 export class GeneratedStynxSdk {
+    public readonly ctg9OfflineSync: Ctg9OfflineSyncService;
     public readonly documents: DocumentsService;
     public readonly flowAgentRules: FlowAgentRulesService;
     public readonly flowAnalytics: FlowAnalyticsService;
@@ -96,6 +98,7 @@ export class GeneratedStynxSdk {
             HEADERS: config?.HEADERS,
             ENCODE_PATH: config?.ENCODE_PATH,
         });
+        this.ctg9OfflineSync = new Ctg9OfflineSyncService(this.request);
         this.documents = new DocumentsService(this.request);
         this.flowAgentRules = new FlowAgentRulesService(this.request);
         this.flowAnalytics = new FlowAnalyticsService(this.request);

@@ -26,6 +26,8 @@ can compile or validate against without importing implementation internals.
   `@stynx-nyx/angular-flow`.
 - [jobs-api.md](jobs-api.md) — tenant-scoped Postgres scheduler and worker
   contract for `@stynx-nyx/jobs`.
+- [jobs-actor-timezone-1.5.md](jobs-actor-timezone-1.5.md) — governing 1.5
+  technical actor, tenant RLS, local cron, migration, and clock contract.
 - [signature.md](signature.md) — PAdES/TSA signing and verification contract for
   `@stynx-nyx/signature`.
 - [xmldsig.md](xmldsig.md) — XMLDSig signing and verification contract for

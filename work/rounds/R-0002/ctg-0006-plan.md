@@ -1,0 +1,160 @@
+# CTG-0006 — web kit and published test helpers
+
+**Role:** Architect. **Authority:** DETRAN C-0002 §6.3–6.6, §7 and OD-S15-01; `docs/framework/contracts/web-kit-1.5.md`. All 14 requirements here are MUST. DETRAN is read only.
+
+## Topology and scope
+
+OD-S15-02 replaces this worktree's old per-CTG PR/RC/full-CI cadence. CTG-0002 SSE/testing and CTG-0003 auth/session are merged in `main`; CTG-0004 jobs has PASS on branch `3a69785a` and enters the cumulative campaign branch without its own PR. **Inspector B shell and published testing entrypoint sensors that do not import CTG5 `Transaction` may begin after revised flow prompt-review PASS and a CTG2/3 API checkpoint.** Their Engineer B counterparts may follow red tests on disjoint paths. Inspector A's IFM/ETag integration, `createFakeTransaction`, data-test adoption and final Angular interop wait for CTG5's stable Transaction/ETag checkpoint and an updated cumulative HEAD. Record SHAs and review receipts below; rebase only at stable checkpoints and rerun affected focused gates. The contract binds `ErrorInterceptor` including `STYNX_SSE_REQUEST`, `StynxSessionService` wildcard matching, and CTG5 `Transaction` semantics; Inspector must read the exact version of each file. CTG-0006 owns U8–U11 except UPS-TEST-01, already allocated to CTG-0002. One fixed-group changeset, no CTG6 PR or RC publication. No candidate UPS-SIG/OBX/OFS enters this CTG absent the §8 adenda.
+
+| Predecessor | Integrated SHA    | Review receipt                                                      | Gate                                                                                                                   |
+| ----------- | ----------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| CTG-0002    | main `ce652143`   | PR #285 merged                                                      | SSE/API checkpoint available                                                                                           |
+| CTG-0003    | main `48b42874`   | PR #287 merged                                                      | wildcard/API checkpoint available                                                                                      |
+| CTG-0004    | branch `3a69785a` | `reviews/ctg4-final-delivery-review-2.json` in conformance worktree | PASS; included in cumulative branch                                                                                    |
+| CTG-0005    | branch `e8931c57` | `reviews/ctg5-delivery-review-2.json` PASS                          | Transaction/public API and ETag replay allowlist checkpoint stable; focused real DB, backend and `test:int` gates pass |
+
+## Role-separated work and locks
+
+| Task                                         | Exclusive writable paths                                                                                                                                                                                                                                                                                                                                                                                                  | Checkpoint                                                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Inspector A — HTTP and Angular error sensors | `packages/backend/test/**/if-match*.spec.ts`, `packages-web/sdk/test/*error*.spec.ts`, `packages-web/angular/test/*error*.spec.ts`, `packages-web/angular-ui/test/*error*.spec.ts`, existing `packages-web/angular/test/{stynx-angular,provider-depth}.spec.ts`, and the exact CTG-0002 SSE spec paths added to this lock at the predecessor integration checkpoint                                                       | 428/412 schema, request ID correlation, ETag, complete classification table, SSE raw bypass, banner |
+| Inspector B — shell and test helper sensors  | `packages-web/angular-ui/test/*shell*.spec.ts`, `reference/web/test/e2e/smoke/shell.spec.ts`, `packages-web/angular-auth/test/*testing*.spec.ts`, `packages-web/angular-i18n/test/*testing*.spec.ts`, `packages/testing/test/*fake-transaction*.spec.ts`, and the adoption files named below                                                                                                                              | axe and keyboard, persistence, public subpaths, typed fake and adoption                             |
+| Engineer A — backend and errors              | `packages/backend/src/if-match/**`, `packages/backend/src/index.ts`, `packages-web/sdk/src/errors.ts`, `packages-web/angular/src/error-classification.ts`, `packages-web/angular/src/error*.ts`, `packages-web/angular/src/index.ts`, `packages-web/angular/src/types.ts`, `packages-web/angular/src/{provide-defaults,stynx-angular.module}.ts`                                                                          | IFM, sdk normalization and NGERR runtime; coordinate banner shape with B                            |
+| Engineer B — shell and test helpers          | `packages-web/angular-ui/src/**`, `packages-web/angular-auth/testing/**`, `packages-web/angular-i18n/testing/**`, `packages-web/angular-auth/src/session.service.ts` and the integrated matcher module if matcher export is needed, `packages/testing/src/**`                                                                                                                                                             | shell, banner, true ng-packagr secondary entrypoints, testing helpers                               |
+| Maestro by role                              | Architect: contract/plan/prompts, trace, baselines. Inspector: package hash assertion if manifest changes and test adoption. Engineer: changeset, package READMEs, manifests/lockfile, `reference/web/src/app/app.routes.ts`, `reference/web/src/app/core/reference-web-i18n.service.ts`, `reference/web/scripts/build-web.mjs`, and the STYNX-only reference shell fixture page/module files needed to mount that route. | Separate commits per role                                                                           |
+
+Engineer A and B may proceed in parallel only after Inspector tests are committed and public UI props/error classification types are settled in the contract. Any package manifests/lockfile/build metadata, including the new `@angular/router` peer/dev dependency for `angular-ui` and `pg`/`@types/pg` for testing, belong to root Engineer to prevent collision. Actual imported dependency additions require a frozen install and changeset. Generated outputs are written only via supported tooling. Root Engineer owns a small `reference/web` fixture route to render the published shell for real Playwright/axe; it must use only STYNX symbols and no DETRAN code. Root Engineer registers the published `@stynx-nyx/angular-ui/catalogs/en.json` and `@stynx-nyx/angular-ui/catalogs/pt-BR.json` imports in `reference/web/src/app/core/reference-web-i18n.service.ts`, maps both `en` and `en-US` to the `en` catalog, maps `pt-BR` to its catalog, and merges these with the existing reference, IAM and Flow catalogs. Root Engineer adds an `@stynx-nyx/angular-ui/catalogs` subpath alias pointing to `packages-web/angular-ui/src/i18n` in `reference/web/scripts/build-web.mjs`, beside the existing package alias. The Playwright bundle uses that source alias; the published-import proof is the package-name specifiers plus `reference/web` TypeScript's `moduleResolution: Bundler` resolution against `dist/catalogs`, after building `packages-web/angular-ui`. Inspector B places the direct-axe shell spec in the existing `smoke` spa-only category. `reference/web/playwright.config.mjs` and `scripts/verify-frontend-a11y-gate.mjs` are frozen and outside all CTG-0006 locks.
+
+`docs/framework/contracts/errors.json` is F1 under Constitution Article 6:
+Architect alone edits and commits the IFM catalog entries after confirming
+their code/status contract. Engineer A has no `docs/` lock. `packages/data`
+test adoption and shared manifests/lockfile are serialized with CTG5;
+`packages-web/angular/src` is serialized with CTG7 NGIDEM. Builds and
+consumer fixtures never run concurrently in the same checkout.
+
+Inspector B adopts the session stub in `packages-web/angular-auth/test/angular-auth.spec.ts` (component stubs only, retain real-service tests), `packages-web/angular-flow/test/routes-and-exports.spec.ts`, `packages-web/angular-flow/test/flow-fan-out.spec.ts`, `packages-web/angular-iam/test/routing/angular-iam-routes.spec.ts`, `packages-web/angular-iam/test/iam-api-and-routes.spec.ts`, `packages-web/angular-sessions/test/angular-sessions.spec.ts`, and `packages-web/angular-trash/test/angular-trash.spec.ts`. Adopt the i18n helper in the applicable component/provider cases in `packages-web/angular-auth/test/angular-auth.spec.ts`, `packages-web/angular-profile/test/angular-profile.spec.ts`, `packages-web/angular-sessions/test/angular-sessions.spec.ts`, and `packages-web/angular-trash/test/trash-confirm-flow.spec.ts`; retain tests that intentionally exercise custom missing-key/failure stubs. Adopt `createFakeTransaction` for query/execute unit cases in `packages/data/test/unit/transaction.spec.ts`. After CTG-0005 integration, inventory `packages/{data,flow,outbox,backend}/test/unit/**` and add any true `Transaction` query/execute fake user to this list before Inspector dispatch; interface-only `OutboxSqlExecutor` tests and real DB tests stay as they are. Every migrated file imports its helper from the **published package subpath**, never a source deep path, with a grep/import sensor proving this. Architect rebinds `law/trace.json` after these test changes.
+
+## Sequence
+
+1. The original behavioral prompt-review cycles culminated in Opus PASS at `reviews/ctg6-prompt-review-4.json`. Submit the revised OD-S15-02 flow/locks to Opus before any new dispatch. The Owner has already authorized further prompt reviews in this session. Check predecessor checkpoints, F1 error-catalog ownership, scoped filter binding, test helper typing, Angular module/provider parity and executable axe lane. The independent Inspector B subset may begin at the approved CTG2/3 checkpoint; Inspector A and Transaction-dependent B work wait for CTG5. REVIEW or FAIL does not permit dispatch of the affected subset.
+2. Inspector A/B write failing tests for every MUST, including positive and negative branches. The tests must compile against the proposed public API after implementation; red failures at the expected absent symbols or behavior are acceptable. Preserve all existing tests; do not weaken unrelated assertions. Root commits F3 separately and Architect rebinds trace from `pnpm check:trace --print`.
+3. Engineer A/B implement against those tests with no shims or DETRAN code. If scoped IFM responses fail under the global filter, stop and escalate to Architect; no global filter migration in CTG-0006. Root commits F2 separately. Engineer root writes one fixed-group changeset and package READMEs; `pnpm package-readmes:write` owns its generated sections.
+4. Architect confirms API diff and runs `pnpm api:baselines:write`, then API baseline check. If a published package manifest moves frozen byte hashes, Inspector rebinds exact hash sensors; no role mixes in one commit. Record actual symbols/tests/deviation in final §7 conformance table.
+5. Run all focused tests including real Nest HTTP and Angular TestBed; execute `pnpm i18n:extract && pnpm i18n:check` and the Playwright axe lane with `pnpm --filter @stynx-nyx/reference-web test:e2e --project spa-only`, which is not covered by `pnpm ci:stynx` and requires Docker compose plus a built `reference/api`. On a clean checkout, run `pnpm --filter @stynx-nyx/angular-ui build` before any affected `reference/web` TypeScript check; that is the published-import proof against fresh `dist/catalogs`. Do not add a source paths alias for the catalogs. Run `pnpm check:trace --print`, `pnpm package-readmes:check`, affected lint/typecheck/build and DEVAI forbidden strict; require Opus delivery-review PASS. Defer full `pnpm ci:stynx`, `pnpm ci:reference-apps`, one PR, remote CI and final publication until CTG8 is integrated. No CTG6 PR or RC publication.
+
+## Evidence
+
+For IFM, test the `@RequireIfMatch()` method decorator plus `@IfMatchRevision()` parameter decorator on a real Nest route with `StynxCoreModule`: absent, empty, malformed, weak, wildcard, comma-joined duplicate, whitespace and unsafe tags; 412 on concurrent revision; unchanged body and new ETag on success; law-schema 428/412 with body/header request ID equality both with and without supplied UUIDv7, including handler-thrown error; no ETag on failure; scoped filter precedence. Preferences retains its existing behavior. For NGERR, test the complete status-kind table including HTTP 418 `X_VALIDATION_ERROR` → validation and HTTP 403 with that code → authorization, `ui.error.*` defaults, code vs prefix precedence with `:` and `_`, old/new envelope sdk mapping, SSE raw bypass and local-412 mapped exclusion, no-config banner compatibility, and both Angular registration paths excluding 401 refresh parity. For SHELL, test `ui.shell.*` i18n in en and pt-BR, landmark names, aria-current, skip focus, keyboard order, status live region, storage reload/denial/invalid value and direct axe `serious`/`critical` zero on a real page; scan exceptions fail. For TEST, exercise each published import path from a consuming package/test and migrate the named STYNX tests to those doubles; retain real PostgreSQL tests for data behavior.
+
+## Triagem
+
+`reference-gap` — prompt-review cycle 1 found nine blocking contract/lock/gate gaps and five nonblocking details; Architect repaired contract, locks, predecessor checkpoint and worker prompts for cycle 2. Classify any subsequent failure in one line here as `plant-bug|sensor-error|policy-issue|reference-gap`, attempt one repair, then escalate.
+
+## Retomada
+
+Architect cycle-3 REVIEW repair. The Owner's 2026-09-27 decision authorized exceptional prompt-review cycle 3 for CTGs 4–8 in R-0002; its CTG-0006 receipt is `reviews/ctg6-prompt-review-3.json` with verdict REVIEW. The two ordinary cycles and authorized third cycle are exhausted. Inspector dispatch remains blocked until a separately authorized review returns PASS **and** the predecessor integration table contains approved SHAs, review receipts and passing gates. The predecessors are not yet integrated here. No Inspector, PR, merge, versioning, or publication may proceed on this checkpoint.
+Owner decision 2026-09-27: the Owner explicitly authorized all actions needed to complete C-0002, including further CTG prompt-reviews. The prepared fourth Opus prompt-review `75-ctg6-prompt-review-4.md` is authorized for dispatch. This does not substitute for a PASS or predecessor gates.
+
+Fourth Opus 5.5 prompt-review returned **PASS** in `reviews/ctg6-prompt-review-4.json`. Its sole nonblocking finding was the clean-checkout ordering for `angular-ui` published catalogs; step 5 and prompt 72 now require an explicit build immediately before the reference TypeScript gate. Inspector dispatch still awaits the CTG-0002…0005 predecessor table and ETag replay-allowlist check.
+
+OD-S15-02 prospectively narrows that blanket predecessor gate: Inspector B
+shell/testing entrypoints may proceed after revised flow PASS and CTG2/3
+checkpoint; IFM/ETag, Transaction fake and final interop still wait for
+CTG5. All work enters one cumulative branch and one final PR after CTG8.
+
+Current OD-S15-02 checkpoint (2026-09-28): Inspector B shell and published-helper sensors, their Engineer implementation, consumer adoption and the reference shell fixture are committed. The real Playwright shell fixture passed 2/2 with zero axe `serious`/`critical` findings. NGERR Inspector sensors are committed at `0ac9dccb` and bootstrap correction `684db971`; Engineer NGERR source is committed at `d5354aaf`. Full affected package tests passed: SDK 68/68, Angular 97/97, Angular UI 19/19, with typechecks passing. Generated i18n keys and the generator/Prettier ownership fix are committed at `648df30c` and `79b301f7`; `pnpm i18n:check` passes. `pnpm package-readmes:write` changed only the Angular UI README, committed at `aeeac841`. IFM/ETag and `createFakeTransaction` Inspector/Engineer tasks remain pending the CTG-0005 stable transaction/API checkpoint and this branch's ordered rebase. No CTG6 delivery review, full campaign CI, PR or published RC has occurred.
+
+CTG-0005 stable dependency checkpoint: this CTG-0006 branch was rebased without conflict onto `a8af3ac5` (CTG5 Architect trace/API rebind), whose source is `332af2f5`. `TransactionalCommand` retains `etag` in its four-header committed replay allowlist; `Database.tx` exports `requireActor`, and `Transaction.query`/`execute` retain their public signatures. CTG5 real HTTP 5/5, advanced HTTP 5/5, rollback/race 8/8, migration 4/4, complete backend tests, `pnpm test:int`, RLS negative/smoke, API baseline and trace all passed at that checkpoint. CTG5 delivery review and the later statement-timeout Inspector amendment remain to be incorporated before final import. The stable API/ETag prerequisite for CTG6 IFM and fake-transaction Inspector dispatch is now satisfied; preserve separate locks and rebase the final CTG5 delta before delivery review.
+
+Inspector IFM/ETag and fake-Transaction sensors are committed separately at
+`9b49718d`. The focused IFM tests are red for absent public exports; the fake
+Transaction tests are red 3/3 in `packages/testing` and 1/18 in
+`packages/data`, with the other 17 data tests passing. They are intentionally
+red pending Engineer implementation. Check the package graph before adding a
+`data` → `testing` dependency because `testing` already imports `data`.
+The branch still needs the final CTG5 delta (currently through `91db8feb`),
+Engineer IFM/fake implementation, F1 error-catalog ownership, trace/API rebind,
+changeset, focused gates and delivery-review. No CTG6 PR or RC publication.
+
+CTG-0006 final predecessor reconciliation: CTG5 Opus delivery-review cycle 2
+returned PASS at `7e858d57`; two nonblocking HTTP provenance sensors were
+added at `81da44e3` and bound to trace at `e8931c57`. The cumulative CTG4
+branch advanced by fast-forward to `e8931c57`. This CTG6 branch rebased 39
+role-separated commits from `a8af3ac5` onto that exact CTG5 HEAD, resolving
+only the additive `law/trace.json` note conflict. `@RequireIfMatch()` and
+`@RevisionETag()` now have real Nest/PostgreSQL composition tests with
+`@TransactionalCommand`: 17/17 focused tests passed, including rollback,
+strong ETag persisted on commit and replay, and no ETag on failures. Architect
+bound the new 45-assertion projection; `pnpm check:trace --print` passes
+441/441, `pnpm lint:tests` passes and public API baselines match 44/44.
+The post-merge DEVAI hook in the cumulative worktree reports a missing
+worktree-local adapter script (`.git/worktrees/stynx2/devai/issue-post-merge-receipt.cjs`)
+even though the fast-forward succeeded. Triagem: `sensor-error`; repair its
+local installation or receipt setup before the final campaign merge, without
+editing a tracked workflow. Next: finish CTG6 focused gates and Opus delivery
+review on the exact rebased HEAD, then import CTG6 by fast-forward. No CTG6
+PR or RC publication.
+
+Delivery-review Opus ciclo 1 em `reviews/ctg6-delivery-review-1.json`
+retornou **REVIEW** no HEAD `4caa1e64`. Triagem: `reference-gap` — faltam
+sensores de `system`/matchMedia, mudança de preferência e SSR, e do texto do
+status vivo após navegação/tema; Inspector acrescenta TestBed e, se couber,
+Playwright. Triagem: `sensor-error` — o fake de `Transaction` do teste data
+resolve um `dist` hoisted, partindo a identidade da classe; Inspector corrige
+o alias de Vitest para source, restaura `instanceof` e prova identidade.
+Achados menores entram no mesmo reparo quando couber: tabulação real no
+browser, sensor de imports públicos dos helpers, inventário de fakes e
+`requestId` de envelope legado. Uma nova tentativa de review é obrigatória
+antes da importação CTG6; o REVIEW não autoriza promoção.
+
+Inventário CTG5 de fakes `Transaction` em testes unitários data/flow/outbox/
+backend: somente `packages/data/test/unit/transaction.spec.ts` instancia a
+classe concreta para `query`/`execute`; `packages/outbox/test/unit/outbox.service.spec.ts`
+usa o port estrutural `OutboxSqlExecutor`, e os demais resultados são stubs
+do banco, métodos com nome `Transaction` ou callbacks sem fake concreto.
+Não adicionar dependência `data` → `testing` ao manifesto.
+
+Os dez commits antigos com autor humano mantêm declaração constitucional por
+escopo e conteúdo, sem misturar papéis em um commit: **Engineer** em
+`6b499e97`, `11870f5c`, `2880b37c`, `1e9a59eb`, `fa75d850` e `71db8791`;
+**Inspector** em `44fd61b2`, `c13236c2`, `28c0666c` e `8f76fbe8`.
+
+Reparo do review ciclo 1: Inspector prendeu a identidade da classe no source
+do teste data (`a68f5f2b`), criou sensor de imports públicos dos dez arquivos
+de adoção (`6d01fe29`) e provou tema `system`, media changes, SSR, status vivo
+en/pt-BR e teclado no browser (`58649782`). Inspector também fixou o
+`requestId` do envelope legado em teste vermelho (`1b708385`); Engineer
+reparou o SDK em `20fdd291`. Architect rebindeou cinco projeções de trace em
+`f283b6a0`. Passaram `pnpm check:trace --print` 442/442, `pnpm lint:tests`,
+angular-ui 26/26, data 90/90, SDK 69/69, Playwright shell 2/2, i18n,
+READMEs, API baselines 44/44, builds Angular UI/reference-web e DEVAI
+forbidden strict sem achados. Um build Angular UI concorrente com
+`api:baselines` falhou por limpeza compartilhada de `dist` (`sensor-error`);
+repetido sequencialmente após o baseline, passou com typecheck/build do
+consumidor. A primeira tecla Tab na página de referência pode atingir os
+controles do header externo; o teste do componente prova que o skip link é
+o primeiro tabbable do shell. Próximo gate: Opus delivery-review ciclo 2 no
+HEAD exato; REVIEW/FAIL impede a importação.
+
+Delivery-review Opus ciclo 2 em `reviews/ctg6-delivery-review-2.json`
+retornou **PASS** para `189b64bb`. Os três bloqueios foram fechados. O reviewer
+marcou como menores um regex insuficiente no sensor de imports públicos e a
+dependência transitiva de `sessions/dist` no alias do barrel de testing; os
+dois recebem hardening Inspector antes da importação cumulativa. O teste de
+Tab no shell foi considerado suficiente no contexto do header externo. Após
+o hardening, rebinder trace, verificar gates focais e importar a CTG6 na
+branch cumulativa. O PASS deste HEAD não substitui o review final da tree
+integrada.
+
+Hardening menor do PASS: Inspector `ecc0e342` acrescentou vetores de rejeição
+e aceitação de caminhos de import, e passou a aliasar o teste data diretamente
+para `testing/src/fake-transaction.ts`, eliminando a carga transitiva de
+`sessions/dist`. Architect `9dcdecc5` rebindeou trace 442/442. Passaram o
+sensor Node 2/2, data 90/90, `pnpm lint:tests` e o focused typecheck do data.
+Submeter ao Opus apenas o delta desde `189b64bb` para confirmar que o PASS
+continua aplicável; depois importar a CTG6 na branch cumulativa.
+
+Delivery-review Opus ciclo 3 em `reviews/ctg6-delivery-review-3.json`
+retornou **PASS** no HEAD `ff576adc`; os dois achados menores foram resolvidos
+e não há mudança de API/runtime no delta. CTG6 está pronta para fast-forward
+na branch cumulativa e para o review final da tree consolidada após CTG8.

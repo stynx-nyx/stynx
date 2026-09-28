@@ -31,3 +31,5 @@ export interface TokenVerifier {
 export interface PrincipalMapper {
   map(result: AuthVerificationResult): Principal;
 }
+/** Own-property constructor brand for the two STYNX verified HTTP guards. */
+export const STYNX_BUILTIN_AUTH_GUARD = Symbol.for('stynx.builtin-auth-guard');

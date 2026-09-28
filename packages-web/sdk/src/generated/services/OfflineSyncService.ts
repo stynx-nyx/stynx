@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CancelNumberingReservationInput } from '../models/CancelNumberingReservationInput';
+import type { CTG9SubmitSyncBatchResult } from '../models/CTG9SubmitSyncBatchResult';
 import type { NumberingReservation } from '../models/NumberingReservation';
 import type { ProblemDetails } from '../models/ProblemDetails';
 import type { ReserveNumberingInput } from '../models/ReserveNumberingInput';
@@ -94,7 +95,7 @@ export class OfflineSyncService {
         });
     }
     /**
-     * @returns SubmitSyncBatchResult OK
+     * @returns any OK
      * @returns ProblemDetails Unexpected error
      * @throws ApiError
      */
@@ -102,7 +103,7 @@ export class OfflineSyncService {
         requestBody,
     }: {
         requestBody: SubmitSyncBatchInput,
-    }): CancelablePromise<SubmitSyncBatchResult | ProblemDetails> {
+    }): CancelablePromise<(SubmitSyncBatchResult | CTG9SubmitSyncBatchResult) | ProblemDetails> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/offline-sync/sync-batches',

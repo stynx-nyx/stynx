@@ -1,0 +1,54 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/test/wiring/ctg9-http.wiring-spec.ts:202",
+      "issue": "The oracle is impossible. `payload` carries `batchSequence: 1` and `deviceId: 'device-a'`. The test at :141 has already closed `batch-a` with sequence 1 on that device. `{...payload, deviceBatchId:'unrelated-a'}` therefore reuses the sequence under a new batch ID, and contract :292 requires 409 for that. Contract :31 also requires the domain check (batch/sequence/declared set) to run before the transport-fingerprint comparison. A conforming implementation returns 409 on both requests, but the test expects 201 and then 422. It also reuses item key `item-a`/`queue-a` across batches.",
+      "required_change": "Inspector: send both requests without `batchSequence` (or give each a fresh device with sequence 1), with their own queueItemId/idempotencyKey (for example `unrelated-item-a`/`unrelated-item-b`) and no applicable domain replay/mismatch. The first request with `transport-unrelated` must be a new batch (201). The second must be another new batch with a different body and the same transport key (422 `IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY`). Keep the context-precedence test at :219 as it is."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:234",
+      "issue": "`identity_mode='ctg9'` is proven only by a raw SQL insert. No sensor runs a CTG9 submission through `PostgresOfflineSyncStore` and checks that the row gets `identity_mode='ctg9'`. Contract :329-331 says that without a schema constraint, a sensor must prevent CTG9 rows from silently defaulting to e6. No sensor proves that the E6 precheck and the raced read filter `identity_mode='e6'` (contract :327). The E6 test at :442 uses a hash that no ctg9 row has, and the only ctg9 row (`{}`) shares its hash with an e6 row. An implementation that writes CTG9 with the default e6, or does an unfiltered E6 lookup (E6 then returns a CTG9 row as a duplicate), passes every sensor.",
+      "required_change": "Inspector: on the 0002 schema, (a) have CTG9 (resolver + Postgres store) submit a new keyed item with hash H and assert `identity_mode='ctg9'` in the row; (b) have E6 (no resolver) submit another key with the same H and assert `duplicateItems: 0` and a new row with `identity_mode='e6'`; (c) submit E6 again with a third key and the same H and assert `duplicateItems: 1` pointing to the e6 row from (b), not the ctg9 row."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:522",
+      "issue": "UPS-OFS-03 has no real PostgreSQL proof. The only CTG9 applier/event-port sensors use `InMemoryOfflineSyncStore` (ctg9-parity.spec.ts:366-421). Contract :300-303 says the in-memory double 'is not evidence of PostgreSQL atomicity' and requires app-role PostgreSQL integration sensors for the shared transaction and rollback. Prompt 146:71-77 requires effect, consumption, receipt and event in one commit, total rollback, and a persisted partial result. The PostgreSQL suite only covers the enclosing-transaction rejection and strict mode through `Database` directly; it never runs a submission with an applier.",
+      "required_change": "Inspector: in the upgrade suite, submit a CTG9 batch through `PostgresOfflineSyncStore` with an applier that writes to a test table using the received `trx`, and an event port that records `trx` identity. Assert that the applier and event port get the same `trx`, and that effect, consumption, receipt and event are all present after commit. For an item where the applier writes and then throws, assert that none of the four is left in the database while the sibling item stays applied. For 40P01, assert the item stays open with no consumption."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/unit/ctg9-parity.spec.ts:468",
+      "issue": "The test reads `conflictId` from `getSyncItemReceipt`, but the pinned `SyncItemReceipt` type (contract :231-236) has no such field. It also expects `resolveConflict(..., 'device-wins')` → 409 with no `conflictResolver` configured, while contract :309 keeps the legacy values supported for existing callers and does not say which kind forbids them.",
+      "required_change": "Either the Architect pins `conflictId` (or `context.conflictId`) and the rule 'legacy value on a concurrency conflict → 409', or the Inspector reads the ID from `context` and configures a `conflictResolver` whose allowed set excludes the action under test."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/unit/postgres-offline-sync.store.spec.ts:142",
+      "issue": "The existing E6 unit harness depends on the order of `trx.query` calls (`mock.calls[2]`, `mockResolvedValueOnce`), and its default mock returns `{rows:[]}`. A separate 0002 schema probe inside the transaction would shift the indices, or would read `rows:[]` as 'no 0002' and break published E6 tests. The Engineer is not allowed to change these tests.",
+      "required_change": "In prompt 153, state that the upgrade-required check must not add `trx.query` calls to the E6 path, for example by mapping 42703/42P01 from the first statement that already touches a 0002 object to `OfflineSyncUpgradeRequiredError`. Alternatively, have the Architect record an explicit exception."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/unit/ctg9-parity.spec.ts:126",
+      "issue": "The no-resolver unit test still sends only `mode:'ctg9'`. `batchSequence` in an E6 body is covered only over HTTP (ctg9-legacy-http.wiring-spec.ts:15). `policyResolver: undefined` at the module level is checked only for controller choice (ctg9-mode.wiring-spec.ts:86), not for the resolved service.",
+      "required_change": "Optional: add `batchSequence: 1` to the E6 body at :129. In ctg9-mode, resolve `OfflineSyncService` from `forRoot({policyResolver: undefined, mountControllers:false, store: inMemory})` and assert `duplicateItems: 1` for two keys with the same hash."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:166",
+      "issue": "The absolute intervals [1000..1009]/[1010..1019] depend on declaration order. The E6 test at :465 reserves from the same range (tenantA/org-a), so reordering or `sequence.shuffle` would make :166 fail.",
+      "required_change": "Optional: use a dedicated range/org for the concurrency test, or assert disjoint, contiguous intervals relative to the observed `next_number`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/wiring/ctg9-mode.wiring-spec.ts:100",
+      "issue": "The sensor pins the option names `handoffPort` and `conflictResolver` as CTG9-only ports. Contract :23-26 lists 'handoff' and does not list the conflict resolver.",
+      "required_change": "Architect: pin the camelCase names of every CTG9-only option in the contract, including `conflictResolver`, so the sensor and the contract match."
+    }
+  ],
+  "summary": "Cycle 2 blockers are mostly closed. The upgrade suite applies 0002 in beforeAll, right after seeding 0001 (legacy-item, ranges) and before any 1.5.0 store call, so the old dependency on test order is gone. CTG9 inserts `identity_mode='ctg9'` explicitly. The negatives cover e6 same hash → 23505 and ctg9 same key → 23505, and the sensor asserts the e6 partial index, the global key index, the NOT NULL column with default e6 and the CHECK e6/ctg9. The 0001-only group expects `OfflineSyncUpgradeRequiredError`/503 with no DML. The E6 harness applies 0002 and keeps its assertions. Bootstrap with CTG9 ports and no resolver, a non-durable custom store with a resolver, `policyResolver:undefined` at the controller level, `batchSequence` in the E6 HTTP body and `clearReservation` never being called are all covered. The E6 path on 0001→0002 is covered (cross-key deduplication, QUEUE_ID_REUSED, second cancel 409), and the legacy-item and identity-resolver sensors do not apply anything. A1 §8.1 is respected. Three new blockers remain: (1) ctg9-http:202 has an impossible oracle, reusing sequence 1 on device-a, where the contract requires 409 before the 201/422 the test expects; (2) no PostgreSQL sensor proves that the CTG9 store writes `identity_mode='ctg9'` or that the E6 lookup filters by mode; (3) UPS-OFS-03 has no real PostgreSQL proof of the shared transaction and rollback, which the contract explicitly requires. Apart from these, the sensors are red only because production code is missing. After the repair: PASS for the Inspector commit and the Engineer prompt review. This review does not declare CTG9 implemented."
+}

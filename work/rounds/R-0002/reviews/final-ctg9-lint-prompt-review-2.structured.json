@@ -1,0 +1,100 @@
+{
+  "duration_api_ms": 96137,
+  "stop_reason": "tool_use",
+  "session_id": "7852e763-0755-41fa-b39f-a8b876b2673b",
+  "total_cost_usd": 0.5388160000000001,
+  "usage": {
+    "input_tokens": 28,
+    "cache_creation_input_tokens": 35686,
+    "cache_read_input_tokens": 510980,
+    "output_tokens": 7551,
+    "output_tokens_details": { "thinking_tokens": 1719 },
+    "server_tool_use": { "web_search_requests": 0, "web_fetch_requests": 0 },
+    "service_tier": "standard",
+    "cache_creation": { "ephemeral_1h_input_tokens": 35686, "ephemeral_5m_input_tokens": 0 },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 2527,
+        "cache_read_input_tokens": 45988,
+        "cache_creation_input_tokens": 1722,
+        "cache_creation": { "ephemeral_5m_input_tokens": 0, "ephemeral_1h_input_tokens": 1722 },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 28,
+      "outputTokens": 7551,
+      "cacheReadInputTokens": 510980,
+      "cacheCreationInputTokens": 35686,
+      "webSearchRequests": 0,
+      "costUSD": 0.5388160000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1719,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": { "background": 0, "foreground": 0, "unset": 0 },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": { "parent": 0, "user": 0, "system": 0 },
+    "refused": { "depth_limit": 0, "concurrency_limit": 0, "budget": 0 },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 15,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "{\"verdict\":\"PASS\",\"findings\":[{\"severity\":\"nonblocking\",\"issue\":\"At trust-gate.spec.ts:626 the prompt asks the Inspector to compare the attached CMS eContent to a 'known fixture relationship'. No fixture file holds those bytes. `openssl asn1parse` on `pades-attached-blt.cms.der` shows eContentType `pkcs7-data` (id-data) and an eContent OCTET STRING of 55 bytes containing the literal `Unrelated CMS content, not the selected PDF ByteRange.`. Neither `pades-attached-source.pdf`, the ByteRange-covered bytes of `pades-attached-blt.pdf`, nor their SHA-256 values appear inside the CMS. The Inspector may therefore spend time looking for a file relationship that does not exist, or settle for an inequality check.\",\"required_change\":\"Optional tightening: name the expected value. Require eContent bytes to equal `Buffer.from('Unrelated CMS content, not the selected PDF ByteRange.')`, a 55-byte literal. Optionally also require that they differ from the ByteRange-covered bytes of `pades-attached-blt.pdf`. Keep the existing rejection with the message 'Detached id-data CMS required'.\"},{\"severity\":\"nonblocking\",\"issue\":\"At manifest.spec.ts:446 the existing violation is `expect(match).not.toBeNull()`. The CW-1 selector in `tools/eslint-config/test.mjs` matches the zero-argument `toBeNull` call even after `.not`. The phrase 'in addition to non-null captures' could lead the Inspector to keep that form, and `lint:tests` would fail again.\",\"required_change\":\"Optional: state that the non-null proof must be a value assertion. One option is `expect(match?.slice(1, 5)).toEqual(['0', expect.stringMatching(/^\\\\d+$/), ...])` followed by the numeric checks `before < after` and `after + tail === pdf.length`. Any `toBeNull`, `toBeDefined` or similar zero-argument matcher, with or without `.not`, is out.\"},{\"severity\":\"nonblocking\",\"issue\":\"At readiness.spec.ts:142, the phrase 'expected constructor/function type' allows `toEqual(expect.any(Function))`. That is compliant and matches line 140, but it is the weakest acceptable form. `SignatureHealthIntegration` is an exported class (`packages/signature/src/readiness.ts:32`), so a stronger identity check is available.\",\"required_change\":\"Optional: also assert `api.SignatureHealthIntegration.name` equals `'SignatureHealthIntegration'`, or assert identity against the module returned by `forRoot()`.\"},{\"severity\":\"nonblocking\",\"issue\":\"The final sentence says 'rebinda', a Portuguese form, where the English 'rebinds' is meant. It is also worth confirming the path mapping: pinned constitution F3 lists `packages/*/tests/`, while every edited file is under `packages/*/test/`. The repository has used `test/` as Inspector scope throughout R-0002, so this is consistent with practice rather than a blocker.\",\"required_change\":\"Change 'rebinda' to 'rebinds'. No other change is needed.\"}],\"summary\":\"Prompt 192 is ready to dispatch. All six anchors match the current tree: backend :159 `toBeNull`, trust-gate :626 `eContent toBeDefined` and :740 `toBeUndefined`, manifest :446 `not.toBeNull`, readiness :142 `toBeDefined`, withdrawal :86 `toBeDefined`. Each is a zero-argument existence matcher caught by the CW-1 selector. Every required replacement keeps or strengthens its proof. `toBe(null)` and `toBe(undefined)` keep the exact negative proofs and pass the lint rule. ByteRange start `'0'`, `before < after` and `after + tail === pdf.length` prove the signed range covers the whole file except the `/Contents` gap. Withdrawal now expects `{documentSha256: hex(sourceDocument), evidenceSha256: hex(expected fixture)}`, a new helper parameter supplies the expected evidence, and the two callers pass different fixtures. Production (`withdrawal.ts:114-115`) sets `documentSha256 = input.contentHash` (`hex(sourceDocument)`) and `evidenceSha256 = sha256Hex(input.evidenceBytes)`. That evidence is `attestation.cms.der` on the physical path and `declarationCmsSignature` on the digital path, so the expected values are correct and come from fixtures, not production output. This resolves the blocking finding from review 1. Scope stays in Inspector test paths and excludes implementation, law, docs, generated files, Git, deletions, skips and weakening. The prompt also requires `check:trace --print` evidence and sets the order: maestro commit, then Architect rebinds `law/trace.json`, and only then Engineer regenerates the final marker and reruns `ci:stynx`. Remaining notes are optional tightening: pin the eContent to its actual 55-byte literal, since no fixture file contains it; forbid `not.toBeNull()` for the ByteRange capture; optionally pin the readiness class name; fix one wording slip ('rebinda').\"}",
+  "structured_output": {
+    "verdict": "PASS",
+    "findings": [
+      {
+        "severity": "nonblocking",
+        "issue": "At trust-gate.spec.ts:626 the prompt asks the Inspector to compare the attached CMS eContent to a 'known fixture relationship'. No fixture file holds those bytes. `openssl asn1parse` on `pades-attached-blt.cms.der` shows eContentType `pkcs7-data` (id-data) and an eContent OCTET STRING of 55 bytes containing the literal `Unrelated CMS content, not the selected PDF ByteRange.`. Neither `pades-attached-source.pdf`, the ByteRange-covered bytes of `pades-attached-blt.pdf`, nor their SHA-256 values appear inside the CMS. The Inspector may therefore spend time looking for a file relationship that does not exist, or settle for an inequality check.",
+        "required_change": "Optional tightening: name the expected value. Require eContent bytes to equal `Buffer.from('Unrelated CMS content, not the selected PDF ByteRange.')`, a 55-byte literal. Optionally also require that they differ from the ByteRange-covered bytes of `pades-attached-blt.pdf`. Keep the existing rejection with the message 'Detached id-data CMS required'."
+      },
+      {
+        "severity": "nonblocking",
+        "issue": "At manifest.spec.ts:446 the existing violation is `expect(match).not.toBeNull()`. The CW-1 selector in `tools/eslint-config/test.mjs` matches the zero-argument `toBeNull` call even after `.not`. The phrase 'in addition to non-null captures' could lead the Inspector to keep that form, and `lint:tests` would fail again.",
+        "required_change": "Optional: state that the non-null proof must be a value assertion. One option is `expect(match?.slice(1, 5)).toEqual(['0', expect.stringMatching(/^\\d+$/), ...])` followed by the numeric checks `before < after` and `after + tail === pdf.length`. Any `toBeNull`, `toBeDefined` or similar zero-argument matcher, with or without `.not`, is out."
+      },
+      {
+        "severity": "nonblocking",
+        "issue": "At readiness.spec.ts:142, the phrase 'expected constructor/function type' allows `toEqual(expect.any(Function))`. That is compliant and matches line 140, but it is the weakest acceptable form. `SignatureHealthIntegration` is an exported class (`packages/signature/src/readiness.ts:32`), so a stronger identity check is available.",
+        "required_change": "Optional: also assert `api.SignatureHealthIntegration.name` equals `'SignatureHealthIntegration'`, or assert identity against the module returned by `forRoot()`."
+      },
+      {
+        "severity": "nonblocking",
+        "issue": "The final sentence says 'rebinda', a Portuguese form, where the English 'rebinds' is meant. It is also worth confirming the path mapping: pinned constitution F3 lists `packages/*/tests/`, while every edited file is under `packages/*/test/`. The repository has used `test/` as Inspector scope throughout R-0002, so this is consistent with practice rather than a blocker.",
+        "required_change": "Change 'rebinda' to 'rebinds'. No other change is needed."
+      }
+    ],
+    "summary": "Prompt 192 is ready to dispatch. All six anchors match the current tree: backend :159 `toBeNull`, trust-gate :626 `eContent toBeDefined` and :740 `toBeUndefined`, manifest :446 `not.toBeNull`, readiness :142 `toBeDefined`, withdrawal :86 `toBeDefined`. Each is a zero-argument existence matcher caught by the CW-1 selector. Every required replacement keeps or strengthens its proof. `toBe(null)` and `toBe(undefined)` keep the exact negative proofs and pass the lint rule. ByteRange start `'0'`, `before < after` and `after + tail === pdf.length` prove the signed range covers the whole file except the `/Contents` gap. Withdrawal now expects `{documentSha256: hex(sourceDocument), evidenceSha256: hex(expected fixture)}`, a new helper parameter supplies the expected evidence, and the two callers pass different fixtures. Production (`withdrawal.ts:114-115`) sets `documentSha256 = input.contentHash` (`hex(sourceDocument)`) and `evidenceSha256 = sha256Hex(input.evidenceBytes)`. That evidence is `attestation.cms.der` on the physical path and `declarationCmsSignature` on the digital path, so the expected values are correct and come from fixtures, not production output. This resolves the blocking finding from review 1. Scope stays in Inspector test paths and excludes implementation, law, docs, generated files, Git, deletions, skips and weakening. The prompt also requires `check:trace --print` evidence and sets the order: maestro commit, then Architect rebinds `law/trace.json`, and only then Engineer regenerates the final marker and reruns `ci:stynx`. Remaining notes are optional tightening: pin the eContent to its actual 55-byte literal, since no fixture file contains it; forbid `not.toBeNull()` for the ByteRange capture; optionally pin the readiness class name; fix one wording slip ('rebinda')."
+  },
+  "ttft_ms": 2079,
+  "type": "result",
+  "duration_ms": 100652,
+  "uuid": "e0774143-4761-4329-ae97-005efaffbfc4",
+  "ttft_stream_ms": 1265,
+  "time_to_request_ms": 362,
+  "first_content_frame_ms": 1265,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

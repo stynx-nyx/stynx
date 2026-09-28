@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-09-27",
+    "last_updated": "2026-09-28",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,9 @@
       "require_test_links": true
     },
     "provenance": [
+      "STYNX 1.5.0 final lint Architect rebind pins CTG9 SSE tenant denial, attached CMS bytes, incremental PDF ByteRange, readiness export and withdrawal hashes after stronger value assertions.",
+      "STYNX 1.5.0 final-version Architect rebind pins private workspace manifest and CHANGELOG restoration through Changesets success, failure and spawn errors.",
+      "STYNX 1.5.0 CTG-0009 Architect rebind pins signature trust/manifest/withdrawal, offline durable parity and upgrade, event-log ownership/RLS, audit chain, SSE bridge and adjusted legacy outbox assertions.",
       "DEVAI 1.2.13 deterministic inventory for exact tracked source bytes.",
       "The 495 tracked test-path census is partitioned into 380 executable tests and 115 non-executable fixtures or support modules.",
       "Fourteen tracked verification scripts and configuration attestations complete the 509-item governed test surface.",
@@ -18,6 +21,7 @@
       "STYNX 1.5.0 CTG-0001 Architect rebind pins legacy-public and optional-auth stale identity regression sensors.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins public-tenant marker precedence and stale-claims negatives.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins credential classification, shared provenance, Cognito claims, interceptor order, and generated request ID sensors.",
+      "STYNX 1.5.0 CTG-0004 Architect rebind pins sparse local cron, poisoned schedule isolation, caller precedence, migration, and seed assertions.",
       "STYNX 1.5.0 CTG-0001 Architect rebind aligns typed-credential fixtures and symbol assertions after Inspector sensor triage.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins served interceptor order, JWKS source/rotation, typed JOSE, revoked session, and provenance sensors from delivery review 3.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins recently refreshed JWKS classification, failed refresh propagation, and public HTTP outage sensors from delivery review 4.",
@@ -26,7 +30,23 @@
       "STYNX 1.5.0 CTG-0002 Architect rebind pins SSE edge, HTTP, source-export and backend behavior sensors after coverage repair.",
       "STYNX 1.5.0 CTG-0002 Architect rebind pins filtered cursor progress and byte-ceiling lifecycle sensors.",
       "STYNX 1.5.0 CTG-0002 Architect rebind pins stale-generation multi-frame lifecycle sensors.",
-      "STYNX 1.5.0 CTG-0003 Architect rebind pins authorization and session coverage sensors, including readiness and Redis policy replies."
+      "STYNX 1.5.0 CTG-0003 Architect rebind pins authorization and session coverage sensors, including readiness and Redis policy replies.",
+      "STYNX 1.5.0 CTG-0004 Architect rebind pins actor/RLS, migration, timezone, DST and worker sensors.",
+      "STYNX 1.5.0 CTG-0004 Architect rebind pins jobs coverage sensors for actor, timezone and timer boundaries.",
+      "STYNX 1.5.0 CTG-0005 Architect rebind pins transactional actor, tenant RLS, audit, idempotency, rollback, race and HTTP replay sensors.",
+      "STYNX 1.5.0 CTG-0005 Architect rebind pins the real app-role statement-timeout rollback sensor.",
+      "STYNX 1.5.0 CTG-0005 Architect rebind pins 500/503 server-cause observability with unchanged public envelopes.",
+      "STYNX 1.5.0 CTG-0005 delivery-review Architect rebind pins filter precedence, inherited guards, provenance bootstraps, and refreshed fault/HTTP assertions.",
+      "STYNX 1.5.0 CTG-0006 Architect rebind pins If-Match, Angular error boundary, accessible shell, published testing helpers and adopted helper sensors. Real Nest/PostgreSQL tests also prove If-Match and ETag compose with transactional commit, replay and rollback. The assertion projection of modified existing tests is refreshed without reducing their declared invariants.",
+      "STYNX 1.5.0 CTG-0006 delivery-review Architect rebind pins system-theme media changes and SSR fallback, accessible live status, source-identity fake Transaction, published testing imports and legacy request ID preservation.",
+      "STYNX 1.5.0 CTG-0006 PASS follow-up Architect rebind pins negative deep-import vectors and direct fake-Transaction source resolution.",
+      "STYNX 1.5.0 CTG-0007 Architect rebind pins the Angular-generated idempotency key through live Nest HTTP and PostgreSQL RLS commit, replay and mismatch paths.",
+      "STYNX 1.5.0 CTG-0008 Architect rebind pins blueprint safety, deterministic output, generated RBAC and PostgreSQL RLS sensors, including the packed external consumer.",
+      "STYNX 1.5.0 CTG-0008 lint repair strengthens exact blueprint values and rebinds the generator assertion projection.",
+      "STYNX 1.5.0 CTG-0008 delivery-review Architect rebind pins staged rename cleanup, integer and route negatives, and inert annotation comparison without weakening existing sensors.",
+      "STYNX 1.5.0 CTG-0008 final hardening Architect rebind pins negative PostgreSQL reserved and restricted SQL identifier vectors before implementation.",
+      "STYNX 1.5.0 CTG-0005 envelope Architect rebind pins canonical HTTP rejections, rollback, bootstrap grammar, legacy data bodies, and defensive no-SQL checks.",
+      "STYNX 1.5.0 CTG-0005 envelope sensor triage rebinding separates internal exception metadata from the HTTP envelope and pins the complete actor-provenance 403 body."
     ]
   },
   "invariants": [
@@ -100,6 +120,69 @@
           "names": ["INV-RBAC-001"],
           "assertions": [
             "public-tenant route requires configured tenancy and never grants token-derived permissions to anonymous actors"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/auth/test/unit/command-guard-provenance.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "built-in guard constructor brand and verified principal replacement reject forged request identity"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "marked HTTP command fails closed when transactional command module is absent"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "inherited transactional routes fail bootstrap without the built-in STYNX auth guard"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "look-alike, inherited, and imperative-only guards cannot attest a protected command actor; cross-tenant Bearer rejects without key or audit"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/tenancy/test/unit/command-context-provenance.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "private resolved-tenancy port records only exact validated membership or nominal/verified public identity"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "every generated HTTP handler has exactly one unique exact permission and no public marker"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "the packed consumer denies every generated route without its exact permission"
           ],
           "mode": "gray_box"
         }
@@ -464,6 +547,105 @@
             "The tracked script participates in the canonical journey verification surface."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "two-tenant real app-role RLS, canonical fingerprint, replay, configurable conflict and identity rejection"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "forced rollback, one-invocation serialization failure, bounded key race and audit lock isolation"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "method filter precedence is validated before execution and committed response bytes survive replay"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "committed 502/replay exact wire bytes, ordinary rollback and status-policy behavior on real app-role PostgreSQL"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "marked HTTP command fails closed when transactional command module is absent"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "real HTTP commands commit only with resolved tenant and actor provenance; wrong module order fails before a transaction; rejected commands omit the key header and committed replay echoes it"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "public command decorator binds scoped committed-response filter and transactional audit marker"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/data/test/unit/database-require-actor.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "actor-required app transaction checks trusted and live role, tenant and actor before SQL or savepoint"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "db",
+          "path": "test/db/transactional-commands-migration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "platform upgrade, FORCE RLS, app-role audit wrapper identity and chain, rollback and tenant isolation"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "canonical CTG5-owned HTTP rejections and request IDs, callback and dependency failures, and PostgreSQL rollback controls"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/backend/test/unit/transactional-command-defensive.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "non-HTTP commands and defensive marking, context, actor, lock timeout, and TTL checks reject before SQL"
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": ["packages/**", "packages-web/**", "reference/**", "domain/**", "tools/**"]
@@ -517,6 +699,69 @@
           "names": ["INV-ERROR-001"],
           "assertions": [
             "The tracked config-attestation participates in the canonical contract verification surface."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "two-tenant real app-role RLS, canonical fingerprint, replay, configurable conflict and identity rejection"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "forced rollback, one-invocation serialization failure, bounded key race and audit lock isolation"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "consumer method filters cannot replace committed HTTP error status, body or replay"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "committed 502/replay exact wire bytes, ordinary rollback and status-policy behavior on real app-role PostgreSQL"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "public command decorator binds scoped committed-response filter and transactional audit marker"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "canonical CTG5-owned HTTP rejections and request IDs, callback and dependency failures, and PostgreSQL rollback controls"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/backend/test/unit/transactional-command-defensive.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "non-HTTP commands and defensive marking, context, actor, lock timeout, and TTL checks reject before SQL"
           ],
           "mode": "white_box"
         }
@@ -618,6 +863,78 @@
             "legacy protected membership and missing-tenant errors retain exact bodies"
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/auth/test/unit/command-guard-provenance.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "built-in guard constructor brand and verified principal replacement reject forged request identity"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "two-tenant real app-role RLS, canonical fingerprint, replay, configurable conflict and identity rejection"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "forced rollback, one-invocation serialization failure, bounded key race and audit lock isolation"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "committed 502/replay exact wire bytes, ordinary rollback and status-policy behavior on real app-role PostgreSQL"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "nominal, verified and protected commands preserve tenant and actor provenance across two real RLS tenants; protected cross-tenant Bearer cannot write a key or audit row"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/data/test/unit/database-require-actor.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "actor-required app transaction checks trusted and live role, tenant and actor before SQL or savepoint"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/tenancy/test/unit/command-context-provenance.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "private resolved-tenancy port records only exact validated membership or nominal/verified public identity"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "db",
+          "path": "test/db/transactional-commands-migration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "platform upgrade, FORCE RLS, app-role audit wrapper identity and chain, rollback and tenant isolation"
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": [
@@ -629,6 +946,140 @@
         "scripts/list-routes.mjs",
         "scripts/verify-api-coverage.mjs"
       ]
+    },
+    {
+      "id": "INV-CLI-001",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-CLI-001.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/cli-generator-1.5.md",
+          "anchor": "input-dialect"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-CLI-001"],
+          "assertions": [
+            "invalid blueprint names, paths, SQL defaults, reserved schemas and output collisions leave no output"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-CLI-001"],
+          "assertions": [
+            "the installed CLI rejects existing output and existing SQL namespace without partial changes"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
+    },
+    {
+      "id": "INV-CLI-002",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-CLI-002.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/cli-generator-1.5.md",
+          "anchor": "acceptance-evidence"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-CLI-002"],
+          "assertions": [
+            "repeated generation is byte-identical and --check detects additions, removals and mutations without writing"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-CLI-002"],
+          "assertions": [
+            "an external consumer installs only local STYNX tarballs with verified integrity and compiles generated source"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
+    },
+    {
+      "id": "INV-CLI-003",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-CLI-003.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/cli-generator-1.5.md",
+          "anchor": "acceptance-evidence"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-CLI-003"],
+          "assertions": [
+            "generated routes have unique exact permission decorators, bound SQL and a trusted tenant context"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-CLI-003"],
+          "assertions": [
+            "real Nest routes deny missing permissions, validate DTOs and use trusted tenant-scoped repositories"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
+    },
+    {
+      "id": "INV-CLI-004",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-CLI-004.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/cli-generator-1.5.md",
+          "anchor": "acceptance-evidence"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-CLI-004"],
+          "assertions": ["generated SQL has FORCE RLS and both tenant policy predicates"],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-CLI-004"],
+          "assertions": [
+            "real app-role PostgreSQL rejects tenant A reading or mutating tenant B rows and missing tenant context"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
     }
   ],
   "test_corpus": [
@@ -781,7 +1232,15 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 160,
-      "assertion_digest_sha256": "854f432e984b0dafbe5e0af42ce0cbd98bd6d5c56323461ba15e42ce815b1e9f"
+      "assertion_digest_sha256": "1e4fb2a93673f233a4b4d6f3812be0353a3ae08105140f7ba69102a9dad9b788"
+    },
+    {
+      "path": "packages-web/angular-auth/test/session-testing.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "665f34abef59abab5b2c0fbb313fa58a1e7e4c3cdccad768cf2e152c7e374269"
     },
     {
       "path": "packages-web/angular-auth/test/identity-contract-depth.spec.ts",
@@ -835,7 +1294,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-FLOW-001", "INV-FLOW-002", "INV-FLOW-003"],
       "lifecycle": "supported",
       "assertion_count": 69,
-      "assertion_digest_sha256": "a232697b0e39c3288685a20cc705b1f73ba9cb03103ef2efed3d66ed2b5e2209"
+      "assertion_digest_sha256": "5fa6238631e015b9820bd6d870f04728942aac48e8776006ca88ad4af81238ab"
     },
     {
       "path": "packages-web/angular-flow/test/routes-and-exports.spec.ts",
@@ -850,7 +1309,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 17,
-      "assertion_digest_sha256": "560c7d6040371bc2e21a997e0cdbf2a854e4a8653171434a1d2a7b0c459255be"
+      "assertion_digest_sha256": "a92b4cc54cbdf7792c3b94d9f14fffd727135f29e65aded1fbe30986038da1ab"
     },
     {
       "path": "packages-web/angular-i18n/test/angular-i18n.spec.ts",
@@ -859,6 +1318,14 @@
       "lifecycle": "supported",
       "assertion_count": 52,
       "assertion_digest_sha256": "a61266fedbaf128a140749fd8b7ca83a13d7536ad6327385ba870c0427cb5e40"
+    },
+    {
+      "path": "packages-web/angular-i18n/test/testing.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "d72e09cd12331b85545baa17e754db07df062f17d5c9ae5bac2fdc89f049e97f"
     },
     {
       "path": "packages-web/angular-i18n/test/rendering-depth.spec.ts",
@@ -882,7 +1349,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 30,
-      "assertion_digest_sha256": "8385fca8bc482bc05e924a6508fb2be3a58cdf6ce41cade5ff7e73ff6bd7e1bc"
+      "assertion_digest_sha256": "c03943a1d92ba1fd1fed96bffc0202bd83b6e0607cf6b9ce926ef14d89041bf5"
     },
     {
       "path": "packages-web/angular-iam/test/routing/angular-iam-routes.spec.ts",
@@ -890,7 +1357,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 4,
-      "assertion_digest_sha256": "4b933f859f660a4d75ee6ade40958d789813b81f92b3eb07dd7f24a7b5153072"
+      "assertion_digest_sha256": "0cfb9a65a4b1c07013f0b82ea5b8a895348e6bbc6c3040f3963a79cde4e2151e"
     },
     {
       "path": "packages-web/angular-iam/test/unit/effective-permissions.component.spec.ts",
@@ -1010,7 +1477,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 78,
-      "assertion_digest_sha256": "57066690fea549109c763dd491fdbd1381e7a92f02bb87cfb6c2e7967f7d5f1a"
+      "assertion_digest_sha256": "4e6320758f52bc89c3264b87870beff115a6e65fa9f0be45def228e0ccab8bf9"
     },
     {
       "path": "packages-web/angular-profile/test/profile-components-depth.spec.ts",
@@ -1042,7 +1509,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 53,
-      "assertion_digest_sha256": "9a3d48ea8635532ce6a9a4b622d123603817f63c3b512f534d7db0b266717c32"
+      "assertion_digest_sha256": "02abaefcb75286996a8b8cb891358700e4e191bd2426aaac77a39f0b1af4e0f1"
     },
     {
       "path": "packages-web/angular-storage/test/angular-storage.spec.ts",
@@ -1096,7 +1563,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 74,
-      "assertion_digest_sha256": "0c7be34af16404b5963aeb32fccaa5a1bbf00f2bc3b0e255630f66942a560cac"
+      "assertion_digest_sha256": "2b5c0a4d805a809971582c8f5db0c73eeffa6b0af737dbacf0a29857db422d38"
     },
     {
       "path": "packages-web/angular-trash/test/trash-confirm-flow.spec.ts",
@@ -1104,7 +1571,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-FLOW-001", "INV-FLOW-002", "INV-FLOW-003"],
       "lifecycle": "supported",
       "assertion_count": 9,
-      "assertion_digest_sha256": "e090d7f8cb8de8ac3c6b8aa6f35067db31ce357d47fa243b6c6a782fc6f0ea3e"
+      "assertion_digest_sha256": "f3a0c2189dd46b9e5d1348e3460278c29a42d906f6b105d6e2dbc6ceef94a8c2"
     },
     {
       "path": "packages-web/angular-ui/test/angular-ui.spec.ts",
@@ -1115,6 +1582,22 @@
       "assertion_digest_sha256": "115073967d6b955168e5a4661b3768ae60edee8d74252629c406e8b334c151ae"
     },
     {
+      "path": "packages-web/angular-ui/test/error-banner.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "f06320e86a72f70d0228615b820f1ece1abb2072642509a8f4462399c4ab882d"
+    },
+    {
+      "path": "packages-web/angular-ui/test/shell.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 41,
+      "assertion_digest_sha256": "10ae5caa0e1538f003f18712fde7cd89f607179c4d176e17eafd1b9f72266566"
+    },
+    {
       "path": "packages-web/angular-ui/test/ui-interactions.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
@@ -1123,12 +1606,28 @@
       "assertion_digest_sha256": "75afe43f29981f63886cc1fc31d272adeb2aa241cc1036c8e52041814c79ed29"
     },
     {
+      "path": "packages-web/angular/test/error-interceptor.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 14,
+      "assertion_digest_sha256": "307ba6d7604879ab16e13c4a54fac2f0c2547ae809bd38ae617a1e087dbf481f"
+    },
+    {
+      "path": "packages-web/angular/test/errors.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 18,
+      "assertion_digest_sha256": "d9a5ed4bd44d573a610fd334b1569db94c4ff079003696d69bc2038f1d043346"
+    },
+    {
       "path": "packages-web/angular/test/event-stream-http.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 33,
-      "assertion_digest_sha256": "22d7eac4d94054c3efbad68bbeca5e8b677994e502d99466494eb24c349a3c6e"
+      "assertion_count": 36,
+      "assertion_digest_sha256": "9ad11c530b1ac89cf9826007089b515d85347d186512666e148a18aa63181689"
     },
     {
       "path": "packages-web/angular/test/event-stream-edges.spec.ts",
@@ -1147,6 +1646,14 @@
       "assertion_digest_sha256": "9b4c13c41133212c67d1ae39707b3574bc933d53080c607e09b977113b8578c2"
     },
     {
+      "path": "packages-web/angular/test/idempotency.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 39,
+      "assertion_digest_sha256": "02537efd6229d175add7181aaa94c9e930bf2221c841f11d8c6c8d6a10d270b8"
+    },
+    {
       "path": "packages-web/angular/test/provider-depth.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
@@ -1161,6 +1668,14 @@
       "lifecycle": "supported",
       "assertion_count": 93,
       "assertion_digest_sha256": "3b94187ce072ba710ad949f87107b74d13d1fa82c529b2d465be7cc334825fd2"
+    },
+    {
+      "path": "packages-web/sdk/test/errors.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "3f6680681289977934c6a8d1b5e76bcab4350a2d04a2763fecb8e40ede31abd0"
     },
     {
       "path": "packages-web/sdk/test/runtime.spec.ts",
@@ -1273,8 +1788,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-FLOW-001", "INV-FLOW-002", "INV-FLOW-003"],
       "lifecycle": "supported",
-      "assertion_count": 132,
-      "assertion_digest_sha256": "2dff915eb852781f3b33124dfa87844170910a9307fe378cc6b5d3a3dc07c638"
+      "assertion_count": 142,
+      "assertion_digest_sha256": "a505a2b86398f0ece5feb398602a739f57c2770807bd14327125c56e901d6601"
     },
     {
       "path": "packages/audit/test/unit/test-helpers.spec.ts",
@@ -1443,6 +1958,22 @@
       "lifecycle": "supported",
       "assertion_count": 24,
       "assertion_digest_sha256": "22db70ed7a25f4ce7917356d3c661a711eabc61c620d655fae63da65b688f151"
+    },
+    {
+      "path": "packages/backend/test/integration/if-match-http.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 54,
+      "assertion_digest_sha256": "776e7d0ac08d27bf5e896887975b4a8385a0dc03f456910fc402e97cc82754cf"
+    },
+    {
+      "path": "packages/backend/test/unit/if-match-contract.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 16,
+      "assertion_digest_sha256": "db132e6ab5201c61f7787f726ed1b75196f89e28d7e6dd652a4fe60b5f13ead4"
     },
     {
       "path": "packages/backend/test/unit/audit-export.spec.ts",
@@ -1690,7 +2221,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 49,
-      "assertion_digest_sha256": "dc153b2709255427a9156accccba29941af01a3e51ec96e07319594c16e85afe"
+      "assertion_digest_sha256": "9be5e5ae9e60204f9840bf66ba65d9d8431b4d388911d16ae0e6a7f29309ad1f"
     },
     {
       "path": "packages/cli/test/cli.spec.ts",
@@ -1849,8 +2380,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 16,
-      "assertion_digest_sha256": "98fcc537d486d1524c1df7fd4b31cc117fdbedd08f7cdff11121f1c8d537502d"
+      "assertion_count": 27,
+      "assertion_digest_sha256": "b38f858eaf58f87cf18152e2cbbd03bad9a430d3b2695dbbe18678e83657df69"
     },
     {
       "path": "packages/data/test/integration/soft-delete.spec.ts",
@@ -1937,8 +2468,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 89,
-      "assertion_digest_sha256": "972b8fd9707cf038e1dd96481142ba71ff9a088556b07ce746e4932300e2e716"
+      "assertion_count": 91,
+      "assertion_digest_sha256": "cf77fbb4b146bd3530e19e2d9c630f86010840c19a77bded4ea39a505976d5a7"
     },
     {
       "path": "packages/feature-flags/test/unit/feature-flags.service.spec.ts",
@@ -2295,8 +2826,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 5,
-      "assertion_digest_sha256": "b061cda37a1d4b7706089d207604699461a13f0378acfcd23fdb5d09509cd3c5"
+      "assertion_count": 7,
+      "assertion_digest_sha256": "1c5f1f22d3a38b741cc907256255fce9696339ca212fed60b471bba45c6516c4"
     },
     {
       "path": "packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
@@ -2883,6 +3414,14 @@
       "assertion_digest_sha256": "970bfc79ace6fad4e6e3d2918b8151800ba27bc22a5211e8576472b470f592d7"
     },
     {
+      "path": "packages/testing/test/fake-transaction.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 14,
+      "assertion_digest_sha256": "5e37fd50e85532051bbefa7e3f514062a03676b9694247900ab9dce53911a0f9"
+    },
+    {
       "path": "packages/testing/test/fixtures.unit.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
@@ -3263,6 +3802,14 @@
       "assertion_digest_sha256": "9b55d1aa8975419abd0f998cc7a2cf4e32b8815b4eb1691d8c7a7dda8cb89dcc"
     },
     {
+      "path": "reference/web/test/e2e/smoke/shell.spec.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 19,
+      "assertion_digest_sha256": "0471c4773554b2455f848e7c55933d072d45a106380ab55862a2387d21da00ab"
+    },
+    {
       "path": "reference/web/test/e2e/tenant/switch-tenant.spec.ts",
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
@@ -3625,8 +4172,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 6,
-      "assertion_digest_sha256": "46b68c8b0a44a563b8390138e4d15a85ea33528910eeb9cc3ad14251e5d55b59"
+      "assertion_count": 8,
+      "assertion_digest_sha256": "935cde9c3f2a471e09e139e8b8fe167a6db134a56d74953abd6d521adffe9e75"
     },
     {
       "path": "tools/migration-linter/test/migration-linter.spec.ts",
@@ -3681,8 +4228,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 10,
-      "assertion_digest_sha256": "60db15cdaf4024ac6e961d970113ee06556a2283a8a58d49dd828f5a8bb74ee0"
+      "assertion_count": 11,
+      "assertion_digest_sha256": "c7fbec4a1c866e431c744c10c5607894ae206dddca3bdaee9ce6f0dc76e300a0"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-sync-depth.spec.ts",
@@ -3733,6 +4280,14 @@
       "assertion_digest_sha256": "2e727059c778fa4bd5990ebb64687c1a0d63d58994d139dc04ab0d72eed410b1"
     },
     {
+      "path": "packages/jobs/test/integration/actor-rls.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 49,
+      "assertion_digest_sha256": "8d4dd46353299b5717f4a17129d2050b0e74e06fdfbbdebb3105bd5b37ac436b"
+    },
+    {
       "path": "packages/jobs/test/integration/module.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001"],
@@ -3741,52 +4296,76 @@
       "assertion_digest_sha256": "aeb2afc0ae3adad2adb9e92a115acadddcd12a2a66d6326d2d1e3d1b700c93ba"
     },
     {
+      "path": "packages/jobs/test/integration/poison-schedules.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "c3164816e5c7e3ccaa6bc134696a450904a2c074f673683368b3ca770fbeadcc"
+    },
+    {
+      "path": "test/db/platform-jobs-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 14,
+      "assertion_digest_sha256": "042e8bb9c6a1ee5b12a13a0785bbedcdd92b89da0ad22569a94b4d94edd364bb"
+    },
+    {
       "path": "packages/jobs/test/unit/cron-and-backoff.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 6,
-      "assertion_digest_sha256": "7a78c3cabf14d75dd9ab93ae283457d602f0454ced7bd336f266741fdc5ab141"
+      "assertion_count": 37,
+      "assertion_digest_sha256": "c2d0cbac867076e72423dc49c949cf546302fbf02f1fc1e02b73b9436afca3f0"
     },
     {
       "path": "packages/jobs/test/unit/jobs-depth.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "adbcf9447411c93b0c0dac0936b6f68003bccbd9c863e5c7a7fc4f4825288dce"
+      "assertion_count": 40,
+      "assertion_digest_sha256": "f797d34f3964213cafb05ed66810d541edd4eb8b734b34b8a281d21d0d107f91"
     },
     {
       "path": "packages/jobs/test/unit/jobs-lifecycle-contract.spec.ts",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "cc5160ea61e5c85c8b46515f70a1c9afdc9d8f5fba88537e7244fedcdbc2cab2"
+      "assertion_count": 55,
+      "assertion_digest_sha256": "1b0f44fca700c04064c61484f666413c2b8aaf1ecd91d03e627e499211782532"
     },
     {
       "path": "packages/jobs/test/unit/jobs-repository-contract.spec.ts",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 36,
-      "assertion_digest_sha256": "7f2aed22cf345487d8dda52723d660a950e3bfe507363de271172622f75350f9"
+      "assertion_count": 51,
+      "assertion_digest_sha256": "d2ed8d731e3ac8cc2599228d01af9e51f7ecda89dbe61242a3cd7bbeb8da31e7"
+    },
+    {
+      "path": "packages/jobs/test/unit/jobs-poison-schedule.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 21,
+      "assertion_digest_sha256": "4b45d0e59869759c2c244bac02e4d8e2e2e2c1cab28649b0c46d14e8cddefc69"
     },
     {
       "path": "packages/jobs/test/unit/jobs-service.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 40,
-      "assertion_digest_sha256": "b1c3d1ee7760ebb3d6af0cf23699168531c37c31310889920227fe9068ad709c"
+      "assertion_count": 83,
+      "assertion_digest_sha256": "e75a0a0a11dc247d85619285290404cd4801858a51ea2bab4f847f8fd37018a6"
     },
     {
       "path": "packages/jobs/test/unit/worker.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 4,
-      "assertion_digest_sha256": "7efd05befeb97861aa5e3de674fb3d34db319164dd2427c27648f01189a97fec"
+      "assertion_count": 35,
+      "assertion_digest_sha256": "c06471cf9cccd86da81fafe4c31f715cc35c3fcc4fc85aea2d35ea3c5d7ab3d4"
     },
     {
       "path": "packages/notifications/test/integration/notifications.database.spec.ts",
@@ -3841,8 +4420,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 142,
-      "assertion_digest_sha256": "6e899f2272949e78a5185e147275c46ab4ff0fc79d4120e54725fc20bf59c3e7"
+      "assertion_count": 149,
+      "assertion_digest_sha256": "5453492354dc7c0c970c2071479f281fffe78898fd3f0aaa4cf0bb80e570d971"
     },
     {
       "path": "packages/outbox/test/unit/outbox.service.spec.ts",
@@ -3865,8 +4444,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 21,
-      "assertion_digest_sha256": "a0c2d71f55886f54e9b6ac9994d76de090a069d55ca6133434ac4e4adaacd403"
+      "assertion_count": 28,
+      "assertion_digest_sha256": "a627e8702442946016da302560545a7aec8ef9409977cd172b319594b0907380"
     },
     {
       "path": "packages/worklist/test/unit/strategies.spec.ts",
@@ -3905,8 +4484,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 851,
-      "assertion_digest_sha256": "eea54acc5e91c5ab81ea274b1771f684b79ca0c151153dc4b09109ac0b9a96b7"
+      "assertion_count": 853,
+      "assertion_digest_sha256": "29290ac65665628164041cf62e2a8c3c925b5bd071309be40343276ab192c0c0"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -3925,12 +4504,20 @@
       "assertion_digest_sha256": "b5788ac2f8c1db5d2fda5ee7411a8967bee12592d3ee24ab6a3b90895cc78509"
     },
     {
+      "path": "test/scripts/private-workspace-version.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 31,
+      "assertion_digest_sha256": "6ecd77432404e82d58909b18af82f8d7f5ea32368c1e31e5fe2ac5ae1424538e"
+    },
+    {
       "path": "test/scripts/release-version-policy.test.mjs",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 288,
-      "assertion_digest_sha256": "cc28f5e60f2703a0ca2c6a686b720fbd3f8155a54b402e4c8c75398fbd49c9d4"
+      "assertion_count": 296,
+      "assertion_digest_sha256": "7298d691ae308e13a89a01d60e4de2eaf7f884b65050b8c23c312bc5095b6bd8"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -4090,7 +4677,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 30,
-      "assertion_digest_sha256": "5c9adc1e6f012dcdc83b650feb6def99fbfe5a9d08a61ed568e81e8d6e26f94d"
+      "assertion_digest_sha256": "d43d3e9f2f35b7f097656c4c02a0511585d99a4e511f94882417b9ae61c62e36"
     },
     {
       "path": "packages/sessions/test/unit/session-policy-bootstrap.spec.ts",
@@ -4115,6 +4702,326 @@
       "lifecycle": "supported",
       "assertion_count": 4,
       "assertion_digest_sha256": "9d8d6d8a4baf15af7f74c1725110af1fbacad1554acdd354d9060ac5f3968508"
+    },
+    {
+      "path": "packages/auth/test/unit/command-guard-provenance.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "47015e2797462713b03e7571584765f5d42703740a1b7e11b822f8851d0c5fc5"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 45,
+      "assertion_digest_sha256": "7c5fc22a95fa983af3d1e11c273759fa6dfa81421cf58b62b073a4c1dfb9e422"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 15,
+      "assertion_digest_sha256": "2d60fac7c62227189b27243560d78a2ae0f1300c0f5a377d0b79fb7475aee2a5"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 56,
+      "assertion_digest_sha256": "d142afe4bca0c7961de14eb30f5033ff195b8fc2c19f945621969cd9a93f5dfd"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 12,
+      "assertion_digest_sha256": "052558ea4c560cae5cb27a704d1e3ee16ba503aae5a7e09a9913e7e88460f05b"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 35,
+      "assertion_digest_sha256": "f5525b33798be14d9ee9a3f6b43f204eabeae30f81340d043c318e2786a735ce"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "d120ed4330fb74d192e0ba3c29564416fd4fe8f2e9652f65c79c1c07996dff5c"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 53,
+      "assertion_digest_sha256": "5746941f7f884d9dcc66b72dd468dc27bbf8fddb07caa243e783f06396996b45"
+    },
+    {
+      "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 9,
+      "assertion_digest_sha256": "d3eb5fece1d957236020d540798f81d16e730582310346f0b1490536a54b954a"
+    },
+    {
+      "path": "packages/backend/test/unit/transactional-command-defensive.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "e7d8aba0589993cb7cb888434ceb0171af482e49cb497f48bee0b2b783beb619"
+    },
+    {
+      "path": "packages/data/test/unit/database-require-actor.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "9c0ae5459f55cf9b762002ca157ac79d8e62eed438b101d317922cacc864c634"
+    },
+    {
+      "path": "packages/tenancy/test/unit/command-context-provenance.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 23,
+      "assertion_digest_sha256": "b6fe541c38cff398c8c5409f67122f36841e9df2d012eb2486dee98bd86b53bb"
+    },
+    {
+      "path": "test/db/transactional-commands-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "0f69d4e22445bf120acd2aac6ab63244573c18219f309325cf316a586b1b9ff2"
+    },
+    {
+      "path": "test/scripts/ctg6-published-import-adoption.test.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 5,
+      "assertion_digest_sha256": "f693a6f0c6072cc79d858d8267f249831a04f8e4cb4aecfeae06b929ee158ea3"
+    },
+    {
+      "path": "packages/backend/test/integration/webhook-signature.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 51,
+      "assertion_digest_sha256": "16427a8dfababbf9f5979a48f14fe19acdedb5d5dd158550dbb0a00411aa9707"
+    },
+    {
+      "path": "packages/core/test/unit/clock.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "5c29109c8e2bc653e454f8cef72fe6371cc33ea1afdc2eddd6a2c3016888ac31"
+    },
+    {
+      "path": "packages/integration-adapter/test/unit/webhook-signature.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 35,
+      "assertion_digest_sha256": "56d858deafef499464a0a2cc01e68d94816098840f3428fa16aacafded1871a3"
+    },
+    {
+      "path": "packages/worklist/test/unit/tenant-business-calendar.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 27,
+      "assertion_digest_sha256": "08c60cb2dd7166312ad8ca929b88bc87fdff77f447999905c876b6e9e6360d4e"
+    },
+    {
+      "path": "packages/backend/test/integration/angular-transactional-command-http.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 16,
+      "assertion_digest_sha256": "3cc141d04f8fb06bbc2195c28f95735cbbc9affc6d172c60641c62fd3846a9d5"
+    },
+    {
+      "path": "packages/cli/test/generate-module.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-RBAC-001", "INV-CLI-001", "INV-CLI-002", "INV-CLI-003", "INV-CLI-004"],
+      "lifecycle": "supported",
+      "assertion_count": 90,
+      "assertion_digest_sha256": "99d99092c79b41b978a9a72bcbee6b8fd79b2350858a11268dac128d1f147f89"
+    },
+    {
+      "path": "packages/audit/test/integration/ctg9-owner-sink.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 2,
+      "assertion_digest_sha256": "7da41aaa532bdeb40666bf5566a12f9789ec7c8290b04af199c84b772d7a9737"
+    },
+    {
+      "path": "packages/backend/test/integration/ctg9-outbox-sse.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "7c01d11f80c2e27a7e3a58bb4b991bcedc2ff57841d242af334d4310110f6598"
+    },
+    {
+      "path": "packages/data/test/integration/ctg9-audit-chain.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 22,
+      "assertion_digest_sha256": "48214f4f326fb5a437b2a73c680c8ddb4fb8b4ec52710ad04d4732548910dba4"
+    },
+    {
+      "path": "packages/data/test/integration/ctg9-independent-seal.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "a00fe6a3314646b19a8cb430175a2e305050f2cd97ec737fc93f20051bd38df5"
+    },
+    {
+      "path": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 201,
+      "assertion_digest_sha256": "6c2d2ec8fe86c8b6b2ba61141f1433128534c613c5fb7522f337008b378687b5"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/ctg9-parity.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 128,
+      "assertion_digest_sha256": "397132e3b0f92e123e4fb220266cbdf4b8b9d60f4bc1ec3930d335409fe4b851"
+    },
+    {
+      "path": "packages/outbox/test/integration/ctg9-append.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 61,
+      "assertion_digest_sha256": "e2f328f68049256d299b81dd90e32dc70d5194883adcc7c88a307e38693829a1"
+    },
+    {
+      "path": "packages/outbox/test/integration/ctg9-ownership.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 29,
+      "assertion_digest_sha256": "867792420822af1fbade0c2b50dfbfded3e11ea442a91319d26371b7d0de8412"
+    },
+    {
+      "path": "packages/signature/test/integration/trust-gate.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 64,
+      "assertion_digest_sha256": "93975ed083c6af1612d22fa3e73284d239418464c6a71bd7b9f38a976a8b4ab1"
+    },
+    {
+      "path": "packages/signature/test/unit/manifest.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 45,
+      "assertion_digest_sha256": "1fc68fbcc9fef5edbaca8957b556457479019379d2ea98e45879480cd7744e38"
+    },
+    {
+      "path": "packages/signature/test/unit/readiness.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 14,
+      "assertion_digest_sha256": "0464b53ac038e4f00383241974c3ab629a399550f454e397fe739d7e1d5a88fb"
+    },
+    {
+      "path": "packages/signature/test/unit/withdrawal.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 30,
+      "assertion_digest_sha256": "a334477b4f74590f391a9383c168e0a0713f0aea2001e69c434a8d3aaa810ccc"
+    },
+    {
+      "path": "test/db/outbox-event-log-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 10,
+      "assertion_digest_sha256": "4aafd56a72ae025aa336b32bac6010c4d1bb73345125e5f9db23face6436e1a8"
+    },
+    {
+      "path": "packages/outbox/test/integration/ctg9-delivery.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 64,
+      "assertion_digest_sha256": "7e265cbae67db338a636ebbc1fe9d783917b24e5c8983225dec53c7f777c5ff6"
+    },
+    {
+      "path": "packages/outbox/test/integration/ctg9-failure-deadline.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "c72193599a5a80ba91c4f48f0ee249e5edbf229e2a038d2661c19562716e306c"
+    },
+    {
+      "path": "packages/outbox/test/integration/ctg9-legacy-late.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 12,
+      "assertion_digest_sha256": "3bcd6b5f7cd5ab3417c6bf135ab539d2099c7d1ac14320a9d3bc1ba3a7182183"
+    },
+    {
+      "path": "packages/outbox/test/integration/ctg9-ownership-queue.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 10,
+      "assertion_digest_sha256": "e83d0a1479b740296511abccb783bafaa8cc109cc7779439a5fe4d21377585cf"
+    },
+    {
+      "path": "packages/outbox/test/integration/ctg9-sse-admission.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "f39dc41daa5260b1e0a88926a82daba488d5e5368911b8882e427f226cceb52b"
+    },
+    {
+      "path": "packages/outbox/test/unit/ctg9-wrapped-persistence.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "e7484816e7967738b9ca444e85f54bbad56fbb1abae05a2a87efb77c4dd8c14c"
+    },
+    {
+      "path": "test/db/offline-sync-durable-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "9fcf704b9a01417ee389a07ceea228da0b2d434482ccdccd65e852424a049130"
     }
   ],
   "suites": {

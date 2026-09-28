@@ -1,0 +1,74 @@
+{
+  "verdict": "PASS",
+  "reviewed": {
+    "base": "718ed37cb11f617ffca62ede723d2511d8466919",
+    "head": "38c40e2f",
+    "commits": [
+      "d28373c2 DEVAI Architect docs(repo): admit exact final CI portability repair",
+      "38c40e2f DEVAI Engineer fix(@stynx-nyx/angular-i18n): typecheck testing entry from source"
+    ],
+    "files": {
+      ".semgrepignore": "M",
+      "law/adr/2026-09-28-final-candidate-ci-repair.md": "A",
+      "packages-web/angular-i18n/tsconfig.spec.json": "M",
+      "scripts/lib/release-context.mjs": "M"
+    }
+  },
+  "blocking_findings": [],
+  "assessment": {
+    "1_tsconfig_spec_alias": {
+      "result": "PASS",
+      "evidence": [
+        "packages-web/angular-i18n/tsconfig.spec.json:7-10 maps '@stynx-nyx/angular-i18n' to ./src/index.ts and '@stynx-nyx/angular-i18n/testing' to ./testing/index.ts.",
+        "Checked with tsc --traceResolution rather than by trusting the local dist: both imports in test/testing.spec.ts:4-5 and the import in testing/index.ts:7 resolve to source (.../src/index.ts and .../testing/index.ts). tsc --listFilesOnly shows no angular-i18n/dist file in the program. A clean checkout with no dist therefore typechecks.",
+        "`tsc -p tsconfig.spec.json --noEmit` exits 0.",
+        "Test fidelity: this matches the vitest runtime aliases (vitest.config.ts:10-11). Typecheck and the runtime test now use the same source graph. The testing entry and the root share one StynxI18nService identity. `pnpm --filter @stynx-nyx/angular-i18n test` passes 14/14.",
+        "Runtime/package API: no effect. tsconfig.spec.json is used only by the `typecheck` script. ng-packagr uses ng-package.json and tsconfig.json. The package ships `files: [\"dist\"]`, and its manifest and exports are unchanged."
+      ]
+    },
+    "2_semgrepignore": {
+      "result": "PASS",
+      "evidence": [
+        ".semgrepignore:15-20 adds four exact file paths. There are no globs, and no source or directory is excluded.",
+        "`git ls-files packages/signature` shows these are the only *.key.pem files in the package. generate.sh:4-16 creates them with openssl as a test CA, signer, spoof and TSA. The matching *.cert.pem files stay scanned.",
+        "packages/signature/package.json:24-26 has `files: [\"dist\"]`, so the keys are not published.",
+        "The rationale is true. The Semgrep job (.github/workflows/release-prep.yml:74, p/default + p/secrets) runs at the repo root and reads this file. No production secret is involved."
+      ]
+    },
+    "3_release_context_and_adr": {
+      "result": "PASS",
+      "evidence": [
+        "scripts/lib/release-context.mjs:300-314: the only behavioural change is one added clause. It admits status 'M' only for exactly '.semgrepignore', 'packages-web/angular-i18n/tsconfig.spec.json' and 'scripts/lib/release-context.mjs', and status 'A' only for exactly 'law/adr/2026-09-28-final-candidate-ci-repair.md'. Every other path or status still fails `every`: R/D/C statuses, any packages/**/src, tests, workflows, .changeset, other law/ files, and other rounds.",
+        "The rest of the diff is formatting only and has the same semantics. For example, at :152, `-\\`-rc.${x}\\`.length` equals `-(\\`...\\`.length)` because member access binds tighter than unary minus.",
+        "The 44-manifest checks, marker-commit checks, the expected marker-change map (.changeset/pre.json D plus consumed changesets) and the zero-changesets-on-disk check (:240-298) are unchanged. The per-commit collection of follow-up changes (scripts/run-release-preparation.mjs:199) is unchanged.",
+        "The existing negative sensors still hold, and release-version-policy.test.mjs passes 48/48. They cover: source follow-up at packages/core/src/index.ts, sensor/test follow-up, workflow follow-up, other round, record/proofs, deleted round note, and added policy authorization (test/scripts/release-version-policy.test.mjs:358-364).",
+        "The ADR accurately states what is admitted, and it keeps the coverage refusal open without lowering thresholds."
+      ]
+    },
+    "4_local_gates": {
+      "pnpm release:policy": "PASS: readmes 44/0 changed, 'Verified release policy for 44 publishable packages', web-sourcemaps 26 OK.",
+      "angular-i18n test": "PASS 14/14 (3 files)",
+      "angular-i18n typecheck": "PASS (exit 0), with source resolution confirmed by traceResolution",
+      "pnpm check:trace": "PASS, 472/472 bound. No executable test changed in the delta.",
+      "devai check --only forbidden-actions --strict --since-ref 718ed37c": "ok: true, findings: [], applied receipts: []. No workflow, package.json, invariant or authority-doc change needs a receipt."
+    },
+    "5_coverage_refusal_and_decision_8": {
+      "coverage_refusal_still_blocks_signed_rc": true,
+      "statement": "Yes. The signed DEVAI `release:prepare` refusal is recorded at work/rounds/R-0002/plan.md:1123-1134: 14 packages are below the 100% global coverage threshold, and offline-sync focal is 61.29% lines / 51.59% branches. That refusal is untouched. This delta does not lower any threshold, weaken any test, or produce signed evidence, so no `verified-local-rc` receipt can exist for this HEAD.",
+      "decision_8_needed": true,
+      "decision_8_statement": "Yes. If `verified-local-rc` is the only failing required check, an admin merge is a break-glass bypass under ADR-CI-ECONOMY Decision 8 (law/adr/2026-08-24-ci-economy.md:104-110). Before the merge, it needs an exact Owner authorization that names the actor, refs, exact commit SHA, reason (the coverage refusal), recovery evidence, and closure condition. The action and its post-condition must be recorded afterwards. The pattern to follow is law/adr/2026-09-27-local-rc-signer-recovery.md:64-70. Broad Owner consent, prior review PASS verdicts, and this PASS do not count as that receipt."
+    }
+  },
+  "nonblocking_notes": [
+    "scripts/lib/release-context.mjs:305-312 admits by path and status only, not by content. Any later post-marker 'M' to these three files would pass the gate, including an edit to release-context.mjs itself, which would let the gate widen its own allowlist. The ADR's 'limited to the four named test keys' for .semgrepignore is enforced only by review. Mitigation: re-review any further commit to these paths before merge, or pin blob hashes in a future release.",
+    "scripts/lib/release-context.mjs:306 comment says 'Neither path enters the 44 publishable package tarballs', but the clause lists three M paths plus the ADR. The wording is cosmetic.",
+    "The ADR and .semgrepignore call the keys 'deterministic'. They are fixed committed bytes, but generate.sh uses random `openssl genpkey`, so running it again would not reproduce them. The wording is cosmetic.",
+    "tsconfig.spec.json `paths` replaces, rather than merges with, the base tools/tsconfig/base.json paths map. This is harmless today because angular-i18n src/test/testing import no other @stynx-nyx package, but a future cross-package import in specs would need that mapping added here.",
+    "No positive unit sensor was added for the four newly admitted paths. Adding one would itself be a post-marker test change that the gate rejects, so the omission is consistent. A post-merge Architect sensor for the admitted set is advisable.",
+    "Remote proof is still pending: the clean-checkout `typecheck` and `semgrep` jobs on PR #308 must go green at this HEAD, as the ADR requires. This local review cannot substitute for them."
+  ],
+  "reviewMode": "direct-claude-p-fallback",
+  "model": "claude-opus-5-5",
+  "bridgeFailure": "Reviewer prefixed JSON with prose; bridge required exactly one JSON expression and exited 4",
+  "rawResponseSha256": "79f810499ea279e91c7bd11d72125d76dde027ea0652d956c3af266cc7b64b7c"
+}

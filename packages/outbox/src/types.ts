@@ -37,6 +37,29 @@ export interface OutboxEnvelope {
   metadata?: Record<string, unknown>;
 }
 
+export interface OutboxAppendEvent {
+  entity: string;
+  entityId: string;
+  idempotencyKey: string;
+  payload: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+}
+
+export interface OutboxEventRow extends OutboxAppendEvent {
+  id: string;
+  tenantId: string;
+  createdAt: Date;
+}
+
+export interface OutboxEventAckInput {
+  tenantId: string;
+  eventId?: string;
+  idempotencyKey?: string;
+  rawBody: Buffer;
+  status: 'ACKED' | 'ERROR';
+  hmacVerified?: boolean;
+}
+
 /** Persisted shape of one outbox row, as returned by every service method. */
 export interface OutboxRow {
   id: string;
@@ -76,6 +99,8 @@ export interface OutboxDispatchOutcome {
   /** `true` when a dispatcher port was invoked and returned without throwing. */
   dispatched: boolean;
   error?: string;
+  /** Transport completed, but the durable attempt/projection could not be confirmed. */
+  reconciliationRequired?: boolean;
 }
 
 /**
@@ -88,6 +113,20 @@ export interface OutboxDispatchOutcome {
  */
 export interface OutboxDispatcherPort {
   send(row: OutboxRow): Promise<void>;
+  /** Optional event-mode evidence captured from the bytes handed to the transport. */
+  sendEvent?(row: OutboxRow): Promise<OutboxTransportEvidence>;
+}
+
+export interface OutboxTransportEvidence {
+  provider?: string;
+  protocol?: string;
+  requestBytes?: Buffer;
+  responseBytes?: Buffer;
+  /** Final header names and redacted/digested values, never raw secrets. */
+  requestHeaders?: Record<string, string>;
+  responseStatus?: number;
+  /** Request construction is known; transmission is confirmed only by a response. */
+  requestTransmission?: 'constructed-not-confirmed' | 'response-received';
 }
 
 /**
@@ -125,4 +164,10 @@ export interface OutboxModuleOptions {
   metrics?: OutboxMetricsSink;
   /** Default `limit` for `dispatchDue()` when the caller doesn't pass one. */
   dispatchBatchSize?: number;
+  /** Lease for an event send and for its subsequent ACK wait. */
+  eventLeaseMs?: number;
+  /** Upper bound on a cutover/append database lock wait. */
+  lockTimeoutMs?: number;
+  /** Persistence retry deadline after a legacy send failure. */
+  failurePersistenceDeadlineMs?: number;
 }

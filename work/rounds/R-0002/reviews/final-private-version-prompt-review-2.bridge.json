@@ -1,0 +1,21 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "issue": "In `scripts/version-packages.mjs`, `run()` calls `process.exit(result.status ?? 1)` synchronously when `changeset version` fails. Prompt 190 accepts \"try/finally or equivalent\", and prompt 189 lets the wiring check be \"a focused structural assertion on the wrapper source\". Counterexample: the Engineer writes `const snap = capturePrivate(root); try { run('pnpm',['exec','changeset','version']); } finally { restorePrivate(snap); }`. A source-order check passes: capture comes before the spawn, restore comes before validation, `applyFixedGroupVersion`, `syncReleaseVersion` and SBOM, and restore does not sit after SBOM. But when Changesets exits non-zero, `process.exit` ends the process and the `finally` block never runs. The private manifests and CHANGELOGs are left changed (for example `tools/image-size-safe` at `2.0.3`, plus the 8 new CHANGELOGs), which breaks the contract rule \"restauração mesmo quando ele falha\".",
+      "required_change": "In 189, require a behavioral failure-path test: run the wrapper in a synthetic workspace with a stubbed `changeset` that changes a private manifest, creates a private CHANGELOG and exits non-zero, then assert byte-exact restoration and that the created CHANGELOG is gone. Alternatively, the structural check must prove that the `changeset version` spawn does not go through a `run()` that calls `process.exit` before restoring. In 190, state that this subprocess must not end the process before restoration: spawn it directly, restore, then exit with the original status."
+    },
+    {
+      "severity": "nonblocking",
+      "issue": "Prompt 190 requires the `reference/api` and `reference/web` SHA-256 freezes to stay unchanged, but its verification step only runs the focused Inspector test, lint and syntax. It never runs `test/scripts/local-rc-blocker-contract.test.mjs` or `test/scripts/release-version-policy.test.mjs`, which already covers the wrapper. It also never checks that `--preview` still writes nothing.",
+      "required_change": "Add to 190's verification: run `local-rc-blocker-contract.test.mjs` and `release-version-policy.test.mjs`, and confirm `node scripts/version-packages.mjs --preview` leaves the tree unchanged."
+    },
+    {
+      "severity": "nonblocking",
+      "issue": "The success-path design is correct against the real tree. The 13 private workspace packages (reference/*, domain/demo-bookmark/*, tools/* including `image-size-safe` 2.0.3-stynx.1, docs/site, test/* without `version`) only use `workspace:*` for `@stynx-nyx/*`, so restoring them does not revert any internal range bump the public policy needs. `unifiedVersion`, `applyFixedGroupVersion` and `syncReleaseVersion` work only on `discoverPublishablePackages` plus the `create-stynx-app` template. That template is not a workspace manifest and is written after restoration, so it is kept. The root package is not in `pnpm-workspace.yaml`. `yaml` 2.9.0 is already a root devDependency, so the Engineer does not need to edit the frozen `package.json`. This is noted so the Engineer does not route discovery through `discoverPublishablePackages`, which only lists roots of publishable packages.",
+      "required_change": "Optionally state in 190 that discovery reads `pnpm-workspace.yaml` with the existing `yaml` dependency, and that private packages are kept strictly separate from `discoverPublishablePackages`."
+    }
+  ],
+  "summary": "The triad (the contract delta and prompts 189/190) fixes both blocking findings from cycle 1. The wrapper wiring is now asserted, and the Architect rebinds `law/trace.json` before the new `pre exit`. The fixture covers the real globs, decoys, the private package without `version`, and the `reference/*` hashes. Its scope restores only private Changesets outputs, keeps the 44 public packages and the root intact, and makes the marker reproducible on the success path. One blocking gap remains. `run()` calls `process.exit` synchronously, and the allowed structural assertion would accept a try/finally that never runs when Changesets fails. The failure-path restoration the contract requires would then not be proven."
+}

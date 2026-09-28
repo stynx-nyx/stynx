@@ -16,7 +16,7 @@ const workspaceRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 const deepImportPatterns = [
   {
-    group: ['@stynx-nyx/*/*'],
+    regex: '^@stynx-nyx/[^/]+/(?!catalogs/(?:en|pt-BR)\\.json$).+',
     message: 'Use barrel imports only; deep imports between workspace packages are forbidden.',
   },
 ];

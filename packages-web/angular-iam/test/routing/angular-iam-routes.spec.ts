@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Router, RouterOutlet, provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
-import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-nyx/angular-auth';
+import { STYNX_ANGULAR_AUTH_OPTIONS } from '@stynx-nyx/angular-auth';
+import { createStynxSessionStub, provideStynxSessionStub } from '@stynx-nyx/angular-auth/testing';
 import { describe, expect, it } from 'vitest';
 import { StynxGroupDetailComponent } from '../../src/group-detail.component';
 import { StynxGroupsAdminComponent } from '../../src/groups-admin.component';
@@ -43,7 +44,9 @@ describe('angular-iam routes', () => {
           { path: 'forbidden', component: ForbiddenComponent },
           { path: '', children: iamRoutes() },
         ]),
-        { provide: StynxSessionService, useValue: { hasAllPermissions: () => true } },
+        provideStynxSessionStub(
+          createStynxSessionStub({ active: true, permissions: ['*'] }),
+        ) as never,
         { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: { permissionDeniedRoute: '/forbidden' } },
       ],
     });
@@ -72,7 +75,7 @@ describe('angular-iam routes', () => {
           { path: 'forbidden', component: ForbiddenComponent },
           { path: '', children: iamRoutes() },
         ]),
-        { provide: StynxSessionService, useValue: { hasAllPermissions: () => false } },
+        provideStynxSessionStub(createStynxSessionStub({ active: true, permissions: [] })) as never,
         { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: { permissionDeniedRoute: '/forbidden' } },
       ],
     });

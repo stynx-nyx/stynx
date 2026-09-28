@@ -7,6 +7,7 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { Router, RouterOutlet, provideRouter } from '@angular/router';
 import { ErrorBannerService } from '@stynx-nyx/angular';
 import { StynxI18nService } from '@stynx-nyx/angular-i18n';
+import { provideStynxI18nTesting } from '@stynx-nyx/angular-i18n/testing';
 import { STYNX_OIDC_ADAPTER } from '@stynx-nyx/angular-auth';
 import { StynxToastService } from '@stynx-nyx/angular-ui';
 import { of, throwError } from 'rxjs';
@@ -76,20 +77,17 @@ afterEach(() => {
 
 describe('@stynx-nyx/angular-profile', () => {
   it('renders profile and preferences forms with translated labels and DOM validation state', async () => {
-    const i18n = {
-      locale: () => 'en',
-      translate: (key: string) =>
-        ({
-          'profile.form.actions.save': 'Save profile',
-          'profile.form.fields.email': 'Email',
-          'profile.form.fields.locale': 'Locale',
-          'profile.form.fields.name': 'Name',
-          'profile.form.validation.nameRequired': 'Name is required',
-          'profile.preferences.actions.save': 'Save preferences',
-          'profile.preferences.fields.locale': 'Language',
-          'profile.preferences.fields.notifications': 'Notifications',
-        })[key] ?? key,
-      use: vi.fn(async () => undefined),
+    const catalogs = {
+      en: {
+        'profile.form.actions.save': 'Save profile',
+        'profile.form.fields.email': 'Email',
+        'profile.form.fields.locale': 'Locale',
+        'profile.form.fields.name': 'Name',
+        'profile.form.validation.nameRequired': 'Name is required',
+        'profile.preferences.actions.save': 'Save preferences',
+        'profile.preferences.fields.locale': 'Language',
+        'profile.preferences.fields.notifications': 'Notifications',
+      },
     };
 
     const profileFixture = await renderComponent(StynxProfileFormComponent, {
@@ -100,8 +98,10 @@ describe('@stynx-nyx/angular-profile', () => {
           locale: 'en-US',
         },
       },
-      providers: [{ provide: StynxI18nService, useValue: i18n }],
+      providers: [provideStynxI18nTesting(catalogs) as never],
     });
+    await TestBed.inject(StynxI18nService).initialize();
+    profileFixture.detectChanges();
     const profileHost = profileFixture.nativeElement as HTMLElement;
     expect(profileHost.textContent).toContain('Name');
     expect(profileHost.textContent).toContain('Save profile');
@@ -117,8 +117,10 @@ describe('@stynx-nyx/angular-profile', () => {
           notifications: false,
         },
       },
-      providers: [{ provide: StynxI18nService, useValue: i18n }],
+      providers: [provideStynxI18nTesting(catalogs) as never],
     });
+    await TestBed.inject(StynxI18nService).initialize();
+    preferencesFixture.detectChanges();
     const preferencesHost = preferencesFixture.nativeElement as HTMLElement;
     expect(preferencesHost.textContent).toContain('Language');
     expect(preferencesHost.textContent).toContain('Notifications');
@@ -141,21 +143,18 @@ describe('@stynx-nyx/angular-profile', () => {
               opened.push([action, context]),
           },
         },
-        {
-          provide: StynxI18nService,
-          useValue: {
-            locale: () => 'en',
-            translate: (key: string) =>
-              ({
-                'profile.security.changePassword.action': 'Change password',
-                'profile.security.description': 'Manage account security.',
-                'profile.security.mfaEnrolment.action': 'Set up MFA',
-                'profile.security.title': 'Security',
-              })[key] ?? key,
+        provideStynxI18nTesting({
+          en: {
+            'profile.security.changePassword.action': 'Change password',
+            'profile.security.description': 'Manage account security.',
+            'profile.security.mfaEnrolment.action': 'Set up MFA',
+            'profile.security.title': 'Security',
           },
-        },
+        }) as never,
       ],
     });
+    await TestBed.inject(StynxI18nService).initialize();
+    fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
     expect(host.textContent).toContain('Security');

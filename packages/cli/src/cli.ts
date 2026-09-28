@@ -15,6 +15,7 @@ import { runDoctor } from './doctor';
 import { scaffoldApp } from './init';
 import { migrateDown, migrateRedo, migrateUp, migrationStatus } from './migrate';
 import { generateRopaFromApp } from './privacy-ropa';
+import { generateModule } from './generate-module';
 
 export function buildProgram(): Command {
   const program = new Command();
@@ -148,6 +149,18 @@ export function buildProgram(): Command {
       const users = parse(readFileSync(resolve(options.usersJson), 'utf8')) as Array<{ id: string; email: string }>;
       const cognitoUsers = parse(readFileSync(resolve(options.cognitoJson), 'utf8')) as Array<{ sub: string; email: string }>;
       console.log(JSON.stringify(linkCognitoUsers(users, cognitoUsers), null, 2));
+    });
+
+  const generate = program.command('generate');
+  generate.exitOverride();
+  const generateModuleCommand = generate.command('module');
+  generateModuleCommand.exitOverride();
+  generateModuleCommand
+    .requiredOption('--blueprint <json>', 'UTF-8 JSON blueprint')
+    .requiredOption('--out <directory>', 'New output directory')
+    .option('--check', 'Compare an existing output without writing', false)
+    .action((options) => {
+      generateModule(options.blueprint, options.out, options.check);
     });
 
   return program;

@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { RequestContextMutator } from '@stynx-nyx/core';
@@ -47,6 +47,10 @@ describe('PostgresOfflineSyncStore', () => {
     try {
       await admin.query(migration);
       await admin.query(migration);
+      const migrationDir = resolve(__dirname, '../../migrations');
+      const next = (await readdir(migrationDir)).filter((name) => /^0002_.*\.sql$/.test(name));
+      expect(next).toHaveLength(1);
+      await admin.query(await readFile(resolve(migrationDir, next[0]!), 'utf8'));
       await admin.query(
         `insert into tenancy.tenants (id, slug, name, is_active, created_at, updated_at)
          values

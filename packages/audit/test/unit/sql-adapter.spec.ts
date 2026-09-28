@@ -7,6 +7,38 @@ function makeExecutor(responses: unknown[] = []) {
 }
 
 describe('AuditSqlSink', () => {
+  it('writes a command audit event through the supplied transaction, never its legacy executor', async () => {
+    const legacy = makeExecutor();
+    const transaction = makeExecutor();
+    const sink = new AuditSqlSink(legacy, { mode: 'audit_write_function' });
+    const event = {
+      occurredAt: '2026-09-28T12:00:00.000Z',
+      action: 'command.created',
+      entity: 'command',
+      entityId: 'cmd-1',
+      tenantId: '0197481e-6f84-77e4-8d6d-41f0b6fca9c1',
+      actorId: '0197481e-7294-7c53-8b03-5c36d7c2831a',
+      actorRole: 'forged-owner',
+    };
+
+    const write = (sink as AuditSqlSink & {
+      writeInTransaction(event: typeof event, executor: typeof transaction): Promise<void>;
+    }).writeInTransaction;
+    expect(typeof write).toBe('function');
+    await write.call(sink, event, transaction);
+
+    expect(legacy.query).not.toHaveBeenCalled();
+    expect(transaction.query).toHaveBeenCalledTimes(1);
+    const [sql, params] = transaction.query.mock.calls[0]!;
+    expect(sql).toMatch(/audit\.write_command_event\s*\(/i);
+    expect(sql).not.toMatch(/audit\.write\s*\(/i);
+    expect(params).not.toContain(event.tenantId);
+    expect(params).not.toContain(event.actorId);
+    expect(params).not.toContain(event.actorRole);
+    expect(params).toContain(event.action);
+    expect(params).toContain(event.entity);
+  });
+
   describe('mode: audit_write_function', () => {
     it('calls SELECT audit.write with the 13 expected params', async () => {
       const executor = makeExecutor();
@@ -748,4 +780,3 @@ describe('AuditSqlReader — sanitize equivalence proofs (src/sql-adapter.ts:186
     expect(executor.query.mock.calls[0]![1]).toEqual([100, 0]);
   });
 });
-

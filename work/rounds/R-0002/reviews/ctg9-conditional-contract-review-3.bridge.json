@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx/work/rounds/R-0002/prompts/132-ctg9-conditional-contract-review-3.md",
+  "prompt_sha256": "207fd3013ca149359c9425481653595de0feef890ccddd0421dca526493f6463",
+  "output": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx/work/rounds/R-0002/reviews/ctg9-conditional-contract-review-3.json",
+  "output_sha256": "29cbfca0255b71a1ec2cc9fe9294d82f5cbd2250269d9ca0a867624f2a1a8587",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx",
+  "started_at": "2026-09-28T06:49:25Z",
+  "ended_at": "2026-09-28T06:52:18Z"
+}

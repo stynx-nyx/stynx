@@ -1,0 +1,56 @@
+{
+  "contract": "CTG9 OFS / DETRAN C-0002 A1 §8.1",
+  "scope": "STYNX neutral service, HTTP envelope, PostgreSQL and RLS sensors; DETRAN TEAT/BOAT route parity remains R-0022/R-0024",
+  "invariant": "INV-OFFLINE-001",
+  "cases": [
+    {
+      "id": "UPS-OFS-01",
+      "sensor": "unit/ctg9-parity.spec.ts; integration/ctg9-upgrade.integration.spec.ts",
+      "consumerMapping": "range block/close/reconcile/settle and consumption projection",
+      "status": "red-first"
+    },
+    {
+      "id": "UPS-OFS-02",
+      "sensor": "unit/ctg9-parity.spec.ts; wiring/ctg9-http.wiring-spec.ts; integration/ctg9-upgrade.integration.spec.ts; wiring/ctg9-mode.wiring-spec.ts; wiring/ctg9-legacy-http.wiring-spec.ts; integration/ctg9-upgrade.integration.spec.ts#legacy-bridge",
+      "consumerMapping": "TEAT maps OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED to TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED; optional OfflineSyncLegacyItemIdentityResolver maps stable legacy identity across batches; HTTP routes/status/body bytes remain host-owned",
+      "status": "red-first"
+    },
+    {
+      "id": "UPS-OFS-03",
+      "sensor": "unit/ctg9-parity.spec.ts; integration/ctg9-upgrade.integration.spec.ts",
+      "consumerMapping": "host applier and OBX-compatible event port share one item transaction",
+      "status": "red-first"
+    },
+    {
+      "id": "UPS-OFS-04",
+      "sensor": "unit/ctg9-parity.spec.ts",
+      "consumerMapping": "host-owned conflict actions and handoff policy; legacy resolution names retain legacy semantics",
+      "status": "red-first"
+    }
+  ],
+  "adoptionMode": {
+    "withoutPolicyResolver": "E6 payload-hash dedup, second-cancel 409, 24h TTL, 100 items, published @Idempotent HTTP; requires 0002 before 1.5.0 PostgreSQL use",
+    "withPolicyResolver": "CTG9 durable identity, replay, lifecycle and policy; mode selected at bootstrap only",
+    "sensors": [
+      "unit/ctg9-parity.spec.ts",
+      "wiring/ctg9-mode.wiring-spec.ts",
+      "wiring/ctg9-legacy-http.wiring-spec.ts",
+      "integration/ctg9-upgrade.integration.spec.ts",
+      "integration/offline-sync.database.integration.spec.ts"
+    ]
+  },
+  "localProofPending": [
+    "HTTP byte equivalence of legacy durable-store replay against published interceptor",
+    "pool-sized strict transaction failures",
+    "lease crash/replay race"
+  ],
+  "consumerProofPending": [
+    "TEAT before/after HTTP bytes and headers",
+    "BOAT before/after HTTP bytes and headers"
+  ],
+  "upgradeBoundary": {
+    "rule": "0002 is prerequisite for STYNX 1.5.0 in both E6 and CTG9 modes",
+    "negativeSensor": "integration/ctg9-upgrade.integration.spec.ts — 0001-only must raise OfflineSyncUpgradeRequiredError / OFFLINE_SYNC_UPGRADE_REQUIRED / 503 before DML or raw SQLSTATE 42703",
+    "legacySuite": "integration/offline-sync.database.integration.spec.ts applies 0001 then 0002 without assertion changes"
+  }
+}

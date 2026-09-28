@@ -1,0 +1,10 @@
+{
+  "tenantId": "tenant-a",
+  "caseId": "case-a",
+  "documentId": "document-a",
+  "contentHash": "0fcd6e0dff9f86c4d6aef475f098eafd1d46b0f60afe88f0c0bef1198b967118",
+  "signerPartyId": "party-a",
+  "verificationMethod": "physical_verified",
+  "evidenceRef": "attestation-a",
+  "verifiedAt": "2026-09-29T12:00:00.000Z"
+}

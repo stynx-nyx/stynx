@@ -1,0 +1,54 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:214",
+      "issue": "The mode is chosen per module when the app starts, but the migrations apply to the whole database. 0002 ships in the package and drops the unique constraint `(tenant_id,payload_hash)`. The E6 Postgres store removes duplicates with `on conflict (tenant_id, payload_hash) do nothing` (packages/offline-sync/src/postgres-offline-sync.store.ts:254). If an E6 adopter (no resolver) upgrades to 1.5.0 and applies 0002, that path fails with 42P10, or it loses deduplication by hash across different keys. The published E6 test (test/integration/offline-sync.database.integration.spec.ts:42-49,147) applies only 0001, so it stays green and misses the regression. offline-sync-api.md:127 ('before enabling CTG9 code') and ADR-0002 §5 do not define E6 behaviour on a 0002 schema.",
+      "required_change": "State that 0002 keeps E6 deduplication without the global constraint. Example: add an `identity_mode` column (or equivalent) to the queue rows, plus a partial unique index `(tenant_id,payload_hash) WHERE identity_mode='e6'` that is created before the global constraint is dropped. The E6 path then uses `ON CONFLICT (tenant_id,payload_hash) WHERE identity_mode='e6'`, and CTG9 rows use key identity. Require an Inspector sensor that runs the unchanged E6 store/service on a 0001→0002 schema and proves hash deduplication across keys, the E6 409 `OFFLINE_SYNC_QUEUE_ID_REUSED`, and the second cancel returning 409."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:192",
+      "issue": "The contract adds block/close/reconcile/settle/consumption (and receipts) to the public `OfflineSyncStore` interface (packages/offline-sync/src/types.ts:117). E6 adopters that supply `options.store` without a resolver would then have to implement CTG9 methods to typecheck. That breaks the E6 public API even though the mode is still E6, and it goes against 'Existing method signatures remain assignable'.",
+      "required_change": "Put the new operations in a separate exported interface (for example `OfflineSyncDurableStore extends OfflineSyncStore`), or declare them optional. `forRoot` and the service require that interface only when `policyResolver` is configured. If the resolver is present and the store lacks the durable operations, fail at bootstrap with a typed error. Leave `OfflineSyncStore` byte-identical."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/146-ctg9-ofs-inspector.md:15",
+      "issue": "No sensor covers the mode boundary itself. test/wiring/ctg9-http.wiring-spec.ts only runs forRoot with a resolver. The no-resolver test (test/unit/ctg9-parity.spec.ts:112) builds the service directly and checks only TTL and the 100-item limit. Nothing proves that forRoot without a resolver mounts `OfflineSyncController` with `@Idempotent('Idempotency-Key')` and without the CTG9 routes. Nothing proves that the resolver with `mountControllers:false` puts the service in CTG9 mode. Nothing proves that a body field such as `mode` or `batchSequence` leaves an E6 module in E6 mode. Nothing checks the other three routes (reserve, cancel, resolve) over HTTP in CTG9 mode.",
+      "required_change": "In 146, require a wiring sensor with both bootstraps. Without a resolver: E6 controller metadata, 400/422 and replay through the interceptor, duplicateItems=1 across keys, second cancel 409, and a body carrying `batchSequence`/CTG9 fields that does not change the mode. With a resolver: CTG9 controller, the same method/path/permission for all four routes, and CTG9 selected with `mountControllers:false`. Mode selection must use `options.policyResolver != null`, not key presence; the harness spreads `policyResolver: undefined`. Add the matching item to 153."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/types.ts:76",
+      "issue": "Making `SyncBatchItemInput.idempotencyKey` optional (contract :101) carries through `StoredSyncQueueItem extends SyncBatchItemInput` into the result type (`SubmitSyncBatchResult.items`). E6 readers that treat the field as `string` then break under strict mode. That contradicts 'only in CTG9 mode' at :26, because the TypeScript type is shared.",
+      "required_change": "In the contract, pin that `StoredSyncQueueItem` keeps `readonly idempotencyKey: string` (redeclared) or stops extending the widened input. Also state what a legacy CTG9 item returns, since the synthetic key cannot be exposed as a client key."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:127",
+      "issue": "`NumberingReservationStatus` adds `'blocked'`. If this replaces `NumberingReservation.status` (types.ts:40), it widens a published result union, which breaks exhaustive switches in E6 consumers. In E6 mode the value never occurs.",
+      "required_change": "State that `'blocked'` appears only in CTG9 results, and record the widening as an intended change when the Architect rebinds public-api-baselines."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:10",
+      "issue": "The contract does not say what happens if `itemApplier`, `eventPort`, `agentResolver` or `concurrencyDetector` are configured without `policyResolver`. Under the rule as written, the module stays in E6 and silently ignores them, so the adopter gets hash deduplication with no domain application.",
+      "required_change": "Require bootstrap to fail with a typed error when any CTG9-only port is configured without `policyResolver`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/wiring/ctg9-http.wiring-spec.ts:45",
+      "issue": "The CTG9 unit and HTTP sensors run in CTG9 mode on `InMemoryOfflineSyncStore` and expect the applier to receive a `trx`. The contract (:204) requires a real `@stynx-nyx/data` `Transaction` under `txIndependent`, and it does not say what the in-memory store supplies.",
+      "required_change": "State that the store owns the item transaction and that `inMemory` provides a test `Transaction` with the same shape. Keep the PostgreSQL proof in the integration sensors."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:200",
+      "issue": "A1 (C-0002 §8.1, 'Compatibilidade offline') requires that items without a key 'usam a chave sintética existente'. DETRAN derives it as `legacy:${deviceId}:${localEntityId}` (submit-batch.command.ts:156), which deduplicates across batches. STYNX uses `stynx:legacy:v1:sha256(tenant,device,batch,queueItem)`, which is scoped to one batch, and explicit keys are applied. DETRAN therefore cannot keep its existing key without the item being applied. This is independent of the resolver cut.",
+      "required_change": "Architect: confirm with R-0022 whether A1 accepts the STYNX synthetic key through the adapter. If it does not, add an optional host hook that derives the legacy key (inside the reserved namespace, never applied), or escalate the delta to the Owner."
+    }
+  ],
+  "summary": "Choosing CTG9 by configuring `OfflineSyncPolicyResolver` at bootstrap does not contradict A1. DETRAN can consume UPS-OFS-01…04 through the resolver and catalogue, and the four E6 routes, statuses and envelopes stay the same. Binding the E6 or CTG9 controller is feasible with `forRoot` without a shim, and no request body can select the mode. The new sensors exercise CTG9 with a deterministic resolver and do not change the E6 tests. The boundary is not yet safe for E6, for three reasons: (1) migration 0002 drops `(tenant_id,payload_hash)`, which the E6 Postgres store needs for `ON CONFLICT`, and the E6 tests only run on 0001; (2) the public `OfflineSyncStore` interface would grow for E6 adopters; (3) no sensor checks which controller the bootstrap binds or E6 on a migrated schema. The fixes are a partial index or E6 identity mode in 0002, a separate durable store interface, and a two-bootstrap sensor. After those, the Inspector/Engineer commit can proceed. This review does not attest the implementation."
+}

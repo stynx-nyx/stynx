@@ -1,0 +1,66 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "UPS-TXN-04's selected 502 path is not defined well enough to implement or test. DETRAN's consumer (requests.service.ts:886-896) records the 502 DELEGATION_FAILED and then throws via commitThenThrow, so the error is thrown from inside a transaction that has to commit. The contract says a 502 is persisted only when the command 'explicitly treats it as terminal and commits', and that an uncaught exception rolls back. It never names the mechanism that tells those two apart. It hands 'HttpException handling' to the Engineer to document. It also leaves open whether the stored and replayed body is the raw exception response or the error envelope the exception filter renders after the interceptors run, and whether an audit event is written for a committed terminal failure.",
+      "required_change": "Name the public mechanism before any tests are written, for example a STYNX terminal-outcome marker or exception type that the command boundary catches. The boundary then commits domain, audit and key completion together and emits the status and body. Any other thrown or HttpException error rolls back and releases the key. State that the stored body is exactly the serialized body the client receives, and that replay returns the same status, body and allowed headers. State whether a committed terminal failure appends an audit event. Add an Inspector case for a plain thrown 502 HttpException: it must roll back and must not leave a completed key."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "The public surface and the Nest ordering guarantee are left to the Engineer ('command transaction interceptor or an explicit command API'). Inspector cannot write red sensors without symbol names, packages and a documented default scope. Two ordering failures follow. First, Nest runs global APP_INTERCEPTOR registrations outside method-level ones, so a globally registered AuditInterceptor can still write after commit. If its fail-closed check runs only at write time, the command has already committed and the client gets an error for a committed write. Second, Database.tx retries 40001/40P01 three times by default (data/src/database.ts:84-86). If the command boundary uses that default, the handler runs again, including any external delegation call.",
+      "required_change": "Pin the exported symbols and their packages: the command boundary, the transactional @Audit and @Idempotent options, scope(ctx) with its documented default value, the configurable mismatch code option, the status policy, and TxOptions.requireActor. Require one boundary that orders idempotency lookup/reservation → handler → audit → completion → commit → cache publication itself, or else a check before the handler runs that rejects missing or misordered participants. Require retry:false (no automatic handler re-execution) at the command boundary, and have Inspector assert that a serialization failure is surfaced without re-running the handler."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "UPS-TXN-01 cannot be met by writing to the existing audit storage under the app role. audit.write (0008_audit.sql:179) is SECURITY INVOKER and calls audit.ensure_monthly_partition. stynx_app holds only SELECT on the audit schema (0009 line 3), so an app-role AuditSqlSink write through the command Transaction fails. There are also package gaps. AuditSink.write(event) in @stynx-nyx/contracts has no transaction parameter. AuditSqlSink lives in @stynx-nyx/audit. @stynx-nyx/backend does not depend on @stynx-nyx/data. Prompt 62 and the plan limit writable scope to packages/data, backend audit and packages/idempotency.",
+      "required_change": "The Architect decides the privilege path before Inspector dispatch. One option is an additive SECURITY DEFINER wrapper that takes tenant and actor from the app.* session settings and keeps the hash chain and RLS; name its migration file, not 0019, which CTG-0004 reserves. Also decide the transaction port or sink API and where it lives. Extend the owned paths, locks and prompts 61/62 to packages/contracts, packages/audit and any backend package.json dependency change, or state explicitly why they are not needed. Require a real-PostgreSQL sensor showing an app-role audit write succeeds in-transaction and chains correctly."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "Key identity puts route/method in the durable key. DETRAN's consumer uses `${scope}:${header}` as identity and returns 409 when the same key is reused on a different route (idempotency.service.ts:125-140). Under this contract, cross-route reuse silently runs a second command instead of returning 409. 'Normalized route' is also undefined. If it means the route template (/requests/:id), the same key and body on /requests/1 and /requests/2 collide and request 1's response is replayed for request 2.",
+      "required_change": "Pick one and document it. Either key identity is tenant + scope + supplied key, with method and concrete normalized path in the fingerprint (409 on cross-route reuse, matching DETRAN), or the route-scoped identity is kept and recorded as an explicit conformance deviation. Define normalization over the concrete request path, not the template. Add Inspector cases for cross-route reuse and for the same template with different path parameters."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0005-plan.md",
+      "issue": "The CTG-0004 predecessor checkpoint is not met, and the plan does not define what counts as meeting it. The CTG-0004 plan (ctg4-jobs worktree, 65e71c70) records two REVIEW results with Owner escalation pending and no worker dispatched. Its RequestContext/actor and Database.tx owner-in-handler behavior is not frozen. CTG-0005 is based on a3c81645, and neither CTG-0003 (whose actor/session trust TXN-05's 'trusted actor' depends on) nor CTG-0004 is integrated.",
+      "required_change": "Define the checkpoint evidence: the CTG-0004 (and CTG-0003) contract commit SHA with a prompt-review PASS, recorded in ctg-0005-plan.md. Name CTG-0003 as a dependency for actor trust. Keep prompt 61 blocked until that evidence exists. Do not dispatch Inspector on the current state."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "The core.idempotency_keys RLS policy admits `tenant_id IS NULL` rows to every tenant (0007_core.sql:79-81), and uniqueness is NULLS NOT DISTINCT (tenant_id, key). A legacy or null-tenant row can therefore be read or replayed across tenants.",
+      "required_change": "Require transactional-mode rows to carry a non-null tenant_id and lookups to filter on it. Add a sensor showing that a NULL-tenant row with the same key is neither replayed nor treated as a conflict for tenant A or B."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "Nested role/tenant/actor validation in Database.tx is stated globally. Today runNestedTransaction silently creates owner-labelled Transactions on the app connection, so existing nested callers may break, which conflicts with 'existing routes keep published behavior'.",
+      "required_change": "State that this is an intended global security fix. Require an inventory of existing nested callers, a migration note in the changeset, and legacy-path regression tests. Otherwise, scope the check to the command/requireActor mode."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "Concurrency and locking behavior is not specified. 'May wait for its commit' leaves open whether a concurrent same-key request blocks or fails fast with an in-progress response, and no lock or statement timeout is given. audit.write takes FOR UPDATE on the tenant's latest hash-chain row, so audited commands in one tenant serialize for the whole command, including external delegation time.",
+      "required_change": "Pick blocking wait with a bounded lock_timeout, or an in-progress error with a stable status and code, so the race sensor is deterministic. Document the per-tenant hash-chain serialization cost."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md",
+      "issue": "Several contract details are open. Canonical JSON does not cover number normalization (1 vs 1.0, -0), undefined or absent properties, or whether the fingerprint uses request.body before pipes run. The 409 body envelope is unspecified; DETRAN expects code plus context {key}. It is unclear whether an unselected successful response commits domain work and deletes the reservation, or rolls everything back.",
+      "required_change": "Specify the canonicalization rules (or adopt RFC 8785), the raw parsed body as fingerprint input, the 409 envelope fields, and unselected-success behavior: commit domain and audit, and leave no pending or completed key."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0005-plan.md",
+      "issue": "Authority assignments are loose. Coupled-work item 4 and prompt 61 have the 'maestro' do trace and API-baseline rebinds, but CLAUDE.md assigns these to the Architect, and law/ commits are authored as DEVAI Architect. Real Nest+PostgreSQL tests in packages/backend may need a devDependency edit that no prompt authorizes. packages/backend/src/idempotency is an unexported duplicate IdempotencyInterceptor that could be edited by mistake.",
+      "required_change": "State that trace and baseline rebinds are separate Architect-role commits authored as DEVAI Architect. Place backend-audit database integration tests where the dependencies already exist, or route the package.json edit through the correct role. Tell Inspector and Engineer to target only @stynx-nyx/idempotency and to leave packages/backend/src/idempotency untouched or explicitly retire it."
+    }
+  ],
+  "summary": "All five UPS-TXN MUST requirements are listed. Rollback, cache-after-commit, 409, legacy compatibility and role separation are stated correctly in intent. Inspector dispatch is not safe yet. The committed 502 needs the commit-then-throw pattern DETRAN uses, and the contract does not define it. Symbols and ordering are not pinned, and the default retry would re-run the handler. The app role cannot write the existing audit storage. Route-scoped key identity differs from the DETRAN consumer. The CTG-0004 checkpoint is unmet and still awaiting Owner escalation. All of these can be repaired by the Architect, and none requires a new Owner decision."
+}

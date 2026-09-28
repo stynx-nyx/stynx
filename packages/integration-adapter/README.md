@@ -1,8 +1,20 @@
-# `@stynx-nyx/integration-adapter` — pure-contract framework for outbound 3rd-party calls
+# `@stynx-nyx/integration-adapter` — outbound adapters and signed inbound webhooks
 
-`@stynx-nyx/integration-adapter` defines the contract every outbound-integration in a STYNX app implements: an `IntegrationAdapter` interface with retry policy, circuit-breaker policy, idempotency-store binding, and telemetry events. It's a light framework — implementations live in domain packages or per-app code, but they share this shape so observability + error envelopes work uniformly across integrations.
+`@stynx-nyx/integration-adapter` supplies shared outbound adapter contracts and
+runtime helpers, plus raw-body HMAC verification for inbound webhooks. Domain
+packages and applications own their provider-specific request and response
+types.
 
 ## Purpose
+
+STYNX 1.5 also provides `verifyWebhookSignature` for inbound signed webhooks.
+Pass the original `rawBody: Buffer`, Node's lowercase `headers`, a secret,
+clock, maximum timestamp skew, namespace, and a shared atomic replay store.
+The default signature is `sha256=<64 hex digits>` over
+`<Unix-seconds timestamp>.<raw body>`. A successful result carries the
+timestamp and reserved replay key; a rejection carries a stable reason.
+Configure `message` when authenticated tenant or event fields must be covered
+by the HMAC. Keep the replay store shared across instances.
 
 Apps making 3rd-party HTTP calls accumulate bespoke retry + circuit-break + idempotency-cache code. Each implementation has subtly different semantics, observability output, and failure modes. `@stynx-nyx/integration-adapter` resolves it by providing the contract and the typed telemetry event shape; implementations wrap their HTTP client (axios, undici, native fetch) in the contract.
 
@@ -61,7 +73,10 @@ export class StripeAdapter implements IntegrationAdapter<StripeRequest, StripeRe
 
 ## Configuration
 
-This package exports only types; runtime config is per-adapter. Recommended convention: each adapter accepts an `IntegrationAdapterOptions` in its constructor and reads policy from there.
+Outbound runtime configuration is per adapter. Recommended convention: each
+adapter accepts an `IntegrationAdapterOptions` in its constructor. Inbound
+verification receives explicit `WebhookVerificationOptions` on each call;
+`@stynx-nyx/backend` provides the Nest guard and module wiring.
 
 ## Examples
 

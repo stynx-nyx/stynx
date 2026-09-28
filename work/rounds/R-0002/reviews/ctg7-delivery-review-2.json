@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "packages/worklist/src/tenant-business-calendar.ts",
+      "issue": "The new OFFSET_TIMEZONE denylist (/^[+-]\\d{2}(?::?\\d{2})?$/) checks the raw string from the tenant source, not the zone that Intl resolves. I probed Node v24.20.0: '+03:00', '+0300', '+03', '-03:00' and '+03:30' are all rejected, but '\\u221203:00' (U+2212 minus sign) passes the regex. Intl.DateTimeFormat then accepts it and resolves it to '-03:00', so an offset-form zone still reaches the calculation. UTC and named IANA zones (America/New_York, Africa/Cairo, Asia/Tokyo, America/Los_Angeles) still work. The reported '+03:00' case is fixed.",
+      "required_change": "After building the formatter, test formatter.resolvedOptions().timeZone against the offset pattern, or require the resolved zone to be 'UTC' or contain '/'. Throw WorklistInputError if it fails. Add a negative sensor for '\\u221203:00' and rebind trace."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0007-plan.md",
+      "issue": "The plan says a sequential release:policy rerun passed for 44 packages and 26 sourcemaps after the postreview reference build. The only release-policy log on disk is /private/tmp/stynx-s15-ctg7-release-policy.log, written at 13:05:11. That is before the repair commits (9d6d5a25 at 13:19, 5cb53fab at 13:20) and before the postreview reference log (13:25:37). The rerun that covers the repair delta has no saved log and no exit marker. The risk is low: the repair touches only src internals and tests, and there is no README or declaration drift. It is still an unevidenced claim.",
+      "required_change": "At the final post-predecessor review, run `pnpm release:policy` after `ci:reference-apps` finishes, capture it to a named postreview log with `; echo RELEASE_POLICY_EXIT=$?`, and cite that path in the plan."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/test/integration/webhook-signature.integration.spec.ts",
+      "issue": "The real PostgreSQL test is valid. It runs StynxDataModule with migrations enabled. Database.tx sets app.tenant_id from RequestContext (database.ts:230). The handler runs `set local role stynx_app`, and migrations create that role NOINHERIT NOBYPASSRLS. The table has FORCE RLS with a policy on app.tenant_id. Each tenant sees only its own label, and the nonmember gets 403 TENANT_ACCESS_DENIED from the real auth.memberships query. However, owner, app and reader all use the same local superuser connection, and the downgrade to stynx_app happens inside the test handler. So the test proves RLS and the tenant GUC handoff, but not that the production app pool connects as stynx_app.",
+      "required_change": "Optional hardening: point the `app` connection at a stynx_app login for this case, if the test support can provide one, and drop the in-handler `set local role`. Alternatively, add a comment saying app-pool role wiring is covered by check:rls-negative."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0007-plan.md",
+      "issue": "This is a known later gate, not a defect in this delta. The CTG-0005 HTTP 409 wire test is still deferred until the predecessor is integrated, as the plan and review-1 state.",
+      "required_change": "After CTG-0005 is integrated, add the real 409 test (same Angular key, different body). Rerun ci:stynx, ci:reference-apps and release:policy with exit markers, then do the final CTG7 delivery review before the PR merges."
+    }
+  ],
+  "summary": "Every repair the prompt asked about is confirmed. (1) WebhookReplayStoreError now always uses the fixed message 'Webhook replay store unavailable' and keeps the original only as `cause`. The unit test throws a cause that contains the replay key, the full signature and the signature hex, and asserts none of them appear in the message. (2) When clock.now() returns a non-Date or NaN, verification throws 'Webhook clock returned an invalid Date' instead of returning OUTSIDE_WINDOW. The guard maps any non-replay-store error to 500, and the Nest test asserts 500 with the handler not called. (3) '+03:00' is rejected with WorklistInputError, and UTC and named IANA zones still work. The U+2212 minus sign is a narrow residual bypass (nonblocking). (4) The Africa/Cairo skipped-midnight vector (2024-04-25T22:00Z, 34h) and the America/New_York fall-back vector (2024-11-05T05:00Z, 47.5h) are correct and lock the exclusive next-midnight boundary. (5) The new migration-backed FORCE RLS test queries as stynx_app (NOBYPASSRLS) under the RequestContext tenant GUC: each of two signed tenants sees only its own row, and the nonmember gets 403. The postreview CI log ends with CI_EXIT=0, and backend webhook-signature.integration ran 9 tests. The reference log ends with REFERENCE_EXIT=0 (API 60/60, web build). Trace rebinds cover only the three changed test files, and 21ee6efe is authored by DEVAI Architect. Nothing changed under docs/framework/contracts, and neither code change alters an exported signature (OFFSET_TIMEZONE is module-private; WebhookReplayStoreError's constructor is unchanged). The repair touches no generated tooling or package.json. The sequential release:policy rerun has no saved log after the repair. The CTG-0005 409 proof remains a declared later gate. No blocking defects in this delta."
+}

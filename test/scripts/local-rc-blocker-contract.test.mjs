@@ -47,11 +47,26 @@ const expectedNotificationsMutate = [
 
 function normalizeRootManifestRcVersion(source) {
   const version = JSON.parse(source).version;
-  assert.match(version, /^1\.5\.0-rc\.[1-9]\d*$/u);
+  assert.match(version, /^1\.5\.0(?:-rc\.[1-9]\d*)?$/u);
   const versionLine = `  "version": "${version}",`;
   assert.equal(source.split(versionLine).length, 2);
   return source.replace(versionLine, '  "version": "1.5.0-rc.1",');
 }
+
+test('frozen root manifest normalization accepts only final 1.5.0 and historical RC versions', () => {
+  const source = readFileSync(join(repoRoot, 'package.json'), 'utf8');
+  const current = JSON.parse(source).version;
+  const line = `  "version": "${current}",`;
+  for (const version of ['1.5.0', '1.5.0-rc.1', '1.5.0-rc.3']) {
+    assert.equal(
+      normalizeRootManifestRcVersion(source.replace(line, `  "version": "${version}",`)),
+      source.replace(line, '  "version": "1.5.0-rc.1",'),
+    );
+  }
+  for (const version of ['1.4.0', '1.5.1', '1.5.0-beta.1', '1.5.0-rc.0']) {
+    assert.throws(() => normalizeRootManifestRcVersion(source.replace(line, `  "version": "${version}",`)));
+  }
+});
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {

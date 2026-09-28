@@ -20,6 +20,16 @@ export class ActorContextMissingError extends StynxDataError {
   }
 }
 
+export class TransactionIdentityMismatchError extends StynxDataError {
+  constructor(context?: Record<string, unknown>) {
+    super('Transaction identity does not match the trusted request context', {
+      code: 'TRANSACTION_IDENTITY_MISMATCH',
+      status: 500,
+      ...(context ? { context } : {}),
+    });
+  }
+}
+
 export class TransactionRequiredError extends StynxDataError {
   constructor() {
     super('Transaction is no longer active', {
@@ -125,6 +135,30 @@ export class SerializationFailureError extends StynxDataError {
       code: 'SERIALIZATION_FAILURE',
       status: 503,
       ...(context ? { context } : {}),
+    });
+  }
+}
+
+export class IndependentTransactionConnectionError extends StynxDataError {
+  constructor() {
+    super('Independent transaction cannot acquire a second held connection', {
+      code: 'INDEPENDENT_TRANSACTION_CONNECTION', status: 409,
+    });
+  }
+}
+
+export class AuditChainIsolationError extends StynxDataError {
+  constructor() {
+    super('Audited writes require READ COMMITTED isolation', {
+      code: 'AUDIT_CHAIN_ISOLATION', status: 409,
+    });
+  }
+}
+
+export class AuditChainKeyMismatchError extends StynxDataError {
+  constructor() {
+    super('Audit transaction cannot change tenant chain', {
+      code: 'AUDIT_CHAIN_KEY_MISMATCH', status: 409,
     });
   }
 }

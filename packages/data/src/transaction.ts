@@ -73,6 +73,7 @@ export class Transaction {
     private readonly db: StynxDrizzleDatabase,
     readonly role: StynxDataRole,
     private readonly metrics?: StynxDataMetricsSink,
+    readonly strictItemMode = false,
   ) {}
 
   close(): void {

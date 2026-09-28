@@ -150,8 +150,13 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 ### Runtime dependencies
 
+- `@peculiar/x509`: `^2.1.0`
+- `@stynx-nyx/health`: `workspace:*`
 - `@stynx-nyx/integration-adapter`: `workspace:*`
 - `@xmldom/xmldom`: `^0.9.10`
+- `asn1js`: `^3.0.10`
+- `pdf-lib`: `^1.17.1`
+- `pkijs`: `^3.4.1`
 - `xml-crypto`: `^6.1.2`
 
 ### Optional dependencies

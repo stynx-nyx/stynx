@@ -1,5 +1,26 @@
 # @stynx-nyx/signature
 
+## 1.5.0
+
+### Minor Changes
+
+- 5dffc83: Complete the CTG9 signature trust verification, ordered transactional event log
+  and delivery receipts, and durable offline batch, numbering and conflict
+  protocols for STYNX 1.5.0. Apply the additive platform and offline-sync
+  migrations before enabling the new modes. Existing E6 offline behavior remains
+  available when no CTG9 policy resolver is configured. The fixed STYNX package
+  group advances together.
+- c67774f: Add runtime CMS, ASN.1, X.509 and STYNX health dependencies for the CTG9
+  signature trust verifier and production readiness integration. This dependency
+  change prepares the API implementation and does not itself provide regulated
+  signature verification. The fixed STYNX package group advances together.
+
+### Patch Changes
+
+- Updated dependencies [8a800c2]
+  - @stynx-nyx/integration-adapter@1.5.0
+  - @stynx-nyx/health@1.5.0
+
 ## 1.5.0-rc.3
 
 ### Patch Changes

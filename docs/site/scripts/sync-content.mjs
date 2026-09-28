@@ -215,6 +215,7 @@ function rewriteGeneratedDocLinks(content) {
     .replace(/\]\(draft\/blueprints\/?\)/gu, '](/docs/product/drafts/blueprints/)')
     .replace(/\]\((?:\.\.\/)+meta\/adr\/?\)/gu, '](/docs/adr/)')
     .replace(/\]\((?:\.\.\/)+meta\/adr\/([^\)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
+    .replace(/\]\((?:\.\.\/)+law\/adr\/([^\)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
     .replace(/\]\(\.\.\/arch\/invariants\/?\)/gu, '](/docs/framework/arch/invariants)')
     .replace(/\]\(\.\.\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/arch$1)')
     .replace(

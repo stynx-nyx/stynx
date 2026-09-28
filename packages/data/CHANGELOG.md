@@ -1,5 +1,43 @@
 # @stynx-nyx/data
 
+## 1.5.0
+
+### Minor Changes
+
+- 42bbb43: Require an active tenant actor for one-shot and recurring jobs, authorize technical actor assignment, and execute handlers with tenant RLS rather than system authority. Persist the schedule actor and canonical IANA timezone, define deterministic DST handling for cron schedules, and dead-letter jobs whose actor is missing or inactive. The fixed STYNX package group advances together.
+
+  Existing enabled schedules without an actor are disabled by the migration and must be assigned an active technical actor before resuming. Configure `StynxJobsModule.forRoot({ authorizeTechnicalActor })` to permit assignment of a technical actor distinct from the caller.
+
+  Materialization isolates invalid persisted cron schedules: it disables the affected row with `disabledReason: 'invalid_schedule'`, leaves its due timestamps unchanged, and continues other tenants' schedules in the same batch. Tenant callers can read the reason through `getSchedule`; repair requires a valid authorized `upsertSchedule` for the same tenant and name, which clears the reason. `resumeSchedule` rejects an unrepaired row with `SCHEDULE_INVALID`.
+
+- 7eec2d7: Add a transactional HTTP command boundary that commits an audit event and a durable idempotent response with the domain mutation in one tenant-scoped app-role transaction. The fixed STYNX package group advances together.
+
+  Apply platform migration `0020_transactional_commands.sql` before enabling command routes. Configure a real `stynx_app` connection for the application pool; the command boundary checks the live database role, tenant and actor. Install `StynxTransactionalCommandModule.forRoot({ auditSink })` and mark protected routes with the built-in STYNX auth guard, `@TransactionalCommand()`, transactional `@Idempotent()` and transactional `@Audit()`. Public tenant commands require `StynxTenancyModule` and `@PublicTenantRoute()`.
+
+  Migration 0020 revokes direct `audit.write` execution from `PUBLIC` and
+  `stynx_app`. Legacy `AuditSqlSink` deployments using
+  `audit_write_function` on unmarked routes must use an owner-role connection;
+  the transactional command boundary uses the restricted
+  `audit.write_command_event` wrapper on its app-role connection.
+
+  Committed responses replay the exact JSON bytes, status, `location`, `retry-after`, `cache-control` and `etag` headers. Do not put cookies or per-request headers in a committed response. An unselected successful status commits the domain change and audit event while clearing its key; an unselected error rolls back. Legacy idempotency behavior remains available on routes without the transactional command marker.
+
+  CTG5 command rejections now follow the STYNX error envelope with `statusCode`,
+  `errorCode`, fixed public `message`, `requestId` matching `X-Request-Id`, and
+  `retryable`; key conflicts include `details: { key }`. The default mismatch
+  code is `IDEMPOTENCY:CONFLICT:duplicate-key`, and configured `mismatchCode`
+  values must match the schema's `errorCode` pattern. Invalid module options or
+  marked route metadata fail during bootstrap. Migrate pre-release CTG5 clients
+  from `code`/`context` to `errorCode`/`details`. Existing data-layer errors,
+  legacy idempotency 422 responses, and consumer-chosen response bytes are
+  unchanged.
+
+### Patch Changes
+
+- Updated dependencies [2a94cac]
+- Updated dependencies [8a800c2]
+  - @stynx-nyx/core@1.5.0
+
 ## 1.5.0-rc.3
 
 ### Patch Changes

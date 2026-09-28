@@ -1,0 +1,26 @@
+{
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "evidence": [
+    "Delta b3e1f8e9..48fff746 is two commits (8d0d6a09, 48fff746) touching exactly 4 files: .semgrepignore (comment wording only, 'deterministic' -> 'fixed'; the four ignored key paths are unchanged), law/adr/2026-09-28-final-candidate-ci-repair.md (the four admitted paths become five and the second clean-checkout finding is recorded), scripts/lib/release-context.mjs (one array entry plus a comment), and tools/tsconfig/base.json (+2 path aliases). No package.json, CHANGELOG, src/, testing/ or test file is modified, so the 44 manifests, the runtime sources and the trace projections are untouched.",
+    "tools/tsconfig/base.json adds '@stynx-nyx/angular-auth/testing' -> '../../packages-web/angular-auth/testing/index.ts' and '@stynx-nyx/angular-i18n/testing' -> '../../packages-web/angular-i18n/testing/index.ts'. There is no baseUrl, so these resolve relative to tools/tsconfig/ and land at the repo root. Both targets exist.",
+    "Inheritance: angular18.json and node24.json both extend base.json, and the 13 Angular packages inherit through angular18.json. Only 6 tsconfigs override 'paths' (test/packages/tsconfig.test.json, angular/tsconfig.spec.json, angular-i18n/tsconfig.spec.json, testing and data tsconfig.build.json, notifications/tsconfig.json). None of the overriding projects imports either testing subpath, so the override-replaces-map behavior is harmless.",
+    "Direct --traceResolution with tsc -p tsconfig.spec.json --noEmit per consumer: angular-iam, angular-trash, angular-flow, angular-sessions and angular-auth all show \"Module name '@stynx-nyx/angular-auth/testing' was successfully resolved to '.../packages-web/angular-auth/testing/index.ts'\". angular-trash, angular-sessions, angular-auth, angular-profile and angular-i18n resolve '@stynx-nyx/angular-i18n/testing' to '.../packages-web/angular-i18n/testing/index.ts'. All 7 exited 0. Resolution goes to source through the path map, not to dist, so it does not depend on build order.",
+    "angular-i18n's own tsconfig.spec.json still overrides paths with './src/index.ts' and './testing/index.ts'. Both remain valid, it traces to its own testing/index.ts, and it typechecks with exit 0.",
+    "Runtime and packed output: no non-test source under packages-web imports either testing subpath. The only other references are vitest.config.ts aliases and test/*.spec.ts. angular-auth's ng-package.json names no tsconfig, so ng-packagr does not read base.json path mappings for the packed build. The build:tsc/tsconfig.json include is limited to src/**. The new aliases therefore cannot change emitted dist or tarball contents.",
+    "release-context allowance stays exact: the new 'tools/tsconfig/base.json' entry sits inside the status === 'M' && [...].includes(path) literal-array branch. There is no glob, prefix or regex widening, and the A-status admission is still only the single ADR path. The ADR text matches the code at five admitted follow-up paths.",
+    "pnpm typecheck --force: 'Tasks: 73 successful, 73 total; Cached: 0 cached, 73 total', exit 0.",
+    "pnpm release:policy: package-readmes:check {\"packageCount\":44,\"changedFiles\":0}; 'Verified release policy for 44 publishable packages.'; '[web-sourcemaps] OK: 26 source maps checked', exit 0.",
+    "git status after verification shows only the pre-existing untracked prompt file (work/rounds/R-0002/prompts/196-shared-testing-path-delivery-review.md). Nothing tracked was modified."
+  ],
+  "nonblocking_notes": [
+    "The local turbo typecheck pipeline runs dependency builds first, so the 73/73 run alone does not reproduce the missing-dist remote condition. The per-project traceResolution evidence is what shows the fix does not depend on dist. The next clean remote CI attempt is the confirming signal.",
+    "The per-package vitest.config.ts aliases already map these subpaths for test runtime. The new tsconfig aliases now mirror them for typecheck. The duplication is pre-existing and acceptable.",
+    "Running 'pnpm typecheck --force' rebuilt git-ignored local artifacts (dist/, .turbo cache) as a side effect of turbo build dependencies. No tracked file, Git state or DETRAN resource was changed.",
+    "Unresolved and outside this delta: the original DEVAI signed RC refusal for the 100% coverage requirement still stands. If it is the only required check not passing, administrative merge of PR #308 requires an exact Owner Decision 8 receipt. This review does not satisfy or substitute for that receipt.",
+    "Plan mode was active and ExitPlanMode was not available in this session, so the review was carried out read-only and no plan file was written."
+  ],
+  "reviewMode": "direct-claude-p-after-bridge-format-failure",
+  "model": "claude-opus-5-5",
+  "rawResponseSha256": "3731978b01a781694706341a32bf5694650ed25e53a3828dd1a8e1e3325c417a"
+}

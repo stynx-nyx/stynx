@@ -119,6 +119,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     if (!metadata) {
       return next.handle();
     }
+    if (metadata.transactional) return next.handle();
 
     const request = context.switchToHttp().getRequest<RequestLike>();
     const headerName = metadata.headerName ?? this.options.defaultHeaderName;

@@ -1,0 +1,48 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg9-obx-contract.md:31",
+      "issue": "The lock order between the new singleton `outbox.legacy_ownership` and the tenant clock/audit advisory is undefined, and that allows a deadlock cycle. Cutover takes the marker `FOR UPDATE` and then, while holding it, 'the total copy order uses the per-tenant clock' (:33), so it locks `outbox.tenant_clock` for tenant X. `appendInTransaction` is not forbidden in the LEGACY state, and the CTG5 callback can call append and then legacy `enqueue` in the same transaction (:13 says append does not seal in CTG5). Sequence: T1 appends (advisory X → clock X, held until commit). C (cutover) acquires the marker FOR UPDATE because T1 does not yet hold FOR SHARE. T1 calls `enqueue` and waits for FOR SHARE behind C. C copies tenant X and waits for clock X held by T1. That is a cycle, and PostgreSQL aborts one side with 40P01, which appears in no contract, ADR or sensor. If the copy fires audit writers (':37 inclusive se o log/ledger for auditado'), the same cycle forms with the common pattern 'audited domain write (advisory X) → enqueue'.",
+      "required_change": "Pin one global order in obx:31, ADR-OUTBOX-0002 and outbox-api.md:15: `legacy_ownership FOR SHARE` → audit advisory → clock. (a) `appendInTransaction`/`appendManyInTransaction` take the marker FOR SHARE before the audit advisory and clock. (b) While holding the marker, cutover acquires only legacy rows → clock and does not invoke the audit chain writers. Its audit record, if any, is written in a separate owner transaction after commit. (c) Cutover uses `lock_timeout` and rolls back fully (idempotent retry) on 55P03/40P01. Add Inspector sensors for 'append+enqueue in the same CTG5 transaction racing cutover' and 'audited domain write+enqueue racing cutover' with no 40P01 on the app side."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:216",
+      "issue": "`dispatchDue` claims, commits SENT and only then calls `dispatcher.send`. On failure, `recordDispatchFailure` updates the row to ERROR without a marker or `migrated_event_id` check. The contract (obx:31) covers only enqueue/claimDue/ack/retry. If cutover commits between the claim and the failure, the legacy row becomes ERROR with `next_attempt_at` while the projection stays `SENT_UNRESOLVED` with no reclaim. The two states diverge, and the known failure never reaches the new attempt ledger, so the event waits for manual reconciliation. There is no double send, because the legacy claim excludes marked rows.",
+      "required_change": "Specify in obx:31 that `recordDispatchFailure` takes the marker FOR SHARE. In NEW, for a marked row, it records the failed attempt in the new ledger in the same transaction and moves `SENT_UNRESOLVED`→`ERROR` with `OutboxBackoffPolicy`, keeping the legacy semantics that a dispatcher failure is retryable. Add a sensor where send fails after cutover."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-obx-contract.md:31",
+      "issue": "'O worker do modo novo só reivindica eventos depois que o marker NEW confirma' can be read as a global gate. In that reading, events appended natively (OFS) by an adopter that never runs cutover are never claimed by `dispatchEventsDue`. That adopter is forced to cut over, which breaks every `enqueue` call with `OutboxLegacyCutoverError`. The Inspector cannot derive an unambiguous sensor.",
+      "required_change": "State that the NEW gate applies only to projections that came from legacy rows (provenance/`migrated_event_id`), and that events appended natively are claimable in both the LEGACY and NEW states. Add a sensor where OFS appends and delivers without cutover while legacy `enqueue`/`dispatchDue` keep working."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:10",
+      "issue": "The legacy interceptor replay (packages/idempotency/src/idempotency.interceptor.ts:190-201) sets the `replayKeyHeaderName` and `replayMarkerHeaderName: true` headers and replays captured headers. The OFS ledger persists only status and body bytes. A client that detects a replay by header loses that signal, which is an observable HTTP regression on the batch route.",
+      "required_change": "Persist the replayable headers with the receipt, and on a domain or transport replay emit the same replay-key/replay-marker headers the interceptor emits under its configured names. Include this in the HTTP before/after sensor."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:183",
+      "issue": "'return a retryable in-progress response' leaves the HTTP status and code for a valid lease past the bounded wait unpinned. The legacy interceptor, on a wait timeout, either proceeds (non-strict) or returns 503 (strict), so compatibility cannot be checked. Separately, a client retry sent across the upgrade whose response is still in the legacy durable idempotency store (within TTL, same fingerprint) now gets a conflict on `legacy_closed_unverified` (:199), even though STYNX has the original bytes.",
+      "required_change": "Pin the in-progress status and code (for example 503 with Retry-After, consistent with durableStrict). For a `legacy_closed_unverified` batch, allow replay of the unexpired legacy interceptor record with the same tenant/user/route/key and fingerprint before returning a conflict."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/signature.md:73",
+      "issue": "'A custom verifier ... cannot return a provider assertion' is a prose rule with no mechanism. A production profile accepts any `SignatureTrustVerifier`, so a consumer verifier that forwards `/pades/verify` still produces `signed QUALIFIED`.",
+      "required_change": "For `environment:'production'`, require the verifier returned by `createCmsTrustVerifier` (internal brand), or an explicit `consumerOwnedVerifier` acknowledgement that is recorded in the evidence/proof (`verifierKind`). Add a negative sensor where a production profile with an unbranded verifier and no acknowledgement fails at boot."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:289",
+      "issue": "The preflight still says an unkeyed item uses 'a chave sintética existente' and stays `received` with `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED`. This contradicts ofs:185 and offline-sync-api.md:86-92 (neutral code `OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED` and the new `stynx:legacy:v1:` formula).",
+      "required_change": "Align preflight:289 with the neutral code, the synthetic-key formula and the reserved namespace, with the TEAT mapping on the adapter."
+    }
+  ],
+  "summary": "REVIEW. All three cycle-1 blockers now have an implementable mechanism. (1) OBX: the ≥0021 DDL only creates structures. Cutover is opt-in and idempotent through the singleton marker (SHARE/UPDATE plus FOR UPDATE on rows without SKIP LOCKED). The legacy claim excludes marked rows, a legacy ACK is routed to the ledger and projection in one transaction, SENT in flight becomes SENT_UNRESOLVED with no reclaim, custom tables are rejected before mutation, and enqueue after NEW fails typed. (2) SIG: STYNX ships `createCmsTrustVerifier` (ByteRange, X.509 path/OID, TSA RFC 3161, signed OCSP/CRL) with the dependencies under maestro lock, a manifest bound to the CMS/ByteRange, and a boot guard plus witness for readiness. (3) OFS: the order is fixed as 400 header → batch identity/sequence/declared set (replay, 409, 422 gap) → transport 422 `IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY`, with replay of the persisted status and body bytes and the published namespace and fingerprint. The nonblocking repairs are closed: owner-only quarantine through `recordUnboundAck`, `UNIQUE(message_id)` preserved, a neutral code with a collision-free synthetic key and reserved namespace, a lease with fencing for the same batch, the published TTL default and 100-item limit with no resolver, the ADR accepted and indexed, the partition taken at the chosen timestamp, and the isolation note assigned to the changeset and guide. The contracts claim no implementation. One deadlock counterexample remains: the cutover holds the marker and takes the tenant clock (or the audit advisory), while an app transaction holds the clock or advisory and waits for the marker FOR SHARE on `enqueue`. The minimal repair is a global order marker→advisory→clock on the append ports and a cutover that does not call the audit chain, with sensors. Also nonblocking: `recordDispatchFailure` after cutover, the NEW-gate reading for native events, replay headers and in-progress status in OFS, enforcement of the custom SIG verifier in production, and the stale preflight at :289. PASS for the Inspectors' prompt-review is not released until the OBX lock-order blocker is repaired."
+}

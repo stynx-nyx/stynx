@@ -3,6 +3,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import type { CanActivateFn, UrlTree } from '@angular/router';
 import { Router } from '@angular/router';
 import { STYNX_ANGULAR_AUTH_OPTIONS, StynxSessionService } from '@stynx-nyx/angular-auth';
+import { createStynxSessionStub } from '@stynx-nyx/angular-auth/testing';
 import type { StynxSdkClient } from '@stynx-nyx/sdk';
 import { firstValueFrom } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
@@ -46,7 +47,8 @@ function createClient(): StynxSdkClient & {
       if (path === '/admin/users/user-1') return { ...users.items[0]!, locale: 'en-US' };
       if (path === '/admin/users/user-1/roles') return roles;
       if (path === '/admin/users/user-1/groups') return groups;
-      if (path === '/admin/users/user-1/effective-permissions') return { userId: 'user-1', permissions: [] };
+      if (path === '/admin/users/user-1/effective-permissions')
+        return { userId: 'user-1', permissions: [] };
       if (path === '/admin/roles') return roles;
       if (path === '/admin/roles/role-1/permissions') return [{ key: 'iam:users:read' }];
       if (path === '/admin/groups') return groups;
@@ -58,15 +60,18 @@ function createClient(): StynxSdkClient & {
       calls.post.push([path, body, options]);
       if (path === '/admin/users') return { id: 'user-2', email: 'grace@example.test' };
       if (path === '/admin/roles') return { id: 'role-2', key: 'auditor', name: 'Auditor' };
-      if (path === '/admin/roles/role-1/clone') return { id: 'role-3', key: 'clone', name: 'Clone' };
+      if (path === '/admin/roles/role-1/clone')
+        return { id: 'role-3', key: 'clone', name: 'Clone' };
       if (path === '/admin/groups') return { id: 'group-2', key: 'support', name: 'Support' };
       return undefined;
     },
     patch: async (path: string, body?: unknown, options?: unknown) => {
       calls.patch.push([path, body, options]);
       if (path === '/admin/users/user-1') return { id: 'user-1', email: 'patched@example.test' };
-      if (path === '/admin/roles/role-1') return { id: 'role-1', key: 'admin', name: 'Admin patched' };
-      if (path === '/admin/groups/group-1') return { id: 'group-1', key: 'ops', name: 'Ops patched' };
+      if (path === '/admin/roles/role-1')
+        return { id: 'role-1', key: 'admin', name: 'Admin patched' };
+      if (path === '/admin/groups/group-1')
+        return { id: 'group-1', key: 'ops', name: 'Ops patched' };
       throw new Error(`Unhandled PATCH ${path}`);
     },
     put: async (path: string, body?: unknown, options?: unknown) => {
@@ -115,8 +120,9 @@ describe('@stynx-nyx/angular-iam API and routes', () => {
     const client = createClient();
     const service = createService(client);
 
-    await expect(firstValueFrom(service.listUsers({ q: 'ada', page: 2, pageSize: 25, tenantId: 'tenant-1' })))
-      .resolves.toMatchObject({ meta: { page: 2, pageSize: 25, total: 1 } });
+    await expect(
+      firstValueFrom(service.listUsers({ q: 'ada', page: 2, pageSize: 25, tenantId: 'tenant-1' })),
+    ).resolves.toMatchObject({ meta: { page: 2, pageSize: 25, total: 1 } });
     expect(service.users()).toEqual([expect.objectContaining({ id: 'user-1' })]);
     expect(client.calls.get[0]).toEqual([
       '/admin/users',
@@ -128,7 +134,9 @@ describe('@stynx-nyx/angular-iam API and routes', () => {
     await firstValueFrom(service.createUser({ email: 'grace@example.test', sendInvite: true }));
     expect(service.users().map((user) => user.id)).toEqual(['user-2', 'user-1']);
     await firstValueFrom(service.patchUser('user-1', { email: 'patched@example.test' }));
-    expect(service.users().find((user) => user.id === 'user-1')?.email).toBe('patched@example.test');
+    expect(service.users().find((user) => user.id === 'user-1')?.email).toBe(
+      'patched@example.test',
+    );
     await firstValueFrom(service.disableUser('user-1'));
     await firstValueFrom(service.reactivateUser('user-1'));
     await firstValueFrom(service.inviteUser('user-1'));
@@ -164,20 +172,24 @@ describe('@stynx-nyx/angular-iam API and routes', () => {
     await firstValueFrom(service.deleteGroup('group-1'));
     expect(service.groups().map((group) => group.id)).toEqual(['group-2']);
 
-    expect(client.calls.post.map(([path]) => path)).toEqual(expect.arrayContaining([
-      '/admin/users/user-1/disable',
-      '/admin/users/user-1/reactivate',
-      '/admin/users/user-1/invite',
-      '/admin/users/user-1/force-logout',
-      '/admin/roles/role-1/clone',
-    ]));
-    expect(client.calls.put).toEqual(expect.arrayContaining([
-      ['/admin/users/user-1/roles', { roleIds: ['role-1'] }, undefined],
-      ['/admin/users/user-1/groups', { groupIds: ['group-1'] }, undefined],
-      ['/admin/roles/role-1/permissions', { permissionKeys: ['iam:users:read'] }, undefined],
-      ['/admin/groups/group-1/roles', { roleIds: ['role-1'] }, undefined],
-      ['/admin/groups/group-1/members', { userIds: ['user-1'] }, undefined],
-    ]));
+    expect(client.calls.post.map(([path]) => path)).toEqual(
+      expect.arrayContaining([
+        '/admin/users/user-1/disable',
+        '/admin/users/user-1/reactivate',
+        '/admin/users/user-1/invite',
+        '/admin/users/user-1/force-logout',
+        '/admin/roles/role-1/clone',
+      ]),
+    );
+    expect(client.calls.put).toEqual(
+      expect.arrayContaining([
+        ['/admin/users/user-1/roles', { roleIds: ['role-1'] }, undefined],
+        ['/admin/users/user-1/groups', { groupIds: ['group-1'] }, undefined],
+        ['/admin/roles/role-1/permissions', { permissionKeys: ['iam:users:read'] }, undefined],
+        ['/admin/groups/group-1/roles', { roleIds: ['role-1'] }, undefined],
+        ['/admin/groups/group-1/members', { userIds: ['user-1'] }, undefined],
+      ]),
+    );
   });
 
   // WAVE-05A targeted kills — patchRole/patchGroup state update + URL templates.
@@ -187,7 +199,9 @@ describe('@stynx-nyx/angular-iam API and routes', () => {
     await firstValueFrom(service.listRoles());
     // Patch URL must be exactly `/admin/roles/${id}` — kills StringLiteral mutation that empties the template.
     await firstValueFrom(service.patchRole('role-1', { name: 'Admin patched' }));
-    expect(client.calls.patch.find(([p]) => p === '/admin/roles/role-1')).toEqual(expect.anything());
+    expect(client.calls.patch.find(([p]) => p === '/admin/roles/role-1')).toEqual(
+      expect.anything(),
+    );
     // The tap() body updates state with the response shape — kills BlockStatement {} mutation.
     expect(service.roles().find((role) => role.id === 'role-1')?.name).toBe('Admin patched');
   });
@@ -197,7 +211,9 @@ describe('@stynx-nyx/angular-iam API and routes', () => {
     const service = createService(client);
     await firstValueFrom(service.listGroups());
     await firstValueFrom(service.patchGroup('group-1', { name: 'Ops patched' }));
-    expect(client.calls.patch.find(([p]) => p === '/admin/groups/group-1')).toEqual(expect.anything());
+    expect(client.calls.patch.find(([p]) => p === '/admin/groups/group-1')).toEqual(
+      expect.anything(),
+    );
     expect(service.groups().find((group) => group.id === 'group-1')?.name).toBe('Ops patched');
   });
 
@@ -257,20 +273,30 @@ describe('@stynx-nyx/angular-iam API and routes', () => {
 
     const allowedInjector = Injector.create({
       providers: [
-        { provide: StynxSessionService, useValue: { hasAllPermissions: () => true } },
+        {
+          provide: StynxSessionService,
+          useValue: createStynxSessionStub({ active: true, permissions: ['*'] }),
+        },
         { provide: Router, useValue: { parseUrl } },
         { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: {} },
       ],
     });
-    expect(runInInjectionContext(allowedInjector, () => guard({} as never, {} as never))).toBe(true);
+    expect(runInInjectionContext(allowedInjector, () => guard({} as never, {} as never))).toBe(
+      true,
+    );
 
     const deniedInjector = Injector.create({
       providers: [
-        { provide: StynxSessionService, useValue: { hasAllPermissions: (permissions: string[]) => permissions.includes('other') } },
+        {
+          provide: StynxSessionService,
+          useValue: createStynxSessionStub({ active: true, permissions: [] }),
+        },
         { provide: Router, useValue: { parseUrl } },
         { provide: STYNX_ANGULAR_AUTH_OPTIONS, useValue: { permissionDeniedRoute: '/forbidden' } },
       ],
     });
-    expect(runInInjectionContext(deniedInjector, () => guard({} as never, {} as never))).toEqual({ redirectedTo: '/forbidden' });
+    expect(runInInjectionContext(deniedInjector, () => guard({} as never, {} as never))).toEqual({
+      redirectedTo: '/forbidden',
+    });
   });
 });

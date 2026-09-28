@@ -4,6 +4,7 @@
  * @packageDocumentation
  */
 export * from './core.module';
+export * from './clock';
 export * from './config';
 export * from './database';
 export * from './error.filter';

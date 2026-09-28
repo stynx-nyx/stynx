@@ -1,5 +1,59 @@
 # @stynx-nyx/angular
 
+## 1.5.0
+
+### Minor Changes
+
+- 138f7f0: Add a scoped NestJS SSE stream service with explicit per-tick request context,
+  cursor replay, bounded connection and payload handling, and observability.
+  Add an Angular SSE client using the normal HTTP interceptors, controlled
+  reconnection and polling, session and tenant lifecycle, and public test
+  doubles. The fixed STYNX package group advances together.
+
+  Consumers supply an RLS-scoped event source and a session-active Signal;
+  configure `StynxEventStreamModule.forRoot({ contextRunner })` with a lazy
+  adapter to the concrete data `Database` on the server and
+  `provideStynxEventStream(...)` in Angular. The real public
+  symbols and full wiring are documented in
+  `packages/backend/README.md#server-sent-events`,
+  `packages-web/angular/README.md#server-sent-events`, and
+  `docs/framework/contracts/sse-1.5.md`.
+
+- 8a800c2: Add raw-body HMAC webhook verification with atomic replay protection, a Nest
+  guard that clears unverified identity, an injectable clock, a tenant business
+  calendar using host-provided timezones and holidays, and opt-in Angular
+  idempotency keys for marked commands. The fixed STYNX package group advances
+  together.
+
+  Consumers must send `sha256=` prefixed signatures, provide a shared replay
+  store, and configure Nest raw-body capture. Business-day deadlines end at the
+  exclusive start of the following local civil date; hosts must supply their own
+  tenant-scoped holiday data.
+
+  Angular consumers register `provideStynxIdempotency()` once with
+  `withInterceptorsFromDi()` and mark each mutating request explicitly. Body
+  hashing requires a plain JSON object or array; existing idempotency headers
+  remain authoritative.
+
+- 5aea8af: Add strong revision `If-Match` parsing, method-scoped 428/412 law errors and
+  successful-response ETags to Nest routes. Add Angular error classification and
+  banner handling, an accessible localized shell, and published auth, i18n and
+  transaction testing helpers. The fixed STYNX package group advances together.
+
+  Apply `@RequireIfMatch()` and `@IfMatchRevision()` to revision-protected methods;
+  the consumer still performs the atomic revision check and throws
+  `PreconditionFailedError` on a stale value. Add `@RevisionETag()` only when the
+  successful body has a safe integer `revision`. For transactional commands,
+  validate that revision before the command commits. Install app-owned i18n
+  catalogs and provide tenant-qualified shell theme storage keys when a shared
+  browser can switch tenants.
+
+### Patch Changes
+
+- Updated dependencies [5aea8af]
+  - @stynx-nyx/sdk@1.5.0
+  - @stynx-nyx/angular-tenancy@1.5.0
+
 ## 1.5.0-rc.3
 
 ### Patch Changes

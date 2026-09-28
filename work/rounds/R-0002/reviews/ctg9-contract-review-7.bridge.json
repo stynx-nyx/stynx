@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "work/rounds/R-0002/prompts/136-ctg9-contract-review-7.md",
+  "prompt_sha256": "be24c71933d1e7060b7ba5c6489791d082b57ad857b00cd9d9f777fa92e7c0d6",
+  "output": "work/rounds/R-0002/reviews/ctg9-contract-review-7.json",
+  "output_sha256": "f39e23706b6ee7a929a7ad6c3c1449c388c25fbd9fdef2e7d0cd3478d2cc29bb",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx",
+  "started_at": "2026-09-28T13:59:51Z",
+  "ended_at": "2026-09-28T14:05:42Z"
+}

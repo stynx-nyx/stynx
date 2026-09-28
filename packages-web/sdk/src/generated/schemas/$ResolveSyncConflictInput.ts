@@ -11,5 +11,8 @@ export const $ResolveSyncConflictInput = {
             type: 'OfflineSyncConflictResolutionStrategy',
             isRequired: true,
         },
+        userRef: {
+            type: 'string',
+        },
     },
 } as const;

@@ -3,6 +3,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { StynxSessionService } from '@stynx-nyx/angular-auth';
+import { createStynxSessionStub } from '@stynx-nyx/angular-auth/testing';
 import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { StynxToastService } from '@stynx-nyx/angular-ui';
 import type { StynxSdkClient } from '@stynx-nyx/sdk';
@@ -14,26 +15,23 @@ import { StynxTrashListComponent } from '../src/trash-list.component';
 import type { StynxTrashAdapter, StynxTrashItem, StynxTrashQuery } from '../src/types';
 import { renderComponent } from './support/test-bed';
 
-interface MockSession {
-  hasAllPermissions: (permissions: string[]) => boolean;
-  snapshot: () => {
-    sid: string | null;
-    claims: Record<string, unknown> | null;
-  };
-}
+type MockSession = ReturnType<typeof createStynxSessionStub>;
 
 interface SdkRequestOptions {
   query?: Record<string, unknown>;
 }
 
-function createSession(canHardDelete = true): MockSession {
-  return {
-    hasAllPermissions: () => canHardDelete,
-    snapshot: () => ({
-      sid: 'session-1',
-      claims: { sub: 'user-1' },
-    }),
-  };
+function createSession(
+  canHardDelete = true,
+  initial: Partial<Parameters<typeof createStynxSessionStub>[0]> = {},
+): MockSession {
+  return createStynxSessionStub({
+    active: true,
+    permissions: canHardDelete ? ['archive:hard-delete:*'] : [],
+    sid: 'session-1',
+    claims: { sub: 'user-1' },
+    ...initial,
+  });
 }
 
 function createComponent(
@@ -87,30 +85,31 @@ describe('@stynx-nyx/angular-trash', () => {
           provide: StynxI18nService,
           useValue: {
             locale: () => 'en',
-            translate: (key: string, params?: Record<string, unknown>) => ({
-              'trash.bulk.clear': 'Clear',
-              'trash.bulk.hardDelete': 'Delete forever',
-              'trash.bulk.restore': 'Restore selected',
-              'trash.bulk.selected': `${params?.['count'] ?? 0} selected`,
-              'trash.confirmHardDelete.confirm': 'Delete forever',
-              'trash.confirmHardDelete.message': 'This cannot be undone.',
-              'trash.confirmHardDelete.title': 'Delete archived item?',
-              'trash.empty.description': 'Deleted items will appear here.',
-              'trash.empty.title': 'Trash is empty',
-              'trash.filters.ariaLabel': 'Filters',
-              'trash.filters.byActor': 'By actor',
-              'trash.filters.byMe': 'By me',
-              'trash.filters.last7Days': 'Last 7 days',
-              'trash.item.deletedBy': `Deleted by ${params?.['actor'] ?? ''}`,
-              'trash.item.hardDelete': 'Delete forever',
-              'trash.item.restore': 'Restore',
-              'trash.item.select': 'Select',
-              'trash.tabs.ariaLabel': 'Trash kinds',
-              'ui.confirmDialog.cancel': 'Cancel',
-              'ui.pagination.next': 'Next',
-              'ui.pagination.pageStatus': `Page ${params?.['page'] ?? 1} of ${params?.['count'] ?? 1}`,
-              'ui.pagination.previous': 'Previous',
-            })[key] ?? key,
+            translate: (key: string, params?: Record<string, unknown>) =>
+              ({
+                'trash.bulk.clear': 'Clear',
+                'trash.bulk.hardDelete': 'Delete forever',
+                'trash.bulk.restore': 'Restore selected',
+                'trash.bulk.selected': `${params?.['count'] ?? 0} selected`,
+                'trash.confirmHardDelete.confirm': 'Delete forever',
+                'trash.confirmHardDelete.message': 'This cannot be undone.',
+                'trash.confirmHardDelete.title': 'Delete archived item?',
+                'trash.empty.description': 'Deleted items will appear here.',
+                'trash.empty.title': 'Trash is empty',
+                'trash.filters.ariaLabel': 'Filters',
+                'trash.filters.byActor': 'By actor',
+                'trash.filters.byMe': 'By me',
+                'trash.filters.last7Days': 'Last 7 days',
+                'trash.item.deletedBy': `Deleted by ${params?.['actor'] ?? ''}`,
+                'trash.item.hardDelete': 'Delete forever',
+                'trash.item.restore': 'Restore',
+                'trash.item.select': 'Select',
+                'trash.tabs.ariaLabel': 'Trash kinds',
+                'ui.confirmDialog.cancel': 'Cancel',
+                'ui.pagination.next': 'Next',
+                'ui.pagination.pageStatus': `Page ${params?.['page'] ?? 1} of ${params?.['count'] ?? 1}`,
+                'ui.pagination.previous': 'Previous',
+              })[key] ?? key,
           },
         },
       ],
@@ -119,7 +118,9 @@ describe('@stynx-nyx/angular-trash', () => {
     await fixture.componentInstance.load();
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('[data-testid="trash-item-record-trash-1"]')?.textContent).toContain('Archived record');
+    expect(host.querySelector('[data-testid="trash-item-record-trash-1"]')?.textContent).toContain(
+      'Archived record',
+    );
 
     host.querySelector<HTMLInputElement>('[data-testid="trash-select-record-trash-1"]')?.click();
     fixture.detectChanges();
@@ -147,12 +148,9 @@ describe('@stynx-nyx/angular-trash', () => {
       hardDelete: vi.fn(async () => undefined),
     };
 
-    const component = createComponent(
-      createSession(),
-      {
-        push: () => undefined,
-      },
-    );
+    const component = createComponent(createSession(), {
+      push: () => undefined,
+    });
     component.resource = 'records';
     component.adapter = adapter;
 
@@ -190,12 +188,9 @@ describe('@stynx-nyx/angular-trash', () => {
       restoreWithCascade: vi.fn(async () => undefined),
       hardDelete: vi.fn(async () => undefined),
     };
-    const component = createComponent(
-      createSession(),
-      {
-        push: (message: string) => toastMessages.push(message),
-      },
-    );
+    const component = createComponent(createSession(), {
+      push: (message: string) => toastMessages.push(message),
+    });
     component.resource = 'records';
     component.adapter = adapter;
 
@@ -215,10 +210,7 @@ describe('@stynx-nyx/angular-trash', () => {
     await component.confirmHardDelete();
     expect(adapter.hardDelete).toHaveBeenCalledWith('records', 'trash-1');
 
-    const noDelete = createComponent(
-      createSession(false),
-      { push: () => undefined },
-    );
+    const noDelete = createComponent(createSession(false), { push: () => undefined });
     noDelete.resource = 'records';
     noDelete.adapter = {
       list: vi.fn(async () => ({ items: [], total: 0 })),
@@ -251,7 +243,8 @@ describe('@stynx-nyx/angular-trash', () => {
             {
               id: `${kind}-1`,
               title: `${kind} item`,
-              deleted_at: kind === 'record' ? '2026-05-18T00:00:00.000Z' : '2026-05-17T00:00:00.000Z',
+              deleted_at:
+                kind === 'record' ? '2026-05-18T00:00:00.000Z' : '2026-05-17T00:00:00.000Z',
               deleted_by: 'user-1',
               can_hard_delete: true,
               purge_at: '2026-05-25T00:00:00.000Z',
@@ -305,22 +298,37 @@ describe('@stynx-nyx/angular-trash', () => {
     await adapter.bulkHardDelete?.('document', ['doc-3']);
 
     expect(client.post).toHaveBeenCalledWith('/trash/restore', { kind: 'document', id: 'doc-1' });
-    expect(client.post).toHaveBeenCalledWith('/trash/restore', { kind: 'document', id: 'doc-2', cascade: true });
-    expect(client.post).toHaveBeenCalledWith('/trash/hard-delete', { kind: 'document', id: 'doc-3' });
-    expect(client.post).toHaveBeenCalledWith('/trash/bulk-restore', { kind: 'document', ids: ['doc-1', 'doc-2'] });
-    expect(client.post).toHaveBeenCalledWith('/trash/bulk-hard-delete', { kind: 'document', ids: ['doc-3'] });
+    expect(client.post).toHaveBeenCalledWith('/trash/restore', {
+      kind: 'document',
+      id: 'doc-2',
+      cascade: true,
+    });
+    expect(client.post).toHaveBeenCalledWith('/trash/hard-delete', {
+      kind: 'document',
+      id: 'doc-3',
+    });
+    expect(client.post).toHaveBeenCalledWith('/trash/bulk-restore', {
+      kind: 'document',
+      ids: ['doc-1', 'doc-2'],
+    });
+    expect(client.post).toHaveBeenCalledWith('/trash/bulk-hard-delete', {
+      kind: 'document',
+      ids: ['doc-3'],
+    });
   });
 
   it('normalizes a single-kind SDK response without relying on optional wire fields', async () => {
     const responses: unknown[] = [
       {
-        items: [{
-          trashId: 'trash-fallback',
-          name: 'Fallback name',
-          deletedAt: '2026-05-18T00:00:00.000Z',
-          canHardDelete: false,
-          retentionUntil: '2026-05-25T00:00:00.000Z',
-        }],
+        items: [
+          {
+            trashId: 'trash-fallback',
+            name: 'Fallback name',
+            deletedAt: '2026-05-18T00:00:00.000Z',
+            canHardDelete: false,
+            retentionUntil: '2026-05-25T00:00:00.000Z',
+          },
+        ],
       },
       {},
       { items: [42, { id: 'id-only' }] },
@@ -332,14 +340,19 @@ describe('@stynx-nyx/angular-trash', () => {
     const adapter = Injector.create({
       providers: [
         { provide: STYNX_TRASH_CLIENT, useValue: client },
-        { provide: STYNX_TRASH_OPTIONS, useValue: { kinds: [{ kind: 'record', label: 'Records' }] } },
+        {
+          provide: STYNX_TRASH_OPTIONS,
+          useValue: { kinds: [{ kind: 'record', label: 'Records' }] },
+        },
         SdkTrashAdapter,
       ],
     }).get(SdkTrashAdapter);
 
-    await expect(adapter.list('document', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }))
-      .resolves.toEqual({
-        items: [{
+    await expect(
+      adapter.list('document', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }),
+    ).resolves.toEqual({
+      items: [
+        {
           id: 'trash-fallback',
           kind: 'document',
           label: 'Fallback name',
@@ -347,19 +360,29 @@ describe('@stynx-nyx/angular-trash', () => {
           deletedBy: null,
           autoPurgeAt: '2026-05-25T00:00:00.000Z',
           canHardDelete: false,
-        }],
-        total: 1,
-      });
-    await expect(adapter.list('*', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }))
-      .resolves.toEqual({ items: [], total: 0 });
-    await expect(adapter.list('document', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }))
-      .resolves.toEqual({
-        items: [
-          { id: '', kind: 'document', label: '', deletedAt: '', deletedBy: null, autoPurgeAt: null },
-          { id: 'id-only', kind: 'document', label: 'id-only', deletedAt: '', deletedBy: null, autoPurgeAt: null },
-        ],
-        total: 2,
-      });
+        },
+      ],
+      total: 1,
+    });
+    await expect(
+      adapter.list('*', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }),
+    ).resolves.toEqual({ items: [], total: 0 });
+    await expect(
+      adapter.list('document', { pageIndex: 0, pageSize: 10, sort: 'deleted_at_desc' }),
+    ).resolves.toEqual({
+      items: [
+        { id: '', kind: 'document', label: '', deletedAt: '', deletedBy: null, autoPurgeAt: null },
+        {
+          id: 'id-only',
+          kind: 'document',
+          label: 'id-only',
+          deletedAt: '',
+          deletedBy: null,
+          autoPurgeAt: null,
+        },
+      ],
+      total: 2,
+    });
   });
 
   it('supports provider-backed components, tabs, filters, bulk actions, and retention countdowns', async () => {
@@ -406,8 +429,13 @@ describe('@stynx-nyx/angular-trash', () => {
     await component.load();
     expect(component.retentionCountdown(firstItem)).toBe('Purges in 3 days');
     expect(component.retentionCountdown(secondItem)).toBe('Purge overdue yesterday');
-    expect(component.retentionCountdown({ id: 'trash-3', label: 'No purge', deletedAt: '2026-05-18T00:00:00.000Z' }))
-      .toBe('No purge scheduled');
+    expect(
+      component.retentionCountdown({
+        id: 'trash-3',
+        label: 'No purge',
+        deletedAt: '2026-05-18T00:00:00.000Z',
+      }),
+    ).toBe('No purge scheduled');
 
     component.toggleSelected('trash-1');
     component.toggleSelected('trash-2');
@@ -453,19 +481,25 @@ describe('@stynx-nyx/angular-trash', () => {
     const adapter: StynxTrashAdapter = {
       list: vi.fn(async () => ({
         items: [
-          { id: 'trash-1', label: 'One', deletedAt: '2026-05-18T00:00:00.000Z', canHardDelete: true },
-          { id: 'trash-2', label: 'Two', deletedAt: '2026-05-17T00:00:00.000Z', canHardDelete: true },
+          {
+            id: 'trash-1',
+            label: 'One',
+            deletedAt: '2026-05-18T00:00:00.000Z',
+            canHardDelete: true,
+          },
+          {
+            id: 'trash-2',
+            label: 'Two',
+            deletedAt: '2026-05-17T00:00:00.000Z',
+            canHardDelete: true,
+          },
         ],
         total: 2,
       })),
       restore: vi.fn(async () => undefined),
       hardDelete: vi.fn(async () => undefined),
     };
-    const component = createComponent(
-      createSession(),
-      { push: vi.fn() },
-      adapter,
-    );
+    const component = createComponent(createSession(), { push: vi.fn() }, adapter);
 
     await component.load();
     component.toggleSelected('trash-1');
@@ -503,11 +537,7 @@ describe('@stynx-nyx/angular-trash', () => {
       })),
       restore: vi.fn(async () => undefined),
     };
-    const component = createComponent(
-      createSession(),
-      { push: vi.fn() },
-      adapter,
-    );
+    const component = createComponent(createSession(), { push: vi.fn() }, adapter);
     component.errorMessage.set('previous failure');
     component.toggleSelected('kept');
     component.toggleSelected('stale');
@@ -540,30 +570,25 @@ describe('@stynx-nyx/angular-trash', () => {
       total: 1,
     }));
     const hardDelete = vi.fn(async () => undefined);
-    const component = createComponent(
-      {
-        hasAllPermissions: (permissions: string[]) => permissions.includes('archive:hard-delete:*'),
-        snapshot: () => ({ sid: 'session-1', claims: null }),
-      },
-      toast,
-      {
-        list,
-        restore: vi.fn(async () => undefined),
-        hardDelete,
-      },
-    );
+    const component = createComponent(createSession(), toast, {
+      list,
+      restore: vi.fn(async () => undefined),
+      hardDelete,
+    });
     component.kinds = [{ kind: 'document', label: 'Documents' }];
 
     expect(component.resource).toBe('record');
     expect(component.activeKind()).toBe('record');
     expect(component.hardDeletePermission).toBe('archive:hard-delete:*');
     expect(component.errorMessage()).toBe('');
-    expect(component.mayHardDelete({
-      id: 'trash-1',
-      label: 'One',
-      deletedAt: '2026-05-18T00:00:00.000Z',
-      canHardDelete: true,
-    })).toBe(true);
+    expect(
+      component.mayHardDelete({
+        id: 'trash-1',
+        label: 'One',
+        deletedAt: '2026-05-18T00:00:00.000Z',
+        canHardDelete: true,
+      }),
+    ).toBe(true);
 
     await component.load();
     expect(component.rows()).toEqual([
@@ -596,10 +621,7 @@ describe('@stynx-nyx/angular-trash', () => {
       restore: vi.fn(async () => undefined),
     };
     const component = createComponent(
-      {
-        hasAllPermissions: () => true,
-        snapshot: () => ({ sid: 'session-1', claims: null }),
-      },
+      createSession(true, { claims: null }),
       { push: vi.fn() },
       adapter,
     );
@@ -631,10 +653,7 @@ describe('@stynx-nyx/angular-trash', () => {
     });
 
     const anonymous = createComponent(
-      {
-        hasAllPermissions: () => false,
-        snapshot: () => ({ sid: null, claims: { sub: 42 } }),
-      },
+      createSession(false, { sid: null, claims: { sub: 42 } }),
       { push: vi.fn() },
       adapter,
     );
@@ -647,19 +666,22 @@ describe('@stynx-nyx/angular-trash', () => {
 
     const missingAdapter = createComponent(createSession(), { push: vi.fn() });
     expect(() => missingAdapter.activeKind()).not.toThrow();
-    await expect(missingAdapter.load()).rejects.toThrow('StynxTrashListComponent requires an adapter input or provideStynxTrash(...).');
+    await expect(missingAdapter.load()).rejects.toThrow(
+      'StynxTrashListComponent requires an adapter input or provideStynxTrash(...).',
+    );
   });
 
   it('checks hard-delete permission names, invalid purge dates, and today countdowns', () => {
     const requestedPermissions: string[][] = [];
+    const session = createSession(true, { permissions: ['trash:purge'] });
+    const checkPermissions = session.hasAllPermissions;
+    const hasAllPermissions = vi.fn((permissions: string[]) => {
+      requestedPermissions.push(permissions);
+      return checkPermissions(permissions);
+    });
+    session.hasAllPermissions = hasAllPermissions;
     const component = createComponent(
-      {
-        hasAllPermissions: (permissions: string[]) => {
-          requestedPermissions.push(permissions);
-          return permissions.includes('trash:purge');
-        },
-        snapshot: () => ({ sid: 'session-1', claims: null }),
-      },
+      session,
       { push: vi.fn() },
       {
         list: vi.fn(async () => ({ items: [], total: 0 })),
@@ -669,25 +691,31 @@ describe('@stynx-nyx/angular-trash', () => {
     component.hardDeletePermission = 'trash:purge';
     vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-05-19T00:00:00.000Z'));
 
-    expect(component.mayHardDelete({
-      id: 'trash-1',
-      label: 'One',
-      deletedAt: '2026-05-18T00:00:00.000Z',
-      canHardDelete: true,
-    })).toBe(true);
+    expect(
+      component.mayHardDelete({
+        id: 'trash-1',
+        label: 'One',
+        deletedAt: '2026-05-18T00:00:00.000Z',
+        canHardDelete: true,
+      }),
+    ).toBe(true);
     expect(requestedPermissions).toEqual([['trash:purge']]);
-    expect(component.retentionCountdown({
-      id: 'invalid',
-      label: 'Invalid',
-      deletedAt: '2026-05-18T00:00:00.000Z',
-      autoPurgeAt: 'not-a-date',
-    })).toBe('No purge scheduled');
-    expect(component.retentionCountdown({
-      id: 'today',
-      label: 'Today',
-      deletedAt: '2026-05-18T00:00:00.000Z',
-      autoPurgeAt: '2026-05-19T00:00:00.000Z',
-    })).toBe('Purges today');
+    expect(
+      component.retentionCountdown({
+        id: 'invalid',
+        label: 'Invalid',
+        deletedAt: '2026-05-18T00:00:00.000Z',
+        autoPurgeAt: 'not-a-date',
+      }),
+    ).toBe('No purge scheduled');
+    expect(
+      component.retentionCountdown({
+        id: 'today',
+        label: 'Today',
+        deletedAt: '2026-05-18T00:00:00.000Z',
+        autoPurgeAt: '2026-05-19T00:00:00.000Z',
+      }),
+    ).toBe('Purges today');
   });
 
   it('does not cascade unrelated restore errors and preserves exact toast messages', async () => {

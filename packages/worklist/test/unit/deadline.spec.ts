@@ -1,6 +1,27 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { Clock } from '@stynx-nyx/core';
 import { resolveWorklistDeadline } from '../../src/deadline';
-import type { WorklistBusinessCalendar } from '../../src/ports';
+import { StynxWorklistModule } from '../../src/worklist.module';
+import { Global, Module } from '@nestjs/common';
+import { Database } from '@stynx-nyx/data';
+import { RequestContext } from '@stynx-nyx/core';
+import {
+  TenantBusinessCalendar,
+  WORKLIST_CLOCK,
+  WORKLIST_BUSINESS_CALENDAR,
+  type WorklistBusinessCalendar,
+} from '../../src';
+import { Test } from '@nestjs/testing';
+
+@Global()
+@Module({
+  providers: [
+    { provide: Database, useValue: {} },
+    { provide: RequestContext, useValue: {} },
+  ],
+  exports: [Database, RequestContext],
+})
+class WorklistTestDependenciesModule {}
 
 const tenantId = '01978f4a-32bf-7c27-a131-fd73a9e101a1';
 const now = new Date('2026-08-24T12:00:00.000Z');
@@ -226,5 +247,52 @@ describe('resolveWorklistDeadline', () => {
       startAt: now,
       businessDays: 2,
     });
+  });
+
+  it('resolves zero and positive days from the supplied instant in tenant zones behind and ahead of UTC', async () => {
+    const calendar = new TenantBusinessCalendar({
+      timezoneForTenant: (id: string) => id === tenantId ? 'America/Los_Angeles' : 'Asia/Tokyo',
+      holidaysFor: () => new Set<string>(),
+    });
+    const startAt = new Date('2024-05-06T00:30:00.000Z');
+
+    await expect(resolveWorklistDeadline({
+      tenantId,
+      now: new Date('2024-01-01T00:00:00Z'),
+      deadline: { kind: 'business_days', businessDays: 0, startAt },
+      calendar,
+    })).resolves.toMatchObject({ dueAt: startAt, businessDays: 0 });
+    await expect(resolveWorklistDeadline({
+      tenantId,
+      now: new Date('2024-01-01T00:00:00Z'),
+      deadline: { kind: 'business_days', businessDays: 1, startAt },
+      calendar,
+    })).resolves.toMatchObject({ dueAt: new Date('2024-05-07T07:00:00.000Z'), businessDays: 1 });
+    await expect(resolveWorklistDeadline({
+      tenantId: `${tenantId.slice(0, -1)}2`,
+      now: new Date('2024-01-01T00:00:00Z'),
+      deadline: { kind: 'business_days', businessDays: 1, startAt },
+      calendar,
+    })).resolves.toMatchObject({ dueAt: new Date('2024-05-07T15:00:00.000Z'), businessDays: 1 });
+  });
+
+  it('registers the identical calendar and clock objects in StynxWorklistModule.forRoot', async () => {
+    const clock: Clock = { now: vi.fn(() => new Date('2024-05-06T00:30:00.000Z')) };
+    const calendar = new TenantBusinessCalendar({ timezoneForTenant: () => 'UTC', holidaysFor: () => new Set() });
+    const module = await Test.createTestingModule({
+      imports: [WorklistTestDependenciesModule, StynxWorklistModule.forRoot({ calendar, clock })],
+    }).compile();
+
+    expect(module.get(WORKLIST_CLOCK)).toBe(clock);
+    expect(module.get(WORKLIST_BUSINESS_CALENDAR)).toBe(calendar);
+    const result = await resolveWorklistDeadline({
+      tenantId,
+      now: module.get(WORKLIST_CLOCK).now(),
+      queueDefault: { kind: 'business_days', businessDays: 1 },
+      calendar: module.get(WORKLIST_BUSINESS_CALENDAR),
+    });
+    expect(clock.now).toHaveBeenCalledOnce();
+    expect(result?.dueAt).toEqual(new Date('2024-05-08T00:00:00.000Z'));
+    await module.close();
   });
 });

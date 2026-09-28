@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/backend",
-  "version": "1.5.0-rc.3",
+  "version": "1.5.0",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "NestJS shared platform modules for stynx",
@@ -30,7 +30,10 @@
   },
   "dependencies": {
     "@stynx-nyx/contracts": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
     "@stynx-nyx/idempotency": "workspace:*",
+    "@stynx-nyx/integration-adapter": "workspace:*",
     "@stynx-nyx/ratelimit": "workspace:*"
   },
   "peerDependencies": {

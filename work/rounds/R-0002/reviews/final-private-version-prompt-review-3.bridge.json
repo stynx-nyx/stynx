@@ -1,0 +1,26 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "issue": "`spawnSync` returns `status: null` with `signal` set when the process is killed by a signal, and sets `result.error` with `status: null` on ENOENT (for example, `pnpm` missing from PATH). Prompts 189 and 190 say to propagate the 'original nonzero status' but say nothing about `null`/`error`. An Engineer who writes `if (result.status > 0) process.exit(result.status)` would treat a SIGTERM or ENOENT as success and go on to validation, `applyFixedGroupVersion` and SBOM using the restored manifests.",
+      "required_change": "In 190 (and in the 189 sensor), require that any result with `error` or with `status !== 0` (including `null`) counts as failure, restores in `finally`, and exits with `status ?? 1`. Add a synthetic case with a null status or a spawn error."
+    },
+    {
+      "severity": "nonblocking",
+      "issue": "If the restoration itself throws inside `finally` (EACCES, disk full), that exception replaces the Changesets status and error message. The operator would see only the restore failure and not know whether Changesets had already failed.",
+      "required_change": "Require the helper to try restoring every captured file and collect the errors. The wrapper then reports both the original Changesets status and the restore failures, and exits nonzero."
+    },
+    {
+      "severity": "nonblocking",
+      "issue": "Concrete check on the current tree: none of the 44 public packages and not the root depend on any private package by name (`image-size` goes only through the root `link:tools/image-size-safe` override, and all internal ranges in the private packages are `workspace:*`). So restoring only private outputs cannot leave a public range or an 'Updated dependencies' line pointing at a reverted private version. The prompts do not record this assumption, so it could silently stop holding later.",
+      "required_change": "Optional: have the 189 sensor, or a check in the helper, fail closed if any public manifest refers to a private package with a range other than `workspace:`/`link:`."
+    },
+    {
+      "severity": "nonblocking",
+      "issue": "`syncReleaseVersion` writes `tools/create-stynx-app/template/package.json`, which sits inside the private package `tools/create-stynx-app`. Because it runs after the restore, it will show up in the marker diff. The contract lists it as an allowed support file (line 103), but the post-versioning check in lines 76-79 ('no private package.json in the diff') could be applied too broadly and give a false positive.",
+      "required_change": "In the contract or in 190, say that the private-diff check covers only the root `package.json`/`CHANGELOG.md` of each private workspace package, and that the create-stynx-app template stays allowed."
+    }
+  ],
+  "summary": "Across 189, 190 and the contract, the triad does what it needs to. Capture uses the real `pnpm-workspace.yaml` roots, including `domain/*/api` and `docs/site`, excludes `node_modules`/`dist`, and includes the private `test/db` package that has no `version`. Restoration is byte-exact and deletes only the private CHANGELOGs this run creates, which covers the 8 created in the recorded failure and keeps `tools/image-size-safe` at `2.0.3-stynx.1`. It runs in `finally` via `spawnSync` without `run()`/`process.exit`, before validation, fixed-group correction, sync and SBOM. The restore list excludes the root and the 44 public packages. Concrete checks found no public dependency on a private package and all private internal ranges are `workspace:*`, so the 44 public packages are not affected. The `reference/*` hash freezes and the Architect trace rebind before a second `pre exit` are handled, which makes the marker reproducible. What remains is nonblocking: treat null status or a spawn error as failure, don't let a restore error hide the Changesets status, and scope the private-diff check so the create-stynx-app template stays allowed."
+}

@@ -89,6 +89,22 @@ require `WorklistBusinessCalendar`; there is no weekend-only fallback because
 that would fabricate statutory prazo semantics. The service persists both the
 resolved `dueAt` and the deadline kind/count/calendar key.
 
+STYNX 1.5 exports `TenantBusinessCalendar`, an implementation that delegates
+tenant timezone and yearly civil-date holidays to the host through
+`TenantBusinessCalendarSource`. The host owns every holiday list and its
+tenant-scoped storage. `addBusinessDays` excludes the starting local date,
+counts weekdays outside that list, and returns the first valid instant of the
+day **after** the last counted business day. It counts civil dates across DST
+changes; zero business days returns a copy of `startAt`. Invalid inputs and an
+exhausted calendar throw the existing `WorklistInputError`, with
+`context.reason = 'calendar_exhausted'` for exhaustion. Missing timezone or
+holiday data never falls back to UTC or a weekend-only calendar.
+
+`@stynx-nyx/core` also exports `Clock`, `SystemClock`, `STYNX_CLOCK`, and
+`provideStynxClock(clock?)`. A host can provide the same `Clock` object to
+`STYNX_CLOCK` and the existing `WORKLIST_CLOCK`; the calendar itself accepts
+`startAt` explicitly and does not read a clock.
+
 ### `WorklistSlaService`
 
 | Operation                        | Contract                                                                                            |

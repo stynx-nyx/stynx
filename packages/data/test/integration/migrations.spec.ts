@@ -1,5 +1,5 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Client } from 'pg';
 import { StynxDataModule } from '../../src/data.module';
@@ -38,6 +38,113 @@ async function queryExistingNames(client: Client, sql: string): Promise<string[]
 }
 
 describe('Stynx platform migrations', () => {
+  it('upgrades enabled actorless schedules while preserving pending historical jobs', async () => {
+    // UPS-JOB-01: a migrated template already has 0019 and cannot model legacy rows.
+    const testDatabase = await createPostgresTestDatabase('stynx_jobs_legacy', { useTemplate: false });
+    const client = await testDatabase.connectAsAdmin();
+    let moduleRef: TestingModule | undefined;
+    const tenantId = '11111111-1111-4111-8111-111111111111';
+    const scheduleId = '22222222-2222-4222-8222-222222222222';
+    const jobId = '33333333-3333-4333-8333-333333333333';
+    try {
+      await client.query(`create schema if not exists core;
+        create table if not exists core.schema_migrations (
+          id text primary key, checksum text, applied_at timestamptz not null default clock_timestamp()
+        )`);
+      const migrationDir = resolve(__dirname, '../../migrations/platform');
+      const filenames = (await readdir(migrationDir)).filter((file) => file.endsWith('.sql')).sort();
+      for (const filename of filenames.filter((file) => file < '0019_jobs_actor_timezone.sql')) {
+        const sql = await readFile(resolve(migrationDir, filename), 'utf8');
+        await client.query('begin');
+        try {
+          await client.query(sql);
+          await client.query(`insert into core.schema_migrations(id,checksum,applied_at)
+            values ($1,md5($2),clock_timestamp())`, [filename, sql]);
+          if (filename === '0002_extensions.sql') {
+            await client.query('alter schema core owner to stynx_owner');
+            await client.query('alter table core.schema_migrations owner to stynx_owner');
+            await client.query('set role stynx_owner');
+          }
+          await client.query('commit');
+        } catch (error) {
+          await client.query('rollback');
+          throw error;
+        }
+      }
+      await client.query(`insert into tenancy.tenants(id,slug,name)
+        values ($1,'legacy-jobs-tenant','Legacy Jobs Tenant')`, [tenantId]);
+      await client.query(`insert into jobs.schedules(id,tenant_id,name,job_type,kind,interval_seconds,next_run_at,is_enabled)
+        values ($1,$2,'legacy-actorless','jobs.legacy','interval',60,clock_timestamp(),true)`,
+      [scheduleId, tenantId]);
+      await client.query(`insert into jobs.jobs(id,tenant_id,schedule_id,job_type,run_at,actor_id)
+        values ($1,$2,$3,'jobs.legacy',clock_timestamp(),null)`, [jobId, tenantId, scheduleId]);
+      await client.query('reset role');
+
+      moduleRef = await createMigratedModule(testDatabase.connectionString('stynx-legacy-owner'));
+      const legacy = await client.query<{
+        actor_id: string | null; timezone: string; is_enabled: boolean;
+      }>(`select actor_id::text, timezone, is_enabled from jobs.schedules where id=$1`, [scheduleId]);
+      expect(legacy.rows).toEqual([{ actor_id: null, timezone: 'UTC', is_enabled: false }]);
+      const pending = await client.query<{ status: string; actor_id: string | null }>(`
+        select status::text, actor_id::text from jobs.jobs where id=$1`, [jobId]);
+      expect(pending.rows).toEqual([{ status: 'pending', actor_id: null }]);
+      const constraint = await client.query<{ convalidated: boolean; definition: string }>(`
+        select convalidated, pg_get_constraintdef(oid) as definition
+        from pg_constraint where conrelid='jobs.schedules'::regclass
+          and contype='c' and pg_get_constraintdef(oid) like '%actor_id%'
+      `);
+      expect(constraint.rows).toHaveLength(1);
+      expect(constraint.rows[0]?.convalidated).toBe(true);
+      expect(constraint.rows[0]?.definition).toContain('actor_id IS NOT NULL');
+      const reasonColumn = await client.query<{ data_type: string; is_nullable: string }>(`
+        select data_type, is_nullable from information_schema.columns
+        where table_schema='jobs' and table_name='schedules' and column_name='disabled_reason'
+      `);
+      expect(reasonColumn.rows).toEqual([{ data_type: 'text', is_nullable: 'YES' }]);
+      const reasonConstraint = await client.query<{ convalidated: boolean; definition: string }>(`
+        select convalidated, pg_get_constraintdef(oid) as definition from pg_constraint
+        where conrelid='jobs.schedules'::regclass and conname='schedules_disabled_reason_known'
+      `);
+      expect(reasonConstraint.rows).toEqual([{
+        convalidated: true,
+        definition: "CHECK (((disabled_reason IS NULL) OR (disabled_reason = 'invalid_schedule'::text)))",
+      }]);
+      await expect(client.query(`update jobs.schedules set disabled_reason='other' where id=$1`, [scheduleId]))
+        .rejects.toMatchObject({ code: '23514' });
+      const actorFk = await client.query<{ confdeltype: string }>(`
+        select confdeltype from pg_constraint where conrelid='jobs.schedules'::regclass
+          and contype='f' and pg_get_constraintdef(oid) like '%actor_id%'
+      `);
+      expect(actorFk.rows).toEqual([{ confdeltype: 'r' }]);
+      const grantsAndRls = await client.query<{
+        table_name: string; row_security: boolean; force_rls: boolean;
+        app_read: boolean; app_write: boolean; reader_read: boolean; reader_write: boolean;
+      }>(`
+        select c.relname as table_name, c.relrowsecurity as row_security,
+               c.relforcerowsecurity as force_rls,
+               has_table_privilege('stynx_app',c.oid,'SELECT') as app_read,
+               has_table_privilege('stynx_app',c.oid,'INSERT') as app_write,
+               has_table_privilege('stynx_reader',c.oid,'SELECT') as reader_read,
+               has_table_privilege('stynx_reader',c.oid,'INSERT') as reader_write
+        from pg_class c join pg_namespace n on n.oid=c.relnamespace
+        where n.nspname='jobs' and c.relname in ('jobs','schedules')
+        order by c.relname
+      `);
+      expect(grantsAndRls.rows).toEqual([
+        { table_name: 'jobs', row_security: true, force_rls: true,
+          app_read: true, app_write: true, reader_read: true, reader_write: false },
+        { table_name: 'schedules', row_security: true, force_rls: true,
+          app_read: true, app_write: true, reader_read: true, reader_write: false },
+      ]);
+      await expect(client.query(`update jobs.schedules set is_enabled=true where id=$1`, [scheduleId]))
+        .rejects.toMatchObject({ code: '23514' });
+    } finally {
+      await moduleRef?.close();
+      await client.end();
+      await testDatabase.dispose();
+    }
+  });
+
   it('boots the platform schema, enforces RLS, and reruns idempotently', async () => {
     const expectedMigrationIds = await expectedPlatformMigrationIds();
     const testDatabase = await createPostgresTestDatabase('stynx_data_migrations', {

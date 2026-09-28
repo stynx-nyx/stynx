@@ -1,0 +1,24 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/152-ctg9-obx-data-engineer.md:8",
+      "issue": "O prompt 152 inclui `packages/backend/src/**` 'se necessário para o adapter SSE'. O sensor `packages/backend/test/integration/ctg9-outbox-sse.integration.spec.ts:4,118` importa `OutboxEventStreamSource` de `@stynx-nyx/outbox`. `packages/outbox/package.json` não depende de `@stynx-nyx/backend`, e o manifesto de backend também não declara `@stynx-nyx/outbox`. Se o adapter importar tipos de backend, cria uma aresta de manifesto que só o maestro pode criar.",
+      "required_change": "Acrescentar ao 152 uma linha dizendo que `OutboxEventStreamSource` fica em `packages/outbox/src` e satisfaz `EventStreamSource` apenas estruturalmente, sem importar `@stynx-nyx/backend` e sem nova dependência de manifesto. Qualquer necessidade de aresta vai ao maestro."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-obx-contract.md:57",
+      "issue": "O contrato diz que 'O Engineer atualiza DDL/seed/test/db e baselines', e a linha 45 atribui ao Engineer o guia de migração e o changeset sobre `TxOptions.isolation`. O prompt 152:10-12, porém, dá ao maestro DDL/seed canônicas, `test/db/runtime`, changesets e baselines. A precedência operacional está clara no prompt, mas o texto do guia/changeset sobre a mudança de comportamento em RR/SERIALIZABLE pode se perder.",
+      "required_change": "No 152, exigir que o relatório do Engineer traga o texto proposto para o guia de migração e o changeset: isolamento honrado e erro tipado `AuditChainIsolationError` em writes auditados sob RR/SERIALIZABLE. Também deve listar os ajustes de DDL/seed canônico que o maestro precisa aplicar."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/151-ctg9-sig-engineer.md:12",
+      "issue": "O 151 resume UPS-SIG-01…04, mas não repete a exigência de SIG-01 sobre a matriz de perfis ADR-0018 e a paridade negativa clínica/junta, com o mapeamento de erros tipados (`ctg9-sig-contract.md:10,21`). A exigência continua coberta pela leitura obrigatória do contrato e pelos sensores, que usam `SignatureLevelNotMetError`, `SignatureEvidenceMismatchError`, `SignatureProviderResponseError` e outros.",
+      "required_change": "Opcional: acrescentar um item citando a matriz consumer-policy (PAdES-B-LT+TSA, OCSP/CRL, QUALIFIED) e o mapeamento dos negativos DETRAN clínico/junta para os erros tipados de `ctg9-sig-contract.md:21`, sem importar código DETRAN."
+    }
+  ],
+  "summary": "151 e 152 cobrem UPS-SIG-01…04 e UPS-OBX-01…02 com write sets disjuntos: `packages/signature/src/**` contra data/outbox/audit/backend src e a migration `0021*`. Não há lock comum. `pkijs`, `asn1js` e `@peculiar/x509` já estão declarados e instalados em signature, e `@stynx-nyx/health` já é dependência. O migration-runner lê o diretório `platform/` sem registro externo, então a 0021 do Engineer é aplicada pelos sensores com `migrations.enabled`. Os aliases vitest de outbox/backend apontam para `src` dos pacotes irmãos. Os sensores do HEAD usam as portas pedidas pelos prompts: `txIndependent`/`strictItemMode`/`ReadOnlyViolationError`, `AuditChainIsolationError`, `appendManyInTransaction`, `dispatchEventsDue`, `ackEvent`, `recordUnboundAck`, `cutoverLegacyMessages`, `OutboxOwnershipContentionError`, `OutboxEventStreamSource`, `verifierKind` stynx-cms/consumer-owned, `consumerOwnedVerifier`, `minimumSignatureLevel`, `boundManifestSha256`/`expectedManifestSha256`, e a ausência de aresta health→signature. Os dois prompts preservam tenancy/RLS FORCE, CTG5 e o legado sem mínimo, o SSE com primário, `now()` independente e `lockTimeoutMs`, e o oráculo A/B/C com NOWAIT. Também proíbem Git, escrita no DETRAN, shim/cópia e edição de testes, e mandam contradições ao maestro com contraexemplo. Os três achados são não bloqueantes. Limite deste review: o commit `314d6ba6` não foi conferido, porque o Git foi proibido; os sensores foram lidos na árvore de trabalho. PASS libera apenas o despacho paralelo dos Engineers SIG e OBX/data; não atesta implementação, delivery, trace ou publicação."
+}

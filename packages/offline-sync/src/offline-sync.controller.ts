@@ -63,7 +63,7 @@ export class OfflineSyncController {
     return this.service.resolveConflict(id, input);
   }
 
-  private rejectContextOverrides(input: unknown): void {
+  protected rejectContextOverrides(input: unknown): void {
     if (
       input &&
       typeof input === 'object' &&

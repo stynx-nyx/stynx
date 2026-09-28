@@ -1,0 +1,36 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "medium",
+      "file": "packages/backend/src/transactional-command/transactional-command.ts",
+      "issue": "The catch block at lines 467-478 turns non-StynxDataError failures from setup, store, audit and COMMIT into the fixed 503 `COMMAND:DEPENDENCY:transaction-failed`, and failures in the phase it calls `ctg5-callback` into the matching 500. It throws the original error away without logging it or attaching it as `cause`. Before this change, the same failures went to the global `StynxErrorFilter`, which logs 5xx errors with their stack (packages/core/src/error.filter.ts:46). `CommittedCommandResponseFilter` handles `CommandRejectionResponse` and logs nothing. An audit-sink fault, a deferred-constraint violation at COMMIT, or a broken callback now leaves operators with only a requestId. The public wire body is correct and leaks no secrets, so this is an operability regression, not a contract breach.",
+      "required_change": "Not blocking for the OD-S15-02 import. Before final release, keep the original error as a server-side `cause` on `CommandRejectionResponse` (never serialized) and log 5xx rejections with the requestId and stack through a Nest Logger. Add a sensor that checks the public body is unchanged."
+    },
+    {
+      "severity": "low",
+      "file": "packages/backend/test/unit/transactional-command-defensive.spec.ts",
+      "issue": "Option A's sensor matrix lists 'errors HTTP sem contexto' for `COMMAND:FORBIDDEN:context-missing` and 'errors HTTP com contexto incompleto' for `COMMAND:FORBIDDEN:actor-or-tenant-missing`. Only the unit defensive spec covers these two codes and `marking-required`, and it checks only status and errorCode, not the full envelope through the filter. They are probably unreachable over HTTP with core middleware and the branded-guard bootstrap check. Their shape still comes from the same `reject()`/filter path that other HTTP specs prove end to end.",
+      "required_change": "Not blocking. The Architect should record in the contract or round record that these branches are unreachable over HTTP and covered by the unit spec. Otherwise the Inspector should add HTTP sensors for them with full `toEqual` envelope checks in a later hardening pass."
+    },
+    {
+      "severity": "low",
+      "file": "packages/backend/src/transactional-command/transactional-command.module.ts",
+      "issue": "The errorCode regex and the lockTimeoutMs check are duplicated here and in `validateRouteOptions`/`ERROR_CODE_PATTERN` in transactional-command.ts. The law-schema grammar test in the provenance spec exercises both copies, so drift would be caught, but there are still two sources.",
+      "required_change": "Optional: have `forRoot` call the exported validator so one pattern serves both bootstrap sites."
+    },
+    {
+      "severity": "info",
+      "file": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+      "issue": "The new errors spec uses one tenant. The two-tenant, RLS and app-role isolation evidence comes from the advanced, provenance and faults specs, which do run against real PostgreSQL.",
+      "required_change": "None required for import."
+    },
+    {
+      "severity": "info",
+      "file": "work/rounds/R-0002/record.md",
+      "issue": "The brief did not allow Git, so this review did not independently check commit authorship or role separation (Architect/Inspector/Engineer identities) or the 44/44 baseline and 451/451 trace counts. They are accepted on the maestro's evidence and the patch contents: the trace adds bindings for the errors and defensive specs, and the baseline changes only the transactional-command.d.ts hash in three sites.",
+      "required_change": "The maestro should confirm the per-role author identities in the ordered import log."
+    }
+  ],
+  "summary": "I checked the source, not just the green logs, and found no blocking issue. (1) Every CTG5-owned 400/403/409/500/503 rejection goes through one table-driven `reject()`/`CommandRejectionResponse` and is serialized by the route filter as exactly {statusCode, errorCode, message, requestId, details?, retryable}. All codes match the law pattern and appear in errors.json with matching retriable/retryable values. The 409 mismatch defaults to `IDEMPOTENCY:CONFLICT:duplicate-key` with details {key} and retryable:false. In-progress is a separate 409 with retryable:true, and `TransactionalReservationTimeoutError` is mapped to it before the generic 503 bucket. The filter sets X-Request-Id to the body requestId, resolved as active context, then normalized response header, then normalized request header, then `generateRequestId` (UUIDv7), with no singleton state. The no-module path is proven with and without core, including replacement of an invalid inbound ID. (2) `mismatchCode` and `lockTimeoutMs` are validated synchronously in `forRoot`, and route mismatchCode/lockTimeoutMs plus marked-route ttlMs are validated in `onApplicationBootstrap`. A drift sensor compares both sites against the pattern read from `law/schemas/error-envelope.schema.json`. The runtime lock/TTL/marking checks still emit canonical envelopes, and the runtime mismatch-code rejection was removed as contracted. (3) Classification runs after `Database.tx` has rolled back and thrown, using a closure phase variable, and handler errors are not wrapped. The pass-throughs are preserved: `StynxDataError` (504 STATEMENT_TIMEOUT, 503 SERIALIZATION_FAILURE and the wrong-role 500 TRANSACTION_IDENTITY_MISMATCH are checked with exact legacy bodies), the consumer-selected `HttpException` from `persistStatus=false`, the handler 502 {code:'HANDLER_FAILED'}, and committed/replayed bytes. Non-data failures in setup (including a real `pool.connect` failure), store lookup/reserve/complete/clear, audit and COMMIT become the fixed nonretryable 503. Callback failures become their specific `COMMAND:CONFIGURATION:*` 500s. Every negative asserts no key, audit or domain effect, most across two attempts. (4) The tests use real Nest HTTP and PostgreSQL with the stynx_app role. Two-tenant isolation is in the advanced and provenance specs, and there are concurrent 409 losers with distinct request IDs and the If-Match composition in both decorator orders. Removed assertions were `>=400`/`toMatchObject` checks replaced by exact `toEqual` checks; the only behavioural migrations are the contracted `/invalid-option` move to a bootstrap test and `SCOPED:CONFLICT:command-mismatch`, so nothing was weakened. `law/` is untouched except the Architect trace rebind, the invariant and schema are unchanged, and the 422s and published wire are preserved. The API baseline changes only the transactional-command.d.ts hash, and a fixed-group changeset and README prose are present. (5) This reviewer did not run Git, so authorship was not independently checked. On the evidence in the patch, the isolated HEAD is safe to import under OD-S15-02 without an intermediate PR, RC or full CI. The main follow-up before final release is to log or keep the cause of converted 503/500 errors on the server side, which this change stopped doing."
+}

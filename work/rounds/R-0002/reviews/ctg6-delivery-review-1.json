@@ -1,0 +1,48 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages-web/angular-ui/test/shell.spec.ts",
+      "issue": "No test covers the `system` theme behavior required by UPS-SHELL. The contract says `system` resolves through matchMedia('(prefers-color-scheme: dark)'), reacts to changes, and applies `light` when SSR or matchMedia is unavailable. No TestBed or Playwright test stubs matchMedia or uses page.emulateMedia. No test fires a change event or covers SSR. The invalid-storage checks in the TestBed and e2e specs only assert that data-stynx-theme is not the string 'system'. They would still pass if dark-scheme resolution or change handling in StynxShellThemeService broke.",
+      "required_change": "Inspector adds TestBed cases with a controllable matchMedia stub. When dark matches, `system` must apply 'dark'. A change event must switch the attribute while the preference is `system` and must be ignored when the preference is explicit. With matchMedia absent, or PLATFORM_ID 'server', the result must be 'light'. The invalid-value case must assert the exact resolved value. Optionally add a Playwright emulateMedia({colorScheme:'dark'}) check. Architect rebinds trace."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages-web/angular-ui/test/shell.spec.ts",
+      "issue": "The polite live status region is only checked for existence and aria-label. The contract requires navigation and theme feedback through it, but no test reads its text after a NavigationEnd or after setTheme. The Playwright spec does not check it either. The statusMessage wiring in StynxShellComponent is unproven.",
+      "required_change": "Inspector asserts the role=status text after router navigation to a nav item (ui.shell.navigationChanged plus the translated item label) and after selecting a theme (ui.shell.themeChanged plus the translated option). Cover at least en, and pt-BR in either the TestBed or Playwright spec. Architect rebinds trace."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/data/test/unit/transaction.spec.ts",
+      "issue": "The createFakeTransaction adoption avoids a declared data→testing cycle, but only through an undeclared phantom dependency. @stynx-nyx/data does not declare @stynx-nyx/testing, and its vitest config has no alias for it. The import resolves only through the workspaceFallbackResolve hoisted .pnpm/node_modules fallback to packages/testing/dist/testing/src/index.js. That file is CommonJS and runs require('@stynx-nyx/data'), which loads data's built dist. So the migrated query/execute and close-guard assertions exercise the built dist Transaction, not packages/data/src, while the builder half of the file uses src. This is why Inspector commit 1977bbac weakened rejects.toBeInstanceOf(TransactionRequiredError) to toMatchObject({code:'TRANSACTION_REQUIRED'}). Turbo does not order testing#build (or a fresh data#build) before data#test, and data#test cache inputs exclude testing/dist. A clean or partially built run can fail to resolve the helper or pass against a stale dist.",
+      "required_change": "Make the adoption test the source under test without a package cycle. Option 1: alias '@stynx-nyx/testing' to '../testing/src/index.ts' in packages/data/vitest.config.ts (and vitest.stryker.config.ts), keeping the existing '@stynx-nyx/data' → src alias, so both sides share one Transaction class. Then restore the instanceof TransactionRequiredError assertions. Option 2: keep the original src-level query/execute close-guard assertions alongside the fake-based ones. Either way, add a sensor that this file resolves one Transaction identity, and rebind trace. Do not add @stynx-nyx/testing to data's manifest."
+    },
+    {
+      "severity": "minor",
+      "file": "reference/web/test/e2e/smoke/shell.spec.ts",
+      "issue": "Real-browser keyboard traversal checks skip link → Home → Settings but never tabs through the menu toggle to the theme control. The TestBed check only inspects DOM order, and first-focusable status comes from skip.focus() rather than the first Tab from document start. Locale persistence across reload is not asserted after switching to pt-BR.",
+      "required_change": "Extend the e2e flow: from a fresh page, the first Tab focuses the skip link; continue tabbing to the collapse control and the Theme button and open the menu with the keyboard. Optionally assert the pt-BR locale survives reload if that persistence is claimed."
+    },
+    {
+      "severity": "minor",
+      "file": "work/rounds/R-0002/ctg-0006-plan.md",
+      "issue": "The plan requires a grep or import sensor proving every migrated test imports helpers from the published subpaths. None exists. The only related test, eslint-config.spec.mjs, covers catalogs. The migrated files do currently import '@stynx-nyx/angular-auth/testing', '@stynx-nyx/angular-i18n/testing' and '@stynx-nyx/testing'; I verified this by hand. The plan also asked for a post-CTG5 inventory of packages/{data,flow,outbox,backend}/test/unit Transaction fake users, and it is not recorded.",
+      "required_change": "Inspector adds a small sensor that scans the named adoption files for published-subpath imports and the absence of 'testing/index' or '/src/' helper paths. Architect records the CTG5 inventory result (including 'none') in the plan."
+    },
+    {
+      "severity": "minor",
+      "file": "work/rounds/R-0002/ctg-0006-plan.md",
+      "issue": "Ten CTG6 commits are authored by the human identity 'Antonio Russo', not DEVAI Engineer or Inspector identities: 6b499e97, 44fd61b2, c13236c2, 11870f5c, 28c0666c, 8f76fbe8, 2880b37c, 1e9a59eb, fa75d850, 71db8791. They mix feat, test and chore. Each commit stays within disjoint paths, and tests precede source for NGERR. Still, the role for each is not declared, while the plan claims '39 role-separated commits'.",
+      "required_change": "Record, in the plan or a round receipt, the declared role for each of these commits. No history rewrite is needed if Owner authority covers them."
+    },
+    {
+      "severity": "minor",
+      "file": "packages-web/sdk/src/errors.ts",
+      "issue": "resolveContext returns a legacy `context` object unchanged and drops a sibling `requestId` when both occur. The contract says requestId 'remains available in that safe context'. Law envelopes (details) are handled correctly.",
+      "required_change": "Optionally merge requestId into the legacy context when it has no requestId key, and add an sdk sensor for that case."
+    }
+  ],
+  "summary": "Reviewed HEAD 4caa1e64 against e8931c57. IFM is sound. The backend exports parseIfMatchRevision, RequireIfMatch, IfMatchRevision, RevisionETag, PreconditionRequiredError(428), PreconditionFailedError(412) and IfMatchExceptionFilter. The regex-only strong integer grammar rejects empty, weak, wildcard, comma-joined or duplicate, outer-whitespace and unsafe tags. The method-scoped filter emits the law envelope with CLS-first requestId equal to X-Request-Id, and the tests prove it wins over a consumer global catch-all with StynxCoreModule installed. Failures carry no ETag. The composition suite runs over real Nest HTTP and PostgreSQL with FORCE RLS and stynx_app, using TransactionalCommand, Idempotent and Audit. It proves pre-handler 428/412 rejection with no handler call, key or audit, and separates it from a route-evaluated stale revision (handler called with 3, rolled back, 412 envelope). It proves the committed strong ETag \"5\", a byte-identical replay with the same ETag, one handler call and one audit row, and rollback after a write. Because the CTG5 global interceptor wraps the route interceptors, ETag selection happens inside the commit boundary, and CTG5 source is untouched. errors.json, the changeset covering all 7 packages, API baselines, READMEs, the angular-ui router peer and lockfile, catalogs, build-web alias and turbo build order look consistent. NGERR classifier precedence, the suffix rule, segment-separator prefixes, SSE raw bypass before exclude, and no-config compatibility are correct and tested, including provider/module parity. The shell is keyed and landmarked, with aria-current and direct axe checks. Not safe for ordered import yet: three blocking gaps remain. The shell system-theme/matchMedia behavior and live-status feedback are unproven MUSTs, and the data fake-Transaction adoption depends on an undeclared hoisted dist of @stynx-nyx/testing, which splits Transaction identity and weakens the instanceof assertion. All three are sensor or config repairs with a trace rebind; no runtime redesign is expected."
+}

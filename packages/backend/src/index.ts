@@ -10,6 +10,8 @@ export * from './event-stream/types';
 export * from './event-stream/tokens';
 export * from './event-stream/event-stream.module';
 export * from './event-stream/event-stream.service';
+export * from './webhook-signature/webhook-signature.guard';
+export * from './webhook-signature/webhook-signature.module';
 
 export * from './auth/constants';
 export * from './auth/default-principal-mapper';
@@ -31,6 +33,9 @@ export * from './audit/decorators';
 export * from './audit/audit.interceptor';
 export * from './audit/audit.module';
 export * from './audit/redaction-policy';
+export * from './transactional-command/transactional-command';
+export * from './transactional-command/transactional-command.module';
+export * from './if-match/if-match';
 
 export * from './db-context/constants';
 export * from './db-context/request-db-client-lifecycle';

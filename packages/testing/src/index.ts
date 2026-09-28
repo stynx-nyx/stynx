@@ -7,6 +7,7 @@ export * from './context';
 export * from './create-test-app';
 export * from './doctor';
 export * from './fixtures';
+export * from './fake-transaction';
 export * from './lgpd-fixture';
 export * from './matchers';
 export * from './mint-test-session';

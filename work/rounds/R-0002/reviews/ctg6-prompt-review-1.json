@@ -1,0 +1,84 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0006-plan.md",
+      "issue": "The plan puts topological integration of CTG-0002/0003/0005 before PR creation, which means Inspectors would write sensors against a3c81645. That base is missing three predecessor changes to files CTG-0006 builds on. First, CTG-0002 changes packages-web/angular/src/error.interceptor.ts (STYNX_SSE_REQUEST bypass) and packages-web/angular/testing/index.ts; here that file is still `export {}`. Second, CTG-0003 rewrites StynxSessionService.hasAll/AnyPermissions with wildcard matching (permissionMatches). Third, CTG-0005's contract changes Transaction/Database.tx actor semantics. Sensors for NGERR-04, TEST-02 and TEST-03 written on this base would encode behavior that is out of date.",
+      "required_change": "Make integration of CTG-0002, CTG-0003 and CTG-0005 into this worktree (at least their contract-approved heads) a precondition of Inspector dispatch, as ctg-0005 already does. Record their SHAs and review receipts in the plan, and say explicitly that the contract binds to the integrated ErrorInterceptor, session service and Transaction."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "The exclusion rules contradict CTG-0002 and weaken it. The contract says SSE exclusion is 'consumer-configured, not hardcoded' and that exclusion 'preserves the mapped error'. CTG-0002's ErrorInterceptor already has a built-in bypass for requests tagged STYNX_SSE_REQUEST, and it rethrows the raw HttpErrorResponse, not the mapped StynxSdkError. The SSE client relies on that. Following the contract as written would remove or change that behavior.",
+      "required_change": "Keep the built-in STYNX_SSE_REQUEST bypass unchanged: no banner, no classification, raw HttpErrorResponse rethrown. Make `errorBoundary.exclude` additive and applied only to non-SSE requests. State exactly what an excluded request rethrows (the mapped StynxSdkError, as today) and what a non-excluded one rethrows. Add a sensor that the SSE fake/transport still receives the raw error."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "The contract tells IfMatchExceptionFilter to use the incoming X-Request-Id or generate its own id. The core CLS middleware (packages/core/src/core.module.ts) already validates or generates a UUIDv7 id, rejects invalid ones and sets it on the response X-Request-Id. Backend's common/request-context exposes request.requestId. A filter that echoes the raw header or mints a second id breaks correlation with the response header and the audit/log requestId, which is what the schema's requestId is for. Backend also has no dependency on @stynx-nyx/core.",
+      "required_change": "Set the requestId priority to: resolved request.requestId, then the response X-Request-Id header already set, then a validated incoming header, then a generated UUIDv7 only when no STYNX core context exists. Require a sensor that body.requestId equals the response X-Request-Id header, both with a supplied UUIDv7 and without one, with StynxCoreModule's global StynxErrorFilter installed."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "classifyStynxError must use createStynxSdkError and recognize both {code} and law {errorCode} payloads. packages-web/sdk/src/errors.ts resolveCode reads only `code` and resolveContext reads only `context`. So law-shape 428/412 bodies (errorCode, details) arrive with code undefined, and the ErrorInterceptor's rethrown error cannot 'preserve code'. The sdk package is in no worker lock.",
+      "required_change": "Choose one approach: extend sdk resolveCode/resolveContext additively (errorCode preferred over code, details mapped to context, requestId kept) and assign packages-web/sdk/src/errors.ts plus its tests to Engineer A and Inspector A; or state that classify parses errorCode itself while the rethrown StynxSdkError still has no code. The first is recommended. Add sensors for both body shapes."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "The banner data model is under-specified and risks breaking existing behavior. ErrorBannerState has only `message: string`. ErrorBannerService.decorateWithTenantLabel prefixes `message` with `[tenant]`, which would corrupt a key if the key were stored in `message`. Existing consumers render `message` as text. The contract never says where messageKey lives, what happens when errorBoundary is not configured (today the server message is shown), or how the tenant label combines with a translated key. The Engineer A (types.ts) / Engineer B (banner component) split depends on this shape.",
+      "required_change": "Add optional `messageKey?` (and optionally `messageParams?`) to ErrorBannerState. Keep `message` as a human-readable fallback that is never a key. Put the tenant label in context/params, never in the key. With no errorBoundary configured, current banner behavior stays byte-for-byte the same. StynxErrorBannerComponent translates messageKey when present and otherwise shows message. Freeze this shape in the contract before dispatch."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "Inspector cannot write deterministic status × code × key tables yet. Three things are missing. (1) The status/kind fallback keys have no names or namespace, and no package is named to catalog them; @stynx-nyx/angular has no catalog, while angular-ui has src/i18n/{en,pt-BR,keys}.json. (2) The kind is undefined for 400, 405, 408, 410, other 4xx and non-HTTP errors. The sdk treats 400 and `*_VALIDATION_ERROR` as validation. (3) The 'segment boundary' is undefined: law codes use ':' (PRECONDITION:FAILED:if-match) but existing codes use '_' (PREFERENCES_REVISION_CONFLICT), and case sensitivity is not stated.",
+      "required_change": "Publish the complete status→kind table, including other 4xx→unknown or validation (decide which) and 5xx→server. Name the default keys, e.g. `stynx.error.<kind>`, and name the catalog that owns them in en/pt-BR. State whether fallbackMessageKey overrides them. Define the boundary characters (':' and '_' recommended), case-sensitive matching, and the tie-break order: exact, then longest prefix, then fallbackMessageKey, then the kind key."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0006-plan.md",
+      "issue": "The lock table misses the real files, so role separation cannot hold. (1) The published testing subpaths are ng-packagr secondary entrypoints at packages-web/{angular-auth,angular-i18n}/testing/index.ts (with testing/ng-package.json); Engineer B is locked to src/testing/**, which the build does not use. (2) TEST-02…04 and DETRAN §6.6 require that STYNX's own tests adopt the doubles. The existing candidates are outside every Inspector lock: packages-web/angular-auth/test/{angular-auth,identity-contract-depth}.spec.ts, angular-flow, angular-iam, angular-sessions, angular-trash and angular-profile tests that stub StynxSessionService or StynxI18nService, and packages/{data,flow,outbox,backend}/test/unit fakes of Transaction. 'Applicable' is never enumerated, so the adoption evidence could be empty.",
+      "required_change": "Retarget Engineer B to packages-web/<pkg>/testing/** (and packages/testing/src/**). Name the existing tests that must migrate to each helper and assign them to an Inspector lock, and note that migrating them requires an Architect trace rebind. Add a sensor or grep proof that those tests import only from the published package subpaths."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "As written, the TEST-02 stub cannot be typed or used safely. StynxSessionService has private members (tenantContext, oidc, backend, options, stateSignal, refreshStorage), so TypeScript classes are nominal and a stub cannot `implements StynxSessionService`. Provided under the service token, the stub also lacks the AuthProvider/action methods that consumers call: login, loginRedirect, completeLogin, logout, getAccessToken, refresh, onAuthFailure, switchTenant. Existing tests stub completeLogin and logout. Its permission checks would also drift from CTG-0003's wildcard permissionMatches.",
+      "required_change": "Type the stub against a public-surface type, e.g. `Pick<StynxSessionService, ...public keys>` or an exported StynxSessionPublicApi, and include every public method as a controllable no-op or spy with recorded calls. Export the production permission matcher (or make the stub delegate to it) so wildcard semantics match exactly, and place session.service.ts / the matcher module in a lock. active$ stays Observable<StynxSessionState>, as the contract correctly states."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0006-plan.md",
+      "issue": "The real axe/keyboard gate is not bound to anything that runs. `pnpm ci:stynx` does not run Playwright; test:e2e is only in ci:stynx:remote-full, and neither the plan nor the prompts name that command. The planned path reference/web/test/e2e/*shell*.spec.ts sits at the top level, so it falls in the `legacy-api` project, which needs the full API stack. The spa-only project uses a fixed category list checked by scripts/verify-frontend-a11y-gate.mjs, which neither Inspector nor Engineer owns. The existing a11y probe records scan-error without failing.",
+      "required_change": "Put the spec in a named category, e.g. reference/web/test/e2e/shell/, and assign the edits to playwright.config.mjs spa-only testMatch and to verify-frontend-a11y-gate requiredCategories. Require the spec itself to assert zero serious/critical violations and to fail on scan errors. List the exact gate command, e.g. `pnpm --filter @stynx-nyx/reference-web test:e2e --project spa-only`, among the required gates and the delivery evidence."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/72-ctg6-engineer.md",
+      "issue": "The three documents give different instructions if scoped handling fails. The contract says 'repair the global filter with migration tests', the plan says Architect contract repair comes first, and the Engineer prompt says report the gap. On feasibility: Nest orders exception filters method → controller → global, and a method-level @UseFilters with a @Catch matching the two error classes catches errors thrown by interceptors and handlers before the global APP_FILTER StynxErrorFilter. So the scoped design is feasible, and @RequireIfMatch via applyDecorators(UseInterceptors, UseFilters) plus a createParamDecorator reading the stored revision is implementable (interceptors run before pipes and param resolution).",
+      "required_change": "Change the contract sentence to 'stop and escalate to the Architect; no global filter migration in CTG-0006'. Require the sensor to run with StynxCoreModule's global filter installed, to prove the scoped filter takes precedence."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "Several IFM details are left open. (1) An empty or whitespace If-Match header: 428 or 412? (2) Comma-joined duplicate headers and whitespace around the tag need defining. (3) The new PRECONDITION:* codes are not registered in docs/framework/contracts/errors.json. (4) The value of retryable is not stated. (5) If @RevisionETag throws on an invalid revision after a non-transactional commit, the client gets 500 for a committed mutation. (6) CTG-0005's replay header allowlist may drop ETag on an idempotent replay.",
+      "required_change": "Define: empty header → 412, absent → 428; any comma → 412; no trimming. Register both codes in errors.json within an assigned lock, with retryable:false. State that ETag validation runs inside the command boundary when present, and add ETag to the CTG-0005 replay allowlist or document that it is omitted."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "The two provider paths are not equivalent today. provideStynxAngular registers RequestId→Auth→Error, while StynxAngularModule.forRoot registers RequestId→Error→Auth, so 401/refresh banner behavior differs. provideStynxAngular also takes an extra tenancy argument. Passing identical options does not give identical behavior.",
+      "required_change": "Either align the interceptor order (with a compatibility note and sensor) or state that parity covers errorBoundary options only, and exclude 401 refresh flows from the cross-path table."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/web-kit-1.5.md",
+      "issue": "Parts of SHELL-04 and TEST-03/04 are open. The theme host attribute name and target element, the default storage key, and how `system` resolves (value applied vs matchMedia) are unspecified. createFakeTransaction must build a real Transaction(PoolClient, drizzle, role), so the fake client has to accept drizzle QueryConfig/rowMode calls and pg types must resolve from @stynx-nyx/testing (a manifest change). provideStynxI18nTesting does not say which locale is used when defaultLocale is omitted.",
+      "required_change": "Name the attribute (e.g. `data-stynx-theme` on documentElement), the default key, and the `system` behavior. Make role a createFakeTransaction option and cover select/execute via the drizzle config, or scope the fake to query/execute and document that limit. Assign the pg types dependency to root Engineer. Default the i18n locale to the first catalog key or require it."
+    }
+  ],
+  "summary": "Verdict: REVIEW. The IFM decorator/filter design is feasible in Nest, the law envelope gap is stated correctly, the PRECONDITION:* codes match the schema pattern, and active$ is correctly typed as session state. Inspector dispatch is still unsafe. The contract runs ahead of the CTG-0002/0003/0005 integration, contradicts CTG-0002's built-in SSE bypass, and takes requestId from the wrong source. It also leaves out the sdk errorCode normalization, the ErrorBannerState messageKey shape, fallback keys and prefix boundaries. The lock table targets the wrong testing entrypoint paths and does not cover adopting existing tests. The TEST-02 stub cannot be typed as written, and the axe gate runs in no lane that is required."
+}

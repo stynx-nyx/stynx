@@ -8,6 +8,12 @@ export interface TxOptions {
   replica?: boolean;
   retry?: { attempts: number; jitterMs: [number, number] } | false;
   deadlineMs?: number;
+  /** Bound PostgreSQL lock acquisition independently of statement_timeout. */
+  lockTimeoutMs?: number;
+  /** Require an actor-bearing app transaction and verify its live PostgreSQL identity. */
+  requireActor?: boolean;
+  /** Reserve one connection for an independent OFS item. */
+  strictItemMode?: boolean;
 }
 
 export interface SoftDeleteOptions {

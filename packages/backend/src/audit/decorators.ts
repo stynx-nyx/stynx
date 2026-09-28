@@ -3,6 +3,7 @@ import { STYNX_AUDIT_METADATA } from './constants';
 
 export interface AuditMetadata {
   action: string;
+  transactional?: boolean;
   entity?: string;
   entityIdSelector?: (request: unknown) => string | undefined;
   metadataSelector?: (request: unknown) => Record<string, unknown> | undefined;

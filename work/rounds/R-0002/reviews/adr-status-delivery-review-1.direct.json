@@ -1,0 +1,16 @@
+{
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "evidence": [
+    "The range 253a8d94..HEAD has one commit, 4011bff3. It changes only scripts/lib/release-context.mjs, adding 'law/adr/2026-09-28-final-candidate-ci-repair.md' to the M-status allowlist in isFinalVersionedCandidate (lines 307-314). No other path, status, package, test or workflow changed.",
+    "The diagnosed cause is the true cause. finalVersionedContext (scripts/run-release-preparation.mjs:199-200) builds followUpChanges one commit at a time from each post-marker commit's diff against its parent, not as one diff from the marker to HEAD. So the ADR shows up as A in d28373c2 and as M in 8d0d6a09. Before this fix only the A entry was allowed, so the M entry made the check return false, which is RELEASE_CONTEXT_FINAL_INVALID.",
+    "I listed every post-marker first-parent commit after marker b647f568 (base origin/main 493fcd95), excluding work/rounds/R-0002/**. Each remaining entry now matches an exact allowlist rule: bfa5d2a9 M law/policy/forbidden-action-authorizations.json; d28373c2 M .semgrepignore, A ADR, M release-context.mjs; 38c40e2f M angular-i18n tsconfig.spec.json; 8d0d6a09 M .semgrepignore, M ADR, M release-context.mjs; 48fff746 M tools/tsconfig/base.json; 4011bff3 M release-context.mjs. Across all post-marker commits there are 8 A and 18 M, with no D, R or merge commits.",
+    "Anything outside these rules still fails closed. Only A and M are accepted. The only paths accepted are the R-0002 round directory, the M policy file, five exact M repair paths, and the exact A ADR. The negative tests (source, sensor, workflow, other-round, proof, deleted-round-note and added-policy follow-ups) are unchanged. A later D or rename of the ADR, or A of any other law/ file, would still be rejected.",
+    "node --test test/scripts/release-version-policy.test.mjs: 48 passed, 0 failed.",
+    "Non-blocking: no positive test exercises the per-commit A-then-M sequence for the ADR. Adding one would be a test edit and would need an Architect trace rebind, so it is not required for this narrow correction.",
+    "Not resolved by this change: the DEVAI signed RC coverage refusal is still open. If it is the only remaining required blocker, an admin merge needs exact Owner Decision 8 authority."
+  ],
+  "reviewMode": "direct-claude-p-after-bridge-format-failure",
+  "model": "claude-opus-5-5",
+  "rawResponseSha256": "cdb2691d9c4d81f0543f52deba3d596b47dec7de1523e972db333da5b5abf0b8"
+}

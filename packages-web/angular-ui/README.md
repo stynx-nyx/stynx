@@ -142,6 +142,7 @@ _None._
 
 - `@angular/common`: `>=22.0.0 <23`
 - `@angular/core`: `>=22.0.0 <23`
+- `@angular/router`: `>=22.0.0 <23`
 
 ### Development-only dependencies
 
@@ -150,6 +151,7 @@ _None._
 - `@angular/compiler-cli`: `22.1.6`
 - `@angular/core`: `22.1.6`
 - `@angular/platform-browser`: `22.1.6`
+- `@angular/router`: `22.1.6`
 - `@types/node`: `24.13.4`
 - `jsdom`: `^29.0.2`
 - `ng-packagr`: `22.1.1`

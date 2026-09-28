@@ -12,6 +12,13 @@ See `docs/framework/contracts/worklist-api.md` and
 `law/adr/ADR-WORKLIST-0001-flow-boundary-distribution-sla.md` for the contract
 and boundary decision.
 
+`TenantBusinessCalendar` implements `WorklistBusinessCalendar` with
+host-provided `timezoneForTenant` and `holidaysFor` callbacks. The host supplies
+every holiday as a valid `YYYY-MM-DD` civil date; STYNX does not embed a
+holiday catalog. The calendar counts local civil days across DST transitions
+and returns the exclusive start of the day after the last counted business
+day. Pass it through `StynxWorklistModule.forRoot` for business-day deadlines.
+
 <!-- stynx:generated-dependencies:start -->
 
 ## Generated dependency reference

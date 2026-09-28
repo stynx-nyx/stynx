@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0.0",
+  "version": "1.0.0",
+  "id": "INV-CLI-003",
+  "domain": "CLI",
+  "severity": "gate",
+  "type": "cli-generator",
+  "title": "Generated routes and repositories enforce caller authority",
+  "statement": "Every generated HTTP handler MUST have a unique exact resource-operation permission key and run behind host-installed STYNX authentication and PermissionGuard; generated writes MUST reject untrusted tenant and primary-key values and use app-role Database.tx, trusted tenant and actor context, bound query values, and tenant-scoped SQL.",
+  "rationale": "A generated route must not infer authority from a path or body, and an app transaction must fail when caller context is missing.",
+  "status": "active",
+  "lifecycle": "supported",
+  "verification": {
+    "required_suites": ["unit", "int"],
+    "oracle": "tests",
+    "strategy": {
+      "primary": "regression",
+      "supplemental": ["structural"],
+      "deterministic_check_available": true,
+      "rationale": "Controller structural tests enumerate all routes and permission metadata; packed Nest route tests deny and allow each operation and reject invalid DTOs; repository tests probe bound parameters, missing context, and cross-tenant updates and deletes."
+    }
+  },
+  "authority_docs": {
+    "docs": [
+      {
+        "doc": "docs/framework/contracts/cli-generator-1.5.md",
+        "anchor": "output-and-safety"
+      }
+    ]
+  },
+  "scope": {
+    "components": ["cli", "data", "core", "auth"],
+    "code_areas": ["packages/cli/src"]
+  },
+  "change_policy": {
+    "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
+    "test_weakening_allowed": false,
+    "human_approval_required": true
+  },
+  "tags": ["stynx", "UPS-CLI-01", "CTG-0008", "generator"],
+  "measurable_via": ["check", "sense inventory", "audit observe"]
+}

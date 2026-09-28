@@ -1,0 +1,36 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "The contract never defines `<slug>`. It only says the slug is a lowercase identifier. Yet the slug sets every output file name (`src/<slug>.*.ts`, `database/<namespace>_<slug>.sql`) and every permission key, `@Permission('<namespace>.<slug>.<operation>')`. The sample leaves it unclear whether the slug comes from module.name `Example`, from entity/table `example_record`, or from the resource path `example-records`, and a hyphenated path would not match `^[a-z][a-z0-9_]*$`. A blueprint may have up to 16 entities and several resources, so a per-module slug gives the same key (e.g. `ops.example.list`) to routes on different entities. Routes then share a permission binding, and the Inspector cannot write exact deny/allow probes.",
+      "required_change": "Define the derivation exactly. For example: module slug = snake_case of module.name for file names, and permission key = `<namespace>.<entity table>.<operation>` per resource. State the case-fold/collision rules. Give the exact expected file names and permission keys for BP-OPS-EXAMPLE-001, e.g. `ops.example_record.list` and `ops.example_record.get`. Require the Inspector to assert those literal strings and that permission keys are unique across resources."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/cli-generator-1.5.md",
+      "issue": "The reserved platform schema list is incomplete. `packages/offline-sync/migrations/0001_offline_sync.sql` runs `CREATE SCHEMA IF NOT EXISTS offline`, but `offline` is not reserved. A blueprint with namespace `offline` passes validation and places generated tables, grants and policies inside a platform-owned schema. That is exactly the escape cycle-1 finding 2 was meant to close.",
+      "required_change": "Add `offline` to the list. Better, state that the reserved set is every schema created by any `packages/*/migrations/**` SQL, and have the Inspector derive or pin that set from the migrations. That way a future platform schema cannot silently become a valid namespace. Add a negative probe for `offline`."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/prompts/91-ctg8-inspector.md",
+      "issue": "The only positive fixture is the tiny sample, which has only `list`/`get` and one writable field. The contract also allows `create`, `update` and `delete`. It requires DTO runtime guards (type, requiredness, length/range, undeclared-property rejection), `id`/`tenant_id` exclusion from writable input, tenant taken from RequestContext on create, and tenant-scoped update/delete SQL. None of these generated handlers or guards would be compiled or exercised. As written, 'every route has deny/allow probes' and DTO validation are not testable at the generated-code level. The cross-tenant INSERT/UPDATE checks exist only as direct SQL.",
+      "required_change": "Require an Inspector-authored STYNX-only full-CRUD blueprint, not DETRAN, with all five operations and each field type/nullable/default variant. It must be generated, compiled and booted in the packed consumer. Add route-level probes: 403 and success for each operation's exact permission; DTO rejection of a wrong type, a missing required field, an over-length varchar, an undeclared property, and a body-supplied `id`/`tenant_id`; tenant-B update/delete through the generated repository affecting zero rows; and a created row carrying the context tenant."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0008-plan.md",
+      "issue": "`test/packages/cli-generator/**` sits inside `@stynx-nyx/test-packages`. Its vitest config includes `**/*.spec.ts`, aliases `@stynx-nyx/auth` and `@stynx-nyx/data` to stubs, and enforces an 85% coverage threshold. It runs under `pnpm test`, which has no PostgreSQL, while `test:int` filters only `./packages/*`. A packed-tarball plus real-DB spec there would either use stubbed aliases, run heavy pack/install inside unit `pnpm test`, or never run in any gated lane. The plan does not say which lane runs the fixture and the DB negative.",
+      "required_change": "Name the runner and lane. For example: fixture specs use a distinct suffix or config excluded from the stubbed `test/packages` unit config, run in a spawned process with no alias leakage, and are invoked by a named script or the `test/db` integration lane with its DB configuration. If a new root script or package.json entry is needed, assign it explicitly (root package.json is byte-frozen and needs the Inspector hash rebind). State that a skipped DB lane is reported as unobserved."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0008-plan.md",
+      "issue": "The Engineer lock allows 'source-owned fixture bootstrap under `reference/**`'. `reference/api/package.json` and `reference/web/package.json` are byte-frozen by `test/scripts/local-rc-blocker-contract.test.mjs`. The fixture is also defined as an external temporary consumer, so a `reference/**` write is unnecessary and could trip the freeze without a planned Inspector rebind.",
+      "required_change": "Remove `reference/**` from the Engineer lock, or restrict it to non-package.json paths and require a stop for Inspector hash rebinding if a frozen manifest must change."
+    }
+  ],
+  "summary": "Cycle-1 findings are largely resolved. Every handler gets a permission binding, and PermissionGuard/@Permission exist as named. The schema namespace and grants now follow 0018_outbox. The id/tenant_id and index rules are exact and handle the sample. Locally packed tarballs replace publication, consistent with AUTHORIZATION.md. index.ts exports stay frozen and the baseline/README owners are named. The realpath symlink rule and rename residual are testable, and the stynx_app, actor and catalog probes plus the INV-RBAC-001 exemplar are present. The triplet, the CTG-0007 hard predecessor, the no-DETRAN-copy rule and the verified APIs (Database.tx role 'app', Transaction.query, RequestContext from @stynx-nyx/core, Permission from @stynx-nyx/auth) hold. Three repairable blockers remain: `<slug>` and the permission key are undefined and can collide across resources; `offline` is missing from the reserved platform schemas; and no fixture exercises the create/update/delete handlers and DTO guards. No constitutional or development-contract conflict was found."
+}

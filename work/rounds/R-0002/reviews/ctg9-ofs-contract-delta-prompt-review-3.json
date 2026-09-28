@@ -1,0 +1,36 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:795",
+      "issue": "The PostgreSQL outcome matrix (:795, :807, :813, :818, :824, :828) checks only `status` and `errorCode` on each item. It never checks `context: {number, reservationId}` for the six outcomes. The prompt asks for proof of both the codes and the context in both stores, but only the in-memory store has the context oracle (ctg9-parity.spec.ts:225, :240, :251, :262, :291). postgres-durable.ts:345-356 builds the context separately, so a mistake there (for example, a `reservationId` other than null on AMBIGUOUS, or a missing `number`) would pass.",
+      "required_change": "Inspector adds `context: expect.objectContaining({number, reservationId})` to each PostgreSQL outcome in the matrix: null for NO_COVERAGE without an ID and for AMBIGUOUS, the submitted ID for the out-of-scope NO_COVERAGE case, and the chosen reservation for EXPIRED and ALREADY_APPLIED."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/unit/ctg9-parity.spec.ts:251",
+      "issue": "The contract table (ctg9-ofs-contract.md:315) requires EXPIRED to be `conflict` with open conflict evidence. The in-memory sensors at :251 and :262 match only `{number, reservationId}` and do not check `conflictId`/`allowedActions`. NO_COVERAGE, AMBIGUOUS and ALREADY_APPLIED do check them. PostgreSQL does cover EXPIRED evidence, through the `open`=6 count at ctg9-upgrade.integration.spec.ts:846.",
+      "required_change": "In both in-memory EXPIRED sensors, check `context: expect.objectContaining({number, reservationId, conflictId: expect.any(String), allowedActions: expect.any(Array)})`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:826",
+      "issue": "The negative `reservationId` case covers only a different device (scope). The contract (:313) and Inspector prompt 146 also require the out-of-range case: an ID from the same tenant/device/org/entity whose range does not contain `reservedNumber` must give NO_COVERAGE. No sensor covers that.",
+      "required_change": "Add a PostgreSQL case, and preferably an in-memory one too, that submits a valid in-scope `reservationId` with a `reservedNumber` outside `start..end`. Expect `rejected` with `OFFLINE_SYNC_NUMBERING_NO_COVERAGE`, context `{number, reservationId: <submitted>}` and open evidence."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:838",
+      "issue": "The PostgreSQL late-sync sensor (`createdLocallyAt <= validUntil < now`) checks only `applied` in the response. It does not check consumption through `getNumberingConsumption`, which the in-memory sensor does (ctg9-parity.spec.ts:277).",
+      "required_change": "After :838, check that `getNumberingConsumption(lateReservation.reservationId)` projects `applied` for `startNumber`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/unit/ctg9-parity.spec.ts:280",
+      "issue": "The test title still says 'records an already-applied number as a conflict', but the fixed outcome it asserts is `rejected` with an open domain conflict. The title contradicts the assertion and the contract table.",
+      "required_change": "Rename it to something like 'records an already-applied number as rejected with open domain conflict evidence and no second effect'. After that, the Architect rebinds `law/trace.json`."
+    }
+  ],
+  "summary": "Focal prompt-review 3, read-only. I edited nothing and ran no Git; the plan file was not written, since this review asked for no edits. I read DETRAN only to check the oracle, in backend/domains/ops/offline-sync/src/handwritten/batch-protocol.ts:35-60.\n\n**Second-review block resolved.** The UPS-OFS-01 table (ctg9-offline-sync-contract.md:311-316) now matches DETRAN §4.4 on every row:\n- NUMBERING_ALREADY_APPLIED is `rejected` with an open domain conflict, matching `TEAT.NUMBERING_NUMBER_ALREADY_APPLIED` → `{rejected, domain}`.\n- NO_COVERAGE and AMBIGUOUS are also `rejected` with open domain evidence, matching `FOREIGN_SHIFT` → `{rejected, domain}`.\n- EXPIRED stays `conflict`, matching `RESERVATION_EXPIRED` → `{conflict, domain}`.\n\nThe sensors agree:\n- In-memory: ctg9-parity.spec.ts:223-226, :238-241 and :289-294 check `rejected`, the code, `{number, reservationId}`, `conflictId`/`allowedActions`, and that the applier runs once.\n- PostgreSQL: ctg9-upgrade.integration.spec.ts:771-848 covers all four codes, including an out-of-scope `reservationId` from another device. It checks six evidence rows in `sync_conflict_evidence`, all with `open` status.\n- Prompts 146 (addendum) and 153 now state these rules.\n\n**Cancelled reservation.** Coverage is limited to numbers it retains as `applied`/`claimed-locally`:\n- Contract: :299-302.\n- Implementation: postgres-durable.ts:340-342 and in-memory :438.\n- Sensors: re-reserving the released tail on the same device without an ID gives `applied`, not AMBIGUOUS, in both stores (ctg9-parity.spec.ts:204-217; integration :1099-1105).\n\n**Late sync.** `createdLocallyAt <= validUntil < now` gives `applied` in-memory (:266-278) and in PostgreSQL (:830-838). `createdLocallyAt > validUntil` gives EXPIRED in both. The comparison uses `createdLocallyAt`, not the processing clock.\n\n**Close/settle projection.** Close gives `[applied, claimed-locally, expired]` and settle gives `[claimed-locally, expired]` in PostgreSQL (:1107-1115); the in-memory store matches.\n\n**Scope, precedence and locking.** The order is scope/range, then ALREADY_APPLIED, then state/validity. Coverage is chosen with `for update of r` inside the item transaction.\n\n**Duplicates.** A cross-batch duplicate keeps the submitted `queueItemId` in the response and in `getSyncBatchReceipt`, with `context.originalQueueItemId`: in-memory (:407-413) and PostgreSQL (:754, :766-767). A declared or synthetic key repeated in the same CTG9 batch gets 400 before any write, in both stores (:447-468; integration :850-870).\n\n**Preserved.** E6 without a resolver, RLS/app-role, and one independent transaction per item are unchanged in the reviewed range.\n\n**Remaining gaps, all nonblocking:**\n- PostgreSQL context oracle for the six outcomes.\n- Conflict evidence on in-memory EXPIRED.\n- Negative `reservationId` in scope but out of range.\n- Consumption check on the PostgreSQL late sync.\n- Outdated test title at :280.\n\nPASS authorizes the OFS delivery-review. It does not declare conformance, a PR or publication."
+}

@@ -1,0 +1,6 @@
+basicConstraints=critical,CA:FALSE
+keyUsage=critical,digitalSignature
+extendedKeyUsage=emailProtection
+certificatePolicies=1.2.3.4.5.6.7
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer

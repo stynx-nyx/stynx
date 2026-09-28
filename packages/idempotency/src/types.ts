@@ -1,6 +1,7 @@
 import type { RequestLike } from './request-context';
 
 export interface IdempotentMetadata {
+  transactional?: boolean;
   headerName?: string;
   ttlMs?: number;
 }

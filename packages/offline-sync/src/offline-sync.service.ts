@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { OfflineSyncError } from './errors';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { OfflineSyncConfigurationError, OfflineSyncError } from './errors';
 import {
   STYNX_OFFLINE_SYNC_CONTEXT,
   STYNX_OFFLINE_SYNC_OPTIONS,
@@ -17,6 +17,19 @@ import type {
   SubmitSyncBatchInput,
   SubmitSyncBatchResult,
   SyncConflict,
+  CTG9SubmitSyncBatchInput,
+  CTG9SubmitSyncBatchResult,
+  SubmitSyncBatchOptions,
+  OfflineSyncDurableStore,
+  CTG9NumberingReservation,
+  ReconcileNumberingInput,
+  ReconcileNumberingResult,
+  SettleNumberingInput,
+  NumberingConsumptionResult,
+  SyncBatchReceipt,
+  SyncItemReceipt,
+  TrustedOfflineSyncScope,
+  DurableBatchExecutionOptions,
 } from './types';
 
 const sha256Pattern = /^sha256:[0-9a-f]{64}$/u;
@@ -43,13 +56,19 @@ export class OfflineSyncService {
       this.invalid('requestedSize must be an integer between 1 and 100.');
     }
     const now = this.now();
-    const validUntil = new Date(
-      Date.parse(now) + (this.options.reservationTtlMs ?? 86_400_000),
-    ).toISOString();
+    const scope = this.context.current();
+    const policy = this.options.policyResolver ? await this.options.policyResolver.resolve({
+      tenantId: scope.tenantId, orgUnitId: input.orgUnitId, operation: 'reserve-numbering', at: now,
+    }) : undefined;
+    const ttl = this.options.policyResolver ? policy?.reservationTtlMs : (this.options.reservationTtlMs ?? 86_400_000);
+    if (ttl === undefined || !Number.isFinite(ttl) || ttl <= 0) this.invalid('reservation policy is missing.');
+    const validUntil = new Date(Date.parse(now) + ttl).toISOString();
     if (input.validUntil && Date.parse(input.validUntil) <= Date.parse(now)) {
       this.invalid('validUntil must be later than the current time.');
     }
-    return this.store.reserveNumbering(this.context.current(), input, now, validUntil);
+    const agentId = this.options.agentResolver ? await this.options.agentResolver.resolve(scope, 'reserve-numbering') : scope.actorId;
+    const agentScope = this.options.policyResolver ? { ...scope, agentId } : scope;
+    return this.store.reserveNumbering(agentScope, input, now, validUntil);
   }
 
   async cancelNumberingReservation(
@@ -60,27 +79,75 @@ export class OfflineSyncService {
     if (input.reason !== undefined && input.reason.length > 500) {
       this.invalid('reason must not exceed 500 characters.');
     }
+    const scope = this.context.current();
+    const cancelScope = this.options.policyResolver ? { ...scope, ctg9: true } : scope;
     return this.store.cancelNumberingReservation(
-      this.context.current(),
+      cancelScope,
       reservationId,
       input,
       this.now(),
     );
   }
 
-  async submitSyncBatch(input: SubmitSyncBatchInput): Promise<SubmitSyncBatchResult> {
+  async blockNumberingReservation(id: string, input: CancelNumberingReservationInput = {}): Promise<CTG9NumberingReservation> {
+    return this.durable.blockNumberingReservation(this.context.current(), id, input, this.now());
+  }
+  async closeNumberingReservation(id: string, input: CancelNumberingReservationInput = {}): Promise<CTG9NumberingReservation> {
+    return this.durable.closeNumberingReservation(this.context.current(), id, input, this.now());
+  }
+  async reconcileNumberingReservation(id: string, input: ReconcileNumberingInput): Promise<ReconcileNumberingResult> {
+    return this.durable.reconcileNumberingReservation(this.context.current(), id, input, this.now());
+  }
+  async settleNumberingReservation(id: string, input: SettleNumberingInput = {}): Promise<CTG9NumberingReservation> {
+    return this.durable.settleNumberingReservation(this.context.current(), id, input, this.now());
+  }
+  async getNumberingConsumption(id: string): Promise<NumberingConsumptionResult> {
+    return this.durable.getNumberingConsumption(this.context.current(), id);
+  }
+  async getSyncBatchReceipt(deviceId: string, deviceBatchId: string): Promise<SyncBatchReceipt> {
+    const receipt = await this.durable.getSyncBatchReceipt(this.context.current(), deviceId, deviceBatchId);
+    if (!receipt) throw new OfflineSyncError('OFFLINE_SYNC_BATCH_CONFLICT', 404, 'Batch receipt was not found.');
+    return receipt;
+  }
+  async getSyncItemReceipt(idempotencyKey: string): Promise<SyncItemReceipt> {
+    const receipt = await this.durable.getSyncItemReceipt(this.context.current(), idempotencyKey);
+    if (!receipt) throw new OfflineSyncError('OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND', 404, 'Item receipt was not found.');
+    return receipt;
+  }
+
+  async submitSyncBatch(input: SubmitSyncBatchInput): Promise<SubmitSyncBatchResult>;
+  async submitSyncBatch(input: CTG9SubmitSyncBatchInput, options: SubmitSyncBatchOptions): Promise<CTG9SubmitSyncBatchResult>;
+  async submitSyncBatch(input: SubmitSyncBatchInput | CTG9SubmitSyncBatchInput, options?: SubmitSyncBatchOptions): Promise<SubmitSyncBatchResult | CTG9SubmitSyncBatchResult> {
     this.assertText(input.orgUnitId, 'orgUnitId');
     this.assertText(input.deviceId, 'deviceId');
     this.assertText(input.deviceBatchId, 'deviceBatchId');
-    if (!Array.isArray(input.items) || input.items.length < 1 || input.items.length > 100) {
+    const scope = this.context.current();
+    const now = this.now();
+    const policy = this.options.policyResolver ? await this.options.policyResolver.resolve({
+      tenantId: scope.tenantId, orgUnitId: input.orgUnitId, operation: 'submit-sync-batch', at: now,
+    }) : undefined;
+    if (this.options.policyResolver && this.options.concurrencyDetector && !policy?.concurrencyWindowMinutes) {
+      Logger.warn('Offline sync concurrency window is unavailable; host detection policy must review this batch.', 'OfflineSyncService');
+    }
+    const maximum = this.options.policyResolver ? policy?.maxBatchItems : 100;
+    if (!Array.isArray(input.items) || input.items.length < 1 || (maximum != null && input.items.length > maximum)) {
       this.invalid('items must contain between 1 and 100 queue items.');
     }
     const queueIds = new Set<string>();
+    const itemKeys = new Set<string>();
     for (const item of input.items) {
       this.assertText(item.queueItemId, 'queueItemId');
       this.assertEntityType(item.entityType);
       this.assertText(item.localEntityId, 'localEntityId');
-      this.assertText(item.idempotencyKey, 'idempotencyKey');
+      if (!this.options.policyResolver || item.idempotencyKey !== undefined) this.assertText(item.idempotencyKey as string, 'idempotencyKey');
+      if (item.idempotencyKey?.startsWith('stynx:legacy:')) this.invalid('idempotencyKey uses a reserved namespace.');
+      if (this.options.policyResolver && 'reservationId' in item && item.reservationId !== undefined &&
+          (typeof item.reservationId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.reservationId))) {
+        this.invalid('reservationId must be a UUID.');
+      }
+      if (this.options.policyResolver && item.reservedNumber !== undefined && !Number.isSafeInteger(item.reservedNumber)) {
+        this.invalid('reservedNumber must be a safe integer.');
+      }
       if (!sha256Pattern.test(item.payloadHash)) {
         this.invalid('payloadHash must be a canonical sha256-prefixed hexadecimal digest.');
       }
@@ -98,8 +165,20 @@ export class OfflineSyncService {
         this.invalid(`queueItemId ${item.queueItemId} appears more than once in the batch.`);
       }
       queueIds.add(item.queueItemId);
+      if (this.options.policyResolver && item.idempotencyKey) {
+        if (itemKeys.has(item.idempotencyKey)) this.invalid(`idempotencyKey ${item.idempotencyKey} appears more than once in the batch.`);
+        itemKeys.add(item.idempotencyKey);
+      }
     }
-    return this.store.submitSyncBatch(this.context.current(), input, this.now());
+    if (!this.options.policyResolver) return this.store.submitSyncBatch(scope, input as SubmitSyncBatchInput, now);
+    if (!this.options.itemApplier && input.items.some(item => item.idempotencyKey && item.reservedNumber !== undefined))
+      throw new OfflineSyncConfigurationError('itemApplier');
+    const agentId = this.options.agentResolver ? await this.options.agentResolver.resolve(scope, 'submit-sync-batch') : scope.actorId;
+    const transport = options ?? { transportIdempotencyKey: `service:${input.deviceId}:${input.deviceBatchId}`, method: 'POST' as const, path: '/offline-sync/sync-batches' };
+    const execution: DurableBatchExecutionOptions = {
+      ...transport, agentId, policy: policy ?? {}, ports: this.options, transport,
+    };
+    return this.durable.submitDurableSyncBatch(scope, input, execution, now);
   }
 
   async openConflict(queueItemId: string, input: OpenSyncConflictInput): Promise<SyncConflict> {
@@ -114,11 +193,19 @@ export class OfflineSyncService {
     input: ResolveSyncConflictInput,
   ): Promise<SyncConflict> {
     this.assertText(conflictId, 'conflictId');
-    if (!['device-wins', 'server-wins', 'manual-review'].includes(input.resolution)) {
+    if (!this.options.conflictResolver && !['device-wins', 'server-wins', 'manual-review'].includes(input.resolution)) {
       this.invalid('resolution must be device-wins, server-wins or manual-review.');
+    }
+    if (this.options.conflictResolver) {
+      const scope = this.context.current();
+      const specialized = this.store as OfflineSyncStore & { resolveWithPort?: (scope: TrustedOfflineSyncScope, id: string, input: ResolveSyncConflictInput, now: string, port: NonNullable<StynxOfflineSyncModuleOptions['conflictResolver']>) => Promise<SyncConflict> };
+      if (specialized.resolveWithPort) return specialized.resolveWithPort(scope,conflictId,input,this.now(),this.options.conflictResolver);
+      return this.options.conflictResolver.resolve({} as import('@stynx-nyx/data').Transaction, conflictId, input.resolution, { ...scope, agentId: scope.actorId, orgUnitId: '', deviceId: '', batchId: '', now: this.now() });
     }
     return this.store.resolveConflict(this.context.current(), conflictId, input, this.now());
   }
+
+  private get durable(): OfflineSyncDurableStore { return this.store as OfflineSyncDurableStore; }
 
   private now(): string {
     return (this.options.now ?? (() => new Date().toISOString()))();

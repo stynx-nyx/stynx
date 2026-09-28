@@ -1,6 +1,7 @@
 /* istanbul ignore file -- declarative Drizzle schema; migrations and query helpers exercise the runtime behavior. */
 import {
   bigint,
+  customType,
   integer,
   jsonb,
   pgSchema,
@@ -11,6 +12,7 @@ import {
 import { tenants } from './tenancy';
 
 export const coreSchema = pgSchema('core');
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' });
 
 export const config = coreSchema.table('config', {
   key: text('key').primaryKey(),
@@ -36,6 +38,8 @@ export const idempotencyKeys = coreSchema.table('idempotency_keys', {
   status: text('status').notNull(),
   requestFingerprint: text('request_fingerprint'),
   response: jsonb('response'),
+  responseStatus: integer('response_status'),
+  responseBytes: bytea('response_bytes'),
   responseHeaders: jsonb('response_headers'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }),
