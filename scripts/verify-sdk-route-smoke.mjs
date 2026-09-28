@@ -47,8 +47,9 @@ if (failures.length > 0) {
 console.log(`[sdk-route-smoke] OK: ${operationCount} generated SDK operations matched`);
 
 function pascalCase(value) {
-  if (String(value).toLowerCase() === 'i18n') return 'I18N';
-  return String(value)
+  const normalized = normalizeLeadingAcronymDigit(value);
+  if (normalized.toLowerCase() === 'i18n') return 'I18N';
+  return normalized
     .replace(/[^A-Za-z0-9]+/gu, ' ')
     .trim()
     .split(/\s+/u)
@@ -58,7 +59,7 @@ function pascalCase(value) {
 }
 
 function operationMethodName(operationId) {
-  const normalized = String(operationId).replace(/i18n/giu, 'i18N');
+  const normalized = normalizeLeadingAcronymDigit(operationId).replace(/i18n/giu, 'i18N');
   const parts = normalized
     .split(/[^A-Za-z0-9]+/u)
     .filter(Boolean);
@@ -69,4 +70,10 @@ function operationMethodName(operationId) {
         : `${part[0]?.toUpperCase() ?? ''}${part.slice(1)}`,
     )
     .join('');
+}
+
+function normalizeLeadingAcronymDigit(value) {
+  return String(value).replace(/^([A-Z])([A-Z]+)(\d)/u, (_, first, rest, digit) =>
+    `${first}${rest.toLowerCase()}${digit}`,
+  );
 }
