@@ -1,0 +1,24 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/137-ctg9-sig-architect.md:5",
+      "issue": "SIG may propose the new ADR `law/adr/ADR-SIGNATURE-0001-trust-evidence.md`. Unlike 138:9-10 and 139:8-9, prompt 137 does not say that only the maestro updates the ADR index (`law/adr/README.md`). A SIG worker could therefore edit the index while OBX and OFS also create ADRs.",
+      "required_change": "Add the same sentence used in 138 and 139 to 137: 'Só o maestro atualiza os índices de ADRs/contratos, serialmente, em commit Architect.'"
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/138-ctg9-obx-architect.md:29",
+      "issue": "The sentence 'Inspector cobre SENT em voo e ACK no momento da migração sem redespacho.' (line 28) interrupts the list, so the fragment 'ledger de tentativas com bytes exatos/hashes, protocolo e provedor, lease, claim…' (29-31) starts lowercase and has no verb. The content is there, but the list of what to define is ambiguous.",
+      "required_change": "Move the Inspector sentence to the end of the paragraph, or start line 29 with 'Defina também o ledger de tentativas…'."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:357",
+      "issue": "§Paralelismo says Architect contracts can be prepared 'depois de ADRs superadoras e prompt-review PASS'. The superseding ADRs are produced by these same Architect dispatches (137-139), so the text reads as circular.",
+      "required_change": "Reword it to: Architect contracts and ADRs after the prompt-review PASS; Inspector sensors after the ADRs and contracts are accepted."
+    }
+  ],
+  "summary": "The SIG blocker is fixed. Prompt 137 limits Architect writes to `docs/framework/contracts/signature.md`, which exists and is under `docs/` (Architect per Art. 6, .devai/pin/constitution.md:95), the round document, and an optional `law/adr/ADR-SIGNATURE-0001-*` (no name collision). It explicitly forbids `packages/`, which is Engineer F2 territory. It also covers the negatives of the DETRAN clinical and board adapters, mapped to typed STYNX results, and preservation of the `verifyWithdrawalEvidence` result set (137:29-32). OBX has `transactional-audit-idempotency-1.5.md` and `audit-events-api.md` in its write set (138:7-8), and both exist; its ADR declares a point supersession of CTG5. OFS only cites `Database.txIndependent` and the OBX ports without redefining data/audit/outbox (139:9-11, 27-28). Prompts 138 and 139 reserve index updates to the maestro, and plan.md item 34 records it; 137 does not repeat the rule (nonblocking). All of the previous review's nonblocking repairs are present: (1) the exact names `appendInTransaction(trx,event)` and `appendManyInTransaction` (138:24,48-49; preflight:197-201); (2) the migration preserves SENT in flight, the lease and terminal ACKs with no second send, plus an Inspector sensor (138:26-28); (3) `verify_chain` partitioned by epoch plus `audit.verify_current_epoch`, including a case with more than 1000 legacy rows (138:39-40; preflight:141-142); (4) the RR/SERIALIZABLE refusal has a fixed MESSAGE and a non-retryable error in data (138:40-41; preflight:127-129); (5) the seal via `SET LOCAL transaction_read_only = on` after the clock, mapped to `ReadOnlyViolationError`, with a local `lock_timeout` in the adapter and the existing SSE 503 (138:50-52; preflight:186-201); (6) GUC mismatch uses `STY41` → `AuditChainKeyMismatchError` before the first advisory, including in `write_command_event`, stated as self-protection (138:41-43; preflight:159-161). The write sets are disjoint: SIG {signature.md, ctg9-sig-contract.md, ADR-SIGNATURE-0001}, OBX {ctg9-obx-contract.md, ADR-OUTBOX-0002, outbox-api.md, transactional-audit-idempotency-1.5.md, audit-events-api.md}, OFS {ctg9-ofs-contract.md, ADR-MOBILE-OFFLINE-0002, offline-sync-api.md}. None writes to packages/, migrations, trace, baselines or indexes. OFS depends only on names already fixed in the preflight, so the three Architect prompts can be dispatched in parallel with no shared lock. This PASS covers only the Architect dispatch; Inspector and Engineer still need their own prompts and reviews."
+}

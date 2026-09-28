@@ -678,3 +678,9 @@ detectou que o prompt SIG concedia escrita em `packages/` a Architect e
 criaria documento paralelo ao contrato `signature.md`. O prompt foi
 restringido a docs/contrato de rodada/ADR, com reparos pontuais de OBX,
 auditoria e migração; ainda não houve despacho.
+
+O prompt-review focal 2 (`reviews/ctg9-architect-prompt-delta-review-2.json`)
+retornou **PASS** para os três Architects em paralelo. Os write sets de
+SIG, OBX e OFS são disjuntos e limitados a docs, ADRs e contratos de
+rodada. Três observações editoriais não bloqueantes foram corrigidas antes
+do despacho; o PASS não atesta produto, testes ou publicação.

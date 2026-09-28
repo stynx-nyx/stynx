@@ -8,6 +8,8 @@ precisar de decisão durável, proponha
 isso cabe ao Engineer após os sensores Inspector. Não execute Git, não commite,
 não faça push/PR, não altere DETRAN nem outros pacotes. O maestro controla
 Git, baselines, trace, changeset e revisão.
+Só o maestro atualiza os índices de ADRs/contratos, serialmente, em commit
+Architect.
 
 Leia na ordem de `AGENTS.md`: README, constituições, ADRs, schemas e
 development-contract; depois leia a adenda A1 §8.1 da especificação C-0002

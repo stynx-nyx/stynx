@@ -692,6 +692,13 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     migração OBX sem redespacho, verificação por época, erro RR não
     retentável, selo SQL e índice dos ADRs sob lock do maestro. Pedir
     revisão focal do delta antes do despacho; ainda nenhum worker CTG9.
+35. Prompt-review focal do delta
+    (`reviews/ctg9-architect-prompt-delta-review-2.json`) retornou **PASS**
+    para despacho Architect paralelo SIG/OBX/OFS, com três ajustes
+    editoriais não bloqueantes incorporados. Os write sets são disjuntos;
+    nenhum worker executa Git, e índices ADR/contratos ficam com o maestro.
+    Inspector e Engineer seguem dependentes de contratos aceitos e prompts
+    próprios revisados.
 
 ## Reviews, PRs e publicações
 

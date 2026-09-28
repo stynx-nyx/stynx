@@ -354,10 +354,10 @@ trace/API baselines e changeset do grupo fixo seguem a R-0002.
 SIG usa lock `packages/signature/**`; o indicador estrutural fica nesse
 pacote, sem `packages/health/**` até o contrato demonstrar necessidade.
 OBX usa `packages/outbox/**`; o adapter SSE fica ali se a porta pública
-existente bastar. OFS usa `packages/offline-sync/**`. Contratos Architect e
-sensores Inspector desses três pacotes podem ser preparados em worktrees
-isoladas ao mesmo tempo **depois** de ADRs superadoras e prompt-review
-PASS; Engineers nos caminhos de pacote podem trabalhar em paralelo após
+existente bastar. OFS usa `packages/offline-sync/**`. Contratos e ADRs
+Architect podem ser preparados em paralelo após prompt-review PASS;
+sensores Inspector vêm depois da aceitação desses contratos/ADRs.
+Engineers nos caminhos de pacote podem trabalhar em paralelo após
 sensores vermelhos, até três tarefas sem lock comum. **Locks compartilhados
 serializados pelo maestro:** `packages/data`, migrations/DDL/seed/
 `test/db`, eventual `packages/backend` SSE, `law/trace.json`, baselines,

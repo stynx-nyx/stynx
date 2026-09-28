@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "work/rounds/R-0002/prompts/142-ctg9-architect-prompt-delta-review.md",
+  "prompt_sha256": "87b3c14e693f585601206fd4f5b3492a144a0c396baa5d1820f6e74f7f1d7bb5",
+  "output": "work/rounds/R-0002/reviews/ctg9-architect-prompt-delta-review-2.json",
+  "output_sha256": "10ee8798997c8519eaadd9c2463a89ff6439402106ec3facd37ca87ebd8db204",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx",
+  "started_at": "2026-09-28T14:16:44Z",
+  "ended_at": "2026-09-28T14:17:38Z"
+}

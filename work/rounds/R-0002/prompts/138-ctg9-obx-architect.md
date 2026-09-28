@@ -26,7 +26,7 @@ tenant, isolamento READ COMMITTED, relação com `Database.txIndependent`.
 Descreva DDL forward >=0021, migração de pendências/ACKs/história sem perda
 ou segundo envio: preserve SENT em voo, lease e ACK já terminal. Inspector
 cobre SENT em voo e ACK no momento da migração sem redespacho.
-ledger de tentativas com bytes exatos/hashes, protocolo e provedor, lease,
+Defina também ledger de tentativas com bytes exatos/hashes, protocolo e provedor, lease,
 claim da cabeça não terminal por agregado, ACK por evento, retries e prova
 PostgreSQL/RLS com dois tenants e dois schedulers.
 
