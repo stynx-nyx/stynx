@@ -1989,6 +1989,9 @@ importers:
       asn1js:
         specifier: ^3.0.10
         version: 3.0.10
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
       pkijs:
         specifier: ^3.4.1
         version: 3.4.1
