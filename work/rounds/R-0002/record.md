@@ -490,6 +490,18 @@ marca AsyncLocalStorage herdável de conexão detida, porta de append na mesma
 isolamento efetivo e grants/RLS do relógio. Continua sem decisão Owner,
 prompt-review PASS ou implementação CTG9.
 
+Ciclo 6: `REVIEW` em `reviews/ctg9-conditional-contract-review-6.json`.
+O Opus aceitou que as obrigações do ciclo 5 estavam escritas, mas encontrou
+três lacunas adicionais no código real: advisory sem posição monotônica não
+lineariza a cabeça auditada hoje ordenada por `now()`/UUIDv4; falha fechada
+global de `Database.tx` em contexto derivado quebraria caminhos legados de
+i18n/ratelimit/tenancy dentro do envelope CTG5; e `now()` SSE não precisa
+esperar o advisory da cadeia, o que poderia esgotar o pool sob transações
+auditadas longas. Também pediu holder ALS mutável desativado no `finally` e
+tratamento explícito da contenção da sentinela tenant NULL. O prompt-review
+condicional continua sem PASS e nenhum worker CTG9 foi despachado. O maestro
+aguarda a decisão Owner de escopo antes de nova revisão dessa prévia.
+
 ## CTG5 — correção de conformidade do envelope antes do Inspector (2026-09-28)
 
 A reavaliação de `INV-ERROR-001.change_policy` e da especificação

@@ -644,6 +644,14 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     retornou PASS em `reviews/ctg5-opaque-delivery-review-1.json`. A correção
     CTG5 e seu follow-up estão prontos para o gate consolidado. Permanece
     pendente a decisão de escopo A1 §8.1 antes de versionar a final.
+30. A prévia condicional CTG9 recebeu `REVIEW` também nos ciclos 5 e 6.
+    O ciclo 5 expôs o trigger auditado sem advisory e perda do marcador CLS;
+    a prévia foi emendada em `6ca1c24b`. O ciclo 6 ainda aponta a cabeça da
+    cadeia ordenada por `now()`/UUIDv4, regressão possível de
+    `Database.tx` legado com contextos derivados e contenção SSE de `now()`
+    no advisory. Não há PASS, contrato vinculante ou despacho CTG9.
+    Aguardar decisão Owner de A1 §8.1 antes de investir em outro review
+    condicional ou alterar código/ADRs desta frente.
 
 ## Reviews, PRs e publicações
 
