@@ -1,4 +1,4 @@
-import { applyDecorators, Catch, HttpException, Inject, Injectable, Optional, SetMetadata, UseFilters, UseInterceptors,
+import { applyDecorators, Catch, HttpException, Inject, Injectable, Logger, Optional, SetMetadata, UseFilters, UseInterceptors,
   type ArgumentsHost, type CallHandler, type ExceptionFilter, type ExecutionContext, type NestInterceptor } from '@nestjs/common';
 import { HttpAdapterHost, ModuleRef, ModulesContainer, Reflector } from '@nestjs/core';
 import { APP_GUARD } from '@nestjs/core';
@@ -25,6 +25,7 @@ export const STYNX_TRANSACTIONAL_COMMAND_OPTIONS = Symbol('STYNX_TRANSACTIONAL_C
 const COMMAND_MODULE_ACTIVE = Symbol('STYNX_COMMAND_MODULE_ACTIVE');
 const ALLOWED_HEADERS = ['location', 'retry-after', 'cache-control', 'etag'] as const;
 const ERROR_CODE_PATTERN = /^[A-Z][A-Z0-9_]*:[A-Z][A-Z0-9_]*:[a-zA-Z][a-zA-Z0-9_*-]*$/u;
+const COMMAND_LOGGER = new Logger('CommittedCommandResponseFilter');
 
 function validateRouteOptions(options: TransactionalCommandOptions): void {
   if (options.mismatchCode !== undefined
@@ -107,15 +108,15 @@ class CommandRejectionResponse extends HttpException {
   readonly key = '';
 
   constructor(readonly statusCode: number, readonly errorCode: string, readonly message: string,
-    readonly details?: Record<string, unknown>, readonly retryable = false) {
-    super('', statusCode);
+    readonly details?: Record<string, unknown>, readonly retryable = false, cause?: unknown) {
+    super('', statusCode, cause === undefined ? undefined : { cause });
   }
 }
 
-function reject(errorCode: keyof typeof REJECTIONS, details?: Record<string, unknown>): never {
+function reject(errorCode: keyof typeof REJECTIONS, details?: Record<string, unknown>, cause?: unknown): never {
   const [status, message] = REJECTIONS[errorCode];
   throw new CommandRejectionResponse(status, errorCode, message, details,
-    errorCode === 'IDEMPOTENCY:CONFLICT:in-progress');
+    errorCode === 'IDEMPOTENCY:CONFLICT:in-progress', cause);
 }
 
 function rejectMismatch(errorCode: string, key: string): never {
@@ -137,6 +138,12 @@ export class CommittedCommandResponseFilter implements ExceptionFilter<Committed
       const activeId = this.requestContext?.hasActiveContext()
         ? normalizeRequestId(this.requestContext.snapshot().requestId) : undefined;
       const requestId = activeId ?? responseId ?? inputId ?? generateRequestId();
+      if (exception.statusCode >= 500) {
+        const cause = exception.cause;
+        const trace = cause instanceof Error ? cause.stack ?? String(cause)
+          : cause === undefined ? exception.stack : `${String(cause)}\n${exception.stack ?? ''}`;
+        COMMAND_LOGGER.error(`Transactional command rejection ${exception.errorCode} requestId=${requestId}`, trace);
+      }
       adapter.setHeader(response, 'X-Request-Id', requestId);
       adapter.setHeader(response, 'content-type', 'application/json; charset=utf-8');
       const body = { statusCode: exception.statusCode, errorCode: exception.errorCode,
@@ -381,7 +388,7 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
     try {
       scope = checkedString(options.scope
         ? options.scope({ tenantId, actorId, method, path, request, body: request.body }) : actorId);
-    } catch { reject('COMMAND:CONFIGURATION:scope-callback-failed'); }
+    } catch (error) { reject('COMMAND:CONFIGURATION:scope-callback-failed', undefined, error); }
     if (!scope) reject('COMMAND:BAD_REQUEST:scope-invalid');
     const rawKey = request.headers[(idempotency.headerName ?? 'Idempotency-Key').toLowerCase()];
     const key = checkedString(Array.isArray(rawKey) ? rawKey[0] : rawKey);
@@ -472,8 +479,8 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
         reject('IDEMPOTENCY:CONFLICT:in-progress', { key });
       }
       if (error instanceof StynxDataError) throw error;
-      if (origin.phase === 'ctg5-callback') reject(`COMMAND:CONFIGURATION:${callbackFailure}`);
-      if (origin.phase !== 'handler') reject('COMMAND:DEPENDENCY:transaction-failed');
+      if (origin.phase === 'ctg5-callback') reject(`COMMAND:CONFIGURATION:${callbackFailure}`, undefined, error);
+      if (origin.phase !== 'handler') reject('COMMAND:DEPENDENCY:transaction-failed', undefined, error);
       throw error;
     }
   }
@@ -494,7 +501,7 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
       [context.getHandler(), context.getClass()]);
     let port: ReturnType<ResolvedTenantCommandContextPort['get']> | undefined;
     try { port = this.tenancyPort?.get(request); }
-    catch { reject('COMMAND:CONFIGURATION:tenancy-port-failed'); }
+    catch (error) { reject('COMMAND:CONFIGURATION:tenancy-port-failed', undefined, error); }
     if (this.tenancyInstalled || publicTenant) {
       const mode = publicTenant
         ? (Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL) === true ? 'verified' : 'nominal')
