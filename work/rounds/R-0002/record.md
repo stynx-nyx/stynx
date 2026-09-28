@@ -843,3 +843,9 @@ prompt-review Engineer integrado, sem atestar implementação. Inspector
 SIG corrigiu os dois oráculos, com três arquivos/70 testes focais verdes.
 Engineer OBX apontou cinco oráculos de SQL exato no legado incompatíveis
 com marker de posse; Inspector OBX corrige preservando a semântica.
+
+Commit Inspector `1ab3afd5` registrou sensores OFS e os reparos SIG,
+com hook Prettier/ESLint verde. `pnpm check:trace --print` mostrou os
+novos vínculos e a alteração unitária OBX ainda não commitada; o rebind
+Architect será feito após esse último commit de sensores. Prompt-review
+161 avalia o despacho independente do Engineer OFS nesse intervalo.
