@@ -263,6 +263,7 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
 
+- Candidata final `version-packages` primeira execução após `pre exit`: `plant-bug` — Changesets alterou o fork privado `tools/image-size-safe` para 2.0.3 e o SBOM falhou; saída parcial restaurada ao HEAD limpo, wrapper deve preservar byte a byte manifestos/CHANGELOGs privados antes de repetir marcador.
 - CTG9 Architect delivery-review ciclo 1: `reference-gap` — OBX não fixou o corte opt-in entre o dispatcher legado e o novo, SIG deixou a verificação criptográfica genérica a cargo do consumidor e OFS deixou a precedência do `Idempotency-Key` indefinida. Os três Architects receberam reparos disjuntos; nenhum Inspector está liberado antes do delta PASS.
 - CTG9 Architect delivery-review ciclo 2: `plant-bug` contratual — uma transação pode obter advisory/clock no append, esperar o marker de corte no enqueue e formar ciclo com o cutover que segura marker e espera clock. Fixar ordem global marker → advisory → clock e manter audit fora da transação de corte; testar corrida. Também completar espelhamento de falha pós-corte, claim nativo, headers de replay, status in-progress, replay legado e verificador customizado em produção. Nenhum Inspector está liberado.
 - CTG9 Inspector prompt-review ciclo 1: `reference-gap` — testes de composição CTG5/`AuditSqlSink` não cabiam nos pacotes outbox/data, e PKI/health não estavam resolvíveis em signature. Provisionamento Engineer `c21ba672` adicionou dependências/aliases; prompts Inspector incluem backend/audit e reparos de matriz/negativos. Repetir prompt-review antes de despachar.
@@ -1031,3 +1032,19 @@ desde ela passou com zero findings antes do segundo delivery-review.
 Prompt-review excepcional ciclo 3 da rota: **PASS**, com ajustes não
 bloqueantes incorporados em prompts 15/16 e neste contrato antes do
 rebind da política.
+
+### Reparo do versionamento privado antes do marcador final
+
+O primeiro `pnpm version-packages` após `pre exit` falhou no SBOM porque
+Changesets modificou o fork privado `tools/image-size-safe`. A saída
+parcial foi revertida; HEAD `5dffc830` mantém `pre.json` em `pre`.
+Contrato focal em `final-release-context-contract.md`, prompts 189/190.
+Prompt-review Opus ciclo 1 retornou **REVIEW**: faltava prova da ligação
+do wrapper e rebind de trace. Os prompts agora exigem ligação, falha do
+subprocesso, globs reais e preservação dos manifests privados congelados.
+Após prompt-review PASS: Inspector escreve e commita sensores; Engineer
+implementa e commita helper/wrapper; Architect executa
+`pnpm check:trace --print`, rebinda `law/trace.json` e commita. Só então
+repetir `pre exit`, `release:preview`, `version-packages` e verificar diff
+sem manifests/CHANGELOGs privados antes do marcador final. Não há PR ou RC
+intermediário.

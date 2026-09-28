@@ -42,6 +42,48 @@ antes do versionamento.
 SBOM, CHANGELOGs e READMEs são saídas determinísticas do verbo de
 versionamento, sem edição manual; essa é a atribuição Engineer do commit.
 
+### Reparo do exit de pre mode para pacotes privados
+
+Na primeira tentativa de `pnpm version-packages` depois de `pre exit`, o
+Changesets nativo alterou manifestos de pacotes privados apesar de
+`privatePackages.version=false` no config: por exemplo,
+`tools/image-size-safe` passou de `2.0.3-stynx.1` a `2.0.3` e o SBOM
+falhou. A tentativa parcial foi restaurada integralmente ao HEAD
+`5dffc830` antes de qualquer marcador. O wrapper de versionamento deve
+capturar, antes de `changeset version`, os bytes de `package.json` e
+`CHANGELOG.md` (inclusive ausência) de cada pacote workspace com
+`private:true`, exceto o manifesto raiz; após o Changesets nativo e
+antes do SBOM, deve restaurá-los exatamente e remover apenas CHANGELOGs
+privados criados por essa invocação. Descubra pacotes pelas raízes do
+`pnpm-workspace.yaml` sem percorrer `node_modules`/`dist`. Não restaure
+manifestos/CHANGELOGs dos 44 pacotes públicos, nem edite saídas geradas
+à mão. Um fixture Inspector deve provar restauração privada, inclusive
+fork `image-size` e CHANGELOG pré-existente/ausente, mantendo intocados
+manifesto e CHANGELOG públicos. Prove também a ligação do wrapper: captura
+antes do subprocesso Changesets e restauração mesmo quando ele falha,
+antes de validação, correção do grupo fixo, sincronização e SBOM. O fixture
+cobre `domain/*/api`, `docs/site`, pacote privado sem `version` e decoys
+em `node_modules`/`dist`. Restaure byte a byte `reference/api` e
+`reference/web`, cujos hashes estão congelados em
+`test/scripts/local-rc-blocker-contract.test.mjs`; não rebinde esses hashes.
+O subprocesso `changeset version` não pode usar o helper `run()` que chama
+`process.exit` antes da restauração. Capture o status via `spawnSync`,
+restaure em `finally` e só então propague o status original. Inspector
+prova esse caminho com subprocesso simulado ou verificação estrutural que
+rejeite explicitamente o uso de `run()` nesse ponto e a saída antecipada.
+`status:null` ou `error` de spawn são falhas. Se a restauração falhar,
+reporte tanto o resultado Changesets quanto todos os arquivos cuja
+restauração falhou, e saia com erro. A checagem de diff privado cobre
+somente manifestos/CHANGELOGs raiz dos pacotes workspace privados; o
+template `tools/create-stynx-app/template/package.json` permanece saída
+de apoio permitida.
+Depois do PASS Engineer, Architect executa `pnpm check:trace --print`,
+rebinda `law/trace.json` e commita como `DEVAI Architect` antes de repetir
+`pre exit` e o versionamento. Após versionar, confira que `git diff` não
+inclui `package.json`/`CHANGELOG.md` de pacotes privados. O marcador final continua limitado aos
+44 pares públicos, arquivos de apoio permitidos e exclusão de pre state/
+changesets; nenhum manifesto/CHANGELOG privado aparece em seu diff.
+
 ## Classificação de release já versionada
 
 O workflow de release-prep executa `pnpm release:status`; este chama

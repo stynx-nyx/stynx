@@ -1185,3 +1185,40 @@ oficial foi commitado em `99cf8e33`; `pnpm sdk:route-smoke` passou para
 `Ctg9OfflineSyncService` (não `CTG9OfflineSyncService`), com métodos
 `ctg9OfflineSync...`. O baseline público de API foi reexecutado depois
 do codegen e escreveu `public-api-baselines.json` com sucesso.
+
+Na preparação da candidata estável, os testes focais do classificador
+passaram 114/115: só falhou a igualdade real de manifestos RC3 versus
+política final 1.5.0, como previsto. `pnpm changeset pre exit` passou;
+`pnpm release:preview` projetou exatamente `1.5.0` a partir de dez
+changesets. A primeira execução de `pnpm version-packages` atualizou
+os 44 públicos mas falhou no SBOM: o Changesets nativo também alterou
+`tools/image-size-safe` privado de `2.0.3-stynx.1` para `2.0.3`,
+contrariando a verificação do fork local. Triagem: `plant-bug` no
+wrapper de versão para saída privada do `pre exit`. O maestro
+restaurou exatamente os arquivos gerados dessa tentativa ao HEAD
+limpo `5dffc830` e removeu oito CHANGELOGs privados criados; `pre.json`
+voltou a `mode=pre`, fork à versão original e nenhuma alteração de
+workspace permanece. Contrato e prompts 189–191 tratam o reparo
+reproduzível antes de novo versionamento. Nenhum marcador foi commitado.
+
+Prompt-review focal do reparo de pacotes privados ciclo 1: **REVIEW** em
+`reviews/final-private-version-prompt-review-1.bridge.json`. Dois
+bloqueios: faltava prova de que o wrapper chama captura/restauração na
+ordem correta e faltava rebind de `law/trace.json` antes de versionar.
+Contrato e prompts 189/190 foram ampliados também para globs reais,
+falha de Changesets, hashes dos manifests `reference/*` e verificação
+do diff privado. Ciclo 2 solicitado; nenhum código de reparo despachado.
+
+Prompt-review ciclo 2: **REVIEW** em
+`reviews/final-private-version-prompt-review-2.bridge.json`. Restou
+um bloqueio: `run()` usa `process.exit` e impediria `finally` após
+falha nativa. Prompts exigem `spawnSync` sem saída antecipada e sensor
+de propagação de status após restauração; Engineer também verificará os
+sensores existentes de freeze/política e preview sem diff. Ciclo 3
+solicitado antes do despacho.
+
+Prompt-review ciclo 3: **PASS** em
+`reviews/final-private-version-prompt-review-3.bridge.json`. As notas
+não bloqueantes sobre `status:null`, erro de spawn/restauração e o
+template permitido foram incorporadas ao contrato e aos prompts antes
+do despacho Inspector.

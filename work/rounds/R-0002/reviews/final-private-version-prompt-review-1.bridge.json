@@ -1,0 +1,31 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "issue": "Prompt 189 only tests a pure snapshot/restore helper, and prompt 190 verifies only that focused test, lint and syntax. Nothing proves that `scripts/version-packages.mjs` actually calls the capture before `run('pnpm',['exec','changeset','version'])` and the restore before `applyFixedGroupVersion`, `syncReleaseVersion` and `run('pnpm',['security:sbom'])`. Counterexample: the Engineer writes a correct helper but calls restore after `security:sbom`, or never imports it. The focused test passes, and a rerun after `pre exit` again moves `tools/image-size-safe` to `2.0.3` and fails the SBOM. The marker is not reproducible.",
+      "required_change": "In 189, add a wiring assertion. Either run `version-packages.mjs` against a temporary workspace with a stubbed `changeset` that changes a private manifest and creates a private CHANGELOG, then check that SBOM/sync see the original bytes. Or add a structural check that capture comes before the `changeset version` spawn and restore comes before `applyFixedGroupVersion`/`syncReleaseVersion`/`security:sbom`. In 190, require that assertion to pass."
+    },
+    {
+      "severity": "blocking",
+      "issue": "The Inspector adds or changes an executable test under `test/scripts/`, which moves the assertion projection. `pnpm check:trace`, the first gate of `ci:stynx`, fails until an Architect rebinds `law/trace.json`. Neither the triad nor the contract section 'Reparo do exit de pre mode para pacotes privados' schedules that rebind before the new versioning run and the final marker. As written, the marker would come from a tree where `ci:stynx`/the release lane is red.",
+      "required_change": "Add an explicit step to the contract section and the round plan. After Engineer PASS, an Architect runs `pnpm check:trace --print` and rebinds `law/trace.json` for the new test, as a `DEVAI Architect` commit. Only then run `pnpm changeset pre exit` and `pnpm version-packages` again."
+    },
+    {
+      "severity": "nonblocking",
+      "issue": "The fixture in 189 does not use the real workspace root shapes. `pnpm-workspace.yaml` includes the nested glob `domain/*/api`, the literal `docs/site`, and packages without `version` (`test/db`, `test/scripts`, `test/packages`). There is also no `node_modules`/`dist` decoy. Counterexample: a helper that only expands `tools/*` or `packages/*` passes the fixture but leaves `domain/demo-bookmark/api` (private, existing CHANGELOG, `workspace:*` deps that Changesets bumps through `updateInternalDependencies`) unrestored. Or it reads a `package.json` under `node_modules` and 'restores' it.",
+      "required_change": "In the fixture, use a `pnpm-workspace.yaml` with a nested glob, a literal path, a private package without `version`, and a `private:true` `package.json` decoy inside `node_modules/` and `dist/`. Assert that the helper covers the first ones and never touches the decoys."
+    },
+    {
+      "severity": "nonblocking",
+      "issue": "`run()` calls `process.exit` when `changeset version` fails, and `validateGeneratedVersionTransition` can throw after the subprocess. In both cases private manifests and newly created CHANGELOGs stay changed, which is exactly the manual cleanup the maestro had to do in the record (8 CHANGELOGs).",
+      "required_change": "In 190, require the restore to run in a try/finally, or on the failure path right after the `changeset version` subprocess returns, whatever its status. In 189, add a case where the synthetic mutation is followed by a failure and the restore still happens."
+    },
+    {
+      "severity": "nonblocking",
+      "issue": "Prompt 190 does not say why `reference/api/package.json` and `reference/web/package.json` need byte restoration. Both are private and carry the SHA-256 freeze in `test/scripts/local-rc-blocker-contract.test.mjs`. Without that context, someone could try to 'fix' the freeze by rebinding the hashes after versioning.",
+      "required_change": "In 190/contract, state that restoring the two reference manifests byte for byte keeps `local-rc-blocker-contract` green with no Inspector rebind. Add a post-versioning check that `git diff` lists no private `package.json`/`CHANGELOG.md`."
+    }
+  ],
+  "summary": "The contract delta and prompts 189/190 target the right scope: only private workspace packages (`private:true`, root excluded), byte restoration including absence, deletion of newly created CHANGELOGs, and the 44 public packages and root left alone. The public/private split is sound: no public package depends on `image-size-safe` or `@stynx-internal/*`, and `syncReleaseVersion` only rewrites the root, the public packages and the template, so restoring before sync does not conflict. The triad still does not make the marker reproducible, for two reasons. The wrapper wiring is not covered by any test, and the trace rebind needed for the new test is not scheduled before the rerun. Workspace glob coverage in the fixture and restoration on the failure path should also be fixed."
+}
