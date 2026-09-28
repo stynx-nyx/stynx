@@ -307,6 +307,7 @@ export function isFinalVersionedCandidate({
         (status === 'M' &&
           [
             '.semgrepignore',
+            'law/adr/2026-09-28-final-candidate-ci-repair.md',
             'packages-web/angular-i18n/tsconfig.spec.json',
             'scripts/lib/release-context.mjs',
             'tools/tsconfig/base.json',
