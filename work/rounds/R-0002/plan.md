@@ -569,6 +569,26 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     executar o merge e então restaurar apenas as mudanças locais dos quatro
     arquivos se a branch final não os alterar. Não incluir o binding de host
     particular no PR sem nova revisão da autoridade remota.
+22. A reconciliação do envelope CTG5 foi preparada **somente** na worktree
+    `/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx`, branch
+    `codex/ctg5-error-envelope`, HEAD `f39ff93e`. O plano isolado
+    `ctg5-error-envelope-option-a.md` cobre todos os erros próprios novos da
+    fronteira, preserva os erros legados de data e recebeu PASS técnico
+    condicional do Opus em `reviews/ctg5-error-envelope-option-a-review-4.json`.
+    Os prompts Inspector 105 e Engineer 106 receberam PASS técnico em
+    `reviews/ctg5-envelope-worker-prompt-review-2.json`; as duas precisões
+    baixas desse review foram incorporadas em `f39ff93e`. A ponte DETRAN
+    rejeitou duas saídas texto não JSON, por isso os reviews válidos usaram
+    `claude -p --json-schema` com o mesmo prompt e guardaram o digest do
+    resultado. **Nenhum código, teste ou contrato vigente foi alterado, e
+    nenhum worker foi despachado nessa correção.** Antes de importá-la ou
+    executar a tríade, falta o recibo exato do Owner para a opção A sob
+    `INV-ERROR-001`, no caminho
+    `work/rounds/R-0002/authorization-ctg5-error-envelope.md`. A decisão
+    de escopo A1 §8.1 também permanece pendente. Depois das decisões, seguir
+    a sequência de commits Architect → Inspector → Architect trace → Engineer
+    → Architect baseline, gates focais e delivery-review PASS; só então
+    importar a correção na branch cumulativa e seguir para o gate final.
 
 ## Reviews, PRs e publicações
 
