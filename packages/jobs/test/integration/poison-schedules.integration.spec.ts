@@ -135,12 +135,18 @@ describe('CTG-0004 poisoned schedule isolation under FORCE RLS', () => {
           intervalSeconds: 60, actorId: actorA, timezone: 'UTC', isEnabled: true,
         });
         expect(repaired.id).toBe(badId);
-        expect(repaired.disabledReason).toBeNull();
+        expect(repaired).toMatchObject({
+          id: badId, tenantId: tenantA, actorId: actorA, kind: 'interval',
+          disabledReason: null, isEnabled: true,
+        });
         expect(repaired.isEnabled).toBe(true);
       });
       await inB(async () => {
-        expect(await service.getSchedule(badId, tenantB)).toBeNull();
-        expect((await service.getSchedule(goodId, tenantB))?.disabledReason).toBeNull();
+        expect(await service.getSchedule(badId, tenantB)).toEqual(null);
+        expect(await service.getSchedule(goodId, tenantB)).toMatchObject({
+          id: goodId, tenantId: tenantB, actorId: actorB, kind: 'cron',
+          disabledReason: null, isEnabled: true,
+        });
       });
       const repairedDb = await admin.query<{ disabled_reason: string | null }>(`
         select disabled_reason from jobs.schedules where id=$1`, [badId]);
