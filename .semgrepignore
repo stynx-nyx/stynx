@@ -12,7 +12,7 @@ reference/api/dist/
 reference/web/dist/
 packages/**/dist/
 packages-web/**/dist/
-# Public, deterministic PKI test fixtures. These four keys sign only the
+# Public, fixed PKI test fixtures. These four keys sign only the
 # tracked test certificates and never enter a publishable package's dist/.
 packages/signature/test/fixtures/pki/root.key.pem
 packages/signature/test/fixtures/pki/signer.key.pem

@@ -12,19 +12,23 @@ tags: [stynx, release, ci, security]
 The first clean remote checkout of PR #308 exposed two differences from the
 locally warmed workspace. TypeScript checked `@stynx-nyx/angular-i18n/testing`
 before that package's build created `dist`; the package's test tsconfig had no
-source mapping for its own testing subpath. Semgrep also reported four private
-keys in the public, deterministic PKI test fixtures. The keys sign only test
+source mapping for its own testing subpath. A second checkout then reached
+`@stynx-nyx/angular-auth/testing` and found the same missing source mapping
+in the shared TypeScript paths. Semgrep also reported four private
+keys in the public, fixed PKI test fixtures. The keys sign only test
 certificates and PDFs, are excluded by the package's `files: ["dist"]` manifest,
 and are not production credentials. Local `ci:stynx`, release policy, provenance,
 and consumer tarball gates had passed on the candidate before these remote
 findings.
 
 The frozen 1.5.0 marker normally permits only round records and exact
-forbidden-action receipts afterward. This decision admits precisely four
+forbidden-action receipts afterward. This decision admits precisely five
 additional follow-up paths: this ADR; `.semgrepignore`, limited to the four
 named test keys; `packages-web/angular-i18n/tsconfig.spec.json`, mapping its
-own source and testing subpath; and the exact release-context implementation
-that checks those paths and statuses. All public package manifests, sources,
+own source and testing subpath; `tools/tsconfig/base.json`, mapping the
+`angular-auth/testing` and `angular-i18n/testing` subpaths for all inheriting
+packages; and the exact release-context implementation that checks those
+paths and statuses. All public package manifests, sources,
 generated `dist`, changesets, and version marker remain unchanged. The
 allowlist does not accept any other source, test, workflow, or policy mutation.
 

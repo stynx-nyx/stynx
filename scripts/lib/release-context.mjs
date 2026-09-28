@@ -302,13 +302,14 @@ export function isFinalVersionedCandidate({
       (status === 'A' || status === 'M') &&
       (/^work\/rounds\/R-0002\/.+/u.test(path) ||
         (status === 'M' && path === 'law/policy/forbidden-action-authorizations.json') ||
-        // Exact CI portability repairs discovered by the first clean remote
-        // checkout. Neither path enters the 44 publishable package tarballs.
+        // Exact CI portability repairs discovered by clean remote checkouts.
+        // None of these files enters the 44 publishable package tarballs.
         (status === 'M' &&
           [
             '.semgrepignore',
             'packages-web/angular-i18n/tsconfig.spec.json',
             'scripts/lib/release-context.mjs',
+            'tools/tsconfig/base.json',
           ].includes(path)) ||
         (status === 'A' && path === 'law/adr/2026-09-28-final-candidate-ci-repair.md')),
   );
