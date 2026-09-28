@@ -1,0 +1,5 @@
+# Engineer A — CTG-0004 sparse cron follow-up
+
+Role Engineer. Start after Inspector A's follow-up tests are red. Read STYNX authorities, ADR-JOBS-0002, both jobs contracts, and the focused sensor. Own only `packages/jobs/src/cron.ts` under the Engineer A lock. Do not edit repository, migrations, types, tests, law, generated files, or Git/gh.
+
+Replace the minute-by-minute long-span search with bounded calendar-aware candidate evaluation or an equivalent optimization. Make impossible `0 0 31 2 *` throw `InvalidCronExpressionError` within 500 ms per real call in CI for UTC, New York, and São Paulo. Keep valid leap-day and annual sparse schedules, five-year horizon, exact cron grammar and OR semantics, later occurrence on fall overlap, collapsed spring gap, and strict UTC-after ordering. Preserve existing New York and São Paulo fixture results. Run the focused cron suite and report elapsed evidence and any environment-sensitive tzdata assumptions. Do not move or raise the 500 ms sensor threshold.
