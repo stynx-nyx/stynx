@@ -5,6 +5,7 @@ test('shell supports keyboard navigation, persisted theme preferences, and axe c
   await page.goto('/shell');
 
   const skip = page.getByRole('link', { name: 'Skip to content' });
+  await skip.focus();
   await expect(skip).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Home' })).toBeFocused();
@@ -20,6 +21,10 @@ test('shell supports keyboard navigation, persisted theme preferences, and axe c
   await themeToggle.click();
   await page.getByRole('button', { name: 'Dark' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-stynx-theme', 'dark');
+
+  await page.getByTestId('locale-switcher-select').selectOption('pt-BR');
+  await expect(page.getByRole('link', { name: 'Pular para o conteúdo' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Navegação principal' })).toBeVisible();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-stynx-theme', 'dark');
 
