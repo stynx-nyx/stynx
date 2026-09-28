@@ -124,8 +124,12 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    recebe esse timestamp já escolhido. Como uma transação REPEATABLE READ
    pode ler cabeça antiga após obter o advisory, **cada um dos três writers**
    verifica `transaction_isolation = read committed` antes de selecionar a
-   cabeça; RR/SERIALIZABLE falham com SQLSTATE `40001` e retry externo,
-   nunca bifurcam. A migração não altera hashes ou timestamps legados.
+   cabeça; RR/SERIALIZABLE falham com SQLSTATE `40001`, MESSAGE fixa
+   `audit_chain_requires_read_committed` e HINT para repetir com RC.
+   `packages/data` converte esse caso em erro tipado **não retentável** na
+   mesma configuração; não repete três vezes nem recomenda retry externo
+   com o mesmo isolamento. Outros `40001` genuínos seguem retentáveis.
+   A migração não altera hashes ou timestamps legados.
    Antes de ativar os novos writers, percorre `previous_hash` por tenant,
    inclusive NULL, e classifica o legado em linear por links, par linear
    mas fora da ordem temporal, fork ou hash mismatch. Não aborta a migração
@@ -133,8 +137,10 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    sela a cadeia com evento âncora explícito após o maior timestamp legado,
    sob o advisory. Esse evento inicia **nova época** (`previous_hash=NULL`),
    sem declarar o segmento antigo conforme. `audit.verify_chain` mantém
-   assinatura e colunas públicas, aceita tenant NULL e valida eventos
-   posteriores à âncora dentro da nova época; eventos legados inválidos
+   assinatura e colunas públicas, aceita tenant NULL e usa `lag()`
+   particionado pela época (âncora = GENESIS). A nova função
+   `audit.verify_current_epoch(tenant,limit)` inicia na âncora vigente,
+   mesmo com mais de `p_limit` eventos legados. Eventos legados inválidos
    continuam `chain_valid=false`. Uma função nova expõe estado da época
    antiga, tips e divergências sem suprimir nenhuma linha. Erro na própria
    migração aborta normalmente; hash mismatch legado fica diagnosticado
@@ -150,7 +156,11 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    papel owner com `p_tenant_id` real ou NULL. A primeira escrita da
    transação grava a chave de cadeia em GUC local `stynx.audit_chain_key`;
    os três writers rejeitam uma segunda chave diferente com SQLSTATE
-   tipado antes de travar outro advisory. Assim, owner pode escrever o
+   `STY41`, mapeado a `AuditChainKeyMismatchError`, **antes** de travar
+   outro advisory, inclusive em `write_command_event`, que hoje pede
+   advisory antes de delegar a `audit.write`. A GUC é autoproteção de
+   transação, não uma fronteira de segurança contra SQL arbitrário.
+   Assim, owner pode escrever o
    tenant X, mas X→NULL na mesma transação falha sem deadlock. NULL fica
    reservado para operações owner de sistema. Não criar tenant falso.
    O Inspector cruza comando CTG5 com handler não auditado versus handler
@@ -169,24 +179,27 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    aplica `TxOptions.isolation` no top-level antes da primeira query de
    sessão; o item OFS pede explicitamente `read committed`. Em transação
    aninhada, uma opção de isolamento divergente falha fechada. Se um
-   chamador fornecer RR ou
-   SERIALIZABLE, falhar fechado com erro tipado antes de escrever ou propagar
-   40001 sem perda, com retry no limite externo do comando; não capturar e
+   chamador fornecer RR ou SERIALIZABLE, falhar fechado com erro tipado
+   antes de escrever; reexecutar somente com RC. Outros `40001` de
+   concorrência usam retry no limite externo do comando, sem capturar e
    continuar dentro da transação abortada. Validar na conexão efetiva SQL
    `current_setting('transaction_isolation') = 'read committed'` e
    `transaction_read_only = off`; opções JS de uma `Database.tx` aninhada não
    bastam para impor essas condições.
    `EventStreamSource.now(scope)` **não** adquire o advisory de auditoria:
    toma somente a linha de relógio por `INSERT ... ON CONFLICT ... DO UPDATE`
-   com `lockTimeoutMs` curto configurável aplicado por `SET LOCAL
-lock_timeout`; SQLSTATE `55P03` vira 503 tipado
-   `SSE_SOURCE_UNAVAILABLE` com retry. Apenas um preflight `now()` por
+   com `lockTimeoutMs` curto configurável aplicado por
+   `trx.query('SET LOCAL lock_timeout ...')` no adapter. O backend SSE já
+   traduz erro da fonte em 503 `SSE_SOURCE_UNAVAILABLE`; SQLSTATE `55P03`
+   preserva esse caminho e o cliente retenta. Apenas um preflight `now()` por
    tenant/processo segura conexão de cada vez; esperas adicionais ficam
    fora do pool e têm deadline, preservando conexões para outros tenants.
-   `appendInTransaction` é a última escrita de negócio; a `Transaction`
-   marca escrita selada após append e rejeita qualquer query de escrita
-   posterior com erro tipado. Para vários fatos na mesma transação, usar
-   `appendManyInTransaction` antes de selar. Esta é API nova, sem alterar
+   `appendInTransaction` é a última escrita de negócio; após o clock,
+   executa `SET LOCAL transaction_read_only = on` na mesma `Transaction`.
+   PostgreSQL recusa qualquer escrita posterior com SQLSTATE `25006`, já
+   traduzido a `ReadOnlyViolationError` por data. Para vários fatos na
+   mesma transação, usar `appendManyInTransaction` antes de selar.
+   Esta é API nova, sem alterar
    `enqueue` legado.
    Atualiza o relógio com `max(clock_ms, agora_ms)` e devolve o valor
    confirmado; assim

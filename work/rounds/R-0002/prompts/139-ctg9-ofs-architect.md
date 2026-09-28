@@ -5,7 +5,10 @@ Declare `Architect` na primeira linha. Trabalhe somente em
 `law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md` e
 `docs/framework/contracts/offline-sync-api.md`. Não execute Git, não
 commite, não faça push/PR, não altere DETRAN nem produto/testes. O maestro
-controla Git, migrações, baselines, trace, changeset e revisão.
+controla Git, migrações, baselines, trace, changeset e revisão. Só o maestro
+atualiza os índices de ADRs/contratos em commit Architect. O contrato OFS
+cita `Database.txIndependent` e as portas OBX pelos nomes estáveis, sem
+redefinir a semântica de data/audit/outbox.
 
 Leia na ordem de `AGENTS.md` os documentos de autoridade, depois A1 §8.1
 e a compatibilidade vinculante no DETRAN somente leitura, a prévia

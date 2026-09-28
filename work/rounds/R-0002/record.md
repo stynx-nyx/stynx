@@ -670,3 +670,11 @@ vincula cada transação a uma cadeia por GUC, classifica e sela legado sem
 reescrever hash, e ativa modo transacional estrito só na API OFS. O próximo
 prompt-review avaliará esse fechamento e os prompts Architect; ainda não
 há PASS nem implementação CTG9.
+
+O prompt-review Opus de fechamento 1
+(`reviews/ctg9-prompt-review-closure-1.json`) retornou REVIEW. Confirmou o
+fechamento contratual dos quatro bloqueios técnicos do review 7, mas
+detectou que o prompt SIG concedia escrita em `packages/` a Architect e
+criaria documento paralelo ao contrato `signature.md`. O prompt foi
+restringido a docs/contrato de rodada/ADR, com reparos pontuais de OBX,
+auditoria e migração; ainda não houve despacho.

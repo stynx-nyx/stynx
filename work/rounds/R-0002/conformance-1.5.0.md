@@ -24,6 +24,26 @@
 
 ## Candidate boundary and consumption
 
+### CTG9 A1 §8.1 — mandatory item ledger
+
+All rows below are **open** on the current source branch. A real declaration,
+passing proof, publication version and deviation will replace each pending
+cell after implementation and the final release. An API name in a draft
+contract is not conformance evidence.
+
+| ID         | Publication | Actual exported symbol | Proof   | Deviation / state                                               |
+| ---------- | ----------- | ---------------------- | ------- | --------------------------------------------------------------- |
+| UPS-SIG-01 | Pending     | Pending                | Pending | Minimum signature level and fail-closed provider evidence open. |
+| UPS-SIG-02 | Pending     | Pending                | Pending | Typed PAdES/TSA/LTA/revocation readiness open.                  |
+| UPS-SIG-03 | Pending     | Pending                | Pending | Canonical multi-signer manifest and verifiable evidence open.   |
+| UPS-SIG-04 | Pending     | Pending                | Pending | Document-bound withdrawal/revocation proof open.                |
+| UPS-OBX-01 | Pending     | Pending                | Pending | Append-only event log, cursor and tenant dedup open.            |
+| UPS-OBX-02 | Pending     | Pending                | Pending | Durable attempt ledger and unambiguous ACK open.                |
+| UPS-OFS-01 | Pending     | Pending                | Pending | Full numbering lifecycle, scoped TTL and consumption open.      |
+| UPS-OFS-02 | Pending     | Pending                | Pending | Durable batch/item receipts and ACK replay open.                |
+| UPS-OFS-03 | Pending     | Pending                | Pending | Per-item atomic applier and partial result open.                |
+| UPS-OFS-04 | Pending     | Pending                | Pending | Concurrency window, handoff and resolution open.                |
+
 DETRAN C-0002 **A1 §8.1** confirms UPS-SIG-01…04, UPS-OBX-01…02, and UPS-OFS-01…04 as **MUST** for the affected DETRAN consumer migrations. A1 says its confirmation is not upstream implementation or publication evidence. The comparison there found the package-owned `dist` files for `signature`, `outbox`, and `offline-sync` byte-identical between 1.4.0 and `1.5.0-rc.2`; RC2 does not satisfy these gaps. **OD-S15-03 includes all ten IDs in the final 1.5.0.** No new STYNX symbol, test outcome, or published declaration for these IDs is asserted yet; all remain open until CTG9 implementation, proof, and publication.
 
 For each mandatory ID, a missing final `1.5.0` published declaration or missing conformance proof remains open. Under OD-S15-01, OD-S15-03, A1 §8.1, and §7, a consumer CTG encountering an absent MUST capability checkpoints and stops; a consumer PR merges only with the final `1.5.0` pin and completed conformance table. Fill actual published versions, declaration symbols, test outcomes, and deviations from exact release evidence before treating any open row as complete.

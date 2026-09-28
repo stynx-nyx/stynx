@@ -2,8 +2,12 @@
 
 Declare `Architect` na primeira linha. Trabalhe somente em
 `work/rounds/R-0002/ctg9-obx-contract.md`,
-`law/adr/ADR-OUTBOX-0002-event-log-and-delivery.md` e
-`docs/framework/contracts/outbox-api.md`. Não execute Git, não commite,
+`law/adr/ADR-OUTBOX-0002-event-log-and-delivery.md`,
+`docs/framework/contracts/outbox-api.md`,
+`docs/framework/contracts/transactional-audit-idempotency-1.5.md` e
+`docs/framework/contracts/audit-events-api.md`. O ADR declara a superação
+pontual da decisão CTG5 alterada. Só o maestro atualiza os índices de
+ADRs/contratos, serialmente, em commit Architect. Não execute Git, não commite,
 não faça push/PR, não altere DETRAN nem produto/testes. O maestro controla
 Git, migrações, baselines, trace, changeset e revisão.
 
@@ -19,7 +23,9 @@ ordenável, leitura no primário, id legado mapeado, `now()` só na linha de
 clock e deadline/503, sem perder evento em corrida de commit. Defina
 `appendInTransaction(trx,event)` como porta para OFS, identidade efetiva do
 tenant, isolamento READ COMMITTED, relação com `Database.txIndependent`.
-Descreva DDL forward >=0021, migração de pendências/ACKs/história sem perda,
+Descreva DDL forward >=0021, migração de pendências/ACKs/história sem perda
+ou segundo envio: preserve SENT em voo, lease e ACK já terminal. Inspector
+cobre SENT em voo e ACK no momento da migração sem redespacho.
 ledger de tentativas com bytes exatos/hashes, protocolo e provedor, lease,
 claim da cabeça não terminal por agregado, ACK por evento, retries e prova
 PostgreSQL/RLS com dois tenants e dois schedulers.
@@ -30,9 +36,18 @@ antes de selecionar cabeça; classifique legado por links, misorder, fork e
 hash mismatch sem rehash e sele com nova época auditável. Owner
 `AuditSqlSink` pode gravar tenant real; GUC transacional impede cruzar duas
 chaves. Inclua índice de cabeça, NULL tenant e ordem cadeia→relógio.
+Defina `audit.verify_current_epoch` além de `verify_chain` particionado por
+época, incluindo caso com mais de 1000 eventos legados. A recusa de
+RR/SERIALIZABLE em writers tem MESSAGE fixa e erro data não retentável;
+GUC mismatch usa SQLSTATE `STY41` antes do primeiro advisory e mapeia a
+erro tipado. A GUC é autoproteção, não limite de segurança.
 Descreva `Database.txIndependent` aditivo com holder ALS estrito no item,
 sem mudar `Database.tx` legado fora do modo estrito. `now()` tem
 `lockTimeoutMs`/55P03→503 e um preflight por tenant/processo, sem segurar
 pool enquanto espera vaga. Append sela escritas posteriores; vários
-eventos usam appendMany. Dê nomes públicos exatos e matriz A1→testes.
+eventos usam `appendManyInTransaction`; a porta unitária é
+`appendInTransaction(trx,event)`. Dê nomes públicos exatos e matriz A1→testes.
+O selo usa `SET LOCAL transaction_read_only = on` após o clock; o adapter
+configura `lock_timeout` local em `now()`, e o backend SSE existente já
+traduz falha da fonte em 503.
 Não crie limites públicos novos nem edite migrações históricas.

@@ -1,8 +1,11 @@
 # CTG9 SIG — Architect worker
 
 Declare `Architect` na primeira linha. Trabalhe somente em
-`packages/signature/**`, `docs/framework/contracts/signature-api.md` e em
-`work/rounds/R-0002/ctg9-sig-contract.md`. Não execute Git, não commite,
+`docs/framework/contracts/signature.md` e
+`work/rounds/R-0002/ctg9-sig-contract.md`. Se a política de confiança
+precisar de decisão durável, proponha
+`law/adr/ADR-SIGNATURE-0001-trust-evidence.md`. Não escreva em `packages/`:
+isso cabe ao Engineer após os sensores Inspector. Não execute Git, não commite,
 não faça push/PR, não altere DETRAN nem outros pacotes. O maestro controla
 Git, baselines, trace, changeset e revisão.
 
@@ -23,5 +26,8 @@ vinculada ao documento e à autoria. O consumidor define perfis e trust
 anchors. Defina negativos executáveis, incluindo adulteração de cada
 vínculo, época zero, backend mock e presença/ausência por capacidade.
 Não crie assinatura CMS simulada como prova de produção. Relacione cada
-critério A1 com símbolo, arquivo e sensor Inspector proposto. Preserve
+critério A1 com símbolo, arquivo e sensor Inspector proposto. Mapeie os
+negativos dos adapters clínicos e de juntas do DETRAN para resultados
+tipados STYNX e preserve o conjunto de resultados da porta
+`verifyWithdrawalEvidence`, sem copiar código DETRAN. Preserve
 explicitamente comportamento legado onde não houver `minimumSignatureLevel`.

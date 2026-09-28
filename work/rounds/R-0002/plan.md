@@ -684,6 +684,14 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     OFS. SSE recebe timeout de lock e preflight serializado por tenant.
     Prompt-review de fechamento e prompts Architect SIG/OBX/OFS preparados;
     nenhum worker CTG9 despachado ainda.
+34. Prompt-review Opus de fechamento 1 (`reviews/ctg9-prompt-review-closure-1.json`)
+    retornou REVIEW: os quatro bloqueios técnicos anteriores estão
+    fechados, mas o prompt SIG permitia escrita Architect em `packages/`
+    e citava contrato inexistente. Corrigido para `signature.md` e contrato
+    de rodada, com ADR opcional. O delta também explicita docs audit/data,
+    migração OBX sem redespacho, verificação por época, erro RR não
+    retentável, selo SQL e índice dos ADRs sob lock do maestro. Pedir
+    revisão focal do delta antes do despacho; ainda nenhum worker CTG9.
 
 ## Reviews, PRs e publicações
 
