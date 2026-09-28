@@ -37,6 +37,11 @@ As implementações atuais **não** comprovam a adenda: RC2 contém `signature`,
 O `REVIEW` técnico Opus em
 `reviews/ctg9-conditional-contract-review-1.json` identificou os riscos
 abaixo. A revisão não libera workers e não resolve as decisões Owner.
+O ciclo 2, salvo em `reviews/ctg9-conditional-contract-review-2.json`,
+confirmou o reparo dos sete bloqueios iniciais, mas encontrou perda possível
+na precisão em milissegundos do cursor SSE e no cursor inicial `now()`.
+A estratégia de tupla `(ms, UUIDv7 monotônico)` e o barrier lock de `now()`
+abaixo são uma proposta Architect para nova verificação, sem implementação.
 
 ## Contratos e provas necessários se o Owner incluir CTG9
 
@@ -61,26 +66,55 @@ abaixo. A revisão não libera workers e não resolve as decisões Owner.
 2. **OBX:** manter `enqueue`/upsert legado e adicionar `append` explícito,
    com chave de idempotência obrigatória por `(tenant,key)`, log de fatos
    distinto da intenção de despacho e cursor público `(createdAt,id)`.
-   Estratégia Architect a validar: uma linha de relógio/cursor por tenant
-   bloqueada com `SELECT FOR UPDATE` durante todo o append, com timestamp
-   estritamente crescente (`max(clock_timestamp(), anterior + 1µs)`), de modo
-   que commit/rollback serializem a visibilidade sem perder evento tardio.
-   Não depender apenas de `clock_timestamp()` e ordenação para commits fora
-   de ordem. O despacho por agregado reivindica só seu evento pendente mais
-   antigo sob schedulers concorrentes; claim tem lease/timeout e reaquisição
-   após crash entre claim e send. ACK novo usa `(tenant,eventId)` ou
-   `(tenant,idempotencyKey)`; ACK legado por agregado só prossegue se único,
-   caso contrário falha fechado. Ledger tem uma linha por tentativa com bytes
-   exatos/hashes de requisição e resposta, protocolo, resultado e provider;
-   FK composta `(tenant_id,event_id)` tanto no ledger como no ACK impede
-   vínculo cruzado mesmo no papel `owner`, que contorna RLS. ACK positivo
-   posterior a ERROR avança o estado; duplicado é idempotente; inválido é
-   registrado e rejeitado. Inspector usa PostgreSQL real, dois schedulers,
-   crash/reclaim, dois eventos do mesmo agregado, dois tenants, atraso de
-   commit/cursor, retry, ACK válido/inválido e migração sem perda. A migração
-   de plataforma usa o próximo número livre **≥0021**, sob lock do maestro,
-   sem editar 0018–0020. O adapter SSE pode implementar `EventStreamSource`
-   no pacote outbox sem alterar `packages/backend` se o cursor permanecer.
+   Estratégia Architect a validar: uma linha de relógio por tenant
+   é criada com `INSERT ... ON CONFLICT DO NOTHING` (inclusive na primeira
+   corrida) e bloqueada com `SELECT FOR UPDATE` na mesma transação do append.
+   Todo `created_at` do **novo log** é arredondado a milissegundos, como o
+   `Date` de `EventStreamCursor`; o `id` é UUIDv7 ordenável, com o mesmo
+   milissegundo e uma sequência global monotônica obtida **sob o lock**
+   codificada nos bits ordenáveis, inclusive quando vários tenants ou eventos
+   compartilham um milissegundo. Sob o lock, o timestamp atribuído é
+   `max(clock_timestamp() arredondado, último_ms)`; a sequência ordena os
+   empates sem colisão global. Na exaustão do espaço codificável, avançar o
+   milissegundo lógico ou falhar antes da escrita sem perder o evento; não
+   introduzir um limite de taxa silencioso. SQL e
+   objeto JS comparam a **mesma** tupla `(ms,id)`; UUID aleatório v4 não
+   atende. O lock é adquirido após os locks de domínio, imediatamente antes
+   do append, e nenhum código adquire lock de domínio depois dele; testar
+   deadlock e medir contenção por tenant. A serialização dura até commit ou
+   rollback, não impõe limite fixo de taxa, mas pode reduzir throughput.
+   `EventStreamSource.now(scope)` também adquire o mesmo lock, atualiza o
+   relógio com `max(clock_ms, agora_ms)` e devolve o valor confirmado; assim
+   uma conexão entre append e commit espera, e qualquer append posterior
+   recebe tupla maior. Eventos já confirmados no mesmo milissegundo podem
+   reaparecer na conexão sem `Last-Event-ID`; o contrato assume entrega
+   pelo menos uma vez, sem perda. O `listSince` usa `(created_at,id)` exatos,
+   inclusive com mais que `batchSize` eventos no mesmo milissegundo.
+   `enqueue` legado não escreve no novo log sem o lock; na migração, os fatos
+   legados expostos ao SSE recebem ordem total e relógio inicial, com
+   mapeamento id/estado/ACK preservado; `findById` resolve também IDs legados
+   pelo mapa de migração para permitir reconexão. O despacho por agregado reivindica
+   somente o evento **não terminal** mais antigo, incluindo PENDING, lease
+   SENT sem ACK final e ERROR aguardando retry, sob schedulers concorrentes;
+   claim tem lease/timeout e reaquisição após crash entre claim e send.
+   Reclaim pode duplicar envio, portanto a entrega é pelo menos uma vez e
+   encaminha `eventId`/chave ao provedor para deduplicação. ACK novo usa
+   `(tenant,eventId)` ou `(tenant,idempotencyKey)`; ACK legado por agregado
+   só prossegue se único, caso contrário falha fechado. Ledger tem uma linha
+   por tentativa com bytes exatos/hashes de requisição e resposta, protocolo,
+   resultado e provedor. Cada ACK recebido ganha linha própria; uma projeção
+   separada guarda o estado atual, substituindo `UNIQUE(message_id)` legado.
+   `tenant_id` é derivado do evento, não confiado ao payload externo, e FK
+   composta `(tenant_id,event_id)` no ledger e no ACK impede vínculo cruzado
+   mesmo no papel `owner`, que contorna RLS. ACK positivo posterior a ERROR
+   avança o estado; duplicado é idempotente; inválido é registrado e rejeitado.
+   Inspector usa PostgreSQL real, dois schedulers, crash/reclaim, dois eventos
+   do mesmo agregado, dois tenants, atraso de commit/cursor, mais que
+   `batchSize` em um milissegundo, retry, ACK válido/inválido, corrida da
+   primeira linha de relógio e migração sem perda. A migração de plataforma
+   usa o próximo número livre **≥0021**, sob lock do maestro, sem editar
+   0018–0020. O adapter SSE pode implementar `EventStreamSource` no pacote
+   outbox sem alterar `packages/backend` se o cursor permanecer.
 3. **OFS:** `OfflineSyncAgentResolver` recebe contexto confiável e separa
    agente de negócio do ator auditável; o corpo HTTP continua proibido de
    fornecer identidade. `OfflineSyncPolicyResolver` fornece TTL, janela e
@@ -105,8 +139,9 @@ abaixo. A revisão não libera workers e não resolve as decisões Owner.
    clientes legados. Inspector cobre HTTP TEAT/BOAT, mais de 100 itens,
    sequência repetida/lacuna, ACK perdido, handoff, janela desligada,
    resolução permitida/proibida, concorrência, rollback por item e RLS real.
-   `migrations/0002_*.sql` faz backfill sem perder fila; DDL e teste de
-   upgrade identificam itens legados. Esta frente depende da correção do
+   `migrations/0002_*.sql` faz backfill sem perder fila; DDL, teste de
+   upgrade e `offline-sync-api.md` fixam a ordem de aplicação para adotantes
+   e identificam itens legados. Esta frente depende da correção do
    envelope CTG5 aprovada pelo Owner; se outra solução for escolhida, os
    409/422 da OFS são revistos antes do contrato.
 
