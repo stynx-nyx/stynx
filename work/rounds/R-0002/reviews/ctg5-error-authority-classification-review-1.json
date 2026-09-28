@@ -1,0 +1,30 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg5-error-envelope-option-a.md:9",
+      "issue": "The proposal says INV-ERROR-001.change_policy requires human approval before the wire can change. Pinned constitution Art. 11 (.devai/pin/constitution.md:169-171) says change_policy governs changes to the invariant: its statement, schema or catalog semantics. Option A leaves law/invariants/INV-ERROR-001.json, law/schemas/error-envelope.schema.json and the existing IDEMPOTENCY:CONFLICT:duplicate-key entry (docs/framework/contracts/errors.json:94) unchanged. It moves new code toward law. It does not move law. The CTG5 code appears in no release tag: `@stynx-nyx/backend@1.5.0-rc.1` and `rc.2` contain 0 files under packages/backend/src/transactional-command, and rc.3 has not been published (law/policy/registry-version-anomalies.json). So no published contract breaks.",
+      "required_change": "In a DEVAI Architect commit, replace lines 3, 9, 22, 26 and 168 with an explicit Architect classification: 'non-breaking conformance correction of unreleased code to the existing schema; outside INV-ERROR-001.change_policy.human_approval_required; executed under the campaign authorization OD-S15-01'. The text must not say the Owner chose option A."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/transactional-audit-idempotency-1.5.md:37",
+      "issue": "The CTG5 Architect contract pins `409 { code: configuredMismatchCode, context: { key } }`, and line 9 sets the default `IDEMPOTENCY_KEY_CONFLICT`. Both contradict law/schemas/error-envelope.schema.json, which requires statusCode, errorCode, message and requestId, sets additionalProperties:false and fixes an errorCode pattern. Under Art. 9 the lower document loses. This is an internal Architect contradiction, not a law change. UPS-TXN-03 requires a configurable 409 code but does not fix the body shape (prompts/91-ctg7-integrated-delivery-review.md:7), so no Owner or consumer semantic choice is overridden.",
+      "required_change": "Before the Inspector is dispatched, amend lines 9, 37 and 45 in a DEVAI Architect commit to use the option-A envelope and codes. Record in the migration note that mismatchCode is now restricted to the schema pattern, and state that this narrowing follows from the law schema, not from a new product decision."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "law/invariants/INV-ERROR-001.json:54",
+      "issue": "human_approval_required:true applies to changing the invariant or its governed semantics: the envelope schema, the documented error catalog, or a legacy/published body. It does not apply to every implementation that touches the error area. Two things would fall under it: option B (a schema exception or ADR), and any change to StynxErrorFilter/StynxDataError legacy bodies, to the legacy 422 IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY, or to consumer-chosen responses. The general Owner authorization ('any actions needed') is approval to act. It is not a semantic choice between A and B, and it is not a specific approval of a breaking change to the invariant.",
+      "required_change": "State in the classification record that the Owner's general authorization is used only as campaign authority to execute. It does not count as a choice between A and B. Any change beyond the option-A scope (schema, legacy bodies, errors.json semantics) reverts to REVIEW and needs a specific Owner receipt."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg5-error-envelope-option-a.md:168",
+      "issue": "Before the Inspector and Engineer are dispatched, the evidence chain still depends on a missing Owner approval. The actual minimum evidence is Architect-side.",
+      "required_change": "Minimum evidence before dispatch: (a) a DEVAI Architect commit with the classification above, citing the rc.1/rc.2 tags without CTG5 and the unchanged law/; (b) amendments to the contract doc, errors.json (CTG5 codes plus legacy runtimeBody entries) and the migration note, with no edits to law/; (c) the prompt review of Inspector/Engineer prompts carried over, saying the Owner receipt is 'not required by classification', not 'granted'; (d) a guard in the Inspector prompt that the legacy StynxDataError, 422 and 502 tests are only strengthened, never weakened. Keep the Owner's final gate OD-S15-02 for PR, CI and publication."
+    }
+  ],
+  "summary": "Classification: (1) Option A is a non-breaking conformance correction. The CTG5 code is new, appears in no tag (backend rc.1/rc.2 have no transactional-command files; rc.3 is unpublished), and moves toward the existing schema. law/ is unchanged, and so are the legacy data/idempotency bodies and consumer responses. The Architect can fix it under campaign authorization; it is not a change to the published invariant or contract. (2) human_approval_required applies to changes in INV-ERROR-001's governed semantics (schema, catalog, published/legacy bodies), not to every implementation in the error area. (3) The Owner's general authorization is approval to act, not a semantic choice between A and B. It would not substitute for a specific receipt if there were a break (option B, a schema exception, or changes to legacy bodies). (4) Minimum evidence: an Architect commit recording the classification with no Owner attribution, the contract doc amended from {code,context} to the envelope, errors.json and the migration note updated, and the carried-over prompt review. Next step: an Architect commit that fixes the classification and amends the contracts, then Inspector red, Engineer green, trace/baselines rebinds, and the final Owner gate OD-S15-02 as already planned. This verdict does not replace the Owner."
+}

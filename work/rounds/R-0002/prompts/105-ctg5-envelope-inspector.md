@@ -1,18 +1,22 @@
 # CTG-0005 envelope — Inspector
 
-Declare **Inspector** (Constitution Art. 6). **Primeiro, verifique**
-`work/rounds/R-0002/authorization-ctg5-error-envelope.md`: deve registrar
-`authorized_by_role: Owner`, opção A e `INV-ERROR-001`; verifique também o
-commit Architect que emenda o contrato/catálogo e um prompt-review PASS deste
-prompt. Se qualquer evidência faltar, pare sem editar e reporte bloqueio.
+Declare **Inspector** (Constitution Art. 6). **Primeiro, verifique** a
+classificação Architect em
+`work/rounds/R-0002/ctg5-error-authority-classification.md`, o commit
+Architect que emenda o contrato/catálogo/nota de migração e um
+prompt-review PASS deste prompt. A opção A corrige código ainda não
+publicado para o schema existente, sem alterar `law/` ou os corpos legados;
+por essa classificação, **não** há recibo Owner de escolha da opção A. Se
+qualquer evidência faltar, pare sem editar e reporte bloqueio.
 O maestro registra os SHAs exatos em `work/rounds/R-0002/record.md` antes
 do despacho; leia esse registro e o PASS
 `work/rounds/R-0002/reviews/ctg5-envelope-worker-prompt-review-2.json`.
 Você não executa Git, inclusive leitura de log/show; o maestro fornece a
 worktree no SHA registrado. Se o registro e os arquivos não concordarem,
 pare e reporte `reference-gap`.
-Leia `ctg5-error-envelope-option-a.md`, o PASS técnico review-4, o contrato
-Architect emendado e `docs/framework/contracts/errors.json` no commit
+Leia `ctg5-error-envelope-option-a.md`, o PASS técnico review-4, o PASS de
+classificação `reviews/ctg5-error-authority-classification-review-1.json`,
+o contrato Architect emendado e `docs/framework/contracts/errors.json` no commit
 registrado, além da fonte/testes CTG5. Para cada código, `runtimeBody` do
 catálogo e o contrato fixam mensagem, `retryable` e `details`; se faltar
 valor fixo, devolva `reference-gap`, sem inventá-lo. Do not execute Git, edit source,

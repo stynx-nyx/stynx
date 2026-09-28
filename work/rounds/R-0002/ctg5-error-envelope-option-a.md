@@ -1,12 +1,22 @@
 # CTG-0005 — proposta Architect para conciliar rejeições HTTP com `law/`
 
-**Papel:** Architect. **Estado:** proposta isolada; decisão do Owner pendente.
+**Papel:** Architect. **Estado:** correção de conformidade escolhida pelo
+Architect para código CTG5 ainda não publicado; despacho depende do rebind
+contratual e de prompt-review dos workers.
 **Base:** branch cumulativa `81681892696c19979c7983ebff0fb1c0c3c49c8d`.
 **Autoridades:** `law/schemas/error-envelope.schema.json`, `INV-ERROR-001`,
 DETRAN C-0002 §6.2 UPS-TXN-03 e OD-S15-01/02. O delivery-review integrado
 `reviews/ctg7-integrated-delivery-review-1.json` considera a divergência
-bloqueante para a publicação final e recomenda esta opção A. Esta proposta
-não autoriza mudar o fio: `INV-ERROR-001.change_policy` requer aprovação humana.
+bloqueante para a publicação final e recomenda esta opção A. A classificação
+Opus em `reviews/ctg5-error-authority-classification-review-1.json` é PASS:
+alinhar somente a fronteira CTG5 nova ao schema existente, sem editar
+`law/`, não altera o invariante nem quebra fio publicado. O campo
+`INV-ERROR-001.change_policy.human_approval_required` rege mudança do
+invariante/semântica governada, não toda implementação na área de erros.
+A autorização geral do Owner permite executar a campanha, mas **não** é
+atribuída a ele como escolha da opção A. Esta é uma decisão Architect sob
+OD-S15-01; mudança de schema, catálogo legado ou corpo publicado exigiria
+decisão Owner específica e novo review.
 
 **Revisão técnica:** a ponte DETRAN foi usada duas vezes, mas ambas as saídas
 texto falharam na validação de JSON (aspas não escapadas e cerca Markdown),
@@ -19,11 +29,12 @@ e `-3.json`. A revisão 4 retornou **PASS técnico condicional** em
 `reviews/ctg5-error-envelope-option-a-review-4.json`: os quatro reparos
 bloqueantes foram fechados; quatro precisões baixas foram incorporadas
 abaixo. Nenhum Inspector ou Engineer foi despachado nesta proposta. Esse
-PASS não substitui a escolha/recibo do Owner exigido por `INV-ERROR-001`.
+PASS técnico não dispensa contrato, testes e delivery-review; nenhum recibo
+de escolha Owner é exigido para esta correção não quebrante.
 
 ## Decisão a registrar
 
-Se o Owner aprovar a opção A, **todas as rejeições geradas pela nova fronteira
+Na opção A escolhida pelo Architect, **todas as rejeições geradas pela nova fronteira
 transacional**, inclusive os dois 409, passam ao envelope canônico. Erros
 preexistentes de `@stynx-nyx/data` e erros escolhidos pelo consumidor são
 tratados separadamente abaixo. O `mismatchCode` continua configurável como `string`, mas
@@ -165,8 +176,8 @@ migração.
 
 ## Tríade e locks
 
-1. **Architect:** depois da aprovação Owner e do prompt-review independente
-   PASS, emendar **todas** as referências antigas no
+1. **Architect:** sob a classificação não quebrante acima, emendar
+   **todas** as referências antigas no
    `docs/framework/contracts/transactional-audit-idempotency-1.5.md`, o
    `docs/framework/contracts/errors.json` (códigos/status,
    `retriable` do catálogo mapeado a `retryable` no fio, `runtimeBody`,
@@ -182,7 +193,8 @@ migração.
    `pnpm api:baselines:write` em outro commit Architect: a injeção opcional
    de RequestContext no filtro exportado provavelmente muda o baseline.
    Não editar o schema de `law/` nesta opção. Os três commits Architect são
-   distintos e usam a identidade `DEVAI Architect`.
+   distintos e usam a identidade `DEVAI Architect`. Reobter prompt-review
+   independente PASS dos prompts 105/106 atualizados **antes** do Inspector.
 2. **Inspector:** atualizar e fortalecer as provas 409 e demais rejeições em
    `packages/backend/test/integration/transactional-command-http.spec.ts`,
    `transactional-command-advanced.integration.spec.ts`,

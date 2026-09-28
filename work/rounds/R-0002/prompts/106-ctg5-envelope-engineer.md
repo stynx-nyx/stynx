@@ -1,8 +1,11 @@
 # CTG-0005 envelope — Engineer
 
-Declare **Engineer** (Constitution Art. 6). **Primeiro, verifique**
-`work/rounds/R-0002/authorization-ctg5-error-envelope.md`: deve registrar
-`authorized_by_role: Owner`, opção A e `INV-ERROR-001`. Verifique o SHA do
+Declare **Engineer** (Constitution Art. 6). **Primeiro, verifique** a
+classificação Architect em
+`work/rounds/R-0002/ctg5-error-authority-classification.md` e o PASS de
+`reviews/ctg5-error-authority-classification-review-1.json`. A opção A
+alinha somente código CTG5 novo ao schema já vigente; **não** há recibo
+Owner de escolha da opção A. Verifique o SHA do
 commit Architect do contrato/catálogo, o SHA do commit Inspector de testes
 vermelhos, o SHA do rebind Architect de `law/trace.json` e um prompt-review
 PASS deste prompt; se faltar qualquer um, pare sem editar e reporte bloqueio.
