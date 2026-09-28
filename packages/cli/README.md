@@ -46,26 +46,45 @@ stynx audit verify
 
 # Generate LGPD ROPA
 stynx privacy ropa --out ./ropa.json
+
+# Generate a module from a validated blueprint into a new directory
+stynx generate module --blueprint ./module-blueprint.json --out ./generated/example
+
+# Later, verify the generated files are unchanged
+stynx generate module --blueprint ./module-blueprint.json --out ./generated/example --check
 ```
 
 ## Public API surface
 
 ### CLI verbs
 
-| Verb                               | Subcommand / Options          | Description                                                                                                                                                                            |
-| ---------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init <app-name>`                  | `--angular --dir <dir>`       | Scaffold a new STYNX app. Produces a NestJS skeleton with `@stynx-nyx/*` packages pre-installed + a starter `AppModule`. `--angular` adds the Angular workspace under `packages-web/`. |
-| `migrate status`                   | `--db <url>`                  | Report applied + pending migrations.                                                                                                                                                   |
-| `migrate up`                       | `--db <url> [--to <name>]`    | Apply pending migrations up to head (or to a specific marker).                                                                                                                         |
-| `migrate down`                     | `--db <url> --to <name>`      | Roll back to a marker.                                                                                                                                                                 |
-| `migrate redo`                     | `--db <url>`                  | Roll back the last migration and re-apply.                                                                                                                                             |
-| `doctor`                           | `--repo-root <path>`          | Run the app-side health check for required paths, package linkage, and build health.                                                                                                   |
-| `audit verify`                     | `--db <url>`                  | Verify the audit event chain's hash integrity end-to-end. Exits non-zero if a break is found.                                                                                          |
-| `privacy ropa`                     | `--out <path>`                | Generate a LGPD Record-of-Processing-Activities JSON document from the PII column registry.                                                                                            |
-| `adopt scan`                       | `--source <dir> --out <path>` | Scan a foreign app's controllers + DB schema; emit a structured adoption-plan.                                                                                                         |
-| `adopt apply`                      | `--plan <path>`               | Apply a previously-scanned adoption plan to the current STYNX repo.                                                                                                                    |
-| `adopt apply-proposed-permissions` | `--plan <path>`               | Apply the permission proposals from an adoption scan to `@stynx-nyx/auth` config.                                                                                                      |
-| `adopt link-cognito-users`         | `--mapping <path>`            | Link foreign-app user identities to Cognito principals.                                                                                                                                |
+| Verb                               | Subcommand / Options                             | Description                                                                                                                                                                            |
+| ---------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `init <app-name>`                  | `--angular --dir <dir>`                          | Scaffold a new STYNX app. Produces a NestJS skeleton with `@stynx-nyx/*` packages pre-installed + a starter `AppModule`. `--angular` adds the Angular workspace under `packages-web/`. |
+| `migrate status`                   | `--db <url>`                                     | Report applied + pending migrations.                                                                                                                                                   |
+| `migrate up`                       | `--db <url> [--to <name>]`                       | Apply pending migrations up to head (or to a specific marker).                                                                                                                         |
+| `migrate down`                     | `--db <url> --to <name>`                         | Roll back to a marker.                                                                                                                                                                 |
+| `migrate redo`                     | `--db <url>`                                     | Roll back the last migration and re-apply.                                                                                                                                             |
+| `doctor`                           | `--repo-root <path>`                             | Run the app-side health check for required paths, package linkage, and build health.                                                                                                   |
+| `audit verify`                     | `--db <url>`                                     | Verify the audit event chain's hash integrity end-to-end. Exits non-zero if a break is found.                                                                                          |
+| `privacy ropa`                     | `--out <path>`                                   | Generate a LGPD Record-of-Processing-Activities JSON document from the PII column registry.                                                                                            |
+| `adopt scan`                       | `--source <dir> --out <path>`                    | Scan a foreign app's controllers + DB schema; emit a structured adoption-plan.                                                                                                         |
+| `adopt apply`                      | `--plan <path>`                                  | Apply a previously-scanned adoption plan to the current STYNX repo.                                                                                                                    |
+| `adopt apply-proposed-permissions` | `--plan <path>`                                  | Apply the permission proposals from an adoption scan to `@stynx-nyx/auth` config.                                                                                                      |
+| `adopt link-cognito-users`         | `--mapping <path>`                               | Link foreign-app user identities to Cognito principals.                                                                                                                                |
+| `generate module`                  | `--blueprint <file> --out <directory> [--check]` | Generate a Nest module and PostgreSQL migration from a validated blueprint; `--check` compares an existing output without writing.                                                     |
+
+The blueprint uses `schemaVersion: "1.0.0"`, a `BP-*` ID, a PascalCase module name,
+an application-owned SQL namespace, and entities with `id` and `tenant_id`
+columns. Optional API resources select `list`, `get`, `create`, `update` or
+`delete` operations. The generated controller uses one exact permission per
+route, while repositories bind SQL parameters and the trusted request tenant.
+The migration creates a new schema and FORCE RLS tables; apply it through your
+database migration process before mounting the module. Register the generated
+module behind the STYNX authentication guard and `StynxDataModule`, and grant
+its generated permission keys in your application's policy. The generator
+never applies SQL or grants permissions on its own. It refuses an existing
+output directory; use `--check` to detect drift.
 
 ### Programmatic API
 
