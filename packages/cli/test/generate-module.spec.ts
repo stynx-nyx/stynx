@@ -301,6 +301,13 @@ describe('stynx generate module command [INV-CLI-001]', () => {
     await rejectsWithoutOutput(variation((b) => { b.module.namespace = namespace; }));
   });
 
+  it.each([
+    ['lateral', (b: Blueprint) => { b.database.entities[0].table = 'lateral'; }],
+    ['time', (b: Blueprint) => { b.database.entities[0].fields[2].name = 'time'; }],
+  ])('rejects PostgreSQL reserved identifier %s before writing', async (_identifier, change) => {
+    await rejectsWithoutOutput(variation(change));
+  });
+
   it('rejects the exact finite platform migration schema inventory', async () => {
     const schemas = migrationSchemas();
     expect(schemas).toEqual([
