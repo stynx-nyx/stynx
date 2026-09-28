@@ -78,3 +78,8 @@ com prova em `test/db/transactional-commands-migration.spec.ts`, omitir o
 header de chave vazio nas rejeições, verificar métodos herdados no boot e
 completar as duas corridas em que o vencedor conclui dentro do prazo. Fazer
 uma tentativa de reparo e novo delivery-review antes da importação.
+
+Disposição DDL/seed: 0020 altera apenas a migração platform de comandos e o
+wrapper de auditoria; `database/ddl/02-audit.sql` e as seeds raiz não recebem
+essa alteração. `test/db/transactional-commands-migration.spec.ts` é o sensor
+da migração aplicada desde banco vazio e dos privilégios de app/owner.
