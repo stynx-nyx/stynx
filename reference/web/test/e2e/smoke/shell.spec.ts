@@ -11,6 +11,15 @@ test('shell supports keyboard navigation, persisted theme preferences, and axe c
   await expect(page.getByRole('link', { name: 'Home' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Settings' })).toBeFocused();
+  const collapse = page.locator('stynx-shell button.menu-toggle');
+  await page.keyboard.press('Tab');
+  await expect(collapse).toBeFocused();
+  await expect(collapse).toHaveAccessibleName('Collapse navigation menu');
+  await expect(collapse).toHaveAttribute('aria-expanded', 'true');
+  await collapse.click();
+  await expect(collapse).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('link', { name: 'Settings' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Expand navigation menu' }).click();
 
   const main = page.getByRole('main');
   await skip.focus();
@@ -18,6 +27,9 @@ test('shell supports keyboard navigation, persisted theme preferences, and axe c
   await expect(main).toBeFocused();
 
   const themeToggle = page.getByRole('button', { name: 'Theme' });
+  await page.getByRole('button', { name: 'Collapse navigation menu' }).focus();
+  await page.keyboard.press('Tab');
+  await expect(themeToggle).toBeFocused();
   await themeToggle.click();
   await page.getByRole('button', { name: 'Dark' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-stynx-theme', 'dark');
@@ -25,6 +37,7 @@ test('shell supports keyboard navigation, persisted theme preferences, and axe c
   await page.getByTestId('locale-switcher-select').selectOption('pt-BR');
   await expect(page.getByRole('link', { name: 'Pular para o conteúdo' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Navegação principal' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Tema' })).toBeVisible();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-stynx-theme', 'dark');
 
