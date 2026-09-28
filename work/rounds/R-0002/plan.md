@@ -623,6 +623,15 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     da final, reparar a perda de observabilidade nos 500/503 convertidos:
     causa original, requestId e stack no log servidor, com sensor de corpo
     público inalterado. Esse achado foi não bloqueante para a importação.
+27. Follow-up de observabilidade CTG5 antes da final: em toda rejeição própria
+    5xx, o filtro HTTP registra `errorCode` e `requestId` com stack via Nest
+    Logger. Quando a CTG5 converte falha de callback, setup, store, audit ou
+    COMMIT em envelope fixo, `CommandRejectionResponse.cause` retém o valor
+    original apenas no servidor. O corpo e os headers públicos continuam
+    byte a byte no contrato canônico, sem causa nem stack. Primeiro, o
+    Inspector prova 500 e 503 com logger e corpo HTTP exato; depois o
+    Engineer implementa. Rebind de trace pelo Architect e delivery-review
+    do follow-up precedem o único gate integral final.
 
 ## Reviews, PRs e publicações
 
