@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { Database, StynxDataModule, type Transaction } from '@stynx-nyx/data';
+import { Database, StynxDataModule, StynxPoolRegistry, type Transaction } from '@stynx-nyx/data';
 import { OutboxService } from '../../src/outbox.service';
 import { StynxOutboxError } from '../../src/errors';
 import { StynxOutboxModule } from '../../src/outbox.module';
@@ -12,6 +12,8 @@ import {
 const TENANT_A = 'e1111111-1111-4111-8111-111111111111';
 const TENANT_B = 'e2222222-2222-4222-8222-222222222222';
 const ACTOR = 'e3333333-3333-4333-8333-333333333333';
+const asRole = (url: string, role: 'stynx_app' | 'stynx_reader') =>
+  `${url}&options=${encodeURIComponent(`-c role=${role}`)}`;
 
 interface AppendedFact {
   id: string;
@@ -53,8 +55,15 @@ describe('CTG9 append-only outbox facts (PostgreSQL/RLS)', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-append-owner') },
-            app: { connectionString: postgres.connectionString('ctg9-append-app') },
-            reader: { connectionString: postgres.connectionString('ctg9-append-reader') },
+            app: {
+              connectionString: asRole(postgres.connectionString('ctg9-append-app'), 'stynx_app'),
+            },
+            reader: {
+              connectionString: asRole(
+                postgres.connectionString('ctg9-append-reader'),
+                'stynx_reader',
+              ),
+            },
           },
           migrations: { enabled: true },
           retry: false,
@@ -65,6 +74,18 @@ describe('CTG9 append-only outbox facts (PostgreSQL/RLS)', () => {
     await moduleRef.init();
     database = moduleRef.get(Database);
     append = moduleRef.get(OutboxService) as unknown as AppendPort;
+    const pools = moduleRef.get(StynxPoolRegistry).pools;
+    for (const [pool, role] of [
+      [pools.app, 'stynx_app'],
+      [pools.reader, 'stynx_reader'],
+    ] as const) {
+      const identity = await pool.query<{
+        current_user: string;
+        rolsuper: boolean;
+        rolbypassrls: boolean;
+      }>('select current_user, rolsuper, rolbypassrls from pg_roles where rolname = current_user');
+      expect(identity.rows).toEqual([{ current_user: role, rolsuper: false, rolbypassrls: false }]);
+    }
     const admin = await postgres.connectAsAdmin();
     try {
       await admin.query(

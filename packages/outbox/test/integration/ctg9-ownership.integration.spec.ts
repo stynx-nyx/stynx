@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { Database, StynxDataModule } from '@stynx-nyx/data';
+import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
 import { OutboxService } from '../../src/outbox.service';
 import { StynxOutboxModule } from '../../src/outbox.module';
 import {
@@ -10,6 +10,8 @@ import {
 
 const TENANT = 'c1111111-1111-4111-8111-111111111111';
 const ACTOR = 'c2222222-2222-4222-8222-222222222222';
+const asRole = (url: string, role: 'stynx_app' | 'stynx_reader') =>
+  `${url}&options=${encodeURIComponent(`-c role=${role}`)}`;
 
 describe('CTG9 legacy ownership barrier (PostgreSQL)', () => {
   let postgres: PostgresTestDatabase;
@@ -24,8 +26,10 @@ describe('CTG9 legacy ownership barrier (PostgreSQL)', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-owner') },
-            app: { connectionString: postgres.connectionString('ctg9-app') },
-            reader: { connectionString: postgres.connectionString('ctg9-reader') },
+            app: { connectionString: asRole(postgres.connectionString('ctg9-app'), 'stynx_app') },
+            reader: {
+              connectionString: asRole(postgres.connectionString('ctg9-reader'), 'stynx_reader'),
+            },
           },
           migrations: { enabled: true },
           retry: false,
@@ -36,6 +40,18 @@ describe('CTG9 legacy ownership barrier (PostgreSQL)', () => {
     await moduleRef.init();
     database = moduleRef.get(Database);
     outbox = moduleRef.get(OutboxService);
+    const pools = moduleRef.get(StynxPoolRegistry).pools;
+    for (const [pool, role] of [
+      [pools.app, 'stynx_app'],
+      [pools.reader, 'stynx_reader'],
+    ] as const) {
+      const identity = await pool.query<{
+        current_user: string;
+        rolsuper: boolean;
+        rolbypassrls: boolean;
+      }>('select current_user, rolsuper, rolbypassrls from pg_roles where rolname = current_user');
+      expect(identity.rows).toEqual([{ current_user: role, rolsuper: false, rolbypassrls: false }]);
+    }
 
     const admin = await postgres.connectAsAdmin();
     try {
@@ -73,6 +89,37 @@ describe('CTG9 legacy ownership barrier (PostgreSQL)', () => {
     await moduleRef?.close();
     await postgres?.dispose();
   }, 60_000);
+
+  it('keeps marker state owner-only under the real app role', async () => {
+    const admin = await postgres.connectAsAdmin();
+    try {
+      let denied = false;
+      try {
+        const attempt = await database.withRequestContext(
+          { tenantId: TENANT, actorId: ACTOR },
+          () =>
+            database.tx(
+              (trx) =>
+                trx.query<{ state: string }>(
+                  `update outbox.legacy_ownership set state='NEW' where id=true returning state`,
+                ),
+              { role: 'app', retry: false },
+            ),
+        );
+        denied = attempt.rows.length === 0;
+      } catch (error) {
+        denied = ['42501', '44000'].includes((error as { code?: string }).code ?? '');
+      }
+      expect(denied).toBe(true);
+      const marker = await admin.query<{ state: string }>(
+        'select state from outbox.legacy_ownership where id=true',
+      );
+      expect(marker.rows).toEqual([{ state: 'LEGACY' }]);
+    } finally {
+      await admin.query(`update outbox.legacy_ownership set state='LEGACY'`).catch(() => undefined);
+      await admin.end();
+    }
+  });
 
   it('rolls back enqueue when cutover already holds marker UPDATE; same key can be retried', async () => {
     const holder = await postgres.connectAsAdmin();
