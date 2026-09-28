@@ -39,6 +39,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
   let raceEnteredPromise: Promise<void>;
   let auditEntered: (() => void) | undefined;
   let auditEnteredPromise: Promise<void>;
+  const cacheSet = vi.fn(async () => undefined);
 
   const countInvocations = (mode: string): number => invocations.get(mode) ?? 0;
 
@@ -93,6 +94,16 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
         return { mustNotCommit: true };
       }
 
+      @Post('/statement-timeout')
+      async statementTimeout() {
+        await this.record('statement-timeout');
+        await this.database.tx(async (trx) => {
+          await trx.query("select set_config('statement_timeout', '80ms', true)");
+          await trx.query('select pg_sleep(0.3)');
+        }, { role: 'app', requireActor: true });
+        return { mustNotCommit: true };
+      }
+
       @Post('/race')
       async race() {
         await this.record('race');
@@ -117,7 +128,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
 
     const commandMethods = [
       'handlerFault', 'auditFault', 'completionFault', 'commitFault',
-      'serializationFault', 'race', 'auditContention',
+      'serializationFault', 'statementTimeout', 'race', 'auditContention',
     ] as const;
     for (const method of commandMethods) {
       const descriptor = Object.getOwnPropertyDescriptor(FaultController.prototype, method)!;
@@ -157,7 +168,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
         } }),
         StynxIdempotencyModule.forRoot({ backend: {
           get: async () => null,
-          set: async () => undefined,
+          set: cacheSet,
           acquireLock: async () => true,
           releaseLock: async () => undefined,
           isLocked: async () => false,
@@ -215,13 +226,13 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     .set('idempotency-key', key)
     .send({ input: key });
 
-  const assertNoDurableEffect = async (mode: string, key: string): Promise<void> => {
+  const assertNoDurableEffect = async (mode: string, key: string, auditOperation = `command.${mode}Fault`): Promise<void> => {
     const admin = await postgres!.connectAsAdmin();
     try {
       const domain = await admin.query<{ count: string }>(
         'select count(*) from core.transactional_fault_probe where tenant_id = $1 and mode = $2', [TENANT, mode]);
       const audit = await admin.query<{ count: string }>(
-        'select count(*) from audit.events where tenancy_id = $1 and operation = $2', [TENANT, `command.${mode}Fault`]);
+        'select count(*) from audit.events where tenancy_id = $1 and operation = $2', [TENANT, auditOperation]);
       const keys = await admin.query<{ count: string }>(
         'select count(*) from core.idempotency_keys where tenant_id = $1 and key like $2', [TENANT, `%:${key.length}:${key}`]);
       expect(Number(domain.rows[0]?.count)).toBe(0);
@@ -254,6 +265,19 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     expect(countInvocations('serialization')).toBe(1);
     await assertNoDurableEffect('serialization', 'serialization-fault');
   });
+
+  it('rolls back a real PostgreSQL statement timeout without publishing cache or consuming the key', async () => {
+    const cachePublicationsBefore = cacheSet.mock.calls.length;
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      const response = await send('statement-timeout', 'statement-timeout-key');
+      expect(response.status).toBe(504);
+      expect(response.body).toMatchObject({ code: 'STATEMENT_TIMEOUT' });
+      expect(response.body.code).not.toBe('IDEMPOTENCY_KEY_IN_PROGRESS');
+      expect(countInvocations('statement-timeout')).toBe(attempt);
+      await assertNoDurableEffect('statement-timeout', 'statement-timeout-key', 'command.statementTimeout');
+      expect(cacheSet.mock.calls.length).toBe(cachePublicationsBefore);
+    }
+  }, 30_000);
 
   it('bounds an identical-key reservation race and never invokes the losing handler', async () => {
     raceEnteredPromise = new Promise<void>((resolve) => { raceEntered = resolve; });
