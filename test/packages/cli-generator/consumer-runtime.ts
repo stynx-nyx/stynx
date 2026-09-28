@@ -9,7 +9,7 @@ import { Client, type ClientConfig } from 'pg';
 import request from 'supertest';
 import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { generateRequestId, RequestContextMutator } from '@stynx-nyx/core';
-import { StynxDataModule } from '@stynx-nyx/data';
+import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { SessionService } from '@stynx-nyx/sessions';
 import { CrudProbeModule } from './generated/src/crud_probe.module';
 import { CrudProbeRepository } from './generated/src/crud_probe.repository';
@@ -36,18 +36,18 @@ function adminConfig(database = 'postgres'): ClientConfig {
   };
 }
 function appConfig(database: string): ClientConfig {
+  // Authenticate with the CI-provided admin credential, then enter the app role
+  // before any SQL runs. current_user stays stynx_app, so FORCE RLS is exercised.
   return {
-    host: process.env.STYNX_TEST_PG_HOST ?? process.env.STYNX_TEST_PG_SOCKET_DIR ?? '/tmp',
-    port: Number(process.env.STYNX_TEST_PG_PORT ?? '5432'),
-    user: 'stynx_app',
-    password: process.env.STYNX_TEST_PG_APP_PASSWORD,
-    database,
+    ...adminConfig(database),
+    options: '-c role=stynx_app',
   };
 }
 function connectionString(config: ClientConfig): string {
   const host = String(config.host);
   const url = new URL(`postgresql://${encodeURIComponent(String(config.user))}@localhost:${config.port ?? 5432}/${config.database}`);
   if (config.password) url.password = String(config.password);
+  if (config.options) url.searchParams.set('options', config.options);
   if (host.startsWith('/')) url.searchParams.set('host', host);
   else url.hostname = host;
   return url.toString();
@@ -74,9 +74,10 @@ async function inTenant<T>(mutator: RequestContextMutator, tenantId: string | un
     ...(tenantId ? { tenantId } : {}), ...(actorId ? { actorId } : {}),
   }, fn));
 }
-async function directRoleProbe(client: Client): Promise<{ recordA: string; recordB: string; noteA: string }> {
-  const current = await client.query<{ current_user: string }>('select current_user');
-  assert(current.rows[0]?.current_user === 'stynx_app', 'direct SQL probe did not connect as stynx_app');
+async function directRoleProbe(client: Client, adminUser: string | undefined): Promise<{ recordA: string; recordB: string; noteA: string }> {
+  const current = await client.query<{ current_user: string; session_user: string }>('select current_user, session_user');
+  assert(current.rows[0]?.current_user === 'stynx_app', 'direct SQL probe effective role is not stynx_app');
+  assert(current.rows[0]?.session_user === adminUser, 'direct SQL probe did not authenticate with the CI admin login');
   async function insertFor(tenant: string, label: string): Promise<string> {
     await client.query('begin');
     try {
@@ -255,19 +256,29 @@ async function main(): Promise<void> {
     await admin.query(`insert into tenancy.tenants(id,slug,name) values ($1,'cli-tenant-a','CLI Tenant A'),($2,'cli-tenant-b','CLI Tenant B')`, [tenantA, tenantB]);
     await catalogProbe(admin);
     appRole = await connect(appCfg);
-    const ids = await directRoleProbe(appRole);
+    const ids = await directRoleProbe(appRole, adminCfg.user);
+    const database = moduleRef.get(Database);
     const repository = moduleRef.get(CrudProbeRepository);
     const mutator = moduleRef.get(RequestContextMutator);
+    const poolIdentity = await inTenant(mutator, tenantA, actorA, () => database.tx(async (trx) => {
+      const result = await trx.query<{ current_user: string; session_user: string }>('select current_user, session_user');
+      return result.rows[0];
+    }, { role: 'app', requireActor: true }));
+    assert(poolIdentity?.current_user === 'stynx_app', 'Database app pool effective role is not stynx_app');
+    assert(poolIdentity?.session_user === adminCfg.user, 'Database app pool did not authenticate with the CI admin login');
     const hiddenUpdate = await inTenant(mutator, tenantB, actorB, () => repository.updateRecordItem(ids.recordA, { label: 'cross-tenant' }));
     assert(hiddenUpdate === null, 'tenant B repository updated tenant A row');
     const hiddenDelete = await inTenant(mutator, tenantB, actorB, () => repository.deleteRecordItem(ids.recordA));
     assert(hiddenDelete === null, 'tenant B repository deleted tenant A row');
-    let missingTenantFailed = false;
-    try { await inTenant(mutator, undefined, actorA, () => repository.listRecordItem()); } catch { missingTenantFailed = true; }
-    assert(missingTenantFailed, 'Database.tx accepted missing tenant context');
-    let missingActorFailed = false;
-    try { await inTenant(mutator, tenantA, undefined, () => repository.listRecordItem()); } catch { missingActorFailed = true; }
-    assert(missingActorFailed, 'Database.tx accepted missing actor context');
+    async function expectContextError(tenantId: string | undefined, actorId: string | undefined, code: string, message: string): Promise<void> {
+      let caught: unknown;
+      try { await inTenant(mutator, tenantId, actorId, () => repository.listRecordItem()); }
+      catch (error) { caught = error; }
+      assert(caught instanceof Error && (caught as Error & { code?: string }).code === code && caught.message === message,
+        `Database.tx missing-context error differs from ${code}: ${String(caught)}`);
+    }
+    await expectContextError(undefined, actorA, 'TENANT_CONTEXT_MISSING', 'Tenant context is required for this transaction');
+    await expectContextError(tenantA, undefined, 'ACTOR_CONTEXT_MISSING', 'Actor context is required for this transaction');
     const retained = await admin.query<{ label: string }>('select label from cli_probe.record_item where id=$1', [ids.recordA]);
     assert(retained.rows[0]?.label === 'tenant-A', 'tenant A data changed after cross-tenant probes');
     await httpProbe(nestApp, ids);

@@ -77,6 +77,42 @@ function binary(command, args, cwd) {
   }
   return (result.stdout ?? '').trim();
 }
+function binaryFailure(command, args, cwd, expected) {
+  const result = spawnSync(command, args, {
+    cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+    maxBuffer: 20 * 1024 * 1024, env: process.env,
+  });
+  const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+  assert(!result.error && result.status !== 0, `${command} unexpectedly accepted invalid output: ${output}`);
+  assert(output.includes(expected), `${command} failed for a different reason: ${output}`);
+}
+function outputBytes(root) {
+  const files = new Map();
+  function walk(dir, prefix = '') {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+      assert(!entry.isSymbolicLink(), `generated output contains symlink ${path}`);
+      if (entry.isDirectory()) walk(join(dir, entry.name), path);
+      else files.set(path, readFileSync(join(dir, entry.name)).toString('base64'));
+    }
+  }
+  walk(root);
+  return [...files].sort(([a], [b]) => a.localeCompare(b));
+}
+function assertOutputUnchanged(root, before, reason) {
+  assert(JSON.stringify(outputBytes(root)) === JSON.stringify(before), `${reason} changed generated output`);
+}
+function assertManifestDigests(root) {
+  const manifest = JSON.parse(readFileSync(join(root, 'generation-manifest.json'), 'utf8'));
+  const bytes = outputBytes(root);
+  const paths = bytes.map(([path]) => path).filter((path) => path !== 'generation-manifest.json');
+  assert(Array.isArray(manifest.files), 'generated manifest lacks files array');
+  assert(JSON.stringify(manifest.files.map((entry) => entry.path)) === JSON.stringify(paths), 'generated manifest file set or order differs');
+  for (const entry of manifest.files) {
+    const digest = createHash('sha256').update(readFileSync(join(root, entry.path))).digest('hex');
+    assert(entry.sha256 === digest, `generated manifest digest differs for ${entry.path}`);
+  }
+}
 function localPackages() {
   const byName = new Map();
   for (const root of ['packages', 'packages-web']) {
@@ -152,7 +188,6 @@ async function assertLoopbackUnreachable() {
 function writeConsumer(tarballs, order) {
   mkdirSync(consumerDir, { recursive: true });
   const overrides = Object.fromEntries(order.map((name) => [name, `file:${tarballs.get(name)}`]));
-  assert(JSON.stringify(Object.keys(overrides).sort()) === JSON.stringify([...order].sort()), 'override keys differ from computed STYNX closure');
   const dependencies = { ...thirdParty };
   for (const name of directStynx) dependencies[name] = `file:${tarballs.get(name)}`;
   const manifest = {
@@ -161,8 +196,11 @@ function writeConsumer(tarballs, order) {
     dependencies,
     pnpm: { overrides },
   };
-  assert(JSON.stringify(Object.keys(manifest.pnpm.overrides).sort()) === JSON.stringify([...order].sort()), 'preinstall override set mismatch');
   writeFileSync(join(consumerDir, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  const written = JSON.parse(readFileSync(join(consumerDir, 'package.json'), 'utf8'));
+  const actualOverrides = written.pnpm?.overrides ?? {};
+  assert(JSON.stringify(Object.keys(actualOverrides).sort()) === JSON.stringify([...order].sort()), 'written consumer override set differs from manifest-computed STYNX closure');
+  for (const name of order) assert(actualOverrides[name] === `file:${tarballs.get(name)}`, `written consumer override for ${name} differs from its packed tarball`);
   writeFileSync(join(consumerDir, '.npmrc'), `@stynx-nyx:registry=${loopbackRegistry}\nregistry=https://registry.npmjs.org/\n`);
   writeFileSync(join(consumerDir, 'tsconfig.json'), `${JSON.stringify({
     compilerOptions: {
@@ -308,9 +346,23 @@ try {
   binary(cliBinary, ['generate', 'module', '--blueprint', join(fixtureDir, 'full-crud-blueprint.json'), '--out', fullOut], consumerDir);
   assertGenerated(sampleOut, true);
   assertGenerated(fullOut, false);
+  assertManifestDigests(sampleOut);
+  assertManifestDigests(fullOut);
   assertRouteStructure(sampleOut, JSON.parse(readFileSync(join(repoRoot, 'packages/cli/test/fixtures/BP-OPS-EXAMPLE-001.json'), 'utf8')));
   assertRouteStructure(fullOut, JSON.parse(readFileSync(join(fixtureDir, 'full-crud-blueprint.json'), 'utf8')));
+  const fullBlueprint = join(fixtureDir, 'full-crud-blueprint.json');
+  const beforeExisting = outputBytes(fullOut);
+  binaryFailure(cliBinary, ['generate', 'module', '--blueprint', fullBlueprint, '--out', fullOut], consumerDir, '--out already exists');
+  assertOutputUnchanged(fullOut, beforeExisting, 'pre-existing output refusal');
   binary(cliBinary, ['generate', 'module', '--blueprint', join(fixtureDir, 'full-crud-blueprint.json'), '--out', fullOut, '--check'], consumerDir);
+  const driftFile = join(fullOut, 'src/crud_probe.module.ts');
+  const original = readFileSync(driftFile);
+  writeFileSync(driftFile, Buffer.concat([original, Buffer.from('// packed consumer drift\n')]));
+  const beforeDriftCheck = outputBytes(fullOut);
+  binaryFailure(cliBinary, ['generate', 'module', '--blueprint', fullBlueprint, '--out', fullOut, '--check'], consumerDir, '--check differs: src/crud_probe.module.ts');
+  assertOutputUnchanged(fullOut, beforeDriftCheck, '--check drift failure');
+  writeFileSync(driftFile, original);
+  binary(cliBinary, ['generate', 'module', '--blueprint', fullBlueprint, '--out', fullOut, '--check'], consumerDir);
   shell(['run', 'build'], consumerDir);
   try {
     const runtime = node([join(consumerDir, 'dist/runtime.js')], consumerDir, {
