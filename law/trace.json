@@ -33,7 +33,8 @@
       "STYNX 1.5.0 CTG-0005 Architect rebind pins transactional actor, tenant RLS, audit, idempotency, rollback, race and HTTP replay sensors.",
       "STYNX 1.5.0 CTG-0005 Architect rebind pins the real app-role statement-timeout rollback sensor.",
       "STYNX 1.5.0 CTG-0005 delivery-review Architect rebind pins filter precedence, inherited guards, provenance bootstraps, and refreshed fault/HTTP assertions.",
-      "STYNX 1.5.0 CTG-0006 Architect rebind pins If-Match, Angular error boundary, accessible shell, published testing helpers and adopted helper sensors. Real Nest/PostgreSQL tests also prove If-Match and ETag compose with transactional commit, replay and rollback. The assertion projection of modified existing tests is refreshed without reducing their declared invariants."
+      "STYNX 1.5.0 CTG-0006 Architect rebind pins If-Match, Angular error boundary, accessible shell, published testing helpers and adopted helper sensors. Real Nest/PostgreSQL tests also prove If-Match and ETag compose with transactional commit, replay and rollback. The assertion projection of modified existing tests is refreshed without reducing their declared invariants.",
+      "STYNX 1.5.0 CTG-0006 delivery-review Architect rebind pins system-theme media changes and SSR fallback, accessible live status, source-identity fake Transaction, published testing imports and legacy request ID preservation."
     ]
   },
   "invariants": [
@@ -1393,8 +1394,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 17,
-      "assertion_digest_sha256": "c8d9f34bb1c517b52e31bdce223f8301305b54df748ca5ebab63942d75277edd"
+      "assertion_count": 41,
+      "assertion_digest_sha256": "10ae5caa0e1538f003f18712fde7cd89f607179c4d176e17eafd1b9f72266566"
     },
     {
       "path": "packages-web/angular-ui/test/ui-interactions.spec.ts",
@@ -1465,8 +1466,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "53bc5a8e589459f293c71a53edd3f716bfe6980e383541de78d58be75ea727e6"
+      "assertion_count": 8,
+      "assertion_digest_sha256": "3f6680681289977934c6a8d1b5e76bcab4350a2d04a2763fecb8e40ede31abd0"
     },
     {
       "path": "packages-web/sdk/test/runtime.spec.ts",
@@ -2259,8 +2260,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 90,
-      "assertion_digest_sha256": "f1521e04c622542b1a784cc2e1ec9b69a7d0f1c1606b75039eaa12fca0ecb4c7"
+      "assertion_count": 91,
+      "assertion_digest_sha256": "cf77fbb4b146bd3530e19e2d9c630f86010840c19a77bded4ea39a505976d5a7"
     },
     {
       "path": "packages/feature-flags/test/unit/feature-flags.service.spec.ts",
@@ -3597,8 +3598,8 @@
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 12,
-      "assertion_digest_sha256": "4835e963d5bb76c0aa0e5879bf58e6742160283e3462c296f2b9f329e01840a4"
+      "assertion_count": 19,
+      "assertion_digest_sha256": "0471c4773554b2455f848e7c55933d072d45a106380ab55862a2387d21da00ab"
     },
     {
       "path": "reference/web/test/e2e/tenant/switch-tenant.spec.ts",
@@ -4573,6 +4574,14 @@
       "lifecycle": "supported",
       "assertion_count": 24,
       "assertion_digest_sha256": "0f69d4e22445bf120acd2aac6ab63244573c18219f309325cf316a586b1b9ff2"
+    },
+    {
+      "path": "test/scripts/ctg6-published-import-adoption.test.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 2,
+      "assertion_digest_sha256": "2a960189457c6db1b0ed6ac7ffadec5dd8592b6159caca2b2e40875be5e9a555"
     }
   ],
   "suites": {
