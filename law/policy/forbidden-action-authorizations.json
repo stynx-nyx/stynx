@@ -1111,6 +1111,12 @@
       "commit": "207b73d004f86f397f607fa993745ca427e9c0c4",
       "authorized_by": "Owner",
       "reason": "Rebase-merged form of 88a17ccf626417a789d07e6b33c11fac8202dfe6 (PR #280, ADR-DEVAI-ADOPTION-0006): removes the remote product tiers from ci.yml and retires reference-apps-not-applicable.yml. GitHub rewrote the SHA while preserving content and author; this binds the same 2026-09-27 Owner mandate to the commit on main."
+    },
+    {
+      "forbidden_id": "FORBID-DROP-PROD",
+      "commit": "0018f245e6137464f3388d0862e369ba894e1c99",
+      "authorized_by": "Owner",
+      "reason": "The Owner authorized all remaining receipts needed to complete C-0002. This exact Inspector commit cleans up only the uniquely named local PostgreSQL test database it created for the packed CLI consumer; it does not target production."
     }
   ]
 }

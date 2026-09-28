@@ -46,6 +46,17 @@ The CLI command exists in help and uses `--blueprint` plus required `--out`; the
 
 No failure classified before dispatch. Each failure entering feedback is classified `plant-bug`, `sensor-error`, `policy-issue`, or `reference-gap` and routed under the authority chain; no role edits its own reference to make a gate pass.
 
+- `sensor-error`: o primeiro ensaio pós-rebase do consumidor externo chegou ao
+  runtime, mas `stynx_app` não tinha senha para TCP no PostgreSQL local. O
+  papel de teste foi provisionado com senha local e `STYNX_TEST_PG_APP_PASSWORD`;
+  o mesmo sensor passou na tentativa seguinte, com 9 tarballs, SRI, Nest HTTP
+  e RLS real de dois tenants. Não houve alteração do teste.
+- `policy-issue`: DEVAI strict identificou `FORBID-DROP-PROD` no commit
+  `0018f245e6137464f3388d0862e369ba894e1c99`, cujo comando é apenas a
+  limpeza do banco temporário criado pelo próprio sensor. Vincular recibo
+  Owner exato antes da revisão e repetir o check; nenhuma base de produção
+  participa do ensaio.
+
 ## Resume state
 
 **Current checkpoint — OD-S15-02:** Revised prompt-review PASS is recorded. Inspector sensors were committed at `c777c4a8` and `50a882b2`; Engineer generator and its package integration gate/changeset at `fa76165e`, `8b4ee270`, and `546a7fac`. The packed external consumer gate `pnpm --filter @stynx-nyx/cli test:int` passed with current-source local tarballs, SHA-512 lockfile proof, generated Nest routes, and two-tenant real PostgreSQL RLS; `packages/cli` unit tests passed 75/75, typecheck/lint/build and package README check passed. Architect rebinding at `f3c59a67` added only the generator declaration baseline, passed `pnpm api:baselines` (44 packages) and `pnpm check:trace --print` (420/420), and ran `pnpm exec devai doctor` with `ok:true` (authority-enforcement advisory reports the existing missing local post-merge adapter key). No CTG-0007 merge is required for independent work. Recheck against CTG-0005 public data API, run the remaining focused/full integration gates and independent delivery review, then import CTG8 last. The earlier per-CTG PR/RC/full-CI steps are superseded.
@@ -61,3 +72,13 @@ Fifth Opus prompt-review returned **REVIEW** in `reviews/ctg8-prompt-review-5.js
 Sixth Opus prompt-review returned **PASS** in `reviews/ctg8-prompt-review-6.json` with two nonblocking findings. Its triage note is addressed here by requiring the failed fetch or resolution target itself to be STYNX before labeling a network-shaped install failure a sensor failure; a STYNX name appearing only as a parent dependency is insufficient and goes to the separate third-party reachability probe. The stale resume wording was also corrected. The historical prompt-review PASS covered the behavioral contract; the revised flow review and Architect invariant checkpoint are current dispatch prerequisites. CTG7 integration is required for final import, not Inspector dispatch.
 
 Architect 8A checked `buildProgram`, `Database.tx`, `Transaction.query`, `RequestContext`, `StynxDataModule.forRoot`, `Permission`, `PermissionGuard`, and the platform migrations against the contract. The host must install the auth guard and data module; `@Permission` alone is metadata. Four atomic gate invariants now divide parsing/output ownership (`INV-CLI-001`), deterministic output/check (`002`), generated route and repository authority (`003`), and PostgreSQL RLS (`004`). Trace binding waits for Inspector test paths. CTG-0007 integration no longer blocks Inspector dispatch under OD-S15-02; final import remains ordered after CTG7.
+
+Post-rebase checkpoint: CTG8 HEAD `0faf544e` descends from the CTG7 integrated
+PASS receipt `22d976fb`. Trace passed 449/449, API baselines 44/44, CLI unit
+75/75, lint/typecheck/build, lint:tests and package README check. The packed
+consumer ran without Turbo cache and passed with 9 current-source tarballs,
+independent SRI lockfile proof, generated Nest HTTP routes and two-tenant
+PostgreSQL/RLS. RLS negative checked 7 tables and RLS smoke passed. The
+first packed-consumer attempt failed only from local test-role provisioning,
+recorded in §Triagem; the next attempt passed unchanged. Full CI and
+reference apps remain deferred to the single final candidate.
