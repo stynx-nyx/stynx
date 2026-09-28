@@ -1,0 +1,54 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "medium",
+      "file": "work/rounds/R-0002/prompts/105-ctg5-envelope-inspector.md:3-5; work/rounds/R-0002/prompts/106-ctg5-envelope-engineer.md:3-6",
+      "issue": "Both prompts gate dispatch on the Owner 'recording' option A for INV-ERROR-001. The invariant's change_policy requires human_approval, but the prompts name no receipt artifact. Owner decisions in this round live in files such as work/rounds/R-0002/authorization-rc2-candidate.md. Neither prompt tells the worker to check for the receipt and stop if it is missing. The gate therefore depends only on the maestro's discipline, and a worker handed the prompt early has nothing to check.",
+      "repair": "Name the exact receipt path in both prompts, e.g. work/rounds/R-0002/authorization-ctg5-error-envelope.md with authorized_by_role: Owner, option A and INV-ERROR-001. Add as the first instruction: 'Verify the receipt, the Architect contract commit and the prompt-review PASS; if any is absent, stop and report blocked without editing.' The Engineer prompt should also name the Inspector red commit and the trace-rebind commit it must find."
+    },
+    {
+      "severity": "medium",
+      "file": "work/rounds/R-0002/prompts/105-ctg5-envelope-inspector.md:20-23,42-43",
+      "issue": "The Inspector prompt says 'each reachable CTG5-owned 400/403/409/500/503 in the plan's matrix'. That can be read as only the first table (14 codes). The plan also requires 'Cobrir explicitamente cada linha da matriz de alcance', including the 'Outros caminhos' table. That table has scope() throwing (500 scope-callback-failed, no SQL), tenancyPort.get() throwing (500 tenancy-port-failed), invalid HTTP status or persistStatus returning non-boolean/throwing (500 status-invalid/status-policy-invalid plus rollback), encodeBody producing non-JSON (500 response-not-json), metadataSelector/entityIdSelector/redaction throwing (500 audit-metadata-failed), and setup faults from pool.connect/BEGIN/session (503 transaction-failed). The fault line lists only 'audit/completion/COMMIT' and leaves out setup. Execution outside HTTP (interceptor unit test) is not mentioned either. Without red sensors for these rows, the Engineer has no specific red to satisfy.",
+      "repair": "List every row of both tables in the Inspector prompt with its expected status/errorCode and the required 'no durable effect' control. Explicitly add: setup-phase fault(s) to 503; store lookup/reserve fault to 503; the scope/tenancy/status/persistStatus/encodeBody/selector/redaction 500s; and the non-HTTP interceptor unit case. Also add the defensive unit sensors for marking-required, lockTimeoutMs and ttlMs that the plan preserves at runtime."
+    },
+    {
+      "severity": "medium",
+      "file": "work/rounds/R-0002/prompts/106-ctg5-envelope-engineer.md:23-36",
+      "issue": "The phase/precedence model covers only errors that leave Database.tx. Two cases are missing. (i) scope() and tenancyPort.get() run before the tx (transactional-command.ts:322-323, 415). Today they raise raw Errors that reach the global filter, and the plan requires canonical 500 scope-callback-failed/tenancy-port-failed without SQL. (ii) metadataSelector, entityIdSelector and redaction run inside writeAudit (:439-446). Under the prompt's 'audit' phase they would map to 503 transaction-failed instead of 500 audit-metadata-failed. store.complete/clear (:384-385) run after audit, and the prompt does not say which phase they carry.",
+      "repair": "State in the Engineer prompt: pre-tx callbacks (scope, tenancyPort.get) are converted to their canonical 500 before any SQL, outside the tx classifier. Selector/redaction evaluation inside writeAudit is phase 'ctg5-callback' (500 audit-metadata-failed); only auditSink.writeInTransaction is 'audit'. Reset the phase to 'store' before complete/clear, and set 'ctg5-callback' around status validation, persistStatus and encodeBody."
+    },
+    {
+      "severity": "medium",
+      "file": "work/rounds/R-0002/prompts/105-ctg5-envelope-inspector.md:6-7,20-22",
+      "issue": "The Inspector must assert toEqual on the complete canonical body, but the plan fixes message text only for the two 409s. For every other COMMAND:*/IDEMPOTENCY:* row it says only 'mensagem pública fixa', and any details come from the catalog. The Inspector is dispatched after the Architect amends errors.json and the CTG5 contract, but the prompt tells it to read only the plan, review-4, source and tests. It does not tell it to read the amended catalog as the oracle for messages, retryable and details. The Inspector would have to invent messages, and Engineer and catalog could diverge.",
+      "repair": "Tell the Inspector to take the exact message, retryable and details for each code from the Architect-amended docs/framework/contracts/errors.json (runtimeBody) and transactional-audit-idempotency-1.5.md at the named commit. If any code lacks a fixed message there, report a reference-gap instead of choosing one. Tell the Engineer to use the same catalog as its source."
+    },
+    {
+      "severity": "low",
+      "file": "work/rounds/R-0002/prompts/105-ctg5-envelope-inspector.md:29; 106-ctg5-envelope-engineer.md:17-20",
+      "issue": "The Inspector is told to compare 'the runtime error-code regex' with the law schema pattern, but no symbol name or location is agreed. Today no such export exists. The Engineer prompt does not say to expose it. A test importing a guessed name produces a spurious red, or it forces a public-API change that neither prompt names.",
+      "repair": "Either prescribe the exact export (module path and name, noting the resulting api:baselines rebind), or require a behavioural sensor: read the pattern from law/schemas/error-envelope.schema.json and assert that forRoot/app.init() accepts and refuses the same corpus of codes."
+    },
+    {
+      "severity": "low",
+      "file": "work/rounds/R-0002/prompts/106-ctg5-envelope-engineer.md:12-21",
+      "issue": "Several plan constraints are missing from the Engineer prompt. (1) Keep the defensive runtime checks for marking, lockTimeoutMs and ttlMs, now canonicalized, with unit proof; only the COMMAND_MISMATCH_CODE_INVALID runtime path is removed. (2) If a real Nest no-module fixture cannot reach the route filter, return reference-gap to the Architect instead of emitting a raw exception. (3) Resolve the requestId only for CommandRejectionResponse, never echo a raw header or a prior transaction's ID, and leave CommittedCommandResponse headers and bytes untouched. (4) The lockfile is not explicitly forbidden.",
+      "repair": "Add these four sentences to the Engineer prompt, and add 'lockfile' next to 'manifests'."
+    },
+    {
+      "severity": "low",
+      "file": "work/rounds/R-0002/prompts/105-ctg5-envelope-inspector.md:24-28; 106-ctg5-envelope-engineer.md:39-43",
+      "issue": "Handoff and gate precision falls short of the plan. The with-core no-module case must equal the header the core middleware set, even when RequestContext cannot be injected in the controller module, and 105 does not say this. The Engineer prompt does not require the @stynx-nyx/backend#test log on the same HEAD naming the nine specs (errors, no-module, if-match-http, http, advanced, faults, provenance, filters, angular) with stynx_app and two tenants. It omits DEVAI strict and pnpm check:trace --print from the gates. Neither prompt says the delivery is incomplete until an independent Opus delivery-review returns PASS.",
+      "repair": "Add the with-core header-equality rule to 105. In 106, require the named-spec log on the same HEAD, DEVAI strict and check:trace --print. In both prompts, state that the output goes to an independent delivery-review, with PR, RC and full CI still reserved for OD-S15-02."
+    },
+    {
+      "severity": "info",
+      "file": "work/rounds/R-0002/prompts/105-ctg5-envelope-inspector.md; 106-ctg5-envelope-engineer.md",
+      "issue": "Satisfied: all four low precision items from review-4. (a) The pass-through precedence order is in 106:28-36. (b) setup is initialized immediately before this.database.tx, with store first and commit last, in 106:24-27. (c) Legacy 504/503/500 is strengthened to the exact existing shape in 105:33-36. (d) The faults handler case is pinned to 502 {code:'HANDLER_FAILED'}, with audit/completion/COMMIT pinned to the exact 503, both attempts and assertNoDurableEffect, in 105:40-43. Also satisfied: role declarations and path locks (tests only / src/transactional-command, README prose and changeset only); the borrowed CTG6/CTG7 test locks as assertions only, keeping 412/428; both 422s and the persisted/replayed 502 byte-identical; the migration of the invalid-option and SCOPED fixtures without deleting negatives; the bootstrap refusals; retryable:true only on the in-progress 409; two concurrent losers with distinct IDs; RLS gates; no Git, law/, workflows or DETRAN; and no full CI/PR/RC under OD-S15-02.",
+      "repair": "None."
+    }
+  ],
+  "summary": "Read-only prompt review of Inspector 105 and Engineer 106, checked against ctg5-error-envelope-option-a.md, the review-4 technical PASS, transactional-command.ts/module.ts, the law error-envelope schema, the INV-ERROR-001 change_policy (human_approval_required) and the real faults/provenance/advanced specs. The prompts carry all four review-4 precisions, the role and path locks, the borrowed CTG6/CTG7 test locks, the legacy 504 STATEMENT_TIMEOUT / 503 SERIALIZATION_FAILURE / 500 wrong-role bodies, both 422s, the consumer-chosen 502, the RLS gates and the OD-S15-02 reservation of PR/RC/full CI. Four medium gaps block a PASS. (1) The Owner gate names no receipt artifact, and neither prompt makes the worker verify it and stop. (2) The Inspector prompt does not enumerate the 'Outros caminhos' reachability rows or setup/store faults, so those rows would have no red sensor. (3) The Engineer's phase model omits the pre-tx scope/tenancyPort callbacks and would misclassify selector/redaction failures inside writeAudit as 503 instead of 500 audit-metadata-failed. (4) The Inspector is not pointed at the Architect-amended errors.json as the oracle for the exact messages its toEqual assertions need. There are also low items: the regex-sensor symbol, the defensive checks and reference-gap path, the requestId scope, the lockfile, the named-spec log, DEVAI strict/check:trace, and the delivery-review handoff. Verdict REVIEW. This technical prompt review does not replace the Owner's human approval of option A under INV-ERROR-001, and no worker may be dispatched without it."
+}

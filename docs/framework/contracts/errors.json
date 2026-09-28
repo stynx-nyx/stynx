@@ -2,13 +2,16 @@
   "schemaVersion": "1.0.0",
   "version": "1.0.0",
   "title": "stynx baseline error contract",
-  "description": "Baseline error catalog. The current StynxErrorFilter passes Nest HttpException bodies through and emits core StynxError as {code,message,context?}; the envelope below is an architectural target, not the literal runtime shape of every response. Adopters extending with domain-specific errors author per-module *.errors.json files that reference this baseline.",
+  "description": "Baseline error catalog. New CTG5-owned transactional command rejections and CTG6 If-Match use the canonical law envelope. Existing StynxErrorFilter, StynxDataError, legacy idempotency and consumer-chosen bodies retain their documented historical shapes. Adopters add per-module *.errors.json files.",
   "envelope": {
     "shape": {
       "type": "object",
       "required": ["statusCode", "errorCode", "message", "requestId"],
       "properties": {
-        "statusCode": { "type": "integer", "description": "HTTP status code (4xx | 5xx)" },
+        "statusCode": {
+          "type": "integer",
+          "description": "HTTP status code (4xx | 5xx)"
+        },
         "errorCode": {
           "type": "string",
           "description": "Stable machine-readable error identifier, format: `<DOMAIN>:<CATEGORY>:<DETAIL>`, e.g. `BOOKMARK:NOT_FOUND:by-id`"
@@ -24,6 +27,10 @@
         "details": {
           "type": "object",
           "description": "Optional per-error metadata; shape depends on errorCode"
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "Optional wire hint for whether the same input may be retried"
         }
       }
     },
@@ -57,7 +64,11 @@
       "statusCode": 403,
       "retriable": false,
       "exception": "ForbiddenException",
-      "runtimeBody": { "message": "TENANT_ACCESS_DENIED", "error": "Forbidden", "statusCode": 403 },
+      "runtimeBody": {
+        "message": "TENANT_ACCESS_DENIED",
+        "error": "Forbidden",
+        "statusCode": 403
+      },
       "description": "Existing protected-route denial for absent or inactive membership, or a verified actor without membership in the public Host tenant. Never downgrade that verified actor to the nominal public actor."
     },
     {
@@ -94,7 +105,353 @@
       "errorCode": "IDEMPOTENCY:CONFLICT:duplicate-key",
       "statusCode": 409,
       "retriable": false,
-      "description": "Idempotency key already used for a different request body. Caller should not retry with the same key + different payload."
+      "description": "Transactional command key was already used with a different canonical body, HTTP method, or concrete path. The caller must use a new key. The legacy @stynx-nyx/idempotency 422 retains its historical body.",
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 409,
+        "errorCode": "IDEMPOTENCY:CONFLICT:duplicate-key",
+        "message": "Idempotency key was used for a different request",
+        "requestId": "<request UUIDv7>",
+        "details": {
+          "key": "<supplied key>"
+        },
+        "retryable": false
+      }
+    },
+    {
+      "errorCode": "IDEMPOTENCY:CONFLICT:in-progress",
+      "statusCode": 409,
+      "retriable": true,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 409,
+        "errorCode": "IDEMPOTENCY:CONFLICT:in-progress",
+        "message": "Idempotency key is in progress",
+        "requestId": "<request UUIDv7>",
+        "details": {
+          "key": "<supplied key>"
+        },
+        "retryable": true
+      },
+      "description": "A concurrent transactional command owns this key; a repeat with the same input can become a replay after the winner commits."
+    },
+    {
+      "errorCode": "COMMAND:UNAVAILABLE:module-required",
+      "statusCode": 503,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 503,
+        "errorCode": "COMMAND:UNAVAILABLE:module-required",
+        "message": "Transactional command module is required",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "Marked route was served without StynxTransactionalCommandModule."
+    },
+    {
+      "errorCode": "COMMAND:CONFIGURATION:marking-required",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 500,
+        "errorCode": "COMMAND:CONFIGURATION:marking-required",
+        "message": "Transactional audit and idempotency markings are required",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "Defensive failure if a marked route bypasses boot validation; registered routes are rejected at bootstrap."
+    },
+    {
+      "errorCode": "COMMAND:FORBIDDEN:context-missing",
+      "statusCode": 403,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 403,
+        "errorCode": "COMMAND:FORBIDDEN:context-missing",
+        "message": "Trusted request context is required",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "A transactional command has no active trusted request context."
+    },
+    {
+      "errorCode": "COMMAND:FORBIDDEN:actor-or-tenant-missing",
+      "statusCode": 403,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 403,
+        "errorCode": "COMMAND:FORBIDDEN:actor-or-tenant-missing",
+        "message": "Trusted actor and tenant are required",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "A transactional command lacks a trusted actor or tenant."
+    },
+    {
+      "errorCode": "COMMAND:BAD_REQUEST:scope-invalid",
+      "statusCode": 400,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 400,
+        "errorCode": "COMMAND:BAD_REQUEST:scope-invalid",
+        "message": "Command scope is invalid",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The configured scope produced no nonempty key."
+    },
+    {
+      "errorCode": "IDEMPOTENCY:BAD_REQUEST:key-required",
+      "statusCode": 400,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 400,
+        "errorCode": "IDEMPOTENCY:BAD_REQUEST:key-required",
+        "message": "Idempotency key is required",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The transactional command request supplied no usable idempotency key."
+    },
+    {
+      "errorCode": "COMMAND:CONFIGURATION:lock-timeout-invalid",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 500,
+        "errorCode": "COMMAND:CONFIGURATION:lock-timeout-invalid",
+        "message": "Command lock timeout is invalid",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "Defensive failure if invalid static options bypass boot validation; registered routes are rejected at bootstrap."
+    },
+    {
+      "errorCode": "COMMAND:CONFIGURATION:ttl-invalid",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 500,
+        "errorCode": "COMMAND:CONFIGURATION:ttl-invalid",
+        "message": "Command idempotency TTL is invalid",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "Defensive failure if invalid metadata bypasses boot validation; registered routes are rejected at bootstrap."
+    },
+    {
+      "errorCode": "COMMAND:BAD_REQUEST:body-invalid",
+      "statusCode": 400,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 400,
+        "errorCode": "COMMAND:BAD_REQUEST:body-invalid",
+        "message": "Command body is invalid",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The request body cannot be canonicalized as strict JSON."
+    },
+    {
+      "errorCode": "COMMAND:FORBIDDEN:tenant-provenance-invalid",
+      "statusCode": 403,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 403,
+        "errorCode": "COMMAND:FORBIDDEN:tenant-provenance-invalid",
+        "message": "Trusted tenant provenance is invalid",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The selected tenant does not match verified guard and tenancy provenance."
+    },
+    {
+      "errorCode": "COMMAND:FORBIDDEN:actor-provenance-invalid",
+      "statusCode": 403,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 403,
+        "errorCode": "COMMAND:FORBIDDEN:actor-provenance-invalid",
+        "message": "Trusted actor provenance is invalid",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The selected actor does not match verified guard and tenancy provenance."
+    },
+    {
+      "errorCode": "COMMAND:FORBIDDEN:claims-mismatch",
+      "statusCode": 403,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 403,
+        "errorCode": "COMMAND:FORBIDDEN:claims-mismatch",
+        "message": "Authenticated claims do not match command context",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "Verified claims disagree with selected tenant or actor."
+    },
+    {
+      "errorCode": "COMMAND:CONFIGURATION:scope-callback-failed",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 500,
+        "errorCode": "COMMAND:CONFIGURATION:scope-callback-failed",
+        "message": "Command scope evaluation failed",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The application scope callback failed before command SQL."
+    },
+    {
+      "errorCode": "COMMAND:CONFIGURATION:tenancy-port-failed",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 500,
+        "errorCode": "COMMAND:CONFIGURATION:tenancy-port-failed",
+        "message": "Tenant context resolution failed",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The configured tenant context port failed before command SQL."
+    },
+    {
+      "errorCode": "COMMAND:CONFIGURATION:status-invalid",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 500,
+        "errorCode": "COMMAND:CONFIGURATION:status-invalid",
+        "message": "Command response status is invalid",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The handler produced a non-HTTP status; the transaction rolls back."
+    },
+    {
+      "errorCode": "COMMAND:CONFIGURATION:status-policy-invalid",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 500,
+        "errorCode": "COMMAND:CONFIGURATION:status-policy-invalid",
+        "message": "Command status policy failed",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The application status policy failed or returned a non-boolean value; the transaction rolls back."
+    },
+    {
+      "errorCode": "COMMAND:CONFIGURATION:response-not-json",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 500,
+        "errorCode": "COMMAND:CONFIGURATION:response-not-json",
+        "message": "Command response is not valid JSON",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The chosen response could not be encoded for durable replay; the transaction rolls back."
+    },
+    {
+      "errorCode": "COMMAND:CONFIGURATION:audit-metadata-failed",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 500,
+        "errorCode": "COMMAND:CONFIGURATION:audit-metadata-failed",
+        "message": "Command audit metadata failed",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "The application audit metadata selector or redaction failed; the transaction rolls back."
+    },
+    {
+      "errorCode": "COMMAND:DEPENDENCY:transaction-failed",
+      "statusCode": 503,
+      "retriable": false,
+      "exception": "@stynx-nyx/backend transactional command boundary",
+      "runtimeBody": {
+        "statusCode": 503,
+        "errorCode": "COMMAND:DEPENDENCY:transaction-failed",
+        "message": "Transactional command failed",
+        "requestId": "<request UUIDv7>",
+        "retryable": false
+      },
+      "description": "Own setup, key-store, audit-sink, or commit failure outside StynxDataError; no command effect is durable."
+    },
+    {
+      "errorCode": "STATEMENT_TIMEOUT",
+      "statusCode": 504,
+      "retriable": true,
+      "exception": "@stynx-nyx/data StatementTimeoutError via StynxErrorFilter",
+      "runtimeBody": {
+        "code": "STATEMENT_TIMEOUT",
+        "message": "Transaction exceeded the configured statement timeout",
+        "context": {
+          "originalCode": "57014"
+        }
+      },
+      "description": "Legacy data error body preserved by the CTG5 boundary; the canonical CTG5 rejection envelope is not applied."
+    },
+    {
+      "errorCode": "SERIALIZATION_FAILURE",
+      "statusCode": 503,
+      "retriable": true,
+      "exception": "@stynx-nyx/data SerializationFailureError via StynxErrorFilter",
+      "runtimeBody": {
+        "code": "SERIALIZATION_FAILURE",
+        "message": "Transaction failed after retrying serialization errors",
+        "context": {
+          "attempts": "<attempt count>",
+          "code": "<40001 or 40P01>"
+        }
+      },
+      "description": "Legacy data error body preserved by the CTG5 boundary; context can include lastError after retries."
+    },
+    {
+      "errorCode": "TRANSACTION_IDENTITY_MISMATCH",
+      "statusCode": 500,
+      "retriable": false,
+      "exception": "@stynx-nyx/data TransactionIdentityMismatchError via StynxErrorFilter",
+      "runtimeBody": {
+        "code": "TRANSACTION_IDENTITY_MISMATCH",
+        "message": "Transaction identity does not match the trusted request context"
+      },
+      "description": "Legacy data error body preserved by the CTG5 boundary; optional context is supplied by the failing connection check."
+    },
+    {
+      "errorCode": "IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY",
+      "statusCode": 422,
+      "retriable": false,
+      "exception": "@stynx-nyx/idempotency UnprocessableEntityException",
+      "runtimeBody": {
+        "message": "IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY",
+        "error": "Unprocessable Entity",
+        "statusCode": 422
+      },
+      "description": "Legacy idempotency interceptor body, outside the new CTG5 transactional command envelope; preserve its historical bytes."
     },
     {
       "errorCode": "PRECONDITION:FAILED:if-match",

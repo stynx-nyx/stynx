@@ -258,6 +258,8 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
 
+- CTG5 envelope sensores pós-despacho: `sensor-error` — o unitário exigia o envelope completo em `HttpException.getResponse()` antes do filtro HTTP resolver `requestId`, e uma asserção antiga de proveniência ainda esperava `{code}`; o Inspector limitou o unitário a status/código interno e fortaleceu a prova HTTP do 403 completo, seguido de rebind Architect de trace.
+- CTG5 envelope Inspector tentativas 1–2: `reference-gap` — os sensores entregues provaram vermelho em PostgreSQL, mas ainda faltam caminhos 400/403/500/503, filtros, If-Match, unitários e controles duráveis exigidos pelo prompt 105; após a nova tentativa parcial, a conclusão dos sensores foi escalada ao maestro no papel Inspector antes de qualquer commit Inspector.
 - RC2 delivery-review Opus ciclo 1: `policy-issue` — a política de anomalia e o publicador ainda fixavam `rc.1` apesar dos 44 manifestos em `rc.2`; Inspector acrescentou prova vermelha de igualdade e da transição `rc.1 → rc.2`, Architect vincula a decisão Owner existente à candidata exata, Engineer atualiza o candidato e o digest; repetir gates e review antes do PR.
 - RC2 `release:status`: `policy-issue` — o primeiro commit de versão tinha assunto fora do marcador canônico; o maestro reconstruiu a sequência local sem mudar a árvore e o gate passou com `chore(repo): version 1.5.0 release candidate`.
 - Delivery-review CTG-0004 ciclo 1: `plant-bug` — `timezoneFormatter` rejeitava zonas IANA canônicas com hífen ou dígito e `enqueue` enviava ator explícito malformado ao PostgreSQL; Inspector registrou testes vermelhos em `24ef81a7`, Engineer corrigiu em `6493be3d`, e Architect refez o vínculo de trace. As provas PostgreSQL negativas e os valores fixos do seed também foram ampliados.
@@ -555,12 +557,11 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
 20. Uma decisão Owner permanece pendente antes do congelamento: a adenda A1
     §8.1 do DETRAN confirmou SIG/OBX/OFS como MUST, enquanto OD-S15-02
     nomeou o encerramento após CTG8. A divergência do envelope 409 da CTG5
-    segue correção Architect opção A em tríade isolada: apenas código CTG5
-    ainda não publicado é alinhado ao schema canônico existente, sem editar
-    `law/` ou corpos legados. O Opus confirmou PASS da classificação em
-    `reviews/ctg5-error-authority-classification-review-1.json` na worktree
-    isolada. A autorização geral do Owner não é apresentada como escolha
-    específica A/B; mudança de invariante ou fio publicado exige nova OD.
+    foi corrigida sob classificação Architect opção A, com PASS de delivery
+    do Opus: apenas código CTG5 ainda não publicado foi alinhado ao schema
+    canônico existente, sem editar `law/` ou corpos legados. A autorização
+    geral do Owner não é apresentada como escolha específica A/B; mudança de
+    invariante ou fio publicado exige nova OD.
 21. O hook pós-merge local aponta para um issuer DEVAI ausente em cada
     worktree. No checkout principal, a correção foi ensaiada com
     `pnpm exec devai init bind --host-adapter post-merge --as-role architect --write`
@@ -583,10 +584,10 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     Os sensores Inspector, o rebind Architect de trace e a implementação
     Engineer foram commitados na worktree isolada; o último commit Engineer é
     `62dfb561`. `pnpm test:int` passou (52/52 tarefas), e o rebind gerado do
-    baseline de API está pendente de commit Architect. Depois, obter
-    delivery-review PASS e importar a correção na branch cumulativa, sem PR,
-    RC ou CI integral intermediário. A decisão de escopo A1 §8.1 permanece
-    pendente. O desvio de procedimento de uma leitura
+    baseline de API passou 44/44 e foi commitado em `949f83dc`. O
+    delivery-review Opus retornou PASS no ciclo 1; este merge importa a
+    correção na branch cumulativa, sem PR, RC ou CI integral intermediário.
+    A decisão de escopo A1 §8.1 permanece pendente. O desvio de uma leitura
     `git show` pelo Inspector, sem mutação, foi comunicado ao maestro; Git
     continuará exclusivo do maestro.
 23. A adenda A1 §8.1 recebeu prévia condicional de lacunas e paralelismo em
@@ -616,6 +617,12 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     de prompt-review de workers CTG9, e nenhum
     worker foi despachado. Os contratos continuam condicionados à decisão
     de escopo A1 e aos ADRs/aprovações humanas listados no preflight.
+26. O delivery-review Opus do envelope CTG5 retornou PASS no ciclo 1 em
+    `reviews/ctg5-envelope-delivery-review-1.json`, com recibo de hash pela
+    ponte DETRAN. O maestro conferiu os autores e papéis dos commits. Antes
+    da final, reparar a perda de observabilidade nos 500/503 convertidos:
+    causa original, requestId e stack no log servidor, com sensor de corpo
+    público inalterado. Esse achado foi não bloqueante para a importação.
 
 ## Reviews, PRs e publicações
 

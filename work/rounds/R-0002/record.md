@@ -423,12 +423,13 @@ A comparação read-only da adenda DETRAN A1 §8.1 mostrou que SIG/OBX/OFS
 totalizam dez IDs MUST ainda sem implementação STYNX. A prévia condicional
 `ctg-0009-preflight.md` foi registrada em `6628b5ca`, sem despachar workers
 nem alterar produto. A decisão do Owner sobre incluir esses IDs na 1.5.0 ou
-adiá-los expressamente continua pendente. A CTG5 também mantém um conflito
-entre seu novo HTTP 409 e `law/schemas/error-envelope.schema.json`. O plano
-de reconciliação opção A e os prompts Inspector/Engineer receberam PASS
-técnico do Opus na branch isolada `codex/ctg5-error-envelope` em `f39ff93e`,
-mas não foram importados ou executados sem decisão específica do Owner sobre
-`INV-ERROR-001`.
+adiá-los expressamente continua pendente. O conflito do novo HTTP 409 CTG5
+com `law/schemas/error-envelope.schema.json` foi corrigido em tríade isolada
+pela opção A Architect, sem mudança de `law/` ou de fio publicado. O Opus
+confirmou a classificação, aprovou os prompts Inspector/Engineer e deu PASS
+no delivery-review da correção. Este merge importa o delta na branch
+cumulativa. A decisão Owner de escopo A1 §8.1 segue pendente; a correção de
+conformidade CTG5 não é apresentada como escolha Owner A/B.
 
 Preflight do gate final, sem escrita de versão: `pnpm release:preview` passou
 na branch cumulativa e listou cinco changesets pendentes (jobs, transação,
@@ -474,3 +475,98 @@ transação ambiente, serialização de `audit.write` antes do relógio por
 migração forward, sequência `CACHE 1 NO CYCLE` sem truncamento, migração de
 IDs v4 para UUIDv7 com mapa, e checagens na conexão efetiva. Ainda não há
 PASS condicional nem autorização de escopo; não houve alteração de produto.
+
+## CTG5 — correção de conformidade do envelope antes do Inspector (2026-09-28)
+
+A reavaliação de `INV-ERROR-001.change_policy` e da especificação
+UPS-TXN-03 concluiu que a opção A corrige somente código CTG5 não publicado
+para o schema de erro vigente; não muda `law/` nem os corpos legados. Os tags
+`@stynx-nyx/backend@1.5.0-rc.1` e `rc.2` não contêm
+`packages/backend/src/transactional-command/**`; `rc.3` não foi publicado.
+O Owner autorizou a campanha, mas não é atribuído a ele uma escolha A/B ou
+uma exceção. O Opus retornou PASS de classificação no fallback estruturado
+`reviews/ctg5-error-authority-classification-review-1.json`; a ponte DETRAN
+rejeitou sua resposta cercada por Markdown. O recibo registra digests do
+mesmo prompt e da saída válida.
+
+O contrato, o catálogo `errors.json` com 21 códigos da nova fronteira e
+os corpos legados 504/503/500/422, a nota de migração, o plano e os prompts
+105/106 foram emendados pelo Architect em `29dfa65f`. `pnpm api:contract`
+passou (135 paths) e `pnpm check:trace --print` passou (449/449) antes dos
+testes novos. O prompt-review de workers ciclo 3 retornou REVIEW por apontar
+o PASS antigo e omissões de catalogação; o reparo Architect está em
+`921d358a`. O ciclo 4 retornou **PASS** em
+`reviews/ctg5-envelope-worker-prompt-review-4.json`, com recibo da ponte
+e SHA-256 dos dois prompts vinculados em
+`reviews/ctg5-envelope-worker-review-binding.json`, commit `379e933c`.
+O PASS anterior review-2 fica superado. Verificar o binding e o HEAD exato
+informado pelo maestro antes do despacho Inspector. Nenhum teste ou código
+foi alterado nesta etapa; próximos commits: Inspector vermelho → Architect
+trace → Engineer verde → Architect baseline → delivery-review → importação
+cumulativa, sem CI completo/PR/RC intermediário sob OD-S15-02.
+
+## CTG5 — sensores e rebind de trace (2026-09-28)
+
+O Inspector worker entregou sensores parciais em duas tentativas; a triagem
+`reference-gap` e a escalada ao maestro constam em `plan.md` §Triagem. O
+maestro concluiu os testes no papel Inspector e os commitou em
+`380f302f2da0a3996f814d33dfc6597ac4730e57`. A prova focal de 11 arquivos
+contra PostgreSQL real foi vermelha como esperado: 46 falhas de contrato e
+47 testes verdes, incluindo rollback, RLS e as respostas legadas. O comando
+usou `STYNX_TEST_PG_HOST=127.0.0.1`, porta `55432`, usuário/senha
+`postgres`, e `pnpm --filter @stynx-nyx/backend test --` com os arquivos
+`transactional-command-*`, `angular-transactional-command-http` e
+`if-match-http`; log efêmero
+`/private/tmp/stynx-ctg5-inspector-complete-red.log`. `pnpm lint:tests`
+passou. Os casos esperados falham por corpos CTG5 antigos, rejeições de
+bootstrap ausentes e falhas de dependência expostas como 500. O worker
+executou indevidamente uma leitura `git show` sem mutação no início da
+primeira tentativa; depois não executou Git. Só o maestro fez os commits.
+O Architect rebinda `law/trace.json` a 451/451 testes rastreados neste
+checkpoint em `45a46c07fe921b47c7f36929fc885684740b5e43`; não alterou
+schema nem invariante de erro. Para o despacho Engineer, os SHAs vinculantes
+são: contrato Architect `29dfa65f`, binding PASS de prompts `379e933c`,
+sensores Inspector `380f302f2da0a3996f814d33dfc6597ac4730e57` e rebind
+Architect `45a46c07fe921b47c7f36929fc885684740b5e43`. O HEAD de
+checkpoint antes do despacho é o commit Architect que registra estes SHAs.
+
+## CTG5 — implementação e rebind de API (2026-09-28)
+
+O Engineer implementou a conformidade do envelope nos arquivos CTG5 e o
+maestro commitou essa entrega como `62dfb56115a124ea92dbb69d64c71b659c4febaf`.
+O ajuste mantém os corpos legados e os códigos do catálogo, e resolve o
+`requestId` pela ordem do contrato antes de devolver rejeições CTG5.
+Após a correção Inspector dos dois sensores e novo rebind Architect de trace,
+os 11 arquivos focais passaram (93/93 testes), assim como toda a suíte
+backend (499/499), lint, typecheck, RLS negativo e smoke, trace (451/451),
+READMEs dos 44 pacotes e DEVAI strict sem findings. A execução de
+`pnpm test:int` com PostgreSQL real passou (52/52 tarefas; log local
+`/private/tmp/stynx-ctg5-envelope-test-int.log`).
+
+O Architect executou `pnpm api:baselines:write` após confirmar que o único
+delta público é o tipo da dependência opcional `RequestContext` no construtor
+do filtro CTG5. O gerador mudou três digests da mesma declaração em
+`docs/framework/contracts/public-api-baselines.json`; `pnpm api:baselines`
+confirmou 44/44 pacotes. Este rebind e o registro compõem o próximo commit
+Architect. Ainda faltam delivery-review PASS e importação cumulativa;
+nenhum PR, RC ou CI integral foi iniciado nesta correção.
+
+## CTG5 — delivery-review do envelope (2026-09-28)
+
+O Opus 5.5, pela ponte DETRAN, revisou o patch desde `81681892` e retornou
+**PASS** em `reviews/ctg5-envelope-delivery-review-1.json`, com recibo
+`reviews/ctg5-envelope-delivery-review-1.bridge.json`. O prompt e a saída
+têm os SHA-256 registrados no recibo e foram conferidos pelo maestro.
+O reviewer não executou Git; o maestro verificou a sequência de autores:
+commits de contrato, trace, baselines e reviews como DEVAI Architect;
+sensores `380f302f` e `2ac1d54d` como DEVAI Inspector; implementação
+`62dfb561` como DEVAI Engineer. O veredito autoriza a importação ordenada
+sob OD-S15-02, sem PR/RC/CI integral intermediário.
+
+Achado não bloqueante para a importação, mas exigido antes da final: quando
+CTG5 converte falha interna em envelope público 500/503, preservar a causa
+e registrar requestId e stack no log do servidor, sem mudar o corpo público;
+adicionar sensor dessa invariância. Os demais achados são a ausência de prova
+HTTP para dois ramos defensivos inalcançáveis via core, duplicação local do
+regex de `errorCode` e observações de cobertura/autor. Não declarar a final
+pronta até o reparo de observabilidade e review correspondente.

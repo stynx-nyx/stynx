@@ -19,3 +19,13 @@ the transactional command boundary uses the restricted
 `audit.write_command_event` wrapper on its app-role connection.
 
 Committed responses replay the exact JSON bytes, status, `location`, `retry-after`, `cache-control` and `etag` headers. Do not put cookies or per-request headers in a committed response. An unselected successful status commits the domain change and audit event while clearing its key; an unselected error rolls back. Legacy idempotency behavior remains available on routes without the transactional command marker.
+
+CTG5 command rejections now follow the STYNX error envelope with `statusCode`,
+`errorCode`, fixed public `message`, `requestId` matching `X-Request-Id`, and
+`retryable`; key conflicts include `details: { key }`. The default mismatch
+code is `IDEMPOTENCY:CONFLICT:duplicate-key`, and configured `mismatchCode`
+values must match the schema's `errorCode` pattern. Invalid module options or
+marked route metadata fail during bootstrap. Migrate pre-release CTG5 clients
+from `code`/`context` to `errorCode`/`details`. Existing data-layer errors,
+legacy idempotency 422 responses, and consumer-chosen response bytes are
+unchanged.

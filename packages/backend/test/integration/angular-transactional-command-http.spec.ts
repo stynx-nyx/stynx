@@ -159,7 +159,10 @@ describe('Angular NGIDEM to transactional command over live HTTP and PostgreSQL'
     } finally {
       await admin.end();
     }
+    const requestId = mismatch.headers.get('x-request-id');
+    expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
     const error = JSON.parse(mismatch.text) as Record<string, unknown>;
-    expect(error).toEqual({ code: 'IDEMPOTENCY_KEY_CONFLICT', context: { key } });
+    expect(error).toEqual({ statusCode: 409, errorCode: 'IDEMPOTENCY:CONFLICT:duplicate-key',
+      message: 'Idempotency key was used for a different request', requestId, details: { key }, retryable: false });
   });
 });
