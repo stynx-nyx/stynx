@@ -1,5 +1,31 @@
 # Prompt do maestro — release STYNX 1.5.0 (rodada S-1.5 da campanha DETRAN C-0002)
 
+## Emenda vigente — OD-S15-02
+
+O Owner substituiu a cadência de PR e RC por CTG para as CTGs 5–8. Esta emenda
+prevalece sobre as instruções históricas abaixo que pedem PR, merge em `main`,
+CI completo ou publicação de RC entre essas CTGs. O maestro integra os quatro
+grupos em ordem topológica numa única branch cumulativa, com commits separados
+por papel, testes focais, rebinds e delivery-review por grupo. Depois da CTG8,
+congela o escopo, prepara a versão estável e executa **um** CI local completo,
+**um** PR, CI remoto e publicação final com os recibos exigidos. RC1 e RC2 já
+publicados são fatos históricos; não publicar outra RC por esta emenda.
+
+O paralelismo permitido é de trabalho em worktrees e arquivos sem lock comum:
+CTG6 shell/entrypoints e CTG7 clock/calendário podem avançar enquanto a CTG5
+fecha a API de transação; CTG8 pode desenvolver o parser, o plano de saída e
+os sensores isolados da CLI. IFM/ETag, fake Transaction, idempotência Angular e
+o consumidor gerado aguardam o checkpoint estável da CTG5. A importação é
+sempre 5 → 6 → 7 → 8, com revisão e gates focais no SHA importado. Nenhum worker
+executa Git. Esta emenda não altera os MUST da OD-S15-01 nem dispensa o
+prompt-review independente antes de novos despachos.
+
+Checkpoint atual: as CTGs 5–8 já foram importadas na branch cumulativa; ler
+`plan.md` §Retomada antes de qualquer nova ação. A adenda A1 §8.1 do DETRAN
+confirmou SIG/OBX/OFS como MUST, e há uma divergência no envelope HTTP 409 da
+CTG5. Ambas as decisões de escopo/contrato estão pendentes do Owner e impedem
+congelar e publicar a final; não presumir resolução a partir desta emenda.
+
 > Sessão nova, sem contexto anterior, Codex CLI (família Codex, modelo Sol 6), aberta em
 > `/Users/aarusso/Development/stynx`. Você é o **maestro** desta rodada. Tudo o que precisa está nos
 > arquivos citados.

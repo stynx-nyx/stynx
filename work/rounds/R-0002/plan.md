@@ -1,10 +1,12 @@
 # R-0002 — plano e checkpoint da STYNX 1.5.0
 
-**Papel atual:** Architect. **Estado:** bootstrap e CI local verdes;
-delivery-review do CTG-0001 escalado após segundo REVIEW.
-**Worktree:**
-`/Users/aarusso/Development/stynx-worktrees/release-1-5-0`, branch
-`feat/release-1-5-0`.
+**Papel atual:** Architect. **Estado atual:** CTGs 5–8 implementadas e
+importadas sob OD-S15-02; aguardam decisões de escopo A1 §8.1 e envelope 409
+antes do único gate final. O estado histórico do bootstrap e das primeiras
+CTGs está preservado abaixo. **Branch cumulativa:**
+`/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx`,
+`feat/release-1-5-0-jobs`, checkpoint de código
+`81681892696c19979c7983ebff0fb1c0c3c49c8d`.
 
 ## Leitura
 
@@ -59,8 +61,11 @@ delivery-review do CTG-0001 escalado após segundo REVIEW.
 
 ## Decomposição prevista
 
-Cada CTG segue Architect → Inspector → Engineer, com review de prompt antes do
-despacho, review de entrega, CI verde e um PR. Ordem topológica:
+Cada CTG segue Architect → Inspector → Engineer, com prompt-review antes do
+despacho e delivery-review. A antiga regra de CI completo, PR e RC por CTG
+foi substituída pela OD-S15-02 para as CTGs 5–8: testes focais por grupo,
+importação cumulativa 5 → 6 → 7 → 8, e um CI local completo, um PR, CI remoto
+e publicação final após a CTG8. Ordem topológica:
 
 1. tenancy: UPS-TEN-01…06; primeiro RC.
 2. SSE: UPS-SSE-01…10, UPS-NGSSE-01…10 e UPS-TEST-01; segundo RC.
@@ -78,6 +83,26 @@ despacho, review de entrega, CI verde e um PR. Ordem topológica:
 Contratos de API, testes, baselines, trace, changesets, package READMEs,
 RLS, integração e conformance serão detalhados por CTG e revistos antes do
 despacho correspondente. Sem shim nem código copiado do DETRAN.
+
+### OD-S15-02 — paralelismo e gate consolidado
+
+| Frente           | Pode avançar antes da CTG5 estável                          | Espera pelo checkpoint CTG5                             | Lock exclusivo                                                          |
+| ---------------- | ----------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
+| CTG5 transação   | Contrato, testes e implementação próprios                   | —                                                       | `packages/data`, audit, idempotency, backend de comando e DDL 0020      |
+| CTG6 web-kit     | Shell, catálogos e entrypoints de teste                     | IFM/ETag e fake `Transaction`                           | Angular UI, auth/i18n testing; Angular source serializado com CTG7      |
+| CTG7 utilitários | HMAC, webhook, clock e calendário                           | Idempotência Angular e prova HTTP 409                   | integration-adapter, core/worklist; Angular source serializado com CTG6 |
+| CTG8 CLI         | Parser, validação, saída determinística e sensores isolados | Consumidor gerado com `Database.tx`/`Transaction` reais | `packages/cli` e harness exclusivo                                      |
+
+Os checkpoints permitem desenvolvimento em paralelo, mas a importação na
+branch cumulativa ocorre em 5 → 6 → 7 → 8, cada grupo após delivery-review PASS
+e gates focais. A integração dessas quatro CTGs já ocorreu até `81681892`.
+Não repetir PRs, RCs ou CI completo por CTG. Próxima execução: resolver as
+duas decisões da §Retomada (A1 §8.1 e envelope 409), atualizar a conformidade,
+versionar a candidata estável, executar `pnpm ci:stynx` e
+`pnpm ci:reference-apps` uma vez no HEAD consolidado, obter delivery-review
+final, abrir um PR, verificar CI remoto e publicar `1.5.0` com recibos exatos.
+Se a decisão de escopo incluir SIG/OBX/OFS, implementá-las antes desse gate;
+CTG8 não equivale ao fim do escopo enquanto essa decisão estiver pendente.
 
 ### CTG-0001 — tenancy, contrato proposto para prompt-review
 
