@@ -15,6 +15,6 @@ export default createVitestConfig({
   alias: {
     '@stynx-nyx/core': resolve(__dirname, '../core/src/index.ts'),
     '@stynx-nyx/data': resolve(__dirname, 'src/index.ts'),
-    '@stynx-nyx/testing': resolve(__dirname, '../testing/src/index.ts'),
+    '@stynx-nyx/testing': resolve(__dirname, '../testing/src/fake-transaction.ts'),
   },
 });
