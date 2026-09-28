@@ -95,7 +95,7 @@ export class CommittedCommandResponseFilter implements ExceptionFilter<Committed
       if ((ALLOWED_HEADERS as readonly string[]).includes(name.toLowerCase())) adapter.setHeader(response, name, value);
     }
     if (exception.bytes !== null) adapter.setHeader(response, 'content-type', 'application/json; charset=utf-8');
-    adapter.setHeader(response, 'x-idempotency-key', exception.key);
+    if (exception.key) adapter.setHeader(response, 'x-idempotency-key', exception.key);
     if (exception.replay) adapter.setHeader(response, 'idempotency-replayed', 'true');
     adapter.reply(response, exception.bytes === null ? null : exception.bytes.toString('utf8'), exception.statusCode);
   }
@@ -210,7 +210,9 @@ function catchesCommitted(filter: unknown): boolean {
   if (typeof constructor !== 'function') return false;
   const catches = (Reflect.getMetadata(FILTER_CATCH_EXCEPTIONS, constructor) as unknown[] | undefined) ?? [];
   return catches.length === 0 || catches.some((exception) =>
-    exception === CommittedCommandResponse || exception === HttpException);
+    typeof exception === 'function' && typeof exception.prototype === 'object'
+      && (exception === CommittedCommandResponse || CommittedCommandResponse.prototype instanceof exception
+        || exception === CommandRejectionResponse || CommandRejectionResponse.prototype instanceof exception));
 }
 
 @Injectable()
@@ -247,37 +249,43 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
       for (const wrapper of module.controllers.values()) {
         const controller = wrapper.metatype;
         if (!controller) continue;
-        for (const name of Object.getOwnPropertyNames(controller.prototype)) {
-          const method = Object.getOwnPropertyDescriptor(controller.prototype, name)?.value;
-          if (typeof method !== 'function') continue;
-          const marked = this.reflector.getAllAndOverride<TransactionalCommandOptions | undefined>(
-            STYNX_TRANSACTIONAL_COMMAND, [method, controller]);
-          if (!marked) continue;
-          const idempotency = this.reflector.getAllAndOverride<IdempotentMetadata | undefined>(
-            STYNX_IDEMPOTENT_ROUTE, [method, controller]);
-          const audit = this.reflector.getAllAndOverride<AuditMetadata | undefined>(
-            STYNX_AUDIT_METADATA, [method, controller]);
-          if (!idempotency?.transactional || !audit?.transactional) {
-            throw new Error(`Transactional command ${controller.name}.${name} requires transactional audit and idempotency`);
-          }
-          const publicTenant = this.reflector.getAllAndOverride<unknown>(STYNX_PUBLIC_TENANT_ROUTE, [method, controller]);
-          if (publicTenant && !this.tenancyPort) throw new Error('Public transactional command requires STYNX tenancy port');
-          const needsGuard = !publicTenant || (typeof publicTenant === 'object' && Boolean((publicTenant as { optionalAuth?: boolean }).optionalAuth));
-          if (needsGuard) {
-            const routeGuards = [method, controller].flatMap((target) =>
-              (Reflect.getMetadata(GUARDS_METADATA, target) as unknown[] | undefined) ?? []);
-            if (![...routeGuards, ...globalGuards].some(isBrandedGuard)) {
-              throw new Error(`Transactional command ${controller.name}.${name} requires a built-in STYNX auth guard`);
+        const seenMethods = new Set<string>();
+        for (let prototype: object | null = controller.prototype;
+          prototype && prototype !== Object.prototype; prototype = Object.getPrototypeOf(prototype)) {
+          for (const name of Object.getOwnPropertyNames(prototype)) {
+            if (seenMethods.has(name)) continue;
+            seenMethods.add(name);
+            const method = Object.getOwnPropertyDescriptor(prototype, name)?.value;
+            if (typeof method !== 'function') continue;
+            const marked = this.reflector.getAllAndOverride<TransactionalCommandOptions | undefined>(
+              STYNX_TRANSACTIONAL_COMMAND, [method, controller]);
+            if (!marked) continue;
+            const idempotency = this.reflector.getAllAndOverride<IdempotentMetadata | undefined>(
+              STYNX_IDEMPOTENT_ROUTE, [method, controller]);
+            const audit = this.reflector.getAllAndOverride<AuditMetadata | undefined>(
+              STYNX_AUDIT_METADATA, [method, controller]);
+            if (!idempotency?.transactional || !audit?.transactional) {
+              throw new Error(`Transactional command ${controller.name}.${name} requires transactional audit and idempotency`);
             }
-          }
-          const methodFilters = (Reflect.getMetadata(EXCEPTION_FILTERS_METADATA, method) as unknown[] | undefined) ?? [];
-          if (!methodFilters.includes(CommittedCommandResponseFilter)) {
-            throw new Error(`Transactional command ${controller.name}.${name} requires its committed response filter`);
-          }
-          const precedingFilters = [...methodFilters].reverse().slice(0,
-            [...methodFilters].reverse().indexOf(CommittedCommandResponseFilter));
-          if (precedingFilters.some(catchesCommitted)) {
-            throw new Error(`Transactional command ${controller.name}.${name} has a filter that would intercept committed responses`);
+            const publicTenant = this.reflector.getAllAndOverride<unknown>(STYNX_PUBLIC_TENANT_ROUTE, [method, controller]);
+            if (publicTenant && !this.tenancyPort) throw new Error('Public transactional command requires STYNX tenancy port');
+            const needsGuard = !publicTenant || (typeof publicTenant === 'object' && Boolean((publicTenant as { optionalAuth?: boolean }).optionalAuth));
+            if (needsGuard) {
+              const routeGuards = [method, controller].flatMap((target) =>
+                (Reflect.getMetadata(GUARDS_METADATA, target) as unknown[] | undefined) ?? []);
+              if (![...routeGuards, ...globalGuards].some(isBrandedGuard)) {
+                throw new Error(`Transactional command ${controller.name}.${name} requires a built-in STYNX auth guard`);
+              }
+            }
+            const methodFilters = (Reflect.getMetadata(EXCEPTION_FILTERS_METADATA, method) as unknown[] | undefined) ?? [];
+            if (!methodFilters.includes(CommittedCommandResponseFilter)) {
+              throw new Error(`Transactional command ${controller.name}.${name} requires its committed response filter`);
+            }
+            const precedingFilters = [...methodFilters].reverse().slice(0,
+              [...methodFilters].reverse().indexOf(CommittedCommandResponseFilter));
+            if (precedingFilters.some(catchesCommitted)) {
+              throw new Error(`Transactional command ${controller.name}.${name} has a filter that would intercept committed responses`);
+            }
           }
         }
       }
