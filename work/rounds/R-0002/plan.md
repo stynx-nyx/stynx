@@ -1107,3 +1107,15 @@ declara RLS explicitamente para o linter. Os 16 testes focais,
 retirado apenas localmente. Rebind de trace, regeneração do candidato
 e novo CI integral são os próximos passos; nenhum PR/push/publicação
 ocorreu.
+
+`sensor-error` — o quinto marcador local `5cebcdac` passou por
+472/472 trace, lint, typecheck, 506/506 testes backend e 135/135 testes
+OFS, mas `test:int` parou em dois casos Redis da CTG3. A fixture fixava
+`2026-09-27` enquanto o Redis real usa `EXPIREAT` absoluto e o relógio
+real já era `2026-09-28`: a sessão de origem sumia imediatamente.
+Inspector `e66515a1` ancora o relógio controlado 60 segundos à frente
+do instante de execução, preservando o avanço de três segundos que
+expira apenas o alvo. `pnpm --filter @stynx-nyx/sessions test:int` passou
+14/14, lint de testes passou. O marcador foi retirado localmente;
+Architect rebinda trace 30/30 e Engineer regenera o candidato antes
+do novo CI integral. Nenhum PR/push/publicação ocorreu.

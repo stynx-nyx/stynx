@@ -4677,7 +4677,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 30,
-      "assertion_digest_sha256": "5c9adc1e6f012dcdc83b650feb6def99fbfe5a9d08a61ed568e81e8d6e26f94d"
+      "assertion_digest_sha256": "d43d3e9f2f35b7f097656c4c02a0511585d99a4e511f94882417b9ae61c62e36"
     },
     {
       "path": "packages/sessions/test/unit/session-policy-bootstrap.spec.ts",
