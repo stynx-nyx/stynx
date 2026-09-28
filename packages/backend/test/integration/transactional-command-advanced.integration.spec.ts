@@ -400,7 +400,10 @@ describe('transactional command fingerprint and app-role isolation over real Nes
       value: 1,
     });
     expect(spoof.status).toBe(403);
-    expect(spoof.body).toMatchObject({ code: 'COMMAND_ACTOR_PROVENANCE_INVALID' });
+    const requestId = spoof.headers['x-request-id'];
+    expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
+    expect(spoof.body).toEqual({ statusCode: 403, errorCode: 'COMMAND:FORBIDDEN:actor-provenance-invalid',
+      message: 'Trusted actor provenance is invalid', requestId, retryable: false });
     expect(sessions).toHaveLength(before);
     expect(calls.has('spoofed-claims')).toBe(false);
   });

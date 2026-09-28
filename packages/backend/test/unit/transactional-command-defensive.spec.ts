@@ -58,7 +58,7 @@ describe('transactional command defensive runtime checks before SQL', () => {
       expect(error).toBeInstanceOf(HttpException);
       const rejection = error as HttpException;
       expect(rejection.getStatus()).toBe(status);
-      expect(rejection.getResponse()).toMatchObject({ statusCode: status, errorCode });
+      expect((rejection as HttpException & { errorCode?: string }).errorCode).toBe(errorCode);
     }
     expect(database.tx).not.toHaveBeenCalled();
   });
