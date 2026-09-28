@@ -1,0 +1,18 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/179-final-release-inspector.md:69",
+      "issue": "The prompt requires `v1.5.0` to be a valid stable tag and `v1.5.0-rc.2` to be refused. That means inverting the current assert at test/scripts/release-version-policy.test.mjs:1542, which expects `parseStableVersionTag(`v${candidate}`)` to throw. This goes beyond the literal wording \"remova apenas...\", but the contract (§Sensores) and the prompt both state it explicitly. It is therefore a declared re-oracle, not a weakening. `parseStableVersionTag` (scripts/resolve-release-forbidden-range.mjs:66-69) accepts `v1.5.0` and refuses `v1.5.0-rc.2`.",
+      "required_change": "No change required. When the Inspector reports, it can list the inverted tag assert next to the removals of lines 1507-1510 and 1514, which gives the Architect a clear rebind."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/179-final-release-inspector.md:88",
+      "issue": "Right after the Inspector and before the Engineer, more tests are expected to be red, because `registryVersionPolicyConstants.candidate` is still rc.3 in scripts/lib/registry-version-policy.mjs. The \"only 345 is red\" rule applies after the Engineer. The prompt already covers this with \"Informe vermelhos esperados na fonte RC3\". The contract also scopes the rule to \"Depois do Engineer e antes do marcador\".",
+      "required_change": "No change required."
+    }
+  ],
+  "summary": "This clears the cycle-3 blocker. (1) Contract §Sensores and prompt 179:72-74 now require the `PUBLICATION_VERSION_DRIFT` negative to mutate the synthetic manifest to the literal `1.5.0-rc.3`, which differs from the candidate `1.5.0`. The contract explains why the old `1.5.0` mutation stopped being drift. `validatePublicationRoster` (publication-dist-tag.mjs:44-47) throws for any version other than the candidate, so the negative holds. (2) Both documents limit the removals to deriving candidate/previousCandidate from the root `package.json` (test lines 1507-1510) and the equality check over the real manifests (line 1514). They keep order, the angular canary, rereads, tag drift and error asserts, and require a synthetic 44-package roster at 1.5.0. (3) Test 1503 is explicitly renamed to 'final stable publication roster, rc2 visibility, bounded rereads, and stable release tags'. The prompt tells the Inspector to warn the Architect, and the contract requires the trace rebind. law/trace.json binds the file path at line 4505. (4) The positive post-publication case with `latest=1.5.0` and `rc=1.5.0-rc.2` unchanged is required. I checked it against `verifyPostPublishDistTags` (publication-dist-tag.mjs:89-110): mutableTag=latest, rc is preserved, and it does not throw. The kept negatives still hold with a stable candidate: rc=rc.2 with latest=1.4.0 gives UNKNOWN, and rc=1.5.0-rc.0 gives DRIFT. (5) Contract and prompt 179:92-96 both say the only red expected after the Engineer and before the marker is the renamed test 345, 'final registry policy candidate equals the root and all 44 publishable manifest versions'. It compares the real root and 44 manifests (still 1.5.0-rc.3) against the policy (1.5.0). All tests turn green after the marker. The 1503 sensor no longer reads the real workspace, so it is not red. This PASS lets the Inspector write sensors only. It does not declare a release, authorize a PR or publish. The review was read-only, with no edits and no Git commands."
+}

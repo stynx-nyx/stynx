@@ -42,6 +42,18 @@ liquidação/consulta de cada número, transições válidas/negativas e
 repetições idempotentes sem reemitir número aplicado. Cancele uma reserva
 com parte já aplicada: só a cauda não usada volta a ficar disponível;
 números aplicados nunca são reemitidos e cancelar de novo é idempotente.
+Adenda após prompt-review focal: CTG9 `reservedNumber` exige uma reserva
+`reserved` do tenant/device/org/entity que cubra o número, com
+`reservationId` opcional para séries sobrepostas. Preserve E6 sem essa
+exigência. Prove em ambos os stores os quatro códigos/contextos da tabela
+UPS-OFS-01, inclusive `ALREADY_APPLIED` como `rejected` com conflito de
+domínio aberto e `NO_COVERAGE`/`AMBIGUOUS` também com evidência aberta.
+Prove `createdLocallyAt <= validUntil < now` aplicado e
+`createdLocallyAt > validUntil` recusado, seleção dentro da transação
+do item com lock contra close, e nova reserva da cauda liberada após
+cancel sem ambiguidade. Em PostgreSQL, cubra também `reservationId`
+fora do escopo/intervalo e close/settle que transforma `available` em
+`expired` sem alterar `claimed-locally`/`applied`.
 
 UPS-OFS-02: lotes >100, legado sem sequência e item sem chave apenas
 `received`/código STYNX neutro mapeável pelo consumidor, identidade durável do
@@ -52,6 +64,9 @@ duplicado. `getSyncBatchReceipt` e `getSyncItemReceipt` retornam o recibo
 original no próprio tenant; tentativa rejeitada não o substitui e leitura
 cruzada de tenant falha. Prove namespace de chave sintética sem colisão com chave do
 cliente e rejeição de chave cliente com prefixo `stynx:legacy:`;
+duplicata de outro lote mantém o `queueItemId` submetido na resposta e
+no recibo e registra `context.originalQueueItemId`; chave declarada ou
+sintética repetida dentro do mesmo lote CTG9 recebe 400 antes da escrita.
 duas submissões concorrentes do mesmo lote aberto, ausência do
 resolver mantendo TTL publicado de 24h, e lote legado migrado fechado.
 Teste service e HTTP Nest com envelopes/status existentes: falta de
@@ -95,3 +110,41 @@ sensores focais e registre vermelho esperado; não
 enfraqueça testes. O maestro faz rebind de trace e commit Inspector.
 Não importe nem copie código DETRAN. O Engineer/maestro mantém provas
 `test/db/runtime` e `tenant-isolation-coverage.json` das novas tabelas.
+
+## Addendum after prompt-review 186 (binding)
+
+For an existing CTG9 batch, context/sequence/declared-set divergence,
+including changed `payloadJson` digest, precedes transport comparison and
+returns 409. With matching context, a previously bound transport key and
+changed body fingerprint returns 422. A new key binds to that batch in a
+tenant-scoped ledger and may replay or resume the originally declared items;
+its later changed-body reuse returns 422. For a new batch, duplicate sequence
+is 409, gap is 422, and only then reuse of a transport key with a changed
+fingerprint is 422. Cover PostgreSQL and memory parity. `duplicateItems`
+counts same-key/same-hash cross-batch duplicates, including E6 received
+collisions, and excludes same-batch resume, integrity conflict and reused
+queue ID. Prove resume invariance. CTG9 itemApplier without eventPort fails
+at bootstrap and before direct-store batch writes, with no rows. A lease-held
+503 carries the contender's current trusted request ID; replay does not
+capture or propagate an earlier request ID. These rules supersede any
+unqualified earlier sentence about changed-body transport-key reuse.
+The Engineer's transport-key ledger adds a sixth CTG9 relation. For this
+addendum only, the Inspector may also edit
+`test/db/offline-sync-durable-migration.spec.ts` to prove its tenant-leading
+key, FORCE RLS, grants and cross-tenant negatives; no other `test/db` file.
+The context sensor must vary each pending item's `reservedNumber`,
+`reservationId`, and `createdLocallyAt` in an open-batch K2 retry,
+keeping other fields fixed; each mutation is 409 before consumption,
+receipt or event. The context also includes `queueItemId`,
+`idempotencyKey`, `payloadHash`, stable `payloadJson` digest,
+`entityType`, `localEntityId`, org unit, agent and batch sequence.
+Prove K1 and K2 share one unique tenant/composite-key namespace and
+that K2 is bound to its own incoming transport fingerprint, so
+identical K2 replays and changed-body K2 returns 422.
+Binding occurs at batch admission before the lease wait, including a K2
+contender that receives 503. K1 from batch A offered against either an
+existing or new batch B returns 422, no replay headers, no new ledger
+binding or effect. With a held lease but no active trusted RequestContext,
+the controller fails closed with a configuration error (HTTP 500), never
+503 without requestId; verify no new receipt, consumption or event. Core
+uses a fixed `X-Request-Id` header.

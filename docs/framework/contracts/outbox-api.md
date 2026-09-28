@@ -1,6 +1,6 @@
 # Transactional Outbox Contract
 
-**Status:** Architecture contract.
+**Status:** Architecture contract for the legacy API and CTG9 append mode. CTG9 implementation passed Opus delivery-review cycle 4. Publication evidence is recorded separately in R-0002.
 **Package:** `@stynx-nyx/outbox`.
 **Decision:** [ADR-OUTBOX-0001](pathname:///adr/ADR-OUTBOX-0001-transactional-outbox-promotion).
 

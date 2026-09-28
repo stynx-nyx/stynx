@@ -1,0 +1,48 @@
+{
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:312",
+      "issue": "policy-issue. A tabela UPS-OFS-01 manda `OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED` para o status de recibo `conflict`. O DETRAN, que aqui é o oráculo de aceitação, faz outra coisa. Em backend/domains/ops/offline-sync/src/handwritten/batch-protocol.ts:48-51 (§4.4), `TEAT.NUMBERING_NUMBER_ALREADY_APPLIED` vira `{status:'rejected',conflictType:'domain'}`. O `close()` de submit-batch.command.ts:866-876 grava esse status no item e no recibo. A coluna 'Host mapping' da tabela só traduz o código; nenhuma porta deixa o host trocar o status. Por isso o recibo durável e o replay de bytes exatos do STYNX mostram `conflict` onde o DETRAN mostra `rejected`, o que contraria a regra de preservar desfechos públicos (§8.1). O sensor ctg9-parity.spec.ts:273 e :276 fixa essa divergência.",
+      "required_change": "O Architect corrige a linha :312 para `rejected` com evidência de conflito de domínio aberta. Alternativa: declarar uma porta pela qual o host informe o status por código, mantendo o oráculo TEAT como aceitação. Depois o Inspector ajusta as expectativas de ctg9-parity.spec.ts:273 e :276 para o valor fixado."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:309",
+      "issue": "policy-issue. No DETRAN, `TEAT.NUMBERING_RESERVATION_FOREIGN_SHIFT` é `rejected` mas também abre conflito de domínio (`conflictType:'domain'`), ou seja, entra na fila do supervisor. As linhas NO_COVERAGE e AMBIGUOUS da tabela só dizem `rejected`, sem evidência de conflito. Sem essa evidência, o host não consegue reproduzir a fila do supervisor.",
+      "required_change": "Declarar, nas linhas :309-310, se `rejected` vem com evidência de conflito de domínio aberta (como no DETRAN) ou sem ela. Em seguida, afirmar esse ponto nos sensores."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:299",
+      "issue": "Não está definido se uma reserva `cancelled`, cuja cauda já foi liberada, ainda cobre os números que liberou. A implementação conta como cobertura qualquer status dentro de start..end (postgres-durable.ts:335-343, in-memory:438). Então, se o mesmo dispositivo reservar de novo a cauda liberada e enviar um item sem ID, recebe AMBIGUOUS e um item válido é recusado. O DETRAN escolheria a reserva mais recente. Nenhum sensor cobre esse caso.",
+      "required_change": "Fixar que a cobertura de uma reserva cancelada se limita aos números que ela retém (aplicados ou reclamados). Acrescentar um sensor de nova reserva no mesmo dispositivo após o cancel, sem reservationId."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/unit/ctg9-parity.spec.ts:252",
+      "issue": "O sensor de expiração só testa createdLocallyAt > validUntil com now anterior a ambos. Falta o caso típico do trabalho offline: o ato é criado antes de validUntil e sincronizado depois, isto é, createdLocallyAt ≤ validUntil < now, com a reserva ainda `reserved`. Nesse caso o item deve consumir. Uma implementação que olhasse o relógio de processamento ou derivasse `expired` do tempo passaria nos sensores atuais.",
+      "required_change": "Acrescentar sensores in-memory e PostgreSQL com o relógio depois de validUntil e createdLocallyAt antes dele, esperando `applied` e consumo."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:932",
+      "issue": "Os quatro códigos neutros da tabela UPS-OFS-01 só têm oráculo in-memory (ctg9-parity.spec.ts:217-278). O caminho PostgreSQL, implementado à parte em postgres-durable.ts:335-360, não tem sensor para NO_COVERAGE, AMBIGUOUS, EXPIRED ou ALREADY_APPLIED. Também não há sensor PostgreSQL que prove que close/settle projeta available→expired preservando claimed-locally e applied, embora o contrato (:319-321) exija 'identically' nos dois stores. Faltam ainda o negativo de reservationId fora do escopo ou do intervalo e a asserção de evidência de conflito aberta.",
+      "required_change": "Adicionar sensores PostgreSQL para os quatro desfechos, com status, código e contexto `{number,reservationId}`. Cobrir também um reservationId de outro dispositivo/org/tenant ou fora do intervalo (→ NO_COVERAGE) e a projeção após close/settle. Nas saídas `conflict`, afirmar a linha de conflito aberta."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:754",
+      "issue": "O contrato (:333-335) proíbe substituir o queueItemId submetido na resposta do lote. O sensor, porém, só afirma `status:'applied'` em `secondResult.items[0]`; só o recibo lido (:766-767) prova `queueItemId` e `originalQueueItemId`. Além disso, o caminho com chave declarada e mesmo hash entre lotes não tem sensor in-memory para `context.originalQueueItemId` (ctg9-parity.spec.ts:374 cobre apenas o caso legado sem chave).",
+      "required_change": "Em :754, afirmar `{queueItemId:'cross-device-second',status:'applied'}`. Acrescentar um sensor in-memory de duplicata com chave declarada entre lotes que verifique a resposta e `getSyncBatchReceipt` com `context.originalQueueItemId`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/prompts/146-ctg9-ofs-inspector.md:52",
+      "issue": "O prompt Inspector 146 não traz as regras novas: tabela UPS-OFS-01, `originalQueueItemId`, 400 para chave duplicada no mesmo lote, corrida item × close e projeção expired. Os sensores já as cobrem, mas o registro do mandato Inspector ficou atrás do contrato.",
+      "required_change": "Registrar no prompt 146, ou numa adenda Inspector, as regras de ctg9-ofs-contract.md:293-337, para que sejam rastreáveis."
+    }
+  ],
+  "summary": "Prompt-review focal 2, somente leitura. Não editei nenhum arquivo nem executei Git. Li o DETRAN apenas em modo leitura (sync-applier.ts, batch-protocol.ts, submit-batch.command.ts) para conferir o oráculo.\n\n**O que está conforme:**\n- **Recibo do duplicado de outro lote.** ctg9-upgrade.integration.spec.ts:766-767 agora espera `queueItemId:'cross-device-second'` com `context.originalQueueItemId:'cross-device-first'`. O caso legado in-memory (ctg9-parity.spec.ts:369-376) também preserva `queue-two`. O sensor-error anterior foi corrigido.\n- **Chave repetida no mesmo lote.** Chave declarada ou sintética repetida em CTG9 recebe 400 antes de qualquer escrita, com sensor in-memory (ctg9-parity.spec.ts:422-443) e PostgreSQL (:771-797 verifica ausência de linhas em sync_batches e sync_queue_items). A compatibilidade E6 continua preservada: sem resolver, dedup por hash, segundo cancel 409 e limite de 100 itens (ctg9-parity.spec.ts:117-146).\n- **Tabela UPS-OFS-01.** Tem quatro códigos neutros distintos, contexto `{number,reservationId}`, mapeamento host explícito e precedência. Só `reserved` consome, e validUntil é comparado com createdLocallyAt.\n- **Trava da reserva.** A reserva é travada na transação do item; o sensor PostgreSQL de corrida item × close (:932-974) prova a espera por lock e o resultado consumed/applied.\n- **Projeção após close/settle.** available→expired preservando claimed-locally e applied está provada in-memory (ctg9-parity.spec.ts:628-641).\n- **reservationId opcional.** Pode ser derivado pelo adaptador host, com validação de escopo e intervalo, conforme o contrato.\n- **Prompt Engineer 153.** Transmite todas essas regras.\n\n**Bloqueio (policy-issue):** a tabela manda NUMBERING_ALREADY_APPLIED para `conflict`, mas o §4.4 do DETRAN (batch-protocol.ts:48-51) grava `rejected` com conflito de domínio. O host só mapeia código, não status, então o recibo durável do STYNX divergiria do desfecho público. O sensor ctg9-parity.spec.ts:273/276 fixa essa divergência.\n\n**Lacunas não bloqueantes:**\n- Evidência de conflito para NO_COVERAGE e AMBIGUOUS.\n- Cobertura por reserva cancelada e ambiguidade ao reservar de novo no mesmo dispositivo.\n- Sensor de sincronização tardia com createdLocallyAt ≤ validUntil < now.\n- Oráculos PostgreSQL dos quatro códigos e da projeção.\n- Asserção de queueItemId na resposta do lote.\n- Atualização do prompt 146.\n\nFAIL: os sensores não podem ser fechados nem o delivery-review OFS autorizado até o Architect fixar o status de ALREADY_APPLIED (ou a porta de status do host) e o Inspector realinhar ctg9-parity.spec.ts:273/276. Este parecer não declara conformidade nem publicação."
+}

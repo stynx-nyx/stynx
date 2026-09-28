@@ -1,7 +1,7 @@
 # Offline Sync API Contract
 
 **Package:** `@stynx-nyx/offline-sync`
-**Status:** E6 server pair supported; CTG9 1.5 parity specified, implementation and release proof pending.
+**Status:** E6 server pair is the compatibility baseline; CTG9 1.5 behavior passed Opus delivery-review cycle 5. Publication evidence is recorded separately in R-0002.
 **Authority:** `INV-OFFLINE-001`, `ADR-MOBILE-OFFLINE-0001`, `ADR-MOBILE-OFFLINE-0002`, OD-S15-03.
 **Effective:** E6 baseline 2026-08-24; CTG9 contract 2026-09-28.
 
@@ -58,8 +58,16 @@ authentication, context and header validation, OFS checks the durable `(tenant,d
 identity, sequence and declared item-key set first: a matching closed batch replays its original
 status and exact body bytes, changed context/set returns 409, and sequence gap returns 422. For a
 request not resolved as that same batch, reuse of a transport key with a changed method/path/body
-fingerprint returns the published 422 `IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY`. Persist that key,
-fingerprint, status, exact body bytes and replayable response headers with the batch receipt.
+fingerprint returns the published 422 `IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY`. A new key may replay or
+resume a matching batch, but its fingerprint is then bound to that batch in a tenant-scoped
+transport-key ledger; later reuse with another body returns 422. Batch context includes a stable
+digest of each `payloadJson` and the item's number, reservation and local creation time, so
+changed effect-bearing fields cannot resume under an unchanged declared hash.
+The transport key binds on batch admission before a lease wait, including a
+contender that receives 503. A key already bound to another batch gives 422
+for an existing or new target batch, without replay or another effect.
+Persist the original key, fingerprint, status, exact body bytes and replayable response headers
+with the batch receipt.
 On either domain or transport replay, restore those headers and set the configured replay-key
 (default `X-Idempotency-Key`) to the incoming key and replay-marker (default
 `Idempotency-Replayed`) to `true`, matching the published interceptor. An outer interceptor that could
@@ -125,6 +133,13 @@ the reserved `stynx:legacy:` namespace are rejected. The item stays `received` w
 `OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED` and is never applied; the TEAT adapter maps that code to
 `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED`. Existing string, hash, UUID and numbering limits remain
 unchanged; the configured policy can accept valid batches of more than 100 items.
+
+In CTG9 mode, `duplicateItems` counts same-key, same-hash duplicates from
+another batch, including legacy E6 collisions answered with
+`OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED`. It excludes same-batch resume,
+integrity conflicts and reused queue IDs. E6 retains its published counting
+behavior. A 503 in-progress response carries the current trusted request ID;
+CTG9 fails closed if that context is unavailable.
 
 Each keyed item applies sequentially in its own app-role, READ COMMITTED
 `Database.txIndependent` transaction. The domain applier receives that `Transaction`; effect,

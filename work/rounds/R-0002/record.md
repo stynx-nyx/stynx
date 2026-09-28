@@ -939,3 +939,249 @@ negativo sem backoff, `lock_timeout` vazando na transação do chamador,
 wait owner sem prazo, admissão SSE que pode abrir conexões simultâneas,
 e lacunas da matriz antes de MUST. O Engineer e Inspector OBX receberam
 essas pendências; novo review será necessário após congelar a fonte.
+
+OBX delivery-review ciclo 3: a ponte saiu 4 por JSON cercado; o mesmo
+prompt 169 via `claude -p` estruturado retornou **PASS** para a fonte
+congelada em `reviews/ctg9-obx-delivery-review-3.json`. A leitura
+estática confirmou recuperação por linha, 40P01/55P03 tipados,
+backoff de ACK, restauração de timeout no caminho normal, SSE admission
+e RLS audit preservada. Antes da conformidade o Inspector acrescentou
+sensores PostgreSQL de persistência após envio e marker longo. O
+review detectou URL/fetch error possivelmente secretos no ledger e
+timeout do chamador vazando quando o append lança erro JS capturado;
+Engineer/Inspector repararam esse delta e o review 4 será necessário.
+
+OFS delivery-review ciclo 2: a ponte saiu 4 por JSON cercado; fallback
+estruturado **FAIL** em `reviews/ctg9-ofs-delivery-review-2.json`.
+Seis bloqueios anteriores foram fechados. Restam preflight que aborta
+lote no meio diante de queue-ID reutilizado/E6, consumo de número sem
+cobertura ou série inequívoca e projeção `consumed` como disponível.
+Embora o reviewer classificasse como não bloqueantes, a OD-S15-01/03
+torna obrigatórias a evidência/resolução/settle e janela da UPS-OFS-04.
+Architect resolveu a divergência do prompt 153: E6 mantém a semântica
+sem reserva; CTG9 exige reserva elegível para `reservedNumber`, com
+`reservationId` opcional em séries sobrepostas. Prompt-review focal 172
+avalia esse delta antes dos sensores Inspector. Fonte OFS sem commit.
+
+SIG delivery-review ciclo 4 pela ponte retornou JSON válido com **FAIL**
+em `reviews/ctg9-sig-delivery-review-4.json`. CMS detached, vínculo
+de signatário, frescura pós-TST e classificação de indisponibilidade
+passaram; o xref continua contornável por catálogo sombreado em stream,
+`/XRefStm` híbrido e trailer duplicado. Engineer repara parser/falha
+fechada; Inspector acrescentará contraprovas. O vínculo da retirada
+por hash no catálogo do prefixo PDF assinado foi aceito por emenda
+Architect ao contrato. Fonte SIG sem commit.
+
+OBX delivery-review ciclo 4 retornou **PASS** em JSON válido pela ponte
+(`reviews/ctg9-obx-delivery-review-4.json`). O maestro commitou a fonte
+no SHA `6514af6d`, com testes PostgreSQL/RLS, unitários, typecheck e
+lint focais verdes; nenhum CI integral ou publicação foi antecipado.
+O Inspector acrescentou duas provas reais de cutover: append sob UPDATE
+retido faz rollback do efeito de domínio e permite retry único; envio
+legado em voo recebe ACK após cutover sem reenvio. Os 15 testes focais
+passaram; commit Inspector `4802ba34`. Paginação same-ms acima do lote e
+auditoria de classes de tabelas seguem em prova.
+
+SIG delivery-review ciclo 5 pela ponte saiu 4 por JSON cercado em
+Markdown; `reviews/ctg9-sig-delivery-review-5.bridge-failure.md`
+registra o formato, e o mesmo prompt via Opus estruturado retornou
+**FAIL** em `reviews/ctg9-sig-delivery-review-5.json`. A contraprova
+em memória anexou um catálogo com DSS aceito pelo parser linear mas
+omitido do xref final, gerando B-LT falso. Engineer exige catálogo
+final anexado e coberto pelo xref efetivo; Inspector acrescentou os
+negativos `endobj1 0 obj` e cabeçalho separado por comentários.
+SIG 201/201, typecheck e lint verdes; `be31f6b5` contém os negativos
+e o sensor `test/db` de migration OFS 0001→0002, RLS e papéis reais.
+O review SIG ciclo 6 foi solicitado; fonte ainda sem commit.
+
+OFS prompt-review focal 172 pela ponte falhou por formato; fallback
+estruturado **FAIL** em
+`reviews/ctg9-ofs-contract-delta-prompt-review.json`. O Inspector
+encontrou oráculo de queueItemId contraditório e política de numeração
+indeterminada. Architect fixou status/códigos neutros por cobertura,
+ambiguidade, expiração/estado e número já aplicado; `validUntil` contra
+`createdLocallyAt`, lock de reserva no item, projeção consumed e
+400 por chave repetida no lote CTG9. Inspector alinha testes E6/CTG9,
+Engineer alinha a fonte. OFS ainda não passou delivery-review.
+
+SIG delivery-review ciclo 6 pela ponte saiu 4 por JSON cercado; o mesmo
+prompt estruturado retornou **PASS** em
+`reviews/ctg9-sig-delivery-review-6.json`. O catálogo com DSS agora
+precisa ter entrada final de xref anexada, cada objeto do contexto tem
+correspondência efetiva e a cadeia TSA usa genTime autenticado. O
+maestro commitou fonte Engineer `d3ae7147` após 201/201, typecheck e
+lint. O Inspector depois adicionou controle positivo do mesmo DSS com
+xref válido e duas combinações de evidência temporal; 204/204,
+typecheck e lint, commit `7a0360d7`. A cadeia PKI de três níveis e
+TSA expirada após genTime permanecem lacunas não bloqueantes de fixture,
+sem mudar o PASS da fonte.
+
+OFS prompt-review focal 2 pela ponte retornou JSON válido com **FAIL**
+em `reviews/ctg9-ofs-contract-delta-prompt-review-2.json`: o contrato
+tratava NUMBERING_ALREADY_APPLIED como `conflict`, enquanto o DETRAN
+registra `rejected` com conflito de domínio aberto. Architect fixou
+status, evidência de domínio para os quatro resultados e cobertura da
+cauda cancelada; prompts Inspector/Engineer foram atualizados. O
+Inspector amplia a matriz PostgreSQL e o Engineer repara a fonte em
+write sets separados. O delivery-review OFS continua bloqueado até
+novo prompt-review focal PASS.
+
+O rebind preliminar de API parou no build de `angular-ui` por
+`@angular/router` ausente no node_modules desta worktree, apesar de
+declarado no manifesto e lockfile. `pnpm install --frozen-lockfile`
+restaurou o link; `pnpm --filter @stynx-nyx/angular-ui build` passou.
+Uma segunda tentativa de build integral ainda falhou enquanto a fonte
+OFS mudava, com saída truncada. Nenhum baseline foi gravado nessa
+tentativa; o próximo build deve registrar log completo e ocorrer sobre
+fonte congelada.
+
+O terceiro prompt-review focal OFS retornou **PASS** pela ponte em
+`reviews/ctg9-ofs-contract-delta-prompt-review-3.json`. As cinco notas
+de cobertura foram incorporadas pelo Inspector: contexto dos resultados
+PostgreSQL, evidência de expiração em memória, ID de reserva fora do
+intervalo, consumo de sincronização tardia e título de teste. Parity e
+PostgreSQL passaram 26/26 cada; commits Inspector `6dd46c97` e
+`8360c6c0`. O Architect rebindeu `law/trace.json` em `90923490` e
+`8918870b`; 471/471 vinculados. O build do site passou após correção
+Engineer de links ADR gerados em `ea5b46f7`. `package-readmes:write`
+atualizou dois READMEs. O rebind de API foi interrompido antes de
+escrever baseline quando a fonte OFS voltou a mudar.
+
+O delivery-review OFS ciclo 3 pela ponte saiu 4 porque Claude cercou o
+JSON em Markdown; a própria saída indicou **FAIL** pelo fallback
+`55P03` que ignorava a identidade do lote. O fallback estruturado do
+mesmo prompt, executado enquanto o Engineer reparava a fonte, observou
+uma árvore diferente e retornou PASS com seis notas. A decisão para a
+árvore congelada continua pendente: o FAIL da primeira observação não
+foi apagado pelo PASS de snapshot móvel. Engineer/Inspector corrigem
+e provam o caminho contendido, recibos retomados, E6 recebido,
+conciliação e concorrência PostgreSQL; haverá novo delivery-review.
+O Architect fixou no contrato que item sem applier nem numeração é
+`received` terminal, E6 `received` não autoriza efeito CTG9 e item
+numerado sem applier falha antes da escrita.
+
+O planejamento final identificou que a política do registry ainda fixa
+RC3, que nunca foi publicada, e que `release:status` não reconhece uma
+candidata estável já versionada depois dos commits das CTGs. O contrato
+focal `final-release-context-contract.md` e prompts 179–181 foram
+preparados sem editar workflow; Opus faz prompt-review antes da tríade.
+
+Owner confirmou a inclusão CTG9 e a continuidade até fechamento final.
+OBX delivery-review ciclo 4 **PASS** (`6514af6d` na fonte) e SIG ciclo 6
+**PASS** (`d3ae7147` na fonte). OFS delivery-review ciclo 4 retornou
+**REVIEW** com dois `sensor-error` bloqueantes: teste de fencing do titular
+antigo era tautológico após lease_token tornar-se NULL, e concorrente do
+mesmo lote não tinha resultado comprovado após alcançar o store. O
+Inspector corrige essas provas e sensores adicionais; Engineer alinha
+replay de chave de transporte, contagem de duplicados em retomada,
+configuração de eventPort pré-escrita e requestId atual. Architect fixou
+as decisões no contrato OFS e solicitou prompt-review focal 186. O
+rebind de API escreveu `public-api-baselines.json` sobre a fonte anterior
+a essas correções; será inspecionado/reexecutado se a API pública mudar.
+
+Para a candidata final consolidada, `law/policy/registry-version-anomalies.json`
+foi rebindada pelo Architect em `1a0d7a9a`. O prompt-review do contrato
+final passou no ciclo 4; Inspector escreve sensores de classificador e
+política final em dois arquivos de teste. Nenhum novo RC, PR final ou
+publicação ocorreu.
+
+O prompt-review focal OFS 186 pela ponte não entregou JSON válido, mas sua
+saída apontou um risco substantivo: `payloadJson` podia mudar sob o mesmo
+`payloadHash` ao retomar lote aberto com outra chave de transporte, e o
+applier receberia o novo corpo. Architect incluiu o digest canônico de
+`payloadJson` no contexto do lote, definiu 409 pré-escrita para essa
+divergência e registrou que o hash declarado pelo host não é recalculado
+por STYNX. Engineer aplicou o digest no fingerprint compartilhado entre
+PostgreSQL e memória; Inspector acrescenta sensores para a retomada
+alterada e idêntica. O mesmo prompt é reavaliado com saída estruturada;
+nenhum PASS é inferido da falha da ponte.
+
+O fallback estruturado do prompt-review OFS 186 retornou **REVIEW**:
+o 503 permitia contexto opcional, o K2 de replay/retomada não ficava
+vinculado no PostgreSQL, faltava validação de eventPort em `forRoot` e
+a contagem de duplicados não estava explicitada. Architect escolheu um
+ledger durável de chaves de transporte aceitas (K1/K2) com RLS forçada,
+especificou a precedência 409/422 e adicionou os sensores aos prompts
+146/153. Engineer implementou ledger, guards de bootstrap/contexto e
+digest de payload na fonte/migration; typecheck, lint e quatro probes
+PostgreSQL focais passaram. Inspector conclui os sensores de concorrência,
+HTTP, configuração e migração. Prompt-review focal 188 ainda corre.
+
+Os testes de classificador final Inspector foram commitados em
+`dd7f6a77`; fonte Engineer em `f47b7687`. O teste de igualdade de
+versão real permanece vermelho antes do marcador porque 44 manifestos
+ainda estão em RC3; outro teste vê baseline público OFS que ainda deve
+ser rebindado após a fonte congelar. Nenhum marcador, PR final ou
+publicação foi feito.
+
+Prompt-review focal OFS 188 pela ponte novamente saiu 4 por JSON
+cercado em Markdown. O fallback estruturado do mesmo prompt retornou
+**PASS** em `reviews/ctg9-ofs-contract-delta-prompt-review-5.json`,
+confirmando contexto de todos os campos com efeito, namespace único de
+K1/K2, precedência 409/422, regras de duplicados, eventPort e requestId.
+Quatro achados não bloqueantes geraram esclarecimentos: K2 se vincula na
+admissão inclusive se a lease levar a 503; chave vinculada a outro lote
+retorna 422 sem replay; ausência de contexto dá erro de configuração
+HTTP 500; o header de request ID do core é fixo `X-Request-Id`. O
+Inspector recebeu sensores adicionais. A sugestão de header customizado
+não se aplica ao core atual, cujo middleware/interceptor fixa esse nome.
+
+O Inspector de wiring e DDL registrou `370cca1c`: 20/20 testes de
+wiring (RequestContext real, 503 com ID atual, replay sem ID antigo,
+falha fechada sem contexto e bootstrap eventPort) e 1/1 teste da
+migration 0002 (sexta tabela de ledger, chave tenant-leading, grants,
+FORCE RLS e isolamento negativo entre tenants). Typecheck offline-sync
+passou. O Inspector PostgreSQL/paridade ainda fecha as provas focais;
+nenhum delivery-review 5 foi solicitado antes de congelá-las.
+
+O segundo Inspector congelou as provas OFS em `45d5471c`: 31/31
+paridade, 31/31 upgrade PostgreSQL, 3/3 integração de banco e lint focal
+verde. Os dois bloqueios do review 4 agora têm provas positivas: lease
+antiga com token/geração capturados durante a primeira transação rejeita
+o titular obsoleto antes do segundo item; duas submissões do mesmo lote
+alcançam o store sob lease válida, com 503 exato para a concorrente e um
+efeito/evento/recibo. Sensores K1/K2, digest de payload e campos de
+numeração também passaram. Architect iniciou rebind de trace e API, e
+delivery-review OFS ciclo 5, em paralelo após congelamento da fonte e
+dos testes. Nenhum PASS de entrega foi declarado ainda.
+
+Após o freeze, a suíte completa `@stynx-nyx/offline-sync test` passou
+135/135 em 9 arquivos; `test:int` passou 34/34 em 2 arquivos,
+incluindo PostgreSQL real. O rebind de API escreveu
+`docs/framework/contracts/public-api-baselines.json` e
+`pnpm api:contract` confirmou 135 caminhos. O trace foi commitado pelo
+Architect em `3f7174a0`, 471/471. Delivery-review OFS ciclo 5 segue
+em andamento; `pnpm api:coverage` também está em execução.
+
+O primeiro `pnpm api:coverage` sinalizou sete rotas CTG9 do controller
+novo ausentes dos contratos OpenAPI gerados. Architect executou
+`pnpm api:docs:write` (não editou JSON à mão): as duas projeções OpenAPI
+agora contêm 142 caminhos para 215 rotas implementadas. `pnpm
+api:coverage` e `pnpm api:contract` passaram, este último com 142
+caminhos. A falha foi drift de baseline gerado, não defeito de rota.
+
+Delivery-review OFS ciclo 5 pela ponte retornou **PASS** em
+`reviews/ctg9-ofs-delivery-review-5.bridge.json`: os quatro MUST foram
+confirmados, inclusive fonte do ledger, RLS, fencing e recuperação. O
+reviewer listou lacunas de sensores não bloqueantes, registradas no
+veredito, sem defeito de fonte que impeça a release. A suíte completa
+offline-sync passou 135/135 unitários e 34/34 de integração. O maestro
+commitou a fonte e migration Engineer em `a2643be5`; o primeiro assunto
+`feat(offline-sync)` foi recusado pelo commitlint porque esse pacote
+não integra sua lista de scopes, então usei o scope permitido `repo`
+sem ignorar hook.
+
+Após gerar OpenAPI, `pnpm sdk:route-smoke` revelou drift do SDK; o
+codegen oficial gerou o serviço CTG9. O verificador ainda diverge da
+convenção do gerador para acrônimo `CTG9` em nome de serviço e método.
+Engineer corrige o verificador; os arquivos gerados permanecem intactos
+manual e aguardam commit. O baseline público de API será refeito após
+o codegen, pois a exportação SDK também mudou.
+
+Engineer corrigiu o verificador de rotas SDK em `6ac9724f`, tratando
+acrônimos com dígitos conforme o codegen real. O SDK gerado pelo comando
+oficial foi commitado em `99cf8e33`; `pnpm sdk:route-smoke` passou para
+211 operações e typecheck SDK passou. O serviço gerado chama-se
+`Ctg9OfflineSyncService` (não `CTG9OfflineSyncService`), com métodos
+`ctg9OfflineSync...`. O baseline público de API foi reexecutado depois
+do codegen e escreveu `public-api-baselines.json` com sucesso.

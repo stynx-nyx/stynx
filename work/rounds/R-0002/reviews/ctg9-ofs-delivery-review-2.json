@@ -1,0 +1,66 @@
+{
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:223",
+      "issue": "A pré-checagem do item lança exceção de nível de lote no meio do laço, e isso ocorre em dois casos. No primeiro, o queueItemId já foi usado sob outra chave: o `on conflict do nothing` não insere e `stored` fica nulo (409 em :223). No segundo, a chave CTG9 pertence a uma linha `identity_mode='e6'` (409 em :224), o cenário de reenvio pós-adoção do DETRAN. A exceção sai de pgSubmit depois que os itens anteriores já foram commitados. Nenhum recibo terminal do item é persistido, os itens seguintes nunca são processados e o lote fica `open` com o lease ainda válido. Por isso as retentativas recebem 503 por 30 s e, após a tomada do lease, o mesmo 409 de novo. O lote nunca fecha. Isso viola UPS-OFS-03 (a rejeição classificada é persistida em transação curta e o próximo item prossegue). Viola também a regra de que mesma chave com mesmo hash devolve o recibo original.",
+      "required_change": "Tratar os dois casos como desfechos por item, dentro da preflight cercada. Para uma linha E6 com mesma chave e mesmo hash, garantir o recibo a partir da linha de fila (insert … select … on conflict do nothing) e devolvê-lo como duplicata sem aplicar. Com hash divergente, usar o attempt de integridade. Para reuso de queueItemId, persistir em `sync_item_attempts` um attempt `rejected`/`OFFLINE_SYNC_QUEUE_ID_REUSED` e seguir para o próximo item. Além disso, qualquer exceção que escape do laço deve liberar o lease com fence (`lease_token=null where lease_token=$tok and lease_generation=$gen`) antes de propagar."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:305",
+      "issue": "O consumo de numeração ainda não é determinado por série nem exige cobertura. (a) A reserva é escolhida por device, org e entity mais `order by reserved_at desc limit 1`. Duas reservas vivas de séries distintas com intervalos numéricos sobrepostos (séries que recomeçam em 1) cobram o número da reserva mais recente, arbitrariamente. O in-memory (in-memory-offline-sync.store.ts:402, `find`) escolhe a primeira, o que diverge da paridade. (b) Quando nenhuma reserva cobre `reservedNumber` (:312 `if (reservation)`), o item é aplicado sem linha em `numbering_consumption` e sem rejeição. Um número do cursor futuro da faixa pode então ser reservado e aplicado de novo depois, emitindo o mesmo número oficial duas vezes, o que contraria 'applied numbers are never made available again'.",
+      "required_change": "Com `reservedNumber` presente, selecionar todas as reservas de (tenant, device, org, entity) que cobrem o número. Com zero reservas, rejeitar o item (classificado, OFFLINE_SYNC_RESERVATION_STATE ou outro código tipado). Com mais de uma em estado `reserved`/`expired`, rejeitar ou gerar conflito por ambiguidade de série, sem escolher por `reserved_at`. Manter a rejeição para estados não consumíveis. Espelhar exatamente essa regra no in-memory."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:88",
+      "issue": "A projeção de consumo trata `blocked`, `expired` e `cancelled`, mas uma reserva `consumed` (close/settle) cai no fallback `'available'`. O in-memory (:315) também mantém essas entradas como `available`. Depois do close/settle, os números não usados aparecem como disponíveis, embora a submissão os rejeite com OFFLINE_SYNC_RESERVATION_STATE, e o reconcile passa a reportar sobre um estado falso. O contrato exige que a projeção distinga os números disponíveis dos não consumíveis.",
+      "required_change": "No fallback, mapear `consumed` para `expired`, ou para outro estado não disponível do union publicado. No in-memory, converter as entradas `available` ao fechar ou liquidar a reserva. Adicionar asserção PostgreSQL e in-memory da projeção após close e após settle."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:249",
+      "issue": "O recibo do lote que duplica item de outro lote é persistido em `sync_item_attempts` com `queue_item_id = receipt.queue_item_id`, ou seja, o ID do item do lote original. O mesmo ID aparece em `receipt.items` da resposta (:261), enquanto `items` do resultado usa o ID do próprio item (:263). Assim `getSyncBatchReceipt` do lote B não contém o queueItemId de B, e a resposta é internamente inconsistente. O in-memory (:382) devolve `previous.item` também em `items`, o que diverge do PostgreSQL. O sensor ctg9-upgrade.integration.spec.ts:766-768 fixa esse comportamento. Duas chaves repetidas dentro do mesmo lote também duplicam entradas, porque o serviço (offline-sync.service.ts:151) só barra queueItemId repetido.",
+      "required_change": "Architect: decidir se o recibo do lote duplicado é indexado pelo item submetido (recomendado: `queueItemId` do próprio item, com `context:{originalQueueItemId,…}`) e alinhar PostgreSQL, in-memory e o sensor. Rejeitar idempotencyKey repetida dentro do mesmo lote na validação do serviço."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/transport.ts:34",
+      "issue": "Pendência do ciclo 1 sem mudança. `captureReplayableHeaders` usa `getHeaders()` no meio do handler e captura `x-request-id`, `x-powered-by` e rate-limit, mas perde os headers posteriores. No replay, sobrescreve o request ID corrente pelo original. A ordem também difere do interceptor publicado, que aplica os headers armazenados depois do marcador; o contrato manda o marcador prevalecer, então a equivalência de bytes com o interceptor precisa de prova explícita.",
+      "required_change": "Capturar por allowlist ou com a semântica de `response.headers` do interceptor, excluindo request-id, rate-limit e framing. Inspector: adicionar um sensor de replay com header customizado e preservação do request ID corrente."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:130",
+      "issue": "A tomada do lease na primeira transação não tem `lock_timeout` e roda sob o advisory lock `tenant:device`. Como `renewLease` mantém o lock da linha do lote durante toda a transação do applier, uma retentativa com lease já expirado no snapshot fica bloqueada enquanto o item executa, e com ela todos os outros lotes do mesmo device.",
+      "required_change": "Aplicar `set local lock_timeout` também nessa transação, ou `for update skip locked`, e tratar 55P03 como lease ocupado (seguindo para o laço de espera)."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:172",
+      "issue": "Pendências do ciclo 1 na ponte legada. A ordenação usa `localeCompare` contra `order by id` com a collation do banco, o que pode gerar um 409 falso. `userId` cai em `scope.actorId`, enquanto o interceptor usa `null` sem principal, e a composite key diverge. Linhas E6 escritas depois de um lote já promovido a `legacy_closed_unverified` não ganham recibo, porque a ponte preguiçosa (:140) só roda quando não há cabeçalho de lote.",
+      "required_change": "Usar `order by id collate \"C\"` com comparação binária em JS. Usar `transportUserId ?? null` no decision/compositeKey. Ao abrir um lote `legacy_closed_unverified`, completar os recibos a partir das linhas E6 com `on conflict do nothing`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-durable.ts:157",
+      "issue": "O 422 de lacuna de sequência informa só o valor esperado; o contrato pede esperado e recebido.",
+      "required_change": "Incluir `received` na mensagem ou no contexto do envelope OfflineSyncError."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/src/postgres-offline-sync.store.ts:93",
+      "issue": "Pendências de UPS-OFS-04 e do ciclo de vida. `offline.sync_conflict_evidence` nunca é escrita. Janela ausente ou desabilitada não gera o aviso do host. `resolveWithPort` não registra a ação nem o estado resultante. Settle é alias de close, e `reason`/`userRef` são descartados em pgTransition.",
+      "required_change": "Gravar evidência (item relacionado e allowed_actions), registrar ação e estado da resolução, dar a settle registro próprio com reason/userRef e emitir o aviso de janela ausente pela política do host."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts:713",
+      "issue": "Lacunas de sensor, distintas dos defeitos acima:\n- PostgreSQL: sem submissões simultâneas do mesmo lote aberto (só existe o teste in-memory ctg9-parity:351).\n- Sem escrita de holder obsoleto rejeitada após a tomada.\n- Sem rejeição classificada persistida com o item seguinte aplicado.\n- Sem queue-ID reutilizado nem chave CTG9 colidindo com linha E6.\n- Sem ponte preguiçosa para linhas E6 posteriores a 0002: o teste :346 usa apenas o backfill.\n- Numeração sem cobertura, série ambígua, projeção de reserva consumed e número já applied em outra entidade.\n- Sem regressão do envelope CTG5.\n- Sem igualdade de corpo completo para 400/422 no HTTP.\n- Caracterização TEAT/BOAT: responsabilidade do host.",
+      "required_change": "Inspector: adicionar esses sensores PostgreSQL/HTTP com papéis reais `stynx_app`/`stynx_reader`, depois dos reparos bloqueantes. A caracterização TEAT/BOAT fica na trilha DETRAN/maestro antes de qualquer declaração MUST."
+    }
+  ],
+  "summary": "Revisão de entrega do CTG9 OFS, ciclo 2, somente leitura. Não executei Git nem testes, e nada foi escrito no DETRAN.\n\nDos oito bloqueios do ciclo 1, seis foram resolvidos. Os dois restantes, preflight e numeração, deixam o código ainda com defeitos bloqueantes.\n\n**Resolvidos:**\n- **Concorrência de mesma chave:** advisory lock por tenant:key, inserts com `on conflict do nothing` e `FOR UPDATE` no recibo com recheck antes do applier. O sensor cross-device prova um único apply.\n- **Hash divergente:** agora é comparado antes do status e persistido em `sync_item_attempts`, visível no recibo do lote.\n- **Lease:** renovado e cercado por token e geração em preflight, applier, catch e close. A expiração é comparada no SQL e o laço de espera toma o lease atomicamente.\n- **Rejeição terminal versus lote aberto:** HttpException 4xx vira `rejected` persistido após rollback. Falha interna ou 40P01 mantém o lote `open`, e o controller devolve 503 com Retry-After.\n- **Projeção:** `blocked`, `expired` e `cancelled` são projetados.\n- **Ponte E6:** linhas E6 posteriores à 0002 recebem cabeçalho `legacy_closed_unverified` sob demanda.\n- **Rota:** usa `originalUrl` e o userId do interceptor, com sensor de prefixo global.\n- **Envelopes e papéis:** 400/422 agora são byte-idênticos aos publicados. Os papéis reais `stynx_app`/`stynx_reader` sem BYPASSRLS são verificados.\n\n**Parcial (numeração):** o cancelamento agora preserva `claimed-locally` e o upsert não sobrescreve `applied`.\n\n**Defeitos de código bloqueantes:**\n1. A preflight lança 409 de nível de lote no meio do laço, para queue-ID reutilizado ou chave de linha E6. Os itens anteriores ficam commitados, o lote fica aberto com lease válido e nunca fecha, sem recibo terminal do item.\n2. O consumo de numeração não resolve a série: escolhe a reserva mais recente quando séries se sobrepõem, divergindo do in-memory. Um número sem reserva que o cubra é aplicado sem evidência, o que permite emissão dupla.\n3. A projeção de uma reserva `consumed` mostra os números não usados como `available`.\n\n**Não bloqueantes:**\n- O recibo do lote duplicado de outro lote usa o queueItemId do lote original; o sensor fixa isso e há divergência in-memory.\n- Captura de headers e request-id no replay.\n- Tomada de lease sem lock_timeout sob o lock do device.\n- Pendências da ponte legada: collation, userId e recibos de linhas E6 adicionadas depois.\n- Mensagem 422 sem o valor recebido.\n- UPS-OFS-04: evidência, resolução, settle e aviso de janela.\n\n**Lacunas de sensor para o Inspector:**\n- Mesmo lote aberto simultâneo em PostgreSQL.\n- Holder obsoleto cercado.\n- Rejeição classificada seguida de próximo item.\n- Queue-ID/E6 em CTG9.\n- Ponte preguiçosa.\n- Numeração: sem cobertura, ambígua ou consumed.\n- Envelope CTG5.\n- Corpo completo em 400/422.\n- Headers customizados.\n- TEAT/BOAT, que pertence ao host.\n\n**FAIL:** o commit da fonte OFS continua bloqueado. Este veredito não atesta conformidade nem publicação."
+}

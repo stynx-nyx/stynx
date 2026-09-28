@@ -155,6 +155,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/integration-adapter`: `workspace:*`
 - `@xmldom/xmldom`: `^0.9.10`
 - `asn1js`: `^3.0.10`
+- `pdf-lib`: `^1.17.1`
 - `pkijs`: `^3.4.1`
 - `xml-crypto`: `^6.1.2`
 

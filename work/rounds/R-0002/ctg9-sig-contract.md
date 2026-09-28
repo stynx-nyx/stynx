@@ -35,8 +35,13 @@ consumer `resolveSignerCertificate(tenantId,signerId)` port returning the
 expected DER SHA-256. Each required signer ID binds to that certificate;
 the same signed artifact or certificate cannot satisfy different IDs in
 one manifest. An unavailable resolver is `unavailable`, never a valid
-manifest. The selected signature dictionary, rather than text elsewhere
-in the PDF, supplies withdrawal and manifest hash bindings.
+manifest. The selected signature dictionary supplies the manifest hash.
+For the separate withdrawal declaration, the hash may be in the parsed
+catalogue of the exact source PDF prefix covered by the selected ByteRange:
+the verifier must require equality with the canonical declaration and
+must not accept free text elsewhere in the PDF. This catalog binding is
+the accepted concrete implementation of the withdrawal proof because the
+signed prefix and party certificate are verified together.
 
 DETRAN `backend/domains/ch/clinical-reports/src/pades-signing.http-adapter.ts` currently rejects: receipt content hash mismatch, malformed artifact hash, absent storage ID, wrong format, invalid or lower signature level, missing TSA time, revoked/unknown certificate validation status or source, missing configuration/token, HTTP failure and timeout. `backend/domains/ch/juntas/src/junta-signing.adapter.ts` extends this adapter, so the same negatives apply to juntas. STYNX maps source/document and certificate mismatches to `SignatureEvidenceMismatchError`/`SignatureTrustError`, unsupported or lower level to `SignatureLevelNotMetError`, absent configuration to `SignatureProviderConfigurationError`, unavailable capability to `SignatureCapabilityError`, provider HTTP/timeout to `SignatureProviderError`, and malformed response to `SignatureProviderResponseError`. Storage document ID and DETRAN's `PAdES-TSA` receipt format stay consumer fields; STYNX validates its own signed bytes and PAdES/TSA proof. The consumer maps those typed errors to its existing HTTP codes and preserves redaction of credentials.
 

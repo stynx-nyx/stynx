@@ -290,6 +290,17 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 - CTG9 OFS delivery-review ciclo 1: `plant-bug` — ponte Opus retornou **FAIL** em JSON válido. Chave de item entre dispositivos pode produzir 23505 ou duplo efeito; hash divergente em recibo `received` passa; lease de 30s sem renovação/cerca completa; erro interno/40P01 gera ACK HTTP 201; consumo sobrescreve número aplicado e cancela cauda claimed-local; projeção bloqueada/expirada vira available; E6 escrito após 0002 não tem bridge lazy; path hardcoded quebra prefixo global. Engineer OFS repara fonte/migration; Inspector acrescentará sensores PostgreSQL. Sem commit/publicação OFS até PASS.
 - CTG9 OBX delivery-review ciclo 2: `plant-bug`/`sensor-error` — ponte falhou por formato, fallback estruturado deu PASS limitado ao snapshot observado enquanto a fonte mudava. Persistência pós-envio precisa de resultado por linha e reconhecimento de `SerializationFailureError.context.code=40P01`; deadline de retry não pode virar `statement_timeout`. Engineer repara fonte, Inspector prova ramos posteriores e a regressão de oráculo `lockTimeoutMs`. Notas do review sobre backoff de ACK negativo, vazamento de timeout na transação do chamador, wait owner sem prazo e admissão SSE simultânea serão fechadas antes da conformidade; repetir review após congelar bytes.
 - CTG9 SIG delivery-review ciclo 2: `sensor-error` residual — oráculos legados de fetchers contradiziam a prova B-LT embutida e manifesto positivo exigia dois signatários mas só anexava um. Inspector preservou negativos com OCSP/CRL/TSA embutidos, completou manifesto e acrescentou fixture A/B spoof; 180/180, typecheck e lint verdes no commit `02c568a0`. Engineer SIG reparou fonte; review ciclo 3 em andamento.
+- CTG9 SIG delivery-review ciclo 3: `plant-bug` — Opus FAIL por CMS attached aceito apesar de ByteRange, identidade do signerId não presa ao certificado, xref pós-assinatura contornável e frescura OCSP/CRL invertida. Engineer reparou os quatro; Inspector `7ce7e10e` adicionou attached CMS, A/B distinto, xref free/shadow e pós-TST, com 194/194. Review ciclo 4 obrigatório.
+- CTG9 SIG delivery-review ciclo 4: `plant-bug` — Opus FAIL por xref efetivo ainda contornável via catálogo sombreado em stream, XRefStm híbrido e trailer duplicado. Fonte e sensores repetem; nenhuma assinatura é declarada conforme até PASS. A divergência textual do hash de retirada foi resolvida pelo Architect: catálogo do prefixo PDF assinado é vínculo aceito.
+- CTG9 OFS delivery-review ciclo 2: `plant-bug`/`policy-issue` — fallback estruturado FAIL por conflito pré-item que aborta o lote, número sem cobertura/série inequívoca e projeção consumed como disponível. Prompt 153 dizia explicitamente aceitar número sem reserva com semântica E6; Architect limita essa compatibilidade ao modo E6, exige cobertura em CTG9, adiciona reservationId opcional e recibo de duplicata indexado pelo queueItemId submetido. Prompt-review focal 172 antes dos sensores Inspector; UPS-OFS-04 evidência/resolução/settle/janela continua MUST apesar de nota não bloqueante do reviewer.
+- CTG9 OFS prompt-review delta 172: `sensor-error`/`policy-issue` — fallback estruturado FAIL por oráculo Inspector antigo que exige queueItemId original em duplicata e por falta de códigos/status/precedência para numeração. Architect fixou tabela de quatro resultados neutros e mapeamento host, elegibilidade `reserved`, `validUntil` vs `createdLocallyAt`, lock na transação do item, projeção consumed e 400 de chave duplicada no lote CTG9. Inspector corrige e amplia sensores; novo prompt-review focal ocorrerá com oráculo coerente. Nenhuma conformidade OFS é declarada.
+- CTG9 SIG delivery-review ciclo 5: `plant-bug` — a ponte retornou FAIL cercado em Markdown (formato recusado). O parser ainda isentava offset de catálogo e ignorava entradas xref no prefixo assinado; regex de cabeçalho não corresponde ao léxico pdf-lib para comentários/NUL/objetos adjacentes. Fallback estruturado em andamento; Engineer e Inspector terão de fechar a contraprova antes de commit SIG.
+- CTG9 OFS prompt-review focal 2: `policy-issue` — Opus FAIL porque ALREADY_APPLIED estava como `conflict`, mas DETRAN registra `rejected` com conflito de domínio. Architect corrigiu a tabela e explicitou evidência aberta para NO_COVERAGE/AMBIGUOUS, cauda liberada de cancelamento e precedência de número aplicado. Inspector/Engineer repetem sensores/fonte; revisão focal 3 antes do delivery-review. Lacunas PG de códigos/TTL offline e identidade de recibo permanecem obrigatórias.
+- CTG9 API baseline preliminar: `sensor-error` de ambiente no primeiro build, pois `@angular/router` declarado não estava linkado em `node_modules`; `pnpm install --frozen-lockfile` restaurou o grafo e o build `angular-ui` isolado passou. O build integral antecipado ainda falhou com saída truncada enquanto OFS fonte mudava; repetir com log completo após congelamento, sem rebind em `law/` a partir de snapshot instável.
+- CTG9 OFS delivery-review ciclo 3: `plant-bug` — Opus encontrou bypass de `context_hash`, sequência e fingerprint quando a primeira transação recebe `55P03` no advisory de lote; uma requisição divergente podia receber replay ou tomar lease e aplicar item não declarado. A ponte devolveu JSON cercado e saiu 4; fallback estruturado foi solicitado. Engineer revalida a identidade na recuperação; Inspector acrescenta sensor PostgreSQL do lock contendido e cobre divergências de paridade de projeção, números, contagem e applier. Rebind API foi interrompido enquanto a fonte muda; sem commit OFS ou conformidade antes de novo PASS.
+- Release final prompt-review ciclo 1: `reference-gap` — Opus REVIEW em JSON cercado (ponte saiu 4): política Architect não fixava owner_decision/supersedes, allowlist pós-marcador era vaga, posição de `pre exit` indefinida e teste vermelho antes do versionamento não identificado. Política final Architect `1a0d7a9a` e contrato/prompt foram fechados para segundo ciclo.
+- Release final prompt-review ciclo 2: `sensor-error` — Opus REVIEW: teste da linha 1503 ainda exigia RC nos manifestos reais e recusava tag estável, o que falharia após o marcador. Architect fixa roster sintético da candidata 1.5.0 nesse sensor, preserva ordem/canário/releituras e deixa igualdade do workspace real só no teste 345. Define também forma de markerCommits/packageStates e igualdade estrutural do pre state pai/base. Prompt-review focal 3 antes do Inspector.
+- Release final prompt-review ciclo 3: `sensor-error` — Opus REVIEW: o negativo VERSION_DRIFT mutava manifesto para 1.5.0, que agora é a candidata; portanto nunca lançaria. Architect fixa mutação para RC3, explicita remoções estritas de oráculo RC, renomeia o título com rebind trace e adiciona positivo latest=1.5.0/rc=rc.2. Prompt-review focal 4 antes do Inspector.
 
 - CTG5 envelope sensores pós-despacho: `sensor-error` — o unitário exigia o envelope completo em `HttpException.getResponse()` antes do filtro HTTP resolver `requestId`, e uma asserção antiga de proveniência ainda esperava `{code}`; o Inspector limitou o unitário a status/código interno e fortaleceu a prova HTTP do 403 completo, seguido de rebind Architect de trace.
 - CTG5 envelope Inspector tentativas 1–2: `reference-gap` — os sensores entregues provaram vermelho em PostgreSQL, mas ainda faltam caminhos 400/403/500/503, filtros, If-Match, unitários e controles duráveis exigidos pelo prompt 105; após a nova tentativa parcial, a conclusão dos sensores foi escalada ao maestro no papel Inspector antes de qualquer commit Inspector.
@@ -803,6 +814,67 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     os oito bloqueios do review 1 e gates focais verdes; Inspector ampliou
     corridas antes do prompt 168/review 2. Nenhum CTG9 foi declarado
     conforme, nenhum PR/RC/final novo foi aberto ou publicado.
+46. Reviews CTG9 após os sensores adicionais: SIG ciclo 3 FAIL e ciclo 4
+    FAIL restrito ao parser de xref/trailer; Engineer e Inspector repetem
+    os negativos. OBX ciclo 3 PASS estruturado, mas a fonte recebeu delta
+    de redaction/timeout e exige review 4 em bytes congelados; sensores
+    reais pós-envio/marker foram acrescentados. OFS ciclo 2 FAIL por
+    preflight e numeração; Architect fixou modo CTG9 versus E6, e
+    prompt-review focal 172 está em curso. Documentação de migração
+    CTG9 está em rascunho. Os dez MUST ainda não têm conformidade nem
+    versão final publicada. Preservar a regra de um só CI local/PR/CI
+    remoto/publicação ao término da CTG9.
+47. CTG9 em 2026-09-28: OBX delivery-review ciclo 4 PASS, fonte no commit
+    `6514af6d`; dois sensores PostgreSQL de corrida cutover/ACK no commit
+    `4802ba34`. SIG delivery-review ciclo 5 FAIL com contraexemplo de
+    catálogo DSS visto no parser linear mas omitido do xref; negativos e
+    sensor DDL/RLS OFS no commit Inspector `be31f6b5`, SIG 201/201 e
+    review ciclo 6 em curso sobre fonte reparada ainda sem commit. OFS
+    prompt-review focal 172 FAIL por `sensor-error` e `policy-issue`;
+    contrato de numeração e recibo foi fechado pelo Architect, Inspector
+    corrige sensores e Engineer alinha fonte. Nenhuma conformidade CTG9,
+    PR final ou publicação foi declarada.
+48. Owner confirmou a inclusão da CTG9 e a continuidade até a publicação
+    final. SIG delivery-review ciclo 6 PASS e OBX ciclo 4 PASS. OFS ciclo 4
+    `REVIEW` por duas provas PostgreSQL insuficientes de fencing e submissão
+    simultânea; o veredito não identificou defeito de fonte que bloqueie os
+    quatro MUST, mas registrou correções adicionais. Architect decidiu a
+    semântica de replay com chave de transporte diferente, contagem de
+    `duplicateItems`, configuração de eventPort antes da escrita e ID da
+    requisição atual no contrato OFS. Inspector e Engineer corrigem arquivos
+    disjuntos em paralelo. Há prompt-review focal 186 para esse delta.
+49. A política Architect da candidata estável `1.5.0` foi commitada em
+    `1a0d7a9a`; o prompt-review da rota final teve PASS no ciclo 4. O
+    Inspector final escreve sensores de scripts, sem versão ou publicação
+    ainda. O rebind de API escreveu `public-api-baselines.json` sobre a
+    fonte OFS congelada; confirmar novamente após qualquer mudança pública.
+    A única publicação planejada permanece `1.5.0` após CTG9, CI local,
+    PR único, CI remoto e recibo vinculado ao SHA exato.
+50. Prompt-review focal OFS 186 pela ponte falhou em formatação JSON; a
+    saída revelou contraexemplo real de `payloadJson` alterado em retomada
+    com outra chave. O fallback estruturado do mesmo prompt retornou
+    `REVIEW`: requestId opcional em 503, chave K2 de replay não vinculada
+    em PostgreSQL, eventPort sem validação bootstrap, contagem de
+    `duplicateItems` pouco explícita e prompts desatualizados. Architect
+    fixou digest do payload no contexto, ledger durável de todas as chaves
+    aceitas, precedência 409/422, regra de duplicados e guards de bootstrap
+    no contrato/prompts; Engineer e Inspector alinham fonte/migration e
+    sensores disjuntos. Prompt-review focal 188 teve PASS via fallback
+    estruturado após falha de formato da ponte; quatro notas não bloqueantes
+    foram esclarecidas no contrato e enviadas ao Inspector. O
+    classificador final Engineer está commitado em `f47b7687`, sensores
+    Inspector em `dd7f6a77`; antes do marcador resta a versão RC3 real
+    e baseline público OFS a rebinder. Nenhum PR/publicação final.
+51. CTG9 OFS delivery-review ciclo 5 **PASS** pela ponte. Fonte/migration
+    Engineer em `a2643be5`; sensores Inspector em `370cca1c` e
+    `45d5471c`; 135/135 testes unitários, 34/34 integração do pacote,
+    typecheck/lint e seis tabelas da migration com FORCE RLS. Trace
+    Architect em `3f7174a0`, 471/471. OpenAPI gerado rebindado para
+    142 caminhos e SDK gerado para as sete rotas novas; verificador de
+    acrônimo Engineer `6ac9724f`, SDK `99cf8e33`, smoke 211/211.
+    Baseline público foi refeito depois do SDK. O próximo passo é fechar
+    o commit Architect de contratos/baselines/changeset/evidência, sair
+    do pre mode e criar o marcador final; não há PR/RC adicional.
 
 ## Reviews, PRs e publicações
 
