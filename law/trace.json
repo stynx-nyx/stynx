@@ -30,7 +30,8 @@
       "STYNX 1.5.0 CTG-0003 Architect rebind pins authorization and session coverage sensors, including readiness and Redis policy replies.",
       "STYNX 1.5.0 CTG-0004 Architect rebind pins actor/RLS, migration, timezone, DST and worker sensors.",
       "STYNX 1.5.0 CTG-0004 Architect rebind pins jobs coverage sensors for actor, timezone and timer boundaries.",
-      "STYNX 1.5.0 CTG-0005 Architect rebind pins transactional actor, tenant RLS, audit, idempotency, rollback, race and HTTP replay sensors."
+      "STYNX 1.5.0 CTG-0005 Architect rebind pins transactional actor, tenant RLS, audit, idempotency, rollback, race and HTTP replay sensors.",
+      "STYNX 1.5.0 CTG-0005 Architect rebind pins the real app-role statement-timeout rollback sensor."
     ]
   },
   "invariants": [
@@ -4362,8 +4363,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "0091e42f99a4675df3d66045d6336c350bc2fa2bff8012ad7cd7e1195b05e299"
+      "assertion_count": 32,
+      "assertion_digest_sha256": "a641b6807979dbaa6b3b59ad2ea5816f9e5b08ff94996cec086a4813523d72c0"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
