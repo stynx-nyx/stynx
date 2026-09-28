@@ -4,7 +4,7 @@ import { X509Certificate } from '@peculiar/x509';
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { SignatureTrustError, SignatureTrustUnavailableError, SignatureCapabilityError, SignatureEvidenceMismatchError } from './errors';
-import { sha256Hex } from './signature.service';
+import { sha256 as sha256Hex } from './digest';
 import { readPdfTrustEvidence, readSelectedSignatureDictionary } from './pdf-trust-evidence';
 import type { SignatureTrustVerifier, SignatureTrustProof } from './types';
 

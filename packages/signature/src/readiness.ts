@@ -5,6 +5,9 @@ import type { SignatureTrustProfile, StynxSignatureModuleOptions } from './types
 import { SignatureService } from './signature.service';
 import { StynxSignatureModule } from './signature.module';
 import { isCmsTrustVerifier } from './cms-trust-verifier';
+import { registerSignatureHealthWitness } from './health-witness';
+
+export { isSignatureHealthWitness } from './health-witness';
 
 export class SignatureReadinessIndicator implements StynxHealthIndicator {
   readonly name = 'signature';
@@ -22,12 +25,6 @@ export class SignatureReadinessIndicator implements StynxHealthIndicator {
   }
 }
 
-const witnesses = new WeakMap<object,{indicator:SignatureReadinessIndicator;registered:StynxHealthIndicator[]}>();
-export function isSignatureHealthWitness(value: object): boolean {
-  const witness=witnesses.get(value);
-  return !!witness && witness.registered.includes(witness.indicator) &&
-    witness.registered.filter(item=>item.name === 'signature').length === 1;
-}
 @Module({})
 export class SignatureHealthIntegration {
   static forRoot(input: {signatureOptions:StynxSignatureModuleOptions;
@@ -44,7 +41,7 @@ export class SignatureHealthIntegration {
         isCmsTrustVerifier((options.verifier ?? options.trustVerifier)!) ? 'stynx-cms':'consumer-owned' : undefined,
     );
     const registered=[...(input.otherIndicators ?? []),indicator];
-    witnesses.set(witness,{indicator,registered});
+    registerSignatureHealthWitness(witness, indicator, registered);
     return {module:SignatureHealthIntegration,imports:[
       StynxSignatureModule.forRoot(options),
       StynxHealthModule.forRoot(input.healthOptions, registered),

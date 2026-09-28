@@ -1,7 +1,7 @@
 import { type DynamicModule, Module, Injectable, Inject, type OnApplicationBootstrap } from '@nestjs/common';
 import { SignatureProviderConfigurationError } from './errors';
 import { isCmsTrustVerifier } from './cms-trust-verifier';
-import { isSignatureHealthWitness } from './readiness';
+import { isSignatureHealthWitness } from './health-witness';
 import { isMockSignatureBackend } from './backend-identity';
 import { HttpSignatureProviderClient } from './http-provider-client';
 import { ProviderBackedSignatureBackend } from './provider-backend';
