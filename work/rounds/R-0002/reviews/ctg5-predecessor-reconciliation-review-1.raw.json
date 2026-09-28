@@ -1,0 +1,74 @@
+{
+  "duration_api_ms": 191926,
+  "stop_reason": "end_turn",
+  "session_id": "13292950-afc7-4488-9718-5307f63895f4",
+  "total_cost_usd": 1.023293,
+  "usage": {
+    "input_tokens": 24,
+    "cache_creation_input_tokens": 68092,
+    "cache_read_input_tokens": 540605,
+    "output_tokens": 18517,
+    "output_tokens_details": { "thinking_tokens": 11788 },
+    "server_tool_use": { "web_search_requests": 0, "web_fetch_requests": 0 },
+    "service_tier": "standard",
+    "cache_creation": { "ephemeral_1h_input_tokens": 68092, "ephemeral_5m_input_tokens": 0 },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 3983,
+        "cache_read_input_tokens": 77624,
+        "cache_creation_input_tokens": 2251,
+        "cache_creation": { "ephemeral_5m_input_tokens": 0, "ephemeral_1h_input_tokens": 2251 },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 24,
+      "outputTokens": 18517,
+      "cacheReadInputTokens": 540605,
+      "cacheCreationInputTokens": 68092,
+      "webSearchRequests": 0,
+      "costUSD": 1.023293,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 11788,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": { "background": 0, "foreground": 0, "unset": 0 },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": { "parent": 0, "user": 0, "system": 0 },
+    "refused": { "depth_limit": 0, "concurrency_limit": 0, "budget": 0 },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 18,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"verdict\": \"REVIEW\",\n  \"reviewed\": {\n    \"contract\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md (lines 11-13, actor provenance amendment)\",\n    \"plan\": \"work/rounds/R-0002/ctg-0005-plan.md (predecessor gate + reconciliation checkpoint)\",\n    \"prompts\": [\"60-ctg5-architect.md\", \"61-ctg5-inspector.md\", \"62-ctg5-engineer.md\"],\n    \"source_compared\": [\n      \"packages/core/src/request-context.interceptor.ts\",\n      \"packages/tenancy/src/tenant-context.interceptor.ts\",\n      \"packages/auth/src/stynx-auth.guard.ts\",\n      \"packages/auth/src/verified-principal.ts\",\n      \"packages/backend/src/auth/auth-context.guard.ts\",\n      \"packages/contracts/src/tenancy.ts\",\n      \"packages/{backend,auth,tenancy}/package.json\",\n      \"authorization-session-1.5.md, tenancy-context-1.5.md\"\n    ]\n  },\n  \"findings\": [\n    {\n      \"id\": \"F1\",\n      \"severity\": \"HIGH\",\n      \"path\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md:11,13\",\n      \"title\": \"A pre-seeded public-principal marker can reach verified mode when no guard is registered\",\n      \"evidence\": \"The public-command boot check (line 13) requires only the STYNX_RESOLVED_PUBLIC_TENANT_CONTEXT provider and route metadata. TenantContextInterceptor (tenant-context.interceptor.ts:93-97) treats Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL) === true on an optionalAuth route as verified, then trusts request.stynxClaims.sub / principal.id. Only StynxAuthGuard and AuthContextGuard clear that exported symbol. On an @PublicTenantRoute({ optionalAuth: true }) command with no built-in guard, middleware that sets the symbol plus stynxClaims produces a port result { mode: 'verified', actorId: <forged member> }. Equality with RequestContext then passes. This breaks the requirement that a pre-seeded marker must not pass without a guard.\",\n      \"required_change\": \"Contract: for a marked public command with optionalAuth, require at boot that StynxAuthGuard or AuthContextGuard is registered for that route, using the same rule as protected commands. Alternatively, the port must never report mode 'verified' unless a built-in guard ran for that request; say which. Inspector prompt 61: add a case with the verified marker and stynxClaims pre-seeded on an optionalAuth public command with no guard, and assert a boot failure or nominal-only result with no forged actor.\"\n    },\n    {\n      \"id\": \"F2\",\n      \"severity\": \"HIGH\",\n      \"path\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md:13\",\n      \"title\": \"A wrong interceptor order fails closed only on public routes, not on protected commands\",\n      \"evidence\": \"The only wrong-order detection is 'no public port result'. On a protected route the nestjs-cls context is active before interceptors (tenancy-context-1.5.md:9). With the effective order core → command → tenancy, core has already patched actor/tenant from guard output, so marker, principal and context are all equal and the boundary opens the app-role transaction and reservation SQL before TenantContextInterceptor runs. That interceptor then (a) runs its owner-role withSystemContext membership query inside the command's CLS transaction, and (b) can re-patch RequestContext.tenantId to a header-selected tenant. The second case happens when AuthContextGuard's custom TenantResolver picked a different tenant (auth-context.guard.ts:174-184 vs tenant-context.interceptor.ts:135). The handler then runs with a context tenant that differs from app.tenant_id on the connection. So the rule that a wrong order fails before handler or SQL does not hold for protected commands.\",\n      \"required_change\": \"Contract: define a wrong-order signal for protected commands when StynxTenancyModule is installed. For example, the same tenancy-private store could record completed protected resolution, as a separate read-only result or mode, and the boundary would require it. Or the command module could check at boot that its APP_INTERCEPTOR is ordered inside both core and tenancy. For auth-only apps without tenancy, state the rule explicitly. Also require the boundary to re-verify context tenant/actor against the connection before the handler. Prompts 61/62: add the core → command → tenancy protected-route case and assert rejection before SQL and handler.\"\n    },\n    {\n      \"id\": \"F3\",\n      \"severity\": \"HIGH\",\n      \"path\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md:11 (principal source); prompts 61/62\",\n      \"title\": \"The verified principal source is ambiguous, so a forged stynxClaims can pass on AuthContextGuard routes\",\n      \"evidence\": \"The contract accepts 'StynxAuthGuard (stynxClaims.sub) or AuthContextGuard (principal.id)', but the boundary cannot tell which guard set STYNX_VERIFIED_TENANT_ID. The marker holds only a tenant ID, and the auth-private verified-principal marker is not exported to backend. On the protected path, AuthContextGuard does not delete request.stynxClaims (auth-context.guard.ts:106-164). RequestContextInterceptor (line 77) and TenantContextInterceptor.resolveActorId (line 177) both prefer stynxClaims.sub. With middleware pre-seeding stynxClaims = { sub: victim }, where victim is a member of the verified tenant, the context actor is victim. An implementation that uses 'stynxClaims.sub ?? principal.id' would find victim == victim == context and attribute the command to a forged actor.\",\n      \"required_change\": \"Contract: require request.principal.id, which both built-in guards set, as the verified principal. Require request.stynxClaims.sub and .tenantId, when present, to equal principal.id and the marker, and reject on any disagreement. Also extend the 'not a cryptographic proof against in-process code' caveat to the protected path, which covers later consumer guards mutating principal. Prompt 61: add AuthContextGuard with forged stynxClaims.sub/tenantId pre-seeded, expecting rejection before SQL.\"\n    },\n    {\n      \"id\": \"F4\",\n      \"severity\": \"MEDIUM\",\n      \"path\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md:13; ctg-0005-plan.md:7; prompts/62-ctg5-engineer.md:7-8\",\n      \"title\": \"The protected-command boot check has no feasible detection mechanism within the owned paths\",\n      \"evidence\": \"The boot check lives in @stynx-nyx/backend and must recognize StynxAuthGuard, which is exported from @stynx-nyx/auth. packages/backend/package.json has no dependency on @stynx-nyx/auth, the contract lists only new backend deps on data and audit, and packages/auth is not an owned CTG5 path. Matching by class name is spoofable and fragile. 'Registered as an earlier APP_GUARD' does not say earlier than what; CTG3 uses 'earlier' only relative to the global authorization guard. Registering through useGlobalGuards before app.init() is also not addressed, only 'after module initialization'.\",\n      \"required_change\": \"Choose and state one mechanism. Option A: a backend → auth dependency edge, added to the ownership list and changeset. Option B: a contracts-level brand or registration token that both guards carry, which adds a narrow packages/auth edit to plan ownership and Engineer paths. Define 'earlier' precisely, for example 'before any consumer guard on that route', or drop it. State whether pre-init useGlobalGuards is supported. Inspector: assert that a look-alike guard with the same class name does not satisfy the boot check.\"\n    },\n    {\n      \"id\": \"F5\",\n      \"severity\": \"LOW\",\n      \"path\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md:11\",\n      \"title\": \"The port's read-only shape needs explicit wording\",\n      \"evidence\": \"'No exported setter' does not rule out a write method on the injected provider instance or its class prototype. The port also does not say that the entry is written only on success, after the RequestContext patch and immediately before next.handle(), and never on an error path.\",\n      \"required_change\": \"State that the provider object exposes only get(). Writes happen through a module-scoped function that is not reachable from the provider or the package exports. Entries are written only on the success path after the patch. Prompt 61 already asks for no result on failure; add a reflection/prototype check that no write method exists.\"\n    },\n    {\n      \"id\": \"F6\",\n      \"severity\": \"LOW\",\n      \"path\": \"work/rounds/R-0002/ctg-0005-plan.md:11,22\",\n      \"title\": \"The checkpoint does not pin the amendment commit that this review covers\",\n      \"evidence\": \"The plan records cumulative HEAD 3900c383, but the amendment under review is the later commit c469b6f8. The contract also does not say how a non-HTTP execution context, such as a job handler invoking command code, is treated by TransactionalCommandInterceptor.\",\n      \"required_change\": \"Record the amended contract SHA next to the renewed PASS receipt. Add one sentence that the command interceptor rejects non-HTTP contexts, or that job-path commands rely only on Database.tx requireActor under the CTG4 persisted actor. CTG4 behavior stays unchanged.\"\n    }\n  ],\n  \"confirmed_ok\": [\n    \"Nonempty RequestContext.actorId, raw request fields, plain @Public() and @System() are explicitly excluded as provenance.\",\n    \"Both built-in guards clear STYNX_VERIFIED_TENANT_ID on entry before any public early return (stynx-auth.guard.ts:38, auth-context.guard.ts:51). With a guard registered, a pre-seeded protected marker cannot survive.\",\n    \"The public port is written after Host, active-tenant, membership and entitlement checks. A nominal route deletes upstream identity fields, and optionalAuth comes from metadata, not request input.\",\n    \"Ownership of packages/contracts and packages/tenancy is narrow. Tenancy writing to a private WeakMap is additive, so legacy non-command and plain @Public() routes are unchanged.\",\n    \"The amendment does not alter CTG4 jobs actor, dead-letter or nested-transaction behavior. Database.tx requireActor and nested checks remain CTG5-only additions.\"\n  ],\n  \"summary\": \"The direction of the amendment is right: guard-verified protected provenance plus a tenancy-private read-only port for @PublicTenantRoute. It does not yet meet the brief. (F1) An optionalAuth public command with no built-in guard lets a pre-seeded STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL produce a verified port result. (F2) A wrong interceptor order fails closed only for public commands; the core → command → tenancy protected order opens SQL before tenancy validation and can split tenant identity. (F3) The principal source is ambiguous, so a forged stynxClaims.sub can pass on AuthContextGuard routes. (F4) The backend boot check cannot identify StynxAuthGuard without an undeclared dependency or an auth-package edit. Amend the contract and prompts 61/62 for F1–F4 and obtain a renewed PASS before Inspector dispatch.\"\n}\n```",
+  "ttft_ms": 3752,
+  "type": "result",
+  "duration_ms": 194272,
+  "uuid": "e20b38fc-7d11-4991-bfb3-e27ff771522a",
+  "ttft_stream_ms": 1583,
+  "time_to_request_ms": 340,
+  "first_content_frame_ms": 1583,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

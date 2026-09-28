@@ -1,0 +1,12 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "mode": "prompt-review",
+  "fallback": "direct claude -p --permission-mode plan --output-format json after bridge normalization exit 4",
+  "prompt": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx/work/rounds/R-0002/prompts/67-ctg5-predecessor-reconciliation-review.md",
+  "prompt_sha256": "8370accbe2c467452a6c8972f8771e62d9c5ef02cf4cdb70527ed160c54f421c",
+  "raw_output": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx/work/rounds/R-0002/reviews/ctg5-predecessor-reconciliation-review-1.raw.json",
+  "raw_output_sha256": "b1a1bc3a77cb504e78c89ed92e70cf6583b3d91a6318023edd2c6a5610c41780",
+  "output": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx/work/rounds/R-0002/reviews/ctg5-predecessor-reconciliation-review-1.json",
+  "output_sha256": "844bbc7167f093f1a58143914ac6c54b5f8b8d83dd9bad273592aff5a8835a4c"
+}
