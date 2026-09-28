@@ -32,4 +32,33 @@ describe('idempotency decorators and metrics', () => {
     metrics.incrementReplay();
     expect(metrics.snapshot()).toEqual({ replayCount: 2 });
   });
+
+  it('marks the object overload as transactional while preserving the positional overload', () => {
+    class Controller {
+      transactional(): void {}
+      legacy(): void {}
+    }
+
+    const objectOverload = Idempotent as unknown as (options: {
+      transactional: true;
+      headerName?: string;
+      ttlMs?: number;
+    }) => MethodDecorator;
+    objectOverload({ transactional: true, headerName: 'X-Command-Key', ttlMs: 30000 })(
+      Controller.prototype, 'transactional', Object.getOwnPropertyDescriptor(Controller.prototype, 'transactional')!,
+    );
+    Idempotent('X-Legacy-Key', 30000)(
+      Controller.prototype, 'legacy', Object.getOwnPropertyDescriptor(Controller.prototype, 'legacy')!,
+    );
+
+    expect(Reflect.getMetadata(STYNX_IDEMPOTENT_ROUTE, Controller.prototype.transactional)).toEqual({
+      transactional: true,
+      headerName: 'X-Command-Key',
+      ttlMs: 30000,
+    });
+    expect(Reflect.getMetadata(STYNX_IDEMPOTENT_ROUTE, Controller.prototype.legacy)).toEqual({
+      headerName: 'X-Legacy-Key',
+      ttlMs: 30000,
+    });
+  });
 });
