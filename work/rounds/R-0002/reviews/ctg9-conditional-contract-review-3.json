@@ -1,0 +1,42 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages/backend/src/event-stream/event-stream.service.ts:135",
+      "issue": "Uma conexão sem Last-Event-ID começa com o cursor `{createdAt: now, id: ''}`, e a prévia pede que `listSince` compare `(ms,id)` em SQL com id UUIDv7 (preflight:81-92). Se o adapter faz `$2::uuid`, `''` gera `invalid input syntax for type uuid` em todo tick. A linha 219 engole o erro ('SSE tick failed; connection remains open'), então a conexão fica viva com heartbeats e nunca entrega evento. É um livelock silencioso. Se o adapter compara como texto, a ordem só coincide com a de bytes quando o UUID está em hexadecimal minúsculo canônico.",
+      "required_change": "O contrato OBX deve fixar a semântica do sentinela: `id = ''` vale como mínimo absoluto, por exemplo `created_at > $1 OR (created_at = $1 AND ($2 = '' OR id > $2::uuid))`, ou o adapter o mapeia para `00000000-0000-0000-0000-000000000000`. A comparação deve ser em `uuid` (bytes), não em texto. O Inspector cobre uma conexão nova sem Last-Event-ID que recebe um append posterior no mesmo milissegundo de `now()`."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:95",
+      "issue": "A reconexão depende de `findById`. Quando ele devolve null, o serviço inicia em `now()` (event-stream.service.ts:127-135) e pula para sempre os eventos entre o Last-Event-ID e agora. `Database` tem pool `reader`/`replica` (pools.ts:122-124, database.ts:166) que pode apontar para réplicas diferentes. Sequência reproduzível: (1) a instância A lê a réplica R1, entrega e=(m,s1) e depois e2=(m+1,s2); (2) o cliente reconecta na instância B, cujo pool reader atende por R2 ainda sem `e`; (3) `findById(e)` devolve null e `now()` no primário devolve m+5; (4) o cursor fica (m+5,'') e e2 se perde. O mesmo salto ocorre com um evento purgado por retenção: o serviço segue de `now()` em vez de 204. O lock de `now()` não fecha esse caminho.",
+      "required_change": "Escolher uma alternativa e fixá-la no contrato. (a) `now`, `findById` e `listSince` do adapter usam o primário (papel app, `replica:false`), com teste que prova que nenhum dos três usa o pool reader. (b) Para ids UUIDv7 bem formados, o cursor de reconexão é derivado do próprio id (ms e sequência embutidos), sem depender de `findById`. Nesse caso, `findById` só resolve ids legados pelo mapa de migração, e um id válido cujo ms fica fora da janela gera 204. Declarar também que um Last-Event-ID desconhecido reinicia em `now()`, e cobrir réplica atrasada e evento purgado."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:133",
+      "issue": "A ordem de locks declarada (linhas 82-84: relógio por último, nenhum lock de domínio depois dele) é contraditória com o applier OFS. Ele processa vários itens na mesma `Database.tx` com resultado parcial, ou seja, com savepoints, e o lock de relógio adquirido no item 1 fica retido pela transação externa até o commit. Sequência: Tx A (lote) trava o domínio X, faz append e trava o relógio C do tenant T, e no item 2 pede o domínio Y. Tx B trava o domínio Y e pede C. A espera B, que espera A: deadlock. O PostgreSQL aborta um dos lotes, e com retry simétrico o conflito pode se repetir.",
+      "required_change": "O applier coleta os eventos de cada item. Os de um item revertido são descartados junto com seu savepoint. O append de todos acontece uma única vez no fim do lote, depois de todos os locks de domínio, sob uma única aquisição do relógio. Alternativa: um commit por item. Qualquer das duas exige um teste de deadlock com dois lotes de ordem cruzada."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:75",
+      "issue": "A 'sequência global monotônica' fica ambígua se for um `SEQUENCE` do PostgreSQL. Com `CACHE > 1`, cada sessão reserva seu próprio bloco. Um append pela sessão Y recebe 21, e o seguinte do mesmo tenant pela sessão X recebe 2 no mesmo ms. O id fica menor e o evento é pulado.",
+      "required_change": "Exigir `CACHE 1` ou, de preferência, um contador na própria linha de relógio do tenant, atualizado sob o lock e transacional com ele. Nesse caso a unicidade global vem do par (tenant, ms, contador) ou de bits aleatórios residuais, e a ordem só precisa valer dentro do tenant."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:70",
+      "issue": "O par `INSERT ... ON CONFLICT DO NOTHING` + `SELECT FOR UPDATE` só é seguro em READ COMMITTED. `TxOptions.isolation` permite repeatable read e serializable (types.ts:5), e o append pode entrar como transação aninhada numa tx RR do chamador. Nesse caso a primeira corrida ou uma atualização concorrente do relógio resulta em 40001. Não há perda, mas o comportamento sem retry não está definido.",
+      "required_change": "Adquirir o lock numa instrução única: `INSERT ... ON CONFLICT (tenant_id) DO UPDATE SET last_ms = GREATEST(...) RETURNING`. Declarar que a transação precisa ser READ COMMITTED, ou que o append falha fechado ou repete em 40001. Declarar também que `now()` roda no primário com papel app, grant de UPDATE e FORCE RLS na tabela de relógio."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:96",
+      "issue": "Com `FOR UPDATE SKIP LOCKED`, um scheduler pode pular a cabeça N travada por outro e reivindicar N+1 do mesmo agregado, a menos que o predicado de 'mais antigo não terminal' seja avaliado sem SKIP LOCKED.",
+      "required_change": "Fixar o predicado com `NOT EXISTS` (subconsulta sem SKIP LOCKED) sobre evento não terminal mais antigo do mesmo `(tenant, agregado)`, ou usar um lock consultivo por agregado. O teste de dois schedulers deve incluir a cabeça travada."
+    }
+  ],
+  "summary": "Fecham, dentro do PostgreSQL e sem mudar o cursor público: lock por tenant retido até o commit, com ordem de commit igual à ordem da tupla (lock e visibilidade chegam juntos em primário e réplica física). Fecham também o ms exato armazenado e devolvido como `Date`, o UUIDv7 com ms igual e sequência sob o lock, `listSince` por `(ms,id)` com mais que `batchSize` eventos no mesmo ms e `now()` sob o lock atualizando e devolvendo o relógio confirmado. A repetição do mesmo ms declarada, o enqueue legado fora do log, oldest non-terminal/lease/ACK por tentativa/FK composta e o adotante offline também estão cobertos. Restam três bloqueios: (1) o sentinela `id=''` do cursor inicial contra comparação uuid causa livelock silencioso; (2) `findById` numa réplica atrasada, ou com evento purgado, cai em `now()` e pula eventos (sequência reproduzível acima); (3) o applier OFS de vários itens numa tx adquire locks de domínio depois do relógio, o que contradiz a ordem declarada e causa deadlock. Após esses reparos, a prévia pode seguir para a preparação dos contratos condicionais. Nenhum worker pode ser despachado antes das decisões Owner."
+}

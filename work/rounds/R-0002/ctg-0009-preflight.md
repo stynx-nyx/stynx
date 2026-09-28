@@ -42,6 +42,9 @@ confirmou o reparo dos sete bloqueios iniciais, mas encontrou perda possível
 na precisão em milissegundos do cursor SSE e no cursor inicial `now()`.
 A estratégia de tupla `(ms, UUIDv7 monotônico)` e o barrier lock de `now()`
 abaixo são uma proposta Architect para nova verificação, sem implementação.
+O ciclo 3 em `reviews/ctg9-conditional-contract-review-3.json` confirmou essa
+ordem de tuplas, mas identificou sentinela `id=''`, leitura de réplica atrasada
+e ordem de locks no lote OFS; os reparos estão especificados abaixo.
 
 ## Contratos e provas necessários se o Owner incluir CTG9
 
@@ -67,35 +70,58 @@ abaixo são uma proposta Architect para nova verificação, sem implementação.
    com chave de idempotência obrigatória por `(tenant,key)`, log de fatos
    distinto da intenção de despacho e cursor público `(createdAt,id)`.
    Estratégia Architect a validar: uma linha de relógio por tenant
-   é criada com `INSERT ... ON CONFLICT DO NOTHING` (inclusive na primeira
-   corrida) e bloqueada com `SELECT FOR UPDATE` na mesma transação do append.
+   é criada/atualizada numa única instrução
+   `INSERT ... ON CONFLICT (tenant_id) DO UPDATE ... RETURNING`, que bloqueia
+   a linha até o commit, inclusive na primeira corrida.
    Todo `created_at` do **novo log** é arredondado a milissegundos, como o
    `Date` de `EventStreamCursor`; o `id` é UUIDv7 ordenável, com o mesmo
-   milissegundo e uma sequência global monotônica obtida **sob o lock**
-   codificada nos bits ordenáveis, inclusive quando vários tenants ou eventos
+   milissegundo e uma sequência global monotônica PostgreSQL com `CACHE 1`,
+   obtida **sob o lock** e codificada nos bits ordenáveis, inclusive quando
+   vários tenants ou eventos
    compartilham um milissegundo. Sob o lock, o timestamp atribuído é
    `max(clock_timestamp() arredondado, último_ms)`; a sequência ordena os
    empates sem colisão global. Na exaustão do espaço codificável, avançar o
    milissegundo lógico ou falhar antes da escrita sem perder o evento; não
-   introduzir um limite de taxa silencioso. SQL e
-   objeto JS comparam a **mesma** tupla `(ms,id)`; UUID aleatório v4 não
-   atende. O lock é adquirido após os locks de domínio, imediatamente antes
-   do append, e nenhum código adquire lock de domínio depois dele; testar
-   deadlock e medir contenção por tenant. A serialização dura até commit ou
-   rollback, não impõe limite fixo de taxa, mas pode reduzir throughput.
+   introduzir um limite de taxa silencioso. SQL e objeto JS comparam a
+   **mesma** tupla `(ms,id)`; UUID aleatório v4 não atende. O lock é adquirido
+   após os locks de domínio, imediatamente antes do append; nenhuma escrita
+   de domínio ocorre depois dele na **mesma transação de item**. O applier OFS
+   não mantém uma transação externa entre itens: cada item bem-sucedido
+   confirma domínio, consumo, recibo e evento juntos; cada falha reverte
+   somente seu item e o lote continua em outra transação. Testar dois lotes
+   cruzados para deadlock e medir contenção por tenant. A serialização dura
+   até commit ou rollback do item, não impõe limite fixo de taxa, mas pode
+   reduzir throughput. O append usa isolamento READ COMMITTED. Se um chamador fornecer RR ou
+   SERIALIZABLE, falhar fechado com erro tipado antes de escrever ou propagar
+   40001 sem perda, com retry no limite externo do comando; não capturar e
+   continuar dentro da transação abortada.
    `EventStreamSource.now(scope)` também adquire o mesmo lock, atualiza o
    relógio com `max(clock_ms, agora_ms)` e devolve o valor confirmado; assim
    uma conexão entre append e commit espera, e qualquer append posterior
    recebe tupla maior. Eventos já confirmados no mesmo milissegundo podem
    reaparecer na conexão sem `Last-Event-ID`; o contrato assume entrega
-   pelo menos uma vez, sem perda. O `listSince` usa `(created_at,id)` exatos,
-   inclusive com mais que `batchSize` eventos no mesmo milissegundo.
+   pelo menos uma vez, sem perda. `now`, `findById` e `listSince` do adapter
+   usam o **primário**, papel app com `replica:false`; `now` tem grant de
+   UPDATE na tabela do relógio com FORCE RLS, e as leituras nunca usam o pool
+   reader/replica que pode atrasar. O novo log e seu mapa de IDs legados não
+   são purgados na 1.5.0; um `Last-Event-ID` desconhecido mantém a semântica
+   atual de reiniciar em `now()`, declarada como sem garantia de replay.
+   `listSince` usa `(created_at,id)` exatos, inclusive com mais que
+   `batchSize` eventos no mesmo milissegundo. O `id=''` do cursor inicial é
+   o menor sentinela possível: SQL usa
+   `created_at > $1 OR (created_at = $1 AND ($2 = '' OR id > NULLIF($2, '')::uuid))`;
+   `NULLIF` impede o cast de `''` para UUID mesmo se o planner avaliar os
+   lados do `OR` fora da ordem escrita. UUIDs são comparados como UUID,
+   nunca como texto.
    `enqueue` legado não escreve no novo log sem o lock; na migração, os fatos
    legados expostos ao SSE recebem ordem total e relógio inicial, com
    mapeamento id/estado/ACK preservado; `findById` resolve também IDs legados
-   pelo mapa de migração para permitir reconexão. O despacho por agregado reivindica
+   pelo mapa de migração para permitir reconexão. O despacho por agregado
+   reivindica
    somente o evento **não terminal** mais antigo, incluindo PENDING, lease
-   SENT sem ACK final e ERROR aguardando retry, sob schedulers concorrentes;
+   SENT sem ACK final e ERROR aguardando retry, sob schedulers concorrentes.
+   O predicado `NOT EXISTS` que exclui sucessor com cabeça não terminal não
+   usa `SKIP LOCKED`, mesmo quando o claim da própria cabeça o utiliza;
    claim tem lease/timeout e reaquisição após crash entre claim e send.
    Reclaim pode duplicar envio, portanto a entrega é pelo menos uma vez e
    encaminha `eventId`/chave ao provedor para deduplicação. ACK novo usa
@@ -108,9 +134,11 @@ abaixo são uma proposta Architect para nova verificação, sem implementação.
    composta `(tenant_id,event_id)` no ledger e no ACK impede vínculo cruzado
    mesmo no papel `owner`, que contorna RLS. ACK positivo posterior a ERROR
    avança o estado; duplicado é idempotente; inválido é registrado e rejeitado.
-   Inspector usa PostgreSQL real, dois schedulers, crash/reclaim, dois eventos
-   do mesmo agregado, dois tenants, atraso de commit/cursor, mais que
-   `batchSize` em um milissegundo, retry, ACK válido/inválido, corrida da
+   Inspector usa PostgreSQL real, dois schedulers (inclusive cabeça travada),
+   crash/reclaim, dois eventos do mesmo agregado, dois tenants, atraso de
+   commit/cursor, nova conexão sem `Last-Event-ID` e append no mesmo
+   milissegundo, mais que `batchSize` nesse milissegundo, ausência de leitura
+   de réplica, RR/40001 sem perda, retry, ACK válido/inválido, corrida da
    primeira linha de relógio e migração sem perda. A migração de plataforma
    usa o próximo número livre **≥0021**, sob lock do maestro, sem editar
    0018–0020. O adapter SSE pode implementar `EventStreamSource` no pacote
@@ -130,15 +158,18 @@ abaixo são uma proposta Architect para nova verificação, sem implementação.
    crash parcial e replay de lote fechado devolvendo o recibo. Lote legado
    sem sequência continua aceito; item sem chave usa a chave sintética
    existente, fica `received` com `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED` e não
-   aplica domínio. Nova porta de applier opera cada item na mesma
-   `Database.tx`/`Transaction` da CTG5 para efeito, consumo, recibo e evento,
-   mas preserva resultado parcial entre itens; evento sai por porta injetada
+   aplica domínio. Nova porta de applier opera **uma transação independente
+   por item** com `Database.tx`/`Transaction` da CTG5 para efeito, consumo,
+   recibo e evento; não há transação externa de domínio retendo locks entre
+   itens. O lote preserva resultado parcial e retoma pelo recibo durável;
+   evento sai por porta injetada
    pelo consumidor, sem dependência direta OFS→OBX. O contrato precisa fixar
    precedência entre idempotência HTTP atual e recibo de domínio, inclusive
    com `mountControllers:false`, para não mascarar 409/422 nem recusar
    clientes legados. Inspector cobre HTTP TEAT/BOAT, mais de 100 itens,
    sequência repetida/lacuna, ACK perdido, handoff, janela desligada,
-   resolução permitida/proibida, concorrência, rollback por item e RLS real.
+   resolução permitida/proibida, concorrência e deadlock de lotes cruzados,
+   rollback por item e RLS real.
    `migrations/0002_*.sql` faz backfill sem perder fila; DDL, teste de
    upgrade e `offline-sync-api.md` fixam a ordem de aplicação para adotantes
    e identificam itens legados. Esta frente depende da correção do

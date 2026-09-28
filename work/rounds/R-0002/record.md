@@ -442,3 +442,22 @@ em `493fcd959592d30055dcacabd57e4cc19505f2c6`, ancestral do HEAD
 cumulativo; o único PR aberto observado foi o bot Changesets #273. O único
 CI local integral, PR, CI remoto, merge e publicação final permanecem
 pendentes.
+
+## Prévia condicional CTG9 — revisão técnica (2026-09-28)
+
+O reviewer Opus 5.5 leu a adenda A1 e o código STYNX sem mutação. Ciclo 1:
+`REVIEW` em `reviews/ctg9-conditional-contract-review-1.json`, com sete
+achados bloqueantes sobre autoridade Owner, ordenação/ledger outbox,
+canonicalização e confiança de assinatura, e unicidade offline. Ciclo 2:
+`REVIEW` em `reviews/ctg9-conditional-contract-review-2.json`, após confirmar
+os sete reparos; apontou perda de precisão `Date`/UUIDv4 e a corrida do cursor
+inicial. A ponte rejeitou a resposta cercada por Markdown; o mesmo prompt
+rodou por `claude -p --json-schema`, e o digest está no recibo `.bridge.json`.
+Ciclo 3: `REVIEW` em `reviews/ctg9-conditional-contract-review-3.json`, com
+os bloqueios restantes de sentinela `id=''`, réplica atrasada e ordem de locks
+do applier. O Architect incorporou os reparos no `ctg-0009-preflight.md`:
+tupla de milissegundo/UUIDv7 monotônico, leituras no primário, sentinela SQL
+segura e transação independente por item, além dos negativos requeridos.
+Esta prévia não é contrato aprovado nem prompt-review de workers. As decisões
+Owner de escopo e de substituição das autoridades existentes seguem pendentes;
+nenhum worker CTG9, código, DDL ou versão de pacote foi alterado.
