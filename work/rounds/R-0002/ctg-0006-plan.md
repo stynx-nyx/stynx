@@ -135,3 +135,13 @@ consumidor. A primeira tecla Tab na página de referência pode atingir os
 controles do header externo; o teste do componente prova que o skip link é
 o primeiro tabbable do shell. Próximo gate: Opus delivery-review ciclo 2 no
 HEAD exato; REVIEW/FAIL impede a importação.
+
+Delivery-review Opus ciclo 2 em `reviews/ctg6-delivery-review-2.json`
+retornou **PASS** para `189b64bb`. Os três bloqueios foram fechados. O reviewer
+marcou como menores um regex insuficiente no sensor de imports públicos e a
+dependência transitiva de `sessions/dist` no alias do barrel de testing; os
+dois recebem hardening Inspector antes da importação cumulativa. O teste de
+Tab no shell foi considerado suficiente no contexto do header externo. Após
+o hardening, rebinder trace, verificar gates focais e importar a CTG6 na
+branch cumulativa. O PASS deste HEAD não substitui o review final da tree
+integrada.
