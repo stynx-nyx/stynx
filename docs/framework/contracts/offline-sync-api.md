@@ -133,8 +133,10 @@ number consumption, receipt and the event port share its commit. OFS calls exact
 `appendManyInTransaction(trx,events)` operation per item, after all other DML; the OBX seal
 forbids later writes. The event port follows the stable OBX interface and has no second connection. A failed
 item rolls back those effects, can receive a separately persisted rejection receipt, and does not
-undo successful sibling items. A batch service checks `Database.assertNoHeldConnection` before
-its first write, including batch-receipt creation. An enclosing `@TransactionalCommand` is
+undo successful sibling items. The PostgreSQL durable store checks
+`Database.hasHeldConnection()` and throws `IndependentTransactionConnectionError` before
+its first write, including batch-receipt creation. The service does not inject `Database`.
+An enclosing `@TransactionalCommand` is
 rejected before writing; strict item mode rejects hidden second connections through derived
 request or system contexts. Ordinary `Database.tx` outside that mode retains its legacy behavior.
 

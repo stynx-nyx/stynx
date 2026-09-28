@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "STYNX 1.5.0 CTG-0009 Architect rebind pins signature trust/manifest/withdrawal, offline durable parity and upgrade, event-log ownership/RLS, audit chain, SSE bridge and adjusted legacy outbox assertions.",
       "DEVAI 1.2.13 deterministic inventory for exact tracked source bytes.",
       "The 495 tracked test-path census is partitioned into 380 executable tests and 115 non-executable fixtures or support modules.",
       "Fourteen tracked verification scripts and configuration attestations complete the 509-item governed test surface.",
@@ -4225,8 +4226,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 10,
-      "assertion_digest_sha256": "60db15cdaf4024ac6e961d970113ee06556a2283a8a58d49dd828f5a8bb74ee0"
+      "assertion_count": 11,
+      "assertion_digest_sha256": "c7fbec4a1c866e431c744c10c5607894ae206dddca3bdaee9ce6f0dc76e300a0"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-sync-depth.spec.ts",
@@ -4417,8 +4418,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 142,
-      "assertion_digest_sha256": "6e899f2272949e78a5185e147275c46ab4ff0fc79d4120e54725fc20bf59c3e7"
+      "assertion_count": 147,
+      "assertion_digest_sha256": "e846e437dd108a37fa608c5321e189e6ebc26ed7491d07f032fda1b7274ba97d"
     },
     {
       "path": "packages/outbox/test/unit/outbox.service.spec.ts",
@@ -4851,6 +4852,110 @@
       "lifecycle": "supported",
       "assertion_count": 90,
       "assertion_digest_sha256": "99d99092c79b41b978a9a72bcbee6b8fd79b2350858a11268dac128d1f147f89"
+    },
+    {
+      "path": "packages/audit/test/integration/ctg9-owner-sink.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 2,
+      "assertion_digest_sha256": "7da41aaa532bdeb40666bf5566a12f9789ec7c8290b04af199c84b772d7a9737"
+    },
+    {
+      "path": "packages/backend/test/integration/ctg9-outbox-sse.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "dceee76af3408aac5c34e4652c5ec0f2caca94af3220fb6fe585e77b58bd0d2e"
+    },
+    {
+      "path": "packages/data/test/integration/ctg9-audit-chain.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 19,
+      "assertion_digest_sha256": "f0ecb117292c1ee1abaf802a317df1473bf0e85fe81619e0fe116e1ae802e946"
+    },
+    {
+      "path": "packages/data/test/integration/ctg9-independent-seal.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "a00fe6a3314646b19a8cb430175a2e305050f2cd97ec737fc93f20051bd38df5"
+    },
+    {
+      "path": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 67,
+      "assertion_digest_sha256": "3623d5c7968da64e3bdbbd16945380f4a3a92fab7ff83691ad732519a1c37480"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/ctg9-parity.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 72,
+      "assertion_digest_sha256": "ab1306331db14d8c256ad21d1050fa13da4d36401f203ffb57ad21b35b529386"
+    },
+    {
+      "path": "packages/outbox/test/integration/ctg9-append.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 42,
+      "assertion_digest_sha256": "2949977df5fb25d52a09bd4a47c008ab996a46c458ca969e6bd4110dc2ce03cc"
+    },
+    {
+      "path": "packages/outbox/test/integration/ctg9-ownership.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 18,
+      "assertion_digest_sha256": "aeb7e18a142817e6da5d58033fe2485670f7d5eed8dc7ec2a6ce861d95248f8d"
+    },
+    {
+      "path": "packages/signature/test/integration/trust-gate.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 25,
+      "assertion_digest_sha256": "976f1019fe91cc4c226dc4975dbc22ccf900a3d1995916d584732e01c1acec6b"
+    },
+    {
+      "path": "packages/signature/test/unit/manifest.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 25,
+      "assertion_digest_sha256": "8610099ce7eed4083991ac300e7bb0af0d8d0e5163aac6440b1e413bfd398dcb"
+    },
+    {
+      "path": "packages/signature/test/unit/readiness.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "a29f0d324494aa3ebfe3df71a2f0cce9c7b72b0ed0d44e79195a429e969d941b"
+    },
+    {
+      "path": "packages/signature/test/unit/withdrawal.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 18,
+      "assertion_digest_sha256": "80f92ab9fb202bdb306a64c413b4d7a3b2c95d9089c93b5ef1873dcba1100b63"
+    },
+    {
+      "path": "test/db/outbox-event-log-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 10,
+      "assertion_digest_sha256": "4aafd56a72ae025aa336b32bac6010c4d1bb73345125e5f9db23face6436e1a8"
     }
   ],
   "suites": {

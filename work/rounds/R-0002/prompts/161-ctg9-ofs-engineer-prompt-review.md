@@ -14,9 +14,10 @@ RLS, batch/lease/replay HTTP, applier/event port na mesma tx,
 Engineer é apenas `packages/offline-sync/src/**` e
 `packages/offline-sync/migrations/0002*`; SIG e OBX/data estão com outros
 Engineers em write sets distintos. O maestro faz Git, DDL/seed canônicos,
-manifests, changesets, baselines e trace. `law/trace.json` aguarda o
-Inspector OBX terminar um ajuste unitário e será refeito antes do gate
-final; isso não permite mexer ou omitir testes OFS.
+manifests, changesets, baselines e trace. O maestro já adicionou
+`supertest` e `@types/supertest` ao manifesto offline-sync/lockfile e
+rebindou `law/trace.json` após os sensores Inspector. Isso não permite
+mexer ou omitir testes OFS.
 
 Indique qualquer import, API, oráculo ou requisito impossível antes de
 despachar. PASS libera somente o Engineer OFS em paralelo, sem atestar
