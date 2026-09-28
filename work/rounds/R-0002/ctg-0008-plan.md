@@ -8,7 +8,7 @@ The Owner's 2026-09-27 flow decision supersedes the historical per-CTG PR, RC an
 
 | Current prerequisite                   | Status / checkpoint                                             |
 | -------------------------------------- | --------------------------------------------------------------- |
-| Revised OD-S15-02 prompt-review        | Pending; required before new worker dispatch                    |
+| Revised OD-S15-02 prompt-review        | PASS, sixth Opus 5.5 cycle, `reviews/ctg8-prompt-review-6.json` |
 | Architect four-invariant F1 checkpoint | Complete; recheck against CTG-0005 public data API              |
 | CTG-0007 merged SHA                    | Superseded; final import order is CTG-0005 → 0006 → 0007 → 0008 |
 
@@ -48,7 +48,7 @@ No failure classified before dispatch. Each failure entering feedback is classif
 
 ## Resume state
 
-**Current checkpoint — OD-S15-02:** Revised review is pending. No CTG-0007 merge is required for Inspector/Engineer dispatch. Preserve the completed F1 invariant work, pin the CTG-0005 data API before dependent generated repository/consumer proof, then perform focused red/green and import this CTG last. The earlier per-CTG PR/RC/full-CI steps are superseded.
+**Current checkpoint — OD-S15-02:** Revised prompt-review PASS is recorded. Inspector sensors were committed at `c777c4a8` and `50a882b2`; Engineer generator and its package integration gate/changeset at `fa76165e`, `8b4ee270`, and `546a7fac`. The packed external consumer gate `pnpm --filter @stynx-nyx/cli test:int` passed with current-source local tarballs, SHA-512 lockfile proof, generated Nest routes, and two-tenant real PostgreSQL RLS; `packages/cli` unit tests passed 75/75, typecheck/lint/build and package README check passed. Architect rebinding at `f3c59a67` added only the generator declaration baseline, passed `pnpm api:baselines` (44 packages) and `pnpm check:trace --print` (420/420), and ran `pnpm exec devai doctor` with `ok:true` (authority-enforcement advisory reports the existing missing local post-merge adapter key). No CTG-0007 merge is required for independent work. Recheck against CTG-0005 public data API, run the remaining focused/full integration gates and independent delivery review, then import CTG8 last. The earlier per-CTG PR/RC/full-CI steps are superseded.
 
 The Owner's 2026-09-27 decision authorized prompt 96 as the exceptional third review; its receipt returned REVIEW. The earlier requirement for a separate Owner decision before a fourth review was superseded by the later 2026-09-27 Owner authorization for all actions needed to complete C-0002, including further CTG prompt-reviews. That historical dispatch gate is superseded: revised OD-S15-02 prompt-review PASS and the Architect four-invariant checkpoint suffice for independent CLI work; CTG5 public data API is required before dependent repository/consumer proof. The old checkpoint did not authorize implementation at that time; this current plan authorizes focused work after its stated gates, with PR/merge/publication deferred to the final candidate.
 
