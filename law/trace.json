@@ -1039,7 +1039,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 20,
-      "assertion_digest_sha256": "80928a51b4154efd8ff878fa12a72b97c599df94590204a8656f82a6b5bf49f7"
+      "assertion_digest_sha256": "665f34abef59abab5b2c0fbb313fa58a1e7e4c3cdccad768cf2e152c7e374269"
     },
     {
       "path": "packages-web/angular-auth/test/identity-contract-depth.spec.ts",
@@ -1386,7 +1386,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 11,
-      "assertion_digest_sha256": "e34abdf6103e6c1724df83120b7a80069a04dd20d8508b1ffb852f0623afbb8f"
+      "assertion_digest_sha256": "f06320e86a72f70d0228615b820f1ece1abb2072642509a8f4462399c4ab882d"
     },
     {
       "path": "packages-web/angular-ui/test/shell.spec.ts",
@@ -1394,7 +1394,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 17,
-      "assertion_digest_sha256": "8fe21210f9edb9d20c15b6be69353ee253c91196a7b345bd8e4cb01ced096981"
+      "assertion_digest_sha256": "c8d9f34bb1c517b52e31bdce223f8301305b54df748ca5ebab63942d75277edd"
     },
     {
       "path": "packages-web/angular-ui/test/ui-interactions.spec.ts",
@@ -1756,7 +1756,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 26,
-      "assertion_digest_sha256": "ddb76592d7b6721110ff95d0740700f3e535188d85d755e854cf12e135f81b40"
+      "assertion_digest_sha256": "e26ed837b3fb132385bd940b40a8ddd136d8fc21f4cb4dfa70bcf4e2cadb5251"
     },
     {
       "path": "packages/backend/test/unit/if-match-contract.spec.ts",
@@ -3209,8 +3209,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 16,
-      "assertion_digest_sha256": "b8ab86ea35e73c983b96a28157ab95a0cbb2948be4fa8bdd4bc36e46efa9e154"
+      "assertion_count": 14,
+      "assertion_digest_sha256": "5e37fd50e85532051bbefa7e3f514062a03676b9694247900ab9dce53911a0f9"
     },
     {
       "path": "packages/testing/test/fixtures.unit.spec.ts",
