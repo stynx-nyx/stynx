@@ -6,6 +6,11 @@ pelo maestro. Leia `AGENTS.md` e as autoridades na ordem exigida, o contrato
 do DETRAN somente leitura. Escreva **somente testes e fixtures de teste**
 sob `packages/signature/test/**`; não altere `src`, docs, law, generated,
 baselines ou outros pacotes. Não execute Git, commit, push nem PR.
+O maestro já instalou `pkijs`, `asn1js`, `@peculiar/x509` e
+`@stynx-nyx/health` e adicionou alias de health no Vitest em `c21ba672`.
+Gere a PKI de teste em `test/fixtures/pki/**` com essas bibliotecas ou
+`openssl`; fixtures e eventual script gerador ficam dentro de `test/**`.
+Nenhum vermelho pode ser somente `MODULE_NOT_FOUND`.
 
 Codifique sensores UPS-SIG-01…04 antes da implementação:
 
@@ -21,7 +26,13 @@ Codifique sensores UPS-SIG-01…04 antes da implementação:
   `consumerOwnedVerifier` falha no bootstrap; marca estrutural forjada falha.
   Caminho reconhecido registra `verifierKind:'consumer-owned'` sem atribuir
   verificação STYNX ao provedor.
-  Preserve negativos clínicos/juntas e regressão da API legada.
+  Reproduza com fixtures STYNX os negativos clínicos/juntas de
+  `ctg9-sig-contract.md`: hash de recibo divergente, artefato/hash
+  malformado, storage ID ausente, formato errado, TSA ausente, estado
+  revogado/desconhecido, configuração/token ausente, HTTP falho e timeout;
+  confira erro tipado de cada um. Cubra a matriz ADR-0018: PAdES-B-LT
+  com TSA, OCSP-only, CRL-only, fallback permitido, QUALIFIED exigido,
+  perfil ausente/não suportado. Preserve regressão da API legada.
 - Readiness tipada: presença e ausência individual de PAdES, TSA, LTA,
   OCSP/CRL, perfil compatível, simulado em produção, indicador ausente,
   health down; sem dependência health→signature.
@@ -39,3 +50,5 @@ de cada critério. Rode os testes focais, registre vermelho esperado por requisi
 enfraquecer sensores existentes. Se uma API proposta for impossível,
 descreva a incompatibilidade em vez de inventar shim. O maestro fará o
 rebind de trace e o commit Inspector.
+Não importe nem copie código DETRAN; mapeamento HTTP dos erros tipados e
+paridade final pertencem ao consumidor nas R-0022…R-0024.

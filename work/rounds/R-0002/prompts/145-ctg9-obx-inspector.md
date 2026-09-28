@@ -5,7 +5,12 @@ pelo maestro. Leia `AGENTS.md` e autoridades na ordem exigida, os contratos
 `ctg9-obx-contract.md`, `docs/framework/contracts/outbox-api.md`,
 `audit-events-api.md`, `transactional-audit-idempotency-1.5.md`, e A1 §8.1
 do DETRAN somente leitura. Escreva **somente testes e fixtures** sob
-`packages/outbox/test/**` e `packages/data/test/**`. Não altere `src`,
+`packages/outbox/test/**`, `packages/data/test/**`,
+`packages/backend/test/**` e `packages/audit/test/**`. Os dois últimos
+abrigam CTG5 `@TransactionalCommand`→append→audit/idempotência e
+`AuditSqlSink` owner; aliases de outbox foram provisionados pelo maestro
+em `c21ba672`. Congele `packages/data/test/support/postgres.ts`:
+novos helpers ficam em arquivos novos. Não altere `src`,
 migrations, docs, law, generated, baselines ou outros pacotes. Não execute
 Git, commit, push nem PR.
 
@@ -30,13 +35,21 @@ cutover e tabelas customizadas têm resultado definido. ACK de HMAC inválido
 ou evento desconhecido vai para quarentena owner-only sem FK de tenant;
 o ledger por evento mantém a FK e o `UNIQUE(message_id)` legado continua.
 Inclua timestamp escolhido para partição auditada de virada mensal.
-Prove append→enqueue e domínio auditado→enqueue concorrendo com o cutover,
-incluindo a fila de três transações advisory→marker, marker→advisory e
-cutover UPDATE. `FOR SHARE NOWAIT` falha 55P03 tipado sem deadlock e retry
-integral respeita a autoridade pós-corte. Trigger `audit.fn_row_change`
-habilitado pelo adotante em tabela tocada pelo cutover causa rejeição tipada
-antes da primeira mutação; DDL padrão não habilita o trigger. `now()`
-recusa transação ambiente e usa conexão curta independente. Timeout ou deadlock injetado
+Prove append→enqueue e domínio auditado→enqueue concorrendo com o cutover.
+Sincronize A segurando advisory e pedindo SHARE, B segurando SHARE e pedindo
+advisory, e C com UPDATE enfileirado entre A e B. A recebe 55P03 pelo
+`FOR SHARE NOWAIT`, termina dentro de deadline, faz rollback integral e
+repete com a mesma chave; após corte, obtém sucesso LEGACY ou erro tipado
+`OutboxLegacyCutoverError` em NEW, sem evento/mensagem duplicado.
+Parametrize trigger `audit.fn_row_change` instalado pelo adotante para
+cada classe tocada (messages, events, projeções, mapa, ledgers, clock,
+marker e partições físicas): cutover falha
+`OutboxCutoverAuditedTableError` antes de mutar, marker fica LEGACY,
+events/map ficam vazios e nenhum 40P01 chega ao app. Remova o trigger
+na limpeza da fixture. `now()` recusa holder ambiente inclusive através
+de `withRequestContext`/`withSystemContext` antes de `pool.connect` ou
+lock no clock; fora desse contexto usa conexão curta independente.
+Timeout ou deadlock injetado
 faz rollback integral e retry idempotente. Falha do dispatcher legado após
 cutover espelha tentativa/ERROR/backoff. Evento nativo OFS despacha sem
 cutover enquanto a API legada continua entregando seus próprios itens.
@@ -60,3 +73,7 @@ focais contra o código atual e registre vermelho esperado;
 não enfraqueça testes. Use fixtures PostgreSQL isoladas e respeite
 `pnpm check:rls-negative`/`pnpm test:int` na validação posterior. O maestro
 faz rebind de trace e commit Inspector.
+Não importe nem copie código DETRAN. A paridade final RENACH/
+`integration.outbox` pertence ao consumidor; prove aqui as portas neutras
+STYNX. O Engineer/maestro mantém `test/db/runtime` e
+`tenant-isolation-coverage.json` para todas as tabelas novas.

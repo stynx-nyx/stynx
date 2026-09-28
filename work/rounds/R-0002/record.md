@@ -730,3 +730,14 @@ OBX não bloqueantes foram devolvidas ao Architect antes dos sensores:
 rejeitar corte em tabelas com trigger audit ativado pelo adotante, retry
 isolado de falha de dispatch, ordem de `now()` ambiente e corrida de
 três participantes no marker. Nenhum Inspector foi despachado ainda.
+
+O prompt-review Inspector ciclo 1 retornou **REVIEW** em
+`reviews/ctg9-inspector-prompt-review-1.json`. Dois bloqueios de
+viabilidade: os sensores de composição CTG5/owner audit estavam confinados
+a outbox/data, e PKI/health de SIG não resolviam no ambiente de testes.
+O Engineer fez um commit separado `c21ba672`, instalando `pkijs`,
+`asn1js`, `@peculiar/x509` e health em signature, gerando README/lockfile
+e adicionando aliases de fontes para SIG, OBX/audit/backend e OFS int.
+Verificações: signature 22/22, typecheck signature, `lint:deps` e
+`lint:cycles` verdes. O Architect ampliou os prompts e negativos, sem
+despachar Inspector até o prompt-review focal PASS.
