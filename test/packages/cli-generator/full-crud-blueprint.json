@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "BP-STYNX-CRUD-001",
+  "module": {
+    "name": "CrudProbe",
+    "namespace": "cli_probe",
+    "version": "1.0.0"
+  },
+  "database": {
+    "entities": [
+      {
+        "name": "RecordItem",
+        "table": "record_item",
+        "primaryKey": ["id"],
+        "fields": [
+          { "name": "id", "type": "uuid", "default": "gen_random_uuid()" },
+          { "name": "tenant_id", "type": "uuid" },
+          { "name": "label", "type": "varchar(32)" },
+          { "name": "description", "type": "text", "nullable": true },
+          { "name": "external_ref", "type": "uuid", "nullable": true },
+          { "name": "quantity", "type": "integer", "default": 0 },
+          { "name": "active", "type": "boolean", "default": true },
+          { "name": "occurred_at", "type": "timestamptz", "default": "now()" }
+        ],
+        "indexes": [{ "columns": ["tenant_id"] }]
+      },
+      {
+        "name": "NoteItem",
+        "table": "note_item",
+        "primaryKey": ["id"],
+        "fields": [
+          { "name": "id", "type": "uuid", "default": "gen_random_uuid()" },
+          { "name": "tenant_id", "type": "uuid" },
+          { "name": "message", "type": "text" }
+        ]
+      }
+    ]
+  },
+  "api": {
+    "basePath": "/v1",
+    "resources": [
+      {
+        "entity": "RecordItem",
+        "path": "/records",
+        "operations": ["list", "get", "create", "update", "delete"]
+      },
+      {
+        "entity": "NoteItem",
+        "path": "/notes",
+        "operations": ["list", "get"]
+      }
+    ]
+  }
+}
