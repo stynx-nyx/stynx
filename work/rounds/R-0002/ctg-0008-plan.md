@@ -117,3 +117,14 @@ tarballs, SRI, Nest HTTP and two-tenant RLS. API baselines 44/44, trace
 449/449, lint:tests, package READMEs, RLS negative/smoke and DEVAI strict
 zero findings passed. Request a fresh Opus delivery-review of this exact
 tree before cumulative import.
+
+Opus integrated delivery-review cycle 2 returned **PASS** for HEAD
+`b2ccc748` in `reviews/ctg8-integrated-delivery-review-2.json`. It confirmed
+the CI-credential app-role proof, real post-staging rename failure cleanup,
+83/83 CLI tests, trace 449/449, packed consumer and the role-separated
+Inspector/Architect/Engineer commits. The remaining reserved-word inventory
+is nonblocking for ordered import; complete it before the final gate if the
+release contract remains as written. In final CI, record the exact env and
+force real integration execution so cache entries from another worktree do
+not substitute for this cumulative tree. Fill the U15 ledger row with actual
+symbols, strict subset, optional controller and test-role startup deviation.
