@@ -405,3 +405,32 @@ Contrato e prompts 80–82 foram atualizados; prompt 86 prepara o ciclo 3
 excepcional. O limite de dois `REVIEW` foi atingido. A exceção Owner para
 executar prompt 86 está pendente; nenhum terceiro review ou worker foi
 despachado. Nenhum código F2, teste F3 ou DETRAN foi editado neste reparo.
+
+## CTG5 — correção de conformidade do envelope antes do Inspector (2026-09-28)
+
+A reavaliação de `INV-ERROR-001.change_policy` e da especificação
+UPS-TXN-03 concluiu que a opção A corrige somente código CTG5 não publicado
+para o schema de erro vigente; não muda `law/` nem os corpos legados. Os tags
+`@stynx-nyx/backend@1.5.0-rc.1` e `rc.2` não contêm
+`packages/backend/src/transactional-command/**`; `rc.3` não foi publicado.
+O Owner autorizou a campanha, mas não é atribuído a ele uma escolha A/B ou
+uma exceção. O Opus retornou PASS de classificação no fallback estruturado
+`reviews/ctg5-error-authority-classification-review-1.json`; a ponte DETRAN
+rejeitou sua resposta cercada por Markdown. O recibo registra digests do
+mesmo prompt e da saída válida.
+
+O contrato, o catálogo `errors.json` com 21 códigos da nova fronteira e
+os corpos legados 504/503/500/422, a nota de migração, o plano e os prompts
+105/106 foram emendados pelo Architect em `29dfa65f`. `pnpm api:contract`
+passou (135 paths) e `pnpm check:trace --print` passou (449/449) antes dos
+testes novos. O prompt-review de workers ciclo 3 retornou REVIEW por apontar
+o PASS antigo e omissões de catalogação; o reparo Architect está em
+`921d358a`. O ciclo 4 retornou **PASS** em
+`reviews/ctg5-envelope-worker-prompt-review-4.json`, com recibo da ponte
+e SHA-256 dos dois prompts vinculados em
+`reviews/ctg5-envelope-worker-review-binding.json`, commit `379e933c`.
+O PASS anterior review-2 fica superado. Verificar o binding e o HEAD exato
+informado pelo maestro antes do despacho Inspector. Nenhum teste ou código
+foi alterado nesta etapa; próximos commits: Inspector vermelho → Architect
+trace → Engineer verde → Architect baseline → delivery-review → importação
+cumulativa, sem CI completo/PR/RC intermediário sob OD-S15-02.
