@@ -1,8 +1,12 @@
+---
+adr_id: ADR-SIGNATURE-0001
+status: accepted
+date: 2026-09-28
+authors: [Architect]
+---
+
 # ADR-SIGNATURE-0001 — Verified trust evidence for regulated signatures
 
-**Status:** Proposed for Architect review
-**Date:** 2026-09-28
-**Authority:** Architect
 **Scope:** `@stynx-nyx/signature` opt-in trust profiles and SIG-01…04
 
 ## Context
@@ -12,15 +16,15 @@ The existing signing facade computes the source hash but may accept provider ass
 ## Decision
 
 1. Regulated calls explicitly opt in with a minimum signature level and a versioned consumer trust profile. Absence of that field preserves the published legacy call behavior, without conferring a regulated level.
-2. A separate `SignatureTrustVerifier` validates exact signed bytes and evidence under consumer supplied anchors/policy. A backend's level, `good`, chain, timestamp, URI or capability declaration is not an authority. It can provide evidence to inspect, not its verdict. ADVANCED and QUALIFIED are achieved only from the verified predicates; the consumer supplies its legal/certificate-policy criteria, including ICP-Brasil roots and qualification OIDs where relevant. STYNX does not assert legal validity solely from a PAdES profile.
+2. STYNX ships `createCmsTrustVerifier`, a concrete `SignatureTrustVerifier` implementation. It verifies CMS/PAdES over the PDF ByteRange, X.509 path to injected anchors and policy OIDs, RFC 3161 TSA signature/imprint/time, and signed OCSP/CRL status and freshness. The consumer supplies anchors, policy and qualification predicates plus authenticated evidence fetchers, not the cryptographic mechanism. A backend's level, `good`, chain, timestamp, URI or capability declaration is not an authority. ADVANCED and QUALIFIED derive from verified predicates. A custom verifier is consumer-owned and cannot reuse a provider verdict as proof. STYNX does not assert legal validity solely from a PAdES profile.
 3. Production trust rejects simulated backends, `/mock`, synthetic CMS and local-time substitution. Signing fails closed on missing capability, missing CMS/PAdES, untrusted chain, TSA, revocation or insufficient level. Verification distinguishes invalid evidence from indeterminate/unavailable evidence; neither authorizes the requested minimum.
-4. Health composition is structural: `signature` exports an indicator implementing the existing `health` indicator shape. This avoids dependency from `health` into `signature` and prevents required checks from being treated as optional skipped callbacks.
-5. Session and batch manifests use RFC 8785 canonical JSON, versioned schema, source document and tenant/snapshot identity, ordered signer proofs and a cryptographic signed-manifest binding. The existing digest-only sequential envelope is not upgraded by naming it a signature.
+4. For a production trust profile, signature owns health composition and a boot guard verifies registration of its required indicator. A missing indicator prevents startup; a failed check makes readiness down. Dependency direction is signature → health, never health → signature.
+5. Session and batch manifests use RFC 8785 canonical JSON, versioned schema, source document and tenant/snapshot identity, ordered signer proofs and a cryptographic signed-manifest binding. The verifier accepts `expectedManifestSha256` and derives `boundManifestSha256` only from a signed CMS attribute or signed PDF content within the verified ByteRange. A free-text reference is invalid. The existing digest-only sequential envelope is not upgraded by naming it a signature.
 6. Withdrawal verification returns typed results and preserves the consumer port's complete receipt field set. Physical withdrawal requires a trusted attestor and signed binding, while digital withdrawal requires cryptographic verification. The consumer owns eligibility and mapping to domain errors.
 
 ## Consequences
 
-Consumers must provision a real trust verifier, anchors, policy revisions, TSA/revocation rules and any physical attestor. Production readiness is down until these are operational. Existing test doubles stay available for legacy/test flows, while Inspector fixtures for the new trust gate need independent cryptographic evidence. No private-key storage or DETRAN business profile moves into STYNX. The contract in `docs/framework/contracts/signature.md` defines the typed API and negative sensors.
+STYNX must add runtime `pkijs`, `asn1js` and `@peculiar/x509` dependencies under the maestro's shared lock and ship/test the concrete verifier against real test-PKI fixtures. Consumers provision anchors, policy revisions, TSA/revocation evidence fetchers and any physical attestor. Production readiness is down until these are operational. Existing test doubles stay available for legacy/test flows. No private-key storage or DETRAN business profile moves into STYNX. The contract in `docs/framework/contracts/signature.md` defines the typed API and negative sensors.
 
 ## Rejected alternatives
 

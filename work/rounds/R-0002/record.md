@@ -698,3 +698,14 @@ superadora; OFS entregou numeração, lote/recibo, applier por item e
 concorrência/handoff, com ADR superadora. O maestro fez o índice de ADRs
 aceitas OBX/OFS e iniciou delivery-review independente; os documentos são
 contratos, não prova de implementação.
+
+O primeiro delivery-review dos contratos retornou **REVIEW** em
+`reviews/ctg9-architect-delivery-review-1.json`. A ponte DETRAN invocou
+Opus 5.5, mas rejeitou a resposta cercada em Markdown por formato; o
+maestro repetiu o mesmo prompt com `claude -p` e schema estruturado,
+registrando a falha da ponte em `reviews/ctg9-architect-delivery-review-1.bridge-failure.md`.
+Três bloqueios: corte OBX entre claim/ACK legados e projeção nova sem
+autoridade única; SIG sem implementação criptográfica de confiança no STYNX;
+OFS sem precedência fixa entre recibo do lote e `Idempotency-Key`. Os
+Architects receberam reparos em paralelo, incluindo observações menores.
+O resultado não libera Inspectors nem confirma conformidade.

@@ -21,6 +21,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-JOBS-0002 — Tenant actor execution and local scheduling for jobs 1.5](ADR-JOBS-0002-actor-tenant-local-clock.md) — supersedes ADR-JOBS-0001 handler context and UTC cron decisions.
 - [ADR-OUTBOX-0001 — Transactional outbox promoted from pec (E3)](ADR-OUTBOX-0001-transactional-outbox-promotion.md)
 - [ADR-OUTBOX-0002 — Append-only event log and per-event delivery](ADR-OUTBOX-0002-event-log-and-delivery.md) — additive CTG9 decision.
+- [ADR-SIGNATURE-0001 — Verified trust evidence for regulated signatures](ADR-SIGNATURE-0001-trust-evidence.md) — opt-in CTG9 trust gate.
 - [Trusted local RC evidence and mutation execution boundary](2026-08-16-trusted-local-rc-evidence.md)
 - [ADR-SESSIONS-0001 — Provider-neutral session inventory and control](ADR-SESSIONS-0001-provider-neutral-session-control.md)
 - [ADR-PREFERENCES-0001 — Tenant-subject preferences boundary](ADR-PREFERENCES-0001-tenant-subject-preferences.md)

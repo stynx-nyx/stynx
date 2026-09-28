@@ -1,0 +1,72 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg9-obx-contract.md:29",
+      "issue": "Platform migration ≥0021 copies every legacy `outbox.messages` row into the new log/projection and moves claim authority to the new mode. ADR-OUTBOX-0002 and outbox-api.md:9 still say the published `enqueue`/`dispatchDue`/aggregate `ack` stay valid. At HEAD, `claimDue` (packages/outbox/src/outbox.service.ts:176-200) claims any PENDING/due ERROR row in `outbox.messages`, and `ack` (:290-320) only updates that table. Concrete sequences: (a) an adopter that runs only legacy `dispatchDue()` has PENDING row M migrated. If authority moves, M is never delivered (loss and regression of the published API). If it does not move, legacy `dispatchDue` and the new scheduler both send M (duplication). (b) Row M is SENT in flight and migrated with its lease. The partner's aggregate ACK arrives through the published `ack({entity,entityId})`, which obx:27 says 'continua para o storage legado'. The projection copy never sees the ACK, the lease expires, it is reclaimed and M is re-sent. That violates A1 UPS-OBX-02 'sem entrega duplicada'. (c) `options.table`/`ackTable` are configurable, so a platform SQL migration cannot migrate custom tables. The contract states 'uma única autoridade de claim por linha' and 'rollback restaura autoridade' but defines no mechanism, and the Inspector sensor at obx:29/44 has no specification to test against.",
+      "required_change": "Fix the cutover mechanism in obx:29, the ADR and outbox-api.md. Minimal repair: the ≥0021 DDL only creates structures. The copy is an explicit, idempotent adopter-invoked cutover (SQL function or service method, documented in the upgrade order) that locks the legacy rows with FOR UPDATE, not SKIP LOCKED, and marks each copied row with `migrated_event_id`/state. The legacy `claimDue` excludes marked rows. The legacy `ack` on a marked row is routed in the same transaction, via the map, to the new ACK ledger and projection. Legacy `enqueue` after cutover has defined behavior (typed rejection or explicit append). Adopters that never cut over keep legacy behavior unchanged. Custom tables are either declared out of scope for the cutover or accepted as function parameters. Replace 'rollback restaura autoridade' with a concrete rule. The Inspector covers: a legacy-only adopter after migration (still delivers), SENT in flight with a legacy ACK at cutover (no re-send), and two schedulers (legacy and new) with no double claim."
+    },
+    {
+      "severity": "blocking",
+      "file": "docs/framework/contracts/signature.md:56",
+      "issue": "`SignatureTrustVerifier` is only an interface. `@stynx-nyx/signature` today has no CMS/X.509/TSA/OCSP library among its dependencies (package.json only lists pkijs/@peculiar/x509 under informational `stynxProviderDependencies`). ctg9-sig-contract.md:33 leaves open 'which concrete trust-verifier implementation... will the consumer provision'. So the checks described in signature.md:71 (ICP-Brasil path, policy OID, TSA token, signed OCSP/CRL, freshness) are delegated to consumer code. `SignatureService` can only recompute the document/PDF/CMS hashes; `achievedLevel`, `tsaAt`, `revocationSource` and `chainSha256` come from the verifier without independent verification. A consumer that implements the verifier by calling the same provider's `/pades/verify` gets 'signed ADVANCED/QUALIFIED' from a self-certified assertion. A1 §8.1 also forbids the consumer's thin adapters from 'reconstruir o mecanismo genérico ausente', and the STYNX sensors in negatives 2-4 would only test doubles.",
+      "required_change": "State in signature.md, ctg9-sig-contract.md and ADR-SIGNATURE-0001 that STYNX ships a cryptographic `SignatureTrustVerifier` implementation, for example `createCmsTrustVerifier`. It verifies the CMS/PAdES signature over the ByteRange, the X.509 path to injected anchors, policy OIDs, the RFC 3161 token (signature, imprint, time) and signed OCSP/CRL responses. The consumer supplies only anchors, policy, qualification predicates and OCSP/CRL/TSA fetchers. Record the new dependencies (pkijs/asn1js/@peculiar/x509) under the maestro lock for lockfile, changeset and READMEs. A custom verifier may exist, but it is marked as consumer-owned and cannot use a provider response as its verdict. The Inspector's positive and negative fixtures (chain, OID, revoked, stale TSA, OCSP-only/CRL-only) run against the STYNX implementation with real test-PKI cryptography."
+    },
+    {
+      "severity": "blocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:10",
+      "issue": "The contract says the batch route 'may cease using its legacy `@Idempotent` interceptor' (also offline-sync-api.md:29) but does not fix the resulting behavior. That leaves open the precedence the preflight (:316-319) requires to be fixed. The published route today uses `@Idempotent('Idempotency-Key')` (packages/offline-sync/src/offline-sync.controller.ts:50). With it, a missing header gives 400 (idempotency.interceptor.ts:128) and reusing a key with a different body gives 422 (:183), and the replay returns the cached response. If the interceptor is removed, a request without the header or reusing a key with a different body (for example a different `deviceBatchId`) is accepted and produces a new effect. If it is kept, the 422/replay runs before the domain checks and masks the 409/422 required by A1. Either way the claim at ofs:10 that 'HTTP statuses, and public bodies remain compatible' is not guaranteed.",
+      "required_change": "Fix one deterministic order in ofs:10 and offline-sync-api.md. (1) The header stays required, with the same 400 when absent. (2) Domain batch identity and the declared set are evaluated first (replay of the receipt, 409 context/sequence, 422 gap). (3) Reusing the same `Idempotency-Key` with a different fingerprint that is not a replay of the same batch keeps the legacy 422 `IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY`. (4) An identical retry returns the original status and body bytes from the durable receipt. Name the mechanism (a batch-specific interceptor or in-service verification) and add an HTTP before/after sensor for missing header, key reuse with a different body, and identical replay."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-obx-contract.md:27",
+      "issue": "The contract requires that 'cada ACK recebido ganha linha própria, inclusive inválido' and also imposes a composite FK `(tenant_id,event_id)` with the tenant derived from the event. An ACK with an invalid HMAC or an unknown or mismatched event has no trustworthy event/tenant, so the FK prevents persisting it.",
+      "required_change": "Define a separate owner-only quarantine table (no tenant FK, raw bytes/hash, reason) for unbound ACKs. Only ACKs that resolve to an event use the FK ledger. The Inspector covers an invalid HMAC and an unknown eventId."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0009-preflight.md:246",
+      "issue": "'substituindo `UNIQUE(message_id)` legado' could be read as dropping `uq_outbox_acknowledgements_message`. The legacy `ack` uses `ON CONFLICT (message_id) DO NOTHING` (outbox.service.ts:305-309), which fails without that constraint.",
+      "required_change": "State that the legacy constraint and table stay intact and that the per-ACK ledger is a new table."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:22",
+      "issue": "STYNX would persist and return the DETRAN vocabulary code `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED`. This contradicts ADR-MOBILE-OFFLINE-0002 ('not product vocabulary inside STYNX') and the rationale of INV-OFFLINE-001. The synthetic key is described only as 'consumer-compatible' (DETRAN uses `legacy:${deviceId}:${localEntityId}`, submit-batch.command.ts:155), with no formula or protection against collision with a client key.",
+      "required_change": "Use a neutral STYNX code, or one supplied by the host policy, that the TEAT adapter maps. Fix the derivation of the synthetic key (or a host port) and a reserved namespace that a supplied `idempotencyKey` cannot use."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:20",
+      "issue": "Serialization covers reserving the batch identity, but not two concurrent submissions of the same open batch (a client retry while the first is still processing). Because no transaction spans items, both apply the same item in parallel: one wins, and the other's unique-key violation on `(tenant,idempotency_key)` has no defined outcome.",
+      "required_change": "Specify that a unique conflict on the item/receipt in the second submission is treated as a replay of the committed receipt, or add a lease on the open batch. The Inspector covers two concurrent submissions of the same open batch."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-ofs-contract.md:16",
+      "issue": "Without an `OfflineSyncPolicyResolver`, the behavior for existing adopters is undefined. Today `reservationTtlMs`/24h is the default (types.ts `StynxOfflineSyncModuleOptions.reservationTtlMs`) and items are limited to 100.",
+      "required_change": "State that with no resolver the published `reservationTtlMs` default stays (and is not called a catalog policy), and that the item limit is removed without a new limit."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "docs/framework/contracts/signature.md:77",
+      "issue": "'Omitted indicator' is required as a failing sensor, but `health` does not know signature exists (by design), so an app that does not register the indicator cannot turn readiness down.",
+      "required_change": "Specify a mechanism, such as a boot check in `StynxSignatureModule` with a production profile that requires the indicator to be exported/registered, or document it as a consumer obligation and remove the claim from the sensor."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "law/adr/ADR-SIGNATURE-0001-trust-evidence.md:3",
+      "issue": "The ADR is 'Proposed for Architect review' and has no YAML frontmatter, unlike OUTBOX-0002 and MOBILE-OFFLINE-0002, which are accepted. Preflight :358-359 requires ADRs to be accepted before Inspector sensors.",
+      "required_change": "Change the status to accepted with frontmatter (adr_id/status/date/authors) in the maestro's Architect commit before dispatching the SIG Inspector."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-obx-contract.md:35",
+      "issue": "`occurred_at = greatest(clock_timestamp(), head+1µs)` can fall in a later month than the partition created by `audit.ensure_monthly_partition(clock_timestamp())` (0017:88). Honoring `TxOptions.isolation`, which was a no-op until now, makes existing audited RR/SERIALIZABLE callers fail with `AuditChainIsolationError`.",
+      "required_change": "Ensure the partition for the chosen timestamp, and record in the changeset/migration guide the observable change in `TxOptions.isolation` for audited writes."
+    }
+  ],
+  "summary": "REVIEW. The contracts preserve Art. 6 authority: the writes are docs/law/work only, the ADRs are additive and scoped to the new mode, and CTG5 is additively rebound in transactional-audit-idempotency-1.5.md. They claim no conformance, keep INV-OFFLINE-001 (unkeyed items are stored but not applied), and add no new limit (>100 items accepted; numbering limit 1..100 kept). They also close the audit chain (advisory→clock, RC-only, epochs), the SSE cursor under commit (tenant clock plus UUIDv7 with full seq, NULLIF, primary), OFS strict txIndependent/seal, and lease/ACK per event. Three blocking points remain. (1) OBX: the automatic migration ≥0021 plus 'cut of authority' does not define how the published legacy `dispatchDue`/`ack` treat migrated rows. This yields concrete sequences of lost delivery for legacy-only adopters, or duplication, including a legacy ACK not reaching the projection of a migrated SENT row, which is reclaimed and re-sent. Configurable tables are also not migratable. (2) SIG: the cryptographic verifier is only a port that the consumer provides, so the provider-independent proof and the chain/TSA/OCSP/CRL negatives are not implemented or tested by STYNX, and A1 forbids the consumer from rebuilding that mechanism. (3) OFS: the batch route 'may' drop `@Idempotent` with no fixed precedence, which changes published 400/422 or masks the domain 409/422. With these three repairs plus the nonblocking adjustments (quarantine for invalid ACKs, neutral legacy code/synthetic key, concurrent same-batch submissions, resolver-absent default, accepted SIG ADR, audit partition), the contracts can be re-checked by a delta review. This REVIEW does not release the Inspector prompts and does not attest to any implementation."
+}

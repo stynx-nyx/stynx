@@ -71,7 +71,11 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    Não reutilizar `canonicalJson` de `packages/signature/src/digest.ts`:
    seus casos de `Date`/`undefined`/binário não fornecem essa garantia. O nível
    ADVANCED/QUALIFIED alcançado deriva de cadeia ICP-Brasil, política, TSA e
-   revogação **verificadas**, não da autodeclaração do provedor. Backend
+   revogação **verificadas**, não da autodeclaração do provedor. STYNX entrega
+   verificador criptográfico concreto de CMS/PAdES ByteRange, cadeia X.509,
+   política OID, token RFC 3161 e OCSP/CRL assinados; o consumidor injeta
+   âncoras, políticas e fetchers. O hash do manifesto esperado precisa
+   coincidir com o hash vinculado na evidência. Backend
    declara capacidades atestadas e `simulated`; `createMockSignatureBackend`,
    prefixo `/mock`, CMS sintético e hora local não podem satisfazer produção
    ou `minimumSignatureLevel >= ADVANCED`. Perfis ADR-0018 entram como
@@ -222,8 +226,15 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    `NULLIF` impede o cast de `''` para UUID mesmo se o planner avaliar os
    lados do `OR` fora da ordem escrita. UUIDs são comparados como UUID,
    nunca como texto.
-   `enqueue` legado não escreve no novo log sem o lock; na migração, os fatos
-   legados expostos ao SSE recebem **novos** IDs UUIDv7 pela mesma sequência
+   `enqueue` legado não escreve no novo log sem o lock. A DDL apenas cria
+   estruturas; o cutover por adotante é opt-in, idempotente e bloqueia as
+   linhas legadas com `FOR UPDATE`. Marca cada linha migrada com o evento
+   correspondente para que o dispatcher legado exclua apenas as marcadas
+   e o ACK legado de SENT em voo atualize a projeção na mesma transação.
+   Sem cutover, o dispatcher e ACK legados continuam funcionais. Enqueue
+   pós-cutover e tabelas customizadas têm política explícita no contrato.
+   Na migração opt-in, os fatos legados expostos ao SSE recebem **novos**
+   IDs UUIDv7 pela mesma sequência
    na ordem total de migração, com `created_at` arredondado a ms, relógio
    inicial ≥ último timestamp e sequência ajustada acima do maior valor
    migrado. O ID v4 legado fica só no mapa persistente de migração;
@@ -243,7 +254,9 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    só prossegue se único, caso contrário falha fechado. Ledger tem uma linha
    por tentativa com bytes exatos/hashes de requisição e resposta, protocolo,
    resultado e provedor. Cada ACK recebido ganha linha própria; uma projeção
-   separada guarda o estado atual, substituindo `UNIQUE(message_id)` legado.
+   separada guarda o estado atual; a tabela e `UNIQUE(message_id)` legados
+   permanecem. ACK sem evento/tenant confiável entra em quarentena owner-only
+   sem FK tenant; ACK vinculado usa o ledger com FK composta.
    `tenant_id` é derivado do evento, não confiado ao payload externo, e FK
    composta `(tenant_id,event_id)` no ledger e no ACK impede vínculo cruzado
    mesmo no papel `owner`, que contorna RLS. ACK positivo posterior a ERROR
@@ -313,10 +326,13 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    `Database.tx` internos. O append verifica no cliente efetivo que
    `app.tenant_id` corresponde ao tenant do evento e rejeita execução fora
    da transação do item. Assim, domínio/consumo/recibo/evento têm um único
-   commit, sem dependência direta OFS→OBX. O contrato precisa fixar
-   precedência entre idempotência HTTP atual e recibo de domínio, inclusive
-   com `mountControllers:false`, para não mascarar 409/422 nem recusar
-   clientes legados. Inspector cobre o endpoint normal e um endpoint
+   commit, sem dependência direta OFS→OBX. O contrato fixa o header
+   `Idempotency-Key` obrigatório (400 se ausente), checagens de identidade
+   e conjunto declarado do lote antes da comparação da chave de transporte,
+   422 legado para chave reaproveitada com corpo diferente e replay dos
+   bytes/status originais de recibo fechado. O serviço sem controller usa
+   identidade de invocação própria; nenhum interceptor genérico antecipa
+   esses resultados. Inspector cobre o endpoint normal e um endpoint
    indevidamente montado sob `@TransactionalCommand`, com
    `withRequestContext` por item, ou cuja porta de evento tente
    `withSystemContext`/nova `Database.txIndependent`: erro tipado antes de qualquer

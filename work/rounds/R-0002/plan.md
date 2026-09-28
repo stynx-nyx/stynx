@@ -263,6 +263,8 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
 
+- CTG9 Architect delivery-review ciclo 1: `reference-gap` — OBX não fixou o corte opt-in entre o dispatcher legado e o novo, SIG deixou a verificação criptográfica genérica a cargo do consumidor e OFS deixou a precedência do `Idempotency-Key` indefinida. Os três Architects receberam reparos disjuntos; nenhum Inspector está liberado antes do delta PASS.
+
 - CTG5 envelope sensores pós-despacho: `sensor-error` — o unitário exigia o envelope completo em `HttpException.getResponse()` antes do filtro HTTP resolver `requestId`, e uma asserção antiga de proveniência ainda esperava `{code}`; o Inspector limitou o unitário a status/código interno e fortaleceu a prova HTTP do 403 completo, seguido de rebind Architect de trace.
 - CTG5 envelope Inspector tentativas 1–2: `reference-gap` — os sensores entregues provaram vermelho em PostgreSQL, mas ainda faltam caminhos 400/403/500/503, filtros, If-Match, unitários e controles duráveis exigidos pelo prompt 105; após a nova tentativa parcial, a conclusão dos sensores foi escalada ao maestro no papel Inspector antes de qualquer commit Inspector.
 - RC2 delivery-review Opus ciclo 1: `policy-issue` — a política de anomalia e o publicador ainda fixavam `rc.1` apesar dos 44 manifestos em `rc.2`; Inspector acrescentou prova vermelha de igualdade e da transição `rc.1 → rc.2`, Architect vincula a decisão Owner existente à candidata exata, Engineer atualiza o candidato e o digest; repetir gates e review antes do PR.
@@ -713,6 +715,14 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     sela a transação após append, preservando auditoria/idempotência do
     envelope. O maestro atualizou o índice ADR das decisões aceitas OBX/OFS
     e pediu delivery-review Opus dos contratos. Ainda não há Inspector.
+38. Os contratos SIG/OBX/OFS da CTG9 foram commitados pelo Architect em
+    `065b2dd1`. O primeiro delivery-review Opus dos contratos retornou
+    **REVIEW** em `reviews/ctg9-architect-delivery-review-1.json`, com três
+    bloqueios e correções menores. A ponte DETRAN rejeitou apenas o formato
+    cercado em Markdown; `claude -p` com o mesmo prompt e schema produziu o
+    veredito estruturado. Architects reativados para reparar contratos;
+    depois rever o delta, obter PASS e só então revisar os prompts Inspector
+    144–146. Nenhuma implementação CTG9, PR ou publicação foi iniciada.
 
 ## Reviews, PRs e publicações
 
