@@ -3772,8 +3772,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 32,
-      "assertion_digest_sha256": "497e33995243a00931ac527043bb49e7f6aa065736000eb9ca8834a0cb27d13e"
+      "assertion_count": 37,
+      "assertion_digest_sha256": "c2d0cbac867076e72423dc49c949cf546302fbf02f1fc1e02b73b9436afca3f0"
     },
     {
       "path": "packages/jobs/test/unit/jobs-depth.spec.ts",
@@ -3804,8 +3804,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 17,
-      "assertion_digest_sha256": "24ac975a1369ff105aa62c362810bde734dfd2a716ba527d5e0b59ea7a25b260"
+      "assertion_count": 21,
+      "assertion_digest_sha256": "4b45d0e59869759c2c244bac02e4d8e2e2e2c1cab28649b0c46d14e8cddefc69"
     },
     {
       "path": "packages/jobs/test/unit/jobs-service.spec.ts",
