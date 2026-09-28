@@ -10,7 +10,11 @@ import {
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import type { PoolClient } from 'pg';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import {
+  AuditChainIsolationError,
+  AuditChainKeyMismatchError,
+  IndependentTransactionConnectionError,
   ActorContextMissingError,
   ReadOnlyViolationError,
   SerializationFailureError,
@@ -32,7 +36,11 @@ interface TransactionContextState {
   client: PoolClient;
   db: StynxDrizzleDatabase;
   savepointCounter: number;
+  isolation: NonNullable<TxOptions['isolation']>;
 }
+
+interface ConnectionHolder { held: boolean; strict: boolean }
+const connectionHolder = new AsyncLocalStorage<ConnectionHolder>();
 
 interface ResolvedExecutionContext {
   requestId?: string;
@@ -50,6 +58,10 @@ function isRetryableError(error: unknown): error is Error & { code: string } {
 
 function mapTransactionError(error: unknown): unknown {
   const code = (error as { code?: string })?.code;
+  if (code === '40001' && (error as Error).message === 'audit_chain_requires_read_committed') {
+    return new AuditChainIsolationError();
+  }
+  if (code === 'STY41') return new AuditChainKeyMismatchError();
   if (code === '25006') {
     return new ReadOnlyViolationError({ originalCode: code });
   }
@@ -81,6 +93,27 @@ export class Database extends CoreDatabase {
   }
 
   async tx<T>(fn: (trx: Transaction) => Promise<T>, options: TxOptions = {}): Promise<T> {
+    return this.runTransaction(fn, options, false);
+  }
+
+  async txIndependent<T>(fn: (trx: Transaction) => Promise<T>, options: TxOptions = {}): Promise<T> {
+    if (connectionHolder.getStore()?.held || this.cls.get<TransactionContextState>(TX_CONTEXT_KEY)) {
+      throw new IndependentTransactionConnectionError();
+    }
+    return this.runTransaction(fn, options, true);
+  }
+
+  /** Detects a held connection even when a derived request context hides the CLS transaction. */
+  hasHeldConnection(): boolean {
+    return connectionHolder.getStore()?.held === true || Boolean(this.cls.get<TransactionContextState>(TX_CONTEXT_KEY));
+  }
+
+  /** Tenant asserted by the request-context boundary, independent of SQL settings. */
+  currentTenantId(): string | undefined {
+    return this.requestContext.hasActiveContext() ? this.requestContext.snapshot().tenantId : undefined;
+  }
+
+  private async runTransaction<T>(fn: (trx: Transaction) => Promise<T>, options: TxOptions, independent: boolean): Promise<T> {
     const resolvedRole = options.role ?? 'app';
     const resolvedReadonly = options.readonly ?? false;
     const retry = options.retry ?? this.options.retry ?? { attempts: 3, jitterMs: [10, 50] as [number, number] };
@@ -96,10 +129,20 @@ export class Database extends CoreDatabase {
 
     const active = this.cls.get<TransactionContextState>(TX_CONTEXT_KEY);
     if (active) {
+      if (independent || connectionHolder.getStore()?.strict || options.strictItemMode) {
+        throw new IndependentTransactionConnectionError();
+      }
+      if (options.isolation && options.isolation !== active.isolation) {
+        throw new TransactionIdentityMismatchError({ reason: 'nested transaction isolation mismatch' });
+      }
       if (options.requireActor) {
         await this.assertLiveCommandIdentity(active.client, executionContext);
       }
       return this.runNestedTransaction(active, resolvedRole, fn);
+    }
+
+    if (connectionHolder.getStore()?.held && (independent || connectionHolder.getStore()?.strict)) {
+      throw new IndependentTransactionConnectionError();
     }
 
     const pool = this.pools.get(resolvedRole, options.replica ?? false);
@@ -108,14 +151,21 @@ export class Database extends CoreDatabase {
 
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
       const client = await pool.connect();
+      let holder: ConnectionHolder | undefined;
+      let trx: Transaction | undefined;
       try {
         await client.query('BEGIN');
+        if (options.isolation) {
+          const isolation = options.isolation.toUpperCase();
+          await client.query(`SET TRANSACTION ISOLATION LEVEL ${isolation}`);
+        }
         await this.applySessionState(
           client,
           resolvedRole,
           resolvedReadonly,
           executionContext,
           options.deadlineMs,
+          options.lockTimeoutMs,
         );
         if (options.requireActor) {
           await this.assertLiveCommandIdentity(client, executionContext);
@@ -125,11 +175,14 @@ export class Database extends CoreDatabase {
           client,
           db,
           savepointCounter: 0,
+          isolation: options.isolation ?? 'read committed',
         };
         this.cls.set(TX_CONTEXT_KEY, txState);
-        const trx = new Transaction(client, db, resolvedRole, this.metrics);
-        const result = await fn(trx);
-        trx.close();
+        const activeTrx = new Transaction(client, db, resolvedRole, this.metrics, options.strictItemMode === true);
+        trx = activeTrx;
+        holder = { held: true, strict: options.strictItemMode === true };
+        const result = await connectionHolder.run(holder, () => fn(activeTrx));
+        activeTrx.close();
         await client.query('COMMIT');
         return result;
       } catch (error) {
@@ -152,6 +205,8 @@ export class Database extends CoreDatabase {
         throw mapped;
       /* v8 ignore next -- v8 reports a synthetic branch on the finally boundary; cleanup paths are covered. */
       } finally {
+        trx?.close();
+        if (holder) holder.held = false;
         if (this.cls.get(TX_CONTEXT_KEY) !== undefined) {
           this.cls.set(TX_CONTEXT_KEY, null as unknown as TransactionContextState);
         }
@@ -258,6 +313,7 @@ export class Database extends CoreDatabase {
     readonly: boolean,
     executionContext: ResolvedExecutionContext,
     deadlineMs?: number,
+    lockTimeoutMs?: number,
   ): Promise<void> {
     await client.query(`SELECT set_config('app.role', $1, true)`, [role]);
 
@@ -281,6 +337,9 @@ export class Database extends CoreDatabase {
     }
     if (deadlineMs !== undefined) {
       await client.query(`SELECT set_config('statement_timeout', $1, true)`, [String(deadlineMs)]);
+    }
+    if (lockTimeoutMs !== undefined) {
+      await client.query(`SELECT set_config('lock_timeout', $1, true)`, [String(lockTimeoutMs)]);
     }
   }
 

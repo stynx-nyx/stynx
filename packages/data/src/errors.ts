@@ -138,3 +138,27 @@ export class SerializationFailureError extends StynxDataError {
     });
   }
 }
+
+export class IndependentTransactionConnectionError extends StynxDataError {
+  constructor() {
+    super('Independent transaction cannot acquire a second held connection', {
+      code: 'INDEPENDENT_TRANSACTION_CONNECTION', status: 409,
+    });
+  }
+}
+
+export class AuditChainIsolationError extends StynxDataError {
+  constructor() {
+    super('Audited writes require READ COMMITTED isolation', {
+      code: 'AUDIT_CHAIN_ISOLATION', status: 409,
+    });
+  }
+}
+
+export class AuditChainKeyMismatchError extends StynxDataError {
+  constructor() {
+    super('Audit transaction cannot change tenant chain', {
+      code: 'AUDIT_CHAIN_KEY_MISMATCH', status: 409,
+    });
+  }
+}

@@ -1,4 +1,27 @@
-import type { OutboxDispatcherPort, OutboxRow } from './types';
+import type { OutboxDispatcherPort, OutboxRow, OutboxTransportEvidence } from './types';
+
+function evidenceHeaders(headers: Record<string, string>): Record<string, string> {
+  const safe = new Set(['content-type', 'x-outbox-event-id', 'x-outbox-idempotency-key']);
+  return Object.fromEntries(Object.entries(headers).map(([name, value]) => {
+    const lower = name.toLowerCase();
+    return [lower, safe.has(lower) ? value : '[redacted]'];
+  }));
+}
+
+function publicProvider(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.origin + parsed.pathname;
+  } catch {
+    return '[invalid-url]';
+  }
+}
+
+function safeDispatchError(provider: string, status?: number): Error {
+  return new Error(status === undefined
+    ? `Outbox dispatch to ${provider} failed before an HTTP response`
+    : `Outbox dispatch to ${provider} failed with HTTP ${status}`);
+}
 
 export interface HttpOutboxDispatcherOptions {
   /** Absolute URL, or a function deriving one per row (e.g. by `entity`). */
@@ -29,24 +52,74 @@ export class HttpOutboxDispatcher implements OutboxDispatcherPort {
   constructor(private readonly options: HttpOutboxDispatcherOptions) {}
 
   async send(row: OutboxRow): Promise<void> {
-    const url = typeof this.options.url === 'function' ? this.options.url(row) : this.options.url;
-    const headers = typeof this.options.headers === 'function' ? this.options.headers(row) : (this.options.headers ?? {});
-    const doFetch = this.options.fetchImpl ?? fetch;
-    const controller = new AbortController();
-    const timeoutMs = this.options.timeoutMs ?? 10_000;
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let provider = '[unavailable]';
+    let status: number | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let timedOut = false;
     try {
+      const url = typeof this.options.url === 'function' ? this.options.url(row) : this.options.url;
+      provider = publicProvider(url);
+      const headers = typeof this.options.headers === 'function' ? this.options.headers(row) : (this.options.headers ?? {});
+      const doFetch = this.options.fetchImpl ?? fetch;
+      const controller = new AbortController();
+      timer = setTimeout(() => { timedOut = true; controller.abort(); }, this.options.timeoutMs ?? 10_000);
       const response = await doFetch(url, {
         method: this.options.method ?? 'POST',
         headers: { 'content-type': 'application/json', ...headers },
         body: JSON.stringify(row.payload),
         signal: controller.signal,
       });
+      status = response.status;
       if (!response.ok) {
-        throw new Error(`Outbox dispatch to ${url} failed with HTTP ${response.status}`);
+        throw safeDispatchError(provider, status);
       }
+    } catch {
+      // Fetch and caller-provided option errors can contain the full URL or
+      // secret text. Never let their message reach an outcome or ledger.
+      if (timedOut) throw new Error('Outbox request aborted');
+      throw safeDispatchError(provider, status);
     } finally {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
     }
+  }
+
+  async sendEvent(row: OutboxRow): Promise<OutboxTransportEvidence> {
+    const evidence: OutboxTransportEvidence = {
+      protocol: 'HTTP', requestTransmission: 'constructed-not-confirmed',
+    };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let timedOut = false;
+    try {
+      const url = typeof this.options.url === 'function' ? this.options.url(row) : this.options.url;
+      evidence.provider = publicProvider(url);
+      const headers = typeof this.options.headers === 'function' ? this.options.headers(row) : (this.options.headers ?? {});
+      const requestBytes = Buffer.from(JSON.stringify(row.payload),'utf8');
+      const normalizedHeaders = Object.fromEntries(Object.entries(headers).map(([name,value]) => [name.toLowerCase(),value]));
+      const finalHeaders = { 'content-type': 'application/json', ...normalizedHeaders,
+        'x-outbox-event-id': row.id, 'x-outbox-idempotency-key': row.idempotencyKey };
+      evidence.requestBytes = requestBytes;
+      evidence.requestHeaders = evidenceHeaders(finalHeaders);
+      const doFetch = this.options.fetchImpl ?? fetch;
+      const controller = new AbortController();
+      timer = setTimeout(() => { timedOut = true; controller.abort(); },this.options.timeoutMs ?? 10_000);
+      const response = await doFetch(url, {
+        method: this.options.method ?? 'POST',
+        headers: finalHeaders,
+        body: requestBytes,
+        signal: controller.signal,
+      });
+      evidence.responseStatus = response.status;
+      evidence.requestTransmission = 'response-received';
+      evidence.responseBytes = Buffer.from(await response.arrayBuffer());
+      if (!response.ok) {
+        throw safeDispatchError(evidence.provider, response.status);
+      }
+      return evidence;
+    } catch {
+      const failure = timedOut ? new Error('Outbox request aborted')
+        : safeDispatchError(evidence.provider ?? '[unavailable]', evidence.responseStatus);
+      Object.assign(failure,{ evidence });
+      throw failure;
+    } finally { if (timer) clearTimeout(timer); }
   }
 }
