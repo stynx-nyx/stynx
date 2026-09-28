@@ -1,0 +1,66 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:83",
+      "issue": "O snapshot revisado é móvel. `outbox.service.ts` (14:21:07) e `types.ts` (14:20:37) foram alterados depois dos sensores Inspector (14:10:42). As mudanças são: `reconciliationRequired` nos catches de persistência pós-envio (420-424, 458-462), `retryableSqlCode` lendo `context.code`, e `lock_timeout` ≤250 ms substituindo `statement_timeout` em `recordDispatchFailure` (661). Nenhum sensor cobre esses ramos, e nenhum teste foi executado nesta revisão.",
+      "required_change": "Congelar os bytes antes do commit e rodar `ci:stynx` e `pnpm check:trace` sobre esses bytes exatos. O Inspector adiciona sensores PostgreSQL para: (a) falha de persistência após envio bem-sucedido e após falha de transporte, com `reconciliationRequired=true`, o lote continuando nas demais linhas e nenhum reenvio; (b) marker UPDATE detido por mais que `failurePersistenceDeadlineMs` em `recordDispatchFailure`, com outcome retentável e a linha seguinte do mesmo `dispatchDue` processada. Qualquer edição posterior a este snapshot invalida este PASS."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:315",
+      "issue": "Um `ackEvent` com `status='ERROR'` (ACK negativo) põe a projeção em ERROR com `next_attempt_at=null`. O claim usa `coalesce(next_attempt_at, e.created_at) <= clock_timestamp()`, então o evento fica elegível imediatamente e é reenviado a cada tick do scheduler, sem `OutboxBackoffPolicy`. O contrato diz 'Retry aplica OutboxBackoffPolicy' (ctg9-obx-contract.md:25). O `ack()` legado tem o mesmo comportamento, o que dá paridade mas não conformidade.",
+      "required_change": "Num ACK negativo, gravar `next_attempt_at = backoffPolicy.nextAttemptAt(attempts, now)`, ou um estado terminal de rejeição se o provedor sinalizar erro permanente. Adicionar um sensor: ACK negativo → sem claim antes do backoff → ACK positivo posterior conclui o evento."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:132",
+      "issue": "`appendManyInTransaction` executa `set_config('lock_timeout', lockTimeoutMs ?? 5000, true)` na Transaction do chamador. O valor vale até o commit e sobrescreve qualquer `lock_timeout` que o caller já tivesse, para mais ou para menos. Na composição CTG5, as escritas de auditoria e idempotência do envelope, feitas depois do callback, passam a falhar com 55P03 cru após 5 s, quando antes esperavam sem limite.",
+      "required_change": "Ler `current_setting('lock_timeout')` antes. Aplicar o limite só durante marker→advisory→clock e restaurar o valor anterior depois, ou usar `min(anterior, lockTimeoutMs)`. Adicionar ao sensor CTG5 o caso append seguido de auditoria/idempotência com um lock_timeout pré-existente."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:87",
+      "issue": "`ownerRetry` (claim, sent, failure e `ackEvent`) não aplica `lock_timeout` nem deadline. Durante um cutover que segura `SHARE ROW EXCLUSIVE` em `event_delivery`, `event_attempts` e `event_acks` enquanto copia, esses UPDATE/INSERT esperam pelo tempo total da cópia. Como nunca ocorre 55P03, o retry de `ownerRetry` também não é acionado. A ordem de locks está correta: delivery→attempts/acks segue a ordem do cutover, então não há 40P01. O problema é só o limite de espera exigido pelo contrato (ctg9-obx-contract.md:39).",
+      "required_change": "Aplicar `SET LOCAL lock_timeout` (`lockTimeoutMs`) dentro de `ownerRetry`, com backoff limitado já existente, e expor o esgotamento como outcome retentável no claim e como `reconciliationRequired` no pós-envio. Adicionar um sensor: cutover longo contra `dispatchEventsDue`/`ackEvent`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/event-stream-source.ts:32",
+      "issue": "A admissão por tenant é uma cadeia de promises. Quando o waiter B atinge o timeout de 250 ms, o `finally` chama `release()`, e o waiter C, que aguardava B, obtém conexão enquanto A ainda ocupa a sua. Sob carga, várias conexões do mesmo tenant ficam simultaneamente em `now()`, o que contraria 'Apenas um preflight now() por tenant/processo ocupa conexão' (ctg9-obx-contract.md:19). O timeout também lança um `Error` genérico em vez de um erro tipado de fonte.",
+      "required_change": "Liberar o sucessor só quando o holder real terminar: encadear sobre o `inFlight` do holder, e não sobre o do waiter que expirou. Ao expirar, lançar um erro tipado que o backend SSE traduza para 503 `SSE_SOURCE_UNAVAILABLE`. Adicionar um sensor: N preflights concorrentes com o clock retido → no máximo 1 conexão por tenant e 503 sem esgotar o pool."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:815",
+      "issue": "O `ack()` legado, com a linha já migrada em NEW, grava `event_acks` com `identity_verified=true`, `hmac_verified=true` e `raw_body` NULL. A porta não recebe bytes nem prova de HMAC, apenas confia na pré-condição documentada. O ledger afirma uma verificação que não tem evidência.",
+      "required_change": "Registrar a proveniência de forma explícita, com `raw_body` indisponível e uma marca de 'caller-asserted/legacy-api', ou `hmac_verified=false` mais uma coluna ou metadado que explique. Alternativamente, aceitar `rawBody` opcional no `OutboxAckInput` e persisti-lo."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:283",
+      "issue": "O ponto do ciclo 1 persiste. `recordUnboundAck` usa `txIndependent`. Chamado por `ackEvent` dentro de uma conexão ambiente retida, ele lança `IndependentTransactionConnectionError`, que substitui o `OutboxNotFoundError` e perde o diagnóstico da quarentena.",
+      "required_change": "Documentar que `ackEvent` deve ser chamado sem transação ambiente, ou usar uma conexão owner separada explicitamente. Adicionar um sensor para o caso."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/http-outbox-dispatcher.ts:72",
+      "issue": "O `provider` persiste a URL completa, que pode conter credenciais em userinfo ou na query. Os headers não públicos recebem SHA-256 sem sal, e um token de baixa entropia pode ser recuperado por dicionário. Os `requestBytes` ficam marcados como 'captured' mesmo quando `fetch` falha antes de transmitir, por exemplo em DNS ou recusa de conexão.",
+      "required_change": "Normalizar o provider para origem+path, sem userinfo/query ou com eles digeridos. Usar HMAC com chave de evidência, ou omitir o valor e registrar só o nome do header. Distinguir em `evidence_state` 'constructed-not-transmitted' de 'transmitted'."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:403",
+      "issue": "Depois de um envio confirmado, o lease é estendido uma única vez. Sem ACK, o evento é reclamado e reenviado a cada `eventLeaseMs`, sem limite. `SENT_UNRESOLVED` bloqueia os sucessores do agregado (NOT EXISTS, 346) e não existe porta pública de reconciliação owner. Isso é aceitável como at-least-once, mas precisa de documentação.",
+      "required_change": "Documentar no guia de migração a política de reenvio por lease e o procedimento owner de reconciliação de `SENT_UNRESOLVED`, ou expor uma porta tipada `reconcileUnresolved`. Opcionalmente, adicionar um estado AWAITING_ACK com política de reenvio própria."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg9-obx-contract.md:53",
+      "issue": "Estas lacunas da matriz não têm sensor PostgreSQL. São sensores necessários antes de qualquer conformidade ou publicação, e nenhuma é defeito de código: CTG5 callback com append seguido de auditoria/idempotência e commit; RR/SERIALIZABLE×RC; 40P01 com retry integral; append (não só enqueue) com C já detendo UPDATE; ACK via `ackEvent` válido, duplicado, tardio após ERROR e em corrida com o cutover sobre SENT em voo; trigger auditado em cada classe de tabela do corte (só messages é testada); preservação da RLS NULL-tenant de `audit.events`/`audit.log` após 0021; diagnósticos HASH_MISMATCH, FORK e TEMPORAL_MISORDER; `verify_current_epoch` com >1000 linhas legadas; SSE 55P03/503 sem esgotar o pool; vários eventos no mesmo ms acima de `batchSize`; selo OFS 25006.",
+      "required_change": "O Inspector adiciona esses sensores e o Architect rebinda `law/trace.json` antes de qualquer declaração MUST ou publicação. Isso não bloqueia o commit da fonte OBX."
+    }
+  ],
+  "summary": "Verdict: PASS. This releases only the commit of the OBX source, and only as the snapshot existed at 14:21:07, since the file was edited during the review. It declares neither MUST conformance nor publication.\n\nStatic reading only: no tests were run, Git was forbidden, and DETRAN was read-only.\n\n**The four cycle-1 blockers are resolved.**\n1. **Ordinal/lease fence.** Both the success and failure paths of `dispatchEventsDue` now require `attempts=$ordinal AND status='SENT'` on `event_delivery`, and each attempt updates only its own ledger row. A late attempt N keeps its ERROR in the ledger without reopening the reclaimed attempt N+1. The sensor `ctg9-delivery` 'fences a late failure' proves this in PostgreSQL.\n2. **Ledger evidence.** `event_attempts` gains `request_headers`, `response_status` and `evidence_state`, filled on both paths. `sendEvent` records the final headers, keeping public IDs in clear and secrets as SHA-256, plus status, exact bytes and SHA-256. A sensor checks success 202 and failure 503.\n3. **Typed 55P03.** `ack` and `retry` map 55P03 to `OutboxOwnershipContentionError` through `.catch(mapOwnershipError)`, with rollback and no side effects. A sensor proves the typed error, the post-cutover ACK in both ledgers, and the later `retry`.\n4. **Audit RLS.** 0021 no longer touches the `audit.events`/`audit.log` policies, so the published NULL-tenant RLS from 0008 is preserved. There is no dedicated sensor for this yet.\n\n**Other items checked.**\n- **Failure isolation after send.** The native path now returns `reconciliationRequired` instead of aborting the batch or resending. `recordDispatchFailure` uses `lock_timeout` ≤250 ms and a deadline instead of `statement_timeout`, so it no longer escapes as 57014.\n- **Lock order.** The native paths write delivery→attempts/acks, in the same order as the cutover. Legacy paths serialize through the marker. Static analysis finds no 40P01.\n- **Legacy history.** It carries `last_error`, `legacy_state` and the legacy ACK with `legacy_ack_time`, and marks it with `*_verified=false`. `received_at` copies the real legacy time, and no time is invented for attempts.\n- **Tenant, dedup, UUIDv7.** The tenant is canonicalized as `::uuid::text` and checked against the trusted context (`AuditChainKeyMismatchError`), using the same advisory key as `lock_chain`. Dedup by (tenant, key) raises a typed conflict on divergent content. UUIDv7 comes from the global sequence under the clock.\n- **SSE.** It reads the primary, uses an independent `now()` with `lock_timeout`, and translates legacy IDs through the map.\n- **CTG5 composition.** Append does not seal and records `audit_chain_key`.\n\n**Sensors.** The A/B/C queue, two schedulers with reclaim, the late legacy failure mirrored SENT_UNRESOLVED→ERROR, and ACK/retry against the cutover all have real PostgreSQL sensors.\n\n**Remaining nonblocking items.**\n- A negative ACK is reclaimed immediately, without backoff.\n- Append's `lock_timeout` leaks into the caller's transaction (CTG5).\n- `ownerRetry` has no `lock_timeout` behind the cutover.\n- SSE admission lets more than one connection per tenant through after a timeout.\n- The legacy ACK after cutover asserts HMAC without evidence.\n- `recordUnboundAck` under an ambient transaction loses the diagnostic.\n- Evidence hygiene: URL and header hashes, and bytes marked 'captured' even when not transmitted.\n- Periodic resend by lease, and `SENT_UNRESOLVED` has no reconciliation port.\n\nThe remaining matrix gaps are all sensors required before conformance or publication, not blocking code defects.\n\n**Conditions of this PASS.** Freeze the bytes, run `ci:stynx` and `check:trace`, and have the Inspector cover the post-14:10 branches."
+}

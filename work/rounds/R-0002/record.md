@@ -906,3 +906,36 @@ hash, lease, ACK, numeração, projeção, E6→CTG9 e path HTTP sob prefixo.
 O Engineer foi reencaminhado ao próprio write set; PostgreSQL/HTTP
 Inspector serão ampliados antes de reivindicar os quatro MUST. O review
 não atesta publicação.
+
+O Inspector SIG fechou os sensores do segundo FAIL: dois PDFs B-LT
+autossuficientes sem fetchers, DSS comprimido, revogação do signatário e
+TSA, ByteRange, alteração incremental, origem do verificador em
+manifesto/retirada e ataque A/B em que o CMS é assinado por A e contém
+certificado B. `02c568a0` registra somente os testes e fixtures; o pacote
+passou 180/180, typecheck e lint. O Engineer SIG informou fonte reparada
+em write set exclusivo, ainda sem commit; o delivery-review ciclo 3 foi
+solicitado pelo prompt 167. A cadeia PKI de três níveis segue como lacuna
+de sensor, sem substituir a prova de revogação dos certificados presentes.
+
+O Engineer OFS informou os oito bloqueios do ciclo 1 reparados na fonte
+e migration, com 117/117 testes unitários/wiring, 14/14 PostgreSQL,
+typecheck e lint. O Inspector foi despachado para as corridas e provas
+HTTP/PostgreSQL adicionais antes do review ciclo 2. Há uma possível
+lacuna de projeção do recibo de lote duplicado com chave pertencente a
+outro lote; será decidida por sensor/review, sem conformidade antecipada.
+
+O segundo delivery-review OBX pela ponte saiu 4 por JSON cercado; o mesmo
+prompt 166 foi enviado ao Opus com schema estruturado. O resultado está
+pendente; a resposta da ponte indicou dois bloqueios em persistência
+isolada por linha e classificação de 40P01 embrulhado pelo Database.
+O Engineer OBX atua na fonte sem Git enquanto se aguarda o veredito.
+
+O fallback estruturado do review OBX 2 retornou **PASS** para o snapshot
+observado em `reviews/ctg9-obx-delivery-review-2.json`: quatro bloqueios
+do ciclo 1 resolvidos, sem liberação de conformidade ou publicação. O
+source mudou durante a revisão; o reviewer exigiu sensores dos ramos
+novos de persistência. Suas notas não bloqueantes também apontam ACK
+negativo sem backoff, `lock_timeout` vazando na transação do chamador,
+wait owner sem prazo, admissão SSE que pode abrir conexões simultâneas,
+e lacunas da matriz antes de MUST. O Engineer e Inspector OBX receberam
+essas pendências; novo review será necessário após congelar a fonte.

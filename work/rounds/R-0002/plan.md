@@ -288,6 +288,8 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 - CTG9 OBX delivery-review ciclo 1: `plant-bug` — ponte relatou REVIEW por projeção sem cerca de tentativa/lease, ACK legado com instante fabricado e waits de marker/cutover sem prazo; fallback estruturado confirmou **REVIEW** e bloqueou também status/headers no ledger, ACK/retry 55P03 bruto e alteração indevida de RLS audit. Maestro retirou a mudança RLS de 0021; Engineer corrige fonte. Lacunas A/B/C, ACK tardio e prova de ledger exigem sensores Inspector antes da conformidade. Fonte OBX não liberada para commit até reparo e PASS.
 - CTG9 SIG delivery-review ciclo 2: `plant-bug` — ponte novamente devolveu FAIL cercado em Markdown; fallback estruturado confirmou **FAIL** e detectou certificado de signatário não vinculado a SignerInfo/primeiro ESSCertIDv2, fetchers sem contexto ainda obrigatórios, DSS lida por regex, atualização pós-assinatura arbitrária, manifesto/retirada com verifier não marcado e `verifyManifest` indisponível classificado como untrusted. `pdf-lib` foi provisionado em `72e0382b`; Engineer e Inspector repetem implementação/sensores em caminhos separados. Sem commit SIG até PASS.
 - CTG9 OFS delivery-review ciclo 1: `plant-bug` — ponte Opus retornou **FAIL** em JSON válido. Chave de item entre dispositivos pode produzir 23505 ou duplo efeito; hash divergente em recibo `received` passa; lease de 30s sem renovação/cerca completa; erro interno/40P01 gera ACK HTTP 201; consumo sobrescreve número aplicado e cancela cauda claimed-local; projeção bloqueada/expirada vira available; E6 escrito após 0002 não tem bridge lazy; path hardcoded quebra prefixo global. Engineer OFS repara fonte/migration; Inspector acrescentará sensores PostgreSQL. Sem commit/publicação OFS até PASS.
+- CTG9 OBX delivery-review ciclo 2: `plant-bug`/`sensor-error` — ponte falhou por formato, fallback estruturado deu PASS limitado ao snapshot observado enquanto a fonte mudava. Persistência pós-envio precisa de resultado por linha e reconhecimento de `SerializationFailureError.context.code=40P01`; deadline de retry não pode virar `statement_timeout`. Engineer repara fonte, Inspector prova ramos posteriores e a regressão de oráculo `lockTimeoutMs`. Notas do review sobre backoff de ACK negativo, vazamento de timeout na transação do chamador, wait owner sem prazo e admissão SSE simultânea serão fechadas antes da conformidade; repetir review após congelar bytes.
+- CTG9 SIG delivery-review ciclo 2: `sensor-error` residual — oráculos legados de fetchers contradiziam a prova B-LT embutida e manifesto positivo exigia dois signatários mas só anexava um. Inspector preservou negativos com OCSP/CRL/TSA embutidos, completou manifesto e acrescentou fixture A/B spoof; 180/180, typecheck e lint verdes no commit `02c568a0`. Engineer SIG reparou fonte; review ciclo 3 em andamento.
 
 - CTG5 envelope sensores pós-despacho: `sensor-error` — o unitário exigia o envelope completo em `HttpException.getResponse()` antes do filtro HTTP resolver `requestId`, e uma asserção antiga de proveniência ainda esperava `{code}`; o Inspector limitou o unitário a status/código interno e fortaleceu a prova HTTP do 403 completo, seguido de rebind Architect de trace.
 - CTG5 envelope Inspector tentativas 1–2: `reference-gap` — os sensores entregues provaram vermelho em PostgreSQL, mas ainda faltam caminhos 400/403/500/503, filtros, If-Match, unitários e controles duráveis exigidos pelo prompt 105; após a nova tentativa parcial, a conclusão dos sensores foi escalada ao maestro no papel Inspector antes de qualquer commit Inspector.
@@ -792,6 +794,15 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     E6 sem resolver. O Inspector OFS foi orientado a prover resolver nos
     sensores novos; contratos e prompts alterados aguardam review focal
     155 antes de Engineer. SIG e OBX seguem independentes em testes.
+45. CTG9 SIG: segundo FAIL de delivery foi reparado em fonte por Engineer
+    e em sensores pelo Inspector `02c568a0`; o pacote signature passou
+    180/180, typecheck e lint. Prompt 167 está em delivery-review ciclo 3;
+    fonte sem commit até PASS. OBX: fallback estruturado do review ciclo 2
+    deu PASS apenas ao snapshot móvel, e os ramos posteriores carecem de
+    sensor/review em bytes congelados. OFS: Engineer informou reparos para
+    os oito bloqueios do review 1 e gates focais verdes; Inspector ampliou
+    corridas antes do prompt 168/review 2. Nenhum CTG9 foi declarado
+    conforme, nenhum PR/RC/final novo foi aberto ou publicado.
 
 ## Reviews, PRs e publicações
 

@@ -20,6 +20,24 @@ The current STYNX `SignatureService.sign/verify`, `SignatureResult`, `VerifyResu
 
 **Delivery-review repair decision:** The default STYNX-owned source proof requires `originalDocument` to be the exact byte prefix of the signed incremental PDF, wholly covered by the selected ByteRange; unrelated PDF/source bytes cannot pass via a self-hash. The selected CMS must carry its embedded signature timestamp; B-LT requires DSS/VRI and embedded revocation evidence. The actual evidence determines PAdES level. Digital withdrawal uses a tenant-scoped consumer `resolvePartyCertificate(tenantId,signerPartyId)` port for the expected DER certificate SHA-256 and requires a separate signed canonical withdrawal declaration binding tenant/case/document/hash/party/evidenceRef; `evidenceBytes` equals that declaration's CMS, never a reused original-document CMS. A persisted manifest receives explicit source/snapshot bytes for each `appendVerifiedSigner` call. A non-prefix source conversion requires a separately reviewed consumer-owned binding. The stronger of request/profile minima governs all regulated uses.
 
+**Delivery-review ciclo 3 decision:** The selected CMS is strictly detached
+`id-data`; an encapsulated `eContent` is refused before PKI verification so
+the signed digest necessarily covers the selected PDF ByteRange. The
+post-signature DSS revision is accepted only when both the parsed object
+graph and the effective final xref table preserve every signed document
+object; free/repointed xref entries and shadow objects inside streams are
+refused. If final xref semantics cannot be established, verification fails
+closed. LTV OCSP/CRL evidence must be signed and issued at or after the
+trusted signature/TST instant, with a valid status for the actual
+certificate and issuer chain; a pre-signature good response cannot prove
+the later signing state. `SignatureManifestService` requires a tenant-scoped
+consumer `resolveSignerCertificate(tenantId,signerId)` port returning the
+expected DER SHA-256. Each required signer ID binds to that certificate;
+the same signed artifact or certificate cannot satisfy different IDs in
+one manifest. An unavailable resolver is `unavailable`, never a valid
+manifest. The selected signature dictionary, rather than text elsewhere
+in the PDF, supplies withdrawal and manifest hash bindings.
+
 DETRAN `backend/domains/ch/clinical-reports/src/pades-signing.http-adapter.ts` currently rejects: receipt content hash mismatch, malformed artifact hash, absent storage ID, wrong format, invalid or lower signature level, missing TSA time, revoked/unknown certificate validation status or source, missing configuration/token, HTTP failure and timeout. `backend/domains/ch/juntas/src/junta-signing.adapter.ts` extends this adapter, so the same negatives apply to juntas. STYNX maps source/document and certificate mismatches to `SignatureEvidenceMismatchError`/`SignatureTrustError`, unsupported or lower level to `SignatureLevelNotMetError`, absent configuration to `SignatureProviderConfigurationError`, unavailable capability to `SignatureCapabilityError`, provider HTTP/timeout to `SignatureProviderError`, and malformed response to `SignatureProviderResponseError`. Storage document ID and DETRAN's `PAdES-TSA` receipt format stay consumer fields; STYNX validates its own signed bytes and PAdES/TSA proof. The consumer maps those typed errors to its existing HTTP codes and preserves redaction of credentials.
 
 DETRAN `backend/domains/shared/src/documents/document-trust.ts` declares `verifyWithdrawalEvidence` input `(tenantId,caseId,documentId,contentHash,eligiblePartyIds)` and valid result `(tenantId,caseId,documentId,contentHash,signerPartyId,verificationMethod,evidenceRef,verifiedAt)`. STYNX's valid result retains all eight fields and adds verifiable hashes/proof reference. The consumer must supply actual document/evidence bytes and trusted attestation source; a matching JSON receipt alone is insufficient. Invalid typed outcomes remain `tampered`, `ineligible`, `untrusted`, `unavailable` and are mapped by DETRAN, rather than copying `RAIT.SIGNATURE_FAILED` into STYNX.
@@ -30,6 +48,10 @@ DETRAN `backend/domains/shared/src/documents/document-trust.ts` declares `verify
 2. A verified ADVANCED proof for QUALIFIED request is rejected; a qualified claim with untrusted ICP-Brasil chain, wrong policy OID, revoked/expired certificate, unsigned/stale TSA token or OCSP/CRL evidence is rejected. Check OCSP-only, CRL-only and fallback policies independently.
 3. Readiness with each of PAdES, TSA, LTA, OCSP and CRL absent fails exactly when required by the profile; simulated production backend fails even with all flags true. Production profile mounted without `SignatureHealthIntegration` or with an indicator absent from health registration fails application bootstrap; a registered indicator with a failed check makes `/readiness` down.
 4. Session and batch manifests with one altered tenant, document bytes/hash, aggregate/snapshot, manifest version, signer identity/order, PAdES artifact, certificate, TSA time, revocation reference or previous entry hash fail. Missing/duplicate signer, digest-only claim, epoch-zero time and canonicalization edge cases fail. A missing or mismatched `boundManifestSha256` from the CMS-signed content fails even if unsigned JSON echoes the expected hash. Real signed proof passes.
+   Prove that A's CMS/certificate cannot fill B's signer slot, whether
+   reused or newly signed, and that resolver unavailability is distinct
+   from an invalid signature. Reject attached CMS, effective xref free or
+   shadow entries, and pre-TST good OCSP/CRL followed by revocation.
 5. Withdrawal evidence referring to another tenant, case, document or content hash, another or ineligible party, absent `evidenceRef`, unsigned physical attestation, or unverifiable digital signature is refused. Valid physical and digital results preserve the complete consumer result set.
 
 ## Open integration questions for the maestro/consumer
