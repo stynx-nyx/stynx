@@ -235,6 +235,8 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 ### Runtime dependencies
 
 - `@stynx-nyx/contracts`: `workspace:*`
+- `@stynx-nyx/core`: `workspace:*`
+- `@stynx-nyx/data`: `workspace:*`
 - `@stynx-nyx/idempotency`: `workspace:*`
 - `@stynx-nyx/ratelimit`: `workspace:*`
 
