@@ -232,7 +232,7 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Triagem
 
-- CTG5 envelope Inspector tentativa 1: `reference-gap` — os primeiros sete sensores provaram vermelho, mas a entrega não cobriu os demais caminhos 400/403/500/503, bootstrap, filtros, If-Match, unitários e controles duráveis exigidos pelo prompt 105; uma nova tentativa completa precede o commit Inspector.
+- CTG5 envelope Inspector tentativas 1–2: `reference-gap` — os sensores entregues provaram vermelho em PostgreSQL, mas ainda faltam caminhos 400/403/500/503, filtros, If-Match, unitários e controles duráveis exigidos pelo prompt 105; após a nova tentativa parcial, a conclusão dos sensores foi escalada ao maestro no papel Inspector antes de qualquer commit Inspector.
 - RC2 delivery-review Opus ciclo 1: `policy-issue` — a política de anomalia e o publicador ainda fixavam `rc.1` apesar dos 44 manifestos em `rc.2`; Inspector acrescentou prova vermelha de igualdade e da transição `rc.1 → rc.2`, Architect vincula a decisão Owner existente à candidata exata, Engineer atualiza o candidato e o digest; repetir gates e review antes do PR.
 - RC2 `release:status`: `policy-issue` — o primeiro commit de versão tinha assunto fora do marcador canônico; o maestro reconstruiu a sequência local sem mudar a árvore e o gate passou com `chore(repo): version 1.5.0 release candidate`.
 - Delivery-review CTG-0004 ciclo 1: `plant-bug` — `timezoneFormatter` rejeitava zonas IANA canônicas com hífen ou dígito e `enqueue` enviava ator explícito malformado ao PostgreSQL; Inspector registrou testes vermelhos em `24ef81a7`, Engineer corrigiu em `6493be3d`, e Architect refez o vínculo de trace. As provas PostgreSQL negativas e os valores fixos do seed também foram ampliados.
