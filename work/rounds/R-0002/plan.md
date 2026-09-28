@@ -654,6 +654,17 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     no advisory. Não há PASS, contrato vinculante ou despacho CTG9.
     Aguardar decisão Owner de A1 §8.1 antes de investir em outro review
     condicional ou alterar código/ADRs desta frente.
+31. Preflight read-only do gate final no HEAD `6c32fd60`: branch limpa,
+    `origin/main` em `493fcd95`, apenas PR bot #273 aberto. A tabela §7 tem
+    U1–U15 e seus 42 caminhos de teste completos existem. `pnpm api:coverage`
+    passou com 135 paths/204 rotas, `pnpm api:contract` com 135 paths,
+    `pnpm sdk:route-smoke` com 204 operações, `pnpm check:rls-smoke` passou
+    e DEVAI doctor retornou `ok:true` com advisory conhecido do binding
+    pós-merge da worktree. `pnpm release:preview` ainda projeta `rc.4` pelos
+    cinco changesets porque o pre mode continua ativo; não houve escrita
+    de versão nem CI integral. A decisão Owner de A1 §8.1 é o bloqueio do
+    congelamento: incluir CTG9 antes da final ou adiar expressamente seus
+    dez MUST e publicar com a lacuna declarada.
 
 ## Reviews, PRs e publicações
 
