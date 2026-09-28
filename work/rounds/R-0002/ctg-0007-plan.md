@@ -71,3 +71,25 @@ branch cumulativa ocorre após CTG6; `packages/backend` e
 `packages-web/angular` exigem reconciliação serial de diffs. O prompt de
 continuação é `prompts/90-ctg7-interop-od-s15-02.md`; os prompts 80–89
 continuam como histórico de testes e reparos já executados.
+
+Checkpoint cumulativo de 2026-09-28: CTG7 foi rebaseada sobre CTG6
+`189b64bb` (Opus delivery-review ciclo 2 PASS) e herdou CTG5 final. Inspector
+adicionou em `cac2cbc4` um teste de fio real que usa
+`IdempotencyKeyInterceptor` Angular, requisição HTTP a Nest e PostgreSQL com
+RLS: corpo igual gera replay byte a byte, corpo divergente retorna 409, e
+handler, evento de auditoria e chave durável aparecem uma só vez. O teste
+passou 1/1; Architect vinculou trace em `b7c24a5f`, 448/448. Baselines
+44/44, `pnpm lint:tests`, README check, lint de dependências/ciclos e DEVAI
+strict passaram após o rebase. O próximo gate é delivery-review Opus do HEAD
+final após CTG6 concluir seu hardening menor; não há PR/RC de CTG7.
+
+Triagem `reference-gap`: o contrato CTG5 em
+`docs/framework/contracts/transactional-audit-idempotency-1.5.md` fixa o
+409 de mismatch como `{ code, context: { key } }`, e o teste HTTP segue esse
+contrato. `law/schemas/error-envelope.schema.json` descreve envelope canônico
+`{ statusCode, errorCode, message, requestId }` para todo 4xx/5xx. A regra
+genérica e o contrato específico são inconsistentes. Registrar no review
+final e no ledger de conformidade; reconciliar a autoridade antes de congelar
+1.5.0, sem enfraquecer o teste de 409 nem alterar o schema sem decisão
+constitucional. O requisito UPS-TXN-03 da especificação pede 409 com código
+configurável, sem fixar a forma do envelope.
