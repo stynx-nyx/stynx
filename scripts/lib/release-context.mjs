@@ -1,9 +1,14 @@
+import { isDeepStrictEqual } from 'node:util';
+
 const fullSha = /^[0-9a-f]{40}$/u;
 const versionCommitSubject = 'ci: version packages';
 const unifiedRebaselineVersion = '1.2.0';
 const releaseStatusCommand = 'node scripts/run-release-preparation.mjs --release-status';
 const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
 const rcVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-rc\.(0|[1-9]\d*)$/u;
+const finalVersionCommitSubject = 'chore(repo): version 1.5.0 final release';
+const finalVersion = '1.5.0';
+const finalBaseVersion = '1.5.0-rc.3';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -199,6 +204,83 @@ export function isVersionedPreModeCandidate({
   );
 }
 
+/** The consolidated final candidate has one exact marker and no pending release inputs. */
+export function isFinalVersionedCandidate({
+  baseRootVersion,
+  basePreState,
+  markerCommits,
+  markerParentPreState,
+  markerChanges,
+  followUpChanges,
+  candidateRootVersion,
+  packageStates,
+  changesetIdsOnDisk,
+  preState,
+}) {
+  if (
+    baseRootVersion !== finalBaseVersion ||
+    candidateRootVersion !== finalVersion ||
+    preState !== null ||
+    basePreState?.mode !== 'pre' ||
+    basePreState.tag !== 'rc' ||
+    !Array.isArray(basePreState.changesets) ||
+    !isDeepStrictEqual(markerParentPreState, basePreState) ||
+    !Array.isArray(markerCommits) ||
+    !Array.isArray(markerChanges) ||
+    !Array.isArray(followUpChanges) ||
+    !Array.isArray(packageStates) ||
+    packageStates.length !== 44 ||
+    !Array.isArray(changesetIdsOnDisk) ||
+    changesetIdsOnDisk.length !== 0
+  ) return false;
+
+  const markers = markerCommits.filter(({ subject }) => subject === finalVersionCommitSubject);
+  if (
+    markers.length !== 1 ||
+    markerCommits.indexOf(markers[0]) === 0 ||
+    markerCommits.some(({ sha, subject }) => !fullSha.test(sha) || typeof subject !== 'string') ||
+    new Set(markerCommits.map(({ sha }) => sha)).size !== markerCommits.length
+  ) return false;
+
+  const names = new Set(packageStates.map(({ name }) => name));
+  const manifests = new Set(packageStates.map(({ manifestPath }) => manifestPath));
+  if (names.size !== 44 || manifests.size !== 44 || !packageStates.every((state) =>
+    /^@stynx-nyx\/[a-z0-9-]+$/u.test(state.name) &&
+    /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(state.manifestPath) &&
+    state.baseVersion === finalBaseVersion &&
+    state.candidateVersion === finalVersion
+  )) return false;
+
+  const expected = new Map([['.changeset/pre.json', 'D']]);
+  for (const id of basePreState.changesets) {
+    if (typeof id !== 'string' || !/^[a-z0-9-]+$/u.test(id)) return false;
+    expected.set(`.changeset/${id}.md`, 'D');
+  }
+  if (expected.size !== basePreState.changesets.length + 1) return false;
+  // CTG changesets are added as files after the base; the pre state itself is frozen.
+  for (const { path, status } of markerChanges) {
+    if (status === 'D' && isChangeset(path) && path !== '.changeset/README.md') {
+      expected.set(path, 'D');
+    }
+  }
+  for (const manifestPath of manifests) {
+    expected.set(manifestPath, 'M');
+    expected.set(manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'), 'M');
+  }
+  for (const path of allowedVersionSupportPaths) expected.set(path, 'M');
+  if (
+    markerChanges.length !== expected.size ||
+    markerChanges.some(({ path, status }) => expected.get(path) !== status) ||
+    new Set(markerChanges.map(({ path }) => path)).size !== markerChanges.length
+  ) return false;
+
+  return followUpChanges.every(({ path, status }) =>
+    (status === 'A' || status === 'M') &&
+    (/^work\/rounds\/R-0002\/.+/u.test(path) ||
+      (status === 'M' && path === 'law/policy/forbidden-action-authorizations.json')),
+  );
+}
+
 export function classifyReleaseContext({
   baseCommit,
   headCommit,
@@ -247,6 +329,7 @@ export function classifyReleaseContext({
 export const releaseContextConstants = Object.freeze({
   releaseStatusCommand,
   versionCommitSubject,
+  finalVersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',
