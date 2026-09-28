@@ -3,7 +3,7 @@ import {
   existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync,
   realpathSync, renameSync, rmSync, statSync, writeFileSync,
 } from 'node:fs';
-import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 
 const namePattern = /^[A-Z][A-Za-z0-9]*$/;
 const identifierPattern = /^[a-z][a-z0-9_]*$/;
@@ -141,7 +141,7 @@ function validateBlueprint(raw: unknown): Blueprint {
       if (field.default !== undefined) {
         if (type === 'uuid' && field.default === 'gen_random_uuid()') defaultValue = 'gen_random_uuid()';
         else if (type === 'timestamptz' && field.default === 'now()') defaultValue = 'now()';
-        else if (type === 'integer' && typeof field.default === 'number' && Number.isSafeInteger(field.default)) defaultValue = field.default;
+        else if (type === 'integer' && typeof field.default === 'number' && Number.isInteger(field.default) && field.default >= -2147483648 && field.default <= 2147483647) defaultValue = field.default;
         else if (type === 'boolean' && typeof field.default === 'boolean') defaultValue = field.default;
         else fail(`${fieldPath}/default`, 'unsupported default');
       }
@@ -168,6 +168,7 @@ function validateBlueprint(raw: unknown): Blueprint {
         if (new Set(columns).size !== columns.length) fail(indexPath, 'duplicate index column');
         const unique = index.unique === undefined ? false : boolean(index.unique, `${indexPath}/unique`);
         if (columns.length === 1 && columns[0] === 'id') fail(indexPath, 'redundant primary key index');
+        if (columns.length === 1 && columns[0] === 'tenant_id' && unique) fail(indexPath, 'conflicts with mandatory tenant index');
         const key = columns.join(',');
         if (indexKeys.has(key)) fail(indexPath, 'duplicate index');
         indexKeys.add(key);
@@ -183,6 +184,7 @@ function validateBlueprint(raw: unknown): Blueprint {
     keys(api, ['basePath', 'resources'], [], '/api');
     basePath = routePath(api.basePath, '/api/basePath');
     const routeKeys = new Set<string>();
+    const routes: { method: string; segments: string[] }[] = [];
     const permissionKeys = new Set<string>();
     array(api.resources, '/api/resources', 1, 32).forEach((value, i) => {
       const path = `/api/resources/${i}`;
@@ -203,6 +205,16 @@ function validateBlueprint(raw: unknown): Blueprint {
         permissionKeys.add(permissionKey);
         return op;
       });
+      for (const op of ops) {
+        const method = op === 'list' || op === 'get' ? 'GET' : op === 'create' ? 'POST' : op === 'update' ? 'PATCH' : 'DELETE';
+        const route = op === 'list' || op === 'create' ? fullPath : joinedPath(fullPath, '/:id');
+        const segments = route.split('/').filter(Boolean);
+        if (routes.some((existing) => existing.method === method && existing.segments.length === segments.length &&
+          existing.segments.every((segment, index) => segment === segments[index] || segment === ':id' || segments[index] === ':id'))) {
+          fail(`${path}/path`, 'route collision');
+        }
+        routes.push({ method, segments });
+      }
       resources.push({ entity, path: fullPath, operations: ops });
     });
   }
@@ -361,7 +373,7 @@ function renderController(blueprint: Blueprint, header: string): string {
   lines.push(`    if (spec.type === 'uuid' && (typeof value !== 'string' || !uuidPattern.test(value))) throw new BadRequestException('Invalid UUID field: ' + key);`);
   lines.push(`    if (spec.type === 'text' && typeof value !== 'string') throw new BadRequestException('Invalid text field: ' + key);`);
   lines.push(`    if (spec.type.startsWith('varchar(') && (typeof value !== 'string' || value.length > Number(spec.type.slice(8, -1)))) throw new BadRequestException('Invalid varchar field: ' + key);`);
-  lines.push(`    if (spec.type === 'integer' && (typeof value !== 'number' || !Number.isSafeInteger(value))) throw new BadRequestException('Invalid integer field: ' + key);`);
+  lines.push(`    if (spec.type === 'integer' && (typeof value !== 'number' || !Number.isInteger(value) || value < -2147483648 || value > 2147483647)) throw new BadRequestException('Invalid integer field: ' + key);`);
   lines.push(`    if (spec.type === 'boolean' && typeof value !== 'boolean') throw new BadRequestException('Invalid boolean field: ' + key);`);
   lines.push(`    if (spec.type === 'timestamptz' && (typeof value !== 'string' || Number.isNaN(Date.parse(value)))) throw new BadRequestException('Invalid timestamp field: ' + key);`);
   lines.push(`    if (value === null || value === undefined) throw new BadRequestException('Invalid field: ' + key);`);
@@ -388,7 +400,7 @@ function renderController(blueprint: Blueprint, header: string): string {
     for (const op of resource.operations) {
       const key = `${blueprint.namespace}.${resource.entity.table}.${op}`;
       const method = `${op}${resource.entity.name}`;
-      const path = op === 'list' || op === 'create' ? resource.path : `${resource.path}/:id`;
+      const path = op === 'list' || op === 'create' ? resource.path : joinedPath(resource.path, '/:id');
       const decorator = op === 'list' || op === 'get' ? 'Get' : op === 'create' ? 'Post' : op === 'update' ? 'Patch' : 'Delete';
       lines.push(`  @${decorator}('${path}')`, `  @Permission('${key}')`);
       if (op === 'list') lines.push(`  async ${method}(): Promise<${resource.entity.name}Record[]> { return this.repository.${method}(); }`);
@@ -432,19 +444,13 @@ function listFiles(root: string): string[] {
 function ensureNoSymlinkBelowParent(out: string): void {
   const parent = dirname(out);
   if (!statSync(parent).isDirectory()) throw new Error('--out parent must be a directory');
-  // Resolve the selected existing parent once. A symlink in an ancestor is
-  // harmless when it stays inside that ancestor's containing directory.
   realpathSync(parent);
-  const parts = parent.split(sep).filter(Boolean);
-  let current = isAbsolute(parent) ? sep : '';
-  for (let i = 0; i < parts.length; i += 1) {
-    current = join(current, parts[i]!);
-    if (lstatSync(current).isSymbolicLink()) {
-      const containingDir = realpathSync(dirname(current));
-      const target = realpathSync(current);
-      if (target !== containingDir && !target.startsWith(containingDir.endsWith(sep) ? containingDir : `${containingDir}${sep}`)) {
-        throw new Error('--out parent contains a symlink below its resolved ancestor');
-      }
+  // An ancestor may resolve anywhere; only an escaping link at the selected parent is unsafe.
+  if (lstatSync(parent).isSymbolicLink()) {
+    const containingDir = realpathSync(dirname(parent));
+    const target = realpathSync(parent);
+    if (target !== containingDir && !target.startsWith(containingDir.endsWith(sep) ? containingDir : `${containingDir}${sep}`)) {
+      throw new Error('--out parent contains a symlink below its resolved ancestor');
     }
   }
 }
