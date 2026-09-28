@@ -11,6 +11,7 @@ export default createVitestConfig({
     '@stynx-nyx/angular': resolve(__dirname, '../angular/src/index.ts'),
     '@stynx-nyx/angular-i18n': resolve(__dirname, '../angular-i18n/src/index.ts'),
     '@stynx-nyx/angular-tenancy': resolve(__dirname, '../angular-tenancy/src/index.ts'),
+    '@stynx-nyx/angular-auth/testing': resolve(__dirname, 'testing/index.ts'),
     '@stynx-nyx/angular-auth': resolve(__dirname, 'src/index.ts'),
     rxjs: resolve(__dirname, 'node_modules/rxjs/dist/cjs/index.js'),
     'rxjs/operators': resolve(__dirname, 'node_modules/rxjs/dist/cjs/operators/index.js'),
