@@ -24,7 +24,9 @@ Implemente UPS-OFS-01…04 até os sensores passarem:
   mantém o decorator E6 no modo legado e a precedência nova no CTG9.
   Selecione com `options.policyResolver != null`, preserve os quatro pares
   method/path/permission e `mountControllers:false`, falhe tipadamente para
-  portas CTG9 sem resolver ou store não durável com resolver. Preserve
+  portas CTG9 sem resolver ou store não durável com resolver usando
+  `OfflineSyncConfigurationError`/`OFFLINE_SYNC_CONFIGURATION_ERROR`.
+  Preserve
   `OfflineSyncStore` e tipos E6; use `OfflineSyncDurableStore`/tipos CTG9.
 - Numeração: reserva concorrente sem sobreposição, cancelamento só da cauda
   não usada, bloqueio/fechamento/reconciliação/liquidação/consulta de cada
@@ -48,7 +50,12 @@ Implemente UPS-OFS-01…04 até os sensores passarem:
 - Migration 0002 aditiva/backfill sem perder ID/status/hash, com constraint
   global antiga removida só após índice parcial E6 por hash e nova chave
   CTG9; `identity_mode` é server-owned e o E6 `ON CONFLICT` mira o índice
-  parcial. Prove E6 no banco 0001→0002, inclusive segundo cancel 409.
+  parcial; o lookup E6 filtra esse modo e CTG9 escreve seu modo
+  explicitamente. 0002 é pré-requisito para 1.5.0 em ambos os modos:
+  0001 isolado falha no primeiro acesso PostgreSQL com
+  `OfflineSyncUpgradeRequiredError`/`OFFLINE_SYNC_UPGRADE_REQUIRED` (503),
+  sem SQLSTATE 42703 bruto. Prove E6 no banco 0001→0002, inclusive
+  segundo cancel 409. Preserve asserções E6 existentes; setup usa 0002.
 
 Rode sensores focais PostgreSQL/HTTP/RLS, testes existentes afetados, lint
 e typecheck offline-sync. Não altere testes para obter verde. Reporte

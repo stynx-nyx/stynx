@@ -15,7 +15,9 @@ Vitest int coletá-los. Não edite o helper compartilhado
 Configure a deterministic `OfflineSyncPolicyResolver` for every CTG9
 durable parity sensor. Without it, E6 behavior remains: hash dedup across
 different keys, second cancel 409, default TTL and 100-item maximum.
-Keep all existing E6 tests intact and add a no-resolver compatibility
+Keep all existing E6 assertions intact; update only the PostgreSQL test
+harness setup to apply 0001→0002 before running 1.5.0 E6 code. Add a
+0001-only negative asserting typed `OFFLINE_SYNC_UPGRADE_REQUIRED` (HTTP 503) before queue DML and no raw 42703. Add a no-resolver compatibility
 sensor. Never use body input to select a mode.
 Prove both `forRoot` bootstraps, including E6 controller metadata and
 `@Idempotent`, CTG9 controller metadata, the four route method/path/
@@ -23,7 +25,12 @@ permission pairs, and CTG9 service mode with `mountControllers:false`.
 `policyResolver: undefined` remains E6. Run the E6 store and service on an
 actual 0001→0002 PostgreSQL schema: cross-key hash dedup, queue-ID reuse
 409 and repeated cancel 409 must survive. Check CTG9-only ports without a
-resolver and a resolver with an E6-only custom store fail at bootstrap.
+resolver and a resolver with an E6-only custom store fail at bootstrap with
+`OfflineSyncConfigurationError`/`OFFLINE_SYNC_CONFIGURATION_ERROR` and the
+invalid option name.
+Check a body with `batchSequence` leaves E6 active and transport-key reuse
+with a changed body still yields the published 422. Assert that the
+legacy store bridge never calls `clearReservation`.
 Exercise `legacyItemIdentityResolver` across batches, and the read-only
 `legacyIdempotencyStore` bridge with an unexpired completed entry plus
 pending/expired/mismatched negatives. No unkeyed item applies a domain effect.

@@ -780,3 +780,11 @@ validação de portas no bootstrap. Os sensores Inspector foram ampliados
 para E6 sobre 0002, metadata HTTP em ambos os modos, identidade legada
 entre lotes e ponte de `IdempotencyStore` somente leitura. Review delta
 Opus ciclo 2 está pendente; nada aqui atesta código CTG9 implementado.
+
+Review focal ciclo 2: a ponte falhou ao formatar o JSON cercado de Markdown
+e prosa; `reviews/ctg9-ofs-mode-delta-review-2.bridge-failure.md` documenta
+o fallback `claude -p` estruturado, que retornou REVIEW. O review detectou
+ordem de migration na própria suíte e INSERT CTG9 sem coluna de modo; o
+Architect fixou 0002 como pré-requisito para ambos os modos e a coluna
+física `identity_mode`, enquanto o Inspector atualiza somente setup E6 e
+sensores novos. Um novo review após congelar a árvore é obrigatório.

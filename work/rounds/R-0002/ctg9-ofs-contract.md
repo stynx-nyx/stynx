@@ -25,6 +25,8 @@ identity resolver, legacy idempotency store, handoff or
 concurrency detector without the resolver fails at bootstrap with a typed
 configuration error; no port is silently ignored. With
 `mountControllers:false`, the service still uses the selected mode.
+The typed bootstrap error is `OfflineSyncConfigurationError` with
+`code: OFFLINE_SYNC_CONFIGURATION_ERROR` and the invalid option name.
 
 The existing four routes, their methods, permissions, HTTP statuses, and public bodies remain compatible. The extended controller adds tenant-scoped block, close, reconcile, settle, consumption, and receipt reads without changing those routes. The host may continue to mount its TEAT/BOAT routes over the service; their before/after HTTP characterization is mandatory. The batch endpoint must reject an enclosing CTG5 `@TransactionalCommand` before any batch or item write. At bootstrap, `StynxOfflineSyncModule.forRoot` mounts the E6 controller with its `@Idempotent('Idempotency-Key')` metadata when no policy resolver is configured, or the CTG9 controller with the same method/path/permission and an OFS-specific in-service transport-key ledger when the resolver is configured. The route never changes mode per request. The controller still requires a nonblank `Idempotency-Key` header and returns the published 400 when absent; the service-only API receives that key explicitly. After authentication, context and header validation, the service checks `(tenant,device,deviceBatchId)`, sequence and declared item-key set **before** transport-key fingerprint comparison. Batch context includes org unit, business agent, every item ID, key, hash, entity type and local entity ID, not merely the key set. A closed matching batch replays its persisted original HTTP status and exact body bytes, even if the transport key differs. Batch-context or declared-set divergence is 409; a sequence gap is 422. Only when no same-batch replay/mismatch applies does reuse of a transport key with a different method/path/body fingerprint return the published 422 `IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY`. The transport namespace remains the published tenant/user/route/key scope, and fingerprinting uses the current `IdempotencyInterceptor` method, concrete path and stable body stringification so a CTG9 upgrade does not recategorize an existing key. An equal transport fingerprint for a different batch identity cannot authorize a new effect: batch identity and item keys still govern. Persist the transport key, fingerprint, response status and response body bytes with the batch receipt. Other routes retain their published idempotency decorator behavior. HTTP interceptors outside this OFS route must not short-circuit before these domain checks; an adopter that mounts the batch service under such an interceptor is unsupported and fails at bootstrap or before a write.
 
@@ -310,13 +312,23 @@ Before creating or reopening a batch receipt, the service calls `Database.assert
 
 Ship an additive, forward-only `packages/offline-sync/migrations/0002_*.sql` after `0001_offline_sync.sql`. Preserve all four existing tables and rows; backfill batch and receipt identity from legacy queue rows without claiming a completed domain effect. Because 0001 has queue rows but no batch header or original HTTP response, a backfilled legacy batch is marked `legacy_closed_unverified`: immutable as to already stored item receipts, **not** eligible for fabricated HTTP replay. After batch identity, sequence and declared-set validation, but before an unverified conflict or any write, an OFS compatibility bridge performs a read-only lookup through the existing `IdempotencyStore.lookup(IdempotencyDecisionContext)` using the published tenant/user/route/key composite key and method/path/body fingerprint. Only an unexpired `completed` record with the same fingerprint qualifies. The bridge returns its recorded status, body and replayable headers through the same response serialization path as the published interceptor, plus configured replay-key/replay-marker headers; it must prove byte equivalence to that interceptor replay in the HTTP sensor. A pending, expired, mismatched or absent record cannot authorize an effect or be promoted. If the legacy store record has no byte-equivalent body representation, fail closed with an explicit conflict rather than claim exact replay. The bridge does not call `reserve` or `persistResponse` on the legacy store; the new batch ledger alone owns new writes. An adopter may instead attach independently verified archived ACK bytes/headers and promote to closed. New batches store original status/body bytes and replayable headers on close and replay exactly. Replace the global `(tenant_id,payload_hash)` constraint only after an E6-only partial unique index and the CTG9 key path are ready; never remove E6 hash deduplication on an upgraded schema. Add batch, receipt, numbering-consumption, and conflict evidence structures with tenant-leading keys, grants, `ENABLE` and `FORCE ROW LEVEL SECURITY`, and app/reader permissions. Keep nullable legacy sequence/key semantics explicit. State the upgrade order and rollback boundary; do not silently rewrite old hashes, statuses, or consumer-visible IDs. The Engineer owns migration, canonical DDL if applicable, seed, and `test/db`; the Architect rebinds trace/API baselines after sensors and implementation.
 
-The 0002 schema serves both modes concurrently. Add a server-owned queue
-`identity_mode` (or equivalent), backfill/default `e6`, create unique partial
+The 0002 schema is a prerequisite for **all** 1.5.0 offline-sync code, E6
+and CTG9. A 1.5.0 Postgres store opened against 0001 alone fails at its
+first DB operation, before queue DML, with `OfflineSyncUpgradeRequiredError`
+(`code: OFFLINE_SYNC_UPGRADE_REQUIRED`, HTTP 503), never raw PostgreSQL 42703. The in-memory store needs no schema check. The existing E6 PostgreSQL test harness applies
+0001→0002 while preserving every published assertion. The 0002 schema
+serves both modes concurrently. Add server-owned queue
+`identity_mode text NOT NULL DEFAULT 'e6' CHECK (identity_mode IN ('e6','ctg9'))`,
+backfill old rows as `e6`, retain the existing global unique
+`(tenant_id,idempotency_key)`, and create unique partial
 index `(tenant_id,payload_hash) WHERE identity_mode='e6'` before dropping
 the global hash uniqueness, then target that index from the E6 insert with
 `ON CONFLICT (tenant_id,payload_hash) WHERE identity_mode='e6' DO NOTHING`.
-CTG9 inserts select the other mode and use key uniqueness. Request bodies
-cannot select `identity_mode`. An unchanged E6 module on a 0001→0002
+The E6 precheck and raced read filter `identity_mode='e6'`, so CTG9 rows
+with the same hash cannot be mistaken for E6 duplicates. CTG9 inserts
+write their distinct `identity_mode` explicitly and use key uniqueness;
+a schema constraint or sensor prevents CTG9 rows from silently defaulting
+to E6. Request bodies cannot select `identity_mode`. An unchanged E6 module on a 0001→0002
 database must continue hash deduplication across different keys, queue-ID
 reuse 409 and second-cancel 409. The Inspector upgrade sensor proves this
 against the actual 0002 schema rather than 0001 alone.

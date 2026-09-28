@@ -26,10 +26,16 @@ different item key, repeated cancellation 409, configured/default 24 h TTL
 and 100-item maximum. CTG9 mode instead uses tenant+item key with hash
 integrity, durable receipts and idempotent repetition of completed cancel.
 The host cannot toggle mode with a request body.
-The 0002 migration supports both modes at once: E6 queue rows retain
+The 0002 migration is required before any 1.5.0 offline-sync code runs,
+including E6; a 0001-only schema causes `OFFLINE_SYNC_UPGRADE_REQUIRED`
+at the first Postgres store operation (HTTP 503),
+never raw 42703. It supports both modes at once: E6 queue rows retain
 hash deduplication through an E6-only partial unique index and their
-updated `ON CONFLICT` target, while CTG9 rows use key identity. The
-published `OfflineSyncStore` and E6 input/result types remain assignable;
+updated `ON CONFLICT` target and E6-only hash lookup, while CTG9 rows
+explicitly select key identity. The queue column is
+`identity_mode text NOT NULL DEFAULT 'e6' CHECK (identity_mode IN
+('e6','ctg9'))`; the global tenant/key uniqueness remains. The published
+`OfflineSyncStore` and E6 input/result types remain assignable;
 the separate `OfflineSyncDurableStore` and CTG9 input/receipt types are
 required only with the resolver. A CTG9-only port without the resolver, or
 a resolver with a store missing durable operations, fails at bootstrap.
@@ -138,7 +144,7 @@ existing warning/no-detection policy. A suspicion marks both affected acts. Conf
 uses the allowed actions for that conflict kind. Legacy `device-wins`, `server-wins`, and
 `manual-review` remain available for existing callers but are not aliases for TEAT action names.
 
-Apply additive `migrations/0002_*.sql` only after 0001 and before enabling CTG9 code. Upgrade
+Apply additive `migrations/0002_*.sql` only after 0001 and before running 1.5.0 offline-sync code in either mode. Upgrade
 must preserve old queue rows and IDs, backfill legacy batch/receipt identity without pretending a
 domain effect occurred, install the new item-key uniqueness and E6 partial hash index before
 dropping global hash uniqueness, and add tenant-leading FORCE RLS, grants and indexes to new tables. It must not silently rewrite

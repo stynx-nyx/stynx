@@ -25,8 +25,13 @@ default and the 100-item maximum. In CTG9 mode, item identity is the key
 with hash integrity and a repeated terminal cancellation returns its prior
 result. The two modes use the same public routes but the module binds the E6
 or CTG9 batch controller once at bootstrap; no request body can select mode.
-The 0002 schema preserves E6 hash deduplication with an E6-only partial
-unique index and updated insert conflict target. CTG9 rows use key identity.
+The 0002 schema is required before running any 1.5.0 offline-sync code,
+even E6, with a typed upgrade-required error on 0001 alone. It preserves
+E6 hash deduplication with an E6-only partial unique index, filtered
+lookup and updated insert conflict target. The queue adds server-owned
+`identity_mode text NOT NULL DEFAULT 'e6' CHECK (identity_mode IN
+('e6','ctg9'))` while retaining global tenant/key uniqueness. CTG9 rows
+explicitly use key identity.
 The published `OfflineSyncStore` stays unchanged; CTG9 requires a separate
 durable store interface and distinct input/receipt types. Missing durable
 operations or CTG9-only ports without a policy resolver fail at bootstrap.
