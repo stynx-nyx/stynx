@@ -459,3 +459,24 @@ são: contrato Architect `29dfa65f`, binding PASS de prompts `379e933c`,
 sensores Inspector `380f302f2da0a3996f814d33dfc6597ac4730e57` e rebind
 Architect `45a46c07fe921b47c7f36929fc885684740b5e43`. O HEAD de
 checkpoint antes do despacho é o commit Architect que registra estes SHAs.
+
+## CTG5 — implementação e rebind de API (2026-09-28)
+
+O Engineer implementou a conformidade do envelope nos arquivos CTG5 e o
+maestro commitou essa entrega como `62dfb56115a124ea92dbb69d64c71b659c4febaf`.
+O ajuste mantém os corpos legados e os códigos do catálogo, e resolve o
+`requestId` pela ordem do contrato antes de devolver rejeições CTG5.
+Após a correção Inspector dos dois sensores e novo rebind Architect de trace,
+os 11 arquivos focais passaram (93/93 testes), assim como toda a suíte
+backend (499/499), lint, typecheck, RLS negativo e smoke, trace (451/451),
+READMEs dos 44 pacotes e DEVAI strict sem findings. A execução de
+`pnpm test:int` com PostgreSQL real passou (52/52 tarefas; log local
+`/private/tmp/stynx-ctg5-envelope-test-int.log`).
+
+O Architect executou `pnpm api:baselines:write` após confirmar que o único
+delta público é o tipo da dependência opcional `RequestContext` no construtor
+do filtro CTG5. O gerador mudou três digests da mesma declaração em
+`docs/framework/contracts/public-api-baselines.json`; `pnpm api:baselines`
+confirmou 44/44 pacotes. Este rebind e o registro compõem o próximo commit
+Architect. Ainda faltam delivery-review PASS e importação cumulativa;
+nenhum PR, RC ou CI integral foi iniciado nesta correção.
