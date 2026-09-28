@@ -231,6 +231,15 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    linhas legadas com `FOR UPDATE`. Marca cada linha migrada com o evento
    correspondente para que o dispatcher legado exclua apenas as marcadas
    e o ACK legado de SENT em voo atualize a projeção na mesma transação.
+   Append novo toma o marker de posse `FOR SHARE` antes de advisory/clock;
+   cutover toma marker `FOR UPDATE`, depois linhas legadas e clocks, sem
+   audit writer/trigger na transação de corte. Assim, append→enqueue e
+   domínio auditado→enqueue concorrentes com o corte não formam o ciclo
+   marker/clock/advisory; timeout/deadlock restante reverte toda a operação
+   e exige retry idempotente. Eventos nativos do novo log são despacháveis
+   em LEGACY e NEW; somente projeções migradas aguardam marker NEW.
+   Falha de envio legado que retorna após o corte espelha tentativa e
+   ERROR/backoff novos quando ainda não houve ACK terminal.
    Sem cutover, o dispatcher e ACK legados continuam funcionais. Enqueue
    pós-cutover e tabelas customizadas têm política explícita no contrato.
    Na migração opt-in, os fatos legados expostos ao SSE recebem **novos**
@@ -285,9 +294,13 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    `(tenant,device_id,batch_sequence)`, conjunto de chaves declarado, estado
    aberto/fechado e recibo durável; concorrência serializada, retomada após
    crash parcial e replay de lote fechado devolvendo o recibo. Lote legado
-   sem sequência continua aceito; item sem chave usa a chave sintética
-   existente, fica `received` com `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED` e não
-   aplica domínio. Nova porta de applier opera **uma transação top-level
+   sem sequência continua aceito; item sem chave usa chave sintética
+   `stynx:legacy:v1:<sha256(tenantId || 0x00 || deviceId || 0x00 ||
+deviceBatchId || 0x00 || queueItemId)>`, com prefixo reservado a STYNX
+   e proibido a chaves fornecidas pelo cliente. Fica `received` com código
+   neutro `OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED` e não aplica domínio; o
+   adapter TEAT mapeia para `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED`.
+   Nova porta de applier opera **uma transação top-level
    independente por item** com `Database.txIndependent`/`Transaction` para
    efeito, consumo, recibo e evento. `Database.tx` hoje usa SAVEPOINT quando
    encontra `TX_CONTEXT_KEY`. A API pública de data para afirmar ausência

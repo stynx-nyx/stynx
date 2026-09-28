@@ -32,7 +32,10 @@ identity, sequence and declared item-key set first: a matching closed batch repl
 status and exact body bytes, changed context/set returns 409, and sequence gap returns 422. For a
 request not resolved as that same batch, reuse of a transport key with a changed method/path/body
 fingerprint returns the published 422 `IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY`. Persist that key,
-fingerprint, status and response bytes with the batch receipt. An outer interceptor that could
+fingerprint, status, exact body bytes and replayable response headers with the batch receipt.
+On either domain or transport replay, restore those headers and set the configured replay-key
+(default `X-Idempotency-Key`) to the incoming key and replay-marker (default
+`Idempotency-Replayed`) to `true`, matching the published interceptor. An outer interceptor that could
 short-circuit these checks is unsupported and fails at bootstrap or before writing.
 
 ## Invariants
@@ -83,7 +86,9 @@ the declared item-key set, open/closed state and original receipts. A closed rep
 context returns the same receipt with no second effect. Changed context or a repeated sequence
 under a new batch ID returns 409; a sequence gap returns 422. One DB-backed lease with a fencing
 generation controls an open batch. A concurrent same-batch request waits for close and replays,
-or safely resumes after lease expiry; it cannot run the same item twice. Unsequenced legacy batches
+or safely resumes after lease expiry; it cannot run the same item twice. If the active lease
+outlasts the bounded wait, the HTTP result is 503 with `errorCode: OFFLINE_SYNC:BATCH:in-progress`,
+`retryable: true` and `Retry-After: 1`, without falling through to another applier. Unsequenced legacy batches
 remain accepted. An unkeyed legacy item receives an internal
 `stynx:legacy:v1:<sha256(tenantId || 0x00 || deviceId || 0x00 || deviceBatchId || 0x00 || queueItemId)>`
 storage key, where inputs are UTF-8 bytes and `||` concatenates bytes. Explicit client keys in
@@ -115,11 +120,19 @@ must preserve old queue rows and IDs, backfill legacy batch/receipt identity wit
 domain effect occurred, install the new item-key uniqueness before dropping hash uniqueness,
 and add tenant-leading FORCE RLS, grants and indexes to new tables. It must not silently rewrite
 stored hashes or statuses. A backfilled batch is `legacy_closed_unverified`: its stored item
-receipts are immutable, but no exact HTTP replay is claimed because 0001 stored no original
-response bytes. An unprovable retry conflicts without reapplying. Independently verified archived
-ACK bytes may promote it to replayable closed state. New batches persist original response status
-and bytes on close. The release evidence includes an upgrade test, seed and `test/db`
-checks, two-tenant PostgreSQL/RLS tests, and TEAT/BOAT HTTP parity. Publication and conformance
+receipts are immutable, but no fabricated HTTP replay is claimed because 0001 stored no original
+response bytes. After domain identity/declared-set validation and before conflict or writes, a
+read-only compatibility bridge looks up the existing `IdempotencyStore` with the original
+tenant/user/route/key composite scope and method/path/body fingerprint. An unexpired completed
+record with an equal fingerprint replays its recorded status, body and headers through the same
+serialization path as the published interceptor, including configured replay-key/marker headers.
+The bridge never reserves or persists a new legacy record. Pending, expired, mismatched or absent
+records cannot authorize another effect; if byte-equivalent replay cannot be proven, the request
+fails closed with a conflict. Independently verified archived ACK bytes and headers may instead
+promote a row to replayable closed state. New batches persist original response status, bytes and
+replayable headers on close. The release evidence includes an upgrade test, seed and `test/db`
+checks, two-tenant PostgreSQL/RLS tests, and TEAT/BOAT HTTP before/after parity for status, body
+bytes, replay headers, 503/Retry-After, and unexpired/expired legacy-store lookup with no duplicate effect. Publication and conformance
 remain pending those proofs.
 
 Server-side device attestation is deferred to Phase 5. This API authenticates the actor and scopes

@@ -17,6 +17,10 @@ Codifique sensores UPS-SIG-01…04 antes da implementação:
   ByteRange, cadeia X.509, OID, token RFC 3161, OCSP e CRL assinados);
   não aceite double da porta nem resposta do provedor como prova regulada.
   Teste `expectedManifestSha256` contra o manifesto vinculado no resultado.
+  Em produção, verificador sem marca interna e sem reconhecimento
+  `consumerOwnedVerifier` falha no bootstrap; marca estrutural forjada falha.
+  Caminho reconhecido registra `verifierKind:'consumer-owned'` sem atribuir
+  verificação STYNX ao provedor.
   Preserve negativos clínicos/juntas e regressão da API legada.
 - Readiness tipada: presença e ausência individual de PAdES, TSA, LTA,
   OCSP/CRL, perfil compatível, simulado em produção, indicador ausente,

@@ -709,3 +709,15 @@ autoridade única; SIG sem implementação criptográfica de confiança no STYNX
 OFS sem precedência fixa entre recibo do lote e `Idempotency-Key`. Os
 Architects receberam reparos em paralelo, incluindo observações menores.
 O resultado não libera Inspectors nem confirma conformidade.
+
+O delta Architect foi commitado em `d3347c43` com somente documentos e
+prompts; `git diff --check` e Prettier passaram. O delivery-review Opus 5.5
+pela ponte DETRAN retornou **REVIEW** no ciclo 2 em
+`reviews/ctg9-architect-delta-delivery-review-2.json`: os três bloqueios
+anteriores foram fechados, mas uma sequência append→enqueue concorrente
+com cutover OBX ainda permite deadlock por ordem marker/advisory/clock.
+O reviewer também pediu espelhar falha de dispatch pós-corte, liberar claim
+de eventos nativos sem corte, preservar headers de replay e resultado de
+lote em progresso, reaproveitar recibo legado idempotente e exigir
+reconhecimento explícito para verificador customizado em produção. Cada
+Architect recebeu a observação do seu pacote; nenhum Inspector foi despachado.

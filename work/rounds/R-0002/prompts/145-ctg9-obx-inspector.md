@@ -30,6 +30,11 @@ cutover e tabelas customizadas têm resultado definido. ACK de HMAC inválido
 ou evento desconhecido vai para quarentena owner-only sem FK de tenant;
 o ledger por evento mantém a FK e o `UNIQUE(message_id)` legado continua.
 Inclua timestamp escolhido para partição auditada de virada mensal.
+Prove append→enqueue e domínio auditado→enqueue concorrendo com o cutover,
+sem o ciclo de deadlock marker/clock/advisory; timeout ou deadlock injetado
+faz rollback integral e retry idempotente. Falha do dispatcher legado após
+cutover espelha tentativa/ERROR/backoff. Evento nativo OFS despacha sem
+cutover enquanto a API legada continua entregando seus próprios itens.
 
 Data/audit: três writers e trigger concorrente, três eventos na mesma tx,
 BEGIN invertido, RR×RC e SERIALIZABLE×RC sem fork, erro de isolamento não

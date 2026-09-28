@@ -264,6 +264,7 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 ## Triagem
 
 - CTG9 Architect delivery-review ciclo 1: `reference-gap` — OBX não fixou o corte opt-in entre o dispatcher legado e o novo, SIG deixou a verificação criptográfica genérica a cargo do consumidor e OFS deixou a precedência do `Idempotency-Key` indefinida. Os três Architects receberam reparos disjuntos; nenhum Inspector está liberado antes do delta PASS.
+- CTG9 Architect delivery-review ciclo 2: `plant-bug` contratual — uma transação pode obter advisory/clock no append, esperar o marker de corte no enqueue e formar ciclo com o cutover que segura marker e espera clock. Fixar ordem global marker → advisory → clock e manter audit fora da transação de corte; testar corrida. Também completar espelhamento de falha pós-corte, claim nativo, headers de replay, status in-progress, replay legado e verificador customizado em produção. Nenhum Inspector está liberado.
 
 - CTG5 envelope sensores pós-despacho: `sensor-error` — o unitário exigia o envelope completo em `HttpException.getResponse()` antes do filtro HTTP resolver `requestId`, e uma asserção antiga de proveniência ainda esperava `{code}`; o Inspector limitou o unitário a status/código interno e fortaleceu a prova HTTP do 403 completo, seguido de rebind Architect de trace.
 - CTG5 envelope Inspector tentativas 1–2: `reference-gap` — os sensores entregues provaram vermelho em PostgreSQL, mas ainda faltam caminhos 400/403/500/503, filtros, If-Match, unitários e controles duráveis exigidos pelo prompt 105; após a nova tentativa parcial, a conclusão dos sensores foi escalada ao maestro no papel Inspector antes de qualquer commit Inspector.
@@ -723,6 +724,13 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     veredito estruturado. Architects reativados para reparar contratos;
     depois rever o delta, obter PASS e só então revisar os prompts Inspector
     144–146. Nenhuma implementação CTG9, PR ou publicação foi iniciada.
+39. O delta de contratos em `d3347c43` recebeu delivery-review Opus ciclo 2
+    **REVIEW** em `reviews/ctg9-architect-delta-delivery-review-2.json` pela
+    ponte DETRAN. Os bloqueios do ciclo 1 foram fechados; restou um ciclo de
+    deadlock entre cutover OBX e append/enqueue por ordem de locks. Architects
+    receberam reparos disjuntos do bloqueio e das observações de compatibilidade
+    SIG/OFS. Corrigir preflight, obter delta PASS e só então prompt-review
+    Inspector. Nenhum código de produto CTG9 foi alterado.
 
 ## Reviews, PRs e publicações
 

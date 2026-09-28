@@ -25,7 +25,11 @@ resolver mantendo TTL publicado de 24h, e lote legado migrado fechado.
 Teste service e HTTP Nest com envelopes/status existentes: falta de
 `Idempotency-Key` continua 400, chave reaproveitada com corpo distinto
 continua 422 `IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY`, validação do domínio
-tem precedência definida, e retry idêntico devolve status e bytes originais;
+tem precedência definida, e retry idêntico devolve status, bytes e headers
+de replay configurados originais. Lote aberto ocupado responde 503
+`OFFLINE_SYNC:BATCH:in-progress` com `Retry-After: 1` sem efeito novo;
+recibo legado fechado reproduz entrada idempotente ainda válida do store
+legado antes de conflito, com tenant/usuário/rota/chave/fingerprint iguais;
 registre limite da prova STYNX e matriz de paridade TEAT/BOAT para o
 consumidor validar em R-0022/R-0024, sem copiar código DETRAN.
 
