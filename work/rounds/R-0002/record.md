@@ -1390,3 +1390,17 @@ confirmou que a falta de evidência DEVAI assinada persiste e que um
 admin merge exige autorização Owner exata nos termos de Decision 8. O
 próximo passo é enviar o novo HEAD ao PR e confirmar typecheck e Semgrep
 verdes no remoto.
+
+O segundo CI remoto do PR em `b3e1f8e9` passou Semgrep, mas typecheck
+parou em `angular-auth/testing` antes do build de `dist`. A inspeção dos
+imports de teste encontrou somente os subpaths `angular/testing`,
+`angular-i18n/testing` e `angular-auth/testing`; o primeiro já tinha
+alias local. Architect `8d0d6a09` admitiu somente
+`tools/tsconfig/base.json` na exceção pós-marcador e atualizou a ADR;
+Engineer `48fff746` adicionou os dois aliases compartilhados de fonte.
+`pnpm typecheck` passou 73/73, traceResolution do auth/testing apontou
+`testing/index.ts`, e `pnpm release:policy` passou 44/44. O review focal
+Opus 5.5 via `claude -p` deu **PASS** sem achados bloqueantes em
+`reviews/shared-testing-path-delivery-review-1.direct.json` (prompt
+196). O próximo CI remoto deve confirmar o checkout limpo; a cobertura
+DEVAI não foi alterada e permanece sem recibo.

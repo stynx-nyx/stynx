@@ -1147,6 +1147,18 @@ em `.semgrepignore`, além da exceção estreita para reparos após o marcador
 congelado. O reviewer Opus 5.5 deu PASS no delta; repetir Semgrep no
 novo SHA sem ampliar as exclusões.
 
+`sensor-error` — o segundo checkout remoto do PR #308 em `b3e1f8e9`
+passou Semgrep e o typecheck de `angular-i18n`, mas o mesmo import de
+`angular-auth/testing` falhou antes do build de `dist`. A varredura de
+imports TS achou somente três subpaths de teste em uso; `angular/testing`
+já tem alias de fonte no próprio tsconfig. Architect `8d0d6a09` ampliou
+a ADR e a exceção de release ao único `tools/tsconfig/base.json`;
+Engineer `48fff746` adicionou os aliases de fonte para
+`angular-auth/testing` e `angular-i18n/testing`. `pnpm typecheck`
+passou 73/73; traceResolution do import auth aponta
+`angular-auth/testing/index.ts`; release policy passou 44/44. Opus 5.5
+deu PASS focal no delta. Repetir em checkout remoto limpo.
+
 **Checkpoint final pré-PR (2026-09-28):** marker Engineer `b647f568`
 para `1.5.0`/44 pacotes, `ci:stynx` integral e `ci:reference-apps`
 verdes, release policy/provenance/consumer fixtures verdes, trace
@@ -1172,3 +1184,9 @@ Semgrep vermelhos; ambos receberam os reparos delimitados acima, com
 delivery-review Opus 5.5 PASS via fallback `claude -p` depois de a
 ponte recusar a resposta com preâmbulo não JSON. Novo HEAD ainda precisa
 ser enviado e observado no CI remoto. O DEVAI RC continua sem recibo.
+
+**Segundo CI do PR #308:** `b3e1f8e9` corrigiu Semgrep, mas expôs o
+subpath `angular-auth/testing` no typecheck. O reparo compartilhado
+`8d0d6a09` + `48fff746` recebeu PASS Opus focal e aguarda push/CI.
+O merge administrativo segue vedado até existir um recibo Owner exato
+para o SHA final e até os demais checks obrigatórios passarem.
