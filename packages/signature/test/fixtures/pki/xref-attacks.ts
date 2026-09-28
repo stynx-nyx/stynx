@@ -87,3 +87,39 @@ export function appendCatalogShadow(pdf: Uint8Array): Uint8Array {
     `startxref\n${xrefAt}\n%%EOF\n`,
   )]);
 }
+
+/** DSS is visible to pdf-lib's linear parser but absent from the effective xref. */
+export function omitUpdatedCatalogFromXref(
+  pdf: Uint8Array,
+  header: 'glued' | 'comment-separated',
+): Uint8Array {
+  const original = Buffer.from(pdf);
+  const text = original.toString('latin1');
+  const range = /\/ByteRange\s*\[\s*\d+\s+\d+\s+(\d+)\s+(\d+)\s*\]/u.exec(text);
+  if (!range) throw new Error('Signed ByteRange absent');
+  const signedEnd = Number(range[1]) + Number(range[2]);
+  const signed = original.subarray(0, signedEnd);
+  const previous = lastXref(signed);
+  const xrefStart = text.indexOf('\nxref\n1 1\n', signedEnd);
+  const catalogEnd = text.indexOf('endobj\n', signedEnd) + 'endobj\n'.length;
+  if (xrefStart < 0 || catalogEnd <= signedEnd) throw new Error('DSS fixture revision absent');
+  const catalog = text.slice(signedEnd, catalogEnd);
+  const evidence = original.subarray(catalogEnd, xrefStart);
+  const evidencedBody = evidence.subarray(0, evidence.length - 1);
+  const shadow = Buffer.from(header === 'glued'
+    ? catalog
+    : catalog.replace(/^1 0 obj/u, '1%comment\n0%comment\nobj'));
+  const body = Buffer.concat([signed, evidencedBody, shadow]);
+  const originalXref = text.slice(xrefStart + 1);
+  const entries = Array.from({ length: 7 }, (_, index) => {
+    const objectNumber = index + 8;
+    const match = new RegExp(`^${objectNumber} 1\\n(\\d{10}) 00000 n`, 'mu').exec(originalXref);
+    if (!match) throw new Error(`DSS object ${objectNumber} absent`);
+    return row(Number(match[1]) - (catalogEnd - signedEnd));
+  });
+  return Buffer.concat([body, Buffer.from(
+    `xref\n8 7\n${entries.join('')}` +
+    `trailer\n<< /Size 15 /Root 1 0 R /Prev ${previous} >>\n` +
+    `startxref\n${body.length}\n%%EOF\n`,
+  )]);
+}

@@ -3,7 +3,12 @@ import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { X509Certificate } from '@peculiar/x509';
 import * as sig from '../../src';
-import { appendCatalogShadow, appendDuplicatePrev, appendHybridXref } from '../fixtures/pki/xref-attacks';
+import {
+  appendCatalogShadow,
+  appendDuplicatePrev,
+  appendHybridXref,
+  omitUpdatedCatalogFromXref,
+} from '../fixtures/pki/xref-attacks';
 import {
   bltCmsSignature,
   bltSignedDocument,
@@ -508,6 +513,10 @@ describe('concrete STYNX CMS verifier', () => {
 
   it.each([
     ['catalog shadow after fake endstream', appendCatalogShadow],
+    ['DSS catalog omitted from final xref after glued endobj',
+      (pdf: Uint8Array) => omitUpdatedCatalogFromXref(pdf, 'glued')],
+    ['DSS catalog omitted from final xref with comment-separated header',
+      (pdf: Uint8Array) => omitUpdatedCatalogFromXref(pdf, 'comment-separated')],
     ['hybrid XRefStm type 1', (pdf: Uint8Array) => appendHybridXref(pdf, 1)],
     ['hybrid XRefStm type 2', (pdf: Uint8Array) => appendHybridXref(pdf, 2)],
     ['duplicate Prev trailer', appendDuplicatePrev],
