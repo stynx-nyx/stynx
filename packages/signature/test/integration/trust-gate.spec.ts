@@ -232,13 +232,11 @@ describe('regulated sign and verify', () => {
   it.each([
     [
       'HTTP failure',
-      vi
-        .fn<typeof fetch>()
-        .mockResolvedValue({
-          ok: false,
-          status: 503,
-          json: async () => ({ error: 'unavailable' }),
-        } as Response),
+      vi.fn<typeof fetch>().mockResolvedValue({
+        ok: false,
+        status: 503,
+        json: async () => ({ error: 'unavailable' }),
+      } as Response),
     ],
     [
       'timeout',
@@ -286,24 +284,25 @@ describe('production verifier ownership', () => {
     ['forged structural marker', { verifierKind: 'stynx-cms' }],
   ])('refuses %s custom verifier without explicit acknowledgement', async (_label, extra) => {
     const custom = { ...verifier(), ...extra };
-    const moduleRef = await (
-      await import('@nestjs/testing')
-    ).Test.createTestingModule({
-      imports: [
-        sig.StynxSignatureModule.forRoot({
-          backend: backend(),
-          trustProfile: { ...profile, environment: 'production' },
-          verifier: custom,
-        } as any),
-      ],
-    }).compile();
-    try {
-      await expect(moduleRef.init()).rejects.toMatchObject({
-        name: 'SignatureProviderConfigurationError',
-      });
-    } finally {
-      await moduleRef.close();
-    }
+    await expect(
+      (await import('@nestjs/testing')).Test.createTestingModule({
+        imports: [
+          sig.StynxSignatureModule.forRoot({
+            backend: backend(),
+            trustProfile: { ...profile, environment: 'production' },
+            verifier: custom,
+          } as any),
+        ],
+      })
+        .compile()
+        .then(async (moduleRef) => {
+          try {
+            await moduleRef.init();
+          } finally {
+            await moduleRef.close();
+          }
+        }),
+    ).rejects.toMatchObject({ name: 'SignatureProviderConfigurationError' });
   });
 
   it('records acknowledged custom verification as consumer-owned, not STYNX-owned', async () => {

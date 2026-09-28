@@ -69,23 +69,28 @@ describe('signature readiness', () => {
   });
 
   it('fails production bootstrap when the exact signature indicator is not health-registered', async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [
-        sig.StynxSignatureModule.forRoot({
-          backend: sig.createMockSignatureBackend(),
-          trustProfile: { ...profile, environment: 'production' },
-          verifier: { capabilities: async () => all(), verifySignedArtifact: async () => ({}) },
-          consumerOwnedVerifier: { acknowledged: true },
-        } as any),
-      ],
-    }).compile();
-    try {
-      await expect(moduleRef.init()).rejects.toMatchObject({
-        name: expect.stringMatching(/SignatureProviderConfigurationError|SignatureCapabilityError/),
-      });
-    } finally {
-      await moduleRef.close();
-    }
+    await expect(
+      Test.createTestingModule({
+        imports: [
+          sig.StynxSignatureModule.forRoot({
+            backend: sig.createMockSignatureBackend(),
+            trustProfile: { ...profile, environment: 'production' },
+            verifier: { capabilities: async () => all(), verifySignedArtifact: async () => ({}) },
+            consumerOwnedVerifier: { acknowledged: true },
+          } as any),
+        ],
+      })
+        .compile()
+        .then(async (moduleRef) => {
+          try {
+            await moduleRef.init();
+          } finally {
+            await moduleRef.close();
+          }
+        }),
+    ).rejects.toMatchObject({
+      name: expect.stringMatching(/SignatureProviderConfigurationError|SignatureCapabilityError/),
+    });
   });
 
   it('keeps health independent of signature at the module boundary', async () => {

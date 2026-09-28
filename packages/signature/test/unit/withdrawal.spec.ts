@@ -60,7 +60,7 @@ const make = (physical = valid) => {
     trustVerifier,
   };
 };
-const assertValidReceipt = (result: any, method: string) => {
+const assertValidReceipt = (result: any, method: string, verifiedAt = now) => {
   expect(result.status).toBe('valid');
   expect(result.evidence).toMatchObject({
     tenantId: 'tenant-a',
@@ -70,7 +70,7 @@ const assertValidReceipt = (result: any, method: string) => {
     signerPartyId: 'party-a',
     verificationMethod: method,
     evidenceRef: 'attestation-a',
-    verifiedAt: now,
+    verifiedAt,
     proofRef: expect.any(String),
   });
   expect(result.evidence.verifiedHashes).toBeDefined();
@@ -128,7 +128,10 @@ describe('withdrawal evidence', () => {
         profile,
       }),
     );
-    assertValidReceipt(result, 'digital_verified');
+    const tsaAt = new Date('2026-09-28T15:42:19.000Z');
+    const proof = await verifySignedArtifact.mock.results[0]?.value;
+    expect(proof.tsaAt).toEqual(tsaAt);
+    assertValidReceipt(result, 'digital_verified', tsaAt);
   });
 
   it.each([
