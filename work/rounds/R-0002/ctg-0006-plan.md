@@ -153,3 +153,8 @@ para `testing/src/fake-transaction.ts`, eliminando a carga transitiva de
 sensor Node 2/2, data 90/90, `pnpm lint:tests` e o focused typecheck do data.
 Submeter ao Opus apenas o delta desde `189b64bb` para confirmar que o PASS
 continua aplicável; depois importar a CTG6 na branch cumulativa.
+
+Delivery-review Opus ciclo 3 em `reviews/ctg6-delivery-review-3.json`
+retornou **PASS** no HEAD `ff576adc`; os dois achados menores foram resolvidos
+e não há mudança de API/runtime no delta. CTG6 está pronta para fast-forward
+na branch cumulativa e para o review final da tree consolidada após CTG8.
