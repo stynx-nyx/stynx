@@ -1,13 +1,15 @@
 # R-0002 — plano e checkpoint da STYNX 1.5.0
 
 **Papel atual:** Architect. **Estado atual:** CTGs 5–8 implementadas e
-importadas sob OD-S15-02; a correção de conformidade do envelope CTG5 está
-em tríade isolada, e a decisão de escopo A1 §8.1 permanece pendente antes do
-único gate final. O estado histórico do bootstrap e das primeiras
+importadas sob OD-S15-02; a correção de conformidade do envelope CTG5 e os
+follow-ups de observabilidade estão integrados, com delivery-review Opus
+PASS. A decisão de escopo A1 §8.1 permanece pendente antes do único gate
+final. O estado histórico do bootstrap e das primeiras
 CTGs está preservado abaixo. **Branch cumulativa:**
 `/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx`,
-`feat/release-1-5-0-jobs`, checkpoint de código
-`81681892696c19979c7983ebff0fb1c0c3c49c8d`.
+`feat/release-1-5-0-jobs`, checkpoint original das CTGs 5–8
+`81681892696c19979c7983ebff0fb1c0c3c49c8d`; a correção CTG5 e os
+follow-ups de observabilidade estão integrados até `b4addd54`.
 
 ## Leitura
 
@@ -97,9 +99,9 @@ despacho correspondente. Sem shim nem código copiado do DETRAN.
 Os checkpoints permitem desenvolvimento em paralelo, mas a importação na
 branch cumulativa ocorre em 5 → 6 → 7 → 8, cada grupo após delivery-review PASS
 e gates focais. A integração dessas quatro CTGs já ocorreu até `81681892`.
-Não repetir PRs, RCs ou CI completo por CTG. Próxima execução: integrar a
-correção CTG5 após sua tríade e delivery-review PASS, decidir A1 §8.1 e atualizar a conformidade,
-versionar a candidata estável, executar `pnpm ci:stynx` e
+Não repetir PRs, RCs ou CI completo por CTG. Próxima execução: decidir A1
+§8.1, ajustar a conformidade e os contratos do escopo escolhido, versionar
+a candidata estável, executar `pnpm ci:stynx` e
 `pnpm ci:reference-apps` uma vez no HEAD consolidado, obter delivery-review
 final, abrir um PR, verificar CI remoto e publicar `1.5.0` com recibos exatos.
 Se a decisão de escopo incluir SIG/OBX/OFS, implementá-las antes desse gate;

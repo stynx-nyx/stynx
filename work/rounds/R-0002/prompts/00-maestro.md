@@ -20,14 +20,14 @@ sempre 5 → 6 → 7 → 8, com revisão e gates focais no SHA importado. Nenhum
 executa Git. Esta emenda não altera os MUST da OD-S15-01 nem dispensa o
 prompt-review independente antes de novos despachos.
 
-Checkpoint atual: as CTGs 5–8 já foram importadas na branch cumulativa; ler
-`plan.md` §Retomada antes de qualquer nova ação. A divergência no envelope
-HTTP 409 da CTG5 está sendo corrigida em tríade isolada conforme a opção A
-Architect, com classificação revisada pelo Opus e sem mudança de `law/` ou do
-fio já publicado. A adenda A1 §8.1 do DETRAN confirmou SIG/OBX/OFS como MUST;
-a decisão Owner sobre incluí-las antes da final ou adiá-las expressamente
-permanece pendente. Não congelar nem publicar a final antes de fechar essa
-decisão e importar a correção CTG5 após delivery-review PASS.
+Checkpoint atual: as CTGs 5–8 e a correção do envelope HTTP 409 CTG5 já
+foram importadas na branch cumulativa, com delivery-review Opus PASS; os
+follow-ups de observabilidade CTG5 também receberam PASS. Ler `plan.md`
+§Retomada antes de qualquer nova ação. A adenda A1 §8.1 do DETRAN confirmou
+SIG/OBX/OFS como MUST; a decisão Owner sobre incluí-las antes da final ou
+adiá-las expressamente permanece pendente. A prévia condicional CTG9 recebeu
+REVIEW até o ciclo 6, sem contrato vinculante ou worker. Não congelar nem
+publicar a final antes da decisão de escopo e do trabalho correspondente.
 
 > Sessão nova, sem contexto anterior, Codex CLI (família Codex, modelo Sol 6), aberta em
 > `/Users/aarusso/Development/stynx`. Você é o **maestro** desta rodada. Tudo o que precisa está nos
