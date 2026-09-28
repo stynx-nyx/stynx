@@ -4482,8 +4482,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 851,
-      "assertion_digest_sha256": "eea54acc5e91c5ab81ea274b1771f684b79ca0c151153dc4b09109ac0b9a96b7"
+      "assertion_count": 853,
+      "assertion_digest_sha256": "29290ac65665628164041cf62e2a8c3c925b5bd071309be40343276ab192c0c0"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -4506,8 +4506,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 288,
-      "assertion_digest_sha256": "cc28f5e60f2703a0ca2c6a686b720fbd3f8155a54b402e4c8c75398fbd49c9d4"
+      "assertion_count": 296,
+      "assertion_digest_sha256": "7298d691ae308e13a89a01d60e4de2eaf7f884b65050b8c23c312bc5095b6bd8"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -4890,16 +4890,16 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 161,
-      "assertion_digest_sha256": "2f93a0d51f6ee5d7c2709916b1a7f1d3b9690d61681d35b851756f660391ead7"
+      "assertion_count": 201,
+      "assertion_digest_sha256": "6c2d2ec8fe86c8b6b2ba61141f1433128534c613c5fb7522f337008b378687b5"
     },
     {
       "path": "packages/offline-sync/test/unit/ctg9-parity.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 119,
-      "assertion_digest_sha256": "6592ce105fffce7901664b27abb53f924bba4ec46cf40788127fb98e9d71b8ba"
+      "assertion_count": 128,
+      "assertion_digest_sha256": "397132e3b0f92e123e4fb220266cbdf4b8b9d60f4bc1ec3930d335409fe4b851"
     },
     {
       "path": "packages/outbox/test/integration/ctg9-append.integration.spec.ts",
@@ -5010,8 +5010,8 @@
       "suite": "db",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 3,
-      "assertion_digest_sha256": "aec942e49a561c92aac92ca1cab460e776e0c73825850ab573e35c0ca26bdd5f"
+      "assertion_count": 6,
+      "assertion_digest_sha256": "9fcf704b9a01417ee389a07ceea228da0b2d434482ccdccd65e852424a049130"
     }
   ],
   "suites": {
