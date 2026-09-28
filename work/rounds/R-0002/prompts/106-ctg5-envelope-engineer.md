@@ -10,8 +10,12 @@ commit Architect do contrato/catálogo, o SHA do commit Inspector de testes
 vermelhos, o SHA do rebind Architect de `law/trace.json` e um prompt-review
 PASS deste prompt; se faltar qualquer um, pare sem editar e reporte bloqueio.
 O maestro registra esses SHAs em `work/rounds/R-0002/record.md` antes do
-despacho; leia esse registro e o PASS
-`work/rounds/R-0002/reviews/ctg5-envelope-worker-prompt-review-2.json`.
+despacho. Leia o binding
+`work/rounds/R-0002/reviews/ctg5-envelope-worker-review-binding.json`:
+ele deve apontar para veredito PASS e recibo `.bridge.json` válidos, e o
+SHA-256 de **este prompt** deve coincidir com seu valor registrado no
+binding no mesmo SHA. Sem binding ou digest coincidente, reporte
+`reference-gap`. O review-2 anterior está superado pela emenda deste prompt.
 Você não executa Git, inclusive leitura de log/show; a worktree fornecida
 pelo maestro deve corresponder aos SHAs registrados. Se faltar prova,
 pare e reporte `reference-gap`.

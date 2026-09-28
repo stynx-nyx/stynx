@@ -9,8 +9,12 @@ publicado para o schema existente, sem alterar `law/` ou os corpos legados;
 por essa classificação, **não** há recibo Owner de escolha da opção A. Se
 qualquer evidência faltar, pare sem editar e reporte bloqueio.
 O maestro registra os SHAs exatos em `work/rounds/R-0002/record.md` antes
-do despacho; leia esse registro e o PASS
-`work/rounds/R-0002/reviews/ctg5-envelope-worker-prompt-review-2.json`.
+do despacho. Leia o binding
+`work/rounds/R-0002/reviews/ctg5-envelope-worker-review-binding.json`:
+ele deve apontar para veredito PASS e recibo `.bridge.json` válidos, e o
+SHA-256 de **este prompt** deve coincidir com seu valor registrado no
+binding no mesmo SHA. Sem binding ou digest coincidente, reporte
+`reference-gap`. O review-2 anterior está superado pela emenda deste prompt.
 Você não executa Git, inclusive leitura de log/show; o maestro fornece a
 worktree no SHA registrado. Se o registro e os arquivos não concordarem,
 pare e reporte `reference-gap`.
@@ -26,8 +30,11 @@ Own only backend tests under `packages/backend/test/**`. Include the existing
 HTTP, advanced, faults, provenance, filters, no-module, Angular interop and
 if-match HTTP specs, the unit contract spec, and a new
 `transactional-command-errors.integration.spec.ts`. The Angular interop spec
-borrows a CTG7 test lock; the If-Match spec borrows a CTG6 test lock. Add
-assertions only, preserving every existing 412/428, 422, 502 and RLS proof.
+borrows a CTG7 test lock; the If-Match spec borrows a CTG6 test lock. Troque
+somente as asserções 409 antigas `{code,context}`/`IDEMPOTENCY_KEY_*` por
+status exato, `toEqual` do envelope completo e igualdade de `X-Request-Id`.
+Isso fortalece a prova; preserve as asserções 412/428, 422, 502, RLS e os
+controles de efeitos duráveis sem enfraquecê-los.
 Move the invalid `mismatchCode:''` provenance fixture to a separate
 `app.init()` refusal fixture; change the valid custom code fixture to
 `SCOPED:CONFLICT:command-mismatch` while keeping its configuration proof.

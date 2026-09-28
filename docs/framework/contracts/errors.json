@@ -442,6 +442,18 @@
       "description": "Legacy data error body preserved by the CTG5 boundary; optional context is supplied by the failing connection check."
     },
     {
+      "errorCode": "IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY",
+      "statusCode": 422,
+      "retriable": false,
+      "exception": "@stynx-nyx/idempotency UnprocessableEntityException",
+      "runtimeBody": {
+        "message": "IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY",
+        "error": "Unprocessable Entity",
+        "statusCode": 422
+      },
+      "description": "Legacy idempotency interceptor body, outside the new CTG5 transactional command envelope; preserve its historical bytes."
+    },
+    {
       "errorCode": "PRECONDITION:FAILED:if-match",
       "statusCode": 412,
       "retriable": false,
