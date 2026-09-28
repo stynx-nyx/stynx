@@ -16,6 +16,7 @@ describe('offline sync durable migration 0002', () => {
     const tenantB = 'b2222222-2222-4222-8222-222222222222';
     const tables = [
       'sync_batches',
+      'sync_batch_transport_keys',
       'sync_item_receipts',
       'sync_item_attempts',
       'numbering_consumption',
@@ -60,6 +61,21 @@ describe('offline sync durable migration 0002', () => {
         reader_write: false,
       })));
 
+      const transportKeyPrimaryColumns = await client.query<{ column_name: string }>(`
+        select kcu.column_name
+        from information_schema.table_constraints tc
+        join information_schema.key_column_usage kcu
+          on kcu.constraint_schema = tc.constraint_schema
+         and kcu.constraint_name = tc.constraint_name
+        where tc.table_schema = 'offline'
+          and tc.table_name = 'sync_batch_transport_keys'
+          and tc.constraint_type = 'PRIMARY KEY'
+        order by kcu.ordinal_position
+      `);
+      expect(transportKeyPrimaryColumns.rows.map((row) => row.column_name)).toEqual([
+        'tenant_id', 'transport_key',
+      ]);
+
       await client.query(`
         insert into tenancy.tenants (id, slug, name)
         values ($1::uuid, 'ofs-ddl-a', 'OFS DDL A'),
@@ -74,6 +90,12 @@ describe('offline sync durable migration 0002', () => {
                ($2::uuid, 'device-b', 'batch-b', 'org-b', 'agent-b',
                 'hash-b', '[]'::jsonb, 'open')
       `, [tenantA, tenantB]);
+      await client.query(`
+        insert into offline.sync_batch_transport_keys
+          (tenant_id, transport_key, device_id, device_batch_id, transport_fingerprint)
+        values ($1::uuid, 'shared-transport-key', 'device-a', 'batch-a', 'fingerprint-a'),
+               ($2::uuid, 'shared-transport-key', 'device-b', 'batch-b', 'fingerprint-b')
+      `, [tenantA, tenantB]);
 
       for (const role of ['stynx_app', 'stynx_reader'] as const) {
         await client.query(`set role ${role}`);
@@ -83,6 +105,13 @@ describe('offline sync durable migration 0002', () => {
           'select tenant_id::text from offline.sync_batches',
         );
         expect(visible.rows).toEqual([{ tenant_id: tenantA }]);
+        const visibleTransportKeys = await client.query<{ tenant_id: string; transport_fingerprint: string }>(
+          'select tenant_id::text, transport_fingerprint from offline.sync_batch_transport_keys',
+        );
+        expect(visibleTransportKeys.rows).toEqual([{
+          tenant_id: tenantA,
+          transport_fingerprint: 'fingerprint-a',
+        }]);
         await client.query('rollback');
         await client.query('reset role');
       }
@@ -96,6 +125,15 @@ describe('offline sync durable migration 0002', () => {
            context_hash, declared_keys, status)
         values ($1::uuid, 'foreign', 'foreign', 'org-b', 'agent-b',
                 'foreign', '[]'::jsonb, 'open')
+      `, [tenantB])).rejects.toMatchObject({ code: '42501' });
+      await client.query('rollback');
+
+      await client.query('begin');
+      await client.query("select set_config('app.tenant_id', $1, true)", [tenantA]);
+      await expect(client.query(`
+        insert into offline.sync_batch_transport_keys
+          (tenant_id, transport_key, device_id, device_batch_id, transport_fingerprint)
+        values ($1::uuid, 'foreign-key', 'device-b', 'batch-b', 'foreign-fingerprint')
       `, [tenantB])).rejects.toMatchObject({ code: '42501' });
       await client.query('rollback');
     } finally {

@@ -128,6 +128,18 @@ describe('OFS E6 and CTG9 controller bootstrap selection', () => {
     expect((error as Error).message).toContain('store');
   });
 
+  it('rejects an item applier without its transactional event port at bootstrap', async () => {
+    const error = await bootstrap({
+      ...options,
+      itemApplier: { apply: vi.fn() },
+      mountControllers: false,
+    } as unknown as StynxOfflineSyncModuleOptions).catch((cause: unknown) => cause);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).constructor.name).toBe('OfflineSyncConfigurationError');
+    expect(error).toMatchObject({ code: 'OFFLINE_SYNC_CONFIGURATION_ERROR' });
+    expect((error as Error).message).toContain('eventPort');
+  });
+
   it('keeps service-only behavior available in both bootstrap modes', () => {
     expect(routes(StynxOfflineSyncModule.forRoot({ mountControllers: false }).controllers)).toEqual(
       [],

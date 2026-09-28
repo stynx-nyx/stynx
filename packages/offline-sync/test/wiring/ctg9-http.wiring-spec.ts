@@ -4,16 +4,22 @@ import { Reflector } from '@nestjs/core';
 import { IdempotencyInterceptor } from '@stynx-nyx/idempotency';
 import type { INestApplication } from '@nestjs/common';
 import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
+import { StynxCoreModule } from '@stynx-nyx/core';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { StynxOfflineSyncModule } from '../../src/offline-sync.module';
 import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
 import { OfflineSyncService } from '../../src/offline-sync.service';
+import { OfflineSyncError } from '../../src/errors';
 import type { OfflineSyncContextPort, StynxOfflineSyncModuleOptions } from '../../src/types';
 
 // INV-OFFLINE-001; UPS-OFS-02. Real Nest HTTP route sensor, without DETRAN vocabulary.
 const itemPayload = { normativePackageId: 'rules-1', normativePackageVersion: '1.0.0' };
 const itemHash = `sha256:${createHash('sha256').update(JSON.stringify(itemPayload)).digest('hex')}`;
+const FIRST_REQUEST_ID = '0190abcd-1234-7abc-89ab-0123456789ab';
+const REPLAY_REQUEST_ID = '0190abcd-1234-7abc-89ab-0123456789ac';
+const HOLDER_REQUEST_ID = '0190abcd-1234-7abc-89ab-0123456789ad';
+const CONTENDER_REQUEST_ID = '0190abcd-1234-7abc-89ab-0123456789ae';
 const payload = {
   orgUnitId: 'org-a',
   deviceId: 'device-a',
@@ -56,6 +62,10 @@ describe('CTG9 OFS batch HTTP contract', () => {
     });
     const moduleRef = await Test.createTestingModule({
       imports: [
+        StynxCoreModule.forRoot({
+          appName: 'offline-sync-ctg9-http-sensor',
+          schema: { safeParseAsync: async () => ({ success: true, data: {} }) } as never,
+        }),
         StynxOfflineSyncModule.forRoot({
           store,
           context,
@@ -142,17 +152,22 @@ describe('CTG9 OFS batch HTTP contract', () => {
     const first = await request(app.getHttpServer())
       .post('/offline-sync/sync-batches')
       .set('Idempotency-Key', 'transport-one')
+      .set('X-Request-Id', FIRST_REQUEST_ID)
       .send(payload);
     expect(first.status).toBe(201);
+    expect(first.headers['x-request-id']).toBe(FIRST_REQUEST_ID);
     expect(first.headers['idempotency-replayed']).toBeUndefined();
     const retry = await request(app.getHttpServer())
       .post('/offline-sync/sync-batches')
       .set('Idempotency-Key', 'transport-two')
+      .set('X-Request-Id', REPLAY_REQUEST_ID)
       .send(payload);
     expect(retry.status).toBe(first.status);
     expect(retry.text).toBe(first.text);
     expect(retry.headers['x-idempotency-key']).toBe('transport-two');
     expect(retry.headers['idempotency-replayed']).toBe('true');
+    expect(retry.headers['x-request-id']).toBe(REPLAY_REQUEST_ID);
+    expect(retry.text).not.toContain(FIRST_REQUEST_ID);
   });
 
   it('returns a bounded 503 with Retry-After while a batch lease is held', async () => {
@@ -179,6 +194,7 @@ describe('CTG9 OFS batch HTTP contract', () => {
     const first = request(app.getHttpServer())
       .post('/offline-sync/sync-batches')
       .set('Idempotency-Key', 'held-transport-one')
+      .set('X-Request-Id', HOLDER_REQUEST_ID)
       .send(heldPayload);
     const firstResult = first.then((result) => result);
     await Promise.race([entered, new Promise<void>((resolve) => setTimeout(resolve, 100))]);
@@ -186,13 +202,17 @@ describe('CTG9 OFS batch HTTP contract', () => {
       const occupied = await request(app.getHttpServer())
         .post('/offline-sync/sync-batches')
         .set('Idempotency-Key', 'held-transport-two')
+        .set('X-Request-Id', CONTENDER_REQUEST_ID)
         .send(heldPayload);
       expect(occupied.status).toBe(503);
       expect(occupied.headers['retry-after']).toBe('1');
       expect(occupied.body).toMatchObject({
         errorCode: 'OFFLINE_SYNC:BATCH:in-progress',
         retryable: true,
+        requestId: CONTENDER_REQUEST_ID,
       });
+      expect(occupied.headers['x-request-id']).toBe(CONTENDER_REQUEST_ID);
+      expect(occupied.text).not.toContain(HOLDER_REQUEST_ID);
     } finally {
       releaseHeld?.();
       await firstResult;
@@ -232,6 +252,40 @@ describe('CTG9 OFS batch HTTP contract', () => {
       statusCode: 422,
       message: 'IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY',
     });
+  });
+
+  it('fails closed when a held lease has no active trusted RequestContext', async () => {
+    const submitSyncBatch = vi.fn().mockRejectedValue(
+      new OfflineSyncError('OFFLINE_SYNC:BATCH:in-progress', 503, 'Batch is in progress.', true),
+    );
+    const moduleRef = await Test.createTestingModule({
+      imports: [StynxOfflineSyncModule.forRoot({
+        store: new InMemoryOfflineSyncStore(),
+        context: { current: () => ({ tenantId: '00000000-0000-4000-8000-0000000000a1', actorId: 'actor-a' }) },
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150, reservationTtlMs: 60_000 }) },
+      })],
+    })
+      .overrideProvider(OfflineSyncService)
+      .useValue({ submitSyncBatch })
+      .overrideGuard(StynxAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
+    const withoutContext = moduleRef.createNestApplication();
+    await withoutContext.init();
+    try {
+      const response = await request(withoutContext.getHttpServer())
+        .post('/offline-sync/sync-batches')
+        .set('Idempotency-Key', 'without-context')
+        .send(payload);
+      expect(submitSyncBatch).toHaveBeenCalledOnce();
+      expect(response.status).toBe(500);
+      expect(response.status).not.toBe(503);
+      expect(response.body).not.toMatchObject({ errorCode: 'OFFLINE_SYNC:BATCH:in-progress' });
+    } finally {
+      await withoutContext.close();
+    }
   });
 
   it('gives batch context conflict precedence over transport fingerprint reuse', async () => {
