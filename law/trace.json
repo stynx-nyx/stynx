@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "STYNX 1.5.0 final-version Architect rebind pins private workspace manifest and CHANGELOG restoration through Changesets success, failure and spawn errors.",
       "STYNX 1.5.0 CTG-0009 Architect rebind pins signature trust/manifest/withdrawal, offline durable parity and upgrade, event-log ownership/RLS, audit chain, SSE bridge and adjusted legacy outbox assertions.",
       "DEVAI 1.2.13 deterministic inventory for exact tracked source bytes.",
       "The 495 tracked test-path census is partitioned into 380 executable tests and 115 non-executable fixtures or support modules.",
@@ -4500,6 +4501,14 @@
       "lifecycle": "supported",
       "assertion_count": 26,
       "assertion_digest_sha256": "b5788ac2f8c1db5d2fda5ee7411a8967bee12592d3ee24ab6a3b90895cc78509"
+    },
+    {
+      "path": "test/scripts/private-workspace-version.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 31,
+      "assertion_digest_sha256": "6ecd77432404e82d58909b18af82f8d7f5ea32368c1e31e5fe2ac5ae1424538e"
     },
     {
       "path": "test/scripts/release-version-policy.test.mjs",
