@@ -1,10 +1,10 @@
-import { applyDecorators, Catch, HttpException, Inject, Injectable, SetMetadata, UseFilters, UseInterceptors,
+import { applyDecorators, Catch, HttpException, Inject, Injectable, Optional, SetMetadata, UseFilters, UseInterceptors,
   type ArgumentsHost, type CallHandler, type ExceptionFilter, type ExecutionContext, type NestInterceptor } from '@nestjs/common';
 import { HttpAdapterHost, ModuleRef, ModulesContainer, Reflector } from '@nestjs/core';
 import { APP_GUARD } from '@nestjs/core';
 import { EXCEPTION_FILTERS_METADATA, FILTER_CATCH_EXCEPTIONS, GUARDS_METADATA } from '@nestjs/common/constants';
-import { RequestContext } from '@stynx-nyx/core';
-import { Database, type Transaction } from '@stynx-nyx/data';
+import { generateRequestId, normalizeRequestId, RequestContext } from '@stynx-nyx/core';
+import { Database, StynxDataError } from '@stynx-nyx/data';
 import { STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE,
   STYNX_RESOLVED_TENANT_COMMAND_CONTEXT, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL,
   STYNX_VERIFIED_TENANT_ID, type AuditEventEnvelope, type ResolvedTenantCommandContextPort,
@@ -24,6 +24,40 @@ export const STYNX_TRANSACTIONAL_COMMAND = Symbol('STYNX_TRANSACTIONAL_COMMAND')
 export const STYNX_TRANSACTIONAL_COMMAND_OPTIONS = Symbol('STYNX_TRANSACTIONAL_COMMAND_OPTIONS');
 const COMMAND_MODULE_ACTIVE = Symbol('STYNX_COMMAND_MODULE_ACTIVE');
 const ALLOWED_HEADERS = ['location', 'retry-after', 'cache-control', 'etag'] as const;
+const ERROR_CODE_PATTERN = /^[A-Z][A-Z0-9_]*:[A-Z][A-Z0-9_]*:[a-zA-Z][a-zA-Z0-9_*-]*$/u;
+
+function validateRouteOptions(options: TransactionalCommandOptions): void {
+  if (options.mismatchCode !== undefined
+    && (typeof options.mismatchCode !== 'string' || !ERROR_CODE_PATTERN.test(options.mismatchCode))) {
+    throw new Error('Transactional command mismatchCode must match the error envelope errorCode pattern');
+  }
+  if (options.lockTimeoutMs !== undefined
+    && (!Number.isSafeInteger(options.lockTimeoutMs) || options.lockTimeoutMs < 1)) {
+    throw new Error('Transactional command lockTimeoutMs must be a positive safe integer');
+  }
+}
+const REJECTIONS = {
+  'COMMAND:UNAVAILABLE:module-required': [503, 'Transactional command module is required'],
+  'COMMAND:CONFIGURATION:marking-required': [500, 'Transactional audit and idempotency markings are required'],
+  'COMMAND:FORBIDDEN:context-missing': [403, 'Trusted request context is required'],
+  'COMMAND:FORBIDDEN:actor-or-tenant-missing': [403, 'Trusted actor and tenant are required'],
+  'COMMAND:BAD_REQUEST:scope-invalid': [400, 'Command scope is invalid'],
+  'IDEMPOTENCY:BAD_REQUEST:key-required': [400, 'Idempotency key is required'],
+  'COMMAND:CONFIGURATION:lock-timeout-invalid': [500, 'Command lock timeout is invalid'],
+  'COMMAND:CONFIGURATION:ttl-invalid': [500, 'Command idempotency TTL is invalid'],
+  'COMMAND:BAD_REQUEST:body-invalid': [400, 'Command body is invalid'],
+  'COMMAND:FORBIDDEN:tenant-provenance-invalid': [403, 'Trusted tenant provenance is invalid'],
+  'COMMAND:FORBIDDEN:actor-provenance-invalid': [403, 'Trusted actor provenance is invalid'],
+  'COMMAND:FORBIDDEN:claims-mismatch': [403, 'Authenticated claims do not match command context'],
+  'COMMAND:CONFIGURATION:scope-callback-failed': [500, 'Command scope evaluation failed'],
+  'COMMAND:CONFIGURATION:tenancy-port-failed': [500, 'Tenant context resolution failed'],
+  'COMMAND:CONFIGURATION:status-invalid': [500, 'Command response status is invalid'],
+  'COMMAND:CONFIGURATION:status-policy-invalid': [500, 'Command status policy failed'],
+  'COMMAND:CONFIGURATION:response-not-json': [500, 'Command response is not valid JSON'],
+  'COMMAND:CONFIGURATION:audit-metadata-failed': [500, 'Command audit metadata failed'],
+  'COMMAND:DEPENDENCY:transaction-failed': [503, 'Transactional command failed'],
+  'IDEMPOTENCY:CONFLICT:in-progress': [409, 'Idempotency key is in progress'],
+} as const;
 
 export interface TransactionalCommandContext {
   tenantId: string;
@@ -68,29 +102,49 @@ export class CommittedCommandResponse extends HttpException {
 
 /** Wire-level boundary rejection; never denotes a committed command outcome. */
 class CommandRejectionResponse extends HttpException {
-  readonly bytes: Buffer;
   readonly headers: Record<string, string> = {};
   readonly replay = false;
   readonly key = '';
 
-  constructor(readonly statusCode: number, body: Record<string, unknown>) {
-    super(body, statusCode);
-    this.bytes = Buffer.from(JSON.stringify(body), 'utf8');
+  constructor(readonly statusCode: number, readonly errorCode: string, readonly message: string,
+    readonly details?: Record<string, unknown>, readonly retryable = false) {
+    super('', statusCode);
   }
 }
 
-function reject(statusCode: number, body: Record<string, unknown>): never {
-  throw new CommandRejectionResponse(statusCode, body);
+function reject(errorCode: keyof typeof REJECTIONS, details?: Record<string, unknown>): never {
+  const [status, message] = REJECTIONS[errorCode];
+  throw new CommandRejectionResponse(status, errorCode, message, details,
+    errorCode === 'IDEMPOTENCY:CONFLICT:in-progress');
+}
+
+function rejectMismatch(errorCode: string, key: string): never {
+  throw new CommandRejectionResponse(409, errorCode, 'Idempotency key was used for a different request', { key });
 }
 
 @Catch(CommittedCommandResponse, CommandRejectionResponse)
 @Injectable()
 export class CommittedCommandResponseFilter implements ExceptionFilter<CommittedCommandResponse | CommandRejectionResponse> {
-  constructor(private readonly adapterHost: HttpAdapterHost) {}
+  constructor(private readonly adapterHost: HttpAdapterHost, @Optional() private readonly requestContext?: RequestContext) {}
 
   catch(exception: CommittedCommandResponse | CommandRejectionResponse, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<unknown>();
     const adapter = this.adapterHost.httpAdapter;
+    if (exception instanceof CommandRejectionResponse) {
+      const request = host.switchToHttp().getRequest<RequestLike>();
+      const responseId = normalizeRequestId(adapter.getHeader(response, 'x-request-id'));
+      const inputId = normalizeRequestId(request.headers['x-request-id']);
+      const activeId = this.requestContext?.hasActiveContext()
+        ? normalizeRequestId(this.requestContext.snapshot().requestId) : undefined;
+      const requestId = activeId ?? responseId ?? inputId ?? generateRequestId();
+      adapter.setHeader(response, 'X-Request-Id', requestId);
+      adapter.setHeader(response, 'content-type', 'application/json; charset=utf-8');
+      const body = { statusCode: exception.statusCode, errorCode: exception.errorCode,
+        message: exception.message, requestId,
+        ...(exception.details ? { details: exception.details } : {}), retryable: exception.retryable };
+      adapter.reply(response, JSON.stringify(body), exception.statusCode);
+      return;
+    }
     for (const [name, value] of Object.entries(exception.headers)) {
       if ((ALLOWED_HEADERS as readonly string[]).includes(name.toLowerCase())) adapter.setHeader(response, name, value);
     }
@@ -106,7 +160,7 @@ export class CommandModuleRequiredInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<RequestLike>();
     if (Reflect.get(request, COMMAND_MODULE_ACTIVE) !== true) {
-      throw new HttpException({ code: 'TRANSACTIONAL_COMMAND_MODULE_REQUIRED' }, 503);
+      reject('COMMAND:UNAVAILABLE:module-required');
     }
     return next.handle();
   }
@@ -267,6 +321,10 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
             if (!idempotency?.transactional || !audit?.transactional) {
               throw new Error(`Transactional command ${controller.name}.${name} requires transactional audit and idempotency`);
             }
+            validateRouteOptions(marked);
+            if (idempotency.ttlMs !== undefined && (!Number.isSafeInteger(idempotency.ttlMs) || idempotency.ttlMs < 1)) {
+              throw new Error(`Transactional command ${controller.name}.${name} requires a positive safe integer ttlMs`);
+            }
             const publicTenant = this.reflector.getAllAndOverride<unknown>(STYNX_PUBLIC_TENANT_ROUTE, [method, controller]);
             if (publicTenant && !this.tenancyPort) throw new Error('Public transactional command requires STYNX tenancy port');
             const needsGuard = !publicTenant || (typeof publicTenant === 'object' && Boolean((publicTenant as { optionalAuth?: boolean }).optionalAuth));
@@ -309,59 +367,67 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
     const audit = this.reflector.getAllAndOverride<AuditMetadata>(STYNX_AUDIT_METADATA,
       [context.getHandler(), context.getClass()]);
     if (!idempotency?.transactional || !audit?.transactional) {
-      reject(500, { code: 'TRANSACTIONAL_COMMAND_MARKING_REQUIRED' });
+      reject('COMMAND:CONFIGURATION:marking-required');
     }
-    if (!this.requestContext.hasActiveContext()) reject(403, { code: 'COMMAND_CONTEXT_MISSING' });
+    if (!this.requestContext.hasActiveContext()) reject('COMMAND:FORBIDDEN:context-missing');
     const active = this.requestContext.snapshot();
     const tenantId = checkedString(active.tenantId);
     const actorId = checkedString(active.actorId);
-    if (!tenantId || !actorId) reject(403, { code: 'COMMAND_ACTOR_OR_TENANT_MISSING' });
+    if (!tenantId || !actorId) reject('COMMAND:FORBIDDEN:actor-or-tenant-missing');
     this.verifyProvenance(context, request, tenantId, actorId);
     const method = String(request.method ?? '').toUpperCase();
     const path = concretePath(request);
-    const scope = checkedString(options.scope
-      ? options.scope({ tenantId, actorId, method, path, request, body: request.body }) : actorId);
-    if (!scope) reject(400, { code: 'COMMAND_SCOPE_INVALID' });
-    if (options.mismatchCode !== undefined && !checkedString(options.mismatchCode)) {
-      reject(500, { code: 'COMMAND_MISMATCH_CODE_INVALID' });
-    }
+    let scope: string | undefined;
+    try {
+      scope = checkedString(options.scope
+        ? options.scope({ tenantId, actorId, method, path, request, body: request.body }) : actorId);
+    } catch { reject('COMMAND:CONFIGURATION:scope-callback-failed'); }
+    if (!scope) reject('COMMAND:BAD_REQUEST:scope-invalid');
     const rawKey = request.headers[(idempotency.headerName ?? 'Idempotency-Key').toLowerCase()];
     const key = checkedString(Array.isArray(rawKey) ? rawKey[0] : rawKey);
-    if (!key) reject(400, { code: 'IDEMPOTENCY_KEY_REQUIRED' });
+    if (!key) reject('IDEMPOTENCY:BAD_REQUEST:key-required');
     const lockTimeoutMs = options.lockTimeoutMs ?? 5_000;
     if (!Number.isSafeInteger(lockTimeoutMs) || lockTimeoutMs < 1) {
-      reject(500, { code: 'COMMAND_LOCK_TIMEOUT_INVALID' });
+      reject('COMMAND:CONFIGURATION:lock-timeout-invalid');
     }
     const ttlMs = idempotency.ttlMs ?? 86_400_000;
     if (!Number.isSafeInteger(ttlMs) || ttlMs < 1) {
-      reject(500, { code: 'COMMAND_IDEMPOTENCY_TTL_INVALID' });
+      reject('COMMAND:CONFIGURATION:ttl-invalid');
     }
     let requestFingerprint: string;
     try { requestFingerprint = fingerprint(request, method, path); }
-    catch { reject(400, { code: 'COMMAND_BODY_INVALID' }); }
+    catch { reject('COMMAND:BAD_REQUEST:body-invalid'); }
     const identity: TransactionalIdempotencyIdentity = {
       tenantId, scope, key, fingerprint: requestFingerprint,
       ttlMs, lockTimeoutMs,
     };
     Reflect.set(request, COMMAND_MODULE_ACTIVE, true);
+    type Phase = 'setup' | 'store' | 'handler' | 'ctg5-callback' | 'audit' | 'commit';
+    const origin: { phase: Phase } = { phase: 'setup' };
+    let callbackFailure: 'status-invalid' | 'status-policy-invalid' | 'response-not-json' | 'audit-metadata-failed' = 'status-invalid';
+    let selectedHttpException: HttpException | undefined;
     try {
       const committed = await this.database.tx(async (trx) => {
+        origin.phase = 'store';
         const existing = await this.store.lookup(trx, identity);
         if (existing) return this.replay(existing, identity, options.mismatchCode);
         const reserved = await this.store.reserve(trx, identity);
         if (!reserved) {
           const winner = await this.store.lookup(trx, identity);
           if (winner) return this.replay(winner, identity, options.mismatchCode);
-          reject(409, { code: 'IDEMPOTENCY_KEY_IN_PROGRESS', context: { key } });
+          reject('IDEMPOTENCY:CONFLICT:in-progress', { key });
         }
         let payload: unknown;
         let selectedError: CommittedCommandError | undefined;
+        origin.phase = 'handler';
         try { payload = await firstValueFrom(next.handle()); }
         catch (error) {
           if (!(error instanceof CommittedCommandError)) throw error;
           selectedError = error;
           payload = error.body;
         }
+        origin.phase = 'ctg5-callback';
+        callbackFailure = 'status-invalid';
         const statusCode = selectedError?.statusCode ?? response.statusCode;
         if (!Number.isInteger(statusCode) || statusCode < 100 || statusCode > 599) {
           throw new Error('Command response status is invalid');
@@ -370,19 +436,27 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
         const outcome: TransactionalCommandOutcome = {
           statusCode, body: payload, headers, error: Boolean(selectedError),
         };
+        callbackFailure = 'status-policy-invalid';
         const selected = options.persistStatus
           ? options.persistStatus(outcome)
           : (selectedError !== undefined || (statusCode >= 200 && statusCode < 300));
         if (typeof selected !== 'boolean') throw new Error('Command persistStatus must return boolean');
         if (selectedError && !selected) {
-          throw new HttpException(
+          selectedHttpException = new HttpException(
             selectedError.body as ConstructorParameters<typeof HttpException>[0], selectedError.statusCode,
           );
+          throw selectedHttpException;
         }
+        callbackFailure = 'response-not-json';
         const bytes = encodeBody(payload);
-        await this.writeAudit(trx, audit, context, request, tenantId, actorId, payload);
+        callbackFailure = 'audit-metadata-failed';
+        const envelope = this.auditEnvelope(audit, context, request, tenantId, actorId, payload);
+        origin.phase = 'audit';
+        await this.options.auditSink.writeInTransaction(envelope, trx);
+        origin.phase = 'store';
         if (selected) await this.store.complete(trx, identity, statusCode, bytes, headers);
         else await this.store.clear(trx, identity);
+        origin.phase = 'commit';
         return selected
           ? { selected: true as const, response: new CommittedCommandResponse(statusCode, bytes, headers, false, key) }
           : { selected: false as const, payload };
@@ -391,20 +465,26 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
       if (committed.selected) throw committed.response;
       return committed.payload;
     } catch (error) {
-      if (error instanceof TransactionalReservationTimeoutError) {
-        reject(409, { code: 'IDEMPOTENCY_KEY_IN_PROGRESS', context: { key } });
+      if (error instanceof CommandRejectionResponse || error instanceof CommittedCommandResponse || error === selectedHttpException) {
+        throw error;
       }
+      if (error instanceof TransactionalReservationTimeoutError) {
+        reject('IDEMPOTENCY:CONFLICT:in-progress', { key });
+      }
+      if (error instanceof StynxDataError) throw error;
+      if (origin.phase === 'ctg5-callback') reject(`COMMAND:CONFIGURATION:${callbackFailure}`);
+      if (origin.phase !== 'handler') reject('COMMAND:DEPENDENCY:transaction-failed');
       throw error;
     }
   }
 
   private replay(existing: TransactionalStoredResponse, identity: TransactionalIdempotencyIdentity,
-    mismatchCode = 'IDEMPOTENCY_KEY_CONFLICT'): CommittedCommandResponse {
+    mismatchCode = 'IDEMPOTENCY:CONFLICT:duplicate-key'): CommittedCommandResponse {
     if (existing.fingerprint !== identity.fingerprint) {
-      reject(409, { code: mismatchCode, context: { key: identity.key } });
+      rejectMismatch(mismatchCode, identity.key);
     }
     if (existing.status !== 'completed' || existing.statusCode === null) {
-      reject(409, { code: 'IDEMPOTENCY_KEY_IN_PROGRESS', context: { key: identity.key } });
+      reject('IDEMPOTENCY:CONFLICT:in-progress', { key: identity.key });
     }
     return new CommittedCommandResponse(existing.statusCode, existing.bytes, filterHeaders(existing.headers), true, identity.key);
   }
@@ -412,30 +492,32 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
   private verifyProvenance(context: ExecutionContext, request: RequestLike, tenantId: string, actorId: string): void {
     const publicTenant = this.reflector.getAllAndOverride<unknown>(STYNX_PUBLIC_TENANT_ROUTE,
       [context.getHandler(), context.getClass()]);
-    const port = this.tenancyPort?.get(request);
+    let port: ReturnType<ResolvedTenantCommandContextPort['get']> | undefined;
+    try { port = this.tenancyPort?.get(request); }
+    catch { reject('COMMAND:CONFIGURATION:tenancy-port-failed'); }
     if (this.tenancyInstalled || publicTenant) {
       const mode = publicTenant
         ? (Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL) === true ? 'verified' : 'nominal')
         : 'protected';
       if (!port || port.mode !== mode || port.tenantId !== tenantId || port.actorId !== actorId) {
-        reject(403, { code: 'COMMAND_TENANT_PROVENANCE_INVALID' });
+        reject('COMMAND:FORBIDDEN:tenant-provenance-invalid');
       }
     }
     if (!publicTenant || port?.mode === 'verified') {
       const principal = request.principal;
       const verifiedTenant = Reflect.get(request, STYNX_VERIFIED_TENANT_ID);
       if (!principal?.id || principal.id !== actorId || (publicTenant ? port?.tenantId : verifiedTenant) !== tenantId) {
-        reject(403, { code: 'COMMAND_ACTOR_PROVENANCE_INVALID' });
+        reject('COMMAND:FORBIDDEN:actor-provenance-invalid');
       }
       const claims = (request as RequestLike & { stynxClaims?: { sub?: string; tenantId?: string } }).stynxClaims;
       if (claims && (claims.sub !== actorId || claims.tenantId !== tenantId)) {
-        reject(403, { code: 'COMMAND_CLAIMS_MISMATCH' });
+        reject('COMMAND:FORBIDDEN:claims-mismatch');
       }
     }
   }
 
-  private async writeAudit(trx: Transaction, metadata: AuditMetadata, context: ExecutionContext,
-    request: RequestLike, tenantId: string, actorId: string, payload: unknown): Promise<void> {
+  private auditEnvelope(metadata: AuditMetadata, context: ExecutionContext,
+    request: RequestLike, tenantId: string, actorId: string, payload: unknown): AuditEventEnvelope {
     const rawMetadata = metadata.metadataSelector?.(request);
     const redacted = this.redaction.redact(rawMetadata, {
       action: metadata.action, entity: metadata.entity ?? context.getClass().name,
@@ -454,7 +536,7 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
       ...(request.correlationId ? { correlationId: request.correlationId } : {}),
       ...(request.ip ? { ipAddress: request.ip } : {}),
     };
-    await this.options.auditSink.writeInTransaction(envelope, trx);
+    return envelope;
   }
 }
 

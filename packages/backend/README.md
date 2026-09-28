@@ -204,6 +204,20 @@ request-specific headers are never stored. The default scope is the trusted
 actor ID; a public route must choose its scope explicitly. A repeated key
 with a different method, concrete path or JSON body returns HTTP 409.
 
+The default mismatch code is `IDEMPOTENCY:CONFLICT:duplicate-key`; a custom
+`mismatchCode` must match the `errorCode` pattern in the STYNX error-envelope
+schema. The module checks its code and lock timeout in `forRoot`, then checks
+marked route overrides and idempotency TTLs at application bootstrap.
+
+Rejections produced by this command boundary use the canonical envelope
+`{ statusCode, errorCode, message, requestId, retryable }`; key conflicts also
+include `details: { key }`. The response `X-Request-Id` equals `requestId`.
+An in-progress key returns retryable HTTP 409, while a failed transaction
+dependency returns nonretryable HTTP 503. Consumers migrating from the
+pre-release CTG5 shape should read `errorCode` instead of `code` and `details`
+instead of `context`. Data-layer errors, the legacy idempotency 422 and
+consumer-selected responses retain their existing bodies.
+
 ## Configuration
 
 Each submodule has its own `.forRoot()` options. See the per-submodule pages linked above.

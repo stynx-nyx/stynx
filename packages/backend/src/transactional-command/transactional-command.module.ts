@@ -15,6 +15,15 @@ export class StynxTransactionalCommandModule {
     if (!options?.auditSink || typeof options.auditSink.writeInTransaction !== 'function') {
       throw new Error('Transactional command requires a same-transaction audit sink');
     }
+    if (options.mismatchCode !== undefined
+      && (typeof options.mismatchCode !== 'string'
+        || !/^[A-Z][A-Z0-9_]*:[A-Z][A-Z0-9_]*:[a-zA-Z][a-zA-Z0-9_*-]*$/u.test(options.mismatchCode))) {
+      throw new Error('Transactional command mismatchCode must match the error envelope errorCode pattern');
+    }
+    if (options.lockTimeoutMs !== undefined
+      && (!Number.isSafeInteger(options.lockTimeoutMs) || options.lockTimeoutMs < 1)) {
+      throw new Error('Transactional command lockTimeoutMs must be a positive safe integer');
+    }
     return {
       module: StynxTransactionalCommandModule,
       providers: [
