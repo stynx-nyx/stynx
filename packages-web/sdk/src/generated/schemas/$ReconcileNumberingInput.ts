@@ -2,14 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $ResolveSyncConflictInput = {
+export const $ReconcileNumberingInput = {
     properties: {
-        description: {
-            type: 'string',
-        },
-        resolution: {
-            type: 'OfflineSyncConflictResolutionStrategy',
-            isRequired: true,
+        claimedNumbers: {
+            type: 'UnknownJson',
         },
         userRef: {
             type: 'string',

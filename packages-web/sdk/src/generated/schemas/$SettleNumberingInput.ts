@@ -2,14 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $ResolveSyncConflictInput = {
+export const $SettleNumberingInput = {
     properties: {
-        description: {
+        reason: {
             type: 'string',
-        },
-        resolution: {
-            type: 'OfflineSyncConflictResolutionStrategy',
-            isRequired: true,
         },
         userRef: {
             type: 'string',
