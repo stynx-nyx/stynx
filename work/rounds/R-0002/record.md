@@ -1348,3 +1348,21 @@ o SHA exato de `main`; então pré-validar o registry, vincular o recibo
 Owner ao comando `gh workflow run release.yml --ref main -f
 candidate_sha=<SHA> -f publish=true`, publicar e reconciliar os 44
 recibos, integridades e tags.
+
+## Preparação DEVAI do PR final (2026-09-28)
+
+O controle local de ferramenta/ambiente coincidiu byte a byte com
+`law/policy/devai-local-rc-{toolchain,environment}.json`, com Node
+24.15.0, pnpm 9.15.0, psql 18.1 e PostgreSQL autenticado. O comando
+`pnpm devai:rc:prepare --candidate 93628332eb0ef22d804bfbaf32ce9a98ccefb1bb`
+executou o perfil RC. Quatorze nós anteriores passaram; `release:prepare`
+falhou no gate `pnpm test:coverage`, com 14 pacotes abaixo do limiar
+global de 100%. A repetição focal de `@stynx-nyx/offline-sync` deu
+135/135 testes PASS e cobertura 61,29% de linhas e 51,59% de branches;
+log `/private/tmp/stynx-s15-final-coverage-retry.log`. O diagnóstico
+DEVAI está em `.devai/state/check-cache/v1/diagnostics/` (estado local
+ignorado); log `/private/tmp/stynx-s15-final-local-rc.log`. O DEVAI
+recusou o recibo `task-population-not-pass`; nenhuma tag de evidência foi
+enviada. Os limiares e testes permanecem intactos. O PR final deve
+declarar a lacuna e só poderá usar uma exceção administrativa exata do
+Owner, conforme ADR-CI-ECONOMY Decision 8, após os demais checks.

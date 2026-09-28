@@ -1120,6 +1120,19 @@ expira apenas o alvo. `pnpm --filter @stynx-nyx/sessions test:int` passou
 Architect rebinda trace 30/30 e Engineer regenera o candidato antes
 do novo CI integral. Nenhum PR/push/publicação ocorreu.
 
+`policy-issue` — a preparação assinada `devai:rc:prepare` para
+`93628332eb0ef22d804bfbaf32ce9a98ccefb1bb` executou o perfil RC:
+engines, typecheck, build, contratos de API, lint, unit, integração,
+referências, DB/RLS, E2E, docs, performance, security e doctor deram
+PASS; `release:prepare` falhou porque `test:coverage` exige 100% de
+cobertura global e 14 pacotes ficaram abaixo desse limiar. Repetição
+focal em `@stynx-nyx/offline-sync` confirmou 135/135 testes verdes,
+61,29% de linhas e 51,59% de branches contra 100%. DEVAI recusou
+corretamente o recibo; nenhuma evidência assinada será publicada para
+este candidato. Manter os testes e os limiares; levar a falha para o PR
+e resolver a autoridade de merge pelo procedimento exato de Decision 8
+de ADR-CI-ECONOMY, se todos os outros checks remotos passarem.
+
 **Checkpoint final pré-PR (2026-09-28):** marker Engineer `b647f568`
 para `1.5.0`/44 pacotes, `ci:stynx` integral e `ci:reference-apps`
 verdes, release policy/provenance/consumer fixtures verdes, trace
@@ -1132,3 +1145,10 @@ preparar e publicar a evidência assinada `verified-local-rc` para o HEAD
 final, cuja configuração de ferramenta/ambiente está fixada em
 `law/policy/devai-local-rc-*`. Depois: PR, CI remoto, merge, SHA main,
 recibo Owner exato e publicação final, sem nova RC.
+
+**Atualização pré-PR:** a preparação RC acima terminou sem recibo pela
+falha de cobertura descrita em §Triagem. Abrir o PR com essa lacuna
+declarada; observar todos os checks remotos. Se somente
+`verified-local-rc` impedir o merge, uma exceção administrativa exige
+autorização Owner vinculada a ator, PR/ref, commit/tree, motivo,
+evidência de recuperação e condição de encerramento antes da ação.
