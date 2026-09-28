@@ -18,6 +18,7 @@
       "STYNX 1.5.0 CTG-0001 Architect rebind pins legacy-public and optional-auth stale identity regression sensors.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins public-tenant marker precedence and stale-claims negatives.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins credential classification, shared provenance, Cognito claims, interceptor order, and generated request ID sensors.",
+      "STYNX 1.5.0 CTG-0004 Architect rebind pins sparse local cron, poisoned schedule isolation, caller precedence, migration, and seed assertions.",
       "STYNX 1.5.0 CTG-0001 Architect rebind aligns typed-credential fixtures and symbol assertions after Inspector sensor triage.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins served interceptor order, JWKS source/rotation, typed JOSE, revoked session, and provenance sensors from delivery review 3.",
       "STYNX 1.5.0 CTG-0001 Architect rebind pins recently refreshed JWKS classification, failed refresh propagation, and public HTTP outage sensors from delivery review 4.",
@@ -1851,8 +1852,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 24,
-      "assertion_digest_sha256": "9f746f14e49e347de0b7446a59781356dee3e67e540f3e3b99fbe1bacf616b1f"
+      "assertion_count": 27,
+      "assertion_digest_sha256": "b38f858eaf58f87cf18152e2cbbd03bad9a430d3b2695dbbe18678e83657df69"
     },
     {
       "path": "packages/data/test/integration/soft-delete.spec.ts",
@@ -3751,20 +3752,28 @@
       "assertion_digest_sha256": "aeb2afc0ae3adad2adb9e92a115acadddcd12a2a66d6326d2d1e3d1b700c93ba"
     },
     {
+      "path": "packages/jobs/test/integration/poison-schedules.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "d45f1c160f5a42bf71760fd39ae69dd595fa7fa34532e562cd1fe9547bc6540d"
+    },
+    {
       "path": "test/db/platform-jobs-migration.spec.ts",
       "suite": "db",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "8974c0274839df4b634c8fb40f712899fc35bfb593fe2209c6b7aed77bb2f63b"
+      "assertion_count": 14,
+      "assertion_digest_sha256": "042e8bb9c6a1ee5b12a13a0785bbedcdd92b89da0ad22569a94b4d94edd364bb"
     },
     {
       "path": "packages/jobs/test/unit/cron-and-backoff.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 28,
-      "assertion_digest_sha256": "72a4877e898594dfbaaf7e310e03e99d5561f56811777b816c67cff19df11b70"
+      "assertion_count": 32,
+      "assertion_digest_sha256": "497e33995243a00931ac527043bb49e7f6aa065736000eb9ca8834a0cb27d13e"
     },
     {
       "path": "packages/jobs/test/unit/jobs-depth.spec.ts",
@@ -3791,12 +3800,20 @@
       "assertion_digest_sha256": "d2ed8d731e3ac8cc2599228d01af9e51f7ecda89dbe61242a3cd7bbeb8da31e7"
     },
     {
+      "path": "packages/jobs/test/unit/jobs-poison-schedule.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 17,
+      "assertion_digest_sha256": "24ac975a1369ff105aa62c362810bde734dfd2a716ba527d5e0b59ea7a25b260"
+    },
+    {
       "path": "packages/jobs/test/unit/jobs-service.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 80,
-      "assertion_digest_sha256": "060fcac35589d60cb04b7ac7f4776ef793027e37255e501f71076eac1cc0c668"
+      "assertion_count": 83,
+      "assertion_digest_sha256": "e75a0a0a11dc247d85619285290404cd4801858a51ea2bab4f847f8fd37018a6"
     },
     {
       "path": "packages/jobs/test/unit/worker.spec.ts",

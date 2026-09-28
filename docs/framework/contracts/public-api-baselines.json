@@ -1292,7 +1292,7 @@
         "jobs/src/jobs.scheduler.d.ts": "34c6f384bf10f041497deba71d60d8722d19427b7945ef2cca60e6cd7803cd4f",
         "jobs/src/jobs.service.d.ts": "94e266d54dea24b6a1b6925def3b71cfc739f59e487bbb88fd5719ba2cd75e68",
         "jobs/src/jobs.worker.d.ts": "19daeae1cd234768823e3cbd08faf2e9176817298b51822328e5cc23d73d9809",
-        "jobs/src/types.d.ts": "f8eb063fc88207dcf2e847bf46fa0428e332946feb91ff5b9774fccc80dd5108"
+        "jobs/src/types.d.ts": "6f9d4a519a6acc9bb591455c6730a369448c91c0d5c448ae300e8f961716a02a"
       }
     },
     "@stynx-nyx/logging": {
