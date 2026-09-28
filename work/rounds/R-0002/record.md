@@ -804,3 +804,8 @@ bytes assinados. SIG tinha 121 vermelhos esperados e 10 verdes, com E6
 legado 11/11 verde. OBX tinha 19 vermelhos esperados e dois verdes no
 PostgreSQL local. Prompt-review 158 solicita despacho antecipado apenas
 dos Engineers SIG e OBX; OFS e rebind trace seguem pendentes.
+
+Opus `prompt-review` focal dos Engineers SIG/OBX retornou **PASS** em
+`reviews/ctg9-sig-obx-engineer-prompt-review-1.json`, com três notas não
+bloqueantes incorporadas aos prompts 151/152. O PASS libera somente os
+dois write sets de produção em paralelo, não código OFS nem conformidade.

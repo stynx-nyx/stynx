@@ -22,6 +22,9 @@ Implemente UPS-SIG-01…04 até os sensores passarem:
 - Gate opt-in de `minimumSignatureLevel` em sign/verify, preservando API
   legada sem mínimo; backend mock/sintético/local-clock nunca estabelece
   ADVANCED/QUALIFIED. Erros tipados e sem vazamento de segredo.
+  Cubra a matriz de perfis ADR-0018 (PAdES-B-LT+TSA, OCSP/CRL,
+  QUALIFIED) e os negativos clínicos/juntas via erros tipados do contrato
+  SIG, sem importar código do DETRAN.
 - Readiness com capacidades PAdES/TSA/LTA/OCSP/CRL e composição health
   signature→health com witness/guard de bootstrap em produção.
 - Manifestos sessão/lote RFC 8785 com vínculo assinado de hash esperado,

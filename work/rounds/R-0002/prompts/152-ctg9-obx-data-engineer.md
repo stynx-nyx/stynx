@@ -11,6 +11,10 @@ adapter SSE. O maestro possui Git, DDL/seed canônicas compartilhadas,
 `test/db/runtime`, manifests/lockfile, changesets, baselines, trace e
 READMEs gerados. Não execute Git, commit, push, PR ou escrita no DETRAN.
 Não altere testes nem faça shim/cópia DETRAN.
+`OutboxEventStreamSource` fica em `packages/outbox/src` e satisfaz
+`EventStreamSource` estruturalmente, sem importar `@stynx-nyx/backend`
+nem criar dependência de manifesto. Se precisar de aresta nova, reporte
+ao maestro.
 
 Implemente UPS-OBX-01…02 e pré-requisitos data/audit:
 
@@ -40,3 +44,7 @@ Rode sensores focais PostgreSQL/RLS, testes existentes afetados, lint e
 typecheck dos pacotes. Não edite arquivos gerados nem testes para obter
 verde. Reporte símbolos reais, migração, riscos e gates. Qualquer
 incompatibilidade concreta vai ao maestro para triagem, não a um shim.
+No relatório, proponha texto do guia de migração e changeset sobre
+`TxOptions.isolation` agora honrado e `AuditChainIsolationError` em
+writes auditados sob RR/SERIALIZABLE; liste ajustes necessários em
+DDL/seed canônicos para o maestro aplicar.
