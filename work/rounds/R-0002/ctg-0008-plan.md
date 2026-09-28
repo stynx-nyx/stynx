@@ -50,7 +50,11 @@ No failure classified before dispatch. Each failure entering feedback is classif
   runtime, mas `stynx_app` não tinha senha para TCP no PostgreSQL local. O
   papel de teste foi provisionado com senha local e `STYNX_TEST_PG_APP_PASSWORD`;
   o mesmo sensor passou na tentativa seguinte, com 9 tarballs, SRI, Nest HTTP
-  e RLS real de dois tenants. Não houve alteração do teste.
+  e RLS real de dois tenants. O delivery-review revelou que esse reparo local
+  não reproduzia a lane CI. O Inspector alterou o harness para autenticar
+  com as credenciais já fornecidas pelo CI e selecionar o papel efetivo
+  `stynx_app` na conexão, com verificações de `session_user` e `current_user`;
+  o consumidor passou novamente sem `STYNX_TEST_PG_APP_PASSWORD`.
 - `policy-issue`: DEVAI strict identificou `FORBID-DROP-PROD` no commit
   `0018f245e6137464f3388d0862e369ba894e1c99`, cujo comando é apenas a
   limpeza do banco temporário criado pelo próprio sensor. Vincular recibo
