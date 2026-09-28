@@ -217,6 +217,10 @@ describe('If-Match and transactional command composition over Nest HTTP and Post
         }, { role: 'app', requireActor: true });
         throw new Error('rollback after write');
       }
+
+      @Post('/update-reversed')
+      @HttpCode(200)
+      updateReversed(suppliedRevision: number) { return this.update(suppliedRevision); }
     }
 
     for (const method of ['update', 'rollback'] as const) {
@@ -232,6 +236,15 @@ describe('If-Match and transactional command composition over Nest HTTP and Post
         RevisionController.prototype, method, descriptor,
       );
     }
+    const reversed = Object.getOwnPropertyDescriptor(RevisionController.prototype, 'updateReversed')!;
+    api.TransactionalCommand!()(RevisionController.prototype, 'updateReversed', reversed);
+    api.RevisionETag!()(RevisionController.prototype, 'updateReversed', reversed);
+    api.RequireIfMatch!()(RevisionController.prototype, 'updateReversed', reversed);
+    api.IfMatchRevision!()(RevisionController.prototype, 'updateReversed', 0);
+    (Idempotent as unknown as (options: { transactional: true }) => MethodDecorator)({ transactional: true })(
+      RevisionController.prototype, 'updateReversed', reversed);
+    backend.Audit({ action: 'command.ifMatch.updateReversed', entity: 'revision', transactional: true } as never)(
+      RevisionController.prototype, 'updateReversed', reversed);
 
     postgres = await createPostgresTestDatabase('stynx_if_match_command');
     const auditSink = new AuditSqlSink({ query: async () => { throw new Error('legacy audit path used'); } },
@@ -302,11 +315,12 @@ describe('If-Match and transactional command composition over Nest HTTP and Post
     }
   });
 
-  const send = (path: 'update' | 'rollback', key: string, ifMatch?: string) => {
+  const send = (path: 'update' | 'update-reversed' | 'rollback', key: string, ifMatch?: string,
+    body: Record<string, unknown> = { note: 'requested' }) => {
     let call = request(app!.getHttpServer()).post(`/if-match-command/${path}`)
       .set('authorization', 'Bearer verified').set('idempotency-key', key);
     if (ifMatch !== undefined) call = call.set('if-match', ifMatch);
-    return call.send({ note: 'requested' });
+    return call.send(body);
   };
 
   const state = async () => {
@@ -356,6 +370,29 @@ describe('If-Match and transactional command composition over Nest HTTP and Post
       row: { revision: 5, note: 'committed' },
       audit: [{ operation: 'command.ifMatch.update', count: '1' }], keys: 1,
     });
+  });
+
+  it.each(['update', 'update-reversed'] as const)('returns a full CTG5 conflict envelope beside If-Match in %s decorator order', async (path) => {
+    const key = `if-match-conflict-${path}`;
+    const first = await send(path, key, '"4"');
+    expect(first.status).toBe(200);
+    const admin = await postgres!.connectAsAdmin();
+    try {
+      await admin.query('update core.if_match_command_probes set revision = 4 where tenant_id = $1', [COMMAND_TENANT]);
+    } finally { await admin.end(); }
+    const conflicting = await send(path, key, '"4"', { note: 'different request body' });
+    expect(conflicting.status).toBe(409);
+    const requestId = conflicting.headers['x-request-id'];
+    expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
+    expect(conflicting.body).toEqual({ statusCode: 409, errorCode: 'IDEMPOTENCY:CONFLICT:duplicate-key',
+      message: 'Idempotency key was used for a different request', requestId,
+      details: { key }, retryable: false });
+    expect(conflicting.headers).not.toHaveProperty('etag');
+    expect(handler).toHaveBeenCalledTimes(1);
+    const durable = await state();
+    expect(durable.row).toEqual({ revision: 4, note: 'committed' });
+    expect(durable.keys).toBe(1);
+    expect(durable.audit).toHaveLength(1);
   });
 
   it('rolls back a handler write and emits no ETag or durable audit/key', async () => {

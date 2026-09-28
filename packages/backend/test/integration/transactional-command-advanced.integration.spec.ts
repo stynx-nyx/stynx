@@ -37,6 +37,14 @@ type CommandApi = {
 const asRole = (connectionString: string, role: 'stynx_app' | 'stynx_reader'): string =>
   `${connectionString}&options=${encodeURIComponent(`-c role=${role}`)}`;
 
+function expectConflictEnvelope(response: { status: number; body: unknown; headers: Record<string, string | undefined> }, key: string, errorCode = 'IDEMPOTENCY:CONFLICT:duplicate-key'): void {
+  expect(response.status).toBe(409);
+  const requestId = response.headers['x-request-id'];
+  expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
+  expect(response.body).toEqual({ statusCode: 409, errorCode,
+    message: 'Idempotency key was used for a different request', requestId, details: { key }, retryable: false });
+}
+
 const tokenVerifier = {
   verifyAuthorizationHeader: async (header?: string | string[]) => {
     const isB = header === 'Bearer tenant-b';
@@ -176,7 +184,7 @@ describe('transactional command fingerprint and app-role isolation over real Nes
               }: {
                 request: { headers: Record<string, string | undefined> };
               }) => req.headers['x-command-scope'] ?? '',
-              mismatchCode: 'SCOPED_COMMAND_MISMATCH',
+              mismatchCode: 'SCOPED:CONFLICT:command-mismatch',
               persistStatus: ({ statusCode }: { statusCode: number }) => statusCode === 202,
             }
           : {};
@@ -326,11 +334,7 @@ describe('transactional command fingerprint and app-role isolation over real Nes
     const method = await send('put', '/advanced-command/item/method', 'method-mismatch').send({
       value: 1,
     });
-    expect(method.status).toBe(409);
-    expect(method.body).toMatchObject({
-      code: 'IDEMPOTENCY_KEY_CONFLICT',
-      context: { key: 'method-mismatch' },
-    });
+    expectConflictEnvelope(method, 'method-mismatch');
     const pathFirst = await send('post', '/advanced-command/item/1', 'path-mismatch').send({
       value: 1,
     });
@@ -338,11 +342,7 @@ describe('transactional command fingerprint and app-role isolation over real Nes
       value: 1,
     });
     expect(pathFirst.status).toBe(201);
-    expect(pathSecond.status).toBe(409);
-    expect(pathSecond.body).toMatchObject({
-      code: 'IDEMPOTENCY_KEY_CONFLICT',
-      context: { key: 'path-mismatch' },
-    });
+    expectConflictEnvelope(pathSecond, 'path-mismatch');
     const canonicalA = await send('post', '/advanced-command/canonical', 'canonical-keys')
       .set('content-type', 'application/json')
       .send('{"z":3,"a":{"y":2,"x":1}}');
@@ -362,11 +362,7 @@ describe('transactional command fingerprint and app-role isolation over real Nes
     const explicitEmpty = await send('post', '/advanced-command/bodyless', 'bodyless').send({});
     expect(bodyless.status).toBe(201);
     expect(bodylessReplay.text).toBe(bodyless.text);
-    expect(explicitEmpty.status).toBe(409);
-    expect(explicitEmpty.body).toMatchObject({
-      code: 'IDEMPOTENCY_KEY_CONFLICT',
-      context: { key: 'bodyless' },
-    });
+    expectConflictEnvelope(explicitEmpty, 'bodyless');
     expect(calls.get('bodyless')).toBe(1);
     expect(calls.has('put-item')).toBe(false);
   });
@@ -384,11 +380,7 @@ describe('transactional command fingerprint and app-role isolation over real Nes
     expect(two.status).toBe(202);
     expect(replay.status).toBe(202);
     expect(replay.text).toBe(one.text);
-    expect(conflict.status).toBe(409);
-    expect(conflict.body).toMatchObject({
-      code: 'SCOPED_COMMAND_MISMATCH',
-      context: { key: 'scope-shared' },
-    });
+    expectConflictEnvelope(conflict, 'scope-shared', 'SCOPED:CONFLICT:command-mismatch');
     expect(calls.get('scoped')).toBe(2);
     const missingScope = await send('post', '/advanced-command/scoped', 'scope-missing').send({
       amount: 1,
@@ -479,7 +471,10 @@ describe('transactional command fingerprint and app-role isolation over real Nes
         .set('authorization', 'Bearer tenant-a')
         .set('idempotency-key', 'wrong-pool-role')
         .send({ value: 1 });
-      expect(response.status).toBeGreaterThanOrEqual(400);
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({ code: 'TRANSACTION_IDENTITY_MISMATCH',
+        message: 'Transaction identity does not match the trusted request context',
+        context: { reason: 'live app identity mismatch' } });
       expect(wrongRoleHandler).not.toHaveBeenCalled();
       const admin = await postgres!.connectAsAdmin();
       try {

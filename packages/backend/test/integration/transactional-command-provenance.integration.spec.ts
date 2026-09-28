@@ -1,9 +1,12 @@
 import 'reflect-metadata';
-import { Controller, Global, Module, Post, UseGuards, type CanActivate, type INestApplication } from '@nestjs/common';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { Controller, Global, Module, Post, UseGuards, type CanActivate, type INestApplication, type Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PublicTenantRoute } from '@stynx-nyx/auth';
 import { AuditSqlSink } from '@stynx-nyx/audit';
 import { StynxCoreModule } from '@stynx-nyx/core';
+import { STYNX_RESOLVED_TENANT_COMMAND_CONTEXT, type ResolvedTenantCommandContextPort } from '@stynx-nyx/contracts';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
@@ -29,6 +32,14 @@ const tokenVerifier = { verifyAuthorizationHeader: async (header?: string | stri
 } };
 
 const handlerCalls: Array<{ tenant: string; actor: string; route: string }> = [];
+
+function expectCommandEnvelope(response: { status: number; body: unknown; headers: Record<string, string | undefined> },
+  statusCode: 400 | 403, errorCode: string, message: string): void {
+  expect(response.status).toBe(statusCode);
+  const requestId = response.headers['x-request-id'];
+  expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
+  expect(response.body).toEqual({ statusCode, errorCode, message, requestId, retryable: false });
+}
 
 @Controller('/provenance-command')
 class ProvenanceController {
@@ -80,12 +91,6 @@ class ProvenanceController {
   @Audit({ action: 'provenance.invalid-scope', transactional: true })
   invalidScope() { return this.execute('invalid-scope'); }
 
-  @Post('/invalid-option')
-  @PublicTenantRoute()
-  @TransactionalCommand({ scope: () => 'public', mismatchCode: '' })
-  @Idempotent({ transactional: true })
-  @Audit({ action: 'provenance.invalid-option', transactional: true })
-  invalidOption() { return this.execute('invalid-option'); }
 }
 
 function commandSink() {
@@ -211,19 +216,62 @@ describe('transactional command tenancy provenance over real Nest HTTP/PostgreSQ
   });
 
   it.each([
-    ['/invalid-scope', 400, 'COMMAND_SCOPE_INVALID', 'provenance.invalid-scope'],
-    ['/invalid-option', 500, 'COMMAND_MISMATCH_CODE_INVALID', 'provenance.invalid-option'],
-  ] as const)('rejects %s without echoing a key or writing an audit or reservation', async (path, status, code, action) => {
+    ['/invalid-scope', 400, 'provenance.invalid-scope'],
+  ] as const)('rejects %s without echoing a key or writing an audit or reservation', async (path, status, action) => {
     const before = handlerCalls.length;
     const durableBefore = await counts(postgres, action);
     const response = await request(app.getHttpServer()).post(`/provenance-command${path}`)
       .set('host', 'a.portal.test').set('idempotency-key', `rejected-${status}`)
       .send({ value: 1 });
-    expect(response.status).toBe(status);
-    expect(response.body).toMatchObject({ code });
+    expectCommandEnvelope(response, status, 'COMMAND:BAD_REQUEST:scope-invalid', 'Command scope is invalid');
     expect(response.headers).not.toHaveProperty('x-idempotency-key');
     expect(handlerCalls).toHaveLength(before);
     expect(await counts(postgres, action)).toEqual(durableBefore);
+  });
+
+  it('maps a throwing tenancy context port to 500 before SQL or handler effects', async () => {
+    const port = app.get<ResolvedTenantCommandContextPort>(STYNX_RESOLVED_TENANT_COMMAND_CONTEXT);
+    const before = await counts(postgres, 'provenance.nominal');
+    const handlerBefore = handlerCalls.length;
+    const spy = vi.spyOn(port, 'get').mockImplementation(() => { throw new Error('tenancy port failure'); });
+    try {
+      const response = await request(app.getHttpServer()).post('/provenance-command/nominal')
+        .set('host', 'a.portal.test').set('idempotency-key', 'throwing-port').send({ value: 1 });
+      expect(response.status).toBe(500);
+      const requestId = response.headers['x-request-id'];
+      expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
+      expect(response.body).toEqual({ statusCode: 500,
+        errorCode: 'COMMAND:CONFIGURATION:tenancy-port-failed',
+        message: 'Tenant context resolution failed', requestId, retryable: false });
+      expect(handlerCalls).toHaveLength(handlerBefore);
+      expect(await counts(postgres, 'provenance.nominal')).toEqual(before);
+    } finally { spy.mockRestore(); }
+  });
+
+  it.each([
+    ['principal', 'COMMAND:FORBIDDEN:actor-provenance-invalid', 'Trusted actor provenance is invalid'],
+    ['claims', 'COMMAND:FORBIDDEN:claims-mismatch', 'Authenticated claims do not match command context'],
+  ] as const)('rejects tampered %s at the command provenance boundary before domain, audit or key effects', async (kind, code, message) => {
+    const port = app.get<ResolvedTenantCommandContextPort>(STYNX_RESOLVED_TENANT_COMMAND_CONTEXT);
+    const originalGet = port.get.bind(port);
+    const before = await counts(postgres, 'provenance.protected');
+    const handlerBefore = handlerCalls.length;
+    const spy = vi.spyOn(port, 'get').mockImplementation((rawRequest) => {
+      const resolved = originalGet(rawRequest);
+      const commandRequest = rawRequest as { principal?: { id: string };
+        stynxClaims?: { sub: string; tenantId: string } };
+      if (kind === 'principal' && commandRequest.principal) commandRequest.principal.id = ACTOR_B;
+      if (kind === 'claims') commandRequest.stynxClaims = { sub: ACTOR_B, tenantId: TENANT_A };
+      return resolved;
+    });
+    try {
+      const response = await request(app.getHttpServer()).post('/provenance-command/protected')
+        .set('authorization', 'Bearer a').set('x-tenant-id', TENANT_A)
+        .set('idempotency-key', `tampered-${kind}`).send({ value: 1 });
+      expectCommandEnvelope(response, 403, code, message);
+      expect(handlerCalls).toHaveLength(handlerBefore);
+      expect(await counts(postgres, 'provenance.protected')).toEqual(before);
+    } finally { spy.mockRestore(); }
   });
 
   it('fails core → command → tenancy ordering before the handler, audit event or key', async () => {
@@ -240,8 +288,7 @@ describe('transactional command tenancy provenance over real Nest HTTP/PostgreSQ
       const response = await request(wrongApp.getHttpServer()).post('/provenance-command/protected')
         .set('authorization', 'Bearer a').set('x-tenant-id', TENANT_A).set('idempotency-key', 'wrong-order')
         .send({ value: 1 });
-      expect(response.status).toBe(403);
-      expect(response.body).toMatchObject({ code: 'COMMAND_TENANT_PROVENANCE_INVALID' });
+      expectCommandEnvelope(response, 403, 'COMMAND:FORBIDDEN:tenant-provenance-invalid', 'Trusted tenant provenance is invalid');
       expect(response.headers).not.toHaveProperty('x-idempotency-key');
       expect(handlerCalls).toHaveLength(before);
       expect(commandTx.mock.calls.filter(([, options]) => options?.requireActor === true)).toHaveLength(0);
@@ -256,18 +303,29 @@ describe('transactional command provenance bootstrap', () => {
   @Module({ providers: [{ provide: Database, useValue: {} }], exports: [Database] })
   class FakeDatabaseModule {}
 
-  async function bootstrap(controller: typeof PublicController | typeof ProtectedController,
-    globalGuard?: BuiltinAuthContextGuard, includeAuth = false) {
+  async function bootstrap(controller: Type<unknown>,
+    globalGuard?: BuiltinAuthContextGuard, includeAuth = false, includeTenancy = false) {
     const testing = await Test.createTestingModule({
       imports: [StynxCoreModule.forRoot({ appName: 'provenance-bootstrap', schema: z.object({}) }),
         FakeDatabaseModule,
         ...(includeAuth ? [StynxAuthModule.forRoot({ tokenVerifier })] : []),
+        ...(includeTenancy ? [StynxTenancyModule.forRoot({ publicTenant: {
+          actorId: NOMINAL_ACTOR, resolveHost: () => TENANT_A,
+        } })] : []),
         StynxTransactionalCommandModule.forRoot({ auditSink: commandSink() })],
       controllers: [controller],
     }).compile();
     const app = testing.createNestApplication();
     if (globalGuard) app.useGlobalGuards(globalGuard);
     return app;
+  }
+
+  async function expectBootstrapRefusal(candidate: INestApplication, pattern: RegExp): Promise<void> {
+    let failure: unknown;
+    try { await candidate.init(); }
+    catch (error) { failure = error; }
+    expect(failure).toBeInstanceOf(Error);
+    if (failure instanceof Error) expect(failure.message).toMatch(pattern);
   }
 
   @Controller('/missing-port')
@@ -289,10 +347,90 @@ describe('transactional command provenance bootstrap', () => {
     run() { return { ok: false }; }
   }
 
+  @Controller('/invalid-mismatch-code')
+  class InvalidMismatchCodeController {
+    @Post()
+    @PublicTenantRoute()
+    @TransactionalCommand({ scope: () => 'public', mismatchCode: '' })
+    @Idempotent({ transactional: true })
+    @Audit({ action: 'invalid.mismatch-code', transactional: true })
+    run() { return { ok: false }; }
+  }
+
+  @Controller('/invalid-lock-timeout')
+  class InvalidLockTimeoutController {
+    @Post()
+    @PublicTenantRoute()
+    @TransactionalCommand({ scope: () => 'public', lockTimeoutMs: 0 })
+    @Idempotent({ transactional: true })
+    @Audit({ action: 'invalid.lock-timeout', transactional: true })
+    run() { return { ok: false }; }
+  }
+
+  @Controller('/invalid-ttl')
+  class InvalidTtlController {
+    @Post()
+    @PublicTenantRoute()
+    @TransactionalCommand({ scope: () => 'public' })
+    @Idempotent({ transactional: true, ttlMs: 0 })
+    @Audit({ action: 'invalid.ttl', transactional: true })
+    run() { return { ok: false }; }
+  }
+
   it('rejects a public command when the tenancy port provider is absent', async () => {
     const missing = await bootstrap(PublicController);
     try { await expect(missing.init()).rejects.toThrow(/tenancy port/i); }
     finally { await missing.close(); }
+  });
+
+  it('refuses an invalid route mismatchCode during app.init instead of exposing a runtime 500 route', async () => {
+    const invalid = await bootstrap(InvalidMismatchCodeController, undefined, false, true);
+    try { await expectBootstrapRefusal(invalid, /mismatchCode|errorCode|invalid/i); }
+    finally { await invalid.close(); }
+  });
+
+  it.each([
+    ['lockTimeoutMs', InvalidLockTimeoutController],
+    ['ttlMs', InvalidTtlController],
+  ] as const)('refuses invalid route %s during app.init', async (_name, controller) => {
+    const invalid = await bootstrap(controller, undefined, false, true);
+    try { await expectBootstrapRefusal(invalid, /timeout|ttl|invalid/i); }
+    finally { await invalid.close(); }
+  });
+
+  it('throws synchronously for invalid forRoot mismatchCode and lockTimeoutMs', () => {
+    expect(() => StynxTransactionalCommandModule.forRoot({ auditSink: commandSink(), mismatchCode: '' }))
+      .toThrow(/mismatchCode|errorCode|invalid/i);
+    expect(() => StynxTransactionalCommandModule.forRoot({ auditSink: commandSink(), lockTimeoutMs: 0 }))
+      .toThrow(/timeout|invalid/i);
+  });
+
+  it.each([
+    'SCOPED:CONFLICT:command-mismatch', '', 'SCOPED_COMMAND_MISMATCH',
+    'SCOPED:CONFLICT:', '1SCOPED:CONFLICT:command-mismatch',
+    'SCOPED:CONFLICT:bad.detail',
+  ])('uses the law errorCode grammar equally at forRoot and route bootstrap for %j', async (code) => {
+    const law = JSON.parse(readFileSync(resolve(__dirname, '../../../../law/schemas/error-envelope.schema.json'), 'utf8')) as {
+      properties: { errorCode: { pattern: string } };
+    };
+    const accepted = new RegExp(law.properties.errorCode.pattern, 'u').test(code);
+    if (accepted) expect(() => StynxTransactionalCommandModule.forRoot({ auditSink: commandSink(), mismatchCode: code })).not.toThrow();
+    else expect(() => StynxTransactionalCommandModule.forRoot({ auditSink: commandSink(), mismatchCode: code }))
+      .toThrow(/mismatchCode|errorCode|invalid/i);
+    @Controller('/code-grammar')
+    class CodeGrammarController {
+      @Post()
+      @PublicTenantRoute()
+      @TransactionalCommand({ mismatchCode: code })
+      @Idempotent({ transactional: true })
+      @Audit({ action: 'code.grammar', transactional: true })
+      run() { return { ok: true }; }
+    }
+    const candidate = await bootstrap(CodeGrammarController, undefined, false, true);
+    try {
+      if (accepted) await expect(candidate.init()).resolves.toBe(candidate);
+      else await expectBootstrapRefusal(candidate, /mismatchCode|errorCode|invalid/i);
+    } finally { await candidate.close(); }
   });
 
   it('rejects a same-name look-alike guard, an inheriting subclass and imperative useGlobalGuards-only registration', async () => {

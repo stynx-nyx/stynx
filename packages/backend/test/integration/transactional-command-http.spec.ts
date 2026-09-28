@@ -37,6 +37,14 @@ const ERROR_BODY = { code: 'DELEGATION_FAILED', message: 'Upstream unavailable' 
 const asRole = (connectionString: string, role: 'stynx_app' | 'stynx_reader'): string =>
   `${connectionString}&options=${encodeURIComponent(`-c role=${role}`)}`;
 
+function expectConflictEnvelope(response: { status: number; body: unknown; headers: Record<string, string | undefined> }, key: string): void {
+  expect(response.status).toBe(409);
+  const requestId = response.headers['x-request-id'];
+  expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
+  expect(response.body).toEqual({ statusCode: 409, errorCode: 'IDEMPOTENCY:CONFLICT:duplicate-key',
+    message: 'Idempotency key was used for a different request', requestId, details: { key }, retryable: false });
+}
+
 type CommandApi = {
   TransactionalCommand: (options?: Record<string, unknown>) => MethodDecorator;
   StynxTransactionalCommandModule: { forRoot(options: Record<string, unknown>): unknown };
@@ -360,11 +368,7 @@ describe('transactional command committed wire response over Nest HTTP and Postg
         .send({ amount: 1 });
     await send('one').expect(502);
     const conflict = await send('two');
-    expect(conflict.status).toBe(409);
-    expect(conflict.body).toMatchObject({
-      code: 'IDEMPOTENCY_KEY_CONFLICT',
-      context: { key: 'same-route-template' },
-    });
+    expectConflictEnvelope(conflict, 'same-route-template');
     expect(handler).toHaveBeenCalledTimes(before + 1);
   });
 });

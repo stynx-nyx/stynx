@@ -32,15 +32,48 @@ const asAppRole = (connectionString: string): string =>
 const asReaderRole = (connectionString: string): string =>
   `${connectionString}&options=${encodeURIComponent('-c role=stynx_reader')}`;
 
+function expectInProgressEnvelope(response: { status: number; body: unknown; headers: Record<string, string | undefined> }, key: string): void {
+  expect(response.status).toBe(409);
+  const requestId = response.headers['x-request-id'];
+  expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
+  expect(response.body).toEqual({ statusCode: 409, errorCode: 'IDEMPOTENCY:CONFLICT:in-progress',
+    message: 'Idempotency key is in progress', requestId, details: { key }, retryable: true });
+}
+
+function expectDependencyEnvelope(response: { status: number; body: unknown; headers: Record<string, string | undefined> }): void {
+  const requestId = response.headers['x-request-id'];
+  expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
+  expect(response.status).toBe(503);
+  expect(response.body).toEqual({ statusCode: 503, errorCode: 'COMMAND:DEPENDENCY:transaction-failed',
+    message: 'Transactional command failed', requestId, retryable: false });
+}
+
 const tick = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 class FaultingCompletionStore extends TransactionalIdempotencyStore {
+  override async lookup(...args: Parameters<TransactionalIdempotencyStore['lookup']>) {
+    const result = await super.lookup(...args);
+    if (args[1].key === 'lookup-fault') throw new Error('injected lookup failure');
+    return result;
+  }
+
+  override async reserve(...args: Parameters<TransactionalIdempotencyStore['reserve']>) {
+    const result = await super.reserve(...args);
+    if (args[1].key === 'reserve-fault') throw new Error('injected reserve failure');
+    return result;
+  }
+
   override async complete(
     ...args: Parameters<TransactionalIdempotencyStore['complete']>
   ): Promise<void> {
     await super.complete(...args);
     if (args[1].key === 'completion-fault')
       throw new Error('injected completion failure after durable update');
+  }
+
+  override async clear(...args: Parameters<TransactionalIdempotencyStore['clear']>): Promise<void> {
+    await super.clear(...args);
+    if (args[1].key === 'clear-fault') throw new Error('injected clear failure');
   }
 }
 
@@ -111,6 +144,15 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
         await this.record('completion');
         return { saved: true };
       }
+
+      @Post('/lookup')
+      async lookupFault() { await this.record('lookup'); return { saved: true }; }
+
+      @Post('/reserve')
+      async reserveFault() { await this.record('reserve'); return { saved: true }; }
+
+      @Post('/clear')
+      async clearFault() { await this.record('clear'); return { saved: true }; }
 
       @Post('/commit')
       async commitFault() {
@@ -196,6 +238,9 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       'handlerFault',
       'auditFault',
       'completionFault',
+      'lookupFault',
+      'reserveFault',
+      'clearFault',
       'commitFault',
       'serializationFault',
       'statementTimeout',
@@ -207,6 +252,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     for (const method of commandMethods) {
       const descriptor = Object.getOwnPropertyDescriptor(FaultController.prototype, method)!;
       TransactionalCommand({
+        ...(method === 'clearFault' ? { persistStatus: () => false } : {}),
         lockTimeoutMs:
           method === 'race' || method === 'auditContention'
             ? 120
@@ -396,8 +442,12 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     async (mode, key) => {
       for (let attempt = 1; attempt <= 2; attempt += 1) {
         const result = await send(mode, key);
-        expect(result.status).toBeGreaterThanOrEqual(500);
-        expect(result.status).not.toBe(409);
+        if (mode === 'handler') {
+          expect(result.status).toBe(502);
+          expect(result.body).toEqual({ code: 'HANDLER_FAILED' });
+        } else {
+          expectDependencyEnvelope(result);
+        }
         expect(countInvocations(mode)).toBe(attempt);
         await assertNoDurableEffect(mode, key);
       }
@@ -407,10 +457,65 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
 
   it('surfaces serialization failure after one handler invocation with no committed effects', async () => {
     const response = await send('serialization', 'serialization-fault');
-    expect(response.status).toBeGreaterThanOrEqual(500);
-    expect(response.status).not.toBe(409);
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({ code: 'SERIALIZATION_FAILURE',
+      message: 'Transaction failed after retrying serialization errors',
+      context: { attempts: 1, code: '40001' } });
     expect(countInvocations('serialization')).toBe(1);
     await assertNoDurableEffect('serialization', 'serialization-fault');
+  });
+
+  it.each([
+    ['lookup', 'lookup-fault', 0], ['reserve', 'reserve-fault', 0], ['clear', 'clear-fault', 1],
+  ] as const)('maps %s store failure to the exact nonretryable 503 after rollback', async (mode, key, calls) => {
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      const result = await send(mode, key);
+      expectDependencyEnvelope(result);
+      expect(countInvocations(mode)).toBe(calls * attempt);
+      await assertNoDurableEffect(mode, key);
+    }
+  });
+
+  it('maps app-pool connection failure before BEGIN to 503 without invoking the handler', async () => {
+    const handler = vi.fn(() => ({ mustNotCommit: true }));
+    @Controller('/transactional-setup-fault')
+    @UseGuards(AuthContextGuard)
+    class SetupFaultController {
+      @Post()
+      @TransactionalCommand()
+      @Idempotent({ transactional: true })
+      @Audit({ action: 'command.setupFault', transactional: true })
+      command() { return handler(); }
+    }
+    const unavailable = new URL(postgres!.connectionString('ctg5-setup-unavailable'));
+    unavailable.port = '1';
+    const auditSink = new AuditSqlSink({ query: async () => { throw new Error('legacy audit path used'); } },
+      { mode: 'audit_write_function' });
+    const testing = await Test.createTestingModule({
+      imports: [
+        StynxCoreModule.forRoot({ appName: 'transactional-setup-fault', schema: z.object({}) }),
+        StynxDataModule.forRoot({ connections: {
+          owner: { connectionString: postgres!.connectionString('ctg5-setup-owner') },
+          app: { connectionString: unavailable.toString() },
+          reader: { connectionString: asReaderRole(postgres!.connectionString('ctg5-setup-reader')) },
+        }, migrations: { enabled: false } }),
+        StynxAuthModule.forRoot({ tokenVerifier: { verifyAuthorizationHeader: async () => ({ principal: {
+          id: ACTOR, roles: ['member'], permissions: [], tenants: [TENANT], claims: { tenant_id: TENANT },
+        } }) } }),
+        StynxIdempotencyModule.forRoot({ backend: { get: async () => null, set: async () => undefined,
+          acquireLock: async () => true, releaseLock: async () => undefined, isLocked: async () => false } }),
+        StynxTransactionalCommandModule.forRoot({ auditSink }),
+      ], controllers: [SetupFaultController],
+    }).compile();
+    const setupApp = testing.createNestApplication();
+    try {
+      await setupApp.init();
+      const response = await request(setupApp.getHttpServer()).post('/transactional-setup-fault')
+        .set('authorization', 'Bearer verified').set('idempotency-key', 'setup-fault').send({ value: 1 });
+      expectDependencyEnvelope(response);
+      expect(handler).not.toHaveBeenCalled();
+      await assertNoDurableEffect('setup', 'setup-fault');
+    } finally { await setupApp.close(); }
   });
 
   it('rolls back a real PostgreSQL statement timeout without publishing cache or consuming the key', async () => {
@@ -418,8 +523,8 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     for (let attempt = 1; attempt <= 2; attempt += 1) {
       const response = await send('statement-timeout', 'statement-timeout-key');
       expect(response.status).toBe(504);
-      expect(response.body).toMatchObject({ code: 'STATEMENT_TIMEOUT' });
-      expect(response.body.code).not.toBe('IDEMPOTENCY_KEY_IN_PROGRESS');
+      expect(response.body).toEqual({ code: 'STATEMENT_TIMEOUT',
+        message: 'Transaction exceeded the configured statement timeout', context: { originalCode: '57014' } });
       expect(countInvocations('statement-timeout')).toBe(attempt);
       await assertNoDurableEffect(
         'statement-timeout',
@@ -438,12 +543,13 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     await raceEnteredPromise;
     try {
       const startedAt = Date.now();
-      const loser = await send('race', 'race-key');
-      expect(loser.status).toBe(409);
-      expect(loser.body).toMatchObject({
-        code: 'IDEMPOTENCY_KEY_IN_PROGRESS',
-        context: { key: 'race-key' },
-      });
+      const [firstLoser, secondLoser] = await Promise.all([
+        send('race', 'race-key'),
+        send('race', 'race-key'),
+      ]);
+      expectInProgressEnvelope(firstLoser, 'race-key');
+      expectInProgressEnvelope(secondLoser, 'race-key');
+      expect(firstLoser.headers['x-request-id']).not.toBe(secondLoser.headers['x-request-id']);
       expect(Date.now() - startedAt).toBeLessThan(3_000);
       expect(countInvocations('race')).toBe(1);
     } finally {
