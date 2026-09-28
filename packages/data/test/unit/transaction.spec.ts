@@ -88,8 +88,8 @@ describe('Transaction', () => {
     ]);
 
     tx.close();
-    await expect(tx.execute(sql`select 3`)).rejects.toBeInstanceOf(TransactionRequiredError);
-    await expect(tx.query('select 4')).rejects.toBeInstanceOf(TransactionRequiredError);
+    await expect(tx.execute(sql`select 3`)).rejects.toMatchObject({ code: 'TRANSACTION_REQUIRED' });
+    await expect(tx.query('select 4')).rejects.toMatchObject({ code: 'TRANSACTION_REQUIRED' });
     expect(fake.queries).toHaveLength(2);
   });
 
