@@ -17,6 +17,14 @@ import { buildManifestBoundPades } from '../fixtures/pki/bound-pades';
 // Doubles isolate the mutation matrix and cannot establish qualification.
 const api = sig as Record<string, any>;
 const snapshot = Buffer.from('{"minutes":"approved"}');
+const partyBCertificate = {
+  ...certificate,
+  pem: Buffer.from(bytes('spoof.cert.pem')).toString('utf8'),
+};
+const partyBSignedDocument = bytes('pades-party-b-blt.pdf');
+const partyBCmsSignature = bytes('pades-party-b-blt.cms.der');
+const certificateFor = (signerId: string) =>
+  signerId === 'secretary' ? hex(bytes('spoof.cert.der')) : hex(bytes('signer.cert.der'));
 const make = () => {
   expect(api.SignatureManifestService).toEqual(expect.any(Function));
   const baseProof = {
@@ -26,9 +34,6 @@ const make = () => {
     achievedLevel: 'ADVANCED',
     padesProfile: 'PAdES-B-LT',
     originalDocumentSha256: hex(sourceDocument),
-    signedDocumentSha256: hex(signedDocument),
-    cmsSha256: hex(cmsSignature),
-    signerCertificateSha256: hex(bytes('signer.cert.der')),
     chainSha256: [hex(bytes('root.cert.pem'))],
     signedAt: now,
     tsaAt: now,
@@ -39,12 +44,20 @@ const make = () => {
   const verifier = {
     verifySignedArtifact: vi.fn().mockImplementation(async (input: any) => ({
       ...baseProof,
+      signedDocumentSha256: hex(input.signedDocument),
+      cmsSha256: hex(input.cmsSignature),
+      signerCertificateSha256: hex(Buffer.from(input.certificate.pem.replace(/-----[^-]+-----|\s/gu, ''), 'base64')),
       boundManifestSha256: input.expectedManifestSha256,
     })),
   };
+  const resolveSignerCertificate = vi.fn().mockImplementation(async (tenantId: string, signerId: string) => {
+    if (tenantId !== 'tenant-a') throw new Error('tenant unavailable');
+    return certificateFor(signerId);
+  });
   return {
-    manifests: new api.SignatureManifestService({ verifier, trustVerifier: verifier }),
+    manifests: new api.SignatureManifestService({ verifier, trustVerifier: verifier, resolveSignerCertificate }),
     verifier,
+    resolveSignerCertificate,
   };
 };
 const common = {
@@ -62,9 +75,9 @@ const common = {
 const signer = (signerId: string) => ({
   signerId,
   signatureId: `signature-${signerId}`,
-  signedDocument,
-  cmsSignature,
-  certificate,
+  signedDocument: signerId === 'secretary' ? partyBSignedDocument : signedDocument,
+  cmsSignature: signerId === 'secretary' ? partyBCmsSignature : cmsSignature,
+  certificate: signerId === 'secretary' ? partyBCertificate : certificate,
   trustProfile: profile,
 });
 const prepared = (manifests: any, kind: 'session' | 'batch') =>
@@ -86,7 +99,10 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
       fetchCrl: async () => bytes('root.crl.der'),
       fetchTsa: async () => timestampToken,
     });
-    const manifests = new api.SignatureManifestService({ verifier: trustVerifier });
+    const manifests = new api.SignatureManifestService({
+      verifier: trustVerifier,
+      resolveSignerCertificate: async (_tenantId: string, signerId: string) => certificateFor(signerId),
+    });
     const manifest =
       kind === 'session'
         ? manifests.prepareSession({
@@ -122,6 +138,47 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
     });
   });
 
+  it('seals distinct real A and B signatures against tenant-scoped signer identities', async () => {
+    const trustVerifier = api.createCmsTrustVerifier({
+      trustAnchorsPem: [rootPem],
+      tsaTrustAnchorsPem: [rootPem],
+      acceptedPolicies: profile.acceptedPolicies,
+      now: () => now,
+    });
+    const resolveSignerCertificate = vi.fn().mockImplementation(async (_tenant: string, id: string) => certificateFor(id));
+    const manifests = new api.SignatureManifestService({ verifier: trustVerifier, resolveSignerCertificate });
+    const manifest = prepared(manifests, kind);
+    const a = buildManifestBoundPades(manifest.manifestSha256, 'A');
+    const b = buildManifestBoundPades(manifest.manifestSha256, 'B');
+    const chair = { ...signer('chair'), signedDocument: a.signedDocument, cmsSignature: a.cmsSignature };
+    const secretary = { ...signer('secretary'), signedDocument: b.signedDocument, cmsSignature: b.cmsSignature };
+    const first = await manifests.appendVerifiedSigner(manifest, chair, { sourceDocument, snapshot });
+    const complete = await manifests.appendVerifiedSigner(first, secretary, { sourceDocument, snapshot });
+    expect((await manifests.verifyManifest({ manifest: complete, sourceDocument, snapshot,
+      signers: [chair, secretary] })).status).toBe('valid');
+    expect(complete.signers.map((entry: any) => entry.signerCertificateSha256))
+      .toEqual([certificateFor('chair'), certificateFor('secretary')]);
+    expect(resolveSignerCertificate).toHaveBeenCalledWith('tenant-a', 'chair');
+    expect(resolveSignerCertificate).toHaveBeenCalledWith('tenant-a', 'secretary');
+  });
+
+  it('refuses an attached CMS even when the PDF carries the expected signed manifest hash', async () => {
+    const trustVerifier = api.createCmsTrustVerifier({
+      trustAnchorsPem: [rootPem], tsaTrustAnchorsPem: [rootPem],
+      acceptedPolicies: profile.acceptedPolicies, now: () => now,
+    });
+    const manifests = new api.SignatureManifestService({ verifier: trustVerifier,
+      resolveSignerCertificate: async () => certificateFor('chair') });
+    const manifest = kind === 'session'
+      ? manifests.prepareSession({ ...common, sessionId: 'session-a', minutesId: 'minutes-a',
+        requiredSignerIds: ['chair'] })
+      : manifests.prepareBatch({ ...common, batchId: 'batch-a', requiredSignerIds: ['chair'] });
+    const attached = buildManifestBoundPades(manifest.manifestSha256, 'A', true);
+    await expect(manifests.appendVerifiedSigner(manifest, {
+      ...signer('chair'), signedDocument: attached.signedDocument, cmsSignature: attached.cmsSignature,
+    }, { sourceDocument, snapshot })).rejects.toMatchObject({ message: 'Detached id-data CMS required' });
+  });
+
   it('binds exact canonical bytes, source/snapshot hashes and signer order', async () => {
     const { manifests, verifier } = make();
     const manifest = prepared(manifests, kind);
@@ -155,6 +212,26 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
     expect(second.signers.map((x: any) => x.order)).toEqual([1, 2]);
   });
 
+  it('refuses A’s proof in B’s slot and refuses CMS reuse across signer positions', async () => {
+    const { manifests } = make();
+    const first = await manifests.appendVerifiedSigner(prepared(manifests, kind), signer('chair'),
+      { sourceDocument, snapshot });
+    const aRelabelled = { ...signer('chair'), signerId: 'secretary', signatureId: 'signature-secretary' };
+    await expect(manifests.appendVerifiedSigner(first, aRelabelled, { sourceDocument, snapshot }))
+      .rejects.toBeInstanceOf(sig.SignatureError);
+    const bWithRepeatedCms = { ...signer('secretary'), cmsSignature };
+    await expect(manifests.appendVerifiedSigner(first, bWithRepeatedCms, { sourceDocument, snapshot }))
+      .rejects.toBeInstanceOf(sig.SignatureError);
+  });
+
+  it('reports an unavailable signer resolver distinctly from an invalid proof', async () => {
+    const { verifier } = make();
+    const manifests = new api.SignatureManifestService({ verifier,
+      resolveSignerCertificate: async () => { throw new Error('directory unavailable'); } });
+    await expect(manifests.appendVerifiedSigner(prepared(manifests, kind), signer('chair'),
+      { sourceDocument, snapshot })).rejects.toMatchObject({ name: 'SignatureTrustUnavailableError' });
+  });
+
   it('appends after JSON persistence using explicit source and snapshot bytes', async () => {
     const { manifests } = make();
     const stored = JSON.parse(JSON.stringify(prepared(manifests, kind)));
@@ -177,25 +254,25 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
     const { verifier } = make();
     const forged = Object.assign(verifier, { verifierKind: 'stynx-cms' });
     const artifact = { ...signer('chair'), trustProfile: { ...profile, environment: 'production' } };
-    const unacknowledged = new api.SignatureManifestService({ verifier: forged });
+    const resolveSignerCertificate = async (_tenantId: string, signerId: string) => certificateFor(signerId);
+    const unacknowledged = new api.SignatureManifestService({ verifier: forged, resolveSignerCertificate });
     const initial = prepared(unacknowledged, kind);
     await expect(unacknowledged.appendVerifiedSigner(initial, artifact, { sourceDocument, snapshot }))
       .rejects.toMatchObject({ name: 'SignatureProviderConfigurationError' });
     const acknowledged = new api.SignatureManifestService({
       verifier: forged,
       consumerOwnedVerifier: { acknowledged: true },
+      resolveSignerCertificate,
     });
     const completed = await acknowledged.appendVerifiedSigner(initial, artifact, { sourceDocument, snapshot });
     expect(completed.signers[0]?.verifierKind).toBe('consumer-owned');
-    const final = await acknowledged.appendVerifiedSigner(completed, {
-      ...artifact,
-      signerId: 'secretary',
-    }, { sourceDocument, snapshot });
+    const secretary = { ...signer('secretary'), trustProfile: artifact.trustProfile };
+    const final = await acknowledged.appendVerifiedSigner(completed, secretary, { sourceDocument, snapshot });
     expect((await acknowledged.verifyManifest({
       manifest: final,
       sourceDocument,
       snapshot,
-      signers: [artifact, { ...artifact, signerId: 'secretary' }],
+      signers: [artifact, secretary],
     })).status).toBe('valid');
   });
 

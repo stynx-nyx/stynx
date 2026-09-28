@@ -265,6 +265,29 @@ describe('withdrawal evidence', () => {
     expect(result.reasons).toContain('DIGITAL_SIGNATURE_INVALID');
   });
 
+  it('rejects an attached CMS as a digital withdrawal declaration', async () => {
+    const trustVerifier = api.createCmsTrustVerifier({
+      trustAnchorsPem: [rootPem], tsaTrustAnchorsPem: [rootPem],
+      acceptedPolicies: profile.acceptedPolicies, now: () => now,
+    });
+    const verifier = new api.SignatureWithdrawalVerifier({
+      trustVerifier,
+      resolvePartyCertificate: async () => hex(bytes('signer.cert.der')),
+    });
+    const attachedCms = bytes('withdrawal-attached-blt.cms.der');
+    const result = await verifier.verifyWithdrawalEvidence({
+      ...base,
+      verificationMethod: 'digital_verified', signerPartyId: 'party-a',
+      evidenceBytes: attachedCms,
+      declarationDocument: bytes('withdrawal-attached-source.pdf'),
+      declarationSignedDocument: bytes('withdrawal-attached-blt.pdf'),
+      declarationCmsSignature: attachedCms,
+      declarationCertificate: certificate,
+    });
+    expect(result.status).toBe('tampered');
+    expect(result.reasons).toContain('DIGITAL_SIGNATURE_INVALID');
+  });
+
   it.each([
     ['tenant', { tenantId: 'tenant-b' }],
     ['case', { caseId: 'case-b' }],

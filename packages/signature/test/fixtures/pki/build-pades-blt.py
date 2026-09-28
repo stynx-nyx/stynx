@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 import zlib
 
 ROOT = Path(__file__).resolve().parent
@@ -23,6 +24,11 @@ BYTE_RANGE_SPACES = os.environ.get('STYNX_BYTE_RANGE_SPACES') == '1'
 REVOKE_SIGNER_OCSP = os.environ.get('STYNX_REVOKE_SIGNER_OCSP') == '1'
 REVOKE_SIGNER_CRL = os.environ.get('STYNX_REVOKE_SIGNER_CRL') == '1'
 ESS_SPOOF = os.environ.get('STYNX_ESS_SPOOF') == '1'
+SIGNER_KIND = os.environ.get('STYNX_SIGNER_KIND', 'signer')
+ATTACHED_CMS = os.environ.get('STYNX_ATTACHED_CMS') == '1'
+PRE_TST_GOOD = os.environ.get('STYNX_PRE_TST_GOOD') == '1'
+if SIGNER_KIND not in ('signer', 'spoof'):
+    raise ValueError('STYNX_SIGNER_KIND must be signer or spoof')
 if MANIFEST and (len(MANIFEST) != 64 or any(c not in '0123456789abcdef' for c in MANIFEST)):
     raise ValueError('STYNX_MANIFEST_SHA256 must be lowercase SHA-256 hex')
 if WITHDRAWAL and (len(WITHDRAWAL) != 64 or any(c not in '0123456789abcdef' for c in WITHDRAWAL)):
@@ -96,32 +102,51 @@ revision = revision.replace(old_range, new_range)
 with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
     work = Path(temp)
     (work / 'content.bin').write_bytes(revision[:gap_start] + revision[gap_end:])
+    if ATTACHED_CMS:
+        (work / 'unrelated.bin').write_bytes(b'Unrelated CMS content, not the selected PDF ByteRange.\n')
     certfile = ROOT / 'root.cert.pem'
     if ESS_SPOOF:
         (work / 'cms-certs.pem').write_bytes((ROOT / 'root.cert.pem').read_bytes() +
                                               (ROOT / 'spoof.cert.pem').read_bytes())
         certfile = work / 'cms-certs.pem'
-    run(OPENSSL, 'cms', '-sign', '-binary', '-cades', '-in', 'content.bin',
-        '-signer', str(ROOT / 'signer.cert.pem'), '-inkey', str(ROOT / 'signer.key.pem'),
+    signing = [OPENSSL, 'cms', '-sign', '-binary', '-cades']
+    if ATTACHED_CMS:
+        signing.append('-nodetach')
+    run(*signing, '-in', 'unrelated.bin' if ATTACHED_CMS else 'content.bin',
+        '-signer', str(ROOT / f'{SIGNER_KIND}.cert.pem'), '-inkey', str(ROOT / f'{SIGNER_KIND}.key.pem'),
         '-certfile', str(certfile), '-outform', 'DER', '-out', 'base.cms.der', cwd=work)
     if ESS_SPOOF:
         run('node', str(ROOT / 'cms-timestamp.cjs'), 'spoof', 'base.cms.der',
             str(ROOT / 'spoof.cert.der'), 'spoof.cms.der', cwd=work)
         shutil.move(work / 'spoof.cms.der', work / 'base.cms.der')
-    signer_index = ('R\t270928000000Z\t260928000000Z\t03E9\tunknown\t/CN=STYNX Test Signer\n'
-                    if REVOKE_SIGNER_OCSP else
-                    'V\t270928000000Z\t\t03E9\tunknown\t/CN=STYNX Test Signer\n')
-    (work / 'ocsp-index.txt').write_text(
-        signer_index +
-        'V\t270928000000Z\t\t03EA\tunknown\t/CN=STYNX Test TSA\n')
-    for name in ('signer', 'tsa'):
-        run(OPENSSL, 'ocsp', '-issuer', str(ROOT / 'root.cert.pem'),
-            '-cert', str(ROOT / f'{name}.cert.pem'), '-reqout', f'{name}.ocsp.req.der', '-no_nonce', cwd=work)
-        run(OPENSSL, 'ocsp', '-index', 'ocsp-index.txt', '-rsigner', str(ROOT / 'root.cert.pem'),
-            '-rkey', str(ROOT / 'root.key.pem'), '-CA', str(ROOT / 'root.cert.pem'),
-            '-reqin', f'{name}.ocsp.req.der', '-respout', f'{name}-ocsp.der', '-ndays', '7', '-noverify', cwd=work)
-    tsa_ocsp = (work / 'tsa-ocsp.der').read_bytes()
-    signer_ocsp = (work / 'signer-ocsp.der').read_bytes()
+    def generate_revocation():
+        serial = '03E9' if SIGNER_KIND == 'signer' else '03EB'
+        subject = 'STYNX Test Signer' if SIGNER_KIND == 'signer' else 'STYNX Test Spoofed Party B'
+        signer_index = (f'R\t270928000000Z\t260928000000Z\t{serial}\tunknown\t/CN={subject}\n'
+                        if REVOKE_SIGNER_OCSP else
+                        f'V\t270928000000Z\t\t{serial}\tunknown\t/CN={subject}\n')
+        (work / 'ocsp-index.txt').write_text(signer_index +
+            'V\t270928000000Z\t\t03EA\tunknown\t/CN=STYNX Test TSA\n')
+        for name in (SIGNER_KIND, 'tsa'):
+            run(OPENSSL, 'ocsp', '-issuer', str(ROOT / 'root.cert.pem'),
+                '-cert', str(ROOT / f'{name}.cert.pem'), '-reqout', f'{name}.ocsp.req.der', '-no_nonce', cwd=work)
+            run(OPENSSL, 'ocsp', '-index', 'ocsp-index.txt', '-rsigner', str(ROOT / 'root.cert.pem'),
+                '-rkey', str(ROOT / 'root.key.pem'), '-CA', str(ROOT / 'root.cert.pem'),
+                '-reqin', f'{name}.ocsp.req.der', '-respout', f'{name}-ocsp.der', '-ndays', '7', '-noverify', cwd=work)
+        (work / 'ca.serial').write_text('1004\n')
+        (work / 'crl.serial').write_text('01\n')
+        (work / 'ca.cnf').write_text('\n'.join([
+            '[ ca ]', 'default_ca = ca_default', '[ ca_default ]', f'dir = {work}',
+            'database = ocsp-index.txt', 'serial = ca.serial', 'crlnumber = crl.serial',
+            f'certificate = {ROOT / "root.cert.pem"}', f'private_key = {ROOT / "root.key.pem"}',
+            'default_md = sha256', 'default_crl_days = 7', 'policy = policy_any',
+            '[ policy_any ]', 'commonName = supplied',
+        ]) + '\n')
+        run(OPENSSL, 'ca', '-config', 'ca.cnf', '-gencrl', '-out', 'fresh.crl.pem', '-batch', cwd=work)
+        run(OPENSSL, 'crl', '-in', 'fresh.crl.pem', '-outform', 'DER', '-out', 'fresh.crl.der', cwd=work)
+    if PRE_TST_GOOD:
+        generate_revocation()
+        time.sleep(1.1)
     run('node', str(ROOT / 'cms-timestamp.cjs'), 'signature', 'base.cms.der', 'signature.bin', cwd=work)
     run(OPENSSL, 'ts', '-query', '-data', 'signature.bin', '-sha256', '-cert', '-out', 'request.tsq', cwd=work)
     (work / 'tsa.serial').write_text('01\n')
@@ -136,6 +161,11 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
     ]) + '\n')
     run(OPENSSL, 'ts', '-reply', '-config', 'tsa.cnf', '-queryfile', 'request.tsq',
         '-out', 'timestamp.tsr', cwd=work)
+    if not PRE_TST_GOOD:
+        generate_revocation()
+    tsa_ocsp = (work / 'tsa-ocsp.der').read_bytes()
+    signer_ocsp = (work / f'{SIGNER_KIND}-ocsp.der').read_bytes()
+    fresh_crl = (work / 'fresh.crl.der').read_bytes()
     if not B_B_ONLY:
         run('node', str(ROOT / 'cms-timestamp.cjs'), 'embed', 'base.cms.der',
             'timestamp.tsr', 'final.cms.der', cwd=work)
@@ -148,8 +178,9 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
     verification = [OPENSSL, 'cms', '-verify', '-binary']
     if not ESS_SPOOF:
         verification.append('-cades')
+    verify_content = [] if ATTACHED_CMS else ['-content', 'covered.bin']
     run(*verification, '-inform', 'DER', '-in',
-        'base.cms.der' if B_B_ONLY else 'final.cms.der', '-content', 'covered.bin', '-CAfile', str(ROOT / 'root.cert.pem'),
+        'base.cms.der' if B_B_ONLY else 'final.cms.der', *verify_content, '-CAfile', str(ROOT / 'root.cert.pem'),
         '-out', 'verified.bin', cwd=work)
 
 if B_B_ONLY or NO_DSS:
@@ -158,11 +189,11 @@ if B_B_ONLY or NO_DSS:
     raise SystemExit(0)
 
 vri_key = hashlib.sha1(cms).hexdigest().upper()
-certificate = (ROOT / 'signer.cert.der').read_bytes()
+certificate = (ROOT / f'{SIGNER_KIND}.cert.der').read_bytes()
 tsa_certificate = base64.b64decode(''.join(
     line for line in (ROOT / 'tsa.cert.pem').read_text().splitlines() if not line.startswith('-----')))
 ocsp = signer_ocsp
-crl = (ROOT / ('revoked.crl.der' if REVOKE_SIGNER_CRL else 'root.crl.der')).read_bytes()
+crl = (ROOT / 'revoked.crl.der').read_bytes() if REVOKE_SIGNER_CRL else fresh_crl
 if WRONG_SIGNER_OCSP:
     ocsp = tsa_ocsp
 def stream(data):

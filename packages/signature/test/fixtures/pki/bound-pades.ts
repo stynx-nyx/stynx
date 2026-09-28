@@ -4,7 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 /** A real B-LT incremental PDF with the manifest hash in the signed revision. */
-export function buildManifestBoundPades(manifestSha256: string): {
+export function buildManifestBoundPades(
+  manifestSha256: string,
+  signer: 'A' | 'B' = 'A',
+  attached = false,
+): {
   sourceDocument: Uint8Array;
   signedDocument: Uint8Array;
   cmsSignature: Uint8Array;
@@ -18,6 +22,8 @@ export function buildManifestBoundPades(manifestSha256: string): {
         ...process.env,
         STYNX_OUTPUT_DIR: temporary,
         STYNX_MANIFEST_SHA256: manifestSha256,
+        STYNX_SIGNER_KIND: signer === 'A' ? 'signer' : 'spoof',
+        ...(attached ? { STYNX_ATTACHED_CMS: '1' } : {}),
       },
       encoding: 'utf8',
     });

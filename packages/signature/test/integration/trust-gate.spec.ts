@@ -418,6 +418,22 @@ describe('concrete STYNX CMS verifier', () => {
     expect(first.cmsSha256).not.toBe(second.cmsSha256);
   });
 
+  it.each(['ocsp', 'crl'] as const)(
+    'refuses a good %s response issued before the trusted timestamp', async (revocation) => {
+      const oldEvidence = {
+        ...input(),
+        originalDocument: bytes('pades-pre-tst-source.pdf'),
+        signedDocument: bytes('pades-pre-tst-blt.pdf'),
+        cmsSignature: bytes('pades-pre-tst-blt.cms.der'),
+        profile: { ...profile, revocation },
+      };
+      await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+        .verifySignedArtifact(oldEvidence)).rejects.toMatchObject({
+          name: 'SignatureTrustUnavailableError',
+        });
+    },
+  );
+
   it('reads Flate-compressed DSS streams and compact PDF dictionaries', async () => {
     const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
       .verifySignedArtifact({
@@ -456,6 +472,38 @@ describe('concrete STYNX CMS verifier', () => {
       .verifySignedArtifact({ ...input(), signedDocument: appended }))
       .rejects.toMatchObject({ message: 'Post-signature modification' });
   });
+
+  it.each(['free', 'shadow'] as const)(
+    'rejects a post-signature %s xref entry for the signed page content object',
+    async (attack) => {
+      const original = Buffer.from(bltSignedDocument);
+      const previous = Number(/startxref\s+(\d+)\s+%%EOF\s*$/u.exec(original.toString('latin1'))?.[1]);
+      expect(Number.isSafeInteger(previous)).toBe(true);
+      const shadowPayload = '4 0 obj\n<< /Length 7 >>\nstream\nchanged\nendstream\nendobj\n';
+      const shadowObject = Buffer.from(
+        `15 0 obj\n<< /Length ${Buffer.byteLength(shadowPayload)} >>\nstream\n` +
+        shadowPayload + 'endstream\nendobj\n',
+      );
+      const appendedObject = attack === 'shadow' ? shadowObject : Buffer.alloc(0);
+      const shadowOffset = original.length + shadowObject.indexOf(Buffer.from('4 0 obj'));
+      const xrefAt = original.length + appendedObject.length;
+      const target = attack === 'free'
+        ? '0000000000 00001 f \n'
+        : `${String(shadowOffset).padStart(10, '0')} 00000 n \n`;
+      const streamEntry = attack === 'shadow'
+        ? `15 1\n${String(original.length).padStart(10, '0')} 00000 n \n`
+        : '';
+      const revision = Buffer.from(
+        `xref\n4 1\n${target}${streamEntry}` +
+        `trailer\n<< /Size 16 /Root 1 0 R /Prev ${previous} >>\n` +
+        `startxref\n${xrefAt}\n%%EOF\n`,
+      );
+      const tampered = Buffer.concat([original, appendedObject, revision]);
+      await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+        .verifySignedArtifact({ ...input(), signedDocument: tampered }))
+        .rejects.toMatchObject({ message: 'Post-signature modification' });
+    },
+  );
 
   it('accepts legal spaces inside the selected ByteRange brackets', async () => {
     const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
@@ -536,6 +584,22 @@ describe('concrete STYNX CMS verifier', () => {
     // the second ESSCertIDv2, but B did not sign the PDF.
     await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
       .verifySignedArtifact(spoofed)).rejects.toBeInstanceOf(sig.SignatureTrustError);
+  });
+
+  it('rejects valid attached CAdES content embedded in an unrelated PDF ByteRange', async () => {
+    const attachedCms = bytes('pades-attached-blt.cms.der');
+    const parsed = asn1js.fromBER(attachedCms.buffer.slice(
+      attachedCms.byteOffset, attachedCms.byteOffset + attachedCms.byteLength,
+    ));
+    const attached = new pkijs.SignedData({ schema: new pkijs.ContentInfo({ schema: parsed.result }).content });
+    expect(attached.encapContentInfo.eContent).toBeDefined();
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes('pades-attached-source.pdf'),
+        signedDocument: bytes('pades-attached-blt.pdf'),
+        cmsSignature: attachedCms,
+      })).rejects.toMatchObject({ message: 'Detached id-data CMS required' });
   });
 
   it('rejects nonzero CMS placeholder padding outside the ByteRange', async () => {
