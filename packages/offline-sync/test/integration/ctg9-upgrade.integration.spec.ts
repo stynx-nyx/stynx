@@ -596,6 +596,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
           idempotencyKey: 'e6-key-1',
           payloadHash,
           payloadJson,
+          reservedNumber: 1000,
           createdLocallyAt: '2026-09-28T12:00:00.000Z',
         };
         await expect(
@@ -763,8 +764,59 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       items: [{ queueItemId: 'cross-device-divergent', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' }],
     });
     expect(await run('ctg9-cross-device-receipt', () => service.getSyncBatchReceipt('race-device-b', 'race-batch-b'))).toMatchObject({
-      items: [{ queueItemId: 'cross-device-first', status: 'applied' }],
+      items: [{ queueItemId: 'cross-device-second', status: 'applied', context: { originalQueueItemId: 'cross-device-first' } }],
     });
+  }, 60_000);
+
+  it('rejects duplicate declared or synthetic CTG9 item keys before PostgreSQL writes', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    const applier = { apply: vi.fn() };
+    const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+      { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) }, itemApplier: applier,
+      } as never);
+    const itemFor = (queueItemId: string, idempotencyKey?: string) => ({ queueItemId, entityType: 'citation', localEntityId: `local-${queueItemId}`,
+      ...(idempotencyKey === undefined ? {} : { idempotencyKey }), payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' });
+    await contexts.runWithRequestContext({ requestId: 'ctg9-duplicate-keys', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, async () => {
+      await expect(service.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'duplicate-device', deviceBatchId: 'duplicate-declared', items: [itemFor('declared-a', 'same-declared'), itemFor('declared-b', 'same-declared')] })).rejects.toMatchObject({ status: 400 });
+      const syntheticService = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+        { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+          policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
+          legacyItemIdentityResolver: { resolve: async () => 'same-synthetic-identity' }, itemApplier: applier,
+        } as never);
+      await expect(syntheticService.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'duplicate-device', deviceBatchId: 'duplicate-synthetic', items: [itemFor('synthetic-a'), itemFor('synthetic-b')] })).rejects.toMatchObject({ status: 400 });
+    });
+    expect(applier.apply).not.toHaveBeenCalled();
+    const admin = await pg.connectAsAdmin();
+    try {
+      const rows = await admin.query(`select device_batch_id from offline.sync_batches where tenant_id=$1::uuid and device_id='duplicate-device' and device_batch_id in ('duplicate-declared','duplicate-synthetic')`, [tenantA]);
+      const items = await admin.query(`select id from offline.sync_queue_items where tenant_id=$1::uuid and id in ('declared-a','declared-b','synthetic-a','synthetic-b')`, [tenantA]);
+      expect(rows.rows).toEqual([]);
+      expect(items.rows).toEqual([]);
+    } finally { await admin.end(); }
+  }, 60_000);
+
+  it('continues PostgreSQL batch processing after a CTG9 queue ID is reused by another batch', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    const applier = { apply: vi.fn(async (_trx: unknown, current: { queueItemId: string }) => ({ serverEntityId: `server-${current.queueItemId}` })) };
+    const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+      { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) }, itemApplier: applier,
+        eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+      } as never);
+    const makeItem = (queueItemId: string, idempotencyKey: string) => ({ queueItemId, entityType: 'citation', localEntityId: `local-${queueItemId}`,
+      idempotencyKey, payloadHash: `sha256:${createHash('sha256').update(idempotencyKey).digest('hex')}`, payloadJson: { idempotencyKey },
+      createdLocallyAt: '2026-09-28T12:00:00.000Z' });
+    const run = <T>(requestId: string, action: () => Promise<T>) => contexts.runWithRequestContext({ requestId, tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, action);
+    await run('ctg9-queue-id-original', () => service.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'queue-id-pg-device', deviceBatchId: 'queue-id-pg-first', items: [makeItem('queue-id-pg-reused', 'queue-id-pg-original-key')] }));
+    const result = await run('ctg9-queue-id-reused', () => service.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'queue-id-pg-device', deviceBatchId: 'queue-id-pg-second', items: [
+      makeItem('queue-id-pg-reused', 'queue-id-pg-new-key'), makeItem('queue-id-pg-sibling', 'queue-id-pg-sibling-key'),
+    ] }));
+    expect(result.receipt.items).toMatchObject([
+      { queueItemId: 'queue-id-pg-reused', status: 'rejected', errorCode: 'OFFLINE_SYNC_QUEUE_ID_REUSED' },
+      { queueItemId: 'queue-id-pg-sibling', status: 'applied' },
+    ]);
+    expect(applier.apply.mock.calls.map(([, current]) => current.queueItemId)).toEqual(['queue-id-pg-reused', 'queue-id-pg-sibling']);
   }, 60_000);
 
   it('takes over an expired open-batch lease with a higher fence generation', async () => {
@@ -804,6 +856,139 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
         expect(after.rows[0]?.status).toBe('closed');
       } finally { await admin.end(); }
     });
+  }, 60_000);
+
+  it('continues after a post-migration E6 queue collision without applying or rewriting that legacy row', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    const applier = { apply: vi.fn(async (_trx: unknown, current: { queueItemId: string }) => ({ serverEntityId: `server-${current.queueItemId}` })) };
+    const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+      { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) },
+      { now: () => '2026-09-28T12:00:00.000Z', policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
+        itemApplier: applier, eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined } } as never);
+    const input = { orgUnitId: 'org-a', deviceId: 'device-a', deviceBatchId: 'post-migration-e6-collision', items: [
+      { queueItemId: 'legacy-item', entityType: 'citation', localEntityId: 'local-legacy', idempotencyKey: 'legacy-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
+      { queueItemId: 'after-e6-collision', entityType: 'citation', localEntityId: 'local-after-e6', idempotencyKey: 'after-e6-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
+    ] };
+    const result = await contexts.runWithRequestContext({ requestId: 'ctg9-post-0002-e6-collision', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => service.submitSyncBatch(input));
+    expect(result.receipt.items).toMatchObject([
+      { queueItemId: 'legacy-item', status: 'rejected', errorCode: 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED' },
+      { queueItemId: 'after-e6-collision', status: 'applied' },
+    ]);
+    expect(applier.apply.mock.calls.map(([, current]) => current.queueItemId)).toEqual(['after-e6-collision']);
+    const admin = await pg.connectAsAdmin();
+    try {
+      const preserved = await admin.query(`select id,status,payload_hash,identity_mode from offline.sync_queue_items where tenant_id=$1::uuid and id='legacy-item'`, [tenantA]);
+      expect(preserved.rows).toEqual([{ id: 'legacy-item', status: 'received', payload_hash: hash, identity_mode: 'e6' }]);
+      const attempt = await admin.query(`select status,error_code from offline.sync_item_attempts where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 and queue_item_id='legacy-item'`, [tenantA, input.deviceId, input.deviceBatchId]);
+      expect(attempt.rows).toEqual([{ status: 'rejected', error_code: 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED' }]);
+    } finally { await admin.end(); }
+  }, 60_000);
+
+  it('records PostgreSQL conflict evidence and allowed actions, rejects a forbidden action, and persists resolution', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    const detector = { detect: vi.fn(async () => ({ suspected: true, pairs: [{ firstItemId: 'conflict-first', secondItemId: 'conflict-second' }] })) };
+    const resolver = {
+      allowedActions: vi.fn(async () => ['manual-review'] as const),
+      resolve: vi.fn(async (_trx: unknown, conflictId: string) => ({
+        conflictId, queueItemId: 'conflict-second', localEntityId: 'local-conflict-second', payloadHash: hash,
+        conflictType: 'concurrency', description: 'resolved by host', status: 'resolved',
+        resolution: 'manual-review', resolvedBy: 'actor-a', resolvedAt: '2026-09-28T12:00:00.000Z',
+      })),
+    };
+    const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+      { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) },
+      { now: () => '2026-09-28T12:00:00.000Z',
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150, concurrencyWindowMinutes: 30 }) },
+        itemApplier: { apply: async (_trx: unknown, current: { queueItemId: string }) => ({ serverEntityId: `server-${current.queueItemId}` }) },
+        eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+        concurrencyDetector: detector, conflictResolver: resolver } as never) as OfflineSyncService & {
+          getSyncItemReceipt(key: string): Promise<{ status: string; context?: Record<string, unknown> }>;
+        };
+    const submit = (deviceId: string, batchId: string, queueItemId: string, key: string) => ({ orgUnitId: 'org-a', deviceId, deviceBatchId: batchId,
+      items: [{ queueItemId, entityType: 'citation', localEntityId: `local-${queueItemId}`, idempotencyKey: key,
+        payloadHash: `sha256:${createHash('sha256').update(queueItemId).digest('hex')}`, payloadJson: { queueItemId }, createdLocallyAt: '2026-09-28T12:00:00.000Z' }] });
+    const run = <T>(requestId: string, action: () => Promise<T>) => contexts.runWithRequestContext({ requestId, tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, action);
+    await run('ctg9-conflict-first', () => service.submitSyncBatch(submit('conflict-device-a', 'conflict-batch-a', 'conflict-first', 'conflict-first-key')));
+    await run('ctg9-conflict-second', () => service.submitSyncBatch(submit('conflict-device-b', 'conflict-batch-b', 'conflict-second', 'conflict-second-key')));
+    const firstReceipt = await run('ctg9-conflict-read', () => service.getSyncItemReceipt('conflict-first-key'));
+    expect(firstReceipt).toMatchObject({ status: 'conflict', context: { relatedQueueItemId: 'conflict-second', allowedActions: ['manual-review'] } });
+    const conflictId = firstReceipt.context?.conflictId as string;
+    await expect(run('ctg9-conflict-forbidden', () => service.resolveConflict(conflictId, { resolution: 'device-wins' }))).rejects.toMatchObject({ status: 409 });
+    expect(resolver.resolve).not.toHaveBeenCalled();
+    await expect(run('ctg9-conflict-permitted', () => service.resolveConflict(conflictId, { resolution: 'manual-review' }))).resolves.toMatchObject({ status: 'resolved', resolution: 'manual-review' });
+    expect(resolver.resolve).toHaveBeenCalledOnce();
+    const admin = await pg.connectAsAdmin();
+    try {
+      const evidence = await admin.query<{ queue_item_id: string; related_queue_item_id: string; allowed_actions: string[] }>(`select distinct on (queue_item_id) queue_item_id,related_queue_item_id,allowed_actions from offline.sync_conflict_evidence where tenant_id=$1::uuid and queue_item_id in ('conflict-first','conflict-second') order by queue_item_id,created_at desc`, [tenantA]);
+      expect(evidence.rows).toEqual(expect.arrayContaining([
+        { queue_item_id: 'conflict-first', related_queue_item_id: 'conflict-second', allowed_actions: ['manual-review'] },
+        { queue_item_id: 'conflict-second', related_queue_item_id: 'conflict-first', allowed_actions: ['manual-review'] },
+      ]));
+      const saved = await admin.query<{ status: string; resolution: string }>(`select status,resolution from offline.sync_conflicts where tenant_id=$1::uuid and id=$2::uuid`, [tenantA, conflictId]);
+      expect(saved.rows).toEqual([{ status: 'resolved', resolution: 'manual-review' }]);
+    } finally { await admin.end(); }
+  }, 60_000);
+
+  it('serializes item consumption with a concurrent reservation close', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    const store = new PostgresOfflineSyncStore(moduleRef);
+    let enteredApply!: () => void;
+    let releaseApply!: () => void;
+    const entered = new Promise<void>((resolve) => { enteredApply = resolve; });
+    const held = new Promise<void>((resolve) => { releaseApply = resolve; });
+    const service = new OfflineSyncService(store, { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+      now: () => '2026-09-28T12:00:00.000Z', policyResolver: { resolve: async () => ({ maxBatchItems: 150, reservationTtlMs: 60_000 }) },
+      itemApplier: { apply: async () => { enteredApply(); await held; return { serverEntityId: 'server-reservation-race' }; } },
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    } as never) as OfflineSyncService & {
+      reserveNumbering(input: { orgUnitId: string; deviceId: string; shiftId: string; entityType: string; requestedSize: number }): Promise<{ reservationId: string; startNumber: number }>;
+      getNumberingConsumption(id: string): Promise<{ status: string; consumption: Array<{ status: string; serverEntityId: string | null }> }>;
+    };
+    const reservation = await contexts.runWithRequestContext({ requestId: 'ctg9-reservation-race-create', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'reservation-race-device', shiftId: 'reservation-race', entityType: 'citation', requestedSize: 1 }));
+    const batch = { orgUnitId: 'org-a', deviceId: 'reservation-race-device', deviceBatchId: 'reservation-race-batch', items: [{
+      queueItemId: 'reservation-race-item', entityType: 'citation', localEntityId: 'local-reservation-race',
+      idempotencyKey: 'reservation-race-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z',
+      reservedNumber: reservation.startNumber, reservationId: reservation.reservationId,
+    }] };
+    const apply = contexts.runWithRequestContext({ requestId: 'ctg9-reservation-race-apply', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => service.submitSyncBatch(batch));
+    await entered;
+    const closing = contexts.runWithRequestContext({ requestId: 'ctg9-reservation-race-close', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => service.closeNumberingReservation(reservation.reservationId));
+    const admin = await pg.connectAsAdmin();
+    try {
+      let blocked = false;
+      const deadline = Date.now() + 3_000;
+      while (!blocked && Date.now() < deadline) {
+        const waits = await admin.query<{ waiting: number }>(`select count(*)::int as waiting from pg_stat_activity where wait_event_type='Lock' and query ilike '%offline.numbering_reservations%'`);
+        blocked = Number(waits.rows[0]?.waiting ?? 0) > 0;
+        if (!blocked) await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      expect(blocked).toBe(true);
+      releaseApply();
+      const [applied, closed] = await Promise.all([apply, closing]);
+      expect(applied.items[0]).toMatchObject({ status: 'applied' });
+      expect(closed.status).toBe('consumed');
+      expect(await contexts.runWithRequestContext({ requestId: 'ctg9-reservation-race-read', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => service.getNumberingConsumption(reservation.reservationId))).toMatchObject({
+        status: 'consumed', consumption: [{ status: 'applied', serverEntityId: 'server-reservation-race' }],
+      });
+    } finally { releaseApply(); await admin.end(); }
+  }, 60_000);
+
+  it('does not invent a PostgreSQL concurrency window when policy omits it', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    const detector = { detect: vi.fn() };
+    const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+      { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
+        itemApplier: { apply: async () => ({ serverEntityId: 'server-no-window' }) },
+        eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+        concurrencyDetector: detector,
+      } as never);
+    await contexts.runWithRequestContext({ requestId: 'ctg9-no-window-policy', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => service.submitSyncBatch({
+      orgUnitId: 'org-a', deviceId: 'no-window-device', deviceBatchId: 'no-window-batch', items: [{ queueItemId: 'no-window-item',
+        entityType: 'citation', localEntityId: 'local-no-window', idempotencyKey: 'no-window-key', payloadHash: hash,
+        payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' }],
+    }));
+    expect(detector.detect).not.toHaveBeenCalled();
   }, 60_000);
 
   it('projects blocked, expired, and claimed-local reservation numbers and preserves the claimed tail on cancel', async () => {

@@ -15,7 +15,7 @@ const at = '2026-09-28T12:00:00.000Z';
 const digest = (payload: unknown) =>
   `sha256:${createHash('sha256').update(JSON.stringify(payload)).digest('hex')}`;
 const payload = { normativePackageId: 'rules-1', normativePackageVersion: '1.0.0' };
-const item = (key = 'item-1', id = key) => ({
+const item = (key = 'item-1', id = key, reservedNumber?: number, reservationId?: string) => ({
   queueItemId: id,
   entityType: 'citation',
   localEntityId: `local-${id}`,
@@ -23,7 +23,8 @@ const item = (key = 'item-1', id = key) => ({
   payloadHash: digest(payload),
   payloadJson: payload,
   createdLocallyAt: at,
-  reservedNumber: 1000,
+  ...(reservedNumber === undefined ? {} : { reservedNumber }),
+  ...(reservationId === undefined ? {} : { reservationId }),
 });
 const batch = (id: string, items = [item()]): SubmitSyncBatchInput => ({
   orgUnitId: 'org-a',
@@ -193,7 +194,7 @@ describe('CTG9 OFS service contract', () => {
       entityType: 'citation',
       requestedSize: 3,
     });
-    await service.submitSyncBatch(batch('consume-first', [item('applied-key', 'applied-queue')]));
+    await service.submitSyncBatch(batch('consume-first', [item('applied-key', 'applied-queue', 1000)]));
     expect(
       (await service.getNumberingConsumption(first.reservationId)).consumption[0],
     ).toMatchObject({ number: 1000, status: 'applied', serverEntityId: 'server-1000' });
@@ -211,6 +212,69 @@ describe('CTG9 OFS service contract', () => {
     expect(
       (await service.getNumberingConsumption(first.reservationId)).consumption[0],
     ).toMatchObject({ number: 1000, status: 'applied' });
+  });
+
+  it('UPS-OFS-01 records the no-coverage outcome before any domain effect', async () => {
+    const zero = harness();
+    const noCoverage = await zero.service.submitSyncBatch(batch('zero-coverage', [item('zero-key', 'zero-item', 1000)]));
+    expect(noCoverage.receipt.items[0]).toMatchObject({
+      queueItemId: 'zero-item', status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
+      context: { number: 1000, reservationId: null },
+    });
+  });
+
+  it('UPS-OFS-01 rejects ambiguous reservation coverage without choosing a series by creation time', async () => {
+    const ambiguous = harness();
+    ambiguous.store.seedNumberingRange({
+      id: '10000000-0000-4000-8000-0000000000d1', tenantId: tenant, orgUnitId: 'org-a',
+      entityType: 'citation', series: 'D', startNumber: 1000, endNumber: 1300, nextNumber: 1000, status: 'active',
+    });
+    await ambiguous.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'shift-c', entityType: 'citation', series: 'C', requestedSize: 1 });
+    await ambiguous.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'shift-d', entityType: 'citation', series: 'D', requestedSize: 1 });
+    const ambiguousResult = await ambiguous.service.submitSyncBatch(batch('ambiguous-coverage', [item('ambiguous-key', 'ambiguous-item', 1000)]));
+    expect(ambiguousResult.receipt.items[0]).toMatchObject({
+      status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_AMBIGUOUS',
+      context: { number: 1000, reservationId: null },
+    });
+  });
+
+  it('UPS-OFS-01 records a closed reservation as an expired conflict', async () => {
+    const closed = harness();
+    const closedReservation = await closed.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'closed', entityType: 'citation', requestedSize: 1 });
+    await closed.service.closeNumberingReservation(closedReservation.reservationId);
+    const closedResult = await closed.service.submitSyncBatch(batch('closed-coverage', [item('closed-key', 'closed-item', 1000, closedReservation.reservationId)]));
+    expect(closedResult.receipt.items[0]).toMatchObject({
+      status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED',
+      context: { number: 1000, reservationId: closedReservation.reservationId },
+    });
+  });
+
+  it('UPS-OFS-01 compares validUntil with createdLocallyAt and records an expired conflict', async () => {
+    const expired = harness();
+    const expiredReservation = await expired.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'expired', entityType: 'citation', requestedSize: 1, validUntil: '2026-09-29T12:00:00.000Z' });
+    const expiredItem = { ...item('expired-key', 'expired-item', 1000, expiredReservation.reservationId), createdLocallyAt: '2026-09-30T12:00:00.000Z' };
+    const expiredResult = await expired.service.submitSyncBatch(batch('expired-coverage', [expiredItem]));
+    expect(expiredResult.receipt.items[0]).toMatchObject({
+      status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED',
+      context: { number: 1000, reservationId: expiredReservation.reservationId },
+    });
+  });
+
+  it('UPS-OFS-01 records an already-applied number as a conflict without a second effect', async () => {
+    const apply = vi.fn(async () => ({ serverEntityId: 'server-applied' }));
+    const alreadyApplied = harness({
+      itemApplier: { apply },
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    });
+    const appliedReservation = await alreadyApplied.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'applied', entityType: 'citation', requestedSize: 1 });
+    await alreadyApplied.service.submitSyncBatch(batch('first-consumption', [item('applied-number-key', 'first-consumption-item', 1000, appliedReservation.reservationId)]));
+    const repeatedNumber = await alreadyApplied.service.submitSyncBatch(batch('repeated-consumption', [item('reused-number-key', 'reused-number-item', 1000, appliedReservation.reservationId)]));
+    expect(repeatedNumber.receipt.items[0]).toMatchObject({
+      status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',
+      context: { number: 1000, reservationId: appliedReservation.reservationId },
+    });
+    expect(alreadyApplied.store.getQueueItem(tenant, 'reused-number-item')?.status).toBe('conflict');
+    expect(apply).toHaveBeenCalledOnce();
   });
 
   it('UPS-OFS-02 admits scoped >100 items and distinct keys with identical payload bytes', async () => {
@@ -302,7 +366,14 @@ describe('CTG9 OFS service contract', () => {
       batch('legacy-three', [unkeyed('queue-three', 'local-two')] as never),
     );
     expect(identity.resolve).toHaveBeenCalledTimes(3);
-    expect(repeated.items[0]).toEqual(first.items[0]);
+    expect(repeated.items[0]).toMatchObject({ queueItemId: 'queue-two', status: 'received' });
+    expect((await service.getSyncBatchReceipt('device-a', 'legacy-two')).items).toEqual([
+      expect.objectContaining({
+        queueItemId: 'queue-two',
+        status: 'received',
+        context: { originalQueueItemId: 'queue-one' },
+      }),
+    ]);
     expect(independent.items[0]).not.toEqual(first.items[0]);
     expect(first.items[0]).toMatchObject({ status: 'received' });
     expect(independent.items[0]).toMatchObject({ status: 'received' });
@@ -346,6 +417,48 @@ describe('CTG9 OFS service contract', () => {
     const second = await service.submitSyncBatch(batch('changed', [changed]));
     expect(second.items[0]).toMatchObject({ status: 'rejected' });
     expect(await service.getSyncItemReceipt('item-1')).toEqual(original);
+  });
+
+  it('UPS-OFS-02 rejects duplicate declared and synthetic keys in one batch before any write', async () => {
+    const applier = { apply: vi.fn(async () => ({ serverEntityId: 'must-not-run' })) };
+    const declared = harness({ itemApplier: applier });
+    await expect(declared.service.submitSyncBatch(batch('same-declared-key', [
+      item('duplicate-key', 'declared-one'), item('duplicate-key', 'declared-two'),
+    ]))).rejects.toMatchObject({ status: 400 });
+    expect(declared.store.getQueueItem(tenant, 'declared-one')).toBeUndefined();
+    expect(declared.store.getQueueItem(tenant, 'declared-two')).toBeUndefined();
+    expect(applier.apply).not.toHaveBeenCalled();
+
+    const synthetic = harness({
+      itemApplier: applier,
+      legacyItemIdentityResolver: { resolve: async () => 'same-host-identity' },
+    });
+    await expect(synthetic.service.submitSyncBatch(batch('same-synthetic-key', [
+      { ...item('', 'synthetic-one'), idempotencyKey: undefined },
+      { ...item('', 'synthetic-two'), idempotencyKey: undefined },
+    ] as never))).rejects.toMatchObject({ status: 400 });
+    expect(synthetic.store.getQueueItem(tenant, 'synthetic-one')).toBeUndefined();
+    expect(synthetic.store.getQueueItem(tenant, 'synthetic-two')).toBeUndefined();
+    expect(applier.apply).not.toHaveBeenCalled();
+  });
+
+  it('UPS-OFS-02 continues after a queue ID reused by a later batch', async () => {
+    const applier = { apply: vi.fn(async (_trx: unknown, current: { queueItemId: string }) => ({ serverEntityId: `server-${current.queueItemId}` })) };
+    const { service } = harness({
+      itemApplier: applier,
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    });
+    await service.submitSyncBatch(batch('queue-id-first', [item('queue-id-original-key', 'reused-queue-id')]));
+    const later = await service.submitSyncBatch(batch('queue-id-second', [
+      item('queue-id-new-key', 'reused-queue-id'), item('queue-id-sibling-key', 'sibling-queue-id'),
+    ]));
+    expect(later.receipt.items).toMatchObject([
+      { queueItemId: 'reused-queue-id', status: 'rejected', errorCode: 'OFFLINE_SYNC_QUEUE_ID_REUSED' },
+      { queueItemId: 'sibling-queue-id', status: 'applied' },
+    ]);
+    expect(applier.apply.mock.calls.map(([, current]) => current.queueItemId)).toEqual([
+      'reused-queue-id', 'sibling-queue-id',
+    ]);
   });
 
   it('UPS-OFS-02 fences simultaneous submissions of the same open batch to one item effect', async () => {
@@ -446,6 +559,13 @@ describe('CTG9 OFS service contract', () => {
     });
     await disabled.service.submitSyncBatch(batch('disabled', [item('disabled-key', 'disabled')]));
     expect(disabledDetect).not.toHaveBeenCalled();
+    const missingDetect = vi.fn();
+    const missing = harness({
+      policyResolver: { resolve: async () => ({ maxBatchItems: 100 }) },
+      concurrencyDetector: { detect: missingDetect },
+    });
+    await missing.service.submitSyncBatch(batch('missing-window', [item('missing-window-key', 'missing-window-item')]));
+    expect(missingDetect).not.toHaveBeenCalled();
   });
 
   it('UPS-OFS-04 marks both cross-device acts, honors handoff, and rejects forbidden actions', async () => {
@@ -454,7 +574,8 @@ describe('CTG9 OFS service contract', () => {
       pairs: [{ firstItemId: 'queue-a', secondItemId: 'queue-b' }],
     }));
     const handoff = { permits: vi.fn(async () => false) };
-    const allowedActions = new Set(['manual_review']);
+    const allowedActions = new Set(['manual-review']);
+    const allowedActionsFor = vi.fn(async () => ['manual-review'] as const);
     const conflictResolver = {
       resolve: vi.fn(async (_trx: unknown, _id: string, action: string) => {
         if (!allowedActions.has(action)) {
@@ -462,8 +583,11 @@ describe('CTG9 OFS service contract', () => {
             status: 409,
           });
         }
-        return { status: 'resolved', resolution: action };
+        return { conflictId: _id, queueItemId: 'queue-a', status: 'resolved', resolution: action,
+          conflictType: 'concurrency', localEntityId: 'local-queue-a', payloadHash: digest(payload),
+          description: 'resolved', resolvedBy: 'authenticated-actor', resolvedAt: at };
       }),
+      allowedActions: allowedActionsFor,
     };
     const { service } = harness({
       policyResolver: { resolve: async () => ({ concurrencyWindowMinutes: 30 }) },
@@ -483,14 +607,37 @@ describe('CTG9 OFS service contract', () => {
     expect(second.status).toBe('conflict');
     const conflictId = first.context?.conflictId;
     expect(conflictId).toEqual(expect.any(String));
+    expect(first.context).toMatchObject({
+      allowedActions: ['manual-review'], relatedQueueItemId: 'queue-b',
+    });
+    expect(allowedActionsFor).toHaveBeenCalled();
     await expect(
       service.resolveConflict(conflictId as string, { resolution: 'device-wins' }),
     ).rejects.toMatchObject({ status: 409 });
+    expect(conflictResolver.resolve).not.toHaveBeenCalled();
+    await expect(service.resolveConflict(conflictId as string, { resolution: 'manual-review' }))
+      .resolves.toMatchObject({ status: 'resolved', resolution: 'manual-review' });
     expect(conflictResolver.resolve).toHaveBeenCalledWith(
       expect.anything(),
       conflictId,
-      'device-wins',
+      'manual-review',
       expect.anything(),
     );
+  });
+
+  it('UPS-OFS-01 close and settle make available values expired while preserving claims and applied evidence', async () => {
+    const { service } = harness({
+      itemApplier: { apply: async () => ({ serverEntityId: 'server-settled' }) },
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    });
+    const reservation = await service.reserveNumbering({
+      orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'settlement', entityType: 'citation', requestedSize: 3,
+    });
+    await service.reconcileNumberingReservation(reservation.reservationId, { claimedNumbers: [1001] });
+    await service.submitSyncBatch(batch('settled-number', [item('settled-key', 'settled-item', 1000, reservation.reservationId)]));
+    expect(await service.settleNumberingReservation(reservation.reservationId, { reason: 'shift settled' }))
+      .toMatchObject({ status: 'consumed' });
+    expect((await service.getNumberingConsumption(reservation.reservationId)).consumption.map(({ status }) => status))
+      .toEqual(['applied', 'claimed-locally', 'expired']);
   });
 });
