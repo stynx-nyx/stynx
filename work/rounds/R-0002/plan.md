@@ -1159,6 +1159,14 @@ passou 73/73; traceResolution do import auth aponta
 `angular-auth/testing/index.ts`; release policy passou 44/44. Opus 5.5
 deu PASS focal no delta. Repetir em checkout remoto limpo.
 
+`policy-issue` — o terceiro checkout remoto em `253a8d94` falhou em
+`release-drafts`: a ADR da exceção entrou com status `A` e foi editada
+com status `M` no commit seguinte, enquanto o contrato pós-marcador
+admitia só `A` para esse caminho. Architect `4011bff3` admite `M`
+somente para a mesma ADR. `pnpm release:status` e
+`pnpm release:drafts` passaram localmente; Opus 5.5 deu PASS focal.
+Repetir o gate remoto no novo HEAD.
+
 **Checkpoint final pré-PR (2026-09-28):** marker Engineer `b647f568`
 para `1.5.0`/44 pacotes, `ci:stynx` integral e `ci:reference-apps`
 verdes, release policy/provenance/consumer fixtures verdes, trace
@@ -1190,3 +1198,8 @@ subpath `angular-auth/testing` no typecheck. O reparo compartilhado
 `8d0d6a09` + `48fff746` recebeu PASS Opus focal e aguarda push/CI.
 O merge administrativo segue vedado até existir um recibo Owner exato
 para o SHA final e até os demais checks obrigatórios passarem.
+
+**Terceiro CI do PR #308:** `253a8d94` passou Semgrep e chegou ao
+typecheck completo, mas `release-drafts` recusou o status `M` da ADR
+pós-marcador. A correção `4011bff3` passou localmente e recebeu PASS
+Opus; enviar o novo HEAD e observar todos os checks.

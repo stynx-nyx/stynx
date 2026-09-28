@@ -1404,3 +1404,13 @@ Opus 5.5 via `claude -p` deu **PASS** sem achados bloqueantes em
 `reviews/shared-testing-path-delivery-review-1.direct.json` (prompt
 196). O próximo CI remoto deve confirmar o checkout limpo; a cobertura
 DEVAI não foi alterada e permanece sem recibo.
+
+O terceiro CI remoto em `253a8d94` falhou em `release-drafts` com
+`RELEASE_CONTEXT_FINAL_INVALID`. O contrato pós-marcador aceitava o
+status `A` da nova ADR, mas ela recebeu `M` no commit de ampliação para
+o tsconfig compartilhado. Architect `4011bff3` admitiu `M` somente para
+a mesma ADR; `pnpm release:status` e `pnpm release:drafts` passaram
+localmente, gerando zero notas de draft para a candidata já versionada.
+Opus 5.5 deu **PASS** no delta de uma linha em
+`reviews/adr-status-delivery-review-1.direct.json` (prompt 197), com
+zero achados bloqueantes. O novo HEAD ainda precisa de CI remoto.
