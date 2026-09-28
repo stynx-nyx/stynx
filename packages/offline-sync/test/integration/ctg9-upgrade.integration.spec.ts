@@ -777,7 +777,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       itemApplier: { apply: async (_trx: unknown, current: { queueItemId: string }) => ({ serverEntityId: `server-${current.queueItemId}` }) },
       eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
     } as never) as OfflineSyncService & {
-      getNumberingConsumption(id: string): Promise<{ consumption: Array<{ status: string }> }>;
+      getNumberingConsumption(id: string): Promise<{ consumption: Array<{ number: number; status: string; serverEntityId: string | null }> }>;
     };
     const run = <T>(requestId: string, action: () => Promise<T>) => contexts.runWithRequestContext({
       requestId, tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z'),
@@ -792,7 +792,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     await run('ctg9-outcome-matrix', async () => {
       const noCoverage = await submit('outcome-no-coverage', 'outcome-device', itemFor('outcome-no-coverage-item', 987654));
       outcomes.push({ queueItemId: 'outcome-no-coverage-item', expected: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE' });
-      expect(noCoverage.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[0].expected });
+      expect(noCoverage.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[0].expected, context: { number: 987654, reservationId: null } });
 
       const admin = await pg.connectAsAdmin();
       try {
@@ -804,28 +804,32 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'outcome-ambiguous-device', shiftId: 'matrix-b', entityType: 'citation', series: 'MATRIX-B', requestedSize: 1 });
       const ambiguous = await submit('outcome-ambiguous', 'outcome-ambiguous-device', itemFor('outcome-ambiguous-item', a.startNumber));
       outcomes.push({ queueItemId: 'outcome-ambiguous-item', expected: 'OFFLINE_SYNC_NUMBERING_AMBIGUOUS' });
-      expect(ambiguous.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[1].expected });
+      expect(ambiguous.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[1].expected, context: { number: a.startNumber, reservationId: null } });
 
       const closed = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'outcome-closed-device', shiftId: 'matrix-closed', entityType: 'citation', requestedSize: 1 });
       await service.closeNumberingReservation(closed.reservationId);
       const closedResult = await submit('outcome-closed', 'outcome-closed-device', itemFor('outcome-closed-item', closed.startNumber, closed.reservationId));
       outcomes.push({ queueItemId: 'outcome-closed-item', expected: 'OFFLINE_SYNC_NUMBERING_EXPIRED' });
-      expect(closedResult.items[0]).toMatchObject({ status: 'conflict', errorCode: outcomes[2].expected });
+      expect(closedResult.items[0]).toMatchObject({ status: 'conflict', errorCode: outcomes[2].expected, context: { number: closed.startNumber, reservationId: closed.reservationId } });
 
       const expired = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'outcome-expired-device', shiftId: 'matrix-expired', entityType: 'citation', requestedSize: 1, validUntil: '2026-09-29T12:00:00.000Z' });
       const expiredResult = await submit('outcome-expired', 'outcome-expired-device', itemFor('outcome-expired-item', expired.startNumber, expired.reservationId, '2026-09-30T12:00:00.000Z'));
       outcomes.push({ queueItemId: 'outcome-expired-item', expected: 'OFFLINE_SYNC_NUMBERING_EXPIRED' });
-      expect(expiredResult.items[0]).toMatchObject({ status: 'conflict', errorCode: outcomes[3].expected });
+      expect(expiredResult.items[0]).toMatchObject({ status: 'conflict', errorCode: outcomes[3].expected, context: { number: expired.startNumber, reservationId: expired.reservationId } });
 
       const applied = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'outcome-applied-device', shiftId: 'matrix-applied', entityType: 'citation', requestedSize: 1 });
       await submit('outcome-applied-first', 'outcome-applied-device', itemFor('outcome-applied-first-item', applied.startNumber, applied.reservationId));
       const repeated = await submit('outcome-applied-repeat', 'outcome-applied-device', itemFor('outcome-applied-repeat-item', applied.startNumber, applied.reservationId));
       outcomes.push({ queueItemId: 'outcome-applied-repeat-item', expected: 'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED' });
-      expect(repeated.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[4].expected });
+      expect(repeated.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[4].expected, context: { number: applied.startNumber, reservationId: applied.reservationId } });
 
       const outOfScope = await submit('outcome-foreign-id', 'outcome-foreign-device', itemFor('outcome-foreign-item', a.startNumber, a.reservationId));
       outcomes.push({ queueItemId: 'outcome-foreign-item', expected: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE' });
-      expect(outOfScope.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[5].expected });
+      expect(outOfScope.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[5].expected, context: { number: a.startNumber, reservationId: a.reservationId } });
+
+      const inScopeOutOfRange = await submit('outcome-in-scope-out-of-range', 'outcome-ambiguous-device', itemFor('outcome-range-item', a.startNumber + 1, a.reservationId));
+      outcomes.push({ queueItemId: 'outcome-range-item', expected: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE' });
+      expect(inScopeOutOfRange.items[0]).toMatchObject({ status: 'rejected', errorCode: outcomes[6].expected, context: { number: a.startNumber + 1, reservationId: a.reservationId } });
 
       const lateReservation = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'late-sync-device', shiftId: 'late-sync', entityType: 'citation', requestedSize: 1, validUntil: '2026-09-29T12:00:00.000Z' });
       const lateService = new OfflineSyncService(store, { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
@@ -836,6 +840,9 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       } as never);
       const late = await run('ctg9-late-sync-positive', () => lateService.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'late-sync-device', deviceBatchId: 'late-sync-batch', items: [itemFor('late-sync-item', lateReservation.startNumber, lateReservation.reservationId, '2026-09-28T12:00:00.000Z')] }));
       expect(late.items[0]).toMatchObject({ status: 'applied', queueItemId: 'late-sync-item' });
+      expect((await lateService.getNumberingConsumption(lateReservation.reservationId)).consumption).toMatchObject([
+        { number: lateReservation.startNumber, status: 'applied', serverEntityId: 'server-late-sync-item' },
+      ]);
     });
     const admin = await pg.connectAsAdmin();
     try {
@@ -843,7 +850,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       expect(evidence.rows.map((row) => row.queue_item_id).sort()).toEqual(outcomes.map((o) => o.queueItemId).sort());
       expect(evidence.rows.every((row) => Object.keys(row.evidence).length > 0)).toBe(true);
       const open = await admin.query<{ status: string; count: number }>(`select c.status,count(*)::int as count from offline.sync_conflicts c join offline.sync_conflict_evidence e on e.tenant_id=c.tenant_id and e.conflict_id=c.id where c.tenant_id=$1::uuid and e.queue_item_id=any($2::text[]) group by c.status`, [tenantA, outcomes.map((o) => o.queueItemId)]);
-      expect(open.rows).toEqual([{ status: 'open', count: 6 }]);
+      expect(open.rows).toEqual([{ status: 'open', count: 7 }]);
     } finally { await admin.end(); }
   }, 60_000);
 

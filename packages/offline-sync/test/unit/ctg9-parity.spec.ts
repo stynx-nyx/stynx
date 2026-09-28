@@ -248,7 +248,7 @@ describe('CTG9 OFS service contract', () => {
     const closedResult = await closed.service.submitSyncBatch(batch('closed-coverage', [item('closed-key', 'closed-item', 1000, closedReservation.reservationId)]));
     expect(closedResult.receipt.items[0]).toMatchObject({
       status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED',
-      context: { number: 1000, reservationId: closedReservation.reservationId },
+      context: expect.objectContaining({ number: 1000, reservationId: closedReservation.reservationId, conflictId: expect.any(String), allowedActions: expect.any(Array) }),
     });
   });
 
@@ -259,7 +259,17 @@ describe('CTG9 OFS service contract', () => {
     const expiredResult = await expired.service.submitSyncBatch(batch('expired-coverage', [expiredItem]));
     expect(expiredResult.receipt.items[0]).toMatchObject({
       status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED',
-      context: { number: 1000, reservationId: expiredReservation.reservationId },
+      context: expect.objectContaining({ number: 1000, reservationId: expiredReservation.reservationId, conflictId: expect.any(String), allowedActions: expect.any(Array) }),
+    });
+  });
+
+  it('UPS-OFS-01 rejects an in-scope reservation ID when the number is outside its interval', async () => {
+    const scoped = harness();
+    const reservation = await scoped.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'range-check', entityType: 'citation', requestedSize: 1 });
+    const result = await scoped.service.submitSyncBatch(batch('reservation-id-out-of-range', [item('range-check-key', 'range-check-item', reservation.startNumber + 1, reservation.reservationId)]));
+    expect(result.receipt.items[0]).toMatchObject({
+      status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
+      context: { number: reservation.startNumber + 1, reservationId: reservation.reservationId },
     });
   });
 
@@ -277,7 +287,7 @@ describe('CTG9 OFS service contract', () => {
     expect((await laterService.getNumberingConsumption(reservation.reservationId)).consumption[0]).toMatchObject({ status: 'applied' });
   });
 
-  it('UPS-OFS-01 records an already-applied number as a conflict without a second effect', async () => {
+  it('UPS-OFS-01 rejects an already-applied number with open conflict evidence and no second effect', async () => {
     const apply = vi.fn(async () => ({ serverEntityId: 'server-applied' }));
     const alreadyApplied = harness({
       itemApplier: { apply },
