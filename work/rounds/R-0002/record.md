@@ -570,3 +570,26 @@ adicionar sensor dessa invariância. Os demais achados são a ausência de prova
 HTTP para dois ramos defensivos inalcançáveis via core, duplicação local do
 regex de `errorCode` e observações de cobertura/autor. Não declarar a final
 pronta até o reparo de observabilidade e review correspondente.
+
+## CTG5 — follow-up de observabilidade (2026-09-28)
+
+O delta CTG5 aprovado foi importado na branch cumulativa pelo merge
+`b1195fe5d3226dfe6afc7b0c01b168ee8644c074`. No HEAD integrado,
+`pnpm api:baselines` passou 44/44, trace 451/451, READMEs 44/0 e RLS
+negativo 7 tabelas; a suíte backend passou 499/499. O Architect fixou o
+contrato do follow-up em `b973d118`. O Inspector commitou os sensores em
+`3e2a30a2`: três falharam pelo log ausente e 25 passaram, com PostgreSQL
+real; `pnpm lint:tests` passou. O Architect rebinda o trace em `8e8a0794`,
+novamente 451/451. O Engineer implementou o log e a causa em `a8723b75`;
+uma segunda edição `a5fea2dd` evitou mudar a declaração pública exposta
+pelo filtro. O código mantém a causa em `HttpException.cause` no servidor e
+o filtro serializa apenas campos canônicos.
+
+Os sensores focais passaram 28/28; o backend completo passou 501/501 em 48
+arquivos, com lint e typecheck verdes. Um primeiro rerun completo falhou ao
+carregar nove arquivos por `@stynx-nyx/integration-adapter` sem `dist` local;
+o maestro gerou esse build ignorado pelo Git e repetiu a suíte no mesmo HEAD,
+que passou (`/private/tmp/stynx-ctg5-observability-backend-final-retry.log`).
+`pnpm api:baselines` passou 44/44 após build backend, trace 451/451,
+READMEs 44/0 e RLS negativo 7 tabelas. Falta delivery-review Opus deste
+follow-up antes de declarar o achado encerrado.
