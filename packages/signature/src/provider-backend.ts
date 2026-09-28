@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { SignatureCertificateValidationError } from './errors';
+import { SignatureCertificateValidationError, SignatureProviderResponseError } from './errors';
 import type {
   ProviderSignResult,
   SignatureBackend,
@@ -41,6 +41,10 @@ export class ProviderBackedSignatureBackend implements SignatureBackend {
       algorithm: request.algorithm ?? 'pades-ltv',
       digestAlgorithm: request.digestAlgorithm ?? 'sha256',
     });
+    if (request.minimumSignatureLevel && (!signed.cmsSignature?.length || !signed.signedDocument?.length ||
+        !(signed.signedAt instanceof Date) || signed.signedAt.getTime() <= 0 ||
+        !(signed.tsaTime instanceof Date) || signed.tsaTime.getTime() <= 0))
+      throw new SignatureProviderResponseError('Signed PDF, CMS and trusted time are required');
     const signedAt = signed.signedAt ?? signed.tsaTime ?? this.now();
     const evidence: SignatureEvidence = {
       signatureId: signed.signatureId ?? signatureIdFor(request, signed),

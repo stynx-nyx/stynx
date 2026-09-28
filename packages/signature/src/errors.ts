@@ -40,3 +40,8 @@ export class SignatureVerificationInputError extends SignatureError {
     super(message);
   }
 }
+export class SignatureCapabilityError extends SignatureError {}
+export class SignatureTrustError extends SignatureError {}
+export class SignatureTrustUnavailableError extends SignatureCapabilityError {}
+export class SignatureLevelNotMetError extends SignatureTrustError {}
+export class SignatureEvidenceMismatchError extends SignatureTrustError {}

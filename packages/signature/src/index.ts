@@ -5,8 +5,13 @@
  */
 import { sha256Hex } from './signature.service';
 import type { SignatureBackend, SignatureCertificateRef, SignatureEvidence } from './types';
+import { markMockSignatureBackend } from './backend-identity';
 
 export * from './errors';
+export * from './cms-trust-verifier';
+export * from './readiness';
+export * from './manifest';
+export * from './withdrawal';
 export * from './digest';
 export * from './govbr-sandbox';
 export * from './http-provider-client';
@@ -23,7 +28,7 @@ export * from './xmldsig';
  * Creates a deterministic in-memory signature backend for tests and local demos.
  */
 export function createMockSignatureBackend(now: () => Date = () => new Date()): SignatureBackend {
-  return {
+  return markMockSignatureBackend({
     async sign(request) {
       const signedAt = now();
       const signatureId = sha256Hex(Buffer.from(`${request.tenantId}:${request.documentSha256}`));
@@ -59,5 +64,5 @@ export function createMockSignatureBackend(now: () => Date = () => new Date()): 
         reasons: [],
       };
     },
-  };
+  });
 }

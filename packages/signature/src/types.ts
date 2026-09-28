@@ -5,6 +5,60 @@ export type SignatureAlgorithm = 'pades-baseline-t' | 'pades-ltv';
 export type DigestAlgorithm = 'sha256';
 
 export type RevocationSource = 'ocsp' | 'crl' | 'embedded' | 'none';
+export type SignatureLevel = 'ADVANCED' | 'QUALIFIED';
+export type SignatureVerifierKind = 'stynx-cms' | 'consumer-owned';
+export interface SignatureTrustProfile {
+  id: string;
+  revision: string;
+  environment: 'production' | 'test';
+  minimumSignatureLevel: SignatureLevel;
+  requiredPadesProfile: 'PAdES-B-T' | 'PAdES-B-LT' | 'PAdES-B-LTA';
+  requireTsa: boolean;
+  requireLta: boolean;
+  revocation: 'ocsp' | 'crl' | 'ocsp-or-crl';
+  trustAnchorsPem: readonly string[];
+  acceptedPolicies?: readonly string[];
+  atTime: 'signing-time' | 'trusted-timestamp';
+}
+export interface SignatureCapabilities {
+  simulated: boolean;
+  pades: boolean;
+  tsa: boolean;
+  lta: boolean;
+  certificateValidation: readonly ('ocsp' | 'crl')[];
+  evidenceSource: string;
+  checkedAt: Date;
+}
+export interface SignatureTrustProof {
+  verifierKind: SignatureVerifierKind;
+  profileId: string;
+  profileRevision: string;
+  achievedLevel: SignatureLevel;
+  padesProfile: SignatureTrustProfile['requiredPadesProfile'];
+  originalDocumentSha256: string;
+  signedDocumentSha256: string;
+  cmsSha256: string;
+  signerCertificateSha256: string;
+  chainSha256: readonly string[];
+  signedAt: Date;
+  tsaAt: Date;
+  certificateValidatedAt: Date;
+  revocationSource: 'ocsp' | 'crl';
+  verificationRef: string;
+  boundManifestSha256?: string;
+}
+export interface SignatureTrustVerifier {
+  capabilities(profile: SignatureTrustProfile): Promise<SignatureCapabilities>;
+  verifySignedArtifact(input: {
+    tenantId: string;
+    originalDocument: Uint8Array;
+    signedDocument: Uint8Array;
+    cmsSignature: Uint8Array;
+    certificate: SignatureCertificateRef;
+    profile: SignatureTrustProfile;
+    expectedManifestSha256?: string;
+  }): Promise<SignatureTrustProof>;
+}
 
 export interface SignatureCertificateRef {
   subject: string;
@@ -36,6 +90,8 @@ export interface VerificationPolicy {
 }
 
 export interface SignatureRequest {
+  minimumSignatureLevel?: SignatureLevel;
+  trustProfile?: SignatureTrustProfile;
   tenantId: string;
   actorId: string;
   document: Uint8Array;
@@ -50,6 +106,9 @@ export interface SignatureRequest {
 }
 
 export interface SignatureEvidence {
+  signatureLevel?: SignatureLevel;
+  verifierKind?: SignatureVerifierKind;
+  trustProof?: SignatureTrustProof;
   signatureId: string;
   documentSha256: string;
   signedAt: Date;
@@ -69,6 +128,9 @@ export interface SignatureResult {
 }
 
 export interface VerifyRequest {
+  minimumSignatureLevel?: SignatureLevel;
+  trustProfile?: SignatureTrustProfile;
+  certificate?: SignatureCertificateRef;
   tenantId: string;
   document: Uint8Array;
   documentSha256: string;
@@ -79,6 +141,9 @@ export interface VerifyRequest {
 }
 
 export interface VerifyResult {
+  signatureLevel?: SignatureLevel;
+  verifierKind?: SignatureVerifierKind;
+  trustProof?: SignatureTrustProof;
   status: 'valid' | 'invalid' | 'unknown';
   documentSha256: string;
   checkedAt: Date;
@@ -166,6 +231,11 @@ export interface HttpSignatureProviderOptions {
 }
 
 export interface StynxSignatureModuleOptions {
+  healthWitness?: object;
+  trustProfile?: SignatureTrustProfile;
+  verifier?: SignatureTrustVerifier;
+  trustVerifier?: SignatureTrustVerifier;
+  consumerOwnedVerifier?: { acknowledged: true };
   provider?: HttpSignatureProviderOptions | undefined;
   backend?: SignatureBackend | undefined;
   providerClient?: SignatureProviderClient | undefined;
