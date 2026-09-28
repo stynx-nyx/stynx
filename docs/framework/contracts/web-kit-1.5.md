@@ -20,7 +20,7 @@ Publish from `@stynx-nyx/backend`:
 
 The consumer checks its current revision atomically when mutating; the decorator parses only the supplied precondition. It must not infer tenant, bypass RLS, perform its own database read, or convert a race to success. Test a real Nest route using both decorators for absent/malformed/weak/conflicting tags, success with the **new** revision in the ETag, and exact schema validation of 428/412 including requestId. Prove the scoped filter catches a handler-thrown `PreconditionFailedError`. Preserve preferences behavior and test it; adopting the generic helper there is optional only if equivalent.
 
-Register the two `PRECONDITION:*:if-match` codes in `docs/framework/contracts/errors.json` as `statusCode` 428/412, `retriable:false`, with their new law-shape runtime bodies. The catalog edit belongs to Engineer A's lock; Architect reviews the declaration and any policy implications before its commit.
+Register the two `PRECONDITION:*:if-match` codes in `docs/framework/contracts/errors.json` as `statusCode` 428/412, `retriable:false`, with their new law-shape runtime bodies. The catalog is F1 under Constitution Article 6: Architect owns its edit and separate commit after confirming the implemented code/status contract. Engineer A does not edit `docs/`.
 
 ## Angular error boundary (UPS-NGERR-01…04)
 
