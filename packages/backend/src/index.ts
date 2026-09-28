@@ -33,6 +33,7 @@ export * from './audit/audit.module';
 export * from './audit/redaction-policy';
 export * from './transactional-command/transactional-command';
 export * from './transactional-command/transactional-command.module';
+export * from './if-match/if-match';
 
 export * from './db-context/constants';
 export * from './db-context/request-db-client-lifecycle';
