@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx/work/rounds/R-0002/prompts/111-ctg5-observability-delivery-review.md",
+  "prompt_sha256": "d441deab3373dc1d62977ca1813b2c20e2be1571f8bce72cf3bb586abd91e284",
+  "output": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx/work/rounds/R-0002/reviews/ctg5-observability-delivery-review-1.json",
+  "output_sha256": "a3e68ec865116d4fb2739afb013866b86a89d32bb6f642beb95916499bad5be2",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx",
+  "started_at": "2026-09-28T08:20:47Z",
+  "ended_at": "2026-09-28T08:21:57Z"
+}

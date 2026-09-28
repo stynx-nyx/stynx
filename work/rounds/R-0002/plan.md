@@ -632,6 +632,12 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     Inspector prova 500 e 503 com logger e corpo HTTP exato; depois o
     Engineer implementa. Rebind de trace pelo Architect e delivery-review
     do follow-up precedem o único gate integral final.
+28. O delivery-review do follow-up retornou PASS, mas apontou um caso limite
+    a fechar antes da final: `String(cause)` pode lançar para um objeto sem
+    protótipo ou com coerção hostil, interrompendo o filtro antes da resposta.
+    O Inspector adiciona prova HTTP de callback que lança esse valor, com
+    corpo/header exatos e log com `errorCode`/`requestId`; o Engineer torna
+    a formatação e emissão do log incapazes de substituir a resposta.
 
 ## Reviews, PRs e publicações
 

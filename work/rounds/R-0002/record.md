@@ -593,3 +593,12 @@ que passou (`/private/tmp/stynx-ctg5-observability-backend-final-retry.log`).
 `pnpm api:baselines` passou 44/44 após build backend, trace 451/451,
 READMEs 44/0 e RLS negativo 7 tabelas. Falta delivery-review Opus deste
 follow-up antes de declarar o achado encerrado.
+
+O Opus 5.5 retornou **PASS** no delivery-review do follow-up em
+`reviews/ctg5-observability-delivery-review-1.json`, pela ponte DETRAN e
+com recibo de digests. Identificou um caso limite para a final: a coerção
+`String(cause)` no filtro pode lançar quando o valor original é um objeto
+sem protótipo ou possui `toString` hostil; o envelope seria perdido. O
+Architect adicionou uma rodada focal Inspector → Engineer para garantir que
+nenhuma falha de formatação/log mude o fio público. O reviewer também
+sugeriu sensores adicionais de `errorCode` no log e do caminho sem causa.
