@@ -84,8 +84,10 @@ function migrationSchemas(): string[] {
     const allCreate = [...sql.matchAll(/\bCREATE\s+SCHEMA\b/gi)].length;
     if (file.endsWith('000_migrate-check-preseed.sql')) {
       const literal = sql.match(/FOREACH\s+schema_name\s+IN\s+ARRAY\s+ARRAY\[([^\]]+)\]/i);
-      expect(literal, 'preseed schema array must remain finite and literal').not.toBeNull();
       const values = literal![1]!.split(',').map((part) => part.trim());
+      expect(values, 'preseed schema array must remain finite and literal').toEqual([
+        "'tenancy'", "'auth'", "'core'", "'audit'", "'data'", "'storage'", "'archive'", "'flow'", "'demo'", "'sample'",
+      ]);
       expect(values.every((part) => /^'[a-z_][a-z_0-9]*'$/.test(part))).toBe(true);
       for (const value of values) found.add(value.slice(1, -1));
       expect(sql).toMatch(/EXECUTE\s+format\('CREATE SCHEMA IF NOT EXISTS %I',\s*schema_name\)/i);
@@ -114,7 +116,7 @@ describe('stynx generate module command [INV-CLI-001]', () => {
   it('declares generate module with required blueprint/out and optional check, without force', () => {
     const generateCommand = buildProgram().commands.find((command) => command.name() === 'generate');
     const moduleCommand = generateCommand?.commands.find((command) => command.name() === 'module');
-    expect(moduleCommand).toBeDefined();
+    expect(moduleCommand?.name()).toBe('module');
     expect(moduleCommand?.options.map((option) => [option.long, option.mandatory])).toEqual([
       ['--blueprint', true], ['--out', true], ['--check', false],
     ]);
@@ -297,7 +299,9 @@ describe('safe output and deterministic verification [INV-CLI-001, INV-CLI-002]'
     expect(JSON.stringify(manifest)).toContain(createHash('sha256').update(readFileSync(join(first, 'blueprint.json'))).digest('hex'));
     const entries = Object.values(manifest).find((value): value is Array<{ path: string; sha256: string }> =>
       Array.isArray(value) && value.every((entry) => typeof entry.path === 'string' && typeof entry.sha256 === 'string'));
-    expect(entries).toBeDefined();
+    expect(entries?.map((entry) => entry.path)).toEqual(
+      [...a.keys()].filter((path) => path !== 'generation-manifest.json').sort(),
+    );
     const listed = entries!;
     expect(listed.map((entry) => entry.path)).toEqual(listed.map((entry) => entry.path).sort());
     expect(listed.map((entry) => entry.path)).toEqual([...a.keys()].filter((path) => path !== 'generation-manifest.json').sort());
@@ -310,7 +314,7 @@ describe('safe output and deterministic verification [INV-CLI-001, INV-CLI-002]'
     const blueprint = join(root, 'blueprint.json');
     const check = () => invoke(['generate', 'module', '--blueprint', blueprint, '--out', out, '--check']);
     const before = files(out);
-    await expect(check()).resolves.toBeUndefined();
+    await check();
     for (const [path, bytes] of before) expect(readFileSync(join(out, path)).equals(bytes)).toBe(true);
     const source = join(out, 'src/example.module.ts');
     const original = readFileSync(source);
