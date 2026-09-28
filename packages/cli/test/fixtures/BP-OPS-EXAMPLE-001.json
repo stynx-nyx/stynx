@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "BP-OPS-EXAMPLE-001",
+  "module": {
+    "name": "Example",
+    "namespace": "ops",
+    "version": "1.0.0",
+    "owners": ["detran-foundation"],
+    "description": "Tiny Phase 2 generator proof; no real domain behavior."
+  },
+  "database": {
+    "entities": [
+      {
+        "name": "ExampleRecord",
+        "table": "example_record",
+        "primaryKey": ["id"],
+        "fields": [
+          { "name": "id", "type": "uuid", "default": "gen_random_uuid()" },
+          { "name": "tenant_id", "type": "uuid" },
+          { "name": "label", "type": "varchar(80)" }
+        ],
+        "indexes": [{ "columns": ["tenant_id"] }]
+      }
+    ]
+  },
+  "api": {
+    "basePath": "/v1",
+    "resources": [
+      {
+        "entity": "ExampleRecord",
+        "path": "/example-records",
+        "operations": ["list", "get"]
+      }
+    ]
+  },
+  "auth": {
+    "rbac": {
+      "roles": ["technical-admin"],
+      "permissions": [{ "role": "technical-admin", "allow": ["list", "get"] }]
+    }
+  },
+  "audit": { "enabled": true },
+  "ops": { "metrics": { "enabled": true } }
+}
