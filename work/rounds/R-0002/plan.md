@@ -1068,3 +1068,12 @@ retirado localmente e a árvore restaurada ao pai. Engineer adicionou
 a fixture como entrada explícita do workspace `test/*` em
 `tools/repo-config/knip.config.ts` (`3a7a3825`); `pnpm lint:deadcode`
 passou. Regenerar marcador e repetir CI integral.
+
+`plant-bug` — preflight `pnpm lint:cycles` encontrou dois ciclos
+reais em signature: verifier ↔ service pelo helper SHA-256 e
+readiness ↔ module pelo registro de health. Engineer `04790342`
+usa o digest comum e move o estado de witness para módulo interno,
+preservando o export público. `pnpm lint:cycles`, signature 204/204,
+lint, typecheck e typecheck do monorepo 73/73 passaram; `lint:deps`
+e `lint:deadcode` também passaram. Regenerar marcador após estes
+commits, sem alteração de baseline público esperada.

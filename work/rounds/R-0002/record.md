@@ -1277,3 +1277,12 @@ não via o caminho como entrada estática. O marcador foi retirado
 localmente; Engineer `3a7a3825` declarou essa fixture como entrada
 do workspace `test/*`. `pnpm lint:deadcode` verde. Nenhum PR/push/
 publicação ocorreu.
+
+Preflight após o segundo CI: `pnpm lint:deps` passou; `lint:cycles`
+achou dois ciclos de importação CTG9 em signature. Triagem
+`plant-bug`. Engineer `04790342` removeu ambos com `digest.ts`
+existente e `health-witness.ts` interno, mantendo o export de
+`isSignatureHealthWitness`. `pnpm lint:cycles` passou (1525 arquivos,
+zero ciclos), signature 204/204, lint e typecheck focal; typecheck
+monorepo 73/73, deadcode e deps verdes. Nenhum marcador final
+atual está presente após a retirada local de `3e4b709f`.
