@@ -12,3 +12,6 @@ pnpm-lock.yaml
 **/coverage/**
 **/.turbo/**
 **/node_modules/**
+
+# i18n-extract writes these manifests in its canonical JSON format.
+packages-web/*/src/i18n/keys.json
