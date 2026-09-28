@@ -1,4 +1,4 @@
-import { computeBackoffMs, nextCronRunAt, parseCronExpression } from '../../src/index';
+import { computeBackoffMs, InvalidCronExpressionError, nextCronRunAt, parseCronExpression } from '../../src/index';
 
 describe('cron and retry primitives', () => {
   it('calculates UTC cron occurrences and cron DOM/DOW OR semantics', () => {
@@ -71,6 +71,44 @@ describe('cron and retry primitives', () => {
     expect(
       nextCronRunAt('30 0 * * *', new Date('2018-11-04T02:59:00.000Z'), 'America/Sao_Paulo').toISOString(),
     ).toBe('2018-11-04T03:00:00.000Z');
+  });
+
+  describe('sparse cron search stays within its per-call budget', () => {
+    it.each(['UTC', 'America/New_York', 'America/Sao_Paulo'])(
+      'rejects an impossible recurrence in %s within 500 ms',
+      timezone => {
+        let error: unknown;
+        const startedAt = performance.now();
+        try {
+          nextCronRunAt('0 0 31 2 *', new Date('2026-01-01T00:00:00Z'), timezone);
+        } catch (caught) {
+          error = caught;
+        }
+        const elapsedMs = performance.now() - startedAt;
+
+        expect(error).toBeInstanceOf(InvalidCronExpressionError);
+        expect(elapsedMs).toBeLessThanOrEqual(500);
+      },
+      120_000,
+    );
+
+    it.each([
+      ['America/Sao_Paulo', '0 0 29 2 *', '2028-03-01T00:00:00Z', '2032-02-29T03:00:00.000Z'],
+      ['America/New_York', '0 0 29 2 *', '2028-03-01T00:00:00Z', '2032-02-29T05:00:00.000Z'],
+      ['America/Sao_Paulo', '0 0 1 1 *', '2029-01-02T00:00:00Z', '2030-01-01T03:00:00.000Z'],
+      ['America/New_York', '0 0 1 1 *', '2029-01-02T00:00:00Z', '2030-01-01T05:00:00.000Z'],
+    ])(
+      'finds %s sparse recurrence %s within 500 ms',
+      (timezone, expression, after, expected) => {
+        const startedAt = performance.now();
+        const result = nextCronRunAt(expression, new Date(after), timezone);
+        const elapsedMs = performance.now() - startedAt;
+
+        expect(result.toISOString()).toBe(expected);
+        expect(elapsedMs).toBeLessThanOrEqual(500);
+      },
+      120_000,
+    );
   });
 
   it('returns strictly increasing UTC occurrences and recomputes against a changed timezone', () => {
