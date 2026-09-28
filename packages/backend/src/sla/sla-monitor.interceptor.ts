@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import type { RequestLike } from '../common/request-context';
+import { CommittedCommandResponse } from '../transactional-command/transactional-command';
 import { DefaultSlaCategoryResolver } from './default-sla-category.resolver';
 import { LoggerSlaEventSink } from './logger-sla-event.sink';
 import type {
@@ -66,7 +67,7 @@ export class SlaMonitorInterceptor implements NestInterceptor {
       tap(
         () => this.logSla(category, Date.now() - start, false),
         (error: unknown) => {
-          this.logSla(category, Date.now() - start, true);
+          this.logSla(category, Date.now() - start, !(error instanceof CommittedCommandResponse));
           throw error;
         },
       ),

@@ -2,7 +2,8 @@ import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
-import { STYNX_PUBLIC_TENANT_OPTIONS } from '@stynx-nyx/contracts';
+import { STYNX_PUBLIC_TENANT_OPTIONS, STYNX_RESOLVED_TENANT_COMMAND_CONTEXT } from '@stynx-nyx/contracts';
+import { resolvedTenantCommandContextPort } from './command-context.port';
 import { TenantContextInterceptor } from './tenant-context.interceptor';
 import { PublicTenantConfigurationCheck } from './public-tenant-configuration.check';
 import { MembershipAccessCache } from './membership-cache';
@@ -34,6 +35,7 @@ export class StynxTenancyModule {
       ],
       controllers: [TenancyController],
       providers: [
+        { provide: STYNX_RESOLVED_TENANT_COMMAND_CONTEXT, useValue: resolvedTenantCommandContextPort },
         {
           provide: STYNX_TENANCY_OPTIONS,
           useValue: resolved,
@@ -73,6 +75,7 @@ export class StynxTenancyModule {
         TenancyService,
       ],
       exports: [
+        STYNX_RESOLVED_TENANT_COMMAND_CONTEXT,
         StynxCoreModule,
         STYNX_TENANCY_OPTIONS,
         ...(resolved.publicTenant ? [STYNX_PUBLIC_TENANT_OPTIONS] : []),

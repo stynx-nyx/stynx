@@ -8,6 +8,8 @@ export interface TxOptions {
   replica?: boolean;
   retry?: { attempts: number; jitterMs: [number, number] } | false;
   deadlineMs?: number;
+  /** Require an actor-bearing app transaction and verify its live PostgreSQL identity. */
+  requireActor?: boolean;
 }
 
 export interface SoftDeleteOptions {

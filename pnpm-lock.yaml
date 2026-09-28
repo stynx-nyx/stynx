@@ -1103,6 +1103,12 @@ importers:
       '@stynx-nyx/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@stynx-nyx/core':
+        specifier: workspace:*
+        version: link:../core
+      '@stynx-nyx/data':
+        specifier: workspace:*
+        version: link:../data
       '@stynx-nyx/idempotency':
         specifier: workspace:*
         version: link:../idempotency

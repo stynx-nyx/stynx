@@ -9,10 +9,11 @@ import {
 } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
 import { RequestContext, RequestContextMutator, StynxError } from '@stynx-nyx/core';
-import { STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
+import { STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
 import { Database } from '@stynx-nyx/data';
 import { Observable, type Subscription } from 'rxjs';
 import { MembershipAccessCache } from './membership-cache';
+import { recordResolvedTenantCommandContext } from './command-context.port';
 import { STYNX_TENANCY_OPTIONS, STYNX_TENANT_MEMBERSHIP_CACHE } from './tokens';
 import type { RequestLike, ResolvedStynxTenancyModuleOptions } from './types';
 import {
@@ -50,7 +51,7 @@ export class TenantContextInterceptor implements NestInterceptor {
       let subscription: Subscription | undefined;
 
       void this.resolveAndValidate(request)
-        .then(({ tenantId, actorId, public: publicTenant }) => {
+        .then(({ tenantId, actorId, public: publicTenant, checkedActorId }) => {
           const verified = publicTenant && request.publicTenantOptionalAuth && Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL) === true;
           const patch = {
             ...(tenantId !== undefined ? { tenantId } : {}),
@@ -58,6 +59,23 @@ export class TenantContextInterceptor implements NestInterceptor {
             ...(publicTenant ? { sessionId: verified ? (request.stynxClaims?.sid ?? request.verifiedSessionId) : undefined } : {}),
           };
           const run = () => {
+            if (tenantId && (publicTenant || checkedActorId)) {
+              const active = this.requestContext.snapshot();
+              const principalId = request.principal?.id;
+              if (publicTenant && verified) {
+                const claims = request.stynxClaims;
+                if (principalId && actorId === principalId && active.tenantId === tenantId && active.actorId === principalId
+                  && (!claims || (claims.sub === principalId && claims.tenantId === tenantId))) {
+                  recordResolvedTenantCommandContext(request, { tenantId, actorId: principalId, mode: 'verified' });
+                }
+              } else if (publicTenant && actorId && active.tenantId === tenantId && active.actorId === actorId) {
+                recordResolvedTenantCommandContext(request, { tenantId, actorId, mode: 'nominal' });
+              } else if (!publicTenant && checkedActorId && principalId === checkedActorId
+                && active.tenantId === tenantId && active.actorId === checkedActorId
+                && Reflect.get(request, STYNX_VERIFIED_TENANT_ID) === tenantId) {
+                recordResolvedTenantCommandContext(request, { tenantId, actorId: checkedActorId, mode: 'protected' });
+              }
+            }
             subscription = next.handle().subscribe({
               next: (value) => subscriber.next(value),
               error: (error: unknown) => subscriber.error(error),
@@ -80,7 +98,7 @@ export class TenantContextInterceptor implements NestInterceptor {
     });
   }
 
-  private async resolveAndValidate(request: RequestLike): Promise<{ tenantId?: string; actorId?: string; public?: boolean }> {
+  private async resolveAndValidate(request: RequestLike): Promise<{ tenantId?: string; actorId?: string; public?: boolean; checkedActorId?: string }> {
     const path = normalizedPath(request);
     if (request.publicTenantRoute) {
       const headerName = this.options.headerName.toLowerCase();
@@ -158,7 +176,7 @@ export class TenantContextInterceptor implements NestInterceptor {
     }
 
     request.tenantId = candidate;
-    return { tenantId: candidate };
+    return { tenantId: candidate, checkedActorId: actorId };
   }
 
   private async isActiveTenant(tenantId: string): Promise<boolean> {

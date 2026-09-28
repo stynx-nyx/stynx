@@ -30,6 +30,8 @@
   },
   "dependencies": {
     "@stynx-nyx/contracts": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
     "@stynx-nyx/idempotency": "workspace:*",
     "@stynx-nyx/ratelimit": "workspace:*"
   },

@@ -40,6 +40,7 @@ export class AuditInterceptor implements NestInterceptor {
     if (!metadata) {
       return next.handle();
     }
+    if (metadata.transactional) return next.handle();
 
     const request = context.switchToHttp().getRequest<RequestLike>();
 

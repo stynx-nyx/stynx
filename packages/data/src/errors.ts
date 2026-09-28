@@ -20,6 +20,16 @@ export class ActorContextMissingError extends StynxDataError {
   }
 }
 
+export class TransactionIdentityMismatchError extends StynxDataError {
+  constructor(context?: Record<string, unknown>) {
+    super('Transaction identity does not match the trusted request context', {
+      code: 'TRANSACTION_IDENTITY_MISMATCH',
+      status: 500,
+      ...(context ? { context } : {}),
+    });
+  }
+}
+
 export class TransactionRequiredError extends StynxDataError {
   constructor() {
     super('Transaction is no longer active', {

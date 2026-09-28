@@ -16,6 +16,7 @@ import {
   SerializationFailureError,
   StatementTimeoutError,
   TenantContextMissingError,
+  TransactionIdentityMismatchError,
 } from './errors';
 import { StynxPoolRegistry } from './pools';
 import { createDrizzle, Transaction, type StynxDrizzleDatabase } from './transaction';
@@ -84,11 +85,20 @@ export class Database extends CoreDatabase {
     const resolvedReadonly = options.readonly ?? false;
     const retry = options.retry ?? this.options.retry ?? { attempts: 3, jitterMs: [10, 50] as [number, number] };
     const retryConfig = retry === false ? undefined : retry;
+    if (options.requireActor && resolvedRole !== 'app') {
+      throw new TransactionIdentityMismatchError({ reason: 'requireActor requires app role' });
+    }
     this.assertRoleConstraints(resolvedRole, resolvedReadonly, options.replica ?? false);
     const executionContext = this.resolveExecutionContext(resolvedRole);
+    if (options.requireActor && !executionContext.actorId?.trim()) {
+      throw new ActorContextMissingError();
+    }
 
     const active = this.cls.get<TransactionContextState>(TX_CONTEXT_KEY);
     if (active) {
+      if (options.requireActor) {
+        await this.assertLiveCommandIdentity(active.client, executionContext);
+      }
       return this.runNestedTransaction(active, resolvedRole, fn);
     }
 
@@ -107,6 +117,9 @@ export class Database extends CoreDatabase {
           executionContext,
           options.deadlineMs,
         );
+        if (options.requireActor) {
+          await this.assertLiveCommandIdentity(client, executionContext);
+        }
         const db = createDrizzle(client);
         const txState: TransactionContextState = {
           client,
@@ -195,6 +208,31 @@ export class Database extends CoreDatabase {
       trx.close();
       await active.client.query(`ROLLBACK TO SAVEPOINT ${savepointName}`);
       throw mapTransactionError(error);
+    }
+  }
+
+  private async assertLiveCommandIdentity(
+    client: PoolClient,
+    expected: ResolvedExecutionContext,
+  ): Promise<void> {
+    const result = await client.query<{
+      current_user: string;
+      role: string | null;
+      tenant_id: string | null;
+      actor_id: string | null;
+    }>(`SELECT current_user,
+              current_setting('app.role', true) AS role,
+              current_setting('app.tenant_id', true) AS tenant_id,
+              current_setting('app.actor_id', true) AS actor_id`);
+    const live = result.rows[0];
+    if (
+      !live
+      || live.current_user !== 'stynx_app'
+      || live.role !== 'app'
+      || live.tenant_id !== expected.tenantId
+      || live.actor_id !== expected.actorId
+    ) {
+      throw new TransactionIdentityMismatchError({ reason: 'live app identity mismatch' });
     }
   }
 

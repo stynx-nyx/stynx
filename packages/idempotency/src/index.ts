@@ -13,3 +13,4 @@ export * from './pg-idempotency.store';
 export * from './redis-idempotency.backend';
 export * from './request-context';
 export * from './types';
+export * from './transactional-idempotency.store';

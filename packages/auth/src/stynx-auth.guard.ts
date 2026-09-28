@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
-import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
 import { SessionService } from '@stynx-nyx/sessions';
 import { PermissionCache } from './permission-cache';
 import { StynxJwtValidator } from './stynx-jwt.validator';
@@ -84,6 +84,7 @@ export class StynxAuthGuard implements CanActivate {
       return true;
     }
 
+    delete request.stynxClaims;
     const response = responseLike(request);
     const startedAt = performance.now();
     const authorization = headerToString(request.headers.authorization);
@@ -126,3 +127,5 @@ export class StynxAuthGuard implements CanActivate {
     return true;
   }
 }
+
+Object.defineProperty(StynxAuthGuard, STYNX_BUILTIN_AUTH_GUARD, { value: true });
