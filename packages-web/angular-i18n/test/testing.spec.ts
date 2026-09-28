@@ -1,7 +1,12 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { provideStynxI18nTesting } from '@stynx-nyx/angular-i18n/testing';
+
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
 
 describe('@stynx-nyx/angular-i18n/testing', () => {
   afterEach(() => TestBed.resetTestingModule());

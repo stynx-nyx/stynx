@@ -1,10 +1,15 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { StynxSessionService } from '@stynx-nyx/angular-auth';
 import {
   createStynxSessionStub,
   provideStynxSessionStub,
 } from '@stynx-nyx/angular-auth/testing';
+
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
 
 describe('@stynx-nyx/angular-auth/testing', () => {
   afterEach(() => TestBed.resetTestingModule());

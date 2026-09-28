@@ -1,6 +1,7 @@
 import '@angular/compiler';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { provideRouter, Router } from '@angular/router';
 import { StynxI18nService } from '@stynx-nyx/angular-i18n';
 import { StynxShellComponent, StynxShellThemeService } from '@stynx-nyx/angular-ui';
@@ -8,6 +9,10 @@ import type { StynxShellNavigationGroup } from '@stynx-nyx/angular-ui';
 
 @Component({ standalone: true, template: '<h1>Workspace</h1>' })
 class ShellContentComponent {}
+
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+});
 
 describe('StynxShellComponent', () => {
   const translations: Record<string, string> = {
