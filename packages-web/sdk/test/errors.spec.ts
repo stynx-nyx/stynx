@@ -53,6 +53,16 @@ describe('createStynxSdkError envelope compatibility', () => {
     expect(error).toBeInstanceOf(ValidationError);
   });
 
+  it('adds the sibling requestId to legacy context when context has no requestId', () => {
+    const error = createStynxSdkError(400, {
+      code: 'BAD_REQUEST',
+      context: { detail: 'kept' },
+      requestId: 'envelope-id',
+    });
+
+    expect(error.context).toEqual({ detail: 'kept', requestId: 'envelope-id' });
+  });
+
   it('uses details when legacy context is absent and preserves base construction', () => {
     const error = createStynxSdkError(418, {
       errorCode: 'X_VALIDATION_ERROR',
