@@ -93,3 +93,17 @@ final e no ledger de conformidade; reconciliar a autoridade antes de congelar
 1.5.0, sem enfraquecer o teste de 409 nem alterar o schema sem decisão
 constitucional. O requisito UPS-TXN-03 da especificação pede 409 com código
 configurável, sem fixar a forma do envelope.
+
+Review integrado do HEAD `21f518aa` em
+`reviews/ctg7-integrated-delivery-review-1.json`: **PASS** para importação
+ordenada após CTG6. `pnpm test:int` passou 51/51 tarefas no HEAD estável;
+`check:rls-negative` verificou 7 tabelas, `check:rls-smoke` passou, e o sensor
+HTTP Angular→Nest/PostgreSQL passou 1/1. Opus confirmou que a divergência
+do envelope 409 pertence ao contrato CTG5 e bloqueia a publicação final,
+não esta importação; uma decisão Owner sobre adequação à lei ou exceção por
+ADR foi solicitada. No CI final único, conferir que `backend#test` executou
+os sensores de webhook e interop, e repetir `release:policy` com saída
+explícita. Atribuição de papéis dos commits históricos com identidade Git
+humana: Inspector `17083e97`, `244fbcbb`, `07e90fd5`; Engineer
+`835d46a0`, `45be71c1`, `6a57075f`. A separação de arquivos por papel foi
+verificada pelo reviewer; commits novos usarão identidade DEVAI do papel.
