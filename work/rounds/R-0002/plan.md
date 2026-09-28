@@ -699,6 +699,20 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     nenhum worker executa Git, e índices ADR/contratos ficam com o maestro.
     Inspector e Engineer seguem dependentes de contratos aceitos e prompts
     próprios revisados.
+36. Após PASS, os Architects SIG, OBX e OFS foram despachados em paralelo
+    nos write sets exclusivos dos prompts 137–139. `ctg9_sig_architect` e
+    `ctg9_obx_architect` são workers Sol 6; o worker de análise OFS
+    `ctg8_consumer_sensor` foi retomado com o prompt 139. Nenhum worker
+    executa Git. O maestro aguarda os três contratos/ADRs, faz o índice
+    serialmente, revisa e commita em papel Architect antes dos sensores.
+37. Os três workers Architect entregaram contratos e docs sem Git:
+    `ctg9-sig-contract.md`/`signature.md`/ADR proposta de confiança;
+    `ctg9-obx-contract.md`/docs outbox, audit e CTG5/ADR superadora;
+    `ctg9-ofs-contract.md`/`offline-sync-api.md`/ADR superadora. A porta
+    OBX admite append genérico dentro do CTG5 sem selo; o item OFS estrito
+    sela a transação após append, preservando auditoria/idempotência do
+    envelope. O maestro atualizou o índice ADR das decisões aceitas OBX/OFS
+    e pediu delivery-review Opus dos contratos. Ainda não há Inspector.
 
 ## Reviews, PRs e publicações
 

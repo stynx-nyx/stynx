@@ -12,6 +12,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [DEVAI 1.5.6 patch adoption](2026-09-26-devai-1.5.6-adoption.md)
 - [DEVAI 1.5.0 adoption and external mutation hardening](2026-09-15-devai-1.5.0-adoption.md)
 - [Mobile/offline E6 promotion from TEAT](ADR-MOBILE-OFFLINE-0001-teat-promotion.md)
+- [ADR-MOBILE-OFFLINE-0002 — Durable offline batch and numbering parity](ADR-MOBILE-OFFLINE-0002-sync-parity.md) — additive CTG9 decision.
 - [Canonical 1.x package line and registry anomaly correction](ADR-VERSION-LINE-0001.md)
 - [STYNX 1.1.1 campaign control contract](2026-08-24-stynx-1.1.1-campaign-controls.md)
 - [CI economy, release authority, and database isolation](2026-08-24-ci-economy.md)
@@ -19,6 +20,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-JOBS-0001 — Postgres-backed scheduler and worker runtime for `@stynx-nyx/jobs`](ADR-JOBS-0001-postgres-scheduler-worker.md)
 - [ADR-JOBS-0002 — Tenant actor execution and local scheduling for jobs 1.5](ADR-JOBS-0002-actor-tenant-local-clock.md) — supersedes ADR-JOBS-0001 handler context and UTC cron decisions.
 - [ADR-OUTBOX-0001 — Transactional outbox promoted from pec (E3)](ADR-OUTBOX-0001-transactional-outbox-promotion.md)
+- [ADR-OUTBOX-0002 — Append-only event log and per-event delivery](ADR-OUTBOX-0002-event-log-and-delivery.md) — additive CTG9 decision.
 - [Trusted local RC evidence and mutation execution boundary](2026-08-16-trusted-local-rc-evidence.md)
 - [ADR-SESSIONS-0001 — Provider-neutral session inventory and control](ADR-SESSIONS-0001-provider-neutral-session-control.md)
 - [ADR-PREFERENCES-0001 — Tenant-subject preferences boundary](ADR-PREFERENCES-0001-tenant-subject-preferences.md)

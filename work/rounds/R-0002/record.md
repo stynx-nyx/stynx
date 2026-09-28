@@ -684,3 +684,17 @@ retornou **PASS** para os três Architects em paralelo. Os write sets de
 SIG, OBX e OFS são disjuntos e limitados a docs, ADRs e contratos de
 rodada. Três observações editoriais não bloqueantes foram corrigidas antes
 do despacho; o PASS não atesta produto, testes ou publicação.
+
+O maestro despachou os Architects SIG, OBX e OFS em paralelo após o PASS,
+com os prompts 137–139. OBX detém apenas os contratos data/audit/outbox;
+OFS cita as portas e não as redefine. Git, índices ADR/contratos e gates
+compartilhados permanecem sob lock exclusivo do maestro.
+
+Os três Architects concluíram seus write sets, sem Git ou alterações no
+DETRAN. SIG entregou contrato de nível, trust verifier, readiness, manifesto
+e retirada, com ADR de confiança ainda proposta. OBX entregou contrato de
+event log, auditoria/épocas, transação independente, SSE e ledger, com ADR
+superadora; OFS entregou numeração, lote/recibo, applier por item e
+concorrência/handoff, com ADR superadora. O maestro fez o índice de ADRs
+aceitas OBX/OFS e iniciou delivery-review independente; os documentos são
+contratos, não prova de implementação.
