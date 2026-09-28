@@ -4,8 +4,9 @@ import { resolve } from 'node:path';
 
 export const registryVersionPolicyConstants = Object.freeze({
   anomalyPolicyPath: 'law/policy/registry-version-anomalies.json',
-  anomalyPolicySha256: '6ca735ab4690088db77315b7c7ed7856f71d9ac686c9809abb851c97ce8cfa70',
-  candidate: '1.5.0-rc.2',
+  anomalyPolicySha256: '2adb7aaa50d1bafbc17dffd12e057b82f553c11085664bb8b7a1745be1e898d8',
+  candidate: '1.5.0-rc.3',
+  previousCandidate: '1.5.0-rc.2',
   preflightLatestVersion: '1.4.0',
   canonicalMajor: 1,
   packageCount: 44,
@@ -300,6 +301,13 @@ function validatePackageMetadata(packageName, metadata, candidate, anomaly) {
         `${packageName}@${version} is not below candidate ${candidate} and has no exact exception`,
       );
     }
+  }
+
+  if (!Object.hasOwn(metadata.versions, registryVersionPolicyConstants.previousCandidate)) {
+    fail(
+      'REGISTRY_PREVIOUS_CANDIDATE_MISSING',
+      `${packageName}: previous candidate ${registryVersionPolicyConstants.previousCandidate} is absent from registry history`,
+    );
   }
 
   return anomalyMatches;

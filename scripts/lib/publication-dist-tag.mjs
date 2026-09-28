@@ -67,13 +67,21 @@ export function buildNpmPublishArgs({ tarball, registry, tag, version }) {
   return ['publish', tarball, '--registry', registry, '--tag', tag, '--access', 'restricted'];
 }
 
-export function validatePreflightDistTags({ preflightLatest, distTags }) {
+export function validatePreflightDistTags({ preflightLatest, preflightRc, distTags }) {
   const snapshot = checkedDistTags(distTags);
   if (typeof snapshot.latest !== 'string') {
     fail('PUBLICATION_DIST_TAG_UNKNOWN', 'registry latest dist-tag is absent');
   }
   if (snapshot.latest !== preflightLatest) {
     fail('PUBLICATION_DIST_TAG_DRIFT', 'registry latest dist-tag differs from the policy baseline');
+  }
+  if (preflightRc !== undefined) {
+    if (typeof snapshot.rc !== 'string') {
+      fail('PUBLICATION_DIST_TAG_UNKNOWN', 'registry rc dist-tag is absent');
+    }
+    if (snapshot.rc !== preflightRc) {
+      fail('PUBLICATION_DIST_TAG_DRIFT', 'registry rc dist-tag differs from the previous candidate');
+    }
   }
   return { ...snapshot };
 }

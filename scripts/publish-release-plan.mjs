@@ -64,6 +64,7 @@ for (const entry of packages) {
   }
   preflightDistTags.set(entry.name, validatePreflightDistTags({
     preflightLatest: registryVersionPolicyConstants.preflightLatestVersion,
+    preflightRc: registryVersionPolicyConstants.previousCandidate,
     distTags: tags.value,
   }));
 }
