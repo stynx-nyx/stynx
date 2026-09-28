@@ -149,7 +149,7 @@ export function isVersionedPreModeCandidate({
   if (
     (!baseStable && !baseRc) ||
     !candidateRc ||
-    versionCommitVersion !== candidateRootVersion.slice(0, -(`-rc.${candidateRc[4]}`.length)) ||
+    versionCommitVersion !== candidateRootVersion.slice(0, -`-rc.${candidateRc[4]}`.length) ||
     preState?.mode !== 'pre' ||
     preState.tag !== 'rc' ||
     !Array.isArray(preState.changesets) ||
@@ -159,18 +159,25 @@ export function isVersionedPreModeCandidate({
     !Array.isArray(changedManifestPaths) ||
     !Array.isArray(changesetIdsOnDisk) ||
     !Array.isArray(followUpChanges) ||
-    followUpChanges.some(({ path }) =>
-      /^(?:packages|packages-web|\.changeset)\//u.test(path) && path !== '.changeset/status.json',
+    followUpChanges.some(
+      ({ path }) =>
+        /^(?:packages|packages-web|\.changeset)\//u.test(path) && path !== '.changeset/status.json',
     )
-  ) return false;
+  )
+    return false;
 
   if (baseStable) {
     if (basePreState !== null) return false;
     const base = baseStable.slice(1).map(Number);
     const candidate = candidateRc.slice(1, 4).map(Number);
-    if (!candidate.some((part, index) =>
-      part > base[index] && candidate.slice(0, index).every((earlier, i) => earlier === base[i]),
-    )) return false;
+    if (
+      !candidate.some(
+        (part, index) =>
+          part > base[index] &&
+          candidate.slice(0, index).every((earlier, i) => earlier === base[i]),
+      )
+    )
+      return false;
   } else {
     if (
       baseRc.slice(1, 4).some((part, index) => part !== candidateRc[index + 1]) ||
@@ -179,7 +186,8 @@ export function isVersionedPreModeCandidate({
       basePreState.tag !== 'rc' ||
       !Array.isArray(basePreState.changesets) ||
       basePreState.changesets.some((id) => !preState.changesets.includes(id))
-    ) return false;
+    )
+      return false;
   }
 
   const names = new Set(packageStates.map(({ name }) => name));
@@ -188,19 +196,25 @@ export function isVersionedPreModeCandidate({
   const consumed = new Set(preState.changesets);
   const onDisk = new Set(changesetIdsOnDisk);
   if (
-    names.size !== 44 || paths.size !== 44 || changed.size !== 44 ||
-    changedManifestPaths.length !== 44 || consumed.size !== preState.changesets.length ||
-    onDisk.size !== changesetIdsOnDisk.length || consumed.size !== onDisk.size ||
+    names.size !== 44 ||
+    paths.size !== 44 ||
+    changed.size !== 44 ||
+    changedManifestPaths.length !== 44 ||
+    consumed.size !== preState.changesets.length ||
+    onDisk.size !== changesetIdsOnDisk.length ||
+    consumed.size !== onDisk.size ||
     [...consumed].some((id) => !onDisk.has(id)) ||
     [...paths].some((path) => !changed.has(path))
-  ) return false;
+  )
+    return false;
 
-  return packageStates.every(({ name, baseVersion, candidateVersion }) =>
-    candidateVersion === candidateRootVersion &&
-    (baseStable
-      ? baseVersion === preState.initialVersions?.[name]
-      : baseVersion === baseRootVersion &&
-        basePreState.initialVersions?.[name] === preState.initialVersions?.[name]),
+  return packageStates.every(
+    ({ name, baseVersion, candidateVersion }) =>
+      candidateVersion === candidateRootVersion &&
+      (baseStable
+        ? baseVersion === preState.initialVersions?.[name]
+        : baseVersion === baseRootVersion &&
+          basePreState.initialVersions?.[name] === preState.initialVersions?.[name]),
   );
 }
 
@@ -232,7 +246,8 @@ export function isFinalVersionedCandidate({
     packageStates.length !== 44 ||
     !Array.isArray(changesetIdsOnDisk) ||
     changesetIdsOnDisk.length !== 0
-  ) return false;
+  )
+    return false;
 
   const markers = markerCommits.filter(({ subject }) => subject === finalVersionCommitSubject);
   if (
@@ -240,16 +255,23 @@ export function isFinalVersionedCandidate({
     markerCommits.indexOf(markers[0]) === 0 ||
     markerCommits.some(({ sha, subject }) => !fullSha.test(sha) || typeof subject !== 'string') ||
     new Set(markerCommits.map(({ sha }) => sha)).size !== markerCommits.length
-  ) return false;
+  )
+    return false;
 
   const names = new Set(packageStates.map(({ name }) => name));
   const manifests = new Set(packageStates.map(({ manifestPath }) => manifestPath));
-  if (names.size !== 44 || manifests.size !== 44 || !packageStates.every((state) =>
-    /^@stynx-nyx\/[a-z0-9-]+$/u.test(state.name) &&
-    /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(state.manifestPath) &&
-    state.baseVersion === finalBaseVersion &&
-    state.candidateVersion === finalVersion
-  )) return false;
+  if (
+    names.size !== 44 ||
+    manifests.size !== 44 ||
+    !packageStates.every(
+      (state) =>
+        /^@stynx-nyx\/[a-z0-9-]+$/u.test(state.name) &&
+        /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(state.manifestPath) &&
+        state.baseVersion === finalBaseVersion &&
+        state.candidateVersion === finalVersion,
+    )
+  )
+    return false;
 
   const expected = new Map([['.changeset/pre.json', 'D']]);
   for (const id of basePreState.changesets) {
@@ -272,12 +294,23 @@ export function isFinalVersionedCandidate({
     markerChanges.length !== expected.size ||
     markerChanges.some(({ path, status }) => expected.get(path) !== status) ||
     new Set(markerChanges.map(({ path }) => path)).size !== markerChanges.length
-  ) return false;
+  )
+    return false;
 
-  return followUpChanges.every(({ path, status }) =>
-    (status === 'A' || status === 'M') &&
-    (/^work\/rounds\/R-0002\/.+/u.test(path) ||
-      (status === 'M' && path === 'law/policy/forbidden-action-authorizations.json')),
+  return followUpChanges.every(
+    ({ path, status }) =>
+      (status === 'A' || status === 'M') &&
+      (/^work\/rounds\/R-0002\/.+/u.test(path) ||
+        (status === 'M' && path === 'law/policy/forbidden-action-authorizations.json') ||
+        // Exact CI portability repairs discovered by the first clean remote
+        // checkout. Neither path enters the 44 publishable package tarballs.
+        (status === 'M' &&
+          [
+            '.semgrepignore',
+            'packages-web/angular-i18n/tsconfig.spec.json',
+            'scripts/lib/release-context.mjs',
+          ].includes(path)) ||
+        (status === 'A' && path === 'law/adr/2026-09-28-final-candidate-ci-repair.md')),
   );
 }
 
