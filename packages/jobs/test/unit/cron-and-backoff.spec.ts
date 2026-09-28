@@ -67,6 +67,24 @@ describe('cron and retry primitives', () => {
     ).toBe('2026-03-09T06:00:00.000Z');
   });
 
+  it('returns the exact New York hourly boundary after the spring transition', () => {
+    expect(nextCronRunAt('0 * * * *', new Date('2026-03-08T04:00:00Z'), 'America/New_York').toISOString()).toBe(
+      '2026-03-08T05:00:00.000Z',
+    );
+  });
+
+  it('keeps the later New York matching minute across a spring-gap expression', () => {
+    expect(
+      nextCronRunAt('30 1,2 * * *', new Date('2026-03-07T07:30:00Z'), 'America/New_York').toISOString(),
+    ).toBe('2026-03-08T06:30:00.000Z');
+  });
+
+  it('returns an earlier Europe match before a next-day spring gap', () => {
+    expect(
+      nextCronRunAt('0 0,2 * * *', new Date('2026-03-28T01:00:00Z'), 'Europe/Berlin').toISOString(),
+    ).toBe('2026-03-28T23:00:00.000Z');
+  });
+
   it('uses the pinned historical São Paulo gap transition', () => {
     expect(
       nextCronRunAt('30 0 * * *', new Date('2018-11-04T02:59:00.000Z'), 'America/Sao_Paulo').toISOString(),
