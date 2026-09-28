@@ -40,7 +40,8 @@
       "STYNX 1.5.0 CTG-0008 Architect rebind pins blueprint safety, deterministic output, generated RBAC and PostgreSQL RLS sensors, including the packed external consumer.",
       "STYNX 1.5.0 CTG-0008 lint repair strengthens exact blueprint values and rebinds the generator assertion projection.",
       "STYNX 1.5.0 CTG-0008 delivery-review Architect rebind pins staged rename cleanup, integer and route negatives, and inert annotation comparison without weakening existing sensors.",
-      "STYNX 1.5.0 CTG-0008 final hardening Architect rebind pins negative PostgreSQL reserved and restricted SQL identifier vectors before implementation."
+      "STYNX 1.5.0 CTG-0008 final hardening Architect rebind pins negative PostgreSQL reserved and restricted SQL identifier vectors before implementation.",
+      "STYNX 1.5.0 CTG-0005 envelope Architect rebind pins canonical HTTP rejections, rollback, bootstrap grammar, legacy data bodies, and defensive no-SQL checks."
     ]
   },
   "invariants": [
@@ -622,6 +623,24 @@
             "platform upgrade, FORCE RLS, app-role audit wrapper identity and chain, rollback and tenant isolation"
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "canonical CTG5-owned HTTP rejections and request IDs, callback and dependency failures, and PostgreSQL rollback controls"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/backend/test/unit/transactional-command-defensive.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "non-HTTP commands and defensive marking, context, actor, lock timeout, and TTL checks reject before SQL"
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": ["packages/**", "packages-web/**", "reference/**", "domain/**", "tools/**"]
@@ -720,6 +739,24 @@
           "names": ["INV-ERROR-001"],
           "assertions": [
             "public command decorator binds scoped committed-response filter and transactional audit marker"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "canonical CTG5-owned HTTP rejections and request IDs, callback and dependency failures, and PostgreSQL rollback controls"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/backend/test/unit/transactional-command-defensive.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "non-HTTP commands and defensive marking, context, actor, lock timeout, and TTL checks reject before SQL"
           ],
           "mode": "white_box"
         }
@@ -1922,8 +1959,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 45,
-      "assertion_digest_sha256": "90e22838bf6794b71929694c4742811675ab84b94cd9b975976e543fd70819a5"
+      "assertion_count": 54,
+      "assertion_digest_sha256": "776e7d0ac08d27bf5e896887975b4a8385a0dc03f456910fc402e97cc82754cf"
     },
     {
       "path": "packages/backend/test/unit/if-match-contract.spec.ts",
@@ -4666,16 +4703,24 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 48,
-      "assertion_digest_sha256": "7a0a98b91fe05d94b92ed361b044fc807d99948b86b04939ec655eb32dee1699"
+      "assertion_count": 44,
+      "assertion_digest_sha256": "948410144b7933de4ae5ec458f7e60c592ee0f095d868e8027bd1ee596a4f6d9"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "b81773f3dd5fefdc3242584dd140c25c803a6da1611b228ceda9f088887e5631"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 47,
-      "assertion_digest_sha256": "6f9be01a7bc866201c74c36be0f9c17f8cda461182cf96bde5009f1944b1ae84"
+      "assertion_count": 53,
+      "assertion_digest_sha256": "5cc5a50c59a15c9de6660402d3cc4707fe03214ecbb77c187e7ce5b4b1c03461"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
@@ -4690,24 +4735,24 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 34,
-      "assertion_digest_sha256": "7492a2fdd177398bd19527a947258c8d47c19684c604698f830e07b690cac33c"
+      "assertion_count": 35,
+      "assertion_digest_sha256": "f5525b33798be14d9ee9a3f6b43f204eabeae30f81340d043c318e2786a735ce"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 4,
-      "assertion_digest_sha256": "02c22edacaad2c73a179e8904cd289814ec899e5c0038f9089c811f79f100dde"
+      "assertion_count": 7,
+      "assertion_digest_sha256": "d120ed4330fb74d192e0ba3c29564416fd4fe8f2e9652f65c79c1c07996dff5c"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 40,
-      "assertion_digest_sha256": "787c8a59f63bec64895012dcc1673f06dbfa9cbb9fbc6b0277f8bac724d52215"
+      "assertion_count": 53,
+      "assertion_digest_sha256": "5746941f7f884d9dcc66b72dd468dc27bbf8fddb07caa243e783f06396996b45"
     },
     {
       "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
@@ -4716,6 +4761,14 @@
       "lifecycle": "supported",
       "assertion_count": 9,
       "assertion_digest_sha256": "d3eb5fece1d957236020d540798f81d16e730582310346f0b1490536a54b954a"
+    },
+    {
+      "path": "packages/backend/test/unit/transactional-command-defensive.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "a4c6089d930d58fe5b4bf417d7c8cc8de6792b4c49eada61c8e3e74f21ffb3d2"
     },
     {
       "path": "packages/data/test/unit/database-require-actor.spec.ts",
@@ -4786,8 +4839,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 15,
-      "assertion_digest_sha256": "3c48a5e2d7515228c12422dba046e14af483cb857d59d88a351ff8b923ce9345"
+      "assertion_count": 16,
+      "assertion_digest_sha256": "3cc141d04f8fb06bbc2195c28f95735cbbc9affc6d172c60641c62fd3846a9d5"
     },
     {
       "path": "packages/cli/test/generate-module.spec.ts",

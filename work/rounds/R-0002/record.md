@@ -434,3 +434,23 @@ informado pelo maestro antes do despacho Inspector. Nenhum teste ou código
 foi alterado nesta etapa; próximos commits: Inspector vermelho → Architect
 trace → Engineer verde → Architect baseline → delivery-review → importação
 cumulativa, sem CI completo/PR/RC intermediário sob OD-S15-02.
+
+## CTG5 — sensores e rebind de trace (2026-09-28)
+
+O Inspector worker entregou sensores parciais em duas tentativas; a triagem
+`reference-gap` e a escalada ao maestro constam em `plan.md` §Triagem. O
+maestro concluiu os testes no papel Inspector e os commitou em
+`380f302f2da0a3996f814d33dfc6597ac4730e57`. A prova focal de 11 arquivos
+contra PostgreSQL real foi vermelha como esperado: 46 falhas de contrato e
+47 testes verdes, incluindo rollback, RLS e as respostas legadas. O comando
+usou `STYNX_TEST_PG_HOST=127.0.0.1`, porta `55432`, usuário/senha
+`postgres`, e `pnpm --filter @stynx-nyx/backend test --` com os arquivos
+`transactional-command-*`, `angular-transactional-command-http` e
+`if-match-http`; log efêmero
+`/private/tmp/stynx-ctg5-inspector-complete-red.log`. `pnpm lint:tests`
+passou. Os casos esperados falham por corpos CTG5 antigos, rejeições de
+bootstrap ausentes e falhas de dependência expostas como 500. O worker
+executou indevidamente uma leitura `git show` sem mutação no início da
+primeira tentativa; depois não executou Git. Só o maestro fez os commits.
+O Architect rebinda `law/trace.json` a 451/451 testes rastreados neste
+checkpoint; não alterou schema nem invariante de erro.
