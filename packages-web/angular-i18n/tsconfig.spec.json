@@ -3,7 +3,11 @@
   "compilerOptions": {
     "declaration": false,
     "declarationMap": false,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "paths": {
+      "@stynx-nyx/angular-i18n": ["./src/index.ts"],
+      "@stynx-nyx/angular-i18n/testing": ["./testing/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "test/**/*.ts"]
 }
