@@ -34,7 +34,8 @@
       "STYNX 1.5.0 CTG-0005 Architect rebind pins the real app-role statement-timeout rollback sensor.",
       "STYNX 1.5.0 CTG-0005 delivery-review Architect rebind pins filter precedence, inherited guards, provenance bootstraps, and refreshed fault/HTTP assertions.",
       "STYNX 1.5.0 CTG-0006 Architect rebind pins If-Match, Angular error boundary, accessible shell, published testing helpers and adopted helper sensors. Real Nest/PostgreSQL tests also prove If-Match and ETag compose with transactional commit, replay and rollback. The assertion projection of modified existing tests is refreshed without reducing their declared invariants.",
-      "STYNX 1.5.0 CTG-0006 delivery-review Architect rebind pins system-theme media changes and SSR fallback, accessible live status, source-identity fake Transaction, published testing imports and legacy request ID preservation."
+      "STYNX 1.5.0 CTG-0006 delivery-review Architect rebind pins system-theme media changes and SSR fallback, accessible live status, source-identity fake Transaction, published testing imports and legacy request ID preservation.",
+      "STYNX 1.5.0 CTG-0006 PASS follow-up Architect rebind pins negative deep-import vectors and direct fake-Transaction source resolution."
     ]
   },
   "invariants": [
@@ -4580,8 +4581,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 2,
-      "assertion_digest_sha256": "2a960189457c6db1b0ed6ac7ffadec5dd8592b6159caca2b2e40875be5e9a555"
+      "assertion_count": 5,
+      "assertion_digest_sha256": "f693a6f0c6072cc79d858d8267f249831a04f8e4cb4aecfeae06b929ee158ea3"
     }
   ],
   "suites": {
