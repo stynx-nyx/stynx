@@ -228,9 +228,12 @@ export function nextCronRunAt(expression: string, after: Date, timezone = 'UTC')
       for (const transition of transitions) {
         if (transition.after <= transition.before || transition.at < first || transition.at > last) continue;
         // A forward jump collapses every matching missing minute to its first
-        // valid UTC minute. Check the missing wall range, including date changes.
+        // valid UTC minute. A neighboring day's transition must not preempt
+        // an earlier match on this date.
         for (let missing = transition.at + transition.before; missing < transition.at + transition.after; missing += MINUTE_MS) {
-          if (matches(parsed, utcWall(new Date(missing))) && (best === undefined || transition.at < best)) {
+          const missingWall = utcWall(new Date(missing));
+          if (missingWall.year === day.year && missingWall.month === day.month && missingWall.day === day.day
+            && matches(parsed, missingWall) && (best === undefined || transition.at < best)) {
             best = transition.at;
             break;
           }
