@@ -6,6 +6,12 @@ Declare **Engineer** (Constitution Art. 6). **Primeiro, verifique**
 commit Architect do contrato/catálogo, o SHA do commit Inspector de testes
 vermelhos, o SHA do rebind Architect de `law/trace.json` e um prompt-review
 PASS deste prompt; se faltar qualquer um, pare sem editar e reporte bloqueio.
+O maestro registra esses SHAs em `work/rounds/R-0002/record.md` antes do
+despacho; leia esse registro e o PASS
+`work/rounds/R-0002/reviews/ctg5-envelope-worker-prompt-review-2.json`.
+Você não executa Git, inclusive leitura de log/show; a worktree fornecida
+pelo maestro deve corresponder aos SHAs registrados. Se faltar prova,
+pare e reporte `reference-gap`.
 Leia `ctg5-error-envelope-option-a.md`,
 `docs/framework/contracts/errors.json` e o contrato CTG5 no commit Architect:
 `runtimeBody` fixa mensagem, retryable e details; não invente variantes.
@@ -46,6 +52,10 @@ setup/store/audit/commit failures become nonretryable canonical 503,
 `ctg5-callback` becomes its specified canonical 500; (5) handler exceptions
 retain the consumer contract. Convert own errors only after rollback. The
 unselected 422 and persisted/replayed 502 remain byte-identical.
+Identifique o `HttpException` pass-through pela **identidade da instância**
+criada a partir de `selectedError` (ou por marcador interno equivalente).
+Um `HttpException` lançado pelo callback `persistStatus` não é essa instância
+e vira 500 `status-policy-invalid`; não classifique apenas por `instanceof`.
 
 Converta `scope()` e `tenancyPort.get()` que lançam em seus 500 canônicos
 **antes** da transação e de qualquer SQL, fora do classificador de fase.

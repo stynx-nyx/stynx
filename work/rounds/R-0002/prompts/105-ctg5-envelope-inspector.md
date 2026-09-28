@@ -5,6 +5,12 @@ Declare **Inspector** (Constitution Art. 6). **Primeiro, verifique**
 `authorized_by_role: Owner`, opção A e `INV-ERROR-001`; verifique também o
 commit Architect que emenda o contrato/catálogo e um prompt-review PASS deste
 prompt. Se qualquer evidência faltar, pare sem editar e reporte bloqueio.
+O maestro registra os SHAs exatos em `work/rounds/R-0002/record.md` antes
+do despacho; leia esse registro e o PASS
+`work/rounds/R-0002/reviews/ctg5-envelope-worker-prompt-review-2.json`.
+Você não executa Git, inclusive leitura de log/show; o maestro fornece a
+worktree no SHA registrado. Se o registro e os arquivos não concordarem,
+pare e reporte `reference-gap`.
 Leia `ctg5-error-envelope-option-a.md`, o PASS técnico review-4, o contrato
 Architect emendado e `docs/framework/contracts/errors.json` no commit
 registrado, além da fonte/testes CTG5. Para cada código, `runtimeBody` do
@@ -46,6 +52,10 @@ No novo spec de erros, cobrir explicitamente: scope callback 500
 500 `COMMAND:CONFIGURATION:response-not-json`; metadataSelector,
 entityIdSelector e redaction lançando 500
 `COMMAND:CONFIGURATION:audit-metadata-failed`. Todos sem efeito durável.
+Inclua `persistStatus` lançando um `HttpException` próprio: ele continua
+erro do callback CTG5 e deve virar 500 `status-policy-invalid`, enquanto o
+`HttpException` criado explicitamente pela fronteira para um
+`CommittedCommandError` não selecionado conserva o corpo do consumidor.
 Falhas de setup (pool.connect/BEGIN/sessão), store lookup/reserve, audit sink,
 store complete/clear e COMMIT que não são `StynxDataError` recebem 503
 `COMMAND:DEPENDENCY:transaction-failed`, `retryable:false`, sem domínio,
