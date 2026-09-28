@@ -104,6 +104,68 @@ describe('CTG9 append-only outbox facts (PostgreSQL/RLS)', () => {
     await postgres?.dispose();
   }, 60_000);
 
+  it('restores caller lock_timeout and composes append with later audit and idempotency writes', async () => {
+    const key = `ctg9-compose-${randomUUID()}`;
+    const composed = await database.withRequestContext({ tenantId: TENANT_A, actorId: ACTOR }, () =>
+      database.tx(
+        async (trx) => {
+          await trx.query(`select set_config('lock_timeout','43ms',true)`);
+          const event = await append.appendInTransaction(trx, {
+            entity: 'ctg9.compose',
+            entityId: key,
+            idempotencyKey: key,
+            payload: { composed: true },
+          });
+          const setting = await trx.query<{ value: string }>(
+            `select current_setting('lock_timeout') as value`,
+          );
+          await trx.query(
+            `select audit.write_command_event(
+            'CREATE','ctg9.compose',$1,'{}'::jsonb,
+            null,null,'ctg9-compose',null,'{"ok":true}'::jsonb,null)`,
+            [key],
+          );
+          await trx.query(
+            `insert into core.idempotency_keys (tenant_id,key,status,response)
+           values ($1::uuid,$2,'COMPLETED','{}'::jsonb)`,
+            [TENANT_A, key],
+          );
+          return { event, lockTimeout: setting.rows[0]?.value };
+        },
+        { role: 'app', isolation: 'read committed', retry: false },
+      ),
+    );
+    expect(composed.lockTimeout).toBe('43ms');
+    const admin = await postgres.connectAsAdmin();
+    try {
+      const facts = await admin.query<{ count: string }>(
+        `select count(*)::text as count from outbox.events where tenant_id=$1 and id=$2`,
+        [TENANT_A, composed.event.id],
+      );
+      const audit = await admin.query<{ count: string }>(
+        `select count(*)::text as count from audit.events where tenancy_id=$1
+          and entity='ctg9.compose' and entity_id=$2`,
+        [TENANT_A, key],
+      );
+      const reservation = await admin.query<{ count: string }>(
+        `select count(*)::text as count from core.idempotency_keys where tenant_id=$1 and key=$2`,
+        [TENANT_A, key],
+      );
+      expect(facts.rows[0]?.count).toBe('1');
+      expect(audit.rows[0]?.count).toBe('1');
+      expect(reservation.rows[0]?.count).toBe('1');
+    } finally {
+      await admin.end();
+    }
+    await append.ackEvent({
+      tenantId: TENANT_A,
+      eventId: composed.event.id,
+      status: 'ACKED',
+      rawBody: Buffer.from('ctg9-compose-terminal'),
+      hmacVerified: true,
+    });
+  });
+
   it('persists two facts for one aggregate, replays an identical key, rejects divergent reuse, and scopes keys per tenant', async () => {
     const aggregate = `ctg9-${randomUUID()}`;
     const firstKey = `${aggregate}:first`;

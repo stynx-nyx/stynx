@@ -674,6 +674,8 @@ describe('OutboxService depth', () => {
 
   it('records ERROR detail, rejects nonunique receipt failures, missing targets, and vanished updates', async () => {
     const errored = { ...row, status: 'ERROR' as const };
+    const nextAttemptAt = new Date('2026-08-25T10:00:00.000Z');
+    const backoff = { nextAttemptAt: vi.fn(() => nextAttemptAt) };
     const metrics = {
       incrementEnqueued: vi.fn(),
       incrementDispatched: vi.fn(),
@@ -681,16 +683,17 @@ describe('OutboxService depth', () => {
     };
     const query = vi
       .fn()
-      .mockResolvedValueOnce({ rows: [{ id: row.id, tenantId: row.tenantId }] })
+      .mockResolvedValueOnce({ rows: [{ id: row.id, tenantId: row.tenantId, attempts: 1 }] })
       .mockResolvedValueOnce({ rows: [errored] })
       .mockResolvedValueOnce({ rows: [] });
-    await createService(query, { metrics }).service.ack({
+    await createService(query, { metrics, backoff }).service.ack({
       entity: row.entity,
       entityId: row.entityId,
       status: 'ERROR',
       detail: 'rejected',
     });
-    expect(query.mock.calls[1]?.[1]).toEqual([row.id, 'ERROR', 'rejected']);
+    expect(query.mock.calls[1]?.[1]).toEqual([row.id, 'ERROR', 'rejected', nextAttemptAt]);
+    expect(backoff.nextAttemptAt).toHaveBeenCalledWith(1, expect.any(Date));
     expect(metrics.incrementAcked).toHaveBeenCalledWith(row.entity, 'error');
 
     const receiptFailure = new Error('receipt unavailable');
@@ -741,12 +744,13 @@ describe('OutboxService depth', () => {
       service.ack({ entity: row.entity, entityId: row.entityId, status: 'ACKED' }),
     ).resolves.toEqual(acked);
     expect(query.mock.calls[0]?.[1]).toEqual([row.entity, row.entityId]);
-    expect(query.mock.calls[1]?.[1]).toEqual([row.id, 'ACKED', null]);
+    expect(query.mock.calls[1]?.[1]).toEqual([row.id, 'ACKED', null, null]);
     expect(query.mock.calls[1]?.[0]).toContain('status = $2::outbox.message_status');
     expect(query.mock.calls[1]?.[0]).toContain('ack_time = now()');
     expect(query.mock.calls[1]?.[0]).toContain(
       "case when $2::text = 'ERROR' then $3 else null end",
     );
+    expect(query.mock.calls[1]?.[0]).toContain('next_attempt_at = $4');
     expect(query.mock.calls[1]?.[0]).toContain('where id = $1');
     expect(query.mock.calls[2]?.[1]).toEqual([row.tenantId, row.id, 'ACKED', null]);
     expect(query.mock.calls[2]?.[0]).toContain('insert into outbox.acknowledgements');
@@ -754,12 +758,13 @@ describe('OutboxService depth', () => {
     expect(query.mock.calls[2]?.[0]).toContain('on conflict (message_id) do nothing');
     expectMarkerBeforeLegacySql(query.mock.calls[0]?.[0], 'select id, tenant_id');
     expect(compactSql(query.mock.calls[0]?.[0])).toBe(
-      'with ownership as materialized (select state from outbox.legacy_ownership where id=true for share nowait) select id, tenant_id as "tenantId", migrated_event_id as "migratedEventId" from outbox.messages cross join ownership where entity = $1 and entity_id = $2 for update of messages',
+      'with ownership as materialized (select state from outbox.legacy_ownership where id=true for share nowait) select id, tenant_id as "tenantId", attempts, migrated_event_id as "migratedEventId" from outbox.messages cross join ownership where entity = $1 and entity_id = $2 for update of messages',
     );
     expect(compactSql(query.mock.calls[1]?.[0])).toBe(
       compactSql(`update outbox.messages
         set status = $2::outbox.message_status, ack_time = now(),
             last_error = case when $2::text = 'ERROR' then $3 else null end,
+            next_attempt_at = $4,
             updated_at = now()
         where id = $1 returning ${outboxColumns()}`),
     );
@@ -834,12 +839,9 @@ describe('OutboxService depth', () => {
         role: 'owner',
         readonly: false,
         retry: false,
-        deadlineMs: expect.any(Number),
+        lockTimeoutMs: 250,
       }),
     );
-    const failureDeadline = dispatch.database.tx.mock.calls[1]?.[1]?.deadlineMs;
-    expect(failureDeadline).toBeGreaterThan(0);
-    expect(failureDeadline).toBeLessThanOrEqual(5_000);
 
     await expect(
       createService(vi.fn(async () => ({ rows: [] }))).service.retry(row.id),

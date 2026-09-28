@@ -281,12 +281,8 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
         expect(item.request_headers['x-outbox-idempotency-key']).toBe(
           `ctg9:${item.event_id === success.id ? success.entityId : failure.entityId}`,
         );
-        expect(item.request_headers.authorization).toBe(
-          `sha256:${createHash('sha256').update('Bearer private').digest('hex')}`,
-        );
-        expect(item.request_headers['x-signature']).toBe(
-          `sha256:${createHash('sha256').update('hmac-private').digest('hex')}`,
-        );
+        expect(item.request_headers.authorization).toBe('[redacted]');
+        expect(item.request_headers['x-signature']).toBe('[redacted]');
         expect(JSON.stringify(item.request_headers)).not.toContain('hmac-private');
         expect(JSON.stringify(item.request_headers)).not.toContain('Bearer private');
         if (item.event_id === success.id) {
@@ -301,6 +297,78 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
       }
     } finally {
       await admin.end();
+    }
+    await ack(success.id);
+    await ack(failure.id);
+  }, 15_000);
+
+  it('defers a negative ACK by backoff and accepts a later positive ACK as terminal', async () => {
+    const event = await append();
+    send = async () => ({ provider: 'probe', protocol: 'HTTP' });
+    const sent = await bounded(outbox.dispatchEventsDue(1));
+    expect(sent.map((item) => item.row.id)).toEqual([event.id]);
+    await outbox.ackEvent({
+      tenantId: TENANT,
+      eventId: event.id,
+      status: 'ERROR',
+      rawBody: Buffer.from('negative-ack'),
+      hmacVerified: true,
+    });
+    const admin = await postgres.connectAsAdmin();
+    try {
+      const rejected = await admin.query<{ status: string; next_attempt_at: Date | null }>(
+        `select status,next_attempt_at from outbox.event_delivery where tenant_id=$1 and event_id=$2`,
+        [TENANT, event.id],
+      );
+      const premature = await bounded(outbox.dispatchEventsDue(1));
+      await outbox.ackEvent({
+        tenantId: TENANT,
+        eventId: event.id,
+        status: 'ACKED',
+        rawBody: Buffer.from('positive-ack'),
+        hmacVerified: true,
+      });
+      const final = await admin.query<{ status: string; next_attempt_at: Date | null }>(
+        `select status,next_attempt_at from outbox.event_delivery where tenant_id=$1 and event_id=$2`,
+        [TENANT, event.id],
+      );
+      expect(rejected.rows[0]?.status).toBe('ERROR');
+      expect(new Date(rejected.rows[0]!.next_attempt_at!).getTime()).toBeGreaterThan(Date.now());
+      expect(premature).toEqual([]);
+      expect(final.rows).toEqual([{ status: 'ACKED', next_attempt_at: null }]);
+    } finally {
+      await admin.end();
+    }
+  }, 15_000);
+
+  it('bounds an owner claim wait behind an exclusive delivery table lock', async () => {
+    const event = await append();
+    send = async () => ({ provider: 'probe', protocol: 'HTTP' });
+    const holder = await postgres.connectAsAdmin();
+    try {
+      await holder.query('begin');
+      await holder.query('lock table outbox.event_delivery in share row exclusive mode');
+      const started = Date.now();
+      let blocked: unknown;
+      try {
+        await bounded(outbox.dispatchEventsDue(1));
+      } catch (error) {
+        blocked = error;
+      }
+      expect(Date.now() - started).toBeLessThan(3_000);
+      const unchanged = await holder.query<{ status: string; attempts: number }>(
+        'select status,attempts from outbox.event_delivery where tenant_id=$1 and event_id=$2',
+        [TENANT, event.id],
+      );
+      expect(unchanged.rows).toEqual([{ status: 'PENDING', attempts: 0 }]);
+      await holder.query('commit');
+      const recovered = await bounded(outbox.dispatchEventsDue(1));
+      expect(recovered.map((item) => item.row.id)).toEqual([event.id]);
+      await ack(event.id);
+      expect(blocked).toMatchObject({ code: 'OUTBOX_OWNERSHIP_CONTENTION', status: 503 });
+    } finally {
+      await holder.query('rollback').catch(() => undefined);
+      await holder.end();
     }
   }, 15_000);
 });
