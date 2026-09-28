@@ -1286,3 +1286,19 @@ existente e `health-witness.ts` interno, mantendo o export de
 zero ciclos), signature 204/204, lint e typecheck focal; typecheck
 monorepo 73/73, deadcode e deps verdes. Nenhum marcador final
 atual está presente após a retirada local de `3e4b709f`.
+
+O marcador local `1d927fa9` regenerou 105 arquivos. O terceiro
+`pnpm ci:stynx` passou pelos gates de lint, ciclos e typecheck, mas
+`api:baselines` detectou nova declaração interna
+`signature/src/health-witness.d.ts` e mudança de digest em
+`signature/src/readiness.d.ts`. Triagem `reference-gap`: a superfície
+empacotada mudou, embora o barrel exportado não. O marcador foi
+retirado localmente. Preflight do grafo de testes sobre a candidata
+também encontrou cinco expectativas de tenancy antigas: a resolução
+protegida devolve `checkedActorId` após membership. Triagem
+`sensor-error`; outros erros de workers no Turbo foram cascata após
+essa falha. Inspector `7041e350` reforçou cinco expectativas com
+`ACTOR_ID`, tenancy 85/85 verde. Trace continuou 472/472, sem rebind.
+Architect rodou `pnpm api:baselines:write` e `pnpm api:baselines` passou
+44/44. `pnpm install --frozen-lockfile` passou, sem diff rastreado.
+Nenhum PR/push/publicação ocorreu.

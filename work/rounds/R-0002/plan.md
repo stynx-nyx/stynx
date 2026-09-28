@@ -1077,3 +1077,16 @@ preservando o export público. `pnpm lint:cycles`, signature 204/204,
 lint, typecheck e typecheck do monorepo 73/73 passaram; `lint:deps`
 e `lint:deadcode` também passaram. Regenerar marcador após estes
 commits, sem alteração de baseline público esperada.
+
+`reference-gap` — o CI após marcador local `1d927fa9` passou por
+typecheck e parou em `api:baselines`: o refactor de signature emite
+`health-witness.d.ts` e modifica `readiness.d.ts`, embora o barrel
+público permaneça igual. O marcador foi retirado localmente;
+Architect executou `pnpm api:baselines:write` e confirmou
+`pnpm api:baselines` 44/44. O grafo de testes preflight revelou cinco
+expectativas antigas de tenancy: `resolveAndValidate` retorna também
+`checkedActorId` após validar membership. Inspector `7041e350`
+amarrou o ator exato nos cinco casos; tenancy 85/85 passou, trace
+472/472 não mudou pois as chamadas `expect` permaneceram nas linhas
+originais. `pnpm install --frozen-lockfile` restaurou dependências sem
+alterar arquivos rastreados. Regenerar marcador e repetir CI.
