@@ -6,6 +6,7 @@
 export * from './errors';
 export * from './in-memory-offline-sync.store';
 export * from './offline-sync.controller';
+export * from './ctg9-offline-sync.controller';
 export * from './offline-sync.module';
 export * from './offline-sync.service';
 export * from './postgres-offline-sync.store';

@@ -9,17 +9,56 @@ export type OfflineSyncErrorCode =
   | 'OFFLINE_SYNC_RANGE_UNAVAILABLE'
   | 'OFFLINE_SYNC_RESERVATION_NOT_FOUND'
   | 'OFFLINE_SYNC_RESERVATION_STATE'
+  | 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE'
+  | 'OFFLINE_SYNC_NUMBERING_AMBIGUOUS'
+  | 'OFFLINE_SYNC_NUMBERING_EXPIRED'
+  | 'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED'
   | 'OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND'
   | 'OFFLINE_SYNC_QUEUE_ID_REUSED'
   | 'OFFLINE_SYNC_CONFLICT_NOT_FOUND'
-  | 'OFFLINE_SYNC_CONFLICT_STATE';
+  | 'OFFLINE_SYNC_CONFLICT_STATE'
+  | 'OFFLINE_SYNC_CONFLICT_RESOLUTION'
+  | 'OFFLINE_SYNC_BATCH_CONFLICT'
+  | 'OFFLINE_SYNC_BATCH_SEQUENCE'
+  | 'OFFLINE_SYNC_ITEM_INTEGRITY'
+  | 'OFFLINE_SYNC:BATCH:in-progress';
+export class OfflineSyncConfigurationError extends Error {
+  readonly code = 'OFFLINE_SYNC_CONFIGURATION_ERROR';
+  constructor(option: string) { super(`Invalid offline-sync configuration: ${option}`); }
+}
+
+export class OfflineSyncUpgradeRequiredError extends HttpException {
+  readonly code = 'OFFLINE_SYNC_UPGRADE_REQUIRED';
+  constructor() {
+    super({ statusCode: 503, errorCode: 'OFFLINE_SYNC_UPGRADE_REQUIRED', message: 'Offline-sync migration 0002 is required.', retryable: true }, 503);
+  }
+}
 
 export class OfflineSyncError extends HttpException {
   constructor(
     readonly code: OfflineSyncErrorCode,
     status: number,
     message: string,
+    retryable = false,
+    requestId?: string,
   ) {
-    super({ statusCode: status, errorCode: code, message, retryable: false }, status);
+    super({ statusCode: status, errorCode: code, message, retryable,
+      ...(requestId ? { requestId } : {}) }, status);
+  }
+}
+
+export type OfflineSyncNumberingCode =
+  | 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE'
+  | 'OFFLINE_SYNC_NUMBERING_AMBIGUOUS'
+  | 'OFFLINE_SYNC_NUMBERING_EXPIRED'
+  | 'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED';
+
+export class OfflineSyncNumberingOutcome extends OfflineSyncError {
+  readonly receiptStatus: 'rejected' | 'conflict';
+  readonly context: {number:number;reservationId:string|null};
+  constructor(code: OfflineSyncNumberingCode, number: number, reservationId: string | null) {
+    super(code,409,code);
+    this.receiptStatus = code === 'OFFLINE_SYNC_NUMBERING_EXPIRED' ? 'conflict' : 'rejected';
+    this.context = {number,reservationId};
   }
 }
