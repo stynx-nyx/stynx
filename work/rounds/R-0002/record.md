@@ -1366,3 +1366,27 @@ recusou o recibo `task-population-not-pass`; nenhuma tag de evidência foi
 enviada. Os limiares e testes permanecem intactos. O PR final deve
 declarar a lacuna e só poderá usar uma exceção administrativa exata do
 Owner, conforme ADR-CI-ECONOMY Decision 8, após os demais checks.
+
+## PR final e reparos do primeiro CI remoto (2026-09-28)
+
+PR #308 abriu em `718ed37c` como único PR final. Preflight autenticado de
+monotonicidade do registry passou para 44 pacotes em 1.5.0. O primeiro CI
+remoto achou duas falhas: `typecheck` de `angular-i18n/testing` antes de
+`dist`, e Semgrep sobre quatro chaves PKI de teste não incluídas em
+tarballs. A ADR `2026-09-28-final-candidate-ci-repair.md` e o commit
+Architect `d28373c2` delimitam a exceção pós-marcador e os quatro
+fixtures; Engineer `38c40e2f` mapeou os dois subpaths para fonte no
+tsconfig de teste. `pnpm release:policy` passou (44 pacotes/26 mapas),
+o pacote Angular passou 14/14 testes e typecheck, e `tsc
+--traceResolution` confirmou `testing/index.ts`; DEVAI forbidden strict
+deu zero findings.
+
+O prompt de review 195 foi enviado pela ponte DETRAN a Claude Code Opus
+5.5. A ponte saiu 4 porque a resposta continha prosa antes do bloco JSON,
+sem produzir recibo válido. O fallback direto `claude -p` com o mesmo
+prompt retornou **PASS**, zero achados bloqueantes, em
+`reviews/final-ci-repair-delivery-review-1.direct.json`. O reviewer
+confirmou que a falta de evidência DEVAI assinada persiste e que um
+admin merge exige autorização Owner exata nos termos de Decision 8. O
+próximo passo é enviar o novo HEAD ao PR e confirmar typecheck e Semgrep
+verdes no remoto.

@@ -1133,6 +1133,20 @@ este candidato. Manter os testes e os limiares; levar a falha para o PR
 e resolver a autoridade de merge pelo procedimento exato de Decision 8
 de ADR-CI-ECONOMY, se todos os outros checks remotos passarem.
 
+`sensor-error` — o primeiro checkout remoto do PR #308 no SHA
+`718ed37c` executou `typecheck` antes do build de `angular-i18n`:
+`test/testing.spec.ts` importava o subpath `./testing` via `dist` ainda
+ausente. Engineer `38c40e2f` mapeou a raiz e `./testing` para os arquivos
+fonte no tsconfig de testes; 14/14 testes, typecheck e traceResolution
+focal passaram. Repetir o check em checkout remoto limpo.
+
+`policy-issue` — Semgrep remoto bloqueou quatro chaves privadas de
+fixtures PKI públicos e limitados a testes, ausentes dos tarballs.
+Architect `d28373c2` registrou ADR e quatro exclusões de arquivo exato
+em `.semgrepignore`, além da exceção estreita para reparos após o marcador
+congelado. O reviewer Opus 5.5 deu PASS no delta; repetir Semgrep no
+novo SHA sem ampliar as exclusões.
+
 **Checkpoint final pré-PR (2026-09-28):** marker Engineer `b647f568`
 para `1.5.0`/44 pacotes, `ci:stynx` integral e `ci:reference-apps`
 verdes, release policy/provenance/consumer fixtures verdes, trace
@@ -1152,3 +1166,9 @@ declarada; observar todos os checks remotos. Se somente
 `verified-local-rc` impedir o merge, uma exceção administrativa exige
 autorização Owner vinculada a ator, PR/ref, commit/tree, motivo,
 evidência de recuperação e condição de encerramento antes da ação.
+
+**PR #308 aberto:** primeiro HEAD remoto `718ed37c` teve `typecheck` e
+Semgrep vermelhos; ambos receberam os reparos delimitados acima, com
+delivery-review Opus 5.5 PASS via fallback `claude -p` depois de a
+ponte recusar a resposta com preâmbulo não JSON. Novo HEAD ainda precisa
+ser enviado e observado no CI remoto. O DEVAI RC continua sem recibo.
