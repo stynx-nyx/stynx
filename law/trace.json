@@ -35,7 +35,8 @@
       "STYNX 1.5.0 CTG-0005 delivery-review Architect rebind pins filter precedence, inherited guards, provenance bootstraps, and refreshed fault/HTTP assertions.",
       "STYNX 1.5.0 CTG-0006 Architect rebind pins If-Match, Angular error boundary, accessible shell, published testing helpers and adopted helper sensors. Real Nest/PostgreSQL tests also prove If-Match and ETag compose with transactional commit, replay and rollback. The assertion projection of modified existing tests is refreshed without reducing their declared invariants.",
       "STYNX 1.5.0 CTG-0006 delivery-review Architect rebind pins system-theme media changes and SSR fallback, accessible live status, source-identity fake Transaction, published testing imports and legacy request ID preservation.",
-      "STYNX 1.5.0 CTG-0006 PASS follow-up Architect rebind pins negative deep-import vectors and direct fake-Transaction source resolution."
+      "STYNX 1.5.0 CTG-0006 PASS follow-up Architect rebind pins negative deep-import vectors and direct fake-Transaction source resolution.",
+      "STYNX 1.5.0 CTG-0007 Architect rebind pins the Angular-generated idempotency key through live Nest HTTP and PostgreSQL RLS commit, replay and mismatch paths."
     ]
   },
   "invariants": [
@@ -4623,6 +4624,14 @@
       "lifecycle": "supported",
       "assertion_count": 27,
       "assertion_digest_sha256": "08c60cb2dd7166312ad8ca929b88bc87fdff77f447999905c876b6e9e6360d4e"
+    },
+    {
+      "path": "packages/backend/test/integration/angular-transactional-command-http.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 15,
+      "assertion_digest_sha256": "3c48a5e2d7515228c12422dba046e14af483cb857d59d88a351ff8b923ce9345"
     }
   ],
   "suites": {
