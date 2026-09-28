@@ -108,15 +108,17 @@ class CommandRejectionResponse extends HttpException {
   readonly key = '';
 
   constructor(readonly statusCode: number, readonly errorCode: string, readonly message: string,
-    readonly details?: Record<string, unknown>, readonly retryable = false, cause?: unknown) {
-    super('', statusCode, cause === undefined ? undefined : { cause });
+    readonly details?: Record<string, unknown>, readonly retryable = false) {
+    super('', statusCode);
   }
 }
 
 function reject(errorCode: keyof typeof REJECTIONS, details?: Record<string, unknown>, cause?: unknown): never {
   const [status, message] = REJECTIONS[errorCode];
-  throw new CommandRejectionResponse(status, errorCode, message, details,
-    errorCode === 'IDEMPOTENCY:CONFLICT:in-progress', cause);
+  const rejection = new CommandRejectionResponse(status, errorCode, message, details,
+    errorCode === 'IDEMPOTENCY:CONFLICT:in-progress');
+  if (cause !== undefined) rejection.cause = cause;
+  throw rejection;
 }
 
 function rejectMismatch(errorCode: string, key: string): never {
