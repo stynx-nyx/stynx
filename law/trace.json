@@ -41,7 +41,8 @@
       "STYNX 1.5.0 CTG-0008 lint repair strengthens exact blueprint values and rebinds the generator assertion projection.",
       "STYNX 1.5.0 CTG-0008 delivery-review Architect rebind pins staged rename cleanup, integer and route negatives, and inert annotation comparison without weakening existing sensors.",
       "STYNX 1.5.0 CTG-0008 final hardening Architect rebind pins negative PostgreSQL reserved and restricted SQL identifier vectors before implementation.",
-      "STYNX 1.5.0 CTG-0005 envelope Architect rebind pins canonical HTTP rejections, rollback, bootstrap grammar, legacy data bodies, and defensive no-SQL checks."
+      "STYNX 1.5.0 CTG-0005 envelope Architect rebind pins canonical HTTP rejections, rollback, bootstrap grammar, legacy data bodies, and defensive no-SQL checks.",
+      "STYNX 1.5.0 CTG-0005 envelope sensor triage rebinding separates internal exception metadata from the HTTP envelope and pins the complete actor-provenance 403 body."
     ]
   },
   "invariants": [
@@ -4703,8 +4704,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 44,
-      "assertion_digest_sha256": "948410144b7933de4ae5ec458f7e60c592ee0f095d868e8027bd1ee596a4f6d9"
+      "assertion_count": 45,
+      "assertion_digest_sha256": "7c5fc22a95fa983af3d1e11c273759fa6dfa81421cf58b62b073a4c1dfb9e422"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
@@ -4768,7 +4769,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 6,
-      "assertion_digest_sha256": "a4c6089d930d58fe5b4bf417d7c8cc8de6792b4c49eada61c8e3e74f21ffb3d2"
+      "assertion_digest_sha256": "e7d8aba0589993cb7cb888434ceb0171af482e49cb497f48bee0b2b783beb619"
     },
     {
       "path": "packages/data/test/unit/database-require-actor.spec.ts",
