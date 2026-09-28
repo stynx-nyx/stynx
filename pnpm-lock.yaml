@@ -1972,7 +1972,7 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       '@stynx-nyx/health':
-        specifier: workspace:1.5.0-rc.3
+        specifier: workspace:*
         version: link:../health
       '@stynx-nyx/integration-adapter':
         specifier: workspace:*

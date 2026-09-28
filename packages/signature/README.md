@@ -151,7 +151,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 ### Runtime dependencies
 
 - `@peculiar/x509`: `^2.1.0`
-- `@stynx-nyx/health`: `workspace:1.5.0-rc.3`
+- `@stynx-nyx/health`: `workspace:*`
 - `@stynx-nyx/integration-adapter`: `workspace:*`
 - `@xmldom/xmldom`: `^0.9.10`
 - `asn1js`: `^3.0.10`
