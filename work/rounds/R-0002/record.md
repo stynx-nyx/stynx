@@ -611,3 +611,13 @@ em `d6bd8138`. O sensor focal passou 13/13 e a suíte backend completa passou
 502/502 em 48 arquivos; lint e typecheck backend e lint de testes passaram.
 O corpo e o header públicos continuam verificados no mesmo sensor. Falta o
 delivery-review independente deste último delta.
+
+O Opus 5.5 retornou **PASS** do caso opaco em
+`reviews/ctg5-opaque-delivery-review-1.json`, com recibo
+`reviews/ctg5-opaque-delivery-review-1.bridge.json`. O reviewer confirmou
+por leitura do código que nem a coerção da causa nem o logger podem escapar
+para substituir o envelope; os 409, erros de data e respostas do consumidor
+seguem fora desse caminho. Apontou como opcional um teste de transporte de
+log que lança; a guarda no código foi inspecionada e não há achado
+bloqueante. O maestro confirmou a autoria DEVAI Inspector em `77588011`,
+Architect em `39ea92a7` e Engineer em `d6bd8138`.

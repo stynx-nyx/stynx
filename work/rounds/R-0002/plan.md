@@ -638,6 +638,12 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     O Inspector adiciona prova HTTP de callback que lança esse valor, com
     corpo/header exatos e log com `errorCode`/`requestId`; o Engineer torna
     a formatação e emissão do log incapazes de substituir a resposta.
+29. O caso opaco foi corrigido no commit Engineer `d6bd8138` após sensor
+    Inspector vermelho `77588011` e rebind Architect `39ea92a7`. O backend
+    passou 502/502 em 48 arquivos, e o delivery-review Opus deste delta
+    retornou PASS em `reviews/ctg5-opaque-delivery-review-1.json`. A correção
+    CTG5 e seu follow-up estão prontos para o gate consolidado. Permanece
+    pendente a decisão de escopo A1 §8.1 antes de versionar a final.
 
 ## Reviews, PRs e publicações
 
