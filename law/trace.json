@@ -4713,8 +4713,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 12,
-      "assertion_digest_sha256": "6d7ea1336c1f3f6549a3df3f0255f1eced3a7ad443e7910d4e78ca3d9b682bbe"
+      "assertion_count": 15,
+      "assertion_digest_sha256": "2d60fac7c62227189b27243560d78a2ae0f1300c0f5a377d0b79fb7475aee2a5"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
