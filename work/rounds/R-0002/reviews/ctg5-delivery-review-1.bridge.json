@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "/private/tmp/stynx-ctg5-delivery-review.md",
+  "prompt_sha256": "a55e512a163eb2fff38b965a829b4d8ca127fe3bf9c6b9532d568a5a1c1da7e4",
+  "output": "work/rounds/R-0002/reviews/ctg5-delivery-review-1.json",
+  "output_sha256": "882355e892ac8e2010c846bbcf8cddafd7611773d308d0ff949d81c279570237",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg5-transaction/stynx",
+  "started_at": "2026-09-28T03:54:28Z",
+  "ended_at": "2026-09-28T03:59:26Z"
+}

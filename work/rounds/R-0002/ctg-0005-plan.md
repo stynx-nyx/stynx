@@ -64,3 +64,17 @@ focais anteriores. Próximo passo: delivery-review Opus do HEAD exato com
 `prompts/64-ctg5-delivery-review.md`; reparar achados se houver, importar a
 CTG5 na branch cumulativa e rebater a CTG6 sobre o checkpoint final. Não abrir
 PR nem publicar RC nesta CTG.
+
+Delivery-review Opus ciclo 1 em `reviews/ctg5-delivery-review-1.json`
+retornou REVIEW no HEAD `91487ae5`. Triagem: `reference-gap` — faltam provas
+Nest HTTP/PostgreSQL para comandos públicos nominal/verificado, comando
+protegido com port de tenancy, ordem invertida, port ausente e guards falsos;
+Inspector acrescenta sensores antes da próxima revisão. Triagem: `plant-bug`
+— a checagem de filtros reconhece tipos exatos, mas Nest também captura
+superclasses; Inspector fixa as duas ordens de decoradores e Engineer corrige
+o bootstrap. Achados não bloqueantes: documentar o REVOKE de `audit.write`,
+registrar que a DDL/seed raiz não muda porque 0020 é migração platform-only
+com prova em `test/db/transactional-commands-migration.spec.ts`, omitir o
+header de chave vazio nas rejeições, verificar métodos herdados no boot e
+completar as duas corridas em que o vencedor conclui dentro do prazo. Fazer
+uma tentativa de reparo e novo delivery-review antes da importação.

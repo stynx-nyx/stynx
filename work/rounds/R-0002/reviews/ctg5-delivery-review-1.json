@@ -1,0 +1,48 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages/backend/test/integration",
+      "issue": "No test runs a command through the boundary for most of the provenance cases the contract and plan require. Missing: a public @PublicTenantRoute command in nominal mode; a public optionalAuth command in verified mode; a protected command with StynxTenancyModule installed, which uses the port with mode 'protected'; the wrong interceptor order core → command → tenancy, which should fail before SQL; a public command with no tenancy port provider; and the bootstrap rejection for a look-alike guard, a subclass that only inherits the brand, and a command guarded only by app.useGlobalGuards. The 5 backend integration specs import neither StynxTenancyModule nor PublicTenantRoute. The tenancy-port logic in verifyProvenance and the guard-brand checks in onApplicationBootstrap are only exercised by the tenancy and auth unit tests, which never go through TransactionalCommandInterceptor.",
+      "required_change": "Inspector: add real Nest HTTP + PostgreSQL specs with StynxTenancyModule and two tenants. Cover nominal and verified public commands (app-role audit and key committed under the Host tenant); a protected command that needs the port; the core → command → tenancy order, asserting 403 with no handler call, no key and no audit row; a missing port provider; and bootstrap failure for an unbranded look-alike guard, an inheriting subclass and a guard registered only through useGlobalGuards. Then have the Architect rebind law/trace.json."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/backend/src/transactional-command/transactional-command.ts",
+      "issue": "catchesCommitted() treats a filter as blocking only when it is a catch-all or when a caught type is exactly CommittedCommandResponse or HttpException. Nest 11 selects filters with instanceof (selectExceptionFilterMetadata). So a consumer method filter @Catch(Error) or @Catch(IntrinsicException) applied outside @TransactionalCommand passes bootstrap, then intercepts committed 502 responses and replays and rewrites their status and body. The contract requires bootstrap to reject any filter that would catch CommittedCommandResponse and would precede the STYNX filter. It also says 'The Inspector tests both decorator orders with a consumer method-level catch-all', and no such test exists. The only filter test is the unit spec, which checks metadata membership and nothing else.",
+      "required_change": "Engineer: treat a filter as intercepting when it catches everything or when a caught type matches CommittedCommandResponse or CommandRejectionResponse by prototype, e.g. `exception === CommittedCommandResponse || CommittedCommandResponse.prototype instanceof exception`. Inspector: add tests where a method-level @Catch() filter and a @Catch(Error) filter each sit on both sides of @TransactionalCommand. Bootstrap must reject when the consumer filter would come first and allow it otherwise, and the allowed order must still produce the committed 502 on the wire."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/data/migrations/platform/0020_transactional_commands.sql",
+      "issue": "Migration 0020 runs REVOKE ALL ON audit.write FROM PUBLIC and stynx_app. An existing consumer that calls a legacy AuditSqlSink in audit_write_function mode, or its own SQL, over an app-role pool will start failing on unmarked routes. The changeset and the backend README do not mention this. The reference API is not affected because it uses the owner role.",
+      "required_change": "Document the revoke and the owner-role requirement for the legacy audit.write path in the changeset body or the migration note. Optionally add a test showing that owner use of audit.write still works after 0020."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "work/rounds/R-0002/ctg-0005-plan.md",
+      "issue": "The plan requires recording the 'DDL/seed/test disposition', and it is not recorded. The root database/ddl/02-audit.sql still defines audit.write and compute_event_hash without the 0020 changes, and no platform seed was added. Following the CTG4 precedent, where platform-only objects stay out of the root ddl, this is probably intended, but the plan says nothing either way.",
+      "required_change": "Architect: add a line to the plan saying root database/ddl and seed are unaffected because 0020 is platform-only, with test/db/transactional-commands-migration.spec.ts as the DDL sensor. Otherwise, update the canonical DDL and its ledger."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/src/transactional-command/transactional-command.ts",
+      "issue": "CommittedCommandResponseFilter also handles CommandRejectionResponse, so every rejection before the transaction (403/400/500) sends an empty `x-idempotency-key: ` header. This non-allowlisted header is also emitted on committed responses and replays.",
+      "required_change": "Set x-idempotency-key only when the key is non-empty, or omit it on rejections, and document it next to the replay marker."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/src/transactional-command/transactional-command.ts",
+      "issue": "The bootstrap scan only looks at method names defined directly on the controller prototype. A @TransactionalCommand method inherited from a base controller skips the checks for marking, guard brand and filter order. The runtime still enforces marking and provenance, so this is fail-open only at boot.",
+      "required_change": "Walk the prototype chain up to Object.prototype when collecting controller methods."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+      "issue": "The same-key race test only covers a loser that times out after lockTimeoutMs while the winner is still in its handler. Two other outcomes of the bounded wait are untested: the winner commits during the wait and the waiter replays, or the winner rolls back during the wait and the waiter acquires the key. That behavior comes from the ON CONFLICT DO UPDATE ... WHERE expired statement and the follow-up lookup under READ COMMITTED.",
+      "required_change": "Inspector: add both sub-cases with a winner that is released inside lockTimeoutMs. Assert a byte-identical replay and one handler call for the commit case, and that the contender acquires the key for the rollback case."
+    }
+  ],
+  "summary": "HEAD 91487ae5 matches, and the tree is clean apart from two untracked, empty temp files in reviews/. Commits are role-separated, and the law/baseline rebinds are authored by DEVAI Architect. The plan records predecessor SHAs, PASS receipts and the reconciliation checkpoint. Verified directly, with passing tests unless noted: Database.tx({role:'app',requireActor:true,retry:false}) probes the live current_user, app.role, app.tenant_id and app.actor_id, and rejects owner/reader roles or a mismatched nested identity before SQL; lookup, reservation, handler, the audit.write_command_event wrapper (SECURITY DEFINER, identity taken from settings, advisory lock per tenant), completion or clear, and commit all run on one app-role client; lock_timeout applies only around the reservation INSERT, and a 55P03 becomes 409 IN_PROGRESS only after rollback; audit advisory-lock contention does not become IN_PROGRESS; a real 57014 statement timeout gives 504 STATEMENT_TIMEOUT with one handler call per attempt and no key, audit, domain row or cache write, which is distinct from the bounded reservation-lock timeout; serialization failure calls the handler once; identity is tenant+scope+key with an explicit tenant_id predicate, and NULL tenant is excluded by the RLS policy; the fingerprint covers method, concrete path and canonical JSON, and body absence is decided from HTTP framing; the 409 envelope is correct; a default-201 POST commits and replays a 502 with identical bytes on the wire despite a consumer global catch-all and an outer mapper; a plain thrown 502 rolls back; an unselected marker rolls back with its ordinary 422; an unselected success commits and deletes its key; legacy interceptors defer to transactional routes. Local runs: backend 23/23, test/db 0020 4/4, data/tenancy/auth/idempotency/audit unit sensors, check:trace 428/428, api:baselines 44 OK. No cache publication exists, so cache-after-commit holds trivially. REVIEW rather than PASS because the contract-required proofs for public/tenancy provenance, wrong interceptor order and guard-brand bootstrap are missing, and the filter-precedence boot check can be bypassed by a superclass @Catch with no test for either decorator order. Fix both before importing into the cumulative branch."
+}
