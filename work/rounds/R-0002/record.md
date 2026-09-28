@@ -888,3 +888,21 @@ não autorizada na política RLS publicada de audit. O maestro removeu a
 mudança RLS de 0021 antes da continuação Engineer. Inspector OBX
 prepara sensores das corridas A/B/C, ACK e lease; fonte não liberada
 para commit nem conformidade até novo PASS.
+
+SIG delivery-review ciclo 2 pela ponte saiu 4 pelo mesmo formato JSON
+cercado; fallback estruturado **FAIL** em
+`reviews/ctg9-sig-delivery-review-2.json`. Além de fetchers externos
+obrigatórios e DSS por regex, o reviewer detectou vínculo insuficiente
+entre SignerInfo e certificado/ESSCertIDv2, alteração pós-assinatura,
+verifier não marcado em manifesto/retirada e classificação errada de
+indisponibilidade. `pdf-lib` foi adicionado como dependência direta de
+signature (`72e0382b`) para parse de objetos PDF. Engineer e Inspector
+atuam em caminhos disjuntos; fonte SIG continua sem commit.
+
+OFS delivery-review 1 pela ponte retornou JSON válido com **FAIL** em
+`reviews/ctg9-ofs-delivery-review-1.json`; bridge registry adjacente.
+O veredito aponta oito bloqueios de implementação na unicidade do item,
+hash, lease, ACK, numeração, projeção, E6→CTG9 e path HTTP sob prefixo.
+O Engineer foi reencaminhado ao próprio write set; PostgreSQL/HTTP
+Inspector serão ampliados antes de reivindicar os quatro MUST. O review
+não atesta publicação.
