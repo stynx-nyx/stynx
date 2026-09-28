@@ -50,6 +50,12 @@ reparo desses casos, mas mostrou que `Database.tx` aninha em SAVEPOINT sob
 transação ambiente e que o audit hash chain ainda pode inverter locks com o
 relógio outbox. A prévia abaixo passa a exigir uma fronteira top-level por
 item e serialização de auditoria antes do relógio; ainda não há PASS.
+O ciclo 5 em `reviews/ctg9-conditional-contract-review-5.json` confirmou que
+essas obrigações eram insuficientes: `audit.fn_row_change` trava a cabeça sem
+advisory, e `runWithRequestContext`/`runWithSystemContext` podem apagar
+`TX_CONTEXT_KEY` do CLS. A prévia abaixo passa a exigir a redefinição do
+trigger, uma marca herdável de conexão em uso fora desse CLS e uma porta de
+append que opera na mesma `Transaction` do item. Ainda não há PASS.
 
 ## Contratos e provas necessários se o Owner incluir CTG9
 
@@ -89,25 +95,38 @@ item e serialização de auditoria antes do relógio; ainda não há PASS.
    empates sem colisão global. Exaustão de `NO CYCLE` falha antes da escrita
    sem perder o evento; não introduzir um limite de taxa silencioso. SQL e
    objeto JS comparam a
-   **mesma** tupla `(ms,id)`; UUID aleatório v4 não atende. O lock é adquirido
-   após os locks de domínio e depois do lock da cadeia de auditoria do tenant,
-   imediatamente antes do append; nenhuma escrita de domínio ocorre depois
-   dele na **mesma transação de item**. A migração forward de plataforma
-   deve fazer `audit.write` adquirir no início o mesmo advisory lock por
-   tenant que `audit.write_command_event` já usa. O append adquire esse
-   advisory lock **antes** do relógio; triggers auditados, comando CTG5,
-   log/ledger/recibo auditado e append passam a seguir cadeia de auditoria
-   → relógio, inclusive quando a cadeia ainda não tem linha. O advisory lock
-   é reentrante no mesmo tx; nenhuma chamada auditada pode adquirir a cadeia
-   pela primeira vez depois de deter o relógio. Um teste cruza comando CTG5
-   que faz append com escrita de domínio auditada que também faz append.
+   **mesma** tupla `(ms,id)`; UUID aleatório v4 não atende. O append adquire
+   o advisory lock da cadeia de auditoria do tenant **antes** do relógio;
+   nenhuma escrita de domínio ocorre depois do relógio na mesma transação
+   de item. Essa é a ordem cadeia → relógio, não uma ordem global de locks
+   de domínio. A migração forward de plataforma redefine
+   **`audit.fn_row_change` de 0017, `audit.write` e
+   `audit.write_command_event`** para adquirir o mesmo advisory lock antes
+   do `SELECT ... FOR UPDATE` da cabeça. A chave é o tenant usado no filtro
+   `tenancy_id` (`app.tenant_id` no trigger, argumento no write), com uma
+   sentinela fixa e não NULL para a cadeia sem tenant. Para tenant real,
+   preserva a chave de 0020. O trigger nunca pode travar a cabeça antes
+   de pedir o advisory. A tabela de relógio não recebe
+   `audit.fn_row_change`; `now()` não pode tomar a cadeia depois do relógio.
+   Log, ledger ou recibo auditado segue a mesma ordem. Dois triggers
+   concorrentes devem manter cadeia linear válida em `audit.verify_chain`.
+   O Inspector cruza comando CTG5 com handler não auditado versus handler
+   auditado, com e sem append, e duas transações de trigger concorrentes.
+   Deadlocks entre locks de domínio e advisory ainda podem ocorrer:
+   40P01/40001 após retries esgotados é resultado de item **retentável**,
+   com rollback sem consumo, evento ou ACK aplicado; o recibo de lote não
+   marca o item como concluído.
    O applier OFS
    não mantém uma transação externa entre itens: cada item bem-sucedido
    confirma domínio, consumo, recibo e evento juntos; cada falha reverte
    somente seu item e o lote continua em outra transação. Testar dois lotes
    cruzados para deadlock e medir contenção por tenant. A serialização dura
    até commit ou rollback do item, não impõe limite fixo de taxa, mas pode
-   reduzir throughput. O append usa isolamento READ COMMITTED. Se um chamador fornecer RR ou
+   reduzir throughput. O append usa isolamento READ COMMITTED. `Database.tx`
+   aplica `TxOptions.isolation` no top-level antes da primeira query de
+   sessão; o item OFS pede explicitamente `read committed`. Em transação
+   aninhada, uma opção de isolamento divergente falha fechada. Se um
+   chamador fornecer RR ou
    SERIALIZABLE, falhar fechado com erro tipado antes de escrever ou propagar
    40001 sem perda, com retry no limite externo do comando; não capturar e
    continuar dentro da transação abortada. Validar na conexão efetiva SQL
@@ -122,8 +141,9 @@ item e serialização de auditoria antes do relógio; ainda não há PASS.
    pelo menos uma vez, sem perda. `now`, `findById` e `listSince` do adapter
    usam o **primário**, papel app com `replica:false`, e verificam na conexão
    efetiva `pg_is_in_recovery() = false`; uma transação ambiente em réplica
-   falha fechada. `now` tem grant de
-   UPDATE na tabela do relógio com FORCE RLS, e as leituras nunca usam o pool
+   falha fechada. `now` tem grants de INSERT e UPDATE na tabela do relógio
+   com FORCE RLS e política `WITH CHECK` por tenant; o Inspector cobre o
+   primeiro `now()` de um tenant sem eventos. As leituras nunca usam o pool
    reader/replica que pode atrasar. O novo log e seu mapa de IDs legados não
    são purgados na 1.5.0; um `Last-Event-ID` desconhecido mantém a semântica
    atual de reiniciar em `now()`, declarada como sem garantia de replay.
@@ -189,22 +209,41 @@ item e serialização de auditoria antes do relógio; ainda não há PASS.
    aplica domínio. Nova porta de applier opera **uma transação top-level
    independente por item** com `Database.tx`/`Transaction` da CTG5 para
    efeito, consumo, recibo e evento. `Database.tx` hoje usa SAVEPOINT quando
-   encontra `TX_CONTEXT_KEY`; o contrato exige uma API pública de data para
-   afirmar ausência de transação ambiente e falhar fechado com erro tipado
-   **antes** do primeiro item. O endpoint de lote não usa
+   encontra `TX_CONTEXT_KEY`. A API pública de data para afirmar ausência
+   de transação ambiente usa uma marca `AsyncLocalStorage` própria de
+   conexão detida, herdável através de `runWithRequestContext` e
+   `runWithSystemContext`, além de consultar o CLS. Se a marca indicar
+   transação ativa mas `TX_CONTEXT_KEY` tiver sido apagado por um contexto
+   derivado, `Database.tx` falha fechado com erro tipado **sem abrir outra
+   conexão**, em vez de tratar a chamada como top-level. O serviço de lote consulta
+   essa API antes de **qualquer escrita, inclusive criar ou abrir o recibo
+   durável de lote**; não basta testar antes do primeiro item. A marca é
+   mantida até commit/rollback e impede que um wrapper de contexto apague
+   a fronteira. O endpoint de lote não usa
    `@TransactionalCommand`: sua identidade/idempotência vem do recibo de
    lote durável; um adotante que o monte sob o interceptor recebe essa
    rejeição tipada, sem abrir conexão extra, consumir pool ou escrever
    parcialmente. Não há transação externa de domínio retendo locks entre
-   itens. O lote preserva resultado parcial e retoma pelo recibo durável;
-   evento sai por porta injetada
-   pelo consumidor, sem dependência direta OFS→OBX. O contrato precisa fixar
+   itens. Itens são aplicados estritamente em sequência no mesmo request;
+   `Promise.all` sobre um mesmo store CLS é rejeitado ou cada item recebe
+   um contexto isolado e uma conexão própria com prova de limite de pool.
+   O lote preserva resultado parcial e retoma pelo recibo durável. A porta
+   de evento OFS→OBX recebe a **mesma `Transaction` do item** e chama
+   `appendInTransaction(trx, event)` sem `withSystemContext` ou
+   `Database.tx` internos. O append verifica no cliente efetivo que
+   `app.tenant_id` corresponde ao tenant do evento e rejeita execução fora
+   da transação do item. Assim, domínio/consumo/recibo/evento têm um único
+   commit, sem dependência direta OFS→OBX. O contrato precisa fixar
    precedência entre idempotência HTTP atual e recibo de domínio, inclusive
    com `mountControllers:false`, para não mascarar 409/422 nem recusar
    clientes legados. Inspector cobre o endpoint normal e um endpoint
-   indevidamente montado sob `@TransactionalCommand` (erro tipado sem efeitos
-   nem exaustão do pool), além de dois lotes cruzados com item 1 confirmado
-   antes de começar o item 2. Cobre HTTP TEAT/BOAT, mais de 100 itens,
+   indevidamente montado sob `@TransactionalCommand`, com
+   `withRequestContext` por item, ou cuja porta de evento tente
+   `withSystemContext`/nova `Database.tx`: erro tipado antes de qualquer
+   escrita, sem conexão extra ou exaustão do pool mesmo quando a
+   concorrência iguala o tamanho do pool. Cobre tentativa de `Promise.all`
+   no mesmo store CLS e dois lotes cruzados com item 1 confirmado antes
+   de começar o item 2. Cobre HTTP TEAT/BOAT, mais de 100 itens,
    sequência repetida/lacuna, ACK perdido, handoff, janela desligada,
    resolução permitida/proibida, concorrência e deadlock de lotes cruzados,
    rollback por item e RLS real.

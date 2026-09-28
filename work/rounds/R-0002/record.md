@@ -476,6 +476,20 @@ migração forward, sequência `CACHE 1 NO CYCLE` sem truncamento, migração de
 IDs v4 para UUIDv7 com mapa, e checagens na conexão efetiva. Ainda não há
 PASS condicional nem autorização de escopo; não houve alteração de produto.
 
+Ciclo 5: `REVIEW` em `reviews/ctg9-conditional-contract-review-5.json`.
+O reviewer confirmou que a prévia havia fechado migração UUIDv4→UUIDv7,
+codificação da sequência e checks SQL, mas mostrou dois bloqueios restantes
+no código real: `audit.fn_row_change` de 0017 não usa advisory lock, e os
+wrappers de RequestContext podem apagar `TX_CONTEXT_KEY` do CLS. Também
+apontou que `TxOptions.isolation` é ignorado no top-level, que o recibo de
+lote pode ser escrito antes do check de transação, que `now()` precisa de
+INSERT, e que deadlocks domínio×audit devem produzir resultado retentável.
+A prévia condicional foi emendada com migração que redefine trigger e writers,
+marca AsyncLocalStorage herdável de conexão detida, porta de append na mesma
+`Transaction`, check antes de qualquer escrita, aplicação sequencial,
+isolamento efetivo e grants/RLS do relógio. Continua sem decisão Owner,
+prompt-review PASS ou implementação CTG9.
+
 ## CTG5 — correção de conformidade do envelope antes do Inspector (2026-09-28)
 
 A reavaliação de `INV-ERROR-001.change_policy` e da especificação
