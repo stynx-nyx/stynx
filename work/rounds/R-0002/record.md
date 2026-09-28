@@ -647,3 +647,16 @@ seguem fora desse caminho. Apontou como opcional um teste de transporte de
 log que lança; a guarda no código foi inspecionada e não há achado
 bloqueante. O maestro confirmou a autoria DEVAI Inspector em `77588011`,
 Architect em `39ea92a7` e Engineer em `d6bd8138`.
+
+## OD-S15-03 — CTG9 incluída na STYNX 1.5.0 (2026-09-28)
+
+O Owner determinou: “inclua CTG9 e continue”. A decisão inclui
+UPS-SIG-01…04, UPS-OBX-01…02 e UPS-OFS-01…04, os dez MUST da adenda A1 §8.1
+do DETRAN, na publicação final da STYNX 1.5.0. O único gate consolidado
+local CI/PR/CI remoto/publicação definido pela OD-S15-02 passa a ocorrer
+depois da CTG9. Nenhum PR nem RC intermediária será aberta/publicada.
+O prompt-review Opus do contrato e dos prompts dos workers continua obrigatório
+antes do despacho; as três frentes podem avançar em paralelo em arquivos
+sem lock comum, com a porta OBX fixada antes da integração OFS→OBX. O DETRAN
+permanece somente leitura. Este registro substitui as menções históricas
+a escopo CTG9 pendente; não afirma implementação, teste ou publicação.

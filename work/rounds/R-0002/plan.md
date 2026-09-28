@@ -3,8 +3,9 @@
 **Papel atual:** Architect. **Estado atual:** CTGs 5–8 implementadas e
 importadas sob OD-S15-02; a correção de conformidade do envelope CTG5 e os
 follow-ups de observabilidade estão integrados, com delivery-review Opus
-PASS. A decisão de escopo A1 §8.1 permanece pendente antes do único gate
-final. O estado histórico do bootstrap e das primeiras
+PASS. **OD-S15-03:** o Owner incluiu CTG9 (SIG/OBX/OFS, dez MUST da adenda
+A1 §8.1) na STYNX 1.5.0. O único gate final ocorre após CTG9. O estado
+histórico do bootstrap e das primeiras
 CTGs está preservado abaixo. **Branch cumulativa:**
 `/Users/aarusso/.codex/worktrees/ctg4-jobs/stynx`,
 `feat/release-1-5-0-jobs`, checkpoint original das CTGs 5–8
@@ -81,7 +82,8 @@ e publicação final após a CTG8. Ordem topológica:
    UPS-TEST-02…04.
 7. utilitários: UPS-HOOK-01…02, UPS-CAL-01…02 e UPS-NGIDEM-01.
 8. cli: UPS-CLI-01.
-9. candidatas SIG/OBX/OFS: só se confirmadas por adenda da §8.
+9. SIG/OBX/OFS: dez MUST confirmados pela adenda A1 §8.1 e incluídos na
+   1.5.0 pela OD-S15-03.
 
 Contratos de API, testes, baselines, trace, changesets, package READMEs,
 RLS, integração e conformance serão detalhados por CTG e revistos antes do
@@ -97,15 +99,16 @@ despacho correspondente. Sem shim nem código copiado do DETRAN.
 | CTG8 CLI         | Parser, validação, saída determinística e sensores isolados | Consumidor gerado com `Database.tx`/`Transaction` reais | `packages/cli` e harness exclusivo                                      |
 
 Os checkpoints permitem desenvolvimento em paralelo, mas a importação na
-branch cumulativa ocorre em 5 → 6 → 7 → 8, cada grupo após delivery-review PASS
-e gates focais. A integração dessas quatro CTGs já ocorreu até `81681892`.
-Não repetir PRs, RCs ou CI completo por CTG. Próxima execução: decidir A1
-§8.1, ajustar a conformidade e os contratos do escopo escolhido, versionar
-a candidata estável, executar `pnpm ci:stynx` e
-`pnpm ci:reference-apps` uma vez no HEAD consolidado, obter delivery-review
-final, abrir um PR, verificar CI remoto e publicar `1.5.0` com recibos exatos.
-Se a decisão de escopo incluir SIG/OBX/OFS, implementá-las antes desse gate;
-CTG8 não equivale ao fim do escopo enquanto essa decisão estiver pendente.
+branch cumulativa ocorre em 5 → 6 → 7 → 8 → 9, cada grupo após delivery-review
+PASS e gates focais. A integração das CTGs 5–8 já ocorreu até `81681892`.
+OD-S15-03 inclui SIG/OBX/OFS na CTG9. Frentes SIG, OBX e OFS podem avançar em
+paralelo em arquivos sem lock comum após prompt-review PASS; a ligação OFS→OBX
+aguarda a porta de evento OBX estável. A importação CTG9 é serializada pelo
+maestro, único executor de Git. Não repetir PRs, RCs ou CI completo por CTG.
+Após os dez MUST da CTG9: versionar a candidata estável, executar
+`pnpm ci:stynx` e `pnpm ci:reference-apps` uma vez no HEAD consolidado, obter
+delivery-review final, abrir um PR, verificar CI remoto e publicar `1.5.0`
+com recibos exatos.
 
 ### CTG-0001 — tenancy, contrato proposto para prompt-review
 
@@ -652,8 +655,8 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     cadeia ordenada por `now()`/UUIDv4, regressão possível de
     `Database.tx` legado com contextos derivados e contenção SSE de `now()`
     no advisory. Não há PASS, contrato vinculante ou despacho CTG9.
-    Aguardar decisão Owner de A1 §8.1 antes de investir em outro review
-    condicional ou alterar código/ADRs desta frente.
+    OD-S15-03 resolveu o escopo; fechar estes três bloqueios e voltar ao
+    prompt-review antes de despachar.
 31. Preflight read-only do gate final no HEAD `6c32fd60`: branch limpa,
     `origin/main` em `493fcd95`, apenas PR bot #273 aberto. A tabela §7 tem
     U1–U15 e seus 42 caminhos de teste completos existem. `pnpm api:coverage`
@@ -662,9 +665,15 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     e DEVAI doctor retornou `ok:true` com advisory conhecido do binding
     pós-merge da worktree. `pnpm release:preview` ainda projeta `rc.4` pelos
     cinco changesets porque o pre mode continua ativo; não houve escrita
-    de versão nem CI integral. A decisão Owner de A1 §8.1 é o bloqueio do
-    congelamento: incluir CTG9 antes da final ou adiar expressamente seus
-    dez MUST e publicar com a lacuna declarada.
+    de versão nem CI integral. OD-S15-03 inclui os dez MUST da CTG9 antes
+    do congelamento.
+32. OD-S15-03, decisão Owner recebida em 2026-09-28: **incluir CTG9 e
+    continuar**. SIG-01…04, OBX-01…02 e OFS-01…04 entram na STYNX 1.5.0;
+    o único CI local/PR/CI remoto/publicação final da OD-S15-02 ocorre após
+    a CTG9. RCs e PRs intermediários continuam dispensados. Próximo passo:
+    resolver os achados técnicos do review 6, ADRs superadoras, prompt-review
+    PASS, tríades e gates focais das três frentes. Não versionar ou publicar
+    enquanto algum dos dez MUST estiver sem prova.
 
 ## Reviews, PRs e publicações
 

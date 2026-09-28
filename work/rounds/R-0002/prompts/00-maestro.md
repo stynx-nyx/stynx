@@ -1,6 +1,18 @@
 # Prompt do maestro — release STYNX 1.5.0 (rodada S-1.5 da campanha DETRAN C-0002)
 
-## Emenda vigente — OD-S15-02
+## Emenda vigente — OD-S15-03 sobre OD-S15-02
+
+O Owner decidiu incluir CTG9 na STYNX 1.5.0. UPS-SIG-01…04,
+UPS-OBX-01…02 e UPS-OFS-01…04 são MUST da adenda A1 §8.1 do DETRAN e devem
+ser implementados e comprovados antes da versão final. O gate único de
+CI local/PR/CI remoto/publicação foi deslocado para **após CTG9**; não abrir
+PR nem publicar RC intermediária. SIG, OBX e OFS podem trabalhar em paralelo
+em caminhos independentes após prompt-review PASS. A ligação OFS→OBX espera
+a porta de evento OBX estável. Só o maestro executa Git, importa os deltas e
+registra commits separados por papel. Esta decisão encerra a pendência de
+escopo; não a reabra ao retomar.
+
+## Emenda histórica — OD-S15-02
 
 O Owner substituiu a cadência de PR e RC por CTG para as CTGs 5–8. Esta emenda
 prevalece sobre as instruções históricas abaixo que pedem PR, merge em `main`,
@@ -24,10 +36,10 @@ Checkpoint atual: as CTGs 5–8 e a correção do envelope HTTP 409 CTG5 já
 foram importadas na branch cumulativa, com delivery-review Opus PASS; os
 follow-ups de observabilidade CTG5 também receberam PASS. Ler `plan.md`
 §Retomada antes de qualquer nova ação. A adenda A1 §8.1 do DETRAN confirmou
-SIG/OBX/OFS como MUST; a decisão Owner sobre incluí-las antes da final ou
-adiá-las expressamente permanece pendente. A prévia condicional CTG9 recebeu
-REVIEW até o ciclo 6, sem contrato vinculante ou worker. Não congelar nem
-publicar a final antes da decisão de escopo e do trabalho correspondente.
+SIG/OBX/OFS como MUST. OD-S15-03 as incluiu na final; a prévia CTG9 recebeu
+REVIEW até o ciclo 6, sem contrato vinculante ou worker. Fechar os bloqueios
+do ciclo 6, obter prompt-review PASS, implementar os dez MUST e só então
+congelar/publicar a final.
 
 > Sessão nova, sem contexto anterior, Codex CLI (família Codex, modelo Sol 6), aberta em
 > `/Users/aarusso/Development/stynx`. Você é o **maestro** desta rodada. Tudo o que precisa está nos

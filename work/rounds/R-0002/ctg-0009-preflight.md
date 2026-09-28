@@ -1,11 +1,10 @@
-# CTG-0009 — prévia condicional da adenda A1 §8.1
+# CTG-0009 — contrato em revisão da adenda A1 §8.1
 
-**Papel:** Architect. **Estado:** leitura e decomposição, sem despacho nem
-contrato aprovado. A adenda A1 do DETRAN confirma UPS-SIG-01…04,
-UPS-OBX-01…02 e UPS-OFS-01…04 como MUST para R-0022. A inclusão desses dez
-IDs na publicação STYNX 1.5.0 aguarda a decisão do Owner sobre o conflito
-entre OD-S15-01 e o gate após CTG8 da OD-S15-02. O DETRAN foi somente leitura.
-Nenhuma API, teste, DDL ou pacote foi alterado por esta prévia.
+**Papel:** Architect. **Estado:** escopo incluído pela OD-S15-03; contrato
+técnico ainda em revisão, sem despacho ou implementação CTG9. A adenda A1
+do DETRAN confirma UPS-SIG-01…04, UPS-OBX-01…02 e UPS-OFS-01…04 como MUST,
+e o Owner os incluiu na publicação STYNX 1.5.0. O gate consolidado da
+OD-S15-02 passa a ocorrer após CTG9. O DETRAN permanece somente leitura.
 
 ## Lacunas verificadas
 
@@ -27,12 +26,12 @@ As implementações atuais **não** comprovam a adenda: RC2 contém `signature`,
 
 ## Decisões antes de contratos vinculantes
 
-| Autoridade | Decisão pendente                                                                                                                                                                                                | Efeito                                                                                                                                                                                                                                   |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Owner      | Incluir os dez IDs de A1 §8.1 na STYNX 1.5.0 ou adiá-los expressamente, conciliando OD-S15-01 e OD-S15-02                                                                                                       | Nenhum contrato CTG9, worker ou versão final pode declarar os IDs dentro/fora do escopo por inferência.                                                                                                                                  |
-| Owner      | Se incluída: aprovar o nível MUST de A1 e a substituição de `ADR-OUTBOX-0001` e `ADR-MOBILE-OFFLINE-0001` onde seus contratos de upsert, ordem/ACK, dedup por hash e limites impedem a adenda                   | Registrar ADRs superadoras antes de mudar comportamento normativo; `INV-OFFLINE-001.change_policy` exige aprovação humana e ADR para quebra. Atualizar `docs/framework/contracts/offline-sync-api.md` sem apagar compatibilidade legada. |
-| Owner      | Qualquer limite novo de itens, chaves, hashes, UUIDs, numeração ou cursor SSE público distinto de `(createdAt,id)`                                                                                              | A1 §8.1 proíbe limite silencioso; o contrato Architect deve manter o cursor e limites atuais salvo decisão específica. O limite fixo 100 da 1.4.0 não pode impedir os lotes de mais de 100 previstos por A1.                             |
-| Architect  | Canonicalização e trust policy genéricos de assinatura; cursor seguro ao commit; esquema de ledger, lease e ACK; identidade de lote e recibo; nomes de portas; numeração de migração e direção das dependências | Preparar alternativas e provas sem alterar produto. Fixar o contrato escolhido somente após as decisões Owner acima e prompt-review Opus.                                                                                                |
+| Autoridade | Decisão pendente                                                                                                                                                                                                | Efeito                                                                                                                                                                                                                  |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owner      | **Resolvido pela OD-S15-03:** incluir os dez IDs de A1 §8.1 na STYNX 1.5.0                                                                                                                                      | A final exige prova de conformidade dos dez MUST; gate consolidado somente depois da CTG9.                                                                                                                              |
+| Owner      | OD-S15-03 incluiu os MUST de A1 e autorizações prévias permitem as ações necessárias; a implementação aditiva preserva `enqueue`, ACK e rotas legados.                                                          | Registrar ADRs superadoras antes de habilitar os novos modos OBX/OFS. Não enfraquecer `INV-OFFLINE-001`; se uma quebra se mostrar inevitável, voltar ao Owner com delta exato, ADR e prova antes de mutar o invariante. |
+| Owner      | Qualquer limite novo de itens, chaves, hashes, UUIDs, numeração ou cursor SSE público distinto de `(createdAt,id)` permanece sem decisão específica.                                                            | Não introduzir esses limites. O limite fixo 100 da 1.4.0 não pode impedir lotes de mais de 100 previstos por A1.                                                                                                        |
+| Architect  | Canonicalização e trust policy genéricos de assinatura; cursor seguro ao commit; esquema de ledger, lease e ACK; identidade de lote e recibo; nomes de portas; numeração de migração e direção das dependências | Preparar alternativas e provas sem alterar produto. Fixar o contrato escolhido somente após as decisões Owner acima e prompt-review Opus.                                                                               |
 
 O `REVIEW` técnico Opus em
 `reviews/ctg9-conditional-contract-review-1.json` identificou os riscos
@@ -55,9 +54,14 @@ essas obrigações eram insuficientes: `audit.fn_row_change` trava a cabeça sem
 advisory, e `runWithRequestContext`/`runWithSystemContext` podem apagar
 `TX_CONTEXT_KEY` do CLS. A prévia abaixo passa a exigir a redefinição do
 trigger, uma marca herdável de conexão em uso fora desse CLS e uma porta de
-append que opera na mesma `Transaction` do item. Ainda não há PASS.
+append que opera na mesma `Transaction` do item. O ciclo 6 em
+`reviews/ctg9-conditional-contract-review-6.json` apontou ainda o uso de
+`now()`/UUIDv4 na cabeça da cadeia, regressão de `Database.tx` legado e
+contenção SSE por advisory no `now()`. Esta revisão do contrato fixa
+timestamp monotônico explícito, `txIndependent` aditivo e `now()` somente
+no relógio, com holder ALS mutável; ainda não há PASS.
 
-## Contratos e provas necessários se o Owner incluir CTG9
+## Contratos e provas necessários para CTG9 incluída
 
 1. **SIG:** a opção Architect para manifestos é JSON canônico RFC 8785 (JCS)
    com `manifestVersion` e identificador da canonicalização; rejeitar `Date`,
@@ -108,8 +112,30 @@ append que opera na mesma `Transaction` do item. Ainda não há PASS.
    preserva a chave de 0020. O trigger nunca pode travar a cabeça antes
    de pedir o advisory. A tabela de relógio não recebe
    `audit.fn_row_change`; `now()` não pode tomar a cadeia depois do relógio.
-   Log, ledger ou recibo auditado segue a mesma ordem. Dois triggers
-   concorrentes devem manter cadeia linear válida em `audit.verify_chain`.
+   Log, ledger ou recibo auditado segue a mesma ordem. O advisory sozinho
+   não escolhe a cabeça: o default `occurred_at=now()` usa o início da
+   transação e o desempate por UUIDv4 é aleatório. A migração forward
+   redefine os três writers para, **sob o advisory e antes do INSERT**,
+   atribuir `occurred_at := greatest(clock_timestamp(),
+head.occurred_at + interval '1 microsecond')` explicitamente. A cabeça
+   continua ordenada por `(occurred_at,event_id)`, mas o timestamp novo é
+   estritamente maior que o último timestamp do tenant, inclusive após
+   BEGIN em ordem inversa ou várias escritas na mesma transação. O hash
+   recebe esse timestamp já escolhido; eventos legados não são reescritos
+   nem re-hasheados. Antes de ativar a migração, validar a cadeia legada
+   completa, incluindo NULL tenant, e abortar com diagnóstico de bifurcação
+   se houver invalidade; não marcar um legado inválido como conforme.
+   `verify_chain` passa a aceitar tenant NULL com filtro `IS NOT DISTINCT
+FROM` e conserva a assinatura/colunas públicas. Inspector cobre três
+   eventos numa transação, BEGIN invertido em relação à ordem do advisory,
+   cadeia antiga linear preservada e falha explícita de preflight para
+   bifurcação legada. Dois triggers concorrentes devem manter cadeia linear.
+   A sentinela advisory fixa de NULL tenant serializa escritas globais;
+   medir espera/latência de dois escritores globais e restringir `audit.write`
+   a `p_tenant_id = app.tenant_id` em papel app, ou NULL em papel owner
+   de sistema; rejeitar cruzamento de duas cadeias na mesma transação.
+   Não criar um tenant
+   falso nem misturar a cadeia NULL com a de tenant real.
    O Inspector cruza comando CTG5 com handler não auditado versus handler
    auditado, com e sem append, e duas transações de trigger concorrentes.
    Deadlocks entre locks de domínio e advisory ainda podem ocorrer:
@@ -133,8 +159,11 @@ append que opera na mesma `Transaction` do item. Ainda não há PASS.
    `current_setting('transaction_isolation') = 'read committed'` e
    `transaction_read_only = off`; opções JS de uma `Database.tx` aninhada não
    bastam para impor essas condições.
-   `EventStreamSource.now(scope)` também adquire o mesmo lock, atualiza o
-   relógio com `max(clock_ms, agora_ms)` e devolve o valor confirmado; assim
+   `EventStreamSource.now(scope)` **não** adquire o advisory de auditoria:
+   toma somente a linha de relógio por `INSERT ... ON CONFLICT ... DO UPDATE`
+   com `lock_timeout` curto configurável e erro 503 tipado para retry.
+   Atualiza o relógio com `max(clock_ms, agora_ms)` e devolve o valor
+   confirmado; assim
    uma conexão entre append e commit espera, e qualquer append posterior
    recebe tupla maior. Eventos já confirmados no mesmo milissegundo podem
    reaparecer na conexão sem `Last-Event-ID`; o contrato assume entrega
@@ -207,19 +236,23 @@ append que opera na mesma `Transaction` do item. Ainda não há PASS.
    sem sequência continua aceito; item sem chave usa a chave sintética
    existente, fica `received` com `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED` e não
    aplica domínio. Nova porta de applier opera **uma transação top-level
-   independente por item** com `Database.tx`/`Transaction` da CTG5 para
+   independente por item** com `Database.txIndependent`/`Transaction` para
    efeito, consumo, recibo e evento. `Database.tx` hoje usa SAVEPOINT quando
    encontra `TX_CONTEXT_KEY`. A API pública de data para afirmar ausência
    de transação ambiente usa uma marca `AsyncLocalStorage` própria de
    conexão detida, herdável através de `runWithRequestContext` e
-   `runWithSystemContext`, além de consultar o CLS. Se a marca indicar
-   transação ativa mas `TX_CONTEXT_KEY` tiver sido apagado por um contexto
-   derivado, `Database.tx` falha fechado com erro tipado **sem abrir outra
-   conexão**, em vez de tratar a chamada como top-level. O serviço de lote consulta
-   essa API antes de **qualquer escrita, inclusive criar ou abrir o recibo
-   durável de lote**; não basta testar antes do primeiro item. A marca é
-   mantida até commit/rollback e impede que um wrapper de contexto apague
-   a fronteira. O endpoint de lote não usa
+   `runWithSystemContext`, além de consultar o CLS. A marca é um holder
+   mutável `{ held: boolean }`, posto em `false` no `finally` após
+   commit/rollback e release; continuations posteriores ao commit não
+   ficam bloqueadas. `Database.txIndependent` chama
+   `assertNoHeldConnection` **antes** de obter conexão, inclusive quando
+   `TX_CONTEXT_KEY` tiver sido apagado por contexto derivado, e falha com
+   erro tipado se houver transação ativa. `Database.tx` legado conserva a
+   semântica publicada de contexto derivado (i18n, ratelimit, tenancy,
+   audit e preferences); nenhuma falha fechada global é introduzida.
+   O serviço de lote consulta a nova API antes de **qualquer escrita,
+   inclusive criar ou abrir o recibo durável de lote**; não basta testar
+   antes do primeiro item. O endpoint de lote não usa
    `@TransactionalCommand`: sua identidade/idempotência vem do recibo de
    lote durável; um adotante que o monte sob o interceptor recebe essa
    rejeição tipada, sem abrir conexão extra, consumir pool ou escrever
@@ -239,21 +272,25 @@ append que opera na mesma `Transaction` do item. Ainda não há PASS.
    clientes legados. Inspector cobre o endpoint normal e um endpoint
    indevidamente montado sob `@TransactionalCommand`, com
    `withRequestContext` por item, ou cuja porta de evento tente
-   `withSystemContext`/nova `Database.tx`: erro tipado antes de qualquer
+   `withSystemContext`/nova `Database.txIndependent`: erro tipado antes de qualquer
    escrita, sem conexão extra ou exaustão do pool mesmo quando a
    concorrência iguala o tamanho do pool. Cobre tentativa de `Promise.all`
    no mesmo store CLS e dois lotes cruzados com item 1 confirmado antes
    de começar o item 2. Cobre HTTP TEAT/BOAT, mais de 100 itens,
    sequência repetida/lacuna, ACK perdido, handoff, janela desligada,
    resolução permitida/proibida, concorrência e deadlock de lotes cruzados,
-   rollback por item e RLS real.
+   rollback por item e RLS real. Regressão CTG5: handler dentro do envelope
+   continua podendo usar i18n/ratelimit/`withSystemContext` com tenancy;
+   applier OFS sob o envelope falha antes da primeira escrita sem conexão
+   extra. Continuation após commit pode iniciar trabalho legítimo.
    `migrations/0002_*.sql` faz backfill sem perder fila; DDL, teste de
    upgrade e `offline-sync-api.md` fixam a ordem de aplicação para adotantes
    e identificam itens legados. A correção do envelope CTG5 opção A foi
    executada sob autoridade Architect para código não publicado, recebeu
    delivery-review Opus PASS e foi integrada na branch cumulativa. Os
    409/422 da OFS deverão respeitar esse contrato e os corpos legados
-   preservados. Isso não decide o escopo CTG9 nem autoriza substituir ADRs.
+   preservados. O escopo CTG9 foi decidido pela OD-S15-03; ADRs superadoras
+   aditivas continuam exigidas antes da implementação normativa.
 
 Para qualquer DDL: atualizar migration, DDL canônica quando o repositório
 a mantiver para aquele schema, seed e `test/db`;
@@ -269,7 +306,7 @@ pacote, sem `packages/health/**` até o contrato demonstrar necessidade.
 OBX usa `packages/outbox/**`; o adapter SSE fica ali se a porta pública
 existente bastar. OFS usa `packages/offline-sync/**`. Contratos Architect e
 sensores Inspector desses três pacotes podem ser preparados em worktrees
-isoladas ao mesmo tempo **depois** das decisões Owner e de prompt-review
+isoladas ao mesmo tempo **depois** de ADRs superadoras e prompt-review
 PASS; Engineers nos caminhos de pacote podem trabalhar em paralelo após
 sensores vermelhos, até três tarefas sem lock comum. **Locks compartilhados
 serializados pelo maestro:** `packages/data`, migrations/DDL/seed/
