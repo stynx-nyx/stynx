@@ -1,6 +1,7 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { ErrorBannerService } from '@stynx-nyx/angular';
 import { StynxSessionService, StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
 import { LocaleSwitcherComponent } from '@stynx-nyx/angular-i18n';
@@ -31,7 +32,9 @@ import { ReferenceWebShellService } from './core/reference-web-shell.service';
           <h1 data-testid="app-title">{{ i18n.t('app.title') }}</h1>
         </div>
         <div class="shell__toolbar">
-          <stynx-locale-switcher [locales]="i18n.locales"></stynx-locale-switcher>
+          @if (!shellFixtureRoute()) {
+            <stynx-locale-switcher [locales]="i18n.locales"></stynx-locale-switcher>
+          }
           <button type="button" routerLink="/tenant">Tenant</button>
           <button type="button" *stynxHasPermission="'sample:record:write'" routerLink="/records/new">New record</button>
           <button type="button" (click)="logout()" [disabled]="!session.snapshot().active" data-testid="logout-button">Logout</button>
@@ -66,7 +69,7 @@ import { ReferenceWebShellService } from './core/reference-web-shell.service';
         <a routerLink="/admin/users" routerLinkActive="is-active" data-testid="nav-admin">Admin</a>
       </nav>
 
-      <main class="shell__main">
+      <main class="shell__main" [attr.role]="shellFixtureRoute() ? 'presentation' : null">
         <router-outlet></router-outlet>
       </main>
     </div>
@@ -153,6 +156,18 @@ export class AppComponent {
   protected readonly session = inject(StynxSessionService);
   protected readonly shell = inject(ReferenceWebShellService);
   protected readonly errorBanner = inject(ErrorBannerService);
+  protected readonly shellFixtureRoute = signal(false);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor() {
+    const subscription = this.router.events.pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        const path = (event as NavigationEnd).urlAfterRedirects.split('?')[0];
+        this.shellFixtureRoute.set(path === '/shell' || path?.startsWith('/shell/') === true);
+      });
+    this.destroyRef.onDestroy(() => subscription.unsubscribe());
+  }
 
   async logout(): Promise<void> {
     await this.shell.logout();

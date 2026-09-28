@@ -8,6 +8,7 @@ export default createVitestConfig({
   environment: 'jsdom',
   alias: {
     '@stynx-nyx/angular': resolve(__dirname, '../angular/src/index.ts'),
+    '@stynx-nyx/angular-i18n/testing': resolve(__dirname, '../angular-i18n/testing/index.ts'),
     '@stynx-nyx/angular-i18n': resolve(__dirname, '../angular-i18n/src/index.ts'),
     '@stynx-nyx/angular-auth': resolve(__dirname, '../angular-auth/src/index.ts'),
     '@stynx-nyx/angular-storage': resolve(__dirname, '../angular-storage/src/index.ts'),

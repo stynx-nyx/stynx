@@ -33,6 +33,7 @@ await build({
     '@stynx-nyx/angular-storage': path.resolve(workspaceRoot, 'packages-web/angular-storage/src/index.ts'),
     '@stynx-nyx/angular-sessions': path.resolve(workspaceRoot, 'packages-web/angular-sessions/src/index.ts'),
     '@stynx-nyx/angular-profile': path.resolve(workspaceRoot, 'packages-web/angular-profile/src/index.ts'),
+    '@stynx-nyx/angular-ui/catalogs': path.resolve(workspaceRoot, 'packages-web/angular-ui/src/i18n'),
     '@stynx-nyx/sdk': path.resolve(workspaceRoot, 'packages-web/sdk/src/index.ts'),
   },
   define: {

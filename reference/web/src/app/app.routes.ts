@@ -13,8 +13,19 @@ import { UnauthorizedPageComponent } from './pages/unauthorized.page';
 import { WorkItemDetailPageComponent } from './pages/work-item-detail.page';
 import { WorkItemFormPageComponent } from './pages/work-item-form.page';
 import { WorkItemsPageComponent } from './pages/work-items.page';
+import { ShellFixturePageComponent } from './pages/shell-fixture.page';
 
 export const APP_ROUTES: Routes = [
+  {
+    path: 'shell/settings',
+    component: ShellFixturePageComponent,
+    title: 'Reference shell settings fixture',
+  },
+  {
+    path: 'shell',
+    component: ShellFixturePageComponent,
+    title: 'Reference shell fixture',
+  },
   {
     path: 'login',
     component: LoginPageComponent,
