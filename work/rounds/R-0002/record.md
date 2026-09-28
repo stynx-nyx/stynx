@@ -809,3 +809,7 @@ Opus `prompt-review` focal dos Engineers SIG/OBX retornou **PASS** em
 `reviews/ctg9-sig-obx-engineer-prompt-review-1.json`, com três notas não
 bloqueantes incorporadas aos prompts 151/152. O PASS libera somente os
 dois write sets de produção em paralelo, não código OFS nem conformidade.
+
+Os Engineers SIG e OBX/data foram despachados em paralelo após o PASS.
+O Inspector OFS corrigiu os três bloqueios do ciclo 3; prompt 159 pede
+review do delta antes de seu commit Inspector e do despacho Engineer OFS.
