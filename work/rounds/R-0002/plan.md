@@ -1048,3 +1048,14 @@ implementa e commita helper/wrapper; Architect executa
 repetir `pre exit`, `release:preview`, `version-packages` e verificar diff
 sem manifests/CHANGELOGs privados antes do marcador final. Não há PR ou RC
 intermediário.
+
+### CI local final: triagem do lint CTG9
+
+`sensor-error` — o primeiro `pnpm ci:stynx` após marcador local
+`5e9e6018` parou em seis asserções de mera existência/ausência nos
+sensores CTG9 (WAVE-05A/CW-1). O marcador foi retirado apenas da
+branch local com `git reset --mixed HEAD^` e a árvore foi restaurada
+ao pai `4baede04`, `pre.json mode=pre`, antes de qualquer PR/push.
+Inspector fortalece as seis asserções nos cinco arquivos indicados em
+prompt 192; Architect rebinda trace; Engineer regenera o marcador e
+repete o CI integral. Nenhum teste é enfraquecido.

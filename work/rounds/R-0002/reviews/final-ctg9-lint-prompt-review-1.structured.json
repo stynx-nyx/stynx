@@ -1,0 +1,105 @@
+{
+  "duration_api_ms": 68968,
+  "stop_reason": "tool_use",
+  "session_id": "5253f654-3922-4ec5-bd1b-0e18f3c0938a",
+  "total_cost_usd": 0.346864,
+  "usage": {
+    "input_tokens": 16,
+    "cache_creation_input_tokens": 23907,
+    "cache_read_input_tokens": 219620,
+    "output_tokens": 5581,
+    "output_tokens_details": { "thinking_tokens": 1627 },
+    "server_tool_use": { "web_search_requests": 0, "web_fetch_requests": 0 },
+    "service_tier": "standard",
+    "cache_creation": { "ephemeral_1h_input_tokens": 23907, "ephemeral_5m_input_tokens": 0 },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 2474,
+        "cache_read_input_tokens": 34221,
+        "cache_creation_input_tokens": 1710,
+        "cache_creation": { "ephemeral_5m_input_tokens": 0, "ephemeral_1h_input_tokens": 1710 },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 16,
+      "outputTokens": 5581,
+      "cacheReadInputTokens": 219620,
+      "cacheCreationInputTokens": 23907,
+      "webSearchRequests": 0,
+      "costUSD": 0.346864,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1627,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": { "background": 0, "foreground": 0, "unset": 0 },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": { "parent": 0, "user": 0, "system": 0 },
+    "refused": { "depth_limit": 0, "concurrency_limit": 0, "budget": 0 },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 9,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "{\"verdict\":\"REVIEW\",\"findings\":[{\"severity\":\"blocking\",\"issue\":\"`withdrawal.spec.ts:86` is not a standalone assertion. It sits inside the shared `assertValidReceipt` helper, which is called at line 106 (physical: `evidenceBytes = attestation.cms.der`) and at line 147 (digital: `evidenceBytes: declarationCmsSignature`, i.e. `withdrawal-blt.cms.der`). Production (`packages/signature/src/withdrawal.ts:114-115`) sets `verifiedHashes = {documentSha256: input.contentHash, evidenceSha256: sha256Hex(input.evidenceBytes)}`, so the expected `evidenceSha256` differs between the two callers. Because prompt 192 says 'Edit ONLY these exact assertions', the Inspector has only two options: hard-code `hex(evidenceBytes)`, which fails the digital case, or use `expect.any(String)`, which is weaker than the prompt requires and fails the goal of checking against the known source.\",\"required_change\":\"Explicitly allow the Inspector to add an expected-evidence parameter to `assertValidReceipt` (bytes or hex) and update its two call sites at lines 106 and 147. Require `verifiedHashes` to `toEqual({documentSha256: hex(sourceDocument), evidenceSha256: hex(evidenceBytes)})` for the physical caller and `hex(declarationCmsSignature)` for the digital caller. Keep the edit inside `withdrawal.spec.ts` and do not change production code.\"},{\"severity\":\"nonblocking\",\"issue\":\"The requirement at `trust-gate.spec.ts:626` ('concrete expected structure/content') is vague. The existing fixture allows a precise proof: `eContentType` equal to id-data `1.2.840.113549.1.7.1`, and an `eContent` OctetString whose bytes equal a known source (for example the covered bytes or `pades-attached-source.pdf`). Without that, the Inspector may settle for `toBeInstanceOf(asn1js.OctetString)`.\",\"required_change\":\"Name the expected assertion. At minimum require an id-data `eContentType` plus a non-empty `eContent` value compared by bytes against a known fixture, or by length/hash if the fixture relationship is unclear. Also require the Inspector to report which fixture relationship they used.\"},{\"severity\":\"nonblocking\",\"issue\":\"For `manifest.spec.ts:446`, 'actual ByteRange capture values/shape' allows a shape-only regex check. The stronger invariants are start === 0, before < after, and after + tail === pdf.length. Together these prove the ByteRange spans the whole file except the `/Contents` gap.\",\"required_change\":\"Require asserting start `'0'` and `Number(after) + Number(tail) === pdf.length`, in addition to non-null captures.\"},{\"severity\":\"nonblocking\",\"issue\":\"The replacements at `ctg9-outbox-sse.integration.spec.ts:159` (`toBe(null)`), `trust-gate.spec.ts:740` (`toBe(undefined)`) and `readiness.spec.ts:142` (`toEqual(expect.any(Function))`, matching line 140) are acceptable as-is. They keep the negative proofs exact and pass the CW-1 selector in `tools/eslint-config/test.mjs`, which only bans zero-argument `toBe(Truthy|Falsy|Defined|Undefined|Null|NaN)`. For readiness, pinning the value to the exported class adds more proof, e.g. `toBe(SignatureHealthIntegration)` via the module's `forRoot().module`, or checking `.name === 'SignatureHealthIntegration'`.\",\"required_change\":\"Optional: for readiness, also assert `api.SignatureHealthIntegration.name` equals 'SignatureHealthIntegration'.\"},{\"severity\":\"nonblocking\",\"issue\":\"Prompt 192 forbids Git but refers to 'the Inspector commit', and it never states the order before the version marker. Plan triage does state it: Inspector → Architect trace rebind → Engineer regenerates the marker → full `ci:stynx`. The prompt does not block that path, but it does not require evidence for it either. Separately, the line-number anchors match the current tree exactly (159; 626, 740; 446; 142; 86), and every edited path is under `packages/*/test/**`, which is within Inspector test authority.\",\"required_change\":\"Add one sentence: the orchestrator commits the Inspector diff; the Architect then runs `pnpm check:trace --print` and rebinds `law/trace.json`; only after that may the Engineer regenerate the final version marker and rerun the full `pnpm ci:stynx`. Also require the report to include `pnpm check:trace` output showing the expected moved projections for these five files.\"}],\"summary\":\"Prompt 192 targets the right six CW-1 violations: all line anchors match the current tree, it stays inside Inspector test paths, forbids weakening, implementation, law and Git changes, and leaves room for the Architect trace rebind and then the Engineer's final marker plus full CI. Four of the six fixes are straightforward and keep or strengthen the proof. One problem blocks: `withdrawal.spec.ts:86` lives in a helper shared by two callers whose evidence bytes differ (`attestation.cms.der` vs `declarationCmsSignature`). Under the 'edit ONLY these exact assertions' rule, the Inspector can either break the digital test or weaken the check to `expect.any(String)`. The prompt needs to allow a helper parameter and updates to both call sites. The nonblocking notes suggest tighter wording for the CMS eContent and ByteRange value proofs, and one sentence setting the commit → trace rebind → marker order.\"}",
+  "structured_output": {
+    "verdict": "REVIEW",
+    "findings": [
+      {
+        "severity": "blocking",
+        "issue": "`withdrawal.spec.ts:86` is not a standalone assertion. It sits inside the shared `assertValidReceipt` helper, which is called at line 106 (physical: `evidenceBytes = attestation.cms.der`) and at line 147 (digital: `evidenceBytes: declarationCmsSignature`, i.e. `withdrawal-blt.cms.der`). Production (`packages/signature/src/withdrawal.ts:114-115`) sets `verifiedHashes = {documentSha256: input.contentHash, evidenceSha256: sha256Hex(input.evidenceBytes)}`, so the expected `evidenceSha256` differs between the two callers. Because prompt 192 says 'Edit ONLY these exact assertions', the Inspector has only two options: hard-code `hex(evidenceBytes)`, which fails the digital case, or use `expect.any(String)`, which is weaker than the prompt requires and fails the goal of checking against the known source.",
+        "required_change": "Explicitly allow the Inspector to add an expected-evidence parameter to `assertValidReceipt` (bytes or hex) and update its two call sites at lines 106 and 147. Require `verifiedHashes` to `toEqual({documentSha256: hex(sourceDocument), evidenceSha256: hex(evidenceBytes)})` for the physical caller and `hex(declarationCmsSignature)` for the digital caller. Keep the edit inside `withdrawal.spec.ts` and do not change production code."
+      },
+      {
+        "severity": "nonblocking",
+        "issue": "The requirement at `trust-gate.spec.ts:626` ('concrete expected structure/content') is vague. The existing fixture allows a precise proof: `eContentType` equal to id-data `1.2.840.113549.1.7.1`, and an `eContent` OctetString whose bytes equal a known source (for example the covered bytes or `pades-attached-source.pdf`). Without that, the Inspector may settle for `toBeInstanceOf(asn1js.OctetString)`.",
+        "required_change": "Name the expected assertion. At minimum require an id-data `eContentType` plus a non-empty `eContent` value compared by bytes against a known fixture, or by length/hash if the fixture relationship is unclear. Also require the Inspector to report which fixture relationship they used."
+      },
+      {
+        "severity": "nonblocking",
+        "issue": "For `manifest.spec.ts:446`, 'actual ByteRange capture values/shape' allows a shape-only regex check. The stronger invariants are start === 0, before < after, and after + tail === pdf.length. Together these prove the ByteRange spans the whole file except the `/Contents` gap.",
+        "required_change": "Require asserting start `'0'` and `Number(after) + Number(tail) === pdf.length`, in addition to non-null captures."
+      },
+      {
+        "severity": "nonblocking",
+        "issue": "The replacements at `ctg9-outbox-sse.integration.spec.ts:159` (`toBe(null)`), `trust-gate.spec.ts:740` (`toBe(undefined)`) and `readiness.spec.ts:142` (`toEqual(expect.any(Function))`, matching line 140) are acceptable as-is. They keep the negative proofs exact and pass the CW-1 selector in `tools/eslint-config/test.mjs`, which only bans zero-argument `toBe(Truthy|Falsy|Defined|Undefined|Null|NaN)`. For readiness, pinning the value to the exported class adds more proof, e.g. `toBe(SignatureHealthIntegration)` via the module's `forRoot().module`, or checking `.name === 'SignatureHealthIntegration'`.",
+        "required_change": "Optional: for readiness, also assert `api.SignatureHealthIntegration.name` equals 'SignatureHealthIntegration'."
+      },
+      {
+        "severity": "nonblocking",
+        "issue": "Prompt 192 forbids Git but refers to 'the Inspector commit', and it never states the order before the version marker. Plan triage does state it: Inspector → Architect trace rebind → Engineer regenerates the marker → full `ci:stynx`. The prompt does not block that path, but it does not require evidence for it either. Separately, the line-number anchors match the current tree exactly (159; 626, 740; 446; 142; 86), and every edited path is under `packages/*/test/**`, which is within Inspector test authority.",
+        "required_change": "Add one sentence: the orchestrator commits the Inspector diff; the Architect then runs `pnpm check:trace --print` and rebinds `law/trace.json`; only after that may the Engineer regenerate the final version marker and rerun the full `pnpm ci:stynx`. Also require the report to include `pnpm check:trace` output showing the expected moved projections for these five files."
+      }
+    ],
+    "summary": "Prompt 192 targets the right six CW-1 violations: all line anchors match the current tree, it stays inside Inspector test paths, forbids weakening, implementation, law and Git changes, and leaves room for the Architect trace rebind and then the Engineer's final marker plus full CI. Four of the six fixes are straightforward and keep or strengthen the proof. One problem blocks: `withdrawal.spec.ts:86` lives in a helper shared by two callers whose evidence bytes differ (`attestation.cms.der` vs `declarationCmsSignature`). Under the 'edit ONLY these exact assertions' rule, the Inspector can either break the digital test or weaken the check to `expect.any(String)`. The prompt needs to allow a helper parameter and updates to both call sites. The nonblocking notes suggest tighter wording for the CMS eContent and ByteRange value proofs, and one sentence setting the commit → trace rebind → marker order."
+  },
+  "ttft_ms": 2201,
+  "type": "result",
+  "duration_ms": 71282,
+  "uuid": "4d5cbc15-f565-4d26-ae94-3af56ab43b9c",
+  "ttft_stream_ms": 1555,
+  "time_to_request_ms": 369,
+  "first_content_frame_ms": 1555,
+  "queued_turn_count": 0,
+  "result_index": 0
+}

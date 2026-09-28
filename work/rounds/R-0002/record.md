@@ -1222,3 +1222,38 @@ Prompt-review ciclo 3: **PASS** em
 não bloqueantes sobre `status:null`, erro de spawn/restauração e o
 template permitido foram incorporadas ao contrato e aos prompts antes
 do despacho Inspector.
+
+Inspector `161474ec` adicionou 6 sensores privados, Engineer
+`56c987b2` corrigiu snapshot/restauração e Architect `4baede04`
+rebindeu trace 472/472. `pnpm changeset pre exit` e preview projetaram
+1.5.0; `pnpm version-packages` passou com 44 públicos, SBOM 172
+componentes, fork privado mantido em `2.0.3-stynx.1`, sem diff de
+manifests/CHANGELOGs privados. READMEs 3 gerados. Marcador local
+`5e9e6018` continha 105 arquivos. `release:status`, `release:policy`,
+`release:provenance`, `release:consumer-fixtures` (44 tarballs/3
+fixtures) e igualdade focal da política passaram.
+
+O primeiro CI local após o marcador falhou em `lint:tests`: seis
+asserções CTG9 de mera existência/ausência violavam WAVE-05A/CW-1.
+Triagem `sensor-error`. Nenhuma execução de PR/remoto/publicação.
+O marcador foi retirado localmente e os 105 arquivos gerados voltaram
+ao pai `4baede04` limpo; `pre.json` está novamente em `mode=pre`.
+Prompts 192/193 cobrem reparo Inspector e revisão antes de novo
+marcador/CI.
+
+Prompt-review 193 pela ponte retornou saída cercada em Markdown e
+falhou na validação JSON (exit 4). O fallback `claude -p` estruturado
+retornou **REVIEW** em
+`reviews/final-ctg9-lint-prompt-review-1.structured.json`:
+`assertValidReceipt` atende dois caminhos com bytes de evidência
+distintos; o prompt só permitia trocar a linha de asserção. Prompt 192
+agora permite parâmetro esperado e os dois call sites, fixa CMS
+eContent e ByteRange por valores e explicita rebind antes do marcador.
+Ciclo 2 será solicitado antes do despacho.
+
+Prompt-review ciclo 2 pela ponte voltou a falhar apenas na sintaxe da
+saída cercada; fallback estruturado do mesmo prompt retornou **PASS**
+em `reviews/final-ctg9-lint-prompt-review-2.structured.json`. As
+notas opcionais foram incorporadas: literal de 55 bytes para o CMS
+anexado, valor dos captures ByteRange sem `.not.toBeNull()`, classe de
+health e parâmetro de evidência obrigatório. Inspector liberado.
