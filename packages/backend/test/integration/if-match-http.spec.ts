@@ -1,12 +1,18 @@
 import 'reflect-metadata';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { Controller, HttpCode, Post, UseFilters, type ArgumentsHost, type ExceptionFilter, type INestApplication } from '@nestjs/common';
+import { Controller, HttpCode, Post, UseFilters, UseGuards, type ArgumentsHost, type ExceptionFilter, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { StynxCoreModule } from '@stynx-nyx/core';
+import { AuditSqlSink } from '@stynx-nyx/audit';
+import { Database, StynxDataModule } from '@stynx-nyx/data';
+import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
 import request from 'supertest';
 import { z } from 'zod';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 import * as backend from '../../src/index';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard';
+import { StynxAuthModule } from '../../src/auth/auth.module';
 
 type IfMatchApi = {
   RequireIfMatch: () => MethodDecorator;
@@ -15,6 +21,8 @@ type IfMatchApi = {
   IfMatchExceptionFilter: new (...args: never[]) => ExceptionFilter;
   PreconditionFailedError: new (message?: string, details?: Record<string, unknown>) => Error;
   PreconditionRequiredError: new (message?: string, details?: Record<string, unknown>) => Error;
+  TransactionalCommand: (options?: Record<string, unknown>) => MethodDecorator;
+  StynxTransactionalCommandModule: { forRoot(options: Record<string, unknown>): unknown };
 };
 
 const api = backend as unknown as Partial<IfMatchApi>;
@@ -162,5 +170,201 @@ describe('If-Match decorators on real Nest HTTP routes with StynxCoreModule', ()
       .set('if-match', '"4"').send({});
     expect(response.status).toBeGreaterThanOrEqual(500);
     expect(response.headers).not.toHaveProperty('etag');
+  });
+});
+
+const COMMAND_TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
+const COMMAND_ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2831a';
+const asAppRole = (connectionString: string): string =>
+  `${connectionString}&options=${encodeURIComponent('-c role=stynx_app')}`;
+
+describe('If-Match and transactional command composition over Nest HTTP and PostgreSQL', () => {
+  let postgres: PostgresTestDatabase | undefined;
+  let app: INestApplication | undefined;
+  const handler = vi.fn();
+
+  beforeAll(async () => {
+    expect(api.TransactionalCommand).toBeTypeOf('function');
+    expect(api.StynxTransactionalCommandModule?.forRoot).toBeTypeOf('function');
+
+    @Controller('/if-match-command')
+    @UseGuards(AuthContextGuard)
+    class RevisionController {
+      constructor(private readonly database: Database) {}
+
+      @Post('/update')
+      @HttpCode(200)
+      async update(suppliedRevision: number) {
+        handler('update', suppliedRevision);
+        return this.database.tx(async (trx) => {
+          const updated = await trx.query<{ revision: number; note: string }>(
+            `update core.if_match_command_probes set revision = revision + 1, note = 'committed'
+             where tenant_id = $1 and revision = $2 returning revision, note`,
+            [COMMAND_TENANT, suppliedRevision],
+          );
+          if (!updated.rows[0]) throw new api.PreconditionFailedError!('Revision does not match');
+          return { revision: updated.rows[0].revision, note: updated.rows[0].note };
+        }, { role: 'app', requireActor: true });
+      }
+
+      @Post('/rollback')
+      @HttpCode(200)
+      async rollback(suppliedRevision: number) {
+        handler('rollback', suppliedRevision);
+        await this.database.tx(async (trx) => {
+          await trx.query('update core.if_match_command_probes set note = $1 where tenant_id = $2',
+            ['rolled back', COMMAND_TENANT]);
+        }, { role: 'app', requireActor: true });
+        throw new Error('rollback after write');
+      }
+    }
+
+    for (const method of ['update', 'rollback'] as const) {
+      const descriptor = Object.getOwnPropertyDescriptor(RevisionController.prototype, method)!;
+      api.IfMatchRevision!()(RevisionController.prototype, method, 0);
+      api.RequireIfMatch!()(RevisionController.prototype, method, descriptor);
+      api.RevisionETag!()(RevisionController.prototype, method, descriptor);
+      api.TransactionalCommand!()(RevisionController.prototype, method, descriptor);
+      (Idempotent as unknown as (options: { transactional: true }) => MethodDecorator)({ transactional: true })(
+        RevisionController.prototype, method, descriptor,
+      );
+      backend.Audit({ action: `command.ifMatch.${method}`, entity: 'revision', transactional: true } as never)(
+        RevisionController.prototype, method, descriptor,
+      );
+    }
+
+    postgres = await createPostgresTestDatabase('stynx_if_match_command');
+    const auditSink = new AuditSqlSink({ query: async () => { throw new Error('legacy audit path used'); } },
+      { mode: 'audit_write_function' });
+    const testing = await Test.createTestingModule({
+      imports: [
+        StynxCoreModule.forRoot({ appName: 'if-match-command', schema: z.object({}) }),
+        StynxDataModule.forRoot({
+          connections: {
+            owner: { connectionString: postgres.connectionString('if-match-owner') },
+            app: { connectionString: asAppRole(postgres.connectionString('if-match-app')) },
+            reader: { connectionString: `${postgres.connectionString('if-match-reader')}&options=${encodeURIComponent('-c role=stynx_reader')}` },
+          },
+          migrations: { enabled: true },
+        }),
+        StynxAuthModule.forRoot({ tokenVerifier: {
+          verifyAuthorizationHeader: async () => ({ principal: {
+            id: COMMAND_ACTOR, roles: ['member'], permissions: [], tenants: [COMMAND_TENANT],
+            claims: { tenant_id: COMMAND_TENANT },
+          } }),
+        } }),
+        StynxIdempotencyModule.forRoot({ backend: {
+          get: async () => null, set: async () => undefined, acquireLock: async () => true,
+          releaseLock: async () => undefined, isLocked: async () => false,
+        } }),
+        api.StynxTransactionalCommandModule!.forRoot({ auditSink }) as never,
+      ],
+      controllers: [RevisionController],
+    }).compile();
+    app = testing.createNestApplication();
+    app.getHttpAdapter().getInstance().disable('etag');
+    await app.init();
+
+    const admin = await postgres.connectAsAdmin();
+    try {
+      await admin.query(`insert into tenancy.tenants (id, slug, name, is_active, created_at, updated_at)
+        values ($1, 'if-match-command', 'If-Match command', true, clock_timestamp(), clock_timestamp())`, [COMMAND_TENANT]);
+      await admin.query(`create table core.if_match_command_probes (
+        tenant_id uuid primary key references tenancy.tenants(id), revision integer not null, note text not null
+      )`);
+      await admin.query('alter table core.if_match_command_probes enable row level security');
+      await admin.query('alter table core.if_match_command_probes force row level security');
+      await admin.query(`create policy if_match_command_tenant on core.if_match_command_probes
+        using (tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid)
+        with check (tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid)`);
+      await admin.query('grant select, update on core.if_match_command_probes to stynx_app');
+      await admin.query('insert into core.if_match_command_probes values ($1, 4, $2)', [COMMAND_TENANT, 'initial']);
+    } finally {
+      await admin.end();
+    }
+  }, 90_000);
+
+  afterAll(async () => {
+    await app?.close();
+    await postgres?.dispose();
+  });
+
+  beforeEach(async () => {
+    handler.mockClear();
+    const admin = await postgres!.connectAsAdmin();
+    try {
+      await admin.query('update core.if_match_command_probes set revision = 4, note = $1 where tenant_id = $2',
+        ['initial', COMMAND_TENANT]);
+      await admin.query("delete from audit.events where tenancy_id = $1 and operation like 'command.ifMatch.%'", [COMMAND_TENANT]);
+      await admin.query('delete from core.idempotency_keys where tenant_id = $1', [COMMAND_TENANT]);
+    } finally {
+      await admin.end();
+    }
+  });
+
+  const send = (path: 'update' | 'rollback', key: string, ifMatch?: string) => {
+    let call = request(app!.getHttpServer()).post(`/if-match-command/${path}`)
+      .set('authorization', 'Bearer verified').set('idempotency-key', key);
+    if (ifMatch !== undefined) call = call.set('if-match', ifMatch);
+    return call.send({ note: 'requested' });
+  };
+
+  const state = async () => {
+    const admin = await postgres!.connectAsAdmin();
+    try {
+      const row = await admin.query<{ revision: number; note: string }>(
+        'select revision, note from core.if_match_command_probes where tenant_id = $1', [COMMAND_TENANT]);
+      const audit = await admin.query<{ operation: string; count: string }>(
+        `select operation, count(*)::text from audit.events where tenancy_id = $1
+         and operation like 'command.ifMatch.%' group by operation order by operation`, [COMMAND_TENANT]);
+      const keys = await admin.query<{ count: string }>(
+        'select count(*)::text from core.idempotency_keys where tenant_id = $1', [COMMAND_TENANT]);
+      return { row: row.rows[0], audit: audit.rows, keys: Number(keys.rows[0]?.count) };
+    } finally {
+      await admin.end();
+    }
+  };
+
+  it('rejects missing and malformed preconditions before handler or commit', async () => {
+    const missing = await send('update', 'if-match-missing');
+    const malformed = await send('update', 'if-match-malformed', 'W/"4"');
+    expectLawEnvelope(missing, 428, 'PRECONDITION:REQUIRED:if-match');
+    expectLawEnvelope(malformed, 412, 'PRECONDITION:FAILED:if-match');
+    expect(handler).not.toHaveBeenCalled();
+    expect(await state()).toEqual({ row: { revision: 4, note: 'initial' }, audit: [], keys: 0 });
+  });
+
+  it('rejects a stale strong revision without committing the write, key or audit', async () => {
+    const stale = await send('update', 'if-match-stale', '"3"');
+    expectLawEnvelope(stale, 412, 'PRECONDITION:FAILED:if-match');
+    expect(handler).toHaveBeenLastCalledWith('update', 3);
+    expect(await state()).toEqual({ row: { revision: 4, note: 'initial' }, audit: [], keys: 0 });
+  });
+
+  it('commits the revision and ETag once, then replays the same bytes and ETag without handler or audit', async () => {
+    const first = await send('update', 'if-match-success', '"4"');
+    const replay = await send('update', 'if-match-success', '"4"');
+    expect(first.status).toBe(200);
+    expect(first.body).toEqual({ revision: 5, note: 'committed' });
+    expect(first.headers.etag).toBe('"5"');
+    expect(replay.status).toBe(first.status);
+    expect(replay.text).toBe(first.text);
+    expect(replay.headers.etag).toBe(first.headers.etag);
+    expect(replay.headers['idempotency-replayed']).toBe('true');
+    expect(handler).toHaveBeenCalledExactlyOnceWith('update', 4);
+    expect(await state()).toEqual({
+      row: { revision: 5, note: 'committed' },
+      audit: [{ operation: 'command.ifMatch.update', count: '1' }], keys: 1,
+    });
+  });
+
+  it('rolls back a handler write and emits no ETag or durable audit/key', async () => {
+    const failed = await send('rollback', 'if-match-rollback', '"4"');
+    expect(failed.status).toBeGreaterThanOrEqual(500);
+    expect(failed.headers).not.toHaveProperty('etag');
+    expect(handler).toHaveBeenCalledExactlyOnceWith('rollback', 4);
+    expect(await state()).toEqual({
+      row: { revision: 4, note: 'initial' }, audit: [], keys: 0,
+    });
   });
 });
