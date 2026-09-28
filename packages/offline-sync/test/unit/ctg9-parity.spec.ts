@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { HttpException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
 import { OfflineSyncService } from '../../src/offline-sync.service';
@@ -91,6 +92,13 @@ function harness(options: Record<string, unknown> = {}) {
 }
 
 describe('CTG9 OFS service contract', () => {
+  const numberingGuardHarness = () => {
+    const apply = vi.fn(async () => ({ serverEntityId: 'should-not-apply' }));
+    return { ...harness({
+      itemApplier: { apply },
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    }), apply };
+  };
   it('UPS-OFS-01 resolves tenant/org/operation TTL and business agent independently of actor', async () => {
     const resolve = vi.fn(async ({ tenantId, orgUnitId, operation }: Record<string, string>) => {
       expect([tenantId, orgUnitId]).toEqual([tenant, 'org-a']);
@@ -209,6 +217,8 @@ describe('CTG9 OFS service contract', () => {
       requestedSize: 2,
     });
     expect(second.startNumber).toBe(1001);
+    const staleTail = await service.submitSyncBatch(batch('cancelled-tail-does-not-cover', [item('stale-tail-key', 'stale-tail-item', second.startNumber, first.reservationId)]));
+    expect(staleTail.receipt.items[0]).toMatchObject({ status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE', context: { number: second.startNumber, reservationId: first.reservationId } });
     const tailSync = await service.submitSyncBatch(batch('tail-without-reservation-id', [item('tail-key', 'tail-item', second.startNumber)]));
     expect(tailSync.receipt.items[0]).toMatchObject({ queueItemId: 'tail-item', status: 'applied' });
     expect((await service.getNumberingConsumption(second.reservationId)).consumption[0]).toMatchObject({ number: 1001, status: 'applied' });
@@ -218,16 +228,17 @@ describe('CTG9 OFS service contract', () => {
   });
 
   it('UPS-OFS-01 records the no-coverage outcome before any domain effect', async () => {
-    const zero = harness();
+    const zero = numberingGuardHarness();
     const noCoverage = await zero.service.submitSyncBatch(batch('zero-coverage', [item('zero-key', 'zero-item', 1000)]));
     expect(noCoverage.receipt.items[0]).toMatchObject({
       queueItemId: 'zero-item', status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
       context: expect.objectContaining({ number: 1000, reservationId: null, conflictId: expect.any(String), allowedActions: expect.any(Array) }),
     });
+    expect(zero.apply).not.toHaveBeenCalled();
   });
 
   it('UPS-OFS-01 rejects ambiguous reservation coverage without choosing a series by creation time', async () => {
-    const ambiguous = harness();
+    const ambiguous = numberingGuardHarness();
     ambiguous.store.seedNumberingRange({
       id: '10000000-0000-4000-8000-0000000000d1', tenantId: tenant, orgUnitId: 'org-a',
       entityType: 'citation', series: 'D', startNumber: 1000, endNumber: 1300, nextNumber: 1000, status: 'active',
@@ -239,10 +250,11 @@ describe('CTG9 OFS service contract', () => {
       status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_AMBIGUOUS',
       context: expect.objectContaining({ number: 1000, reservationId: null, conflictId: expect.any(String), allowedActions: expect.any(Array) }),
     });
+    expect(ambiguous.apply).not.toHaveBeenCalled();
   });
 
   it('UPS-OFS-01 records a closed reservation as an expired conflict', async () => {
-    const closed = harness();
+    const closed = numberingGuardHarness();
     const closedReservation = await closed.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'closed', entityType: 'citation', requestedSize: 1 });
     await closed.service.closeNumberingReservation(closedReservation.reservationId);
     const closedResult = await closed.service.submitSyncBatch(batch('closed-coverage', [item('closed-key', 'closed-item', 1000, closedReservation.reservationId)]));
@@ -250,10 +262,11 @@ describe('CTG9 OFS service contract', () => {
       status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED',
       context: expect.objectContaining({ number: 1000, reservationId: closedReservation.reservationId, conflictId: expect.any(String), allowedActions: expect.any(Array) }),
     });
+    expect(closed.apply).not.toHaveBeenCalled();
   });
 
   it('UPS-OFS-01 compares validUntil with createdLocallyAt and records an expired conflict', async () => {
-    const expired = harness();
+    const expired = numberingGuardHarness();
     const expiredReservation = await expired.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'expired', entityType: 'citation', requestedSize: 1, validUntil: '2026-09-29T12:00:00.000Z' });
     const expiredItem = { ...item('expired-key', 'expired-item', 1000, expiredReservation.reservationId), createdLocallyAt: '2026-09-30T12:00:00.000Z' };
     const expiredResult = await expired.service.submitSyncBatch(batch('expired-coverage', [expiredItem]));
@@ -261,16 +274,25 @@ describe('CTG9 OFS service contract', () => {
       status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED',
       context: expect.objectContaining({ number: 1000, reservationId: expiredReservation.reservationId, conflictId: expect.any(String), allowedActions: expect.any(Array) }),
     });
+    expect(expired.apply).not.toHaveBeenCalled();
+  });
+
+  it('UPS-OFS-01 rejects a non-safe-integer reserved number before recording the batch', async () => {
+    const { service } = harness();
+    await expect(service.submitSyncBatch(batch('fractional-number', [item('fraction-key', 'fraction-item', 1000.5)])))
+      .rejects.toMatchObject({ status: 400 });
+    await expect(service.getSyncBatchReceipt('device-a', 'fractional-number')).rejects.toMatchObject({ status: 404 });
   });
 
   it('UPS-OFS-01 rejects an in-scope reservation ID when the number is outside its interval', async () => {
-    const scoped = harness();
+    const scoped = numberingGuardHarness();
     const reservation = await scoped.service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'range-check', entityType: 'citation', requestedSize: 1 });
     const result = await scoped.service.submitSyncBatch(batch('reservation-id-out-of-range', [item('range-check-key', 'range-check-item', reservation.startNumber + 1, reservation.reservationId)]));
     expect(result.receipt.items[0]).toMatchObject({
       status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
       context: { number: reservation.startNumber + 1, reservationId: reservation.reservationId },
     });
+    expect(scoped.apply).not.toHaveBeenCalled();
   });
 
   it('UPS-OFS-01 accepts a late sync when createdLocallyAt was within reservation validity', async () => {
@@ -418,8 +440,17 @@ describe('CTG9 OFS service contract', () => {
     const { service } = harness();
     await service.submitSyncBatch(batch('declared-first', [item('declared-shared', 'declared-queue-one')]));
     const second = await service.submitSyncBatch(batch('declared-second', [item('declared-shared', 'declared-queue-two')]));
-    expect(second.receipt.items[0]).toMatchObject({ queueItemId: 'declared-queue-two', status: 'applied', context: { originalQueueItemId: 'declared-queue-one' } });
+    expect(second.receipt).toMatchObject({ status: 'closed', responseStatus: 201 });
+    expect(second.receipt.items[0]).toMatchObject({ queueItemId: 'declared-queue-two', status: 'received', context: { originalQueueItemId: 'declared-queue-one' } });
     expect((await service.getSyncBatchReceipt('device-a', 'declared-second')).items[0]).toMatchObject({ queueItemId: 'declared-queue-two', context: { originalQueueItemId: 'declared-queue-one' } });
+  });
+
+  it('UPS-OFS-01 requires an applier before writing a numbered CTG9 batch', async () => {
+    const { service } = harness();
+    const reservation = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'requires-applier', entityType: 'citation', requestedSize: 1 });
+    await expect(service.submitSyncBatch(batch('requires-applier', [item('requires-applier-key', 'requires-applier-item', reservation.startNumber, reservation.reservationId)])))
+      .rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFIGURATION_ERROR' });
+    expect((await service.getNumberingConsumption(reservation.reservationId)).consumption[0].status).toBe('available');
   });
 
   it('UPS-OFS-02 rejects an empty host legacy identity before storing or applying an item', async () => {
@@ -578,7 +609,11 @@ describe('CTG9 OFS service contract', () => {
       pairs: [{ firstItemId: 'a', secondItemId: 'b' }],
     }));
     const handoff = { permits: vi.fn(async () => true) };
-    const { service } = harness({ concurrencyDetector: { detect }, handoffPort: handoff });
+    const { service } = harness({
+      concurrencyDetector: { detect }, handoffPort: handoff,
+      itemApplier: { apply: async () => ({ serverEntityId: 'handoff-server' }) },
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    });
     await service.submitSyncBatch(batch('handoff-a', [item('handoff-key-a', 'a')]));
     await service.submitSyncBatch({
       ...batch('handoff-b', [item('handoff-key-b', 'b')]),
@@ -629,6 +664,8 @@ describe('CTG9 OFS service contract', () => {
       concurrencyDetector: { detect },
       handoffPort: handoff,
       conflictResolver,
+      itemApplier: { apply: async () => ({ serverEntityId: 'conflict-server' }) },
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
     });
     await service.submitSyncBatch(batch('one', [item('key-a', 'queue-a')]));
     await service.submitSyncBatch({
@@ -674,5 +711,25 @@ describe('CTG9 OFS service contract', () => {
       .toMatchObject({ status: 'consumed' });
     expect((await service.getNumberingConsumption(reservation.reservationId)).consumption.map(({ status }) => status))
       .toEqual(['applied', 'claimed-locally', 'expired']);
+  });
+
+  it('UPS-OFS-01 reconciles after close without reviving available values', async () => {
+    const { service } = harness() as { service: ExtendedService };
+    const reservation = await service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'closed-reconcile', entityType: 'citation', requestedSize: 3 });
+    await service.closeNumberingReservation(reservation.reservationId);
+    const result = await service.reconcileNumberingReservation(reservation.reservationId, { claimedNumbers: [1001] });
+    expect(result.consumption.map((entry) => entry.status)).toEqual(['expired', 'expired', 'expired']);
+    expect((await service.getNumberingConsumption(reservation.reservationId)).consumption.map((entry) => entry.status))
+      .toEqual(['expired', 'expired', 'expired']);
+  });
+
+  it('UPS-OFS-03 treats an HttpException 4xx from the in-memory applier as terminal', async () => {
+    const { service } = harness({
+      itemApplier: { apply: async () => { throw new HttpException('not valid', 422); } },
+      eventPort: { appendInTransaction: async () => undefined, appendManyInTransaction: async () => undefined },
+    });
+    const result = await service.submitSyncBatch(batch('http-4xx-item', [item('http-4xx-key', 'http-4xx-queue')]));
+    expect(result.receipt).toMatchObject({ status: 'closed', responseStatus: 201 });
+    expect(result.receipt.items[0]).toMatchObject({ status: 'rejected' });
   });
 });
