@@ -1,0 +1,15 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "mode": "prompt-review",
+  "transport": "direct-claude-p-fallback",
+  "reason": "DETRAN bridge rejected non-JSON prose wrapper",
+  "prompt": "work/rounds/R-0002/prompts/68-ctg5-predecessor-reconciliation-review-2.md",
+  "prompt_sha256": "58e55fccf88c28901398b4b095a5e45d3572b04dcf541958a8aee99077955037",
+  "raw": "work/rounds/R-0002/reviews/ctg5-predecessor-reconciliation-review-2.raw.json",
+  "raw_sha256": "dbaf31713caad0ac5dbcd57ad9ab5b584414f70ceaec5ac2cd70a8b723eeb84b",
+  "normalized_output": "work/rounds/R-0002/reviews/ctg5-predecessor-reconciliation-review-2.json",
+  "reviewed_commit": "42c069b990439ba635eb1804bd4a86d1897c5ffa",
+  "verdict": "REVIEW",
+  "recorded_at_utc": "2026-09-28T03:03:26.664375+00:00"
+}

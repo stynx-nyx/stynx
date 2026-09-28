@@ -1,0 +1,74 @@
+{
+  "duration_api_ms": 140467,
+  "stop_reason": "end_turn",
+  "session_id": "3c7bab4a-882c-4e56-a672-5f4c16517df8",
+  "total_cost_usd": 0.810271,
+  "usage": {
+    "input_tokens": 20,
+    "cache_creation_input_tokens": 57616,
+    "cache_read_input_tokens": 426715,
+    "output_tokens": 13196,
+    "output_tokens_details": { "thinking_tokens": 7467 },
+    "server_tool_use": { "web_search_requests": 0, "web_fetch_requests": 0 },
+    "service_tier": "standard",
+    "cache_creation": { "ephemeral_1h_input_tokens": 57616, "ephemeral_5m_input_tokens": 0 },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 3365,
+        "cache_read_input_tokens": 67281,
+        "cache_creation_input_tokens": 2118,
+        "cache_creation": { "ephemeral_5m_input_tokens": 0, "ephemeral_1h_input_tokens": 2118 },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 20,
+      "outputTokens": 13196,
+      "cacheReadInputTokens": 426715,
+      "cacheCreationInputTokens": 57616,
+      "webSearchRequests": 0,
+      "costUSD": 0.810271,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 7467,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "fast_mode_disabled_reason": "sdk_opt_in_required",
+  "subagent_stats": {
+    "spawned": 0,
+    "requested": { "background": 0, "foreground": 0, "unset": 0 },
+    "started_in_background": 0,
+    "max_depth": 0,
+    "spawned_by_subagents": 0,
+    "completed": 0,
+    "failed": 0,
+    "killed": { "parent": 0, "user": 0, "system": 0 },
+    "refused": { "depth_limit": 0, "concurrency_limit": 0, "budget": 0 },
+    "by_type": {}
+  },
+  "is_error": false,
+  "num_turns": 11,
+  "subtype": "success",
+  "api_error_status": null,
+  "result": "```json\n{\n  \"verdict\": \"REVIEW\",\n  \"reviewed\": {\n    \"repaired_contract_commit\": \"42c069b9 (contract lines 11, 13, 15, 17)\",\n    \"plan\": \"work/rounds/R-0002/ctg-0005-plan.md (predecessor dispatch gate and reconciliation checkpoint)\",\n    \"prompts\": [\"60-ctg5-architect.md\", \"61-ctg5-inspector.md\", \"62-ctg5-engineer.md\"],\n    \"source\": [\n      \"packages/tenancy/src/tenant-context.interceptor.ts\",\n      \"packages/core/src/request-context.interceptor.ts\",\n      \"packages/auth/src/stynx-auth.guard.ts\",\n      \"packages/backend/src/auth/auth-context.guard.ts\",\n      \"@nestjs/core 11.2.3 internal-core-module-factory.js, nest-application.js, application-config.js\"\n    ]\n  },\n  \"prior_findings\": {\n    \"F1\": \"RESOLVED. Contract line 15 and prompt 62 require a branded built-in guard at boot on @PublicTenantRoute({optionalAuth:true}) commands. Both guards delete STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL and the identity fields at entry on public routes (stynx-auth.guard.ts:41-51, auth-context.guard.ts:56-65). A pre-seeded marker plus claims therefore cannot reach tenant-context.interceptor.ts:93. Prompt 61 has the matching boot-failure case. Anonymous-only public routes need the port but no guard.\",\n    \"F2\": \"RESOLVED IN TEXT (see N1). Line 13 defines a protected mode on the private port, and line 17 requires the port result before any transaction when tenancy is installed. The core → command → tenancy order therefore fails before SQL on protected and public routes. The auth-only rule and the live current_user/app.role/app.tenant_id/app.actor_id check are both specified. Prompt 61 covers the custom TenantResolver/header mismatch case.\",\n    \"F3\": \"RESOLVED FOR PROTECTED ROUTES (see N3 for public verified). principal.id is authoritative. Any stynxClaims.sub and tenantId must equal principal.id and the marker. AuthContextGuard clearing stynxClaims at entry is a new backend edit, which prompt 62 assigns; today's protected path at auth-context.guard.ts:106-164 does not clear them. StynxAuthGuard replaces claims on success and throws on failure.\",\n    \"F4\": \"RESOLVED IN TEXT (see N2, N4). The contracts symbol brand is checked on real metatypes and instances. It needs no backend→auth dependency, and a same-name look-alike fails. The text covers route, class, APP_GUARD and pre-init useGlobalGuards, and drops relative ordering. The packages/auth edit is in the plan ownership list, the locks and prompts 61/62.\",\n    \"F5\": \"RESOLVED. The provider exposes only get() on its own object and prototype. The writer is module-scoped and not exported. It writes once, only on success, after the RequestContext patch and immediately before next.handle(), and never on error or unresolved optional paths. Prompt 61 asserts the reflection shape.\",\n    \"F6\": \"RESOLVED. The plan records c469b6f8 with REVIEW receipt review-1 and has an explicit pending slot for the repaired SHA and cycle-2 PASS. Line 11 rejects non-HTTP contexts; CTG4 jobs use Database.tx under their persisted actor.\"\n  },\n  \"findings\": [\n    {\n      \"id\": \"N1\",\n      \"severity\": \"MEDIUM\",\n      \"path\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md:13; prompts 61/62\",\n      \"title\": \"Protected-mode port can record an actor that tenancy never membership-checked\",\n      \"evidence\": \"On protected routes, resolveAndValidate returns only { tenantId } (tenant-context.interceptor.ts:161), so the patched context actor stays core's value (request-context.interceptor.ts:77, principal.id once AuthContextGuard clears stynxClaims). Tenancy's membership check uses resolveActorId (line 176-180): stynxClaims.sub ?? parseBearerTenantClaims(authorization).sub ?? principal.id. After the repair clears stynxClaims on AuthContextGuard routes, that becomes an unverified base64 decode of the bearer sub. When a PrincipalMapper maps principal.id from a different claim than sub, tenancy checks membership for the token sub. The port then records mode:'protected' with actor principal.id, which was never checked. The boundary's equality among port, context and principal passes, yet the contract states the port is written 'after the existing membership check' for that actor.\",\n      \"required_change\": \"Contract line 13: the protected-mode writer records an entry only when the actor whose membership tenancy validated equals the patched RequestContext actor; otherwise it writes no entry and the command fails closed. Alternatively, for command routes tenancy uses request.principal.id, when a built-in guard is present, as the membership actor rather than the unverified bearer decode; say which. Existing non-command resolution stays unchanged. Prompt 61: add an AuthContextGuard case whose mapper yields principal.id ≠ token sub, and assert rejection before command SQL or handler.\"\n    },\n    {\n      \"id\": \"N2\",\n      \"severity\": \"MEDIUM\",\n      \"path\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md:15; prompt 62\",\n      \"title\": \"Pre-init useGlobalGuards discovery has no public Nest 11 mechanism\",\n      \"evidence\": \"NestApplication.useGlobalGuards writes to ApplicationConfig.globalGuards (nest-application.js:291-293). ApplicationConfig is not a DI provider; InternalCoreModule exports only ExternalContextCreator, ModulesContainer, HttpAdapterHost, LazyModuleLoader and SerializedGraph. insertOrphanedEnhancer goes to the graph inspector, which is a no-op unless snapshot mode is on. APP_GUARD providers can be found through ModulesContainer, but imperative guards can only be reached through private internals such as externalContextCreator.guardsContextCreator.config. The contract promises support for this path without naming a mechanism.\",\n      \"required_change\": \"Name the discovery mechanism and pin it to the supported Nest 11 range with a sensor. Otherwise declare imperative useGlobalGuards unsupported for protected and optional-auth commands, so that APP_GUARD or route/class registration is required and boot fails closed. Update prompt 61's pre-init global case and prompt 62 to match.\"\n    },\n    {\n      \"id\": \"N3\",\n      \"severity\": \"LOW\",\n      \"path\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md:13\",\n      \"title\": \"Verified public identity source is not stated as principal.id\",\n      \"evidence\": \"Line 11 fixes principal.id only for protected commands. Line 13 requires equality with 'verified guard identity where applicable'. Tenancy's verified actor is stynxClaims.sub ?? principal.id (line 97). Both guards clear claims first, so this is safe today, but the rule is implicit.\",\n      \"required_change\": \"State that mode:'verified' requires actorId === request.principal.id, and that any stynxClaims.sub/tenantId must equal principal.id and the Host tenant.\"\n    },\n    {\n      \"id\": \"N4\",\n      \"severity\": \"LOW\",\n      \"path\": \"docs/framework/contracts/transactional-audit-idempotency-1.5.md:15\",\n      \"title\": \"Brand inheritance and self-branding not addressed\",\n      \"evidence\": \"A static symbol on a constructor is inherited by subclasses. A consumer subclass that overrides canActivate would therefore pass the brand check. The brand symbol is also publicly exported from contracts, so any class can carry it.\",\n      \"required_change\": \"Require the brand as an own property of the guard constructor, or accept subclasses explicitly. Extend line 11's in-process caveat to self-branding. Optionally add a prompt 61 subclass case.\"\n    }\n  ],\n  \"preserved\": [\n    \"CTG4 jobs actor, dead-letter and Database.tx behavior are unchanged; non-HTTP contexts are excluded from the interceptor.\",\n    \"Non-command routes, plain @Public()/@System() and legacy audit/idempotency are unchanged; the tenancy writer is additive.\",\n    \"CTG3 guard-marker semantics are reused and not altered, apart from the additive AuthContextGuard clearing of stynxClaims.\"\n  ],\n  \"summary\": \"The repair addresses F1–F6 in substance. Public optional-auth commands need a branded guard at boot. The private port covers protected, nominal and verified completion, so the wrong interceptor order fails before SQL. principal.id plus claims equality is authoritative for protected commands. The brand avoids a backend→auth dependency, the port's read-only shape and write timing are exact, and the plan pins c469b6f8 with a pending cycle-2 slot. Two source-grounded gaps remain. N1: in protected mode, tenancy validates membership for an unverified bearer sub while the port attests the context actor principal.id. N2: the promised pre-init useGlobalGuards detection has no public Nest 11 API. Resolve N1 and N2 (N3/N4 are wording) and obtain a renewed PASS. Inspector 61 stays blocked until the maestro records the repaired SHA and PASS receipt in the plan.\"\n}\n```\n\nOne note on the environment: the claude.ai Google Drive and Mermaid Chart connectors need authorization in their claude.ai connector settings before they can be used. This review didn't need either of them.",
+  "ttft_ms": 3288,
+  "type": "result",
+  "duration_ms": 143353,
+  "uuid": "2347d326-a3e2-4ec1-8a4c-2ca1b97b971d",
+  "ttft_stream_ms": 2120,
+  "time_to_request_ms": 347,
+  "first_content_frame_ms": 2120,
+  "queued_turn_count": 0,
+  "result_index": 0
+}
