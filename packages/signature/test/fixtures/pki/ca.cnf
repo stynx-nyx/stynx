@@ -1,0 +1,14 @@
+[ ca ]
+default_ca = ca_default
+[ ca_default ]
+dir = .
+database = index.txt
+serial = ca.serial
+crlnumber = crl.serial
+certificate = root.cert.pem
+private_key = root.key.pem
+default_md = sha256
+default_crl_days = 7
+policy = policy_any
+[ policy_any ]
+commonName = supplied

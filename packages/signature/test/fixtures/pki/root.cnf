@@ -1,0 +1,11 @@
+[ req ]
+distinguished_name = dn
+x509_extensions = v3_ca
+prompt = no
+[ dn ]
+CN = STYNX Test Trust Root
+[ v3_ca ]
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, keyCertSign, cRLSign
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
