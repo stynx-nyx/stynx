@@ -207,6 +207,66 @@ describe('CTG9 append-only outbox facts (PostgreSQL/RLS)', () => {
     });
   });
 
+  it('rolls back a composed domain write when append meets an already-held cutover UPDATE', async () => {
+    const key = `ctg9-append-cutover-${randomUUID()}`;
+    const holder = await postgres.connectAsAdmin();
+    const writeDomainAndAppend = () =>
+      database.withRequestContext({ tenantId: TENANT_A, actorId: ACTOR }, () =>
+        database.tx(
+          async (trx) => {
+            await trx.query(
+              `insert into core.idempotency_keys (tenant_id,key,status,response)
+               values ($1::uuid,$2,'COMPLETED','{}'::jsonb)`,
+              [TENANT_A, key],
+            );
+            return append.appendInTransaction(trx, {
+              entity: 'ctg9.append-cutover',
+              entityId: key,
+              idempotencyKey: key,
+              payload: { key },
+            });
+          },
+          { role: 'app', isolation: 'read committed', retry: false },
+        ),
+      );
+
+    try {
+      await holder.query('begin');
+      await holder.query('select id from outbox.legacy_ownership for update');
+
+      await expect(writeDomainAndAppend()).rejects.toMatchObject({
+        code: 'OUTBOX_OWNERSHIP_CONTENTION',
+        status: 503,
+      });
+      const rolledBack = await holder.query<{ domain: string; event: string }>(
+        `select (select count(*)::text from core.idempotency_keys where tenant_id=$1 and key=$2) as domain,
+                (select count(*)::text from outbox.events where tenant_id=$1 and idempotency_key=$2) as event`,
+        [TENANT_A, key],
+      );
+      expect(rolledBack.rows).toEqual([{ domain: '0', event: '0' }]);
+
+      await holder.query('commit');
+      const retried = await writeDomainAndAppend();
+      expect(retried.tenantId).toBe(TENANT_A);
+      const committed = await holder.query<{ domain: string; event: string }>(
+        `select (select count(*)::text from core.idempotency_keys where tenant_id=$1 and key=$2) as domain,
+                (select count(*)::text from outbox.events where tenant_id=$1 and idempotency_key=$2) as event`,
+        [TENANT_A, key],
+      );
+      expect(committed.rows).toEqual([{ domain: '1', event: '1' }]);
+      await append.ackEvent({
+        tenantId: TENANT_A,
+        eventId: retried.id,
+        status: 'ACKED',
+        rawBody: Buffer.from(`ctg9-append-retry:${key}`),
+        hmacVerified: true,
+      });
+    } finally {
+      await holder.query('rollback').catch(() => undefined);
+      await holder.end();
+    }
+  }, 15_000);
+
   it('persists two facts for one aggregate, replays an identical key, rejects divergent reuse, and scopes keys per tenant', async () => {
     const aggregate = `ctg9-${randomUUID()}`;
     const firstKey = `${aggregate}:first`;

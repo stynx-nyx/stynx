@@ -28,7 +28,8 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
   let moduleRef: TestingModule;
   let database: Database;
   let outbox: OutboxService;
-  let send: (row: OutboxRow) => Promise<OutboxTransportEvidence>;
+  let send: (row: OutboxRow) => Promise<OutboxTransportEvidence> = async () => ({});
+  let sendLegacy: (row: OutboxRow) => Promise<void> = async () => undefined;
 
   const append = async (entityId = randomUUID()) =>
     database.withRequestContext({ tenantId: TENANT, actorId: ACTOR }, () =>
@@ -75,7 +76,7 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
         StynxOutboxModule.forRoot({
           eventLeaseMs: 40,
           dispatcher: {
-            send: async () => undefined,
+            send: (row) => sendLegacy(row),
             sendEvent: (row) => send(row),
           },
         }),
@@ -210,6 +211,69 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
       await admin.end();
     }
     await ack(event.id);
+  }, 15_000);
+
+  it('keeps an in-flight SENT message terminal when cutover and its ACK finish before transport returns', async () => {
+    const key = `ctg9-sent-cutover-ack-${randomUUID()}`;
+    const admin = await postgres.connectAsAdmin();
+    let sendStartedResolve!: () => void;
+    const sendStarted = new Promise<void>((resolve) => {
+      sendStartedResolve = resolve;
+    });
+    let finishSend!: (evidence: OutboxTransportEvidence) => void;
+    let sendCalls = 0;
+    try {
+      const inserted = await admin.query<{ id: string }>(
+        `insert into outbox.messages (tenant_id,entity,entity_id,payload,idempotency_key)
+         values ($1,'ctg9.inflight-cutover',$2,'{"state":"pending"}'::jsonb,$2)
+         returning id`,
+        [TENANT, key],
+      );
+      const legacyId = inserted.rows[0]!.id;
+      sendLegacy = async (row) => {
+        sendCalls += 1;
+        expect(row.id).toBe(legacyId);
+        sendStartedResolve();
+        return new Promise<void>((resolve) => {
+          finishSend = () => resolve();
+        });
+      };
+
+      const legacyDispatch = bounded(outbox.dispatchDue(1));
+      await bounded(sendStarted);
+      await bounded(outbox.cutoverLegacyMessages());
+      const acknowledged = await outbox.ack({
+        entity: 'ctg9.inflight-cutover',
+        entityId: key,
+        tenantId: TENANT,
+        status: 'ACKED',
+      });
+      expect(acknowledged.id).toBe(legacyId);
+      expect(acknowledged.status).toBe('ACKED');
+
+      finishSend({ provider: 'probe', protocol: 'HTTP' });
+      const [outcome] = await bounded(legacyDispatch);
+      expect(outcome?.dispatched).toBe(true);
+      expect(sendCalls).toBe(1);
+
+      const linked = await admin.query<{ migrated_event_id: string; status: string }>(
+        'select migrated_event_id,status from outbox.messages where id=$1',
+        [legacyId],
+      );
+      expect(linked.rows[0]?.status).toBe('ACKED');
+      const eventId = linked.rows[0]!.migrated_event_id;
+      const delivery = await admin.query<{ status: string; attempts: number }>(
+        `select status,attempts from outbox.event_delivery where tenant_id=$1 and event_id=$2`,
+        [TENANT, eventId],
+      );
+      expect(delivery.rows).toEqual([{ status: 'ACKED', attempts: 1 }]);
+      expect(await bounded(outbox.dispatchEventsDue(10))).toHaveLength(0);
+      expect(sendCalls).toBe(1);
+    } finally {
+      finishSend?.({ provider: 'probe', protocol: 'HTTP' });
+      sendLegacy = async () => undefined;
+      await admin.end();
+    }
   }, 15_000);
 
   it('records final HTTP headers, status, exact bytes, and SHA-256 for success and failure', async () => {
