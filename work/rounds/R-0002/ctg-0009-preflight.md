@@ -116,26 +116,43 @@ no relógio, com holder ALS mutável; ainda não há PASS.
    não escolhe a cabeça: o default `occurred_at=now()` usa o início da
    transação e o desempate por UUIDv4 é aleatório. A migração forward
    redefine os três writers para, **sob o advisory e antes do INSERT**,
-   atribuir `occurred_at := greatest(clock_timestamp(),
-head.occurred_at + interval '1 microsecond')` explicitamente. A cabeça
+   atribuir `occurred_at` explicitamente como o maior entre
+   `clock_timestamp()` e `head.occurred_at + 1µs`. A cabeça
    continua ordenada por `(occurred_at,event_id)`, mas o timestamp novo é
    estritamente maior que o último timestamp do tenant, inclusive após
    BEGIN em ordem inversa ou várias escritas na mesma transação. O hash
-   recebe esse timestamp já escolhido; eventos legados não são reescritos
-   nem re-hasheados. Antes de ativar a migração, validar a cadeia legada
-   completa, incluindo NULL tenant, e abortar com diagnóstico de bifurcação
-   se houver invalidade; não marcar um legado inválido como conforme.
-   `verify_chain` passa a aceitar tenant NULL com filtro `IS NOT DISTINCT
-FROM` e conserva a assinatura/colunas públicas. Inspector cobre três
-   eventos numa transação, BEGIN invertido em relação à ordem do advisory,
-   cadeia antiga linear preservada e falha explícita de preflight para
-   bifurcação legada. Dois triggers concorrentes devem manter cadeia linear.
+   recebe esse timestamp já escolhido. Como uma transação REPEATABLE READ
+   pode ler cabeça antiga após obter o advisory, **cada um dos três writers**
+   verifica `transaction_isolation = read committed` antes de selecionar a
+   cabeça; RR/SERIALIZABLE falham com SQLSTATE `40001` e retry externo,
+   nunca bifurcam. A migração não altera hashes ou timestamps legados.
+   Antes de ativar os novos writers, percorre `previous_hash` por tenant,
+   inclusive NULL, e classifica o legado em linear por links, par linear
+   mas fora da ordem temporal, fork ou hash mismatch. Não aborta a migração
+   por defeito legado; guarda diagnóstico e tips em uma tabela de épocas e
+   sela a cadeia com evento âncora explícito após o maior timestamp legado,
+   sob o advisory. Esse evento inicia **nova época** (`previous_hash=NULL`),
+   sem declarar o segmento antigo conforme. `audit.verify_chain` mantém
+   assinatura e colunas públicas, aceita tenant NULL e valida eventos
+   posteriores à âncora dentro da nova época; eventos legados inválidos
+   continuam `chain_valid=false`. Uma função nova expõe estado da época
+   antiga, tips e divergências sem suprimir nenhuma linha. Erro na própria
+   migração aborta normalmente; hash mismatch legado fica diagnosticado
+   e exige avaliação Owner antes de **publicar** a final se existir no
+   banco de release. Inspector cobre par legado misordered, fork de três
+   eventos, mismatch, três eventos novos numa transação, BEGIN invertido,
+   RR×RC e SERIALIZABLE×RC sem bifurcação. Índices da cabeça incluem
+   `(tenancy_id,occurred_at DESC,event_id DESC)` e parcial para NULL;
+   buscas evitam `IS NOT DISTINCT FROM` no caminho crítico.
    A sentinela advisory fixa de NULL tenant serializa escritas globais;
-   medir espera/latência de dois escritores globais e restringir `audit.write`
-   a `p_tenant_id = app.tenant_id` em papel app, ou NULL em papel owner
-   de sistema; rejeitar cruzamento de duas cadeias na mesma transação.
-   Não criar um tenant
-   falso nem misturar a cadeia NULL com a de tenant real.
+   medir espera/latência de dois escritores globais. `audit.write` continua
+   com EXECUTE revogado para app; o caller real `AuditSqlSink` escreve em
+   papel owner com `p_tenant_id` real ou NULL. A primeira escrita da
+   transação grava a chave de cadeia em GUC local `stynx.audit_chain_key`;
+   os três writers rejeitam uma segunda chave diferente com SQLSTATE
+   tipado antes de travar outro advisory. Assim, owner pode escrever o
+   tenant X, mas X→NULL na mesma transação falha sem deadlock. NULL fica
+   reservado para operações owner de sistema. Não criar tenant falso.
    O Inspector cruza comando CTG5 com handler não auditado versus handler
    auditado, com e sem append, e duas transações de trigger concorrentes.
    Deadlocks entre locks de domínio e advisory ainda podem ocorrer:
@@ -161,7 +178,16 @@ FROM` e conserva a assinatura/colunas públicas. Inspector cobre três
    bastam para impor essas condições.
    `EventStreamSource.now(scope)` **não** adquire o advisory de auditoria:
    toma somente a linha de relógio por `INSERT ... ON CONFLICT ... DO UPDATE`
-   com `lock_timeout` curto configurável e erro 503 tipado para retry.
+   com `lockTimeoutMs` curto configurável aplicado por `SET LOCAL
+lock_timeout`; SQLSTATE `55P03` vira 503 tipado
+   `SSE_SOURCE_UNAVAILABLE` com retry. Apenas um preflight `now()` por
+   tenant/processo segura conexão de cada vez; esperas adicionais ficam
+   fora do pool e têm deadline, preservando conexões para outros tenants.
+   `appendInTransaction` é a última escrita de negócio; a `Transaction`
+   marca escrita selada após append e rejeita qualquer query de escrita
+   posterior com erro tipado. Para vários fatos na mesma transação, usar
+   `appendManyInTransaction` antes de selar. Esta é API nova, sem alterar
+   `enqueue` legado.
    Atualiza o relógio com `max(clock_ms, agora_ms)` e devolve o valor
    confirmado; assim
    uma conexão entre append e commit espera, e qualquer append posterior
@@ -242,14 +268,22 @@ FROM` e conserva a assinatura/colunas públicas. Inspector cobre três
    de transação ambiente usa uma marca `AsyncLocalStorage` própria de
    conexão detida, herdável através de `runWithRequestContext` e
    `runWithSystemContext`, além de consultar o CLS. A marca é um holder
-   mutável `{ held: boolean }`, posto em `false` no `finally` após
+   mutável `{ held: boolean, strict: boolean }`, posto em `false` no `finally` após
    commit/rollback e release; continuations posteriores ao commit não
    ficam bloqueadas. `Database.txIndependent` chama
    `assertNoHeldConnection` **antes** de obter conexão, inclusive quando
    `TX_CONTEXT_KEY` tiver sido apagado por contexto derivado, e falha com
-   erro tipado se houver transação ativa. `Database.tx` legado conserva a
-   semântica publicada de contexto derivado (i18n, ratelimit, tenancy,
-   audit e preferences); nenhuma falha fechada global é introduzida.
+   erro tipado se houver transação ativa. Dentro do item OFS, ativa
+   `strict=true`: qualquer `Database.tx` que precisaria abrir **outra**
+   conexão, inclusive via `withRequestContext`/`withSystemContext`, falha
+   antes de `pool.connect` em qualquer papel. SAVEPOINT na mesma conexão
+   continua possível, mas a porta de domínio recebe a `Transaction` do
+   item e deve usá-la diretamente. Fora de `txIndependent` estrito,
+   `Database.tx` legado conserva a semântica publicada de contexto derivado
+   (i18n, ratelimit, tenancy, audit e preferences). O modo estrito também
+   cobre o callback de efeito fornecido pelo consumidor, não só a porta
+   de evento; impede ciclo invisível no Node esperando o advisory da
+   própria transação em outra conexão.
    O serviço de lote consulta a nova API antes de **qualquer escrita,
    inclusive criar ou abrir o recibo durável de lote**; não basta testar
    antes do primeiro item. O endpoint de lote não usa
@@ -282,7 +316,10 @@ FROM` e conserva a assinatura/colunas públicas. Inspector cobre três
    rollback por item e RLS real. Regressão CTG5: handler dentro do envelope
    continua podendo usar i18n/ratelimit/`withSystemContext` com tenancy;
    applier OFS sob o envelope falha antes da primeira escrita sem conexão
-   extra. Continuation após commit pode iniciar trabalho legítimo.
+   extra. Um efeito de domínio que chama `AuditSqlSink`,
+   `withRequestContext` ou `withSystemContext` e tenta abrir outra conexão
+   falha tipado sem hang, com concorrência igual aos pools app e owner;
+   continuation após commit pode iniciar trabalho legítimo.
    `migrations/0002_*.sql` faz backfill sem perder fila; DDL, teste de
    upgrade e `offline-sync-api.md` fixam a ordem de aplicação para adotantes
    e identificam itens legados. A correção do envelope CTG5 opção A foi

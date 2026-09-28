@@ -674,6 +674,16 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     resolver os achados técnicos do review 6, ADRs superadoras, prompt-review
     PASS, tríades e gates focais das três frentes. Não versionar ou publicar
     enquanto algum dos dez MUST estiver sem prova.
+33. Review técnico Opus 7 (`reviews/ctg9-contract-review-7.json`) retornou
+    REVIEW. Quatro bloqueios de contrato: RR pode ler cabeça audit antiga
+    sob advisory; restrição proposta de `audit.write` rejeitaria o caller
+    owner real; defeito legado não pode impedir upgrade; efeito de domínio
+    OFS pode abrir segunda conexão e congelar o pool. A prévia foi ajustada
+    para RC obrigatório nos writers, GUC local de uma cadeia por transação,
+    classificação/âncora de época legada e modo ALS estrito apenas no item
+    OFS. SSE recebe timeout de lock e preflight serializado por tenant.
+    Prompt-review de fechamento e prompts Architect SIG/OBX/OFS preparados;
+    nenhum worker CTG9 despachado ainda.
 
 ## Reviews, PRs e publicações
 

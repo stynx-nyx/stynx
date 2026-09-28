@@ -660,3 +660,13 @@ antes do despacho; as três frentes podem avançar em paralelo em arquivos
 sem lock comum, com a porta OBX fixada antes da integração OFS→OBX. O DETRAN
 permanece somente leitura. Este registro substitui as menções históricas
 a escopo CTG9 pendente; não afirma implementação, teste ou publicação.
+
+O review técnico Opus 7 (`reviews/ctg9-contract-review-7.json`) retornou
+REVIEW com quatro bloqueios concretos: snapshot RR da cabeça audit,
+incompatibilidade da proposta com `AuditSqlSink` owner, legado já
+bifurcado e nova conexão por efeito de domínio dentro do item OFS. A
+revisão Architect do contrato limita escritores auditados a READ COMMITTED,
+vincula cada transação a uma cadeia por GUC, classifica e sela legado sem
+reescrever hash, e ativa modo transacional estrito só na API OFS. O próximo
+prompt-review avaliará esse fechamento e os prompts Architect; ainda não
+há PASS nem implementação CTG9.
