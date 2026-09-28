@@ -24,11 +24,9 @@ describe('createFakeTransaction', () => {
     ).resolves.toMatchObject({ rows: [{ id: 'row-1' }], rowCount: 1 });
 
     expect(fake.queries).toEqual([
-      expect.objectContaining({ text: 'select $1::int as answer', values: [7] }),
-      expect.objectContaining({ text: 'select id from items where id = $1', values: ['row-1'] }),
+      { text: 'select $1::int as answer', values: [7] },
+      { text: 'select id from items where id = $1', values: ['row-1'] },
     ]);
-    expect(fake.queries[0]?.rowMode).toBeUndefined();
-    expect(fake.queries[1]?.rowMode).toBeUndefined();
   });
 
   it('propagates scripted errors, records the attempted SQL, and accepts later responses', async () => {

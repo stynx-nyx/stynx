@@ -66,7 +66,8 @@ describe('StynxShellComponent', () => {
     expect(nav?.getAttribute('aria-label')).toBe('Primary navigation');
     expect(nav?.querySelector('a[aria-current="page"]')?.textContent).toContain('Home');
     expect(main?.getAttribute('tabindex')).toBe('-1');
-    expect(host.querySelector('[aria-live="polite"]')).not.toBeNull();
+    expect(host.querySelector('[role="status"][aria-live="polite"]')?.getAttribute('aria-label'))
+      .toBe('Shell status');
     expect(host.querySelector('h1')?.textContent).toContain('Example workspace');
 
     skip?.focus();

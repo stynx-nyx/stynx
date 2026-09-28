@@ -37,7 +37,7 @@ function expectLawEnvelope(response: { status: number; body: Record<string, unkn
   expect(response.body.requestId).toMatch(uuidV7);
   expect(response.body.requestId).toBe(response.headers['x-request-id']);
   if (expectedRequestId) expect(response.body.requestId).toBe(expectedRequestId);
-  expect(response.headers.etag).toBeUndefined();
+  expect(response.headers).not.toHaveProperty('etag');
   expect(response.body).not.toHaveProperty('code');
   expect(response.body).not.toHaveProperty('context');
 }
@@ -161,6 +161,6 @@ describe('If-Match decorators on real Nest HTTP routes with StynxCoreModule', ()
     const response = await request(app!.getHttpServer()).post('/if-match-contract/bad-revision')
       .set('if-match', '"4"').send({});
     expect(response.status).toBeGreaterThanOrEqual(500);
-    expect(response.headers.etag).toBeUndefined();
+    expect(response.headers).not.toHaveProperty('etag');
   });
 });

@@ -1,6 +1,7 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
+import { firstValueFrom } from 'rxjs';
 import { StynxSessionService } from '@stynx-nyx/angular-auth';
 import {
   createStynxSessionStub,
@@ -14,7 +15,7 @@ beforeAll(() => {
 describe('@stynx-nyx/angular-auth/testing', () => {
   afterEach(() => TestBed.resetTestingModule());
 
-  it('provides a typed session stub with the real session state shape and controllable signals', () => {
+  it('provides a typed session stub with the real session state shape and controllable signals', async () => {
     const stub = createStynxSessionStub();
     TestBed.configureTestingModule({ providers: [provideStynxSessionStub(stub)] });
     const session = TestBed.inject(StynxSessionService);
@@ -30,7 +31,10 @@ describe('@stynx-nyx/angular-auth/testing', () => {
       claims: null,
     });
     expect(stub.active()).toBe(false);
-    expect(stub.active$).toBeDefined();
+    await expect(firstValueFrom(stub.active$)).resolves.toMatchObject({
+      active: false,
+      tenantId: null,
+    });
 
     stub.setSession({
       active: true,
@@ -51,7 +55,7 @@ describe('@stynx-nyx/angular-auth/testing', () => {
     expect(stub.hasAllPermissions(['admin:write'])).toBe(true);
     stub.deactivate();
     expect(stub.active()).toBe(false);
-    expect(stub.state().tenantId).toBeNull();
+    expect(stub.state().tenantId).toBe(null);
   });
 
   it('records calls for the public auth methods', async () => {

@@ -27,7 +27,7 @@ describe('StynxErrorBannerComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('The record changed.');
     expect(fixture.nativeElement.textContent).not.toContain('Server fallback copy');
-    expect(fixture.nativeElement.querySelector('[role="alert"], [aria-live]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.getAttribute('data-tone')).toBe('error');
     expect(translate).toHaveBeenCalledWith('app.errors.conflict', {});
   });
 
@@ -42,7 +42,7 @@ describe('StynxErrorBannerComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Original server text');
-    expect(fixture.nativeElement.querySelector('[role="alert"], [aria-live]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.getAttribute('data-tone')).toBe('error');
   });
 
   it('uses fallback when translation returns the key, clears state on dismiss, and runs an action', async () => {
@@ -63,13 +63,13 @@ describe('StynxErrorBannerComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Readable fallback');
     const retry = [...fixture.nativeElement.querySelectorAll('button')]
       .find((button: HTMLButtonElement) => button.textContent?.trim() === 'Retry');
-    expect(retry).toBeDefined();
+    expect(retry?.getAttribute('type')).toBe('button');
     retry?.click();
     expect(action).toHaveBeenCalledOnce();
 
     const dismiss = [...fixture.nativeElement.querySelectorAll('button')]
       .find((button: HTMLButtonElement) => /dismiss|close/iu.test(button.getAttribute('aria-label') ?? button.textContent ?? ''));
-    expect(dismiss).toBeDefined();
+    expect(dismiss?.getAttribute('aria-label')).toBe('Dismiss error');
     dismiss?.click();
     fixture.detectChanges();
     expect(banner.current()).toBe(null);
