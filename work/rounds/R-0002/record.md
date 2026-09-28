@@ -453,4 +453,9 @@ bootstrap ausentes e falhas de dependência expostas como 500. O worker
 executou indevidamente uma leitura `git show` sem mutação no início da
 primeira tentativa; depois não executou Git. Só o maestro fez os commits.
 O Architect rebinda `law/trace.json` a 451/451 testes rastreados neste
-checkpoint; não alterou schema nem invariante de erro.
+checkpoint em `45a46c07fe921b47c7f36929fc885684740b5e43`; não alterou
+schema nem invariante de erro. Para o despacho Engineer, os SHAs vinculantes
+são: contrato Architect `29dfa65f`, binding PASS de prompts `379e933c`,
+sensores Inspector `380f302f2da0a3996f814d33dfc6597ac4730e57` e rebind
+Architect `45a46c07fe921b47c7f36929fc885684740b5e43`. O HEAD de
+checkpoint antes do despacho é o commit Architect que registra estes SHAs.
