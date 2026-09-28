@@ -4732,8 +4732,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 55,
-      "assertion_digest_sha256": "a4e85debcda80079a4e6c4a6913361d29e58a2ffb10f64568e7ac413ab2c3625"
+      "assertion_count": 56,
+      "assertion_digest_sha256": "d142afe4bca0c7961de14eb30f5033ff195b8fc2c19f945621969cd9a93f5dfd"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",

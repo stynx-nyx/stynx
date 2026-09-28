@@ -1090,3 +1090,20 @@ amarrou o ator exato nos cinco casos; tenancy 85/85 passou, trace
 472/472 não mudou pois as chamadas `expect` permaneceram nas linhas
 originais. `pnpm install --frozen-lockfile` restaurou dependências sem
 alterar arquivos rastreados. Regenerar marcador e repetir CI.
+
+`sensor-error` — o quarto marcador local `c1959ce6` passou pelos gates
+anteriores e revelou que o teste de falha de conexão da CTG5 usava
+`new URL()` para um DSN PostgreSQL de socket Unix. Inspector `98388927`
+usa uma porta TCP indisponível para provar 503 sem chamar o handler.
+
+`plant-bug` — o audit trigger da CTG9 faz a reserva da chave aguardar
+o advisory lock da cadeia. O `lock_timeout` de idempotência produzia
+409 indevido antes do handler. Inspector `c372ee12` observa o bloqueio
+real com uma segunda conexão PostgreSQL e exige 201 após mais de
+`lockTimeoutMs`. Engineer `c96e832d` suspende esse timeout apenas ao
+adquirir o advisory de auditoria e o restaura depois; a migration agora
+declara RLS explicitamente para o linter. Os 16 testes focais,
+`lint:migrations`, `lint:tests` e RLS negativo passaram. O marcador foi
+retirado apenas localmente. Rebind de trace, regeneração do candidato
+e novo CI integral são os próximos passos; nenhum PR/push/publicação
+ocorreu.
