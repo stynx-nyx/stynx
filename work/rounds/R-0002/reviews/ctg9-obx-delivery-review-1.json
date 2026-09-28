@@ -1,0 +1,78 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file": "packages/outbox/src/outbox.service.ts:371",
+      "issue": "The failure path in `dispatchEventsDue` changes the projection with `where tenant_id=$1 and event_id=$2 and status='SENT'`. It does not check which attempt still holds the lease. Failure scenario: attempt N sends and takes longer than the fixed 5-minute lease (line 308). Another scheduler reclaims the event as attempt N+1, and status stays SENT. Attempt N then fails late and sets the projection to ERROR with `next_attempt_at`. That makes the event claimable again while N+1 is still in flight, so it can be sent a third time concurrently. This breaks the invariant that a valid-lease SENT blocks the event, and the late-failure race named in the contract (ctg9-obx-contract.md:25,54). The race involving ACK is handled correctly (`status='SENT'` does not overwrite ACKED). The ordinal race is not.",
+      "required_change": "Fence both the failure and success paths by attempt: add `and attempts=$ordinal` (or compare with `lease_until` returned by the claim) to the `event_delivery` UPDATE. Only update `event_attempts` for its own ordinal. If the projection has moved to another ordinal, record only the late attempt in the ledger and leave the projection unchanged. The Inspector adds a sensor: lease expires → reclaim N+1 → late failure of N does not change N+1."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/outbox/src/http-outbox-dispatcher.ts:53",
+      "issue": "`sendEvent` captures `requestBytes` and `responseBytes`, but never records the HTTP status code or the headers sent (including the HMAC signature and `x-outbox-event-id`/`x-outbox-idempotency-key`). `OutboxTransportEvidence` (types.ts) and `outbox.event_attempts` (0021:47-65) have no column for either. On success no status is recorded at all. On failure it survives only as free text in `error`. The contract requires the ledger to hold protocol, provider, exact bytes, SHA-256 and 'status/resultado' (ctg9-obx-contract.md:27), and the review scope asks for bytes/headers/status.",
+      "required_change": "Add `responseStatus?: number` and `requestHeaders?: Record<string,string>` to `OutboxTransportEvidence`. Fill them in `sendEvent`: the final headers actually sent, with secret values redacted or hashed according to a documented policy, and `response.status`. In 0021, add `response_status integer` and `request_headers jsonb` (or canonical header bytes plus SHA-256) to `outbox.event_attempts`, and persist them on both the success path (outbox.service.ts:344-353) and the failure path (361-370). When a value is absent, mark it explicitly instead of leaving NULL with no explanation."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/outbox/src/outbox.service.ts:684",
+      "issue": "Legacy `ack()` (via `resolveAckTarget`, 748) and `retry()` (637) take the marker with `FOR SHARE NOWAIT` through `ownershipCte`, but do not convert `55P03` into `OutboxOwnershipContentionError`. Only `enqueue`, `dispatchDue` and `recordDispatchFailure` call `mapOwnershipError`, and `mapTransactionError` in data does not handle 55P03. An ACK racing a cutover that already holds UPDATE therefore reaches the caller as a raw pg error. The contract (ctg9-obx-contract.md:31) lists `ack` and `retry` among the paths that must surface the typed, retryable error.",
+      "required_change": "Wrap the `this.database.withSystemContext(...tx...)` calls in `ack` and `retry` with `.catch(e => { throw this.mapOwnershipError(e); })`, or equivalent. The Inspector adds a sensor for legacy ACK racing a cutover that holds UPDATE: typed error, full rollback, and a retry that lands the ACK in the legacy table and in the new ledger/projection."
+    },
+    {
+      "severity": "blocking",
+      "file": "packages/data/migrations/platform/0021_outbox_event_log.sql:501",
+      "issue": "The migration drops and recreates `tenant_scope` on `audit.events` and `audit_log_tenant_isolation` on `audit.log`. It removes the `OR tenancy_id IS NULL` / `OR tenant_id IS NULL` clause that has been published since 0008:21,154-158 and adds WITH CHECK. After this migration, the app and reader roles no longer see NULL-tenant audit rows. This is a change to published RLS semantics outside UPS-OBX and the contract. Neither the ADR nor the contract authorizes it, and legacy audit readers are affected. The new writers do not need it: `audit.lock_chain` and `fn_row_change` are SECURITY DEFINER under the BYPASSRLS owner.",
+      "required_change": "Remove lines 501-508 from 0021 and keep the 0008 policies. If hiding NULL-tenant rows is the intended hardening, take it to the Architect as a contract/ADR delta with a migration-guide entry and a dedicated RLS sensor, in a separate change."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:161",
+      "issue": "The cutover takes `LOCK TABLE ... SHARE ROW EXCLUSIVE` in the order messages→events→event_delivery→legacy_event_map→event_attempts→event_acks. Native paths that take no marker write in a different order: the event-failure path writes event_attempts→event_delivery (361-376), and `ackEvent` writes event_acks→event_delivery (269-279). Either one can deadlock (40P01) with a cutover, and both run with `retry:false`. If the failure path loses, the attempt stays CLAIMED and the projection stays SENT until the lease expires, causing a resend. The cutover (153) and the marker wait in append without NOWAIT (99 → 65) also run without `lock_timeout`, while the contract requires a timeout or deadline on every other wait (ctg9-obx-contract.md:39). Legacy enqueue against cutover has no deadlock, because the marker is taken first with NOWAIT.",
+      "required_change": "Make the native paths write in the cutover order (event_delivery before event_attempts/event_acks), or lock only the tables the cutover actually needs. Apply `SET LOCAL lock_timeout` to the cutover and to append's marker/clock wait. Give the native owner paths a bounded retry on 40P01/55P03."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:210",
+      "issue": "The engineer's risk about pre-cutover legacy history. The legacy schema (`outbox.messages`/`acknowledgements`) has only a counter, `last_error` and one ACK row, with no record per attempt. There is no source for per-attempt rows, and fabricating them would violate the ADR ('History without exact bytes is marked unavailable, never fabricated'). A1 §8.1 UPS-OBX-02 ('conservar pendências e trilha histórica') is met, because the legacy rows are left intact and linked through `legacy_event_map`/`legacy_message_id`. This is not a MUST breach and needs no correction before PASS. However, the summary row drops `last_error`, the legacy status and timestamps, and the imported ACK drops `ack_message`/`ack_time`.",
+      "required_change": "Optional: fill `error` in the `LEGACY_HISTORY_UNAVAILABLE` row with `last_error`, and record in `protocol`/metadata the legacy attempt count, status, `created_at`/`updated_at`, and `ack_message`/`ack_time` of the imported ACK. Record the limitation in the migration guide."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/test/integration/ctg9-ownership.integration.spec.ts:124",
+      "issue": "These are test gaps, not implementation gaps. The existing sensors do not cover these items from the matrix (ctg9-obx-contract.md:53-55): the A/B/C queue, and the held-UPDATE variant for append (only enqueue is tested); ACK racing the cutover; a late legacy failure after the cutover, mirrored SENT_UNRESOLVED→ERROR; a long-held marker in `recordDispatchFailure` while other rows keep processing; two schedulers with lease/crash/reclaim; SENT_UNRESOLVED not reclaimed; bytes/hashes in the ledger; valid, duplicate and late ACKs; native append delivered with no cutover; a legacy-only adopter after DDL; the audit diagnostics HASH_MISMATCH/FORK/TEMPORAL_MISORDER; `verify_current_epoch` with >1000 rows; concurrent RR×RC runs; and CTG5 append followed by audit/idempotency. Static analysis of the A/B/C queue shows no deadlock (NOWAIT when a prior key exists, marker→advisory→clock otherwise), but that has not been proven.",
+      "required_change": "The Inspector adds these sensors before any conformance or publication claim. They do not block the commit of this implementation, apart from the sensor for the race in the first finding, which should accompany its fix."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:308",
+      "issue": "The lease is hard-coded to 5 minutes, and a successful send does not update the projection. The event stays SENT until the lease expires and is then reclaimed and resent every 5 minutes while no ACK arrives. That goes beyond reclaim 'após crash' (ctg9-obx-contract.md:25), even though it stays within at-least-once delivery.",
+      "required_change": "Make the lease configurable in `OutboxModuleOptions`. After a confirmed send, extend `lease_until` or record an awaiting-ACK state with a resend policy, and document this in the migration guide."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:96",
+      "issue": "Append uses the raw text of `app.tenant_id` as both the advisory key and the GUC value. `audit.lock_chain` uses `p_tenant_id::text` (canonical lowercase). If the GUC holds a non-canonical form (for example uppercase), the advisory locks diverge and the next audit write raises STY41. In addition, an X→Y mismatch in append raises `OutboxEventTransactionError`, not `AuditChainKeyMismatchError`, and the live tenant is never compared with the trusted Database context (ctg9-obx-contract.md:9).",
+      "required_change": "Read the tenant as `nullif(current_setting('app.tenant_id',true),'')::uuid::text`, raise `AuditChainKeyMismatchError` on mismatch, and compare it with the tenant in the execution context."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/outbox/src/outbox.service.ts:614",
+      "issue": "The retry budget of `recordDispatchFailure` is 4 attempts at 5–20 ms, about 50 ms in total. Any cutover that copies rows will exhaust it. The legacy row then stays SENT, or becomes SENT_UNRESOLVED after the cutover, even though the failure is already known. The contract accepts a per-row outcome on exhaustion, but this budget is too short for the long-hold sensor.",
+      "required_change": "Make the budget configurable, with a deadline on the order of seconds and exponential backoff. Log the exhaustion as reconcilable."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/data/migrations/platform/0021_outbox_event_log.sql:577",
+      "issue": "The epoch anchor is inserted into the partitioned `audit.events` table without calling `audit.ensure_monthly_partition(anchor_at)`. If no partition exists for the current month, the migration aborts. The diagnostics CTE (538-544) uses a correlated subquery on `row_hash` with no index, which is O(n²) on large databases.",
+      "required_change": "Call `PERFORM audit.ensure_monthly_partition(anchor_at)` before the INSERT. Replace the subquery with a join on a temporary index over `(tenancy_id,row_hash)`."
+    },
+    {
+      "severity": "nonblocking",
+      "file": "packages/data/src/database.ts:127",
+      "issue": "Strict mode rejects any nested `Database.tx`, including a SAVEPOINT on the same connection. The ADR only requires failure when a second connection would be opened. An OFS `itemApplier` that uses `database.tx` internally will fail with `IndependentTransactionConnectionError`. Separately, `recordUnboundAck` uses `txIndependent`, which is refused when an ambient connection is held, so the diagnosis can be lost.",
+      "required_change": "Either allow a nested savepoint on the same connection in strict mode, or document in the OFS port that the applier must use the `trx` it receives. Make `recordUnboundAck` fall back to a separate connection, or return a typed error that the caller cannot silently ignore."
+    }
+  ],
+  "summary": "REVIEW: the implementation cannot be committed yet. The core of UPS-OBX-01 is correct in static reading. Append uses the caller's Transaction and checks RC, app role, tenant, primary and read-write on the live connection. It takes marker SHARE (NOWAIT when an audit key already exists), then advisory, then clock. It deduplicates by (tenant, key) and raises a typed conflict on divergent content. It generates UUIDv7 from a global sequence under the clock lock and seals only in strict mode. The SSE adapter reads the primary, and its independent now() applies lock_timeout and per-tenant admission. The three audit writers go through `lock_chain`, which checks RC, STY41 and the advisory before the head and uses the chosen timestamp for the partition. The RLS FORCE setup and the owner-only quarantine and marker are consistent. The legacy compatibility DDL is additive, the cutover is opt-in, idempotent, rejects custom tables and audited triggers, and legacy enqueue against cutover has no deadlock. Four blocking findings remain. (1) A late failure in `dispatchEventsDue` is not fenced by attempt ordinal and reopens an attempt that was reclaimed and is still in flight. (2) The ledger records neither the HTTP status nor the headers sent. (3) Legacy `ack` and `retry` return a raw 55P03 instead of `OutboxOwnershipContentionError`. (4) 0021 changes the published RLS on audit.events and audit.log (hides NULL-tenant rows) with no authorization. On the engineer's risks: the `LEGACY_HISTORY_UNAVAILABLE` summary does not breach the A1 MUST, because the legacy store has no per-attempt history and it is conserved with provenance; enriching the summary is optional. The missing A/B/C and ACK/late-failure proofs are Inspector test gaps. They block conformance and publication claims but not this commit, except that the late-failure race is a real implementation defect and needs its own sensor alongside the fix. Scope limits: no tests were run, and this is static reading only (Git was forbidden, DETRAN was read-only). PASS after the repairs would release only the commit of the OBX implementation, not publication."
+}

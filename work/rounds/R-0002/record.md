@@ -849,3 +849,42 @@ com hook Prettier/ESLint verde. `pnpm check:trace --print` mostrou os
 novos vínculos e a alteração unitária OBX ainda não commitada; o rebind
 Architect será feito após esse último commit de sensores. Prompt-review
 161 avalia o despacho independente do Engineer OFS nesse intervalo.
+
+CTG9 após OD-S15-03: Inspector vinculou testes OBX aos papéis PostgreSQL
+`stynx_app`/`stynx_reader` reais, sem BYPASSRLS, e a negação de mutação
+do marker passou 9/9 (`b4649764`). O teste `test/db` da migration 0021
+passou com seed `LEGACY`, FORCE RLS e isolamento entre tenants
+(`3477936d`). O bootstrap canônico de `database/ddl` é legado e não
+contém o grafo platform; espelhar 0021 literalmente nele quebraria o
+reset. A migration contém sua própria seed `LEGACY`. A correção de
+fixture OFS com TTL scoped foi commitada pelo Inspector em `4fde00e6`.
+
+Prompt-review Engineer OFS 161: ponte DETRAN saiu 4 por JSON cercado de
+Markdown; fallback `claude -p` estruturado deu REVIEW no ciclo 1 por
+`supertest` ausente. O maestro instalou `supertest`/`@types/supertest`
+no pacote e lockfile (`07518b8b`), corrigiu contrato/prompt de
+`hasHeldConnection` e store durável, e rebindou 464 testes em
+`law/trace.json` (`5df48e74`). Ciclo 2 estruturado deu **PASS**;
+três esclarecimentos não bloqueantes entraram no prompt 153. OFS
+Engineer foi despachado sem PR/RC intermediário.
+
+SIG delivery-review 1 pela ponte DETRAN saiu 4 por JSON cercado; fallback
+estruturado **FAIL** (`reviews/ctg9-sig-delivery-review-1.json`), com
+evidência PAdES-B-LT ecoada, ByteRange não ISO, downgrade QUALIFIED,
+retirada sem autoria/declaração própria e indisponibilidade tratada como
+invalidade. Contrato Architect fixou PDF incremental original como prefixo
+coberto, timestamp CMS embutido, DSS/VRI, declaração canônica de retirada
+separada e manifesto persistível (`759ad2d0`). Inspector regenerou
+fixtures CAdES/TST/DSS/VRI e negativos; 169/169 testes de signature
+passaram, com commit Inspector `c8900429`. O Engineer SIG corrigiu fonte
+em write set separado; delivery-review 2 pendente. Nenhuma publicação
+é inferida desses gates.
+
+OBX delivery-review 1 pela ponte DETRAN saiu 4 por JSON cercado; fallback
+estruturado **REVIEW** (`reviews/ctg9-obx-delivery-review-1.json`).
+Bloqueios: tentativa tardia sem cerca de lease/ordinal, ledger sem
+status/headers HTTP, ACK/retry sem erro tipado de contenção, e mutation
+não autorizada na política RLS publicada de audit. O maestro removeu a
+mudança RLS de 0021 antes da continuação Engineer. Inspector OBX
+prepara sensores das corridas A/B/C, ACK e lease; fonte não liberada
+para commit nem conformidade até novo PASS.
