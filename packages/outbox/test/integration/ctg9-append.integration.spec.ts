@@ -8,6 +8,7 @@ import {
   type Transaction,
 } from '@stynx-nyx/data';
 import { OutboxService } from '../../src/outbox.service';
+import { OutboxEventStreamSource } from '../../src/event-stream-source';
 import { StynxOutboxError } from '../../src/errors';
 import { StynxOutboxModule } from '../../src/outbox.module';
 import {
@@ -37,6 +38,15 @@ interface AppendPort {
       payload: Record<string, unknown>;
     },
   ): Promise<AppendedFact>;
+  appendManyInTransaction(
+    trx: Transaction,
+    events: Array<{
+      entity: string;
+      entityId: string;
+      idempotencyKey: string;
+      payload: Record<string, unknown>;
+    }>,
+  ): Promise<AppendedFact[]>;
   cutoverLegacyMessages(): Promise<unknown>;
   dispatchEventsDue(limit: number): Promise<unknown[]>;
   recordUnboundAck(rawBody: Buffer, reason: string): Promise<unknown>;
@@ -419,41 +429,139 @@ describe('CTG9 append-only outbox facts (PostgreSQL/RLS)', () => {
     }
   });
 
-  it('refuses cutover before mutation when messages carry an audit row trigger', async () => {
+  it('pages through a same-millisecond append batch larger than the stream batch size', async () => {
+    const batchKey = `ctg9-same-ms-${randomUUID()}`;
+    const batchSize = 3;
+    const eventCount = 8;
+    const fixedMs = Date.now() + 120_000;
+    const admin = await postgres.connectAsAdmin();
+    try {
+      await admin.query(
+        `insert into outbox.tenant_clock (tenant_id,last_ms) values ($1,$2)
+         on conflict (tenant_id) do update set last_ms=excluded.last_ms`,
+        [TENANT_A, fixedMs],
+      );
+    } finally {
+      await admin.end();
+    }
+
+    const facts = await database.withRequestContext({ tenantId: TENANT_A, actorId: ACTOR }, () =>
+      database.tx(
+        (trx) =>
+          append.appendManyInTransaction(
+            trx,
+            Array.from({ length: eventCount }, (_, index) => ({
+              entity: 'ctg9.same-ms',
+              entityId: `${batchKey}:${index}`,
+              idempotencyKey: `${batchKey}:${index}`,
+              payload: { index },
+            })),
+          ),
+        { role: 'app', isolation: 'read committed', retry: false },
+      ),
+    );
+    expect(facts).toHaveLength(eventCount);
+
+    const verify = await postgres.connectAsAdmin();
+    try {
+      const timestamps = await verify.query<{ count: string; created_at: Date }>(
+        `select count(*)::text as count,min(created_at) as created_at
+           from outbox.events where tenant_id=$1 and idempotency_key like $2`,
+        [TENANT_A, `${batchKey}%`],
+      );
+      expect(timestamps.rows[0]?.count).toBe(String(eventCount));
+      const batchTimestamp = timestamps.rows[0]!.created_at;
+      const sameTimestamp = await verify.query<{ count: string }>(
+        `select count(*)::text as count from outbox.events
+          where tenant_id=$1 and idempotency_key like $2 and created_at=$3`,
+        [TENANT_A, `${batchKey}%`, batchTimestamp],
+      );
+      expect(sameTimestamp.rows[0]?.count).toBe(String(eventCount));
+
+      const source = new OutboxEventStreamSource(database);
+      let cursor = { createdAt: batchTimestamp, id: '' };
+      const observed: string[] = [];
+      let pages = 0;
+      while (observed.length < eventCount && pages < eventCount) {
+        const page = await source.listSince(cursor, { tenantId: TENANT_A, actorId: ACTOR }, batchSize);
+        expect(page.length).toBeGreaterThan(0);
+        observed.push(...page.map((row) => row.id));
+        const last = page[page.length - 1]!;
+        cursor = { createdAt: last.createdAt, id: last.id };
+        pages += 1;
+      }
+      expect(pages).toBe(3);
+      expect(observed).toHaveLength(eventCount);
+      expect(new Set(observed).size).toBe(eventCount);
+
+      const expected = await verify.query<{ id: string }>(
+        `select id from outbox.events where tenant_id=$1 and idempotency_key like $2
+          order by created_at,id`,
+        [TENANT_A, `${batchKey}%`],
+      );
+      expect(observed).toEqual(expected.rows.map((row) => row.id));
+    } finally {
+      await verify.end();
+    }
+    for (const fact of facts) {
+      await append.ackEvent({
+        tenantId: TENANT_A,
+        eventId: fact.id,
+        status: 'ACKED',
+        rawBody: Buffer.from(`ctg9-same-ms:${fact.id}`),
+        hmacVerified: true,
+      });
+    }
+  }, 15_000);
+
+  it('refuses cutover before mutation when any historical or cutover table has an audit row trigger', async () => {
     const key = `ctg9-audited-cutover-${randomUUID()}`;
     const admin = await postgres.connectAsAdmin();
+    const cutoverTables = [
+      'messages',
+      'events',
+      'event_delivery',
+      'legacy_event_map',
+      'event_attempts',
+      'event_acks',
+      'tenant_clock',
+      'legacy_ownership',
+    ];
     try {
       await admin.query(
         `insert into outbox.messages (tenant_id, entity, entity_id, payload, idempotency_key)
          values ($1, 'ctg9.audited', $2, '{}'::jsonb, $2)`,
         [TENANT_A, key],
       );
-      await admin.query(
-        `create trigger ctg9_audit_probe after insert or update or delete on outbox.messages
-         for each row execute function audit.fn_row_change()`,
-      );
-      let failure: unknown;
-      try {
-        await append.cutoverLegacyMessages();
-      } catch (error) {
-        failure = error;
+      for (const table of cutoverTables) {
+        await admin.query(
+          `create trigger ctg9_audit_probe after insert or update or delete on outbox.${table}
+           for each row execute function audit.fn_row_change()`,
+        );
+        let failure: unknown;
+        try {
+          await append.cutoverLegacyMessages();
+        } catch (error) {
+          failure = error;
+        }
+        expect((failure as Error | undefined)?.constructor.name).toBe(
+          'OutboxCutoverAuditedTableError',
+        );
+        const marker = await admin.query<{ state: string }>(
+          'select state from outbox.legacy_ownership',
+        );
+        expect(marker.rows[0]?.state).toBe('LEGACY');
+        const events = await admin.query<{ count: string }>(
+          'select count(*)::text as count from outbox.events where entity_id = $1',
+          [key],
+        );
+        expect(events.rows[0]?.count).toBe('0');
+        await admin.query(`drop trigger ctg9_audit_probe on outbox.${table}`);
       }
-      expect((failure as Error | undefined)?.constructor.name).toBe(
-        'OutboxCutoverAuditedTableError',
-      );
-      const marker = await admin.query<{ state: string }>(
-        'select state from outbox.legacy_ownership',
-      );
-      expect(marker.rows[0]?.state).toBe('LEGACY');
-      const events = await admin.query<{ count: string }>(
-        'select count(*)::text as count from outbox.events where entity_id = $1',
-        [key],
-      );
-      expect(events.rows[0]?.count).toBe('0');
     } finally {
-      await admin
-        .query('drop trigger if exists ctg9_audit_probe on outbox.messages')
-        .catch(() => undefined);
+      for (const table of cutoverTables) {
+        await admin.query(`drop trigger if exists ctg9_audit_probe on outbox.${table}`).catch(() => undefined);
+      }
       await admin.end();
     }
   });
