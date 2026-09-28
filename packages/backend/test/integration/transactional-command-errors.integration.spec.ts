@@ -56,6 +56,12 @@ describe('transactional command canonical configuration rejections over Nest HTT
       @Audit({ action: 'command.errors.scope-callback', transactional: true })
       scopeCallback() { return handler(); }
 
+      @Post('/scope-opaque')
+      @TransactionalCommand({ scope: () => { throw Object.create(null); } })
+      @Idempotent({ transactional: true })
+      @Audit({ action: 'command.errors.scope-opaque', transactional: true })
+      scopeOpaque() { return handler(); }
+
       @Post('/persist-status-invalid')
       @TransactionalCommand({ persistStatus: () => undefined as unknown as boolean })
       @Idempotent({ transactional: true })
@@ -173,8 +179,23 @@ describe('transactional command canonical configuration rejections over Nest HTT
         expect.stringContaining(`requestId=${response.headers['x-request-id']}`),
         expect.stringContaining('scope callback failure'),
       );
+      expect(errorLog.mock.calls[0]?.[0]).toContain('COMMAND:CONFIGURATION:scope-callback-failed');
       expect(response.text).not.toContain('scope callback failure');
       expect(handler).not.toHaveBeenCalled();
+      await assertNoDurableEffect();
+    } finally { errorLog.mockRestore(); }
+  });
+
+  it('keeps the canonical 500 envelope when the callback throws a value that cannot be stringified', async () => {
+    const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    try {
+      const response = await request(app.getHttpServer()).post('/transactional-command-errors/scope-opaque')
+        .set('authorization', 'Bearer verified').set('idempotency-key', 'opaque-observability').send({ value: 1 });
+      expectEnvelope(response);
+      expect(errorLog).toHaveBeenCalledWith(
+        expect.stringContaining(`COMMAND:CONFIGURATION:scope-callback-failed requestId=${response.headers['x-request-id']}`),
+        expect.stringContaining('CommandRejectionResponse'),
+      );
       await assertNoDurableEffect();
     } finally { errorLog.mockRestore(); }
   });
@@ -189,6 +210,7 @@ describe('transactional command canonical configuration rejections over Nest HTT
         expect.stringContaining(`requestId=${response.headers['x-request-id']}`),
         expect.stringContaining('policy failure'),
       );
+      expect(errorLog.mock.calls[0]?.[0]).toContain('COMMAND:CONFIGURATION:status-policy-invalid');
       expect(response.text).not.toContain('policy failure');
       await assertNoDurableEffect();
     } finally { errorLog.mockRestore(); }
