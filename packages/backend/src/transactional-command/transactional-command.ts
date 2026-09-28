@@ -141,10 +141,15 @@ export class CommittedCommandResponseFilter implements ExceptionFilter<Committed
         ? normalizeRequestId(this.requestContext.snapshot().requestId) : undefined;
       const requestId = activeId ?? responseId ?? inputId ?? generateRequestId();
       if (exception.statusCode >= 500) {
-        const cause = exception.cause;
-        const trace = cause instanceof Error ? cause.stack ?? String(cause)
-          : cause === undefined ? exception.stack : `${String(cause)}\n${exception.stack ?? ''}`;
-        COMMAND_LOGGER.error(`Transactional command rejection ${exception.errorCode} requestId=${requestId}`, trace);
+        let trace = exception.stack;
+        try {
+          const cause = exception.cause;
+          if (cause instanceof Error) trace = cause.stack ?? String(cause);
+          else if (cause !== undefined) trace = `${String(cause)}\n${exception.stack ?? ''}`;
+        } catch { /* An opaque thrown value must not replace the HTTP response. */ }
+        try {
+          COMMAND_LOGGER.error(`Transactional command rejection ${exception.errorCode} requestId=${requestId}`, trace);
+        } catch { /* Logging failure must not replace the HTTP response. */ }
       }
       adapter.setHeader(response, 'X-Request-Id', requestId);
       adapter.setHeader(response, 'content-type', 'application/json; charset=utf-8');
