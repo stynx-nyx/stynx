@@ -528,12 +528,12 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     `b28be30b`. A tabela de conformidade preliminar entrou em `58d85187`.
     O próximo CI completo, apps de referência, PR, CI remoto e publicação
     final ocorrem somente após congelar o escopo e versionar a candidata.
-20. Duas decisões Owner estão pendentes antes do congelamento: a adenda A1
-    §8.1 do DETRAN confirmou SIG/OBX/OFS como MUST, enquanto OD-S15-02
-    nomeou o encerramento após CTG8; e o 409 da CTG5 diverge do schema
-    canônico `law/schemas/error-envelope.schema.json`. Opus liberou a
-    importação de CTG7 mas declarou a divergência bloqueante para a final.
-    As duas escolhas foram solicitadas ao Owner e não devem ser presumidas.
+20. A decisão Owner de escopo permanece pendente antes do congelamento: a
+    adenda A1 §8.1 do DETRAN confirmou SIG/OBX/OFS como MUST, enquanto
+    OD-S15-02 nomeou o encerramento após CTG8. A divergência do 409 da CTG5
+    está sendo corrigida pela opção A Architect, que alinha apenas código
+    CTG5 não publicado ao schema canônico vigente; o Opus aprovou essa
+    classificação. Não atribuir ao Owner uma escolha A/B que ele não fez.
 21. O hook pós-merge local aponta para um issuer DEVAI ausente em cada
     worktree. No checkout principal, a correção foi ensaiada com
     `pnpm exec devai init bind --host-adapter post-merge --as-role architect --write`
@@ -546,6 +546,14 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     executar o merge e então restaurar apenas as mudanças locais dos quatro
     arquivos se a branch final não os alterar. Não incluir o binding de host
     particular no PR sem nova revisão da autoridade remota.
+22. A correção CTG5 está implementada no commit Engineer `62dfb561`, após
+    sensores Inspector vermelhos e rebind Architect de trace. Os testes
+    backend focais e completos, `pnpm test:int` (52/52 tarefas), RLS negativo,
+    trace, lint, typecheck e READMEs passaram. O rebind gerado de API passou
+    na verificação de 44 pacotes e está pendente de commit Architect. Em
+    seguida: delivery-review Opus PASS, importação na branch cumulativa e
+    gates focais. Sob OD-S15-02, não abrir PR, publicar RC ou executar CI
+    integral intermediário. O único gate final espera a decisão do item 20.
 
 ## Reviews, PRs e publicações
 
