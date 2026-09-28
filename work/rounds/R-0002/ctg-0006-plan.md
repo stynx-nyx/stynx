@@ -145,3 +145,11 @@ Tab no shell foi considerado suficiente no contexto do header externo. Após
 o hardening, rebinder trace, verificar gates focais e importar a CTG6 na
 branch cumulativa. O PASS deste HEAD não substitui o review final da tree
 integrada.
+
+Hardening menor do PASS: Inspector `ecc0e342` acrescentou vetores de rejeição
+e aceitação de caminhos de import, e passou a aliasar o teste data diretamente
+para `testing/src/fake-transaction.ts`, eliminando a carga transitiva de
+`sessions/dist`. Architect `9dcdecc5` rebindeou trace 442/442. Passaram o
+sensor Node 2/2, data 90/90, `pnpm lint:tests` e o focused typecheck do data.
+Submeter ao Opus apenas o delta desde `189b64bb` para confirmar que o PASS
+continua aplicável; depois importar a CTG6 na branch cumulativa.
