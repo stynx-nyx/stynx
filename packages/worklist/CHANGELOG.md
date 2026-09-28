@@ -1,5 +1,34 @@
 # @stynx-nyx/worklist
 
+## 1.5.0
+
+### Minor Changes
+
+- 8a800c2: Add raw-body HMAC webhook verification with atomic replay protection, a Nest
+  guard that clears unverified identity, an injectable clock, a tenant business
+  calendar using host-provided timezones and holidays, and opt-in Angular
+  idempotency keys for marked commands. The fixed STYNX package group advances
+  together.
+
+  Consumers must send `sha256=` prefixed signatures, provide a shared replay
+  store, and configure Nest raw-body capture. Business-day deadlines end at the
+  exclusive start of the following local civil date; hosts must supply their own
+  tenant-scoped holiday data.
+
+  Angular consumers register `provideStynxIdempotency()` once with
+  `withInterceptorsFromDi()` and mark each mutating request explicitly. Body
+  hashing requires a plain JSON object or array; existing idempotency headers
+  remain authoritative.
+
+### Patch Changes
+
+- Updated dependencies [42bbb43]
+- Updated dependencies [2a94cac]
+- Updated dependencies [7eec2d7]
+- Updated dependencies [8a800c2]
+  - @stynx-nyx/data@1.5.0
+  - @stynx-nyx/core@1.5.0
+
 ## 1.5.0-rc.3
 
 ### Patch Changes

@@ -1,5 +1,18 @@
 # @stynx-nyx/angular-sessions
 
+## 1.5.0
+
+### Patch Changes
+
+- Updated dependencies [c6ddb66]
+- Updated dependencies [138f7f0]
+- Updated dependencies [8a800c2]
+- Updated dependencies [5aea8af]
+  - @stynx-nyx/angular-auth@1.5.0
+  - @stynx-nyx/angular@1.5.0
+  - @stynx-nyx/angular-i18n@1.5.0
+  - @stynx-nyx/angular-ui@1.5.0
+
 ## 1.5.0-rc.3
 
 ### Patch Changes

@@ -1,5 +1,46 @@
 # @stynx-nyx/angular-auth
 
+## 1.5.0
+
+### Minor Changes
+
+- c6ddb66: Add opt-in global authorization with trusted tenant context, configurable
+  targets and denial envelopes, and case-insensitive hierarchical permission
+  grants in the backend and Angular auth package. Add atomic per-tenant session
+  policy, verified strong-factor handling, atomic tenant switch, and a bounded
+  Redis readiness indicator. The fixed STYNX package group advances together.
+
+  Consumers using `StynxAuthorizationModule.forRoot({ global: true })` must
+  register their authentication `APP_GUARD` first. Session policy remains off by
+  default; every custom session store must implement the atomic
+  `createWithPolicy` operation before upgrade, even when the policy is off,
+  because tenant switching always needs an atomic transition. The
+  session readiness indicator composes with the health module. See
+  `docs/framework/contracts/authorization-session-1.5.md` for the real symbols
+  and migration behavior.
+
+- 5aea8af: Add strong revision `If-Match` parsing, method-scoped 428/412 law errors and
+  successful-response ETags to Nest routes. Add Angular error classification and
+  banner handling, an accessible localized shell, and published auth, i18n and
+  transaction testing helpers. The fixed STYNX package group advances together.
+
+  Apply `@RequireIfMatch()` and `@IfMatchRevision()` to revision-protected methods;
+  the consumer still performs the atomic revision check and throws
+  `PreconditionFailedError` on a stale value. Add `@RevisionETag()` only when the
+  successful body has a safe integer `revision`. For transactional commands,
+  validate that revision before the command commits. Install app-owned i18n
+  catalogs and provide tenant-qualified shell theme storage keys when a shared
+  browser can switch tenants.
+
+### Patch Changes
+
+- Updated dependencies [138f7f0]
+- Updated dependencies [8a800c2]
+- Updated dependencies [5aea8af]
+  - @stynx-nyx/angular@1.5.0
+  - @stynx-nyx/angular-i18n@1.5.0
+  - @stynx-nyx/sdk@1.5.0
+
 ## 1.5.0-rc.3
 
 ### Minor Changes

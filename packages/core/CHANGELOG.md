@@ -1,5 +1,29 @@
 # @stynx-nyx/core
 
+## 1.5.0
+
+### Minor Changes
+
+- 2a94cac: Initialize one request context before guards, add explicit public tenant routes with Host-based tenant selection and optional verified authentication, and reject conflicting tenant sources. The fixed STYNX package group advances together.
+
+  Backend migration: replace application-specific public request seeds and global interceptor-order patches with `StynxTenancyModule.forRoot({ publicTenant: { resolveHost, actorId } })` and `@PublicTenantRoute()`. Keep the application's Host allow-list and configure proxy Host forwarding explicitly. The nominal `actorId` must be a valid UUID. Remove DETRAN prototype helpers `patchTenantContextInterceptorOrdering`, `seedPortalPublicRequest`, `request.portalPublic`, and `portalRequestHostStorage` after adopting this API.
+
+- 8a800c2: Add raw-body HMAC webhook verification with atomic replay protection, a Nest
+  guard that clears unverified identity, an injectable clock, a tenant business
+  calendar using host-provided timezones and holidays, and opt-in Angular
+  idempotency keys for marked commands. The fixed STYNX package group advances
+  together.
+
+  Consumers must send `sha256=` prefixed signatures, provide a shared replay
+  store, and configure Nest raw-body capture. Business-day deadlines end at the
+  exclusive start of the following local civil date; hosts must supply their own
+  tenant-scoped holiday data.
+
+  Angular consumers register `provideStynxIdempotency()` once with
+  `withInterceptorsFromDi()` and mark each mutating request explicitly. Body
+  hashing requires a plain JSON object or array; existing idempotency headers
+  remain authoritative.
+
 ## 1.5.0-rc.3
 
 ## 1.5.0-rc.2

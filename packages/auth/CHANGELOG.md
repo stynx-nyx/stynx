@@ -1,5 +1,63 @@
 # @stynx-nyx/auth
 
+## 1.5.0
+
+### Minor Changes
+
+- c6ddb66: Add opt-in global authorization with trusted tenant context, configurable
+  targets and denial envelopes, and case-insensitive hierarchical permission
+  grants in the backend and Angular auth package. Add atomic per-tenant session
+  policy, verified strong-factor handling, atomic tenant switch, and a bounded
+  Redis readiness indicator. The fixed STYNX package group advances together.
+
+  Consumers using `StynxAuthorizationModule.forRoot({ global: true })` must
+  register their authentication `APP_GUARD` first. Session policy remains off by
+  default; every custom session store must implement the atomic
+  `createWithPolicy` operation before upgrade, even when the policy is off,
+  because tenant switching always needs an atomic transition. The
+  session readiness indicator composes with the health module. See
+  `docs/framework/contracts/authorization-session-1.5.md` for the real symbols
+  and migration behavior.
+
+- 2a94cac: Initialize one request context before guards, add explicit public tenant routes with Host-based tenant selection and optional verified authentication, and reject conflicting tenant sources. The fixed STYNX package group advances together.
+
+  Backend migration: replace application-specific public request seeds and global interceptor-order patches with `StynxTenancyModule.forRoot({ publicTenant: { resolveHost, actorId } })` and `@PublicTenantRoute()`. Keep the application's Host allow-list and configure proxy Host forwarding explicitly. The nominal `actorId` must be a valid UUID. Remove DETRAN prototype helpers `patchTenantContextInterceptorOrdering`, `seedPortalPublicRequest`, `request.portalPublic`, and `portalRequestHostStorage` after adopting this API.
+
+- 7eec2d7: Add a transactional HTTP command boundary that commits an audit event and a durable idempotent response with the domain mutation in one tenant-scoped app-role transaction. The fixed STYNX package group advances together.
+
+  Apply platform migration `0020_transactional_commands.sql` before enabling command routes. Configure a real `stynx_app` connection for the application pool; the command boundary checks the live database role, tenant and actor. Install `StynxTransactionalCommandModule.forRoot({ auditSink })` and mark protected routes with the built-in STYNX auth guard, `@TransactionalCommand()`, transactional `@Idempotent()` and transactional `@Audit()`. Public tenant commands require `StynxTenancyModule` and `@PublicTenantRoute()`.
+
+  Migration 0020 revokes direct `audit.write` execution from `PUBLIC` and
+  `stynx_app`. Legacy `AuditSqlSink` deployments using
+  `audit_write_function` on unmarked routes must use an owner-role connection;
+  the transactional command boundary uses the restricted
+  `audit.write_command_event` wrapper on its app-role connection.
+
+  Committed responses replay the exact JSON bytes, status, `location`, `retry-after`, `cache-control` and `etag` headers. Do not put cookies or per-request headers in a committed response. An unselected successful status commits the domain change and audit event while clearing its key; an unselected error rolls back. Legacy idempotency behavior remains available on routes without the transactional command marker.
+
+  CTG5 command rejections now follow the STYNX error envelope with `statusCode`,
+  `errorCode`, fixed public `message`, `requestId` matching `X-Request-Id`, and
+  `retryable`; key conflicts include `details: { key }`. The default mismatch
+  code is `IDEMPOTENCY:CONFLICT:duplicate-key`, and configured `mismatchCode`
+  values must match the schema's `errorCode` pattern. Invalid module options or
+  marked route metadata fail during bootstrap. Migrate pre-release CTG5 clients
+  from `code`/`context` to `errorCode`/`details`. Existing data-layer errors,
+  legacy idempotency 422 responses, and consumer-chosen response bytes are
+  unchanged.
+
+### Patch Changes
+
+- Updated dependencies [c6ddb66]
+- Updated dependencies [42bbb43]
+- Updated dependencies [2a94cac]
+- Updated dependencies [7eec2d7]
+- Updated dependencies [8a800c2]
+  - @stynx-nyx/contracts@1.5.0
+  - @stynx-nyx/sessions@1.5.0
+  - @stynx-nyx/data@1.5.0
+  - @stynx-nyx/core@1.5.0
+  - @stynx-nyx/idempotency@1.5.0
+
 ## 1.5.0-rc.3
 
 ### Minor Changes
