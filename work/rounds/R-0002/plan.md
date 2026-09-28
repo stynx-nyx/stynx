@@ -580,10 +580,13 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     105 e Engineer 106 retornou **PASS** no ciclo 4 em
     `reviews/ctg5-envelope-worker-prompt-review-4.json`, com binding em
     `379e933c`. O checkpoint anterior ao despacho Inspector é `cae8860a`.
-    O Inspector está escrevendo sensores vermelhos; depois, seguir os commits
-    Inspector → Architect trace → Engineer → Architect baseline, gates focais
-    e delivery-review PASS antes da importação cumulativa. A decisão de escopo
-    A1 §8.1 permanece pendente. O desvio de procedimento de uma leitura
+    Os sensores Inspector, o rebind Architect de trace e a implementação
+    Engineer foram commitados na worktree isolada; o último commit Engineer é
+    `62dfb561`. `pnpm test:int` passou (52/52 tarefas), e o rebind gerado do
+    baseline de API está pendente de commit Architect. Depois, obter
+    delivery-review PASS e importar a correção na branch cumulativa, sem PR,
+    RC ou CI integral intermediário. A decisão de escopo A1 §8.1 permanece
+    pendente. O desvio de procedimento de uma leitura
     `git show` pelo Inspector, sem mutação, foi comunicado ao maestro; Git
     continuará exclusivo do maestro.
 23. A adenda A1 §8.1 recebeu prévia condicional de lacunas e paralelismo em

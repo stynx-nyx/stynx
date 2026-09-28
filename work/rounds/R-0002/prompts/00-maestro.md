@@ -21,10 +21,13 @@ executa Git. Esta emenda não altera os MUST da OD-S15-01 nem dispensa o
 prompt-review independente antes de novos despachos.
 
 Checkpoint atual: as CTGs 5–8 já foram importadas na branch cumulativa; ler
-`plan.md` §Retomada antes de qualquer nova ação. A adenda A1 §8.1 do DETRAN
-confirmou SIG/OBX/OFS como MUST, e há uma divergência no envelope HTTP 409 da
-CTG5. Ambas as decisões de escopo/contrato estão pendentes do Owner e impedem
-congelar e publicar a final; não presumir resolução a partir desta emenda.
+`plan.md` §Retomada antes de qualquer nova ação. A divergência no envelope
+HTTP 409 da CTG5 está sendo corrigida em tríade isolada conforme a opção A
+Architect, com classificação revisada pelo Opus e sem mudança de `law/` ou do
+fio já publicado. A adenda A1 §8.1 do DETRAN confirmou SIG/OBX/OFS como MUST;
+a decisão Owner sobre incluí-las antes da final ou adiá-las expressamente
+permanece pendente. Não congelar nem publicar a final antes de fechar essa
+decisão e importar a correção CTG5 após delivery-review PASS.
 
 > Sessão nova, sem contexto anterior, Codex CLI (família Codex, modelo Sol 6), aberta em
 > `/Users/aarusso/Development/stynx`. Você é o **maestro** desta rodada. Tudo o que precisa está nos
