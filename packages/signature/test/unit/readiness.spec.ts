@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import * as sig from '../../src';
+import { StynxHealthService } from '@stynx-nyx/health';
 import { profile, now } from '../fixtures/trust';
 
 // UPS-SIG-02 / INV-SIGNATURE-001. A capability is operational evidence,
@@ -66,6 +67,48 @@ describe('signature readiness', () => {
     const indicator = new api.SignatureReadinessIndicator({ checkReadiness }, profile);
     expect(indicator.name).toBe('signature');
     expect(await indicator.check()).toMatchObject({ status: 'down' });
+  });
+
+  it('does not trust a forged verifier kind during production readiness', async () => {
+    const fake = {
+      verifierKind: 'stynx-cms',
+      capabilities: vi.fn().mockResolvedValue(all()),
+      verifySignedArtifact: vi.fn(),
+    };
+    const instance = new (sig.SignatureService as any)(
+      { sign: vi.fn(), verify: vi.fn() },
+      { verifier: fake },
+    );
+    await expect(instance.checkReadiness({ ...profile, environment: 'production' }))
+      .rejects.toMatchObject({ name: 'SignatureProviderConfigurationError' });
+  });
+
+  it('makes health readiness fail when its registered signature check fails', async () => {
+    const verifier = {
+      capabilities: vi.fn().mockRejectedValue(new Error('OCSP unavailable')),
+      verifySignedArtifact: vi.fn(),
+    };
+    const moduleRef = await Test.createTestingModule({
+      imports: [api.SignatureHealthIntegration.forRoot({
+        signatureOptions: {
+          backend: { sign: vi.fn(), verify: vi.fn() },
+          verifier,
+          trustProfile: { ...profile, environment: 'production' },
+          consumerOwnedVerifier: { acknowledged: true },
+        },
+      })],
+    }).compile();
+    try {
+      await moduleRef.init();
+      await expect(moduleRef.get(StynxHealthService).readiness()).rejects.toMatchObject({
+        message: 'stynx readiness failed',
+        causes: expect.objectContaining({
+          details: expect.objectContaining({ signature: expect.objectContaining({ status: 'down' }) }),
+        }),
+      });
+    } finally {
+      await moduleRef.close();
+    }
   });
 
   it('fails production bootstrap when the exact signature indicator is not health-registered', async () => {

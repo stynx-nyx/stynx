@@ -4,6 +4,10 @@ import * as pkijs from 'pkijs';
 import { X509Certificate } from '@peculiar/x509';
 import * as sig from '../../src';
 import {
+  bltCmsSignature,
+  bltSignedDocument,
+  bltSourceDocument,
+  bltTimestampResponse,
   bytes,
   certificate,
   cmsSignature,
@@ -342,6 +346,27 @@ describe('concrete STYNX CMS verifier', () => {
     expect(x509.subject).toContain('STYNX Test Signer');
   });
 
+  it('has embedded B-LT evidence and a signed source prefix', () => {
+    const pdf = Buffer.from(bltSignedDocument);
+    const source = Buffer.from(bltSourceDocument);
+    expect(pdf.subarray(0, source.length).equals(source)).toBe(true);
+    expect(pdf.toString('latin1')).toContain('/SubFilter /ETSI.CAdES.detached');
+    expect(pdf.toString('latin1')).toContain('/DSS 8 0 R');
+    expect(pdf.toString('latin1')).toContain('/VRI <<');
+    const cms = Buffer.from(bltCmsSignature);
+    const parsed = asn1js.fromBER(cms.buffer.slice(
+      cms.byteOffset,
+      cms.byteOffset + cms.byteLength,
+    ));
+    const data = new pkijs.SignedData({ schema: new pkijs.ContentInfo({ schema: parsed.result }).content });
+    expect(data.signerInfos[0]?.signedAttrs?.attributes.some(
+      (attr) => attr.type === '1.2.840.113549.1.9.16.2.47',
+    )).toBe(true);
+    expect(data.signerInfos[0]?.unsignedAttrs?.attributes.some(
+      (attr) => attr.type === '1.2.840.113549.1.9.16.2.14',
+    )).toBe(true);
+  });
+
   const create = (overrides: Record<string, unknown> = {}) => {
     expect(api.createCmsTrustVerifier).toEqual(expect.any(Function));
     return api.createCmsTrustVerifier({
@@ -351,15 +376,15 @@ describe('concrete STYNX CMS verifier', () => {
       now: () => now,
       fetchOcsp: async () => bytes('ocsp-good.der'),
       fetchCrl: async () => bytes('root.crl.der'),
-      fetchTsa: async () => bytes('timestamp.tsr'),
+      fetchTsa: async () => bltTimestampResponse,
       ...overrides,
     });
   };
   const input = () => ({
     tenantId: 'tenant-a',
-    originalDocument: sourceDocument,
-    signedDocument,
-    cmsSignature,
+    originalDocument: bltSourceDocument,
+    signedDocument: bltSignedDocument,
+    cmsSignature: bltCmsSignature,
     certificate,
     profile,
   });
@@ -368,9 +393,9 @@ describe('concrete STYNX CMS verifier', () => {
     const result = await create().verifySignedArtifact(input());
     expect(result).toMatchObject({
       verifierKind: 'stynx-cms',
-      originalDocumentSha256: hex(sourceDocument),
-      signedDocumentSha256: hex(signedDocument),
-      cmsSha256: hex(cmsSignature),
+      originalDocumentSha256: hex(bltSourceDocument),
+      signedDocumentSha256: hex(bltSignedDocument),
+      cmsSha256: hex(bltCmsSignature),
       signerCertificateSha256: hex(bytes('signer.cert.der')),
       achievedLevel: 'ADVANCED',
       padesProfile: 'PAdES-B-LT',
@@ -380,8 +405,8 @@ describe('concrete STYNX CMS verifier', () => {
   });
 
   it.each([
-    ['PDF ByteRange contents', { signedDocument: bytes('pades-tampered.pdf') }],
-    ['detached CMS', { cmsSignature: Buffer.from(cmsSignature).fill(0, 20, 30) }],
+    ['PDF ByteRange contents', { signedDocument: Buffer.from(bltSignedDocument).fill(0, 40, 45) }],
+    ['detached CMS', { cmsSignature: Buffer.from(bltCmsSignature).fill(0, 20, 30) }],
     ['wrong signer certificate', { certificate: { ...certificate, pem: rootPem } }],
     ['untrusted chain', { profile: { ...profile, trustAnchorsPem: [] } }],
     ['wrong policy OID', { profile: { ...profile, acceptedPolicies: ['9.9.9'] } }],
@@ -389,6 +414,59 @@ describe('concrete STYNX CMS verifier', () => {
     await expect(create().verifySignedArtifact({ ...input(), ...change })).rejects.toBeInstanceOf(
       sig.SignatureError,
     );
+  });
+
+  it('rejects a B-T detached CMS that claims the B-LT profile', async () => {
+    await expect(create({ fetchTsa: async () => bytes('timestamp.tsr') }).verifySignedArtifact({
+      ...input(),
+      originalDocument: sourceDocument,
+      signedDocument,
+      cmsSignature,
+    })).rejects.toBeInstanceOf(sig.SignatureError);
+  });
+
+  it.each([
+    ['B-B', 'pades-bb'],
+    ['B-T', 'pades-bt'],
+  ])('rejects real %s bytes relabelled B-LT by a provider', async (_label, stem) => {
+    const pdf = bytes(`${stem}-blt.pdf`);
+    const cms = bytes(`${stem}-blt.cms.der`);
+    const source = bytes(`${stem}-source.pdf`);
+    await expect(create({ fetchTsa: async () => bytes(`${stem}-blt-timestamp.tsr`) })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: source,
+        signedDocument: pdf,
+        cmsSignature: cms,
+      })).rejects.toBeInstanceOf(sig.SignatureError);
+  });
+
+  it('rejects an external timestamp even when the token itself is signed', async () => {
+    await expect(create({ fetchTsa: async () => bltTimestampResponse }).verifySignedArtifact({
+      ...input(),
+      originalDocument: sourceDocument,
+      signedDocument,
+      cmsSignature,
+    })).rejects.toBeInstanceOf(sig.SignatureError);
+  });
+
+  it('rejects an unrelated original document even when the PDF and CMS are valid', async () => {
+    await expect(create().verifySignedArtifact({
+      ...input(),
+      originalDocument: Buffer.from('unrelated PDF source'),
+    })).rejects.toBeInstanceOf(sig.SignatureError);
+  });
+
+  it('rejects nonzero CMS placeholder padding outside the ByteRange', async () => {
+    const pdf = Buffer.from(bltSignedDocument);
+    const contentHex = pdf.indexOf(Buffer.from('/Contents <')) + '/Contents <'.length;
+    const padding = contentHex + bltCmsSignature.length * 2;
+    expect(pdf[padding]).toBe('0'.charCodeAt(0));
+    pdf[padding] = '1'.charCodeAt(0);
+    await expect(create().verifySignedArtifact({
+      ...input(),
+      signedDocument: pdf,
+    })).rejects.toBeInstanceOf(sig.SignatureError);
   });
 
   it('rejects a manifest hash that is absent from CMS signed attributes', async () => {
@@ -448,5 +526,41 @@ describe('concrete STYNX CMS verifier', () => {
       cmsSignature: result.cmsSignature,
     });
     expect(checked.status).toBe('valid');
+  });
+
+  it('classifies unavailable TSA as unknown and a broken signed PDF as invalid', async () => {
+    const verifyRequest = {
+      tenantId: 'tenant-a',
+      document: bltSourceDocument,
+      documentSha256: hex(bltSourceDocument),
+      signedDocument: bltSignedDocument,
+      cmsSignature: bltCmsSignature,
+      certificate,
+      minimumSignatureLevel: 'ADVANCED',
+      trustProfile: profile,
+    } as const;
+    const unavailable = await service(backend(), create({ fetchTsa: async () => undefined }))
+      .verify(verifyRequest as any);
+    expect(unavailable.status).toBe('unknown');
+    const invalid = await service(backend(), create()).verify({
+      ...verifyRequest,
+      signedDocument: Buffer.from(bltSignedDocument).fill(0, 40, 45),
+    } as any);
+    expect(invalid.status).toBe('invalid');
+  });
+
+  it('enforces a QUALIFIED profile even when the request asks for ADVANCED', async () => {
+    const result = signedResult({
+      signedDocument: bltSignedDocument,
+      cmsSignature: bltCmsSignature,
+      evidence: { ...signedResult().evidence, documentSha256: hex(bltSourceDocument) },
+    });
+    await expect(service(backend(result), create()).sign({
+      ...request,
+      document: bltSourceDocument,
+      documentSha256: hex(bltSourceDocument),
+      minimumSignatureLevel: 'ADVANCED',
+      trustProfile: { ...profile, minimumSignatureLevel: 'QUALIFIED' },
+    } as any)).rejects.toMatchObject({ name: 'SignatureLevelNotMetError' });
   });
 });

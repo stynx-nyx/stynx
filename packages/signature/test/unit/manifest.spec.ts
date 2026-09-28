@@ -1,14 +1,14 @@
 import * as sig from '../../src';
 import {
+  bltCmsSignature as cmsSignature,
+  bltSignedDocument as signedDocument,
+  bltSourceDocument as sourceDocument,
   bytes,
   certificate,
-  cmsSignature,
   hex,
   now,
   profile,
   rootPem,
-  signedDocument,
-  sourceDocument,
 } from '../fixtures/trust';
 import { buildManifestBoundPades } from '../fixtures/pki/bound-pades';
 
@@ -107,7 +107,7 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
       trustProfile: profile,
       timestampToken: signed.timestampToken,
     };
-    const completed = await manifests.appendVerifiedSigner(manifest, artifact);
+    const completed = await manifests.appendVerifiedSigner(manifest, artifact, { sourceDocument, snapshot });
     const checked = await manifests.verifyManifest({
       manifest: completed,
       sourceDocument,
@@ -134,7 +134,7 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
       snapshotSha256: hex(snapshot),
       requiredSignerIds: ['chair', 'secretary'],
     });
-    const first = await manifests.appendVerifiedSigner(manifest, signer('chair'));
+    const first = await manifests.appendVerifiedSigner(manifest, signer('chair'), { sourceDocument, snapshot });
     expect(verifier.verifySignedArtifact).toHaveBeenCalledWith(
       expect.objectContaining({
         originalDocument: sourceDocument,
@@ -143,7 +143,7 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
         expectedManifestSha256: manifest.manifestSha256,
       }),
     );
-    const second = await manifests.appendVerifiedSigner(first, signer('secretary'));
+    const second = await manifests.appendVerifiedSigner(first, signer('secretary'), { sourceDocument, snapshot });
     const result = await manifests.verifyManifest({
       manifest: second,
       sourceDocument,
@@ -153,6 +153,24 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
     expect(result).toMatchObject({ status: 'valid' });
     expect(second.signers.map((x: any) => x.signerId)).toEqual(['chair', 'secretary']);
     expect(second.signers.map((x: any) => x.order)).toEqual([1, 2]);
+  });
+
+  it('appends after JSON persistence using explicit source and snapshot bytes', async () => {
+    const { manifests } = make();
+    const stored = JSON.parse(JSON.stringify(prepared(manifests, kind)));
+    const first = await manifests.appendVerifiedSigner(stored, signer('chair'), {
+      sourceDocument,
+      snapshot,
+    });
+    expect(first.signers).toHaveLength(1);
+    await expect(manifests.appendVerifiedSigner(stored, signer('chair'), {
+      sourceDocument: Buffer.from('unrelated source'),
+      snapshot,
+    })).rejects.toBeInstanceOf(sig.SignatureError);
+    await expect(manifests.appendVerifiedSigner(stored, signer('chair'), {
+      sourceDocument,
+      snapshot: Buffer.from('unrelated snapshot'),
+    })).rejects.toBeInstanceOf(sig.SignatureError);
   });
 
   it.each([
@@ -186,7 +204,7 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
       verifierKind: 'stynx-cms',
       achievedLevel: 'ADVANCED',
     });
-    await expect(manifests.appendVerifiedSigner(manifest, signer('chair'))).rejects.toBeInstanceOf(
+    await expect(manifests.appendVerifiedSigner(manifest, signer('chair'), { sourceDocument, snapshot })).rejects.toBeInstanceOf(
       sig.SignatureError,
     );
     verifier.verifySignedArtifact.mockResolvedValueOnce({
@@ -194,7 +212,7 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
       achievedLevel: 'ADVANCED',
       boundManifestSha256: '0'.repeat(64),
     });
-    await expect(manifests.appendVerifiedSigner(manifest, signer('chair'))).rejects.toBeInstanceOf(
+    await expect(manifests.appendVerifiedSigner(manifest, signer('chair'), { sourceDocument, snapshot })).rejects.toBeInstanceOf(
       sig.SignatureError,
     );
   });
@@ -213,8 +231,8 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
     ['previous entry', 'previousEntryHash', '0'.repeat(64)],
   ])('detects altered signer %s', async (_label, field, altered) => {
     const { manifests } = make();
-    const first = await manifests.appendVerifiedSigner(prepared(manifests, kind), signer('chair'));
-    const complete = await manifests.appendVerifiedSigner(first, signer('secretary'));
+    const first = await manifests.appendVerifiedSigner(prepared(manifests, kind), signer('chair'), { sourceDocument, snapshot });
+    const complete = await manifests.appendVerifiedSigner(first, signer('secretary'), { sourceDocument, snapshot });
     const tampered = structuredClone(complete);
     tampered.signers[0][field] = altered;
     const checked = await manifests.verifyManifest({

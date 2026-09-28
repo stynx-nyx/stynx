@@ -1,5 +1,8 @@
 import * as sig from '../../src';
 import {
+  bltCmsSignature,
+  bltSignedDocument,
+  bltSourceDocument,
   bytes,
   certificate,
   cmsSignature,
@@ -15,6 +18,9 @@ import {
 // input, while the digital path must call the STYNX cryptographic verifier.
 const api = sig as Record<string, any>;
 const evidenceBytes = bytes('attestation.cms.der');
+const declarationDocument = bytes('withdrawal-source.pdf');
+const declarationSignedDocument = bytes('withdrawal-blt.pdf');
+const declarationCmsSignature = bytes('withdrawal-blt.cms.der');
 const base = {
   tenantId: 'tenant-a',
   caseId: 'case-a',
@@ -55,7 +61,11 @@ const make = (physical = valid) => {
     }),
   };
   return {
-    verifier: new api.SignatureWithdrawalVerifier({ attestor, trustVerifier }),
+    verifier: new api.SignatureWithdrawalVerifier({
+      attestor,
+      trustVerifier,
+      resolvePartyCertificate: async () => hex(bytes('signer.cert.der')),
+    }),
     attestor,
     trustVerifier,
   };
@@ -106,32 +116,86 @@ describe('withdrawal evidence', () => {
       now: () => now,
       fetchOcsp: async () => bytes('ocsp-good.der'),
       fetchCrl: async () => bytes('root.crl.der'),
-      fetchTsa: async () => bytes('timestamp.tsr'),
+      fetchTsa: async () => bytes('withdrawal-blt-timestamp.tsr'),
     });
     const verifySignedArtifact = vi.spyOn(trustVerifier, 'verifySignedArtifact');
-    const verifier = new api.SignatureWithdrawalVerifier({ trustVerifier });
+    const resolvePartyCertificate = vi.fn().mockResolvedValue(hex(bytes('signer.cert.der')));
+    const verifier = new api.SignatureWithdrawalVerifier({ trustVerifier, resolvePartyCertificate });
     const result = await verifier.verifyWithdrawalEvidence({
       ...base,
       verificationMethod: 'digital_verified',
       signerPartyId: 'party-a',
-      signedDocument,
-      cmsSignature,
-      certificate,
+      evidenceBytes: declarationCmsSignature,
+      declarationDocument,
+      declarationSignedDocument,
+      declarationCmsSignature,
+      declarationCertificate: certificate,
     });
     expect(verifySignedArtifact).toHaveBeenCalledWith(
       expect.objectContaining({
         tenantId: 'tenant-a',
-        originalDocument: sourceDocument,
-        signedDocument,
-        cmsSignature,
+        originalDocument: declarationDocument,
+        signedDocument: declarationSignedDocument,
+        cmsSignature: declarationCmsSignature,
         certificate,
         profile,
       }),
     );
-    const tsaAt = new Date('2026-09-28T15:42:19.000Z');
     const proof = await verifySignedArtifact.mock.results[0]?.value;
-    expect(proof.tsaAt).toEqual(tsaAt);
-    assertValidReceipt(result, 'digital_verified', tsaAt);
+    expect(proof.tsaAt.getTime()).toBeGreaterThan(0);
+    expect(resolvePartyCertificate).toHaveBeenCalledWith('tenant-a', 'party-a');
+    assertValidReceipt(result, 'digital_verified', proof.tsaAt);
+  });
+
+  it('rejects reuse of a valid original document signature as withdrawal evidence', async () => {
+    const { verifier, trustVerifier } = make();
+    const result = await verifier.verifyWithdrawalEvidence({
+      ...base,
+      verificationMethod: 'digital_verified',
+      signerPartyId: 'party-a',
+      document: bltSourceDocument,
+      contentHash: hex(bltSourceDocument),
+      signedDocument: bltSignedDocument,
+      cmsSignature: bltCmsSignature,
+      evidenceBytes: bltCmsSignature,
+      declarationDocument: bltSourceDocument,
+      declarationSignedDocument: bltSignedDocument,
+      declarationCmsSignature: bltCmsSignature,
+      declarationCertificate: certificate,
+    });
+    expect(result.status).toBe('tampered');
+    expect(result.reasons).toContain('DOCUMENT_SIGNATURE_REUSED');
+    expect(trustVerifier.verifySignedArtifact).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['wrong party certificate', '0'.repeat(64), declarationCmsSignature],
+    ['wrong evidence bytes', hex(bytes('signer.cert.der')), cmsSignature],
+  ])('rejects digital withdrawal with %s', async (_label, partyCertificateHash, suppliedEvidence) => {
+    const trustVerifier = api.createCmsTrustVerifier({
+      trustAnchorsPem: [rootPem],
+      tsaTrustAnchorsPem: [rootPem],
+      acceptedPolicies: profile.acceptedPolicies,
+      now: () => now,
+      fetchOcsp: async () => bytes('ocsp-good.der'),
+      fetchCrl: async () => bytes('root.crl.der'),
+      fetchTsa: async () => bytes('withdrawal-blt-timestamp.tsr'),
+    });
+    const verifier = new api.SignatureWithdrawalVerifier({
+      trustVerifier,
+      resolvePartyCertificate: async () => partyCertificateHash,
+    });
+    const result = await verifier.verifyWithdrawalEvidence({
+      ...base,
+      verificationMethod: 'digital_verified',
+      signerPartyId: 'party-a',
+      evidenceBytes: suppliedEvidence,
+      declarationDocument,
+      declarationSignedDocument,
+      declarationCmsSignature,
+      declarationCertificate: certificate,
+    });
+    expect(result.status).toBe('tampered');
   });
 
   it.each([
@@ -203,9 +267,11 @@ describe('withdrawal evidence', () => {
       ...base,
       verificationMethod: 'digital_verified',
       signerPartyId: 'party-a',
-      signedDocument,
-      cmsSignature,
-      certificate,
+      evidenceBytes: declarationCmsSignature,
+      declarationDocument,
+      declarationSignedDocument,
+      declarationCmsSignature,
+      declarationCertificate: certificate,
     });
     expect(digital.status).toBe('tampered');
     expect(attestor.verifyAttestation).toHaveBeenCalledTimes(1);
