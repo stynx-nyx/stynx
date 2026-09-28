@@ -46,9 +46,13 @@ function resolveCode(payload: unknown): string | undefined {
 
 function resolveContext(payload: unknown): Record<string, unknown> | undefined {
   if (!isObject(payload)) return undefined;
-  if (isObject(payload.context)) return payload.context;
-  const details = isObject(payload.details) ? payload.details : undefined;
   const requestId = typeof payload.requestId === 'string' ? payload.requestId : undefined;
+  if (isObject(payload.context)) {
+    return requestId && !Object.prototype.hasOwnProperty.call(payload.context, 'requestId')
+      ? { ...payload.context, requestId }
+      : payload.context;
+  }
+  const details = isObject(payload.details) ? payload.details : undefined;
   if (!details && !requestId) return undefined;
   return {
     ...details,
