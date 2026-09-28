@@ -9,7 +9,13 @@ do DETRAN somente leitura. Escreva **somente testes e fixtures** sob
 `packages/backend/test/**` e `packages/audit/test/**`. Os dois últimos
 abrigam CTG5 `@TransactionalCommand`→append→audit/idempotência e
 `AuditSqlSink` owner; aliases de outbox foram provisionados pelo maestro
-em `c21ba672`. Congele `packages/data/test/support/postgres.ts`:
+em `c21ba672`. Sensores audit que importam outbox ficam sob
+`packages/audit/test/integration/**/*.spec.ts` e rodam em `test:int`;
+sensores PostgreSQL backend seguem
+`packages/backend/test/integration/*.integration.spec.ts` e rodam em
+`pnpm --filter @stynx-nyx/backend test`, pois backend tem um só config.
+`packages/backend/test` abriga também a regressão não estrita
+CTG5/i18n/ratelimit/tenancy. Congele `packages/data/test/support/postgres.ts`:
 novos helpers ficam em arquivos novos. Não altere `src`,
 migrations, docs, law, generated, baselines ou outros pacotes. Não execute
 Git, commit, push nem PR.
@@ -36,11 +42,15 @@ ou evento desconhecido vai para quarentena owner-only sem FK de tenant;
 o ledger por evento mantém a FK e o `UNIQUE(message_id)` legado continua.
 Inclua timestamp escolhido para partição auditada de virada mensal.
 Prove append→enqueue e domínio auditado→enqueue concorrendo com o cutover.
-Sincronize A segurando advisory e pedindo SHARE, B segurando SHARE e pedindo
-advisory, e C com UPDATE enfileirado entre A e B. A recebe 55P03 pelo
-`FOR SHARE NOWAIT`, termina dentro de deadline, faz rollback integral e
-repete com a mesma chave; após corte, obtém sucesso LEGACY ou erro tipado
-`OutboxLegacyCutoverError` em NEW, sem evento/mensagem duplicado.
+Sincronize B segurando SHARE e pedindo advisory de A, C com UPDATE
+enfileirado atrás de B, e A segurando advisory e pedindo SHARE. Nesse
+cenário, o PostgreSQL pode conceder SHARE a A imediatamente: exija apenas
+terminação A/B dentro de deadline antes do commit de C, sem 40P01 ou
+evento/mensagem duplicado; 55P03 em A é alternativa permitida, não oráculo.
+Num sensor separado, C **já detém** UPDATE quando A, com advisory, pede
+`FOR SHARE NOWAIT`: exija 55P03 tipado, rollback integral e retry com a
+mesma chave, terminando em sucesso LEGACY ou `OutboxLegacyCutoverError`
+após NEW, sem efeito duplicado.
 Parametrize trigger `audit.fn_row_change` instalado pelo adotante para
 cada classe tocada (messages, events, projeções, mapa, ledgers, clock,
 marker e partições físicas): cutover falha

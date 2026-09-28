@@ -17,14 +17,18 @@ UPS-OFS-01: PostgreSQL/RLS real com dois tenants; reserva concorrente sem
 sobreposição, TTL do catálogo por tenant/órgão/operação e expiração,
 agente de negócio separado do ator, bloqueio/fechamento/reconciliação/
 liquidação/consulta de cada número, transições válidas/negativas e
-repetições idempotentes sem reemitir número aplicado.
+repetições idempotentes sem reemitir número aplicado. Cancele uma reserva
+com parte já aplicada: só a cauda não usada volta a ficar disponível;
+números aplicados nunca são reemitidos e cancelar de novo é idempotente.
 
 UPS-OFS-02: lotes >100, legado sem sequência e item sem chave apenas
 `received`/código STYNX neutro mapeável pelo consumidor, identidade durável do
 lote, conjunto declarado, sequência repetida 409/lacuna 422, replay de
 ACK perdido, contexto divergente 409, hash igual/chave diferente e chave
 igual/hash divergente com recibo rejeitado, crash e retomada sem efeito
-duplicado. Prove namespace de chave sintética sem colisão com chave do
+duplicado. `getSyncBatchReceipt` e `getSyncItemReceipt` retornam o recibo
+original no próprio tenant; tentativa rejeitada não o substitui e leitura
+cruzada de tenant falha. Prove namespace de chave sintética sem colisão com chave do
 cliente e rejeição de chave cliente com prefixo `stynx:legacy:`;
 duas submissões concorrentes do mesmo lote aberto, ausência do
 resolver mantendo TTL publicado de 24h, e lote legado migrado fechado.

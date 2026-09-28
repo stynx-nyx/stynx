@@ -741,3 +741,13 @@ e adicionando aliases de fontes para SIG, OBX/audit/backend e OFS int.
 Verificações: signature 22/22, typecheck signature, `lint:deps` e
 `lint:cycles` verdes. O Architect ampliou os prompts e negativos, sem
 despachar Inspector até o prompt-review focal PASS.
+
+O prompt-review Inspector ciclo 2 retornou **REVIEW** em
+`reviews/ctg9-inspector-prompt-review-2.json`. Os bloqueios de import
+foram fechados; restou um oráculo impossível de 55P03 quando UPDATE está
+apenas enfileirado atrás de SHARE. O Architect corrigiu contrato OBX e
+sensor com variante separada de UPDATE já detido. O prompt OFS agora exige
+cancelamento e leitura de recibos, e explicita onde rodam os sensores
+backend/audit. Em commit Engineer separado `c67774f9`, health passou a
+`workspace:*` e foi criado changeset para as dependências signature.
+Terceiro prompt-review focal autorizado pela OD ampla do Owner está pendente.
