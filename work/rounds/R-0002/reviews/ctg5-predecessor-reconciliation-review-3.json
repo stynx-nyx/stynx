@@ -1,0 +1,48 @@
+{
+  "verdict": "PASS",
+  "reviewed": {
+    "repaired_contract_commit": "ae27eb5f (diff against 42c069b9: contract lines 13 and 15, ctg-0005-plan.md predecessor gate and checkpoint, prompts 60/61/62)",
+    "prior_review": "work/rounds/R-0002/reviews/ctg5-predecessor-reconciliation-review-2.json",
+    "source": [
+      "packages/tenancy/src/tenant-context.interceptor.ts:83-180",
+      "packages/auth/src/stynx-auth.guard.ts:41-117",
+      "packages/backend/src/auth/auth-context.guard.ts:31-140",
+      "packages/core/src/request-context.interceptor.ts (per review-2 citation)"
+    ]
+  },
+  "prior_findings": {
+    "N1": "RESOLVED. Contract line 13 now makes the tenancy interceptor keep the exact actor it passes to hasActiveMembership. It writes mode:'protected' only when that actor equals the patched RequestContext.actorId and request.principal.id, and the checked tenant equals the patched RequestContext.tenantId and STYNX_VERIFIED_TENANT_ID. On mismatch nothing is written, so the command fails before SQL or handler. This matches the source. resolveActorId (tenant-context.interceptor.ts:176-180) is stynxClaims.sub ?? unverified bearer sub ?? principal.id. Once AuthContextGuard clears stynxClaims, a mapper can set principal.id (auth-context.guard.ts:82-86,114-115) to something other than the bearer sub. Tenancy then checks the bearer sub, the comparison fails and no port entry is written. The contract states that the membership lookup and non-command behavior are unchanged; writing to the port is additive. Prompt 61 has the matching sensor (mapper principal.id ≠ bearer sub → no result, reject before command SQL or handler). Prompt 62 specifies the same rule, including tenant equality.",
+    "N2": "RESOLVED. Line 15 states that imperative app.useGlobalGuards is unsupported command provenance, including before app.init(), and gives the reason: Nest 11 has no public DI registry for ApplicationConfig.globalGuards. A command whose only guard is registered that way fails the boot check. Discovery is limited to route/class @UseGuards metadata and APP_GUARD providers, both reachable through Reflector/ModulesContainer. Prompt 61 tests route/class and APP_GUARD registrations and rejects useGlobalGuards even before init. Prompt 62 excludes it. The plan checkpoint says the same.",
+    "N3": "RESOLVED. Line 13 requires that mode:'verified' has actorId === request.principal.id, and that any stynxClaims.sub and .tenantId equal that principal and the Host-selected tenant; otherwise no entry and rejection before SQL. The source agrees: verifiedActor is stynxClaims.sub ?? principal.id (line 97), and both guards set principal.id to the verified subject or clear claims on public entry. Prompts 61 and 62 match.",
+    "N4": "RESOLVED. Line 15 requires the brand as an own property, checked with Object.hasOwn and === true on the concrete metatype or instance constructor. A same-name look-alike and a subclass that only inherits the brand both fail. Deliberate self-branding is stated to fall inside the in-process trusted-code boundary. Prompt 61 tests look-alike and subclass rejection. Prompt 62 requires an own brand on the concrete constructor and never a class name or inherited brand."
+  },
+  "plan_and_prompts": {
+    "plan": "Records c469b6f8 REVIEW (review-1) and 42c069b9 REVIEW (review-2). The next repaired SHA and cycle-3 PASS receipt are explicitly pending and must be recorded together before Inspector dispatch. The checkpoint is dated 2026-09-28 and restates N1–N4.",
+    "prompt_60": "Names both prior REVIEW SHAs and requires the third-revision SHA plus a new PASS before dispatch.",
+    "prompt_61_62": "Sensors and implementation paths match for N1–N4. Ownership is unchanged: packages/tenancy port, packages/auth brand, backend AuthContextGuard brand and claim clearing."
+  },
+  "findings": [
+    {
+      "id": "R3-1",
+      "severity": "LOW",
+      "path": "docs/framework/contracts/transactional-audit-idempotency-1.5.md:15",
+      "title": "Residual 'as a global guard' wording is ambiguous after useGlobalGuards was excluded",
+      "evidence": "The same paragraph declares imperative app.useGlobalGuards unsupported. It then says a protected or optional-auth command requires a built-in guard 'on their route/class or as a global guard'. A reader could take 'global guard' to include app.useGlobalGuards, which contradicts the preceding sentence.",
+      "required_change": "Replace 'or as a global guard' with 'or as an `APP_GUARD` provider'. This is wording only and does not block."
+    },
+    {
+      "id": "R3-2",
+      "severity": "LOW",
+      "path": "work/rounds/R-0002/prompts/62-ctg5-engineer.md:8",
+      "title": "Engineer prompt says 'route/class/global guard metatypes' before the exclusion",
+      "evidence": "The prompt says 'inspect actual route/class/global guard metatypes or instances, excluding imperative app.useGlobalGuards'. The intent is clear, but naming APP_GUARD would match the contract and prompt 61 exactly. It would also point the Engineer at ModulesContainer provider discovery, where APP_GUARD tokens carry a generated suffix and request-scoped or useFactory providers need a metatype or instance constructor check, and away from ApplicationConfig internals.",
+      "required_change": "Say 'route/class @UseGuards metadata and APP_GUARD providers'. Optionally note that APP_GUARD provider tokens are discovered by prefix through ModulesContainer, without private Nest internals. This is wording only and does not block."
+    }
+  ],
+  "preserved": [
+    "The CTG4 jobs actor, dead-letter handling and Database.tx behavior are unchanged; non-HTTP contexts are rejected by the command interceptor.",
+    "The existing membership lookup, Host/entitlement handling, non-command routes, plain @Public()/@System() and legacy audit/idempotency are unchanged; the port write and the actor comparison are additive.",
+    "The CTG3 guard-marker semantics are reused. The only additive guard edits are AuthContextGuard's stynxClaims clearing and the two own-property brands."
+  ],
+  "summary": "The ae27eb5f revision resolves all four review-2 findings, and the source agrees. N1: tenancy attests the actor it actually checked for membership only when that actor equals principal.id, the patched context actor and the verified tenant, so a mapper-derived principal.id that differs from the bearer sub fails before command SQL. N2: imperative useGlobalGuards is explicitly unsupported; route/class and APP_GUARD are the supported and tested paths. N3: the verified public actor is bound to principal.id, with claims tied to that principal and the Host tenant. N4: only an own brand on the concrete constructor passes, and self-branding sits inside the trusted-code boundary. The prompts use matching sensors and paths. The plan records 42c069b9 as REVIEW and leaves the next SHA/PASS slot pending. Two LOW wording cleanups (both saying 'global guard' where APP_GUARD is meant) are advisory. This PASS does not dispatch the Inspector: the maestro must first record this revision's exact SHA and this PASS receipt in ctg-0005-plan.md."
+}
