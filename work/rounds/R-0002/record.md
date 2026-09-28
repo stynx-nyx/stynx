@@ -821,3 +821,10 @@ conectado como superuser. O veredito estruturado governa a rodada; o
 Inspector deve usar `stynx_app`/`stynx_reader` reais e verificar FORCE RLS
 antes de novo review. O prompt Engineer 153 ganhou oráculos explícitos
 de recibo, partial, 40P01 e papel app.
+
+O Inspector corrigiu a única falha bloqueante do review 4: conexões
+`stynx_app`/`stynx_reader` reais, ambas sem superuser/BYPASSRLS; o
+preflight passou no PostgreSQL antes do erro esperado de 0002 ausente.
+O 40P01 agora é levantado pelo SQL da transação. Após três saídas da
+ponte rejeitadas pelo mesmo formato, o ciclo 5 usa diretamente
+`claude -p` com o prompt 160 e JSON estruturado. O veredito está pendente.
