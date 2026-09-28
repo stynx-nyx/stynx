@@ -1302,3 +1302,49 @@ essa falha. Inspector `7041e350` reforçou cinco expectativas com
 Architect rodou `pnpm api:baselines:write` e `pnpm api:baselines` passou
 44/44. `pnpm install --frozen-lockfile` passou, sem diff rastreado.
 Nenhum PR/push/publicação ocorreu.
+
+## Candidata final consolidada e revisão independente (2026-09-28)
+
+O marcador de versão Engineer `b647f568b6051c1f0a7a91ca4f76fc706f52f6c1`
+consumiu dez changesets, saiu do pre mode `rc`, fixou a raiz e os 44
+pacotes públicos em `1.5.0` e preservou versões privadas. A árvore
+ficou limpa; não houve RC ou PR intermediário das CTGs 5–9.
+
+Gates no mesmo código-fonte: `pnpm ci:stynx` PASS em
+`/tmp/stynx-final-ci-sixth.log` (inclui `test:int`, build e doctor),
+`pnpm ci:reference-apps` PASS em `/tmp/stynx-final-reference-ci6.log`
+(63 testes de integração da API), `pnpm release:policy` PASS em
+`/tmp/stynx-final-policy6.log`, `pnpm release:provenance` PASS em
+`/tmp/stynx-final-provenance6.log`, e
+`pnpm release:consumer-fixtures` PASS em
+`/tmp/stynx-final-consumer-fixtures6.log` (44 tarballs instalados em
+três projetos consumidores). `pnpm lint:migrations`,
+`pnpm check:rls-negative` (sete tabelas), `pnpm lint:tests` e
+`pnpm check:trace --print` (472/472) também passaram. O gate DEVAI
+strict desde `origin/main` inicialmente apontou apenas a citação de
+comando de publicação no commit Architect `5dffc830`; o recibo Owner
+exato `FORBID-PUBLISH@5dffc830` foi registrado em `bfa5d2a9` sob a
+autorização expressa desta sessão. Nova execução retornou zero achados
+em `/tmp/stynx-final-forbidden6c.log`.
+
+O delivery-review consolidado via ponte DETRAN/Claude Code Opus 5.5,
+prompt 194, retornou **PASS** no primeiro ciclo para HEAD `3c1c3408`:
+`reviews/final-integrated-delivery-review-1.bridge.json`, com recibo
+`reviews/final-integrated-delivery-review-1.bridge.bridge.json`.
+Reconheceu o teste real do advisory CTG5×CTG9, a correção da fixture
+Redis, o marcador único, os 44 pacotes e os gates. Achados não
+bloqueantes: documentar que `lockTimeoutMs` limita a disputa da chave,
+enquanto a espera da cadeia de auditoria requer `deadlineMs` para limite
+absoluto; aprofundar cinco sensores OFS em follow-up; trocar o estado
+do ledger após a publicação. Os arquivos temporários da ponte já foram
+removidos; somente os dois recibos JSON permanentes serão commitados.
+
+A tabela `conformance-1.5.0.md` foi atualizada para os 15 grupos U e
+os dez IDs A1. A coluna de versão identifica a candidata que contém
+cada capacidade e só é declaração publicada após recibos de registry.
+Próximos passos: preparar a evidência DEVAI `verified-local-rc` do HEAD
+final do PR, abrir o único PR, observar CI remoto, mesclar e registrar
+o SHA exato de `main`; então pré-validar o registry, vincular o recibo
+Owner ao comando `gh workflow run release.yml --ref main -f
+candidate_sha=<SHA> -f publish=true`, publicar e reconciliar os 44
+recibos, integridades e tags.

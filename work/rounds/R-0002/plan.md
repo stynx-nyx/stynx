@@ -1119,3 +1119,16 @@ expira apenas o alvo. `pnpm --filter @stynx-nyx/sessions test:int` passou
 14/14, lint de testes passou. O marcador foi retirado localmente;
 Architect rebinda trace 30/30 e Engineer regenera o candidato antes
 do novo CI integral. Nenhum PR/push/publicação ocorreu.
+
+**Checkpoint final pré-PR (2026-09-28):** marker Engineer `b647f568`
+para `1.5.0`/44 pacotes, `ci:stynx` integral e `ci:reference-apps`
+verdes, release policy/provenance/consumer fixtures verdes, trace
+472/472, RLS negativo sete tabelas, DEVAI forbidden strict zero achados
+após recibo exato em `bfa5d2a9`. Delivery-review consolidado Opus 5.5
+ciclo 1 **PASS** em `reviews/final-integrated-delivery-review-1.bridge.json`.
+O ledger de §7/A1 usa 1.5.0 como versão candidata e deixa explícito
+que o pin DETRAN só vale após publicação verificada. Antes do único PR,
+preparar e publicar a evidência assinada `verified-local-rc` para o HEAD
+final, cuja configuração de ferramenta/ambiente está fixada em
+`law/policy/devai-local-rc-*`. Depois: PR, CI remoto, merge, SHA main,
+recibo Owner exato e publicação final, sem nova RC.
