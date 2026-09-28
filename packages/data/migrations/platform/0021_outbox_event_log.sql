@@ -6,10 +6,12 @@ CREATE TABLE outbox.legacy_ownership (
   generation bigint NOT NULL DEFAULT 0
 );
 INSERT INTO outbox.legacy_ownership (id) VALUES (true);
+-- @no_soft_delete: a tenant's monotonic ordering clock is operational state.
 CREATE TABLE outbox.tenant_clock (
   tenant_id uuid PRIMARY KEY REFERENCES tenancy.tenants(id),
   last_ms bigint NOT NULL DEFAULT 0
 );
+-- @no_soft_delete: the event log is append-only and never deleted.
 CREATE TABLE outbox.events (
   id uuid PRIMARY KEY,
   tenant_id uuid NOT NULL REFERENCES tenancy.tenants(id),
@@ -31,6 +33,7 @@ BEGIN
 END $$;
 CREATE TRIGGER outbox_events_immutable BEFORE UPDATE OR DELETE ON outbox.events
 FOR EACH ROW EXECUTE FUNCTION outbox.reject_event_mutation();
+-- @no_soft_delete: delivery lifecycle is expressed by status and attempts.
 CREATE TABLE outbox.event_delivery (
   tenant_id uuid NOT NULL,
   event_id uuid NOT NULL,
@@ -44,6 +47,7 @@ CREATE TABLE outbox.event_delivery (
   PRIMARY KEY (tenant_id,event_id),
   FOREIGN KEY (tenant_id,event_id) REFERENCES outbox.events(tenant_id,id)
 );
+-- @no_soft_delete: attempts are append-only transport evidence.
 CREATE TABLE outbox.event_attempts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -67,6 +71,7 @@ CREATE TABLE outbox.event_attempts (
   FOREIGN KEY (tenant_id,event_id) REFERENCES outbox.events(tenant_id,id),
   UNIQUE (tenant_id,event_id,attempt_ordinal)
 );
+-- @no_soft_delete: acknowledgements are append-only delivery evidence.
 CREATE TABLE outbox.event_acks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -83,6 +88,7 @@ CREATE TABLE outbox.event_acks (
   received_at timestamptz NOT NULL DEFAULT clock_timestamp(),
   FOREIGN KEY (tenant_id,event_id) REFERENCES outbox.events(tenant_id,id)
 );
+-- @no_soft_delete: the legacy mapping is a durable cutover record.
 CREATE TABLE outbox.legacy_event_map (
   legacy_id uuid PRIMARY KEY,
   tenant_id uuid NOT NULL,
@@ -100,12 +106,22 @@ CREATE TABLE outbox.ack_quarantine (
 );
 ALTER TABLE outbox.messages ADD COLUMN migrated_event_id uuid;
 ALTER TABLE outbox.messages ADD COLUMN cutover_generation bigint;
-DO $$ DECLARE relation text; BEGIN
-  FOREACH relation IN ARRAY ARRAY['legacy_ownership','tenant_clock','events','event_delivery','event_attempts','event_acks','legacy_event_map','ack_quarantine'] LOOP
-    EXECUTE format('ALTER TABLE outbox.%I ENABLE ROW LEVEL SECURITY', relation);
-    EXECUTE format('ALTER TABLE outbox.%I FORCE ROW LEVEL SECURITY', relation);
-  END LOOP;
-END $$;
+ALTER TABLE outbox.legacy_ownership ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox.legacy_ownership FORCE ROW LEVEL SECURITY;
+ALTER TABLE outbox.tenant_clock ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox.tenant_clock FORCE ROW LEVEL SECURITY;
+ALTER TABLE outbox.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox.events FORCE ROW LEVEL SECURITY;
+ALTER TABLE outbox.event_delivery ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox.event_delivery FORCE ROW LEVEL SECURITY;
+ALTER TABLE outbox.event_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox.event_attempts FORCE ROW LEVEL SECURITY;
+ALTER TABLE outbox.event_acks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox.event_acks FORCE ROW LEVEL SECURITY;
+ALTER TABLE outbox.legacy_event_map ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox.legacy_event_map FORCE ROW LEVEL SECURITY;
+ALTER TABLE outbox.ack_quarantine ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox.ack_quarantine FORCE ROW LEVEL SECURITY;
 CREATE POLICY ownership_read ON outbox.legacy_ownership FOR SELECT TO stynx_app USING (true);
 -- A locking SELECT also evaluates UPDATE RLS. Permit row visibility for
 -- FOR SHARE, while WITH CHECK false rejects an app UPDATE of the marker.
@@ -147,6 +163,7 @@ REVOKE ALL ON outbox.ack_quarantine FROM PUBLIC,stynx_app,stynx_reader;
 -- The head lookup must be performed after a tenant advisory is held, including
 -- the first row of a chain. NULL is a dedicated chain and cannot be switched
 -- within a transaction. The chosen timestamp drives both audit stores.
+-- @security-definer-approved: platform-architects/CTG-0009
 CREATE OR REPLACE FUNCTION audit.lock_chain(p_tenant_id uuid)
 RETURNS TABLE (previous_hash text, chosen_at timestamptz)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog,audit
@@ -154,6 +171,7 @@ AS $$
 DECLARE
   chain_key text := coalesce(p_tenant_id::text,'<null-tenant>');
   prior_key text := nullif(current_setting('stynx.audit_chain_key',true),'');
+  prior_lock_timeout text := current_setting('lock_timeout');
   head_at timestamptz;
 BEGIN
   IF current_setting('transaction_isolation') <> 'read committed' THEN
@@ -164,7 +182,11 @@ BEGIN
     RAISE EXCEPTION 'audit_chain_key_mismatch' USING ERRCODE = 'STY41';
   END IF;
   PERFORM set_config('stynx.audit_chain_key',chain_key,true);
+  -- A reservation's bounded lock_timeout applies to the idempotency key,
+  -- not to the tenant audit chain reached by its AFTER INSERT trigger.
+  PERFORM set_config('lock_timeout','0',true);
   PERFORM pg_advisory_xact_lock(hashtextextended(chain_key,0));
+  PERFORM set_config('lock_timeout',prior_lock_timeout,true);
   IF p_tenant_id IS NULL THEN
     SELECT e.row_hash,e.occurred_at INTO previous_hash,head_at
       FROM audit.events e WHERE e.tenancy_id IS NULL
@@ -280,6 +302,7 @@ BEGIN
   );
 END
 $$;
+-- @security-definer-approved: platform-architects/STYNX-AUDIT-DML
 CREATE OR REPLACE FUNCTION audit.fn_row_change()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -429,6 +452,7 @@ BEGIN
   RETURN COALESCE(NEW, OLD);
 END
 $$;
+-- @security-definer-approved: platform-architects/CTG-0009
 CREATE OR REPLACE FUNCTION audit.write_command_event(
   p_operation text,
   p_entity text,
