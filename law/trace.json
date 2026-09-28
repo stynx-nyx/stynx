@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-09-27",
+    "last_updated": "2026-09-28",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -29,7 +29,8 @@
       "STYNX 1.5.0 CTG-0002 Architect rebind pins stale-generation multi-frame lifecycle sensors.",
       "STYNX 1.5.0 CTG-0003 Architect rebind pins authorization and session coverage sensors, including readiness and Redis policy replies.",
       "STYNX 1.5.0 CTG-0004 Architect rebind pins actor/RLS, migration, timezone, DST and worker sensors.",
-      "STYNX 1.5.0 CTG-0004 Architect rebind pins jobs coverage sensors for actor, timezone and timer boundaries."
+      "STYNX 1.5.0 CTG-0004 Architect rebind pins jobs coverage sensors for actor, timezone and timer boundaries.",
+      "STYNX 1.5.0 CTG-0005 Architect rebind pins transactional actor, tenant RLS, audit, idempotency, rollback, race and HTTP replay sensors."
     ]
   },
   "invariants": [
@@ -105,6 +106,33 @@
             "public-tenant route requires configured tenancy and never grants token-derived permissions to anonymous actors"
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/auth/test/unit/command-guard-provenance.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "built-in guard constructor brand and verified principal replacement reject forged request identity"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "marked HTTP command fails closed when transactional command module is absent"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/tenancy/test/unit/command-context-provenance.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "private resolved-tenancy port records only exact validated membership or nominal/verified public identity"
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": []
@@ -467,6 +495,69 @@
             "The tracked script participates in the canonical journey verification surface."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "two-tenant real app-role RLS, canonical fingerprint, replay, configurable conflict and identity rejection"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "forced rollback, one-invocation serialization failure, bounded key race and audit lock isolation"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "committed 502/replay exact wire bytes, ordinary rollback and status-policy behavior on real app-role PostgreSQL"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "marked HTTP command fails closed when transactional command module is absent"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "public command decorator binds scoped committed-response filter and transactional audit marker"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/data/test/unit/database-require-actor.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "actor-required app transaction checks trusted and live role, tenant and actor before SQL or savepoint"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "db",
+          "path": "test/db/transactional-commands-migration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "platform upgrade, FORCE RLS, app-role audit wrapper identity and chain, rollback and tenant isolation"
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["packages/**", "packages-web/**", "reference/**", "domain/**", "tools/**"]
@@ -520,6 +611,42 @@
           "names": ["INV-ERROR-001"],
           "assertions": [
             "The tracked config-attestation participates in the canonical contract verification surface."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "two-tenant real app-role RLS, canonical fingerprint, replay, configurable conflict and identity rejection"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "forced rollback, one-invocation serialization failure, bounded key race and audit lock isolation"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "committed 502/replay exact wire bytes, ordinary rollback and status-policy behavior on real app-role PostgreSQL"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "public command decorator binds scoped committed-response filter and transactional audit marker"
           ],
           "mode": "white_box"
         }
@@ -619,6 +746,69 @@
           "names": ["INV-TENANCY-001"],
           "assertions": [
             "legacy protected membership and missing-tenant errors retain exact bodies"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/auth/test/unit/command-guard-provenance.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "built-in guard constructor brand and verified principal replacement reject forged request identity"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "two-tenant real app-role RLS, canonical fingerprint, replay, configurable conflict and identity rejection"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "forced rollback, one-invocation serialization failure, bounded key race and audit lock isolation"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "committed 502/replay exact wire bytes, ordinary rollback and status-policy behavior on real app-role PostgreSQL"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/data/test/unit/database-require-actor.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "actor-required app transaction checks trusted and live role, tenant and actor before SQL or savepoint"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/tenancy/test/unit/command-context-provenance.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "private resolved-tenancy port records only exact validated membership or nominal/verified public identity"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "db",
+          "path": "test/db/transactional-commands-migration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "platform upgrade, FORCE RLS, app-role audit wrapper identity and chain, rollback and tenant isolation"
           ],
           "mode": "gray_box"
         }
@@ -1276,8 +1466,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-FLOW-001", "INV-FLOW-002", "INV-FLOW-003"],
       "lifecycle": "supported",
-      "assertion_count": 132,
-      "assertion_digest_sha256": "2dff915eb852781f3b33124dfa87844170910a9307fe378cc6b5d3a3dc07c638"
+      "assertion_count": 142,
+      "assertion_digest_sha256": "a505a2b86398f0ece5feb398602a739f57c2770807bd14327125c56e901d6601"
     },
     {
       "path": "packages/audit/test/unit/test-helpers.spec.ts",
@@ -2298,8 +2488,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 5,
-      "assertion_digest_sha256": "b061cda37a1d4b7706089d207604699461a13f0378acfcd23fdb5d09509cd3c5"
+      "assertion_count": 7,
+      "assertion_digest_sha256": "1c5f1f22d3a38b741cc907256255fce9696339ca212fed60b471bba45c6516c4"
     },
     {
       "path": "packages/idempotency/test/unit/idempotency.interceptor.spec.ts",
@@ -4150,6 +4340,78 @@
       "lifecycle": "supported",
       "assertion_count": 4,
       "assertion_digest_sha256": "9d8d6d8a4baf15af7f74c1725110af1fbacad1554acdd354d9060ac5f3968508"
+    },
+    {
+      "path": "packages/auth/test/unit/command-guard-provenance.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "47015e2797462713b03e7571584765f5d42703740a1b7e11b822f8851d0c5fc5"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 48,
+      "assertion_digest_sha256": "88d36a096f4e620a662eebb9065d92f0a97a2b89f15d1232f29844275728b68d"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 27,
+      "assertion_digest_sha256": "0091e42f99a4675df3d66045d6336c350bc2fa2bff8012ad7cd7e1195b05e299"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-http.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 34,
+      "assertion_digest_sha256": "ce88fed2918a4b6a4e2cb259afe48b108d8afa4bcabb6be65d2d4849eeaa712b"
+    },
+    {
+      "path": "packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 4,
+      "assertion_digest_sha256": "02c22edacaad2c73a179e8904cd289814ec899e5c0038f9089c811f79f100dde"
+    },
+    {
+      "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 9,
+      "assertion_digest_sha256": "d3eb5fece1d957236020d540798f81d16e730582310346f0b1490536a54b954a"
+    },
+    {
+      "path": "packages/data/test/unit/database-require-actor.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "9c0ae5459f55cf9b762002ca157ac79d8e62eed438b101d317922cacc864c634"
+    },
+    {
+      "path": "packages/tenancy/test/unit/command-context-provenance.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-TENANCY-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 22,
+      "assertion_digest_sha256": "fbe6b61739c329dac3659fc10a6bd3cdf1c93d38d68c97d7ad909d50b62922ce"
+    },
+    {
+      "path": "test/db/transactional-commands-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "0f69d4e22445bf120acd2aac6ab63244573c18219f309325cf316a586b1b9ff2"
     }
   ],
   "suites": {
