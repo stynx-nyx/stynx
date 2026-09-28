@@ -34,7 +34,8 @@ const config: KnipConfig = {
       ],
     },
     'test/*': {
-      entry: ['validate.js', 'vitest.config.ts', 'support/*.ts'],
+      // The CLI consumer copies this fixture into a temporary external project at runtime.
+      entry: ['validate.js', 'vitest.config.ts', 'support/*.ts', 'cli-generator/consumer-runtime.ts'],
       project: ['**/*.{ts,js,mjs,cjs}'],
     },
     'apps/*': {
