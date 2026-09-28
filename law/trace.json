@@ -3757,7 +3757,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 24,
-      "assertion_digest_sha256": "d45f1c160f5a42bf71760fd39ae69dd595fa7fa34532e562cd1fe9547bc6540d"
+      "assertion_digest_sha256": "c3164816e5c7e3ccaa6bc134696a450904a2c074f673683368b3ca770fbeadcc"
     },
     {
       "path": "test/db/platform-jobs-migration.spec.ts",
