@@ -79,6 +79,7 @@ describe('Transaction', () => {
       { rows: [], rowCount: 0 },
     ], { role: 'app' });
     const tx: Transaction = fake.transaction;
+    expect(tx).toBeInstanceOf(Transaction);
 
     await expect(tx.execute(sql`select 1`)).resolves.toEqual(expect.objectContaining({ rows: [{ ok: 1 }], rowCount: 1 }));
     await expect(tx.query('select 2', [2])).resolves.toEqual(expect.objectContaining({ rows: [], rowCount: 0 }));
@@ -88,8 +89,8 @@ describe('Transaction', () => {
     ]);
 
     tx.close();
-    await expect(tx.execute(sql`select 3`)).rejects.toMatchObject({ code: 'TRANSACTION_REQUIRED' });
-    await expect(tx.query('select 4')).rejects.toMatchObject({ code: 'TRANSACTION_REQUIRED' });
+    await expect(tx.execute(sql`select 3`)).rejects.toBeInstanceOf(TransactionRequiredError);
+    await expect(tx.query('select 4')).rejects.toBeInstanceOf(TransactionRequiredError);
     expect(fake.queries).toHaveLength(2);
   });
 
