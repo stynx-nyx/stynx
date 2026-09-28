@@ -100,3 +100,20 @@ The Architect then rebinds trace, and Engineer repairs confirmed plant bugs.
 Rerun the packed consumer through root `pnpm test:int` with only CI-provided
 PG variables, plus focused gates and independent review, before ordered CTG8
 import. The contract now records the OD-S15-02 supersession.
+
+Repair checkpoint: Inspector commit `d795db3e` adds the post-staging rename
+failure cleanup proof, strengthens inert metadata, packed output/check/digest
+and written override checks, and uses CI-provided credentials with effective
+`stynx_app` on both direct SQL and Database app pool. The focused packed
+consumer passed with `STYNX_TEST_PG_APP_PASSWORD` unset. Seven additional
+unit negatives were red only for missing generator behavior; Architect bound
+the new assertion projection in `260ff032` (trace 449/449). Engineer commit
+`bb6c5c19` repaired integer int32 bounds, root item route, tenant index
+collision, route shadowing and ancestor symlink handling. CLI unit passed
+83/83, including all seven new negatives. Root `pnpm test:int` passed
+52/52 tasks with only CI-provided PostgreSQL variables; its CLI task printed
+`cache bypass, force executing` and the external consumer PASS with nine
+tarballs, SRI, Nest HTTP and two-tenant RLS. API baselines 44/44, trace
+449/449, lint:tests, package READMEs, RLS negative/smoke and DEVAI strict
+zero findings passed. Request a fresh Opus delivery-review of this exact
+tree before cumulative import.
