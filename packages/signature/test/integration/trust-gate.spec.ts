@@ -404,6 +404,70 @@ describe('concrete STYNX CMS verifier', () => {
     expect(result.revocationSource).toMatch(/^(ocsp|crl)$/);
   });
 
+  it('uses one verifier for two self-contained B-LT PDFs without evidence fetchers', async () => {
+    const trust = create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined });
+    const first = await trust.verifySignedArtifact(input());
+    const second = await trust.verifySignedArtifact({
+      ...input(),
+      originalDocument: bytes('withdrawal-source.pdf'),
+      signedDocument: bytes('withdrawal-blt.pdf'),
+      cmsSignature: bytes('withdrawal-blt.cms.der'),
+    });
+    expect(first.padesProfile).toBe('PAdES-B-LT');
+    expect(second.padesProfile).toBe('PAdES-B-LT');
+    expect(first.cmsSha256).not.toBe(second.cmsSha256);
+  });
+
+  it('reads Flate-compressed DSS streams and compact PDF dictionaries', async () => {
+    const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes('pades-compact-source.pdf'),
+        signedDocument: bytes('pades-compact-blt.pdf'),
+        cmsSignature: bytes('pades-compact-blt.cms.der'),
+      });
+    expect(result.padesProfile).toBe('PAdES-B-LT');
+  });
+
+  it.each([
+    ['wrong signer OCSP', 'pades-wrong-ocsp'],
+    ['missing TSA path revocation', 'pades-missing-tsa'],
+  ])('refuses B-LT when DSS has %s', async (_label, stem) => {
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes(`${stem}-source.pdf`),
+        signedDocument: bytes(`${stem}-blt.pdf`),
+        cmsSignature: bytes(`${stem}-blt.cms.der`),
+      })).rejects.toBeInstanceOf(sig.SignatureError);
+  });
+
+  it('rejects a page-content rewrite in a later incremental revision', async () => {
+    const original = Buffer.from(bltSignedDocument);
+    const previous = Number(/startxref\s+(\d+)\s+%%EOF\s*$/u.exec(original.toString('latin1'))?.[1]);
+    expect(Number.isSafeInteger(previous)).toBe(true);
+    const rewritten = Buffer.from('4 0 obj\n<< /Length 7 >>\nstream\nchanged\nendstream\nendobj\n');
+    const xrefAt = original.length + rewritten.length;
+    const appended = Buffer.concat([original, rewritten, Buffer.from(
+      `xref\n4 1\n${String(original.length).padStart(10, '0')} 00000 n \n` +
+      `trailer\n<< /Size 15 /Root 1 0 R /Prev ${previous} >>\nstartxref\n${xrefAt}\n%%EOF\n`,
+    )]);
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({ ...input(), signedDocument: appended }))
+      .rejects.toMatchObject({ message: 'Post-signature modification' });
+  });
+
+  it('accepts legal spaces inside the selected ByteRange brackets', async () => {
+    const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes('pades-spaces-source.pdf'),
+        signedDocument: bytes('pades-spaces-blt.pdf'),
+        cmsSignature: bytes('pades-spaces-blt.cms.der'),
+      });
+    expect(result.padesProfile).toBe('PAdES-B-LT');
+  });
+
   it.each([
     ['PDF ByteRange contents', { signedDocument: Buffer.from(bltSignedDocument).fill(0, 40, 45) }],
     ['detached CMS', { cmsSignature: Buffer.from(bltCmsSignature).fill(0, 20, 30) }],
@@ -457,6 +521,23 @@ describe('concrete STYNX CMS verifier', () => {
     })).rejects.toBeInstanceOf(sig.SignatureError);
   });
 
+  it('binds the actual SignerInfo signer to the first ESSCertIDv2, not injected party B', async () => {
+    const spoofed = {
+      ...input(),
+      originalDocument: bytes('pades-ess-spoof-source.pdf'),
+      signedDocument: bytes('pades-ess-spoof-blt.pdf'),
+      cmsSignature: bytes('pades-ess-spoof-blt.cms.der'),
+      certificate: {
+        ...certificate,
+        pem: Buffer.from(bytes('spoof.cert.pem')).toString('utf8'),
+      },
+    };
+    // The fixture's CMS verifies with A's key; B is embedded and listed as
+    // the second ESSCertIDv2, but B did not sign the PDF.
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact(spoofed)).rejects.toBeInstanceOf(sig.SignatureTrustError);
+  });
+
   it('rejects nonzero CMS placeholder padding outside the ByteRange', async () => {
     const pdf = Buffer.from(bltSignedDocument);
     const contentHex = pdf.indexOf(Buffer.from('/Contents <')) + '/Contents <'.length;
@@ -479,29 +560,29 @@ describe('concrete STYNX CMS verifier', () => {
   });
 
   it.each([
-    ['revoked OCSP', { fetchOcsp: async () => bytes('ocsp-revoked.der') }, profile],
-    [
-      'unknown OCSP',
-      { fetchOcsp: async () => bytes('ocsp-unknown.der') },
-      { ...profile, revocation: 'ocsp' },
-    ],
-    [
-      'revoked CRL',
-      { fetchCrl: async () => bytes('revoked.crl.der') },
-      { ...profile, revocation: 'crl' },
-    ],
-    ['absent TSA', { fetchTsa: async () => undefined }, profile],
-    ['unsigned TSA', { fetchTsa: async () => Buffer.from('not-a-token') }, profile],
-  ])('rejects %s from signed PKI evidence', async (_name, fetchers, selected) => {
-    await expect(
-      create(fetchers).verifySignedArtifact({
+    ['revoked OCSP', 'pades-revoked-ocsp', 'ocsp'],
+    ['revoked CRL', 'pades-revoked-crl', 'crl'],
+  ])('rejects %s embedded in the signed PKI fixture', async (_name, stem, revocation) => {
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
         ...input(),
-        profile: selected,
-      }),
-    ).rejects.toBeInstanceOf(sig.SignatureError);
+        originalDocument: bytes(`${stem}-source.pdf`),
+        signedDocument: bytes(`${stem}-blt.pdf`),
+        cmsSignature: bytes(`${stem}-blt.cms.der`),
+        profile: { ...profile, revocation },
+      })).rejects.toBeInstanceOf(sig.SignatureError);
   });
 
-  it('permits CRL-only and OCSP-or-CRL fallback when the configured proof is signed and fresh', async () => {
+  it('rejects a signed PDF without an embedded timestamp even if a fetcher claims one', async () => {
+    await expect(create({ fetchTsa: async () => bltTimestampResponse }).verifySignedArtifact({
+      ...input(),
+      originalDocument: bytes('pades-bb-source.pdf'),
+      signedDocument: bytes('pades-bb-blt.pdf'),
+      cmsSignature: bytes('pades-bb-blt.cms.der'),
+    })).rejects.toMatchObject({ message: 'Embedded signature timestamp absent' });
+  });
+
+  it('selects signed CRL-only or OCSP evidence from the self-contained DSS', async () => {
     const crlOnly = await create({ fetchOcsp: async () => undefined }).verifySignedArtifact({
       ...input(),
       profile: { ...profile, revocation: 'crl' },
@@ -510,7 +591,7 @@ describe('concrete STYNX CMS verifier', () => {
     const fallback = await create({ fetchOcsp: async () => undefined }).verifySignedArtifact(
       input(),
     );
-    expect(fallback.revocationSource).toBe('crl');
+    expect(fallback.revocationSource).toBe('ocsp');
   });
 
   it('keeps existing no-minimum mock signing and verification', async () => {
@@ -528,23 +609,23 @@ describe('concrete STYNX CMS verifier', () => {
     expect(checked.status).toBe('valid');
   });
 
-  it('classifies unavailable TSA as unknown and a broken signed PDF as invalid', async () => {
+  it('classifies unavailable online B-T revocation as unknown and a broken PDF as invalid', async () => {
     const verifyRequest = {
       tenantId: 'tenant-a',
-      document: bltSourceDocument,
-      documentSha256: hex(bltSourceDocument),
-      signedDocument: bltSignedDocument,
-      cmsSignature: bltCmsSignature,
+      document: bytes('pades-bt-source.pdf'),
+      documentSha256: hex(bytes('pades-bt-source.pdf')),
+      signedDocument: bytes('pades-bt-blt.pdf'),
+      cmsSignature: bytes('pades-bt-blt.cms.der'),
       certificate,
       minimumSignatureLevel: 'ADVANCED',
-      trustProfile: profile,
+      trustProfile: { ...profile, requiredPadesProfile: 'PAdES-B-T' },
     } as const;
-    const unavailable = await service(backend(), create({ fetchTsa: async () => undefined }))
+    const unavailable = await service(backend(), create({ fetchOcsp: undefined, fetchCrl: undefined }))
       .verify(verifyRequest as any);
     expect(unavailable.status).toBe('unknown');
     const invalid = await service(backend(), create()).verify({
       ...verifyRequest,
-      signedDocument: Buffer.from(bltSignedDocument).fill(0, 40, 45),
+      signedDocument: Buffer.from(bytes('pades-bt-blt.pdf')).fill(0, 40, 45),
     } as any);
     expect(invalid.status).toBe('invalid');
   });

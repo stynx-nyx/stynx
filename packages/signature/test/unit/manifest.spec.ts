@@ -173,6 +173,52 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
     })).rejects.toBeInstanceOf(sig.SignatureError);
   });
 
+  it('rejects a forged STYNX verifier in production and records acknowledged ownership', async () => {
+    const { verifier } = make();
+    const forged = Object.assign(verifier, { verifierKind: 'stynx-cms' });
+    const artifact = { ...signer('chair'), trustProfile: { ...profile, environment: 'production' } };
+    const unacknowledged = new api.SignatureManifestService({ verifier: forged });
+    const initial = prepared(unacknowledged, kind);
+    await expect(unacknowledged.appendVerifiedSigner(initial, artifact, { sourceDocument, snapshot }))
+      .rejects.toMatchObject({ name: 'SignatureProviderConfigurationError' });
+    const acknowledged = new api.SignatureManifestService({
+      verifier: forged,
+      consumerOwnedVerifier: { acknowledged: true },
+    });
+    const completed = await acknowledged.appendVerifiedSigner(initial, artifact, { sourceDocument, snapshot });
+    expect(completed.signers[0]?.verifierKind).toBe('consumer-owned');
+    const final = await acknowledged.appendVerifiedSigner(completed, {
+      ...artifact,
+      signerId: 'secretary',
+    }, { sourceDocument, snapshot });
+    expect((await acknowledged.verifyManifest({
+      manifest: final,
+      sourceDocument,
+      snapshot,
+      signers: [artifact, { ...artifact, signerId: 'secretary' }],
+    })).status).toBe('valid');
+  });
+
+  it('distinguishes unavailable verifier evidence from untrusted evidence', async () => {
+    const { manifests, verifier } = make();
+    const first = await manifests.appendVerifiedSigner(prepared(manifests, kind), signer('chair'), { sourceDocument, snapshot });
+    const complete = await manifests.appendVerifiedSigner(first, signer('secretary'), { sourceDocument, snapshot });
+    verifier.verifySignedArtifact.mockRejectedValueOnce(new api.SignatureTrustUnavailableError('OCSP unavailable'));
+    expect((await manifests.verifyManifest({
+      manifest: complete,
+      sourceDocument,
+      snapshot,
+      signers: [signer('chair'), signer('secretary')],
+    })).status).toBe('unavailable');
+    verifier.verifySignedArtifact.mockRejectedValueOnce(new api.SignatureTrustError('OCSP invalid'));
+    expect((await manifests.verifyManifest({
+      manifest: complete,
+      sourceDocument,
+      snapshot,
+      signers: [signer('chair'), signer('secretary')],
+    })).status).toBe('untrusted');
+  });
+
   it.each([
     ['tenant', { tenantId: 'other-tenant' }],
     ['document ID', { documentId: 'other-document' }],

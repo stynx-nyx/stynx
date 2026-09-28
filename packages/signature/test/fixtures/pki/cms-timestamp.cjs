@@ -1,5 +1,7 @@
 /* Test-only DER surgery: RFC 3161 token is an unsigned CMS signer attribute. */
 const fs = require('node:fs');
+const { createHash, sign } = require('node:crypto');
+const { join } = require('node:path');
 const asn1js = require('asn1js');
 
 const decode = (path) => {
@@ -36,6 +38,24 @@ if (action === 'signature') {
     idBlock: { tagClass: 3, tagNumber: 1 }, value: [attribute],
   }));
   fs.writeFileSync(outputPath, Buffer.from(cms.toBER(false)));
+} else if (action === 'spoof') {
+  const signedAttrs = children(info).find((node) => node.idBlock.tagClass === 3 && node.idBlock.tagNumber === 0);
+  const ess = children(signedAttrs).find((node) => children(node)[0].valueBlock.toString() ===
+    '1.2.840.113549.1.9.16.2.47');
+  if (!ess) throw new Error('SigningCertificateV2 missing');
+  const signingCertificate = children(children(ess)[1])[0];
+  const certs = children(signingCertificate)[0];
+  const bHash = createHash('sha256').update(fs.readFileSync(tokenPath)).digest();
+  children(certs).push(new asn1js.Sequence({
+    value: [new asn1js.OctetString({ valueHex: bHash })],
+  }));
+  const signedSet = new asn1js.Set({ value: children(signedAttrs) });
+  const signature = sign('RSA-SHA256', Buffer.from(signedSet.toBER(false)),
+    fs.readFileSync(join(__dirname, 'signer.key.pem')));
+  const infoFields = children(info);
+  const signatureIndex = infoFields.findIndex((node) => node instanceof asn1js.OctetString);
+  infoFields[signatureIndex] = new asn1js.OctetString({ valueHex: signature });
+  fs.writeFileSync(outputPath, Buffer.from(cms.toBER(false)));
 } else {
-  throw new Error('Use signature or embed');
+  throw new Error('Use signature, embed, or spoof');
 }

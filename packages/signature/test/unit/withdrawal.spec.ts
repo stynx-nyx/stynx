@@ -198,6 +198,73 @@ describe('withdrawal evidence', () => {
     expect(result.status).toBe('tampered');
   });
 
+  it('rejects a forged production verifier and labels an acknowledged custom proof consumer-owned', async () => {
+    const fake = {
+      verifierKind: 'stynx-cms',
+      verifySignedArtifact: vi.fn().mockResolvedValue({
+        originalDocumentSha256: hex(declarationDocument),
+        signedDocumentSha256: hex(declarationSignedDocument),
+        cmsSha256: hex(declarationCmsSignature),
+        signerCertificateSha256: hex(bytes('signer.cert.der')),
+        tsaAt: now,
+        verificationRef: 'custom-proof',
+        achievedLevel: 'ADVANCED',
+      }),
+    };
+    const input = {
+      ...base,
+      trustProfile: { ...profile, environment: 'production' },
+      verificationMethod: 'digital_verified',
+      signerPartyId: 'party-a',
+      evidenceBytes: declarationCmsSignature,
+      declarationDocument,
+      declarationSignedDocument,
+      declarationCmsSignature,
+      declarationCertificate: certificate,
+    };
+    const options = {
+      trustVerifier: fake,
+      resolvePartyCertificate: async () => hex(bytes('signer.cert.der')),
+    };
+    await expect(new api.SignatureWithdrawalVerifier(options).verifyWithdrawalEvidence(input))
+      .rejects.toMatchObject({ name: 'SignatureProviderConfigurationError' });
+    const acknowledged = new api.SignatureWithdrawalVerifier({
+      ...options,
+      consumerOwnedVerifier: { acknowledged: true },
+    });
+    const result = await acknowledged.verifyWithdrawalEvidence(input);
+    expect(result.status).toBe('valid');
+    expect(result.evidence.verifierKind).toBe('consumer-owned');
+  });
+
+  it('rejects withdrawal in B’s name when A signed and B was injected into CMS/ESS', async () => {
+    const trustVerifier = api.createCmsTrustVerifier({
+      trustAnchorsPem: [rootPem],
+      tsaTrustAnchorsPem: [rootPem],
+      acceptedPolicies: profile.acceptedPolicies,
+      now: () => now,
+    });
+    const verifier = new api.SignatureWithdrawalVerifier({
+      trustVerifier,
+      resolvePartyCertificate: async () => hex(bytes('spoof.cert.der')),
+    });
+    const result = await verifier.verifyWithdrawalEvidence({
+      ...base,
+      verificationMethod: 'digital_verified',
+      signerPartyId: 'party-a',
+      evidenceBytes: bytes('withdrawal-ess-spoof-blt.cms.der'),
+      declarationDocument: bytes('withdrawal-ess-spoof-source.pdf'),
+      declarationSignedDocument: bytes('withdrawal-ess-spoof-blt.pdf'),
+      declarationCmsSignature: bytes('withdrawal-ess-spoof-blt.cms.der'),
+      declarationCertificate: {
+        ...certificate,
+        pem: Buffer.from(bytes('spoof.cert.pem')).toString('utf8'),
+      },
+    });
+    expect(result.status).toBe('tampered');
+    expect(result.reasons).toContain('DIGITAL_SIGNATURE_INVALID');
+  });
+
   it.each([
     ['tenant', { tenantId: 'tenant-b' }],
     ['case', { caseId: 'case-b' }],
