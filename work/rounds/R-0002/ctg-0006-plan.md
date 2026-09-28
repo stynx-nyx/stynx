@@ -94,3 +94,27 @@ local installation or receipt setup before the final campaign merge, without
 editing a tracked workflow. Next: finish CTG6 focused gates and Opus delivery
 review on the exact rebased HEAD, then import CTG6 by fast-forward. No CTG6
 PR or RC publication.
+
+Delivery-review Opus ciclo 1 em `reviews/ctg6-delivery-review-1.json`
+retornou **REVIEW** no HEAD `4caa1e64`. Triagem: `reference-gap` — faltam
+sensores de `system`/matchMedia, mudança de preferência e SSR, e do texto do
+status vivo após navegação/tema; Inspector acrescenta TestBed e, se couber,
+Playwright. Triagem: `sensor-error` — o fake de `Transaction` do teste data
+resolve um `dist` hoisted, partindo a identidade da classe; Inspector corrige
+o alias de Vitest para source, restaura `instanceof` e prova identidade.
+Achados menores entram no mesmo reparo quando couber: tabulação real no
+browser, sensor de imports públicos dos helpers, inventário de fakes e
+`requestId` de envelope legado. Uma nova tentativa de review é obrigatória
+antes da importação CTG6; o REVIEW não autoriza promoção.
+
+Inventário CTG5 de fakes `Transaction` em testes unitários data/flow/outbox/
+backend: somente `packages/data/test/unit/transaction.spec.ts` instancia a
+classe concreta para `query`/`execute`; `packages/outbox/test/unit/outbox.service.spec.ts`
+usa o port estrutural `OutboxSqlExecutor`, e os demais resultados são stubs
+do banco, métodos com nome `Transaction` ou callbacks sem fake concreto.
+Não adicionar dependência `data` → `testing` ao manifesto.
+
+Os dez commits antigos com autor humano mantêm declaração constitucional por
+escopo e conteúdo, sem misturar papéis em um commit: **Engineer** em
+`6b499e97`, `11870f5c`, `2880b37c`, `1e9a59eb`, `fa75d850` e `71db8791`;
+**Inspector** em `44fd61b2`, `c13236c2`, `28c0666c` e `8f76fbe8`.
