@@ -602,3 +602,12 @@ sem protótipo ou possui `toString` hostil; o envelope seria perdido. O
 Architect adicionou uma rodada focal Inspector → Engineer para garantir que
 nenhuma falha de formatação/log mude o fio público. O reviewer também
 sugeriu sensores adicionais de `errorCode` no log e do caminho sem causa.
+
+O Inspector adicionou o sensor HTTP de causa opaca em `77588011` e obteve
+vermelho esperado: 1 falha por corpo vazio, 12 testes verdes; lint de testes
+passou. O Architect rebinda o trace em `39ea92a7` (451/451). O Engineer
+isolou a formatação e a chamada do logger em blocos que não escapam ao filtro
+em `d6bd8138`. O sensor focal passou 13/13 e a suíte backend completa passou
+502/502 em 48 arquivos; lint e typecheck backend e lint de testes passaram.
+O corpo e o header públicos continuam verificados no mesmo sensor. Falta o
+delivery-review independente deste último delta.
