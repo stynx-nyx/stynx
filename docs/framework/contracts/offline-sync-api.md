@@ -26,6 +26,18 @@ different item key, repeated cancellation 409, configured/default 24 h TTL
 and 100-item maximum. CTG9 mode instead uses tenant+item key with hash
 integrity, durable receipts and idempotent repetition of completed cancel.
 The host cannot toggle mode with a request body.
+The 0002 migration supports both modes at once: E6 queue rows retain
+hash deduplication through an E6-only partial unique index and their
+updated `ON CONFLICT` target, while CTG9 rows use key identity. The
+published `OfflineSyncStore` and E6 input/result types remain assignable;
+the separate `OfflineSyncDurableStore` and CTG9 input/receipt types are
+required only with the resolver. A CTG9-only port without the resolver, or
+a resolver with a store missing durable operations, fails at bootstrap.
+`options.policyResolver != null` is the mode check. The host may supply
+`legacyItemIdentityResolver` for a stable legacy identity across batches;
+its unkeyed items remain unapplied. `legacyIdempotencyStore` supplies the
+published durable `IdempotencyStore` for read-only upgrade replay; absent
+verified bytes, an unverified legacy batch fails closed.
 
 The four rows above are the existing route contract and remain compatible. CTG9 adds service
 operations for block, close, reconcile, settle, consumption and receipt reads. A mounted controller
@@ -99,8 +111,10 @@ or safely resumes after lease expiry; it cannot run the same item twice. If the 
 outlasts the bounded wait, the HTTP result is 503 with `errorCode: OFFLINE_SYNC:BATCH:in-progress`,
 `retryable: true` and `Retry-After: 1`, without falling through to another applier. Unsequenced legacy batches
 remain accepted. An unkeyed legacy item receives an internal
-`stynx:legacy:v1:<sha256(tenantId || 0x00 || deviceId || 0x00 || deviceBatchId || 0x00 || queueItemId)>`
-storage key, where inputs are UTF-8 bytes and `||` concatenates bytes. Explicit client keys in
+`stynx:legacy:v1:<sha256(tenantId || 0x00 || legacyIdentity)>`
+storage key, where inputs are UTF-8 bytes and `||` concatenates bytes. The default
+legacy identity is `deviceId || 0x00 || deviceBatchId || 0x00 || queueItemId`;
+the optional host resolver can use a stable identity across batches. Explicit client keys in
 the reserved `stynx:legacy:` namespace are rejected. The item stays `received` with neutral
 `OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED` and is never applied; the TEAT adapter maps that code to
 `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED`. Existing string, hash, UUID and numbering limits remain
@@ -126,8 +140,8 @@ uses the allowed actions for that conflict kind. Legacy `device-wins`, `server-w
 
 Apply additive `migrations/0002_*.sql` only after 0001 and before enabling CTG9 code. Upgrade
 must preserve old queue rows and IDs, backfill legacy batch/receipt identity without pretending a
-domain effect occurred, install the new item-key uniqueness before dropping hash uniqueness,
-and add tenant-leading FORCE RLS, grants and indexes to new tables. It must not silently rewrite
+domain effect occurred, install the new item-key uniqueness and E6 partial hash index before
+dropping global hash uniqueness, and add tenant-leading FORCE RLS, grants and indexes to new tables. It must not silently rewrite
 stored hashes or statuses. A backfilled batch is `legacy_closed_unverified`: its stored item
 receipts are immutable, but no fabricated HTTP replay is claimed because 0001 stored no original
 response bytes. After domain identity/declared-set validation and before conflict or writes, a

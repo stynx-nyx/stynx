@@ -17,6 +17,16 @@ durable parity sensor. Without it, E6 behavior remains: hash dedup across
 different keys, second cancel 409, default TTL and 100-item maximum.
 Keep all existing E6 tests intact and add a no-resolver compatibility
 sensor. Never use body input to select a mode.
+Prove both `forRoot` bootstraps, including E6 controller metadata and
+`@Idempotent`, CTG9 controller metadata, the four route method/path/
+permission pairs, and CTG9 service mode with `mountControllers:false`.
+`policyResolver: undefined` remains E6. Run the E6 store and service on an
+actual 0001→0002 PostgreSQL schema: cross-key hash dedup, queue-ID reuse
+409 and repeated cancel 409 must survive. Check CTG9-only ports without a
+resolver and a resolver with an E6-only custom store fail at bootstrap.
+Exercise `legacyItemIdentityResolver` across batches, and the read-only
+`legacyIdempotencyStore` bridge with an unexpired completed entry plus
+pending/expired/mismatched negatives. No unkeyed item applies a domain effect.
 
 UPS-OFS-01: PostgreSQL/RLS real com dois tenants; reserva concorrente sem
 sobreposição, TTL do catálogo por tenant/órgão/operação e expiração,

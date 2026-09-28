@@ -15,7 +15,8 @@ Não altere testes nem faça shim/cópia DETRAN.
 Implemente UPS-OBX-01…02 e pré-requisitos data/audit:
 
 - `Database.txIndependent`, assert de conexão detida através de contextos
-  derivados, isolamento efetivo de `TxOptions.isolation` e modo estrito só
+  derivados, isolamento efetivo de `TxOptions.isolation` e opção
+  `strictItemMode:true` só
   no item OFS. Preserve CTG5 e transações legadas fora do modo estrito.
 - Migration aditiva ≥0021: três writers audit com advisory por tenant antes
   da cabeça, READ COMMITTED obrigatório, timestamp monotônico e partição

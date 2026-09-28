@@ -770,3 +770,13 @@ outra chave, segundo cancelamento 409) e a paridade da adenda A1. O
 Architect fixou modo CTG9 por `OfflineSyncPolicyResolver` no bootstrap,
 preservando E6 sem resolver e seus testes intactos. Contrato, ADR e prompts
 foram ajustados; review focal Opus está pendente antes de Engineer.
+
+Review Opus focal ciclo 1 `reviews/ctg9-ofs-mode-contract-review-1.json`
+foi REVIEW, com três bloqueios: E6 na migration 0002, `OfflineSyncStore`
+exigindo métodos novos e ausência de sensores para os dois bootstraps.
+O Architect fixou índice parcial E6 com `identity_mode` server-owned,
+interface `OfflineSyncDurableStore` separada, tipos CTG9 separados e
+validação de portas no bootstrap. Os sensores Inspector foram ampliados
+para E6 sobre 0002, metadata HTTP em ambos os modos, identidade legada
+entre lotes e ponte de `IdempotencyStore` somente leitura. Review delta
+Opus ciclo 2 está pendente; nada aqui atesta código CTG9 implementado.

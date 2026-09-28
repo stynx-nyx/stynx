@@ -22,6 +22,10 @@ Implemente UPS-OFS-01…04 até os sensores passarem:
   tenant/org/operação, inclusive >100 itens quando permitido; use key+hash
   e repetição terminal idempotente. Bind condicional do controller de lote
   mantém o decorator E6 no modo legado e a precedência nova no CTG9.
+  Selecione com `options.policyResolver != null`, preserve os quatro pares
+  method/path/permission e `mountControllers:false`, falhe tipadamente para
+  portas CTG9 sem resolver ou store não durável com resolver. Preserve
+  `OfflineSyncStore` e tipos E6; use `OfflineSyncDurableStore`/tipos CTG9.
 - Numeração: reserva concorrente sem sobreposição, cancelamento só da cauda
   não usada, bloqueio/fechamento/reconciliação/liquidação/consulta de cada
   número, ator auditável distinto do agente de negócio.
@@ -31,15 +35,20 @@ Implemente UPS-OFS-01…04 até os sensores passarem:
   idempotente legado. Header `Idempotency-Key` 400 ausente; domínio 409/422
   antes de conflito de chave de transporte 422; in-progress 503 fixo.
   Item legado sem chave fica `received` com código neutro e namespace
-  sintético reservado, nunca é aplicado implicitamente.
-- Um `Database.txIndependent` por item: domínio, consumo, recibo e uma
+  sintético reservado, nunca é aplicado implicitamente. Exponha
+  `legacyItemIdentityResolver` para identidade host estável entre lotes e
+  `legacyIdempotencyStore` para lookup da ponte E6 sem nova reserva.
+- Um `Database.txIndependent` por item com
+  `{role:'app', isolation:'read committed', strictItemMode:true}`: domínio, consumo, recibo e uma
   operação final da porta OBX na mesma `Transaction`, rollback total por
   item e partial do lote. Rejeite transação envolvente e segunda conexão
   antes de adquirir pool. OFS importa só a interface da porta de eventos,
   não o pacote outbox. Janela de concorrência e handoff são resolvidos
   pelo host, com suspeita nos dois atos e ações de resolução tipadas.
 - Migration 0002 aditiva/backfill sem perder ID/status/hash, com constraint
-  antiga removida só após a nova chave e RLS FORCE em tabelas novas.
+  global antiga removida só após índice parcial E6 por hash e nova chave
+  CTG9; `identity_mode` é server-owned e o E6 `ON CONFLICT` mira o índice
+  parcial. Prove E6 no banco 0001→0002, inclusive segundo cancel 409.
 
 Rode sensores focais PostgreSQL/HTTP/RLS, testes existentes afetados, lint
 e typecheck offline-sync. Não altere testes para obter verde. Reporte
