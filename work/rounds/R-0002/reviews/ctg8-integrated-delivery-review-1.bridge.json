@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "/private/tmp/stynx-ctg8-integrated-delivery-review.md",
+  "prompt_sha256": "34e6ea85d9427f5a83ef2cc567f0c824fe4313c9f92f75c7bb0a62df35b54f58",
+  "output": "work/rounds/R-0002/reviews/ctg8-integrated-delivery-review-1.json",
+  "output_sha256": "da5738706a64d9d1f9d3b72e4d6a79727da5e93b82895acdc531c1237b0bcc84",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg8-cli/stynx",
+  "started_at": "2026-09-28T05:03:36Z",
+  "ended_at": "2026-09-28T05:07:41Z"
+}

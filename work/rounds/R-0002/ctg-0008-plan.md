@@ -82,3 +82,17 @@ PostgreSQL/RLS. RLS negative checked 7 tables and RLS smoke passed. The
 first packed-consumer attempt failed only from local test-role provisioning,
 recorded in §Triagem; the next attempt passed unchanged. Full CI and
 reference apps remain deferred to the single final candidate.
+
+Opus integrated delivery-review cycle 1 on `f2596db6` returned **REVIEW** in
+`reviews/ctg8-integrated-delivery-review-1.json`. Two blockers: the
+workstation-only `stynx_app` TCP password does not survive the strict Turbo
+CI environment, and no sensor forces failure after output staging begins.
+Inspector repairs the consumer harness with reproducible effective app-role
+PostgreSQL sessions and adds a staged failure cleanup sensor before Engineer
+touches implementation. The same Inspector lanes strengthen concrete
+nonblocking findings (packed output/check/digest proof, int32, path/index/
+route collisions, context error and inert metadata assertions) where relevant.
+The Architect then rebinds trace, and Engineer repairs confirmed plant bugs.
+Rerun the packed consumer through root `pnpm test:int` with only CI-provided
+PG variables, plus focused gates and independent review, before ordered CTG8
+import. The contract now records the OD-S15-02 supersession.
