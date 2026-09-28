@@ -91,7 +91,7 @@ function boundedText(value: unknown, path: string, max = 256): string {
   return result;
 }
 
-export function validateBlueprint(raw: unknown): Blueprint {
+function validateBlueprint(raw: unknown): Blueprint {
   const top = object(raw, '');
   keys(top, ['schemaVersion', 'id', 'module', 'database'], ['api', 'auth', 'audit', 'ops'], '');
   if (top.schemaVersion !== '1.0.0') fail('/schemaVersion', 'expected 1.0.0');
