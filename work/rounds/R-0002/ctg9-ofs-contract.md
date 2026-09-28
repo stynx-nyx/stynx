@@ -145,6 +145,7 @@ interface CTG9SyncBatchItemInput {
   readonly payloadJson: Record<string, unknown>;
   readonly createdLocallyAt: string;
   readonly reservedNumber?: number;
+  readonly reservationId?: string;
 }
 interface CTG9SubmitSyncBatchInput {
   readonly orgUnitId: string;
@@ -289,6 +290,44 @@ The published one-argument `submitSyncBatch(input)` remains callable for service
 
 Keep `reserveNumbering` and `cancelNumberingReservation`. Add `blockNumberingReservation`, `closeNumberingReservation`, `reconcileNumberingReservation`, `settleNumberingReservation`, and `getNumberingConsumption` to `OfflineSyncService` and the separate `OfflineSyncDurableStore`, leaving `OfflineSyncStore` unchanged. `NumberingReservation` retains the existing fields; additive lifecycle and consumption projections distinguish available, locally claimed, applied, blocked, and expired numbers. A range allocation locks its tenant/org/entity/series range and advances its cursor atomically. Cancellation can release only the unused tail; applied numbers are never made available again. Block may transition reserved or expired to blocked; close may transition reserved or expired to consumed; in CTG9 mode, idempotent repetition of the same terminal action, including cancel, returns its recorded result. The E6 no-resolver path keeps its second-cancel 409. Other transitions fail with the consumer-compatible status and envelope. Reconcile records one result for every number in the interval, rejects out-of-range claims, reports missing and unexpected server consumption, and does not erase applied evidence. Settlement and consumption reads must remain tenant scoped. Distinct reservations cannot overlap under concurrent app-role transactions.
 
+For CTG9 mode, `reservedNumber` asserts coverage by a reservation in the
+trusted tenant/device/org/entity scope. An optional `reservationId` identifies
+one such reservation; the host may derive it from trusted series/shift data in
+its existing business adapter, then prove TEAT/BOAT HTTP behavior before and
+after adoption. Without the ID, multiple covering reservations, including
+different series with overlapping numbers, are ambiguous; never select by
+creation time. A cancelled reservation covers only numbers it retains as
+`applied` or `claimed-locally`; numbers in its released unused tail are not
+coverage, so a new reservation of that tail by the same device is
+unambiguous. Resolve coverage, lock the chosen reservation row against
+close/block/cancel/settle, validate state and insert consumption inside the
+same independent item transaction, before the applier or any effect. The
+scope and numeric range are checked first; an existing `applied` consumption
+then yields ALREADY_APPLIED before the reservation-state check. `reserved` is the only
+consumable status; `validUntil` is compared with the item's
+`createdLocallyAt` (not processing time) for the protocol's expiration guard.
+The classified outcomes carry `{number,reservationId:null|string}` and are:
+
+| Condition                                                             | Neutral STYNX item code                  | Receipt status                                | Host mapping                                     |
+| --------------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------- | ------------------------------------------------ |
+| No covering reservation, or supplied ID outside trusted scope/range   | `OFFLINE_SYNC_NUMBERING_NO_COVERAGE`     | `rejected` with open domain conflict evidence | `TEAT.NUMBERING_RESERVATION_FOREIGN_SHIFT`       |
+| More than one covering reservation without ID                         | `OFFLINE_SYNC_NUMBERING_AMBIGUOUS`       | `rejected` with open domain conflict evidence | host equivalent of foreign/ambiguous reservation |
+| Chosen reservation not `reserved`, or `validUntil < createdLocallyAt` | `OFFLINE_SYNC_NUMBERING_EXPIRED`         | `conflict` with open conflict evidence        | `TEAT.NUMBERING_RESERVATION_EXPIRED`             |
+| Number already applied                                                | `OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED` | `rejected` with open domain conflict evidence | `TEAT.NUMBERING_NUMBER_ALREADY_APPLIED`          |
+
+The host mapping preserves its existing HTTP envelope and guard precedence:
+authorization and host item validation run first, then this numbering guard
+before the domain effect. The TEAT/BOAT characterization is the acceptance
+oracle; the STYNX neutral code does not replace a consumer's public code.
+The E6 no-resolver path retains its published no-reservation behavior even
+when `reservedNumber` is present. After close/settle, previously `available`
+numbers project as `expired`; `claimed-locally` and `applied` remain unchanged,
+identically in the PostgreSQL and in-memory stores. Reconcile serializes on
+the reservation row with cancel, close and settle. A claim submitted after
+close/settle is reported as a discrepancy without changing the terminal
+`expired` projection; a cancelled reservation cannot gain a new claim in its
+released tail or make a later reservation ambiguous.
+
 `OfflineSyncPolicyResolver.resolve({tenantId,orgUnitId,operation,at})` returns the applicable reservation TTL, concurrency window, and batch cardinality policy from the host catalogue. The clock is injected. If the resolver is configured and returns no value for a required tenant/org policy, do not silently fall back to another tenant or a global default: apply the host's explicit missing-parameter outcome. With **no resolver configured**, preserve the published `reservationTtlMs ?? 86_400_000` behavior, identified as a legacy compatibility default rather than a catalogue value; keep the published 100-item maximum in that mode. With a resolver, accept its scoped policy, including more than 100 items when allowed; do not impose a new fixed ceiling. A missing or disabled concurrency window follows the host's existing warning/no-detection policy. A request-supplied `validUntil` remains subject to the host's existing contract and resolved policy. Do not add new limits for strings, hashes, UUIDs, or numbering.
 
 ## UPS-OFS-02 — durable batches and receipts
@@ -296,6 +335,26 @@ Keep `reserveNumbering` and `cancelNumberingReservation`. Add `blockNumberingRes
 `CTG9SubmitSyncBatchInput` adds optional positive `batchSequence` and permits a legacy item with no `idempotencyKey`; the published E6 input type keeps its required key. Persist a batch keyed by `(tenant_id,device_id,device_batch_id)`, with sequence, declared idempotency-key set, open/closed state, and a durable result. A second unique key `(tenant_id,device_id,batch_sequence)` applies only when sequence is present. Serialize reservation of these identities so duplicate sequence under a new batch ID returns 409 and a gap returns 422 with expected/received sequence; first sequenced batch expects 1. A closed batch replay with the same device, sequence, declared set, and context returns the original receipt bytes and causes no new effect. A changed context or declared set returns 409. An open batch after a crash resumes from persisted item receipts in input order; an already completed item is never re-applied. Each open batch has a DB-backed lease with holder token and monotonically increasing fencing generation. Only the current holder may begin an item or close the batch. A concurrent same-batch request waits for the holder to close, then returns the exact closed receipt; if the lease expires, one contender atomically acquires the next generation and resumes uncompleted items. While a valid lease remains open beyond the bounded wait, return HTTP 503 with `errorCode: 'OFFLINE_SYNC:BATCH:in-progress'`, `retryable: true`, the current request ID and `Retry-After: 1` (seconds), with no item effect; this is the durable-strict timeout behavior, never a non-strict fall-through; a stale holder fails the fencing check before its next write. Unique-item conflicts from two contenders resolve by reading the committed receipt, never by re-running the applier. Prove this with simultaneous submissions of the same open batch.
 
 `getSyncBatchReceipt` and `getSyncItemReceipt` return tenant-scoped durable receipts. In CTG9 mode, item identity is `(tenant_id,idempotency_key)` with `payloadHash` as integrity evidence: same key and hash returns the original receipt; same key and different hash records a rejected/integrity-conflict attempt receipt without overwriting the original item receipt or applying a second effect. Different keys with equal payload bytes remain distinct. A hash that does not match the canonical payload is rejected with the existing public integrity outcome. A missing item key uses an internal synthetic key `stynx:legacy:v1:<sha256(tenantId || 0x00 || legacyIdentity)>`, where the inputs are UTF-8 byte strings and `||` is byte concatenation. By default `legacyIdentity` is `deviceId || 0x00 || deviceBatchId || 0x00 || queueItemId`. Optional `OfflineSyncLegacyItemIdentityResolver.resolve` supplies a stable host identity, such as DETRAN's existing device/local-entity identity, so repeated legacy items across batches deduplicate without being applied. The resolver cannot supply tenant authority or a client-accepted key; empty/invalid results fail closed. Explicit client keys beginning `stynx:legacy:` are rejected before writing, and the generated key is never returned as an accepted client key. The item remains `received` with neutral code `OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED` and invokes no applier. The TEAT adapter maps that code to `TEAT.SYNC_LEGACY_ITEM_NOT_APPLIED` while preserving its public envelope. A batch without sequence remains accepted and unordered. Preserve the established receipt statuses `received`, `applied`, `conflict`, and `rejected`, with error code/context and the consumer's public envelopes. No path can infer tenant authority from device or request body data.
+
+A keyed CTG9 item with neither an item applier nor a numbering claim remains
+terminal `received`: it has no domain effect or event, its batch closes, and
+same-key duplicates return that receipt without leaving another batch open.
+A keyed item that requests `reservedNumber` without an item applier fails
+before the batch is written with `OfflineSyncConfigurationError('itemApplier')`;
+the package cannot mark a number applied without a domain effect.
+The normal same-key replay rule applies to CTG9 receipts. An E6 row with
+`received` status is unverified legacy evidence, so a colliding CTG9 key
+instead receives a terminal `rejected` receipt with
+`OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED` and no domain effect; it must not
+promote the E6 row into a verified CTG9 application or keep a lease open.
+
+A same-key duplicate submitted from a different batch has a durable attempt
+receipt indexed by that batch's submitted `queueItemId`. The receipt may
+link to the original queue item in `context.originalQueueItemId`, but must not
+replace the new queue item ID in the batch response or in
+`getSyncBatchReceipt`. In CTG9 mode only, two items in one batch with the same
+declared or legacy synthetic idempotency key fail batch validation with the
+published 400 envelope before any write. E6 behavior remains unchanged.
 
 ## UPS-OFS-03 — one independent transaction per item
 
