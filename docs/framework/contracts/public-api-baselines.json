@@ -749,6 +749,7 @@
         "cli/src/audit.d.ts": "fac6919d37e9e25c60ff1b968e0207d22a0d15a0e464d16998ec113b865ae040",
         "cli/src/cli.d.ts": "a4d32be3e59cdfe29ba34f4ea3a7446e6834a2195222adb1c1a25e5d7f4dc00d",
         "cli/src/doctor.d.ts": "e41f2994aa99fe6d5378b6b45c5ca20b3b2e37b5f977113a98788f1e037b4c78",
+        "cli/src/generate-module.d.ts": "a97265eec135173d7861e0fa44701549c7a16aeb53d058ee6596f42ce09ea9c5",
         "cli/src/index.d.ts": "6118f7a8fa7d3a96c5ac99ea116139c9a797b3a15d208d50a09d4259a1e04231",
         "cli/src/init.d.ts": "63a5193f65ed89824acc2bfe7a4db8dd1b0d1ebcbe3a07aed48cd8ff4bcb475a",
         "cli/src/main.d.ts": "fdbeaaceb1047d486b9d1e7fc381a8cb7f589bbe8e78d591cd17a7797f425c49",

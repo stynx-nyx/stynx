@@ -36,7 +36,8 @@
       "STYNX 1.5.0 CTG-0006 Architect rebind pins If-Match, Angular error boundary, accessible shell, published testing helpers and adopted helper sensors. Real Nest/PostgreSQL tests also prove If-Match and ETag compose with transactional commit, replay and rollback. The assertion projection of modified existing tests is refreshed without reducing their declared invariants.",
       "STYNX 1.5.0 CTG-0006 delivery-review Architect rebind pins system-theme media changes and SSR fallback, accessible live status, source-identity fake Transaction, published testing imports and legacy request ID preservation.",
       "STYNX 1.5.0 CTG-0006 PASS follow-up Architect rebind pins negative deep-import vectors and direct fake-Transaction source resolution.",
-      "STYNX 1.5.0 CTG-0007 Architect rebind pins the Angular-generated idempotency key through live Nest HTTP and PostgreSQL RLS commit, replay and mismatch paths."
+      "STYNX 1.5.0 CTG-0007 Architect rebind pins the Angular-generated idempotency key through live Nest HTTP and PostgreSQL RLS commit, replay and mismatch paths.",
+      "STYNX 1.5.0 CTG-0008 Architect rebind pins blueprint safety, deterministic output, generated RBAC and PostgreSQL RLS sensors, including the packed external consumer."
     ]
   },
   "invariants": [
@@ -157,6 +158,24 @@
             "private resolved-tenancy port records only exact validated membership or nominal/verified public identity"
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "every generated HTTP handler has exactly one unique exact permission and no public marker"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "the packed consumer denies every generated route without its exact permission"
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": []
@@ -882,6 +901,140 @@
         "scripts/list-routes.mjs",
         "scripts/verify-api-coverage.mjs"
       ]
+    },
+    {
+      "id": "INV-CLI-001",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-CLI-001.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/cli-generator-1.5.md",
+          "anchor": "input-dialect"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-CLI-001"],
+          "assertions": [
+            "invalid blueprint names, paths, SQL defaults, reserved schemas and output collisions leave no output"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-CLI-001"],
+          "assertions": [
+            "the installed CLI rejects existing output and existing SQL namespace without partial changes"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
+    },
+    {
+      "id": "INV-CLI-002",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-CLI-002.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/cli-generator-1.5.md",
+          "anchor": "acceptance-evidence"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-CLI-002"],
+          "assertions": [
+            "repeated generation is byte-identical and --check detects additions, removals and mutations without writing"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-CLI-002"],
+          "assertions": [
+            "an external consumer installs only local STYNX tarballs with verified integrity and compiles generated source"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
+    },
+    {
+      "id": "INV-CLI-003",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-CLI-003.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/cli-generator-1.5.md",
+          "anchor": "acceptance-evidence"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-CLI-003"],
+          "assertions": [
+            "generated routes have unique exact permission decorators, bound SQL and a trusted tenant context"
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-CLI-003"],
+          "assertions": [
+            "real Nest routes deny missing permissions, validate DTOs and use trusted tenant-scoped repositories"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
+    },
+    {
+      "id": "INV-CLI-004",
+      "docs": [
+        {
+          "doc": "law/invariants/INV-CLI-004.json",
+          "anchor": "statement"
+        },
+        {
+          "doc": "docs/framework/contracts/cli-generator-1.5.md",
+          "anchor": "acceptance-evidence"
+        }
+      ],
+      "tests": [
+        {
+          "suite": "unit",
+          "path": "packages/cli/test/generate-module.spec.ts",
+          "names": ["INV-CLI-004"],
+          "assertions": ["generated SQL has FORCE RLS and both tenant policy predicates"],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "test/packages/cli-generator/run-integration.mjs",
+          "names": ["INV-CLI-004"],
+          "assertions": [
+            "real app-role PostgreSQL rejects tenant A reading or mutating tenant B rows and missing tenant context"
+          ],
+          "mode": "gray_box"
+        }
+      ],
+      "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
     }
   ],
   "test_corpus": [
@@ -2023,7 +2176,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 49,
-      "assertion_digest_sha256": "dc153b2709255427a9156accccba29941af01a3e51ec96e07319594c16e85afe"
+      "assertion_digest_sha256": "9be5e5ae9e60204f9840bf66ba65d9d8431b4d388911d16ae0e6a7f29309ad1f"
     },
     {
       "path": "packages/cli/test/cli.spec.ts",
@@ -4632,6 +4785,14 @@
       "lifecycle": "supported",
       "assertion_count": 15,
       "assertion_digest_sha256": "3c48a5e2d7515228c12422dba046e14af483cb857d59d88a351ff8b923ce9345"
+    },
+    {
+      "path": "packages/cli/test/generate-module.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-RBAC-001", "INV-CLI-001", "INV-CLI-002", "INV-CLI-003", "INV-CLI-004"],
+      "lifecycle": "supported",
+      "assertion_count": 76,
+      "assertion_digest_sha256": "dd968e31e5cd37082e402d1af05cd587571c8958690a320e0f31389dfb6f414b"
     }
   ],
   "suites": {
