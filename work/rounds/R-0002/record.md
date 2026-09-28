@@ -405,3 +405,40 @@ Contrato e prompts 80–82 foram atualizados; prompt 86 prepara o ciclo 3
 excepcional. O limite de dois `REVIEW` foi atingido. A exceção Owner para
 executar prompt 86 está pendente; nenhum terceiro review ou worker foi
 despachado. Nenhum código F2, teste F3 ou DETRAN foi editado neste reparo.
+
+## Retomada consolidada sob OD-S15-02 (2026-09-28)
+
+Os parágrafos históricos acima registram o estado de suas respectivas datas;
+seus itens pendentes foram superados pelos checkpoints posteriores em
+`plan.md` §Retomada. A OD-S15-02 substituiu PR, RC e CI integral por CTG para
+as CTGs 5–8 por uma importação cumulativa 5 → 6 → 7 → 8, com gates focais e
+delivery-review por grupo, seguida de um único gate final. CTG7 teve PASS
+integrado em `22d976fb`; CTG8 teve PASS integrado em `0c7eb2e0`. O código
+cumulativo, incluindo o hardening da CTG8, está em `81681892`. A branch
+`feat/release-1-5-0-jobs` está em `6628b5ca` após checkpoints documentais.
+Nenhum PR final foi aberto e não houve RC nova sob a OD-S15-02. RC1 e RC2
+publicadas anteriormente continuam evidência histórica, não declaração final.
+
+A comparação read-only da adenda DETRAN A1 §8.1 mostrou que SIG/OBX/OFS
+totalizam dez IDs MUST ainda sem implementação STYNX. A prévia condicional
+`ctg-0009-preflight.md` foi registrada em `6628b5ca`, sem despachar workers
+nem alterar produto. A decisão do Owner sobre incluir esses IDs na 1.5.0 ou
+adiá-los expressamente continua pendente. A CTG5 também mantém um conflito
+entre seu novo HTTP 409 e `law/schemas/error-envelope.schema.json`. O plano
+de reconciliação opção A e os prompts Inspector/Engineer receberam PASS
+técnico do Opus na branch isolada `codex/ctg5-error-envelope` em `f39ff93e`,
+mas não foram importados ou executados sem decisão específica do Owner sobre
+`INV-ERROR-001`.
+
+Preflight do gate final, sem escrita de versão: `pnpm release:preview` passou
+na branch cumulativa e listou cinco changesets pendentes (jobs, transação,
+web-kit, utilitários e CLI). Como `.changeset/pre.json` ainda está no modo
+`rc` e os manifests estão em `1.5.0-rc.3`, a prévia reportou
+`1.5.0-rc.3 -> 1.5.0-rc.4`; isso **não** é a versão final pretendida. A
+sequência final continua `pnpm changeset pre exit` e
+`pnpm version-packages` depois do congelamento do escopo e da correção
+autorizada. `git fetch -q origin --prune` confirmou `origin/main` e `main`
+em `493fcd959592d30055dcacabd57e4cc19505f2c6`, ancestral do HEAD
+cumulativo; o único PR aberto observado foi o bot Changesets #273. O único
+CI local integral, PR, CI remoto, merge e publicação final permanecem
+pendentes.

@@ -595,6 +595,16 @@ ci:stynx`, log `/private/tmp/stynx-s15-rc1-ci.log`. Trace 393/393,
     Nenhum worker foi despachado para CTG9. Se incluída, a CTG9 segue a
     mesma importação cumulativa, sem PR ou RC intermediário; o único gate
     local/PR/remoto/publicação ocorre após todos os MUST confirmados.
+24. Preflight read-only do gate consolidado em 2026-09-28: `origin/main` e
+    `main` coincidem em `493fcd95` e são ancestrais da branch cumulativa;
+    apenas o PR bot #273 está aberto. `pnpm release:preview` passou e mostrou
+    cinco changesets de CTGs 4–8 pendentes, mas ainda projetou
+    `1.5.0-rc.4` porque `.changeset/pre.json` permanece em `pre`. Não
+    versionar nem executar o CI integral antes do congelamento do escopo:
+    após as decisões Owner e a correção CTG5, usar `pnpm changeset pre exit`
+    e `pnpm version-packages` para gerar a candidata estável, então executar
+    o único gate integral da OD-S15-02. O estado detalhado está em
+    `record.md` §Retomada consolidada.
 
 ## Reviews, PRs e publicações
 
