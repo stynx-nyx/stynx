@@ -100,6 +100,20 @@ describe('PDF trust remaining reachable branches', () => {
       .rejects.toMatchObject({ name: 'SignatureTrustError', message: 'Post-signature modification' });
   });
 
+  it('maps a non-dictionary parsed xref trailer to the typed fail-closed error', async () => {
+    const parser = vi.spyOn(PDFObjectParser, 'forBytes').mockReturnValue({
+      parseObject: () => PDFNull,
+      bytes: { offset: () => 4 },
+    } as unknown as ReturnType<typeof PDFObjectParser.forBytes>);
+    try {
+      const revision = Buffer.from(listUpdatedCatalogInXref(bltSignedDocument));
+      await expect(readPdfTrustEvidence(revision, revisionEnd(revision), bltCmsSignature))
+        .rejects.toMatchObject({ name: 'SignatureTrustError', message: 'Post-signature modification' });
+    } finally {
+      parser.mockRestore();
+    }
+  });
+
   it('fails closed when a parsed xref object reports an invalid byte offset', async () => {
     const parser = vi.spyOn(PDFObjectParser, 'forBytes').mockReturnValue({
       parseObject: () => PDFNull,
