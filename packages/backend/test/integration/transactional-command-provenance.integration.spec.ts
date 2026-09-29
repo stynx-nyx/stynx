@@ -405,7 +405,7 @@ describe('transactional command provenance bootstrap', () => {
     ['ttlMs', InvalidTtlController],
   ] as const)('refuses invalid route %s during app.init', async (_name, controller) => {
     const invalid = await bootstrap(controller, undefined, false, true);
-    try { await expectBootstrapRefusal(invalid, /timeout|ttl|invalid/i); }
+    try { await expectBootstrapRefusal(invalid, /timeout|deadline|ttl|invalid/i); }
     finally { await invalid.close(); }
   });
 

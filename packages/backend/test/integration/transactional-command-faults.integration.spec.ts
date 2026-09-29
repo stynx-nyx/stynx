@@ -679,13 +679,15 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     }
   }, 30_000);
 
-  it('rolls back domain, audit and reservation after an audit-chain statement deadline', async () => {
+  it('rolls back a reservation blocked by its audit trigger after a statement deadline', async () => {
     const admin = await postgres!.connectAsAdmin();
     await admin.query('begin');
     await admin.query('select pg_advisory_xact_lock(hashtextextended($1::text, 0))', [TENANT]);
     try {
       const response = await send('audit-deadline', 'audit-deadline-key');
-      expectDependencyEnvelope(response);
+      expect(response.status).toBe(504);
+      expect(response.body).toEqual({ code: 'STATEMENT_TIMEOUT',
+        message: 'Transaction exceeded the configured statement timeout', context: { originalCode: '57014' } });
       const effects = await admin.query<{ count: string }>(
         "select count(*) from core.transactional_fault_probe where tenant_id=$1 and mode='audit-deadline'",
         [TENANT],
@@ -698,7 +700,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
     const retry = await send('audit-deadline', 'audit-deadline-key');
     expect(retry.status).toBe(201);
     expect(retry.body).toEqual({ committed: true });
-    expect(countInvocations('audit-deadline')).toBe(2);
+    expect(countInvocations('audit-deadline')).toBe(1);
   }, 30_000);
 
   it('preserves ordinary unmarked route behavior beside the global command boundary', async () => {
