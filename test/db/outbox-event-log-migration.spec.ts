@@ -119,4 +119,90 @@ describe('outbox event log migration 0021', () => {
       await database.dispose();
     }
   });
+
+  it('upgrades an existing 0021 attempt to tenant-scoped app updates in 0022', async () => {
+    const database = await createPostgresTestDatabase('stynx_outbox_attempt_upgrade', { useTemplate: false });
+    const client = await database.connectAsAdmin();
+    const migrations = resolve(__dirname, '../../packages/data/migrations/platform');
+    const tenantA = 'a3333333-3333-4333-8333-333333333333';
+    const tenantB = 'b4444444-4444-4444-8444-444444444444';
+    const eventA = '01900000-0000-7000-8000-000000000031';
+    const eventB = '01900000-0000-7000-8000-000000000032';
+    try {
+      const files = (await readdir(migrations)).filter((file) => file.endsWith('.sql')).sort();
+      expect(files).toContain('0022_outbox_request_path.sql');
+      for (const filename of files) {
+        if (filename > '0021_outbox_event_log.sql') break;
+        await client.query(await readFile(resolve(migrations, filename), 'utf8'));
+        if (filename === '0002_extensions.sql') await client.query('set role stynx_owner');
+      }
+      await client.query(`
+        insert into tenancy.tenants (id,slug,name) values
+          ($1::uuid,'outbox-upgrade-a','Outbox upgrade A'),
+          ($2::uuid,'outbox-upgrade-b','Outbox upgrade B')
+      `, [tenantA, tenantB]);
+      await client.query(`
+        insert into outbox.events
+          (id,tenant_id,entity,entity_id,idempotency_key,payload,created_at)
+        values ($1::uuid,$3::uuid,'upgrade','a','upgrade-a','{}'::jsonb,now()),
+               ($2::uuid,$4::uuid,'upgrade','b','upgrade-b','{}'::jsonb,now())
+      `, [eventA, eventB, tenantA, tenantB]);
+      await client.query(`
+        insert into outbox.event_attempts (tenant_id,event_id,attempt_ordinal,result)
+        values ($1::uuid,$2::uuid,1,'CLAIMED'),($3::uuid,$4::uuid,1,'CLAIMED')
+      `, [tenantA, eventA, tenantB, eventB]);
+      const before = await client.query<{ allowed: boolean }>(
+        `select has_table_privilege('stynx_app','outbox.event_attempts','UPDATE') as allowed`,
+      );
+      expect(before.rows).toEqual([{ allowed: false }]);
+
+      await client.query(await readFile(resolve(migrations, '0022_outbox_request_path.sql'), 'utf8'));
+      const security = await client.query<{
+        enabled: boolean; forced: boolean; app_update: boolean; reader_update: boolean;
+      }>(`
+        select relrowsecurity as enabled,relforcerowsecurity as forced,
+               has_table_privilege('stynx_app',oid,'UPDATE') as app_update,
+               has_table_privilege('stynx_reader',oid,'UPDATE') as reader_update
+        from pg_class where oid='outbox.event_attempts'::regclass
+      `);
+      expect(security.rows).toEqual([{
+        enabled: true, forced: true, app_update: true, reader_update: false,
+      }]);
+      const preserved = await client.query<{ tenant_id: string; result: string }>(`
+        select tenant_id::text,result from outbox.event_attempts order by tenant_id
+      `);
+      expect(preserved.rows).toEqual([
+        { tenant_id: tenantA, result: 'CLAIMED' },
+        { tenant_id: tenantB, result: 'CLAIMED' },
+      ]);
+
+      await client.query('set role stynx_app');
+      await client.query('begin');
+      await client.query("select set_config('app.tenant_id',$1,true)", [tenantA]);
+      const own = await client.query<{ event_id: string }>(`
+        update outbox.event_attempts set result='SENT' where tenant_id=$1::uuid
+        returning event_id::text
+      `, [tenantA]);
+      expect(own.rows).toEqual([{ event_id: eventA }]);
+      const foreign = await client.query<{ event_id: string }>(`
+        update outbox.event_attempts set result='ERROR' where tenant_id=$1::uuid
+        returning event_id::text
+      `, [tenantB]);
+      expect(foreign.rows).toEqual([]);
+      await client.query('commit');
+      await client.query('reset role');
+      const after = await client.query<{ tenant_id: string; result: string }>(`
+        select tenant_id::text,result from outbox.event_attempts order by tenant_id
+      `);
+      expect(after.rows).toEqual([
+        { tenant_id: tenantA, result: 'SENT' },
+        { tenant_id: tenantB, result: 'CLAIMED' },
+      ]);
+    } finally {
+      await client.query('rollback').catch(() => undefined);
+      await client.query('reset role').catch(() => undefined);
+      await client.end();
+      await database.dispose();
+    }
+  });
 });
