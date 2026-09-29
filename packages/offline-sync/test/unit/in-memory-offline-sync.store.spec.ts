@@ -298,8 +298,8 @@ describe('InMemoryOfflineSyncStore direct CTG9 contracts', () => {
 
   it('uses durable option defaults and treats absent batch/item receipts as empty', async () => {
     const store = new InMemoryOfflineSyncStore();
-    await expect(store.getSyncBatchReceipt(scope, 'device-a', 'missing')).resolves.toBeNull();
-    await expect(store.getSyncItemReceipt(scope, 'missing')).resolves.toBeNull();
+    await expect(store.getSyncBatchReceipt(scope, 'device-a', 'missing')).resolves.toStrictEqual(null);
+    await expect(store.getSyncItemReceipt(scope, 'missing')).resolves.toStrictEqual(null);
     const sparse = { method: 'POST', path: '/sync/batch' } as unknown as DurableBatchExecutionOptions;
     await expect(store.submitDurableSyncBatch(scope, batch('sparse'), sparse, now)).resolves.toMatchObject({ items: [{ status: 'received' }] });
   });

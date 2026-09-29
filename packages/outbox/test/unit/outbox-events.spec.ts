@@ -29,6 +29,29 @@ function databaseFor(query: OutboxSqlExecutor['query'], tenantId: string | null 
   };
 }
 
+function expectAckQueryBatch(
+  query: OutboxSqlExecutor['query'],
+  start: number,
+  lookup: readonly unknown[],
+  status: 'ACKED' | 'ERROR',
+  rawBody: Buffer,
+): void {
+  expect(query).toHaveBeenCalledTimes(start + 4);
+  const calls = query.mock.calls.slice(start);
+  expect(calls.map(([sql]) => String(sql).trim().replace(/\s+/gu, ' '))).toEqual([
+    expect.stringContaining('select id from outbox.events'),
+    expect.stringContaining('select attempts from outbox.event_delivery'),
+    expect.stringContaining("update outbox.event_delivery set status=$3,next_attempt_at=$4,lease_until=null,updated_at=clock_timestamp()"),
+    expect.stringContaining('insert into outbox.event_acks'),
+  ]);
+  expect(calls.map(([, params]) => params)).toEqual([
+    lookup,
+    [tenant, eventRow.id],
+    [tenant, eventRow.id, status, status === 'ERROR' ? expect.any(Date) : null],
+    [tenant, eventRow.id, status, rawBody, expect.stringMatching(/^[0-9a-f]{64}$/u)],
+  ]);
+}
+
 function appendQuery(overrides: { duplicate?: boolean; conflict?: boolean; invalid?: boolean; ownershipCode?: string } = {}) {
   return vi.fn(async (sql: string) => {
     if (sql.includes("current_setting('app.tenant_id'")) return { rows: [{
@@ -248,9 +271,9 @@ describe('OutboxService tenant event ACK', () => {
       return { rows: [] };
     }) as OutboxSqlExecutor['query'];
     const service = new OutboxService(databaseFor(query) as never, {});
-    await expect(service.ackTenantEvent({ idempotencyKey: 'key', rawBody: Buffer.from('ack'), status: 'ERROR', hmacVerified: true })).resolves.toBeUndefined();
-    expect(query.mock.calls.some(([sql]) => String(sql).includes('insert into outbox.event_acks'))).toBe(true);
-    expect(query.mock.calls.some(([sql]) => String(sql).includes("set status=$3,next_attempt_at=$4"))).toBe(true);
+    const ackBody = Buffer.from('ack');
+    await service.ackTenantEvent({ idempotencyKey: 'key', rawBody: ackBody, status: 'ERROR', hmacVerified: true });
+    expectAckQueryBatch(query, 0, [tenant, null, 'key'], 'ERROR', ackBody);
 
     const unknown = vi.fn(async () => ({ rows: [] })) as OutboxSqlExecutor['query'];
     await expect(new OutboxService(databaseFor(unknown) as never, {}).ackTenantEvent({
@@ -264,13 +287,17 @@ describe('OutboxService tenant event ACK', () => {
     await expect(new OutboxService(databaseFor(query) as never, {}).ackTenantEvent({
       tenantId: tenant, idempotencyKey: 'key', rawBody: Buffer.from('ack'), status: 'ACKED', hmacVerified: true,
     } as never)).rejects.toMatchObject({ code: 'OUTBOX_NOT_FOUND' });
-    await expect(new OutboxService(databaseFor(query) as never, {}).ackTenantEvent({
-      idempotencyKey: 'key', rawBody: Buffer.from('ack'), status: 'ACKED', hmacVerified: true,
-    })).resolves.toBeUndefined();
+    const keyAckStart = query.mock.calls.length;
+    await new OutboxService(databaseFor(query) as never, {}).ackTenantEvent({
+      idempotencyKey: 'key', rawBody: ackBody, status: 'ACKED', hmacVerified: true,
+    });
+    expectAckQueryBatch(query, keyAckStart, [tenant, null, 'key'], 'ACKED', ackBody);
     // Event ID is a supported exclusive identity, with no idempotency key.
-    await expect(new OutboxService(databaseFor(query) as never, {}).ackTenantEvent({
-      eventId: eventRow.id, rawBody: Buffer.from('ack'), status: 'ACKED', hmacVerified: true,
-    })).resolves.toBeUndefined();
+    const eventAckStart = query.mock.calls.length;
+    await new OutboxService(databaseFor(query) as never, {}).ackTenantEvent({
+      eventId: eventRow.id, rawBody: ackBody, status: 'ACKED', hmacVerified: true,
+    });
+    expectAckQueryBatch(query, eventAckStart, [tenant, eventRow.id, null], 'ACKED', ackBody);
   });
 
   it('quarantines unverified request ACKs and remaps held-connection failures', async () => {
@@ -310,16 +337,17 @@ describe('OutboxService verified owner event ACK', () => {
       return { rows: [] };
     }) as OutboxSqlExecutor['query'];
     const service = new OutboxService(databaseFor(query) as never, {});
-    await expect(service.ackEvent(valid)).resolves.toBeUndefined();
-    expect(query.mock.calls.some(([sql]) => String(sql).includes('insert into outbox.event_acks'))).toBe(true);
+    await service.ackEvent(valid);
+    expectAckQueryBatch(query, 0, [tenant, eventRow.id, null], 'ERROR', valid.rawBody);
 
     const missingDelivery = vi.fn(async (sql: string) => sql.includes('from outbox.events')
       ? { rows: [{ id: eventRow.id }] } : { rows: [] }) as OutboxSqlExecutor['query'];
     await expect(new OutboxService(databaseFor(missingDelivery) as never, {}).ackEvent(valid))
       .rejects.toMatchObject({ code: 'OUTBOX_NOT_FOUND' });
 
-    await expect(new OutboxService(databaseFor(query) as never, {}).ackEvent({ ...valid, status: 'ACKED' }))
-      .resolves.toBeUndefined();
+    const ackedStart = query.mock.calls.length;
+    await new OutboxService(databaseFor(query) as never, {}).ackEvent({ ...valid, status: 'ACKED' });
+    expectAckQueryBatch(query, ackedStart, [tenant, eventRow.id, null], 'ACKED', valid.rawBody);
   });
 
   it('quarantines a found event with an invalid signature using idempotency identity', async () => {

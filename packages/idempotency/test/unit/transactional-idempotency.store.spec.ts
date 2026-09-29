@@ -93,7 +93,8 @@ describe('TransactionalIdempotencyStore', () => {
   it('completes only the matching pending reservation and refuses a lost reservation', async () => {
     const bytes = Buffer.from('response');
     const completed = scriptedTransaction({ rowCount: 1 });
-    await expect(store.complete(completed.trx, identity, 202, bytes, { etag: 'v2' })).resolves.toBeUndefined();
+    await store.complete(completed.trx, identity, 202, bytes, { etag: 'v2' });
+    expect(completed.query).toHaveBeenCalledTimes(1);
     expect(completed.query).toHaveBeenCalledWith(expect.stringContaining("status = 'pending'"), [
       identity.tenantId, TransactionalIdempotencyStore.durableKey(identity.scope, identity.key),
       202, bytes, '{"etag":"v2"}', identity.fingerprint,
@@ -106,7 +107,8 @@ describe('TransactionalIdempotencyStore', () => {
 
   it('clears only the matching pending reservation inside the supplied transaction', async () => {
     const { trx, query } = scriptedTransaction({ rowCount: 1 });
-    await expect(store.clear(trx, identity)).resolves.toBeUndefined();
+    await store.clear(trx, identity);
+    expect(query).toHaveBeenCalledTimes(1);
     expect(query).toHaveBeenCalledWith(expect.stringContaining('delete from core.idempotency_keys'), [
       identity.tenantId, TransactionalIdempotencyStore.durableKey(identity.scope, identity.key),
       identity.fingerprint,

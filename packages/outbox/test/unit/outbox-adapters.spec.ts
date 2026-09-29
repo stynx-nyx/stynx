@@ -120,11 +120,11 @@ describe('outbox adapter edge behavior', () => {
     });
     const source = new OutboxEventStreamSource(makeDatabase(query) as never);
     await expect(source.now({ tenantId: 't', actorId: 'a' })).resolves.toEqual(new Date(1_700_000_000_000));
-    await expect(source.findById('not-a-uuid', { tenantId: 't', actorId: 'a' })).resolves.toBeNull();
+    await expect(source.findById('not-a-uuid', { tenantId: 't', actorId: 'a' })).resolves.toStrictEqual(null);
     await expect(source.findById(streamRow.id, { tenantId: 't', actorId: 'a' })).resolves.toEqual(streamRow);
     const emptyRead = new OutboxEventStreamSource(makeDatabase(vi.fn(async (sql: string) =>
       sql.includes('pg_is_in_recovery') ? { rows: [{ recovery: false, role: 'app', sql_role: 'stynx_app' }] } : { rows: [] })) as never);
-    await expect(emptyRead.findById(streamRow.id, { tenantId: 't', actorId: 'a' })).resolves.toBeNull();
+    await expect(emptyRead.findById(streamRow.id, { tenantId: 't', actorId: 'a' })).resolves.toStrictEqual(null);
     await expect(source.listSince({ createdAt: new Date(0), id: '' }, { tenantId: 't', actorId: 'a' }, 3)).resolves.toEqual([streamRow]);
 
     const held = new OutboxEventStreamSource(makeDatabase(query, true) as never);
