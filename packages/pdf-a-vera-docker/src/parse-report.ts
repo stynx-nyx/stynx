@@ -30,7 +30,7 @@ export function parseVeraPdfJson(raw: string): PdfAValidationResult {
   if (!details || !hasRulePopulation(details)) {
     throw new VeraPdfReportParseError('VERAPDF_REPORT_DETAILS_MISSING');
   }
-  const errors = collectRuleErrors(validation);
+  const errors = collectRuleErrors(details);
 
   return {
     valid,
@@ -63,8 +63,7 @@ function parseJson(raw: string): JsonRecord {
   }
 }
 
-function collectRuleErrors(validation: JsonRecord): PdfARuleError[] {
-  const details = asRecord(validation.details) ?? validation;
+function collectRuleErrors(details: JsonRecord): PdfARuleError[] {
   const failedRules = readArray(details, ['failedRules', 'rules', 'ruleSummaries']);
   return failedRules.flatMap((rule) => {
     const ruleRecord = asRecord(rule);

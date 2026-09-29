@@ -130,9 +130,7 @@ export async function runVeraPdfDocker(
 }
 
 function killChild(child: ChildProcessWithoutNullStreams): void {
-  if (!child.killed) {
-    child.kill('SIGKILL');
-  }
+  child.kill('SIGKILL');
 }
 
 function cleanupContainer(dockerBin: string, containerName: string): void {
