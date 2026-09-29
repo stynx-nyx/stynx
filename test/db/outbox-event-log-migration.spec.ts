@@ -266,7 +266,8 @@ describe('outbox event log migration 0021', () => {
         (tenant_id,event_id,attempt_ordinal,result,completed_at,legacy_message_id,legacy_state)
         values ($1::uuid,$2::uuid,1,'SENT',clock_timestamp(),null,null),
                ($1::uuid,$2::uuid,2,'LEGACY_HISTORY_UNAVAILABLE',null,
-                '01900000-0000-4000-8000-000000000056'::uuid,'{"source":"legacy"}'::jsonb)`,
+                '01900000-0000-4000-8000-000000000056'::uuid,'{"source":"legacy"}'::jsonb),
+               ($1::uuid,$2::uuid,3,'CLAIMED',null,null,null)`,
       [tenant, event]);
       await client.query('set role stynx_app');
       for (const ordinal of [1, 2]) {
@@ -277,6 +278,24 @@ describe('outbox event log migration 0021', () => {
         [tenant, event, ordinal])).rejects.toMatchObject({ code: '42501' });
         await client.query('rollback');
       }
+      for (const mutation of [
+        "result='SENT'",
+        "result='CLAIMED',error='rewrite'",
+        'attempt_ordinal=4',
+      ]) {
+        await client.query('begin');
+        await client.query("select set_config('app.tenant_id',$1,true)", [tenant]);
+        await expect(client.query(`update outbox.event_attempts set ${mutation}
+          where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=3`,
+        [tenant, event])).rejects.toMatchObject({ code: '42501' });
+        await client.query('rollback');
+      }
+      await client.query('reset role');
+      const claimed = await client.query<{ attempt_ordinal: number; result: string; error: string | null }>(`
+        select attempt_ordinal,result,error from outbox.event_attempts
+        where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal>=3
+        order by attempt_ordinal`, [tenant, event]);
+      expect(claimed.rows).toEqual([{ attempt_ordinal: 3, result: 'CLAIMED', error: null }]);
     } finally {
       await client.query('rollback').catch(() => undefined);
       await client.query('reset role').catch(() => undefined);

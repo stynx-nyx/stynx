@@ -77,8 +77,9 @@ const packageRoster = JSON.parse(
 // The registry census is validated against the current unified candidate
 // (registryVersionPolicyConstants.candidate), not the historical 1.2.0
 // rebaseline target that unified-rebaseline.mjs still describes.
-const currentCandidate = '1.5.0';
+const currentCandidate = '1.5.1';
 const previousCandidate = '1.5.0-rc.2';
+const preflightLatest = '1.5.0';
 
 const campaignPolicy = {
   policy_id: 'stynx.package-roster',
@@ -115,7 +116,7 @@ function registryMetadata(name, versions) {
   return {
     name,
     versions: Object.fromEntries(versions.map((version) => [version, { name, version }])),
-    'dist-tags': { latest: versions.at(-1), rc: previousCandidate },
+    'dist-tags': { latest: preflightLatest, rc: previousCandidate },
   };
 }
 
@@ -123,7 +124,10 @@ function publishedRegistryState(name, versions) {
   return {
     authenticated: true,
     status: 200,
-    metadata: registryMetadata(name, versions),
+    metadata: registryMetadata(
+      name,
+      versions.includes(preflightLatest) ? versions : [...versions, preflightLatest],
+    ),
   };
 }
 
@@ -137,12 +141,12 @@ function validRegistryCensus() {
       if (firstPublicationNames.includes(name)) return [name, absentRegistryState()];
       const versions =
         name === '@stynx-nyx/angular-profile'
-          ? ['0.5.0', '1.0.0', '1.1.0', previousCandidate, '2.0.0']
+          ? ['0.5.0', '1.0.0', '1.1.0', previousCandidate, preflightLatest, '2.0.0']
           : name === '@stynx-nyx/angular-sessions' || name === '@stynx-nyx/sessions'
-            ? ['0.5.0', '1.0.0', '1.1.0', previousCandidate]
+            ? ['0.5.0', '1.0.0', '1.1.0', previousCandidate, preflightLatest]
             : singleVersionNames.includes(name)
-              ? ['1.1.1', previousCandidate]
-              : ['0.5.0', '1.0.0', previousCandidate];
+              ? ['1.1.1', previousCandidate, preflightLatest]
+              : ['0.5.0', '1.0.0', previousCandidate, preflightLatest];
       return [name, publishedRegistryState(name, versions)];
     }),
   );
@@ -711,18 +715,18 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 test('Architect anomaly policy is required at its exact approved digest', () => {
   // The next unified candidate must be explicitly bound in the Architect
   // policy; 1.2.0 remains historical rebaseline data.
-  assert.equal(currentCandidate, '1.5.0');
+  assert.equal(currentCandidate, '1.5.1');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
-  assert.equal(anomalyPolicy.owner_decision.date, '2026-09-28');
-  assert.equal(anomalyPolicy.owner_decision.repository_baseline, '493fcd959592d30055dcacabd57e4cc19505f2c6');
-  assert.equal(anomalyPolicy.owner_decision.repository_tree, '9ef2f9350a67fec3d20d6d631669e4207ef6b636');
+  assert.equal(anomalyPolicy.owner_decision.date, '2026-09-29');
+  assert.equal(anomalyPolicy.owner_decision.repository_baseline, '64d7906682d00ea929e1b48cb7b67e477a46766a');
+  assert.equal(anomalyPolicy.owner_decision.repository_tree, '1e50971e4bce2eb0d242b146a4dd7f56c158a098');
   assert.deepEqual(anomalyPolicy.owner_decision.supersedes, {
-    date: '2026-09-27', next_unified_version: '1.5.0-rc.3',
+    date: '2026-09-28', next_unified_version: '1.5.0',
   });
-  for (const phrase of ['44', previousCandidate, currentCandidate, 'exact-main-SHA', 'rc', 'latest', '1.4.0']) {
+  for (const phrase of ['44', previousCandidate, currentCandidate, 'exact-main-SHA', 'rc', 'latest', preflightLatest]) {
     assert.ok(anomalyPolicy.owner_decision.statement.includes(phrase), `Owner statement must name ${phrase}`);
   }
-  assert.equal(anomalyPolicy.preflight_latest_version, '1.4.0');
+  assert.equal(anomalyPolicy.preflight_latest_version, preflightLatest);
   assert.notEqual(currentCandidate, unifiedRebaselineTarget);
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.allowed_candidate, currentCandidate);
@@ -1417,7 +1421,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
   assert.equal(packageNames.length, 44);
   assert.equal(registryVersionPolicyConstants.candidate, currentCandidate);
   assert.equal(registryVersionPolicyConstants.previousCandidate, previousCandidate);
-  assert.equal(registryVersionPolicyConstants.preflightLatestVersion, '1.4.0');
+  assert.equal(registryVersionPolicyConstants.preflightLatestVersion, preflightLatest);
   assert.equal(anomalyPolicy.anomalies.length, 1);
   assert.deepEqual(
     anomalyPolicy.anomalies.map(({ package: name, version }) => [name, version]),
@@ -1435,7 +1439,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
   for (const [version, code] of [
     [currentCandidate, 'REGISTRY_CANDIDATE_EXISTS'],
     ['1.5.0-rc.4', null],
-    ['1.5.1', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['1.5.2', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
     ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
   ]) {
     const history = validRegistryCensus();
@@ -1444,7 +1448,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
     else assertPolicyError(() => validate({ registryStatesByPackage: history }), code);
   }
 
-  for (const candidate of ['1.5.0-rc.1', previousCandidate, '1.5.0-rc.4', '1.5.1']) {
+  for (const candidate of ['1.5.0-rc.1', previousCandidate, '1.5.0-rc.4', '1.5.2']) {
     assertPolicyError(() => loadRegistryAnomalyPolicy(repoRoot, candidate), 'REGISTRY_ANOMALY_POLICY_UNSUPPORTED');
     assertPolicyError(() => validate({ candidate }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
   }
@@ -1541,20 +1545,20 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   assert.match(helperSource, /export function verifyPostPublishDistTags\(\{ candidate, preflightLatest, preflightDistTags, distTags \}\)/u);
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
-  assert.equal(preflightLatest, '1.4.0');
+  assert.equal(preflightLatest, '1.5.0');
   assert.deepEqual(validatePreflightDistTags({
     preflightLatest,
     preflightRc,
-    distTags: { latest: '1.4.0', rc: previousCandidate, legacy: '0.9.0' },
-  }), { latest: '1.4.0', rc: previousCandidate, legacy: '0.9.0' });
-  for (const latest of ['2.0.0', currentCandidate, '1.3.1']) {
+    distTags: { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' },
+  }), { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' });
+  for (const latest of ['2.0.0', currentCandidate, '1.4.0']) {
     assert.throws(
       () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags: { latest, rc: previousCandidate } }),
       (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT',
     );
   }
   for (const distTags of [
-    { rc: previousCandidate }, null, [], {}, { latest: 1 }, { '': '1.4.0' },
+    { rc: previousCandidate }, null, [], {}, { latest: 1 }, { '': preflightLatest },
   ]) {
     assert.throws(
       () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags }),
@@ -1562,42 +1566,42 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
     );
   }
   assert.throws(
-    () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags: { latest: '1.4.0' } }),
+    () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags: { latest: preflightLatest } }),
     (error) => error?.code === 'PUBLICATION_DIST_TAG_UNKNOWN',
   );
   for (const rc of ['1.5.0-rc.1', currentCandidate]) {
     assert.throws(
-      () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags: { latest: '1.4.0', rc } }),
+      () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags: { latest: preflightLatest, rc } }),
       (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT',
     );
   }
   assert.deepEqual(
-    validatePreflightDistTags({ preflightLatest, distTags: { latest: '1.4.0' } }),
-    { latest: '1.4.0' },
+    validatePreflightDistTags({ preflightLatest, distTags: { latest: preflightLatest } }),
+    { latest: preflightLatest },
     'historical helper calls may omit preflightRc',
   );
 });
 
 test('final publication moves only latest while RC2 and other tags stay fixed', async () => {
   const { verifyPostPublishDistTags } = await import('../../scripts/lib/publication-dist-tag.mjs');
-  const preflightDistTags = { latest: '1.4.0', rc: previousCandidate, legacy: '0.9.0' };
+  const preflightDistTags = { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' };
   assert.doesNotThrow(() => verifyPostPublishDistTags({
     candidate: currentCandidate,
-    preflightLatest: '1.4.0',
+    preflightLatest,
     preflightDistTags,
     distTags: { latest: currentCandidate, rc: previousCandidate, legacy: '0.9.0' },
   }));
   assert.throws(() => verifyPostPublishDistTags({
     candidate: currentCandidate,
-    preflightLatest: '1.4.0',
+    preflightLatest,
     preflightDistTags,
     distTags: { latest: currentCandidate, rc: currentCandidate, legacy: '0.9.0' },
   }), (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT');
   assert.throws(() => verifyPostPublishDistTags({
     candidate: currentCandidate,
-    preflightLatest: '1.4.0',
+    preflightLatest,
     preflightDistTags,
-    distTags: { latest: '1.5.1', rc: previousCandidate, legacy: '0.9.0' },
+    distTags: { latest: '1.5.2', rc: previousCandidate, legacy: '0.9.0' },
   }), (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT');
 });
 
@@ -1636,13 +1640,13 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
       () => publication.verifyPostPublishDistTags({
         candidate,
         preflightLatest: registryVersionPolicyConstants.preflightLatestVersion,
-        preflightDistTags: { latest: '1.4.0', rc: previousCandidate },
-        distTags: { latest: '1.4.0', rc },
+        preflightDistTags: { latest: preflightLatest, rc: previousCandidate },
+        distTags: { latest: preflightLatest, rc },
       }),
       (error) => error?.code === code,
     );
   }
-  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 0n]);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 1n]);
   assert.throws(() => parseStableVersionTag(`v${previousCandidate}`), /malformed stable release tag/u);
   const publisher = repositorySource('scripts/publish-release-plan.mjs');
   const workflow = repositorySource('.github/workflows/release.yml');
