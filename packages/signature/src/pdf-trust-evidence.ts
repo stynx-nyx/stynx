@@ -26,7 +26,7 @@ function parsedObject(bytes:Uint8Array,context:PDFContext):{value:unknown;length
   } catch {return failXref();}
 }
 
-function finalXref(bytes:Uint8Array,allowUnsupported=false):{entries:Map<number,XrefEntry>;sections:XrefSection[]} {
+function finalXref(bytes:Uint8Array):{entries:Map<number,XrefEntry>;sections:XrefSection[]} {
   const text=Buffer.from(bytes).toString('latin1');
   const end=text.lastIndexOf('startxref');
   if (end<0) failXref();
@@ -39,12 +39,11 @@ function finalXref(bytes:Uint8Array,allowUnsupported=false):{entries:Map<number,
   while (Number.isSafeInteger(offset) && offset>=0 && offset<bytes.length) {
     if (seen.has(offset)) failXref();
     if (text.slice(offset,offset+4)!=='xref') {
-      if (allowUnsupported) throw new SignatureTrustUnavailableError('Unsupported PDF xref stream');
-      failXref();
+      throw new SignatureTrustUnavailableError('Unsupported PDF xref stream');
     }
     seen.add(offset);
     let cursor=offset+4;
-    while (/\s/u.test(text[cursor] ?? '')) cursor++;
+    while (/\s/u.test(text[cursor]!)) cursor++;
     for (;;) {
       if (text.slice(cursor,cursor+7)==='trailer') {cursor+=7;break;}
       const header=/^(\d+)\s+(\d+)\s*/u.exec(text.slice(cursor));
@@ -61,16 +60,14 @@ function finalXref(bytes:Uint8Array,allowUnsupported=false):{entries:Map<number,
       }
     }
     const parsed=parsedObject(bytes.subarray(cursor),PDFContext.create());
-    if (!(parsed.value instanceof PDFDict)) failXref();
-    const trailer=parsed.value;
+    const trailer=parsed.value as PDFDict;
     const raw=text.slice(cursor,cursor+parsed.length);
     const keys=[...raw.matchAll(/\/((?:#[0-9a-fA-F]{2}|[A-Za-z0-9])+)/gu)]
       .map(match=>match[1]!.replace(/#([0-9a-fA-F]{2})/gu,(_,hex:string)=>
         String.fromCharCode(Number.parseInt(hex,16))));
     if (new Set(keys).size!==keys.length) failXref();
     if (keys.includes('XRefStm') || trailer.has(name('XRefStm'))) {
-      if (allowUnsupported) throw new SignatureTrustUnavailableError('Unsupported PDF hybrid xref');
-      failXref();
+      throw new SignatureTrustUnavailableError('Unsupported PDF hybrid xref');
     }
     const declared=/^\s*startxref\s+(\d+)\s+%%EOF/u.exec(text.slice(cursor+parsed.length));
     if (!declared || Number(declared[1])!==offset) failXref();
@@ -86,9 +83,9 @@ function finalXref(bytes:Uint8Array,allowUnsupported=false):{entries:Map<number,
 
 function checkFinalXref(pdf:Uint8Array,revisionEnd:number,catalogRef:PDFRef,
   context:PDFContext):SignatureTrustUnavailableError|undefined {
-  const original=finalXref(pdf.slice(0,revisionEnd),true);
+  const original=finalXref(pdf.slice(0,revisionEnd));
   let final:ReturnType<typeof finalXref>;
-  try {final=finalXref(pdf,true);}
+  try {final=finalXref(pdf);}
   catch (error) {
     if (error instanceof SignatureTrustUnavailableError) return error;
     throw error;
@@ -132,8 +129,6 @@ function checkFinalXref(pdf:Uint8Array,revisionEnd:number,catalogRef:PDFRef,
   for (const [ref] of context.enumerateIndirectObjects()) {
     const entry=final.entries.get(ref.objectNumber);
     if (!entry?.inUse || entry.generation!==ref.generationNumber) failXref();
-    if (entry.offset>=revisionEnd &&
-        !intervals.some(([start])=>start===entry.offset)) failXref();
   }
   return undefined;
 }
