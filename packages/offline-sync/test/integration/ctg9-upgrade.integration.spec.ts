@@ -587,21 +587,36 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       { queueItemId: '55p03-closed-original', entityType: 'citation', localEntityId: 'local-closed-original', idempotencyKey: '55p03-closed-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
     ] };
     await run('55p03-closed-create', () => closedService.submitSyncBatch(closed));
-    const lock = async (deviceId: string, runAttempt: () => Promise<unknown>, missingId: string, expectedStatus = 409) => {
+    const lock = async (deviceId: string, runAttempt: () => Promise<unknown>, expectedStatus = 409) => {
       const admin = await pg.connectAsAdmin();
       try {
         await admin.query('begin');
         await admin.query(`select pg_advisory_xact_lock(hashtextextended($1,0))`, [`${tenantA}:${deviceId}`]);
+        const snapshot = async () => {
+          const tables = [
+            ['sync_batches', 'device_batch_id'],
+            ['sync_batch_transport_keys', 'transport_key'],
+            ['sync_queue_items', 'id'],
+            ['sync_item_receipts', 'idempotency_key'],
+            ['sync_item_attempts', 'device_batch_id,queue_item_id'],
+          ] as const;
+          const snapshotRows: unknown[][] = [];
+          for (const [table, order] of tables) {
+            const rows = await admin.query(`select * from offline.${table} where tenant_id=$1::uuid and device_id=$2 order by ${order}`, [tenantA, deviceId]);
+            snapshotRows.push(rows.rows);
+          }
+          return snapshotRows;
+        };
+        const before = await snapshot();
         await expect(runAttempt()).rejects.toMatchObject({ status: expectedStatus });
-        const untouched = await admin.query(`select id from offline.sync_queue_items where tenant_id=$1::uuid and id=$2`, [tenantA, missingId]);
-        expect(untouched.rows).toEqual([]);
+        expect(await snapshot()).toEqual(before);
       } finally { await admin.query('rollback').catch(() => undefined); await admin.end(); }
     };
     await lock(closed.deviceId, () => run('55p03-closed-divergent', () => closedService.submitSyncBatch({
       ...closed, items: [{ ...closed.items[0], queueItemId: '55p03-closed-undeclared', localEntityId: 'local-undeclared', idempotencyKey: '55p03-closed-other-key' }],
-    })), '55p03-closed-undeclared');
-    await lock(closed.deviceId, () => run('55p03-sequence-divergent', () => closedService.submitSyncBatch({ ...closed, batchSequence: 2 })), '55p03-sequence-undeclared');
-    await lock(closed.deviceId, () => run('55p03-fingerprint-divergent', () => closedService.submitSyncBatch({ ...closed, extraTransportBody: 'changed-with-same-domain-context' })), '55p03-fingerprint-undeclared', 422);
+    })));
+    await lock(closed.deviceId, () => run('55p03-sequence-divergent', () => closedService.submitSyncBatch({ ...closed, batchSequence: 2 })));
+    await lock(closed.deviceId, () => run('55p03-fingerprint-divergent', () => closedService.submitSyncBatch({ ...closed, extraTransportBody: 'changed-with-same-domain-context' })), 422);
 
     let failOnce = true;
     const openService = makeService(async (queueItemId) => {
@@ -614,7 +629,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     await run('55p03-open-create', () => openService.submitSyncBatch(open));
     await lock(open.deviceId, () => run('55p03-open-divergent', () => openService.submitSyncBatch({
       ...open, items: [{ ...open.items[0], queueItemId: '55p03-open-undeclared', localEntityId: 'local-open-undeclared', idempotencyKey: '55p03-open-other-key' }],
-    })), '55p03-open-undeclared');
+    })));
   }, 60_000);
 
   it('enforces PostgreSQL sequence duplicate and gap statuses with the expected message', async () => {
@@ -942,6 +957,34 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     } finally { await admin.end(); }
   }, 60_000);
 
+  it('rejects a directly constructed applier without an event port before any PostgreSQL batch write', async () => {
+    const contexts = moduleRef.get(RequestContextMutator);
+    const apply = vi.fn(async () => ({ serverEntityId: 'unexpected-effect' }));
+    const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
+      { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) }, {
+        policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
+        itemApplier: { apply },
+      } as never);
+    const input = { orgUnitId: 'org-a', deviceId: 'missing-event-port-device', deviceBatchId: 'missing-event-port-batch', items: [
+      { queueItemId: 'missing-event-port-item', entityType: 'citation', localEntityId: 'local-missing-event-port', idempotencyKey: 'missing-event-port-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
+    ] };
+    let error: unknown;
+    try {
+      await contexts.runWithRequestContext({ requestId: 'missing-event-port-request', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, () => service.submitSyncBatch(input));
+    } catch (caught) { error = caught; }
+    expect(error).toMatchObject({ code: 'OFFLINE_SYNC_CONFIGURATION_ERROR' });
+    expect((error as Error).constructor.name).toBe('OfflineSyncConfigurationError');
+    expect((error as Error).message).toContain('eventPort');
+    expect(apply).not.toHaveBeenCalled();
+    const admin = await pg.connectAsAdmin();
+    try {
+      for (const table of ['sync_batches', 'sync_batch_transport_keys', 'sync_queue_items', 'sync_item_receipts', 'sync_item_attempts']) {
+        const rows = await admin.query(`select * from offline.${table} where tenant_id=$1::uuid and device_id=$2`, [tenantA, input.deviceId]);
+        expect(rows.rows).toEqual([]);
+      }
+    } finally { await admin.end(); }
+  }, 60_000);
+
   it('rejects fractional reservation numbers and requires an applier before numbered batch writes', async () => {
     const contexts = moduleRef.get(RequestContextMutator);
     const service = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef),
@@ -1070,21 +1113,33 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     const run = <T>(requestId: string, action: () => Promise<T>) => contexts.runWithRequestContext({ requestId, tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, action);
     const reservation = await run('resume-context-reservation', () => service.reserveNumbering({ orgUnitId: 'org-a', deviceId: 'resume-context-device', shiftId: 'resume-context', entityType: 'citation', requestedSize: 1 }));
     await run('resume-context-close', () => service.closeNumberingReservation(reservation.reservationId));
+    await run('resume-context-cross-batch-seed', () => service.submitSyncBatch({
+      orgUnitId: 'org-a', deviceId: 'resume-context-device', deviceBatchId: 'resume-context-seed', items: [
+        { queueItemId: 'resume-cross-original', entityType: 'citation', localEntityId: 'local-resume-cross-original', idempotencyKey: 'resume-cross-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
+      ],
+    }));
     const input = { orgUnitId: 'org-a', deviceId: 'resume-context-device', deviceBatchId: 'resume-context-batch', items: [
       { queueItemId: 'resume-expired-item', entityType: 'citation', localEntityId: 'local-resume-expired', idempotencyKey: 'resume-expired-key', payloadHash: hash, payloadJson: {}, reservedNumber: reservation.startNumber, reservationId: reservation.reservationId, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
+      { queueItemId: 'resume-cross-duplicate', entityType: 'citation', localEntityId: 'local-resume-cross-duplicate', idempotencyKey: 'resume-cross-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
       { queueItemId: 'resume-transient-item', entityType: 'citation', localEntityId: 'local-resume-transient', idempotencyKey: 'resume-transient-key', payloadHash: hash, payloadJson: {}, createdLocallyAt: '2026-09-28T12:00:00.000Z' },
     ] };
     const first = await run('resume-context-first', () => service.submitSyncBatch(input));
     expect(first.receipt).toMatchObject({ status: 'open', items: [
       { status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED', context: { conflictId: expect.any(String) } },
+      { status: 'applied', context: { originalQueueItemId: 'resume-cross-original' } },
       { status: 'received', errorCode: 'OFFLINE_SYNC_ITEM_FAILED' },
     ] });
+    expect(first.duplicateItems).toBe(1);
     fail = false;
     const resumed = await run('resume-context-second', () => service.submitSyncBatch(input));
     const durable = await run('resume-context-read', () => service.getSyncBatchReceipt(input.deviceId, input.deviceBatchId));
+    expect(resumed.duplicateItems).toBe(1);
+    expect(resumed.items[1]).toMatchObject({ queueItemId: 'resume-cross-duplicate', status: 'applied', context: { originalQueueItemId: 'resume-cross-original' } });
     expect(resumed.items[0]).toMatchObject({ queueItemId: 'resume-expired-item', status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED', context: { conflictId: expect.any(String), allowedActions: expect.any(Array) } });
     expect(durable.items[0]).toMatchObject({ queueItemId: 'resume-expired-item', status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED', context: resumed.items[0].context });
-    expect(JSON.parse(Buffer.from(durable.responseBodyBytes!).toString('utf8'))).toEqual(resumed);
+    const persistedBody = JSON.parse(Buffer.from(durable.responseBodyBytes!).toString('utf8'));
+    expect(persistedBody).toEqual(resumed);
+    expect(persistedBody.duplicateItems).toBe(1);
   }, 60_000);
 
   it('binds PostgreSQL K1 and K2 bodies, rejects altered effect context, and replays with K2 headers', async () => {
@@ -1138,12 +1193,14 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     expect(replayStatus).toBe(0);
     const replayHeaders: Record<string, string> = { 'X-Request-Id': '0198d132-0000-7000-8000-000000000003' };
     let returnedStatus = 0;
-    const replayResponse = { status: (code: number) => { returnedStatus = code; }, setHeader: (name: string, value: string) => { replayHeaders[name] = value; }, getHeaders: () => ({ 'x-request-id': replayHeaders['X-Request-Id']! }) };
+    const replayResponse = { status: (code: number) => { returnedStatus = code; }, setHeader: (name: string, value: string) => { replayHeaders[name] = value; }, getHeaders: () => ({ 'x-request-id': replayHeaders['X-Request-Id']!, 'x-current-response': 'kept' }) };
     await expect(send('ledger-replay', 'K2', { ...input, transportMetadata: { delivery: 2 } }, replayResponse)).resolves.toEqual(resumed);
     expect(returnedStatus).toBe(201);
     expect(replayHeaders['X-Idempotency-Key']).toBe('K2');
     expect(replayHeaders['Idempotency-Replayed']).toBe('true');
     expect(replayHeaders['X-Request-Id']).toBe('0198d132-0000-7000-8000-000000000003');
+    expect(replayHeaders['x-request-id']).toEqual(undefined);
+    expect(replayHeaders['x-current-response']).toBe('kept');
     await expect(send('ledger-changed', 'K2', { ...input, transportMetadata: { delivery: 3 } })).rejects.toMatchObject({ status: 422 });
   }, 60_000);
 
@@ -1181,10 +1238,20 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     expect(apply).toHaveBeenCalledOnce();
     expect(results[0]).toMatchObject({ status: 'fulfilled', value: { receipt: { status: 'closed' } } });
     expect(secondOutcome?.status).toBe('rejected');
-    if (secondOutcome?.status === 'rejected') expect(secondOutcome.reason).toMatchObject({ status: 503, code: 'OFFLINE_SYNC:BATCH:in-progress' });
+    if (secondOutcome?.status === 'rejected') {
+      expect(secondOutcome.reason).toMatchObject({ status: 503, code: 'OFFLINE_SYNC:BATCH:in-progress' });
+      expect((secondOutcome.reason as HttpException).getResponse()).toEqual({
+        statusCode: 503,
+        errorCode: 'OFFLINE_SYNC:BATCH:in-progress',
+        message: 'Batch is in progress.',
+        retryable: true,
+      });
+    }
     expect(append).toHaveBeenCalledOnce();
     const receipt = await run('same-pg-open-final-read');
-    expect(receipt).toMatchObject({ receipt: { status: 'closed', items: [{ queueItemId: 'same-pg-open-item', status: 'applied' }] } });
+    const firstOutcome = results[0];
+    if (firstOutcome?.status !== 'fulfilled') throw new Error('First batch did not complete');
+    expect(receipt).toEqual(firstOutcome.value);
     const verify = await pg.connectAsAdmin();
     try {
       const attempts = await verify.query(`select queue_item_id from offline.sync_item_attempts where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`, [tenantA, input.deviceId, input.deviceBatchId]);
