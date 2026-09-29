@@ -42,6 +42,7 @@ import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 import {
   classifyReleaseContext,
   isFinalVersionedCandidate,
+  isStablePatchVersionedCandidate,
   isVersionedPreModeCandidate,
   releaseContextConstants,
   ReleaseContextError,
@@ -370,6 +371,76 @@ test('final versioned candidate accepts a late single marker and exact generated
     const invalid = structuredClone(input);
     mutate(invalid);
     assert.equal(isFinalVersionedCandidate(invalid), false, label);
+  }
+});
+
+test('stable 1.5.1 patch context consumes one changeset and rejects ungoverned follow-ups', () => {
+  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+    name,
+    manifestPath: relative(repoRoot, manifestPath),
+    parentVersion: '1.5.0',
+    candidateVersion: '1.5.1',
+  }));
+  assert.equal(packageStates.length, 44);
+  const markerChanges = [
+    { status: 'D', path: '.changeset/postrelease-request-path.md' },
+    ...packageStates.flatMap(({ manifestPath }) => [
+      { status: 'M', path: manifestPath },
+      { status: 'M', path: manifestPath.replace(/package\.json$/u, 'CHANGELOG.md') },
+    ]),
+    ...[
+      'docs/meta/security/sbom.cdx.json',
+      'package.json',
+      'tools/create-stynx-app/template/package.json',
+      'packages/pdf/README.md',
+      'packages/pdf-a/README.md',
+      'packages/pdf-a-vera-docker/README.md',
+    ].map((path) => ({ status: 'M', path })),
+  ];
+  const input = {
+    baseRootVersion: '1.5.0',
+    markerParentRootVersion: '1.5.0',
+    candidateRootVersion: '1.5.1',
+    markerCommits: [
+      { sha: 'a'.repeat(40), subject: 'fix(repo): complete postrelease request path' },
+      { sha: 'b'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.1' },
+      { sha: 'c'.repeat(40), subject: 'docs(repo): bind patch policy' },
+    ],
+    markerChanges,
+    markerParentChangesets: ['.changeset/postrelease-request-path.md'],
+    followUpChanges: [
+      { status: 'M', path: 'law/policy/registry-version-anomalies.json' },
+      { status: 'M', path: 'package.json' },
+      { status: 'A', path: 'work/rounds/R-0003/reviews/delivery-review-3.json' },
+    ],
+    rootManifestMatchesMarker: true,
+    packageStates,
+    changesetIdsOnDisk: [],
+    preState: null,
+    markerParentPreState: null,
+  };
+  assert.equal(isStablePatchVersionedCandidate(input), true);
+  for (const [label, mutate] of [
+    ['wrong base', (value) => { value.baseRootVersion = '1.4.0'; }],
+    ['wrong candidate', (value) => { value.candidateRootVersion = '1.5.2'; }],
+    ['missing marker', (value) => { value.markerCommits.splice(1, 1); }],
+    ['duplicate marker', (value) => { value.markerCommits.push({ sha: 'd'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.1' }); }],
+    ['missing changeset', (value) => { value.markerParentChangesets = []; }],
+    ['extra changeset', (value) => { value.markerParentChangesets.push('.changeset/other.md'); }],
+    ['unconsumed changeset', (value) => { value.markerChanges.shift(); }],
+    ['missing manifest', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath); }],
+    ['missing changelog', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath.replace(/package\.json$/u, 'CHANGELOG.md')); }],
+    ['extra package', (value) => { value.packageStates.push(structuredClone(value.packageStates[0])); }],
+    ['one package stale', (value) => { value.packageStates[0].candidateVersion = '1.5.0'; }],
+    ['retained pre mode', (value) => { value.preState = { mode: 'exit' }; }],
+    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('later'); }],
+    ['source follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'packages/core/src/index.ts' }); }],
+    ['workflow follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' }); }],
+    ['root manifest drift', (value) => { value.rootManifestMatchesMarker = false; }],
+  ]) {
+    const invalid = structuredClone(input);
+    mutate(invalid);
+    assert.equal(isStablePatchVersionedCandidate(invalid), false, label);
   }
 });
 
