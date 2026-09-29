@@ -91,6 +91,17 @@ mutation is reviewed against the exact Owner receipt rule before execution.
   strict forbidden-action audit, and repeat signed RC on the new clean HEAD.
   No hook bypass or force push is allowed.
 
+- OD-R0003-04 (2026-09-29): The first remote DEVAI verifier compared the
+  signed 1.5.2 policy with the older workstation-03 toolchain control on
+  `main`; promote accepted ADR-DEVAI-ADOPTION-0008 and its exact control in
+  PR #315, then rerun verification. PR #314's Semgrep check identified four
+  more public PKI test keys generated for negative fixtures. Under
+  ADR-STYNX-1.5.2-PKI-FIXTURE-SCAN, add only those exact paths to
+  `.semgrepignore`, bind the full eight-path exception with an Inspector
+  sensor, admit this ADR and ignore file in the second-marker follow-up
+  contract, and repeat the gates and signed RC on a clean candidate. Do not
+  weaken or remove the PKI tests or broaden the scanner exclusion.
+
 - CTG5: add an optional positive `deadlineMs` to transactional-command
   module/route options. Pass it to `Database.tx` as PostgreSQL
   `statement_timeout` for each statement. Keep `lockTimeoutMs` scoped to the
