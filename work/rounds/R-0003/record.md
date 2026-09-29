@@ -69,6 +69,15 @@ reverted it. A forced full test graph with the original concurrency passed
 97/97. Release context now needs an exact stable-patch classifier before
 signed RC preparation.
 
+The Architect recorded the exact stable-patch context; Inspector sensors
+proved a red missing classifier, then 49/49 policy tests passed after the
+Engineer implementation. `pnpm release:status` now classifies the 1.5.1
+candidate, and `pnpm release:drafts` produced the expected empty draft set.
+`pnpm check:trace --print` passed 473/473 after the Architect rebind.
+Opus cycle 3 returned REVIEW solely on this classifier gap; its JSON is in
+`reviews/delivery-review-3.json`. A follow-up delivery review and full CI
+remain due on the completed HEAD.
+
 DEVAI 1.6.0 has no supported R-0001 closeout action. Its `round close` and
 `round seal` commands are experimental; the historical round still has
 TASK-0001 escalated and no ordered D/DII closing decision or phase ledger.

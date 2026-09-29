@@ -1,0 +1,11 @@
+{
+  "family": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "/tmp/stynx-r0003-delivery-review-3b-prompt.md",
+  "prompt_sha256": "56a24833f9b5e65bd1dea076f7452fa7f699597a8207221bfb930ac0bd1c5fa9",
+  "output": "/tmp/stynx-r0003-delivery-review-3b.json",
+  "output_sha256": "1ca7035839fd0d1ff185ae7d0c62647e93e5435d8331d67b741e9ea5696415c2",
+  "cwd": "/Users/aarusso/.codex/worktrees/ctg8-cli/stynx",
+  "started_at": "2026-09-29T03:46:20Z",
+  "ended_at": "2026-09-29T03:49:53Z"
+}
