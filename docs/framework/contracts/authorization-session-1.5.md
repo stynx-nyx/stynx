@@ -185,6 +185,13 @@ sid and every returned revoked sid, preserving the effect of its
 former post-create revoke. Existing auth clients need no request
 shape change.
 
+Both policy refusals are `StynxError` subclasses, so `StynxErrorFilter`
+renders them on `POST /sessions` and `POST /sessions/switch`:
+`SessionConflictError` as 409 `{ code: 'SESSION_CONFLICT' }` and
+`StrongFactorRequiredError` as 403 `{ code: 'STRONG_FACTOR_REQUIRED' }`.
+`packages/auth/test/integration/session-policy-http.integration.spec.ts`
+proves both refusals and revoke-existing over HTTP.
+
 The package exports `createSessionStoreReadinessIndicator(store,
 {timeoutMs?})`, a structural `StynxHealthIndicator` named
 `stynx-session-store`; default timeout is 500 ms. Its `check()` runs
