@@ -226,9 +226,6 @@ export function createCmsTrustVerifier(options: CmsTrustVerifierOptions): Signat
         if (!verified.signatureVerified || !verified.signerCertificate ||
           !Buffer.from(verified.signerCertificate.toSchema().toBER(false)).equals(signerDer))
           throw new SignatureTrustError('CMS signer identity differs from supplied certificate');
-        const embeddedSigner = (signed.certificates ?? []).find(c =>
-          c instanceof pkijs.Certificate && Buffer.from(c.toSchema().toBER(false)).equals(signerDer));
-        if (!embeddedSigner) throw new SignatureTrustError('Signer certificate differs from CMS');
         const x509 = new X509Certificate(signerDer);
         const policyOids = input.profile.acceptedPolicies ?? options.acceptedPolicies ?? [];
         const policies = signer.extensions?.find(ext => ext.extnID === '2.5.29.32')?.parsedValue;
