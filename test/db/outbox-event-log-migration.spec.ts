@@ -195,7 +195,7 @@ describe('outbox event log migration 0021', () => {
       await client.query('begin');
       await client.query("select set_config('app.tenant_id',$1,true)", [tenantA]);
       const own = await client.query<{ event_id: string }>(`
-        update outbox.event_attempts set result='SENT' where tenant_id=$1::uuid
+        update outbox.event_attempts set result='SENT',completed_at=clock_timestamp() where tenant_id=$1::uuid
           and attempt_ordinal=1
         returning event_id::text
       `, [tenantA]);
@@ -235,6 +235,48 @@ describe('outbox event log migration 0021', () => {
         { attempt_ordinal: 2, result: 'SENT' },
         { attempt_ordinal: 3, result: 'LEGACY_HISTORY_UNAVAILABLE' },
       ]);
+    } finally {
+      await client.query('rollback').catch(() => undefined);
+      await client.query('reset role').catch(() => undefined);
+      await client.end();
+      await database.dispose();
+    }
+  });
+
+  it('keeps completed and legacy attempt evidence immutable to the app role', async () => {
+    const database = await createPostgresTestDatabase('stynx_outbox_attempt_immutable', { useTemplate: false });
+    const client = await database.connectAsAdmin();
+    const migrations = resolve(__dirname, '../../packages/data/migrations/platform');
+    const tenant = 'a5555555-5555-4555-8555-555555555555';
+    const event = '01900000-0000-7000-8000-000000000055';
+    try {
+      const files = (await readdir(migrations)).filter((file) => file.endsWith('.sql')).sort();
+      for (const filename of files) {
+        if (filename > '0022_outbox_request_path.sql') break;
+        await client.query(await readFile(resolve(migrations, filename), 'utf8'));
+        if (filename === '0002_extensions.sql') await client.query('set role stynx_owner');
+      }
+      await client.query(`insert into tenancy.tenants (id,slug,name)
+        values ($1::uuid,'outbox-immutable','Outbox immutable')`, [tenant]);
+      await client.query(`insert into outbox.events
+        (id,tenant_id,entity,entity_id,idempotency_key,payload,created_at)
+        values ($1::uuid,$2::uuid,'upgrade','immutable','immutable','{}'::jsonb,now())`,
+      [event, tenant]);
+      await client.query(`insert into outbox.event_attempts
+        (tenant_id,event_id,attempt_ordinal,result,completed_at,legacy_message_id,legacy_state)
+        values ($1::uuid,$2::uuid,1,'SENT',clock_timestamp(),null,null),
+               ($1::uuid,$2::uuid,2,'LEGACY_HISTORY_UNAVAILABLE',null,
+                '01900000-0000-4000-8000-000000000056'::uuid,'{"source":"legacy"}'::jsonb)`,
+      [tenant, event]);
+      await client.query('set role stynx_app');
+      for (const ordinal of [1, 2]) {
+        await client.query('begin');
+        await client.query("select set_config('app.tenant_id',$1,true)", [tenant]);
+        await expect(client.query(`update outbox.event_attempts set result='ERROR'
+          where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,
+        [tenant, event, ordinal])).rejects.toMatchObject({ code: '42501' });
+        await client.query('rollback');
+      }
     } finally {
       await client.query('rollback').catch(() => undefined);
       await client.query('reset role').catch(() => undefined);
