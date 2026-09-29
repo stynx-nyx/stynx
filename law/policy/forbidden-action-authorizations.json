@@ -1123,6 +1123,12 @@
       "commit": "5dffc830ff1b793a13abf82e9c2763e4393c1495",
       "authorized_by": "Owner",
       "reason": "The Owner explicitly authorized all remaining action receipts for completion of C-0002 on 2026-09-28. This exact Architect commit records review prompts that quote a future registry publication command; it performed no package publication and grants no dispatch receipt. Final publication remains bound to a separate exact main SHA authorization."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "a39c4f27312a522701204293d8314f7277eb4bab",
+      "authorized_by": "Owner",
+      "reason": "The Owner authorized all receipts necessary to close C-0002. This exact Auditor evidence commit stores the generated post-merge inventory; the matched text is a quoted example inside that inventory. It changes no invariant authority."
     }
   ]
 }
