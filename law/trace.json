@@ -5057,7 +5057,7 @@
     {
       "path": "packages/auth/test/integration/session-policy-http.integration.spec.ts",
       "suite": "int",
-      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 13,
       "assertion_digest_sha256": "2d9ae9262442804fc0bda8044e69968fc7f359c7dae9c8b0bcaaaa24880b0b0a"
@@ -5251,8 +5251,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
       "lifecycle": "supported",
-      "assertion_count": 20,
-      "assertion_digest_sha256": "c06f90e2ac0f0d36f879f7f88ed9f39c88511b06039a233ebc39f465953a6d97"
+      "assertion_count": 21,
+      "assertion_digest_sha256": "02dd6642d08bb2f4a860fc6b358d52d4e6166dd7ab4e91fb841c6390fa92dbd6"
     },
     {
       "path": "packages/signature/test/unit/pdf-trust-xref-coverage.spec.ts",

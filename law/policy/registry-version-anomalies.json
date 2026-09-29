@@ -2,13 +2,13 @@
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.registry-version-anomalies",
   "canonical_line": "1.x",
-  "next_unified_version": "1.5.1",
+  "next_unified_version": "1.5.2",
   "preflight_latest_version": "1.5.0",
   "owner_decision": {
     "date": "2026-09-29",
     "repository_baseline": "64d7906682d00ea929e1b48cb7b67e477a46766a",
     "repository_tree": "1e50971e4bce2eb0d242b146a4dd7f56c158a098",
-    "statement": "The Owner directed completion of the remaining STYNX campaign work except DETRAN proofs. Stable 1.5.0 is published for all 44 fixed-group packages: authenticated registry census on 2026-09-29 observed latest 1.5.0 and rc 1.5.0-rc.2 on every package. The postrelease changeset advances the next unified publication candidate to exactly stable 1.5.1. Publish only with the latest dist-tag and an action-specific exact-main-SHA Owner receipt; preflight latest must remain 1.5.0 and rc must remain 1.5.0-rc.2 until publication. This decision does not authorize angular-profile 2.0.0 remediation.",
+    "statement": "The Owner directed completion of the remaining STYNX campaign work except DETRAN proofs. Stable 1.5.0 is published for all 44 fixed-group packages: authenticated registry census on 2026-09-29 observed latest 1.5.0 and rc 1.5.0-rc.2 on every package. The first postrelease changeset produced the historical 1.5.1 candidate. After origin/main introduced an approved session-policy HTTP patch and its pending changeset, the fixed-group generator computes 1.5.2 as the next complete candidate under the Owner's standing completion authorization. Publish only with the latest dist-tag and an action-specific exact-main-SHA Owner receipt; preflight latest must remain 1.5.0 and rc must remain 1.5.0-rc.2 until publication. This decision does not authorize angular-profile 2.0.0 remediation.",
     "supersedes": {
       "date": "2026-09-28",
       "next_unified_version": "1.5.0"
@@ -27,12 +27,12 @@
         "observed_at": "2026-08-24T02:04:20.663Z"
       },
       "rationale": "The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.",
-      "allowed_candidate": "1.5.1",
+      "allowed_candidate": "1.5.2",
       "allowed_effects": ["registry-monotonicity-exception"],
       "permitted_remediation": ["retain-as-noncanonical-history"],
       "deletion_requires": "new-owner-authorization-naming-version-id-and-recovery-evidence",
       "deprecation_requires": "new-owner-authorization-naming-package-version-action-and-message",
-      "closure_condition": "Unified stable 1.5.1 is verified for all 44 publishable packages, latest resolves to 1.5.1, rc remains at 1.5.0-rc.2, and angular-profile 2.0.0 remains immutable non-canonical history.",
+      "closure_condition": "Unified stable 1.5.2 is verified for all 44 publishable packages, latest resolves to 1.5.2, rc remains at 1.5.0-rc.2, and angular-profile 2.0.0 remains immutable non-canonical history.",
       "applies_to_other_packages": false,
       "applies_to_other_versions": false
     }

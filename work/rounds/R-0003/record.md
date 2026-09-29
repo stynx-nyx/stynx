@@ -108,3 +108,14 @@ the seven intervening `origin/main` commits without force. The complete
 `pnpm check:rls-negative` checked seven tenant-scoped tables. A signed
 local-RC candidate observation and a fresh cross-family delivery review
 remain due before the R-0003 PR. No DETRAN proof ran.
+
+Opus delivery-review cycle 5 returned FAIL on the 1.5.1 candidate after the
+`origin/main` merge: its new session-policy changeset was unconsumed and the
+source commits exceeded the exact post-marker follow-up contract. The review
+also found a missing `INV-ERROR-001` trace mapping and a PDF xref-trailer
+error boundary. The Architect restored the trace invariant and adopted
+ADR-DEVAI-ADOPTION-0009 / OD-R0003-02 for a second fixed-group patch to
+1.5.2. The Inspector added the malformed-trailer negative sensor
+(`dc47de3b`), and the Engineer restored the typed guard (`d403c24f`). The
+aborted 1.5.1 RC preparation was terminated before any receipt or tag was
+exported. All gates and review will be repeated for the clean 1.5.2 SHA.

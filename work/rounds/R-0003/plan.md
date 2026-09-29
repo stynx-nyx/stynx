@@ -68,6 +68,18 @@ mutation is reviewed against the exact Owner receipt rule before execution.
   RC classifiers retain their contracts. A valid patch candidate produces an
   empty release status because the changeset was consumed by versioning.
 
+- OD-R0003-02 (2026-09-29): `origin/main` later introduced the independently
+  approved session-policy HTTP patch with an unconsumed Changeset. The
+  integration made the former 1.5.1 candidate invalid under the exact patch
+  classifier; Opus delivery-review 5 returned FAIL, and `pnpm release:status`
+  reproduced `RELEASE_CONTEXT_PATCH_INVALID`. Under the Owner's standing
+  authorization to finish the campaign, the next fixed-group release is the
+  generator-computed 1.5.2 patch. Consume the session Changeset through
+  `pnpm version-packages`, bind a second exact version marker and its bounded
+  follow-up contract, update the registry anomaly policy for 1.5.2, and
+  repeat local CI, 44-package coverage, signed RC and cross-family review.
+  The original 1.5.1 marker remains historical evidence.
+
 - CTG5: add an optional positive `deadlineMs` to transactional-command
   module/route options. Pass it to `Database.tx` as PostgreSQL
   `statement_timeout` for each statement. Keep `lockTimeoutMs` scoped to the
