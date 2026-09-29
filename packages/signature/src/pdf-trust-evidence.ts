@@ -229,10 +229,8 @@ export async function readPdfTrustEvidence(pdf:Uint8Array,revisionEnd:number,cms
   }
   const reachable=new Set<string>();
   collectRefs(catalog.get(name('DSS')),complete.context,reachable);
-  for (const [key,obj] of allObjects) {
+  for (const key of allObjects.keys()) {
     if (oldObjects.has(key) || reachable.has(key)) continue;
-    if (obj instanceof PDFRawStream &&
-        obj.dict.lookupMaybe(name('Type'),PDFName)?.toString() === '/ObjStm') continue;
     throw new SignatureTrustError('Post-signature modification');
   }
   const vri=dss.lookupMaybe(name('VRI'),PDFDict);
