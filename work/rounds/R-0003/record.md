@@ -119,3 +119,19 @@ ADR-DEVAI-ADOPTION-0009 / OD-R0003-02 for a second fixed-group patch to
 (`dc47de3b`), and the Engineer restored the typed guard (`d403c24f`). The
 aborted 1.5.1 RC preparation was terminated before any receipt or tag was
 exported. All gates and review will be repeated for the clean 1.5.2 SHA.
+
+The fixed-group generator consumed the one session-policy changeset in marker
+`8a71d0e6` and advanced all 44 packages to 1.5.2. Inspector sensors cover
+both exact patch markers and reject source, workflow, root-manifest and
+unrelated law follow-ups. Engineer bound the new classifier and the registry
+policy digest. `pnpm release:status` passed on the resulting branch. The first
+1.5.2 CI attempt failed only on two script-test expectations still fixed to
+1.5.1; the Inspector corrected them and the Architect rebound trace. The
+second `pnpm ci:stynx` passed at `ea1f6f1f8b9e625e996c7ea9c4018a53d8fbb24b`.
+`pnpm test:coverage` then verified all four metrics at exactly 100% for
+44/44 packages, with zero failures. `pnpm release:policy`,
+`pnpm release:provenance`, `pnpm api:baselines` and the 44-tarball,
+three-fixture `pnpm release:consumer-fixtures` gate passed. The Opus 5.5
+delivery-review cycle 6 returned PASS with no findings; cycles 5 and 6 and
+their bridge receipts are retained in `reviews/`. Signed RC preparation is
+next. No DETRAN proof ran.
