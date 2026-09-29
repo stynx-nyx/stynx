@@ -25,12 +25,23 @@ REVOKE_SIGNER_OCSP = os.environ.get('STYNX_REVOKE_SIGNER_OCSP') == '1'
 REVOKE_SIGNER_CRL = os.environ.get('STYNX_REVOKE_SIGNER_CRL') == '1'
 ESS_SPOOF = os.environ.get('STYNX_ESS_SPOOF') == '1'
 SIGNER_KIND = os.environ.get('STYNX_SIGNER_KIND', 'signer')
+SIGNER_ISSUER_KIND = os.environ.get('STYNX_SIGNER_ISSUER_KIND', 'root')
+OCSP_RESPONDER_KIND = os.environ.get('STYNX_OCSP_RESPONDER_KIND', SIGNER_ISSUER_KIND)
+TSA_KIND = os.environ.get('STYNX_TSA_KIND', 'tsa')
+REVOKE_INTERMEDIATE_OCSP = os.environ.get('STYNX_REVOKE_INTERMEDIATE_OCSP') == '1'
+FINAL_XREF_KIND = os.environ.get('STYNX_FINAL_XREF_KIND', 'table')
+if FINAL_XREF_KIND not in ('table', 'stream', 'hybrid'):
+    raise ValueError('STYNX_FINAL_XREF_KIND must be table, stream, or hybrid')
+if TSA_KIND not in ('tsa', 'expired-tsa'):
+    raise ValueError('STYNX_TSA_KIND must be tsa or expired-tsa')
 ATTACHED_CMS = os.environ.get('STYNX_ATTACHED_CMS') == '1'
 PRE_TST_GOOD = os.environ.get('STYNX_PRE_TST_GOOD') == '1'
 STALE_SIGNER_OCSP = os.environ.get('STYNX_STALE_SIGNER_OCSP') == '1'
 INCLUDE_FRESH_SIGNER_OCSP = os.environ.get('STYNX_INCLUDE_FRESH_SIGNER_OCSP') == '1'
-if SIGNER_KIND not in ('signer', 'spoof'):
-    raise ValueError('STYNX_SIGNER_KIND must be signer or spoof')
+if SIGNER_KIND not in ('signer', 'spoof', 'chain-signer'):
+    raise ValueError('STYNX_SIGNER_KIND must be signer, spoof, or chain-signer')
+if SIGNER_ISSUER_KIND not in ('root', 'intermediate'):
+    raise ValueError('STYNX_SIGNER_ISSUER_KIND must be root or intermediate')
 if MANIFEST and (len(MANIFEST) != 64 or any(c not in '0123456789abcdef' for c in MANIFEST)):
     raise ValueError('STYNX_MANIFEST_SHA256 must be lowercase SHA-256 hex')
 if WITHDRAWAL and (len(WITHDRAWAL) != 64 or any(c not in '0123456789abcdef' for c in WITHDRAWAL)):
@@ -59,6 +70,34 @@ def xref(pdf, offsets, previous=None):
     pdf += b'trailer\n' + trailer + b' >>\n'
     pdf += f'startxref\n{start}\n%%EOF\n'.encode()
     return pdf, start
+
+
+def final_xref(pdf, offsets, previous):
+    if FINAL_XREF_KIND == 'table':
+        return xref(pdf, offsets, previous)
+    stream_offset = len(pdf)
+    entries = dict(offsets) if FINAL_XREF_KIND == 'stream' else {}
+    entries[18] = stream_offset
+    index = []
+    payload = bytearray()
+    for number in sorted(entries):
+        index.extend((number, 1))
+        payload.extend(b'\x01' + entries[number].to_bytes(4, 'big') + b'\x00\x00')
+    dictionary = (f'<< /Type /XRef /Size 19 /Root 1 0 R /Prev {previous} '
+                  f'/W [1 4 2] /Index [{" ".join(map(str, index))}] '
+                  f'/Length {len(payload)} >>\nstream\n').encode()
+    pdf += b'18 0 obj\n' + dictionary + payload + b'\nendstream\nendobj\n'
+    if FINAL_XREF_KIND == 'stream':
+        pdf += f'startxref\n{stream_offset}\n%%EOF\n'.encode()
+        return pdf, stream_offset
+    table_offset = len(pdf)
+    pdf += b'xref\n'
+    for number in sorted(offsets):
+        pdf += f'{number} 1\n{offsets[number]:010d} 00000 n \n'.encode()
+    pdf += f'18 1\n{stream_offset:010d} 00000 n \n'.encode()
+    pdf += (f'trailer\n<< /Size 19 /Root 1 0 R /Prev {previous} '
+            f'/XRefStm {stream_offset} >>\nstartxref\n{table_offset}\n%%EOF\n').encode()
+    return pdf, table_offset
 
 
 def run(*args, cwd=ROOT):
@@ -107,6 +146,10 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
     if ATTACHED_CMS:
         (work / 'unrelated.bin').write_bytes(b'Unrelated CMS content, not the selected PDF ByteRange.\n')
     certfile = ROOT / 'root.cert.pem'
+    if SIGNER_ISSUER_KIND == 'intermediate':
+        (work / 'cms-chain.pem').write_bytes((ROOT / 'intermediate.cert.pem').read_bytes() +
+                                             (ROOT / 'root.cert.pem').read_bytes())
+        certfile = work / 'cms-chain.pem'
     if ESS_SPOOF:
         (work / 'cms-certs.pem').write_bytes((ROOT / 'root.cert.pem').read_bytes() +
                                               (ROOT / 'spoof.cert.pem').read_bytes())
@@ -122,24 +165,43 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
             str(ROOT / 'spoof.cert.der'), 'spoof.cms.der', cwd=work)
         shutil.move(work / 'spoof.cms.der', work / 'base.cms.der')
     def generate_revocation():
-        serial = '03E9' if SIGNER_KIND == 'signer' else '03EB'
-        subject = 'STYNX Test Signer' if SIGNER_KIND == 'signer' else 'STYNX Test Spoofed Party B'
+        serial = {'signer': '03E9', 'spoof': '03EB', 'chain-signer': '03EC'}[SIGNER_KIND]
+        subject = {'signer': 'STYNX Test Signer', 'spoof': 'STYNX Test Spoofed Party B',
+                   'chain-signer': 'STYNX Test Chain Signer'}[SIGNER_KIND]
         signer_index = (f'R\t270928000000Z\t260928000000Z\t{serial}\tunknown\t/CN={subject}\n'
                         if REVOKE_SIGNER_OCSP else
                         f'V\t270928000000Z\t\t{serial}\tunknown\t/CN={subject}\n')
+        tsa_serial = '03EA' if TSA_KIND == 'tsa' else '03ED'
+        tsa_subject = 'STYNX Test TSA' if TSA_KIND == 'tsa' else 'STYNX Expiring TSA'
         (work / 'ocsp-index.txt').write_text(signer_index +
-            'V\t270928000000Z\t\t03EA\tunknown\t/CN=STYNX Test TSA\n')
+            f'V\t270928000000Z\t\t{tsa_serial}\tunknown\t/CN={tsa_subject}\n')
         crl_signer_index = (f'R\t270928000000Z\t260928000000Z\t{serial}\tunknown\t/CN={subject}\n'
                             if REVOKE_SIGNER_CRL else
                             f'V\t270928000000Z\t\t{serial}\tunknown\t/CN={subject}\n')
         (work / 'crl-index.txt').write_text(crl_signer_index +
-            'V\t270928000000Z\t\t03EA\tunknown\t/CN=STYNX Test TSA\n')
-        for name in (SIGNER_KIND, 'tsa'):
-            run(OPENSSL, 'ocsp', '-issuer', str(ROOT / 'root.cert.pem'),
+            f'V\t270928000000Z\t\t{tsa_serial}\tunknown\t/CN={tsa_subject}\n')
+        for name in (SIGNER_KIND, TSA_KIND):
+            issuer_kind = SIGNER_ISSUER_KIND if name == SIGNER_KIND else 'root'
+            responder_kind = OCSP_RESPONDER_KIND if name == SIGNER_KIND else 'root'
+            run(OPENSSL, 'ocsp', '-issuer', str(ROOT / f'{issuer_kind}.cert.pem'),
                 '-cert', str(ROOT / f'{name}.cert.pem'), '-reqout', f'{name}.ocsp.req.der', '-no_nonce', cwd=work)
-            run(OPENSSL, 'ocsp', '-index', 'ocsp-index.txt', '-rsigner', str(ROOT / 'root.cert.pem'),
-                '-rkey', str(ROOT / 'root.key.pem'), '-CA', str(ROOT / 'root.cert.pem'),
+            run(OPENSSL, 'ocsp', '-index', 'ocsp-index.txt',
+                '-rsigner', str(ROOT / f'{responder_kind}.cert.pem'),
+                '-rkey', str(ROOT / f'{responder_kind}.key.pem'),
+                '-CA', str(ROOT / f'{issuer_kind}.cert.pem'),
                 '-reqin', f'{name}.ocsp.req.der', '-respout', f'{name}-ocsp.der', '-ndays', '7', '-noverify', cwd=work)
+        if SIGNER_ISSUER_KIND == 'intermediate':
+            (work / 'intermediate-index.txt').write_text(
+                ('R' if REVOKE_INTERMEDIATE_OCSP else 'V') +
+                '\t270928000000Z\t' + ('260928000000Z' if REVOKE_INTERMEDIATE_OCSP else '') +
+                '\t03EE\tunknown\t/CN=STYNX Test Intermediate\n')
+            run(OPENSSL, 'ocsp', '-issuer', str(ROOT / 'root.cert.pem'),
+                '-cert', str(ROOT / 'intermediate.cert.pem'), '-reqout', 'intermediate.ocsp.req.der',
+                '-no_nonce', cwd=work)
+            run(OPENSSL, 'ocsp', '-index', 'intermediate-index.txt',
+                '-rsigner', str(ROOT / 'root.cert.pem'), '-rkey', str(ROOT / 'root.key.pem'),
+                '-CA', str(ROOT / 'root.cert.pem'), '-reqin', 'intermediate.ocsp.req.der',
+                '-respout', 'intermediate-ocsp.der', '-ndays', '7', '-noverify', cwd=work)
         (work / 'ca.serial').write_text('1004\n')
         (work / 'crl.serial').write_text('01\n')
         (work / 'ca.cnf').write_text('\n'.join([
@@ -161,7 +223,7 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
     (work / 'tsa.cnf').write_text('\n'.join([
         '[ tsa ]', 'default_tsa = tsa_config1', '[ tsa_config1 ]',
         f'dir = {work}', 'serial = tsa.serial',
-        f'signer_cert = {ROOT / "tsa.cert.pem"}', f'signer_key = {ROOT / "tsa.key.pem"}',
+        f'signer_cert = {ROOT / f"{TSA_KIND}.cert.pem"}', f'signer_key = {ROOT / f"{TSA_KIND}.key.pem"}',
         f'certs = {ROOT / "root.cert.pem"}', 'default_policy = 1.2.3.4.5.6.7',
         'crypto_device = builtin', 'signer_digest = sha256', 'digests = sha256',
         'accuracy = secs:1', 'ordering = yes', 'tsa_name = yes',
@@ -171,7 +233,9 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
         '-out', 'timestamp.tsr', cwd=work)
     if not PRE_TST_GOOD:
         generate_revocation()
-    tsa_ocsp = (work / 'tsa-ocsp.der').read_bytes()
+    tsa_ocsp = (work / f'{TSA_KIND}-ocsp.der').read_bytes()
+    intermediate_ocsp = ((work / 'intermediate-ocsp.der').read_bytes()
+                         if SIGNER_ISSUER_KIND == 'intermediate' else None)
     fresh_signer_ocsp = (work / f'{SIGNER_KIND}-ocsp.der').read_bytes()
     signer_ocsp = stale_signer_ocsp if STALE_SIGNER_OCSP else (work / f'{SIGNER_KIND}-ocsp.der').read_bytes()
     fresh_crl = (work / 'fresh.crl.der').read_bytes()
@@ -200,7 +264,7 @@ if B_B_ONLY or NO_DSS:
 vri_key = hashlib.sha1(cms).hexdigest().upper()
 certificate = (ROOT / f'{SIGNER_KIND}.cert.der').read_bytes()
 tsa_certificate = base64.b64decode(''.join(
-    line for line in (ROOT / 'tsa.cert.pem').read_text().splitlines() if not line.startswith('-----')))
+    line for line in (ROOT / f'{TSA_KIND}.cert.pem').read_text().splitlines() if not line.startswith('-----')))
 ocsp = signer_ocsp
 crl = fresh_crl
 if WRONG_SIGNER_OCSP:
@@ -210,9 +274,13 @@ def stream(data):
     marker = ' /Filter /FlateDecode' if COMPRESS_DSS else ''
     return f'<< /Length {len(payload)}{marker} >>\nstream\n'.encode() + payload + b'\nendstream'
 cert_refs = '10 0 R' if OMIT_TSA_REVOCATION else '10 0 R 14 0 R'
+if SIGNER_ISSUER_KIND == 'intermediate':
+    cert_refs += ' 16 0 R'
 ocsp_refs = '11 0 R' + (' 15 0 R' if INCLUDE_FRESH_SIGNER_OCSP else '')
 if not OMIT_TSA_REVOCATION:
     ocsp_refs += ' 13 0 R'
+if SIGNER_ISSUER_KIND == 'intermediate':
+    ocsp_refs += ' 17 0 R'
 crl_refs = '' if OMIT_TSA_REVOCATION else '12 0 R'
 if COMPACT_DSS:
     dss = f'<</Type/DSS/Certs[{cert_refs}]/OCSPs[{ocsp_refs}]/CRLs[{crl_refs}]/VRI<</{vri_key} 9 0 R>>>>'.encode()
@@ -231,7 +299,10 @@ if not OMIT_TSA_REVOCATION:
     objects.extend([(12, stream(crl)), (13, stream(tsa_ocsp)), (14, stream(tsa_certificate))])
 if INCLUDE_FRESH_SIGNER_OCSP:
     objects.append((15, stream(fresh_signer_ocsp)))
+if SIGNER_ISSUER_KIND == 'intermediate':
+    objects.extend([(16, stream((ROOT / 'intermediate.cert.der').read_bytes())),
+                    (17, stream(intermediate_ocsp))])
 final, offsets = add_objects(revision, objects)
-final, _ = xref(final, offsets, signed_xref)
+final, _ = final_xref(final, offsets, signed_xref)
 (OUT / f'{PREFIX}-blt.pdf').write_bytes(final)
 print('PAdES B-LT fixture:', len(source), 'source bytes,', len(cms), 'CMS bytes,', vri_key)

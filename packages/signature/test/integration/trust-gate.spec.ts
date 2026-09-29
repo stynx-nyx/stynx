@@ -536,6 +536,24 @@ describe('concrete STYNX CMS verifier', () => {
     expect(result.signedDocumentSha256).toBe(hex(signedDocument));
   });
 
+  it.each([
+    ['xref stream', 'pades-xref-stream'],
+    ['hybrid xref', 'pades-hybrid-xref'],
+  ])('classifies a valid signed PDF with unsupported %s as unavailable', async (_kind, stem) => {
+    const signedDocument = bytes(`${stem}-blt.pdf`);
+    const cmsSignature = bytes(`${stem}-blt.cms.der`);
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes(`${stem}-source.pdf`),
+        signedDocument,
+        cmsSignature,
+      })).rejects.toMatchObject({
+        name: 'SignatureTrustUnavailableError',
+        message: expect.stringContaining('xref'),
+      });
+  });
+
   it('accepts legal spaces inside the selected ByteRange brackets', async () => {
     const result = await create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
       .verifySignedArtifact({
@@ -672,6 +690,50 @@ describe('concrete STYNX CMS verifier', () => {
         name: 'SignatureTrustError',
         message: 'Certificate revoked',
       });
+  });
+
+  it('rejects a revoked intermediate in a real three-certificate signer path', async () => {
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes('pades-revoked-intermediate-source.pdf'),
+        signedDocument: bytes('pades-revoked-intermediate-blt.pdf'),
+        cmsSignature: bytes('pades-revoked-intermediate-blt.cms.der'),
+        certificate: { ...certificate, pem: Buffer.from(bytes('chain-signer.cert.pem')).toString('utf8') },
+        profile: { ...profile, revocation: 'ocsp' },
+      })).rejects.toMatchObject({ name: 'SignatureTrustError', message: 'Certificate revoked' });
+  });
+
+  it('rejects an otherwise signed OCSP response from a delegated responder without OCSPSigning EKU', async () => {
+    await expect(create({ fetchTsa: undefined, fetchOcsp: undefined, fetchCrl: undefined })
+      .verifySignedArtifact({
+        ...input(),
+        originalDocument: bytes('pades-bad-responder-source.pdf'),
+        signedDocument: bytes('pades-bad-responder-blt.pdf'),
+        cmsSignature: bytes('pades-bad-responder-blt.cms.der'),
+        profile: { ...profile, revocation: 'ocsp' },
+      })).rejects.toMatchObject({ name: 'SignatureTrustError', message: 'OCSP signature invalid' });
+  });
+
+  it('accepts an authenticated TSA generation time even after that TSA certificate expires', async () => {
+    const pem = Buffer.from(bytes('expired-tsa.cert.pem')).toString('utf8');
+    const tsaCertificate = new X509Certificate(Buffer.from(
+      pem.replace(/-----[^-]+-----|\s/gu, ''), 'base64',
+    ));
+    const afterExpiration = new Date(tsaCertificate.notAfter.getTime() + 3_600_000);
+    const result = await create({
+      now: () => afterExpiration,
+      fetchTsa: undefined,
+      fetchOcsp: undefined,
+      fetchCrl: undefined,
+    }).verifySignedArtifact({
+      ...input(),
+      originalDocument: bytes('pades-expired-tsa-source.pdf'),
+      signedDocument: bytes('pades-expired-tsa-blt.pdf'),
+      cmsSignature: bytes('pades-expired-tsa-blt.cms.der'),
+    });
+    expect(result.tsaAt.getTime()).toBeLessThan(tsaCertificate.notAfter.getTime());
+    expect(result.padesProfile).toBe('PAdES-B-LT');
   });
 
   it('rejects a signed PDF without an embedded timestamp even if a fetcher claims one', async () => {
