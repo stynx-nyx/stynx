@@ -38,6 +38,9 @@ the idempotency key; it is not a total command deadline. The audit-chain
 function deliberately sets `lock_timeout` to zero while waiting for its
 transactional advisory lock. In direct `Database.tx` flows,
 `TxOptions.deadlineMs` sets a per-statement PostgreSQL `statement_timeout`,
-including an audit write; the 1.5.0 CTG5 decorator does not expose that
-option. A consumer must manage its wall-clock request deadline separately.
+including the audit trigger on idempotency reservation. The 1.5.0 CTG5
+decorator does not expose that option; the postrelease patch adds optional
+`deadlineMs` to module and route options. PostgreSQL reports a statement
+timeout through the existing `StynxDataError` 504 body and rolls the command
+back. A consumer must manage its wall-clock request deadline separately.
 An audit wait failure must not be reported as idempotency-key contention.

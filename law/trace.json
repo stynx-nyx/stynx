@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "Post-1.5.0 Architect rebind pins app-role request-path outbox RLS, statement deadline rollback, and signature trust edge fixtures.",
       "STYNX 1.5.0 final lint Architect rebind pins CTG9 SSE tenant denial, attached CMS bytes, incremental PDF ByteRange, readiness export and withdrawal hashes after stronger value assertions.",
       "STYNX 1.5.0 final-version Architect rebind pins private workspace manifest and CHANGELOG restoration through Changesets success, failure and spawn errors.",
       "STYNX 1.5.0 CTG-0009 Architect rebind pins signature trust/manifest/withdrawal, offline durable parity and upgrade, event-log ownership/RLS, audit chain, SSE bridge and adjusted legacy outbox assertions.",
@@ -646,6 +647,15 @@
             "non-HTTP commands and defensive marking, context, actor, lock timeout, and TTL checks reject before SQL"
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/outbox/test/integration/request-path-rls.integration.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "tenant-scoped outbox claim, attempt evidence and ACK remain atomic and durable under app-role transactions"
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["packages/**", "packages-web/**", "reference/**", "domain/**", "tools/**"]
@@ -933,6 +943,15 @@
           "names": ["INV-TENANCY-001"],
           "assertions": [
             "platform upgrade, FORCE RLS, app-role audit wrapper identity and chain, rollback and tenant isolation"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/outbox/test/integration/request-path-rls.integration.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "two real tenants prove request-path app role, FORCE RLS, actor context and cross-tenant rejection"
           ],
           "mode": "gray_box"
         }
@@ -4732,8 +4751,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 56,
-      "assertion_digest_sha256": "d142afe4bca0c7961de14eb30f5033ff195b8fc2c19f945621969cd9a93f5dfd"
+      "assertion_count": 62,
+      "assertion_digest_sha256": "37c74873a84963cdce494137f2e5e4c47e880b4f27454c17e3c47be34cdc2b7f"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
@@ -4764,8 +4783,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 53,
-      "assertion_digest_sha256": "5746941f7f884d9dcc66b72dd468dc27bbf8fddb07caa243e783f06396996b45"
+      "assertion_count": 54,
+      "assertion_digest_sha256": "856bb1814025ba4ea8d7ca0aea5c385d6d54f70758a121859b1f7fa1faf58ff6"
     },
     {
       "path": "packages/backend/test/unit/transactional-command-contract.spec.ts",
@@ -4932,8 +4951,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 64,
-      "assertion_digest_sha256": "93975ed083c6af1612d22fa3e73284d239418464c6a71bd7b9f38a976a8b4ab1"
+      "assertion_count": 69,
+      "assertion_digest_sha256": "7c2c5c1b23cc32a3ca88b3131c52f52ab5f0054c441412eb23f9aa93aac7b873"
     },
     {
       "path": "packages/signature/test/unit/manifest.spec.ts",
@@ -5022,6 +5041,14 @@
       "lifecycle": "supported",
       "assertion_count": 6,
       "assertion_digest_sha256": "9fcf704b9a01417ee389a07ceea228da0b2d434482ccdccd65e852424a049130"
+    },
+    {
+      "path": "packages/outbox/test/integration/request-path-rls.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 22,
+      "assertion_digest_sha256": "12dade5ca78802a6b6b7b2064c08c7cb6892aec6fda0ab1900feb796b0d3754c"
     }
   ],
   "suites": {

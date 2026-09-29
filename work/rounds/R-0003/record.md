@@ -26,3 +26,12 @@ The generated SBOM has 172 components and `pnpm security:release` passed.
 Architect corrected stale prepublication contract/ledger prose. Hardening run
 `36501815112` passed all k6 scenarios and baseline comparison on the exact
 published 1.5.0 SHA, superseding the June R17-K6 known-gap row.
+
+The complete local `pnpm ci:stynx` passed before the postrelease product
+changes. The Owner issue #223 tag-creation restriction was not applied:
+GitHub returned HTTP 422 when adding the built-in GitHub Actions app
+(`15368`) as a bypass actor because that integration is not part of the
+ruleset source or owner organization. The existing active deletion and
+non-fast-forward rules remain in effect. A release-specific installed app
+or another Owner-governed credential/workflow design is needed to restrict
+creation without blocking automated releases.
