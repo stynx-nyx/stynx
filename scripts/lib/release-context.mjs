@@ -10,6 +10,7 @@ const finalVersionCommitSubject = 'chore(repo): version 1.5.0 final release';
 const finalVersion = '1.5.0';
 const finalBaseVersion = '1.5.0-rc.3';
 const stablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.1';
+const secondStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.2';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -45,6 +46,16 @@ const allowedStablePatchFollowUpPaths = new Set([
   'scripts/lib/release-context.mjs',
   'scripts/run-release-preparation.mjs',
   'test/db/outbox-event-log-migration.spec.ts',
+  'test/scripts/local-rc-blocker-contract.test.mjs',
+  'test/scripts/release-version-policy.test.mjs',
+]);
+
+const allowedSecondStablePatchFollowUpPaths = new Set([
+  'law/policy/registry-version-anomalies.json',
+  'law/trace.json',
+  'scripts/lib/registry-version-policy.mjs',
+  'scripts/lib/release-context.mjs',
+  'scripts/run-release-preparation.mjs',
   'test/scripts/local-rc-blocker-contract.test.mjs',
   'test/scripts/release-version-policy.test.mjs',
 ]);
@@ -329,25 +340,33 @@ export function isFinalVersionedCandidate({
   );
 }
 
-/** One consumed changeset versions the complete 1.5.0 fixed group to stable 1.5.1. */
-export function isStablePatchVersionedCandidate({
-  baseRootVersion,
-  markerParentRootVersion,
-  candidateRootVersion,
-  markerCommits,
-  markerChanges,
-  markerParentChangesets,
-  followUpChanges,
-  rootManifestMatchesMarker,
-  packageStates,
-  changesetIdsOnDisk,
-  preState,
-  markerParentPreState,
-}) {
+function isExactStablePatchVersionedCandidate(
+  {
+    baseRootVersion,
+    markerParentRootVersion,
+    candidateRootVersion,
+    markerCommits,
+    markerChanges,
+    markerParentChangesets,
+    followUpChanges,
+    rootManifestMatchesMarker,
+    packageStates,
+    changesetIdsOnDisk,
+    preState,
+    markerParentPreState,
+  },
+  {
+    parentVersion: expectedParentVersion,
+    candidateVersion: expectedCandidateVersion,
+    changesetPath,
+    markerSubject,
+    allowedFollowUpPaths,
+  },
+) {
   if (
     baseRootVersion !== '1.5.0' ||
-    markerParentRootVersion !== '1.5.0' ||
-    candidateRootVersion !== '1.5.1' ||
+    markerParentRootVersion !== expectedParentVersion ||
+    candidateRootVersion !== expectedCandidateVersion ||
     preState !== null ||
     markerParentPreState !== null ||
     rootManifestMatchesMarker !== true ||
@@ -359,13 +378,11 @@ export function isStablePatchVersionedCandidate({
     packageStates.length !== 44 ||
     !Array.isArray(changesetIdsOnDisk) ||
     changesetIdsOnDisk.length !== 0 ||
-    !isDeepStrictEqual(markerParentChangesets, ['.changeset/postrelease-request-path.md'])
+    !isDeepStrictEqual(markerParentChangesets, [changesetPath])
   )
     return false;
 
-  const markers = markerCommits.filter(
-    ({ subject }) => subject === stablePatchVersionCommitSubject,
-  );
+  const markers = markerCommits.filter(({ subject }) => subject === markerSubject);
   if (
     markers.length !== 1 ||
     markerCommits.indexOf(markers[0]) === 0 ||
@@ -383,13 +400,13 @@ export function isStablePatchVersionedCandidate({
       ({ name, manifestPath, parentVersion, candidateVersion }) =>
         /^@stynx-nyx\/[a-z0-9-]+$/u.test(name) &&
         /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(manifestPath) &&
-        parentVersion === '1.5.0' &&
-        candidateVersion === '1.5.1',
+        parentVersion === expectedParentVersion &&
+        candidateVersion === expectedCandidateVersion,
     )
   )
     return false;
 
-  const expected = new Map([['.changeset/postrelease-request-path.md', 'D']]);
+  const expected = new Map([[changesetPath, 'D']]);
   for (const manifestPath of manifests) {
     expected.set(manifestPath, 'M');
     expected.set(manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'), 'M');
@@ -406,8 +423,30 @@ export function isStablePatchVersionedCandidate({
     ({ path, status }) =>
       (status === 'A' || status === 'M') &&
       (/^work\/rounds\/R-0003\/.+/u.test(path) ||
-        (status === 'M' && allowedStablePatchFollowUpPaths.has(path))),
+        (status === 'M' && allowedFollowUpPaths.has(path))),
   );
+}
+
+/** The first stable patch remains an exact historical release candidate. */
+export function isStablePatchVersionedCandidate(input) {
+  return isExactStablePatchVersionedCandidate(input, {
+    parentVersion: '1.5.0',
+    candidateVersion: '1.5.1',
+    changesetPath: '.changeset/postrelease-request-path.md',
+    markerSubject: stablePatchVersionCommitSubject,
+    allowedFollowUpPaths: allowedStablePatchFollowUpPaths,
+  });
+}
+
+/** The merged session policy changeset advances the same fixed group to 1.5.2. */
+export function isSecondStablePatchVersionedCandidate(input) {
+  return isExactStablePatchVersionedCandidate(input, {
+    parentVersion: '1.5.1',
+    candidateVersion: '1.5.2',
+    changesetPath: '.changeset/session-policy-http-status.md',
+    markerSubject: secondStablePatchVersionCommitSubject,
+    allowedFollowUpPaths: allowedSecondStablePatchFollowUpPaths,
+  });
 }
 
 export function classifyReleaseContext({
@@ -460,6 +499,7 @@ export const releaseContextConstants = Object.freeze({
   versionCommitSubject,
   finalVersionCommitSubject,
   stablePatchVersionCommitSubject,
+  secondStablePatchVersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',

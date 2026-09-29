@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   classifyReleaseContext,
   isFinalVersionedCandidate,
+  isSecondStablePatchVersionedCandidate,
   isStablePatchVersionedCandidate,
   isVersionedPreModeCandidate,
   releaseContextConstants,
@@ -240,8 +241,12 @@ function finalVersionedContext(baseCommit, headCommit, commits) {
   };
 }
 
-function stablePatchVersionedContext(baseCommit, headCommit, commits) {
-  const markerSubject = releaseContextConstants.stablePatchVersionCommitSubject;
+function stablePatchVersionedContext(
+  baseCommit,
+  headCommit,
+  commits,
+  { markerSubject, predicate },
+) {
   const markers = commits.filter(({ subject }) => subject === markerSubject);
   if (markers.length === 0) return null;
   if (markers.length !== 1) {
@@ -295,7 +300,7 @@ function stablePatchVersionedContext(baseCommit, headCommit, commits) {
       ? readGitJson(markerParent, '.changeset/pre.json')
       : null,
   };
-  if (!isStablePatchVersionedCandidate(input)) {
+  if (!predicate(input)) {
     throw new ReleaseContextError(
       'RELEASE_CONTEXT_PATCH_INVALID',
       'stable patch candidate does not match its consumed changeset and fixed-group contract',
@@ -353,7 +358,14 @@ function releaseContext() {
   return classified.kind === 'ordinary'
     ? (versionedPreModeContext(baseCommit, headCommit, commits) ??
         finalVersionedContext(baseCommit, headCommit, commits) ??
-        stablePatchVersionedContext(baseCommit, headCommit, commits) ??
+        stablePatchVersionedContext(baseCommit, headCommit, commits, {
+          markerSubject: releaseContextConstants.secondStablePatchVersionCommitSubject,
+          predicate: isSecondStablePatchVersionedCandidate,
+        }) ??
+        stablePatchVersionedContext(baseCommit, headCommit, commits, {
+          markerSubject: releaseContextConstants.stablePatchVersionCommitSubject,
+          predicate: isStablePatchVersionedCandidate,
+        }) ??
         classified)
     : classified;
 }
