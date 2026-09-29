@@ -51,6 +51,7 @@ const allowedStablePatchFollowUpPaths = new Set([
 ]);
 
 const allowedSecondStablePatchFollowUpPaths = new Set([
+  '.semgrepignore',
   'law/policy/forbidden-action-authorizations.json',
   'law/policy/registry-version-anomalies.json',
   'law/trace.json',
@@ -59,6 +60,10 @@ const allowedSecondStablePatchFollowUpPaths = new Set([
   'scripts/run-release-preparation.mjs',
   'test/scripts/local-rc-blocker-contract.test.mjs',
   'test/scripts/release-version-policy.test.mjs',
+]);
+
+const allowedSecondStablePatchAddedPaths = new Set([
+  'law/adr/2026-09-29-postrelease-pki-fixture-scan.md',
 ]);
 
 export class ReleaseContextError extends Error {
@@ -362,6 +367,7 @@ function isExactStablePatchVersionedCandidate(
     changesetPath,
     markerSubject,
     allowedFollowUpPaths,
+    allowedAddedFollowUpPaths,
   },
 ) {
   if (
@@ -424,7 +430,8 @@ function isExactStablePatchVersionedCandidate(
     ({ path, status }) =>
       (status === 'A' || status === 'M') &&
       (/^work\/rounds\/R-0003\/.+/u.test(path) ||
-        (status === 'M' && allowedFollowUpPaths.has(path))),
+        (status === 'M' && allowedFollowUpPaths.has(path)) ||
+        (status === 'A' && allowedAddedFollowUpPaths?.has(path))),
   );
 }
 
@@ -447,6 +454,7 @@ export function isSecondStablePatchVersionedCandidate(input) {
     changesetPath: '.changeset/session-policy-http-status.md',
     markerSubject: secondStablePatchVersionCommitSubject,
     allowedFollowUpPaths: allowedSecondStablePatchFollowUpPaths,
+    allowedAddedFollowUpPaths: allowedSecondStablePatchAddedPaths,
   });
 }
 
