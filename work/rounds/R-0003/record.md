@@ -60,6 +60,15 @@ Architect rebound all three trace projections. The two focused script
 suites passed 115/115; PostgreSQL migration tests passed 3/3; trace is
 473/473. Full local CI and a third delivery review remain due.
 
+Opus cycle 3 (the bridge first rejected malformed reviewer JSON, then a
+compact retry returned REVIEW) confirmed both 1.5.1 policy blockers fixed
+and found one release-preparation gap: the 1.5.1 marker is treated as an
+ordinary branch, so the consumed changeset is redrafted. The legacy D14
+contract rejected a temporary root test-concurrency cap; the Engineer
+reverted it. A forced full test graph with the original concurrency passed
+97/97. Release context now needs an exact stable-patch classifier before
+signed RC preparation.
+
 DEVAI 1.6.0 has no supported R-0001 closeout action. Its `round close` and
 `round seal` commands are experimental; the historical round still has
 TASK-0001 escalated and no ordered D/DII closing decision or phase ledger.
