@@ -4900,8 +4900,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 201,
-      "assertion_digest_sha256": "6c2d2ec8fe86c8b6b2ba61141f1433128534c613c5fb7522f337008b378687b5"
+      "assertion_count": 213,
+      "assertion_digest_sha256": "2afe9e12ffe2c04fd0441f13fac52024bea69c7c3813086667a1fab169c42c75"
     },
     {
       "path": "packages/offline-sync/test/unit/ctg9-parity.spec.ts",
