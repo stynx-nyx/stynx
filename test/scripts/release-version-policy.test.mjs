@@ -484,6 +484,8 @@ test('stable 1.5.2 patch context consumes only session policy and rejects unboun
       { status: 'M', path: 'law/policy/forbidden-action-authorizations.json' },
       { status: 'M', path: 'scripts/lib/release-context.mjs' },
       { status: 'M', path: 'test/scripts/release-version-policy.test.mjs' },
+      { status: 'M', path: '.semgrepignore' },
+      { status: 'A', path: 'law/adr/2026-09-29-postrelease-pki-fixture-scan.md' },
       { status: 'A', path: 'work/rounds/R-0003/reviews/second-stable-patch.json' },
     ],
     rootManifestMatchesMarker: true,
@@ -515,12 +517,33 @@ test('stable 1.5.2 patch context consumes only session policy and rejects unboun
     ['missing exact root binding', (value) => { value.rootManifestMatchesMarker = false; }],
     ['root manifest follow-up is not allowed', (value) => { value.followUpChanges.push({ status: 'M', path: 'package.json' }); }],
     ['unrelated law follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'law/adr/unrelated.md' }); }],
+    ['Semgrep allowlist status must be modified', (value) => { value.followUpChanges.push({ status: 'A', path: '.semgrepignore' }); }],
+    ['PKI scan ADR status must be added', (value) => { value.followUpChanges.push({ status: 'M', path: 'law/adr/2026-09-29-postrelease-pki-fixture-scan.md' }); }],
     ['deleted follow-up', (value) => { value.followUpChanges.push({ status: 'D', path: 'work/rounds/R-0003/reviews/removed.json' }); }],
   ]) {
     const invalid = structuredClone(input);
     mutate(invalid);
     assert.equal(isSecondStablePatchVersionedCandidate(invalid), false, label);
   }
+});
+
+test('Semgrep admits only the eight exact public PKI fixture keys', () => {
+  const entries = readFileSync(join(repoRoot, '.semgrepignore'), 'utf8')
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('packages/signature/test/fixtures/pki/'));
+
+  assert.deepEqual(entries, [
+    'packages/signature/test/fixtures/pki/root.key.pem',
+    'packages/signature/test/fixtures/pki/signer.key.pem',
+    'packages/signature/test/fixtures/pki/spoof.key.pem',
+    'packages/signature/test/fixtures/pki/tsa.key.pem',
+    'packages/signature/test/fixtures/pki/bad-responder.key.pem',
+    'packages/signature/test/fixtures/pki/chain-signer.key.pem',
+    'packages/signature/test/fixtures/pki/expired-tsa.key.pem',
+    'packages/signature/test/fixtures/pki/intermediate.key.pem',
+  ]);
+  assert.equal(entries.some((entry) => /[*?{}[\]]/u.test(entry)), false);
 });
 
 test('release preparation routes the final candidate to empty status and skips consumed drafts', () => {
