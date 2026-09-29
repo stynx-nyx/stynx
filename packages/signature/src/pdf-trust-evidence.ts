@@ -85,9 +85,14 @@ function finalXref(bytes:Uint8Array,allowUnsupported=false):{entries:Map<number,
 }
 
 function checkFinalXref(pdf:Uint8Array,revisionEnd:number,catalogRef:PDFRef,
-  context:PDFContext):void {
+  context:PDFContext):SignatureTrustUnavailableError|undefined {
   const original=finalXref(pdf.slice(0,revisionEnd),true);
-  const final=finalXref(pdf);
+  let final:ReturnType<typeof finalXref>;
+  try {final=finalXref(pdf,true);}
+  catch (error) {
+    if (error instanceof SignatureTrustUnavailableError) return error;
+    throw error;
+  }
   const text=Buffer.from(pdf).toString('latin1');
   const signedStart=original.sections[0]?.offset;
   const appended=final.sections.filter(section=>section.offset>=revisionEnd);
@@ -130,6 +135,7 @@ function checkFinalXref(pdf:Uint8Array,revisionEnd:number,catalogRef:PDFRef,
     if (entry.offset>=revisionEnd &&
         !intervals.some(([start])=>start===entry.offset)) failXref();
   }
+  return undefined;
 }
 
 export async function readSelectedSignatureDictionary(pdf:Uint8Array,revisionEnd:number,
@@ -211,7 +217,7 @@ export async function readPdfTrustEvidence(pdf:Uint8Array,revisionEnd:number,cms
   const catalog=complete.catalog;
   const catalogRef=previous.context.getObjectRef(oldCatalog);
   if (!catalogRef) throw new SignatureTrustError('Post-signature modification');
-  checkFinalXref(pdf,revisionEnd,catalogRef,complete.context);
+  const unsupportedXref=checkFinalXref(pdf,revisionEnd,catalogRef,complete.context);
   if (!sameObject(complete.context.lookup(catalogRef),complete.catalog))
     throw new SignatureTrustError('Post-signature modification');
   if (oldCatalog.has(name('DSS')) || !catalog.has(name('DSS')) ||
@@ -250,5 +256,6 @@ export async function readPdfTrustEvidence(pdf:Uint8Array,revisionEnd:number,cms
       evidence.vriOcsp.some(item=>!contains(evidence.ocsp,item)) ||
       evidence.vriCrls.some(item=>!contains(evidence.crls,item)))
     throw new SignatureTrustError('DSS VRI evidence is unbound');
+  if (unsupportedXref) throw unsupportedXref;
   return evidence;
 }

@@ -127,8 +127,10 @@ async function verifyRevocation(
         const basic=new pkijs.BasicOCSPResponse({schema:parse(new Uint8Array(response.responseBytes.response.valueBlock.valueHexView))});
         const status=await response.getCertificateStatus(subject,issuer);
         if (!status.isForCertificate) continue;
-        if (!await basic.verify({trustedCerts:anchors,issuerCerts:issuerPath}))
-          throw new SignatureTrustError('OCSP signature invalid');
+        let authorizedResponder:boolean;
+        try {authorizedResponder=await basic.verify({trustedCerts:anchors,issuerCerts:issuerPath});}
+        catch {throw new SignatureTrustError('OCSP signature invalid');}
+        if (!authorizedResponder) throw new SignatureTrustError('OCSP signature invalid');
         if (!validDate(basic.tbsResponseData.producedAt,now))
           throw new SignatureTrustError('OCSP production time invalid');
         if (basic.tbsResponseData.producedAt<at) {unavailable=true;continue;}
