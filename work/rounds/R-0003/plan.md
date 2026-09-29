@@ -67,5 +67,9 @@ mutation is reviewed against the exact Owner receipt rule before execution.
   Invalid HMAC and cross-tenant identities do not perform a domain lookup or
   owner-role fallback. Existing owner methods remain internal-control paths.
   An additive migration may grant `stynx_app` the minimum missing update
-  privilege on attempt ledger rows. Tests must use real PostgreSQL, two
-  tenants, and verify absence of cross-tenant writes.
+  privilege on attempt ledger rows. The grant is column-scoped to request
+  result evidence. A database trigger permits app-role updates only once,
+  from an uncompleted `CLAIMED` attempt to a terminal `SENT` or `ERROR`;
+  completed and migrated legacy rows are immutable to the app role. Tests
+  must use real PostgreSQL, two tenants, and verify absence of cross-tenant
+  writes and same-tenant evidence rewrites.
