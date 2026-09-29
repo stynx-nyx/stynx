@@ -135,3 +135,18 @@ three-fixture `pnpm release:consumer-fixtures` gate passed. The Opus 5.5
 delivery-review cycle 6 returned PASS with no findings; cycles 5 and 6 and
 their bridge receipts are retained in `reviews/`. Signed RC preparation is
 next. No DETRAN proof ran.
+
+The exact forbidden-action receipt for Engineer merge
+`1d08b743a7e29430790677e78994dd1ab23b7d59` passed the strict DEVAI
+audit. A signed candidate at `43b2b29f` was exported and published as local
+evidence. Remote verification initially failed because `main` still carried
+the older workstation-03 toolchain control. PR #315 promoted the reviewed
+control and ADR, passed local and remote gates, received an Opus 5.5 PASS,
+and merged at `95a240c3`; rerunning the verifier passed for that candidate.
+PR #314 then exposed four additional public PKI fixture keys through its
+Semgrep check. ADR-STYNX-1.5.2-PKI-FIXTURE-SCAN authorizes exactly those four
+paths alongside the four already excluded keys. Inspector tests bind the
+eight-path list and the second-marker follow-up states; Engineer updated the
+allowlist and classifier without deleting tests. Trace is rebound at
+500/500. Full gates, cross-family delivery review, and a new signed local RC
+remain due on the final clean SHA. No DETRAN proof ran.
