@@ -47,4 +47,19 @@ describe('StynxUserDetailComponent', () => {
     expect(changed).toHaveLength(1);
     expect(toast.push).toHaveBeenCalledWith('iam.users.detail.saved', 'success');
   });
+
+  it('ignores an empty user id and omits blank optional overview fields', async () => {
+    const fixture = await renderComponent(StynxUserDetailComponent);
+    const component = fixture.componentInstance;
+    const api = TestBed.inject(IamApiService) as unknown as FakeIamApi;
+    const access = component as unknown as { saveOverview(): void };
+
+    component.userId = '';
+    expect(api.getUser).not.toHaveBeenCalled();
+    component.userId = 'user-1';
+    component.overviewForm.setValue({ email: 'ada@example.test', firstName: ' ', lastName: '', locale: '   ' });
+    access.saveOverview();
+
+    expect(api.patchUser).toHaveBeenCalledWith('user-1', { email: 'ada@example.test' });
+  });
 });

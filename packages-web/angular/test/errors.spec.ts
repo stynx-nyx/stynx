@@ -95,6 +95,8 @@ describe('classifyStynxError', () => {
     expect(classifyStynxError(validation).kind).toBe('validation');
     expect(classifyStynxError(new Error('transport'))).toMatchObject({ kind: 'unknown', messageKey: 'ui.error.unknown' });
     expect(classifyStynxError(new HttpErrorResponse({ status: 0, error: new Error('offline') })).kind).toBe('network');
+    expect(classifyStynxError({ status: 0 })).toMatchObject({ kind: 'network', status: 0 });
+    expect(classifyStynxError({ status: 503 })).toMatchObject({ kind: 'unknown' });
   });
 
   it('does not use an untrusted server message as the translation key', () => {

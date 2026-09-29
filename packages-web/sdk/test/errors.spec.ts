@@ -75,4 +75,20 @@ describe('createStynxSdkError envelope compatibility', () => {
       context: { requestId: 'req-8', field: 'age' },
     });
   });
+
+  it('preserves a requestId already present in details over the sibling envelope value', () => {
+    const error = createStynxSdkError(400, {
+      errorCode: 'INPUT:INVALID:field',
+      requestId: 'envelope-id',
+      details: { requestId: 'details-id', field: 'email' },
+    });
+
+    expect(error.context).toEqual({ requestId: 'details-id', field: 'email' });
+  });
+
+  it('creates context from the sibling requestId when details are absent', () => {
+    const error = createStynxSdkError(418, { requestId: 'envelope-id' });
+
+    expect(error.context).toEqual({ requestId: 'envelope-id' });
+  });
 });

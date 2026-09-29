@@ -1,4 +1,7 @@
 import 'reflect-metadata';
+import { lastValueFrom, of } from 'rxjs';
+import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
+import { IfMatchExceptionFilter, IfMatchPreconditionInterceptor, PreconditionFailedError, PreconditionRequiredError, RevisionETagInterceptor } from '../../src/if-match/if-match';
 import { EXCEPTION_FILTERS_METADATA, INTERCEPTORS_METADATA } from '@nestjs/common/constants';
 import * as backend from '../../src/index';
 
@@ -62,5 +65,68 @@ describe('published If-Match contract', () => {
     const interceptors = Reflect.getMetadata(INTERCEPTORS_METADATA, Resource.prototype.update) as unknown[] | undefined;
     expect(filters).toContain(api.IfMatchExceptionFilter);
     expect(interceptors?.length).toBeGreaterThan(0);
+  });
+
+  it('rejects non-string request headers, assigns valid revisions, and writes response ETags', async () => {
+    const interceptor = new IfMatchPreconditionInterceptor();
+    const malformed = { headers: { 'if-match': ['"3"'] } };
+    const malformedContext = { switchToHttp: () => ({ getRequest: () => malformed }) } as never;
+    expect(() => interceptor.intercept(malformedContext, { handle: () => of(null) })).toThrow(PreconditionFailedError);
+
+    const request = { headers: { 'if-match': '"3"' } };
+    const context = { switchToHttp: () => ({ getRequest: () => request }) } as never;
+    await expect(lastValueFrom(interceptor.intercept(context, { handle: () => of('updated') }))).resolves.toBe('updated');
+
+    const response = { setHeader: vi.fn() };
+    const eTagContext = { switchToHttp: () => ({ getResponse: () => response }) } as never;
+    await expect(lastValueFrom(new RevisionETagInterceptor().intercept(eTagContext, { handle: () => of({ revision: 0 }) })))
+      .resolves.toEqual({ revision: 0 });
+    expect(response.setHeader).toHaveBeenCalledWith('ETag', '"0"');
+    for (const body of [null, [], {}, { revision: -1 }, { revision: Number.MAX_SAFE_INTEGER + 1 }]) {
+      await expect(lastValueFrom(new RevisionETagInterceptor().intercept(eTagContext, { handle: () => of(body) })))
+        .rejects.toThrow(/safe nonnegative integer revision/i);
+    }
+  });
+
+  it('serializes precondition failures with the supplied request ID and optional details', () => {
+    const adapter = { getHeader: vi.fn(() => undefined), setHeader: vi.fn(), reply: vi.fn() };
+    const filter = new IfMatchExceptionFilter({ httpAdapter: adapter } as never);
+    const request = { headers: { 'x-request-id': '0197481e-7294-7c53-8b03-5c36d7c2831a' } };
+    const response = {};
+    const host = { switchToHttp: () => ({ getRequest: () => request, getResponse: () => response }) } as never;
+
+    filter.catch(new PreconditionRequiredError('Supply revision', { current: 2 }), host);
+
+    expect(adapter.setHeader).toHaveBeenCalledWith(response, 'X-Request-Id', '0197481e-7294-7c53-8b03-5c36d7c2831a');
+    expect(adapter.reply).toHaveBeenCalledWith(response, expect.objectContaining({
+      statusCode: 428, errorCode: 'PRECONDITION:REQUIRED:if-match', requestId: '0197481e-7294-7c53-8b03-5c36d7c2831a', details: { current: 2 },
+    }), 428);
+  });
+
+  it('generates a request ID when context, adapter, and request provide none', () => {
+    const adapter = { getHeader: vi.fn(() => undefined), setHeader: vi.fn(), reply: vi.fn() };
+    const filter = new IfMatchExceptionFilter({ httpAdapter: adapter } as never);
+    const response = {};
+    const host = { switchToHttp: () => ({ getRequest: () => ({ headers: {} }), getResponse: () => response }) } as never;
+
+    filter.catch(new PreconditionFailedError(), host);
+
+    const [[target, name, requestId]] = adapter.setHeader.mock.calls;
+    expect(target).toBe(response);
+    expect(name).toBe('X-Request-Id');
+    expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    expect(adapter.reply).toHaveBeenCalledWith(response, expect.objectContaining({ requestId }), 412);
+  });
+
+  it('rejects parameter resolution when the route omitted RequireIfMatch', () => {
+    class Resource { update(_revision: number): void {} }
+    const decorator = api.IfMatchRevision!();
+    decorator(Resource.prototype, 'update', 0);
+    const args = Reflect.getMetadata(ROUTE_ARGS_METADATA, Resource, 'update') as Record<
+      string, { factory: (data: unknown, context: unknown) => number }
+    >;
+    const parameter = Object.values(args)[0]!;
+    const context = { switchToHttp: () => ({ getRequest: () => ({}) }) };
+    expect(() => parameter.factory(undefined, context)).toThrow(/requires RequireIfMatch/i);
   });
 });

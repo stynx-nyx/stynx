@@ -41,4 +41,16 @@ describe('StynxGroupsAdminComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['group-1'], { relativeTo: route });
     expect(toast.push).toHaveBeenCalledWith('iam.groups.delete.deleted', 'success');
   });
+
+  it('emits group selection when optional router context is absent', async () => {
+    const fixture = await renderComponent(StynxGroupsAdminComponent);
+    const component = fixture.componentInstance;
+    const access = component as unknown as { openDetail(group: typeof GROUPS[number]): void };
+    const selected: string[] = [];
+    component.groupSelected.subscribe((group) => selected.push(group.id));
+
+    access.openDetail(GROUPS[0]!);
+
+    expect(selected).toEqual(['group-1']);
+  });
 });

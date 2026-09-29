@@ -195,6 +195,78 @@ describe('stynx generate module command [INV-CLI-001]', () => {
     expect(paths.some((path) => path.endsWith('.controller.ts'))).toBe(false);
   });
 
+  it('renders every supported CRUD verb, database type, optional default, and unique index', async () => {
+    const root = sandbox();
+    const blueprint = variation((b) => {
+      b.module.name = 'LongNamedDomain';
+      b.module.owners = ['owner'];
+      b.module.description = 'Domain fixture';
+      b.database.entities[0].fields.push(
+        { name: 'count', type: 'integer', default: 0 },
+        { name: 'enabled', type: 'boolean', default: true },
+        { name: 'created_at', type: 'timestamptz', default: 'now()' },
+        { name: 'optional_text', type: 'text', nullable: true },
+      );
+      b.database.entities[0].indexes = [{ columns: ['label'], unique: true }];
+      b.api.resources[0].operations = ['list', 'get', 'create', 'update', 'delete'];
+    });
+    const out = await generate(root, blueprint);
+    const controller = readFileSync(join(out, 'src/long_named_domain.controller.ts'), 'utf8');
+    const repository = readFileSync(join(out, 'src/long_named_domain.repository.ts'), 'utf8');
+    const sql = readFileSync(join(out, 'database/ops_long_named_domain.sql'), 'utf8');
+
+    expect(controller).toContain('@Post(');
+    expect(controller).toContain('@Patch(');
+    expect(controller).toContain('@Delete(');
+    expect(repository).toContain('count: number');
+    expect(repository).toContain('enabled: boolean');
+    expect(repository).toContain('optional_text: string | null');
+    expect(sql).toContain('DEFAULT now()');
+    expect(sql).toContain('DEFAULT true');
+    expect(sql).toContain('DEFAULT 0');
+    expect(sql).toContain('CREATE UNIQUE INDEX');
+  });
+
+  it('rejects invalid JSON shapes and scalar values before creating output', async () => {
+    const cases: Array<[string, (draft: Blueprint) => void]> = [
+      ['non-object module', (b) => { b.module = null; }],
+      ['missing required version', (b) => { delete b.module.version; }],
+      ['non-string id', (b) => { b.id = 7; }],
+      ['empty entities', (b) => { b.database.entities = []; }],
+      ['malformed primary key', (b) => { b.database.entities[0].primaryKey = ['tenant_id']; }],
+      ['invalid nullable flag', (b) => { b.database.entities[0].fields[2].nullable = 'yes'; }],
+      ['bad version', (b) => { b.module.version = '1.0'; }],
+      ['unsafe derived slug', (b) => { b.module.name = 'A'.repeat(49); }],
+      ['invalid bounded description', (b) => { b.module.description = 'line\nfeed'; }],
+      ['invalid audit flag', (b) => { b.audit.enabled = 'yes'; }],
+    ['invalid metrics flag', (b) => { b.ops.metrics.enabled = 1; }],
+      ['bad varchar size', (b) => { b.database.entities[0].fields[2].type = 'varchar(256)'; }],
+      ['invalid boolean default', (b) => { b.database.entities[0].fields[2].default = 'true'; }],
+      ['unknown api entity', (b) => { b.api.resources[0].entity = 'MissingEntity'; }],
+      ['empty operations', (b) => { b.api.resources[0].operations = []; }],
+      ['invalid role annotation', (b) => { b.auth.rbac.roles = ['Invalid Role']; }],
+      ['undeclared role annotation', (b) => { b.auth.rbac.permissions[0].role = 'missing'; }],
+    ['invalid permission operation', (b) => { b.auth.rbac.permissions[0].allow = ['upsert']; }],
+    ['invalid blueprint id', (b) => { b.id = 'bad id'; }],
+    ['duplicate field name', (b) => { b.database.entities[0].fields.push({ name: 'label', type: 'text' }); }],
+    ['undeclared index field', (b) => { b.database.entities[0].indexes = [{ columns: ['missing'] }]; }],
+    ['repeated index field', (b) => { b.database.entities[0].indexes = [{ columns: ['label', 'label'] }]; }],
+    ['redundant primary key index', (b) => { b.database.entities[0].indexes = [{ columns: ['id'] }]; }],
+  ];
+
+    for (const [label, change] of cases) {
+      const root = sandbox();
+      const out = join(root, 'out');
+      await mustRejectBehavior(generate(root, variation(change), out));
+      expect(existsSync(out), label).toBe(false);
+      expect(readdirSync(root).sort(), label).toEqual(['blueprint.json']);
+    }
+    await rejectsWithoutOutput(null as unknown as Blueprint);
+    const invalidTextRoot = sandbox();
+    writeFileSync(join(invalidTextRoot, 'blueprint.json'), Buffer.from([0xff, 0xfe]));
+    await mustRejectBehavior(invoke(['generate', 'module', '--blueprint', join(invalidTextRoot, 'blueprint.json'), '--out', join(invalidTextRoot, 'out')]));
+  });
+
   it('treats accepted auth, audit and ops annotations as inert data', async () => {
     const annotated = sandbox();
     const bare = sandbox();
@@ -253,6 +325,33 @@ describe('stynx generate module command [INV-CLI-001]', () => {
     expect(controller).not.toContain("@Get('//:id')");
   });
 
+  it('joins a root child route to a non-root base and permits optional metadata omission', async () => {
+    const root = sandbox();
+    const blueprint = variation((b) => {
+      b.api.resources[0].path = '/';
+      delete b.module.owners;
+      delete b.module.description;
+      delete b.database.entities[0].indexes;
+    });
+    const out = await generate(root, blueprint);
+    const controller = readFileSync(join(out, 'src/example.controller.ts'), 'utf8');
+    expect(controller).toContain("@Get('/v1')");
+    expect(controller).toContain("@Get('/v1/:id')");
+  });
+
+  it('hashes long generated index identifiers to PostgreSQL identifier length', async () => {
+    const root = sandbox();
+    const blueprint = variation((b) => {
+      b.module.namespace = 'n'.repeat(48);
+      b.database.entities[0].table = 't'.repeat(48);
+      b.database.entities[0].fields[2].name = 'c'.repeat(48);
+      b.database.entities[0].indexes = [{ columns: ['c'.repeat(48)], unique: true }];
+    });
+    const out = await generate(root, blueprint);
+    const sql = readFileSync(join(out, `database/${'n'.repeat(48)}_example.sql`), 'utf8');
+    expect(sql).toMatch(/CREATE UNIQUE INDEX "n{48}_t{5}_[a-f0-9]{8}"/);
+  });
+
   it('rejects a unique tenant index that would reuse the mandatory index name', async () => {
     await rejectsWithoutOutput(variation((b) => {
       b.database.entities[0].indexes = [{ columns: ['tenant_id'], unique: true }];
@@ -266,6 +365,24 @@ describe('stynx generate module command [INV-CLI-001]', () => {
       entity.table = 'other_record';
       b.database.entities.push(entity);
       b.api.resources.push({ entity: 'OtherRecord', path: '/example-records/x', operations: ['list'] });
+    }));
+  });
+
+  it('rejects a literal id route shadowed by the generated item route', async () => {
+    await rejectsWithoutOutput(variation((b) => {
+      b.api.resources[0].path = '/example-records/list';
+      b.api.resources[0].operations = ['list'];
+      const literal = structuredClone(b.database.entities[0]);
+      literal.name = 'LiteralRecord';
+      literal.table = 'literal_record';
+      const item = structuredClone(b.database.entities[0]);
+      item.name = 'ItemRecord';
+      item.table = 'item_record';
+      b.database.entities.push(literal, item);
+      b.api.resources.push(
+        { entity: 'LiteralRecord', path: '/example-records/id', operations: ['list'] },
+        { entity: 'ItemRecord', path: '/example-records', operations: ['get'] },
+      );
     }));
   });
 
@@ -364,6 +481,17 @@ describe('safe output and deterministic verification [INV-CLI-001, INV-CLI-002]'
     expect(existsSync(join(elsewhere, 'escaped'))).toBe(false);
   });
 
+  it('allows a selected parent symlink when its target remains inside the resolved ancestor', async () => {
+    const root = sandbox();
+    const realParent = join(root, 'real-parent');
+    mkdirSync(realParent);
+    symlinkSync(realParent, join(root, 'parent-link'));
+
+    await generate(root, sample, join(root, 'parent-link', 'generated'));
+
+    expect(existsSync(join(realParent, 'generated/generation-manifest.json'))).toBe(true);
+  });
+
   it('allows a symlinked ancestor whose target is outside the link directory after realpath', async () => {
     const root = sandbox();
     const target = sandbox();
@@ -428,6 +556,33 @@ describe('safe output and deterministic verification [INV-CLI-001, INV-CLI-002]'
     await mustRejectBehavior(invoke(['generate', 'module', '--blueprint', blueprint, '--out', out, '--check']));
     expect(readFileSync(join(out, 'generation-manifest.json'), 'utf8')).toBe('{bad');
   });
+
+  it('rejects non-object manifests and symlinks inside a check output without changing them', async () => {
+    const root = sandbox();
+    const out = await generate(root);
+    const blueprint = join(root, 'blueprint.json');
+    const manifest = join(out, 'generation-manifest.json');
+    writeFileSync(manifest, 'null');
+    await mustRejectBehavior(invoke(['generate', 'module', '--blueprint', blueprint, '--out', out, '--check']));
+    expect(readFileSync(manifest, 'utf8')).toBe('null');
+
+    writeFileSync(manifest, JSON.stringify(JSON.parse(readFileSync(input(root), 'utf8'))));
+    const target = join(root, 'sentinel');
+    writeFileSync(target, 'keep');
+    symlinkSync(target, join(out, 'linked-output'));
+    await mustRejectBehavior(invoke(['generate', 'module', '--blueprint', blueprint, '--out', out, '--check']));
+    expect(readFileSync(target, 'utf8')).toBe('keep');
+    expect(lstatSync(join(out, 'linked-output')).isSymbolicLink()).toBe(true);
+  });
+
+  it('requires a directory for the selected output parent', async () => {
+    const root = sandbox();
+    const parentFile = join(root, 'file-parent');
+    writeFileSync(parentFile, 'keep');
+    await mustRejectBehavior(generate(root, sample, join(parentFile, 'out')));
+    expect(readFileSync(parentFile, 'utf8')).toBe('keep');
+  });
+
 });
 
 describe('static SQL shape [INV-CLI-004]', () => {

@@ -273,6 +273,9 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     const oldSchema = Object.assign(new Error('missing column'), { code: '42703' });
     await expect(pgGetItem(databaseWith(oldSchema).database, scope, 'key-1'))
       .rejects.toMatchObject({ code: 'OFFLINE_SYNC_UPGRADE_REQUIRED' });
+    const absentTable = Object.assign(new Error('missing table'), { code: '42P01' });
+    await expect(pgGetItem(databaseWith(absentTable).database, scope, 'key-1'))
+      .rejects.toMatchObject({ code: 'OFFLINE_SYNC_UPGRADE_REQUIRED' });
     const unrelated = Object.assign(new Error('connection lost'), { code: '08006' });
     await expect(pgGetItem(databaseWith(unrelated).database, scope, 'key-1'))
       .rejects.toBe(unrelated);
