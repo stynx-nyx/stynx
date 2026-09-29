@@ -328,6 +328,25 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     expect(query.mock.calls.some(([sql]) => sql.includes('sync_batch_transport_keys'))).toBe(true);
   });
 
+  it('compares absent idempotency keys as declared nulls during closed-batch replay', async () => {
+    const submittedBatch = { ...syncBatch, items: [{ ...syncItem, idempotencyKey: undefined }] };
+    const existing = {
+      ...verifiedClosedRow,
+      context_hash: batchContextFingerprint(submittedBatch, execution.agentId),
+      declared_keys: [null],
+    };
+    const fingerprint = transportFingerprint(transport, submittedBatch);
+    const { database } = routedDatabase((sql) => {
+      if (sql.includes('select *,lease_expires_at')) return { rows: [existing] };
+      if (sql.includes('select device_id,device_batch_id,transport_fingerprint'))
+        return { rows: [{ device_id: syncBatch.deviceId,
+          device_batch_id: syncBatch.deviceBatchId, transport_fingerprint: fingerprint }] };
+      return {};
+    });
+    await expect(pgSubmit(database, scope, submittedBatch, execution, now))
+      .resolves.toEqual({ replayed: true });
+  });
+
   it('refuses changed batch context, a changed body for the same key, and key rebinding', async () => {
     const fingerprint = transportFingerprint(transport, syncBatch);
     const compositeKey = transportCompositeKey(scope, transport);
