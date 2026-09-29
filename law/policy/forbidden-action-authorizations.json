@@ -1129,6 +1129,12 @@
       "commit": "a39c4f27312a522701204293d8314f7277eb4bab",
       "authorized_by": "Owner",
       "reason": "The Owner authorized all receipts necessary to close C-0002. This exact Auditor evidence commit stores the generated post-merge inventory; the matched text is a quoted example inside that inventory. It changes no invariant authority."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "1d08b743a7e29430790677e78994dd1ab23b7d59",
+      "authorized_by": "Owner",
+      "reason": "The Owner explicitly authorized the exact exception-receipt amendment and all remaining actions to complete C-0002. This Engineer-authored merge brought origin/main into the 1.5.1 candidate; its first-parent diff contains no law/ path, while comparison to its second parent carries previously Architect-authored R-0003 ADR, policy and trace changes. The merge did not independently weaken or amend invariant authority. This receipt covers only that exact merge SHA."
     }
   ]
 }

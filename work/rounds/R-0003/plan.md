@@ -80,6 +80,17 @@ mutation is reviewed against the exact Owner receipt rule before execution.
   repeat local CI, 44-package coverage, signed RC and cross-family review.
   The original 1.5.1 marker remains historical evidence.
 
+- OD-R0003-03 (2026-09-29): The first push of the signed 1.5.2 candidate was
+  refused by the strict DEVAI pre-push audit. It identified the exact
+  Engineer-authored merge `1d08b743a7e29430790677e78994dd1ab23b7d59`
+  as `FORBID-MUTATE-INVARIANTS`: its second-parent comparison carries
+  previously Architect-authored `law/` files, although its first-parent
+  comparison changes no `law/` path. The Owner has explicitly authorized the
+  exact exception-receipt amendment. Bind one receipt for that SHA, admit only
+  the authorization ledger as an additional second-marker follow-up, rerun
+  strict forbidden-action audit, and repeat signed RC on the new clean HEAD.
+  No hook bypass or force push is allowed.
+
 - CTG5: add an optional positive `deadlineMs` to transactional-command
   module/route options. Pass it to `Database.tx` as PostgreSQL
   `statement_timeout` for each statement. Keep `lockTimeoutMs` scoped to the
