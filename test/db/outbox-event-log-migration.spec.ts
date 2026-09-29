@@ -151,6 +151,13 @@ describe('outbox event log migration 0021', () => {
         insert into outbox.event_attempts (tenant_id,event_id,attempt_ordinal,result)
         values ($1::uuid,$2::uuid,1,'CLAIMED'),($3::uuid,$4::uuid,1,'CLAIMED')
       `, [tenantA, eventA, tenantB, eventB]);
+      await client.query(`
+        insert into outbox.event_attempts
+          (tenant_id,event_id,attempt_ordinal,result,completed_at,legacy_message_id,legacy_state)
+        values ($1::uuid,$2::uuid,2,'SENT',clock_timestamp(),null,null),
+               ($1::uuid,$2::uuid,3,'LEGACY_HISTORY_UNAVAILABLE',null,
+                '01900000-0000-4000-8000-000000000033'::uuid,'{"source":"legacy"}'::jsonb)
+      `, [tenantA, eventA]);
       const before = await client.query<{ allowed: boolean }>(
         `select has_table_privilege('stynx_app','outbox.event_attempts','UPDATE') as allowed`,
       );
@@ -159,17 +166,25 @@ describe('outbox event log migration 0021', () => {
       await client.query(await readFile(resolve(migrations, '0022_outbox_request_path.sql'), 'utf8'));
       const security = await client.query<{
         enabled: boolean; forced: boolean; app_update: boolean; reader_update: boolean;
+        result_update: boolean; evidence_update: boolean; identity_update: boolean;
+        legacy_update: boolean;
       }>(`
         select relrowsecurity as enabled,relforcerowsecurity as forced,
                has_table_privilege('stynx_app',oid,'UPDATE') as app_update,
-               has_table_privilege('stynx_reader',oid,'UPDATE') as reader_update
+               has_table_privilege('stynx_reader',oid,'UPDATE') as reader_update,
+               has_column_privilege('stynx_app',oid,'result','UPDATE') as result_update,
+               has_column_privilege('stynx_app',oid,'request_bytes','UPDATE') as evidence_update,
+               has_column_privilege('stynx_app',oid,'event_id','UPDATE') as identity_update,
+               has_column_privilege('stynx_app',oid,'legacy_state','UPDATE') as legacy_update
         from pg_class where oid='outbox.event_attempts'::regclass
       `);
       expect(security.rows).toEqual([{
-        enabled: true, forced: true, app_update: true, reader_update: false,
+        enabled: true, forced: true, app_update: false, reader_update: false,
+        result_update: true, evidence_update: true, identity_update: false, legacy_update: false,
       }]);
       const preserved = await client.query<{ tenant_id: string; result: string }>(`
-        select tenant_id::text,result from outbox.event_attempts order by tenant_id
+        select tenant_id::text,result from outbox.event_attempts
+        where attempt_ordinal=1 order by tenant_id
       `);
       expect(preserved.rows).toEqual([
         { tenant_id: tenantA, result: 'CLAIMED' },
@@ -181,22 +196,44 @@ describe('outbox event log migration 0021', () => {
       await client.query("select set_config('app.tenant_id',$1,true)", [tenantA]);
       const own = await client.query<{ event_id: string }>(`
         update outbox.event_attempts set result='SENT' where tenant_id=$1::uuid
+          and attempt_ordinal=1
         returning event_id::text
       `, [tenantA]);
       expect(own.rows).toEqual([{ event_id: eventA }]);
       const foreign = await client.query<{ event_id: string }>(`
         update outbox.event_attempts set result='ERROR' where tenant_id=$1::uuid
+          and attempt_ordinal=1
         returning event_id::text
       `, [tenantB]);
       expect(foreign.rows).toEqual([]);
       await client.query('commit');
+
+      for (const ordinal of [2, 3]) {
+        await client.query('begin');
+        await client.query("select set_config('app.tenant_id',$1,true)", [tenantA]);
+        await expect(client.query(`
+          update outbox.event_attempts set result='ERROR'
+          where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3
+        `, [tenantA, eventA, ordinal])).rejects.toMatchObject({ code: '42501' });
+        await client.query('rollback');
+      }
       await client.query('reset role');
       const after = await client.query<{ tenant_id: string; result: string }>(`
-        select tenant_id::text,result from outbox.event_attempts order by tenant_id
+        select tenant_id::text,result from outbox.event_attempts
+        where attempt_ordinal=1 order by tenant_id
       `);
       expect(after.rows).toEqual([
         { tenant_id: tenantA, result: 'SENT' },
         { tenant_id: tenantB, result: 'CLAIMED' },
+      ]);
+      const immutable = await client.query<{ attempt_ordinal: number; result: string }>(`
+        select attempt_ordinal,result from outbox.event_attempts
+        where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal in (2,3)
+        order by attempt_ordinal
+      `, [tenantA, eventA]);
+      expect(immutable.rows).toEqual([
+        { attempt_ordinal: 2, result: 'SENT' },
+        { attempt_ordinal: 3, result: 'LEGACY_HISTORY_UNAVAILABLE' },
       ]);
     } finally {
       await client.query('rollback').catch(() => undefined);

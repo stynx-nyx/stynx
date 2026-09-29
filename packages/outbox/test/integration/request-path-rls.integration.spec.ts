@@ -33,6 +33,7 @@ describe('request-path outbox delivery and ACK (PostgreSQL/FORCE RLS)', () => {
   let outbox: OutboxService;
   let requestPath: TenantOutboxPort;
   const delivered: OutboxRow[] = [];
+  const failedEventIds = new Set<string>();
 
   const asTenant = <T>(tenantId: string, work: () => Promise<T>) =>
     database.withRequestContext({ tenantId, actorId: ACTOR }, work);
@@ -89,6 +90,19 @@ describe('request-path outbox delivery and ACK (PostgreSQL/FORCE RLS)', () => {
             send: async () => undefined,
             sendEvent: async (row) => {
               delivered.push(row);
+              if (failedEventIds.has(row.id)) {
+                const failure = new Error('request-path transport rejected');
+                Object.assign(failure, {
+                  evidence: {
+                    provider: 'request-path-probe',
+                    protocol: 'HTTP',
+                    requestBytes: Buffer.from(`request:${row.id}`),
+                    responseBytes: Buffer.from(`failure:${row.id}`),
+                    responseStatus: 503,
+                  },
+                });
+                throw failure;
+              }
               return {
                 provider: 'request-path-probe',
                 protocol: 'HTTP',
@@ -156,13 +170,23 @@ describe('request-path outbox delivery and ACK (PostgreSQL/FORCE RLS)', () => {
     await postgres?.dispose();
   }, 60_000);
 
-  it('grants app attempt updates while retaining FORCE RLS on request-path tables', async () => {
+  it('grants only evidence-column attempt updates while retaining FORCE RLS', async () => {
     const admin = await postgres.connectAsAdmin();
     try {
-      const grant = await admin.query<{ allowed: boolean }>(
-        `select has_table_privilege('stynx_app','outbox.event_attempts','UPDATE') as allowed`,
+      const grant = await admin.query<{
+        table_update: boolean; result_update: boolean; evidence_update: boolean;
+        identity_update: boolean; legacy_update: boolean;
+      }>(
+        `select has_table_privilege('stynx_app','outbox.event_attempts','UPDATE') as table_update,
+                has_column_privilege('stynx_app','outbox.event_attempts','result','UPDATE') as result_update,
+                has_column_privilege('stynx_app','outbox.event_attempts','request_bytes','UPDATE') as evidence_update,
+                has_column_privilege('stynx_app','outbox.event_attempts','event_id','UPDATE') as identity_update,
+                has_column_privilege('stynx_app','outbox.event_attempts','legacy_state','UPDATE') as legacy_update`,
       );
-      expect(grant.rows).toEqual([{ allowed: true }]);
+      expect(grant.rows).toEqual([{
+        table_update: false, result_update: true, evidence_update: true,
+        identity_update: false, legacy_update: false,
+      }]);
       const relations = await admin.query<{
         relname: string;
         relrowsecurity: boolean;
@@ -179,6 +203,56 @@ describe('request-path outbox delivery and ACK (PostgreSQL/FORCE RLS)', () => {
       );
     } finally {
       await admin.end();
+    }
+  });
+
+  it('records a transport failure and retry schedule under the app-role trigger boundary', async () => {
+    const eventA = await append(TENANT_A);
+    const eventB = await append(TENANT_B);
+    failedEventIds.add(eventA.id);
+    try {
+      const outcomes = await asTenant(TENANT_A, () => requestPath.dispatchTenantEventsDue(10));
+      expect(outcomes).toHaveLength(1);
+      expect(outcomes[0]).toMatchObject({
+        dispatched: false,
+        row: { id: eventA.id, tenantId: TENANT_A, status: 'ERROR', attempts: 1 },
+        error: 'request-path transport rejected',
+      });
+      expect(outcomes[0]?.reconciliationRequired).not.toBe(true);
+      expect(Date.parse(outcomes[0]?.row.nextAttemptAt ?? '')).toBeGreaterThan(Date.now());
+      const admin = await postgres.connectAsAdmin();
+      try {
+        const projections = await admin.query<{
+          tenant_id: string; status: string; attempts: number; next_attempt_at: Date | null;
+        }>(`
+          select tenant_id::text,status,attempts,next_attempt_at from outbox.event_delivery
+          where event_id in ($1,$2) order by tenant_id
+        `, [eventA.id, eventB.id]);
+        expect(projections.rows).toEqual([
+          { tenant_id: TENANT_A, status: 'ERROR', attempts: 1,
+            next_attempt_at: expect.any(Date) },
+          { tenant_id: TENANT_B, status: 'PENDING', attempts: 0, next_attempt_at: null },
+        ]);
+        const attempts = await admin.query<{
+          tenant_id: string; result: string; error: string;
+          request_sha256: string; response_sha256: string; response_status: number;
+        }>(`
+          select tenant_id::text,result,error,request_sha256,response_sha256,response_status
+            from outbox.event_attempts where event_id in ($1,$2)
+        `, [eventA.id, eventB.id]);
+        expect(attempts.rows).toEqual([{
+          tenant_id: TENANT_A, result: 'ERROR', error: 'request-path transport rejected',
+          request_sha256: createHash('sha256').update(`request:${eventA.id}`).digest('hex'),
+          response_sha256: createHash('sha256').update(`failure:${eventA.id}`).digest('hex'),
+          response_status: 503,
+        }]);
+      } finally {
+        await admin.end();
+      }
+    } finally {
+      failedEventIds.delete(eventA.id);
+      delivered.length = 0;
+      await ack(TENANT_B, eventB);
     }
   });
 
@@ -291,6 +365,16 @@ describe('request-path outbox delivery and ACK (PostgreSQL/FORCE RLS)', () => {
   it('rejects cross-tenant identity and runtime tenantId spoofing without an ACK ledger row', async () => {
     const eventA = await append(TENANT_A);
     const eventB = await append(TENANT_B);
+    await expect(
+      asTenant(TENANT_A, () =>
+        requestPath.ackTenantEvent({
+          eventId: eventB.id,
+          status: 'ACKED',
+          rawBody: Buffer.from(`foreign-event-id:${eventB.id}`),
+          hmacVerified: true,
+        }),
+      ),
+    ).rejects.toMatchObject({ code: 'OUTBOX_NOT_FOUND' });
     await expect(
       asTenant(TENANT_A, () =>
         requestPath.ackTenantEvent({
