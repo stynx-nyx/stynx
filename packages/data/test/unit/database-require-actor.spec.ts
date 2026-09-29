@@ -48,6 +48,16 @@ function harness(live: { user: string; role: string; tenant: string; actor: stri
 }
 
 describe('Database.tx requireActor', () => {
+  it('probes the live app identity before a top-level command callback', async () => {
+    const { database, statements } = harness({ user: 'stynx_app', role: 'app', tenant: TENANT, actor: ACTOR });
+    const caller = vi.fn(async () => 'command-result');
+
+    await expect(database.tx(caller, command)).resolves.toBe('command-result');
+    expect(statements.findIndex((sql) => /current_user|current_setting/u.test(sql)))
+      .toBeLessThan(statements.findIndex((sql) => sql === 'COMMIT'));
+    expect(caller).toHaveBeenCalledTimes(1);
+  });
+
   it.each(['owner', 'reader'] as const)('rejects %s command role before acquiring a connection', async (role) => {
     const { database, pools } = harness({ user: 'stynx_app', role: 'app', tenant: TENANT, actor: ACTOR });
     await expect(database.tx(async () => 'unreached', { role, readonly: role === 'reader', requireActor: true } as TxOptions)).rejects.toThrow();

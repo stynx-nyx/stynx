@@ -349,6 +349,50 @@ describe('@stynx-nyx/angular idempotency canonical wire vectors', () => {
     expect(() => canonicalJson({ required: 1, optional: undefined })).toThrow();
   });
 
+  it('rejects arrays with extra own properties or symbol keys and sorts prefix keys correctly', () => {
+    const decorated = [1] as number[] & { extra?: number };
+    decorated.extra = 2;
+    const symbolKeyed = [1] as number[] & { [key: symbol]: number };
+    symbolKeyed[Symbol('extra')] = 2;
+
+    expect(() => canonicalJson(decorated)).toThrow(/array contains a property/i);
+    expect(() => canonicalJson(symbolKeyed)).toThrow(/symbol property/i);
+    expect(canonicalJson({ aa: 2, a: 1, ab: 3 })).toBe('{"a":1,"aa":2,"ab":3}');
+    expect(canonicalJson([1, 2])).toBe('[1,2]');
+  });
+
+  it('requires an explicit body-hash opt-in and accepts JSON arrays', async () => {
+    const http = configureOptInHttpClient();
+    const client = TestBed.inject(HttpClient);
+    const invalid = firstValueFrom(client.post('/commands/disabled-hash', { ok: true }, {
+      context: idempotencyContext({ action: 'record.create', target: 'record-7', includeBodyHash: false } as never),
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+    }));
+    await expect(invalid).rejects.toThrow(/body-hash/i);
+    expectNoRequest(http);
+
+    const sent = firstValueFrom(client.post('/commands/array-hash', [1, 2], {
+      context: idempotencyContext({ action: 'record.create', target: 'record-7', includeBodyHash: true }),
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+    }));
+    const request = await vi.waitFor(() => http.expectOne('/commands/array-hash'));
+    expect(request.request.headers.get('Idempotency-Key')).toMatch(/^record\.create:record-7:[a-f0-9]{64}$/);
+    request.flush({ ok: true });
+    await expect(sent).resolves.toEqual({ ok: true });
+    http.verify();
+  });
+
+  it('requires Content-Type when hashing an otherwise valid JSON object', async () => {
+    const http = configureOptInHttpClient();
+    const client = TestBed.inject(HttpClient);
+
+    await expect(firstValueFrom(client.post('/commands/missing-content-type', { ok: true }, {
+      context: idempotencyContext({ action: 'record.create', target: 'record-7', includeBodyHash: true }),
+    }))).rejects.toThrow(/application\/json/i);
+    expectNoRequest(http);
+    http.verify();
+  });
+
   it('hashes UTF-8 canonical JSON as lowercase SHA-256 and builds the CTG5-compatible body key', async () => {
     expect(await sha256Hex('{"a":1,"b":2}')).toBe(HASHED_BODY_DIGEST);
     expect(await sha256Hex(new TextEncoder().encode('{"a":1,"b":2}'))).toBe(HASHED_BODY_DIGEST);

@@ -224,6 +224,12 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
         return { committed: true };
       }
 
+      @Post('/audit-deadline')
+      async auditDeadline() {
+        await this.record('audit-deadline');
+        return { committed: true };
+      }
+
       @Post('/legacy')
       legacy() {
         invocations.set('legacy', countInvocations('legacy') + 1);
@@ -245,6 +251,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       'raceCommit',
       'raceRollback',
       'auditContention',
+      'auditDeadline',
     ] as const;
     for (const method of commandMethods) {
       const descriptor = Object.getOwnPropertyDescriptor(FaultController.prototype, method)!;
@@ -256,6 +263,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
             : method === 'raceCommit' || method === 'raceRollback'
               ? 1_500
               : 5_000,
+        ...(method === 'auditDeadline' ? { deadlineMs: 120 } : {}),
       })(FaultController.prototype, method, descriptor);
       Idempotent({ transactional: true })(FaultController.prototype, method, descriptor);
       Audit({ action: `command.${method}`, entity: 'command', transactional: true })(
@@ -669,6 +677,30 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
       await admin.end();
       await responsePromise?.catch(() => undefined);
     }
+  }, 30_000);
+
+  it('rolls back a reservation blocked by its audit trigger after a statement deadline', async () => {
+    const admin = await postgres!.connectAsAdmin();
+    await admin.query('begin');
+    await admin.query('select pg_advisory_xact_lock(hashtextextended($1::text, 0))', [TENANT]);
+    try {
+      const response = await send('audit-deadline', 'audit-deadline-key');
+      expect(response.status).toBe(504);
+      expect(response.body).toEqual({ code: 'STATEMENT_TIMEOUT',
+        message: 'Transaction exceeded the configured statement timeout', context: { originalCode: '57014' } });
+      const effects = await admin.query<{ count: string }>(
+        "select count(*) from core.transactional_fault_probe where tenant_id=$1 and mode='audit-deadline'",
+        [TENANT],
+      );
+      expect(Number(effects.rows[0]?.count)).toBe(0);
+    } finally {
+      await admin.query('rollback');
+      await admin.end();
+    }
+    const retry = await send('audit-deadline', 'audit-deadline-key');
+    expect(retry.status).toBe(201);
+    expect(retry.body).toEqual({ committed: true });
+    expect(countInvocations('audit-deadline')).toBe(1);
   }, 30_000);
 
   it('preserves ordinary unmarked route behavior beside the global command boundary', async () => {

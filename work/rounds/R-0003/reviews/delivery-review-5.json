@@ -1,0 +1,34 @@
+{
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "severity": "high",
+      "file": "scripts/lib/release-context.mjs",
+      "line": 361,
+      "problem": "The main merge brought in .changeset/session-policy-http-status.md, which is still unconsumed. There are also 81 follow-up paths after the 1.5.1 marker (package src/tests, docs, law/adr, local-RC policy) outside the allowed set. isStablePatchVersionedCandidate therefore returns false, so release:status, ci:stynx:release and release-prep would fail with RELEASE_CONTEXT_PATCH_INVALID. The sessions 409/403 fix is also missing from the sessions 1.5.1 CHANGELOG.",
+      "required_fix": "Re-version the candidate so the sessions changeset is consumed into 1.5.1, or get an Architect/Owner-approved classifier amendment. Run release:status on the exact HEAD before the RC."
+    },
+    {
+      "severity": "medium",
+      "file": "law/trace.json",
+      "line": 5058,
+      "problem": "The Engineer-authored merge 1d08b743 dropped main's trace entry for session-policy-http. Architect rebind 2356b476 restored it without INV-ERROR-001, so the HTTP error-envelope sensor lost its INV-ERROR-001 binding.",
+      "required_fix": "Have an Architect restore invariant_ids [INV-CORE-001, INV-ERROR-001, INV-RBAC-001] for this entry, as on origin/main, and rerun check:trace."
+    },
+    {
+      "severity": "low",
+      "file": "packages/signature/src/pdf-trust-evidence.ts",
+      "line": 63,
+      "problem": "The explicit instanceof PDFDict trailer guard was replaced with a cast. A non-dictionary trailer now fails through a TypeError that is only caught by the verifier's generic catch-all, not through the typed Post-signature modification error.",
+      "required_fix": "Restore the explicit failXref() guard, or add a test showing that a non-dictionary trailer produces a SignatureTrustError."
+    }
+  ],
+  "evidence": [
+    "Merge-base equals origin/main 75c657fc. Merge 1d08b743 keeps main's sessions errors, changeset, README, auth sensor and API baselines. pnpm-lock carries ip-address 10.5.1.",
+    "Removed guards checked against invariants: revocationSource is always set on path0/i0, and verify() finds the signer only in CMS certificates. Placeholder and interval checks were redundant; the Angular duplicate-provider guard is kept.",
+    "Offline-sync guard removals match the batch-level itemApplier/eventPort configuration checks. postgres numbering behavior is unchanged for reachable configurations.",
+    "devai-local-rc-toolchain.json changes only node and psql, backed by ADR-0008 in an Architect commit. The preparer still compares the controls exactly; no stale 24.15.0 or 18.1 references remain.",
+    "Sampled mock-driven CMS/PDF coverage tests assert exact error name and message (toMatchObject) rather than weak truthiness. Two use a bare toBeInstanceOf(SignatureTrustError).",
+    "SBOM lists only first-party packages at 1.5.1, so the ip-address lock bump is out of its scope. No signed local RC artifact was inspected or claimed."
+  ]
+}

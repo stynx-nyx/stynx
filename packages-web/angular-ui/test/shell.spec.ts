@@ -136,6 +136,43 @@ describe('StynxShellComponent', () => {
     expect(toggle?.getAttribute('aria-expanded')).toBe('false');
     fixture.destroy();
   });
+
+  it('announces navigation without a matching label and handles each theme choice', async () => {
+    const fixture = await renderShell();
+    fixture.componentRef.setInput('navigation', [{
+      labelKey: 'ui.shell.navigation', items: [{ labelKey: 'nav.home', route: '/never' }],
+    }]);
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    const live = host.querySelector<HTMLElement>('[role="status"]');
+
+    await TestBed.inject(Router).navigateByUrl('/settings');
+    fixture.detectChanges();
+    expect(live?.textContent?.trim()).toBe('Navigation changed to');
+
+    const menuToggle = host.querySelector<HTMLButtonElement>('button.menu-toggle');
+    menuToggle?.click();
+    fixture.detectChanges();
+    expect(host.querySelector('.shell-navigation')).toBe(null);
+    menuToggle?.click();
+    fixture.detectChanges();
+    expect(host.querySelector('.shell-navigation')).not.toBe(null);
+
+    const toggle = host.querySelector<HTMLButtonElement>('button.theme-toggle');
+    toggle?.click();
+    fixture.detectChanges();
+    const options = host.querySelectorAll<HTMLButtonElement>('.theme-menu button');
+    options[0]?.click();
+    fixture.detectChanges();
+    expect(live?.textContent?.trim()).toBe('Theme changed to ui.shell.themeSystem');
+    toggle?.click();
+    fixture.detectChanges();
+    const light = host.querySelectorAll<HTMLButtonElement>('.theme-menu button')[1];
+    light?.click();
+    fixture.detectChanges();
+    expect(live?.textContent?.trim()).toBe('Theme changed to ui.shell.themeLight');
+    fixture.destroy();
+  });
 });
 
 const originalMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia');
@@ -249,5 +286,11 @@ describe('StynxShellThemeService', () => {
     expect(() => theme.setPreference('dark')).not.toThrow();
     expect(theme.preference()).toBe('dark');
     expect(document.documentElement.getAttribute('data-stynx-theme')).toBe('dark');
+  });
+
+  it('rejects preferences outside the supported theme set', () => {
+    mockMatchMedia(false);
+    const theme = configureTheme();
+    expect(() => theme.setPreference('sepia' as never)).toThrow(/unsupported shell theme preference/i);
   });
 });

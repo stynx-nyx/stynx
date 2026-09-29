@@ -374,4 +374,77 @@ describe('withdrawal evidence', () => {
     expect(digital.status).toBe('tampered');
     expect(attestor.verifyAttestation).toHaveBeenCalledTimes(1);
   });
+
+  it('classifies absent and malformed digital withdrawal bindings at each trust boundary', async () => {
+    const noAttestor = new api.SignatureWithdrawalVerifier({});
+    expect(await noAttestor.verifyWithdrawalEvidence({ ...base, verificationMethod: 'physical_verified',
+      signerPartyId: 'party-a' })).toMatchObject({ status: 'unavailable', reasons: ['ATTESTOR_UNAVAILABLE'] });
+    expect(await noAttestor.verifyWithdrawalEvidence({ ...base, verificationMethod: 'digital_verified',
+      signerPartyId: 'party-a' })).toMatchObject({ status: 'unavailable', reasons: ['DIGITAL_PROOF_ABSENT'] });
+
+    const commonDigital = {
+      ...base,
+      verificationMethod: 'digital_verified',
+      signerPartyId: 'party-a',
+      evidenceBytes: declarationCmsSignature,
+      declarationDocument,
+      declarationSignedDocument,
+      declarationCmsSignature,
+      declarationCertificate: certificate,
+    };
+    const configured = () => make().verifier;
+    const run = (overrides: Record<string, unknown> = {}, instance = configured()) =>
+      instance.verifyWithdrawalEvidence({ ...commonDigital, ...overrides });
+
+    expect(await run({ declarationDocument: Buffer.from('not a PDF') }))
+      .toMatchObject({ status: 'tampered', reasons: ['WITHDRAWAL_DECLARATION_BINDING'] });
+    expect(await run({ declarationDocument: declarationSignedDocument }))
+      .toMatchObject({ status: 'tampered', reasons: ['WITHDRAWAL_DECLARATION_BINDING'] });
+    expect(await run({ declarationSignedDocument: bytes('pades-signed.pdf') }))
+      .toMatchObject({ status: 'tampered', reasons: ['WITHDRAWAL_DECLARATION_SOURCE'] });
+    expect(await run({ signedDocument: declarationSignedDocument }))
+      .toMatchObject({ status: 'tampered', reasons: ['DOCUMENT_SIGNATURE_REUSED'] });
+
+    const unavailableParty = new api.SignatureWithdrawalVerifier({
+      trustVerifier: { verifySignedArtifact: vi.fn() },
+      resolvePartyCertificate: vi.fn().mockRejectedValue(new Error('directory offline')),
+    });
+    expect(await run({}, unavailableParty)).toMatchObject({
+      status: 'unavailable', reasons: ['PARTY_CERTIFICATE_UNAVAILABLE'],
+    });
+
+    const malformedParty = new api.SignatureWithdrawalVerifier({
+      trustVerifier: { verifySignedArtifact: vi.fn() },
+      resolvePartyCertificate: vi.fn().mockResolvedValue('not-a-hash'),
+    });
+    expect(await run({}, malformedParty)).toMatchObject({
+      status: 'unavailable', reasons: ['PARTY_CERTIFICATE_UNAVAILABLE'],
+    });
+
+    const unavailableProof = new api.SignatureWithdrawalVerifier({
+      trustVerifier: { verifySignedArtifact: vi.fn().mockRejectedValue(
+        new sig.SignatureTrustUnavailableError('revocation unavailable')) },
+      resolvePartyCertificate: vi.fn().mockResolvedValue(hex(bytes('signer.cert.der'))),
+    });
+    expect(await run({}, unavailableProof)).toMatchObject({
+      status: 'unavailable', reasons: ['DIGITAL_TRUST_UNAVAILABLE'],
+    });
+
+    const qualifiedProfile = { ...profile, minimumSignatureLevel: 'QUALIFIED' };
+    const insufficientQualifiedProof = new api.SignatureWithdrawalVerifier({
+      trustVerifier: { verifySignedArtifact: vi.fn().mockResolvedValue({
+        originalDocumentSha256: hex(declarationDocument),
+        signedDocumentSha256: hex(declarationSignedDocument),
+        cmsSha256: hex(declarationCmsSignature),
+        signerCertificateSha256: hex(bytes('signer.cert.der')),
+        tsaAt: now,
+        verificationRef: 'proof-a',
+        achievedLevel: 'ADVANCED',
+      }) },
+      resolvePartyCertificate: vi.fn().mockResolvedValue(hex(bytes('signer.cert.der'))),
+    });
+    expect(await run({ trustProfile: qualifiedProfile }, insufficientQualifiedProof)).toMatchObject({
+      status: 'tampered', reasons: ['DIGITAL_PROOF_BINDING'],
+    });
+  });
 });

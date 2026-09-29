@@ -43,6 +43,16 @@ describe('AuditInterceptor', () => {
     expect(sink.write).not.toHaveBeenCalledTimes(1);
   });
 
+  it('passes through transactional audit metadata for the transaction owner to write', async () => {
+    const sink = { write: vi.fn() };
+    const interceptor = new AuditInterceptor(new FakeReflector({ action: 'command.changed', transactional: true }), sink);
+    const payload = { id: 'entity-2' };
+
+    await expect(lastValueFrom(interceptor.intercept(ctx({ headers: {} }), makeHandler(payload)))).resolves.toBe(payload);
+
+    expect(sink.write).not.toHaveBeenCalled();
+  });
+
   it('writes an envelope with action/entity/entityId/tenantId/actorId/role', async () => {
     const sink = { write: vi.fn(async () => undefined) };
     const reflector = new FakeReflector({ action: 'doc.created', entity: 'Document' });

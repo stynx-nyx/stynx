@@ -1,0 +1,20 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "low",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "line": 534,
+      "problem": "The eight-path sensor only reads .semgrepignore lines that start with the pki fixture prefix, so a broad entry such as '**/*.pem' or 'packages/signature/' would still pass, although ADR decision 2 claims the test rejects broad globs and non-fixture paths.",
+      "required_fix": "Have an Inspector bind the whole .semgrepignore entry list, or reject any glob or pem/key entry outside the eight exact paths, then have an Architect rebind trace."
+    }
+  ],
+  "evidence": [
+    "Diff 43b2b29f..62c47d16 adds only bad-responder, chain-signer, expired-tsa and intermediate .key.pem to .semgrepignore; the four earlier keys and the other ignore lines are unchanged.",
+    "Inspector commit 84f361a5 only adds lines: two negative cases (.semgrepignore as A, ADR as M) and an eight-path deepEqual test. Existing PKI and policy assertions are intact; trace moves 302 to 304.",
+    "release-context.mjs adds .semgrepignore only to the second-marker M set and the ADR path only to a new A set. The 1.5.1 caller omits allowedAddedFollowUpPaths, so ?.has is falsy there.",
+    "The 1.5.0 final-candidate classifier and allowedStablePatchFollowUpPaths are byte-unchanged, so the historic 1.5.1 classifier did not broaden.",
+    "@stynx-nyx/signature publishes files:[dist] only, so test/fixtures keys are outside the tarball. The local secret scan does not read .pem, and no Semgrep rule or workflow file changed.",
+    "Commit authors match roles (Architect: ADR/plan/trace/record; Inspector: test; Engineer: ignore file/classifier). Semgrep, CI and trace results were not run or observed here."
+  ]
+}

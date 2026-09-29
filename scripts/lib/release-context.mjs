@@ -9,6 +9,8 @@ const rcVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-rc\.(0|[1-9]\d*)$/u
 const finalVersionCommitSubject = 'chore(repo): version 1.5.0 final release';
 const finalVersion = '1.5.0';
 const finalBaseVersion = '1.5.0-rc.3';
+const stablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.1';
+const secondStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.2';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -34,6 +36,34 @@ const allowedVersionFollowUpPaths = new Set([
   // contract or permitting arbitrary release follow-up paths.
   'test/scripts/local-rc-blocker-contract.test.mjs',
   'tools/create-stynx-app/template/package.json',
+]);
+
+const allowedStablePatchFollowUpPaths = new Set([
+  'law/policy/registry-version-anomalies.json',
+  'law/trace.json',
+  'package.json',
+  'scripts/lib/registry-version-policy.mjs',
+  'scripts/lib/release-context.mjs',
+  'scripts/run-release-preparation.mjs',
+  'test/db/outbox-event-log-migration.spec.ts',
+  'test/scripts/local-rc-blocker-contract.test.mjs',
+  'test/scripts/release-version-policy.test.mjs',
+]);
+
+const allowedSecondStablePatchFollowUpPaths = new Set([
+  '.semgrepignore',
+  'law/policy/forbidden-action-authorizations.json',
+  'law/policy/registry-version-anomalies.json',
+  'law/trace.json',
+  'scripts/lib/registry-version-policy.mjs',
+  'scripts/lib/release-context.mjs',
+  'scripts/run-release-preparation.mjs',
+  'test/scripts/local-rc-blocker-contract.test.mjs',
+  'test/scripts/release-version-policy.test.mjs',
+]);
+
+const allowedSecondStablePatchAddedPaths = new Set([
+  'law/adr/2026-09-29-postrelease-pki-fixture-scan.md',
 ]);
 
 export class ReleaseContextError extends Error {
@@ -316,6 +346,118 @@ export function isFinalVersionedCandidate({
   );
 }
 
+function isExactStablePatchVersionedCandidate(
+  {
+    baseRootVersion,
+    markerParentRootVersion,
+    candidateRootVersion,
+    markerCommits,
+    markerChanges,
+    markerParentChangesets,
+    followUpChanges,
+    rootManifestMatchesMarker,
+    packageStates,
+    changesetIdsOnDisk,
+    preState,
+    markerParentPreState,
+  },
+  {
+    parentVersion: expectedParentVersion,
+    candidateVersion: expectedCandidateVersion,
+    changesetPath,
+    markerSubject,
+    allowedFollowUpPaths,
+    allowedAddedFollowUpPaths,
+  },
+) {
+  if (
+    baseRootVersion !== '1.5.0' ||
+    markerParentRootVersion !== expectedParentVersion ||
+    candidateRootVersion !== expectedCandidateVersion ||
+    preState !== null ||
+    markerParentPreState !== null ||
+    rootManifestMatchesMarker !== true ||
+    !Array.isArray(markerCommits) ||
+    !Array.isArray(markerChanges) ||
+    !Array.isArray(markerParentChangesets) ||
+    !Array.isArray(followUpChanges) ||
+    !Array.isArray(packageStates) ||
+    packageStates.length !== 44 ||
+    !Array.isArray(changesetIdsOnDisk) ||
+    changesetIdsOnDisk.length !== 0 ||
+    !isDeepStrictEqual(markerParentChangesets, [changesetPath])
+  )
+    return false;
+
+  const markers = markerCommits.filter(({ subject }) => subject === markerSubject);
+  if (
+    markers.length !== 1 ||
+    markerCommits.indexOf(markers[0]) === 0 ||
+    markerCommits.some(({ sha, subject }) => !fullSha.test(sha) || typeof subject !== 'string') ||
+    new Set(markerCommits.map(({ sha }) => sha)).size !== markerCommits.length
+  )
+    return false;
+
+  const names = new Set(packageStates.map(({ name }) => name));
+  const manifests = new Set(packageStates.map(({ manifestPath }) => manifestPath));
+  if (
+    names.size !== 44 ||
+    manifests.size !== 44 ||
+    !packageStates.every(
+      ({ name, manifestPath, parentVersion, candidateVersion }) =>
+        /^@stynx-nyx\/[a-z0-9-]+$/u.test(name) &&
+        /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(manifestPath) &&
+        parentVersion === expectedParentVersion &&
+        candidateVersion === expectedCandidateVersion,
+    )
+  )
+    return false;
+
+  const expected = new Map([[changesetPath, 'D']]);
+  for (const manifestPath of manifests) {
+    expected.set(manifestPath, 'M');
+    expected.set(manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'), 'M');
+  }
+  for (const path of allowedVersionSupportPaths) expected.set(path, 'M');
+  if (
+    markerChanges.length !== expected.size ||
+    markerChanges.some(({ path, status }) => expected.get(path) !== status) ||
+    new Set(markerChanges.map(({ path }) => path)).size !== markerChanges.length
+  )
+    return false;
+
+  return followUpChanges.every(
+    ({ path, status }) =>
+      (status === 'A' || status === 'M') &&
+      (/^work\/rounds\/R-0003\/.+/u.test(path) ||
+        (status === 'M' && allowedFollowUpPaths.has(path)) ||
+        (status === 'A' && allowedAddedFollowUpPaths?.has(path))),
+  );
+}
+
+/** The first stable patch remains an exact historical release candidate. */
+export function isStablePatchVersionedCandidate(input) {
+  return isExactStablePatchVersionedCandidate(input, {
+    parentVersion: '1.5.0',
+    candidateVersion: '1.5.1',
+    changesetPath: '.changeset/postrelease-request-path.md',
+    markerSubject: stablePatchVersionCommitSubject,
+    allowedFollowUpPaths: allowedStablePatchFollowUpPaths,
+  });
+}
+
+/** The merged session policy changeset advances the same fixed group to 1.5.2. */
+export function isSecondStablePatchVersionedCandidate(input) {
+  return isExactStablePatchVersionedCandidate(input, {
+    parentVersion: '1.5.1',
+    candidateVersion: '1.5.2',
+    changesetPath: '.changeset/session-policy-http-status.md',
+    markerSubject: secondStablePatchVersionCommitSubject,
+    allowedFollowUpPaths: allowedSecondStablePatchFollowUpPaths,
+    allowedAddedFollowUpPaths: allowedSecondStablePatchAddedPaths,
+  });
+}
+
 export function classifyReleaseContext({
   baseCommit,
   headCommit,
@@ -365,6 +507,8 @@ export const releaseContextConstants = Object.freeze({
   releaseStatusCommand,
   versionCommitSubject,
   finalVersionCommitSubject,
+  stablePatchVersionCommitSubject,
+  secondStablePatchVersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',

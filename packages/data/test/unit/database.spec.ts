@@ -610,4 +610,98 @@ describe('Database', () => {
     expect(queries.some((query) => query.text.includes('app.request_id'))).toBe(false);
     expect(queries.some((query) => query.text.includes('app.actor_id'))).toBe(false);
   });
+
+  it('reports trusted tenant and held-connection state across transaction scopes', async () => {
+    const { client } = createClient();
+    const database = createPoolBackedDatabase(client);
+    expect(database.currentTenantId()).toBe('tenant-1');
+    expect(database.hasHeldConnection()).toBe(false);
+
+    await database.tx(async () => {
+      expect(database.hasHeldConnection()).toBe(true);
+      await expect(database.txIndependent(async () => 'forbidden'))
+        .rejects.toMatchObject({ code: 'INDEPENDENT_TRANSACTION_CONNECTION' });
+    });
+    expect(database.hasHeldConnection()).toBe(false);
+    await expect(database.txIndependent(async () => 'independent')).resolves.toBe('independent');
+    expect(createDatabase().currentTenantId()).toBe(undefined);
+  });
+
+  it('rejects a hidden strict connection and a nested isolation change', async () => {
+    const { client } = createClient();
+    const hidden = createPoolBackedDatabase(client);
+    await hidden.tx(async () => {
+      await expect(hidden.tx(async () => 'forbidden')).rejects.toMatchObject({
+        code: 'INDEPENDENT_TRANSACTION_CONNECTION',
+      });
+    }, { strictItemMode: true });
+
+    let active: unknown;
+    const cls = {
+      get: vi.fn(() => active),
+      set: vi.fn((_key: PropertyKey, value: unknown) => { active = value; }),
+    } as unknown as ClsService<Record<PropertyKey, unknown>>;
+    const nested = createPoolBackedDatabase(createClient().client, { cls });
+    await nested.tx(async () => {
+      await expect(nested.tx(async () => 'forbidden', { isolation: 'serializable' }))
+        .rejects.toMatchObject({ code: 'TRANSACTION_IDENTITY_MISMATCH' });
+      await expect(nested.tx(async () => 'forbidden', { strictItemMode: true }))
+        .rejects.toMatchObject({ code: 'INDEPENDENT_TRANSACTION_CONNECTION' });
+      await expect(nested.txIndependent(async () => 'forbidden'))
+        .rejects.toMatchObject({ code: 'INDEPENDENT_TRANSACTION_CONNECTION' });
+    });
+  });
+
+  it('sets explicit isolation and lock timeout only within the active transaction', async () => {
+    const { client, queries } = createClient();
+    const database = createPoolBackedDatabase(client);
+
+    await database.tx(async () => 'committed', {
+      isolation: 'serializable', lockTimeoutMs: 250, retry: false,
+    });
+    expect(queries).toContainEqual({ text: 'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE', values: undefined });
+    expect(queries).toContainEqual({
+      text: "SELECT set_config('lock_timeout', $1, true)", values: ['250'],
+    });
+  });
+
+  it('rejects whitespace-only command actor before a pool connection', async () => {
+    const { client } = createClient();
+    const database = createPoolBackedDatabase(client, {
+      requestContext: {
+        hasActiveContext: () => true,
+        snapshot: () => ({ requestId: 'req', tenantId: 'tenant-1', actorId: ' ', startedAt: new Date() }),
+      } as unknown as RequestContext,
+    });
+    await expect(database.tx(async () => 'forbidden', { requireActor: true }))
+      .rejects.toBeInstanceOf(ActorContextMissingError);
+    expect(client.query).not.toHaveBeenCalled();
+  });
+
+  it('maps audit-chain SQL failures without retrying unrelated error codes', async () => {
+    for (const [code, message, expected] of [
+      ['40001', 'audit_chain_requires_read_committed', 'AUDIT_CHAIN_ISOLATION'],
+      ['STY41', 'wrong tenant chain', 'AUDIT_CHAIN_KEY_MISMATCH'],
+    ] as const) {
+      const { client } = createClient();
+      const database = createPoolBackedDatabase(client);
+      const error = Object.assign(new Error(message), { code });
+      await expect(database.tx(async () => { throw error; }, { retry: false }))
+        .rejects.toMatchObject({ code: expected });
+      expect(client.release).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('releases a connection when BEGIN fails before a transaction holder exists', async () => {
+    const { client } = createClient();
+    const beginFailure = new Error('BEGIN failed');
+    client.query.mockRejectedValueOnce(beginFailure);
+    const database = createPoolBackedDatabase(client);
+
+    await expect(database.tx(async () => 'unreached', { retry: false }))
+      .rejects.toBe(beginFailure);
+    expect(client.query).toHaveBeenCalledWith('ROLLBACK');
+    expect(client.release).toHaveBeenCalledTimes(1);
+    expect(database.hasHeldConnection()).toBe(false);
+  });
 });

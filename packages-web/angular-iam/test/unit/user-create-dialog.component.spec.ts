@@ -26,4 +26,18 @@ describe('StynxUserCreateDialogComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('iam.users.create.title');
     expect(created).toEqual([{ email: 'ada@example.test', firstName: 'Ada', locale: 'pt-BR', sendInvite: false }]);
   });
+
+  it('omits optional text fields that contain only whitespace', async () => {
+    const fixture = await renderComponent(StynxUserCreateDialogComponent);
+    const component = fixture.componentInstance;
+    const created: StynxCreateUserRequest[] = [];
+    component.create.subscribe((body) => created.push(body));
+
+    component.form.setValue({
+      email: 'ada@example.test', firstName: ' ', lastName: '\t', locale: '   ', sendInvite: true,
+    });
+    (component as unknown as { submit(): void }).submit();
+
+    expect(created).toEqual([{ email: 'ada@example.test', sendInvite: true }]);
+  });
 });

@@ -367,6 +367,16 @@ describe('transactional command provenance bootstrap', () => {
     run() { return { ok: false }; }
   }
 
+  @Controller('/invalid-deadline')
+  class InvalidDeadlineController {
+    @Post()
+    @PublicTenantRoute()
+    @TransactionalCommand({ scope: () => 'public', deadlineMs: 0 })
+    @Idempotent({ transactional: true })
+    @Audit({ action: 'invalid.deadline', transactional: true })
+    run() { return { ok: false }; }
+  }
+
   @Controller('/invalid-ttl')
   class InvalidTtlController {
     @Post()
@@ -391,18 +401,21 @@ describe('transactional command provenance bootstrap', () => {
 
   it.each([
     ['lockTimeoutMs', InvalidLockTimeoutController],
+    ['deadlineMs', InvalidDeadlineController],
     ['ttlMs', InvalidTtlController],
   ] as const)('refuses invalid route %s during app.init', async (_name, controller) => {
     const invalid = await bootstrap(controller, undefined, false, true);
-    try { await expectBootstrapRefusal(invalid, /timeout|ttl|invalid/i); }
+    try { await expectBootstrapRefusal(invalid, /timeout|deadline|ttl|invalid/i); }
     finally { await invalid.close(); }
   });
 
-  it('throws synchronously for invalid forRoot mismatchCode and lockTimeoutMs', () => {
+  it('throws synchronously for invalid forRoot mismatchCode and timeout options', () => {
     expect(() => StynxTransactionalCommandModule.forRoot({ auditSink: commandSink(), mismatchCode: '' }))
       .toThrow(/mismatchCode|errorCode|invalid/i);
     expect(() => StynxTransactionalCommandModule.forRoot({ auditSink: commandSink(), lockTimeoutMs: 0 }))
       .toThrow(/timeout|invalid/i);
+    expect(() => StynxTransactionalCommandModule.forRoot({ auditSink: commandSink(), deadlineMs: 0 }))
+      .toThrow(/deadline|invalid/i);
   });
 
   it.each([

@@ -47,23 +47,32 @@ const expectedNotificationsMutate = [
 
 function normalizeRootManifestRcVersion(source) {
   const version = JSON.parse(source).version;
-  assert.match(version, /^1\.5\.0(?:-rc\.[1-9]\d*)?$/u);
+  assert.match(version, /^(?:1\.5\.0(?:-rc\.[1-9]\d*)?|1\.5\.[12])$/u);
   const versionLine = `  "version": "${version}",`;
   assert.equal(source.split(versionLine).length, 2);
   return source.replace(versionLine, '  "version": "1.5.0-rc.1",');
 }
 
-test('frozen root manifest normalization accepts only final 1.5.0 and historical RC versions', () => {
+test('frozen root manifest normalization accepts 1.5.2 and historical stable and 1.5.0 candidates', () => {
   const source = readFileSync(join(repoRoot, 'package.json'), 'utf8');
   const current = JSON.parse(source).version;
   const line = `  "version": "${current}",`;
-  for (const version of ['1.5.0', '1.5.0-rc.1', '1.5.0-rc.3']) {
+  for (const version of ['1.5.2', '1.5.1', '1.5.0', '1.5.0-rc.1', '1.5.0-rc.3']) {
     assert.equal(
       normalizeRootManifestRcVersion(source.replace(line, `  "version": "${version}",`)),
       source.replace(line, '  "version": "1.5.0-rc.1",'),
     );
   }
-  for (const version of ['1.4.0', '1.5.1', '1.5.0-beta.1', '1.5.0-rc.0']) {
+  for (const version of [
+    '0.5.2',
+    '1.4.0',
+    '1.5.3',
+    '1.6.0',
+    '2.5.2',
+    '1.5.2-rc.1',
+    '1.5.0-beta.1',
+    '1.5.0-rc.0',
+  ]) {
     assert.throws(() => normalizeRootManifestRcVersion(source.replace(line, `  "version": "${version}",`)));
   }
 });
@@ -4124,7 +4133,7 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
   const frozenBaseline = normalizeD20PlaywrightWait(configSource);
   assert.equal(
     createHash('sha256').update(frozenBaseline).digest('hex'),
-    '3fbbb1a4dc5bcafe289113674ae8176f2cc90af74dfd69c6f1dc4f138fbff067',
+    'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
   );
   if (occurrenceCount === 0) {
     assert.equal(frozenBaseline, configSource);
@@ -4176,7 +4185,7 @@ test('D20 production adds only the exact API-entry raw-stderr wait', async () =>
   const frozenWithoutWait = normalizeD20PlaywrightWait(configSource);
   assert.equal(
     createHash('sha256').update(frozenWithoutWait).digest('hex'),
-    '3fbbb1a4dc5bcafe289113674ae8176f2cc90af74dfd69c6f1dc4f138fbff067',
+    'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
   );
   assert.equal(
     configSource.includes(playwrightApiReadyWaitLine),
@@ -4320,8 +4329,8 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
   const frozenFiles = {
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
-      '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': 'fae7d6bf126f8c46a2111ae6515c1bb711179b6262788238c234b848f63552ac',
+      '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
+    'package.json': 'db310788dbc26e251fccc370bae94c5f9687770841efd57eb720f76220b1501f',
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
@@ -4493,8 +4502,8 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
   const frozenFiles = {
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
-      '126344dd1fcbceb9496ade28ae95eea73686884d305681c13afc00c94a02c4be',
-    'package.json': 'fae7d6bf126f8c46a2111ae6515c1bb711179b6262788238c234b848f63552ac',
+      '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
+    'package.json': 'db310788dbc26e251fccc370bae94c5f9687770841efd57eb720f76220b1501f',
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
@@ -4555,8 +4564,8 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
   const frozen = {
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
-      '3fbbb1a4dc5bcafe289113674ae8176f2cc90af74dfd69c6f1dc4f138fbff067',
-    'package.json': 'fae7d6bf126f8c46a2111ae6515c1bb711179b6262788238c234b848f63552ac',
+      'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
+    'package.json': 'db310788dbc26e251fccc370bae94c5f9687770841efd57eb720f76220b1501f',
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':

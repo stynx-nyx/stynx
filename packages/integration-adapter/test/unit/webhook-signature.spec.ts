@@ -1,6 +1,7 @@
 import { createHmac } from 'node:crypto';
 import {
   verifyWebhookSignature,
+  validateWebhookVerificationOptions,
   type WebhookReplayStore,
   type WebhookVerificationInput,
   type WebhookVerificationOptions,
@@ -47,6 +48,34 @@ function options(store: WebhookReplayStore, clockMs = nowMs): WebhookVerificatio
 }
 
 describe('UPS-HOOK-01 verifyWebhookSignature', () => {
+  it('validates bootstrap dependencies, header names, and optional callbacks', () => {
+    const base = options(new AtomicReplayStore());
+    for (const invalid of [
+      undefined,
+      { ...base, secret: '' },
+      { ...base, secret: 42 },
+      { ...base, clock: undefined },
+      { ...base, clock: { now: undefined } },
+      { ...base, maxSkewMs: 0 },
+      { ...base, maxSkewMs: Number.NaN },
+      { ...base, replayStore: undefined },
+      { ...base, replayStore: {} },
+      { ...base, replayNamespace: '' },
+      { ...base, signatureHeaderName: 'bad header' },
+      { ...base, timestampHeaderName: '' },
+      { ...base, message: true },
+      { ...base, replayKey: 12 },
+    ]) {
+      expect(() => validateWebhookVerificationOptions(invalid as never)).toThrow();
+    }
+    expect(() => validateWebhookVerificationOptions({ ...base, secret: Buffer.from('key') })).not.toThrow();
+    expect(() => validateWebhookVerificationOptions({
+      ...base,
+      signatureHeaderName: undefined,
+      timestampHeaderName: undefined,
+    })).not.toThrow();
+  });
+
   it('authenticates the exact raw Buffer and returns Unix seconds with the verified HMAC replay key', async () => {
     const store = new AtomicReplayStore();
     const result = await verifyWebhookSignature(input(), options(store));
@@ -321,5 +350,23 @@ describe('UPS-HOOK-01 verifyWebhookSignature', () => {
         },
       }),
     ).rejects.toThrow('clock unavailable');
+  });
+
+  it('rejects invalid clock and callback results and wraps replay-store failures', async () => {
+    const base = options(new AtomicReplayStore());
+    await expect(verifyWebhookSignature(input(), {
+      ...base,
+      clock: { now: () => 'not-a-date' as never },
+    })).rejects.toThrow('Webhook clock returned an invalid Date');
+    const validMessage = Buffer.from(`${timestamp}.` + rawBody.toString());
+    await expect(verifyWebhookSignature(input(), {
+      ...base,
+      message: () => 'not bytes' as never,
+    })).rejects.toThrow('Webhook message callback must return a Buffer');
+
+    const digest = createHmac('sha256', secret).update(validMessage).digest('hex');
+    await expect(verifyWebhookSignature(input({
+      headers: { 'x-webhook-timestamp': timestamp, 'x-webhook-signature': `sha256=${digest}` },
+    }), { ...base, replayKey: () => '' })).rejects.toThrow('Invalid webhook replay key');
   });
 });

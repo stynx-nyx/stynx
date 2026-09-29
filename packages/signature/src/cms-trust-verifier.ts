@@ -46,6 +46,7 @@ function coveredPdf(pdf: Uint8Array, cms: Uint8Array): { covered: Uint8Array; fi
   const cmsHex=Buffer.from(cms).toString('hex');
   const ranges=[...bytes.toString('latin1').matchAll(/\/ByteRange\s*\[\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\]/gu)];
   let selected:RegExpMatchArray|undefined;
+  let selectedContents:RegExpExecArray|undefined;
   for (const range of ranges) {
     const before=Number(range[2]);const after=Number(range[3]);
     if (!Number.isSafeInteger(before) || !Number.isSafeInteger(after) || after <= before) continue;
@@ -54,6 +55,7 @@ function coveredPdf(pdf: Uint8Array, cms: Uint8Array): { covered: Uint8Array; fi
     if (contents?.[1]?.toLowerCase().startsWith(cmsHex)) {
       if (selected) throw new SignatureTrustError('Ambiguous PDF signature revisions');
       selected=range;
+      selectedContents=contents;
     }
   }
   if (!selected) throw new SignatureTrustError('Matching PDF ByteRange missing');
@@ -61,12 +63,9 @@ function coveredPdf(pdf: Uint8Array, cms: Uint8Array): { covered: Uint8Array; fi
   if (start !== 0 || !Number.isSafeInteger(before) || !Number.isSafeInteger(after) ||
       !Number.isSafeInteger(tail) || before <= 0 || after <= before ||
       after + tail > bytes.length) throw new SignatureTrustError('PDF ByteRange is incomplete');
-  const placeholder = bytes.subarray(before, after);
   if (!bytes.subarray(Math.max(0,before-32),before).toString('latin1').includes('/Contents'))
     throw new SignatureTrustError('PDF Contents is not the ByteRange gap');
-  const contents = /^<([0-9a-fA-F]+)>$/u.exec(placeholder.toString('latin1'));
-  if (!contents) throw new SignatureTrustError('PDF Contents placeholder invalid');
-  const embedded = contents[1]!;
+  const embedded = selectedContents![1]!;
   if (!embedded.toLowerCase().startsWith(cmsHex) ||
       !/^0*$/u.test(embedded.slice(cmsHex.length)))
     throw new SignatureTrustError('Detached CMS does not match PDF Contents');
@@ -127,8 +126,10 @@ async function verifyRevocation(
         const basic=new pkijs.BasicOCSPResponse({schema:parse(new Uint8Array(response.responseBytes.response.valueBlock.valueHexView))});
         const status=await response.getCertificateStatus(subject,issuer);
         if (!status.isForCertificate) continue;
-        if (!await basic.verify({trustedCerts:anchors,issuerCerts:issuerPath}))
-          throw new SignatureTrustError('OCSP signature invalid');
+        let authorizedResponder:boolean;
+        try {authorizedResponder=await basic.verify({trustedCerts:anchors,issuerCerts:issuerPath});}
+        catch {throw new SignatureTrustError('OCSP signature invalid');}
+        if (!authorizedResponder) throw new SignatureTrustError('OCSP signature invalid');
         if (!validDate(basic.tbsResponseData.producedAt,now))
           throw new SignatureTrustError('OCSP production time invalid');
         if (basic.tbsResponseData.producedAt<at) {unavailable=true;continue;}
@@ -225,9 +226,6 @@ export function createCmsTrustVerifier(options: CmsTrustVerifierOptions): Signat
         if (!verified.signatureVerified || !verified.signerCertificate ||
           !Buffer.from(verified.signerCertificate.toSchema().toBER(false)).equals(signerDer))
           throw new SignatureTrustError('CMS signer identity differs from supplied certificate');
-        const embeddedSigner = (signed.certificates ?? []).find(c =>
-          c instanceof pkijs.Certificate && Buffer.from(c.toSchema().toBER(false)).equals(signerDer));
-        if (!embeddedSigner) throw new SignatureTrustError('Signer certificate differs from CMS');
         const x509 = new X509Certificate(signerDer);
         const policyOids = input.profile.acceptedPolicies ?? options.acceptedPolicies ?? [];
         const policies = signer.extensions?.find(ext => ext.extnID === '2.5.29.32')?.parsedValue;
@@ -315,7 +313,6 @@ export function createCmsTrustVerifier(options: CmsTrustVerifierOptions): Signat
             if (pathIndex===0 && i===0) revocationSource=source;
           }
         }
-        if (!revocationSource) throw new SignatureTrustUnavailableError('Signer revocation evidence unavailable');
         const padesProfile=embeddedComplete ? 'PAdES-B-LT' : 'PAdES-B-T';
         if (input.profile.requiredPadesProfile === 'PAdES-B-LT' && !embeddedComplete)
           throw new SignatureTrustError('Embedded DSS evidence incomplete');
@@ -330,7 +327,7 @@ export function createCmsTrustVerifier(options: CmsTrustVerifierOptions): Signat
           originalDocumentSha256:sha256Hex(input.originalDocument),signedDocumentSha256:sha256Hex(input.signedDocument),
           cmsSha256:sha256Hex(input.cmsSignature),signerCertificateSha256:sha256Hex(signerDer),
           chainSha256:chainValidation.certificatePath.map(a => sha256Hex(new Uint8Array(a.toSchema().toBER(false)))),
-          signedAt:signingTime,tsaAt:tst.genTime,certificateValidatedAt:validationTime,revocationSource,
+          signedAt:signingTime,tsaAt:tst.genTime,certificateValidatedAt:validationTime,revocationSource:revocationSource!,
           verificationRef:sha256Hex(input.cmsSignature),...(manifest ? {boundManifestSha256:manifest} : {})};
       } catch (error) {
         if (error instanceof SignatureTrustError || error instanceof SignatureTrustUnavailableError) throw error;

@@ -1,0 +1,59 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "high",
+      "file": "reference/web/playwright.config.mjs",
+      "line": 49,
+      "problem": "Engineer commit e780da76 ('repair pilot path and formatting drift') ran Prettier over reference/web/playwright.config.mjs. This file is byte-frozen by the RC blocker contract, and no Inspector commit rebound its digests. Three ci:stynx tests fail on this tree. I ran `node --test --test-name-pattern='D21 production|D22 production|D16.1 freezes' test/scripts/local-rc-blocker-contract.test.mjs` and got pass 0, fail 3. D21 and D22 expect raw 126344dd… but the file hashes to 853496f0…. D16.1 expects normalized 3fbbb1a4… but gets eab3cb3d…. The package.json rebind in 93a7dd84 is correct: the normalized hash is db310788…, which matches. The Playwright file was changed after that rebind and was never reconciled.",
+      "required_fix": "Preferred: an Engineer commit restores the origin/main bytes of reference/web/playwright.config.mjs (the change was formatting only) and adds the file to .prettierignore so lint-staged cannot reformat it again. Alternative: an Inspector commit rebinds all three sites in test/scripts/local-rc-blocker-contract.test.mjs (about lines 4322, 4495 and 4557), followed by an Architect trace rebind if the assertion projection moves. Then rerun the local-rc-blocker-contract suite."
+    },
+    {
+      "severity": "medium",
+      "file": "packages/data/migrations/platform/0022_outbox_request_path.sql",
+      "line": 3,
+      "problem": "Migration 0022 grants table-wide UPDATE on outbox.event_attempts to stynx_app. 0021 describes that table as 'append-only transport evidence', and the R-0003 plan allows only the 'minimum missing update privilege on attempt ledger rows'. With this grant, any app-role code in a tenant context can rewrite already-completed evidence in its own tenant. That covers request_bytes/request_sha256, response_bytes/response_sha256, result, error, completed_at, and the migrated legacy_message_id/legacy_state rows. RLS still blocks cross-tenant writes, but within a tenant the evidence becomes mutable, where before app could only INSERT. No trigger guards completed rows. test/db/outbox-event-log-migration.spec.ts:175 even shows app flipping result freely.",
+      "required_fix": "Narrow the grant to column level, covering only the columns the request path writes (result, error, completed_at, provider, protocol, request_bytes, request_sha256, response_bytes, response_sha256, request_headers, response_status, evidence_state). Add a BEFORE UPDATE guard for the app role that allows only a single transition from result='CLAIMED' AND completed_at IS NULL, and rejects changes to identity or legacy columns. Inspector adds a negative real-PostgreSQL test proving app cannot rewrite a completed (SENT/ERROR) attempt or a legacy-migrated attempt. Rebind the trace afterwards."
+    },
+    {
+      "severity": "low",
+      "file": "packages/outbox/test/integration/request-path-rls.integration.spec.ts",
+      "line": 291,
+      "problem": "The request-path tests have gaps that let regressions through. (1) The first cross-tenant case also passes tenantId, so it is rejected by the `'tenantId' in input` guard at outbox.service.ts:323 and never reaches RLS. Only the idempotencyKey variant tests RLS; a cross-tenant eventId without tenantId is untested. (2) Every rejection uses a bare `.rejects.toThrow()` with no error type or reason. (3) The tenant-path transport-failure branch (outbox.service.ts:469–505: ERROR projection, backoff, failed evidence), lease reclaim, and reconciliationRequired are not exercised under the app-role trigger probes.",
+      "required_fix": "Inspector adds: a cross-tenant eventId-only ACK; exact error class/reason assertions; a failing-dispatcher case asserting ERROR projection, next_attempt_at and attempt evidence under stynx_app; and a lease-expiry reclaim. Architect then rebinds the trace. Optional but recommended before closing #306."
+    },
+    {
+      "severity": "low",
+      "file": "packages/outbox/src/outbox.service.ts",
+      "line": 349,
+      "problem": "ackTenantEvent and dispatchTenantEventsDue run `FOR UPDATE` and claim queries under app role without lockTimeoutMs. The owner paths use ownerRetry with lock_timeout ≤250 ms plus bounded retry. A request-path ACK can therefore block for as long as a cutover or owner transaction holds the delivery row, tying up a request worker. Separately, the tenant ACK path does not quarantine verified-but-unknown or cross-tenant ACK bodies, while the general contract's ackEvent path does. The tenant-path contract only promises HMAC quarantine, so this divergence is allowed but undocumented.",
+      "required_fix": "Optional: pass a bounded lockTimeoutMs (and map 55P03 to a retryable error) on the tenant-path transactions. State explicitly in outbox-api.md that the tenant path does not quarantine unknown or cross-tenant identities, or quarantine them through the owner control path."
+    },
+    {
+      "severity": "low",
+      "file": "packages/signature/src/pdf-trust-evidence.ts",
+      "line": 91,
+      "problem": "An unsupported xref stream or hybrid in the final (appended) revision now returns SignatureTrustUnavailableError. That skips the appended-section integrity checks in checkFinalXref (catalog offset, trailer Root/Encrypt/Info, object intervals, shadow objects). Refusal is preserved: unavailable never authorizes, per ADR-SIGNATURE-0001 §3, and all 77 trust-gate tests pass, including the hybrid XRefStm attacks, which later checks still classify as 'Post-signature modification'. However, a hostile pure xref-stream incremental update that evades the later pdf-lib checks would now be classified as unavailable/unknown instead of invalid. No test covers that case.",
+      "required_fix": "Optional hardening: Inspector adds a hostile pure xref-stream appended revision (shadowing signed content) and asserts it is still rejected. Ideally assert 'Post-signature modification', or record in signature.md that such a document is classified unavailable. No production change is required if the classification is accepted."
+    },
+    {
+      "severity": "info",
+      "file": "packages/backend/src/transactional-command/transactional-command.ts",
+      "line": 40,
+      "problem": "deadlineMs is validated only as a positive safe integer. PostgreSQL statement_timeout accepts at most 2147483647 ms, so a larger value passes bootstrap validation and then fails at runtime in set_config as a data error, not the COMMAND:CONFIGURATION:deadline-invalid rejection. positiveMilliseconds in the outbox package already applies this upper bound.",
+      "required_fix": "Optional: cap deadlineMs (and lockTimeoutMs) at 2_147_483_647 in module, route and interceptor validation, with a matching provenance test."
+    }
+  ],
+  "evidence": [
+    "Read-only review of 21 commits from origin/main to HEAD 6f416973. Commits are role-separated: Architect for docs, law/trace.json, baselines and plan; Inspector for tests and fixtures; Engineer for src, migration, deps, changeset and config. law/ commits are authored as DEVAI Architect. No workflow files changed, so no FORBID-CI-WITHOUT-ADR receipt is needed.",
+    "The Inspector wrote failing sensors before the Engineer implementation for CTG5 (214f45d8/076e68c5 before 083da26d/e32a8fa9) and SIG (6a9273e2 before de1cd3b2). No deletions of assertions: offline-sync ctg9-upgrade went from 201 to 213 expect() calls, and existing hybrid XRefStm/shadow attack expectations are unchanged.",
+    "`node --test` on the D21/D22/D16.1 freeze tests fails 3/3 with Playwright config digest mismatches. The normalized root package.json hash equals the rebound db310788…, so the dependency-override freeze rebind is correct.",
+    "`pnpm check:trace` passes: 473 executable tests bound, 473 tracked.",
+    "packages/signature trust-gate.spec.ts passes 77/77. The new tests cover an authentic xref-stream and hybrid PDF classified SignatureTrustUnavailableError; a revoked intermediate in a three-certificate chain, which returns 'Certificate revoked'; a delegated OCSP responder without EKU, where a pkijs verify throw is now mapped to 'OCSP signature invalid'; and TSA genTime accepted after TSA certificate expiry.",
+    "OutboxService.dispatchTenantEventsDue and ackTenantEvent use Database.tx({role:'app',requireActor:true,retry:false}) with tenant from currentTenantId(), explicit tenant_id predicates, and FORCE RLS policies from 0021. They reject a runtime tenantId. Invalid HMAC validates live identity (readonly app tx) before owner quarantine and does no domain lookup. Claim plus CLAIMED attempt is one transaction; the SENT or ERROR projection plus attempt evidence is a second atomic transaction guarded by attempts=$n and status='SENT'; post-send persistence failure returns reconciliationRequired without re-send. The claim SQL mirrors the owner dispatchEventsDue (per-aggregate ordering, SKIP LOCKED, legacy_id gated by marker NEW), so it coexists with the owner and legacy schedulers.",
+    "The real-PostgreSQL two-tenant test installs BEFORE triggers that reject any delivery/attempt/ack write unless current_user=stynx_app, app.role=app, and actor and tenant match. This is a strong SQL-role and provenance proof for the success paths. The test/db migration upgrade test proves 0021 to 0022 preserves rows and RLS, and that app cannot update another tenant's attempts.",
+    "CTG5: deadlineMs is validated in forRoot, route and interceptor, and passed to Database.tx as SET LOCAL statement_timeout. The integration test holds the tenant audit advisory lock, gets 504 with the existing StynxDataError body {code:'STATEMENT_TIMEOUT',…,context:{originalCode:'57014'}}, sees zero domain effects, and a retry with the same key commits once (invocation count 1).",
+    "The changeset bumps backend, data, outbox and signature as patch within the fixed group. public-api-baselines.json rebinds only transactional-command.d.ts and outbox.service.d.ts. The overrides changed are root-only (fast-uri, multer, ip-address, undici) and are not publishable-package dependencies, so package-readmes:write is not required.",
+    "DDL obligation: 0022 is additive, test/db was updated, and there is no new table, so no new RLS policy is required. DETRAN proofs were not required or assessed, in line with the Owner's exclusion. The API baseline verification and the full ci:stynx run were not executed by this reviewer."
+  ]
+}

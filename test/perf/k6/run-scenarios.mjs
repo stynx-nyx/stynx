@@ -1,22 +1,25 @@
 import { chmodSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const repoRoot = resolve(new URL('../../..', import.meta.url).pathname);
+const repoRoot = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const perfDir = resolve(repoRoot, 'test/perf/k6');
 const resultsDir = resolve(perfDir, 'results');
 const requestedScenario = process.argv.includes('--scenario')
   ? process.argv[process.argv.indexOf('--scenario') + 1]
-  : (process.env.STYNX_K6_SCENARIO || 'all');
+  : process.env.STYNX_K6_SCENARIO || 'all';
 
 const allScenarios = ['auth', 'crud', 'upload', 'cascade-delete'];
 const scenarios = requestedScenario === 'all' ? allScenarios : [requestedScenario];
 const scenarioPauseMs = Number(process.env.STYNX_K6_SCENARIO_PAUSE_MS || '0');
 const waitUrl = process.env.STYNX_K6_WAIT_URL || 'http://127.0.0.1:3000';
-const baseUrl = process.env.STYNX_K6_BASE_URL
-  || (process.platform === 'darwin' ? 'http://host.docker.internal:3000' : 'http://127.0.0.1:3000');
-const s3PublicBaseUrl = process.env.STYNX_K6_S3_PUBLIC_BASE_URL
-  || (process.platform === 'darwin' ? 'http://host.docker.internal:4566' : 'http://127.0.0.1:4566');
+const baseUrl =
+  process.env.STYNX_K6_BASE_URL ||
+  (process.platform === 'darwin' ? 'http://host.docker.internal:3000' : 'http://127.0.0.1:3000');
+const s3PublicBaseUrl =
+  process.env.STYNX_K6_S3_PUBLIC_BASE_URL ||
+  (process.platform === 'darwin' ? 'http://host.docker.internal:4566' : 'http://127.0.0.1:4566');
 const useHostNetwork = process.platform !== 'darwin' && process.platform !== 'win32';
 
 function wait(ms) {
@@ -74,21 +77,25 @@ function runScenario(name) {
 
   for (const [key, value] of Object.entries(process.env)) {
     if (
-      key.startsWith('STYNX_K6_')
-      && value
-      && key !== 'STYNX_K6_BASE_URL'
-      && key !== 'STYNX_K6_S3_PUBLIC_BASE_URL'
-      && key !== 'STYNX_K6_RATE'
+      key.startsWith('STYNX_K6_') &&
+      value &&
+      key !== 'STYNX_K6_BASE_URL' &&
+      key !== 'STYNX_K6_S3_PUBLIC_BASE_URL' &&
+      key !== 'STYNX_K6_RATE'
     ) {
       dockerArgs.push('-e', `${key}=${value}`);
     }
   }
 
-  const result = spawnSync('docker', ['run', ...dockerArgs, 'grafana/k6:0.49.0', 'run', `/perf/${name}.js`], {
-    cwd: repoRoot,
-    stdio: 'inherit',
-    env: process.env,
-  });
+  const result = spawnSync(
+    'docker',
+    ['run', ...dockerArgs, 'grafana/k6:0.49.0', 'run', `/perf/${name}.js`],
+    {
+      cwd: repoRoot,
+      stdio: 'inherit',
+      env: process.env,
+    },
+  );
 
   if (result.status !== 0) {
     throw new Error(`k6 scenario "${name}" failed with exit code ${result.status ?? 1}`);

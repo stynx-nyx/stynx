@@ -1,0 +1,19 @@
+{
+  "verdict": "REVIEW",
+  "findings": [
+    {
+      "severity": "medium",
+      "file": "scripts/lib/release-context.mjs",
+      "line": 9,
+      "problem": "The 1.5.1 version commit 36f45845 has the subject 'chore(repo): version fixed group to 1.5.1'. That subject matches neither the ci: version packages marker nor the 1.5.0-only final marker, so releaseContext classifies the branch as ordinary. It then runs changeset status --since origin/main, which exits 1 because packages changed and no changesets remain. As a result, the release-drafts job in release-prep.yml and pnpm ci:stynx:release (via release:drafts) fail on this PR.",
+      "required_fix": "Have the Architect decide on a governed context for a stable patch version candidate: generalize the final-marker constants or add a stable-patch classifier with an exact marker subject. Then an Engineer implements it, an Inspector adds tests, and the Architect rebinds trace. Another option is to record an Owner decision accepting the red release-drafts job and not running ci:stynx:release for this PR."
+    }
+  ],
+  "evidence": [
+    "High 1 is fixed: in 69320a95 the Inspector widened the normalizer to accept exactly 1.5.1, still rejecting 1.5.2 and 1.6.0; normalized output is still 1.5.0-rc.1, so the frozen SHA sites are unchanged.",
+    "High 2 is fixed: 742bfad3 (DEVAI Architect) sets next 1.5.1, preflight latest 1.5.0, anomaly candidate and closure 1.5.1; its sha256 9e3911d8... matches registry-version-policy.mjs.",
+    "The owner_decision baseline 64d79066 and tree 1e50971e equal origin/main. plan.md and record.md record the 44-package authenticated census and the 1.5.1 decision. Commit c827e8de and revert d1e3fd49 cancel to a zero net package.json diff.",
+    "The three new stynx_app attempt-guard negatives in 69320a95 target the trigger and the column grant correctly, and assert the CLAIMED row stays unchanged. I did not run the PostgreSQL suite.",
+    "Local results: release-version-policy and local-rc-blocker suites 115/115 pass; check:trace ok 473/473; changeset status --since origin/main exits 1 with no changesets. Full ci:stynx was not run by me."
+  ]
+}

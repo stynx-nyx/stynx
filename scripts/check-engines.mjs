@@ -48,7 +48,9 @@ if (expectedPnpm !== supported.pnpm) {
 }
 
 if (packageManager !== supported.packageManager) {
-  failures.push(`packageManager must be ${supported.packageManager}, got ${packageManager ?? '(missing)'}`);
+  failures.push(
+    `packageManager must be ${supported.packageManager}, got ${packageManager ?? '(missing)'}`,
+  );
 }
 
 for (const packagePath of discoverPackageJsons()) {
@@ -75,19 +77,31 @@ for (const packagePath of discoverPackageJsons()) {
     }
     for (const [name, version] of Object.entries(pkg.devDependencies ?? {})) {
       if (name.startsWith('@angular/') && version !== supported.angularBuild) {
-        failures.push(`${rel}: ${name} build dependency must be ${supported.angularBuild}, got ${version}`);
+        failures.push(
+          `${rel}: ${name} build dependency must be ${supported.angularBuild}, got ${version}`,
+        );
       }
     }
-    if (pkg.devDependencies?.['ng-packagr'] && pkg.devDependencies['ng-packagr'] !== supported.ngPackagr) {
-      failures.push(`${rel}: ng-packagr must be ${supported.ngPackagr}, got ${pkg.devDependencies['ng-packagr']}`);
+    if (
+      pkg.devDependencies?.['ng-packagr'] &&
+      pkg.devDependencies['ng-packagr'] !== supported.ngPackagr
+    ) {
+      failures.push(
+        `${rel}: ng-packagr must be ${supported.ngPackagr}, got ${pkg.devDependencies['ng-packagr']}`,
+      );
     }
     const expectedTsAngular = TS_ANGULAR_EXCEPTIONS[rel] ?? supported.tsAngular;
     if (pkg.devDependencies?.typescript && pkg.devDependencies.typescript !== expectedTsAngular) {
-      failures.push(`${rel}: Angular TypeScript must be ${expectedTsAngular}, got ${pkg.devDependencies.typescript}`);
+      failures.push(
+        `${rel}: Angular TypeScript must be ${expectedTsAngular}, got ${pkg.devDependencies.typescript}`,
+      );
     }
   }
 
-  if (rel === 'domain/demo-bookmark/web/package.json' && Object.keys(pkg.dependencies ?? {}).length > 0) {
+  if (
+    rel === 'domain/demo-bookmark/web/package.json' &&
+    Object.keys(pkg.dependencies ?? {}).length > 0
+  ) {
     failures.push(`${rel}: scaffold-evidence package must not declare production dependencies`);
   }
 
@@ -135,11 +149,12 @@ function packageJsonsIn(root, depth = 1) {
     .filter((entry) => entry.isDirectory() && !ignoredPackageDir(entry.name))
     .map((entry) => join(root, entry.name, 'package.json'))
     .filter((path) => existsSync(path));
-  const nested = depth === 0
-    ? []
-    : entries
-      .filter((entry) => entry.isDirectory() && !ignoredPackageDir(entry.name))
-      .flatMap((entry) => packageJsonsIn(join(root, entry.name), depth - 1));
+  const nested =
+    depth === 0
+      ? []
+      : entries
+          .filter((entry) => entry.isDirectory() && !ignoredPackageDir(entry.name))
+          .flatMap((entry) => packageJsonsIn(join(root, entry.name), depth - 1));
   return [...direct, ...nested];
 }
 

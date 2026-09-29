@@ -1,5 +1,27 @@
 # @stynx-nyx/angular-profile
 
+## 1.5.2
+
+### Patch Changes
+
+- @stynx-nyx/angular@1.5.2
+- @stynx-nyx/angular-auth@1.5.2
+- @stynx-nyx/angular-i18n@1.5.2
+- @stynx-nyx/angular-storage@1.5.2
+- @stynx-nyx/angular-ui@1.5.2
+- @stynx-nyx/sdk@1.5.2
+
+## 1.5.1
+
+### Patch Changes
+
+- @stynx-nyx/angular@1.5.1
+- @stynx-nyx/angular-auth@1.5.1
+- @stynx-nyx/angular-i18n@1.5.1
+- @stynx-nyx/angular-storage@1.5.1
+- @stynx-nyx/angular-ui@1.5.1
+- @stynx-nyx/sdk@1.5.1
+
 ## 1.5.0
 
 ### Patch Changes

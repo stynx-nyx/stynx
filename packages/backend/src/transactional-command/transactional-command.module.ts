@@ -24,6 +24,10 @@ export class StynxTransactionalCommandModule {
       && (!Number.isSafeInteger(options.lockTimeoutMs) || options.lockTimeoutMs < 1)) {
       throw new Error('Transactional command lockTimeoutMs must be a positive safe integer');
     }
+    if (options.deadlineMs !== undefined
+      && (!Number.isSafeInteger(options.deadlineMs) || options.deadlineMs < 1)) {
+      throw new Error('Transactional command deadlineMs must be a positive safe integer');
+    }
     return {
       module: StynxTransactionalCommandModule,
       providers: [

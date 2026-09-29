@@ -135,10 +135,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     if ((scope as TrustedOfflineSyncScope & { ctg9?: boolean }).ctg9) {
       const rangeKey = this.key(scope.tenantId, reservation.rangeId);
       const range = this.ranges.get(rangeKey);
-      const entries = this.consumption.get(key);
-      const highestApplied = Math.max(reservation.startNumber - 1, ...[...(entries?.values() ?? [])].filter(entry => ['applied','claimed-locally'].includes(entry.status)).map(entry => entry.number));
+      const entries = this.consumption.get(key)!;
+      const highestApplied = Math.max(reservation.startNumber - 1, ...[...entries.values()].filter(entry => ['applied','claimed-locally'].includes(entry.status)).map(entry => entry.number));
       if (range && range.nextNumber === reservation.endNumber + 1) this.ranges.set(rangeKey, { ...range, nextNumber: highestApplied + 1, status: 'active' });
-      for (const [number,entry] of entries ?? []) if (entry.status === 'available') entries?.set(number,{...entry,status:'expired'});
+      for (const [number,entry] of entries) if (entry.status === 'available') entries.set(number,{...entry,status:'expired'});
     }
     return cancelled;
   }
@@ -273,9 +273,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     const conflict = this.conflicts.get(key);
     if (!conflict) throw new OfflineSyncError('OFFLINE_SYNC_CONFLICT_NOT_FOUND',404,'Conflict was not found.');
     if (conflict.status !== 'open') throw new OfflineSyncError('OFFLINE_SYNC_CONFLICT_STATE',409,'Conflict is already resolved.');
-    const item = this.queueItems.get(this.key(scope.tenantId,conflict.queueItemId));
-    const context = {...scope,agentId:item?.agentId ?? scope.actorId,orgUnitId:item?.orgUnitId ?? '',
-      deviceId:item?.deviceId ?? '',batchId:'',now};
+    const item = this.queueItems.get(this.key(scope.tenantId,conflict.queueItemId))!;
+    const context = {...scope,agentId:item.agentId,orgUnitId:item.orgUnitId,
+      deviceId:item.deviceId,batchId:'',now};
     const trx = {token:randomUUID()} as unknown as import('@stynx-nyx/data').Transaction;
     const receipt = [...this.itemReceipts.values()].find(value => value.item.queueItemId === conflict.queueItemId)?.receipt;
     const allowed = receipt?.context?.allowedActions as readonly string[] | undefined ??
@@ -304,7 +304,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     return this.transitionReservation(scope, id, 'consumed');
   }
 
-  private transitionReservation(scope: TrustedOfflineSyncScope, id: string, status: CTG9NumberingReservation['status']): CTG9NumberingReservation {
+  private transitionReservation(scope: TrustedOfflineSyncScope, id: string, status: 'blocked' | 'consumed'): CTG9NumberingReservation {
     const key = this.key(scope.tenantId, id);
     const current = this.reservations.get(key);
     if (!current) throw new OfflineSyncError('OFFLINE_SYNC_RESERVATION_NOT_FOUND', 404, 'Reservation was not found.');
@@ -312,7 +312,8 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     if (!['reserved', 'expired'].includes(current.status)) throw new OfflineSyncError('OFFLINE_SYNC_RESERVATION_STATE', 409, 'Reservation cannot transition from its current state.');
     const changed = { ...current, status };
     this.reservations.set(key, changed as NumberingReservation);
-    if (status === 'blocked' || status === 'consumed') for (const [number, entry] of this.consumption.get(key) ?? []) if (entry.status === 'available') this.consumption.get(key)?.set(number, { ...entry, status: status === 'blocked' ? 'blocked' : 'expired' });
+    const entries = this.consumption.get(key)!;
+    for (const [number, entry] of entries) if (entry.status === 'available') entries.set(number, { ...entry, status: status === 'blocked' ? 'blocked' : 'expired' });
     return changed;
   }
 
@@ -336,7 +337,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     const key = this.key(scope.tenantId, id);
     const reservation = this.reservations.get(key);
     if (!reservation) throw new OfflineSyncError('OFFLINE_SYNC_RESERVATION_NOT_FOUND', 404, 'Reservation was not found.');
-    return { reservationId: id, status: reservation.status, consumption: [...(this.consumption.get(key)?.values() ?? [])] };
+    return { reservationId: id, status: reservation.status, consumption: [...this.consumption.get(key)!.values()] };
   }
 
   async getSyncBatchReceipt(scope: TrustedOfflineSyncScope, deviceId: string, deviceBatchId: string): Promise<SyncBatchReceipt | null> {
@@ -387,10 +388,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       if (bound && bound.batchIdentity !== identity)
         throw new OfflineSyncError('OFFLINE_SYNC_BATCH_CONFLICT',409,'Transport key belongs to another batch.');
       this.transport.set(transportKey,{batchIdentity:identity,fingerprint});
-      if (prior.result) { applyReplayResponse(runtime.transport,runtime.ports,prior.receipt.responseStatus ?? 201,prior.receipt.responseHeaders); return prior.result; }
+      if (prior.result) { applyReplayResponse(runtime.transport,runtime.ports,prior.receipt.responseStatus!,prior.receipt.responseHeaders); return prior.result; }
       if (prior.promise) {
         const waited = await Promise.race([prior.promise.then(value => ({ value })), new Promise<{ value?: CTG9SubmitSyncBatchResult }>(resolve => setTimeout(() => resolve({}), runtime.ports.leaseWaitMs ?? 750))]);
-        if (waited.value) { applyReplayResponse(runtime.transport,runtime.ports,prior.receipt.responseStatus ?? 201,prior.receipt.responseHeaders); return waited.value; }
+        if (waited.value) { applyReplayResponse(runtime.transport,runtime.ports,prior.receipt.responseStatus!,prior.receipt.responseHeaders); return waited.value; }
         throw new OfflineSyncError('OFFLINE_SYNC:BATCH:in-progress', 503, 'Batch is in progress.', true);
       }
     }
@@ -425,7 +426,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         const itemKey = this.key(scope.tenantId, key);
         const e6 = this.e6Items.get(itemKey);
         if (e6) {
-          const legacy = this.queueItems.get(this.key(scope.tenantId,e6.item.queueItemId)) ?? e6.item;
+          const legacy = this.queueItems.get(this.key(scope.tenantId,e6.item.queueItemId))!;
           const sameHash = legacy.payloadHash === item.payloadHash;
           if (sameHash && e6.batchKey !== identity) duplicates += 1;
           const legacyReceived = sameHash && legacy.status === 'received';
@@ -462,7 +463,6 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         const itemContext = { ...scope, agentId: runtime.agentId, orgUnitId: input.orgUnitId, deviceId: input.deviceId, batchId: input.deviceBatchId, now };
         if (!item.idempotencyKey) errorCode = 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED';
         else {
-          if (runtime.ports.itemApplier && !runtime.ports.eventPort) throw new OfflineSyncConfigurationError('eventPort');
           const trx = { token: randomUUID() } as unknown as import('@stynx-nyx/data').Transaction;
           try {
             const covering = item.reservedNumber === undefined ? [] : [...this.reservations.entries()].filter(([reservationKey,reservation]) => reservationKey.startsWith(`${scope.tenantId}:`) && reservation.deviceId === input.deviceId && reservation.orgUnitId === input.orgUnitId && reservation.entityType === item.entityType && reservation.startNumber <= item.reservedNumber! && item.reservedNumber! <= reservation.endNumber && (!item.reservationId || reservation.reservationId === item.reservationId) && (reservation.status !== 'cancelled' || ['applied','claimed-locally'].includes(this.consumption.get(reservationKey)?.get(item.reservedNumber!)?.status ?? '')));
@@ -474,7 +474,6 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
               const entry = this.consumption.get(reservationKey)?.get(item.reservedNumber!);
               if (entry?.status === 'applied') throw new OfflineSyncNumberingOutcome('OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',item.reservedNumber!,reservation.reservationId);
               if (reservation.status !== 'reserved' || Date.parse(reservation.validUntil) < Date.parse(item.createdLocallyAt)) throw new OfflineSyncNumberingOutcome('OFFLINE_SYNC_NUMBERING_EXPIRED',item.reservedNumber!,reservation.reservationId);
-              if (entry && !['available','claimed-locally'].includes(entry.status)) throw new OfflineSyncNumberingOutcome('OFFLINE_SYNC_NUMBERING_EXPIRED',item.reservedNumber!,reservation.reservationId);
             }
             if (runtime.ports.itemApplier) {
             const applied = await runtime.ports.itemApplier.apply(trx, item, itemContext);
@@ -491,7 +490,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                   for (const [storedKey, old] of this.itemReceipts) if (old.item.queueItemId === affected && storedKey.startsWith(`${scope.tenantId}:`)) {
                     this.itemReceipts.set(storedKey, { ...old, receipt: { ...old.receipt, status: 'conflict', context:evidence } });
                     const affectedQueue = this.queueItems.get(this.key(scope.tenantId,affected));
-                    if (affectedQueue) this.queueItems.set(this.key(scope.tenantId,affected),{...affectedQueue,status:'conflict'});
+                    this.queueItems.set(this.key(scope.tenantId,affected),{...affectedQueue!,status:'conflict'});
                     this.conflicts.set(this.key(scope.tenantId,conflictId),{conflictId,tenantId:scope.tenantId,
                       queueItemId:affected,localEntityId:old.item.localEntityId,payloadHash:old.item.payloadHash,
                       conflictType:'concurrency',description:'Concurrent agent activity',status:'open'});
@@ -507,7 +506,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
               }
             }
             if (status !== 'conflict') status = 'applied';
-            if (runtime.ports.eventPort) await runtime.ports.eventPort.appendInTransaction(trx, { entity: item.entityType, entityId: applied.serverEntityId, idempotencyKey: key, payload: item.payloadJson });
+            await runtime.ports.eventPort!.appendInTransaction(trx, { entity: item.entityType, entityId: applied.serverEntityId, idempotencyKey: key, payload: item.payloadJson });
             }
           } catch (error) {
             const classified = error instanceof HttpException && error.getStatus() >= 400 && error.getStatus() < 500 &&
@@ -516,15 +515,12 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             status = numbering?.receiptStatus ?? (classified ? 'rejected' : 'received');
             errorCode = (error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED';
             if (numbering) {
-              receiptContext=numbering.context;
-              if (numbering) {
-                const conflictId = randomUUID();
-                const allowedActions = await runtime.ports.conflictResolver?.allowedActions?.(trx,conflictId,itemContext) ?? ['reject','retry_after_correction'];
-                receiptContext={...numbering.context,conflictId,allowedActions};
-                this.conflicts.set(this.key(scope.tenantId,conflictId),{conflictId,tenantId:scope.tenantId,
-                  queueItemId:item.queueItemId,localEntityId:item.localEntityId,payloadHash:item.payloadHash,
-                  conflictType:'domain',description:numbering.code,status:'open'});
-              }
+              const conflictId = randomUUID();
+              const allowedActions = await runtime.ports.conflictResolver?.allowedActions?.(trx,conflictId,itemContext) ?? ['reject','retry_after_correction'];
+              receiptContext={...numbering.context,conflictId,allowedActions};
+              this.conflicts.set(this.key(scope.tenantId,conflictId),{conflictId,tenantId:scope.tenantId,
+                queueItemId:item.queueItemId,localEntityId:item.localEntityId,payloadHash:item.payloadHash,
+                conflictType:'domain',description:numbering.code,status:'open'});
             }
             if (!classified) retryable = true;
           }
@@ -534,9 +530,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         this.queueItems.set(this.key(scope.tenantId, item.queueItemId), { ...saved, idempotencyKey: key } as StoredSyncQueueItem);
         this.itemReceipts.set(itemKey, { hash: item.payloadHash, batchKey: identity, receipt: itemReceipt, item: saved });
         if (coveringReservationKey && serverEntityId !== undefined && ['applied','conflict'].includes(status) && item.reservedNumber !== undefined) {
-          const entries = this.consumption.get(coveringReservationKey);
-          const entry = entries?.get(item.reservedNumber);
-          if (entry) entries?.set(item.reservedNumber, { ...entry, status: 'applied', serverEntityId: serverEntityId ?? null, finalizedAt: now });
+          const entries = this.consumption.get(coveringReservationKey)!;
+          const entry = entries.get(item.reservedNumber)!;
+          entries.set(item.reservedNumber, { ...entry, status: 'applied', serverEntityId, finalizedAt: now });
         }
         stored.push(saved);
         itemReceipts.push(itemReceipt);

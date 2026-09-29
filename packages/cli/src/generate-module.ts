@@ -3,7 +3,7 @@ import {
   existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync,
   realpathSync, renameSync, rmSync, statSync, writeFileSync,
 } from 'node:fs';
-import { basename, dirname, join, resolve, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 const namePattern = /^[A-Z][A-Za-z0-9]*$/;
 const identifierPattern = /^[a-z][a-z0-9_]*$/;
@@ -463,7 +463,9 @@ function ensureNoSymlinkBelowParent(out: string): void {
   if (lstatSync(parent).isSymbolicLink()) {
     const containingDir = realpathSync(dirname(parent));
     const target = realpathSync(parent);
-    if (target !== containingDir && !target.startsWith(containingDir.endsWith(sep) ? containingDir : `${containingDir}${sep}`)) {
+    const resolvedWithinAncestor = relative(containingDir, target);
+    if (resolvedWithinAncestor === '..' || resolvedWithinAncestor.startsWith(`..${sep}`)
+      || isAbsolute(resolvedWithinAncestor)) {
       throw new Error('--out parent contains a symlink below its resolved ancestor');
     }
   }
@@ -476,7 +478,6 @@ export function generateModule(blueprintFile: string, destination: string, check
   const blueprint = validateBlueprint(raw);
   const planned = renderFiles(blueprint, sha(bytes));
   const out = resolve(destination);
-  if (basename(out) === '.' || basename(out) === '..') throw new Error('--out must name a new directory');
   if (check) {
     if (!existsSync(out) || !lstatSync(out).isDirectory() || lstatSync(out).isSymbolicLink()) throw new Error('--check requires an existing ordinary directory');
     const actual = listFiles(out);
@@ -492,7 +493,6 @@ export function generateModule(blueprintFile: string, destination: string, check
   ensureNoSymlinkBelowParent(out);
   const parent = realpathSync(dirname(out));
   const target = join(parent, basename(out));
-  if (dirname(target) !== parent) throw new Error('--out escapes selected parent');
   const stage = mkdtempSync(join(parent, '.stynx-generate-'));
   try {
     for (const [path, content] of planned) {

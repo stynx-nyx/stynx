@@ -18,3 +18,8 @@ packages/signature/test/fixtures/pki/root.key.pem
 packages/signature/test/fixtures/pki/signer.key.pem
 packages/signature/test/fixtures/pki/spoof.key.pem
 packages/signature/test/fixtures/pki/tsa.key.pem
+# Public negative-case PKI fixtures admitted by ADR-STYNX-1.5.2-PKI-FIXTURE-SCAN.
+packages/signature/test/fixtures/pki/bad-responder.key.pem
+packages/signature/test/fixtures/pki/chain-signer.key.pem
+packages/signature/test/fixtures/pki/expired-tsa.key.pem
+packages/signature/test/fixtures/pki/intermediate.key.pem

@@ -26,7 +26,7 @@ function parsedObject(bytes:Uint8Array,context:PDFContext):{value:unknown;length
   } catch {return failXref();}
 }
 
-function finalXref(bytes:Uint8Array,allowUnsupported=false):{entries:Map<number,XrefEntry>;sections:XrefSection[]} {
+function finalXref(bytes:Uint8Array):{entries:Map<number,XrefEntry>;sections:XrefSection[]} {
   const text=Buffer.from(bytes).toString('latin1');
   const end=text.lastIndexOf('startxref');
   if (end<0) failXref();
@@ -39,12 +39,11 @@ function finalXref(bytes:Uint8Array,allowUnsupported=false):{entries:Map<number,
   while (Number.isSafeInteger(offset) && offset>=0 && offset<bytes.length) {
     if (seen.has(offset)) failXref();
     if (text.slice(offset,offset+4)!=='xref') {
-      if (allowUnsupported) throw new SignatureTrustUnavailableError('Unsupported PDF xref stream');
-      failXref();
+      throw new SignatureTrustUnavailableError('Unsupported PDF xref stream');
     }
     seen.add(offset);
     let cursor=offset+4;
-    while (/\s/u.test(text[cursor] ?? '')) cursor++;
+    while (/\s/u.test(text[cursor]!)) cursor++;
     for (;;) {
       if (text.slice(cursor,cursor+7)==='trailer') {cursor+=7;break;}
       const header=/^(\d+)\s+(\d+)\s*/u.exec(text.slice(cursor));
@@ -69,8 +68,7 @@ function finalXref(bytes:Uint8Array,allowUnsupported=false):{entries:Map<number,
         String.fromCharCode(Number.parseInt(hex,16))));
     if (new Set(keys).size!==keys.length) failXref();
     if (keys.includes('XRefStm') || trailer.has(name('XRefStm'))) {
-      if (allowUnsupported) throw new SignatureTrustUnavailableError('Unsupported PDF hybrid xref');
-      failXref();
+      throw new SignatureTrustUnavailableError('Unsupported PDF hybrid xref');
     }
     const declared=/^\s*startxref\s+(\d+)\s+%%EOF/u.exec(text.slice(cursor+parsed.length));
     if (!declared || Number(declared[1])!==offset) failXref();
@@ -85,13 +83,18 @@ function finalXref(bytes:Uint8Array,allowUnsupported=false):{entries:Map<number,
 }
 
 function checkFinalXref(pdf:Uint8Array,revisionEnd:number,catalogRef:PDFRef,
-  context:PDFContext):void {
-  const original=finalXref(pdf.slice(0,revisionEnd),true);
-  const final=finalXref(pdf);
+  context:PDFContext):SignatureTrustUnavailableError|undefined {
+  const original=finalXref(pdf.slice(0,revisionEnd));
+  let final:ReturnType<typeof finalXref>;
+  try {final=finalXref(pdf);}
+  catch (error) {
+    if (error instanceof SignatureTrustUnavailableError) return error;
+    throw error;
+  }
   const text=Buffer.from(pdf).toString('latin1');
   const signedStart=original.sections[0]?.offset;
   const appended=final.sections.filter(section=>section.offset>=revisionEnd);
-  if (!signedStart || !appended.length || appended.at(-1)?.previous!==signedStart) failXref();
+  if (!signedStart || !appended.length || appended.at(-1)!.previous!==signedStart) failXref();
   const effectiveCatalog=final.entries.get(catalogRef.objectNumber);
   if (!effectiveCatalog?.inUse || effectiveCatalog.generation!==catalogRef.generationNumber ||
       effectiveCatalog.offset<revisionEnd) failXref();
@@ -127,9 +130,8 @@ function checkFinalXref(pdf:Uint8Array,revisionEnd:number,catalogRef:PDFRef,
   for (const [ref] of context.enumerateIndirectObjects()) {
     const entry=final.entries.get(ref.objectNumber);
     if (!entry?.inUse || entry.generation!==ref.generationNumber) failXref();
-    if (entry.offset>=revisionEnd &&
-        !intervals.some(([start])=>start===entry.offset)) failXref();
   }
+  return undefined;
 }
 
 export async function readSelectedSignatureDictionary(pdf:Uint8Array,revisionEnd:number,
@@ -211,7 +213,7 @@ export async function readPdfTrustEvidence(pdf:Uint8Array,revisionEnd:number,cms
   const catalog=complete.catalog;
   const catalogRef=previous.context.getObjectRef(oldCatalog);
   if (!catalogRef) throw new SignatureTrustError('Post-signature modification');
-  checkFinalXref(pdf,revisionEnd,catalogRef,complete.context);
+  const unsupportedXref=checkFinalXref(pdf,revisionEnd,catalogRef,complete.context);
   if (!sameObject(complete.context.lookup(catalogRef),complete.catalog))
     throw new SignatureTrustError('Post-signature modification');
   if (oldCatalog.has(name('DSS')) || !catalog.has(name('DSS')) ||
@@ -223,15 +225,13 @@ export async function readPdfTrustEvidence(pdf:Uint8Array,revisionEnd:number,cms
   const dss=catalog.lookupMaybe(name('DSS'),PDFDict);
   if (!dss) throw new SignatureTrustError('Post-signature modification');
   for (const [key,obj] of oldObjects) {
-    if (key === previous.context.getObjectRef(oldCatalog)?.toString()) continue;
+    if (key === catalogRef.toString()) continue;
     if (!sameObject(obj,allObjects.get(key))) throw new SignatureTrustError('Post-signature modification');
   }
   const reachable=new Set<string>();
   collectRefs(catalog.get(name('DSS')),complete.context,reachable);
-  for (const [key,obj] of allObjects) {
+  for (const key of allObjects.keys()) {
     if (oldObjects.has(key) || reachable.has(key)) continue;
-    if (obj instanceof PDFRawStream &&
-        obj.dict.lookupMaybe(name('Type'),PDFName)?.toString() === '/ObjStm') continue;
     throw new SignatureTrustError('Post-signature modification');
   }
   const vri=dss.lookupMaybe(name('VRI'),PDFDict);
@@ -250,5 +250,6 @@ export async function readPdfTrustEvidence(pdf:Uint8Array,revisionEnd:number,cms
       evidence.vriOcsp.some(item=>!contains(evidence.ocsp,item)) ||
       evidence.vriCrls.some(item=>!contains(evidence.crls,item)))
     throw new SignatureTrustError('DSS VRI evidence is unbound');
+  if (unsupportedXref) throw unsupportedXref;
   return evidence;
 }

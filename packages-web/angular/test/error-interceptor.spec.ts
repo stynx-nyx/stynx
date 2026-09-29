@@ -129,4 +129,17 @@ describe('ErrorInterceptor errorBoundary', () => {
     }
     expect(snapshots[0]).toEqual(snapshots[1]);
   });
+
+  it('omits an absent SDK code from the classified error banner', async () => {
+    const { client, http, banner } = configure('provider');
+    const pending = firstValueFrom(client.get('/api/uncoded')).catch((error: unknown) => error);
+    http.expectOne('/api/uncoded').flush({ message: 'Unexpected server failure' }, {
+      status: 500, statusText: 'Server Error',
+    });
+
+    const error = await pending;
+    expect(error).toMatchObject({ status: 500, message: 'Unexpected server failure' });
+    expect(banner.current()).toMatchObject({ message: 'Unexpected server failure', status: 500 });
+    expect(banner.current()).not.toHaveProperty('code');
+  });
 });

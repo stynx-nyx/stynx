@@ -74,4 +74,28 @@ describe('StynxErrorBannerComponent', () => {
     fixture.detectChanges();
     expect(banner.current()).toBe(null);
   });
+
+  it('uses translated dismiss text and prefixes translated errors with a tenant label', async () => {
+    await TestBed.configureTestingModule({
+      imports: [StynxErrorBannerComponent],
+      providers: [
+        ErrorBannerService,
+        { provide: StynxI18nService, useValue: { translate: (key: string) => ({
+          'ui.error.dismiss': 'Fechar aviso',
+          'error.key': 'Request failed',
+        })[key] ?? key } },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(StynxErrorBannerComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.dismissLabel()).toBe('Fechar aviso');
+    expect(component.displayMessage({
+      message: 'Fallback', messageKey: 'error.key', context: { tenantLabel: 'North region' },
+    })).toBe('[North region] Request failed');
+    expect(component.displayMessage({
+      message: 'Fallback', messageKey: 'error.key', context: { tenantLabel: '' },
+    })).toBe('Request failed');
+    fixture.destroy();
+  });
 });

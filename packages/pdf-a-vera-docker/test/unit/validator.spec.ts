@@ -142,4 +142,104 @@ describe('VeraPdfDockerValidator', () => {
     expect(logger.observe).not.toHaveBeenCalled();
     expect(logger.log).not.toHaveBeenCalled();
   });
+
+  it('reads valid runtime overrides from the environment and allows an empty logger', async () => {
+    const keys = [
+      'STYNX_VERAPDF_IMAGE',
+      'STYNX_VERAPDF_DOCKER_BIN',
+      'STYNX_VERAPDF_TIMEOUT_MS',
+    ] as const;
+    const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+    process.env.STYNX_VERAPDF_IMAGE = 'verapdf/env-image';
+    process.env.STYNX_VERAPDF_DOCKER_BIN = '/usr/local/bin/docker-env';
+    process.env.STYNX_VERAPDF_TIMEOUT_MS = '12345';
+    const requests: VeraPdfDockerRunRequest[] = [];
+    try {
+      const validator = new VeraPdfDockerValidator({
+        logger: {},
+        runner: async (request) => {
+          requests.push(request);
+          return {
+            stdout: JSON.stringify({
+              report: {
+                jobs: [{
+                  validationResult: {
+                    profileName: 'PDF/A-2B',
+                    isCompliant: true,
+                    details: { failedRules: [] },
+                  },
+                }],
+              },
+            }),
+            stderr: '',
+            exitCode: 0,
+            timedOut: false,
+          };
+        },
+      });
+      expect((await validator.validate(new Uint8Array())).valid).toBe(true);
+      expect(requests[0]).toMatchObject({
+        image: 'verapdf/env-image',
+        dockerBin: '/usr/local/bin/docker-env',
+        timeoutMs: 12345,
+      });
+    } finally {
+      for (const key of keys) {
+        const value = previous[key];
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  });
+
+  it.each(['invalid', '0'])('ignores invalid timeout environment value %s', async (value) => {
+    const previous = process.env.STYNX_VERAPDF_TIMEOUT_MS;
+    process.env.STYNX_VERAPDF_TIMEOUT_MS = value;
+    const requests: VeraPdfDockerRunRequest[] = [];
+    try {
+      const validator = new VeraPdfDockerValidator({
+        timeoutMs: undefined,
+        runner: async (request) => {
+          requests.push(request);
+          return {
+            stdout: JSON.stringify({ report: { jobs: [{ validationResult: {
+              profileName: 'PDF/A-2B', isCompliant: true, details: { failedRules: [] },
+            } }] } }),
+            stderr: '',
+            exitCode: 0,
+            timedOut: false,
+          };
+        },
+      });
+      await validator.validate(new Uint8Array());
+      expect(requests[0]?.timeoutMs).toBe(420000);
+    } finally {
+      if (previous === undefined) delete process.env.STYNX_VERAPDF_TIMEOUT_MS;
+      else process.env.STYNX_VERAPDF_TIMEOUT_MS = previous;
+    }
+  });
+
+  it('uses a stable fallback when Docker fails without stderr text', async () => {
+    const validator = new VeraPdfDockerValidator({
+      runner: async () => ({ stdout: '{bad json', stderr: '  \n', exitCode: 1, timedOut: false }),
+    });
+    await expect(validator.validate(new Uint8Array())).rejects.toThrow(/no stderr output/u);
+  });
+
+  it('uses the default Docker runner when no runner is configured', async () => {
+    const validator = new VeraPdfDockerValidator({
+      dockerBin: '/path/that/does/not/exist',
+      timeoutMs: 1000,
+    });
+    await expect(validator.validate(new Uint8Array())).rejects.toThrow(/spawnSync/u);
+  });
+
+  it('labels a missing Docker exit code and stderr explicitly', async () => {
+    const validator = new VeraPdfDockerValidator({
+      runner: async () => ({ stdout: '', stderr: '', exitCode: null, timedOut: false }),
+    });
+    await expect(validator.validate(new Uint8Array())).rejects.toThrow(
+      /exit code unknown: no stderr output/u,
+    );
+  });
 });

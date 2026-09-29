@@ -48,4 +48,16 @@ describe('StynxRolesAdminComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['role-1'], { relativeTo: route });
     expect(toast.push).toHaveBeenCalledWith('iam.roles.delete.deleted', 'success');
   });
+
+  it('emits role selection when optional router context is absent', async () => {
+    const fixture = await renderComponent(StynxRolesAdminComponent);
+    const component = fixture.componentInstance;
+    const access = component as unknown as { openDetail(role: typeof ROLES[number]): void };
+    const selected: string[] = [];
+    component.roleSelected.subscribe((role) => selected.push(role.id));
+
+    access.openDetail(ROLES[0]!);
+
+    expect(selected).toEqual(['role-1']);
+  });
 });

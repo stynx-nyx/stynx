@@ -186,6 +186,26 @@ describe('resolved tenant command context port', () => {
     }
   });
 
+  it('attests a verified public principal only when Host, claims, and active actor agree', async () => {
+    const { module, port, run, query } = await setup();
+    try {
+      const request: Record<string | symbol, unknown> = {
+        headers: { host: 'portal.test' },
+        originalUrl: '/portal/records',
+        principal: { id: ACTOR },
+        stynxClaims: { sub: ACTOR, tenantId: TENANT, sid: 'session-1' },
+      };
+      Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
+
+      expect(port.get(request)).toBe(undefined);
+      await expect(run(request, 'optional')).resolves.toBe('handled');
+      expect(query).toHaveBeenCalledWith(expect.stringContaining('auth.memberships'), [ACTOR, TENANT]);
+      expect(port.get(request)).toEqual({ tenantId: TENANT, actorId: ACTOR, mode: 'verified' });
+    } finally {
+      await module.close();
+    }
+  });
+
   it('publishes no result after membership failure', async () => {
     const { module, port, run } = await setup(false);
     try {

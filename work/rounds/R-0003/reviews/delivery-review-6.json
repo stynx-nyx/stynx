@@ -1,0 +1,12 @@
+{
+  "verdict": "PASS",
+  "findings": [],
+  "evidence": [
+    "Marker 8a71d0e6 changes 95 paths: session changeset deletion, 44 manifest/changelog pairs, 6 support paths. Parent a606a1a7 is 1.5.1 with only that changeset; the 1.5.1 marker 36f45845 is kept.",
+    "Follow-ups after the 1.5.2 marker touch only 6 modified paths, all in allowedSecondStablePatchFollowUpPaths. All 44 packages are 1.5.2. Base 1.5.0, no pending changesets, sessions CHANGELOG has the 409/403 fix.",
+    "release:status was not run because it writes .changeset/status.json. Its routing checks the 1.5.2 predicate before the unchanged 1.5.1 one; ADR-0009 and the policy are Architect-authored.",
+    "trace test_corpus has 500 entries and no origin/main entry is missing or has different invariant_ids. session-policy-http again binds INV-CORE-001, INV-ERROR-001 and INV-RBAC-001 (a606a1a7).",
+    "finalXref now calls failXref() when the trailer is not a PDFDict. Without it, trailer.has throws an uncaught TypeError, so the new test's SignatureTrustError assertion tells the two apart.",
+    "Policy digest 3063d91a matches the verifier; the census stays latest 1.5.0 and rc 1.5.0-rc.2. CI, coverage, release gates and signed RC have no completed evidence here and are not claimed."
+  ]
+}

@@ -112,6 +112,18 @@ describe('TenantBusinessCalendar', () => {
     expect(result.getTime() - new Date(start).getTime()).toBe(34 * 60 * 60 * 1_000);
   });
 
+  it('rejects a due-date boundary erased by a timezone calendar change', async () => {
+    const calendar = makeCalendar({ [A]: 'Pacific/Apia' });
+
+    // Samoa skipped 2011-12-30 entirely. A due date on the 29th has no
+    // exclusive next-day boundary in that timezone.
+    await expect(deadline(calendar, A, '2011-12-28T12:00:00Z', 1))
+      .rejects.toMatchObject({
+        code: 'WORKLIST_INPUT_INVALID',
+        message: 'Due date does not exist in the tenant timezone',
+      });
+  });
+
   it('keeps the exclusive next-day boundary on civil dates across the repeated fall-back hour', async () => {
     const calendar = makeCalendar({ [A]: 'America/New_York' });
     const start = '2024-11-03T05:30:00.000Z'; // First 1:30 a.m. during the repeated hour.
@@ -184,5 +196,22 @@ describe('TenantBusinessCalendar', () => {
       .rejects.toBeInstanceOf(WorklistInputError);
     await expect(deadline(exhausted, A, '2024-01-01T12:00:00Z', 1))
       .rejects.toMatchObject({ code: 'WORKLIST_INPUT_INVALID', context: { reason: 'calendar_exhausted' } });
+  });
+
+  it('rejects malformed holiday sources before calculating a deadline', async () => {
+    const malformed = [
+      { supplied: ['2024-05-07'], message: 'Tenant holidays must be a set of civil dates' },
+      { supplied: new Set([42]), message: 'Tenant holiday must be a valid YYYY-MM-DD date' },
+      { supplied: new Set(['2024-5-07']), message: 'Tenant holiday must be a valid YYYY-MM-DD date' },
+    ];
+
+    for (const { supplied, message } of malformed) {
+      const calendar = new TenantBusinessCalendar({
+        timezoneForTenant: () => 'UTC',
+        holidaysFor: () => supplied as unknown as ReadonlySet<string>,
+      });
+      await expect(deadline(calendar, A, '2024-05-06T12:00:00Z', 1))
+        .rejects.toMatchObject({ code: 'WORKLIST_INPUT_INVALID', message });
+    }
   });
 });
