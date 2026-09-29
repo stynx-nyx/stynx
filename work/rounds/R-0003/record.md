@@ -138,15 +138,25 @@ next. No DETRAN proof ran.
 
 The exact forbidden-action receipt for Engineer merge
 `1d08b743a7e29430790677e78994dd1ab23b7d59` passed the strict DEVAI
-audit. A signed candidate at `43b2b29f` was exported and published as local
-evidence. Remote verification initially failed because `main` still carried
+audit. The local RC for commit `43b2b29fc7819a6113b35623ec487a8156666c46`
+and tree `df71c08dd4a88c1e622a6b28046849fa3e889c63` was signed by
+`stynx-inspector-workstation-03` with receipt
+`fe3523bd07a4fd7b599b21b66fb8b1aedbcb11b3fb46e730a2c6e69151f630b0`
+and published as evidence tag
+`devai-local-evidence/df71c08dd4a88c1e622a6b28046849fa3e889c63`.
+Remote verifier run 36538947776 initially failed because `main` still carried
 the older workstation-03 toolchain control. PR #315 promoted the reviewed
 control and ADR, passed local and remote gates, received an Opus 5.5 PASS,
-and merged at `95a240c3`; rerunning the verifier passed for that candidate.
+and merged at `95a240c32a4d801c92df22931743f39906ff2e79`; rerunning the
+verifier (attempt 2) passed for that candidate.
 PR #314 then exposed four additional public PKI fixture keys through its
 Semgrep check. ADR-STYNX-1.5.2-PKI-FIXTURE-SCAN authorizes exactly those four
 paths alongside the four already excluded keys. Inspector tests bind the
 eight-path list and the second-marker follow-up states; Engineer updated the
-allowlist and classifier without deleting tests. Trace is rebound at
-500/500. Full gates, cross-family delivery review, and a new signed local RC
-remain due on the final clean SHA. No DETRAN proof ran.
+allowlist and classifier without deleting tests. Opus cycle 8 returned PASS
+with one low sensor finding; the Inspector bound the entire active ignore list
+in a follow-up. The local full CI passed before that final sensor edit, and
+44-package coverage was started. Trace rebind, final CI, remote Semgrep, and
+a new signed local RC remain due on the final clean SHA. Publication remains
+bound to a separate Owner receipt naming the eventual merged `main` SHA. No
+DETRAN proof ran.

@@ -57,8 +57,10 @@ mutation is reviewed against the exact Owner receipt rule before execution.
   work includes the fixed-group patch generated from the R-0003 changeset.
   An authenticated 44-package census on 2026-09-29 found `latest=1.5.0`
   and `rc=1.5.0-rc.2` throughout. The Architect policy binds the next exact
-  candidate to 1.5.1, with preflight latest 1.5.0. An exact-main-SHA
-  publication receipt remains required when the merged SHA is known.
+  historical candidate to 1.5.1, with preflight latest 1.5.0. OD-R0003-02
+  supersedes that candidate with the fixed-group 1.5.2 marker. An
+  exact-main-SHA publication receipt remains required when the merged SHA is
+  known.
 - Release preparation recognizes the exact stable patch marker
   `chore(repo): version fixed group to 1.5.1` after the 1.5.0 base. It must
   prove a single consumed changeset, all 44 manifests and changelogs at

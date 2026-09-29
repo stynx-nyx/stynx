@@ -4539,8 +4539,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 304,
-      "assertion_digest_sha256": "3c9777795688d981bf0431cb23635b4139da33925c358f1d59e0ef39717026ec"
+      "assertion_count": 303,
+      "assertion_digest_sha256": "49b7e892e21d2c4c7f8404962922d1e02e1e3a3ea64a52eb4c38c84a4113b33e"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
