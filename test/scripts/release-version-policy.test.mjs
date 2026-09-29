@@ -527,13 +527,27 @@ test('stable 1.5.2 patch context consumes only session policy and rejects unboun
   }
 });
 
-test('Semgrep admits only the eight exact public PKI fixture keys', () => {
+test('Semgrep ignore list preserves build exclusions and only exact public PKI fixture keys', () => {
   const entries = readFileSync(join(repoRoot, '.semgrepignore'), 'utf8')
     .split(/\r?\n/u)
     .map((line) => line.trim())
-    .filter((line) => line.startsWith('packages/signature/test/fixtures/pki/'));
+    .filter((line) => line !== '' && !line.startsWith('#'));
 
   assert.deepEqual(entries, [
+    'dist/',
+    'build/',
+    'coverage/',
+    'node_modules/',
+    '.turbo/',
+    '.changeset/release-drafts/',
+    'docs/.docusaurus/',
+    'docs/.generated/',
+    'docs/build/',
+    'infra/cdk/cdk.out/',
+    'reference/api/dist/',
+    'reference/web/dist/',
+    'packages/**/dist/',
+    'packages-web/**/dist/',
     'packages/signature/test/fixtures/pki/root.key.pem',
     'packages/signature/test/fixtures/pki/signer.key.pem',
     'packages/signature/test/fixtures/pki/spoof.key.pem',
@@ -543,7 +557,6 @@ test('Semgrep admits only the eight exact public PKI fixture keys', () => {
     'packages/signature/test/fixtures/pki/expired-tsa.key.pem',
     'packages/signature/test/fixtures/pki/intermediate.key.pem',
   ]);
-  assert.equal(entries.some((entry) => /[*?{}[\]]/u.test(entry)), false);
 });
 
 test('release preparation routes the final candidate to empty status and skips consumed drafts', () => {
