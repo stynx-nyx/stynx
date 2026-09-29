@@ -1,5 +1,12 @@
 # @stynx-nyx/signature
 
+## 1.5.1
+
+### Patch Changes
+
+- @stynx-nyx/health@1.5.1
+- @stynx-nyx/integration-adapter@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes

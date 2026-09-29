@@ -1,5 +1,14 @@
 # @stynx-nyx/tenancy
 
+## 1.5.1
+
+### Patch Changes
+
+- @stynx-nyx/contracts@1.5.1
+- @stynx-nyx/core@1.5.1
+- @stynx-nyx/data@1.5.1
+- @stynx-nyx/idempotency@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes

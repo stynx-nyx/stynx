@@ -1,5 +1,12 @@
 # @stynx-nyx/worklist
 
+## 1.5.1
+
+### Patch Changes
+
+- @stynx-nyx/core@1.5.1
+- @stynx-nyx/data@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes

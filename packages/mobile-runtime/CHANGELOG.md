@@ -1,5 +1,7 @@
 # @stynx-nyx/mobile-runtime
 
+## 1.5.1
+
 ## 1.5.0
 
 ## 1.5.0-rc.3

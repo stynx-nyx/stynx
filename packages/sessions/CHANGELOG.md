@@ -1,5 +1,17 @@
 # @stynx-nyx/sessions
 
+## 1.5.1
+
+### Patch Changes
+
+- 5d67d36: Return HTTP 409 for `SessionConflictError` and HTTP 403 for
+  `StrongFactorRequiredError` from the session endpoints. Both errors now extend
+  `StynxError`, so `StynxErrorFilter` renders `{ code, message }` instead of
+  rethrowing them as HTTP 500. The `code` values are unchanged.
+  - @stynx-nyx/core@1.5.1
+  - @stynx-nyx/data@1.5.1
+  - @stynx-nyx/idempotency@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes
