@@ -1,7 +1,7 @@
 {
-  "node": "v24.15.0",
+  "node": "v24.20.0",
   "pnpm": "9.15.0",
-  "postgres": "psql (PostgreSQL) 18.1 (Postgres.app)",
+  "postgres": "psql (PostgreSQL) 18.2 (Postgres.app)",
   "typescript": "typescript@6.0.3",
   "vitest": "vitest@4.1.11"
 }
