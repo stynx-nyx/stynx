@@ -1577,7 +1577,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
     [['@stynx-nyx/angular-profile', '2.0.0']],
   );
 
-  for (const version of ['1.4.0', '1.5.0-rc.0', '1.5.0-rc.1', previousCandidate]) {
+  for (const version of ['1.4.0', '1.5.0-rc.0', '1.5.0-rc.1', previousCandidate, '1.5.1']) {
     const history = validRegistryCensus();
     history.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', previousCandidate, version]));
     assert.deepEqual(validate({ registryStatesByPackage: history }), {
@@ -1588,7 +1588,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
   for (const [version, code] of [
     [currentCandidate, 'REGISTRY_CANDIDATE_EXISTS'],
     ['1.5.0-rc.4', null],
-    ['1.5.1', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['1.6.0', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
     ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
   ]) {
     const history = validRegistryCensus();
@@ -1795,7 +1795,7 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
       (error) => error?.code === code,
     );
   }
-  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 1n]);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 2n]);
   assert.throws(() => parseStableVersionTag(`v${previousCandidate}`), /malformed stable release tag/u);
   const publisher = repositorySource('scripts/publish-release-plan.mjs');
   const workflow = repositorySource('.github/workflows/release.yml');
