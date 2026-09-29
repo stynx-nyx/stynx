@@ -1,5 +1,13 @@
 # @stynx-nyx/outbox
 
+## 1.5.2
+
+### Patch Changes
+
+- @stynx-nyx/contracts@1.5.2
+- @stynx-nyx/core@1.5.2
+- @stynx-nyx/data@1.5.2
+
 ## 1.5.1
 
 ### Patch Changes

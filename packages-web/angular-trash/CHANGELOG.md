@@ -1,5 +1,14 @@
 # @stynx-nyx/angular-trash
 
+## 1.5.2
+
+### Patch Changes
+
+- @stynx-nyx/angular-auth@1.5.2
+- @stynx-nyx/angular-i18n@1.5.2
+- @stynx-nyx/angular-ui@1.5.2
+- @stynx-nyx/sdk@1.5.2
+
 ## 1.5.1
 
 ### Patch Changes

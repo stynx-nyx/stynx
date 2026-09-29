@@ -1,5 +1,17 @@
 # @stynx-nyx/testing
 
+## 1.5.2
+
+### Patch Changes
+
+- Updated dependencies [5d67d36]
+  - @stynx-nyx/sessions@1.5.2
+  - @stynx-nyx/auth@1.5.2
+  - @stynx-nyx/audit@1.5.2
+  - @stynx-nyx/core@1.5.2
+  - @stynx-nyx/data@1.5.2
+  - @stynx-nyx/storage@1.5.2
+
 ## 1.5.1
 
 ### Patch Changes
