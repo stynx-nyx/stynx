@@ -46,13 +46,15 @@ export default defineConfig({
   ],
   webServer: [
     ...(useRealOidc
-      ? [{
-          command: 'node scripts/serve-fake-oidc.mjs',
-          cwd: fileURLToPath(new URL('.', import.meta.url)),
-          url: 'http://127.0.0.1:3200/readyz',
-          reuseExistingServer: true,
-          timeout: 30_000,
-        }]
+      ? [
+          {
+            command: 'node scripts/serve-fake-oidc.mjs',
+            cwd: fileURLToPath(new URL('.', import.meta.url)),
+            url: 'http://127.0.0.1:3200/readyz',
+            reuseExistingServer: true,
+            timeout: 30_000,
+          },
+        ]
       : []),
     {
       command: 'node scripts/serve-reference-api-stack.mjs',
