@@ -485,7 +485,8 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
         return selected
           ? { selected: true as const, response: new CommittedCommandResponse(statusCode, bytes, headers, false, key) }
           : { selected: false as const, payload };
-      }, { role: 'app', requireActor: true, retry: false, deadlineMs: options.deadlineMs });
+      }, { role: 'app', requireActor: true, retry: false,
+        ...(options.deadlineMs === undefined ? {} : { deadlineMs: options.deadlineMs }) });
       if (committed instanceof CommittedCommandResponse) throw committed;
       if (committed.selected) throw committed.response;
       return committed.payload;
