@@ -462,7 +462,6 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         const itemContext = { ...scope, agentId: runtime.agentId, orgUnitId: input.orgUnitId, deviceId: input.deviceId, batchId: input.deviceBatchId, now };
         if (!item.idempotencyKey) errorCode = 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED';
         else {
-          if (runtime.ports.itemApplier && !runtime.ports.eventPort) throw new OfflineSyncConfigurationError('eventPort');
           const trx = { token: randomUUID() } as unknown as import('@stynx-nyx/data').Transaction;
           try {
             const covering = item.reservedNumber === undefined ? [] : [...this.reservations.entries()].filter(([reservationKey,reservation]) => reservationKey.startsWith(`${scope.tenantId}:`) && reservation.deviceId === input.deviceId && reservation.orgUnitId === input.orgUnitId && reservation.entityType === item.entityType && reservation.startNumber <= item.reservedNumber! && item.reservedNumber! <= reservation.endNumber && (!item.reservationId || reservation.reservationId === item.reservationId) && (reservation.status !== 'cancelled' || ['applied','claimed-locally'].includes(this.consumption.get(reservationKey)?.get(item.reservedNumber!)?.status ?? '')));
@@ -507,7 +506,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
               }
             }
             if (status !== 'conflict') status = 'applied';
-            if (runtime.ports.eventPort) await runtime.ports.eventPort.appendInTransaction(trx, { entity: item.entityType, entityId: applied.serverEntityId, idempotencyKey: key, payload: item.payloadJson });
+            await runtime.ports.eventPort!.appendInTransaction(trx, { entity: item.entityType, entityId: applied.serverEntityId, idempotencyKey: key, payload: item.payloadJson });
             }
           } catch (error) {
             const classified = error instanceof HttpException && error.getStatus() >= 400 && error.getStatus() < 500 &&
@@ -516,15 +515,12 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             status = numbering?.receiptStatus ?? (classified ? 'rejected' : 'received');
             errorCode = (error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED';
             if (numbering) {
-              receiptContext=numbering.context;
-              if (numbering) {
-                const conflictId = randomUUID();
-                const allowedActions = await runtime.ports.conflictResolver?.allowedActions?.(trx,conflictId,itemContext) ?? ['reject','retry_after_correction'];
-                receiptContext={...numbering.context,conflictId,allowedActions};
-                this.conflicts.set(this.key(scope.tenantId,conflictId),{conflictId,tenantId:scope.tenantId,
-                  queueItemId:item.queueItemId,localEntityId:item.localEntityId,payloadHash:item.payloadHash,
-                  conflictType:'domain',description:numbering.code,status:'open'});
-              }
+              const conflictId = randomUUID();
+              const allowedActions = await runtime.ports.conflictResolver?.allowedActions?.(trx,conflictId,itemContext) ?? ['reject','retry_after_correction'];
+              receiptContext={...numbering.context,conflictId,allowedActions};
+              this.conflicts.set(this.key(scope.tenantId,conflictId),{conflictId,tenantId:scope.tenantId,
+                queueItemId:item.queueItemId,localEntityId:item.localEntityId,payloadHash:item.payloadHash,
+                conflictType:'domain',description:numbering.code,status:'open'});
             }
             if (!classified) retryable = true;
           }
@@ -536,7 +532,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         if (coveringReservationKey && serverEntityId !== undefined && ['applied','conflict'].includes(status) && item.reservedNumber !== undefined) {
           const entries = this.consumption.get(coveringReservationKey);
           const entry = entries?.get(item.reservedNumber);
-          if (entry) entries?.set(item.reservedNumber, { ...entry, status: 'applied', serverEntityId: serverEntityId ?? null, finalizedAt: now });
+          if (entry) entries!.set(item.reservedNumber, { ...entry, status: 'applied', serverEntityId, finalizedAt: now });
         }
         stored.push(saved);
         itemReceipts.push(itemReceipt);
