@@ -35,7 +35,7 @@ describe('MockPadesEvidenceAdapter', () => {
       reason: 'Official PDF signature',
       evidenceUri: expect.stringMatching(/^stynx-pades:\/\/evidence\//u),
     });
-    expect(decodePadesEvidenceBlock(Buffer.from('%PDF without envelope'))).toBeNull();
+    expect(decodePadesEvidenceBlock(Buffer.from('%PDF without envelope'))).toEqual(null);
     expect(createMockPadesEvidenceAdapter().sign({ payload: Buffer.from('x'), verifyUrl: '/' })
       .envelope.signedAt).toBe('1970-01-01T00:00:00.000Z');
   });

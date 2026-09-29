@@ -653,7 +653,9 @@ describe('concrete STYNX CMS verifier', () => {
     const original = Buffer.from(listUpdatedCatalogInXref(bltSignedDocument));
     const text = original.toString('latin1');
     const byteRange = /\/ByteRange\s*\[\s*\d+\s+(\d+)\s+(\d+)\s+(\d+)\s*\]/u.exec(text);
-    expect(byteRange).not.toBeNull();
+    const signedByteRange = /\/ByteRange\s*\[\s*\d+\s+(\d+)\s+(\d+)\s+(\d+)\s*\]/u
+      .exec(Buffer.from(bltSignedDocument).toString('latin1'));
+    expect(byteRange?.slice(1).map(Number)).toEqual(signedByteRange?.slice(1).map(Number));
     const revisionEnd = Number(byteRange![2]) + Number(byteRange![3]);
     const trailerStart = text.lastIndexOf('trailer');
     const rootKey = text.indexOf('/Root', trailerStart);

@@ -112,7 +112,12 @@ describe('CMS trust verifier final low-level revocation branches', () => {
         name: 'SignatureTrustUnavailableError',
         message: 'Revocation evidence not current',
       });
-    expect(fetchOcsp).toHaveBeenCalled();
+    expect(fetchOcsp).toHaveBeenCalledWith(expect.objectContaining({
+      certificate: expect.any(pkijs.Certificate),
+      issuer: expect.any(pkijs.Certificate),
+      signedDocument: input().signedDocument,
+      signerInfo: expect.any(pkijs.SignerInfo),
+    }));
     expect(pkijs.getAlgorithmByOID).toHaveBeenCalledWith('1.2.3.4.999');
   });
 
@@ -132,7 +137,12 @@ describe('CMS trust verifier final low-level revocation branches', () => {
         name: 'SignatureTrustUnavailableError',
         message: 'Revocation evidence not current',
       });
-    expect(fetchOcsp).toHaveBeenCalled();
+    expect(fetchOcsp).toHaveBeenCalledWith(expect.objectContaining({
+      certificate: expect.any(pkijs.Certificate),
+      issuer: expect.any(pkijs.Certificate),
+      signedDocument: input().signedDocument,
+      signerInfo: expect.any(pkijs.SignerInfo),
+    }));
   });
 
   const crlWithTimes = (thisUpdate: Date, nextUpdate: Date | undefined): Buffer => {
@@ -160,7 +170,12 @@ describe('CMS trust verifier final low-level revocation branches', () => {
       name: 'SignatureTrustUnavailableError',
       message: 'Revocation evidence not current',
     });
-    expect(fetchCrl).toHaveBeenCalled();
+    expect(fetchCrl).toHaveBeenCalledWith(expect.objectContaining({
+      certificate: expect.any(pkijs.Certificate),
+      issuer: expect.any(pkijs.Certificate),
+      signedDocument: input().signedDocument,
+      signerInfo: expect.any(pkijs.SignerInfo),
+    }));
   };
 
   it('treats a CRL without nextUpdate as unavailable', async () => {
@@ -211,7 +226,14 @@ describe('CMS trust verifier final low-level revocation branches', () => {
         verifierKind: 'stynx-cms',
         padesProfile: 'PAdES-B-T',
       });
-      expect(verify).toHaveBeenCalled();
+      expect(verify).toHaveBeenCalledWith(expect.objectContaining({
+        signer: 0,
+        data: expect.any(ArrayBuffer),
+        trustedCerts: expect.any(Array),
+        checkChain: true,
+        checkDate: expect.any(Date),
+        extendedMode: true,
+      }));
     } finally {
       verify.mockRestore();
     }

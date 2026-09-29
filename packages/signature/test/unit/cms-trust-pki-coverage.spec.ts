@@ -100,8 +100,18 @@ describe('CMS trust verifier online PKI evidence paths', () => {
       revocationSource: 'ocsp',
       achievedLevel: 'ADVANCED',
     });
-    expect(fetchOcsp).toHaveBeenCalled();
-    expect(fetchCrl).toHaveBeenCalled();
+    expect(fetchOcsp).toHaveBeenCalledWith(expect.objectContaining({
+      certificate: expect.any(pkijs.Certificate),
+      issuer: expect.any(pkijs.Certificate),
+      signedDocument: input().signedDocument,
+      signerInfo: expect.any(pkijs.SignerInfo),
+    }));
+    expect(fetchCrl).toHaveBeenCalledWith(expect.objectContaining({
+      certificate: expect.any(pkijs.Certificate),
+      issuer: expect.any(pkijs.Certificate),
+      signedDocument: input().signedDocument,
+      signerInfo: expect.any(pkijs.SignerInfo),
+    }));
     // The verifier fetches status for both the signer and TSA certificate paths.
     expect(fetchOcsp.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
@@ -112,8 +122,18 @@ describe('CMS trust verifier online PKI evidence paths', () => {
 
     await expect(verifier({ fetchOcsp, fetchCrl }).verifySignedArtifact(input()))
       .rejects.toBeInstanceOf(SignatureTrustUnavailableError);
-    expect(fetchOcsp).toHaveBeenCalled();
-    expect(fetchCrl).toHaveBeenCalled();
+    expect(fetchOcsp).toHaveBeenCalledWith(expect.objectContaining({
+      certificate: expect.any(pkijs.Certificate),
+      issuer: expect.any(pkijs.Certificate),
+      signedDocument: input().signedDocument,
+      signerInfo: expect.any(pkijs.SignerInfo),
+    }));
+    expect(fetchCrl).toHaveBeenCalledWith(expect.objectContaining({
+      certificate: expect.any(pkijs.Certificate),
+      issuer: expect.any(pkijs.Certificate),
+      signedDocument: input().signedDocument,
+      signerInfo: expect.any(pkijs.SignerInfo),
+    }));
   });
 
   it('rejects a timestamp unsigned attribute whose value is not an RFC 3161 CMS token', async () => {
