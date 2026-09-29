@@ -75,7 +75,7 @@ export class SignatureService {
     if (profile.environment === 'production' && !isCmsTrustVerifier(verifier) &&
       !this.options.consumerOwnedVerifier?.acknowledged)
       throw new SignatureProviderConfigurationError('Production trust verifier is unacknowledged');
-    const observedAt=c?.checkedAt instanceof Date ? c.checkedAt.getTime() : NaN;
+    const observedAt=c.checkedAt instanceof Date ? c.checkedAt.getTime() : NaN;
     const maxAge=profile.environment === 'production' ? 300_000 : 86_400_000;
     const recent = Number.isFinite(observedAt) && observedAt > 0 &&
       Math.abs(Date.now()-observedAt) <= maxAge;

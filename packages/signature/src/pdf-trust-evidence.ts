@@ -96,7 +96,7 @@ function checkFinalXref(pdf:Uint8Array,revisionEnd:number,catalogRef:PDFRef,
   const text=Buffer.from(pdf).toString('latin1');
   const signedStart=original.sections[0]?.offset;
   const appended=final.sections.filter(section=>section.offset>=revisionEnd);
-  if (!signedStart || !appended.length || appended.at(-1)?.previous!==signedStart) failXref();
+  if (!signedStart || !appended.length || appended.at(-1)!.previous!==signedStart) failXref();
   const effectiveCatalog=final.entries.get(catalogRef.objectNumber);
   if (!effectiveCatalog?.inUse || effectiveCatalog.generation!==catalogRef.generationNumber ||
       effectiveCatalog.offset<revisionEnd) failXref();
@@ -229,7 +229,7 @@ export async function readPdfTrustEvidence(pdf:Uint8Array,revisionEnd:number,cms
   const dss=catalog.lookupMaybe(name('DSS'),PDFDict);
   if (!dss) throw new SignatureTrustError('Post-signature modification');
   for (const [key,obj] of oldObjects) {
-    if (key === previous.context.getObjectRef(oldCatalog)?.toString()) continue;
+    if (key === catalogRef.toString()) continue;
     if (!sameObject(obj,allObjects.get(key))) throw new SignatureTrustError('Post-signature modification');
   }
   const reachable=new Set<string>();
