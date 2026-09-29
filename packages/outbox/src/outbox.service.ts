@@ -311,6 +311,202 @@ export class OutboxService {
     });
   }
 
+  /**
+   * Request-path ACK: identity is taken from the trusted request context, and
+   * both projection and evidence are written by stynx_app under FORCE RLS.
+   * Invalid signatures are quarantined by the separate control path without
+   * looking up a domain event.
+   */
+  async ackTenantEvent(input: Omit<OutboxEventAckInput, 'tenantId'>): Promise<void> {
+    const tenantId = this.database.currentTenantId();
+    if (!tenantId) throw new OutboxNotFoundError({ reason: 'missing-tenant-context' });
+    if ('tenantId' in input) throw new OutboxNotFoundError({ reason: 'tenant-identity-must-come-from-context' });
+    if (input.hmacVerified !== true) {
+      // Require the same live actor/tenant identity as a valid ACK before the
+      // separate control path quarantines bytes; it never reads domain rows.
+      await this.database.tx(async () => undefined, { role: 'app', requireActor: true, readonly: true, retry: false });
+      await this.recordUnboundAck(input.rawBody, 'invalid-hmac');
+      throw new OutboxNotFoundError({ reason: 'invalid-hmac' });
+    }
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
+    if ((input.eventId && !uuid.test(input.eventId))
+      || (!input.eventId && !input.idempotencyKey)
+      || (input.eventId && input.idempotencyKey)) {
+      throw new OutboxNotFoundError({ reason: 'missing-or-ambiguous-event-identity' });
+    }
+    const hash = createHash('sha256').update(input.rawBody).digest('hex');
+    await this.database.tx(async (trx) => {
+      const found = await trx.query<{ id: string }>(
+        `select id from outbox.events where tenant_id=$1::uuid
+           and ($2::uuid is null or id=$2::uuid)
+           and ($3::text is null or idempotency_key=$3) limit 1`,
+        [tenantId, input.eventId ?? null, input.idempotencyKey ?? null],
+      );
+      const eventId = found.rows[0]?.id;
+      if (!eventId) throw new OutboxNotFoundError({ eventId: input.eventId, idempotencyKey: input.idempotencyKey });
+      const delivery = await trx.query<{ attempts: number }>(
+        `select attempts from outbox.event_delivery
+          where tenant_id=$1::uuid and event_id=$2::uuid for update`,
+        [tenantId, eventId],
+      );
+      if (!delivery.rows[0]) throw new OutboxNotFoundError({ eventId });
+      const nextAttemptAt = input.status === 'ERROR'
+        ? this.backoffPolicy.nextAttemptAt(delivery.rows[0].attempts, new Date()) : null;
+      await trx.query(
+        `update outbox.event_delivery set status=$3,next_attempt_at=$4,lease_until=null,updated_at=clock_timestamp()
+          where tenant_id=$1::uuid and event_id=$2::uuid and status<>'ACKED'`,
+        [tenantId, eventId, input.status, nextAttemptAt],
+      );
+      await trx.query(
+        `insert into outbox.event_acks (tenant_id,event_id,status,raw_body,raw_sha256,identity_verified,hmac_verified,verification_source)
+         values ($1::uuid,$2::uuid,$3,$4,$5,true,true,'verified-raw-body')`,
+        [tenantId, eventId, input.status, input.rawBody, hash],
+      );
+    }, { role: 'app', requireActor: true, retry: false });
+  }
+
+  /** Claim and deliver only events visible to the active app-role tenant. */
+  async dispatchTenantEventsDue(limit: number = this.dispatchBatchSize): Promise<OutboxDispatchOutcome[]> {
+    const tenantId = this.database.currentTenantId();
+    if (!tenantId) throw new OutboxNotFoundError({ reason: 'missing-tenant-context' });
+    if (!Number.isSafeInteger(limit) || limit < 1) throw new RangeError('limit must be a positive integer');
+    const claimed = await this.database.tx(async (trx) => {
+      const result = await trx.query<{
+        tenant_id: string; event_id: string; attempts: number;
+        entity: string; entity_id: string; idempotency_key: string;
+        payload: Record<string, unknown>; metadata: Record<string, unknown> | null; created_at: Date;
+      }>(
+        `with due as (
+           select d.tenant_id,d.event_id
+             from outbox.event_delivery d join outbox.events e
+               on e.tenant_id=d.tenant_id and e.id=d.event_id
+            where d.tenant_id=$1::uuid and e.tenant_id=$1::uuid
+              and (d.legacy_id is null or
+                   (select state from outbox.legacy_ownership where id=true)='NEW')
+              and ((d.status in ('PENDING','ERROR') and coalesce(d.next_attempt_at,e.created_at)<=clock_timestamp())
+                   or (d.status='SENT' and d.lease_until<clock_timestamp()))
+              and not exists (
+                select 1 from outbox.events p join outbox.event_delivery pd
+                  on pd.tenant_id=p.tenant_id and pd.event_id=p.id
+                 where p.tenant_id=$1::uuid and pd.tenant_id=$1::uuid
+                   and p.entity=e.entity and p.entity_id=e.entity_id
+                   and (p.created_at,p.id)<(e.created_at,e.id) and pd.status<>'ACKED'
+              )
+            order by e.created_at,e.id limit $2 for update of d skip locked
+         ), claimed as (
+           update outbox.event_delivery d
+              set status='SENT',attempts=d.attempts+1,
+                  lease_until=clock_timestamp()+($3::integer * interval '1 millisecond'),
+                  next_attempt_at=null,updated_at=clock_timestamp()
+             from due where d.tenant_id=$1::uuid and d.tenant_id=due.tenant_id and d.event_id=due.event_id
+           returning d.tenant_id,d.event_id,d.attempts
+         )
+         select c.*,e.entity,e.entity_id,e.idempotency_key,e.payload,e.metadata,e.created_at
+           from claimed c join outbox.events e on e.tenant_id=$1::uuid and e.tenant_id=c.tenant_id and e.id=c.event_id
+          order by e.created_at,e.id`,
+        [tenantId, limit, this.options.eventLeaseMs ?? 300_000],
+      );
+      for (const row of result.rows) {
+        await trx.query(
+          `insert into outbox.event_attempts (tenant_id,event_id,attempt_ordinal,result,leased_at)
+           values ($1::uuid,$2::uuid,$3,'CLAIMED',clock_timestamp())
+           on conflict (tenant_id,event_id,attempt_ordinal) do nothing`,
+          [tenantId, row.event_id, row.attempts],
+        );
+      }
+      return result.rows;
+    }, { role: 'app', requireActor: true, retry: false });
+    const outcomes: OutboxDispatchOutcome[] = [];
+    for (const claim of claimed) {
+      const row: OutboxRow = {
+        id: claim.event_id, tenantId, entity: claim.entity, entityId: claim.entity_id,
+        idempotencyKey: claim.idempotency_key, payload: claim.payload, metadata: claim.metadata,
+        status: 'SENT', attempts: claim.attempts, lastError: null, ackTime: null,
+        nextAttemptAt: null, createdAt: claim.created_at.toISOString(), updatedAt: new Date().toISOString(),
+      };
+      if (!this.dispatcher) { outcomes.push({ row, dispatched: false }); continue; }
+      let evidence: OutboxTransportEvidence | undefined;
+      let transportError: unknown;
+      let transportFailed = false;
+      try {
+        evidence = this.dispatcher.sendEvent
+          ? await this.dispatcher.sendEvent(row)
+          : (await this.dispatcher.send(row), {} as OutboxTransportEvidence);
+      } catch (error) {
+        transportFailed = true;
+        transportError = error;
+      }
+      if (!transportFailed) {
+        const sentEvidence = evidence ?? {};
+        const requestHash = sentEvidence.requestBytes ? createHash('sha256').update(sentEvidence.requestBytes).digest('hex') : null;
+        const responseHash = sentEvidence.responseBytes ? createHash('sha256').update(sentEvidence.responseBytes).digest('hex') : null;
+        try {
+          await this.database.tx(async (trx) => {
+            await trx.query(
+              `update outbox.event_delivery set lease_until=clock_timestamp()+($4::integer * interval '1 millisecond'),updated_at=clock_timestamp()
+                 where tenant_id=$1::uuid and event_id=$2::uuid and attempts=$3 and status='SENT'`,
+              [tenantId, claim.event_id, claim.attempts, this.options.eventLeaseMs ?? 300_000],
+            );
+            await trx.query(
+              `update outbox.event_attempts set result='SENT',completed_at=clock_timestamp(),
+                   provider=$4,protocol=$5,request_bytes=$6,request_sha256=$7,
+                   response_bytes=$8,response_sha256=$9,request_headers=$10::jsonb,
+                   response_status=$11,evidence_state=$12::jsonb
+                 where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,
+              [tenantId, claim.event_id, claim.attempts, sentEvidence.provider ?? null,
+                sentEvidence.protocol ?? null, sentEvidence.requestBytes ?? null, requestHash,
+                sentEvidence.responseBytes ?? null, responseHash,
+                sentEvidence.requestHeaders ? JSON.stringify(sentEvidence.requestHeaders) : null,
+                sentEvidence.responseStatus ?? null, transportEvidenceState(sentEvidence)],
+            );
+          }, { role: 'app', requireActor: true, retry: false });
+        } catch (persistenceError) {
+          outcomes.push({ row, dispatched: true, reconciliationRequired: true,
+            error: `Send succeeded; attempt persistence unresolved: ${errorMessage(persistenceError)}` });
+          continue;
+        }
+        outcomes.push({ row, dispatched: true });
+      } else {
+        const message = errorMessage(transportError);
+        const failedEvidence = (transportError as { evidence?: OutboxTransportEvidence })?.evidence;
+        const requestHash = failedEvidence?.requestBytes ? createHash('sha256').update(failedEvidence.requestBytes).digest('hex') : null;
+        const responseHash = failedEvidence?.responseBytes ? createHash('sha256').update(failedEvidence.responseBytes).digest('hex') : null;
+        const next = this.backoffPolicy.nextAttemptAt(claim.attempts, new Date());
+        try {
+          const projectionChanged = await this.database.tx(async (trx) => {
+            const delivery = await trx.query(
+              `update outbox.event_delivery set status='ERROR',lease_until=null,
+                   next_attempt_at=$3,last_error=$4,updated_at=clock_timestamp()
+                 where tenant_id=$1::uuid and event_id=$2::uuid and attempts=$5 and status='SENT'
+                 returning event_id`,
+              [tenantId, claim.event_id, next, message, claim.attempts],
+            );
+            await trx.query(
+              `update outbox.event_attempts set result='ERROR',error=$4,completed_at=clock_timestamp(),
+                   provider=$5,protocol=$6,request_bytes=$7,request_sha256=$8,
+                   response_bytes=$9,response_sha256=$10,request_headers=$11::jsonb,
+                   response_status=$12,evidence_state=$13::jsonb
+                 where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,
+              [tenantId, claim.event_id, claim.attempts, message, failedEvidence?.provider ?? null,
+                failedEvidence?.protocol ?? null, failedEvidence?.requestBytes ?? null, requestHash,
+                failedEvidence?.responseBytes ?? null, responseHash,
+                failedEvidence?.requestHeaders ? JSON.stringify(failedEvidence.requestHeaders) : null,
+                failedEvidence?.responseStatus ?? null, transportEvidenceState(failedEvidence)],
+            );
+            return delivery.rows.length > 0;
+          }, { role: 'app', requireActor: true, retry: false });
+          outcomes.push({ row: projectionChanged
+            ? { ...row, status: 'ERROR', lastError: message, nextAttemptAt: next.toISOString() }
+            : row, dispatched: false, error: message });
+        } catch (persistenceError) {
+          outcomes.push({ row, dispatched: false, reconciliationRequired: true,
+            error: `Send failed: ${message}; attempt persistence unresolved: ${errorMessage(persistenceError)}` });
+        }
+      }
+    }
+    return outcomes;
+  }
+
   async ackEvent(input: OutboxEventAckInput): Promise<void> {
     const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
     if (!input.tenantId || !uuid.test(input.tenantId)
