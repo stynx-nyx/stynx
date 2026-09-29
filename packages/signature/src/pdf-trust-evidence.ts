@@ -60,7 +60,8 @@ function finalXref(bytes:Uint8Array):{entries:Map<number,XrefEntry>;sections:Xre
       }
     }
     const parsed=parsedObject(bytes.subarray(cursor),PDFContext.create());
-    const trailer=parsed.value as PDFDict;
+    if (!(parsed.value instanceof PDFDict)) failXref();
+    const trailer=parsed.value;
     const raw=text.slice(cursor,cursor+parsed.length);
     const keys=[...raw.matchAll(/\/((?:#[0-9a-fA-F]{2}|[A-Za-z0-9])+)/gu)]
       .map(match=>match[1]!.replace(/#([0-9a-fA-F]{2})/gu,(_,hex:string)=>
