@@ -134,7 +134,7 @@ describe('additional PDF trust evidence hardening paths', () => {
     const originalXref = lastStartXref(signedPrefix);
     const originalText = signedPrefix.toString('latin1').slice(originalXref);
     const originalObject = /(?:^|\n)3 1\n(\d{10}) 00000 n/u.exec(originalText);
-    expect(originalObject).not.toBeNull();
+    expect(originalObject?.[1]).toMatch(/^\d{10}$/u);
     // Point the new DSS dictionary entry at the original signed catalog. The
     // effective catalog binding must reject that stale xref identity.
     Buffer.from(originalObject![1]!).copy(revision, rowOffset + '8 7\n'.length);
@@ -149,10 +149,10 @@ describe('additional PDF trust evidence hardening paths', () => {
     const dss = document.catalog.lookupMaybe(PDFName.of('DSS'), PDFDict);
     const ocsp = dss?.lookupMaybe(PDFName.of('OCSPs'), PDFArray);
     const stream = ocsp?.lookupMaybe(0, PDFRawStream);
-    expect(stream).toBeDefined();
+    expect(stream).toBeInstanceOf(PDFRawStream);
     expect(stream.dict.lookupMaybe(PDFName.of('Filter'), PDFName)?.toString()).toBe('/FlateDecode');
     const ref = document.context.getObjectRef(stream!);
-    expect(ref).toBeDefined();
+    expect(ref?.generationNumber).toBe(0);
     const objectHeader = Buffer.from(`${ref!.objectNumber} ${ref!.generationNumber} obj`);
     const objectAt = pdf.indexOf(objectHeader);
     expect(objectAt).toBeGreaterThanOrEqual(0);

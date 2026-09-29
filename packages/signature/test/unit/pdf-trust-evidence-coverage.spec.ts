@@ -118,9 +118,9 @@ describe('PDF trust evidence reader', () => {
       .resolves.toMatch(/^[0-9a-f]{64}$/u);
     const plain = await PDFDocument.create();
     plain.addPage();
-    await expect(readWithdrawalSourceBinding(await plain.save())).resolves.toBeUndefined();
+    await expect(readWithdrawalSourceBinding(await plain.save())).resolves.toBe(undefined);
     plain.catalog.set(PDFName.of('STYNXWithdrawalSHA256'), PDFString.of('bad-digest'));
-    await expect(readWithdrawalSourceBinding(await plain.save())).resolves.toBeUndefined();
+    await expect(readWithdrawalSourceBinding(await plain.save())).resolves.toBe(undefined);
     await expect(readWithdrawalSourceBinding(Buffer.from('not a PDF')))
       .rejects.toMatchObject({ message: 'Withdrawal source PDF invalid' });
   });

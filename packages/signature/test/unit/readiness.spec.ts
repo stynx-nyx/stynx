@@ -78,7 +78,23 @@ describe('signature readiness', () => {
     const moduleRef = await Test.createTestingModule({ imports: [withTrustVerifier] }).compile();
     try {
       await moduleRef.init();
-      await expect(moduleRef.get(StynxHealthService).readiness()).resolves.toBeDefined();
+      await expect(moduleRef.get(StynxHealthService).readiness()).resolves.toMatchObject({
+        status: 'ok',
+        info: {
+          signature: {
+            status: 'up',
+            simulated: false,
+            pades: true,
+            tsa: true,
+            lta: true,
+            certificateValidation: ['ocsp', 'crl'],
+            evidenceSource: 'authenticated-challenge',
+            checkedAt: now,
+            verifierKind: 'consumer-owned',
+          },
+        },
+        error: {},
+      });
     } finally {
       await moduleRef.close();
     }
