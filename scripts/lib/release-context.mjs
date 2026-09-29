@@ -9,6 +9,7 @@ const rcVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-rc\.(0|[1-9]\d*)$/u
 const finalVersionCommitSubject = 'chore(repo): version 1.5.0 final release';
 const finalVersion = '1.5.0';
 const finalBaseVersion = '1.5.0-rc.3';
+const stablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.1';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -34,6 +35,18 @@ const allowedVersionFollowUpPaths = new Set([
   // contract or permitting arbitrary release follow-up paths.
   'test/scripts/local-rc-blocker-contract.test.mjs',
   'tools/create-stynx-app/template/package.json',
+]);
+
+const allowedStablePatchFollowUpPaths = new Set([
+  'law/policy/registry-version-anomalies.json',
+  'law/trace.json',
+  'package.json',
+  'scripts/lib/registry-version-policy.mjs',
+  'scripts/lib/release-context.mjs',
+  'scripts/run-release-preparation.mjs',
+  'test/db/outbox-event-log-migration.spec.ts',
+  'test/scripts/local-rc-blocker-contract.test.mjs',
+  'test/scripts/release-version-policy.test.mjs',
 ]);
 
 export class ReleaseContextError extends Error {
@@ -316,6 +329,87 @@ export function isFinalVersionedCandidate({
   );
 }
 
+/** One consumed changeset versions the complete 1.5.0 fixed group to stable 1.5.1. */
+export function isStablePatchVersionedCandidate({
+  baseRootVersion,
+  markerParentRootVersion,
+  candidateRootVersion,
+  markerCommits,
+  markerChanges,
+  markerParentChangesets,
+  followUpChanges,
+  rootManifestMatchesMarker,
+  packageStates,
+  changesetIdsOnDisk,
+  preState,
+  markerParentPreState,
+}) {
+  if (
+    baseRootVersion !== '1.5.0' ||
+    markerParentRootVersion !== '1.5.0' ||
+    candidateRootVersion !== '1.5.1' ||
+    preState !== null ||
+    markerParentPreState !== null ||
+    rootManifestMatchesMarker !== true ||
+    !Array.isArray(markerCommits) ||
+    !Array.isArray(markerChanges) ||
+    !Array.isArray(markerParentChangesets) ||
+    !Array.isArray(followUpChanges) ||
+    !Array.isArray(packageStates) ||
+    packageStates.length !== 44 ||
+    !Array.isArray(changesetIdsOnDisk) ||
+    changesetIdsOnDisk.length !== 0 ||
+    !isDeepStrictEqual(markerParentChangesets, ['.changeset/postrelease-request-path.md'])
+  )
+    return false;
+
+  const markers = markerCommits.filter(
+    ({ subject }) => subject === stablePatchVersionCommitSubject,
+  );
+  if (
+    markers.length !== 1 ||
+    markerCommits.indexOf(markers[0]) === 0 ||
+    markerCommits.some(({ sha, subject }) => !fullSha.test(sha) || typeof subject !== 'string') ||
+    new Set(markerCommits.map(({ sha }) => sha)).size !== markerCommits.length
+  )
+    return false;
+
+  const names = new Set(packageStates.map(({ name }) => name));
+  const manifests = new Set(packageStates.map(({ manifestPath }) => manifestPath));
+  if (
+    names.size !== 44 ||
+    manifests.size !== 44 ||
+    !packageStates.every(
+      ({ name, manifestPath, parentVersion, candidateVersion }) =>
+        /^@stynx-nyx\/[a-z0-9-]+$/u.test(name) &&
+        /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(manifestPath) &&
+        parentVersion === '1.5.0' &&
+        candidateVersion === '1.5.1',
+    )
+  )
+    return false;
+
+  const expected = new Map([['.changeset/postrelease-request-path.md', 'D']]);
+  for (const manifestPath of manifests) {
+    expected.set(manifestPath, 'M');
+    expected.set(manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'), 'M');
+  }
+  for (const path of allowedVersionSupportPaths) expected.set(path, 'M');
+  if (
+    markerChanges.length !== expected.size ||
+    markerChanges.some(({ path, status }) => expected.get(path) !== status) ||
+    new Set(markerChanges.map(({ path }) => path)).size !== markerChanges.length
+  )
+    return false;
+
+  return followUpChanges.every(
+    ({ path, status }) =>
+      (status === 'A' || status === 'M') &&
+      (/^work\/rounds\/R-0003\/.+/u.test(path) ||
+        (status === 'M' && allowedStablePatchFollowUpPaths.has(path))),
+  );
+}
+
 export function classifyReleaseContext({
   baseCommit,
   headCommit,
@@ -365,6 +459,7 @@ export const releaseContextConstants = Object.freeze({
   releaseStatusCommand,
   versionCommitSubject,
   finalVersionCommitSubject,
+  stablePatchVersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',

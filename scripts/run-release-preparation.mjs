@@ -7,11 +7,11 @@ import { fileURLToPath } from 'node:url';
 import {
   classifyReleaseContext,
   isFinalVersionedCandidate,
+  isStablePatchVersionedCandidate,
   isVersionedPreModeCandidate,
   releaseContextConstants,
   ReleaseContextError,
 } from './lib/release-context.mjs';
-import { discoverMutationRoster } from './lib/mutation-roster.mjs';
 import { collectPublicPackages } from './lib/release-version-policy.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -117,7 +117,10 @@ function versionedPreModeContext(baseCommit, headCommit, commits) {
     };
   });
   const changedManifestPaths = parseChanges(baseCommit, headCommit)
-    .filter(({ status, path }) => status === 'M' && /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(path))
+    .filter(
+      ({ status, path }) =>
+        status === 'M' && /^(?:packages|packages-web)\/[^/]+\/package\.json$/u.test(path),
+    )
     .map(({ path }) => path);
   const preState = JSON.parse(readFileSync(prePath, 'utf8'));
   const baseRootVersion = readGitJson(baseCommit, 'package.json').version;
@@ -127,17 +130,21 @@ function versionedPreModeContext(baseCommit, headCommit, commits) {
   const changesetIdsOnDisk = readdirSync(resolve(repoRoot, '.changeset'))
     .filter((name) => name.endsWith('.md') && name !== 'README.md')
     .map((name) => name.slice(0, -3));
-  if (!isVersionedPreModeCandidate({
-    baseRootVersion,
-    candidateRootVersion: JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')).version,
-    versionCommitVersion: markerPattern.exec(versionCommits[0].subject)[1],
-    packageStates,
-    changedManifestPaths,
-    changesetIdsOnDisk,
-    followUpChanges: parseChanges(versionCommits[0].sha, headCommit),
-    basePreState,
-    preState,
-  })) return null;
+  if (
+    !isVersionedPreModeCandidate({
+      baseRootVersion,
+      candidateRootVersion: JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8'))
+        .version,
+      versionCommitVersion: markerPattern.exec(versionCommits[0].subject)[1],
+      packageStates,
+      changedManifestPaths,
+      changesetIdsOnDisk,
+      followUpChanges: parseChanges(versionCommits[0].sha, headCommit),
+      basePreState,
+      preState,
+    })
+  )
+    return null;
 
   return {
     kind: 'versioned-pre-mode',
@@ -155,7 +162,10 @@ function finalVersionedContext(baseCommit, headCommit, commits) {
   const markers = commits.filter(({ subject }) => subject === markerSubject);
   if (markers.length === 0) return null;
   if (markers.length !== 1) {
-    throw new ReleaseContextError('RELEASE_CONTEXT_AMBIGUOUS', 'candidate has multiple final version markers');
+    throw new ReleaseContextError(
+      'RELEASE_CONTEXT_AMBIGUOUS',
+      'candidate has multiple final version markers',
+    );
   }
 
   const marker = markers[0];
@@ -196,20 +206,23 @@ function finalVersionedContext(baseCommit, headCommit, commits) {
     ? readGitJson(headCommit, '.changeset/pre.json')
     : null;
   const markerIndex = commits.findIndex(({ sha }) => sha === marker.sha);
-  const followUpChanges = commits.slice(markerIndex + 1).flatMap(({ sha }) =>
-    parseChanges(git(['rev-parse', `${sha}^`]), sha));
-  if (!isFinalVersionedCandidate({
-    baseRootVersion: readGitJson(baseCommit, 'package.json').version,
-    basePreState,
-    markerCommits: commits,
-    markerParentPreState,
-    markerChanges,
-    followUpChanges,
-    candidateRootVersion: readGitJson(headCommit, 'package.json').version,
-    packageStates,
-    changesetIdsOnDisk,
-    preState,
-  })) {
+  const followUpChanges = commits
+    .slice(markerIndex + 1)
+    .flatMap(({ sha }) => parseChanges(git(['rev-parse', `${sha}^`]), sha));
+  if (
+    !isFinalVersionedCandidate({
+      baseRootVersion: readGitJson(baseCommit, 'package.json').version,
+      basePreState,
+      markerCommits: commits,
+      markerParentPreState,
+      markerChanges,
+      followUpChanges,
+      candidateRootVersion: readGitJson(headCommit, 'package.json').version,
+      packageStates,
+      changesetIdsOnDisk,
+      preState,
+    })
+  ) {
     throw new ReleaseContextError(
       'RELEASE_CONTEXT_FINAL_INVALID',
       'final version candidate does not match its exact marker and follow-up contract',
@@ -223,6 +236,79 @@ function finalVersionedContext(baseCommit, headCommit, commits) {
     versionCommit: marker.sha,
     packageCount: packageStates.length,
     changesetCount: deletedChangesets.length,
+    rebaseline: false,
+  };
+}
+
+function stablePatchVersionedContext(baseCommit, headCommit, commits) {
+  const markerSubject = releaseContextConstants.stablePatchVersionCommitSubject;
+  const markers = commits.filter(({ subject }) => subject === markerSubject);
+  if (markers.length === 0) return null;
+  if (markers.length !== 1) {
+    throw new ReleaseContextError(
+      'RELEASE_CONTEXT_AMBIGUOUS',
+      'candidate has multiple stable patch markers',
+    );
+  }
+
+  const marker = markers[0];
+  const markerParent = git(['rev-parse', `${marker.sha}^`]);
+  const markerChanges = parseChanges(markerParent, marker.sha);
+  const parentFiles = git(['ls-tree', '-r', '--name-only', markerParent, '.changeset']).split('\n');
+  const markerParentChangesets = parentFiles.filter(
+    (path) => /^\.changeset\/[^/]+\.md$/u.test(path) && path !== '.changeset/README.md',
+  );
+  const headFiles = git(['ls-tree', '-r', '--name-only', headCommit, '.changeset']).split('\n');
+  const changesetIdsOnDisk = headFiles
+    .filter((path) => /^\.changeset\/[^/]+\.md$/u.test(path) && path !== '.changeset/README.md')
+    .map((path) => path.slice('.changeset/'.length, -3));
+  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => {
+    const path = relative(repoRoot, manifestPath);
+    return {
+      name,
+      manifestPath: path,
+      parentVersion: readGitJson(markerParent, path).version,
+      candidateVersion: readGitJson(headCommit, path).version,
+    };
+  });
+  const markerIndex = commits.findIndex(({ sha }) => sha === marker.sha);
+  const followUpChanges = commits
+    .slice(markerIndex + 1)
+    .flatMap(({ sha }) => parseChanges(git(['rev-parse', `${sha}^`]), sha));
+  const input = {
+    baseRootVersion: readGitJson(baseCommit, 'package.json').version,
+    markerParentRootVersion: readGitJson(markerParent, 'package.json').version,
+    candidateRootVersion: readGitJson(headCommit, 'package.json').version,
+    markerCommits: commits,
+    markerChanges,
+    markerParentChangesets,
+    followUpChanges,
+    rootManifestMatchesMarker:
+      JSON.stringify(readGitJson(marker.sha, 'package.json')) ===
+      JSON.stringify(readGitJson(headCommit, 'package.json')),
+    packageStates,
+    changesetIdsOnDisk,
+    preState: headFiles.includes('.changeset/pre.json')
+      ? readGitJson(headCommit, '.changeset/pre.json')
+      : null,
+    markerParentPreState: parentFiles.includes('.changeset/pre.json')
+      ? readGitJson(markerParent, '.changeset/pre.json')
+      : null,
+  };
+  if (!isStablePatchVersionedCandidate(input)) {
+    throw new ReleaseContextError(
+      'RELEASE_CONTEXT_PATCH_INVALID',
+      'stable patch candidate does not match its consumed changeset and fixed-group contract',
+    );
+  }
+
+  return {
+    kind: 'stable-patch-versioned',
+    baseCommit,
+    headCommit,
+    versionCommit: marker.sha,
+    packageCount: packageStates.length,
+    changesetCount: markerParentChangesets.length,
     rebaseline: false,
   };
 }
@@ -265,8 +351,10 @@ function releaseContext() {
     versionRebaselineValid: rebaseline,
   });
   return classified.kind === 'ordinary'
-    ? versionedPreModeContext(baseCommit, headCommit, commits) ??
-      finalVersionedContext(baseCommit, headCommit, commits) ?? classified
+    ? (versionedPreModeContext(baseCommit, headCommit, commits) ??
+        finalVersionedContext(baseCommit, headCommit, commits) ??
+        stablePatchVersionedContext(baseCommit, headCommit, commits) ??
+        classified)
     : classified;
 }
 
