@@ -1,0 +1,19 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "severity": "low",
+      "file": "test/scripts/release-version-policy.test.mjs",
+      "line": 447,
+      "problem": "No source sensor checks the runner's stablePatchVersionedContext step. Dropping it from the releaseContext ?? chain would still pass the tests, and markerParentPreState and a marker as the first commit are not tested as negatives.",
+      "required_fix": "Inspector should add a routing assertion for isStablePatchVersionedCandidate/stable-patch-versioned in run-release-preparation.mjs and negatives for markerParentPreState and a first-commit marker."
+    }
+  ],
+  "evidence": [
+    "The real marker 36f45845 has exactly D postrelease-request-path.md, 44 manifest and changelog M pairs, and the six allowed support paths. Its parent is at 1.5.0 and has only that one changeset.",
+    "Every change after the marker, through af8f070c, is an M in allowedStablePatchFollowUpPaths or an A/M under work/rounds/R-0003. HEAD package.json equals the marker (the c827e8de/d1e3fd49 pair nets to zero), with root at 1.5.1.",
+    "The final and RC classifiers are unchanged apart from formatting. The stable-patch step runs last in the ?? chain and returns null when no marker exists; duplicate or invalid markers throw RELEASE_CONTEXT_AMBIGUOUS or RELEASE_CONTEXT_PATCH_INVALID.",
+    "The non-ordinary kind routes to an empty status.json and skips release:drafts, which closes the cycle-3 gap. The removed discoverMutationRoster import had no other use in the prior runner.",
+    "The Inspector test adds 1 positive and 16 negative mutations. Trace moves from 296 to 299 assertions and no existing test was edited. I did not run tests, and I have no evidence that ci:stynx passed."
+  ]
+}

@@ -78,6 +78,13 @@ Opus cycle 3 returned REVIEW solely on this classifier gap; its JSON is in
 `reviews/delivery-review-3.json`. A follow-up delivery review and full CI
 remain due on the completed HEAD.
 
+`pnpm ci:stynx` passed on `af8f070c`: policy and trace, RLS negative,
+97 unit test tasks, serial PostgreSQL integration, 48 build tasks and
+doctor. The source-only Opus cycle 4 returned PASS with one low-priority
+request for an additional runner-routing sensor; no required change remains
+from the delivery review. `release:policy`, `release:provenance` and the
+44-tarball, three-fixture consumer check passed. No DETRAN proof ran.
+
 DEVAI 1.6.0 has no supported R-0001 closeout action. Its `round close` and
 `round seal` commands are experimental; the historical round still has
 TASK-0001 escalated and no ordered D/DII closing decision or phase ledger.
