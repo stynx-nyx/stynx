@@ -67,7 +67,7 @@ export class SignatureService {
     let c: Awaited<ReturnType<SignatureTrustVerifier['capabilities']>>;
     try { c = await Promise.race([verifier.capabilities(profile),timeout]); }
     catch { throw new SignatureCapabilityError('Signature capability check unavailable'); }
-    finally { if (timer) clearTimeout(timer); }
+    finally { clearTimeout(timer!); }
     if (!c || !Array.isArray(c.certificateValidation))
       throw new SignatureCapabilityError('Signature capability observation malformed');
     if (profile.environment === 'production' && c.simulated)
@@ -84,8 +84,7 @@ export class SignatureService {
       : c.certificateValidation.includes(profile.revocation);
     if (!['PAdES-B-T','PAdES-B-LT','PAdES-B-LTA'].includes(profile.requiredPadesProfile) ||
       !recent || !c.pades || (profile.requireTsa && !c.tsa) ||
-      ((profile.requireLta || profile.requiredPadesProfile === 'PAdES-B-LTA') && !c.lta) || !revocation ||
-      (profile.environment === 'production' && c.simulated)) {
+      ((profile.requireLta || profile.requiredPadesProfile === 'PAdES-B-LTA') && !c.lta) || !revocation) {
       throw new SignatureCapabilityError('Required signature capability is unavailable');
     }
     return {ok: true, capabilities: c,verifierKind:isCmsTrustVerifier(verifier) ? 'stynx-cms':'consumer-owned'};
