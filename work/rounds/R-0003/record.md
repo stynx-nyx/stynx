@@ -155,8 +155,13 @@ paths alongside the four already excluded keys. Inspector tests bind the
 eight-path list and the second-marker follow-up states; Engineer updated the
 allowlist and classifier without deleting tests. Opus cycle 8 returned PASS
 with one low sensor finding; the Inspector bound the entire active ignore list
-in a follow-up. The local full CI passed before that final sensor edit, and
-44-package coverage was started. Trace rebind, final CI, remote Semgrep, and
+in a follow-up. Opus cycle 9 returned PASS with only a stale record sentence;
+its review and bridge receipts are retained in `reviews/`. The final local
+`pnpm ci:stynx` passed on `d991647c`, including PostgreSQL integration,
+RLS-negative and doctor. `pnpm test:coverage` measured all four metrics at
+exactly 100% for 44/44 packages with zero failures. `pnpm check:trace --print`
+passed 500/500 after the Architect rebind; `pnpm release:consumer-fixtures`
+installed 44 tarballs across three local adopter fixtures. Remote Semgrep and
 a new signed local RC remain due on the final clean SHA. Publication remains
 bound to a separate Owner receipt naming the eventual merged `main` SHA. No
 DETRAN proof ran.
