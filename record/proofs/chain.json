@@ -1,5 +1,5 @@
 {
-  "head": "ac402e8029b9f0012daedea4a973437395017f0bb744fae4a2c4f8b143c774d7",
+  "head": "345fd93ce08a3516d88a676e9135c9084cd80fa8deee5af0b56706c71ac46861",
   "records": [
     {
       "schemaVersion": "1.0.0",
@@ -243,6 +243,84 @@
       "manifest_hash": "ac402e8029b9f0012daedea4a973437395017f0bb744fae4a2c4f8b143c774d7",
       "sequence": 6,
       "previous_hash": "2760330c6cf08f3089d87aa19ad279a107ca8b028c2a09fcafa965becf29af9e"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-33f8415a0b1f695d",
+      "timestamp": "2026-09-29T01:05:06.390Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "evidence.record.generic",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stynx",
+        "git": {
+          "head_sha": "c3a1c70d01990d317f559a59c6502f8bff5793ce",
+          "dirty_files": ["record/proofs/work/generic/R-0002.jsonl"]
+        }
+      },
+      "artifacts": [],
+      "notes": ["round_id=R-0002", "proof_sequence=2"],
+      "previous_run_hash": "ac402e8029b9f0012daedea4a973437395017f0bb744fae4a2c4f8b143c774d7",
+      "manifest_hash": "f92eadacf93895fcf1df97b24d61ed946196ec7c4c6c3028c6f4fdf817e7b4a4",
+      "sequence": 7,
+      "previous_hash": "ac402e8029b9f0012daedea4a973437395017f0bb744fae4a2c4f8b143c774d7"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-0dee45f264f8f1c0",
+      "timestamp": "2026-09-29T01:05:15.439Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "audit.observe",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Users/aarusso/Development/stynx",
+        "git": {
+          "head_sha": "c3a1c70d01990d317f559a59c6502f8bff5793ce",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            "record/proofs/work/generic/R-0002.jsonl",
+            ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/assessment.json",
+            ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/backlog.json",
+            ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/inventory.json",
+            ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/scorecard.json",
+            ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/status.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/inventory.json",
+          "sha256": "7758cc18416417b2440c87990de17687005c7b951774953db2a5e5df60ca1f6f",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/scorecard.json",
+          "sha256": "3f5ce316bff98e4ad20ee5fa9a858a3903e43cdd2d46adab9522bddf16afcbaf",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/backlog.json",
+          "sha256": "355104f1c9785e4eb4e45918cc3c190ff0c1984b1c0763ce2675cc36beabc550",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/assessment.json",
+          "sha256": "69b902e683a885bb4000638e167ad6d44b3bb6c9d7b3cf47ae425cb2aea5f2ea",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/c3a1c70d01990d317f559a59c6502f8bff5793ce/status.json",
+          "sha256": "4bf101d7997ff902e767fbd8171bbc74496368ac034ccf87a7fe0e60d8dbf407",
+          "kind": "audit"
+        }
+      ],
+      "notes": ["exact_sha=c3a1c70d01990d317f559a59c6502f8bff5793ce", "readiness_promoting=false"],
+      "previous_run_hash": "f92eadacf93895fcf1df97b24d61ed946196ec7c4c6c3028c6f4fdf817e7b4a4",
+      "manifest_hash": "345fd93ce08a3516d88a676e9135c9084cd80fa8deee5af0b56706c71ac46861",
+      "sequence": 8,
+      "previous_hash": "f92eadacf93895fcf1df97b24d61ed946196ec7c4c6c3028c6f4fdf817e7b4a4"
     }
   ]
 }
