@@ -90,3 +90,21 @@ DEVAI 1.6.0 has no supported R-0001 closeout action. Its `round close` and
 TASK-0001 escalated and no ordered D/DII closing decision or phase ledger.
 TASK-0003/0004 code defects were fixed, but the active marker remains until
 DEVAI supports a governed closure with an explicit TASK-0001 disposition.
+
+The post-1.5.0 coverage closure is now measured on the integrated 1.5.1
+candidate. Inspector tests exercise the formerly uncovered branches in all
+44 publishable packages, including real CMS/OCSP/CRL and PDF xref/DSS
+boundaries; scoped parser/PKI mocks cover fail-closed defensive guards that
+cannot be triggered by a valid pdf-lib parse. No threshold or test was
+weakened. After the final assertion-strengthening pass, `pnpm test:coverage`
+returned 44 results, zero failures, and exact 100% lines, statements,
+functions, and branches for every package. `@stynx-nyx/signature` alone has
+975/975 lines, 1131/1131 statements, 186/186 functions, and 1162/1162
+branches, with 385 tests in its last focused coverage run. The Architect
+rebound `law/trace.json`: 500/500 tracked executable tests. The branch merged
+the seven intervening `origin/main` commits without force. The complete
+`pnpm ci:stynx` passed after stronger value/argument assertions repaired
+27 `lint:tests` findings; `pnpm api:baselines` matched 44 packages and
+`pnpm check:rls-negative` checked seven tenant-scoped tables. A signed
+local-RC candidate observation and a fresh cross-family delivery review
+remain due before the R-0003 PR. No DETRAN proof ran.
