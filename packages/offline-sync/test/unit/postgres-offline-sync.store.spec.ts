@@ -396,4 +396,60 @@ describe('PostgresOfflineSyncStore', () => {
       ),
     ).rejects.toMatchObject({ code });
   });
+
+  it('delegates the durable block transition with tenant and actor context', async () => {
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes('from offline.numbering_reservations')) return { rows: [reservationRow] };
+      if (sql.includes('update offline.numbering_reservations'))
+        return { rows: [{ ...reservationRow, status: 'blocked' }] };
+      return { rows: [], rowCount: 1 };
+    });
+    const { store } = harness(query);
+    await expect(store.blockNumberingReservation(scope, reservationRow.id, { reason: 'lost device' }, now))
+      .resolves.toMatchObject({ status: 'blocked' });
+    expect(query.mock.calls.some(([sql, values]) => sql.includes('update offline.numbering_reservations') &&
+      values[3] === scope.actorId && values[6] === 'lost device')).toBe(true);
+  });
+
+  it('fails closed when a conflict port cannot find or resolve its target', async () => {
+    const resolve = vi.fn(async () => ({ ...conflictRow, status: 'open' as const }));
+    await expect(harness(vi.fn(async () => ({ rows: [] }))).store.resolveWithPort(
+      scope, conflictRow.id, { resolution: 'manual-review' }, now, { resolve } as never,
+    )).rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_NOT_FOUND' });
+    const query = vi.fn(async (sql: string) => sql.includes('from offline.sync_conflict_evidence')
+      ? { rows: [] }
+      : { rows: [{ org_unit_id: 'org-a', device_id: 'device-a', agent_id: scope.actorId, device_batch_id: 'batch-a' }] });
+    await expect(harness(query).store.resolveWithPort(
+      scope, conflictRow.id, { resolution: 'manual-review' }, now, { resolve } as never,
+    )).rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_RESOLUTION' });
+    expect(resolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns an already cancelled CTG9 reservation without rewriting its audit history', async () => {
+    const query = vi.fn(async () => ({ rows: [{ ...reservationRow, status: 'cancelled' }] }));
+    const { store } = harness(query);
+    await expect(store.cancelNumberingReservation(
+      { ...scope, ctg9: true } as never, reservationRow.id, {}, now,
+    )).resolves.toMatchObject({ status: 'cancelled' });
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes explicitly supplied durable execution ports and actor through the store boundary', async () => {
+    const database = { hasHeldConnection: () => false, tx: vi.fn() };
+    const store = new PostgresOfflineSyncStore({ get: () => database } as never);
+    const durableInput = {
+      orgUnitId: 'org-a', deviceId: 'device-a', deviceBatchId: 'batch-a',
+      items: [{ ...item, reservedNumber: Number.MAX_SAFE_INTEGER + 1 }],
+    };
+    const options = {
+      agentId: 'delegated-agent', policy: { concurrencyWindowMinutes: 5 }, ports: {},
+      transport: { method: 'POST', path: '/sync', transportIdempotencyKey: 'transport-1' },
+    };
+    await expect(store.submitDurableSyncBatch(scope, durableInput, options as never, now))
+      .rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT' });
+    await expect(store.submitDurableSyncBatch(scope, durableInput, {
+      method: 'POST', path: '/sync', transportIdempotencyKey: 'transport-2',
+    } as never, now)).rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT' });
+    expect(database.tx).not.toHaveBeenCalled();
+  });
 });

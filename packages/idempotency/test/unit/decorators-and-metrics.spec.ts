@@ -61,4 +61,22 @@ describe('idempotency decorators and metrics', () => {
       ttlMs: 30000,
     });
   });
+
+  it('omits a zero positional TTL so the configured default remains authoritative', () => {
+    class Controller { handler(): void {} }
+    Idempotent('X-Key', 0)(
+      Controller.prototype, 'handler', Object.getOwnPropertyDescriptor(Controller.prototype, 'handler')!,
+    );
+    expect(Reflect.getMetadata(STYNX_IDEMPOTENT_ROUTE, Controller.prototype.handler))
+      .toEqual({ headerName: 'X-Key' });
+  });
+
+  it('defaults the header name for object options without an override', () => {
+    class Controller { handler(): void {} }
+    Idempotent({ transactional: true })(
+      Controller.prototype, 'handler', Object.getOwnPropertyDescriptor(Controller.prototype, 'handler')!,
+    );
+    expect(Reflect.getMetadata(STYNX_IDEMPOTENT_ROUTE, Controller.prototype.handler))
+      .toEqual({ transactional: true, headerName: 'Idempotency-Key' });
+  });
 });

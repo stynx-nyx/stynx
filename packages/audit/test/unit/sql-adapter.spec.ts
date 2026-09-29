@@ -39,6 +39,45 @@ describe('AuditSqlSink', () => {
     expect(params).toContain(event.entity);
   });
 
+  it('rejects table mode for transactional writes before issuing SQL', async () => {
+    const legacy = makeExecutor();
+    const transaction = makeExecutor();
+    const sink = new AuditSqlSink(legacy, { mode: 'audit_event_table' });
+
+    await expect(sink.writeInTransaction({ occurredAt: 'now', action: 'created', entity: 'item' }, transaction))
+      .rejects.toThrow('Transactional commands require audit_write_function mode');
+    expect(transaction.query).not.toHaveBeenCalled();
+    expect(legacy.query).not.toHaveBeenCalled();
+  });
+
+  it('sends nulls for absent optional command fields and uses explicit composite keys', async () => {
+    const transaction = makeExecutor();
+    const sink = new AuditSqlSink(makeExecutor(), { mode: 'audit_write_function' });
+
+    await sink.writeInTransaction({ occurredAt: 'now', action: 'updated', entity: 'item' }, transaction);
+    const [, withoutKey] = transaction.query.mock.calls[0]!;
+    expect(withoutKey).toEqual(['updated', 'item', null, '{}', null, null, null, null, null, null]);
+
+    await sink.writeInTransaction({
+      occurredAt: 'now',
+      action: 'updated',
+      entity: 'item',
+      entityId: 'item-1',
+      pk: { tenant_id: 'tenant-1', item_id: 'item-1' },
+      metadata: { source: 'test' },
+      ipAddress: '127.0.0.1',
+      correlationId: 'corr-1',
+      oldData: { state: 'old' },
+      newData: { state: 'new' },
+    }, transaction);
+    const [, withKey] = transaction.query.mock.calls[1]!;
+    expect(withKey).toEqual([
+      'updated', 'item', 'item-1', '{"source":"test"}', '127.0.0.1', null,
+      'corr-1', '{"state":"old"}', '{"state":"new"}',
+      '{"tenant_id":"tenant-1","item_id":"item-1"}',
+    ]);
+  });
+
   describe('mode: audit_write_function', () => {
     it('calls SELECT audit.write with the 13 expected params', async () => {
       const executor = makeExecutor();

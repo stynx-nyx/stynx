@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { Transaction } from '@stynx-nyx/data';
+import { Transaction, tenants } from '@stynx-nyx/data';
 import { createFakeTransaction } from '@stynx-nyx/testing';
 
 describe('createFakeTransaction', () => {
@@ -63,5 +63,35 @@ describe('createFakeTransaction', () => {
       code: 'TRANSACTION_REQUIRED',
     });
     expect(fake.queries).toEqual([]);
+  });
+
+  it('fails on an unscripted query and records the attempted SQL', async () => {
+    const fake = createFakeTransaction([], { role: 'app' });
+
+    await expect(fake.transaction.query('select missing')).rejects.toThrow(
+      'No fake transaction response queued for: select missing',
+    );
+    expect(fake.queries).toEqual([{ text: 'select missing', values: [] }]);
+  });
+
+  it('maps both object and array rows from the pg array mode used by Drizzle', async () => {
+    const fake = createFakeTransaction(
+      [
+        { rows: [{ id: 'tenant-object' }], rowCount: 1 },
+        { rows: [['tenant-array']], rowCount: 1 },
+      ],
+      { role: 'app' },
+    );
+
+    await expect(fake.transaction.select().from(tenants)).resolves.toMatchObject([
+      { id: 'tenant-object' },
+    ]);
+    await expect(fake.transaction.select().from(tenants)).resolves.toMatchObject([
+      { id: 'tenant-array' },
+    ]);
+    expect(fake.queries).toEqual([
+      expect.objectContaining({ rowMode: 'array' }),
+      expect.objectContaining({ rowMode: 'array' }),
+    ]);
   });
 });

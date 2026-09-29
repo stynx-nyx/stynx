@@ -110,6 +110,18 @@ function createBackend(initialEntry?: IdempotencyStoredEntry | null): Idempotenc
 }
 
 describe('IdempotencyInterceptor', () => {
+  it('delegates transactional routes to the command transaction boundary', async () => {
+    const handler = function transactionalHandler() {};
+    Reflect.defineMetadata(STYNX_IDEMPOTENT_ROUTE, { transactional: true }, handler);
+    const interceptor = new IdempotencyInterceptor(new Reflector(), {}, undefined, createBackend());
+    const next: CallHandler = { handle: vi.fn(() => of({ delegated: true })) };
+
+    await expect(lastValueFrom(interceptor.intercept(
+      createExecutionContext({ headers: {} }, createResponseStub(), handler), next,
+    ))).resolves.toEqual({ delegated: true });
+    expect(next.handle).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects annotated routes without the configured header', async () => {
     const reflector = createReflector();
     const interceptor = new IdempotencyInterceptor(reflector, {}, undefined, createBackend());

@@ -6,6 +6,7 @@ import {
   CascadeTooLargeError,
   ReadOnlyViolationError,
   SerializationFailureError,
+  TransactionIdentityMismatchError,
   RestoreCascadeParentsArchivedError,
   RestoreConflictError,
   SoftDeleteBlockedError,
@@ -34,5 +35,15 @@ describe('data errors', () => {
     expect(new ReadOnlyViolationError().context).toBe(undefined);
     expect(new StatementTimeoutError().context).toBe(undefined);
     expect(new SerializationFailureError().context).toBe(undefined);
+  });
+
+  it('preserves optional identity and retry context when supplied', () => {
+    expect(new TransactionIdentityMismatchError({ reason: 'wrong actor' })).toMatchObject({
+      code: 'TRANSACTION_IDENTITY_MISMATCH', context: { reason: 'wrong actor' },
+    });
+    expect(new TransactionIdentityMismatchError().context).toBe(undefined);
+    expect(new SerializationFailureError({ attempts: 2, code: '40001' })).toMatchObject({
+      code: 'SERIALIZATION_FAILURE', context: { attempts: 2, code: '40001' },
+    });
   });
 });
