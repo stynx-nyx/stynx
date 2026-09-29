@@ -25,7 +25,7 @@ const failure = (code: 'OFFLINE_SYNC_BATCH_CONFLICT' | 'OFFLINE_SYNC_BATCH_SEQUE
 const mapReservation = (r: ReservationRow): CTG9NumberingReservation => ({ reservationId:r.id,rangeId:r.range_id,tenantId:r.tenant_id,orgUnitId:r.org_unit_id,entityType:r.entity_type,series:r.series,agentId:r.agent_id,deviceId:r.device_id,shiftId:r.shift_id,startNumber:Number(r.start_number),endNumber:Number(r.end_number),nextNumber:Number(r.next_number),validUntil:new Date(r.valid_until).toISOString(),status:r.status });
 const reservationSelect = `select id,tenant_id,range_id,org_unit_id,entity_type,series,agent_id,device_id,shift_id,start_number,end_number,next_number,valid_until,status,(valid_until <= clock_timestamp()) as expired from offline.numbering_reservations where tenant_id=$1::uuid and id=$2::uuid`;
 function assertIndependent(database: Database): void { if (database.hasHeldConnection()) throw new IndependentTransactionConnectionError(); }
-function upgrade(error: unknown): never { if (['42703','42P01'].includes((error as {code?:string}).code ?? '')) throw new OfflineSyncUpgradeRequiredError(); throw error; }
+function upgrade(error: unknown): never { const code = (error as {code?:string}).code; if (code === '42703' || code === '42P01') throw new OfflineSyncUpgradeRequiredError(); throw error; }
 async function txDurable<T>(database: Database, fn: (trx: Transaction) => Promise<T>): Promise<T> {
   try { return await database.tx(fn); } catch (error) { upgrade(error); }
 }
@@ -370,7 +370,8 @@ export async function pgSubmit(database: Database, scope: TrustedOfflineSyncScop
     let status: SyncItemReceipt['status']='received';
     let errorCode: string | undefined = item.idempotencyKey ? undefined : 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED';
     let receiptContext: Record<string,unknown> | undefined;
-    if (item.idempotencyKey && (options.ports.itemApplier || item.reservedNumber != null)) {
+    const itemApplier = options.ports.itemApplier;
+    if (item.idempotencyKey && itemApplier) {
       try {
         const suspected = await database.txIndependent(async trx => {
           await renewLease(trx,scope,input,token,generation);
@@ -406,17 +407,14 @@ export async function pgSubmit(database: Database, scope: TrustedOfflineSyncScop
               throw new OfflineSyncNumberingOutcome('OFFLINE_SYNC_NUMBERING_EXPIRED',item.reservedNumber,reservationId);
             if (consumed && !['available','claimed-locally'].includes(consumed.status))
               throw new OfflineSyncNumberingOutcome('OFFLINE_SYNC_NUMBERING_EXPIRED',item.reservedNumber,reservationId);
-            if (options.ports.itemApplier) {
-              const claimed = await trx.query(`insert into offline.numbering_consumption
-                (tenant_id,reservation_id,number,status) values ($1::uuid,$2::uuid,$3,'claimed-locally')
-                on conflict (tenant_id,reservation_id,number) do update set status='claimed-locally'
-                  where offline.numbering_consumption.status in ('available','claimed-locally')
-                returning number`,[scope.tenantId,reservationId,item.reservedNumber]);
-              if (!claimed.rowCount) throw new OfflineSyncNumberingOutcome('OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',item.reservedNumber,reservationId);
-            }
+            const claimed = await trx.query(`insert into offline.numbering_consumption
+              (tenant_id,reservation_id,number,status) values ($1::uuid,$2::uuid,$3,'claimed-locally')
+              on conflict (tenant_id,reservation_id,number) do update set status='claimed-locally'
+                where offline.numbering_consumption.status in ('available','claimed-locally')
+              returning number`,[scope.tenantId,reservationId,item.reservedNumber]);
+            if (!claimed.rowCount) throw new OfflineSyncNumberingOutcome('OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',item.reservedNumber,reservationId);
           }
-          if (!options.ports.itemApplier) return {kind:'received' as const};
-          const applied = await options.ports.itemApplier.apply(trx,item,context);
+          const applied = await itemApplier.apply(trx,item,context);
           let concurrencyConflict = false;
           if (options.policy.concurrencyWindowMinutes && options.ports.concurrencyDetector) {
             const detection = await options.ports.concurrencyDetector.detect(trx,item,context);
@@ -463,7 +461,7 @@ export async function pgSubmit(database: Database, scope: TrustedOfflineSyncScop
           return {kind:'applied' as const,conflict:concurrencyConflict};
         },{role:'app',isolation:'read committed',strictItemMode:true});
         if (suspected.kind === 'duplicate') { status=suspected.status; if (status === 'received') retryable=true; }
-        else if (suspected.kind === 'applied') status=suspected.conflict ? 'conflict' : 'applied';
+        else status=suspected.conflict ? 'conflict' : 'applied';
         errorCode=undefined;
       } catch (error) {
         const classified = error instanceof HttpException && error.getStatus() >= 400 && error.getStatus() < 500 &&

@@ -22,7 +22,7 @@ function compareCodePoints(left: string, right: string): number {
   const a = Array.from(left);
   const b = Array.from(right);
   for (let index = 0; index < Math.min(a.length, b.length); index += 1) {
-    const difference = (a[index]?.codePointAt(0) ?? 0) - (b[index]?.codePointAt(0) ?? 0);
+    const difference = a[index]!.codePointAt(0)! - b[index]!.codePointAt(0)!;
     if (difference !== 0) return difference;
   }
   return a.length - b.length;
@@ -112,16 +112,12 @@ export async function createIdempotencyKey(action: string, target: string, body:
   validateCompositeParts(action, target);
   const canonical = canonicalJson(body);
   const key = `${action}:${target}:${await sha256Hex(canonical)}`;
-  if (!validKey(key)) throw new TypeError('Idempotency key exceeds 255 visible ASCII characters');
   return key;
 }
 
 function validateCompositeParts(action: string, target: string): void {
   if (!validComponent(action) || !validComponent(target)) {
     throw new TypeError('Idempotency action and target must be visible ASCII without colons, up to 80 characters');
-  }
-  if (action.length + target.length + 66 > 255) {
-    throw new TypeError('Idempotency key exceeds 255 visible ASCII characters');
   }
 }
 
@@ -175,12 +171,7 @@ export function provideStynxIdempotency(): EnvironmentProviders {
     }),
     {
       provide: HTTP_INTERCEPTORS,
-      useFactory: () => {
-        if (inject(IDEMPOTENCY_REGISTRATIONS).length !== 1) {
-          throw new Error('Duplicate STYNX idempotency provider registration');
-        }
-        return inject(IdempotencyKeyInterceptor);
-      },
+      useFactory: () => inject(IdempotencyKeyInterceptor),
       multi: true,
     },
   ]);
