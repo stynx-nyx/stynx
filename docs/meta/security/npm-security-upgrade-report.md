@@ -29,6 +29,12 @@ Engineer updates the four overrides and regenerates the frozen lockfile.
 The generated CycloneDX SBOM must be rewritten by `pnpm security:sbom` so its
 lockfile digest agrees. Then run frozen install, full and production audits,
 `pnpm security:release`, affected upload/tooling checks, and `pnpm ci:stynx`.
-Only verified post-change results may close the six advisories. The change
-does not itself publish replacement tarballs; a consumer-facing release would
-need the fixed-group version and normal release approvals.
+The four overrides were changed in Engineer commit `6888f73f`; the frozen
+install passed with the GitHub Packages credential provided as an environment
+variable. `pnpm audit --json` and `pnpm audit --prod --json` then each reported
+zero vulnerabilities. `pnpm security:sbom` regenerated the 172-component SBOM,
+and `pnpm security:release` passed its SBOM, license, secret and production
+audit gates. The full STYNX CI and GitHub alert reconciliation remain to be
+checked before this remediation is declared closed. This change does not
+publish replacement tarballs; a consumer-facing release would need the fixed
+group version and normal release approvals.

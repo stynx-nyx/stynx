@@ -1,8 +1,8 @@
 # STYNX 1.5 — transactional command errors
 
-`@TransactionalCommand` is new in 1.5.0 and has not been published in a stable
-release or in RC1/RC2. Before the final release, its own rejection bodies are
-aligned with the existing `law/schemas/error-envelope.schema.json`:
+`@TransactionalCommand` was introduced in the published STYNX 1.5.0. It was
+not present in RC1/RC2. Its own rejection bodies align with the existing
+`law/schemas/error-envelope.schema.json`:
 `statusCode`, `errorCode`, `message`, `requestId`, optional `details`, and
 `retryable`. `X-Request-Id` equals `requestId` on those rejections.
 
@@ -27,8 +27,17 @@ contracts of application mutation endpoints still enumerate their own
 validation, authorization, not-found, conflict and rate-limit outcomes as
 required by `INV-ERROR-001`.
 
-The Inspector must assert each reachable CTG5-owned status and complete body
-at real Nest HTTP, verify request IDs and absence of durable effects on
-rejection, and strengthen exact legacy-body assertions. Backend integration
-tests use PostgreSQL with tenant RLS and two tenants. Release conformance is
-recorded only after the cumulative final CI, review, PR and publication.
+The release tests assert the CTG5-owned statuses and complete bodies at real
+Nest HTTP, including request IDs, absence of durable effects on rejection and
+the exact legacy bodies. Backend integration uses PostgreSQL with tenant RLS
+and two tenants. The published conformance record is
+`work/rounds/R-0002/conformance-1.5.0.md`.
+
+`lockTimeoutMs` bounds individual PostgreSQL lock acquisition while reserving
+the idempotency key; it is not a total command deadline. Audit-chain
+serialization occurs later in the same transaction. In direct `Database.tx`
+flows, `TxOptions.deadlineMs` sets a per-statement PostgreSQL
+`statement_timeout`, including an audit write; the CTG5 decorator does not
+expose that option. The consumer must manage a wall-clock request deadline
+separately. A failure while waiting for audit must not be reported as key
+contention.

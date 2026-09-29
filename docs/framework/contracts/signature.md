@@ -3,8 +3,10 @@
 **Status:** Architect contract for UPS-SIG-01…04. **Package:** `@stynx-nyx/signature`. Trust policy decision: [ADR-SIGNATURE-0001](../../../law/adr/ADR-SIGNATURE-0001-trust-evidence.md).
 
 The fourth CTG9 delivery-review found an xref/trailer parser defect; the
-Engineer repaired it, and delivery-review cycle 6 returned PASS. This
-contract does not assert publication.
+Engineer repaired it, and delivery-review cycle 6 returned PASS. The final
+1.5.0 package containing this capability was published from
+`c3a1c70d01990d317f559a59c6502f8bff5793ce`; consumer trust-profile
+selection and domain equivalence remain separate proofs.
 
 ## Published API and compatibility
 

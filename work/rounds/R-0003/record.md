@@ -19,3 +19,10 @@ sixth `undici` advisory in `pnpm audit`. Four root overrides pin vulnerable
 transitive versions; patch/minor fixes are available. PF-06 PORM investigation
 found an Angular 21/22 peer mismatch and colliding `flow` schema models. No
 consumer or registry mutation has occurred.
+
+Engineer `6888f73f` updated four root overrides and the frozen lockfile.
+Frozen install passed; full and production audits report zero vulnerabilities.
+The generated SBOM has 172 components and `pnpm security:release` passed.
+Architect corrected stale prepublication contract/ledger prose. Hardening run
+`36501815112` passed all k6 scenarios and baseline comparison on the exact
+published 1.5.0 SHA, superseding the June R17-K6 known-gap row.
