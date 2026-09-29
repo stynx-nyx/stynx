@@ -36,6 +36,10 @@ function validateRouteOptions(options: TransactionalCommandOptions): void {
     && (!Number.isSafeInteger(options.lockTimeoutMs) || options.lockTimeoutMs < 1)) {
     throw new Error('Transactional command lockTimeoutMs must be a positive safe integer');
   }
+  if (options.deadlineMs !== undefined
+    && (!Number.isSafeInteger(options.deadlineMs) || options.deadlineMs < 1)) {
+    throw new Error('Transactional command deadlineMs must be a positive safe integer');
+  }
 }
 const REJECTIONS = {
   'COMMAND:UNAVAILABLE:module-required': [503, 'Transactional command module is required'],
@@ -45,6 +49,7 @@ const REJECTIONS = {
   'COMMAND:BAD_REQUEST:scope-invalid': [400, 'Command scope is invalid'],
   'IDEMPOTENCY:BAD_REQUEST:key-required': [400, 'Idempotency key is required'],
   'COMMAND:CONFIGURATION:lock-timeout-invalid': [500, 'Command lock timeout is invalid'],
+  'COMMAND:CONFIGURATION:deadline-invalid': [500, 'Command statement deadline is invalid'],
   'COMMAND:CONFIGURATION:ttl-invalid': [500, 'Command idempotency TTL is invalid'],
   'COMMAND:BAD_REQUEST:body-invalid': [400, 'Command body is invalid'],
   'COMMAND:FORBIDDEN:tenant-provenance-invalid': [403, 'Trusted tenant provenance is invalid'],
@@ -81,6 +86,8 @@ export interface TransactionalCommandOptions {
   mismatchCode?: string;
   persistStatus?: (outcome: TransactionalCommandOutcome) => boolean;
   lockTimeoutMs?: number;
+  /** PostgreSQL per-statement timeout; not an end-to-end command deadline. */
+  deadlineMs?: number;
 }
 
 export interface StynxTransactionalCommandModuleOptions extends TransactionalCommandOptions {
@@ -404,6 +411,10 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
     if (!Number.isSafeInteger(lockTimeoutMs) || lockTimeoutMs < 1) {
       reject('COMMAND:CONFIGURATION:lock-timeout-invalid');
     }
+    if (options.deadlineMs !== undefined
+      && (!Number.isSafeInteger(options.deadlineMs) || options.deadlineMs < 1)) {
+      reject('COMMAND:CONFIGURATION:deadline-invalid');
+    }
     const ttlMs = idempotency.ttlMs ?? 86_400_000;
     if (!Number.isSafeInteger(ttlMs) || ttlMs < 1) {
       reject('COMMAND:CONFIGURATION:ttl-invalid');
@@ -474,7 +485,7 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
         return selected
           ? { selected: true as const, response: new CommittedCommandResponse(statusCode, bytes, headers, false, key) }
           : { selected: false as const, payload };
-      }, { role: 'app', requireActor: true, retry: false });
+      }, { role: 'app', requireActor: true, retry: false, deadlineMs: options.deadlineMs });
       if (committed instanceof CommittedCommandResponse) throw committed;
       if (committed.selected) throw committed.response;
       return committed.payload;
