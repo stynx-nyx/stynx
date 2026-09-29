@@ -1414,3 +1414,40 @@ localmente, gerando zero notas de draft para a candidata já versionada.
 Opus 5.5 deu **PASS** no delta de uma linha em
 `reviews/adr-status-delivery-review-1.direct.json` (prompt 197), com
 zero achados bloqueantes. O novo HEAD ainda precisa de CI remoto.
+
+## Encerramento da 1.5.0 (2026-09-28–29)
+
+O PR #308 passou os 17 jobs remotos reportados no HEAD
+`dc0af306a482f4512c5e5d907097bf559e0e607e`. O DEVAI não emitiu
+`verified-local-rc`: `release:prepare` parou no gate de cobertura global de
+100% em 14 pacotes. O Owner autorizou a exceção administrativa exata de
+ADR-CI-ECONOMY Decision 8 para esse PR, HEAD e árvore
+`4ba7a31120c5944803adaf5aa95de5ecd2273222`. O merge produziu
+`c3a1c70d01990d317f559a59c6502f8bff5793ce` em `main`; a proteção
+da branch permaneceu intacta. A dívida de cobertura e evidência assinada
+segue aberta para a próxima release.
+
+O Owner autorizou o opt-in de publicação e o dispatch final no SHA exato.
+O primeiro run `36500042438` parou antes de qualquer mutação no registry:
+`verify-missing-evidence.mjs` exigia um check `k6` aprovado no mesmo SHA.
+O Hardening `scenario=all` passou no run `36501815112`, e o verificador
+de evidência retornou `ok:true` no merge commit e na árvore acima. A
+monotonicidade autenticada confirmou novamente os 44 pacotes inéditos.
+
+O segundo run de publicação `36504371593` concluiu com sucesso. Seu plano
+e 44/44 recibos `verified-published` ligam `1.5.0`, SHA, árvore,
+integrity e shasum. A leitura autenticada do registry confirmou os 44
+checksums e `latest=1.5.0`, preservando as outras dist-tags; 44 tags Git
+apontam ao merge SHA e 44 GitHub Releases finais foram criadas. O opt-in
+do repositório foi devolvido a `false`. RC1 `1.5.0-rc.1` (run
+`36347940240`, SHA `c78893281f765aef7d220d438975105597d3a9d3`) e RC2
+`1.5.0-rc.2` (run `36356692969`, SHA
+`137ff2b308d6399b94c34df478ebdce259925b76`) haviam publicado os
+mesmos 44 pacotes; RC3 foi apenas versionada, sem publicação.
+
+O pós-merge DEVAI registrou a prova genérica da rodada
+`EV-33f8415a0b1f695d` e a observação não promotora
+`EV-0dee45f264f8f1c0` no SHA final. `evidence verify --scope chain`
+passou. O ledger `conformance-1.5.0.md` vincula U1–U15 e os dez IDs A1
+aos símbolos e testes reais; a equivalência de consumo do DETRAN permanece
+prova downstream nas R-0022…R-0024.

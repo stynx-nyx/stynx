@@ -460,6 +460,14 @@ fixa positivos e negativos; Engineer implementa sem editar workflow.
 
 ## Retomada
 
+**Rodada encerrada em 2026-09-29.** PR #308 foi mesclado em
+`c3a1c70d01990d317f559a59c6502f8bff5793ce`; STYNX 1.5.0 foi
+publicado para 44/44 pacotes no run `36504371593`, com recibos,
+integridade e dist-tags reconciliados. A observação DEVAI pós-merge e o
+ledger de conformidade estão em `record.md` e
+`conformance-1.5.0.md`. Os checkpoints numerados abaixo preservam o
+histórico de retomada, sem indicar trabalho pendente desta rodada.
+
 1. **Retomar esta worktree e esta rodada; não recriar nem replanejar.** A
    linha de base e o CI local da entrega CTG-0001 estão verdes. Prompt-review
    foi executado três vezes por Opus 5.5 via ponte, com REVIEW, REVIEW, PASS.
