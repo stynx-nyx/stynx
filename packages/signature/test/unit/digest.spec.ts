@@ -16,4 +16,12 @@ describe('digest helpers', () => {
       sha256('<evento Id="E1">ok</evento>'),
     );
   });
+
+  it('canonicalizes nested arrays and primitive JSON values', () => {
+    expect(canonicalJson([{ z: 1, a: true }, ['text', null, 2]])).toBe(
+      '[{"a":true,"z":1},["text",null,2]]',
+    );
+    expect(canonicalJson('value')).toBe('"value"');
+    expect(canonicalJson(null)).toBe('null');
+  });
 });

@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import * as sig from '../../src';
 import { StynxHealthService } from '@stynx-nyx/health';
-import { profile, now } from '../fixtures/trust';
+import { profile, now, rootPem } from '../fixtures/trust';
 
 // UPS-SIG-02 / INV-SIGNATURE-001. A capability is operational evidence,
 // rather than a provider's HTTP /health assertion.
@@ -67,6 +67,54 @@ describe('signature readiness', () => {
     const indicator = new api.SignatureReadinessIndicator({ checkReadiness }, profile);
     expect(indicator.name).toBe('signature');
     expect(await indicator.check()).toMatchObject({ status: 'down' });
+  });
+
+  it('supports the legacy trustVerifier option and a module without configured verifier metadata', async () => {
+    const verifier = { capabilities: vi.fn().mockResolvedValue(all()), verifySignedArtifact: vi.fn() };
+    const withTrustVerifier = api.SignatureHealthIntegration.forRoot({
+      signatureOptions: { backend: sig.createMockSignatureBackend(), trustVerifier: verifier, trustProfile: profile },
+    });
+    expect(withTrustVerifier.imports).toHaveLength(2);
+    const moduleRef = await Test.createTestingModule({ imports: [withTrustVerifier] }).compile();
+    try {
+      await moduleRef.init();
+      await expect(moduleRef.get(StynxHealthService).readiness()).resolves.toBeDefined();
+    } finally {
+      await moduleRef.close();
+    }
+    const withoutVerifier = api.SignatureHealthIntegration.forRoot({
+      signatureOptions: { backend: sig.createMockSignatureBackend(), trustProfile: profile },
+    });
+    expect(withoutVerifier.imports).toHaveLength(2);
+
+    const stynxCms = sig.createCmsTrustVerifier({ trustAnchorsPem: [rootPem], now: () => now });
+    const owned = api.SignatureHealthIntegration.forRoot({
+      signatureOptions: { backend: { sign: vi.fn(), verify: vi.fn() },
+        verifier: stynxCms, trustProfile: { ...profile, environment: 'production' } },
+    });
+    expect(owned.imports).toHaveLength(2);
+  });
+
+  it('returns an up result with capabilities and reports configured ownership on probe failure', async () => {
+    const goodIndicator = new api.SignatureReadinessIndicator({
+      checkReadiness: vi.fn().mockResolvedValue({
+        ok: true,
+        capabilities: { pades: true, tsa: true },
+        verifierKind: 'consumer-owned',
+      }),
+    }, profile);
+    expect(await goodIndicator.check()).toEqual({
+      status: 'up',
+      details: { pades: true, tsa: true, verifierKind: 'consumer-owned' },
+    });
+
+    const failedIndicator = new api.SignatureReadinessIndicator({
+      checkReadiness: vi.fn().mockRejectedValue(new Error('unavailable')),
+    }, profile, 'stynx-cms');
+    expect(await failedIndicator.check()).toEqual({
+      status: 'down',
+      details: { reason: 'SIGNATURE_CAPABILITY_UNAVAILABLE', verifierKind: 'stynx-cms' },
+    });
   });
 
   it('does not trust a forged verifier kind during production readiness', async () => {

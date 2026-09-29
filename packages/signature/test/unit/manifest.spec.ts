@@ -1,4 +1,5 @@
 import * as sig from '../../src';
+import { createHash } from 'node:crypto';
 import {
   bltCmsSignature as cmsSignature,
   bltSignedDocument as signedDocument,
@@ -11,6 +12,7 @@ import {
   rootPem,
 } from '../fixtures/trust';
 import { buildManifestBoundPades } from '../fixtures/pki/bound-pades';
+import { canonicalRfc8785Json } from '../../src';
 
 // UPS-SIG-03 / INV-SIGNATURE-001. The positive path below uses the concrete
 // STYNX verifier and a PDF whose manifest hash is inside the signed ByteRange.
@@ -84,6 +86,23 @@ const prepared = (manifests: any, kind: 'session' | 'batch') =>
   kind === 'session'
     ? manifests.prepareSession({ ...common, sessionId: 'session-a', minutesId: 'minutes-a' })
     : manifests.prepareBatch({ ...common, batchId: 'batch-a' });
+
+describe('canonicalRfc8785Json edge cases', () => {
+  it('rejects cycles, sparse arrays, accessors and non-JSON values', () => {
+    const cycle: { self?: unknown } = {};
+    cycle.self = cycle;
+    expect(() => canonicalRfc8785Json(cycle)).toThrow('Manifest contains a cycle');
+    const sparse = new Array(2);
+    expect(() => canonicalRfc8785Json(sparse)).toThrow('Sparse array');
+    const accessor = Object.defineProperty({}, 'value', { enumerable: true, get: () => 1 });
+    expect(() => canonicalRfc8785Json(accessor)).toThrow('Accessor in manifest');
+    for (const value of [Number.NaN, Number.POSITIVE_INFINITY, undefined, new Date(), new Uint8Array()]) {
+      expect(() => canonicalRfc8785Json(value)).toThrow('Manifest contains a non-JSON value');
+    }
+    expect(() => canonicalRfc8785Json(new Map())).toThrow('Unsupported JSON object');
+    expect(() => canonicalRfc8785Json(Object.create(null))).toThrow('Unsupported JSON object');
+  });
+});
 
 describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
   it('accepts a signer only when the real CMS verifier reads the signed manifest hash', async () => {
@@ -341,6 +360,32 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
   });
 
   it.each([
+    ['source hash', { originalDocumentSha256: '0'.repeat(64) }, profile],
+    ['signed PDF hash', { signedDocumentSha256: '0'.repeat(64) }, profile],
+    ['CMS hash', { cmsSha256: '0'.repeat(64) }, profile],
+    ['profile identity', { profileId: 'other-profile' }, profile],
+    ['profile revision', { profileRevision: 'other-revision' }, profile],
+    ['qualified level', { achievedLevel: 'ADVANCED' }, { ...profile, minimumSignatureLevel: 'QUALIFIED' }],
+  ])('rejects a proof with a mismatched %s', async (_label, mutation, selectedProfile) => {
+    const { manifests, verifier } = make();
+    const manifest = prepared(manifests, kind);
+    const artifact = { ...signer('chair'), trustProfile: selectedProfile };
+    verifier.verifySignedArtifact.mockResolvedValueOnce({
+      boundManifestSha256: manifest.manifestSha256,
+      originalDocumentSha256: hex(sourceDocument),
+      signedDocumentSha256: hex(artifact.signedDocument),
+      cmsSha256: hex(artifact.cmsSignature),
+      profileId: selectedProfile.id,
+      profileRevision: selectedProfile.revision,
+      signerCertificateSha256: hex(bytes('signer.cert.der')),
+      achievedLevel: selectedProfile.minimumSignatureLevel === 'QUALIFIED' ? 'QUALIFIED' : 'ADVANCED',
+      ...mutation,
+    });
+    await expect(manifests.appendVerifiedSigner(manifest, artifact, { sourceDocument, snapshot }))
+      .rejects.toMatchObject({ name: 'SignatureTrustError' });
+  });
+
+  it.each([
     ['signer identity', 'signerId', 'other-signer'],
     ['signer order', 'order', 2],
     ['signature ID', 'signatureId', 'other-signature'],
@@ -366,6 +411,90 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
     });
     expect(checked.status).toBe('tampered');
     expect(checked.reasons.length).toBeGreaterThan(0);
+  });
+
+  it('classifies verifier ownership, certificate identity, proof and seal mutations', async () => {
+    const { manifests, verifier } = make();
+    const first = await manifests.appendVerifiedSigner(prepared(manifests, kind), signer('chair'), { sourceDocument, snapshot });
+    const complete = await manifests.appendVerifiedSigner(first, signer('secretary'), { sourceDocument, snapshot });
+    const input = { sourceDocument, snapshot, signers: [signer('chair'), signer('secretary')] };
+
+    for (const [field, value, reason] of [
+      ['verifierKind', 'stynx-cms', 'VERIFIER_KIND_BINDING'],
+      ['expectedSignerCertificateSha256', '0'.repeat(64), 'SIGNER_IDENTITY_BINDING'],
+    ] as const) {
+      const altered = structuredClone(complete);
+      altered.signers[1][field] = value;
+      const { entryHash: _oldHash, ...fields } = altered.signers[1];
+      altered.signers[1].entryHash = createHash('sha256')
+        .update(canonicalRfc8785Json(fields)).digest('hex');
+      expect(await manifests.verifyManifest({ ...input, manifest: altered }))
+        .toMatchObject({ status: 'tampered', reasons: [reason] });
+    }
+
+    const badProof = { ...complete, signers: [...complete.signers] };
+    verifier.verifySignedArtifact.mockResolvedValueOnce({ boundManifestSha256: '0'.repeat(64) });
+    expect(await manifests.verifyManifest({ ...input, manifest: badProof }))
+      .toMatchObject({ status: 'untrusted', reasons: ['SIGNER_PROOF'] });
+
+    expect(await manifests.verifyManifest({ ...input,
+      manifest: { ...complete, sealSha256: '0'.repeat(64) } }))
+      .toMatchObject({ status: 'tampered', reasons: ['SEAL_BINDING'] });
+
+    const noResolver = new api.SignatureManifestService({ verifier });
+    await expect(noResolver.verifyManifest({ ...input, manifest: complete }))
+      .rejects.toMatchObject({ name: 'SignatureProviderConfigurationError' });
+  });
+});
+
+describe('manifest preparation and append boundaries', () => {
+  it('rejects incorrect source hashes, empty or duplicate signer lists, and invalid timestamps', () => {
+    const { manifests } = make();
+    expect(() => manifests.prepareSession({
+      ...common, documentSha256: '0'.repeat(64), sessionId: 's', minutesId: 'm',
+    })).toThrow('Document or snapshot hash differs');
+    expect(() => manifests.prepareSession({
+      ...common, requiredSignerIds: [], sessionId: 's', minutesId: 'm',
+    })).toThrow('Required signers are absent or duplicated');
+    expect(() => manifests.prepareBatch({
+      ...common, requiredSignerIds: ['chair', 'chair'], batchId: 'b',
+    })).toThrow('Required signers are absent or duplicated');
+    expect(() => manifests.prepareBatch({
+      ...common, preparedAt: new Date(0), batchId: 'b',
+    })).toThrow('Real UTC instant required');
+  });
+
+  it('requires explicit source bindings, signer order and resolver output', async () => {
+    const { manifests } = make();
+    const manifest = manifests.prepareSession({ ...common, sessionId: 's', minutesId: 'm' });
+    await expect(manifests.appendVerifiedSigner(manifest, signer('chair'), {} as never))
+      .rejects.toThrow('Source document and snapshot required');
+    await expect(manifests.appendVerifiedSigner(manifest, signer('secretary'), { sourceDocument, snapshot }))
+      .rejects.toThrow('Signer order differs');
+
+    const noResolver = new api.SignatureManifestService({
+      verifier: { verifySignedArtifact: vi.fn() },
+    });
+    const noResolverManifest = noResolver.prepareSession({ ...common, sessionId: 's', minutesId: 'm' });
+    await expect(noResolver.appendVerifiedSigner(noResolverManifest, signer('chair'), { sourceDocument, snapshot }))
+      .rejects.toThrow('Signer certificate resolver required');
+
+    const noVerifier = new api.SignatureManifestService({
+      resolveSignerCertificate: vi.fn().mockResolvedValue(hex(bytes('signer.cert.der'))),
+    });
+    const noVerifierManifest = noVerifier.prepareSession({ ...common, sessionId: 's', minutesId: 'm' });
+    await expect(noVerifier.appendVerifiedSigner(
+      noVerifierManifest, signer('chair'), { sourceDocument, snapshot },
+    )).rejects.toThrow('Trust verifier required');
+
+    const invalidResolver = new api.SignatureManifestService({
+      verifier: { verifySignedArtifact: vi.fn() },
+      resolveSignerCertificate: vi.fn().mockResolvedValue('not-a-sha256'),
+    });
+    const invalidResolverManifest = invalidResolver.prepareSession({ ...common, sessionId: 's', minutesId: 'm' });
+    await expect(invalidResolver.appendVerifiedSigner(
+      invalidResolverManifest, signer('chair'), { sourceDocument, snapshot },
+    )).rejects.toThrow('Signer certificate resolution unavailable');
   });
 });
 
