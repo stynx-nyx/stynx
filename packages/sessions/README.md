@@ -47,7 +47,8 @@ StynxSessionsModule.forRoot({
 and target tenant. A tenant switch atomically revokes the originating
 session and creates the target session, even when the mode is `off`.
 `SessionConflictError.code` is `SESSION_CONFLICT` when `reject-new`
-finds an active conflict.
+finds an active conflict. It is a `StynxError` with status 409, so
+`StynxErrorFilter` returns HTTP 409.
 
 Every custom `SessionStore` must implement
 `createWithPolicy(record, { mode, now, priorSessionId? })` before upgrading.
@@ -62,7 +63,7 @@ to `amr`; `acr` or a custom verified claim can be selected. Accepted
 values are trimmed and compared without case. Blank values are discarded,
 and an empty resulting list fails at startup. Missing or unmatched verified
 claims raise `StrongFactorRequiredError` with code
-`STRONG_FACTOR_REQUIRED`. Factor values must come from a validated
+`STRONG_FACTOR_REQUIRED`, a `StynxError` with status 403. Factor values must come from a validated
 identity token through `verifiedFactorClaims`, never from request body
 metadata. A valid prior session carries its verified factor through an
 atomic tenant switch.

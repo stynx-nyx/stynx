@@ -35,9 +35,10 @@ token and passes its verified claims to `SessionService`. Configure
 `StynxSessionsModule.forRoot({ strongFactor: { claimName,
 acceptedValues } })` with a claim that your Cognito access token actually
 contains. In particular, `amr` or `acr` may be absent; if the chosen
-claim has no accepted value, session creation fails with
-`STRONG_FACTOR_REQUIRED`. Request body `deviceMeta` never supplies
-factor proof.
+claim has no accepted value, session creation fails with HTTP 403
+`STRONG_FACTOR_REQUIRED`. A `singleSession: { mode: 'reject-new' }`
+conflict returns HTTP 409 `SESSION_CONFLICT`. Request body `deviceMeta`
+never supplies factor proof.
 
 The sessions package now requires every custom `SessionStore` to
 implement atomic `createWithPolicy` before upgrade, including hosts

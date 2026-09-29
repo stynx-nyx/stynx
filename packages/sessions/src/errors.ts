@@ -1,3 +1,5 @@
+import { StynxError } from '@stynx-nyx/core';
+
 export class InvalidRefreshTokenError extends Error {
   constructor() {
     super('Refresh token is invalid');
@@ -16,14 +18,18 @@ export class SessionExpiredError extends Error {
   }
 }
 
-export class SessionConflictError extends Error {
-  readonly code = 'SESSION_CONFLICT';
-  constructor() { super('SESSION_CONFLICT'); }
+export class SessionConflictError extends StynxError {
+  declare readonly code: 'SESSION_CONFLICT';
+  constructor() {
+    super('SESSION_CONFLICT', { code: 'SESSION_CONFLICT', status: 409 });
+  }
 }
 
-export class StrongFactorRequiredError extends Error {
-  readonly code = 'STRONG_FACTOR_REQUIRED';
-  constructor() { super('STRONG_FACTOR_REQUIRED'); }
+export class StrongFactorRequiredError extends StynxError {
+  declare readonly code: 'STRONG_FACTOR_REQUIRED';
+  constructor() {
+    super('STRONG_FACTOR_REQUIRED', { code: 'STRONG_FACTOR_REQUIRED', status: 403 });
+  }
 }
 
 export class SessionSigningKeyError extends Error {
