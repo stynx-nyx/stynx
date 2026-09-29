@@ -1,5 +1,13 @@
 # @stynx-nyx/jobs
 
+## 1.5.1
+
+### Patch Changes
+
+- Updated dependencies [8e09a90]
+  - @stynx-nyx/data@1.5.1
+  - @stynx-nyx/core@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes

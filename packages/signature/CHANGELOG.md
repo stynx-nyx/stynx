@@ -1,5 +1,15 @@
 # @stynx-nyx/signature
 
+## 1.5.1
+
+### Patch Changes
+
+- 8e09a90: Expose a per-statement deadline for transactional commands, add tenant-scoped
+  outbox dispatch and ACK under application RLS, and improve signature trust
+  classification for authentic unsupported PDF cross references and OCSP errors.
+  - @stynx-nyx/health@1.5.1
+  - @stynx-nyx/integration-adapter@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes

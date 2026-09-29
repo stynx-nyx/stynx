@@ -1,5 +1,20 @@
 # @stynx-nyx/backend
 
+## 1.5.1
+
+### Patch Changes
+
+- 8e09a90: Expose a per-statement deadline for transactional commands, add tenant-scoped
+  outbox dispatch and ACK under application RLS, and improve signature trust
+  classification for authentic unsupported PDF cross references and OCSP errors.
+- Updated dependencies [8e09a90]
+  - @stynx-nyx/data@1.5.1
+  - @stynx-nyx/idempotency@1.5.1
+  - @stynx-nyx/ratelimit@1.5.1
+  - @stynx-nyx/contracts@1.5.1
+  - @stynx-nyx/core@1.5.1
+  - @stynx-nyx/integration-adapter@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes

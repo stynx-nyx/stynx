@@ -1,5 +1,14 @@
 # @stynx-nyx/ratelimit
 
+## 1.5.1
+
+### Patch Changes
+
+- Updated dependencies [8e09a90]
+  - @stynx-nyx/data@1.5.1
+  - @stynx-nyx/auth@1.5.1
+  - @stynx-nyx/contracts@1.5.1
+
 ## 1.5.0
 
 ### Patch Changes

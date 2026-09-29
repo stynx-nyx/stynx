@@ -1,5 +1,12 @@
 # @stynx-nyx/angular
 
+## 1.5.1
+
+### Patch Changes
+
+- @stynx-nyx/angular-tenancy@1.5.1
+- @stynx-nyx/sdk@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes
