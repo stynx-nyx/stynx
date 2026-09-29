@@ -44,6 +44,22 @@ upgrade sensors now pass, including completed/legacy attempt rewrite denial.
 The reviewer also identified optional request-path and PDF classification
 hardening; the request-path failure and foreign-event ACK tests were added.
 
+The first `release:consumer-fixtures` run encountered a transient missing
+declaration during packaging. A package-only retry and the complete gate
+passed: 44 tarballs installed across three local adopter fixtures. These are
+STYNX fixtures, not DETRAN consumer proofs.
+
+Opus delivery-review cycle 2 returned FAIL at the newly versioned 1.5.1
+checkpoint: the legacy 1.5.0 registry policy and frozen script sensors had
+not advanced with the version commit. Its review is retained in `reviews/`.
+The Architect verified authenticated `latest=1.5.0` and
+`rc=1.5.0-rc.2` for all 44 packages, then bound the exact 1.5.1 policy.
+The Engineer updated the verifier constants, the Inspector updated the
+version sensors and added three negative attempt-guard mutations, and the
+Architect rebound all three trace projections. The two focused script
+suites passed 115/115; PostgreSQL migration tests passed 3/3; trace is
+473/473. Full local CI and a third delivery review remain due.
+
 DEVAI 1.6.0 has no supported R-0001 closeout action. Its `round close` and
 `round seal` commands are experimental; the historical round still has
 TASK-0001 escalated and no ordered D/DII closing decision or phase ledger.

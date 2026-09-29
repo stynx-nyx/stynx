@@ -1,0 +1,47 @@
+{
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "severity": "high",
+      "file": "package.json",
+      "line": 4,
+      "problem": "Engineer commit 36f45845 ('chore(repo): version fixed group to 1.5.1') set the root version to 1.5.1. That commit came after the last full ci:stynx pass recorded in work/rounds/R-0003/record.md. The frozen-manifest normalizer at test/scripts/local-rc-blocker-contract.test.mjs:50 requires /^1\\.5\\.0(?:-rc\\.[1-9]\\d*)?$/ and fails closed on '1.5.1'. The test at lines 56-68 names 1.5.1 as a version it must reject. As a result, 'D21 production binds exact Compose-up terminals…' (normalizer called at line 4335), 'D22 production binds owned PostgreSQL mapping…' (line 4508) and 'D16.1 freezes main, Playwright…' (line 4576) all fail with AssertionError: input '1.5.1' did not match. I reproduced this with `node --test test/scripts/*.test.mjs`: 139 tests, 135 pass, 4 fail. Before this commit the same D21/D22/D16.1 tests passed after the Inspector rebind in 916b711f, so the Playwright finding is closed and the new failure comes only from the version bump.",
+      "required_fix": "Pick one of two paths. (a) If 1.5.1 is not an authorized publication target for this PR, revert the version-plan commit: an Engineer commit restores 1.5.0 manifests and CHANGELOGs and the pending .changeset/postrelease-request-path.md, and versioning happens in a later release PR. (b) If it is authorized, the Owner or Architect advances the release decision first (see the next finding). Then an Inspector commit extends normalizeRootManifestRcVersion to accept exactly the new governed stable version, keeps the rejection list meaningful (for example 1.5.2 and 1.6.0), and rebinds any affected SHA sites. Then an Architect commit rebinds law/trace.json for the moved assertion projections. Rerun the full test/scripts suite and pnpm ci:stynx."
+    },
+    {
+      "severity": "high",
+      "file": "law/policy/registry-version-anomalies.json",
+      "line": 5,
+      "problem": "The Architect-governed registry release policy still declares next_unified_version '1.5.0' (line 5), with anomaly allowed_candidate '1.5.0' (line 30). Its owner_decision (2026-09-28) names 'exactly stable 1.5.0' as the next publication candidate, with preflight latest 1.4.0. The workspace and all 44 publishable manifests are now 1.5.1. test/scripts/release-version-policy.test.mjs:449 ('final registry policy candidate equals the root and all 44 publishable manifest versions') fails with '1.5.1' !== '1.5.0'. The test constants are still currentCandidate='1.5.0' and previousCandidate='1.5.0-rc.2' (lines 80-81), and scripts/lib/registry-version-policy.mjs:5 holds the same values. Neither the R-0003 AUTHORIZATION.md nor plan.md records an Owner decision naming 1.5.1 as the next unified candidate, a 1.5.0 preflight latest, or a changed anomaly closure_condition. The version plan therefore gets ahead of the release policy, and publish-release-plan/verify-release-policy would still preflight against 1.5.0-rc.2 / 1.4.0.",
+      "required_fix": "This needs an Owner decision (Architect-authored law/ commit as DEVAI Architect) that sets next_unified_version=1.5.1 and preflight_latest_version=1.5.0 (after verifying 1.5.0 is published as latest for all 44 packages). The same decision must re-scope or close REGISTRY-VERSION-ANOMALY-0001 (allowed_candidate and closure_condition) and rebind the anomaly-policy digest at release-version-policy.test.mjs:711. Then an Engineer updates scripts/lib/registry-version-policy.mjs, and an Inspector updates currentCandidate and previousCandidate in the test, followed by a trace rebind. Otherwise, take path (a) above and keep the PR at 1.5.0 plus a pending changeset."
+    },
+    {
+      "severity": "low",
+      "file": "test/db/outbox-event-log-migration.spec.ts",
+      "line": 246,
+      "problem": "The guard at packages/data/migrations/platform/0022_outbox_request_path.sql:17-26 has no direct negative tests for three of its branches under stynx_app: a CLAIMED→SENT/ERROR transition that leaves completed_at NULL, a CLAIMED→CLAIMED (or other non-terminal) NEW.result, and an attempt_ordinal change. The existing tests only prove that rewriting completed SENT rows and LEGACY_HISTORY_UNAVAILABLE rows is denied (42501), plus the positive transition with completed_at (28e72fda). The implementation logic is correct on inspection.",
+      "required_fix": "Optional: an Inspector adds three 42501 cases to 'keeps completed and legacy attempt evidence immutable to the app role' (missing completed_at, non-terminal NEW.result, attempt_ordinal change), followed by an Architect trace rebind."
+    },
+    {
+      "severity": "info",
+      "file": "packages-web/sdk/CHANGELOG.md",
+      "line": 3,
+      "problem": "Changesets fixed-group versioning produced empty '## 1.5.1' sections for members with no own or dependency change (for example sdk, angular-i18n, contracts, core, feature-flags). This is expected behavior for the fixed group, not a defect. It does mean consumers see a no-op 1.5.1 for those packages.",
+      "required_fix": "None required. Optionally, record in the release notes that 1.5.1 is a fixed-group patch where only backend, data, outbox and signature (plus dependents) change behavior."
+    }
+  ],
+  "evidence": [
+    "Scope: read-only review of origin/main..HEAD, 28 commits, HEAD 36f45845. Role authorship is consistent: 916b711f, 96dde555 and 28e72fda are by DEVAI Inspector; 90d78157 and 1d0e1f9d (law/trace.json) by DEVAI Architect; 71e64b84 and 36f45845 by DEVAI Engineer. No workflow files changed.",
+    "Cycle-1 High (Playwright freeze) is resolved in code. 916b711f changes exactly 5 digest lines in test/scripts/local-rc-blocker-contract.test.mjs. The D21/D22/D16.1 failures observed now all have actual '1.5.1' against the version regex at line 50, not a Playwright digest mismatch.",
+    "Cycle-1 Medium (0022 grant) is resolved. 0022 (new on this branch; absent from origin/main, so not in published 1.5.0) now runs REVOKE UPDATE on outbox.event_attempts from stynx_app. It then grants UPDATE only on the columns result, error, completed_at, provider, protocol, request_bytes, request_sha256, request_headers, response_bytes, response_sha256, response_status and evidence_state. A BEFORE UPDATE trigger outbox.guard_app_attempt_completion (SECURITY INVOKER, pinned search_path) raises 42501 unless OLD.result='CLAIMED' AND OLD.completed_at IS NULL AND NEW.result IN ('SENT','ERROR') AND NEW.completed_at IS NOT NULL, with tenant_id, event_id, attempt_ordinal, legacy_message_id and legacy_state unchanged.",
+    "The trigger's current_user='stynx_app' predicate is sound. packages/data/src/database.ts:285 asserts current_user==='stynx_app' for every app transaction, so the app path cannot run under an inheriting login role that would bypass the guard.",
+    "Legacy cutover rows are inserted with result 'LEGACY_HISTORY_UNAVAILABLE' (outbox.service.ts:272), and legacy error rows are inserted already completed (outbox.service.ts:917). Both fall outside the only permitted app transition and are therefore immutable to stynx_app.",
+    "test/db/outbox-event-log-migration.spec.ts asserts that after 0022, has_table_privilege UPDATE is false, the result and request_bytes column UPDATEs are true, and the event_id and legacy_state column UPDATEs are false. It also asserts 42501 on rewriting a completed SENT row and a legacy row in both the 0021→0022 upgrade test and the fresh-migrations test, with row values preserved. Cross-tenant update still returns 0 rows under FORCE RLS.",
+    "packages/outbox request-path-rls.integration.spec.ts (96dde555) adds a transport-failure case asserting ERROR projection, attempts=1, next_attempt_at set, and ERROR attempt evidence for tenant A with tenant B untouched. It also adds a cross-tenant ACK case rejected with code OUTBOX_NOT_FOUND. docs/framework/contracts/outbox-api.md lines 29-32 now document the tenant-path quarantine divergence.",
+    "`pnpm check:trace` reports: [trace][ok] 473 executable tests bound; 473 tracked. `pnpm package-readmes:check` reports: {\"packageCount\":44,\"changedFiles\":0}.",
+    "`node --test test/scripts/*.test.mjs` on HEAD: 139 tests, 135 pass, 4 fail. The failures are D16.1, D21 and D22 in local-rc-blocker-contract (root version 1.5.1 rejected by the normalizer at line 50) and 'final registry policy candidate…' at release-version-policy.test.mjs:449 ('1.5.1' !== '1.5.0'). pnpm ci:stynx therefore cannot pass on HEAD. The record's second full ci:stynx pass predates 36f45845.",
+    "Candidate versus published: 1.5.1 is a prepublication candidate that exists only in this worktree. The registry could not be queried (npm.pkg.github.com returned E401 unauthenticated). law/policy/registry-version-anomalies.json still binds the governed publication candidate to stable 1.5.0 with preflight latest 1.4.0, so 1.5.1 has no policy or Owner receipt basis on this branch.",
+    "The version commit is otherwise mechanically consistent Changesets output. The four-package patch changeset is consumed, all fixed-group manifests and the internal peer ranges moved to ^1.5.1, tools/create-stynx-app/template pins ^1.5.1, and the SBOM and generated READMEs were regenerated.",
+    "DETRAN proofs were not assessed, per the Owner exclusion. I did not run full ci:stynx, test:int or the PostgreSQL suites; for those I relied on source inspection and the recorded results."
+  ]
+}

@@ -53,6 +53,13 @@ mutation is reviewed against the exact Owner receipt rule before execution.
 
 ## Contract decisions for remaining product gaps
 
+- Postrelease patch: the Owner's direction to complete the remaining STYNX
+  work includes the fixed-group patch generated from the R-0003 changeset.
+  An authenticated 44-package census on 2026-09-29 found `latest=1.5.0`
+  and `rc=1.5.0-rc.2` throughout. The Architect policy binds the next exact
+  candidate to 1.5.1, with preflight latest 1.5.0. An exact-main-SHA
+  publication receipt remains required when the merged SHA is known.
+
 - CTG5: add an optional positive `deadlineMs` to transactional-command
   module/route options. Pass it to `Database.tx` as PostgreSQL
   `statement_timeout` for each statement. Keep `lockTimeoutMs` scoped to the
