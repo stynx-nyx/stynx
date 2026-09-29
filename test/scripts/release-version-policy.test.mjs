@@ -481,6 +481,7 @@ test('stable 1.5.2 patch context consumes only session policy and rejects unboun
     markerParentChangesets: ['.changeset/session-policy-http-status.md'],
     followUpChanges: [
       { status: 'M', path: 'law/policy/registry-version-anomalies.json' },
+      { status: 'M', path: 'law/policy/forbidden-action-authorizations.json' },
       { status: 'M', path: 'scripts/lib/release-context.mjs' },
       { status: 'M', path: 'test/scripts/release-version-policy.test.mjs' },
       { status: 'A', path: 'work/rounds/R-0003/reviews/second-stable-patch.json' },
