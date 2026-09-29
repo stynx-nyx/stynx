@@ -35,3 +35,17 @@ ruleset source or owner organization. The existing active deletion and
 non-fast-forward rules remain in effect. A release-specific installed app
 or another Owner-governed credential/workflow design is needed to restrict
 creation without blocking automated releases.
+
+The second full `pnpm ci:stynx` passed. Independent Claude Opus 5.5 delivery
+review returned REVIEW: its hash-freeze finding was already fixed by Inspector
+rebind (`916b711f`), and the substantive grant finding led to a column-scoped
+0022 grant and database trigger. PostgreSQL request-path and 0021→0022
+upgrade sensors now pass, including completed/legacy attempt rewrite denial.
+The reviewer also identified optional request-path and PDF classification
+hardening; the request-path failure and foreign-event ACK tests were added.
+
+DEVAI 1.6.0 has no supported R-0001 closeout action. Its `round close` and
+`round seal` commands are experimental; the historical round still has
+TASK-0001 escalated and no ordered D/DII closing decision or phase ledger.
+TASK-0003/0004 code defects were fixed, but the active marker remains until
+DEVAI supports a governed closure with an explicit TASK-0001 disposition.

@@ -22,9 +22,15 @@ Tenant identity comes only from `RequestContext`; a runtime `tenantId` field
 is rejected. Claim, attempt evidence, projection update and bound ACK each
 use `Database.tx` under `stynx_app` with `requireActor`, explicit tenant
 predicates and the existing FORCE RLS. Migration 0022 grants the app role
-UPDATE on `outbox.event_attempts`; it does not relax the tenant policy.
+only the result-evidence columns on `outbox.event_attempts`; it does not relax
+the tenant policy. A trigger allows the app role one completion from
+`CLAIMED` to `SENT` or `ERROR` with `completed_at`; completed and migrated
+legacy attempt evidence cannot be rewritten.
 Invalid HMAC is quarantined by a separate owner-only control transaction
 after live app identity validation and without a domain event lookup.
+Unknown or cross-tenant event identities are rejected by the tenant path
+without owner lookup or quarantine; the trusted owner-control `ackEvent`
+retains its separate unbound-ACK diagnostic behavior.
 
 The existing `dispatchEventsDue` and `ackEvent` owner paths remain for trusted
 cross-tenant schedulers and control jobs. Request handlers must use the new

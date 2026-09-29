@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "Post-1.5.0 Architect rebind pins column-scoped app attempt updates, completed and legacy evidence immutability, and request-path failure/foreign-ACK sensors.",
       "Post-1.5.0 Architect rebind pins 0021-to-0022 outbox grant upgrade and tenant RLS persistence assertions.",
       "Post-1.5.0 Architect rebind pins app-role request-path outbox RLS, statement deadline rollback, and signature trust edge fixtures.",
       "STYNX 1.5.0 final lint Architect rebind pins CTG9 SSE tenant denial, attached CMS bytes, incremental PDF ByteRange, readiness export and withdrawal hashes after stronger value assertions.",
@@ -4984,8 +4985,8 @@
       "suite": "db",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 17,
-      "assertion_digest_sha256": "e32252351f24a0e843854bf55f92dc262775a10d98b9ac0ca8215d49a64aabf5"
+      "assertion_count": 20,
+      "assertion_digest_sha256": "e029dc21a2997c412af247ece9d430858a54d19c87a5f3a076013246c13fcebd"
     },
     {
       "path": "packages/outbox/test/integration/ctg9-delivery.integration.spec.ts",
@@ -5048,8 +5049,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 22,
-      "assertion_digest_sha256": "12dade5ca78802a6b6b7b2064c08c7cb6892aec6fda0ab1900feb796b0d3754c"
+      "assertion_count": 29,
+      "assertion_digest_sha256": "2e6b341b00c13b80b4bf375cb87e9252b46e8983c35303d8797e29dfc5ffbc98"
     }
   ],
   "suites": {
