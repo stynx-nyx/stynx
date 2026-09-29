@@ -1,10 +1,19 @@
 import { resolve } from 'node:path';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
+// Coverage must observe the PostgreSQL durable store through its real DB
+// integration sensors. Keep the ordinary package test tier fast and isolated.
+const coverageRun = process.argv.includes('--coverage');
+
 export default createVitestConfig({
   packageDir: __dirname,
   packageName: '@stynx-nyx/offline-sync',
-  include: ['test/unit/**/*.spec.ts', 'test/wiring/**/*.wiring-spec.ts'],
+  include: [
+    'test/unit/**/*.spec.ts',
+    'test/wiring/**/*.wiring-spec.ts',
+    ...(coverageRun ? ['test/integration/**/*.integration.spec.ts'] : []),
+  ],
+  sequentialFiles: coverageRun,
   alias: {
     '@stynx-nyx/auth': resolve(__dirname, '../auth/src/index.ts'),
     '@stynx-nyx/backend': resolve(__dirname, '../backend/src/index.ts'),
