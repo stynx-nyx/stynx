@@ -51,6 +51,7 @@ const allowedStablePatchFollowUpPaths = new Set([
 ]);
 
 const allowedSecondStablePatchFollowUpPaths = new Set([
+  'law/policy/forbidden-action-authorizations.json',
   'law/policy/registry-version-anomalies.json',
   'law/trace.json',
   'scripts/lib/registry-version-policy.mjs',
