@@ -3274,7 +3274,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 7,
-      "assertion_digest_sha256": "4d2827ea158d7e44c68b06daa635d03f0374df133978139881232dd0c62232d0"
+      "assertion_digest_sha256": "544bc3ea84a00d8687835b0bc0ff0d1ed1a718acf3eca87e6f25bfe1e1c6c4aa"
     },
     {
       "path": "packages/signature/test/unit/sequential.spec.ts",
@@ -4956,7 +4956,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 83,
-      "assertion_digest_sha256": "4ce45e345dcf483fc189ca947a58c745bd062dcd4bd394c701cac0985539933d"
+      "assertion_digest_sha256": "3f7b06613e454ad24b57a4ba9fc5f33cc3dee25d194ee8069c9c61c7088b3693"
     },
     {
       "path": "packages/signature/test/unit/manifest.spec.ts",
@@ -4972,7 +4972,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 20,
-      "assertion_digest_sha256": "51349bfc7701f86800779098f3133d57e0dcdf62abd9c59e3b3322bb68f0ccc9"
+      "assertion_digest_sha256": "610c05f0912d4ef3b949f39525ca2f714d784bba1b5a1db947d650fa51cbd3fd"
     },
     {
       "path": "packages/signature/test/unit/withdrawal.spec.ts",
@@ -5084,7 +5084,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 22,
-      "assertion_digest_sha256": "ae87bb93688ea8142431ac779f1a868c2f84eeae891789089b45b80a3bbb7cd8"
+      "assertion_digest_sha256": "5e49266eef2ad4cb89bd4a36a22622821325435a94e11be7e8bd469125d597c4"
     },
     {
       "path": "packages/offline-sync/test/unit/coverage-boundaries.spec.ts",
@@ -5100,7 +5100,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 69,
-      "assertion_digest_sha256": "2b46dba465c661f236fb9d048a21e11b0e5436ba8785be952f7482acce28ced4"
+      "assertion_digest_sha256": "3e39f96a25b05f0b004711d7c9ce241df51b6c72297e4efbf515ab71d169ff90"
     },
     {
       "path": "packages/offline-sync/test/unit/postgres-durable-coverage.spec.ts",
@@ -5116,15 +5116,15 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 39,
-      "assertion_digest_sha256": "5cc4384d9e79805baf7d347d7e355a45d92106578d3593cd8ad4e65d3eec09c8"
+      "assertion_digest_sha256": "f62ee50a2d3086a74ed2d07c8dadd49c6440422711492bfbe1b5d46950dfef38"
     },
     {
       "path": "packages/outbox/test/unit/outbox-events.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 104,
-      "assertion_digest_sha256": "bc6deea17f369ccaa165d80465912da84a3b828429f13037b7efae3a655738d6"
+      "assertion_count": 99,
+      "assertion_digest_sha256": "e0b66ce39d88a3172c5b9175c912755b836faf501ba4067fbfa574c63363537a"
     },
     {
       "path": "packages/pdf/test/unit/assets-missing.spec.ts",
@@ -5188,7 +5188,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
       "lifecycle": "supported",
       "assertion_count": 9,
-      "assertion_digest_sha256": "7967c282c91f4b5a84541c59c01e9f87b73241f8dd75dafa490aee386a344bc1"
+      "assertion_digest_sha256": "295bb460f79315f19115f1d79623c69b2866152451a437dfe5b3f59795ef9621"
     },
     {
       "path": "packages/signature/test/unit/cms-trust-pki-coverage.spec.ts",
@@ -5196,7 +5196,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
       "lifecycle": "supported",
       "assertion_count": 11,
-      "assertion_digest_sha256": "75f78c85a032d31cfed7aad591ca33123edf7525af38784b497e51347d7258c6"
+      "assertion_digest_sha256": "565d5015a1de22e5f05a55d0a6c369763095879da30546429beb2f8985cc856f"
     },
     {
       "path": "packages/signature/test/unit/cms-trust-revocation-coverage.spec.ts",
@@ -5228,7 +5228,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
       "lifecycle": "supported",
       "assertion_count": 25,
-      "assertion_digest_sha256": "7c8d25816e07e9ac32403eb0304b6b9186b3d63e4d98242680cc7ab1fd119a9e"
+      "assertion_digest_sha256": "89230248530d3620046e9d0bac5f318242f1c21bd49a4389d8c4ef17f851946b"
     },
     {
       "path": "packages/signature/test/unit/pdf-trust-evidence-more-coverage.spec.ts",
@@ -5236,7 +5236,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
       "lifecycle": "supported",
       "assertion_count": 18,
-      "assertion_digest_sha256": "e2bdfedd131b1456c1fb8d9f5e6167de7649479f13c7ed52616ebd565fa6355e"
+      "assertion_digest_sha256": "aa9636f5e019d1915c29984ff5d979aeec28a69df3a1cfe0caedcbf8fbd098e2"
     },
     {
       "path": "packages/signature/test/unit/pdf-trust-final-coverage.spec.ts",
