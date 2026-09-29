@@ -27,6 +27,9 @@ the existing clean Codex worktree on `codex/post-1-5-0-debt`.
    Preserve PORM's own authority and user data.
 7. Close the DEVAI 100% coverage and signed local-RC evidence debt with
    meaningful tests and an exact candidate observation.
+8. Resolve #306's additional request-path constraint with a tenant-scoped
+   public outbox dispatch/ACK path under `stynx_app` and RLS. Keep the
+   existing owner/system dispatch path for internal cross-tenant control.
 
 DETRAN R-0022…R-0024 packed-consumer and domain-equivalence proofs are
 explicitly out of scope. No writes to DETRAN.
@@ -47,3 +50,22 @@ mutation is reviewed against the exact Owner receipt rule before execution.
 - Do not close an issue until its acceptance evidence is attached.
 - Record blockers and exact next action in `record.md` if a dependency requires
   Owner-only information or an action-specific receipt.
+
+## Contract decisions for remaining product gaps
+
+- CTG5: add an optional positive `deadlineMs` to transactional-command
+  module/route options. Pass it to `Database.tx` as PostgreSQL
+  `statement_timeout` for each statement. Keep `lockTimeoutMs` scoped to the
+  idempotency reservation; neither setting promises an end-to-end wall-clock
+  deadline. A timeout in audit remains a dependency failure, with rollback of
+  domain, audit and idempotency writes.
+- OBX: expose tenant-scoped dispatch and ACK entry points whose tenant comes
+  only from trusted `RequestContext`. Run claim, persistence and ACK under
+  `Database.tx({role:'app',requireActor:true,retry:false})`; use explicit
+  `tenant_id` predicates in addition to FORCE RLS. The transport may run
+  outside a transaction, with attempt updates in new app-role transactions.
+  Invalid HMAC and cross-tenant identities do not perform a domain lookup or
+  owner-role fallback. Existing owner methods remain internal-control paths.
+  An additive migration may grant `stynx_app` the minimum missing update
+  privilege on attempt ledger rows. Tests must use real PostgreSQL, two
+  tenants, and verify absence of cross-tenant writes.

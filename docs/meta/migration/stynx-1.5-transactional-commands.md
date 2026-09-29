@@ -34,10 +34,10 @@ and two tenants. The published conformance record is
 `work/rounds/R-0002/conformance-1.5.0.md`.
 
 `lockTimeoutMs` bounds individual PostgreSQL lock acquisition while reserving
-the idempotency key; it is not a total command deadline. Audit-chain
-serialization occurs later in the same transaction. In direct `Database.tx`
-flows, `TxOptions.deadlineMs` sets a per-statement PostgreSQL
-`statement_timeout`, including an audit write; the CTG5 decorator does not
-expose that option. The consumer must manage a wall-clock request deadline
-separately. A failure while waiting for audit must not be reported as key
-contention.
+the idempotency key; it is not a total command deadline. The audit-chain
+function deliberately sets `lock_timeout` to zero while waiting for its
+transactional advisory lock. In direct `Database.tx` flows,
+`TxOptions.deadlineMs` sets a per-statement PostgreSQL `statement_timeout`,
+including an audit write; the 1.5.0 CTG5 decorator does not expose that
+option. A consumer must manage its wall-clock request deadline separately.
+An audit wait failure must not be reported as idempotency-key contention.
