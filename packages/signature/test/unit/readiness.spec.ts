@@ -27,6 +27,16 @@ const service = (capabilities: unknown) => {
 };
 
 describe('signature readiness', () => {
+  // Capability freshness is judged against Date.now(); pin it to the fixture
+  // observation time. Only Date is faked so Nest and readiness timeouts stay real.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(now);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('returns typed capabilities for an operational profile', async () => {
     const result = await service(all()).checkReadiness(profile);
     expect(result).toMatchObject({ ok: true, capabilities: all() });

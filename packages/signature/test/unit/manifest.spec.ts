@@ -104,6 +104,10 @@ describe('canonicalRfc8785Json edge cases', () => {
   });
 });
 
+// buildManifestBoundPades signs, timestamps and embeds DSS OCSP/CRL at the real
+// wall-clock time, so the verifier clock for those artifacts must be real too.
+const generatedNow = (): Date => new Date();
+
 describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
   it('accepts a signer only when the real CMS verifier reads the signed manifest hash', async () => {
     expect(api.SignatureManifestService).toEqual(expect.any(Function));
@@ -113,7 +117,7 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
       trustAnchorsPem: [rootPem],
       tsaTrustAnchorsPem: [rootPem],
       acceptedPolicies: profile.acceptedPolicies,
-      now: () => now,
+      now: generatedNow,
       fetchOcsp: async () => bytes('ocsp-good.der'),
       fetchCrl: async () => bytes('root.crl.der'),
       fetchTsa: async () => timestampToken,
@@ -162,7 +166,7 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
       trustAnchorsPem: [rootPem],
       tsaTrustAnchorsPem: [rootPem],
       acceptedPolicies: profile.acceptedPolicies,
-      now: () => now,
+      now: generatedNow,
     });
     const resolveSignerCertificate = vi.fn().mockImplementation(async (_tenant: string, id: string) => certificateFor(id));
     const manifests = new api.SignatureManifestService({ verifier: trustVerifier, resolveSignerCertificate });
@@ -184,7 +188,7 @@ describe.each(['session', 'batch'] as const)('%s minutes manifest', (kind) => {
   it('refuses an attached CMS even when the PDF carries the expected signed manifest hash', async () => {
     const trustVerifier = api.createCmsTrustVerifier({
       trustAnchorsPem: [rootPem], tsaTrustAnchorsPem: [rootPem],
-      acceptedPolicies: profile.acceptedPolicies, now: () => now,
+      acceptedPolicies: profile.acceptedPolicies, now: generatedNow,
     });
     const manifests = new api.SignatureManifestService({ verifier: trustVerifier,
       resolveSignerCertificate: async () => certificateFor('chair') });

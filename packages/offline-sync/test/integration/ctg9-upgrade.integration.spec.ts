@@ -1488,7 +1488,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     const store = new PostgresOfflineSyncStore(moduleRef);
     const scope = { tenantId: tenantA, actorId: 'actor-a', ctg9: true } as never;
     await contexts.runWithRequestContext({ requestId: 'ctg9-number-projection', tenantId: tenantA, actorId: 'actor-a', startedAt: new Date('2026-09-28T12:00:00.000Z') }, async () => {
-      const reservation = await store.reserveNumbering(scope, { orgUnitId: 'org-a', deviceId: 'projection-device', shiftId: 'projection-shift', entityType: 'citation', series: 'C', requestedSize: 3 }, '2026-09-28T12:00:00.000Z', '2026-09-29T12:00:00.000Z');
+      const reservation = await store.reserveNumbering(scope, { orgUnitId: 'org-a', deviceId: 'projection-device', shiftId: 'projection-shift', entityType: 'citation', series: 'C', requestedSize: 3 }, '2026-09-28T12:00:00.000Z', '2099-09-29T12:00:00.000Z');
       await store.reconcileNumberingReservation(scope, reservation.reservationId, { claimedNumbers: [reservation.startNumber + 1] }, '2026-09-28T12:00:00.000Z');
       const afterClaim = await store.getNumberingConsumption(scope, reservation.reservationId);
       expect(afterClaim.consumption.map((entry) => entry.status)).toEqual(['available', 'claimed-locally', 'available']);
