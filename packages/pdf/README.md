@@ -173,7 +173,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@pdf-lib/fontkit`: `^1.1.1`
 - `handlebars`: `4.7.9`
 - `pdf-lib`: `^1.17.1`
-- `playwright`: `^1.60.0`
+- `playwright`: `^1.61.1`
 
 ### Optional dependencies
 

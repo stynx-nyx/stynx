@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:2b4113fc-a563-4b7a-8a1c-a992a26ccbeb",
+  "serialNumber": "urn:uuid:f4de46b7-ca4e-46b2-892c-dad5f273e81d",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "2b4113fca563cb7aaa1ca992a26ccbeb67595ff493dff7d16adfeb20d3cd58c2"
+        "value": "f4de46b7ca4e96b2c92cdad5f273e81d302809d75b018cb4f2afa1650a964ed6"
       },
       {
         "name": "stynx:package-manager",
@@ -346,7 +346,7 @@
     {
       "type": "library",
       "name": "@axe-core/playwright",
-      "version": "4.11.3",
+      "version": "4.12.1",
       "scope": "required",
       "licenses": [
         {
@@ -355,7 +355,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@axe-core%2fplaywright@4.11.3"
+      "purl": "pkg:npm/@axe-core%2fplaywright@4.12.1"
     },
     {
       "type": "library",
@@ -626,7 +626,7 @@
     {
       "type": "library",
       "name": "@playwright/test",
-      "version": "1.60.0",
+      "version": "1.61.1",
       "scope": "required",
       "licenses": [
         {
@@ -635,7 +635,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@playwright%2ftest@1.60.0"
+      "purl": "pkg:npm/@playwright%2ftest@1.61.1"
     },
     {
       "type": "library",
@@ -1986,7 +1986,7 @@
     {
       "type": "library",
       "name": "globals",
-      "version": "17.6.0",
+      "version": "17.7.0",
       "scope": "required",
       "licenses": [
         {
@@ -1995,7 +1995,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/globals@17.6.0"
+      "purl": "pkg:npm/globals@17.7.0"
     },
     {
       "type": "library",
@@ -2187,7 +2187,7 @@
     {
       "type": "library",
       "name": "openapi-typescript-codegen",
-      "version": "0.30.0",
+      "version": "0.31.0",
       "scope": "required",
       "licenses": [
         {
@@ -2196,7 +2196,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/openapi-typescript-codegen@0.30.0"
+      "purl": "pkg:npm/openapi-typescript-codegen@0.31.0"
     },
     {
       "type": "library",
@@ -2229,7 +2229,7 @@
     {
       "type": "library",
       "name": "pg",
-      "version": "8.21.0",
+      "version": "8.23.1",
       "scope": "required",
       "licenses": [
         {
@@ -2238,7 +2238,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/pg@8.21.0"
+      "purl": "pkg:npm/pg@8.23.1"
     },
     {
       "type": "library",
@@ -2285,7 +2285,7 @@
     {
       "type": "library",
       "name": "playwright",
-      "version": "1.60.0",
+      "version": "1.61.1",
       "scope": "required",
       "licenses": [
         {
@@ -2294,7 +2294,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/playwright@1.60.0"
+      "purl": "pkg:npm/playwright@1.61.1"
     },
     {
       "type": "library",
@@ -2623,7 +2623,7 @@
     {
       "type": "library",
       "name": "uuid",
-      "version": "14.0.0",
+      "version": "14.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -2632,7 +2632,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/uuid@14.0.0"
+      "purl": "pkg:npm/uuid@14.0.1"
     },
     {
       "type": "library",

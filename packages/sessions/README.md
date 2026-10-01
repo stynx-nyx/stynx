@@ -222,7 +222,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/idempotency`: `workspace:*`
 - `jose`: `^6.2.2`
 - `redis`: `^6.0.0`
-- `uuid`: `^14.0.0`
+- `uuid`: `^14.0.1`
 - `zod`: `^4.3.6`
 
 ### Optional dependencies

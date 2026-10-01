@@ -170,7 +170,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 - `@stynx-nyx/privacy`: `workspace:*`
 - `commander`: `^15.0.0`
-- `pg`: `^8.20.0`
+- `pg`: `^8.22.0`
 - `yaml`: `^2.8.3`
 
 ### Optional dependencies

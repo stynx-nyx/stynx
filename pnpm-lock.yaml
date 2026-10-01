@@ -50,7 +50,7 @@ overrides:
   tar@7: 7.5.21
   tmp: 0.2.7
   undici@7: 7.29.1
-  uuid: 14.0.0
+  uuid: 14.0.1
   vite@7: 7.3.6
   vitest@4: 4.1.11
   webpack-dev-server@5: 5.2.6
@@ -1936,8 +1936,8 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
       uuid:
-        specifier: 14.0.0
-        version: 14.0.0
+        specifier: 14.0.1
+        version: 14.0.1
       zod:
         specifier: ^4.3.6
         version: 4.4.3
@@ -13109,8 +13109,8 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  uuid@14.0.0:
-    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
+  uuid@14.0.1:
+    resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -17266,7 +17266,7 @@ snapshots:
       open: 7.4.2
       proxy-agent: 6.5.0
       tmp: 0.2.7
-      uuid: 14.0.0
+      uuid: 14.0.1
       yargs: 15.4.1
       yargs-parser: 13.1.2
     transitivePeerDependencies:
@@ -23208,7 +23208,7 @@ snapshots:
       roughjs: 4.6.6
       stylis: 4.4.0
       ts-dedent: 2.2.0
-      uuid: 14.0.0
+      uuid: 14.0.1
 
   methods@1.1.2: {}
 
@@ -25689,7 +25689,7 @@ snapshots:
   sockjs@0.3.24:
     dependencies:
       faye-websocket: 0.11.4
-      uuid: 14.0.0
+      uuid: 14.0.1
       websocket-driver: 0.7.5
 
   socks-proxy-agent@8.0.5:
@@ -26541,7 +26541,7 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
-  uuid@14.0.0: {}
+  uuid@14.0.1: {}
 
   v8-compile-cache-lib@3.0.1: {}
 
