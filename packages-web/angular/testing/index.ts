@@ -38,8 +38,8 @@ export class FakeStynxEventStreamTransport implements StynxEventStreamTransport 
     this.current().subject.complete();
   }
 
-  error(status: number, headers: Record<string, string> = {}): void {
-    this.current().subject.error(new HttpErrorResponse({ status, headers: new HttpHeaders(headers), statusText: 'Fake stream error' }));
+  error(status: number, headers: Record<string, string> = {}, body?: unknown): void {
+    this.current().subject.error(new HttpErrorResponse({ status, headers: new HttpHeaders(headers), statusText: 'Fake stream error', error: body }));
   }
 
   close(): void { this.current().subject.complete(); }
