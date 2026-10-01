@@ -349,25 +349,44 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
     expect(await delivery(event!)).toMatchObject({ status: 'SENT', attempts: 2 });
     expect(await attemptCount(event!)).toBe(2);
 
-    // Backoff retry: eligible only at the policy time; a later event of the aggregate never passes it.
+    // A non-immediate retry takes the earlier of current eligibility and the backoff time: never later.
+    const [overdue, distant] = await appendMany(tenantA, [fact('retry.overdue'), fact('retry.distant')]);
+    failing.add(distant!.id);
+    await failOnce(overdue!, true);
+    failing.delete(distant!.id);
+    await admin((client) => client.query(
+      `update outbox.event_delivery set next_attempt_at=clock_timestamp()+interval '1 day' where tenant_id=$1 and event_id=$2`,
+      [tenantA, distant!.id],
+    ));
+    const overdueBefore = await delivery(overdue!);
+    const kept = await asTenant(tenantA, () => outbox.retryEvent(overdue!.id));
+    expect(kept.delivery).toMatchObject({ status: 'PENDING', nextAttemptAt: overdueBefore!.next_attempt_at });
+    const advanced = await asTenant(tenantA, () => outbox.retryEvent(distant!.id));
+    expect(advanced.delivery.nextAttemptAt!.getTime()).toBeLessThan(Date.now() + 16 * 60_000);
+    expect(advanced.delivery.nextAttemptAt!.getTime()).toBeGreaterThan(Date.now() + 14 * 60_000);
+    const dueNow = await asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
+    expect(dueNow.map((outcome) => outcome.row.id)).toEqual([overdue!.id]);
+
+    // ADR-OUTBOX-0002: a retried later event never passes a non-ACKED predecessor of its aggregate.
     const aggregate = randomUUID();
     const [head, tail] = await appendMany(tenantA, [fact('retry.ordered', aggregate), fact('retry.ordered', aggregate)]);
-    failing.add(head!.id);
-    try {
-      const firstSweep = await asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
-      expect(firstSweep.map((outcome) => outcome.row.id)).toEqual([head!.id]);
-    } finally {
-      failing.delete(head!.id);
-    }
+    await failOnce(head!);
     await admin((client) => client.query(
-      `update outbox.event_delivery set next_attempt_at=clock_timestamp()-interval '1 second' where tenant_id=$1 and event_id=$2`,
-      [tenantA, head!.id],
+      `update outbox.event_delivery set status='ERROR',attempts=1,last_error='tail failed',
+          next_attempt_at=clock_timestamp()-interval '1 second' where tenant_id=$1 and event_id=$2`,
+      [tenantA, tail!.id],
     ));
-    const scheduled = await asTenant(tenantA, () => outbox.retryEvent(head!.id));
-    expect(scheduled.delivery.status).toBe('PENDING');
-    expect(scheduled.delivery.nextAttemptAt!.getTime()).toBeGreaterThan(Date.now() + 14 * 60_000);
+    sends.delete(head!.id);
+    await asTenant(tenantA, () => outbox.retryEvent(tail!.id, { immediate: true }));
     await expect(asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50))).resolves.toEqual([]);
     expect(sends.get(tail!.id)).toBeUndefined();
+    await asTenant(tenantA, () => outbox.retryEvent(head!.id, { immediate: true }));
+    const headFirst = await asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
+    expect(headFirst.map((outcome) => outcome.row.id)).toEqual([head!.id]);
+    expect(sends.get(tail!.id)).toBeUndefined();
+    await asTenant(tenantA, () => outbox.ackTenantEvent({ eventId: head!.id, status: 'ACKED', rawBody: Buffer.from('ack-head'), hmacVerified: true }));
+    const tailNext = await asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
+    expect(tailNext.map((outcome) => outcome.row.id)).toEqual([tail!.id]);
 
     // Foreign, missing and malformed identities are the same not-found; B stays intact.
     const [foreign] = await appendMany(tenantB, [fact('retry.renach')]);
@@ -405,7 +424,7 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
     expect(sends.get(unresolved!.id)).toBeUndefined();
   });
 
-  it('never duplicates a send when retry races a tenant dispatch in either lock order', async () => {
+  it('never duplicates a send when retry holds the row lock or a claim committed first', async () => {
     const [tenantA] = await tenants();
     const [lockedFirst, claimedFirst] = await appendMany(tenantA, [fact('race.retry-first'), fact('race.claim-first')]);
     failing.add(claimedFirst!.id);
@@ -448,5 +467,48 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
     await asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
     expect(Object.fromEntries(sends)).toEqual({ [claimedFirst!.id]: 1, [lockedFirst!.id]: 1 });
     expect(await delivery(lockedFirst!)).toMatchObject({ status: 'SENT', attempts: 2 });
+  });
+
+  it('blocks retry on an uncommitted claim transaction, then refuses the committed SENT row and sends once', async () => {
+    const [tenantA] = await tenants();
+    const [event] = await appendMany(tenantA, [fact('race.uncommitted-claim')]);
+    await failOnce(event!, true);
+    sends.delete(event!.id);
+    const gateKey = 7_316_016;
+    // The claim inserts its CLAIMED attempt inside the claim transaction, after it
+    // marked the delivery SENT; this trigger parks that transaction uncommitted.
+    await admin((client) => client.query(`
+      create function outbox.test_park_claim() returns trigger language plpgsql as $$
+      begin perform pg_advisory_xact_lock_shared(${gateKey}); return new; end $$;
+      create trigger test_park_claim before insert on outbox.event_attempts
+        for each row execute function outbox.test_park_claim();
+    `));
+    const gate = await postgres.connectAsAdmin();
+    try {
+      await gate.query('select pg_advisory_lock($1)', [gateKey]);
+      const waiting = (pattern: string, event: string) => admin(async (client) => Number((await client.query<{ count: string }>(
+        `select count(*)::text as count from pg_stat_activity
+          where datname=current_database() and wait_event_type='Lock' and wait_event=$2 and query ilike $1`,
+        [pattern, event],
+      )).rows[0]!.count));
+      const claim = asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
+      await vi.waitFor(async () => expect(await waiting('%event_attempts%', 'advisory')).toBe(1), { timeout: 10_000 });
+      const retry = asTenant(tenantA, () => outbox.retryEvent(event!.id, { immediate: true })).catch((error: unknown) => error);
+      await vi.waitFor(async () => expect(await waiting('%for update%', 'transactionid')).toBe(1), { timeout: 10_000 });
+      expect(sends.get(event!.id)).toBeUndefined();
+      await gate.query('select pg_advisory_unlock($1)', [gateKey]);
+      const refused = await retry;
+      expect(refused).toBeInstanceOf(OutboxEventNotFailedError);
+      expect(refused).toMatchObject({ context: { eventId: event!.id, status: 'SENT' } });
+      await expect(claim).resolves.toMatchObject([{ row: { id: event!.id }, dispatched: true }]);
+    } finally {
+      await gate.end();
+      await admin((client) => client.query(
+        'drop trigger test_park_claim on outbox.event_attempts; drop function outbox.test_park_claim()',
+      ));
+    }
+    await asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
+    expect(sends.get(event!.id)).toBe(1);
+    expect(await delivery(event!)).toMatchObject({ status: 'SENT', attempts: 2 });
   });
 });

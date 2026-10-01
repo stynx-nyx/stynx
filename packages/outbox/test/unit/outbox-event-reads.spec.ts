@@ -77,6 +77,9 @@ describe('OutboxService tenant event reads (UPS-OBX-04)', () => {
     for (const limit of [0, 501, 1.5]) await expect(service.listEvents({ limit })).rejects.toThrow('limit must be an integer from 1 to 500');
     await expect(service.listEvents({ deliveryStatus: [] })).rejects.toThrow('deliveryStatus must name event delivery states');
     await expect(service.listEvents({ deliveryStatus: 'DONE' as never })).rejects.toThrow('deliveryStatus must name event delivery states');
+    for (const deliveryStatus of [7, { 0: 'ERROR' }, null, new Set(['ERROR'])]) {
+      await expect(service.listEvents({ deliveryStatus: deliveryStatus as never })).rejects.toThrow(RangeError);
+    }
     await expect(service.listEvents({ entity: '' })).rejects.toThrow('entity must be a non-empty string');
     await expect(service.listEvents({ entityPrefix: 7 as never })).rejects.toThrow('entityPrefix must be a non-empty string');
     for (const cursor of [{ createdAt: new Date(Number.NaN), id: eventId }, { createdAt: '2026-01-01' as never, id: eventId },
@@ -104,32 +107,33 @@ describe('OutboxService tenant event reads (UPS-OBX-04)', () => {
     expect(calls).toHaveLength(2);
   });
 
-  it('summarizes one aggregate with head, zero-filled counts and bounded ascending events', async () => {
-    let counts: unknown[] = [{ status: 'ERROR', count: 1 }, { status: 'ACKED', count: 2 }];
-    let head: unknown[] = [deliveryRow];
-    const { calls, database } = harness((sql) => {
-      if (sql.includes('count(*)')) return counts;
-      if (sql.includes("d.status<>'ACKED'")) return head;
-      return [deliveryRow, { ...deliveryRow, id: otherId, status: 'ACKED' }];
-    });
+  it('summarizes one aggregate from one snapshot with head, zero-filled counts and bounded ascending events', async () => {
+    const acked = { ...deliveryRow, id: otherId, status: 'ACKED' };
+    let rows: unknown[] = [
+      { ...acked, position: 1, statusRank: 1, statusCount: 2 },
+      { ...deliveryRow, position: 3, statusRank: 1, statusCount: 1 },
+    ];
+    const { calls, options, database } = harness(() => rows);
     const service = new OutboxService(database as never, {});
-    const aggregate = await service.getAggregateDelivery('renach.item', 'item-1');
+    const aggregate = await service.getAggregateDelivery('renach.item', 'item-1', { limit: 1 });
     expect(aggregate).toEqual({
       entity: 'renach.item', entityId: 'item-1', head: expectedDelivery,
       counts: { PENDING: 0, SENT: 0, SENT_UNRESOLVED: 0, ERROR: 1, ACKED: 2 },
-      events: [expectedDelivery, { ...expectedDelivery, id: otherId, delivery: { ...deliveryColumns, status: 'ACKED' } }],
+      events: [{ ...expectedDelivery, id: otherId, delivery: { ...deliveryColumns, status: 'ACKED' } }],
     });
-    expect(calls.map((call) => call.params)).toEqual([
-      [tenant, 'renach.item', 'item-1'], [tenant, 'renach.item', 'item-1'], [tenant, 'renach.item', 'item-1', 100],
-    ]);
-    expect(flat(calls[1]!.sql)).toContain("e.entity=$2 and e.entity_id=$3 and d.status<>'ACKED' order by e.created_at,e.id limit 1");
-    expect(flat(calls[2]!.sql)).toContain('order by e.created_at,e.id limit $4');
-    head = [];
-    await expect(service.getAggregateDelivery('renach.item', 'item-1', { limit: 5 })).resolves.toMatchObject({ head: null });
-    expect(calls[5]!.params).toEqual([tenant, 'renach.item', 'item-1', 5]);
-    counts = [];
+    expect(calls).toHaveLength(1);
+    expect(options).toEqual([appRead]);
+    expect(calls[0]!.params).toEqual([tenant, 'renach.item', 'item-1', 1]);
+    expect(flat(calls[0]!.sql)).toContain('row_number() over (partition by d.status order by e.created_at,e.id)::integer as "statusRank"');
+    expect(flat(calls[0]!.sql)).toContain('where e.tenant_id=$1::uuid and e.entity=$2 and e.entity_id=$3 ) ranked where "position"<=$4 or "statusRank"=1 order by "position"');
+    rows = [{ ...acked, position: 1, statusRank: 1, statusCount: 1 }];
+    await expect(service.getAggregateDelivery('renach.item', 'item-1')).resolves.toMatchObject({
+      head: null, counts: { ACKED: 1, ERROR: 0 }, events: [{ id: otherId }],
+    });
+    expect(calls[1]!.params).toEqual([tenant, 'renach.item', 'item-1', 100]);
+    rows = [];
     await expect(service.getAggregateDelivery('renach.item', 'other')).resolves.toBeNull();
-    expect(calls).toHaveLength(7);
+    expect(calls).toHaveLength(3);
   });
 
   it('reads the attempt ledger by ordinal and selects raw bytes only on explicit request', async () => {
@@ -190,7 +194,7 @@ describe('OutboxService operator event retry (UPS-OBX-05)', () => {
     expect(backoff.nextAttemptAt).not.toHaveBeenCalled();
     expect(options).toEqual([appWrite]);
     expect(flat(calls[0]!.sql)).toBe('select status,attempts from outbox.event_delivery where tenant_id=$1::uuid and event_id=$2::uuid for update');
-    expect(flat(calls[1]!.sql)).toBe("update outbox.event_delivery set status='PENDING',next_attempt_at=coalesce($3::timestamptz,clock_timestamp()), lease_until=null,updated_at=clock_timestamp() where tenant_id=$1::uuid and event_id=$2::uuid and status='ERROR' returning event_id");
+    expect(flat(calls[1]!.sql)).toBe("update outbox.event_delivery set status='PENDING',next_attempt_at=case when $3::timestamptz is null then clock_timestamp() else least(coalesce(next_attempt_at,clock_timestamp()),$3::timestamptz) end, lease_until=null,updated_at=clock_timestamp() where tenant_id=$1::uuid and event_id=$2::uuid and status='ERROR' returning event_id");
     expect(calls[1]!.params).toEqual([tenant, eventId, null]);
     expect(calls.some((call) => /event_attempts|event_acks|last_error=|attempts=/u.test(call.sql))).toBe(false);
 
