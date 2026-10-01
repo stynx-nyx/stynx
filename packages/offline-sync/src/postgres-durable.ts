@@ -382,7 +382,7 @@ export async function pgSubmit(database: Database, scope: TrustedOfflineSyncScop
               locked.queue_item_id !== item.queueItemId || locked.payload_hash !== item.payloadHash || locked.status !== 'received')
             return {kind:'duplicate' as const,status:locked?.status ?? 'received'};
           const context = {...scope,agentId:options.agentId,orgUnitId:input.orgUnitId,deviceId:input.deviceId,
-            batchId:input.deviceBatchId,now};
+            batchId:input.deviceBatchId,now,receiptId:key};
           let reservationId: string | null = null;
           if (item.reservedNumber != null) {
             const covering = (await trx.query<{id:string;status:string;valid_until:Date|string}>(
@@ -475,7 +475,7 @@ export async function pgSubmit(database: Database, scope: TrustedOfflineSyncScop
           if (numbering) {
             const conflictId = randomUUID();
             const itemContext = {...scope,agentId:options.agentId,orgUnitId:input.orgUnitId,deviceId:input.deviceId,
-              batchId:input.deviceBatchId,now};
+              batchId:input.deviceBatchId,now,receiptId:key};
             await trx.query(`insert into offline.sync_conflicts
               (id,tenant_id,sync_queue_item_id,local_entity_id,payload_hash,conflict_type,description,status,created_at)
               values ($1::uuid,$2::uuid,$3,$4,$5,'domain',$6,'open',$7::timestamptz)`,

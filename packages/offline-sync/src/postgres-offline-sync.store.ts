@@ -2,7 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
-import { OfflineSyncError, OfflineSyncUpgradeRequiredError } from './errors';
+import { OfflineSyncError, OfflineSyncRangeUnavailableError, OfflineSyncReservationReplayError, OfflineSyncUpgradeRequiredError } from './errors';
+import { rangeUnavailableReason, reservationFingerprint } from './listing';
+import { pgListBatches, pgListConflicts, pgListItemReceipts, pgListQueueItems } from './postgres-listing';
 import { pgGetBatch, pgGetItem, pgTransition, pgConsumption, pgReconcile, pgSubmit } from './postgres-durable';
 import type {
   CancelNumberingReservationInput,
@@ -22,6 +24,8 @@ import type {
   CTG9SubmitSyncBatchInput, CTG9SubmitSyncBatchResult, DurableBatchExecutionOptions, SubmitSyncBatchOptions,
   SyncBatchReceipt, SyncItemReceipt,
   OfflineSyncConflictResolver,
+  ListSyncBatchReceiptsInput, ListSyncConflictsInput, ListSyncItemReceiptsInput, ListSyncQueueItemsInput,
+  OfflineSyncPage, SyncBatchReceiptSummary, SyncConflictRecord, SyncItemReceiptRecord, SyncQueueItemRecord,
 } from './types';
 
 interface NumberingRangeRow {
@@ -103,6 +107,10 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
   }
   getSyncBatchReceipt(scope: TrustedOfflineSyncScope, deviceId: string, deviceBatchId: string): Promise<SyncBatchReceipt | null> { return pgGetBatch(this.database,scope,deviceId,deviceBatchId); }
   getSyncItemReceipt(scope: TrustedOfflineSyncScope, key: string): Promise<SyncItemReceipt | null> { return pgGetItem(this.database,scope,key); }
+  listSyncBatchReceipts(scope: TrustedOfflineSyncScope, input: ListSyncBatchReceiptsInput): Promise<OfflineSyncPage<SyncBatchReceiptSummary>> { return pgListBatches(this.database,scope,input); }
+  listSyncItemReceipts(scope: TrustedOfflineSyncScope, input: ListSyncItemReceiptsInput): Promise<OfflineSyncPage<SyncItemReceiptRecord>> { return pgListItemReceipts(this.database,scope,input); }
+  listSyncQueueItems(scope: TrustedOfflineSyncScope, input: ListSyncQueueItemsInput): Promise<OfflineSyncPage<SyncQueueItemRecord>> { return pgListQueueItems(this.database,scope,input); }
+  listSyncConflicts(scope: TrustedOfflineSyncScope, input: ListSyncConflictsInput): Promise<OfflineSyncPage<SyncConflictRecord>> { return pgListConflicts(this.database,scope,input); }
   resolveWithPort(scope: TrustedOfflineSyncScope, id: string, input: ResolveSyncConflictInput, now: string, port: OfflineSyncConflictResolver): Promise<SyncConflict> {
     return this.database.tx(async trx => {
       const result = await trx.query<{org_unit_id:string;device_id:string;agent_id:string;device_batch_id:string}>(
@@ -133,7 +141,15 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
     now: string,
     defaultValidUntil: string,
   ): Promise<NumberingReservation> {
+    const key = input.idempotencyKey;
+    const fingerprint = key === undefined ? null : reservationFingerprint(scope, input);
     return this.txE6(async (trx) => {
+      if (key !== undefined) {
+        // Same-key requests serialize here; READ COMMITTED lets the waiter see the committed original.
+        await trx.query('select pg_advisory_xact_lock(hashtextextended($1,0))', [`${scope.tenantId}:numbering-reserve:${key}`]);
+        const prior = await this.keyedReservation(trx, scope, key, fingerprint!);
+        if (prior) return prior;
+      }
       const result = await trx.query<NumberingRangeRow>(
         `select id, tenant_id, org_unit_id, entity_type, series, start_number,
                 end_number, next_number, status,
@@ -171,17 +187,15 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
         range.orgUnitId !== input.orgUnitId ||
         range.entityType !== input.entityType
       ) {
-        throw new OfflineSyncError(
-          'OFFLINE_SYNC_RANGE_UNAVAILABLE',
-          409,
+        throw new OfflineSyncRangeUnavailableError(
+          rangeUnavailableReason(range, input),
           'The selected numbering range is not active for this entity and organizational unit.',
         );
       }
       const endNumber = range.nextNumber + input.requestedSize - 1;
       if (endNumber > range.endNumber) {
-        throw new OfflineSyncError(
-          'OFFLINE_SYNC_RANGE_UNAVAILABLE',
-          409,
+        throw new OfflineSyncRangeUnavailableError(
+          'insufficient_capacity',
           'The selected numbering range has insufficient capacity.',
         );
       }
@@ -198,10 +212,10 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
         `insert into offline.numbering_reservations (
            id, tenant_id, range_id, org_unit_id, entity_type, series, agent_id,
            device_id, shift_id, start_number, end_number, next_number,
-           reserved_at, valid_until, status
+           reserved_at, valid_until, status${key === undefined ? '' : ', idempotency_key, idempotency_fingerprint'}
          ) values (
            $1::uuid, $2::uuid, $3::uuid, $4, $5, $6, $7, $8, $9,
-           $10, $11, $10, $12::timestamptz, $13::timestamptz, 'reserved'
+           $10, $11, $10, $12::timestamptz, $13::timestamptz, 'reserved'${key === undefined ? '' : ', $14, $15'}
          )
          returning id, tenant_id, range_id, org_unit_id, entity_type, series,
                    agent_id, device_id, shift_id, start_number, end_number,
@@ -220,10 +234,34 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
           endNumber,
           now,
           input.validUntil ?? defaultValidUntil,
+          ...(key === undefined ? [] : [key, fingerprint]),
         ],
       );
       return this.mapReservation(inserted.rows[0]!);
+    }).catch((error: unknown) => {
+      if (key !== undefined && error instanceof OfflineSyncUpgradeRequiredError) throw new OfflineSyncUpgradeRequiredError('0003');
+      throw error;
     });
+  }
+
+  async replayNumberingReservation(scope: TrustedOfflineSyncScope, input: ReserveNumberingInput): Promise<NumberingReservation | null> {
+    const key = input.idempotencyKey;
+    if (key === undefined) return null;
+    return this.txE6(trx => this.keyedReservation(trx, scope, key, reservationFingerprint(scope, input))).catch((error: unknown) => {
+      if (error instanceof OfflineSyncUpgradeRequiredError) throw new OfflineSyncUpgradeRequiredError('0003');
+      throw error;
+    });
+  }
+
+  private async keyedReservation(trx: Transaction, scope: TrustedOfflineSyncScope, key: string, fingerprint: string): Promise<NumberingReservation | null> {
+    const prior = (await trx.query<NumberingReservationRow & { idempotency_fingerprint: string }>(
+      `select id, tenant_id, range_id, org_unit_id, entity_type, series, agent_id, device_id, shift_id,
+              start_number, end_number, next_number, valid_until, status, idempotency_fingerprint
+         from offline.numbering_reservations where tenant_id = $1::uuid and idempotency_key = $2`,
+      [scope.tenantId, key])).rows[0];
+    if (!prior) return null;
+    if (prior.idempotency_fingerprint !== fingerprint) throw new OfflineSyncReservationReplayError();
+    return this.mapReservation(prior);
   }
 
   async cancelNumberingReservation(

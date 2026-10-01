@@ -29,8 +29,8 @@ export class OfflineSyncConfigurationError extends Error {
 
 export class OfflineSyncUpgradeRequiredError extends HttpException {
   readonly code = 'OFFLINE_SYNC_UPGRADE_REQUIRED';
-  constructor() {
-    super({ statusCode: 503, errorCode: 'OFFLINE_SYNC_UPGRADE_REQUIRED', message: 'Offline-sync migration 0002 is required.', retryable: true }, 503);
+  constructor(migration = '0002') {
+    super({ statusCode: 503, errorCode: 'OFFLINE_SYNC_UPGRADE_REQUIRED', message: `Offline-sync migration ${migration} is required.`, retryable: true }, 503);
   }
 }
 
@@ -60,5 +60,23 @@ export class OfflineSyncNumberingOutcome extends OfflineSyncError {
     super(code,409,code);
     this.receiptStatus = code === 'OFFLINE_SYNC_NUMBERING_EXPIRED' ? 'conflict' : 'rejected';
     this.context = {number,reservationId};
+  }
+}
+
+/** Why a range refused a reservation; the public code stays `OFFLINE_SYNC_RANGE_UNAVAILABLE`. */
+export type OfflineSyncRangeUnavailableReason = 'inactive' | 'exhausted' | 'insufficient_capacity';
+
+export class OfflineSyncRangeUnavailableError extends OfflineSyncError {
+  constructor(readonly reason: OfflineSyncRangeUnavailableReason, message: string) {
+    super('OFFLINE_SYNC_RANGE_UNAVAILABLE', 409, message);
+  }
+}
+
+/** Same reservation idempotency key reused with a different request (UPS-OFS-05). */
+export class OfflineSyncReservationReplayError extends HttpException {
+  readonly code = 'OFFLINE_SYNC_RESERVATION_IDEMPOTENCY_CONFLICT';
+  constructor() {
+    super({ statusCode: 409, errorCode: 'OFFLINE_SYNC_RESERVATION_IDEMPOTENCY_CONFLICT',
+      message: 'Reservation idempotency key was already used with a different request.', retryable: false }, 409);
   }
 }

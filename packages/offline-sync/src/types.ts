@@ -49,6 +49,12 @@ export interface ReserveNumberingInput {
   readonly rangeId?: string;
   readonly series?: string;
   readonly validUntil?: string;
+  /**
+   * Optional tenant-scoped request key (1–255 UTF-8 bytes). A repeated key with the same request
+   * returns the original reservation without consuming numbers; a different request under the
+   * same key throws `OfflineSyncReservationReplayError`. Requires migration 0003 on PostgreSQL.
+   */
+  readonly idempotencyKey?: string;
 }
 
 export interface CancelNumberingReservationInput {
@@ -122,6 +128,11 @@ export interface OfflineSyncStore {
     now: string,
     defaultValidUntil: string,
   ): Promise<NumberingReservation>;
+  /**
+   * Returns the reservation stored for `input.idempotencyKey` in its current state, `null` when
+   * the key is unused, or throws `OfflineSyncReservationReplayError` for a different request.
+   */
+  replayNumberingReservation?(scope: TrustedOfflineSyncScope, input: ReserveNumberingInput): Promise<NumberingReservation | null>;
   cancelNumberingReservation(
     scope: TrustedOfflineSyncScope,
     reservationId: string,
@@ -195,6 +206,8 @@ export interface OfflineSyncItemContext extends TrustedOfflineSyncScope {
   readonly deviceId: string;
   readonly batchId: string;
   readonly now: string;
+  /** Stable item receipt identifier: the tenant-scoped storage key of the item receipt (UPS-OFS-09). */
+  readonly receiptId?: string;
 }
 export interface OfflineSyncApplyResult { readonly serverEntityId: string }
 export interface OfflineSyncEvent {
@@ -278,4 +291,33 @@ export interface OfflineSyncDurableStore extends OfflineSyncStore {
   submitDurableSyncBatch(scope: TrustedOfflineSyncScope, input: CTG9SubmitSyncBatchInput, options: SubmitSyncBatchOptions, now: string): Promise<CTG9SubmitSyncBatchResult>;
   getSyncBatchReceipt(scope: TrustedOfflineSyncScope, deviceId: string, deviceBatchId: string): Promise<SyncBatchReceipt | null>;
   getSyncItemReceipt(scope: TrustedOfflineSyncScope, idempotencyKey: string): Promise<SyncItemReceipt | null>;
+  listSyncBatchReceipts?(scope: TrustedOfflineSyncScope, input: ListSyncBatchReceiptsInput): Promise<OfflineSyncPage<SyncBatchReceiptSummary>>;
+  listSyncItemReceipts?(scope: TrustedOfflineSyncScope, input: ListSyncItemReceiptsInput): Promise<OfflineSyncPage<SyncItemReceiptRecord>>;
+  listSyncQueueItems?(scope: TrustedOfflineSyncScope, input: ListSyncQueueItemsInput): Promise<OfflineSyncPage<SyncQueueItemRecord>>;
+  listSyncConflicts?(scope: TrustedOfflineSyncScope, input: ListSyncConflictsInput): Promise<OfflineSyncPage<SyncConflictRecord>>;
 }
+/** One keyset page, newest first. `nextCursor` is opaque and `null` on the last page. */
+export interface OfflineSyncPage<T> { readonly items: readonly T[]; readonly nextCursor: string | null }
+export interface OfflineSyncListInput { readonly limit?: number; readonly cursor?: string }
+export interface ListSyncBatchReceiptsInput extends OfflineSyncListInput { readonly deviceId?: string; readonly status?: SyncBatchReceipt['status'] }
+export interface ListSyncItemReceiptsInput extends OfflineSyncListInput { readonly deviceId?: string; readonly deviceBatchId?: string; readonly status?: OfflineSyncQueueStatus }
+export interface ListSyncQueueItemsInput extends OfflineSyncListInput { readonly deviceId?: string; readonly status?: OfflineSyncQueueStatus; readonly entityType?: string }
+export interface ListSyncConflictsInput extends OfflineSyncListInput { readonly status?: SyncConflict['status']; readonly conflictType?: string; readonly queueItemId?: string }
+export interface SyncBatchReceiptSummary {
+  readonly deviceId: string;
+  readonly deviceBatchId: string;
+  readonly batchSequence: number | null;
+  readonly status: SyncBatchReceipt['status'];
+  readonly responseStatus: number | null;
+  readonly createdAt: string;
+}
+export interface SyncItemReceiptRecord extends SyncItemReceipt {
+  /** Same value as `OfflineSyncItemContext.receiptId` for applied items. */
+  readonly receiptId: string;
+  readonly deviceId: string;
+  readonly deviceBatchId: string;
+  readonly payloadHash: string;
+  readonly receivedAt: string;
+}
+export interface SyncQueueItemRecord extends StoredSyncQueueItem { readonly deviceBatchId: string }
+export interface SyncConflictRecord extends SyncConflict { readonly createdAt: string }

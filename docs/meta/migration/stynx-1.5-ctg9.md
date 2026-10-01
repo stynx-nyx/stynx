@@ -22,6 +22,15 @@ statuses are not rewritten. New relations receive tenant leading keys,
 policies, grants, and forced RLS. Test the migration from an empty database
 and upgrade a copy of the existing 0001 schema before deploying it.
 
+In 1.5.x, offline-sync adds the forward-only `0003_reservation_idempotency.sql`
+after 0002. It adds nullable `idempotency_key` and `idempotency_fingerprint`
+columns to `offline.numbering_reservations`, plus a partial unique index on
+`(tenant_id, idempotency_key)`. The table's existing forced RLS policy and
+grants still apply. Only callers that pass
+`ReserveNumberingInput.idempotencyKey` need 0003. Without it, a keyed
+PostgreSQL reservation fails with 503 `OFFLINE_SYNC_UPGRADE_REQUIRED`
+("migration 0003"), and keyless callers are unaffected.
+
 The outbox migration adds the immutable event log, delivery projection,
 attempt and ACK ledgers, tenant clock, legacy ID map, ownership marker, and
 unbound ACK quarantine. It installs forced RLS and app/owner grants while

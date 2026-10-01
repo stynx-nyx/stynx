@@ -88,7 +88,7 @@ short-circuit these checks is unsupported and fails at bootstrap or before writi
 - Device-local entity and queue identifiers are bounded text because device IDs need not be UUIDs.
 
 Adopters must apply the shipped `migrations/0001_offline_sync.sql` with the STYNX migration owner
-before mounting the PostgreSQL-backed module. The package does not create consumer numbering-range
+before mounting the PostgreSQL-backed module, then 0002 and, for keyed reservations, 0003. The package does not create consumer numbering-range
 rows; provisioning those ranges remains a host-domain responsibility.
 
 ## CTG9 1.5 public services and ports
@@ -180,6 +180,126 @@ replayable headers on close. The release evidence includes an upgrade test, seed
 checks, two-tenant PostgreSQL/RLS tests, and TEAT/BOAT HTTP before/after parity for status, body
 bytes, replay headers, 503/Retry-After, and unexpired/expired legacy-store lookup with no duplicate effect. Publication and conformance
 remain pending those proofs.
+
+## 1.5.x additions (#317)
+
+These additions are opt-in. Signatures published in 1.5.0 and keyless or unfiltered calls keep their
+1.5.0 behavior.
+
+**Tenant listings (UPS-OFS-11).** `OfflineSyncService` exposes `listSyncBatchReceipts`,
+`listSyncItemReceipts`, `listSyncQueueItems`, and `listSyncConflicts`. Each takes an optional
+input and returns `OfflineSyncPage<T> = { items, nextCursor }`. The tenant always comes from the
+trusted context port. PostgreSQL reads run in the app-role `Database.tx` with `app.tenant_id` and a
+`tenant_id` predicate under FORCE RLS, so another tenant's rows never appear. Filters are equality
+matches:
+
+| Listing                   | Filters                                                           | Order (newest first, stable tie-break)                  | Row type                                                                                                                |
+| ------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| batch receipts            | `deviceId`, `status` (`open`/`closed`/`legacy_closed_unverified`) | `created_at desc, device_id desc, device_batch_id desc` | `SyncBatchReceiptSummary` (no item list or body bytes; use `getSyncBatchReceipt`)                                       |
+| item receipts             | `deviceId`, `deviceBatchId`, `status`                             | `received_at desc, receiptId desc`                      | `SyncItemReceiptRecord` (`receiptId`, `deviceId`, `deviceBatchId`, `payloadHash`, `receivedAt`, plus `SyncItemReceipt`) |
+| queue items (E6 and CTG9) | `deviceId`, `status`, `entityType`                                | `received_at desc, id desc`                             | `SyncQueueItemRecord` (`StoredSyncQueueItem` plus `deviceBatchId`)                                                      |
+| conflicts                 | `status` (`open`/`resolved`), `conflictType`, `queueItemId`       | `created_at desc, id desc`                              | `SyncConflictRecord` (`SyncConflict` plus `createdAt`)                                                                  |
+
+Identifier tie-breaks use the `C` collation. `limit` defaults to 50 and must be an integer from 1 to 200. `cursor` is an opaque base64url keyset token: the microsecond UTC sort instant plus tie-break
+identifiers of the last row. A malformed cursor, blank filter, unknown status or bad limit returns
+400 `OFFLINE_SYNC_INVALID_INPUT`. A cursor whose instant is not a real calendar time, for example
+`2026-99-99T99:00:00.000000Z`, is malformed and is rejected before any query. Rows created after a
+cursor was issued do not shift later pages.
+
+The PostgreSQL item-receipt timestamp is the database insertion time (`clock_timestamp()`). Queue
+items and conflicts use the injected service clock, and batches use their database creation time.
+`receiptId` is the receipt's tenant-scoped storage key: the client `idempotencyKey`, or the
+`stynx:legacy:v1:` key for unkeyed items. The listing methods are optional on
+`OfflineSyncDurableStore`, so existing custom stores still compile. Calling one against a store that
+lacks it throws `OfflineSyncConfigurationError`. The packaged controllers do not mount listing
+routes; hosts map their own routes to the service.
+
+The listings are scoped only by tenant. For example, `listSyncQueueItems` returns every matching
+queue item of the tenant with its full `payloadJson`, across all org units, agents and devices. Any
+HTTP route that exposes a listing must add its own authorization and org-unit or device scoping,
+typically by forcing the `deviceId` filter or post-filtering on `orgUnitId`.
+
+Recorded follow-up: no index added in 1.5.x matches the listing sort keys exactly. Batches sort on
+`created_at` (only `sync_batches_tenant_status_idx` exists), item receipts on `received_at` (only the
+tenant/device/batch index exists), and an unfiltered queue or conflict listing cannot use the
+existing tenant/device/status or tenant/status index for ordering. Large tenants may sort in memory
+until a later forward-only migration adds tenant-leading sort indexes.
+
+**Idempotent reservation (UPS-OFS-05).** `ReserveNumberingInput.idempotencyKey` is optional and
+1–255 UTF-8 bytes. A key is unique per tenant: all devices and agents of a tenant share one key
+space, so clients should generate a fresh UUID for each logical reservation request. The request fingerprint is a SHA-256 of the stable serialization
+of the resolved business agent and the request fields: `orgUnitId`, `deviceId`, `shiftId`,
+`entityType`, `requestedSize`, `rangeId`, `series` and the explicit `validUntil`, normalized to the
+same instant via `new Date(value).toISOString()` (so `…T00:00:00Z` and `…T00:00:00.000Z` match). The
+computed default validity is excluded.
+
+- Same key and fingerprint: returns the original reservation in its current stored state. It
+  consumes no numbers and emits no event. The replay is not a usability guarantee: the reservation
+  may since have been `cancelled`, `blocked` or `consumed`, and time-based expiry does not change
+  `status`, so a reservation past its `validUntil` still replays as `reserved`. Clients must check
+  `status` and `validUntil` on every replay and request a new key when the reservation is no longer
+  usable.
+- Same key with a different fingerprint: throws `OfflineSyncReservationReplayError`, which is
+  `HttpException` 409 with `code`/`errorCode` `OFFLINE_SYNC_RESERVATION_IDEMPOTENCY_CONFLICT`. The
+  original reservation is unchanged.
+- Without a key, behavior is identical to 1.5.0.
+
+On PostgreSQL, same-key requests serialize on a transaction-scoped advisory lock, and the partial
+unique index `(tenant_id, idempotency_key)` backs that up. N concurrent replays therefore consume one
+interval. For a keyed request, the service checks the input shape (required text, key length,
+`requestedSize`) and resolves the business agent, which is part of the fingerprint, and then looks
+up the key. Only on a miss does it apply the time- and policy-dependent checks: policy resolution,
+TTL and `validUntil` in the future. A retry after `validUntil` has passed, or after the policy lost
+its TTL, therefore still replays. The store repeats the lookup under the advisory lock before it
+reserves. A custom `OfflineSyncStore` without the optional `replayNumberingReservation` keeps the
+1.5.0 ordering.
+Keyed reservations need forward-only `migrations/0003_reservation_idempotency.sql`, applied after 0002
+with the migration owner. It adds nullable `idempotency_key` and `idempotency_fingerprint` columns,
+which must be both null or both set, and the partial unique index. It keeps the table's 0001 FORCE
+RLS policy and grants. Without 0003, a keyed request fails with 503 `OFFLINE_SYNC_UPGRADE_REQUIRED`
+and the message "migration 0003 is required".
+
+Range refusals keep the public `OFFLINE_SYNC_RANGE_UNAVAILABLE` code, 409 status and response body.
+The thrown error is now `OfflineSyncRangeUnavailableError` (a subclass of `OfflineSyncError`) with
+`reason`:
+
+- `exhausted`: the matching range is fully consumed.
+- `insufficient_capacity`: the range has fewer free numbers than `requestedSize`.
+- `inactive`: the range is cancelled, or the selected `rangeId` belongs to another unit or entity.
+
+STYNX does not enforce a single active reservation per device and shift. See V-11.
+
+**Applier receipt identifier (UPS-OFS-09, part).** `OfflineSyncItemContext.receiptId` (optional in
+the type, always set by the shipped stores for keyed items) is the item receipt key above. It equals
+`SyncItemReceiptRecord.receiptId` and is stable across replay. The detection order is unchanged:
+concurrency detection runs after `apply` in the same item transaction. Passing the suspicion result
+to the applier is not implemented.
+
+**Batch cardinality message.** The 400 message reports the effective limit: "items must contain
+between 1 and N queue items." With no limit (`maxBatchItems: null` or absent under a policy
+resolver), an empty batch reports "items must contain at least 1 queue item." E6 keeps N = 100.
+
+### UPS-OFS-14 verification map (V-01…V-15, except V-09)
+
+The test paths are below `packages/offline-sync/test/`. The **Gap** column lists behavior that STYNX
+does not provide today; it is documented here rather than implied.
+
+| V    | Documented behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Tests                                                                                                                                                                                                                                                                                                       | Gap                                                                                                                                           |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| V-01 | With a resolver, `maxBatchItems: null` or absent means no item limit. No durable path applies the fixed 100; a 101-item batch is accepted. A numeric limit is enforced and reported.                                                                                                                                                                                                                                                                                                                                                                                         | `unit/offline-sync-lists-reserve.spec.ts` "V-01 …"; `unit/ctg9-parity.spec.ts` "UPS-OFS-02 admits scoped >100 items …"                                                                                                                                                                                      | —                                                                                                                                             |
+| V-02 | An unkeyed item gets a `stynx:legacy:v1:` key (host resolver optional), stays `received` with `OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED`, and is never applied. A batch without `batchSequence` is accepted with `batchSequence: null` and consumes no sequence.                                                                                                                                                                                                                                                                                                                 | `unit/offline-sync-lists-reserve.spec.ts` "V-02 …"; `unit/ctg9-parity.spec.ts` "UPS-OFS-02 stores unkeyed legacy items …"                                                                                                                                                                                   | —                                                                                                                                             |
+| V-03 | A repeated sequence under a new batch ID returns 409 `OFFLINE_SYNC_BATCH_CONFLICT`. A gap returns 422 `OFFLINE_SYNC_BATCH_SEQUENCE`. A replay with a different declared set, context or sequence returns 409 `OFFLINE_SYNC_BATCH_CONFLICT`. An integrity mismatch is a per-item `rejected`/`OFFLINE_SYNC_ITEM_INTEGRITY`.                                                                                                                                                                                                                                                    | `integration/ctg9-upgrade.integration.spec.ts` "enforces PostgreSQL sequence duplicate and gap statuses …"; `unit/postgres-durable-coverage.spec.ts` "rejects skipped and reused batch sequences …"; `unit/in-memory-offline-sync.store.spec.ts` "rejects batch context and transport-key reuse …"          | The expected and received sequence numbers and `deviceBatchId` appear only in the error message, not as structured context.                   |
+| V-04 | Each keyed item runs in one app-role `txIndependent` transaction covering the effect, consumption, receipt and final event. An applier error rolls the item back, and the outcome is then written to the receipt separately. 4xx `HttpException` (except `OFFLINE_SYNC_BATCH_CONFLICT`) → `rejected` with `errorCode = error.code`. `OfflineSyncNumberingOutcome` → its `receiptStatus` (`EXPIRED` → `conflict`, otherwise `rejected`) with context `{number,reservationId,conflictId,allowedActions}`. Any other error → `received`, retryable, and the batch stays `open`. | `integration/ctg9-upgrade.integration.spec.ts` "commits effect, consumption, receipt and final event …"; `unit/ctg9-parity.spec.ts` "UPS-OFS-03 rolls back a failed item …", "UPS-OFS-03 treats an HttpException 4xx …"; `unit/postgres-durable-coverage.spec.ts` "rejects a business validation failure …" | A domain error's own `context` is not copied to the receipt; only numbering outcomes carry context.                                           |
+| V-05 | A same-key, same-hash item in another batch returns the original receipt without `apply`, with `context.originalQueueItemId` when the IDs differ. A hash mismatch gives a `rejected` `OFFLINE_SYNC_ITEM_INTEGRITY` receipt and an attempt row, and leaves the original unchanged. A `queueItemId` reused with another key gives `rejected` `OFFLINE_SYNC_QUEUE_ID_REUSED`, and processing continues.                                                                                                                                                                         | `unit/ctg9-parity.spec.ts` "UPS-OFS-02 returns the submitted queue ID …", "UPS-OFS-02 retains original key/hash receipt …", "UPS-OFS-02 continues after a queue ID reused …"; `integration/ctg9-upgrade.integration.spec.ts` "serializes a same-key cross-device race …"                                    | No `integrity` conflict row holds both hashes. `server_entity_id` is not stored on the receipt, so replay cannot return it (UPS-OFS-08).      |
+| V-06 | `policyResolver.resolve` runs once per operation with `at` = `options.now()`. With a resolver, the policy's `reservationTtlMs` is the only TTL; `options.reservationTtlMs` and the 24 h default are ignored, and a missing TTL is 400. An explicit `validUntil` in the future is stored as sent.                                                                                                                                                                                                                                                                             | `unit/offline-sync-lists-reserve.spec.ts` "V-06 …"; `unit/ctg9-parity.spec.ts` "UPS-OFS-01 resolves tenant/org/operation TTL …"; `unit/coverage-boundaries.spec.ts` "refuses a missing, nonfinite, or nonpositive reservation TTL …"                                                                        | —                                                                                                                                             |
+| V-07 | The detector runs once per applied item, after `apply`, only when `concurrencyWindowMinutes` is truthy and a detector is configured. `null`/`0` disables it. Each suspected pair consults `handoffPort.permits`. Both items become `conflict` with an open `concurrency` conflict while the effect is kept. A resolver with a detector but no window logs a warning.                                                                                                                                                                                                         | `unit/ctg9-parity.spec.ts` "UPS-OFS-04 marks both cross-device acts …", "UPS-OFS-04 suppresses suspicion …"; `integration/ctg9-upgrade.integration.spec.ts` "does not invent a PostgreSQL concurrency window …"                                                                                             | The missing-window signal is only a log line, with no structured code for `SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING`.                           |
+| V-08 | `resolveWithPort` runs in one transaction. `allowedActions` stored on the evidence governs refusal (409 `OFFLINE_SYNC_CONFLICT_RESOLUTION`). The resolver must return `resolved`. Resolution updates the conflict and appends evidence history.                                                                                                                                                                                                                                                                                                                              | `integration/ctg9-upgrade.integration.spec.ts` "records PostgreSQL conflict evidence and allowed actions …"; `unit/in-memory-offline-sync.store.spec.ts` "supports conflict resolution ports …"                                                                                                             | A resolver cannot keep a conflict open (UPS-OFS-07). No event is emitted for a resolution.                                                    |
+| V-10 | The persisted `agent_id` comes from `agentResolver.resolve(scope, operation)`, and the audit actor comes from the context. They are stored separately (`audit_actor_id`, `resolved_by`).                                                                                                                                                                                                                                                                                                                                                                                     | `unit/ctg9-parity.spec.ts` "UPS-OFS-01 resolves tenant/org/operation TTL and business agent independently of actor"; `unit/coverage-boundaries.spec.ts` "uses an agent resolver and an empty policy …"                                                                                                      | The resolver does not receive the request's business `agent_id`; the host must carry it, for example through its own request context.         |
+| V-11 | `requestedSize` must be an integer from 1 to 100, and `shiftId` is required. Exhaustion is `OFFLINE_SYNC_RANGE_UNAVAILABLE` with `reason`. Concurrent reservations never overlap.                                                                                                                                                                                                                                                                                                                                                                                            | `unit/offline-sync-depth.spec.ts` "accepts exact upper validation boundaries …"; `integration/ctg9-upgrade.integration.spec.ts` "UPS-OFS-01 allocates disjoint intervals …"; `integration/offline-sync-lists-reserve.integration.spec.ts` "UPS-OFS-05 …"                                                    | No single-active-reservation check per device and shift, so there is no distinct "active exists" code. `shiftId` cannot be null (UPS-OFS-12). |
+| V-12 | Cancel accepts only `reserved`; in CTG9 mode a repeated cancel returns the cancelled row unchanged and rewinds the range only for an unused tail. Block and close accept `reserved`/`expired`; repeating the same target status returns the row unchanged. Settle also accepts `consumed`. Unused (`available`) numbers become `blocked`/`expired`.                                                                                                                                                                                                                          | `unit/ctg9-parity.spec.ts` "UPS-OFS-01 makes configured-policy lifecycle transitions idempotent", "UPS-OFS-01 releases only an unused tail …"; `unit/in-memory-offline-sync.store.spec.ts` "cancels a CTG9 reservation idempotently …"                                                                      | No events are emitted, so "no new event" holds trivially.                                                                                     |
+| V-13 | Claims outside the interval return 400 before any write. Claims are recorded only while the reservation is `reserved`. Consumption has one entry per number. `missingOnServer` lists claims not `applied`; `unexpectedOnServer` lists `applied` numbers that were not claimed.                                                                                                                                                                                                                                                                                               | `unit/postgres-durable-coverage.spec.ts` "reconciles claims and reports missing …", "rejects out-of-range claims …"; `unit/ctg9-parity.spec.ts` "UPS-OFS-01 reconciles after close …"                                                                                                                       | Reconciliation updates only `audit_actor_id`/`updated_at`; no separate reconciliation record is kept.                                         |
+| V-14 | The service emits exactly one `eventPort.appendInTransaction(trx, {entity: entityType, entityId: serverEntityId, idempotencyKey: <receipt key>, payload: payloadJson})` per applied item, inside that item's transaction. It emits nothing for rejections, conflict openings, reservations or resolutions, so the consumer's own envelopes are the only public trail.                                                                                                                                                                                                        | `unit/ctg9-parity.spec.ts` "UPS-OFS-03 applies items serially and passes the identical transaction …"                                                                                                                                                                                                       | —                                                                                                                                             |
+| V-15 | `stableStringify` sorts object keys recursively and serializes `undefined` as `null` rather than omitting it. `batchContextFingerprint` hashes it for batch identity only. `payloadHash` is client-declared and checked only for format; STYNX does not recompute it.                                                                                                                                                                                                                                                                                                        | `unit/offline-sync-lists-reserve.spec.ts` "V-15 …"; `unit/coverage-boundaries.spec.ts` "separates transport users and absent optional item fields …"                                                                                                                                                        | There is no port for a consumer canonical hash, and the `undefined` handling differs from JSON omission.                                      |
 
 Server-side device attestation is deferred to Phase 5. This API authenticates the actor and scopes
 database access, but it cannot independently prove the client's posture claim.
