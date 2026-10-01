@@ -209,6 +209,49 @@ The status path is `idle → live → reconnecting → polling → live`, with `
 
 `maxConnectionBytes` and `maxConnectionAgeMs` are finite positive ceilings. When either is reached, cancel and reopen with the most recent `Last-Event-ID`; this prevents unbounded cumulative `partialText` growth. The byte ceiling counts received UTF-8 text, not just emitted payload. Parse the complete frames in the received `DownloadProgress` suffix before evaluating that suffix against the byte ceiling; a valid frame in the crossing suffix counts as cursor progress. Reaching the byte ceiling before any valid cursor advance on that connection is a failed stream attempt: apply backoff and the configured failure threshold, then enter polling if failures continue. This prevents a large first frame from causing an immediate reconnect loop with the same cursor. A ceiling reached after cursor progress, or the age ceiling, is a planned reconnect and does not itself count as a failure. The cursor survives a same-tenant reconnect and is cleared by 204 or tenant change. Applications should set backend `maxPayloadBytes` sufficiently below client `maxConnectionBytes` to leave room for SSE framing and comments; the client ceiling applies to all received stream text.
 
+### 1.5.x opt-in client options (UPS-NGSSE-11, 13, 14, 15)
+
+**Source:** stynx-nyx/stynx#321 (DETRAN C-0002, R-0022, CTG-0005). These additions are additive within 1.5.x. Each new option is set per `provideStynxEventStream` injector. When it is omitted, the client keeps the 1.5.0 behavior described above. UPS-NGSSE-12, server close as end of stream, is not part of this change: a 200 that ends the body still counts as a failure and keeps the cursor.
+
+```ts
+export interface StynxEventStreamConfig {
+  // ...1.5.0 fields above...
+  reopenOnPollingEntry?: 'immediate' | 'backoff'; // default 'immediate'
+  commentActivity?: 'stale-only' | 'live'; // default 'stale-only'
+  retryAfterFrom?: (error: HttpErrorResponse, body: unknown) => number | null; // milliseconds
+}
+export type StynxEventStreamResyncReason = 'no-content' | 'tenant-change' | 'server-close';
+export interface StynxEventStreamResync {
+  reason: StynxEventStreamResyncReason;
+}
+export interface StynxEventStreamError {
+  status: number | null; // HTTP status; null when the error is not an HttpErrorResponse
+  body: unknown; // HttpErrorResponse.error, JSON-decoded when it is JSON text
+  error: unknown; // the original error
+  at: number; // StynxEventStreamClock.now() when recorded
+  outcome: 'stopped' | 'retry' | 'polling';
+}
+export class StynxEventStreamService<T = unknown> {
+  // ...1.5.0 members above...
+  readonly resync$: Observable<StynxEventStreamResync>;
+  readonly lastError: Signal<StynxEventStreamError | null>;
+}
+```
+
+**`reopenOnPollingEntry` (UPS-NGSSE-11).** With `'immediate'` (the default), the failure that first moves the stream into polling reopens at once, unless the server asked for a delay. This is the 1.5.0 behavior. A positive `Retry-After` or `retryAfterFrom` delay still defers this reopen, as in the 429 fix. With `'backoff'`, that reopen is scheduled like any other failure, after `max(backoff, Retry-After, retryAfterFrom)`, and it respects `retryMode`, `initialMs` and `maxMs`. With the defaults, consecutive failures therefore reopen after 1, 2 and 4 seconds and so on, with no request at the moment polling begins. `tick$` keeps its `pollingIntervalMs` compass from that moment. With `failuresBeforePolling: 1`, `retryMode: 'fixed'` and `initialMs = pollingIntervalMs = 60_000`, nothing is requested for 60 seconds after the first failure, and one request follows at 60 seconds. Stops for 401/403, `UnauthorizedError` and an inactive session keep precedence. The 204 and tenant-change paths are unchanged.
+
+**`commentActivity` (UPS-NGSSE-13).** With `'stale-only'` (the default), SSE comment lines such as `: connected` and `: heartbeat` only re-arm the silence timer. This is the 1.5.0 behavior. With `'live'`, every comment line received on the current connection has the same effect on state as a delivered frame. Status becomes `live` and `polling()` becomes false. The failure window and consecutive-failure counter are cleared, so the next failure waits `initialMs`. The retry and polling timers are cancelled, so `tick$` stops, and `lastError` is cleared. A comment emits nothing on `events$`. It does not move `lastEventId` and does not enter deduplication. It still re-arms staleness: silence for `heartbeatMs × staleFactor` after the last comment counts as a failure. The generation guard is unchanged. A comment parsed after a subscriber has stopped the stream or changed tenant, even within the same progress chunk, has no effect. The status set on opening is unchanged in both modes: `live` with no prior failure, `reconnecting` or `polling` otherwise. No option holds the previous status until the first line arrives. A consumer that needs that state must derive it.
+
+**`resync$` (UPS-NGSSE-14).** This stream emits once each time the client discards a cursor it holds, that is, when `lastEventId()` was non-null. The emission happens after `lastEventId()` and the deduplication history are cleared, and before the matching reopen is scheduled or opened. The reason is `'no-content'` for an HTTP 204 response and `'tenant-change'` for a tenant switch. Nothing is emitted on the first open, on a 204 or tenant change while no cursor is held, or on any ordinary failure that keeps the cursor (status 0, 5xx, 429, silence, a byte ceiling, or a 200 that ends the body). A subscriber may stop the stream or change tenant synchronously from `resync$`. In that case the old generation does not reopen. `'server-close'` is reserved in the reason union for UPS-NGSSE-12 (server-initiated end of stream) so that adding it does not widen the type later; no 1.5.x release emits it. Consumers that switch on the reason should already handle it.
+
+**`lastError` (UPS-NGSSE-15).** This signal holds the most recent error delivered by the transport's error channel, recorded when the client handles it. `outcome` is `'stopped'` for 401/403, `UnauthorizedError` or an inactive session. It is `'polling'` when the failure leaves the stream polling and `'retry'` otherwise. A stop keeps the recorded error, so a terminal 401 remains visible while `stopped`. Failures with no error object, which are silence, completion, a 200 or 204 response and the byte ceiling, leave `lastError` unchanged. The signal is cleared by `start()`, by a tenant change, and whenever a delivered frame (or, with `commentActivity: 'live'`, a comment) returns the stream to `live`. The service does not translate the error into display text: the application maps `status` and `body` to its own message keys.
+
+**`retryAfterFrom` (UPS-NGSSE-15).** This function is called for every non-terminal `HttpErrorResponse` failure, with the response and its decoded body. It is not called for 401/403 or for failures without an HTTP error. The decoded body is the JSON-decoded value when `error.error` is JSON text, as it is under the transport's `responseType: 'text'`. Otherwise it is `error.error` as received. The function returns a delay in milliseconds, or `null`. A non-finite or non-number result, or a thrown exception, contributes no delay, and a negative result counts as zero. The reopen waits for `max(backoff, Retry-After, retryAfterFrom)`. STYNX embeds no consumer error envelope. A consumer whose body carries `context.retryAfter` in seconds returns that value multiplied by 1 000, or `null` when it is absent.
+
+**Transport header.** The built-in `HttpClient` transport sends `Accept: text/event-stream` on every stream request, in addition to `Last-Event-ID` when a cursor is held.
+
+**Test double.** `FakeStynxEventStreamTransport.error(status, headers?, body?)` accepts an optional response body, delivered as `HttpErrorResponse.error`. Existing two-argument calls are unchanged.
+
 ## Published test double (`@stynx-nyx/angular/testing`)
 
 The existing APF secondary entry `packages-web/angular/testing/index.ts` becomes the canonical test barrel. It exports `FakeStynxEventStreamTransport` and `FakeStynxEventStreamClock`, implementing the public primary-entry interfaces, with methods to emit cumulative progress/text frames, HTTP responses and errors, advance time, and observe/cancel connection subscriptions. Its imports of primary API types use `@stynx-nyx/angular`, never relative paths crossing APF entry points. `packages-web/angular/src/testing/index.ts` is not re-exported by the primary barrel. The generated `dist/fesm2022/stynx-nyx-angular-testing.mjs` and `dist/types/stynx-nyx-angular-testing.d.ts` must both exist after `ng-packagr` and resolve from a package consumer. STYNX's own client tests use the published fake and clock, rather than a private duplicate. The source package already declares `./testing`, but its current entry is empty; an empty entry does not satisfy UPS-TEST-01.
@@ -239,6 +282,10 @@ The existing APF secondary entry `packages-web/angular/testing/index.ts` becomes
 | UPS-NGSSE-08 | Tenant change resets connection/cursor; supplied session signal false stops.                                     |
 | UPS-NGSSE-09 | Type/prefix filtering without rendering data fields as text.                                                     |
 | UPS-NGSSE-10 | Replaceable transport and published testing entry exercise frames/errors/close/clock.                            |
+| UPS-NGSSE-11 | `reopenOnPollingEntry: 'backoff'` reopens on backoff/fixed compass at polling entry; default stays immediate.    |
+| UPS-NGSSE-13 | `commentActivity: 'live'` comment returns to `live` and clears counters without event or cursor move.            |
+| UPS-NGSSE-14 | `resync$` emits once per held cursor discarded by 204 or tenant change, never on ordinary failure.               |
+| UPS-NGSSE-15 | `lastError` records status/body/outcome; `retryAfterFrom` body delay joins `max(backoff, Retry-After)`.          |
 | UPS-TEST-01  | `@stynx-nyx/angular/testing` fake is used by STYNX tests and both APF artifacts resolve to a consumer.           |
 
 | Requirement                    | Required observation                                                                                                                                                                                                          |

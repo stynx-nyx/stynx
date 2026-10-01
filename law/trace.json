@@ -1669,6 +1669,54 @@
       "assertion_digest_sha256": "9b4c13c41133212c67d1ae39707b3574bc933d53080c607e09b977113b8578c2"
     },
     {
+      "path": "packages-web/angular/test/event-stream-retry-after.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "78a80e8b5b4359ee55eb67b7f8f402c7ae6f6c2ae5db72a628f82873cc224308"
+    },
+    {
+      "path": "packages-web/angular/test/event-stream-comment-activity.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 18,
+      "assertion_digest_sha256": "d1f30ff8666a39b5aad62ef44ffaea338eb2e8b080d39352f67d39707057f33d"
+    },
+    {
+      "path": "packages-web/angular/test/event-stream-http-headers.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "1ebb1631118f0543899edcde25ee6acd843966be415b7b84e76c99fed07c5959"
+    },
+    {
+      "path": "packages-web/angular/test/event-stream-last-error.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 31,
+      "assertion_digest_sha256": "84927b5c6aa0b21c956e7b34e163d37ae0b9a85cac607563c6cde40fed5b5b89"
+    },
+    {
+      "path": "packages-web/angular/test/event-stream-polling-entry.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "7139923fed28241ac9d593ac97812c5ea0ed1c44e1f5535e6aaaa4e70982a098"
+    },
+    {
+      "path": "packages-web/angular/test/event-stream-resync.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 15,
+      "assertion_digest_sha256": "952597c6dca2837b88370a397e6894cfcba96376c8cc6867b74043790f4179fc"
+    },
+    {
       "path": "packages-web/angular/test/idempotency.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
