@@ -171,3 +171,114 @@ export interface OutboxModuleOptions {
   /** Persistence retry deadline after a legacy send failure. */
   failurePersistenceDeadlineMs?: number;
 }
+
+/** Event-mode delivery projection states (`outbox.event_delivery.status`). */
+export type OutboxEventDeliveryStatus = 'PENDING' | 'SENT' | 'SENT_UNRESOLVED' | 'ERROR' | 'ACKED';
+
+/** Delivery projection of one event; `nextAttemptAt` is the next eligibility. */
+export interface OutboxEventDeliveryState {
+  status: OutboxEventDeliveryStatus;
+  attempts: number;
+  lastError: string | null;
+  nextAttemptAt: Date | null;
+  leaseUntil: Date | null;
+  updatedAt: Date;
+}
+
+/** Immutable event-log identity returned by the tenant read ports (payload omitted). */
+export interface OutboxEventSummary {
+  id: string;
+  tenantId: string;
+  entity: string;
+  entityId: string;
+  idempotencyKey: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: Date;
+}
+
+/** One `listEvents()` row; `delivery` is `null` for an event without a delivery row. */
+export interface OutboxEventListItem extends OutboxEventSummary {
+  delivery: OutboxEventDeliveryState | null;
+}
+
+/** An event together with its existing delivery row. */
+export interface OutboxEventDelivery extends OutboxEventSummary {
+  delivery: OutboxEventDeliveryState;
+}
+
+/** Keyset position `(createdAt, id)` of the last row of a `listEvents()` page. */
+export interface OutboxEventListCursor {
+  createdAt: Date;
+  id: string;
+}
+
+export interface OutboxEventListQuery {
+  /** Only events whose delivery has one of these states; events without delivery never match. */
+  deliveryStatus?: OutboxEventDeliveryStatus | readonly OutboxEventDeliveryStatus[];
+  /** Exact `entity` match. */
+  entity?: string;
+  /** Case-sensitive literal `entity` prefix (no pattern characters). */
+  entityPrefix?: string;
+  /** Page size, 1–500; default 50. */
+  limit?: number;
+  /** Continue after the `nextCursor` of a previous page. */
+  cursor?: OutboxEventListCursor | null;
+}
+
+export interface OutboxEventListPage {
+  items: OutboxEventListItem[];
+  /** `null` when no later page exists. */
+  nextCursor: OutboxEventListCursor | null;
+}
+
+export type OutboxDeliveryStatusCounts = Record<OutboxEventDeliveryStatus, number>;
+
+/** Delivery state of one `(entity, entityId)` aggregate in the context tenant. */
+export interface OutboxAggregateDelivery {
+  entity: string;
+  entityId: string;
+  /** Oldest non-`ACKED` delivery: the one that blocks later events of the aggregate; `null` when all are `ACKED`. */
+  head: OutboxEventDelivery | null;
+  /** Counts over every delivery of the aggregate. */
+  counts: OutboxDeliveryStatusCounts;
+  /** Deliveries ordered `createdAt, id` ascending, at most `limit`. */
+  events: OutboxEventDelivery[];
+}
+
+export type OutboxEventAttemptResult = 'CLAIMED' | 'SENT' | 'ERROR' | 'LEGACY_HISTORY_UNAVAILABLE';
+
+/** One `outbox.event_attempts` ledger row. Raw bytes are present only with `includeBytes`. */
+export interface OutboxEventAttempt {
+  id: string;
+  eventId: string;
+  attemptOrdinal: number;
+  provider: string | null;
+  protocol: string | null;
+  requestSha256: string | null;
+  responseSha256: string | null;
+  responseStatus: number | null;
+  /** Final header names with redacted or digested values, as captured by the dispatcher. */
+  requestHeaders: Record<string, string> | null;
+  evidenceState: Record<string, unknown>;
+  result: OutboxEventAttemptResult;
+  error: string | null;
+  leasedAt: Date | null;
+  completedAt: Date | null;
+  legacyMessageId: string | null;
+  requestBytes?: Buffer | null;
+  responseBytes?: Buffer | null;
+}
+
+/** Per-tenant queue health over delivery rows (events without delivery are not counted). */
+export interface OutboxQueueHealth {
+  tenantId: string;
+  total: number;
+  byStatus: OutboxDeliveryStatusCounts;
+  /** `createdAt` of the oldest non-`ACKED` delivery, or `null`. */
+  oldestUnackedCreatedAt: Date | null;
+}
+
+export interface OutboxQueueHealthQuery {
+  entity?: string;
+  entityPrefix?: string;
+}

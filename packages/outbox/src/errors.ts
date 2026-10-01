@@ -67,3 +67,9 @@ export class OutboxAckQuarantineUnavailableError extends StynxOutboxError {
   constructor() { super('Unbound ACK could not be quarantined while a transaction holds the connection',
     { code: 'OUTBOX_ACK_QUARANTINE_UNAVAILABLE', status: 503 }); }
 }
+/** Raised by `retryEvent()` when the tenant's delivery is not in `ERROR`; nothing is changed. */
+export class OutboxEventNotFailedError extends StynxOutboxError {
+  constructor(context: Record<string, unknown>) {
+    super('Outbox event delivery is not in ERROR', { code: 'OUTBOX_EVENT_NOT_FAILED', status: 409, context });
+  }
+}

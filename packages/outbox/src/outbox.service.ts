@@ -12,7 +12,7 @@ import {
   STYNX_OUTBOX_METRICS,
   STYNX_OUTBOX_OPTIONS,
 } from './constants';
-import { OutboxAckQuarantineUnavailableError, OutboxAlreadyEnqueuedError, OutboxAmbiguousAckError, OutboxNotFoundError, OutboxEventConflictError, OutboxEventTransactionError, OutboxOwnershipContentionError, OutboxLegacyCutoverError, OutboxCustomTableCutoverUnsupportedError, OutboxCutoverAuditedTableError } from './errors';
+import { OutboxAckQuarantineUnavailableError, OutboxAlreadyEnqueuedError, OutboxAmbiguousAckError, OutboxNotFoundError, OutboxEventConflictError, OutboxEventTransactionError, OutboxOwnershipContentionError, OutboxLegacyCutoverError, OutboxCustomTableCutoverUnsupportedError, OutboxCutoverAuditedTableError, OutboxEventNotFailedError } from './errors';
 import { assertQualifiedIdentifier, errorMessage, isUniqueViolation, outboxColumns, toRows } from './row-mapper';
 import type {
   OutboxAckInput,
@@ -28,7 +28,50 @@ import type {
   OutboxEventRow,
   OutboxEventAckInput,
   OutboxTransportEvidence,
+  OutboxAggregateDelivery,
+  OutboxDeliveryStatusCounts,
+  OutboxEventAttempt,
+  OutboxEventDelivery,
+  OutboxEventDeliveryState,
+  OutboxEventDeliveryStatus,
+  OutboxEventListPage,
+  OutboxEventListQuery,
+  OutboxEventSummary,
+  OutboxQueueHealth,
+  OutboxQueueHealthQuery,
 } from './types';
+
+const EVENT_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
+const DELIVERY_STATUSES: readonly OutboxEventDeliveryStatus[] = ['PENDING','SENT','SENT_UNRESOLVED','ERROR','ACKED'];
+const EVENT_DELIVERY_COLUMNS = `e.id,e.tenant_id as "tenantId",e.entity,e.entity_id as "entityId",
+  e.idempotency_key as "idempotencyKey",e.metadata,e.created_at as "createdAt",d.status,d.attempts,
+  d.last_error as "lastError",d.next_attempt_at as "nextAttemptAt",d.lease_until as "leaseUntil",d.updated_at as "updatedAt"`;
+type EventDeliverySqlRow = OutboxEventSummary & {
+  status: OutboxEventDeliveryStatus | null; attempts: number | null; lastError: string | null;
+  nextAttemptAt: Date | null; leaseUntil: Date | null; updatedAt: Date | null;
+};
+
+function eventSummary(row: EventDeliverySqlRow): OutboxEventSummary {
+  return { id: row.id, tenantId: row.tenantId, entity: row.entity, entityId: row.entityId,
+    idempotencyKey: row.idempotencyKey, metadata: row.metadata, createdAt: row.createdAt };
+}
+
+function deliveryState(row: EventDeliverySqlRow): OutboxEventDeliveryState | null {
+  return row.status === null ? null : { status: row.status, attempts: row.attempts!, lastError: row.lastError,
+    nextAttemptAt: row.nextAttemptAt, leaseUntil: row.leaseUntil, updatedAt: row.updatedAt! };
+}
+
+function statusCounts(rows: readonly { status: OutboxEventDeliveryStatus; count: number }[]): OutboxDeliveryStatusCounts {
+  const counts = Object.fromEntries(DELIVERY_STATUSES.map((status) => [status, 0])) as OutboxDeliveryStatusCounts;
+  for (const row of rows) counts[row.status] = row.count;
+  return counts;
+}
+
+function filterText(value: string | undefined, name: string): string | null {
+  if (value === undefined) return null;
+  if (typeof value !== 'string' || value.length === 0) throw new RangeError(`${name} must be a non-empty string`);
+  return value;
+}
 
 function transportEvidenceState(evidence?: OutboxTransportEvidence): string {
   return JSON.stringify({
@@ -505,6 +548,165 @@ export class OutboxService {
       }
     }
     return outcomes;
+  }
+
+  private requestTenant(): string {
+    const tenantId = this.database.currentTenantId();
+    if (!tenantId) throw new OutboxNotFoundError({ reason: 'missing-tenant-context' });
+    return tenantId;
+  }
+
+  /** Read-only, actor-bearing stynx_app transaction; nested calls join the caller's transaction. */
+  private tenantRead<T>(fn: (trx: Transaction) => Promise<T>): Promise<T> {
+    return this.database.tx(fn, { role: 'app', readonly: true, requireActor: true, retry: false });
+  }
+
+  private async deliveriesWhere(trx: OutboxSqlExecutor, tenantId: string, where: string, params: unknown[], tail: string): Promise<OutboxEventDelivery[]> {
+    const result = await trx.query<EventDeliverySqlRow>(
+      `select ${EVENT_DELIVERY_COLUMNS}
+         from outbox.events e join outbox.event_delivery d
+           on d.tenant_id=$1::uuid and d.tenant_id=e.tenant_id and d.event_id=e.id
+        where e.tenant_id=$1::uuid and ${where} ${tail}`, [tenantId, ...params],
+    );
+    return result.rows.map((row) => ({ ...eventSummary(row), delivery: deliveryState(row)! }));
+  }
+
+  /**
+   * Lists the context tenant's events with their delivery state, newest first
+   * (`createdAt desc, id desc`), filtered by delivery status and `entity`.
+   */
+  async listEvents(query: OutboxEventListQuery = {}): Promise<OutboxEventListPage> {
+    const tenantId = this.requestTenant();
+    const limit = query.limit ?? 50;
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 500) throw new RangeError('limit must be an integer from 1 to 500');
+    const statuses = query.deliveryStatus === undefined ? null
+      : (typeof query.deliveryStatus === 'string' ? [query.deliveryStatus] : [...query.deliveryStatus]);
+    if (statuses && (statuses.length === 0 || statuses.some((status) => !DELIVERY_STATUSES.includes(status)))) {
+      throw new RangeError('deliveryStatus must name event delivery states');
+    }
+    const entity = filterText(query.entity, 'entity');
+    const entityPrefix = filterText(query.entityPrefix, 'entityPrefix');
+    const cursor = query.cursor ?? null;
+    if (cursor && (!(cursor.createdAt instanceof Date) || Number.isNaN(cursor.createdAt.getTime()) || !EVENT_UUID.test(cursor.id))) {
+      throw new RangeError('cursor must be a listEvents nextCursor');
+    }
+    const rows = await this.tenantRead(async (trx) => (await trx.query<EventDeliverySqlRow>(
+      `select ${EVENT_DELIVERY_COLUMNS}
+         from outbox.events e left join outbox.event_delivery d
+           on d.tenant_id=$1::uuid and d.tenant_id=e.tenant_id and d.event_id=e.id
+        where e.tenant_id=$1::uuid
+          and ($2::text[] is null or d.status=any($2::text[]))
+          and ($3::text is null or e.entity=$3)
+          and ($4::text is null or left(e.entity,length($4))=$4)
+          and ($5::timestamptz is null or (e.created_at,e.id)<($5::timestamptz,$6::uuid))
+        order by e.created_at desc,e.id desc limit $7`,
+      [tenantId, statuses, entity, entityPrefix, cursor?.createdAt ?? null, cursor?.id ?? null, limit + 1],
+    )).rows);
+    const items = rows.slice(0, limit).map((row) => ({ ...eventSummary(row), delivery: deliveryState(row) }));
+    const last = items[items.length - 1];
+    return { items, nextCursor: rows.length > limit && last ? { createdAt: last.createdAt, id: last.id } : null };
+  }
+
+  /** Delivery of one event in the context tenant; `null` when absent, foreign or without delivery. */
+  async getEventDelivery(eventId: string): Promise<OutboxEventDelivery | null> {
+    const tenantId = this.requestTenant();
+    if (!EVENT_UUID.test(eventId)) return null;
+    const rows = await this.tenantRead((trx) => this.deliveriesWhere(trx, tenantId, 'e.id=$2::uuid', [eventId], ''));
+    return rows[0] ?? null;
+  }
+
+  /** Delivery state of one aggregate in the context tenant; `null` when it has no delivery row. */
+  async getAggregateDelivery(entity: string, entityId: string, options: { limit?: number } = {}): Promise<OutboxAggregateDelivery | null> {
+    const tenantId = this.requestTenant();
+    const limit = options.limit ?? 100;
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 1000) throw new RangeError('limit must be an integer from 1 to 1000');
+    return this.tenantRead(async (trx) => {
+      const counted = await trx.query<{ status: OutboxEventDeliveryStatus; count: number }>(
+        `select d.status,count(*)::integer as count
+           from outbox.events e join outbox.event_delivery d
+             on d.tenant_id=$1::uuid and d.tenant_id=e.tenant_id and d.event_id=e.id
+          where e.tenant_id=$1::uuid and e.entity=$2 and e.entity_id=$3 group by d.status`,
+        [tenantId, entity, entityId],
+      );
+      if (counted.rows.length === 0) return null;
+      const aggregate = 'e.entity=$2 and e.entity_id=$3';
+      const [head] = await this.deliveriesWhere(trx, tenantId, `${aggregate} and d.status<>'ACKED'`, [entity, entityId],
+        'order by e.created_at,e.id limit 1');
+      const events = await this.deliveriesWhere(trx, tenantId, aggregate, [entity, entityId, limit],
+        'order by e.created_at,e.id limit $4');
+      return { entity, entityId, head: head ?? null, counts: statusCounts(counted.rows), events };
+    });
+  }
+
+  /** Attempt ledger of one context-tenant event by ordinal; empty when absent or foreign. */
+  async listEventAttempts(eventId: string, options: { includeBytes?: boolean } = {}): Promise<OutboxEventAttempt[]> {
+    const tenantId = this.requestTenant();
+    if (!EVENT_UUID.test(eventId)) return [];
+    const bytes = options.includeBytes === true;
+    const result = await this.tenantRead((trx) => trx.query<OutboxEventAttempt>(
+      `select id,event_id as "eventId",attempt_ordinal as "attemptOrdinal",provider,protocol,
+              request_sha256 as "requestSha256",response_sha256 as "responseSha256",
+              response_status as "responseStatus",request_headers as "requestHeaders",
+              evidence_state as "evidenceState",result,error,leased_at as "leasedAt",
+              completed_at as "completedAt",legacy_message_id as "legacyMessageId"
+              ${bytes ? ',request_bytes as "requestBytes",response_bytes as "responseBytes"' : ''}
+         from outbox.event_attempts
+        where tenant_id=$1::uuid and event_id=$2::uuid order by attempt_ordinal,id`,
+      [tenantId, eventId],
+    ));
+    return result.rows;
+  }
+
+  /** Delivery counts by status for the context tenant, optionally per `entity`. */
+  async getQueueHealth(query: OutboxQueueHealthQuery = {}): Promise<OutboxQueueHealth> {
+    const tenantId = this.requestTenant();
+    const entity = filterText(query.entity, 'entity');
+    const entityPrefix = filterText(query.entityPrefix, 'entityPrefix');
+    const result = await this.tenantRead((trx) => trx.query<{ status: OutboxEventDeliveryStatus; count: number; oldest: Date | null }>(
+      `select d.status,count(*)::integer as count,min(e.created_at) filter (where d.status<>'ACKED') as oldest
+         from outbox.event_delivery d join outbox.events e
+           on e.tenant_id=$1::uuid and e.tenant_id=d.tenant_id and e.id=d.event_id
+        where d.tenant_id=$1::uuid
+          and ($2::text is null or e.entity=$2)
+          and ($3::text is null or left(e.entity,length($3))=$3)
+        group by d.status`,
+      [tenantId, entity, entityPrefix],
+    ));
+    const oldest = result.rows.map((row) => row.oldest).filter((value): value is Date => value !== null)
+      .sort((left, right) => left.getTime() - right.getTime())[0] ?? null;
+    return { tenantId, total: result.rows.reduce((sum, row) => sum + row.count, 0),
+      byStatus: statusCounts(result.rows), oldestUnackedCreatedAt: oldest };
+  }
+
+  /**
+   * Operator retry of one context-tenant event whose delivery is `ERROR`: it
+   * becomes `PENDING` and eligible now (`immediate`) or at the backoff time.
+   * `attempts`, `last_error` and the attempt/ACK ledgers are preserved.
+   */
+  async retryEvent(eventId: string, options: { immediate?: boolean } = {}): Promise<OutboxEventDelivery> {
+    const tenantId = this.requestTenant();
+    if (!EVENT_UUID.test(eventId)) throw new OutboxNotFoundError({ eventId });
+    return this.database.tx(async (trx) => {
+      // The row lock serializes with a claim; a claimed row is SENT and refused.
+      const current = await trx.query<{ status: OutboxEventDeliveryStatus; attempts: number }>(
+        `select status,attempts from outbox.event_delivery
+          where tenant_id=$1::uuid and event_id=$2::uuid for update`, [tenantId, eventId],
+      );
+      const row = current.rows[0];
+      if (!row) throw new OutboxNotFoundError({ eventId });
+      if (row.status !== 'ERROR') throw new OutboxEventNotFailedError({ eventId, status: row.status });
+      const nextAttemptAt = options.immediate ? null : this.backoffPolicy.nextAttemptAt(row.attempts, new Date());
+      const updated = await trx.query<{ event_id: string }>(
+        `update outbox.event_delivery
+            set status='PENDING',next_attempt_at=coalesce($3::timestamptz,clock_timestamp()),
+                lease_until=null,updated_at=clock_timestamp()
+          where tenant_id=$1::uuid and event_id=$2::uuid and status='ERROR' returning event_id`,
+        [tenantId, eventId, nextAttemptAt],
+      );
+      if (!updated.rows[0]) throw new OutboxEventNotFailedError({ eventId });
+      const [delivery] = await this.deliveriesWhere(trx, tenantId, 'e.id=$2::uuid', [eventId], '');
+      return delivery!;
+    }, { role: 'app', requireActor: true, retry: false });
   }
 
   async ackEvent(input: OutboxEventAckInput): Promise<void> {
