@@ -1752,15 +1752,15 @@
         "outbox/src/ack-signature.d.ts": "6e67ae496baf430c0a7b04d1042a709146c5ea6889f3a91a9a4687390cf8c2f1",
         "outbox/src/backoff.d.ts": "bf0fd4379ef1b0518cc565d0e9b8f45c5fa6d3a3ad75c81cc919fcebd039f8a5",
         "outbox/src/constants.d.ts": "5608169fc9e1acc63721b3ca2374eba016ab3939df86ff74f154f3732bf36a0c",
-        "outbox/src/errors.d.ts": "7dcc8353138cdca4d34602419ced81e6881d49f3c65e369f4d78977c61f599cf",
+        "outbox/src/errors.d.ts": "ca4d78109bf001e1104cd1dd11f8b58916fc40a13854b2357124a9e512b818c5",
         "outbox/src/event-stream-source.d.ts": "6e285a29ead96ec82e79580af9ef1622742a6ceb2834c96b78250e75de7f1ff5",
         "outbox/src/http-outbox-dispatcher.d.ts": "4a527674ea9e5966b6a423e97fb8ed46433b3b0416bf4842f26adefadd5f3efb",
         "outbox/src/index.d.ts": "7cdd4ca53c60ebcde70f9517eebd0ab95da56afbc6a6603d2145d66b6f6da447",
         "outbox/src/metrics.d.ts": "826350ea81f85da8ad9325a89c70dc882d9530ffb0df1c9ed6ced16971eaab31",
         "outbox/src/outbox.module.d.ts": "189a82c4e1e82969991cb35b6f931eb199bce0da003a255f0c730c838473abcc",
-        "outbox/src/outbox.service.d.ts": "24e07816fa58046ec6dc165d5f80cc78d401adb1593a6a7cc37634bf1ac56845",
+        "outbox/src/outbox.service.d.ts": "d95d0e2f4490e4aca3660ab31c005211e074fd9156caeb9b1a7068f9e42cc1d2",
         "outbox/src/row-mapper.d.ts": "95f16a057b8fd75ee6287d8e887a036b36e7a80bdc1ab165caa15f2545024721",
-        "outbox/src/types.d.ts": "53451d17a580b687be28a7a11f2060a224a873cbb24caf14dc508aa3bb324e73"
+        "outbox/src/types.d.ts": "4114c3756acc2994f4a313c7f6cbb2cf0838666515ca065457ddb088518da7ba"
       }
     },
     "@stynx-nyx/pdf": {
