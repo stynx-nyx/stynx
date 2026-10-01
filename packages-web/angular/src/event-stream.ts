@@ -287,19 +287,19 @@ export class StynxEventStreamService<T = unknown> {
       if (!this.config.sessionActive()) { this.stop(); return; }
       this.tickSubject.next();
     }, this.config.pollingIntervalMs);
-    if (polling && !wasPolling && !freshCursor) {
-      // Polling starts its first recovery attempt immediately; later attempts use backoff.
-      this.open();
-      return;
-    }
-    const base = this.config.initialMs ?? 1_000;
-    const backoff = this.config.retryMode === 'fixed' ? base : Math.min(this.config.maxMs ?? 30_000, base * 2 ** Math.max(0, Math.min(this.consecutiveFailures - 1, 30)));
     const header = error instanceof HttpErrorResponse ? error.headers.get('Retry-After') : null;
     const seconds = header ? Number(header) : NaN;
     const date = header ? Date.parse(header) : NaN;
     const retryAfter = Number.isFinite(seconds)
       ? Math.max(0, seconds * 1_000)
       : Number.isFinite(date) ? Math.max(0, date - this.clock.now()) : 0;
+    if (polling && !wasPolling && !freshCursor && retryAfter === 0) {
+      // Polling starts its first recovery attempt immediately unless the server asked for a delay; later attempts use backoff.
+      this.open();
+      return;
+    }
+    const base = this.config.initialMs ?? 1_000;
+    const backoff = this.config.retryMode === 'fixed' ? base : Math.min(this.config.maxMs ?? 30_000, base * 2 ** Math.max(0, Math.min(this.consecutiveFailures - 1, 30)));
     this.retryTimer = this.clock.setTimeout(() => { this.retryTimer = undefined; this.open(); }, Math.max(backoff, retryAfter));
   }
 }
