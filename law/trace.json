@@ -4927,12 +4927,36 @@
       "assertion_digest_sha256": "2afe9e12ffe2c04fd0441f13fac52024bea69c7c3813086667a1fab169c42c75"
     },
     {
+      "path": "packages/offline-sync/test/integration/offline-sync-lists-reserve.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 35,
+      "assertion_digest_sha256": "bc456a8ebf58c04bfd49044574ec2a4da8f8010a961773b11afd90549f3b4c7b"
+    },
+    {
       "path": "packages/offline-sync/test/unit/ctg9-parity.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 128,
       "assertion_digest_sha256": "397132e3b0f92e123e4fb220266cbdf4b8b9d60f4bc1ec3930d335409fe4b851"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-sync-lists-reserve.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 77,
+      "assertion_digest_sha256": "bc63de849e8259f029d29cd87925e177f0d7017a32f696d408589fa8e2bc8ea8"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/postgres-lists-reserve.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 22,
+      "assertion_digest_sha256": "31af2635caf4bd1755dbee778409940fd2d2f60d6ff2c5595c9f20f9f5e2d4d7"
     },
     {
       "path": "packages/outbox/test/integration/ctg9-append.integration.spec.ts",
@@ -5045,6 +5069,14 @@
       "lifecycle": "supported",
       "assertion_count": 6,
       "assertion_digest_sha256": "9fcf704b9a01417ee389a07ceea228da0b2d434482ccdccd65e852424a049130"
+    },
+    {
+      "path": "test/db/offline-sync-reservation-idempotency-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "375207551ae40a9fc55c37c7581a82f34a8f481ba1007540e5dcbf213d72fc74"
     },
     {
       "path": "packages/outbox/test/integration/request-path-rls.integration.spec.ts",
