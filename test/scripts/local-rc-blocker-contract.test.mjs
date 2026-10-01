@@ -4330,11 +4330,11 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'db310788dbc26e251fccc370bae94c5f9687770841efd57eb720f76220b1501f',
+    'package.json': '3445fce758f3454b25429df00be3926aac133b112555e5d2b9805ede7df58ab7',
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
-      '1f71ab5805cc2f03862111dd55b7ad26134bf1963387dd5b426a3b7e63761cf2',
+      'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
   };
   for (const [path, digest] of Object.entries(frozenFiles)) {
@@ -4503,11 +4503,11 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'db310788dbc26e251fccc370bae94c5f9687770841efd57eb720f76220b1501f',
+    'package.json': '3445fce758f3454b25429df00be3926aac133b112555e5d2b9805ede7df58ab7',
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
-      '1f71ab5805cc2f03862111dd55b7ad26134bf1963387dd5b426a3b7e63761cf2',
+      'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
   };
   for (const [path, digest] of Object.entries(frozenFiles)) {
@@ -4565,11 +4565,11 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
-    'package.json': 'db310788dbc26e251fccc370bae94c5f9687770841efd57eb720f76220b1501f',
+    'package.json': '3445fce758f3454b25429df00be3926aac133b112555e5d2b9805ede7df58ab7',
     'reference/api/package.json':
       'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
     'reference/web/package.json':
-      '1f71ab5805cc2f03862111dd55b7ad26134bf1963387dd5b426a3b7e63761cf2',
+      'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
   };
   for (const [path, digest] of Object.entries(frozen)) {
@@ -6093,7 +6093,7 @@ test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwrigh
         stderrEmpty: engineResult.stderr === '',
         stdoutExact:
           engineResult.stdout ===
-          `[engines][ok] node ${process.versions.node}; pnpm >=9 <10; Angular 22.1.6; NestJS ^11.1.19; TypeScript ^6.0.3/6.0.3\n`,
+          `[engines][ok] node ${process.versions.node}; pnpm >=9 <10; Angular 22.2.1; NestJS ^11.1.19; TypeScript ^6.0.3/6.0.3\n`,
       },
       playwright: {
         copiedBytesExact: readFileSync(

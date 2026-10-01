@@ -1135,6 +1135,12 @@
       "commit": "1d08b743a7e29430790677e78994dd1ab23b7d59",
       "authorized_by": "Owner",
       "reason": "The Owner explicitly authorized the exact exception-receipt amendment and all remaining actions to complete C-0002. This Engineer-authored merge brought origin/main into the 1.5.1 candidate; its first-parent diff contains no law/ path, while comparison to its second parent carries previously Architect-authored R-0003 ADR, policy and trace changes. The merge did not independently weaken or amend invariant authority. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "4a17c18efc5b65e53d53d35413f300c1d27795e6",
+      "authorized_by": "Owner",
+      "reason": "Owner decision of 2026-10-01 to accept, as an exception, the current aws-cdk-lib version whose bundled brace-expansion 5.0.9 carries GHSA-q2hr-2g5m-vwhr, GHSA-qhr7-859c-m2p7 and GHSA-6j4f-fj2g-mc7p; no released aws-cdk-lib (<= 2.272.0) bundles a patched copy and npm overrides cannot replace bundled dependencies. This exact commit replaces the raw npm audit in release-prep.yml's dependency-audit CDK step with scripts/audit-cdk-dependencies.mjs, which keeps failing on every other high or critical finding and accepts only those three advisories on the bundled copy at aws-cdk-lib 2.265.0, so any aws-cdk-lib bump re-arms the gate."
     }
   ]
 }

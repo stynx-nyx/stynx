@@ -128,7 +128,7 @@ jobs:
         run: |
           cd infra/cdk
           npm install --ignore-scripts
-          npm audit --audit-level=high
+          node ../../scripts/audit-cdk-dependencies.mjs
 
   release-drafts:
     name: release-drafts

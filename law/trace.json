@@ -4495,6 +4495,14 @@
       "assertion_digest_sha256": "85d1e8edfa36840035e9968c206a4312b0f4db293ba82ec5919ab77ce4a8bd63"
     },
     {
+      "path": "test/scripts/audit-cdk-dependencies.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "9a50f7dd4e2bb1e375b85922e7406f8cf2d657bbfa5b9016d0b75032a5fd1a0c"
+    },
+    {
       "path": "test/scripts/devai-1.5-adoption-contract.test.mjs",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],

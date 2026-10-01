@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:f837de9f-3f80-46cf-8642-2e1cc5806f94",
+  "serialNumber": "urn:uuid:2b4113fc-a563-4b7a-8a1c-a992a26ccbeb",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "f837de9f3f8076cf76422e1cc5806f9435ca29a762020c67de8b4b3bc2336bca"
+        "value": "2b4113fca563cb7aaa1ca992a26ccbeb67595ff493dff7d16adfeb20d3cd58c2"
       },
       {
         "name": "stynx:package-manager",
@@ -108,7 +108,7 @@
     {
       "type": "library",
       "name": "@angular/common",
-      "version": "22.1.6",
+      "version": "22.2.1",
       "scope": "required",
       "licenses": [
         {
@@ -117,12 +117,12 @@
           }
         }
       ],
-      "purl": "pkg:npm/@angular%2fcommon@22.1.6"
+      "purl": "pkg:npm/@angular%2fcommon@22.2.1"
     },
     {
       "type": "library",
       "name": "@angular/compiler-cli",
-      "version": "22.1.6",
+      "version": "22.2.1",
       "scope": "required",
       "licenses": [
         {
@@ -131,12 +131,12 @@
           }
         }
       ],
-      "purl": "pkg:npm/@angular%2fcompiler-cli@22.1.6"
+      "purl": "pkg:npm/@angular%2fcompiler-cli@22.2.1"
     },
     {
       "type": "library",
       "name": "@angular/compiler",
-      "version": "22.1.6",
+      "version": "22.2.1",
       "scope": "required",
       "licenses": [
         {
@@ -145,12 +145,12 @@
           }
         }
       ],
-      "purl": "pkg:npm/@angular%2fcompiler@22.1.6"
+      "purl": "pkg:npm/@angular%2fcompiler@22.2.1"
     },
     {
       "type": "library",
       "name": "@angular/core",
-      "version": "22.1.6",
+      "version": "22.2.1",
       "scope": "required",
       "licenses": [
         {
@@ -159,12 +159,12 @@
           }
         }
       ],
-      "purl": "pkg:npm/@angular%2fcore@22.1.6"
+      "purl": "pkg:npm/@angular%2fcore@22.2.1"
     },
     {
       "type": "library",
       "name": "@angular/forms",
-      "version": "22.1.6",
+      "version": "22.2.1",
       "scope": "required",
       "licenses": [
         {
@@ -173,12 +173,12 @@
           }
         }
       ],
-      "purl": "pkg:npm/@angular%2fforms@22.1.6"
+      "purl": "pkg:npm/@angular%2fforms@22.2.1"
     },
     {
       "type": "library",
       "name": "@angular/platform-browser-dynamic",
-      "version": "22.1.6",
+      "version": "22.2.1",
       "scope": "required",
       "licenses": [
         {
@@ -187,12 +187,12 @@
           }
         }
       ],
-      "purl": "pkg:npm/@angular%2fplatform-browser-dynamic@22.1.6"
+      "purl": "pkg:npm/@angular%2fplatform-browser-dynamic@22.2.1"
     },
     {
       "type": "library",
       "name": "@angular/platform-browser",
-      "version": "22.1.6",
+      "version": "22.2.1",
       "scope": "required",
       "licenses": [
         {
@@ -201,12 +201,12 @@
           }
         }
       ],
-      "purl": "pkg:npm/@angular%2fplatform-browser@22.1.6"
+      "purl": "pkg:npm/@angular%2fplatform-browser@22.2.1"
     },
     {
       "type": "library",
       "name": "@angular/router",
-      "version": "22.1.6",
+      "version": "22.2.1",
       "scope": "required",
       "licenses": [
         {
@@ -215,7 +215,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@angular%2frouter@22.1.6"
+      "purl": "pkg:npm/@angular%2frouter@22.2.1"
     },
     {
       "type": "library",

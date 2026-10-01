@@ -258,13 +258,13 @@ _None._
 
 ### Development-only dependencies
 
-- `@angular/common`: `22.1.6`
-- `@angular/compiler`: `22.1.6`
-- `@angular/compiler-cli`: `22.1.6`
-- `@angular/core`: `22.1.6`
-- `@angular/platform-browser`: `22.1.6`
-- `@angular/platform-browser-dynamic`: `22.1.6`
-- `@angular/router`: `22.1.6`
+- `@angular/common`: `22.2.1`
+- `@angular/compiler`: `22.2.1`
+- `@angular/compiler-cli`: `22.2.1`
+- `@angular/core`: `22.2.1`
+- `@angular/platform-browser`: `22.2.1`
+- `@angular/platform-browser-dynamic`: `22.2.1`
+- `@angular/router`: `22.2.1`
 - `@types/node`: `24.13.4`
 - `cross-env`: `^10.1.0`
 - `jsdom`: `^29.0.2`
