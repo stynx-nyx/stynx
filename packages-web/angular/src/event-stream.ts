@@ -34,6 +34,21 @@ export interface StynxEventStreamConfig {
   maxConnectionAgeMs?: number;
   types?: readonly string[];
   eventPrefix?: string;
+  /** Reopen when a failure enters polling: at once (default) or after the normal retry delay. */
+  reopenOnPollingEntry?: 'immediate' | 'backoff';
+  /** Comment lines only re-arm staleness (default) or also count as live activity. */
+  commentActivity?: 'stale-only' | 'live';
+  /** Extra retry delay in milliseconds read from an HTTP error and its JSON-decoded body; the reopen waits for max(backoff, Retry-After, this). */
+  retryAfterFrom?: (error: HttpErrorResponse, body: unknown) => number | null;
+}
+export type StynxEventStreamResyncReason = 'no-content' | 'tenant-change';
+export interface StynxEventStreamResync { reason: StynxEventStreamResyncReason }
+export interface StynxEventStreamError {
+  status: number | null;
+  body: unknown;
+  error: unknown;
+  at: number;
+  outcome: 'stopped' | 'retry' | 'polling';
 }
 
 export const STYNX_SSE_REQUEST = new HttpContextToken<boolean>(() => false);
@@ -50,12 +65,19 @@ const systemClock: StynxEventStreamClock = {
 class HttpStynxEventStreamTransport implements StynxEventStreamTransport {
   private readonly http = inject(HttpClient);
   connect(request: { url: string; lastEventId: string | null; context: HttpContext }): Observable<HttpEvent<string>> {
-    const headers = request.lastEventId === null ? new HttpHeaders() : new HttpHeaders({ 'Last-Event-ID': request.lastEventId });
+    const headers = new HttpHeaders(request.lastEventId === null ? { Accept: 'text/event-stream' } : { Accept: 'text/event-stream', 'Last-Event-ID': request.lastEventId });
     return this.http.get(request.url, {
       headers, context: request.context.set(STYNX_SSE_REQUEST, true),
       observe: 'events', reportProgress: true, responseType: 'text',
     });
   }
+}
+
+function decodedBody(error: unknown): unknown {
+  const body: unknown = error instanceof HttpErrorResponse ? error.error : null;
+  if (typeof body !== 'string') return body;
+  try { return JSON.parse(body) as unknown; }
+  catch { /* Non-JSON text is kept as received. */ return body; }
 }
 
 function positive(value: number | undefined, name: string): void {
@@ -81,7 +103,7 @@ class FrameParser {
   private id = '';
   private event = 'message';
   constructor(private readonly onFrame: (id: string, event: string, data: string) => void,
-    private readonly onActivity: () => void) {}
+    private readonly onActivity: () => void, private readonly onComment: () => void) {}
   feed(chunk: string): void {
     this.buffer += chunk;
     while (true) {
@@ -96,7 +118,7 @@ class FrameParser {
         this.data = []; this.id = ''; this.event = 'message';
         continue;
       }
-      if (line.startsWith(':')) continue;
+      if (line.startsWith(':')) { this.onComment(); continue; }
       const colon = line.indexOf(':');
       const field = colon < 0 ? line : line.slice(0, colon);
       let value = colon < 0 ? '' : line.slice(colon + 1);
@@ -118,11 +140,17 @@ export class StynxEventStreamService<T = unknown> {
   private readonly cursorState = signal<string | null>(null);
   private readonly eventSubject = new Subject<StynxEventStreamEvent<T>>();
   private readonly tickSubject = new Subject<void>();
+  private readonly resyncSubject = new Subject<StynxEventStreamResync>();
+  private readonly errorState = signal<StynxEventStreamError | null>(null);
   readonly status = this.statusState.asReadonly();
   readonly polling: Signal<boolean> = computed(() => this.statusState() === 'polling');
   readonly lastEventId = this.cursorState.asReadonly();
   readonly events$ = this.eventSubject.asObservable();
   readonly tick$ = this.tickSubject.asObservable();
+  /** Emits once each time a held cursor is discarded, before the matching reopen. */
+  readonly resync$: Observable<StynxEventStreamResync> = this.resyncSubject.asObservable();
+  /** Most recent transport error; cleared by start, tenant change and live delivery. */
+  readonly lastError: Signal<StynxEventStreamError | null> = this.errorState.asReadonly();
   private connection: Subscription | undefined;
   private retryTimer: { cancel(): void } | undefined;
   private staleTimer: { cancel(): void } | undefined;
@@ -151,13 +179,19 @@ export class StynxEventStreamService<T = unknown> {
     if (this.active) return;
     if (!this.config.sessionActive()) { this.statusState.set('stopped'); return; }
     this.active = true;
+    this.errorState.set(null);
     this.currentTenant = this.tenant?.tenantId() ?? null;
     this.tenantSubscription = this.tenant?.tenantChanged$.subscribe(() => {
       const next = this.tenant?.tenantId() ?? null;
       if (next === this.currentTenant) return;
       this.currentTenant = next;
+      const hadCursor = this.cursorState() !== null;
       this.cursorState.set(null); this.seen.clear(); this.failures = []; this.consecutiveFailures = 0;
+      this.errorState.set(null);
       this.cancelConnection(); this.clearTimers();
+      const generation = this.generation;
+      if (hadCursor) this.resyncSubject.next({ reason: 'tenant-change' });
+      if (generation !== this.generation) return;
       if (next && this.active) this.open();
       else this.statusState.set('idle');
     });
@@ -197,6 +231,8 @@ export class StynxEventStreamService<T = unknown> {
       if (this.deliver(id, event, data)) cursorAdvanced = true;
     }, () => {
       if (generation === this.generation && this.active) this.armStale(generation);
+    }, () => {
+      if (generation === this.generation && this.active && this.config.commentActivity === 'live') this.alive();
     });
     const request = { url: this.config.url, lastEventId: this.cursorState(), context: new HttpContext().set(STYNX_SSE_REQUEST, true) };
     this.statusState.set(this.pollingTimer ? 'polling' : this.consecutiveFailures ? 'reconnecting' : 'live');
@@ -226,7 +262,11 @@ export class StynxEventStreamService<T = unknown> {
             return;
           }
         } else if (event.type === HttpEventType.Response) {
-          if (event.status === 204) { this.cursorState.set(null); this.seen.clear(); }
+          if (event.status === 204) {
+            const hadCursor = this.cursorState() !== null;
+            this.cursorState.set(null); this.seen.clear();
+            if (hadCursor) this.resyncSubject.next({ reason: 'no-content' });
+          }
           this.failed(generation, undefined, event.status === 204);
         }
       },
@@ -248,13 +288,18 @@ export class StynxEventStreamService<T = unknown> {
       const oldest = this.seen.values().next().value;
       if (oldest !== undefined) this.seen.delete(oldest);
     }
-    this.failures = []; this.consecutiveFailures = 0;
-    this.clearTimers();
-    this.statusState.set('live');
+    this.alive();
     if ((!prefix || event.startsWith(prefix)) && (!this.config.types || this.config.types.includes(name))) {
       this.eventSubject.next({ id, event: name, data: parsed });
     }
     return true;
+  }
+
+  private alive(): void {
+    this.failures = []; this.consecutiveFailures = 0;
+    this.clearTimers();
+    this.statusState.set('live');
+    this.errorState.set(null);
   }
 
   private armStale(generation: number): void {
@@ -272,9 +317,9 @@ export class StynxEventStreamService<T = unknown> {
   private failed(generation: number, error?: unknown, freshCursor = false): void {
     if (generation !== this.generation || !this.active) return;
     this.cancelConnection();
-    if (!this.config.sessionActive()) { this.stop(); return; }
-    if ((error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403))
-      || error instanceof UnauthorizedError) { this.stop(); return; }
+    if (!this.config.sessionActive()
+      || (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403))
+      || error instanceof UnauthorizedError) { this.record(error, 'stopped'); this.stop(); return; }
     if (!freshCursor) {
       const now = this.clock.now();
       this.failures = this.failures.filter((time) => now - time <= (this.config.failureWindowMs ?? 60_000));
@@ -283,6 +328,7 @@ export class StynxEventStreamService<T = unknown> {
     const wasPolling = this.statusState() === 'polling';
     const polling = this.failures.length >= (this.config.failuresBeforePolling ?? 2);
     this.statusState.set(polling ? 'polling' : 'reconnecting');
+    this.record(error, polling ? 'polling' : 'retry');
     if (polling && !this.pollingTimer) this.pollingTimer = this.clock.setInterval(() => {
       if (!this.config.sessionActive()) { this.stop(); return; }
       this.tickSubject.next();
@@ -290,10 +336,11 @@ export class StynxEventStreamService<T = unknown> {
     const header = error instanceof HttpErrorResponse ? error.headers.get('Retry-After') : null;
     const seconds = header ? Number(header) : NaN;
     const date = header ? Date.parse(header) : NaN;
-    const retryAfter = Number.isFinite(seconds)
+    const fromHeader = Number.isFinite(seconds)
       ? Math.max(0, seconds * 1_000)
       : Number.isFinite(date) ? Math.max(0, date - this.clock.now()) : 0;
-    if (polling && !wasPolling && !freshCursor && retryAfter === 0) {
+    const retryAfter = Math.max(fromHeader, error instanceof HttpErrorResponse ? this.extractedDelay(error) : 0);
+    if (polling && !wasPolling && !freshCursor && retryAfter === 0 && this.config.reopenOnPollingEntry !== 'backoff') {
       // Polling starts its first recovery attempt immediately unless the server asked for a delay; later attempts use backoff.
       this.open();
       return;
@@ -301,5 +348,18 @@ export class StynxEventStreamService<T = unknown> {
     const base = this.config.initialMs ?? 1_000;
     const backoff = this.config.retryMode === 'fixed' ? base : Math.min(this.config.maxMs ?? 30_000, base * 2 ** Math.max(0, Math.min(this.consecutiveFailures - 1, 30)));
     this.retryTimer = this.clock.setTimeout(() => { this.retryTimer = undefined; this.open(); }, Math.max(backoff, retryAfter));
+  }
+
+  private extractedDelay(error: HttpErrorResponse): number {
+    let delay: number | null | undefined;
+    try { delay = this.config.retryAfterFrom?.(error, decodedBody(error)); }
+    catch { /* A throwing extractor contributes no delay. */ }
+    return typeof delay === 'number' && Number.isFinite(delay) ? Math.max(0, delay) : 0;
+  }
+
+  private record(error: unknown, outcome: StynxEventStreamError['outcome']): void {
+    if (error === undefined) return;
+    const status = error instanceof HttpErrorResponse ? error.status : null;
+    this.errorState.set({ status, body: decodedBody(error), error, at: this.clock.now(), outcome });
   }
 }
