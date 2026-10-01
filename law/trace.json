@@ -4959,6 +4959,14 @@
       "assertion_digest_sha256": "3f7b06613e454ad24b57a4ba9fc5f33cc3dee25d194ee8069c9c61c7088b3693"
     },
     {
+      "path": "packages/signature/test/integration/qualified-policy.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 21,
+      "assertion_digest_sha256": "1845b5da3d339257a8ddea9515c1fb9eaa3e01fb6f6a6c28ce699f571cfbf81c"
+    },
+    {
       "path": "packages/signature/test/unit/manifest.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
