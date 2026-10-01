@@ -69,7 +69,9 @@ actor. Migration 0021 already grants `stynx_app` `SELECT` on `outbox.events`,
 `retryEvent` locks the tenant's delivery row `FOR UPDATE` in one app
 transaction. Only `ERROR` is retried: the row becomes `PENDING` with
 `lease_until = null` and `next_attempt_at = clock_timestamp()` when
-`immediate: true`, otherwise `OutboxBackoffPolicy.nextAttemptAt(attempts, now)`.
+`immediate: true`, otherwise
+`least(coalesce(next_attempt_at, clock_timestamp()), OutboxBackoffPolicy.nextAttemptAt(attempts, now))`,
+so a retry never moves eligibility later (an already due row stays due).
 `attempts` is unchanged (the next claim increments it and allocates the next
 attempt ordinal), `last_error` is kept as the last observed failure until a
 later failed attempt overwrites it, and the attempt and ACK ledgers are not
@@ -80,8 +82,22 @@ malformed, missing or other-tenant event raises the same
 `OutboxNotFoundError` (`OUTBOX_NOT_FOUND`, 404, context `{ eventId }`), so
 existence in another tenant is not revealed. Concurrency with dispatch: a claim
 selects due rows with `FOR UPDATE OF d SKIP LOCKED`, so it skips a row the retry
-holds; a claim that committed first leaves the row `SENT`, which retry refuses.
-A retried event still waits for any older non-`ACKED` event of its aggregate.
+holds; a retry that reaches the row while a claim transaction is uncommitted
+waits on its row lock and then sees the committed `SENT`, which it refuses, as
+it refuses a claim that committed first. A retried event still waits for any
+older non-`ACKED` event of its aggregate (ADR-OUTBOX-0002).
+
+These ports have no package-level permission check: tenant isolation is
+enforced, but any actor in the tenant context can call them. The caller must
+authorize the actor before `retryEvent` (an operator mutation) and before
+`listEventAttempts(..., { includeBytes: true })`, which returns raw request and
+response bytes.
+
+`getAggregateDelivery` reads counts, head and page in one SQL statement, so
+they come from a single snapshot even inside a caller's READ COMMITTED
+transaction. Separate port calls (for example `listEvents` pages and
+`getQueueHealth`) are independent statements and may observe concurrent
+dispatch or ACK changes between them.
 
 ### Contract verifications V-01, V-03…V-06 (UPS-OBX-09)
 

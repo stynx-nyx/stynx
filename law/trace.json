@@ -5059,8 +5059,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 78,
-      "assertion_digest_sha256": "5f3c3f1a0a071315fcfa6ab327c541fd397e7dae9d3c3933e699f7be9e2604a0"
+      "assertion_count": 90,
+      "assertion_digest_sha256": "44c10b2e6d65ebd2b87823c824f62519c505aa6b3b8edfd7bddd9288d9c07531"
     },
     {
       "path": "packages/outbox/test/integration/contract-v-items.integration.spec.ts",
@@ -5147,8 +5147,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 69,
-      "assertion_digest_sha256": "f04cc356f45d951b446fbb0152517d60c98e1918262c54e286520c01456814e1"
+      "assertion_count": 72,
+      "assertion_digest_sha256": "c8f67c2b0b23de06349ad548d2c608c0f4c9c461a335e80e287262762e6da739"
     },
     {
       "path": "packages/outbox/test/unit/outbox-contract-v.spec.ts",

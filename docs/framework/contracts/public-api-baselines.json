@@ -1758,7 +1758,7 @@
         "outbox/src/index.d.ts": "7cdd4ca53c60ebcde70f9517eebd0ab95da56afbc6a6603d2145d66b6f6da447",
         "outbox/src/metrics.d.ts": "826350ea81f85da8ad9325a89c70dc882d9530ffb0df1c9ed6ced16971eaab31",
         "outbox/src/outbox.module.d.ts": "189a82c4e1e82969991cb35b6f931eb199bce0da003a255f0c730c838473abcc",
-        "outbox/src/outbox.service.d.ts": "cb39acbe4563fddd941d9fcb31287403b2f6ae03c6b181c9e668aede851f4e48",
+        "outbox/src/outbox.service.d.ts": "d95d0e2f4490e4aca3660ab31c005211e074fd9156caeb9b1a7068f9e42cc1d2",
         "outbox/src/row-mapper.d.ts": "95f16a057b8fd75ee6287d8e887a036b36e7a80bdc1ab165caa15f2545024721",
         "outbox/src/types.d.ts": "4114c3756acc2994f4a313c7f6cbb2cf0838666515ca065457ddb088518da7ba"
       }
