@@ -1,5 +1,16 @@
 # @stynx-nyx/flow Changelog
 
+## 1.5.3
+
+### Patch Changes
+
+- Updated dependencies [d98960b]
+  - @stynx-nyx/data@1.5.3
+  - @stynx-nyx/auth@1.5.3
+  - @stynx-nyx/backend@1.5.3
+  - @stynx-nyx/idempotency@1.5.3
+  - @stynx-nyx/core@1.5.3
+
 ## 1.5.2
 
 ### Patch Changes

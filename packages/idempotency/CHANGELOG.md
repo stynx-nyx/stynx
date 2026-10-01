@@ -1,5 +1,13 @@
 # @stynx-nyx/idempotency
 
+## 1.5.3
+
+### Patch Changes
+
+- Updated dependencies [d98960b]
+  - @stynx-nyx/data@1.5.3
+  - @stynx-nyx/contracts@1.5.3
+
 ## 1.5.2
 
 ### Patch Changes

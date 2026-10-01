@@ -1,5 +1,18 @@
 # @stynx-nyx/sessions
 
+## 1.5.3
+
+### Patch Changes
+
+- d98960b: Refresh minor and patch dependencies: `pg` ^8.22.0 (`@stynx-nyx/cli`,
+  `@stynx-nyx/data`), `uuid` ^14.0.1
+  (`@stynx-nyx/sessions`; the workspace override moves to 14.0.1 so the bump
+  takes effect), and `openapi-typescript-codegen` ^0.31.0 (`@stynx-nyx/sdk`).
+- Updated dependencies [d98960b]
+  - @stynx-nyx/data@1.5.3
+  - @stynx-nyx/idempotency@1.5.3
+  - @stynx-nyx/core@1.5.3
+
 ## 1.5.2
 
 ### Patch Changes
