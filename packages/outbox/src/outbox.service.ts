@@ -579,9 +579,10 @@ export class OutboxService {
     const tenantId = this.requestTenant();
     const limit = query.limit ?? 50;
     if (!Number.isSafeInteger(limit) || limit < 1 || limit > 500) throw new RangeError('limit must be an integer from 1 to 500');
-    const statuses = query.deliveryStatus === undefined ? null
-      : (typeof query.deliveryStatus === 'string' ? [query.deliveryStatus] : [...query.deliveryStatus]);
-    if (statuses && (statuses.length === 0 || statuses.some((status) => !DELIVERY_STATUSES.includes(status)))) {
+    const rawStatus: unknown = query.deliveryStatus;
+    const statuses: unknown[] | null = rawStatus === undefined ? null
+      : (typeof rawStatus === 'string' ? [rawStatus] : (Array.isArray(rawStatus) ? [...rawStatus] : []));
+    if (statuses && (statuses.length === 0 || statuses.some((status) => !DELIVERY_STATUSES.includes(status as OutboxEventDeliveryStatus)))) {
       throw new RangeError('deliveryStatus must name event delivery states');
     }
     const entity = filterText(query.entity, 'entity');
@@ -620,22 +621,32 @@ export class OutboxService {
     const tenantId = this.requestTenant();
     const limit = options.limit ?? 100;
     if (!Number.isSafeInteger(limit) || limit < 1 || limit > 1000) throw new RangeError('limit must be an integer from 1 to 1000');
-    return this.tenantRead(async (trx) => {
-      const counted = await trx.query<{ status: OutboxEventDeliveryStatus; count: number }>(
-        `select d.status,count(*)::integer as count
+    // One statement, so counts, head and page come from a single snapshot even
+    // inside a caller's READ COMMITTED transaction.
+    const rows = await this.tenantRead(async (trx) => (await trx.query<EventDeliverySqlRow & {
+      position: number; statusRank: number; statusCount: number;
+    }>(
+      `select * from (
+         select ${EVENT_DELIVERY_COLUMNS},
+                row_number() over (order by e.created_at,e.id)::integer as "position",
+                row_number() over (partition by d.status order by e.created_at,e.id)::integer as "statusRank",
+                count(*) over (partition by d.status)::integer as "statusCount"
            from outbox.events e join outbox.event_delivery d
              on d.tenant_id=$1::uuid and d.tenant_id=e.tenant_id and d.event_id=e.id
-          where e.tenant_id=$1::uuid and e.entity=$2 and e.entity_id=$3 group by d.status`,
-        [tenantId, entity, entityId],
-      );
-      if (counted.rows.length === 0) return null;
-      const aggregate = 'e.entity=$2 and e.entity_id=$3';
-      const [head] = await this.deliveriesWhere(trx, tenantId, `${aggregate} and d.status<>'ACKED'`, [entity, entityId],
-        'order by e.created_at,e.id limit 1');
-      const events = await this.deliveriesWhere(trx, tenantId, aggregate, [entity, entityId, limit],
-        'order by e.created_at,e.id limit $4');
-      return { entity, entityId, head: head ?? null, counts: statusCounts(counted.rows), events };
-    });
+          where e.tenant_id=$1::uuid and e.entity=$2 and e.entity_id=$3
+       ) ranked where "position"<=$4 or "statusRank"=1 order by "position"`,
+      [tenantId, entity, entityId, limit],
+    )).rows);
+    if (rows.length === 0) return null;
+    const view = (row: EventDeliverySqlRow): OutboxEventDelivery => ({ ...eventSummary(row), delivery: deliveryState(row)! });
+    // The oldest non-ACKED delivery is first in its own status partition, so it is always selected.
+    const head = rows.find((row) => row.status !== 'ACKED');
+    return {
+      entity, entityId, head: head ? view(head) : null,
+      counts: statusCounts(rows.filter((row) => row.statusRank === 1)
+        .map((row) => ({ status: row.status!, count: row.statusCount }))),
+      events: rows.filter((row) => row.position <= limit).map(view),
+    };
   }
 
   /** Attempt ledger of one context-tenant event by ordinal; empty when absent or foreign. */
@@ -680,7 +691,8 @@ export class OutboxService {
 
   /**
    * Operator retry of one context-tenant event whose delivery is `ERROR`: it
-   * becomes `PENDING` and eligible now (`immediate`) or at the backoff time.
+   * becomes `PENDING` and eligible now (`immediate`) or at the earlier of its
+   * current eligibility and the backoff time, so a retry never delays it.
    * `attempts`, `last_error` and the attempt/ACK ledgers are preserved.
    */
   async retryEvent(eventId: string, options: { immediate?: boolean } = {}): Promise<OutboxEventDelivery> {
@@ -698,7 +710,8 @@ export class OutboxService {
       const nextAttemptAt = options.immediate ? null : this.backoffPolicy.nextAttemptAt(row.attempts, new Date());
       const updated = await trx.query<{ event_id: string }>(
         `update outbox.event_delivery
-            set status='PENDING',next_attempt_at=coalesce($3::timestamptz,clock_timestamp()),
+            set status='PENDING',next_attempt_at=case when $3::timestamptz is null then clock_timestamp()
+                  else least(coalesce(next_attempt_at,clock_timestamp()),$3::timestamptz) end,
                 lease_until=null,updated_at=clock_timestamp()
           where tenant_id=$1::uuid and event_id=$2::uuid and status='ERROR' returning event_id`,
         [tenantId, eventId, nextAttemptAt],
