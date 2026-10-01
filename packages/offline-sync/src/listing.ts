@@ -9,6 +9,13 @@ const sortInstant = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/u;
 /** Keyset ordering key: UTC instant with microseconds, then tie-break identifiers. */
 export type SortKey = readonly string[];
 
+const validInstant = (value: string): boolean => {
+  if (!sortInstant.test(value)) return false;
+  const millis = value.replace(/(\.\d{3})\d{3}Z$/u, '$1Z');
+  const parsed = new Date(millis);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString() === millis;
+};
+
 export const sortInstantOf = (value: string | Date): string => new Date(value).toISOString().replace('Z', '000Z');
 export const pgSortInstant = (column: string): string => `to_char(${column} at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
 
@@ -18,7 +25,7 @@ export function decodeCursor(cursor: string | undefined, arity: number): SortKey
   if (cursor === undefined) return null;
   let values: unknown = null;
   try { values = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')); } catch { /* invalid below */ }
-  if (!Array.isArray(values) || values.length !== arity || !values.every(value => typeof value === 'string') || !sortInstant.test(values[0] as string))
+  if (!Array.isArray(values) || values.length !== arity || !values.every(value => typeof value === 'string') || !validInstant(values[0] as string))
     throw new OfflineSyncError('OFFLINE_SYNC_INVALID_INPUT', 400, 'cursor is invalid.');
   return values as string[];
 }
@@ -42,12 +49,17 @@ export function pageOf<T>(rows: readonly { key: SortKey; value: T }[], arity: nu
   return finishPage(ordered.slice(0, size + 1), size);
 }
 
+const normalInstant = (value: string | undefined): string | undefined => {
+  const parsed = value === undefined ? Number.NaN : Date.parse(value);
+  return Number.isFinite(parsed) ? new Date(parsed).toISOString() : value;
+};
+
 /** Stable digest of a reservation request; the computed default `validUntil` is excluded. */
 export function reservationFingerprint(scope: TrustedOfflineSyncScope, input: ReserveNumberingInput): string {
   const agentId = (scope as TrustedOfflineSyncScope & { agentId?: string }).agentId ?? scope.actorId;
   return `sha256:${createHash('sha256').update(stableStringify({ agentId, orgUnitId: input.orgUnitId, deviceId: input.deviceId,
     shiftId: input.shiftId, entityType: input.entityType, requestedSize: input.requestedSize, rangeId: input.rangeId,
-    series: input.series, validUntil: input.validUntil })).digest('hex')}`;
+    series: input.series, validUntil: normalInstant(input.validUntil) })).digest('hex')}`;
 }
 
 /** A range for another unit/entity, or a cancelled range, is inactive; a fully consumed one is exhausted. */

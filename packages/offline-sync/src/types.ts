@@ -128,6 +128,11 @@ export interface OfflineSyncStore {
     now: string,
     defaultValidUntil: string,
   ): Promise<NumberingReservation>;
+  /**
+   * Returns the reservation stored for `input.idempotencyKey` in its current state, `null` when
+   * the key is unused, or throws `OfflineSyncReservationReplayError` for a different request.
+   */
+  replayNumberingReservation?(scope: TrustedOfflineSyncScope, input: ReserveNumberingInput): Promise<NumberingReservation | null>;
   cancelNumberingReservation(
     scope: TrustedOfflineSyncScope,
     reservationId: string,

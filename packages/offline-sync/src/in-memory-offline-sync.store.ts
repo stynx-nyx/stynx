@@ -50,13 +50,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     _now: string,
     defaultValidUntil: string,
   ): Promise<NumberingReservation> {
+    const replay = await this.replayNumberingReservation(scope, input);
+    if (replay) return replay;
     const replayKey = input.idempotencyKey === undefined ? undefined : this.key(scope.tenantId, input.idempotencyKey);
     const fingerprint = reservationFingerprint(scope, input);
-    const prior = replayKey === undefined ? undefined : this.reservationKeys.get(replayKey);
-    if (prior) {
-      if (prior.fingerprint !== fingerprint) throw new OfflineSyncReservationReplayError();
-      return this.reservations.get(this.key(scope.tenantId, prior.reservationId))!;
-    }
     const range = [...this.ranges.values()].find(
       (candidate) =>
         candidate.tenantId === scope.tenantId &&
@@ -117,6 +114,13 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     for (let number = reservation.startNumber; number <= reservation.endNumber; number += 1) entries.set(number, { number, status: 'available', serverEntityId: null, finalizedAt: null });
     this.consumption.set(this.key(scope.tenantId, reservation.reservationId), entries);
     return reservation;
+  }
+
+  async replayNumberingReservation(scope: TrustedOfflineSyncScope, input: ReserveNumberingInput): Promise<NumberingReservation | null> {
+    const prior = input.idempotencyKey === undefined ? undefined : this.reservationKeys.get(this.key(scope.tenantId, input.idempotencyKey));
+    if (!prior) return null;
+    if (prior.fingerprint !== reservationFingerprint(scope, input)) throw new OfflineSyncReservationReplayError();
+    return this.reservations.get(this.key(scope.tenantId, prior.reservationId))!;
   }
 
   async cancelNumberingReservation(

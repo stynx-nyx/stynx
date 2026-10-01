@@ -147,15 +147,8 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
       if (key !== undefined) {
         // Same-key requests serialize here; READ COMMITTED lets the waiter see the committed original.
         await trx.query('select pg_advisory_xact_lock(hashtextextended($1,0))', [`${scope.tenantId}:numbering-reserve:${key}`]);
-        const prior = (await trx.query<NumberingReservationRow & { idempotency_fingerprint: string }>(
-          `select id, tenant_id, range_id, org_unit_id, entity_type, series, agent_id, device_id, shift_id,
-                  start_number, end_number, next_number, valid_until, status, idempotency_fingerprint
-             from offline.numbering_reservations where tenant_id = $1::uuid and idempotency_key = $2`,
-          [scope.tenantId, key])).rows[0];
-        if (prior) {
-          if (prior.idempotency_fingerprint !== fingerprint) throw new OfflineSyncReservationReplayError();
-          return this.mapReservation(prior);
-        }
+        const prior = await this.keyedReservation(trx, scope, key, fingerprint!);
+        if (prior) return prior;
       }
       const result = await trx.query<NumberingRangeRow>(
         `select id, tenant_id, org_unit_id, entity_type, series, start_number,
@@ -249,6 +242,26 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
       if (key !== undefined && error instanceof OfflineSyncUpgradeRequiredError) throw new OfflineSyncUpgradeRequiredError('0003');
       throw error;
     });
+  }
+
+  async replayNumberingReservation(scope: TrustedOfflineSyncScope, input: ReserveNumberingInput): Promise<NumberingReservation | null> {
+    const key = input.idempotencyKey;
+    if (key === undefined) return null;
+    return this.txE6(trx => this.keyedReservation(trx, scope, key, reservationFingerprint(scope, input))).catch((error: unknown) => {
+      if (error instanceof OfflineSyncUpgradeRequiredError) throw new OfflineSyncUpgradeRequiredError('0003');
+      throw error;
+    });
+  }
+
+  private async keyedReservation(trx: Transaction, scope: TrustedOfflineSyncScope, key: string, fingerprint: string): Promise<NumberingReservation | null> {
+    const prior = (await trx.query<NumberingReservationRow & { idempotency_fingerprint: string }>(
+      `select id, tenant_id, range_id, org_unit_id, entity_type, series, agent_id, device_id, shift_id,
+              start_number, end_number, next_number, valid_until, status, idempotency_fingerprint
+         from offline.numbering_reservations where tenant_id = $1::uuid and idempotency_key = $2`,
+      [scope.tenantId, key])).rows[0];
+    if (!prior) return null;
+    if (prior.idempotency_fingerprint !== fingerprint) throw new OfflineSyncReservationReplayError();
+    return this.mapReservation(prior);
   }
 
   async cancelNumberingReservation(

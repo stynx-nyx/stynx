@@ -24,7 +24,7 @@ async function page<R extends Sorted, T>(database: Database, sql: string, values
 }
 
 /** Tenant batch receipts, newest `created_at` first, tie-broken by device and batch id (C collation). */
-export function pgListBatches(database: Database, scope: TrustedOfflineSyncScope, input: ListSyncBatchReceiptsInput): Promise<OfflineSyncPage<SyncBatchReceiptSummary>> {
+export async function pgListBatches(database: Database, scope: TrustedOfflineSyncScope, input: ListSyncBatchReceiptsInput): Promise<OfflineSyncPage<SyncBatchReceiptSummary>> {
   const after = decodeCursor(input.cursor, 3);
   return page<Sorted & { device_id: string; device_batch_id: string; batch_sequence: string | null; status: SyncBatchReceiptSummary['status']; response_status: number | null; created_at: Date }, SyncBatchReceiptSummary>(database,
     `select device_id,device_batch_id,batch_sequence,status,response_status,created_at,${pgSortInstant('created_at')} as sort_at
@@ -39,7 +39,7 @@ export function pgListBatches(database: Database, scope: TrustedOfflineSyncScope
 }
 
 /** Tenant item receipts, newest `received_at` first, tie-broken by receipt id (C collation). */
-export function pgListItemReceipts(database: Database, scope: TrustedOfflineSyncScope, input: ListSyncItemReceiptsInput): Promise<OfflineSyncPage<SyncItemReceiptRecord>> {
+export async function pgListItemReceipts(database: Database, scope: TrustedOfflineSyncScope, input: ListSyncItemReceiptsInput): Promise<OfflineSyncPage<SyncItemReceiptRecord>> {
   const after = decodeCursor(input.cursor, 2);
   return page<Sorted & { idempotency_key: string; queue_item_id: string; device_id: string; device_batch_id: string; payload_hash: string; status: SyncItemReceiptRecord['status']; error_code: string | null; context_json: Record<string, unknown> | null; received_at: Date }, SyncItemReceiptRecord>(database,
     `select idempotency_key,queue_item_id,device_id,device_batch_id,payload_hash,status,error_code,context_json,received_at,${pgSortInstant('received_at')} as sort_at
@@ -55,7 +55,7 @@ export function pgListItemReceipts(database: Database, scope: TrustedOfflineSync
 }
 
 /** Tenant queue items (E6 and CTG9), newest `received_at` first, tie-broken by queue item id (C collation). */
-export function pgListQueueItems(database: Database, scope: TrustedOfflineSyncScope, input: ListSyncQueueItemsInput): Promise<OfflineSyncPage<SyncQueueItemRecord>> {
+export async function pgListQueueItems(database: Database, scope: TrustedOfflineSyncScope, input: ListSyncQueueItemsInput): Promise<OfflineSyncPage<SyncQueueItemRecord>> {
   const after = decodeCursor(input.cursor, 2);
   return page<Sorted & { id: string; tenant_id: string; device_batch_id: string; org_unit_id: string; agent_id: string; device_id: string; entity_type: string; local_entity_id: string; idempotency_key: string; payload_hash: string; payload_json: Record<string, unknown>; created_locally_at: Date; reserved_number: string | null; status: SyncQueueItemRecord['status']; received_at: Date }, SyncQueueItemRecord>(database,
     `select id,tenant_id,device_batch_id,org_unit_id,agent_id,device_id,entity_type,local_entity_id,idempotency_key,payload_hash,
@@ -73,7 +73,7 @@ export function pgListQueueItems(database: Database, scope: TrustedOfflineSyncSc
 }
 
 /** Tenant conflicts, newest `created_at` first, tie-broken by conflict id. */
-export function pgListConflicts(database: Database, scope: TrustedOfflineSyncScope, input: ListSyncConflictsInput): Promise<OfflineSyncPage<SyncConflictRecord>> {
+export async function pgListConflicts(database: Database, scope: TrustedOfflineSyncScope, input: ListSyncConflictsInput): Promise<OfflineSyncPage<SyncConflictRecord>> {
   const after = decodeCursor(input.cursor, 2);
   return page<Sorted & { id: string; tenant_id: string; sync_queue_item_id: string; local_entity_id: string; payload_hash: string; conflict_type: string; description: string; status: SyncConflictRecord['status']; resolution: OfflineSyncConflictResolutionStrategy | null; resolved_by: string | null; resolved_at: Date | null; created_at: Date }, SyncConflictRecord>(database,
     `select id,tenant_id,sync_queue_item_id,local_entity_id,payload_hash,conflict_type,description,status,resolution,resolved_by,resolved_at,created_at,

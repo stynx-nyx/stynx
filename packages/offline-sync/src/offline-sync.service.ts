@@ -63,6 +63,12 @@ export class OfflineSyncService {
     ) {
       this.invalid('requestedSize must be an integer between 1 and 100.');
     }
+    // A keyed retry is answered from the stored reservation before time- or policy-dependent checks.
+    const keyed = input.idempotencyKey === undefined ? undefined : await this.reservationScope();
+    if (keyed && this.store.replayNumberingReservation) {
+      const replay = await this.store.replayNumberingReservation(keyed, input);
+      if (replay) return replay;
+    }
     const now = this.now();
     const scope = this.context.current();
     const policy = this.options.policyResolver ? await this.options.policyResolver.resolve({
@@ -74,9 +80,13 @@ export class OfflineSyncService {
     if (input.validUntil && Date.parse(input.validUntil) <= Date.parse(now)) {
       this.invalid('validUntil must be later than the current time.');
     }
+    return this.store.reserveNumbering(keyed ?? await this.reservationScope(), input, now, validUntil);
+  }
+
+  private async reservationScope(): Promise<TrustedOfflineSyncScope> {
+    const scope = this.context.current();
     const agentId = this.options.agentResolver ? await this.options.agentResolver.resolve(scope, 'reserve-numbering') : scope.actorId;
-    const agentScope = this.options.policyResolver ? { ...scope, agentId } : scope;
-    return this.store.reserveNumbering(agentScope, input, now, validUntil);
+    return this.options.policyResolver ? { ...scope, agentId } as TrustedOfflineSyncScope : scope;
   }
 
   async cancelNumberingReservation(
