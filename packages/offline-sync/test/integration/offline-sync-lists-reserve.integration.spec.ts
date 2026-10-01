@@ -110,6 +110,36 @@ describe('UPS-OFS-05/-09/-11 PostgreSQL reservation idempotency and listings', (
     }
   }, 60_000);
 
+  it('UPS-OFS-05 replays a key after validUntil and a policy change, returning the current reservation state', async () => {
+    const saved = now;
+    let policy: { reservationTtlMs?: number } = { reservationTtlMs: 3_600_000 };
+    const a = service(tenantA, { policyResolver: { resolve: async () => ({ ...policy, maxBatchItems: null }) } });
+    const keyed = { ...reserve, deviceId: 'replay-device', validUntil: '2026-09-28T12:30:00Z', idempotencyKey: 'replay-after-expiry' };
+    const first = await run(tenantA, () => a.reserveNumbering(keyed));
+    now = '2026-09-29T12:00:00.000Z';
+    policy = {};
+    const replay = await run(tenantA, () => a.reserveNumbering({ ...keyed, validUntil: '2026-09-28T12:30:00.000Z' }));
+    expect(replay).toEqual({ ...first, status: 'reserved', validUntil: '2026-09-28T12:30:00.000Z' });
+    now = saved;
+    policy = { reservationTtlMs: 3_600_000 };
+    const cancelled = await run(tenantA, () => a.reserveNumbering({ ...reserve, deviceId: 'replay-cancel', idempotencyKey: 'replay-cancelled' }));
+    await run(tenantA, () => a.cancelNumberingReservation(cancelled.reservationId));
+    now = '2026-09-30T00:00:00.000Z';
+    policy = {};
+    await expect(run(tenantA, () => a.reserveNumbering({ ...reserve, deviceId: 'replay-cancel', idempotencyKey: 'replay-cancelled' })))
+      .resolves.toMatchObject({ reservationId: cancelled.reservationId, status: 'cancelled' });
+    await expect(run(tenantA, () => a.reserveNumbering({ ...reserve, deviceId: 'other', idempotencyKey: 'replay-cancelled' })))
+      .rejects.toBeInstanceOf(OfflineSyncReservationReplayError);
+    now = saved;
+  }, 60_000);
+
+  it('UPS-OFS-11 rejects a forged cursor with 400 before reaching PostgreSQL', async () => {
+    const forged = Buffer.from(JSON.stringify(['2026-99-99T99:00:00.000000Z', 'x'])).toString('base64url');
+    const a = service(tenantA);
+    await expect(run(tenantA, () => a.listSyncQueueItems({ cursor: forged }))).rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT', response: { statusCode: 400 } });
+    await expect(run(tenantA, () => a.listSyncConflicts({ cursor: forged }))).rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT' });
+  }, 60_000);
+
   it('UPS-OFS-05 reports exhausted, inactive and insufficient ranges under the published code', async () => {
     const a = service(tenantA);
     const exhausted = await run(tenantA, () => a.reserveNumbering({ ...reserve, orgUnitId: 'org-x', series: 'X', requestedSize: 1 })).catch((error: unknown) => error as OfflineSyncRangeUnavailableError);
@@ -140,9 +170,9 @@ describe('UPS-OFS-05/-09/-11 PostgreSQL reservation idempotency and listings', (
       pages.push(...page.items.map(receipt => receipt.queueItemId));
       cursor = page.nextCursor ?? undefined;
     } while (cursor);
-    const legacyFirst = ['l-b1', 'l-a3', 'l-a2', 'l-a1'];
-    expect(pages.filter(id => legacyFirst.includes(id))).toHaveLength(4);
-    expect(pages.slice(0, 1)).toEqual(['l-b1']);
+    // One row per page: every tenant-A receipt exactly once, newest insertion first.
+    expect(pages).toEqual(['l-b1', 'l-a3', 'l-a2', 'l-a1']);
+    expect(new Set(pages).size).toBe(pages.length);
     const receipts = await run(tenantA, () => a.listSyncItemReceipts({ deviceId: 'list-a' }));
     expect(receipts.items.map(receipt => receipt.deviceBatchId)).toEqual(['lb-1', 'lb-1', 'lb-1']);
     // Item receipts order by their database insertion time (received_at defaults to clock_timestamp()).
