@@ -30,9 +30,13 @@ import type {
   SyncItemReceipt,
   TrustedOfflineSyncScope,
   DurableBatchExecutionOptions,
+  ListSyncBatchReceiptsInput, ListSyncConflictsInput, ListSyncItemReceiptsInput, ListSyncQueueItemsInput,
+  OfflineSyncListInput, OfflineSyncPage, SyncBatchReceiptSummary, SyncConflictRecord, SyncItemReceiptRecord, SyncQueueItemRecord,
 } from './types';
+import { listDefaultLimit, listMaxLimit } from './listing';
 
 const sha256Pattern = /^sha256:[0-9a-f]{64}$/u;
+const queueStatuses = ['received', 'applied', 'conflict', 'rejected'];
 
 @Injectable()
 export class OfflineSyncService {
@@ -48,6 +52,10 @@ export class OfflineSyncService {
     this.assertText(input.deviceId, 'deviceId');
     this.assertText(input.shiftId, 'shiftId');
     this.assertEntityType(input.entityType);
+    if (input.idempotencyKey !== undefined) {
+      this.assertText(input.idempotencyKey, 'idempotencyKey');
+      if (Buffer.byteLength(input.idempotencyKey) > 255) this.invalid('idempotencyKey must not exceed 255 bytes.');
+    }
     if (
       !Number.isSafeInteger(input.requestedSize) ||
       input.requestedSize < 1 ||
@@ -115,6 +123,31 @@ export class OfflineSyncService {
     return receipt;
   }
 
+  /** Tenant batch receipts, newest first (UPS-OFS-11). */
+  async listSyncBatchReceipts(input: ListSyncBatchReceiptsInput = {}): Promise<OfflineSyncPage<SyncBatchReceiptSummary>> {
+    this.assertFilters(input, ['deviceId']);
+    if (input.status !== undefined && !['open', 'closed', 'legacy_closed_unverified'].includes(input.status)) this.invalid('status is invalid.');
+    return this.listing('listSyncBatchReceipts').call(this.durable, this.context.current(), this.page(input));
+  }
+  /** Tenant item receipts, newest first (UPS-OFS-11). */
+  async listSyncItemReceipts(input: ListSyncItemReceiptsInput = {}): Promise<OfflineSyncPage<SyncItemReceiptRecord>> {
+    this.assertFilters(input, ['deviceId', 'deviceBatchId']);
+    if (input.status !== undefined && !queueStatuses.includes(input.status)) this.invalid('status is invalid.');
+    return this.listing('listSyncItemReceipts').call(this.durable, this.context.current(), this.page(input));
+  }
+  /** Tenant queue items, newest first (UPS-OFS-11). */
+  async listSyncQueueItems(input: ListSyncQueueItemsInput = {}): Promise<OfflineSyncPage<SyncQueueItemRecord>> {
+    this.assertFilters(input, ['deviceId', 'entityType']);
+    if (input.status !== undefined && !queueStatuses.includes(input.status)) this.invalid('status is invalid.');
+    return this.listing('listSyncQueueItems').call(this.durable, this.context.current(), this.page(input));
+  }
+  /** Tenant conflicts, newest first (UPS-OFS-11). */
+  async listSyncConflicts(input: ListSyncConflictsInput = {}): Promise<OfflineSyncPage<SyncConflictRecord>> {
+    this.assertFilters(input, ['conflictType', 'queueItemId']);
+    if (input.status !== undefined && !['open', 'resolved'].includes(input.status)) this.invalid('status is invalid.');
+    return this.listing('listSyncConflicts').call(this.durable, this.context.current(), this.page(input));
+  }
+
   async submitSyncBatch(input: SubmitSyncBatchInput): Promise<SubmitSyncBatchResult>;
   async submitSyncBatch(input: CTG9SubmitSyncBatchInput, options: SubmitSyncBatchOptions): Promise<CTG9SubmitSyncBatchResult>;
   async submitSyncBatch(input: SubmitSyncBatchInput | CTG9SubmitSyncBatchInput, options?: SubmitSyncBatchOptions): Promise<SubmitSyncBatchResult | CTG9SubmitSyncBatchResult> {
@@ -131,7 +164,7 @@ export class OfflineSyncService {
     }
     const maximum = this.options.policyResolver ? policy?.maxBatchItems : 100;
     if (!Array.isArray(input.items) || input.items.length < 1 || (maximum != null && input.items.length > maximum)) {
-      this.invalid('items must contain between 1 and 100 queue items.');
+      this.invalid(maximum == null ? 'items must contain at least 1 queue item.' : `items must contain between 1 and ${maximum} queue items.`);
     }
     const queueIds = new Set<string>();
     const itemKeys = new Set<string>();
@@ -206,6 +239,26 @@ export class OfflineSyncService {
   }
 
   private get durable(): OfflineSyncDurableStore { return this.store as OfflineSyncDurableStore; }
+
+  private listing<K extends 'listSyncBatchReceipts' | 'listSyncItemReceipts' | 'listSyncQueueItems' | 'listSyncConflicts'>(name: K): NonNullable<OfflineSyncDurableStore[K]> {
+    const operation = this.durable[name];
+    if (typeof operation !== 'function') throw new OfflineSyncConfigurationError(name);
+    return operation as NonNullable<OfflineSyncDurableStore[K]>;
+  }
+
+  private assertFilters(input: object, fields: readonly string[]): void {
+    for (const field of fields) {
+      const value = (input as Record<string, unknown>)[field];
+      if (value !== undefined) this.assertText(value as string, field);
+    }
+  }
+
+  private page<T extends OfflineSyncListInput>(input: T): T & { limit: number } {
+    const limit = input.limit ?? listDefaultLimit;
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > listMaxLimit) this.invalid(`limit must be an integer between 1 and ${listMaxLimit}.`);
+    if (input.cursor !== undefined) this.assertText(input.cursor, 'cursor');
+    return { ...input, limit };
+  }
 
   private now(): string {
     return (this.options.now ?? (() => new Date().toISOString()))();

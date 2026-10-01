@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { HttpException, UnprocessableEntityException } from '@nestjs/common';
-import { OfflineSyncConfigurationError, OfflineSyncError, OfflineSyncNumberingOutcome } from './errors';
+import { OfflineSyncConfigurationError, OfflineSyncError, OfflineSyncNumberingOutcome, OfflineSyncRangeUnavailableError, OfflineSyncReservationReplayError } from './errors';
+import { pageOf, rangeUnavailableReason, reservationFingerprint, sortInstantOf } from './listing';
 import { applyReplayResponse, batchContextFingerprint, captureReplayableHeaders, transportCompositeKey, transportFingerprint } from './transport';
 import type {
   CancelNumberingReservationInput,
@@ -19,6 +20,8 @@ import type {
   NumberingConsumptionEntry, CTG9SubmitSyncBatchInput, CTG9SubmitSyncBatchResult,
   DurableBatchExecutionOptions, SubmitSyncBatchOptions, SyncBatchReceipt, SyncItemReceipt,
   OfflineSyncConflictResolver,
+  ListSyncBatchReceiptsInput, ListSyncConflictsInput, ListSyncItemReceiptsInput, ListSyncQueueItemsInput,
+  OfflineSyncPage, SyncBatchReceiptSummary, SyncConflictRecord, SyncItemReceiptRecord, SyncQueueItemRecord,
 } from './types';
 
 /** Deterministic process-local store for tests and sandbox wiring. */
@@ -27,11 +30,14 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   private readonly reservations = new Map<string, NumberingReservation>();
   private readonly queueItems = new Map<string, StoredSyncQueueItem>();
   private readonly payloadIndex = new Map<string, string>();
-  private readonly e6Items = new Map<string, {item:StoredSyncQueueItem;batchKey:string}>();
+  private readonly e6Items = new Map<string, {item:StoredSyncQueueItem;batchKey:string;deviceBatchId:string}>();
   private readonly conflicts = new Map<string, SyncConflict>();
   private readonly consumption = new Map<string, Map<number, NumberingConsumptionEntry>>();
-  private readonly itemReceipts = new Map<string, { hash: string; batchKey: string; receipt: SyncItemReceipt; item: CTG9SubmitSyncBatchResult['items'][number] }>();
-  private readonly batches = new Map<string, { contextHash: string; receipt: SyncBatchReceipt; result?: CTG9SubmitSyncBatchResult; promise?: Promise<CTG9SubmitSyncBatchResult>; transportKey: string; fingerprint: string }>();
+  private readonly itemReceipts = new Map<string, { hash: string; batchKey: string; receipt: SyncItemReceipt; item: CTG9SubmitSyncBatchResult['items'][number]; deviceBatchId: string; receivedAt: string }>();
+  private readonly batches = new Map<string, { contextHash: string; receipt: SyncBatchReceipt; result?: CTG9SubmitSyncBatchResult; promise?: Promise<CTG9SubmitSyncBatchResult>; transportKey: string; fingerprint: string; createdAt: string }>();
+  private readonly reservationKeys = new Map<string, { fingerprint: string; reservationId: string }>();
+  private readonly queueBatches = new Map<string, string>();
+  private readonly conflictCreatedAt = new Map<string, string>();
   private readonly transport = new Map<string, { batchIdentity: string; fingerprint: string }>();
 
   seedNumberingRange(range: NumberingRange): void {
@@ -44,6 +50,13 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     _now: string,
     defaultValidUntil: string,
   ): Promise<NumberingReservation> {
+    const replayKey = input.idempotencyKey === undefined ? undefined : this.key(scope.tenantId, input.idempotencyKey);
+    const fingerprint = reservationFingerprint(scope, input);
+    const prior = replayKey === undefined ? undefined : this.reservationKeys.get(replayKey);
+    if (prior) {
+      if (prior.fingerprint !== fingerprint) throw new OfflineSyncReservationReplayError();
+      return this.reservations.get(this.key(scope.tenantId, prior.reservationId))!;
+    }
     const range = [...this.ranges.values()].find(
       (candidate) =>
         candidate.tenantId === scope.tenantId &&
@@ -65,17 +78,15 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       range.orgUnitId !== input.orgUnitId ||
       range.entityType !== input.entityType
     ) {
-      throw new OfflineSyncError(
-        'OFFLINE_SYNC_RANGE_UNAVAILABLE',
-        409,
+      throw new OfflineSyncRangeUnavailableError(
+        rangeUnavailableReason(range, input),
         'The selected numbering range is not active for this entity and organizational unit.',
       );
     }
     const endNumber = range.nextNumber + input.requestedSize - 1;
     if (endNumber > range.endNumber) {
-      throw new OfflineSyncError(
-        'OFFLINE_SYNC_RANGE_UNAVAILABLE',
-        409,
+      throw new OfflineSyncRangeUnavailableError(
+        'insufficient_capacity',
         'The selected numbering range has insufficient capacity.',
       );
     }
@@ -101,6 +112,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       status: 'reserved',
     };
     this.reservations.set(this.key(scope.tenantId, reservation.reservationId), reservation);
+    if (replayKey !== undefined) this.reservationKeys.set(replayKey, { fingerprint, reservationId: reservation.reservationId });
     const entries = new Map<number, NumberingConsumptionEntry>();
     for (let number = reservation.startNumber; number <= reservation.endNumber; number += 1) entries.set(number, { number, status: 'available', serverEntityId: null, finalizedAt: null });
     this.consumption.set(this.key(scope.tenantId, reservation.reservationId), entries);
@@ -180,8 +192,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         receivedAt: now,
       };
       this.queueItems.set(itemKey, queueItem);
+      this.queueBatches.set(itemKey, input.deviceBatchId);
       this.e6Items.set(this.key(scope.tenantId,item.idempotencyKey),{
-        item:queueItem,batchKey:this.key(scope.tenantId,`${input.deviceId}:${input.deviceBatchId}`)});
+        item:queueItem,batchKey:this.key(scope.tenantId,`${input.deviceId}:${input.deviceBatchId}`),deviceBatchId:input.deviceBatchId});
       this.payloadIndex.set(payloadKey, item.queueItemId);
       stored.push(queueItem);
     }
@@ -200,7 +213,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     scope: TrustedOfflineSyncScope,
     queueItemId: string,
     input: OpenSyncConflictInput,
-    _now: string,
+    now: string,
   ): Promise<SyncConflict> {
     const queueKey = this.key(scope.tenantId, queueItemId);
     const item = this.queueItems.get(queueKey);
@@ -222,7 +235,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       description: input.description,
       status: 'open',
     };
-    this.conflicts.set(this.key(scope.tenantId, conflict.conflictId), conflict);
+    this.saveConflict(conflict, now);
     return conflict;
   }
 
@@ -405,7 +418,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     if (!prior && bound?.fingerprint !== undefined && bound.fingerprint !== fingerprint) throw new UnprocessableEntityException('IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY');
     if (!prior && bound && bound.batchIdentity !== identity) throw new OfflineSyncError('OFFLINE_SYNC_BATCH_CONFLICT',409,'Transport key belongs to another batch.');
     const receipt: SyncBatchReceipt = prior?.receipt ?? { deviceId: input.deviceId, deviceBatchId: input.deviceBatchId, batchSequence: input.batchSequence ?? null, status: 'open', items: [], responseStatus: null, responseBodyBytes: null, responseHeaders: {} };
-    const record = (prior ?? { contextHash, receipt, transportKey, fingerprint }) as { contextHash: string; receipt: SyncBatchReceipt; result?: CTG9SubmitSyncBatchResult; promise?: Promise<CTG9SubmitSyncBatchResult>; transportKey: string; fingerprint: string };
+    const record = (prior ?? { contextHash, receipt, transportKey, fingerprint, createdAt: now }) as { contextHash: string; receipt: SyncBatchReceipt; result?: CTG9SubmitSyncBatchResult; promise?: Promise<CTG9SubmitSyncBatchResult>; transportKey: string; fingerprint: string; createdAt: string };
     this.batches.set(identity, record);
     this.transport.set(transportKey,{batchIdentity:identity,fingerprint});
     const run = async (): Promise<CTG9SubmitSyncBatchResult> => {
@@ -434,7 +447,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           const errorCode = !sameHash ? 'OFFLINE_SYNC_ITEM_INTEGRITY' : legacyReceived ? 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED' : undefined;
           const context = legacy.queueItemId !== item.queueItemId ? {originalQueueItemId:legacy.queueItemId} : undefined;
           const originalReceipt: SyncItemReceipt={queueItemId:legacy.queueItemId,status:legacy.status};
-          this.itemReceipts.set(itemKey,{hash:legacy.payloadHash,batchKey:e6.batchKey,receipt:originalReceipt,item:legacy});
+          this.itemReceipts.set(itemKey,{hash:legacy.payloadHash,batchKey:e6.batchKey,receipt:originalReceipt,item:legacy,deviceBatchId:e6.deviceBatchId,receivedAt:legacy.receivedAt});
           stored.push({...item,tenantId:scope.tenantId,agentId:runtime.agentId,orgUnitId:input.orgUnitId,
             deviceId:input.deviceId,status,receivedAt:now,...(errorCode ? {errorCode} : {}),...(context ? {context} : {})});
           itemReceipts.push({queueItemId:item.queueItemId,status,...(errorCode ? {errorCode} : {}),...(context ? {context} : {})});
@@ -460,7 +473,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         let serverEntityId: string | undefined;
         let receiptContext: Record<string,unknown> | undefined;
         let coveringReservationKey: string | undefined;
-        const itemContext = { ...scope, agentId: runtime.agentId, orgUnitId: input.orgUnitId, deviceId: input.deviceId, batchId: input.deviceBatchId, now };
+        const itemContext = { ...scope, agentId: runtime.agentId, orgUnitId: input.orgUnitId, deviceId: input.deviceId, batchId: input.deviceBatchId, now, receiptId: key };
         if (!item.idempotencyKey) errorCode = 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED';
         else {
           const trx = { token: randomUUID() } as unknown as import('@stynx-nyx/data').Transaction;
@@ -491,15 +504,15 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                     this.itemReceipts.set(storedKey, { ...old, receipt: { ...old.receipt, status: 'conflict', context:evidence } });
                     const affectedQueue = this.queueItems.get(this.key(scope.tenantId,affected));
                     this.queueItems.set(this.key(scope.tenantId,affected),{...affectedQueue!,status:'conflict'});
-                    this.conflicts.set(this.key(scope.tenantId,conflictId),{conflictId,tenantId:scope.tenantId,
+                    this.saveConflict({conflictId,tenantId:scope.tenantId,
                       queueItemId:affected,localEntityId:old.item.localEntityId,payloadHash:old.item.payloadHash,
-                      conflictType:'concurrency',description:'Concurrent agent activity',status:'open'});
+                      conflictType:'concurrency',description:'Concurrent agent activity',status:'open'},now);
                   }
                   if (affected === item.queueItemId) {
                     receiptContext=evidence;
-                    this.conflicts.set(this.key(scope.tenantId,conflictId),{conflictId,tenantId:scope.tenantId,
+                    this.saveConflict({conflictId,tenantId:scope.tenantId,
                       queueItemId:affected,localEntityId:item.localEntityId,payloadHash:item.payloadHash,
-                      conflictType:'concurrency',description:'Concurrent agent activity',status:'open'});
+                      conflictType:'concurrency',description:'Concurrent agent activity',status:'open'},now);
                   }
                 }
                 if (pair.firstItemId === item.queueItemId || pair.secondItemId === item.queueItemId) status = 'conflict';
@@ -518,9 +531,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
               const conflictId = randomUUID();
               const allowedActions = await runtime.ports.conflictResolver?.allowedActions?.(trx,conflictId,itemContext) ?? ['reject','retry_after_correction'];
               receiptContext={...numbering.context,conflictId,allowedActions};
-              this.conflicts.set(this.key(scope.tenantId,conflictId),{conflictId,tenantId:scope.tenantId,
+              this.saveConflict({conflictId,tenantId:scope.tenantId,
                 queueItemId:item.queueItemId,localEntityId:item.localEntityId,payloadHash:item.payloadHash,
-                conflictType:'domain',description:numbering.code,status:'open'});
+                conflictType:'domain',description:numbering.code,status:'open'},now);
             }
             if (!classified) retryable = true;
           }
@@ -528,7 +541,8 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         const saved: CTG9SubmitSyncBatchResult['items'][number] = { ...item, tenantId: scope.tenantId, agentId: runtime.agentId, orgUnitId: input.orgUnitId, deviceId: input.deviceId, status, receivedAt: now };
         const itemReceipt: SyncItemReceipt = { queueItemId: item.queueItemId, status, ...(errorCode ? { errorCode } : {}),...(receiptContext ? {context:receiptContext} : {}) };
         this.queueItems.set(this.key(scope.tenantId, item.queueItemId), { ...saved, idempotencyKey: key } as StoredSyncQueueItem);
-        this.itemReceipts.set(itemKey, { hash: item.payloadHash, batchKey: identity, receipt: itemReceipt, item: saved });
+        this.queueBatches.set(this.key(scope.tenantId, item.queueItemId), input.deviceBatchId);
+        this.itemReceipts.set(itemKey, { hash: item.payloadHash, batchKey: identity, receipt: itemReceipt, item: saved, deviceBatchId: input.deviceBatchId, receivedAt: previous?.receivedAt ?? now });
         if (coveringReservationKey && serverEntityId !== undefined && ['applied','conflict'].includes(status) && item.reservedNumber !== undefined) {
           const entries = this.consumption.get(coveringReservationKey)!;
           const entry = entries.get(item.reservedNumber)!;
@@ -545,6 +559,51 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     };
     record.promise = run();
     try { return await record.promise; } finally { delete record.promise; }
+  }
+
+  async listSyncBatchReceipts(scope: TrustedOfflineSyncScope, input: ListSyncBatchReceiptsInput): Promise<OfflineSyncPage<SyncBatchReceiptSummary>> {
+    return pageOf([...this.batches.entries()].filter(([key, { receipt }]) => key.startsWith(`${scope.tenantId}:`) &&
+      (input.deviceId === undefined || receipt.deviceId === input.deviceId) && (input.status === undefined || receipt.status === input.status))
+      .map(([, { receipt, createdAt }]) => ({ key: [sortInstantOf(createdAt), receipt.deviceId, receipt.deviceBatchId], value: {
+        deviceId: receipt.deviceId, deviceBatchId: receipt.deviceBatchId, batchSequence: receipt.batchSequence, status: receipt.status,
+        responseStatus: receipt.responseStatus, createdAt: new Date(createdAt).toISOString() } })), 3, input.cursor, input.limit);
+  }
+
+  async listSyncItemReceipts(scope: TrustedOfflineSyncScope, input: ListSyncItemReceiptsInput): Promise<OfflineSyncPage<SyncItemReceiptRecord>> {
+    const prefix = `${scope.tenantId}:`;
+    return pageOf([...this.itemReceipts.entries()].filter(([key, record]) => key.startsWith(prefix) &&
+      (input.deviceId === undefined || record.item.deviceId === input.deviceId) &&
+      (input.deviceBatchId === undefined || record.deviceBatchId === input.deviceBatchId) &&
+      (input.status === undefined || record.receipt.status === input.status))
+      .map(([key, record]) => {
+        const receiptId = key.slice(prefix.length);
+        return { key: [sortInstantOf(record.receivedAt), receiptId], value: { ...record.receipt, queueItemId: record.item.queueItemId, receiptId,
+          deviceId: record.item.deviceId, deviceBatchId: record.deviceBatchId, payloadHash: record.hash, receivedAt: new Date(record.receivedAt).toISOString() } };
+      }), 2, input.cursor, input.limit);
+  }
+
+  async listSyncQueueItems(scope: TrustedOfflineSyncScope, input: ListSyncQueueItemsInput): Promise<OfflineSyncPage<SyncQueueItemRecord>> {
+    return pageOf([...this.queueItems.entries()].filter(([key, item]) => key.startsWith(`${scope.tenantId}:`) &&
+      (input.deviceId === undefined || item.deviceId === input.deviceId) && (input.status === undefined || item.status === input.status) &&
+      (input.entityType === undefined || item.entityType === input.entityType))
+      .map(([key, item]) => ({ key: [sortInstantOf(item.receivedAt), item.queueItemId], value: { ...item, deviceBatchId: this.queueBatches.get(key)! } })),
+    2, input.cursor, input.limit);
+  }
+
+  async listSyncConflicts(scope: TrustedOfflineSyncScope, input: ListSyncConflictsInput): Promise<OfflineSyncPage<SyncConflictRecord>> {
+    return pageOf([...this.conflicts.entries()].filter(([key, conflict]) => key.startsWith(`${scope.tenantId}:`) &&
+      (input.status === undefined || conflict.status === input.status) && (input.conflictType === undefined || conflict.conflictType === input.conflictType) &&
+      (input.queueItemId === undefined || conflict.queueItemId === input.queueItemId))
+      .map(([key, conflict]) => {
+        const createdAt = this.conflictCreatedAt.get(key)!;
+        return { key: [sortInstantOf(createdAt), conflict.conflictId], value: { ...conflict, createdAt: new Date(createdAt).toISOString() } };
+      }), 2, input.cursor, input.limit);
+  }
+
+  private saveConflict(conflict: SyncConflict, now: string): void {
+    const key = this.key(conflict.tenantId, conflict.conflictId);
+    this.conflicts.set(key, conflict);
+    this.conflictCreatedAt.set(key, now);
   }
 
   private key(tenantId: string, id: string): string {
