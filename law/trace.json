@@ -5055,6 +5055,22 @@
       "assertion_digest_sha256": "2e6b341b00c13b80b4bf375cb87e9252b46e8983c35303d8797e29dfc5ffbc98"
     },
     {
+      "path": "packages/outbox/test/integration/event-reads-retry-rls.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 78,
+      "assertion_digest_sha256": "5f3c3f1a0a071315fcfa6ab327c541fd397e7dae9d3c3933e699f7be9e2604a0"
+    },
+    {
+      "path": "packages/outbox/test/integration/contract-v-items.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 16,
+      "assertion_digest_sha256": "3649a839748a1684113dcac3377237b1b7690ccc16d1cb43112ba6f8ba6941e8"
+    },
+    {
       "path": "packages/auth/test/integration/session-policy-http.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-RBAC-001"],
@@ -5125,6 +5141,22 @@
       "lifecycle": "supported",
       "assertion_count": 99,
       "assertion_digest_sha256": "e0b66ce39d88a3172c5b9175c912755b836faf501ba4067fbfa574c63363537a"
+    },
+    {
+      "path": "packages/outbox/test/unit/outbox-event-reads.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 69,
+      "assertion_digest_sha256": "f04cc356f45d951b446fbb0152517d60c98e1918262c54e286520c01456814e1"
+    },
+    {
+      "path": "packages/outbox/test/unit/outbox-contract-v.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 38,
+      "assertion_digest_sha256": "da3cbe483143dc7629ca46128085b54d6c7ce5572aa744fd03fa1cad50586092"
     },
     {
       "path": "packages/pdf/test/unit/assets-missing.spec.ts",
