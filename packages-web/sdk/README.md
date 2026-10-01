@@ -132,7 +132,7 @@ _None._
 - `@stynx-nyx/core`: `workspace:*`
 - `@types/node`: `24.13.4`
 - `ng-packagr`: `22.1.1`
-- `openapi-typescript-codegen`: `^0.30.0`
+- `openapi-typescript-codegen`: `^0.31.0`
 - `tslib`: `^2.8.1`
 - `typescript`: `6.0.3`
 
