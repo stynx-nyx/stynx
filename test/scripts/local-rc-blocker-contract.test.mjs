@@ -4330,9 +4330,9 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': '3445fce758f3454b25429df00be3926aac133b112555e5d2b9805ede7df58ab7',
+    'package.json': '7b7703e4772a430cc6871b4f6b17d9e2b7111c1035284fe145c5a070d0bbcb09',
     'reference/api/package.json':
-      'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
+      'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -4503,9 +4503,9 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': '3445fce758f3454b25429df00be3926aac133b112555e5d2b9805ede7df58ab7',
+    'package.json': '7b7703e4772a430cc6871b4f6b17d9e2b7111c1035284fe145c5a070d0bbcb09',
     'reference/api/package.json':
-      'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
+      'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -4565,9 +4565,9 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
-    'package.json': '3445fce758f3454b25429df00be3926aac133b112555e5d2b9805ede7df58ab7',
+    'package.json': '7b7703e4772a430cc6871b4f6b17d9e2b7111c1035284fe145c5a070d0bbcb09',
     'reference/api/package.json':
-      'f46078fd9c30b5cf855ec17e08cae9db185f5411d441770b722dd56aee407d26',
+      'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
