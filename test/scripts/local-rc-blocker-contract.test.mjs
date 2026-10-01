@@ -6093,7 +6093,7 @@ test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwrigh
         stderrEmpty: engineResult.stderr === '',
         stdoutExact:
           engineResult.stdout ===
-          `[engines][ok] node ${process.versions.node}; pnpm >=9 <10; Angular 22.1.6; NestJS ^11.1.19; TypeScript ^6.0.3/6.0.3\n`,
+          `[engines][ok] node ${process.versions.node}; pnpm >=9 <10; Angular 22.2.1; NestJS ^11.1.19; TypeScript ^6.0.3/6.0.3\n`,
       },
       playwright: {
         copiedBytesExact: readFileSync(
