@@ -4964,7 +4964,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 65,
-      "assertion_digest_sha256": "270cb277741e7e74e21da3f1f5616f8d1d2ddf498d67eb628dbbb62f3e507d54"
+      "assertion_digest_sha256": "4d862d6a18522a07ede3007a6afad3b3d5b1318523415a04e4eab74b6556e21f"
     },
     {
       "path": "packages/signature/test/unit/readiness.spec.ts",
@@ -4972,7 +4972,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 20,
-      "assertion_digest_sha256": "610c05f0912d4ef3b949f39525ca2f714d784bba1b5a1db947d650fa51cbd3fd"
+      "assertion_digest_sha256": "90e1c6ae5c92b403f5e6309e584610353a623790da49891e3b875b2a34ff2794"
     },
     {
       "path": "packages/signature/test/unit/withdrawal.spec.ts",
