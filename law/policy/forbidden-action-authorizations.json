@@ -1141,6 +1141,12 @@
       "commit": "4a17c18efc5b65e53d53d35413f300c1d27795e6",
       "authorized_by": "Owner",
       "reason": "Owner decision of 2026-10-01 to accept, as an exception, the current aws-cdk-lib version whose bundled brace-expansion 5.0.9 carries GHSA-q2hr-2g5m-vwhr, GHSA-qhr7-859c-m2p7 and GHSA-6j4f-fj2g-mc7p; no released aws-cdk-lib (<= 2.272.0) bundles a patched copy and npm overrides cannot replace bundled dependencies. This exact commit replaces the raw npm audit in release-prep.yml's dependency-audit CDK step with scripts/audit-cdk-dependencies.mjs, which keeps failing on every other high or critical finding and accepts only those three advisories on the bundled copy at aws-cdk-lib 2.265.0, so any aws-cdk-lib bump re-arms the gate."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "0f8ff173f58fc1d586b5e9a6a84c32307a6c6890",
+      "authorized_by": "Owner",
+      "reason": "Owner decision of 2026-10-01 to merge Dependabot PR #322. This exact commit, the Dependabot recreation on main 31ad6be1 of the earlier 741d94f2, only moves the SHA-pinned actions/setup-python in release-prep.yml from 6.2.0 to 6.3.0, keeping the v6 major; no job, step, trigger or permission changes."
     }
   ]
 }
