@@ -10,7 +10,8 @@ immediately. `commentActivity: 'live'` lets SSE comment lines such as
 `retryAfterFrom(error, body)` adds a retry delay read from an HTTP error body;
 the reopen waits for the largest of backoff, `Retry-After` and that delay.
 `StynxEventStreamService` gains `resync$`, emitted once when a held cursor is
-discarded by a 204 or a tenant change, and `lastError`, a signal holding the
+discarded by a 204 or a tenant change (the reason type also reserves
+`'server-close'`, not emitted in 1.5.x), and `lastError`, a signal holding the
 most recent transport error. The built-in transport now sends
 `Accept: text/event-stream`. Every new option defaults to the 1.5.0
 behavior, and `FakeStynxEventStreamTransport.error()` accepts an optional

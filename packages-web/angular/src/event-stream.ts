@@ -41,7 +41,8 @@ export interface StynxEventStreamConfig {
   /** Extra retry delay in milliseconds read from an HTTP error and its JSON-decoded body; the reopen waits for max(backoff, Retry-After, this). */
   retryAfterFrom?: (error: HttpErrorResponse, body: unknown) => number | null;
 }
-export type StynxEventStreamResyncReason = 'no-content' | 'tenant-change';
+// 'server-close' is reserved for UPS-NGSSE-12 and is not emitted in 1.5.x.
+export type StynxEventStreamResyncReason = 'no-content' | 'tenant-change' | 'server-close';
 export interface StynxEventStreamResync { reason: StynxEventStreamResyncReason }
 export interface StynxEventStreamError {
   status: number | null;
