@@ -1147,6 +1147,102 @@
       "commit": "0f8ff173f58fc1d586b5e9a6a84c32307a6c6890",
       "authorized_by": "Owner",
       "reason": "Owner decision of 2026-10-01 to merge Dependabot PR #322. This exact commit, the Dependabot recreation on main 31ad6be1 of the earlier 741d94f2, only moves the SHA-pinned actions/setup-python in release-prep.yml from 6.2.0 to 6.3.0, keeping the v6 major; no job, step, trigger or permission changes."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "a705af2ac81ba164eda5d1d5b8b103890f809dff",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #326 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "a705af2ac81ba164eda5d1d5b8b103890f809dff",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #326 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "99f0afa36b0935acb3093fa1c2daef1123e872b8",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #331 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "99f0afa36b0935acb3093fa1c2daef1123e872b8",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #331 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "275c6ccbae1de96ea1045882d384bc9a3c5751a0",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #324 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "275c6ccbae1de96ea1045882d384bc9a3c5751a0",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #324 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "34229f3c5f5c7d98c9d7cacb3746748e577183ab",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #322 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "34229f3c5f5c7d98c9d7cacb3746748e577183ab",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #322 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "df1cad7b1cfdd249ea508968312c36acb8d7f3cd",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #328 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "df1cad7b1cfdd249ea508968312c36acb8d7f3cd",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #328 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "8afe56c4418c9ece3cdcf450ef97b771220aca54",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #329 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "8afe56c4418c9ece3cdcf450ef97b771220aca54",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #329 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "d43891658b12717c5290fef774cc57ab02912ee5",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #330 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "d43891658b12717c5290fef774cc57ab02912ee5",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #330 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "53ba39046a0122797021e18d6124cf6b136e08a9",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #323 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "53ba39046a0122797021e18d6124cf6b136e08a9",
+      "authorized_by": "Owner",
+      "reason": "Owner admin merge of PR #323 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
     }
   ]
 }
