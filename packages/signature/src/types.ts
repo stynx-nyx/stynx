@@ -7,6 +7,8 @@ export type DigestAlgorithm = 'sha256';
 export type RevocationSource = 'ocsp' | 'crl' | 'embedded' | 'none';
 export type SignatureLevel = 'ADVANCED' | 'QUALIFIED';
 export type SignatureVerifierKind = 'stynx-cms' | 'consumer-owned';
+/** Rule by which the STYNX verifier attained QUALIFIED: a profile/verifier policy OID or the consumer predicate. */
+export type SignatureQualificationRule = 'certificate-policy' | 'consumer-predicate';
 export interface SignatureTrustProfile {
   id: string;
   revision: string;
@@ -18,6 +20,8 @@ export interface SignatureTrustProfile {
   revocation: 'ocsp' | 'crl' | 'ocsp-or-crl';
   trustAnchorsPem: readonly string[];
   acceptedPolicies?: readonly string[];
+  /** Signer certificate policy OIDs (2.5.29.32) that confer QUALIFIED for this profile; consumer-supplied. */
+  qualifiedPolicies?: readonly string[];
   atTime: 'signing-time' | 'trusted-timestamp';
 }
 export interface SignatureCapabilities {
@@ -34,6 +38,8 @@ export interface SignatureTrustProof {
   profileId: string;
   profileRevision: string;
   achievedLevel: SignatureLevel;
+  /** Present only when `achievedLevel` is QUALIFIED; records the rule that attained it. */
+  qualifiedBy?: SignatureQualificationRule;
   padesProfile: SignatureTrustProfile['requiredPadesProfile'];
   originalDocumentSha256: string;
   signedDocumentSha256: string;

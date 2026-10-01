@@ -6,7 +6,7 @@ import * as pkijs from 'pkijs';
 import { SignatureTrustError, SignatureTrustUnavailableError, SignatureCapabilityError, SignatureEvidenceMismatchError } from './errors';
 import { sha256 as sha256Hex } from './digest';
 import { readPdfTrustEvidence, readSelectedSignatureDictionary } from './pdf-trust-evidence';
-import type { SignatureTrustVerifier, SignatureTrustProof } from './types';
+import type { SignatureQualificationRule, SignatureTrustVerifier, SignatureTrustProof } from './types';
 
 const branded = new WeakSet<object>();
 export function isCmsTrustVerifier(value: object): boolean { return branded.has(value); }
@@ -23,6 +23,11 @@ const content = (bytes: Uint8Array): pkijs.SignedData => {
   if (info.contentType !== pkijs.ContentInfo.SIGNED_DATA) throw new SignatureTrustError('CMS SignedData required');
   return new pkijs.SignedData({ schema: info.content });
 };
+const hasPolicy = (certificate: pkijs.Certificate, oids: readonly string[]): boolean => {
+  const policies = certificate.extensions?.find(ext => ext.extnID === '2.5.29.32')?.parsedValue;
+  return policies instanceof pkijs.CertificatePolicies &&
+    policies.certificatePolicies.some(p => oids.includes(p.policyIdentifier));
+};
 const validDate = (date: Date, now: Date): boolean =>
   date instanceof Date && date.getTime() > 0 && date.getTime() <= now.getTime() + 300_000;
 
@@ -30,12 +35,20 @@ export interface CmsTrustVerifierOptions {
   trustAnchorsPem: readonly string[];
   tsaTrustAnchorsPem?: readonly string[];
   acceptedPolicies?: readonly string[];
+  /** Fallback for a profile without `qualifiedPolicies`: signer certificate policy OIDs that confer QUALIFIED. */
+  qualifiedPolicies?: readonly string[];
   now?: () => Date;
   fetchTsa?: (context:{signedDocument:Uint8Array;signerInfo:pkijs.SignerInfo}) => Promise<Uint8Array | undefined>;
   fetchOcsp?: (context:{certificate:pkijs.Certificate;issuer:pkijs.Certificate;signedDocument:Uint8Array;
     signerInfo:pkijs.SignerInfo}) => Promise<Uint8Array | undefined>;
   fetchCrl?: (context:{certificate:pkijs.Certificate;issuer:pkijs.Certificate;signedDocument:Uint8Array;
     signerInfo:pkijs.SignerInfo}) => Promise<Uint8Array | undefined>;
+  /**
+   * Consumer qualification predicate. Called at most once per verification, after every cryptographic,
+   * path, TSA, revocation and PAdES check passed and only when the declarative policy rule did not
+   * qualify, with the verified signer certificate and the profile as supplied. May be async; STYNX
+   * imposes no timeout. A throw or rejection fails with SignatureTrustUnavailableError; truthy is QUALIFIED.
+   */
   qualifiesCertificate?: (certificate: pkijs.Certificate, profile: Parameters<SignatureTrustVerifier['capabilities']>[0]) => boolean | Promise<boolean>;
   readinessChallenge?: (profile: Parameters<SignatureTrustVerifier['capabilities']>[0]) => Promise<Parameters<SignatureTrustVerifier['verifySignedArtifact']>[0]>;
 }
@@ -228,9 +241,7 @@ export function createCmsTrustVerifier(options: CmsTrustVerifierOptions): Signat
           throw new SignatureTrustError('CMS signer identity differs from supplied certificate');
         const x509 = new X509Certificate(signerDer);
         const policyOids = input.profile.acceptedPolicies ?? options.acceptedPolicies ?? [];
-        const policies = signer.extensions?.find(ext => ext.extnID === '2.5.29.32')?.parsedValue;
-        if (policyOids.length && (!(policies instanceof pkijs.CertificatePolicies) ||
-          !policies.certificatePolicies.some(p => policyOids.includes(p.policyIdentifier))))
+        if (policyOids.length && !hasPolicy(signer, policyOids))
           throw new SignatureTrustError('Certificate policy is not accepted');
         const timestampAttr=signerInfo.unsignedAttrs?.attributes.find(a=>
           a.type === '1.2.840.113549.1.9.16.2.14');
@@ -318,12 +329,16 @@ export function createCmsTrustVerifier(options: CmsTrustVerifierOptions): Signat
           throw new SignatureTrustError('Embedded DSS evidence incomplete');
         if (input.profile.requireLta || input.profile.requiredPadesProfile === 'PAdES-B-LTA')
           throw new SignatureTrustError('Archive timestamp evidence unavailable');
-        let qualified=false;
-        try {qualified=!!(options.qualifiesCertificate && await options.qualifiesCertificate(signer,input.profile));}
-        catch {throw new SignatureTrustUnavailableError('Certificate qualification service unavailable');}
-        const achievedLevel = qualified ? 'QUALIFIED' : 'ADVANCED';
+        const qualifiedOids = input.profile.qualifiedPolicies ?? options.qualifiedPolicies ?? [];
+        let qualifiedBy:SignatureQualificationRule|undefined=qualifiedOids.length && hasPolicy(signer,qualifiedOids)
+          ? 'certificate-policy' : undefined;
+        if (!qualifiedBy) {
+          try {if (options.qualifiesCertificate && await options.qualifiesCertificate(signer,input.profile)) qualifiedBy='consumer-predicate';}
+          catch {throw new SignatureTrustUnavailableError('Certificate qualification service unavailable');}
+        }
+        const achievedLevel = qualifiedBy ? 'QUALIFIED' : 'ADVANCED';
         return {verifierKind:'stynx-cms',profileId:input.profile.id,profileRevision:input.profile.revision,
-          achievedLevel,padesProfile,
+          achievedLevel,...(qualifiedBy ? {qualifiedBy} : {}),padesProfile,
           originalDocumentSha256:sha256Hex(input.originalDocument),signedDocumentSha256:sha256Hex(input.signedDocument),
           cmsSha256:sha256Hex(input.cmsSignature),signerCertificateSha256:sha256Hex(signerDer),
           chainSha256:chainValidation.certificatePath.map(a => sha256Hex(new Uint8Array(a.toSchema().toBER(false)))),

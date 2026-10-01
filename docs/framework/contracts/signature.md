@@ -1,6 +1,6 @@
 # Signature contract — CTG9
 
-**Status:** Architect contract for UPS-SIG-01…04. **Package:** `@stynx-nyx/signature`. Trust policy decision: [ADR-SIGNATURE-0001](../../../law/adr/ADR-SIGNATURE-0001-trust-evidence.md).
+**Status:** Architect contract for UPS-SIG-01…04 and UPS-SIG-06 (declarative QUALIFIED rule, 1.5.x additive). **Package:** `@stynx-nyx/signature`. Trust policy decision: [ADR-SIGNATURE-0001](../../../law/adr/ADR-SIGNATURE-0001-trust-evidence.md).
 
 The fourth CTG9 delivery-review found an xref/trailer parser defect; the
 Engineer repaired it, and delivery-review cycle 6 returned PASS. The final
@@ -22,6 +22,7 @@ New exports in `packages/signature/src/types.ts` and `index.ts`:
 type SignatureLevel = 'ADVANCED' | 'QUALIFIED';
 type SignatureCapability = 'pades' | 'tsa' | 'lta' | 'ocsp' | 'crl';
 type SignatureVerifierKind = 'stynx-cms' | 'consumer-owned';
+type SignatureQualificationRule = 'certificate-policy' | 'consumer-predicate';
 interface SignatureTrustProfile {
   id: string;
   revision: string;
@@ -33,6 +34,7 @@ interface SignatureTrustProfile {
   revocation: 'ocsp' | 'crl' | 'ocsp-or-crl';
   trustAnchorsPem: readonly string[];
   acceptedPolicies?: readonly string[];
+  qualifiedPolicies?: readonly string[];
   atTime: 'signing-time' | 'trusted-timestamp';
 }
 interface SignatureCapabilities {
@@ -49,6 +51,7 @@ interface SignatureTrustProof {
   profileId: string;
   profileRevision: string;
   achievedLevel: SignatureLevel;
+  qualifiedBy?: SignatureQualificationRule;
   padesProfile: 'PAdES-B-T' | 'PAdES-B-LT' | 'PAdES-B-LTA';
   originalDocumentSha256: string;
   signedDocumentSha256: string;
@@ -124,6 +127,15 @@ Implementation dependencies required under the maestro's shared package/lockfile
 
 `SignatureProviderConfigurationError` covers missing backend/profile/verifier. Add `SignatureCapabilityError`, `SignatureTrustError`, `SignatureLevelNotMetError` and `SignatureEvidenceMismatchError`, extending `SignatureError` with stable codes and redacted details. Provider timeout/unavailability and malformed response preserve `SignatureProviderError`/`SignatureProviderResponseError`; no `signed` result follows. Opt-in `verify` returns `valid` only with independent proof, `invalid` for definite signature/binding failure and `unknown` for genuinely indeterminate or unavailable trust evidence. Missing local signed bytes remain `SignatureVerificationInputError`; `invalid` and `unknown` both refuse a minimum-level workflow. No key, token or PEM appears in exceptions.
 
+## QUALIFIED attainment — SIG-06
+
+`createCmsTrustVerifier` reports `achievedLevel: 'QUALIFIED'` only through one of two consumer-configured rules, evaluated after every CMS, ByteRange, ESS, path, accepted-policy, TSA, revocation and PAdES-level check has passed and after the LTA refusal. Neither rule is consulted for an artifact that fails any of those checks. STYNX embeds no qualifying OID and never infers QUALIFIED from the PAdES level, a chain or subject name, or a backend assertion.
+
+1. **Declarative certificate-policy rule.** The effective list is `profile.qualifiedPolicies ?? options.qualifiedPolicies ?? []`, the same precedence as `acceptedPolicies`: a profile list, including an explicit empty list, replaces the verifier-level fallback. When the list is nonempty and the verified signer certificate's `certificatePolicies` extension (`2.5.29.32`) contains one of its policy identifiers by exact OID string equality, the level is QUALIFIED and the proof carries `qualifiedBy: 'certificate-policy'`. Only the signer certificate is examined; intermediate or TSA certificate policies, policy qualifiers and policy mappings are not. A certificate without the extension, or an empty effective list, does not qualify by this rule. Each profile is evaluated independently, so one certificate may be QUALIFIED under one profile and ADVANCED under another. The rule is independent of `acceptedPolicies`, which remains an acceptance filter; a consumer that wants every qualifying policy to be accepted lists it in both.
+2. **Consumer predicate `options.qualifiesCertificate(certificate, profile)`.** It is invoked only when the declarative rule did not qualify, at most once per `verifySignedArtifact` call, with the parsed `pkijs.Certificate` of the verified signer (the DER bound to the CMS signer and `signing-certificate-v2`) and the exact profile passed to the verifier. It may be synchronous or asynchronous and may use the network; STYNX applies no timeout, so a consumer that needs one bounds the call itself and rejects on expiry. A truthy result yields QUALIFIED with `qualifiedBy: 'consumer-predicate'`; a falsy result yields ADVANCED. A throw or rejection fails verification with `SignatureTrustUnavailableError('Certificate qualification service unavailable')`: no proof is returned, `SignatureService.verify` reports `unknown` and `sign` throws, so an unavailable predicate never yields a positive or a downgraded ADVANCED proof. When the declarative rule already qualifies, the predicate is not called and its availability does not affect the result.
+
+The combination is therefore _declarative rule OR predicate_. `qualifiedBy` is present only on QUALIFIED proofs from this verifier, and `SignatureService` preserves it in `evidence.trustProof` for audit. A consumer-owned verifier may set it, but it is then the consumer's statement under `verifierKind: 'consumer-owned'`. With neither `qualifiedPolicies` nor `qualifiesCertificate` configured, every verified artifact is ADVANCED and proofs have no `qualifiedBy` field, exactly as in 1.5.0; with only the predicate, it is called exactly as in 1.5.0 and the proof additionally carries `qualifiedBy`. Level enforcement is unchanged: a QUALIFIED request or profile minimum with an ADVANCED proof throws `SignatureLevelNotMetError` in sign, and manifest and withdrawal flows refuse it.
+
 ## Typed readiness — SIG-02
 
 `SignatureService.checkReadiness(profile)` returns `{ok:true, capabilities}` or throws configuration/capability error. It requires the selected PAdES profile, TSA, LTA if required, and the permitted OCSP/CRL mode; `simulated` is always down for a production profile. A claimed capability needs a functioning configured verifier (trusted handshake or signed challenge), not arbitrary `/health` JSON. Timeout, absent check, malformed or stale observation and missing capability are down. `SignatureReadinessIndicator` exported by `signature` has `name:'signature'` and `check(): Promise<{status:'up'|'down';details?:Record<string,unknown>}>`, structurally matching `StynxHealthIndicator` in `packages/health/src/tokens.ts`.
@@ -146,4 +158,4 @@ For digital withdrawal, a consumer `resolvePartyCertificate(tenantId, signerPart
 
 ## Inspector sensor obligations
 
-The Inspector owns tests after this contract. Cover absence of backend/profile/verifier, mock and `/mock`, synthetic CMS, forged level, insufficient level, wrong document/certificate, untrusted chain, wrong policy OID, expired/revoked certificate, unsigned/stale TSA, OCSP/CRL policy branches, missing LTA, provider timeout and epoch zero. Positive and negative cryptographic fixtures use a real test PKI and run against STYNX `createCmsTrustVerifier`; doubles never establish production qualification. Test production boot with an unbranded verifier and no acknowledgement (fails), a forged `verifierKind:'stynx-cms'` property (fails), acknowledged custom verifier (records `consumer-owned` in proof/evidence/readiness), and a provider-echo verifier (never yields a STYNX-owned qualification claim). Test each capability present/absent, profile restrictions, production bootstrap without health integration, and health failure. For manifests mutate each bound field and each signer proof field separately; cover missing/duplicate/reordered signers, non-JSON input, canonical vectors, fake digest, absent/mismatched CMS-signed `boundManifestSha256` and epoch zero. For withdrawal cover valid physical/digital attestations, forged attestor, wrong tenant/case/document/hash/party, missing ref and unavailable verifier. Preserve legacy tests and add a no-minimum regression for sign, verify, sequential signing and mock behavior.
+The Inspector owns tests after this contract. Cover absence of backend/profile/verifier, mock and `/mock`, synthetic CMS, forged level, insufficient level, wrong document/certificate, untrusted chain, wrong policy OID, expired/revoked certificate, unsigned/stale TSA, OCSP/CRL policy branches, missing LTA, provider timeout and epoch zero. Positive and negative cryptographic fixtures use a real test PKI and run against STYNX `createCmsTrustVerifier`; doubles never establish production qualification. Test production boot with an unbranded verifier and no acknowledgement (fails), a forged `verifierKind:'stynx-cms'` property (fails), acknowledged custom verifier (records `consumer-owned` in proof/evidence/readiness), and a provider-echo verifier (never yields a STYNX-owned qualification claim). Test each capability present/absent, profile restrictions, production bootstrap without health integration, and health failure. For manifests mutate each bound field and each signer proof field separately; cover missing/duplicate/reordered signers, non-JSON input, canonical vectors, fake digest, absent/mismatched CMS-signed `boundManifestSha256` and epoch zero. For withdrawal cover valid physical/digital attestations, forged attestor, wrong tenant/case/document/hash/party, missing ref and unavailable verifier. For SIG-06 prove with the real test PKI that a configured profile OID yields QUALIFIED and satisfies a QUALIFIED minimum, a nonmatching list yields ADVANCED and `SignatureLevelNotMetError`, two profiles with different lists evaluate the same certificate differently, the verifier fallback applies only without a profile list, a failing predicate is unavailable without a proof, `qualifiedBy` records the attaining rule, and absence of both rules preserves 1.5.0. Preserve legacy tests and add a no-minimum regression for sign, verify, sequential signing and mock behavior.
