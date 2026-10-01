@@ -4931,8 +4931,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 35,
-      "assertion_digest_sha256": "bc456a8ebf58c04bfd49044574ec2a4da8f8010a961773b11afd90549f3b4c7b"
+      "assertion_count": 40,
+      "assertion_digest_sha256": "d1031a60a53a4ff270fe405c663b1de0e822f47a47d77874dfdbf4cc09d33741"
     },
     {
       "path": "packages/offline-sync/test/unit/ctg9-parity.spec.ts",
@@ -4957,6 +4957,14 @@
       "lifecycle": "supported",
       "assertion_count": 22,
       "assertion_digest_sha256": "31af2635caf4bd1755dbee778409940fd2d2f60d6ff2c5595c9f20f9f5e2d4d7"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-sync-reserve-replay.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 30,
+      "assertion_digest_sha256": "a7273d251f7899426e98416b4f758e6544cb1503a9da27757895c869b8ddc0b9"
     },
     {
       "path": "packages/outbox/test/integration/ctg9-append.integration.spec.ts",

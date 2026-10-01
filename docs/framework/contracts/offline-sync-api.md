@@ -202,7 +202,9 @@ matches:
 
 Identifier tie-breaks use the `C` collation. `limit` defaults to 50 and must be an integer from 1 to 200. `cursor` is an opaque base64url keyset token: the microsecond UTC sort instant plus tie-break
 identifiers of the last row. A malformed cursor, blank filter, unknown status or bad limit returns
-400 `OFFLINE_SYNC_INVALID_INPUT`. Rows created after a cursor was issued do not shift later pages.
+400 `OFFLINE_SYNC_INVALID_INPUT`. A cursor whose instant is not a real calendar time, for example
+`2026-99-99T99:00:00.000000Z`, is malformed and is rejected before any query. Rows created after a
+cursor was issued do not shift later pages.
 
 The PostgreSQL item-receipt timestamp is the database insertion time (`clock_timestamp()`). Queue
 items and conflicts use the injected service clock, and batches use their database creation time.
@@ -212,14 +214,31 @@ items and conflicts use the injected service clock, and batches use their databa
 lacks it throws `OfflineSyncConfigurationError`. The packaged controllers do not mount listing
 routes; hosts map their own routes to the service.
 
-**Idempotent reservation (UPS-OFS-05).** `ReserveNumberingInput.idempotencyKey` is optional, 1–255
-UTF-8 bytes, and scoped by tenant. The request fingerprint is a SHA-256 of the stable serialization
-of the resolved business agent and the request fields: `orgUnitId`, `deviceId`, `shiftId`,
-`entityType`, `requestedSize`, `rangeId`, `series` and the explicit `validUntil`. The computed default
-validity is excluded.
+The listings are scoped only by tenant. For example, `listSyncQueueItems` returns every matching
+queue item of the tenant with its full `payloadJson`, across all org units, agents and devices. Any
+HTTP route that exposes a listing must add its own authorization and org-unit or device scoping,
+typically by forcing the `deviceId` filter or post-filtering on `orgUnitId`.
 
-- Same key and fingerprint: returns the original reservation in its current state. It consumes no
-  numbers and emits no event.
+Recorded follow-up: no index added in 1.5.x matches the listing sort keys exactly. Batches sort on
+`created_at` (only `sync_batches_tenant_status_idx` exists), item receipts on `received_at` (only the
+tenant/device/batch index exists), and an unfiltered queue or conflict listing cannot use the
+existing tenant/device/status or tenant/status index for ordering. Large tenants may sort in memory
+until a later forward-only migration adds tenant-leading sort indexes.
+
+**Idempotent reservation (UPS-OFS-05).** `ReserveNumberingInput.idempotencyKey` is optional and
+1–255 UTF-8 bytes. A key is unique per tenant: all devices and agents of a tenant share one key
+space, so clients should generate a fresh UUID for each logical reservation request. The request fingerprint is a SHA-256 of the stable serialization
+of the resolved business agent and the request fields: `orgUnitId`, `deviceId`, `shiftId`,
+`entityType`, `requestedSize`, `rangeId`, `series` and the explicit `validUntil`, normalized to the
+same instant via `new Date(value).toISOString()` (so `…T00:00:00Z` and `…T00:00:00.000Z` match). The
+computed default validity is excluded.
+
+- Same key and fingerprint: returns the original reservation in its current stored state. It
+  consumes no numbers and emits no event. The replay is not a usability guarantee: the reservation
+  may since have been `cancelled`, `blocked` or `consumed`, and time-based expiry does not change
+  `status`, so a reservation past its `validUntil` still replays as `reserved`. Clients must check
+  `status` and `validUntil` on every replay and request a new key when the reservation is no longer
+  usable.
 - Same key with a different fingerprint: throws `OfflineSyncReservationReplayError`, which is
   `HttpException` 409 with `code`/`errorCode` `OFFLINE_SYNC_RESERVATION_IDEMPOTENCY_CONFLICT`. The
   original reservation is unchanged.
@@ -227,7 +246,13 @@ validity is excluded.
 
 On PostgreSQL, same-key requests serialize on a transaction-scoped advisory lock, and the partial
 unique index `(tenant_id, idempotency_key)` backs that up. N concurrent replays therefore consume one
-interval. Request validation, including `validUntil` in the future, runs before the replay lookup.
+interval. For a keyed request, the service checks the input shape (required text, key length,
+`requestedSize`) and resolves the business agent, which is part of the fingerprint, and then looks
+up the key. Only on a miss does it apply the time- and policy-dependent checks: policy resolution,
+TTL and `validUntil` in the future. A retry after `validUntil` has passed, or after the policy lost
+its TTL, therefore still replays. The store repeats the lookup under the advisory lock before it
+reserves. A custom `OfflineSyncStore` without the optional `replayNumberingReservation` keeps the
+1.5.0 ordering.
 Keyed reservations need forward-only `migrations/0003_reservation_idempotency.sql`, applied after 0002
 with the migration owner. It adds nullable `idempotency_key` and `idempotency_fingerprint` columns,
 which must be both null or both set, and the partial unique index. It keeps the table's 0001 FORCE
