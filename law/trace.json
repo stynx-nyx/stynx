@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-09-29",
+    "last_updated": "2026-10-04",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "DEVAI 1.9.0 adoption Architect rebind (ADR-DEVAI-ADOPTION-0010) moves the renamed DEVAI adoption contract test and pins the 1.9.0 identity, Constitution 1.0.2 and ownership-matrix posture assertions.",
       "Post-1.5.0 R-0003 Architect rebind pins full coverage sensors and the CMS/PDF trust boundary across the fixed 44-package group.",
       "Issue #294 Architect rebind pins the session policy HTTP sensor: reject-new 409 SESSION_CONFLICT, missing strong factor 403 STRONG_FACTOR_REQUIRED and revoke-existing invalidation.",
       "Post-1.5.0 Architect rebind pins column-scoped app attempt updates, completed and legacy evidence immutability, and request-path failure/foreign-ACK sensors.",
@@ -4551,12 +4552,12 @@
       "assertion_digest_sha256": "9a50f7dd4e2bb1e375b85922e7406f8cf2d657bbfa5b9016d0b75032a5fd1a0c"
     },
     {
-      "path": "test/scripts/devai-1.5-adoption-contract.test.mjs",
+      "path": "test/scripts/devai-adoption-contract.test.mjs",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 53,
-      "assertion_digest_sha256": "aa69f51c143290f4134cd565add595657d5f1218dba0e17467633c4888124604"
+      "assertion_count": 65,
+      "assertion_digest_sha256": "7bbed2929ae76882c5cec238370df2a4f245fb6f474356250db6d5d7cb037b63"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
