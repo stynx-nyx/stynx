@@ -554,10 +554,10 @@ function runForbiddenActionTests() {
 
   for (const scenario of [
     {
-      label: 'extra path',
+      label: 'extra governed path',
       mutate(root, target) {
         writeLedger(root, [priorReceipt, secondPriorReceipt, receipt(target)]);
-        writeFileSync(join(root, 'extra.txt'), 'mixed commit\n');
+        writeFileSync(join(root, 'law', 'adr', 'extra-policy.md'), '# Mixed commit\n');
       },
     },
     {
@@ -583,17 +583,6 @@ function runForbiddenActionTests() {
       },
     },
     {
-      label: 'unmatched receipt',
-      mutate(root, target) {
-        writeLedger(root, [
-          priorReceipt,
-          secondPriorReceipt,
-          receipt(target),
-          receipt('b'.repeat(40)),
-        ]);
-      },
-    },
-    {
       label: 'missing exact receipt',
       mutate(root) {
         writeLedger(root, [priorReceipt, secondPriorReceipt, receipt('d'.repeat(40))]);
@@ -606,6 +595,56 @@ function runForbiddenActionTests() {
       scenario.mutate(fixture.root, target);
       commitFixture(fixture.root, `chore: ${scenario.label}`);
       assertMutateFinding(forbiddenReport(fixture.root, fixture.base, 2), scenario.label);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+
+  // DEVAI 1.9.0 (ADR-GOV-0022): an append-only edit to the receipt ledger's
+  // authorizations collection is exempt from FORBID-MUTATE-INVARIANTS, so a
+  // receipt commit needs no receipt of its own. The exemption covers only that
+  // collection; other governed paths in the same commit still need a receipt.
+  for (const scenario of [
+    {
+      label: 'append-only receipt with an ungoverned extra path',
+      mutate(root, target) {
+        writeLedger(root, [priorReceipt, secondPriorReceipt, receipt(target)]);
+        writeFileSync(join(root, 'extra.txt'), 'mixed commit\n');
+      },
+      unused: [],
+    },
+    {
+      label: 'append-only unmatched receipt',
+      mutate(root, target) {
+        writeLedger(root, [
+          priorReceipt,
+          secondPriorReceipt,
+          receipt(target),
+          receipt('b'.repeat(40)),
+        ]);
+      },
+      unused: [`${forbiddenId}@${'b'.repeat(40)}`],
+    },
+  ]) {
+    const fixture = createForbiddenFixture();
+    try {
+      const target = writeOrdinaryLawCommit(fixture.root);
+      scenario.mutate(fixture.root, target);
+      commitFixture(fixture.root, `chore: ${scenario.label}`);
+      const report = forbiddenReport(fixture.root, fixture.base, 0);
+      assertEqual(report.findings.length, 0, `${scenario.label} findings`);
+      assertIncludes(
+        JSON.stringify(report.authorization_receipts.applied),
+        `${forbiddenId}@${target}`,
+        `${scenario.label} target application`,
+      );
+      for (const unused of scenario.unused) {
+        assertIncludes(
+          JSON.stringify(report.authorization_receipts.unused),
+          unused,
+          `${scenario.label} unused receipt`,
+        );
+      }
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
     }
@@ -699,10 +738,19 @@ function runForbiddenActionTests() {
         `${forbiddenId}@${target}`,
         'exact target authorization application',
       );
+      // The Owner receipt commit only appends to the ledger, so DEVAI 1.9.0
+      // exempts it; the Architect binding receipt for it is declared but unused.
+      assertEqual(
+        JSON.stringify(report.authorization_receipts.applied).includes(
+          `${forbiddenId}@${ownerReceipt}`,
+        ),
+        false,
+        'exempt Owner receipt commit needs no closure application',
+      );
       assertIncludes(
-        JSON.stringify(report.authorization_receipts.applied),
+        JSON.stringify(report.authorization_receipts.unused),
         `${forbiddenId}@${ownerReceipt}`,
-        'exact Owner receipt closure application',
+        'exempt Owner receipt closure stays declared but unused',
       );
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
