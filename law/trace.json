@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-04 Architect binding adds the auth.sessions partition retention sensor (ADR-SESSIONS-0003) and rebinds the privacy retention assertions.",
       "2026-10-04 Architect rebind pins the exact post-migration partition set (audit current month, sessions current and next month).",
       "2026-10-04 Architect binding adds the auth.sessions monthly partition maintenance sensor (ADR-SESSIONS-0002) and rebinds the session mirror writer assertions.",
       "DEVAI 1.9.0 adoption Architect rebind (ADR-DEVAI-ADOPTION-0010) moves the renamed DEVAI adoption contract test and pins the 1.9.0 identity, Constitution 1.0.2 and ownership-matrix posture assertions.",
@@ -3134,8 +3135,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 23,
-      "assertion_digest_sha256": "5c292525de74804fd1e8a4a7bbcc977c17ea5f8034b60f68cc34b3a3514ce1e7"
+      "assertion_count": 24,
+      "assertion_digest_sha256": "554e28f43f3903ed0fde03b6ab3af3d641227edcf8962f6ae4335fec612681b5"
     },
     {
       "path": "packages/privacy/test/unit/privacy-runtime.spec.ts",
@@ -3158,8 +3159,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 46,
-      "assertion_digest_sha256": "6b9daaf5677166628258b61139f01dfcdd5d223cc8f08483a6affa330b7d5260"
+      "assertion_count": 48,
+      "assertion_digest_sha256": "e335e33bf3f82768b28ba81410fd8e148e6e18f84cd6d3136c5916fd91f51b75"
     },
     {
       "path": "packages/ratelimit/test/integration/rate-limit.integration.spec.ts",
@@ -3940,6 +3941,14 @@
       "lifecycle": "supported",
       "assertion_count": 14,
       "assertion_digest_sha256": "cb3c85df5109ed953e504044bc9a125d4d157f932b94fadaac9c5fa9df52bd13"
+    },
+    {
+      "path": "test/db/auth-sessions-partition-retention-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 15,
+      "assertion_digest_sha256": "abebfc7f42c0d92091078d63d33585b1debec6acbf40a51a5b505d442f949e6e"
     },
     {
       "path": "test/db/auth-sessions-partitions-migration.spec.ts",

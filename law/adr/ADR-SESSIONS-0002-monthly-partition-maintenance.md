@@ -55,9 +55,9 @@ role cannot create partitions of a table it does not own.
 - Session inserts keep working across month rollovers, and
   `test/db/auth-sessions-partitions-migration.spec.ts` pins the window, the
   idempotence and the grants.
-- Partition retention, meaning dropping old months, is still not automated. It
-  remains an operator task, tracked for its own decision in
-  stynx-nyx/stynx#337.
+- Partition retention is decided in ADR-SESSIONS-0003: months are dropped 90
+  days after they end by the operator-triggered privacy retention action
+  (stynx-nyx/stynx#337).
 - Partitions inherit queries through the parent. RLS, grants and the audit
   trigger stay defined on `auth.sessions`, as for the partition that `0005`
   creates.
