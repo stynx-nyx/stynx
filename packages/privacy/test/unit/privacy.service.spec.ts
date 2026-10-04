@@ -28,18 +28,12 @@ function createService(
     disableUser: vi.fn(async () => undefined),
   };
   return {
-    service: new PrivacyService(
-      moduleRef,
-      piiMapService,
-      objectStore,
-      cognitoAdmin,
-      {
-        environment: 'test',
-        region: 'us-east-1',
-        erasureSalt: 'unit',
-        ...options,
-      },
-    ),
+    service: new PrivacyService(moduleRef, piiMapService, objectStore, cognitoAdmin, {
+      environment: 'test',
+      region: 'us-east-1',
+      erasureSalt: 'unit',
+      ...options,
+    }),
     database,
     objectStore,
     cognitoAdmin,
@@ -52,34 +46,43 @@ describe('PrivacyService branch coverage', () => {
   it('rejects export requests without a selector', async () => {
     const { service } = createService([], vi.fn());
 
-    await expect(service.exportData({ format: 'json' })).rejects.toThrow('Export requires subjectUserId or tenantId');
+    await expect(service.exportData({ format: 'json' })).rejects.toThrow(
+      'Export requires subjectUserId or tenantId',
+    );
   });
 
   it('exports an empty bundle when rules match no rows', async () => {
     const query = vi.fn(async () => ({ rows: [] }));
-    const { service, objectStore } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-        tenantColumn: 'tenant_id',
-      },
-    ], query);
+    const { service, objectStore } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+          tenantColumn: 'tenant_id',
+        },
+      ],
+      query,
+    );
 
-    await expect(service.exportData({
-      tenantId: '01990000-0000-7000-8000-000000000002',
-      format: 'csv',
-    })).resolves.toMatchObject({
+    await expect(
+      service.exportData({
+        tenantId: '01990000-0000-7000-8000-000000000002',
+        format: 'csv',
+      }),
+    ).resolves.toMatchObject({
       downloadUrl: 'memory://export',
       expiresInSeconds: 60,
       tables: [],
     });
-    expect(objectStore.putObject).toHaveBeenCalledWith(expect.objectContaining({
-      contentType: 'application/zip',
-      key: expect.stringMatching(/^exports\//u),
-    }));
+    expect(objectStore.putObject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contentType: 'application/zip',
+        key: expect.stringMatching(/^exports\//u),
+      }),
+    );
   });
 
   it('exports live and archive rows using subject and tenant filters', async () => {
@@ -91,37 +94,44 @@ describe('PrivacyService branch coverage', () => {
       .mockResolvedValueOnce({
         rows: [{ row_json: { email: 'old@example.test', note: 'line\nbreak' } }],
       });
-    const { service, objectStore } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-        tenantColumn: 'tenant_id',
-      },
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'display_name',
-        strategy: 'tombstone',
-        subjectColumn: 'subject_user_id',
-      },
-    ], query);
+    const { service, objectStore } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+          tenantColumn: 'tenant_id',
+        },
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'display_name',
+          strategy: 'tombstone',
+          subjectColumn: 'subject_user_id',
+        },
+      ],
+      query,
+    );
 
-    await expect(service.exportData({
-      subjectUserId,
-      tenantId: '01990000-0000-7000-8000-000000000002',
-      format: 'json',
-    })).resolves.toMatchObject({
+    await expect(
+      service.exportData({
+        subjectUserId,
+        tenantId: '01990000-0000-7000-8000-000000000002',
+        format: 'json',
+      }),
+    ).resolves.toMatchObject({
       downloadUrl: 'memory://export',
       tables: [{ table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 1 }],
     });
     expect(query.mock.calls[0]?.[0]).toContain('"subject_user_id" = $1::uuid');
     expect(query.mock.calls[0]?.[0]).toContain('"tenant_id" = $2::uuid');
-    expect(objectStore.putObject).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.any(Buffer),
-    }));
+    expect(objectStore.putObject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.any(Buffer),
+      }),
+    );
   });
 
   it('exports unfiltered table snapshots and uses the default export TTL', async () => {
@@ -131,20 +141,26 @@ describe('PrivacyService branch coverage', () => {
         rows: [{ row_json: { plain: 'value', empty: null, nested: { a: 1 } } }],
       })
       .mockResolvedValueOnce({ rows: [] });
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-      },
-    ], query, {});
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+        },
+      ],
+      query,
+      {},
+    );
 
-    await expect(service.exportData({
-      tenantId: '01990000-0000-7000-8000-000000000002',
-      format: 'json',
-    })).resolves.toMatchObject({
+    await expect(
+      service.exportData({
+        tenantId: '01990000-0000-7000-8000-000000000002',
+        format: 'json',
+      }),
+    ).resolves.toMatchObject({
       expiresInSeconds: 7 * 24 * 60 * 60,
       tables: [{ table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 0 }],
     });
@@ -153,33 +169,43 @@ describe('PrivacyService branch coverage', () => {
 
   it('skips export rules that do not describe a subject column', async () => {
     const query = vi.fn();
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-      },
-    ], query);
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+        },
+      ],
+      query,
+    );
 
-    await expect(service.exportData({
-      subjectUserId,
-      format: 'json',
-    })).resolves.toMatchObject({ tables: [] });
+    await expect(
+      service.exportData({
+        subjectUserId,
+        format: 'json',
+      }),
+    ).resolves.toMatchObject({ tables: [] });
     expect(query).not.toHaveBeenCalledTimes(1);
   });
 
   it('fails erasure when a rule lacks subject metadata', async () => {
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-      },
-    ], vi.fn());
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+        },
+      ],
+      vi.fn(),
+    );
 
-    await expect(service.eraseSubject({ subjectUserId })).rejects.toThrow('PII rule is missing subjectColumn metadata');
+    await expect(service.eraseSubject({ subjectUserId })).rejects.toThrow(
+      'PII rule is missing subjectColumn metadata',
+    );
   });
 
   it('applies every erasure strategy to live and archive targets and disables Cognito user', async () => {
@@ -192,41 +218,49 @@ describe('PrivacyService branch coverage', () => {
       }
       return { rows: [], rowCount: 0 };
     });
-    const { service, cognitoAdmin } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-      },
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'display_name',
-        strategy: 'tombstone',
-        subjectColumn: 'subject_user_id',
-      },
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'external_ref',
-        strategy: 'hash_with_salt',
-        subjectColumn: 'subject_user_id',
-      },
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'attachments',
-        columnName: 'blob_key',
-        strategy: 'delete_row',
-        subjectColumn: 'subject_user_id',
-      },
-    ], query);
+    const { service, cognitoAdmin } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+        },
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'display_name',
+          strategy: 'tombstone',
+          subjectColumn: 'subject_user_id',
+        },
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'external_ref',
+          strategy: 'hash_with_salt',
+          subjectColumn: 'subject_user_id',
+        },
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'attachments',
+          columnName: 'blob_key',
+          strategy: 'delete_row',
+          subjectColumn: 'subject_user_id',
+        },
+      ],
+      query,
+    );
 
     await expect(service.eraseSubject({ subjectUserId })).resolves.toMatchObject({
       subjectUserId,
       actions: expect.arrayContaining([
-        expect.objectContaining({ column: 'email', strategy: 'nullify', liveAffected: 2, archiveAffected: 2 }),
+        expect.objectContaining({
+          column: 'email',
+          strategy: 'nullify',
+          liveAffected: 2,
+          archiveAffected: 2,
+        }),
         expect.objectContaining({ column: 'display_name', strategy: 'tombstone' }),
         expect.objectContaining({ column: 'external_ref', strategy: 'hash_with_salt' }),
         expect.objectContaining({ column: 'blob_key', strategy: 'delete_row', liveAffected: 3 }),
@@ -249,22 +283,25 @@ describe('PrivacyService branch coverage', () => {
 
   it('treats missing row counts as zero during erasure', async () => {
     const query = vi.fn(async () => ({ rows: [] }));
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-      },
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'attachments',
-        columnName: 'blob_key',
-        strategy: 'delete_row',
-        subjectColumn: 'subject_user_id',
-      },
-    ], query);
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+        },
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'attachments',
+          columnName: 'blob_key',
+          strategy: 'delete_row',
+          subjectColumn: 'subject_user_id',
+        },
+      ],
+      query,
+    );
 
     await expect(service.eraseSubject({ subjectUserId })).resolves.toMatchObject({
       actions: [
@@ -280,34 +317,40 @@ describe('PrivacyService branch coverage', () => {
       .mockResolvedValueOnce({ rows: [{ total: 0 }] })
       .mockResolvedValueOnce({ rows: [{ total: 2 }] })
       .mockResolvedValueOnce({ rows: [], rowCount: 2 })
-      .mockResolvedValueOnce({ rows: [{ total: 1 }] });
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'attachments',
-        columnName: 'blob_key',
-        strategy: 'delete_row',
-        subjectColumn: 'subject_user_id',
-        retention: {
-          timestampColumn: 'created_at',
-          olderThanDays: 30,
-          target: 'both',
+      .mockResolvedValueOnce({ rows: [{ total: 1 }] })
+      .mockResolvedValueOnce({
+        rows: [{ partition_name: 'auth.sessions_2026_05', month_end: '2026-06-01', dropped: true }],
+      });
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'attachments',
+          columnName: 'blob_key',
+          strategy: 'delete_row',
+          subjectColumn: 'subject_user_id',
+          retention: {
+            timestampColumn: 'created_at',
+            olderThanDays: 30,
+            target: 'both',
+          },
         },
-      },
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-        retention: {
-          timestampColumn: 'created_at',
-          olderThanDays: 90,
-          target: 'live',
-          reason: 'live cleanup',
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+          retention: {
+            timestampColumn: 'created_at',
+            olderThanDays: 90,
+            target: 'live',
+            reason: 'live cleanup',
+          },
         },
-      },
-    ], query);
+      ],
+      query,
+    );
 
     await expect(service.applyRetention(false)).resolves.toEqual({
       dryRun: false,
@@ -327,92 +370,150 @@ describe('PrivacyService branch coverage', () => {
           reason: 'live cleanup',
         },
       ],
+      partitions: [
+        {
+          table: 'auth.sessions',
+          partition: 'auth.sessions_2026_05',
+          monthEnd: '2026-06-01',
+          dropped: true,
+          reason: 'retention>90d after month end',
+        },
+      ],
     });
-    expect(query).toHaveBeenCalledWith(expect.stringContaining('delete from "archive"."privacy_fixture_attachments"'), ['30']);
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('delete from "archive"."privacy_fixture_attachments"'),
+      ['30'],
+    );
+    expect(query).toHaveBeenLastCalledWith(
+      'select partition_name, month_end::text as month_end, dropped from auth.drop_expired_sessions_partitions($1::boolean)',
+      [false],
+    );
   });
 
   it('keeps dry-run retention from deleting and rejects unsafe identifiers', async () => {
-    const dryQuery = vi.fn(async () => ({ rows: [{ total: 1 }] }));
-    const dryRun = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'delete_row',
-        subjectColumn: 'subject_user_id',
-        retention: {
-          timestampColumn: 'created_at',
-          olderThanDays: 30,
-          target: 'archive',
+    const dryQuery = vi.fn(async (sql: string) =>
+      sql.includes('drop_expired_sessions_partitions')
+        ? {
+            rows: [
+              { partition_name: 'auth.sessions_2026_04', month_end: '2026-05-01', dropped: false },
+            ],
+          }
+        : { rows: [{ total: 1 }] },
+    );
+    const dryRun = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'delete_row',
+          subjectColumn: 'subject_user_id',
+          retention: {
+            timestampColumn: 'created_at',
+            olderThanDays: 30,
+            target: 'archive',
+          },
         },
-      },
-    ], dryQuery);
+      ],
+      dryQuery,
+    );
 
     await expect(dryRun.service.applyRetention()).resolves.toMatchObject({
       dryRun: true,
       actions: [expect.objectContaining({ target: 'archive', affectedRows: 1 })],
-    });
-    expect(dryQuery).not.toHaveBeenCalledWith(expect.stringContaining('delete from'), expect.anything());
-
-    const unsafe = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'delete_row',
-        subjectColumn: 'subject_user_id',
-        retention: {
-          timestampColumn: 'created_at;drop',
-          olderThanDays: 30,
-          target: 'live',
+      partitions: [
+        {
+          table: 'auth.sessions',
+          partition: 'auth.sessions_2026_04',
+          monthEnd: '2026-05-01',
+          dropped: false,
+          reason: 'retention>90d after month end',
         },
-      },
-    ], vi.fn());
+      ],
+    });
+    expect(dryQuery).not.toHaveBeenCalledWith(
+      expect.stringContaining('delete from'),
+      expect.anything(),
+    );
+    expect(dryQuery).toHaveBeenLastCalledWith(
+      expect.stringContaining('drop_expired_sessions_partitions'),
+      [true],
+    );
+
+    const unsafe = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'delete_row',
+          subjectColumn: 'subject_user_id',
+          retention: {
+            timestampColumn: 'created_at;drop',
+            olderThanDays: 30,
+            target: 'live',
+          },
+        },
+      ],
+      vi.fn(),
+    );
     await expect(unsafe.service.applyRetention()).rejects.toThrow('Unsafe SQL identifier');
   });
 
   it('treats empty retention count results as zero and defaults target to both', async () => {
     const query = vi.fn(async () => ({ rows: [] }));
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'delete_row',
-        subjectColumn: 'subject_user_id',
-        retention: {
-          timestampColumn: 'created_at',
-          olderThanDays: 30,
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'delete_row',
+          subjectColumn: 'subject_user_id',
+          retention: {
+            timestampColumn: 'created_at',
+            olderThanDays: 30,
+          },
         },
-      },
-    ], query);
+      ],
+      query,
+    );
 
-    await expect(service.applyRetention(false)).resolves.toEqual({ dryRun: false, actions: [] });
-    expect(query).toHaveBeenCalledTimes(2);
+    await expect(service.applyRetention(false)).resolves.toEqual({
+      dryRun: false,
+      actions: [],
+      partitions: [],
+    });
+    expect(query).toHaveBeenCalledTimes(3);
   });
 
   it('renders ROPA markdown from loaded rules', async () => {
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        category: 'contact',
-        notes: 'email address',
-        subjectColumn: 'subject_user_id',
-        retention: {
-          timestampColumn: 'created_at',
-          olderThanDays: 30,
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          category: 'contact',
+          notes: 'email address',
+          subjectColumn: 'subject_user_id',
+          retention: {
+            timestampColumn: 'created_at',
+            olderThanDays: 30,
+          },
         },
-      },
-    ], vi.fn());
+      ],
+      vi.fn(),
+    );
 
-    await expect(service.generateRopa({
-      controllers: ['STYNX'],
-      processors: ['AWS'],
-      categories: { contact: 'Contact data' },
-    })).resolves.toContain('Controllers: STYNX');
+    await expect(
+      service.generateRopa({
+        controllers: ['STYNX'],
+        processors: ['AWS'],
+        categories: { contact: 'Contact data' },
+      }),
+    ).resolves.toContain('Controllers: STYNX');
     await expect(service.generateRopa()).resolves.toContain('# STYNX ROPA');
   });
 });
@@ -433,18 +534,21 @@ describe('PrivacyService — exportData CSV escaping (kills csvEscape mutants at
   ): Promise<{ csv: string; columns: string[] }> {
     const query = vi
       .fn()
-      .mockResolvedValueOnce({ rows: rows.map((r) => ({ row_json: r })) })  // live
-      .mockResolvedValueOnce({ rows: [] });                                  // archive
+      .mockResolvedValueOnce({ rows: rows.map((r) => ({ row_json: r })) }) // live
+      .mockResolvedValueOnce({ rows: [] }); // archive
     let capturedBuffer: Buffer | undefined;
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-      },
-    ], query);
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+        },
+      ],
+      query,
+    );
     // Replace objectStore.putObject to capture the zip payload.
     const objectStore = (service as unknown as { objectStore: PrivacyObjectStore }).objectStore;
     objectStore.putObject = vi.fn(async ({ body }) => {
@@ -514,16 +618,19 @@ describe('PrivacyService — manifest null coalescing (kills LogicalOperator sur
       .mockResolvedValueOnce({ rows: [{ row_json: { x: 1 } }] })
       .mockResolvedValueOnce({ rows: [] });
     let capturedBuffer: Buffer | undefined;
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-        tenantColumn: 'tenant_id',
-      },
-    ], query);
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+          tenantColumn: 'tenant_id',
+        },
+      ],
+      query,
+    );
     const objectStore = (service as unknown as { objectStore: PrivacyObjectStore }).objectStore;
     objectStore.putObject = vi.fn(async ({ body }) => {
       capturedBuffer = body as Buffer;
@@ -600,50 +707,65 @@ describe('PrivacyService — empty-side guard on exportData (kills ConditionalEx
   const subjectUserId = '01990000-0000-7000-8000-000000000001';
 
   it('includes a table when only liveRows are present (archive empty)', async () => {
-    const query = vi.fn()
-      .mockResolvedValueOnce({ rows: [{ row_json: { id: 'r1' } }] })   // live
-      .mockResolvedValueOnce({ rows: [] });                              // archive
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-      },
-    ], query);
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ row_json: { id: 'r1' } }] }) // live
+      .mockResolvedValueOnce({ rows: [] }); // archive
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+        },
+      ],
+      query,
+    );
     const result = await service.exportData({ subjectUserId });
-    expect(result.tables).toEqual([{ table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 0 }]);
+    expect(result.tables).toEqual([
+      { table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 0 },
+    ]);
   });
 
   it('includes a table when only archiveRows are present (live empty)', async () => {
-    const query = vi.fn()
-      .mockResolvedValueOnce({ rows: [] })                                 // live
-      .mockResolvedValueOnce({ rows: [{ row_json: { id: 'r1' } }] });      // archive
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-      },
-    ], query);
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [] }) // live
+      .mockResolvedValueOnce({ rows: [{ row_json: { id: 'r1' } }] }); // archive
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+        },
+      ],
+      query,
+    );
     const result = await service.exportData({ subjectUserId });
-    expect(result.tables).toEqual([{ table: 'privacy_fixture.subjects', liveRows: 0, archiveRows: 1 }]);
+    expect(result.tables).toEqual([
+      { table: 'privacy_fixture.subjects', liveRows: 0, archiveRows: 1 },
+    ]);
   });
 
   it('skips a table only when BOTH sides are empty', async () => {
     const query = vi.fn(async () => ({ rows: [] }));
-    const { service } = createService([
-      {
-        tableSchema: 'privacy_fixture',
-        tableName: 'subjects',
-        columnName: 'email',
-        strategy: 'nullify',
-        subjectColumn: 'subject_user_id',
-      },
-    ], query);
+    const { service } = createService(
+      [
+        {
+          tableSchema: 'privacy_fixture',
+          tableName: 'subjects',
+          columnName: 'email',
+          strategy: 'nullify',
+          subjectColumn: 'subject_user_id',
+        },
+      ],
+      query,
+    );
     const result = await service.exportData({ subjectUserId });
     expect(result.tables).toEqual([]);
   });
