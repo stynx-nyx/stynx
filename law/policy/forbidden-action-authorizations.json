@@ -1291,6 +1291,12 @@
       "commit": "012fb6e4de0ee5c6f3390e1378a4e212b02f67f2",
       "authorized_by": "Owner",
       "reason": "Owner post-merge authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decision D4) for the anchor baseline and R-0001 historical-gap declaration as they landed on main through the PR #338 admin rebase merge, which rewrote the pre-merge receipted commit b4bcdd1e. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-DROP-PROD",
+      "commit": "43de48584fbe66faa057545504b26f6c2845f447",
+      "authorized_by": "Owner",
+      "reason": "Owner decision 2026-10-04 on #337 (ADR-SESSIONS-0003): drop expired auth.sessions month partitions 90 days after the month ends. The DROP TABLE is the body of the owner-only, clock-bounded, dry-run-first auth.drop_expired_sessions_partitions() in migration 0024, run only through the operator-triggered privacy retention action. This receipt covers only that exact commit."
     }
   ]
 }
