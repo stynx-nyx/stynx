@@ -29,9 +29,9 @@ function taskClosure(descriptor, roots) {
   return closure;
 }
 
-test('DEVAI 1.6.0 identity, Constitution 1.0.1, and profile 1.4.0 stay exact', () => {
+test('DEVAI 1.9.0 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', () => {
   const expectedConstitutionDigest =
-    'ff8c4f099a284b1b42f980742b20c849379ba4e3f357905f36a87648ae3fdeae';
+    'd7f8791f1d00a7247bced66bdcdf8b1af431bb57e49d03b6ddd7024cb52f957d';
   const identity = readJson('law/policy/devai-package-identity.json');
   const manifest = readJson('package.json');
   const installedManifest = readJson('node_modules/@aarusso-nyx/devai/package.json');
@@ -43,29 +43,29 @@ test('DEVAI 1.6.0 identity, Constitution 1.0.1, and profile 1.4.0 stay exact', (
   assert.deepEqual(identity, {
     schemaVersion: '1.0.0',
     policy_id: 'stynx.devai-package-identity',
-    policy_version: '1.1.0',
+    policy_version: '1.2.0',
     authority: 'Architect',
     description: identity.description,
     registry: 'https://npm.pkg.github.com',
     package: '@aarusso-nyx/devai',
-    version: '1.6.0',
+    version: '1.9.0',
     tarball:
-      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.6.0/d67263cb9d84b116fa4637acc8dc22c74f3d3a2a',
+      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.9.0/37594fb078f5098b83b3938a3bc70ac5488c3162',
     integrity:
-      'sha512-WarRgd01xFBxf296+iGGcZMXfg90UmHyCKRQJUyX0RSSVICJZDcI1mJBIp/EytnoNMLUfiJQl2mWC0f4qz9q9g==',
-    shasum: 'd67263cb9d84b116fa4637acc8dc22c74f3d3a2a',
-    sha256: 'e42831712152e630cf54fcf6dbd204039ae7e1d7fb3ec57e5fe5ff08ea1755d1',
-    source_commit: '349894356a89e16d92bcb57581e97ca5fc89a2eb',
-    source_tree: '436a88f657d2329b9980eb4aa2c265c9d2261e76',
-    signed_tag_object: 'd71cf93113ba26b362f673e76debda5b861f06e3',
+      'sha512-5XPsmj5rOCEETMNAoGSN5WRqhrTgIEVcIHmWsU1aNpNPdfBjqh9IsAyHEUDka2csLQ1J1y7JuV3+A1VH+IfzAg==',
+    shasum: '37594fb078f5098b83b3938a3bc70ac5488c3162',
+    sha256: 'b9813b7dc3697e5cfae4d5746ebf067b22563b38e81058d06c63681938b9e374',
+    source_commit: '75343991140c223240b51cea80c060c516226945',
+    source_tree: '90f0f5b64bf594677f96eebf26ae80cf7da1149e',
+    signed_tag_object: 'cdc4d7b1ad3c9ade71d6ab7d73dc2a5e74304308',
   });
-  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '1.6.0');
-  assert.equal(installedManifest.version, '1.6.0');
+  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '1.9.0');
+  assert.equal(installedManifest.version, '1.9.0');
   assert.deepEqual(project.constitution, {
-    version: '1.0.1',
+    version: '1.0.2',
     sha256: expectedConstitutionDigest,
   });
-  assert.equal(project.devai_version, '1.6.0');
+  assert.equal(project.devai_version, '1.9.0');
   assert.equal(
     createHash('sha256').update(pinnedConstitution).digest('hex'),
     expectedConstitutionDigest,
@@ -75,6 +75,43 @@ test('DEVAI 1.6.0 identity, Constitution 1.0.1, and profile 1.4.0 stay exact', (
   assert.deepEqual(profile.mutation_roster, []);
   assert.equal(Object.hasOwn(profile, 'mutation_execution'), false);
   assert.deepEqual(profile, adoption.release_verification);
+});
+
+test('DEVAI 1.9.0 ownership-matrix bind keeps the attested RC gate and GitHub host identity', () => {
+  const project = readJson('.devai/config/project.json');
+  const adoption = readJson('law/policy/devai-adoption.json');
+  const binding = readJson('.devai/config/adopter-policy-binding.json');
+  const authority = readJson('.devai/config/authority-policy.json');
+  const githubAdapter = readJson('.devai/config/github-actions-host-adapter.json');
+  const postMergeAdapter = readJson('.devai/config/post-merge-host-adapter.json');
+  const scorecardNa = readJson('.devai/config/scorecard-na.json');
+
+  assert.deepEqual(project.ci_economy, adoption.ci_economy);
+  assert.equal(project.ci_economy.attested_rc.required_check, 'verified-local-rc');
+  assert.equal(binding.policy_version, adoption.policy_version);
+  assert.deepEqual(binding.retired_keys, []);
+  assert.equal(Object.hasOwn(binding, 'authority_extension'), false);
+  assert.deepEqual(project.authority_enforcement, {
+    mode: 'host-integrated',
+    adapter_config: '.devai/config/github-actions-host-adapter.json',
+  });
+  assert.deepEqual(authority.host_enforcement, {
+    adapter: { adapter_id: 'github-actions-main-observation', adapter_version: '1.9.0' },
+    mode: 'host-integrated',
+  });
+  assert.equal(authority.framework_package.version, '1.9.0');
+  assert.equal(githubAdapter.package_binding.version, '1.9.0');
+  assert.equal(postMergeAdapter.package_binding.version, '1.9.0');
+  assert.equal(
+    createHash('sha256')
+      .update(readFileSync(join(repoRoot, githubAdapter.workflow_path)))
+      .digest('hex'),
+    githubAdapter.workflow_digest_sha256,
+  );
+  assert.deepEqual(
+    scorecardNa.cells.map((entry) => entry.cell),
+    ['F4:T5'],
+  );
 });
 
 test('mandatory profiles and release capabilities cannot reach optional mutation hardening', () => {
