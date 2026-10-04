@@ -1249,6 +1249,30 @@
       "commit": "6f0a0184dd7440978f097505e4bc9a3e5d2801f7",
       "authorized_by": "Owner",
       "reason": "Owner authorization (2026-10-04, ADR-SECURITY-AUDIT-0001) for routing the release-prep dependency-audit step through scripts/audit-workspace-dependencies.mjs at the unchanged high level, applying the time-boxed exception for the unpatched braces and http-cache-semantics advisories. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "f7e2ea3928b6330c779a9d05470ca17a6a9c9455",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decisions D1 and D3) for rematerializing .devai/config with the DEVAI 1.9.0 CLI, rebuilt linearly on main after PR #335 (supersedes the PR #334 commit 43f4b233). This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "b8e65ae08ffb7a9a31bbf627a79b3409914922f4",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decision D3) for re-creating .github/workflows/devai-main-observation.yml byte-identical to the DEVAI 1.9.0 generator (sha256 00a02fba), rebuilt linearly on main after PR #335 (supersedes the PR #334 commit 22087c7c). This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "b4bcdd1e4863a78854859816762e20f550e81893",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decision D4) for the ADR-EVI-0002 anchor baseline and the Architect historical-gap declaration for the three R-0001 proof lines, rebuilt linearly on main after PR #335 (supersedes the PR #334 commit d0404042). This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "a778e4fd263c4cb304c3c2fa37c4a423546b2e6b",
+      "authorized_by": "Owner",
+      "reason": "Owner post-merge authorization (2026-10-04, ADR-SECURITY-AUDIT-0001) for the dependency-audit workflow change as it landed on main through the PR #335 rebase merge, which rewrote the pre-merge receipted commit 6f0a0184. This receipt covers only that exact commit."
     }
   ]
 }
