@@ -8,6 +8,7 @@ Operator-facing runbooks and recovery procedures for the STYNX reference deploym
 
 - [Tenant suspension](runbooks/tenant-suspension.md)
 - [LGPD erasure](runbooks/lgpd-erasure.md)
+- [Session partition retention](runbooks/session-partition-retention.md)
 - [Session revocation](runbooks/session-revocation.md)
 - [Database role rotation](runbooks/db-role-rotation.md)
 - [Cognito federation onboarding](runbooks/cognito-federation-onboarding.md)
