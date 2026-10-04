@@ -122,7 +122,7 @@ jobs:
       - name: Audit workspace dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm audit --audit-level=high
+          node scripts/audit-workspace-dependencies.mjs --audit-level=high
 
       - name: Audit CDK dependencies
         run: |
