@@ -25,7 +25,7 @@ const thirdParty = {
   '@types/node': '24.13.4',
   '@types/pg': '8.20.0',
   '@types/supertest': '7.2.0',
-  pg: '8.21.0',
+  pg: '8.23.1',
   'reflect-metadata': '0.2.2',
   rxjs: '7.8.2',
   supertest: '7.2.2',
