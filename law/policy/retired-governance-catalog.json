@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.retired-governance-catalog",
-  "policy_version": "1.0.0",
+  "policy_version": "1.1.0",
   "authority": "Architect",
-  "description": "Digest-bound record of governance artifacts retired by ADR-DEVAI-ADOPTION-0002. Digests are of the bytes as they existed at commit 4f106b92, immediately before removal. These artifacts confer no current authority and are not executable inputs.",
+  "description": "Digest-bound record of governance artifacts retired by ADR-DEVAI-ADOPTION-0002. Digests are of the bytes as they existed at commit 4f106b92, immediately before removal. These artifacts confer no current authority and are not executable inputs. Paths later re-created under newer ADRs are listed in reinstated_artifacts; their retirement digests stay as historical record and do not describe the current files.",
   "retired_at_commit": "4f106b9244da51f217282a61f774255cb8709a0d",
   "retired_by_adr": "ADR-DEVAI-ADOPTION-0002",
   "removed_artifacts": [
@@ -72,10 +72,42 @@
       "bytes_preserved": true
     }
   ],
-  "inactive_historical_records": [
+  "reinstated_artifacts": [
     {
-      "path": "law/trace.json",
-      "note": "No executable path reads this file after the trace task node was removed."
+      "path": "scripts/devai-local-rc.mjs",
+      "reinstated_at_commit": "653ad773",
+      "authority": "ADR-DEVAI-ADOPTION-0004"
+    },
+    {
+      "path": "scripts/lib/devai-local-rc.mjs",
+      "reinstated_at_commit": "653ad773",
+      "authority": "ADR-DEVAI-ADOPTION-0004"
+    },
+    {
+      "path": "scripts/verify-devai-trace.mjs",
+      "reinstated_at_commit": "ad8e9daf",
+      "authority": "stynx-nyx/stynx#266"
+    },
+    {
+      "path": "law/policy/devai-local-rc-environment.json",
+      "reinstated_at_commit": "399c48ec",
+      "authority": "ADR-DEVAI-ADOPTION-0005"
+    },
+    {
+      "path": "law/policy/devai-local-rc-toolchain.json",
+      "reinstated_at_commit": "399c48ec",
+      "authority": "ADR-DEVAI-ADOPTION-0005"
+    },
+    {
+      "path": "law/policy/devai-local-rc-trust-store.json",
+      "reinstated_at_commit": "399c48ec",
+      "authority": "ADR-DEVAI-ADOPTION-0005"
+    },
+    {
+      "path": ".github/workflows/devai-local-rc-verify.yml",
+      "reinstated_at_commit": "17d87afa",
+      "authority": "ADR-DEVAI-ADOPTION-0004"
     }
-  ]
+  ],
+  "inactive_historical_records": []
 }

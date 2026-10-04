@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.3.0",
+  "policy_version": "1.4.0",
   "project": {
     "project_type": "platform-package",
     "repo": {
@@ -16,6 +16,17 @@
           "dev/security": "meta/security"
         }
       }
+    }
+  },
+  "ci_economy": {
+    "attested_rc": {
+      "profile": "rc",
+      "transport": "protected-tag-v1",
+      "tag_prefix": "devai-local-evidence/",
+      "binding": "exact-tree",
+      "required_check": "verified-local-rc",
+      "failure_mode": "fail-closed",
+      "local_only_nodes": ["test:mutation"]
     }
   },
   "release_verification": {
@@ -67,7 +78,13 @@
   },
   "scorecard_na": {
     "schemaVersion": "1.0.0",
-    "cells": []
+    "cells": [
+      {
+        "cell": "F4:T5",
+        "reason": "Inventory x Idiomaticity is the degenerate cell Article 5 names: inventory artifacts are derived deterministically from F1, F2 and F3 and never authored, so idiomaticity has no authored subject to measure.",
+        "constitution_anchor": "Article 5"
+      }
+    ]
   },
   "glob_guards": {
     "schemaVersion": "1.0.0",

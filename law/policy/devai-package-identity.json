@@ -1,17 +1,17 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-package-identity",
-  "policy_version": "1.1.0",
+  "policy_version": "1.2.0",
   "authority": "Architect",
   "description": "Exact identity of the @aarusso-nyx/devai package STYNX adopts. Extracted from the retired release-campaign-1.1.1 policy so the dependency pin survives the DEVAI adoption migration. The retired verifier-materialization block is deliberately not carried forward.",
   "registry": "https://npm.pkg.github.com",
   "package": "@aarusso-nyx/devai",
-  "version": "1.6.0",
-  "tarball": "https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.6.0/d67263cb9d84b116fa4637acc8dc22c74f3d3a2a",
-  "integrity": "sha512-WarRgd01xFBxf296+iGGcZMXfg90UmHyCKRQJUyX0RSSVICJZDcI1mJBIp/EytnoNMLUfiJQl2mWC0f4qz9q9g==",
-  "shasum": "d67263cb9d84b116fa4637acc8dc22c74f3d3a2a",
-  "sha256": "e42831712152e630cf54fcf6dbd204039ae7e1d7fb3ec57e5fe5ff08ea1755d1",
-  "source_commit": "349894356a89e16d92bcb57581e97ca5fc89a2eb",
-  "source_tree": "436a88f657d2329b9980eb4aa2c265c9d2261e76",
-  "signed_tag_object": "d71cf93113ba26b362f673e76debda5b861f06e3"
+  "version": "1.9.0",
+  "tarball": "https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.9.0/37594fb078f5098b83b3938a3bc70ac5488c3162",
+  "integrity": "sha512-5XPsmj5rOCEETMNAoGSN5WRqhrTgIEVcIHmWsU1aNpNPdfBjqh9IsAyHEUDka2csLQ1J1y7JuV3+A1VH+IfzAg==",
+  "shasum": "37594fb078f5098b83b3938a3bc70ac5488c3162",
+  "sha256": "b9813b7dc3697e5cfae4d5746ebf067b22563b38e81058d06c63681938b9e374",
+  "source_commit": "75343991140c223240b51cea80c060c516226945",
+  "source_tree": "90f0f5b64bf594677f96eebf26ae80cf7da1149e",
+  "signed_tag_object": "cdc4d7b1ad3c9ade71d6ab7d73dc2a5e74304308"
 }
