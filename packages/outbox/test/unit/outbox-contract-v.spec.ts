@@ -114,7 +114,7 @@ describe('UPS-OBX-09 contract verifications', () => {
     const source = new OutboxEventStreamSource(database as never);
     const scope = { tenantId: tenant, actorId: 'actor' };
     await source.listSince({ createdAt: new Date(5), id: eventId }, scope, 10);
-    await expect(source.findById(eventId, scope)).resolves.toBeNull();
+    await expect(source.findById(eventId, scope)).resolves.toBe(null);
     expect(database.withRequestContext).toHaveBeenCalledWith(scope, expect.any(Function));
     expect(txOptions).toEqual([
       { role: 'app', readonly: true, replica: false, retry: false }, { role: 'app', readonly: true, replica: false, retry: false },
