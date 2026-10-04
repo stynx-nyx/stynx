@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-09-29",
+    "last_updated": "2026-10-04",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-04 Architect binding adds the auth.sessions monthly partition maintenance sensor (ADR-SESSIONS-0002) and rebinds the session mirror writer assertions.",
       "Post-1.5.0 R-0003 Architect rebind pins full coverage sensors and the CMS/PDF trust boundary across the fixed 44-package group.",
       "Issue #294 Architect rebind pins the session policy HTTP sensor: reject-new 409 SESSION_CONFLICT, missing strong factor 403 STRONG_FACTOR_REQUIRED and revoke-existing invalidation.",
       "Post-1.5.0 Architect rebind pins column-scoped app attempt updates, completed and legacy evidence immutability, and request-path failure/foreign-ACK sensors.",
@@ -3273,8 +3274,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 60,
-      "assertion_digest_sha256": "f5736d022ee57ed2b127c1e7eccae4e25c27ef0edb83dd21af1b23aaa31c7d00"
+      "assertion_count": 62,
+      "assertion_digest_sha256": "524171052709001c74649c29f641566713d73a495766fbad560fb77abc210391"
     },
     {
       "path": "packages/sessions/test/unit/session-control-storage.contract.spec.ts",
@@ -3297,8 +3298,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 78,
-      "assertion_digest_sha256": "6503bc5d9ec4ec7bdfc44ce05cc5954c60a4d2cee98bb42afc7f609f34e871b5"
+      "assertion_count": 79,
+      "assertion_digest_sha256": "faae1a0ff1bc1e2cf27e392f4447d1b9c189b91bec3ceddbf9ac25cbbf6e28dc"
     },
     {
       "path": "packages/signature/test/unit/digest.spec.ts",
@@ -3935,6 +3936,14 @@
       "lifecycle": "supported",
       "assertion_count": 14,
       "assertion_digest_sha256": "cb3c85df5109ed953e504044bc9a125d4d157f932b94fadaac9c5fa9df52bd13"
+    },
+    {
+      "path": "test/db/auth-sessions-partitions-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 13,
+      "assertion_digest_sha256": "ad26b233fa8b0b54226c25b5db3b472f504f226667ca9a4cd583725a568ab702"
     },
     {
       "path": "test/db/auth.ddl.spec.ts",
