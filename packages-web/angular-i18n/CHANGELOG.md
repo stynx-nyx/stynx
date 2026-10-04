@@ -1,5 +1,14 @@
 # @stynx-nyx/angular-i18n
 
+## 1.5.3
+
+### Patch Changes
+
+- bccd834: Build and test the Angular packages against Angular 22.2.1, the release that fixes
+  GHSA-ff3f-86qr-9cv3 (`@angular/router` SSR denial of service). The supported
+  peer range stays `>=22.0.0 <23`; consumers on 22.0–22.1 should upgrade their
+  own Angular install to 22.2.0 or later.
+
 ## 1.5.2
 
 ## 1.5.1
