@@ -26,6 +26,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-SIGNATURE-0001 — Verified trust evidence for regulated signatures](ADR-SIGNATURE-0001-trust-evidence.md) — opt-in CTG9 trust gate.
 - [Trusted local RC evidence and mutation execution boundary](2026-08-16-trusted-local-rc-evidence.md)
 - [ADR-SESSIONS-0001 — Provider-neutral session inventory and control](ADR-SESSIONS-0001-provider-neutral-session-control.md)
+- [ADR-SESSIONS-0002 — Monthly partition maintenance for auth.sessions](ADR-SESSIONS-0002-monthly-partition-maintenance.md)
 - [ADR-PREFERENCES-0001 — Tenant-subject preferences boundary](ADR-PREFERENCES-0001-tenant-subject-preferences.md)
 - [ADR-001 — Soft Delete](ADR-001-soft-delete.md)
 - [ADR-002 — Permissions Caching](ADR-002-perms-caching.md)
