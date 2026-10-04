@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-09-29",
+    "last_updated": "2026-10-04",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-04 Architect rebind pins the outbox read, retry and RLS assertions after the Inspector made 16 existence-only null/undefined checks exact.",
       "Post-1.5.0 R-0003 Architect rebind pins full coverage sensors and the CMS/PDF trust boundary across the fixed 44-package group.",
       "Issue #294 Architect rebind pins the session policy HTTP sensor: reject-new 409 SESSION_CONFLICT, missing strong factor 403 STRONG_FACTOR_REQUIRED and revoke-existing invalidation.",
       "Post-1.5.0 Architect rebind pins column-scoped app attempt updates, completed and legacy evidence immutability, and request-path failure/foreign-ACK sensors.",
@@ -5164,7 +5165,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 90,
-      "assertion_digest_sha256": "44c10b2e6d65ebd2b87823c824f62519c505aa6b3b8edfd7bddd9288d9c07531"
+      "assertion_digest_sha256": "75ff8cfff04d1734d7165ead673c311764a0639af4467b72fa74c040b2ac6f80"
     },
     {
       "path": "packages/outbox/test/integration/contract-v-items.integration.spec.ts",
@@ -5172,7 +5173,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 16,
-      "assertion_digest_sha256": "3649a839748a1684113dcac3377237b1b7690ccc16d1cb43112ba6f8ba6941e8"
+      "assertion_digest_sha256": "2e0ee38d1ecb01a757d29763137577d5c2a51a2ab2e296b6a835a6911b109da8"
     },
     {
       "path": "packages/auth/test/integration/session-policy-http.integration.spec.ts",
@@ -5252,7 +5253,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 72,
-      "assertion_digest_sha256": "c8f67c2b0b23de06349ad548d2c608c0f4c9c461a335e80e287262762e6da739"
+      "assertion_digest_sha256": "d89d9fcdc2fa10a7d22abc6db43331be95ee09d02a91832f179d5ee9b88b817d"
     },
     {
       "path": "packages/outbox/test/unit/outbox-contract-v.spec.ts",
@@ -5260,7 +5261,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 38,
-      "assertion_digest_sha256": "da3cbe483143dc7629ca46128085b54d6c7ce5572aa744fd03fa1cad50586092"
+      "assertion_digest_sha256": "df63d4713f54a08a3ed0d287d561ccf498beb180df79dd09e3460e5d4372f9e6"
     },
     {
       "path": "packages/pdf/test/unit/assets-missing.spec.ts",
