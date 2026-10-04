@@ -12,7 +12,7 @@ called production-grade for regulated private adopters.
 Run these before a release-candidate claim:
 
 ```bash
-pnpm audit --prod
+pnpm security:audit
 pnpm check:engines
 pnpm api:coverage
 pnpm api:contract
