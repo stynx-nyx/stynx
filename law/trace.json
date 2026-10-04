@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "DEVAI 1.9.0 adoption Architect rebind (ADR-DEVAI-ADOPTION-0010) moves the renamed DEVAI adoption contract test and pins the 1.9.0 identity, Constitution 1.0.2 and ownership-matrix posture assertions.",
       "2026-10-04 Architect binding adds the workspace audit exception sensor (ADR-SECURITY-AUDIT-0001).",
       "2026-10-04 Architect rebind pins the outbox read, retry and RLS assertions after the Inspector made 16 existence-only null/undefined checks exact.",
       "Post-1.5.0 R-0003 Architect rebind pins full coverage sensors and the CMS/PDF trust boundary across the fixed 44-package group.",
@@ -4561,12 +4562,12 @@
       "assertion_digest_sha256": "d5078c06458b9ea5e19e608ba88b4d8b7913c8c94d528f51295ce85feb4580fd"
     },
     {
-      "path": "test/scripts/devai-1.5-adoption-contract.test.mjs",
+      "path": "test/scripts/devai-adoption-contract.test.mjs",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 53,
-      "assertion_digest_sha256": "aa69f51c143290f4134cd565add595657d5f1218dba0e17467633c4888124604"
+      "assertion_count": 65,
+      "assertion_digest_sha256": "7bbed2929ae76882c5cec238370df2a4f245fb6f474356250db6d5d7cb037b63"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
