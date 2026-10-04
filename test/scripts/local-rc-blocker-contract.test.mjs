@@ -4330,7 +4330,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'aa17b4a7d452a5f2dd409fea4be60512051d5ec2fd5b410a1e1f45104fc01f5a',
+    'package.json': 'fb1a61632e40dda0bc12ce627382efd430c9e70ef2750654578e3140639c00b6',
     'reference/api/package.json':
       'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
     'reference/web/package.json':
@@ -4503,7 +4503,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'aa17b4a7d452a5f2dd409fea4be60512051d5ec2fd5b410a1e1f45104fc01f5a',
+    'package.json': 'fb1a61632e40dda0bc12ce627382efd430c9e70ef2750654578e3140639c00b6',
     'reference/api/package.json':
       'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
     'reference/web/package.json':
@@ -4565,7 +4565,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
-    'package.json': 'aa17b4a7d452a5f2dd409fea4be60512051d5ec2fd5b410a1e1f45104fc01f5a',
+    'package.json': 'fb1a61632e40dda0bc12ce627382efd430c9e70ef2750654578e3140639c00b6',
     'reference/api/package.json':
       'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
     'reference/web/package.json':
