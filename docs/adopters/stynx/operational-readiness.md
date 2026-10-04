@@ -25,7 +25,7 @@ This document is the current MVP operations bar for regulated STYNX adopters.
 Run these before declaring a release candidate:
 
 ```bash
-pnpm audit --prod
+pnpm security:audit
 pnpm check:engines
 pnpm api:coverage
 pnpm api:contract
