@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Time-boxed workspace audit exception for unpatched dev and docs advisories](2026-10-04-workspace-audit-exception.md)
 - [main requires no approving review and no code-owner review](2026-09-27-main-review-policy.md)
 - [Local RC signer recovery after workstation key loss](2026-09-27-local-rc-signer-recovery.md)
 - [verified-local-rc gates pull requests instead of remote product tiers](2026-09-27-verified-local-rc-cutover.md)
