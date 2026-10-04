@@ -102,8 +102,8 @@ describe('OutboxService tenant event reads (UPS-OBX-04)', () => {
     expect(calls[0]!.params).toEqual([tenant, eventId]);
     expect(options).toEqual([appRead]);
     rows = [];
-    await expect(service.getEventDelivery(otherId)).resolves.toBeNull();
-    await expect(service.getEventDelivery('not-a-uuid')).resolves.toBeNull();
+    await expect(service.getEventDelivery(otherId)).resolves.toBe(null);
+    await expect(service.getEventDelivery('not-a-uuid')).resolves.toBe(null);
     expect(calls).toHaveLength(2);
   });
 
@@ -132,7 +132,7 @@ describe('OutboxService tenant event reads (UPS-OBX-04)', () => {
     });
     expect(calls[1]!.params).toEqual([tenant, 'renach.item', 'item-1', 100]);
     rows = [];
-    await expect(service.getAggregateDelivery('renach.item', 'other')).resolves.toBeNull();
+    await expect(service.getAggregateDelivery('renach.item', 'other')).resolves.toBe(null);
     expect(calls).toHaveLength(3);
   });
 

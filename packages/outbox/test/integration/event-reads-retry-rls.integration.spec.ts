@@ -184,7 +184,7 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
     expect(pages).toEqual([expected.slice(0, 2), expected.slice(2, 4), expected.slice(4, 6)]);
     const repeat = await asTenant(tenantA, () => outbox.listEvents({ entityPrefix: namespace, limit: 10 }));
     expect(repeat.items.map((item) => item.id)).toEqual(expected);
-    expect(repeat.nextCursor).toBeNull();
+    expect(repeat.nextCursor).toBe(null);
     expect(repeat.items[0]).toMatchObject({
       entity: `${namespace}.alpha`, metadata: { source: 'reads-retry' },
       delivery: { status: 'PENDING', attempts: 0, lastError: null, nextAttemptAt: null },
@@ -263,10 +263,10 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
     expect(acked).toMatchObject({ head: null, counts: { ACKED: 2 } });
 
     // Foreign tenant and no-delivery reads are indistinguishable from absence.
-    await expect(asTenant(tenantB, () => outbox.getEventDelivery(first!.id))).resolves.toBeNull();
+    await expect(asTenant(tenantB, () => outbox.getEventDelivery(first!.id))).resolves.toBe(null);
     await expect(asTenant(tenantB, () => outbox.listEventAttempts(first!.id, { includeBytes: true }))).resolves.toEqual([]);
-    await expect(asTenant(tenantB, () => outbox.getAggregateDelivery('reads.aggregate', aggregate))).resolves.toBeNull();
-    await expect(asTenant(tenantA, () => outbox.getEventDelivery(randomUUID()))).resolves.toBeNull();
+    await expect(asTenant(tenantB, () => outbox.getAggregateDelivery('reads.aggregate', aggregate))).resolves.toBe(null);
+    await expect(asTenant(tenantA, () => outbox.getEventDelivery(randomUUID()))).resolves.toBe(null);
     const orphanId = randomUUID();
     const orphanAggregate = randomUUID();
     await admin((client) => client.query(
@@ -274,8 +274,8 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
        values ($1,$2,'reads.undestined',$3,$4,'{}'::jsonb,clock_timestamp())`,
       [orphanId, tenantA, orphanAggregate, `orphan:${orphanId}`],
     ));
-    await expect(asTenant(tenantA, () => outbox.getEventDelivery(orphanId))).resolves.toBeNull();
-    await expect(asTenant(tenantA, () => outbox.getAggregateDelivery('reads.undestined', orphanAggregate))).resolves.toBeNull();
+    await expect(asTenant(tenantA, () => outbox.getEventDelivery(orphanId))).resolves.toBe(null);
+    await expect(asTenant(tenantA, () => outbox.getAggregateDelivery('reads.undestined', orphanAggregate))).resolves.toBe(null);
     const listed = await asTenant(tenantA, () => outbox.listEvents({ entity: 'reads.undestined' }));
     expect(listed.items).toEqual([expect.objectContaining({ id: orphanId, delivery: null })]);
     await expect(asTenant(tenantA, () => outbox.listEvents({ entity: 'reads.undestined', deliveryStatus: 'PENDING' })))
@@ -379,11 +379,11 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
     sends.delete(head!.id);
     await asTenant(tenantA, () => outbox.retryEvent(tail!.id, { immediate: true }));
     await expect(asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50))).resolves.toEqual([]);
-    expect(sends.get(tail!.id)).toBeUndefined();
+    expect(sends.get(tail!.id)).toBe(undefined);
     await asTenant(tenantA, () => outbox.retryEvent(head!.id, { immediate: true }));
     const headFirst = await asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
     expect(headFirst.map((outcome) => outcome.row.id)).toEqual([head!.id]);
-    expect(sends.get(tail!.id)).toBeUndefined();
+    expect(sends.get(tail!.id)).toBe(undefined);
     await asTenant(tenantA, () => outbox.ackTenantEvent({ eventId: head!.id, status: 'ACKED', rawBody: Buffer.from('ack-head'), hmacVerified: true }));
     const tailNext = await asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
     expect(tailNext.map((outcome) => outcome.row.id)).toEqual([tail!.id]);
@@ -420,8 +420,8 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
       expect(await attemptCount(event!)).toBe(0);
     }
     await asTenant(tenantA, () => outbox.dispatchTenantEventsDue(50));
-    expect(sends.get(acked!.id)).toBeUndefined();
-    expect(sends.get(unresolved!.id)).toBeUndefined();
+    expect(sends.get(acked!.id)).toBe(undefined);
+    expect(sends.get(unresolved!.id)).toBe(undefined);
   });
 
   it('never duplicates a send when retry holds the row lock or a claim committed first', async () => {
@@ -495,7 +495,7 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
       await vi.waitFor(async () => expect(await waiting('%event_attempts%', 'advisory')).toBe(1), { timeout: 10_000 });
       const retry = asTenant(tenantA, () => outbox.retryEvent(event!.id, { immediate: true })).catch((error: unknown) => error);
       await vi.waitFor(async () => expect(await waiting('%for update%', 'transactionid')).toBe(1), { timeout: 10_000 });
-      expect(sends.get(event!.id)).toBeUndefined();
+      expect(sends.get(event!.id)).toBe(undefined);
       await gate.query('select pg_advisory_unlock($1)', [gateKey]);
       const refused = await retry;
       expect(refused).toBeInstanceOf(OutboxEventNotFailedError);

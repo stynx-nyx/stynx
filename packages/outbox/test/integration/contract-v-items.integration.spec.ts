@@ -127,7 +127,7 @@ describe('UPS-OBX-09 V-01/V-04/V-05 behavior (PostgreSQL/FORCE RLS)', () => {
   it('V-05 findById of another tenant is null; listSince is strictly after (createdAt,id) and maps entity to event', async () => {
     const foreign = await append(TENANT_B, fact('contract.stream'));
     const scopeA = { tenantId: TENANT_A, actorId: ACTOR };
-    await expect(source.findById(foreign.id, scopeA)).resolves.toBeNull();
+    await expect(source.findById(foreign.id, scopeA)).resolves.toBe(null);
     await expect(source.findById(foreign.id, { tenantId: TENANT_B, actorId: ACTOR })).resolves.toMatchObject({
       id: foreign.id, event: 'contract.stream', payload: foreign.payload,
     });
