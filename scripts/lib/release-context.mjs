@@ -11,6 +11,7 @@ const finalVersion = '1.5.0';
 const finalBaseVersion = '1.5.0-rc.3';
 const stablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.1';
 const secondStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.2';
+const thirdStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.3';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -64,6 +65,32 @@ const allowedSecondStablePatchFollowUpPaths = new Set([
 
 const allowedSecondStablePatchAddedPaths = new Set([
   'law/adr/2026-09-29-postrelease-pki-fixture-scan.md',
+]);
+
+// ADR-DEVAI-ADOPTION-0011: the eleven changesets the 1.5.3 marker consumes.
+const thirdStablePatchChangesetPaths = Object.freeze([
+  '.changeset/angular-22-2-1-advisory.md',
+  '.changeset/auth-sessions-partition-maintenance.md',
+  '.changeset/auth-sessions-partition-retention.md',
+  '.changeset/deps-minor-patch-2026-10.md',
+  '.changeset/ngsse-opt-in-options.md',
+  '.changeset/offline-sync-lists-idempotent-reserve.md',
+  '.changeset/outbox-event-reads-retry.md',
+  '.changeset/outbox-exact-null-assertions.md',
+  '.changeset/signature-declarative-qualified.md',
+  '.changeset/signature-offline-sync-test-clock.md',
+  '.changeset/sse-429-retry-after-polling.md',
+]);
+
+const allowedThirdStablePatchFollowUpPaths = new Set([
+  'law/policy/forbidden-action-authorizations.json',
+  'law/policy/registry-version-anomalies.json',
+  'law/trace.json',
+  'scripts/lib/registry-version-policy.mjs',
+  'scripts/lib/release-context.mjs',
+  'scripts/run-release-preparation.mjs',
+  'test/scripts/local-rc-blocker-contract.test.mjs',
+  'test/scripts/release-version-policy.test.mjs',
 ]);
 
 export class ReleaseContextError extends Error {
@@ -362,16 +389,17 @@ function isExactStablePatchVersionedCandidate(
     markerParentPreState,
   },
   {
+    baseVersion: expectedBaseVersion = '1.5.0',
     parentVersion: expectedParentVersion,
     candidateVersion: expectedCandidateVersion,
-    changesetPath,
+    changesetPaths,
     markerSubject,
     allowedFollowUpPaths,
     allowedAddedFollowUpPaths,
   },
 ) {
   if (
-    baseRootVersion !== '1.5.0' ||
+    baseRootVersion !== expectedBaseVersion ||
     markerParentRootVersion !== expectedParentVersion ||
     candidateRootVersion !== expectedCandidateVersion ||
     preState !== null ||
@@ -385,7 +413,7 @@ function isExactStablePatchVersionedCandidate(
     packageStates.length !== 44 ||
     !Array.isArray(changesetIdsOnDisk) ||
     changesetIdsOnDisk.length !== 0 ||
-    !isDeepStrictEqual(markerParentChangesets, [changesetPath])
+    !isDeepStrictEqual([...markerParentChangesets].sort(), [...changesetPaths].sort())
   )
     return false;
 
@@ -413,7 +441,7 @@ function isExactStablePatchVersionedCandidate(
   )
     return false;
 
-  const expected = new Map([[changesetPath, 'D']]);
+  const expected = new Map(changesetPaths.map((path) => [path, 'D']));
   for (const manifestPath of manifests) {
     expected.set(manifestPath, 'M');
     expected.set(manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'), 'M');
@@ -440,7 +468,7 @@ export function isStablePatchVersionedCandidate(input) {
   return isExactStablePatchVersionedCandidate(input, {
     parentVersion: '1.5.0',
     candidateVersion: '1.5.1',
-    changesetPath: '.changeset/postrelease-request-path.md',
+    changesetPaths: ['.changeset/postrelease-request-path.md'],
     markerSubject: stablePatchVersionCommitSubject,
     allowedFollowUpPaths: allowedStablePatchFollowUpPaths,
   });
@@ -451,10 +479,25 @@ export function isSecondStablePatchVersionedCandidate(input) {
   return isExactStablePatchVersionedCandidate(input, {
     parentVersion: '1.5.1',
     candidateVersion: '1.5.2',
-    changesetPath: '.changeset/session-policy-http-status.md',
+    changesetPaths: ['.changeset/session-policy-http-status.md'],
     markerSubject: secondStablePatchVersionCommitSubject,
     allowedFollowUpPaths: allowedSecondStablePatchFollowUpPaths,
     allowedAddedFollowUpPaths: allowedSecondStablePatchAddedPaths,
+  });
+}
+
+/**
+ * The unpublished 1.5.2 candidate on main consumes eleven changesets into 1.5.3
+ * (ADR-DEVAI-ADOPTION-0011); main itself is the 1.5.2 base.
+ */
+export function isThirdStablePatchVersionedCandidate(input) {
+  return isExactStablePatchVersionedCandidate(input, {
+    baseVersion: '1.5.2',
+    parentVersion: '1.5.2',
+    candidateVersion: '1.5.3',
+    changesetPaths: thirdStablePatchChangesetPaths,
+    markerSubject: thirdStablePatchVersionCommitSubject,
+    allowedFollowUpPaths: allowedThirdStablePatchFollowUpPaths,
   });
 }
 
@@ -509,6 +552,7 @@ export const releaseContextConstants = Object.freeze({
   finalVersionCommitSubject,
   stablePatchVersionCommitSubject,
   secondStablePatchVersionCommitSubject,
+  thirdStablePatchVersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',
