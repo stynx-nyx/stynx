@@ -13,6 +13,10 @@ Operator-facing runbooks and recovery procedures for the STYNX reference deploym
 - [Cognito federation onboarding](runbooks/cognito-federation-onboarding.md)
 - [Flow operations](runbooks/flow.md)
 
+## Workflows
+
+- [GitHub Actions workflow reference](workflows/)
+
 ## Recovery
 
 - [PostgreSQL backup restore](recovery/pg-backup-restore.md)
