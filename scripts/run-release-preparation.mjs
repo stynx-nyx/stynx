@@ -8,6 +8,7 @@ import {
   classifyReleaseContext,
   isFinalVersionedCandidate,
   isSecondStablePatchVersionedCandidate,
+  isThirdStablePatchVersionedCandidate,
   isStablePatchVersionedCandidate,
   isVersionedPreModeCandidate,
   releaseContextConstants,
@@ -358,6 +359,10 @@ function releaseContext() {
   return classified.kind === 'ordinary'
     ? (versionedPreModeContext(baseCommit, headCommit, commits) ??
         finalVersionedContext(baseCommit, headCommit, commits) ??
+        stablePatchVersionedContext(baseCommit, headCommit, commits, {
+          markerSubject: releaseContextConstants.thirdStablePatchVersionCommitSubject,
+          predicate: isThirdStablePatchVersionedCandidate,
+        }) ??
         stablePatchVersionedContext(baseCommit, headCommit, commits, {
           markerSubject: releaseContextConstants.secondStablePatchVersionCommitSubject,
           predicate: isSecondStablePatchVersionedCandidate,
