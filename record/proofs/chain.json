@@ -1,5 +1,5 @@
 {
-  "head": "345fd93ce08a3516d88a676e9135c9084cd80fa8deee5af0b56706c71ac46861",
+  "head": "7e6d1da3ae75d703c142c39d0ccd95c667436fde1fc70d4fb7c8ed0650eec9c8",
   "records": [
     {
       "schemaVersion": "1.0.0",
@@ -321,6 +321,52 @@
       "manifest_hash": "345fd93ce08a3516d88a676e9135c9084cd80fa8deee5af0b56706c71ac46861",
       "sequence": 8,
       "previous_hash": "f92eadacf93895fcf1df97b24d61ed946196ec7c4c6c3028c6f4fdf817e7b4a4"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-6cda04fa398056e1",
+      "timestamp": "2026-10-04T06:50:38.597Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "evidence.record.historical-gap",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/stynx-devai-governance-87804e",
+        "git": {
+          "head_sha": "45f7c9d0eb67595ab63b55a9fc354a7cdb6591dc",
+          "dirty_files": [
+            "AGENTS.md",
+            "CLAUDE.md",
+            "docs/meta/ops/README.md",
+            "docs/meta/migration/stynx-devai-1.9-adoption-plan.md",
+            "docs/meta/ops/workflows/README.md",
+            "docs/meta/ops/workflows/audit.md",
+            "docs/meta/ops/workflows/ci.md",
+            "docs/meta/ops/workflows/devai-local-rc-verify.md",
+            "docs/meta/ops/workflows/devai-main-observation.md",
+            "docs/meta/ops/workflows/docs.md",
+            "docs/meta/ops/workflows/hardening.md",
+            "docs/meta/ops/workflows/module-demo-bookmark.md",
+            "docs/meta/ops/workflows/reference-apps.md",
+            "docs/meta/ops/workflows/release-prep-not-applicable.md",
+            "docs/meta/ops/workflows/release-prep.md",
+            "docs/meta/ops/workflows/release.md",
+            "docs/meta/ops/workflows/reusable-typecheck.md",
+            "docs/meta/ops/workflows/semantic-pr-title.md",
+            "record/proofs/anchor-baseline.json",
+            "record/proofs/work/historical-gap/R-0002.jsonl"
+          ]
+        }
+      },
+      "artifacts": [],
+      "notes": ["round_id=R-0002", "proof_sequence=1"],
+      "proof_path": "record/proofs/work/historical-gap/R-0002.jsonl",
+      "proof_sequence": 1,
+      "proof_sha256": "2f8968925c43842fa282f9c7eaaa3c2d97c44e0ce5ec50ea8c7e87eec746c505",
+      "previous_run_hash": "345fd93ce08a3516d88a676e9135c9084cd80fa8deee5af0b56706c71ac46861",
+      "manifest_hash": "7e6d1da3ae75d703c142c39d0ccd95c667436fde1fc70d4fb7c8ed0650eec9c8",
+      "sequence": 9,
+      "previous_hash": "345fd93ce08a3516d88a676e9135c9084cd80fa8deee5af0b56706c71ac46861"
     }
   ]
 }

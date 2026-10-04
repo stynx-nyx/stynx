@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0.0",
+  "record": "ADR-EVI-0002",
+  "cutoff": "2026-10-04T06:50:06.298Z",
+  "entries": [
+    {
+      "path": "record/proofs/work/generic/R-0001.jsonl",
+      "sequence": 1,
+      "sha256": "d4b1f49f242279ec49f3c31d3abd9761bced61b1285a134ef342ea1d559356b5",
+      "anchor_status": "orphaned",
+      "observed_at": "2026-10-04T06:50:06.298Z"
+    },
+    {
+      "path": "record/proofs/work/generic/R-0001.jsonl",
+      "sequence": 2,
+      "sha256": "9c153d5d640c3a6f42e06e8dc566c353da971839feac18d7342ebd812a82a9fe",
+      "anchor_status": "orphaned",
+      "observed_at": "2026-10-04T06:50:06.298Z"
+    },
+    {
+      "path": "record/proofs/work/generic/R-0001.jsonl",
+      "sequence": 3,
+      "sha256": "b0ade417e4ba3c7c101cae4b0e59334768e389c71b66bef2564e6d80f3d9fbbb",
+      "anchor_status": "orphaned",
+      "observed_at": "2026-10-04T06:50:06.298Z"
+    },
+    {
+      "path": "record/proofs/work/generic/R-0002.jsonl",
+      "sequence": 1,
+      "sha256": "d1618d31cae00f607559753ba4f516d40d42020abba8ed5328ff8492d446bf84",
+      "anchor_status": "anchored",
+      "observed_at": "2026-10-04T06:50:06.298Z"
+    },
+    {
+      "path": "record/proofs/work/generic/R-0002.jsonl",
+      "sequence": 2,
+      "sha256": "d129ac3bde43bafca0c2354d67e3d436467e19a4667bd118d9d2c3c2823cb0d9",
+      "anchor_status": "anchored",
+      "observed_at": "2026-10-04T06:50:06.298Z"
+    }
+  ]
+}
