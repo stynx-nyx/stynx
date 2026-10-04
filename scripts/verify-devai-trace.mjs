@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Verifies the executable-test bindings in law/trace.json.
 //
-// DEVAI 1.4.5 validates the trace's shape and path classification but does
-// not verify `assertion_count` / `assertion_digest_sha256`, so those fields
-// were unenforced after ADR-DEVAI-ADOPTION-0002 retired the previous version
-// of this script together with the 1.1.1 campaign census it carried. This
+// DEVAI (re-checked at 1.9.0) validates the trace's shape and path
+// classification but does not verify `assertion_count` /
+// `assertion_digest_sha256`, so those fields were unenforced after
+// ADR-DEVAI-ADOPTION-0002 retired the previous version of this script
+// together with the 1.1.1 campaign census it carried. This
 // restores only the durable binding check:
 //
 //   - every test_corpus path is tracked and is an executable test file;
