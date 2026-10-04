@@ -87,7 +87,22 @@ export interface PrivacyRetentionPlanItem {
   reason: string;
 }
 
+/** One expired monthly partition found (and, outside a dry run, dropped) by the retention sweep. */
+export interface PrivacyPartitionRetentionItem {
+  /** Partitioned parent table, for example `auth.sessions`. */
+  table: string;
+  /** Qualified partition name, for example `auth.sessions_2026_06`. */
+  partition: string;
+  /** First day after the partition's month (ISO date). */
+  monthEnd: string;
+  /** True when the partition was dropped; false in a dry run. */
+  dropped: boolean;
+  reason: string;
+}
+
 export interface PrivacyRetentionResult {
   dryRun: boolean;
   actions: PrivacyRetentionPlanItem[];
+  /** Expired auth.sessions month partitions (ADR-SESSIONS-0003: 90 days after the month ends). */
+  partitions: PrivacyPartitionRetentionItem[];
 }
