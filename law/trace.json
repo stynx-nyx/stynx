@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-04 Architect rebind pins the exact 1.5.3 stable patch classifier and root manifest admission (ADR-DEVAI-ADOPTION-0011).",
       "2026-10-04 Architect binding adds the auth.sessions partition retention sensor (ADR-SESSIONS-0003) and rebinds the privacy retention assertions.",
       "2026-10-04 Architect rebind pins the exact post-migration partition set (audit current month, sessions current and next month).",
       "2026-10-04 Architect binding adds the auth.sessions monthly partition maintenance sensor (ADR-SESSIONS-0002) and rebinds the session mirror writer assertions.",
@@ -4594,7 +4595,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 853,
-      "assertion_digest_sha256": "6931ccfa30fe7d0609e7866eb482fff96806ba481922771e390540bc23b69945"
+      "assertion_digest_sha256": "ca9a2884d0fd284ee02401fb65ed5e64f51d0c48fe7e60694ec5bfa54703f6a9"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -4625,8 +4626,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 303,
-      "assertion_digest_sha256": "49b7e892e21d2c4c7f8404962922d1e02e1e3a3ea64a52eb4c38c84a4113b33e"
+      "assertion_count": 307,
+      "assertion_digest_sha256": "1d78a0e511cfaa675a9c04df59a97cc0c4e8d35ce318f1b7583460a45cede32c"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
