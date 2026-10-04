@@ -1243,6 +1243,12 @@
       "commit": "53ba39046a0122797021e18d6124cf6b136e08a9",
       "authorized_by": "Owner",
       "reason": "Owner admin merge of PR #323 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "6f0a0184dd7440978f097505e4bc9a3e5d2801f7",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization (2026-10-04, ADR-SECURITY-AUDIT-0001) for routing the release-prep dependency-audit step through scripts/audit-workspace-dependencies.mjs at the unchanged high level, applying the time-boxed exception for the unpatched braces and http-cache-semantics advisories. This receipt covers only that exact commit."
     }
   ]
 }
