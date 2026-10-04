@@ -107,6 +107,11 @@
       "path": ".github/workflows/devai-local-rc-verify.yml",
       "reinstated_at_commit": "17d87afa",
       "authority": "ADR-DEVAI-ADOPTION-0004"
+    },
+    {
+      "path": ".github/workflows/devai-main-observation.yml",
+      "authority": "ADR-DEVAI-ADOPTION-0010",
+      "note": "Re-created by devai init bind --host-adapter github-actions at DEVAI 1.9.0; the landed commit carries the Owner FORBID-CI-WITHOUT-ADR receipt."
     }
   ],
   "inactive_historical_records": []
