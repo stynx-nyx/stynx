@@ -18,6 +18,7 @@ import type {
   PrivacyExportRequest,
   PrivacyExportResult,
   PrivacyObjectStore,
+  PrivacyPartitionRetentionItem,
   PrivacyRetentionPlanItem,
   PrivacyRetentionResult,
   PrivacyRule,
@@ -178,6 +179,7 @@ export class PrivacyService {
   async applyRetention(dryRun = true): Promise<PrivacyRetentionResult> {
     const rules = await this.piiMapService.load();
     const actions: PrivacyRetentionPlanItem[] = [];
+    const partitions: PrivacyPartitionRetentionItem[] = [];
     const candidates = rules.filter((rule) => rule.retention !== undefined);
 
     const database = this.database();
@@ -218,12 +220,27 @@ export class PrivacyService {
               );
             }
           }
+
+          // ADR-SESSIONS-0003: session month partitions expire 90 days after the month ends.
+          const expired = await trx.query<{ partition_name: string; month_end: string; dropped: boolean }>(
+            'select partition_name, month_end::text as month_end, dropped from auth.drop_expired_sessions_partitions($1::boolean)',
+            [dryRun],
+          );
+          for (const row of expired.rows) {
+            partitions.push({
+              table: 'auth.sessions',
+              partition: row.partition_name,
+              monthEnd: row.month_end,
+              dropped: row.dropped,
+              reason: 'retention>90d after month end',
+            });
+          }
         },
         { role: 'owner', readonly: false, replica: false },
       ),
     );
 
-    return { dryRun, actions };
+    return { dryRun, actions, partitions };
   }
 
   async generateRopa(metadata: RopaMetadata = {}): Promise<string> {
