@@ -659,11 +659,19 @@ describe('SessionControlService remaining behavior', () => {
     await expect(registry.claimPending(now, '2026-08-25T12:11:00.000Z', 1)).resolves.toEqual([]);
   });
 
-  it('writes an infrastructure mirror row without an optional membership', async () => {
-    const values = vi.fn(async () => undefined);
+  it('ensures the month partition before writing a mirror row without an optional membership', async () => {
+    const calls: string[] = [];
+    const values = vi.fn(async () => {
+      calls.push('insert');
+    });
+    const query = vi.fn(async () => {
+      calls.push('ensure');
+      return { rows: [] };
+    });
     const database = {
       tx: vi.fn(async (callback: (trx: unknown) => Promise<void>) =>
         callback({
+          query,
           insert: vi.fn(() => ({ values })),
         }),
       ),
@@ -684,6 +692,10 @@ describe('SessionControlService remaining behavior', () => {
       createdAt: now,
       expiresAt: '2026-08-26T12:00:00.000Z',
     });
+    expect(query).toHaveBeenCalledWith('select auth.ensure_sessions_partition($1::timestamptz)', [
+      new Date(now).toISOString(),
+    ]);
+    expect(calls).toEqual(['ensure', 'insert']);
     expect(values).toHaveBeenCalledWith(
       expect.not.objectContaining({ membershipId: expect.anything() }),
     );
