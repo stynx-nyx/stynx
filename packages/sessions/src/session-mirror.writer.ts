@@ -26,14 +26,19 @@ export class SessionMirrorWriter implements SessionMirror {
           startedAt: new Date(entry.createdAt),
         },
         async () => {
+          const createdAt = new Date(entry.createdAt);
           await database.tx(async (trx) => {
+            // auth.sessions is partitioned by month; ensure the row's month exists.
+            await trx.query('select auth.ensure_sessions_partition($1::timestamptz)', [
+              createdAt.toISOString(),
+            ]);
             await trx.insert(authSessions).values({
               id: randomUUID(),
               tenantId: entry.tenantId,
               userId: entry.userId,
               sid: entry.sid,
               status: entry.status,
-              createdAt: new Date(entry.createdAt),
+              createdAt,
               expiresAt: new Date(entry.expiresAt),
               ...(entry.membershipId !== undefined ? { membershipId: entry.membershipId } : {}),
             });
