@@ -1,5 +1,18 @@
 # @stynx-nyx/sdk
 
+## 1.5.3
+
+### Patch Changes
+
+- bccd834: Build and test the Angular packages against Angular 22.2.1, the release that fixes
+  GHSA-ff3f-86qr-9cv3 (`@angular/router` SSR denial of service). The supported
+  peer range stays `>=22.0.0 <23`; consumers on 22.0–22.1 should upgrade their
+  own Angular install to 22.2.0 or later.
+- d98960b: Refresh minor and patch dependencies: `pg` ^8.22.0 (`@stynx-nyx/cli`,
+  `@stynx-nyx/data`), `uuid` ^14.0.1
+  (`@stynx-nyx/sessions`; the workspace override moves to 14.0.1 so the bump
+  takes effect), and `openapi-typescript-codegen` ^0.31.0 (`@stynx-nyx/sdk`).
+
 ## 1.5.2
 
 ## 1.5.1

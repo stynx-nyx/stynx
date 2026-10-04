@@ -1,5 +1,23 @@
 # @stynx-nyx/data
 
+## 1.5.3
+
+### Patch Changes
+
+- 59d04a7: Keep `auth.sessions` writable across month rollovers. Platform migration
+  `0023_auth_sessions_partitions.sql` adds `auth.ensure_sessions_partition()`
+  (owner-run, idempotent, limited to twelve months back and one month ahead,
+  executable only by `stynx_app` and `stynx_owner`) and creates the current and
+  next month's partitions. `SessionMirrorWriter` ensures the row's month
+  partition before every insert. Previously only the month in which the
+  migration ran had a partition, so session inserts failed with `23514` from the
+  first rollover after migrating.
+- d98960b: Refresh minor and patch dependencies: `pg` ^8.22.0 (`@stynx-nyx/cli`,
+  `@stynx-nyx/data`), `uuid` ^14.0.1
+  (`@stynx-nyx/sessions`; the workspace override moves to 14.0.1 so the bump
+  takes effect), and `openapi-typescript-codegen` ^0.31.0 (`@stynx-nyx/sdk`).
+  - @stynx-nyx/core@1.5.3
+
 ## 1.5.2
 
 ### Patch Changes

@@ -1,5 +1,37 @@
 # @stynx-nyx/angular
 
+## 1.5.3
+
+### Patch Changes
+
+- bccd834: Build and test the Angular packages against Angular 22.2.1, the release that fixes
+  GHSA-ff3f-86qr-9cv3 (`@angular/router` SSR denial of service). The supported
+  peer range stays `>=22.0.0 <23`; consumers on 22.0–22.1 should upgrade their
+  own Angular install to 22.2.0 or later.
+- 3324e19: Add opt-in `StynxEventStreamConfig` options and service members for SSE
+  consumers (UPS-NGSSE-11, -13, -14, -15). `reopenOnPollingEntry: 'backoff'`
+  schedules the reopen that enters polling on the normal retry delay instead of
+  immediately. `commentActivity: 'live'` lets SSE comment lines such as
+  `: heartbeat` return the stream to `live` and clear failure counters.
+  `retryAfterFrom(error, body)` adds a retry delay read from an HTTP error body;
+  the reopen waits for the largest of backoff, `Retry-After` and that delay.
+  `StynxEventStreamService` gains `resync$`, emitted once when a held cursor is
+  discarded by a 204 or a tenant change (the reason type also reserves
+  `'server-close'`, not emitted in 1.5.x), and `lastError`, a signal holding the
+  most recent transport error. The built-in transport now sends
+  `Accept: text/event-stream`. Every new option defaults to the 1.5.0
+  behavior, and `FakeStynxEventStreamTransport.error()` accepts an optional
+  response body.
+- 7fce995: Honor `Retry-After` when a 429 is the failure that moves
+  `StynxEventStreamService` into polling. The client previously reopened the
+  stream immediately on entering polling and skipped the `Retry-After` delay; it
+  now waits `max(backoff, Retry-After)` as the SSE contract requires. Entering
+  polling without `Retry-After` still reopens immediately.
+- Updated dependencies [bccd834]
+- Updated dependencies [d98960b]
+  - @stynx-nyx/angular-tenancy@1.5.3
+  - @stynx-nyx/sdk@1.5.3
+
 ## 1.5.2
 
 ### Patch Changes

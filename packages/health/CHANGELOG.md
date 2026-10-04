@@ -1,5 +1,11 @@
 # @stynx-nyx/health
 
+## 1.5.3
+
+### Patch Changes
+
+- @stynx-nyx/core@1.5.3
+
 ## 1.5.2
 
 ### Patch Changes

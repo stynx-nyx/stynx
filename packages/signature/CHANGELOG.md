@@ -1,5 +1,13 @@
 # @stynx-nyx/signature
 
+## 1.5.3
+
+### Patch Changes
+
+- b32878c: Add an optional declarative QUALIFIED rule to `createCmsTrustVerifier`: `SignatureTrustProfile.qualifiedPolicies` (with a verifier-level `qualifiedPolicies` fallback) lists consumer-supplied certificate policy OIDs that confer QUALIFIED on a verified signer certificate. The proof records the attaining rule in the new optional `qualifiedBy` field (`certificate-policy` or `consumer-predicate`). Without the rule, verification is unchanged from 1.5.0.
+  - @stynx-nyx/health@1.5.3
+  - @stynx-nyx/integration-adapter@1.5.3
+
 ## 1.5.2
 
 ### Patch Changes
