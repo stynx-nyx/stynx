@@ -1,5 +1,27 @@
 # @stynx-nyx/outbox
 
+## 1.5.3
+
+### Patch Changes
+
+- fef9470: Add tenant-scoped event-mode read ports and an operator retry to
+  `OutboxService`, all running as `stynx_app` with an actor-bearing request
+  context and FORCE RLS (never owner): `listEvents()` (delivery status and
+  `entity` equality/prefix filters, `createdAt desc, id desc` keyset pages),
+  `getEventDelivery()`, `getAggregateDelivery()`, `listEventAttempts()` (raw
+  bytes only with `includeBytes`) and `getQueueHealth()`. `retryEvent()` makes
+  an `ERROR` delivery `PENDING` and eligible now or at the earlier of its
+  current eligibility and the backoff time,
+  preserving attempts, `last_error` and the attempt/ACK ledgers; any other state
+  raises the new `OutboxEventNotFailedError`, and a missing or foreign event
+  raises `OutboxNotFoundError`. Existing methods are unchanged.
+- Updated dependencies [59d04a7]
+- Updated dependencies [47426a6]
+- Updated dependencies [d98960b]
+  - @stynx-nyx/data@1.5.3
+  - @stynx-nyx/contracts@1.5.3
+  - @stynx-nyx/core@1.5.3
+
 ## 1.5.2
 
 ### Patch Changes

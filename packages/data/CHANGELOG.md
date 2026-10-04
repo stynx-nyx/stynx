@@ -1,5 +1,36 @@
 # @stynx-nyx/data
 
+## 1.5.3
+
+### Patch Changes
+
+- 59d04a7: Keep `auth.sessions` writable across month rollovers. Platform migration
+  `0023_auth_sessions_partitions.sql` adds `auth.ensure_sessions_partition()`
+  (owner-run, idempotent, limited to twelve months back and one month ahead,
+  executable only by `stynx_app` and `stynx_owner`) and creates the current and
+  next month's partitions. `SessionMirrorWriter` ensures the row's month
+  partition before every insert. Previously only the month in which the
+  migration ran had a partition, so session inserts failed with `23514` from the
+  first rollover after migrating.
+- 47426a6: Retain `auth.sessions` month partitions until 90 days after the month ends, then
+  drop them. Platform migration `0024_auth_sessions_partition_retention.sql` adds:
+
+  - `auth.drop_expired_sessions_partitions(dry_run)`, executable only by
+    `stynx_owner`. The cutoff comes from the database clock, the current and next
+    month never qualify, and only `sessions_YYYY_MM` partitions are considered.
+  - A tighter `auth.ensure_sessions_partition()` that refuses to recreate a month
+    retention would drop.
+
+  `PrivacyService.applyRetention()` stays a dry run by default and now also
+  reports the expired session partitions in a new `partitions` result field. They
+  are dropped only with `applyRetention(false)`.
+
+- d98960b: Refresh minor and patch dependencies: `pg` ^8.22.0 (`@stynx-nyx/cli`,
+  `@stynx-nyx/data`), `uuid` ^14.0.1
+  (`@stynx-nyx/sessions`; the workspace override moves to 14.0.1 so the bump
+  takes effect), and `openapi-typescript-codegen` ^0.31.0 (`@stynx-nyx/sdk`).
+  - @stynx-nyx/core@1.5.3
+
 ## 1.5.2
 
 ### Patch Changes
