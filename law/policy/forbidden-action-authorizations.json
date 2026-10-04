@@ -1273,6 +1273,24 @@
       "commit": "a778e4fd263c4cb304c3c2fa37c4a423546b2e6b",
       "authorized_by": "Owner",
       "reason": "Owner post-merge authorization (2026-10-04, ADR-SECURITY-AUDIT-0001) for the dependency-audit workflow change as it landed on main through the PR #335 rebase merge, which rewrote the pre-merge receipted commit 6f0a0184. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "24efbce223f4c6984b5cb300939b0fb165e1d196",
+      "authorized_by": "Owner",
+      "reason": "Owner post-merge authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decisions D1 and D3) for the DEVAI 1.9.0 .devai/config rematerialization as it landed on main through the PR #338 admin rebase merge, which rewrote the pre-merge receipted commit f7e2ea39. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "812321316fa3a6c0791404cfaef95c4424bd78c1",
+      "authorized_by": "Owner",
+      "reason": "Owner post-merge authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decision D3) for the re-created devai-main-observation.yml as it landed on main through the PR #338 admin rebase merge, which rewrote the pre-merge receipted commit b8e65ae0. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "012fb6e4de0ee5c6f3390e1378a4e212b02f67f2",
+      "authorized_by": "Owner",
+      "reason": "Owner post-merge authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decision D4) for the anchor baseline and R-0001 historical-gap declaration as they landed on main through the PR #338 admin rebase merge, which rewrote the pre-merge receipted commit b4bcdd1e. This receipt covers only that exact commit."
     }
   ]
 }
