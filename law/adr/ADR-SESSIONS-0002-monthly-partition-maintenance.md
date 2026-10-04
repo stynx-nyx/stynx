@@ -56,7 +56,8 @@ role cannot create partitions of a table it does not own.
   `test/db/auth-sessions-partitions-migration.spec.ts` pins the window, the
   idempotence and the grants.
 - Partition retention, meaning dropping old months, is still not automated. It
-  remains an operator task and needs its own decision.
+  remains an operator task, tracked for its own decision in
+  stynx-nyx/stynx#337.
 - Partitions inherit queries through the parent. RLS, grants and the audit
   trigger stay defined on `auth.sessions`, as for the partition that `0005`
   creates.
