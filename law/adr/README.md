@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Release the fixed group as stable patch 1.5.3](2026-10-04-third-stable-patch-1.5.3.md)
 - [DEVAI 1.9.0 adoption with constitution 1.0.2](2026-10-04-devai-1.9.0-adoption.md)
 - [Time-boxed workspace audit exception for unpatched dev and docs advisories](2026-10-04-workspace-audit-exception.md)
 - [main requires no approving review and no code-owner review](2026-09-27-main-review-policy.md)
