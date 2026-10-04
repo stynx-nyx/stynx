@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-04 Architect rebind pins the exact post-migration partition set (audit current month, sessions current and next month).",
       "2026-10-04 Architect binding adds the auth.sessions monthly partition maintenance sensor (ADR-SESSIONS-0002) and rebinds the session mirror writer assertions.",
       "DEVAI 1.9.0 adoption Architect rebind (ADR-DEVAI-ADOPTION-0010) moves the renamed DEVAI adoption contract test and pins the 1.9.0 identity, Constitution 1.0.2 and ownership-matrix posture assertions.",
       "2026-10-04 Architect binding adds the workspace audit exception sensor (ADR-SECURITY-AUDIT-0001).",
@@ -1115,8 +1116,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "0befb4eb32b8f2e96d6b1815613eca6777cede56666357fda90210908930e981"
+      "assertion_count": 27,
+      "assertion_digest_sha256": "fa3c019f81539ce5b4ca30d5734ae27c163ce4ee4be04bd7456781d4b1132afd"
     },
     {
       "path": "domain/demo-bookmark/api/test/bookmark-tag.service.spec.ts",
@@ -2456,7 +2457,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 27,
-      "assertion_digest_sha256": "b38f858eaf58f87cf18152e2cbbd03bad9a430d3b2695dbbe18678e83657df69"
+      "assertion_digest_sha256": "fa3c019f81539ce5b4ca30d5734ae27c163ce4ee4be04bd7456781d4b1132afd"
     },
     {
       "path": "packages/data/test/integration/soft-delete.spec.ts",
