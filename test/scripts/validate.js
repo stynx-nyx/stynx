@@ -711,11 +711,11 @@ function runForbiddenActionTests() {
 }
 
 function runDoctorAdopterPolicyPrecedenceTest() {
-  const exactVersion = '1.6.0';
+  const exactVersion = '1.9.0';
   const exactTarball =
-    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.6.0/d67263cb9d84b116fa4637acc8dc22c74f3d3a2a';
+    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.9.0/37594fb078f5098b83b3938a3bc70ac5488c3162';
   const exactIntegrity =
-    'sha512-WarRgd01xFBxf296+iGGcZMXfg90UmHyCKRQJUyX0RSSVICJZDcI1mJBIp/EytnoNMLUfiJQl2mWC0f4qz9q9g==';
+    'sha512-5XPsmj5rOCEETMNAoGSN5WRqhrTgIEVcIHmWsU1aNpNPdfBjqh9IsAyHEUDka2csLQ1J1y7JuV3+A1VH+IfzAg==';
   // The 1.1.1 campaign policy was retired with the DEVAI adoption migration.
   // Its still-valid DEVAI dependency pin now lives in the STYNX-owned identity
   // policy, which remains the exact adopted package identity.
@@ -729,27 +729,27 @@ function runDoctorAdopterPolicyPrecedenceTest() {
   assertEqual(campaign.devai.integrity, exactIntegrity, 'adopted DEVAI integrity');
   assertEqual(
     campaign.devai.shasum,
-    'd67263cb9d84b116fa4637acc8dc22c74f3d3a2a',
+    '37594fb078f5098b83b3938a3bc70ac5488c3162',
     'adopted DEVAI shasum',
   );
   assertEqual(
     campaign.devai.sha256,
-    'e42831712152e630cf54fcf6dbd204039ae7e1d7fb3ec57e5fe5ff08ea1755d1',
+    'b9813b7dc3697e5cfae4d5746ebf067b22563b38e81058d06c63681938b9e374',
     'adopted DEVAI sha256',
   );
   assertEqual(
     campaign.devai.source_commit,
-    '349894356a89e16d92bcb57581e97ca5fc89a2eb',
+    '75343991140c223240b51cea80c060c516226945',
     'adopted DEVAI source commit',
   );
   assertEqual(
     campaign.devai.source_tree,
-    '436a88f657d2329b9980eb4aa2c265c9d2261e76',
+    '90f0f5b64bf594677f96eebf26ae80cf7da1149e',
     'adopted DEVAI source tree',
   );
   assertEqual(
     campaign.devai.signed_tag_object,
-    'd71cf93113ba26b362f673e76debda5b861f06e3',
+    'cdc4d7b1ad3c9ade71d6ab7d73dc2a5e74304308',
     'adopted DEVAI signed tag object',
   );
 
@@ -799,10 +799,10 @@ function runDoctorAdopterPolicyPrecedenceTest() {
     readFileSync(join(repoRoot, '.devai', 'config', 'project.json'), 'utf8'),
   );
   assertEqual(project.devai_version, exactVersion, 'materialized DEVAI version');
-  assertEqual(project.constitution.version, '1.0.1', 'materialized constitution version');
+  assertEqual(project.constitution.version, '1.0.2', 'materialized constitution version');
   assertEqual(
     project.constitution.sha256,
-    'ff8c4f099a284b1b42f980742b20c849379ba4e3f357905f36a87648ae3fdeae',
+    'd7f8791f1d00a7247bced66bdcdf8b1af431bb57e49d03b6ddd7024cb52f957d',
     'materialized constitution digest',
   );
   const releaseVerification = JSON.parse(
