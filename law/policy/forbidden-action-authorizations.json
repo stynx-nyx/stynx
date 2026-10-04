@@ -1243,6 +1243,24 @@
       "commit": "53ba39046a0122797021e18d6124cf6b136e08a9",
       "authorized_by": "Owner",
       "reason": "Owner admin merge of PR #323 on 2026-10-01 (merge commit, by Owner decision, to keep receipted PR commit SHAs intact). The PR branch was behind main when merged, so comparing this exact merge to its second parent also shows workflow and law/ changes that were already on main from earlier PRs merged the same day under their own receipts (#325 4a17c18e, #322 0f8ff173) or Architect commits; the merge itself authors no CI or law change beyond the PR's reviewed content. This receipt covers only that exact merge SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "22087c7c74e766a98940fc5db3b994e862b07cfd",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decision D3) for re-creating .github/workflows/devai-main-observation.yml through devai init bind --host-adapter github-actions at DEVAI 1.9.0. The workflow is byte-identical to the package generator (sha256 00a02fba) and is bound by the GitHub Actions host adapter. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "43f4b233da63c94f89ef9ec9e3cdd0b3ad0c7189",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decisions D1 and D3) for rematerializing .devai/config with the DEVAI 1.9.0 CLI: constitution 1.0.2, operational law, subprocess effects, host adapters (GitHub Actions selected) and the adopter policy with no retired keys, plus the package-generated stamp refreshes. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "d04040420a00f86b3b67c09a0351d4ad1e73c559",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization (2026-10-04, ADR-DEVAI-ADOPTION-0010 decision D4) for the ADR-EVI-0002 anchor baseline and the Architect historical-gap declaration covering the three R-0001 pilot proof lines, written by the DEVAI 1.9.0 CLI without changing any existing proof byte or chain entry. This receipt covers only that exact commit."
     }
   ]
 }
