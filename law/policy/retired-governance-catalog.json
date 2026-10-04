@@ -107,6 +107,11 @@
       "path": ".github/workflows/devai-local-rc-verify.yml",
       "reinstated_at_commit": "17d87afa",
       "authority": "ADR-DEVAI-ADOPTION-0004"
+    },
+    {
+      "path": ".github/workflows/devai-main-observation.yml",
+      "reinstated_at_commit": "22087c7c",
+      "authority": "ADR-DEVAI-ADOPTION-0010"
     }
   ],
   "inactive_historical_records": []
