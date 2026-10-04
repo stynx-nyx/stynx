@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-04 Architect binding adds the workspace audit exception sensor (ADR-SECURITY-AUDIT-0001).",
       "2026-10-04 Architect rebind pins the outbox read, retry and RLS assertions after the Inspector made 16 existence-only null/undefined checks exact.",
       "Post-1.5.0 R-0003 Architect rebind pins full coverage sensors and the CMS/PDF trust boundary across the fixed 44-package group.",
       "Issue #294 Architect rebind pins the session policy HTTP sensor: reject-new 409 SESSION_CONFLICT, missing strong factor 403 STRONG_FACTOR_REQUIRED and revoke-existing invalidation.",
@@ -4550,6 +4551,14 @@
       "lifecycle": "supported",
       "assertion_count": 6,
       "assertion_digest_sha256": "9a50f7dd4e2bb1e375b85922e7406f8cf2d657bbfa5b9016d0b75032a5fd1a0c"
+    },
+    {
+      "path": "test/scripts/audit-workspace-dependencies.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 14,
+      "assertion_digest_sha256": "d5078c06458b9ea5e19e608ba88b4d8b7913c8c94d528f51295ce85feb4580fd"
     },
     {
       "path": "test/scripts/devai-1.5-adoption-contract.test.mjs",

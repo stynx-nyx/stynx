@@ -3,11 +3,14 @@
 **Authority:** Architect (Constitution Article 6).
 
 This policy defines the release-security lane for STYNX framework packages.
-`pnpm audit --prod` remains required, but it is only one control in the lane.
+`pnpm security:audit` (`pnpm audit --prod` with the time-boxed exception of
+ADR-SECURITY-AUDIT-0001) remains required, but it is only one control in the lane.
 
 ## Required Release Gates
 
-- Production dependency audit: `pnpm audit --prod`.
+- Production dependency audit: `pnpm security:audit`. It runs `pnpm audit --prod`
+  and fails on any finding except the Owner-accepted, expiring exception in
+  `scripts/audit-workspace-dependencies.mjs` (ADR-SECURITY-AUDIT-0001).
 - SBOM freshness: `pnpm security:sbom:check`.
 - Direct external dependency license policy: `pnpm security:licenses`.
 - High-confidence secret scan: `pnpm security:secrets`.
