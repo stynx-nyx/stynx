@@ -1309,6 +1309,12 @@
       "commit": "ecca37d2f8a2af4b87a8186265c83d557616cf6d",
       "authorized_by": "Owner",
       "reason": "Owner decision 2026-10-05 (documentation grade restoration): gate the Docs freshness check workflow on the package README shape check and the documentation path check. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "24efa499ae14c66fecdecd92b1cb74b745c51105",
+      "authorized_by": "Owner",
+      "reason": "Owner post-merge authorization (2026-10-05) for the docs freshness workflow gates as they landed on main through the PR #345 rebase merge, which rewrote the pre-merge receipted commit ecca37d2. This receipt covers only that exact commit."
     }
   ]
 }
