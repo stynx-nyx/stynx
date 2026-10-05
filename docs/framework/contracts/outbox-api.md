@@ -99,6 +99,90 @@ transaction. Separate port calls (for example `listEvents` pages and
 `getQueueHealth`) are independent statements and may observe concurrent
 dispatch or ACK changes between them.
 
+### Destinations and filtered dispatch (UPS-OBX-07, #316)
+
+The event log and the delivery queue are separate (ADR-OUTBOX-0002). By default
+every appended event is also queued for delivery, as in 1.5.0. A host that uses
+the log for events that have no external destination declares which `entity`
+values are dispatchable:
+
+```ts
+StynxOutboxModule.forRoot({
+  dispatcher,
+  dispatchableEntities: {
+    entities: ['ch.renach.exam-result'],
+    entityPrefixes: ['SINISTRO_'],
+  },
+});
+```
+
+`OutboxEntitySelector` is `{ entities?: readonly string[]; entityPrefixes?: readonly string[] }`.
+An `entity` matches when it equals a name in `entities` or starts with a prefix
+in `entityPrefixes`. Matching is literal and case-sensitive, with no `LIKE`
+pattern, the same rule as `entityPrefix` in the read ports. Every listed value
+must be a non-empty string.
+
+**`OutboxModuleOptions.dispatchableEntities`.** It is read once, when
+`OutboxService` is constructed; a malformed value throws `RangeError` there.
+
+- Omitted: every new event gets a `PENDING` delivery row (1.5.0 behavior).
+- Set: `appendInTransaction`/`appendManyInTransaction` insert the delivery row
+  only for a new event whose `entity` matches. An empty selector (`{}`) makes
+  the service a pure event log.
+- An event without a destination is still written to `outbox.events` with the
+  same id, `created_at`, tenant clock, idempotency and conflict rules, so
+  `OutboxEventStreamSource` and SSE cursors are unaffected. It has no
+  `outbox.event_delivery` row. It is therefore never claimed by
+  `dispatchEventsDue` or `dispatchTenantEventsDue`, never passed to the
+  dispatcher, has no `outbox.event_attempts` row and is not counted by
+  `getQueueHealth`. `listEvents` returns it with `delivery: null`;
+  `getEventDelivery` and `getAggregateDelivery` return `null`; `retryEvent`,
+  `ackEvent` and `ackTenantEvent` raise `OutboxNotFoundError` for it.
+- The per-aggregate order of ADR-OUTBOX-0002 is unchanged: a later event waits
+  for every older event of the same `(tenant, entity, entityId)` that **has a
+  delivery row** and is not `ACKED`. An event without a delivery row never
+  blocks a later event of its aggregate.
+- The declaration applies at append time only. It does not create, remove or
+  change delivery rows of events already in the log, and an idempotent replay
+  returns the logged event without adding a delivery. A delivery created before
+  an `entity` was removed from the declaration stays in the queue, is still
+  dispatched and still blocks its aggregate until it is `ACKED`; this package
+  has no terminal state for such a row (tracked as UPS-OBX-11, #320).
+  `cutoverLegacyMessages()` is not affected: every migrated legacy message
+  keeps its delivery projection.
+- Tenancy is unchanged. The append ports still require the caller's
+  `stynx_app` transaction, and the declaration only decides whether the second
+  insert, into the FORCE RLS table `outbox.event_delivery`, happens.
+
+**Dispatch filter.** `dispatchEventsDue(limit?, filter?)` and
+`dispatchTenantEventsDue(limit?, filter?)` take an optional
+`OutboxEntitySelector`. With a filter, the claim considers only deliveries whose
+event `entity` matches, so each destination can be drained by its own job or
+route without claiming the deliveries of another. `entity` is part of the
+aggregate key, so the filter selects whole aggregates and the ordering rule
+above holds inside each sweep. A filter must list at least one entity or
+prefix; an empty or malformed filter throws `RangeError` before any
+transaction. Without a filter both methods behave as in 1.5.3. Role, tenant
+scope, lease, backoff, attempt evidence and the ACK rules are those of V-03 and
+of the tenant-scoped request path; the filter adds no privilege.
+
+There is still one `OutboxDispatcherPort` per module, and it routes by
+`row.entity`. In event mode the `OutboxRow` passed to `sendEvent(row)` (or
+`send(row)`) is the log event, not a legacy message:
+
+| `OutboxRow` field                                                         | Event-mode value                                               |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `id`                                                                      | `outbox.events.id`                                             |
+| `tenantId`, `entity`, `entityId`, `idempotencyKey`, `payload`, `metadata` | the event's own columns                                        |
+| `createdAt`                                                               | the event's `created_at` as an ISO string                      |
+| `attempts`                                                                | the ordinal of this attempt (`event_attempts.attempt_ordinal`) |
+| `status`                                                                  | `SENT`                                                         |
+| `lastError`, `ackTime`, `nextAttemptAt`                                   | `null`                                                         |
+| `updatedAt`                                                               | the claim time as an ISO string                                |
+
+Not provided: named destinations with one dispatcher each, and a
+per-`appendInTransaction` override of the declaration.
+
 ### Contract verifications V-01, V-03…V-06 (UPS-OBX-09)
 
 **V-01 `appendInTransaction`/`appendManyInTransaction`.** They use only the
@@ -111,18 +195,21 @@ tenant is the SQL `app.tenant_id`; a different `RequestContext` tenant raises
 comes from `outbox.tenant_clock` (`greatest(last_ms, now_ms)`), so it is
 non-decreasing per tenant at millisecond precision and one call stamps every
 event of a batch with the same instant; the UUIDv7 `id` embeds that instant and
-a global sequence. A new event always inserts a `PENDING` delivery row. The same
+a global sequence. A new event inserts a `PENDING` delivery row, unless
+`dispatchableEntities` is configured and does not match its `entity`
+(UPS-OBX-07). The same
 `(tenant, idempotencyKey)` with identical `entity`, `entityId`, `payload` and
 `metadata` returns the existing row without a second delivery; different content
 raises `OutboxEventConflictError`.
 
-**V-03 `dispatchEventsDue(limit = dispatchBatchSize)`.** Trusted scheduler path,
+**V-03 `dispatchEventsDue(limit = dispatchBatchSize, filter?)`.** Trusted scheduler path,
 never a request path. Each database step runs in `withSystemContext` as
 `owner` (`retry: false`, `lock_timeout` ≤ 250 ms) and retries the whole step up
 to four times on `40P01`/`55P03`, then maps `55P03` to
-`OutboxOwnershipContentionError`. It spans all tenants and has no tenant or
-`entity` filter; the tenant-scoped variant is `dispatchTenantEventsDue`, and
-neither filters by `entity` (destination routing is UPS-OBX-07). The claim
+`OutboxOwnershipContentionError`. It spans all tenants and has no tenant
+filter; the tenant-scoped variant is `dispatchTenantEventsDue`. Both accept the
+optional `entity` filter of UPS-OBX-07 and claim every due delivery without it.
+The claim
 transaction selects deliveries that are (`PENDING` or `ERROR` with
 `coalesce(next_attempt_at, created_at) <= clock_timestamp()`) or (`SENT` with an
 expired `lease_until`), excluding migrated rows while the legacy marker is not
@@ -184,14 +271,15 @@ it runs once in `withSystemContext` as `owner` (READ COMMITTED) and is
 idempotent. It is a maintenance operation and must not be exposed to a request
 route (until UPS-OBX-03).
 
-| Item          | Named tests                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| V-01          | `outbox-contract-v.spec.ts` "V-01 appendInTransaction uses only the caller transaction…"; `contract-v-items.integration.spec.ts` "V-01 refuses an owner transaction, replays an identical key and keeps tenant created_at monotonic"; `outbox-events.spec.ts` "validates app transaction identity and tenant binding…", "returns an identical idempotent append and rejects content reuse"; `ctg9-append.integration.spec.ts` "persists two facts for one aggregate, replays an identical key, rejects divergent reuse, and scopes keys per tenant" |
-| V-03          | `outbox-contract-v.spec.ts` "V-03 dispatchEventsDue claims as owner in system context, oldest head first…"; `ctg9-delivery.integration.spec.ts` "records final HTTP headers, status, exact bytes, and SHA-256 for success and failure", "allows one scheduler claim, then reclaims after a crashed lease without duplicate ordinal", "fences a late failure from attempt N after another scheduler reclaims attempt N+1"; `outbox.integration.spec.ts` "never double-claims one row across concurrent dispatcher sweeps"                            |
-| V-04          | `outbox-contract-v.spec.ts` "V-04 ackEvent owns owner transactions, never regresses ACKED…"; `contract-v-items.integration.spec.ts` "V-04 a later ERROR never regresses ACKED and replayed receipts only append ledger rows (owner and tenant ACK)"; `ctg9-delivery.integration.spec.ts` "defers a negative ACK by backoff and accepts a later positive ACK as terminal"; `request-path-rls.integration.spec.ts` "rejects cross-tenant identity and runtime tenantId spoofing without an ACK ledger row"                                            |
-| V-05          | `outbox-contract-v.spec.ts` "V-05 OutboxEventStreamSource maps entity to event…"; `contract-v-items.integration.spec.ts` "V-05 findById of another tenant is null; listSince is strictly after (createdAt,id) and maps entity to event"; `ctg9-append.integration.spec.ts` "pages through a same-millisecond append batch larger than the stream batch size"                                                                                                                                                                                        |
-| V-06          | `outbox-contract-v.spec.ts` "V-06 cutoverLegacyMessages refuses custom tables before SQL and otherwise runs as owner in system context"; `outbox-events.spec.ts` "requires the platform tables and recognizes an already completed migration"; `ctg9-append.integration.spec.ts` "cuts over four legacy states exactly once and leaves their legacy queue unclaimed"                                                                                                                                                                                |
-| UPS-OBX-04/05 | `outbox-event-reads.spec.ts`; `event-reads-retry-rls.integration.spec.ts` (two tenants, FORCE RLS, `stynx_app` without `BYPASSRLS`)                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Item          | Named tests                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V-01          | `outbox-contract-v.spec.ts` "V-01 appendInTransaction uses only the caller transaction…"; `contract-v-items.integration.spec.ts` "V-01 refuses an owner transaction, replays an identical key and keeps tenant created_at monotonic"; `outbox-events.spec.ts` "validates app transaction identity and tenant binding…", "returns an identical idempotent append and rejects content reuse"; `ctg9-append.integration.spec.ts` "persists two facts for one aggregate, replays an identical key, rejects divergent reuse, and scopes keys per tenant"                                                                                                                                                                           |
+| V-03          | `outbox-contract-v.spec.ts` "V-03 dispatchEventsDue claims as owner in system context, oldest head first…"; `ctg9-delivery.integration.spec.ts` "records final HTTP headers, status, exact bytes, and SHA-256 for success and failure", "allows one scheduler claim, then reclaims after a crashed lease without duplicate ordinal", "fences a late failure from attempt N after another scheduler reclaims attempt N+1"; `outbox.integration.spec.ts` "never double-claims one row across concurrent dispatcher sweeps"                                                                                                                                                                                                      |
+| V-04          | `outbox-contract-v.spec.ts` "V-04 ackEvent owns owner transactions, never regresses ACKED…"; `contract-v-items.integration.spec.ts` "V-04 a later ERROR never regresses ACKED and replayed receipts only append ledger rows (owner and tenant ACK)"; `ctg9-delivery.integration.spec.ts` "defers a negative ACK by backoff and accepts a later positive ACK as terminal"; `request-path-rls.integration.spec.ts` "rejects cross-tenant identity and runtime tenantId spoofing without an ACK ledger row"                                                                                                                                                                                                                      |
+| V-05          | `outbox-contract-v.spec.ts` "V-05 OutboxEventStreamSource maps entity to event…"; `contract-v-items.integration.spec.ts` "V-05 findById of another tenant is null; listSince is strictly after (createdAt,id) and maps entity to event"; `ctg9-append.integration.spec.ts` "pages through a same-millisecond append batch larger than the stream batch size"                                                                                                                                                                                                                                                                                                                                                                  |
+| V-06          | `outbox-contract-v.spec.ts` "V-06 cutoverLegacyMessages refuses custom tables before SQL and otherwise runs as owner in system context"; `outbox-events.spec.ts` "requires the platform tables and recognizes an already completed migration"; `ctg9-append.integration.spec.ts` "cuts over four legacy states exactly once and leaves their legacy queue unclaimed"                                                                                                                                                                                                                                                                                                                                                          |
+| UPS-OBX-04/05 | `outbox-event-reads.spec.ts`; `event-reads-retry-rls.integration.spec.ts` (two tenants, FORCE RLS, `stynx_app` without `BYPASSRLS`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| UPS-OBX-07    | `outbox-event-destinations.spec.ts`; `event-destinations.integration.spec.ts` (two tenants, FORCE RLS, `stynx_app` without `BYPASSRLS`): "appends topics with and without a destination in one transaction and creates a delivery only for the destined ones, per tenant", "never claims, sends or records an attempt for an event without a destination, on the owner sweep and on the tenant sweep", "drains each destination with its own filtered sweep without touching the delivery of the other", "does not let an earlier event without a delivery block a destined event of the same aggregate", "keeps the 1.5.0 behavior without a declaration and logs every event without a delivery under an empty declaration" |
 
 The ≥0021 DDL creates structures but does **not** cut over legacy rows. An adopter that only uses `enqueue`/`dispatchDue`/`ack` continues to deliver after the DDL. Native append events are deliverable through `dispatchEventsDue` in both LEGACY and NEW; the marker NEW check is only for migrated events. `OutboxService.cutoverLegacyMessages()` explicitly and idempotently moves the **default** `outbox.messages`/`outbox.acknowledgements` tables to the event mode. Custom `OutboxModuleOptions.table`/`ackTable` are rejected before mutation with `OutboxCustomTableCutoverUnsupportedError`; they continue in legacy mode. Legacy `enqueue`, claim, ACK, retry and `recordDispatchFailure` take marker `FOR SHARE NOWAIT` before legacy row locks. A request encountering an UPDATE **already held** receives retryable `OutboxOwnershipContentionError` (55P03); the entire caller transaction rolls back and retries with the same idempotency key. After cutover commits NEW, retry of `enqueue` gets typed `OutboxLegacyCutoverError`. The cutover takes marker UPDATE, waits for those shared locks, locks legacy rows `FOR UPDATE` without `SKIP LOCKED`, copies events/map/projections, marks `migrated_event_id`, then atomically changes the marker from LEGACY to NEW. After marker UPDATE but before mutation, it locks target tables in fixed order with `LOCK TABLE ... IN SHARE ROW EXCLUSIVE MODE` to exclude concurrent trigger DDL, then queries `pg_trigger`/`pg_proc` for enabled `audit.fn_row_change` on every table it will mutate (messages, events, projections, map, ledgers, clock, ownership marker and physical partitions); any hit returns `OutboxCutoverAuditedTableError` with full rollback. The ≥0021 DDL installs no such triggers there. Cutover may take tenant-clock locks **after** marker UPDATE, but calls no audit writer and touches no audit-triggered table in that transaction; optional audit is a separate owner transaction after commit. Thus a clock holder already holds marker SHARE, and cutover cannot hold marker UPDATE while waiting for that clock. A legacy audited-domain-write→enqueue may hold advisory before marker. In the three-party queue, B holds marker SHARE and waits for A’s advisory, C queues marker UPDATE, then A requests marker SHARE. PostgreSQL may grant A’s compatible SHARE immediately despite C waiting: A/B must complete within the deadline, C commits after both, with no 40P01 or duplicate effect. A 55P03 is allowed but not required there. A separate deterministic NOWAIT case makes C **hold** UPDATE before A requests SHARE; A receives typed 55P03, rolls back its entire transaction and retries with the same key. If C committed NEW, that retry returns `OutboxLegacyCutoverError` without a second effect. The old claim excludes marked rows; after NEW, `enqueue` fails with `OutboxLegacyCutoverError` instead of silently changing the new log. A legacy `ack` for a marked row updates both legacy ACK and event ledger/projection in the **same transaction**, after application HMAC verification, preserving aggregate ambiguity checks. A delayed legacy send failure after cutover takes marker SHARE, records its failed attempt and policy retry time in the event projection, and moves `SENT_UNRESOLVED → ERROR` only if no terminal ACK has since committed. `recordDispatchFailure` retries its own idempotent persistence transaction on 55P03/40P01 with bounded backoff, never re-sends; exhausted retries yield an error outcome for that row while the dispatch loop continues other claimed rows. Other migrated SENT in flight has no automatic reclaim until ACK or explicit owner reconciliation. SQLSTATE `55P03`/`40P01` rolls back the full operation; a retry starts with the same idempotency key from the outer boundary and never continues an aborted transaction. Rollback before cutover commit leaves legacy as the only authority; after commit, no automatic reversal is offered. This prevents legacy/new schedulers from claiming the same migrated row.
 
