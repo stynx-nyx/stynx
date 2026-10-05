@@ -17,7 +17,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-angular-testing.d.ts": "f5353724c43f401c44f7a9dcde55ee709ff1db893aba60206ea40f6e72d74f6f",
-        "types/stynx-nyx-angular.d.ts": "505dd96bfdfe30d9bd1fe91e2cbc44e0d7a9dfee79cc9e9f61aa25a29cc17c72"
+        "types/stynx-nyx-angular.d.ts": "b1073ccb65a8ff08fc80d2589e43ae6550bee9ced9136615a977cf3b8a029aec"
       }
     },
     "@stynx-nyx/angular-audit": {
@@ -1760,9 +1760,9 @@
         "outbox/src/index.d.ts": "7cdd4ca53c60ebcde70f9517eebd0ab95da56afbc6a6603d2145d66b6f6da447",
         "outbox/src/metrics.d.ts": "826350ea81f85da8ad9325a89c70dc882d9530ffb0df1c9ed6ced16971eaab31",
         "outbox/src/outbox.module.d.ts": "189a82c4e1e82969991cb35b6f931eb199bce0da003a255f0c730c838473abcc",
-        "outbox/src/outbox.service.d.ts": "d95d0e2f4490e4aca3660ab31c005211e074fd9156caeb9b1a7068f9e42cc1d2",
+        "outbox/src/outbox.service.d.ts": "f2c3bab2358d2b8cb45ffa42a71a009c62d4549305306f83aec4ffbbf098ab4d",
         "outbox/src/row-mapper.d.ts": "95f16a057b8fd75ee6287d8e887a036b36e7a80bdc1ab165caa15f2545024721",
-        "outbox/src/types.d.ts": "4114c3756acc2994f4a313c7f6cbb2cf0838666515ca065457ddb088518da7ba"
+        "outbox/src/types.d.ts": "ac506132ceebc7bdb71736326073642969916e4309186e0e9022d80080454186"
       }
     },
     "@stynx-nyx/pdf": {
