@@ -20,6 +20,13 @@
 //   node scripts/check-package-doc-shape.mjs --strict     # exit 1 if any pkg fails
 //   node scripts/check-package-doc-shape.mjs --pkg <path> # check only one package
 //   node scripts/check-package-doc-shape.mjs --human      # readable summary
+//   node scripts/check-package-doc-shape.mjs --publishable # only published packages
+//
+// --publishable restricts the walk to the publishable `@stynx-nyx/*` set under
+// packages/ and packages-web/ (the same discovery the release policy uses).
+// The docs freshness lane gates on `--strict --publishable`: the template is
+// the contract for published READMEs, while private tools/ entries (shared
+// configs, a vendored upstream patch) are reported only by the full walk.
 //
 // Exit codes:
 //   0  all packages clean (or --strict not set)
@@ -28,11 +35,13 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
 
 const REPO_ROOT = resolve(process.cwd());
 const args = process.argv.slice(2);
 const STRICT = args.includes('--strict');
 const HUMAN = args.includes('--human');
+const PUBLISHABLE = args.includes('--publishable');
 const PKG_FLAG_IDX = args.indexOf('--pkg');
 const PKG_FILTER = PKG_FLAG_IDX >= 0 ? args[PKG_FLAG_IDX + 1] : null;
 
@@ -51,6 +60,14 @@ const REQUIRED_SECTIONS = [
 const SCAN_DIRS = ['packages', 'packages-web', 'tools'];
 
 function discoverPackages(filter) {
+  if (PUBLISHABLE) {
+    return discoverPublishablePackages(REPO_ROOT)
+      .filter(({ dir }) => !filter || dir === filter || dir.split('/').pop() === filter)
+      .map(({ name, dir, dirPath }) => {
+        const readmePath = join(dirPath, 'README.md');
+        return { name, path: dir, readmePath, readmeExists: existsSync(readmePath) };
+      });
+  }
   const found = [];
   for (const scanDir of SCAN_DIRS) {
     const absScan = join(REPO_ROOT, scanDir);
