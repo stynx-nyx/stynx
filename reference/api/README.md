@@ -1,6 +1,6 @@
 # Reference API
 
-`@stynx-nyx/reference-api` is the runnable NestJS reference app for the neutral `sample.*` domain defined in [STYNX-REFERENCE-MIGRATION.sql](../../specs/STYNX-REFERENCE-MIGRATION.sql).
+`@stynx-nyx/reference-api` is the runnable NestJS reference app for the neutral `sample.*` domain defined in [reference-migration.sql](../../docs/framework/arch/reference-migration.sql).
 
 ## What It Exercises
 

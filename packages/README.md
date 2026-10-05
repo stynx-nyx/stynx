@@ -41,5 +41,5 @@ or security behavior.
 
 ## Consumer Entry Point
 
-See [`docs/stynx/package-architecture.md`](../docs/stynx/package-architecture.md)
+See [`docs/adopters/stynx/package-architecture.md`](../docs/adopters/stynx/package-architecture.md)
 for the package topology and recommended host composition order.
