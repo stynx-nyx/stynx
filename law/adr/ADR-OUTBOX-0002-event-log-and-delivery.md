@@ -11,6 +11,8 @@ tags: [stynx, outbox, sse, audit, tenancy, ctg9]
 
 **Decision source:** DETRAN C-0002 A1 §8.1 UPS-OBX-01…02, included in STYNX 1.5.0 by OD-S15-03. **Companion:** [CTG9 OBX contract](../../work/rounds/R-0002/ctg9-obx-contract.md).
 
+**Amendment:** [ADR-OUTBOX-0003](ADR-OUTBOX-0003-configurable-role-and-consumer-storage.md) makes the application SQL role name configurable, adds consumer-owned outbox storage as a supported mode and adds named destinations. The historical text below remains for provenance.
+
 ## Context and supersession
 
 ADR-OUTBOX-0001 promoted PEC's one-row-per-aggregate upsert. Its statement that one outstanding message per aggregate satisfies ordering, and that append-only replay requires a later decision, is superseded **only for the new append mode**. Existing `enqueue`, aggregate ACK, HMAC, claim-only dispatch and legacy storage semantics stay valid. A1 requires distinct facts, tenant-key dedup, SSE replay and a durable attempt/ACK ledger. The existing upsert table cannot be an SSE event source.
