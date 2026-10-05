@@ -113,8 +113,22 @@ export interface OutboxDispatchOutcome {
  */
 export interface OutboxDispatcherPort {
   send(row: OutboxRow): Promise<void>;
-  /** Optional event-mode evidence captured from the bytes handed to the transport. */
+  /**
+   * Optional event-mode evidence captured from the bytes handed to the transport.
+   * In event mode `row` is the log event: `id` is the event id, `tenantId`, `entity`,
+   * `entityId`, `idempotencyKey`, `payload`, `metadata` and `createdAt` are the event's own,
+   * `attempts` is the ordinal of this attempt and `status` is `SENT`.
+   */
   sendEvent?(row: OutboxRow): Promise<OutboxTransportEvidence>;
+}
+
+/**
+ * Selects events by `entity`: an exact name listed in `entities`, or a name that starts
+ * with a literal, case-sensitive prefix listed in `entityPrefixes` (no `LIKE` pattern).
+ */
+export interface OutboxEntitySelector {
+  entities?: readonly string[];
+  entityPrefixes?: readonly string[];
 }
 
 export interface OutboxTransportEvidence {
@@ -170,6 +184,14 @@ export interface OutboxModuleOptions {
   lockTimeoutMs?: number;
   /** Persistence retry deadline after a legacy send failure. */
   failurePersistenceDeadlineMs?: number;
+  /**
+   * Event-mode destinations. When set, `appendInTransaction`/`appendManyInTransaction`
+   * create a delivery row only for an event whose `entity` the selector matches; any other
+   * event is written to the log alone and is never claimed, sent or counted in queue health.
+   * An empty selector makes the service a pure event log. When omitted, every appended event
+   * is dispatchable, as in 1.5.0.
+   */
+  dispatchableEntities?: OutboxEntitySelector;
 }
 
 /** Event-mode delivery projection states (`outbox.event_delivery.status`). */

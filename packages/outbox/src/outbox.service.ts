@@ -39,6 +39,7 @@ import type {
   OutboxEventSummary,
   OutboxQueueHealth,
   OutboxQueueHealthQuery,
+  OutboxEntitySelector,
 } from './types';
 
 const EVENT_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
@@ -71,6 +72,33 @@ function filterText(value: string | undefined, name: string): string | null {
   if (value === undefined) return null;
   if (typeof value !== 'string' || value.length === 0) throw new RangeError(`${name} must be a non-empty string`);
   return value;
+}
+
+interface EntityMatcher { entities: string[]; prefixes: string[] }
+
+/** Validates an `entity` selector; `null` when none was given. */
+function entityMatcher(value: OutboxEntitySelector | undefined, name: string, allowEmpty: boolean): EntityMatcher | null {
+  if (value === undefined) return null;
+  const list = (items: unknown, field: string): string[] => {
+    if (items === undefined) return [];
+    if (!Array.isArray(items) || items.some((item) => typeof item !== 'string' || item.length === 0)) {
+      throw new RangeError(`${name}.${field} must be a list of non-empty strings`);
+    }
+    return [...(items as string[])];
+  };
+  if (value === null || typeof value !== 'object') throw new RangeError(`${name} must be an entity selector`);
+  const matcher = { entities: list(value.entities, 'entities'), prefixes: list(value.entityPrefixes, 'entityPrefixes') };
+  if (!allowEmpty && matcher.entities.length + matcher.prefixes.length === 0) {
+    throw new RangeError(`${name} must list at least one entity or entity prefix`);
+  }
+  return matcher;
+}
+
+/** Claim predicate for a dispatch filter; `first` is the index of its first SQL parameter. */
+function entityFilterSql(first: number): string {
+  return `and (e.entity=any($${first}::text[]) or exists (
+                select 1 from unnest($${first + 1}::text[]) as prefix(value)
+                 where left(e.entity,length(prefix.value))=prefix.value))`;
 }
 
 function transportEvidenceState(evidence?: OutboxTransportEvidence): string {
@@ -114,6 +142,8 @@ export class OutboxService {
   private readonly ackTable: string;
   private readonly dispatchBatchSize: number;
   private readonly backoffPolicy: OutboxBackoffPolicy;
+  /** Declared event-mode destinations; `null` keeps every appended event dispatchable. */
+  private readonly dispatchable: EntityMatcher | null;
   private get platformLegacyTable(): boolean { return this.table === DEFAULT_OUTBOX_TABLE && this.ackTable === DEFAULT_OUTBOX_ACK_TABLE; }
   private get ownershipCte(): string {
     return this.platformLegacyTable
@@ -150,6 +180,12 @@ export class OutboxService {
       if ((error as { code?: string }).code === '55P03') throw new OutboxOwnershipContentionError();
       throw error;
     }
+  }
+
+  /** Whether an appended event of this `entity` gets a delivery row. */
+  private hasDestination(entity: string): boolean {
+    const declared = this.dispatchable;
+    return !declared || declared.entities.includes(entity) || declared.prefixes.some((prefix) => entity.startsWith(prefix));
   }
 
   async appendInTransaction(trx: Transaction, event: OutboxAppendEvent): Promise<OutboxEventRow> {
@@ -236,7 +272,8 @@ export class OutboxService {
         if (!row) {
           throw new OutboxEventConflictError();
         }
-      } else {
+      } else if (this.hasDestination(row.entity)) {
+        // Only an event with a declared destination enters the delivery queue.
         await trx.query(`insert into outbox.event_delivery (tenant_id,event_id) values ($1::uuid,$2::uuid)`, [tenantId,row.id]);
       }
       result.push(row);
@@ -408,11 +445,15 @@ export class OutboxService {
     }, { role: 'app', requireActor: true, retry: false });
   }
 
-  /** Claim and deliver only events visible to the active app-role tenant. */
-  async dispatchTenantEventsDue(limit: number = this.dispatchBatchSize): Promise<OutboxDispatchOutcome[]> {
+  /**
+   * Claim and deliver only events visible to the active app-role tenant. With `filter`,
+   * only deliveries whose event `entity` matches are claimed.
+   */
+  async dispatchTenantEventsDue(limit: number = this.dispatchBatchSize, filter?: OutboxEntitySelector): Promise<OutboxDispatchOutcome[]> {
     const tenantId = this.database.currentTenantId();
     if (!tenantId) throw new OutboxNotFoundError({ reason: 'missing-tenant-context' });
     if (!Number.isSafeInteger(limit) || limit < 1) throw new RangeError('limit must be a positive integer');
+    const only = entityMatcher(filter, 'filter', false);
     const claimed = await this.database.tx(async (trx) => {
       const result = await trx.query<{
         tenant_id: string; event_id: string; attempts: number;
@@ -435,6 +476,7 @@ export class OutboxService {
                    and p.entity=e.entity and p.entity_id=e.entity_id
                    and (p.created_at,p.id)<(e.created_at,e.id) and pd.status<>'ACKED'
               )
+              ${only ? entityFilterSql(4) : ''}
             order by e.created_at,e.id limit $2 for update of d skip locked
          ), claimed as (
            update outbox.event_delivery d
@@ -447,7 +489,7 @@ export class OutboxService {
          select c.*,e.entity,e.entity_id,e.idempotency_key,e.payload,e.metadata,e.created_at
            from claimed c join outbox.events e on e.tenant_id=$1::uuid and e.tenant_id=c.tenant_id and e.id=c.event_id
           order by e.created_at,e.id`,
-        [tenantId, limit, this.options.eventLeaseMs ?? 300_000],
+        [tenantId, limit, this.options.eventLeaseMs ?? 300_000, ...(only ? [only.entities, only.prefixes] : [])],
       );
       for (const row of result.rows) {
         await trx.query(
@@ -766,7 +808,12 @@ export class OutboxService {
     });
   }
 
-  async dispatchEventsDue(limit: number = this.dispatchBatchSize): Promise<OutboxDispatchOutcome[]> {
+  /**
+   * Trusted scheduler sweep over every tenant. With `filter`, only deliveries whose event
+   * `entity` matches are claimed, so each destination can be drained by its own job.
+   */
+  async dispatchEventsDue(limit: number = this.dispatchBatchSize, filter?: OutboxEntitySelector): Promise<OutboxDispatchOutcome[]> {
+    const only = entityMatcher(filter, 'filter', false);
     const claimed = await this.ownerRetry('outbox event claim', async (trx) => {
       const result = await trx.query<{
         tenant_id: string; event_id: string; attempts: number; status: string;
@@ -787,6 +834,7 @@ export class OutboxService {
                  where p.tenant_id=e.tenant_id and p.entity=e.entity and p.entity_id=e.entity_id
                    and (p.created_at,p.id)<(e.created_at,e.id) and pd.status<>'ACKED'
               )
+              ${only ? entityFilterSql(3) : ''}
             order by e.created_at,e.id limit $1 for update of d skip locked
          ), claimed as (
            update outbox.event_delivery d
@@ -798,7 +846,8 @@ export class OutboxService {
          )
          select c.*,e.entity,e.entity_id,e.idempotency_key,e.payload,e.metadata,e.created_at
            from claimed c join outbox.events e on e.tenant_id=c.tenant_id and e.id=c.event_id
-          order by e.created_at,e.id`, [limit,this.options.eventLeaseMs ?? 300_000],
+          order by e.created_at,e.id`,
+        [limit,this.options.eventLeaseMs ?? 300_000, ...(only ? [only.entities, only.prefixes] : [])],
       );
       for (const row of result.rows) {
         await trx.query(
@@ -933,6 +982,7 @@ export class OutboxService {
     this.ackTable = assertQualifiedIdentifier(options.ackTable ?? DEFAULT_OUTBOX_ACK_TABLE, 'ackTable');
     this.dispatchBatchSize = options.dispatchBatchSize ?? DEFAULT_OUTBOX_DISPATCH_BATCH_SIZE;
     this.backoffPolicy = injectedBackoffPolicy ?? options.backoffPolicy ?? new FixedIntervalBackoffPolicy();
+    this.dispatchable = entityMatcher(options.dispatchableEntities, 'dispatchableEntities', true);
   }
 
   /**
