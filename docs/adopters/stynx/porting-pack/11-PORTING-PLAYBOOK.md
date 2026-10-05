@@ -13,7 +13,7 @@ Cross-references are explicit; follow them.
 `./adoption/ASSESSMENT.md` in the foreign repo.
 
 **Entry criteria:** access to the foreign repo at HEAD; the pack
-under `docs/stynx/porting-pack/`.
+under `docs/adopters/stynx/porting-pack/`.
 
 **Steps:**
 

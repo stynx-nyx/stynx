@@ -11,9 +11,9 @@
 >
 > **Source baseline.**
 >
-> - `docs/stynx/porting-pack/_DISCOVERY.md` (commit `670d165`, 2026-04-27)
-> - `docs/stynx/porting-pack/16-SPEC-EXCERPTS/audit-model.md`
-> - `docs/stynx/porting-pack/16-SPEC-EXCERPTS/soft-delete-model.md`
+> - `docs/adopters/stynx/porting-pack/_DISCOVERY.md` (commit `670d165`, 2026-04-27)
+> - `docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/audit-model.md`
+> - `docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/soft-delete-model.md`
 > - `specs/STYNX-ADOPT-EXAMPLE.md` §6 ("Common gotchas")
 > - `docs/work/audit/07-FINDINGS-REGISTER.md`
 

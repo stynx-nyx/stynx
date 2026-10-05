@@ -210,6 +210,9 @@ function rewriteGeneratedDocLinks(content) {
       '`G-013 — Background-job patterns`',
     )
     .replace(/\]\(\.\/glossary\/?\)/gu, '](/docs/glossary/)')
+    .replace(/\]\((?:\.\.\/)+law\/glossary\/(?:README\.md)?\)/gu, '](/docs/glossary/)')
+    .replace(/\]\((?:\.\.\/)+law\/adr\/(?:README\.md)?\)/gu, '](/docs/adr/)')
+    .replace(/\]\((?:\.\.\/)+product\/drafts\/blueprints\/(?:README\.md)?\)/gu, '](/docs/product/drafts/blueprints/)')
     .replace(/\]\((?:\.\.\/)+law\/invariants\/?\)/gu, '](/docs/law/invariants/)')
     .replace(/\]\(\.\.\/invariants\/?\)/gu, '](/docs/law/invariants/)')
     .replace(/\]\(draft\/blueprints\/?\)/gu, '](/docs/product/drafts/blueprints/)')
@@ -480,8 +483,6 @@ function syncPublicStynxDocs() {
 
   const docs = [
     ['consumer-adoption-guide.md', 'narrative/stynx/consumer-adoption-guide.md', 'Consumer Adoption Guide'],
-    ['feature-coverage-status.md', 'narrative/stynx/feature-coverage-status.md', 'Feature Coverage Status'],
-    ['implementation-status.md', 'narrative/stynx/implementation-status.md', 'Implementation Status'],
     ['package-architecture.md', 'narrative/stynx/package-architecture.md', 'Package Architecture'],
     ['porm-flow-deprecation-readiness.md', 'narrative/stynx/porm-flow-deprecation-readiness.md', 'PORM Flow Deprecation Readiness'],
     ['release-readiness.md', 'narrative/stynx/release-readiness.md', 'Release Readiness'],

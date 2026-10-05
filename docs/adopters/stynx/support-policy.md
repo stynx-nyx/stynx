@@ -63,5 +63,5 @@ EOL notices must include:
 2. Run `pnpm api:baselines` and inspect public type drift.
 3. Regenerate SDK clients from `docs/framework/contracts/openapi.json`.
 4. Run adopter package tests and browser smoke tests.
-5. Review `docs/stynx/operational-readiness.md` for changed runbooks or known
+5. Review `docs/adopters/stynx/operational-readiness.md` for changed runbooks or known
    limitations.

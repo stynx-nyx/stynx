@@ -24,7 +24,7 @@ non-negotiable invariants (I1–I8). Your job is to migrate the
 foreign codebase onto this foundation while preserving its product
 behavior.
 
-You have access to the STYNX Porting Pack at `docs/stynx/porting-pack/`.
+You have access to the STYNX Porting Pack at `docs/adopters/stynx/porting-pack/`.
 Treat it as authoritative. Do not invent STYNX features; if the
 pack does not cover something, say so explicitly and stop for
 guidance.
@@ -154,7 +154,7 @@ Effort: S–M.
 
 ## Canonical opening prompt (paste into the agent's first turn)
 
-> You have access to the STYNX Porting Pack at `docs/stynx/porting-pack/`.
+> You have access to the STYNX Porting Pack at `docs/adopters/stynx/porting-pack/`.
 > You are porting `<FOREIGN APP>` at `<PATH>` onto STYNX.
 >
 > **Step 1.** Read `00-README.md`, then

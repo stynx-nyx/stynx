@@ -4,7 +4,7 @@
 
 **Role:** generated diagnostic/template artifact for the current
 repository/reference-app inventory. It is not the canonical framework RBAC
-implementation; see [ADR-003](../meta/adr/ADR-003-rbac-matrix-role.md).
+implementation; see [ADR-003](../../law/adr/ADR-003-rbac-matrix-role.md).
 
 **Wave 04 update:** the authored reference-app RBAC inventory is
 [Reference App RBAC Inventory](arch/reference-app-rbac.md).

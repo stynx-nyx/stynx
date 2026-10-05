@@ -88,7 +88,7 @@ stynx assumes the following actors with distinct authority:
 - `audit.events` table has no UPDATE/DELETE grants for `stynx_app` (insert-only).
 
 **Invariants:** Future `INV-AUDIT-001` candidate (not yet promoted; behaviour is enforced by code structure + table grants).
-**Tests:** `packages/audit/test/hash-chain.spec.ts`.
+**Tests:** `test/packages/audit/hash-chain.spec.ts`.
 **Residual risk:** A database superuser can tamper at the storage layer; out of scope (assumes Postgres operator is trusted).
 
 ### T-6 — Supply-chain compromise via unpinned CI actions
@@ -130,7 +130,7 @@ stynx assumes the following actors with distinct authority:
 - Long-running queries are subject to per-task DB statement timeouts (configured in `@stynx-nyx/data`).
 
 **Invariants:** Future `INV-PERF-001` candidate (post-perf-targets work).
-**Tests:** `packages/rate-limit/test/rate-limit.guard.spec.ts`, `_probes/ratelimit` endpoint runtime smoke.
+**Tests:** `test/packages/rate-limit/rate-limit.guard.spec.ts`, `_probes/ratelimit` endpoint runtime smoke.
 **Residual risk:** Distributed attack across many tenants can still saturate shared resources; needs upstream rate limiting (CDN / WAF) for production deployments.
 
 ## Intentional algorithm choices

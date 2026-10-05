@@ -112,7 +112,7 @@ That path is ignored by git. Relevant files include:
 - `reference-web/compose-ps.txt`
 - `reference-web/test-results`
 - `reference-web/playwright-report`
-- `docs/lighthouse`
+- `docs/site/build/lighthouse`
 - `coverage/*`
 
 ## Fidelity Limits

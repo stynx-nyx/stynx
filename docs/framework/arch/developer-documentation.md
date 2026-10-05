@@ -72,4 +72,4 @@ is clean enough to avoid broad suppressions.
 
 `docs/framework/rbac-matrix.md` is a generated diagnostic/template artifact for the
 reference-app inventory. It is not the canonical framework RBAC implementation
-or platform permission catalog. See [ADR-003](../../meta/adr/ADR-003-rbac-matrix-role.md).
+or platform permission catalog. See [ADR-003](../../../law/adr/ADR-003-rbac-matrix-role.md).

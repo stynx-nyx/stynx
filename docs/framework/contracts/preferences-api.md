@@ -1,7 +1,7 @@
 # Preferences API Contract
 
 **Status:** Architecture contract.
-**Decision:** [ADR-PREFERENCES-0001](../../meta/adr/ADR-PREFERENCES-0001-tenant-subject-preferences.md).
+**Decision:** [ADR-PREFERENCES-0001](../../../law/adr/ADR-PREFERENCES-0001-tenant-subject-preferences.md).
 **Target package:** `@stynx-nyx/preferences`.
 
 This is the normative R21 contract. Keywords MUST, MUST NOT, SHOULD, and MAY are

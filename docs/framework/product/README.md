@@ -11,7 +11,7 @@ capabilities that consumers can reuse.
 
 - [use-cases/](use-cases/) — reference-app use cases used by coverage and RBAC
   diagnostics.
-- [draft/blueprints/](draft/blueprints/) — module blueprints and scaffold
+- [drafts/blueprints/](../../../product/drafts/blueprints/README.md) — module blueprints and scaffold
   inputs used during the C-4 pilot.
 
 Business rules for a consuming application should live in that application's
