@@ -10,6 +10,8 @@ supersedes: ADR-MOBILE-OFFLINE-0001 queue deduplication and fixed-policy decisio
 
 # ADR-MOBILE-OFFLINE-0002 — Durable offline batch and numbering parity
 
+**Amendment:** [ADR-MOBILE-OFFLINE-0003](ADR-MOBILE-OFFLINE-0003-queue-states-and-consumer-storage.md) adds the `pending` queue state, lets a resolution keep a conflict open, records an integrity conflict for a same-key submission with a different hash, and turns a non-canonical `payloadHash` into a per-item rejection in CTG9 mode. The historical text below remains for provenance.
+
 ## Authority and context
 
 OD-S15-03 includes DETRAN C-0002 A1 §8.1 UPS-OFS-01…04 in STYNX 1.5.0. This decision extends the E6 promotion recorded in ADR-MOBILE-OFFLINE-0001. Its framework-free mobile runtime, open `entityType`, tenant RLS, authenticated actor, and consumer-owned policy remain in force. The detailed interface is the [CTG9 OFS contract](../../work/rounds/R-0002/ctg9-ofs-contract.md) and the [offline-sync API contract](../../docs/framework/contracts/offline-sync-api.md). Acceptance requires implementation and independent sensors; this ADR alone is no release evidence.
