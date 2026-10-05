@@ -223,6 +223,33 @@ function eventStreamProviders(
 
 The application must resolve or set its current tenant through `TenantContextService` before starting the stream. `TenantInterceptor` then supplies `X-Tenant-Id`; the SSE service does not derive it from event data.
 
+### Opt-in stream options
+
+Each option below is set per `provideStynxEventStream` call and defaults to the 1.5.0 behavior. The [SSE contract](/docs/framework/contracts/sse-1.5) defines them exactly.
+
+| Option or member                  | Effect                                                                                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `reopenOnPollingEntry: 'backoff'` | The failure that enters polling reopens after the normal retry delay instead of at once.                                                                |
+| `commentActivity: 'live'`         | A comment line such as `: heartbeat` returns the stream to `live` and clears the failure counters.                                                      |
+| `retryAfterFrom(error, body)`     | Adds a retry delay in milliseconds read from an HTTP error body; the reopen waits for the largest of backoff, `Retry-After` and this value.             |
+| `serverClose`                     | Policy for a stream the server ends without an error; see below.                                                                                        |
+| `resync$`                         | Emits once when a held cursor is discarded, with the reason `'no-content'`, `'tenant-change'` or `'server-close'`. Reload state by query when it fires. |
+| `lastError`                       | Signal with the most recent transport error: `status`, decoded `body`, `at` and `outcome`.                                                              |
+
+`serverClose` has three independent fields. `ok` decides whether a 200 response whose body ends counts as a failure (`'failure'`, the default) or is a normal end of stream (`'end-of-stream'`) that stays out of the failure window and never leads to polling by itself. `cursor` decides whether that 200 keeps `Last-Event-ID` (`'keep'`, the default) or discards it (`'discard'`), which emits `resync$` with `'server-close'`; a 204 always discards. `reopen` sets the delay after a close that is not a failure, which is a 204 or a 200 under `'end-of-stream'`: `'backoff'` (the default), `'immediate'`, or `'immediate-after-frame'`, which reopens at once only when the closed connection delivered a frame.
+
+```ts
+provideStynxEventStream({
+  url: '/api/stream',
+  pollingIntervalMs: 30_000,
+  sessionActive: sessionActive.asReadonly(),
+  commentActivity: 'live',
+  serverClose: { ok: 'end-of-stream', cursor: 'discard', reopen: 'immediate-after-frame' },
+});
+```
+
+`reopen: 'immediate'` has no rate limit: a server that closes every request at once is asked again without pause. Prefer `'immediate-after-frame'` unless the server holds an idle stream open.
+
 ## Related packages
 
 - [`@stynx-nyx/sdk`](/docs/packages-web/sdk/) — the generated REST client this package wires.

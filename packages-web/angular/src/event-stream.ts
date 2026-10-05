@@ -40,8 +40,19 @@ export interface StynxEventStreamConfig {
   commentActivity?: 'stale-only' | 'live';
   /** Extra retry delay in milliseconds read from an HTTP error and its JSON-decoded body; the reopen waits for max(backoff, Retry-After, this). */
   retryAfterFrom?: (error: HttpErrorResponse, body: unknown) => number | null;
+  /** Policy for a stream the server ends without an error; every omitted field keeps the 1.5.0 behavior. */
+  serverClose?: StynxEventStreamServerClose;
 }
-// 'server-close' is reserved for UPS-NGSSE-12 and is not emitted in 1.5.x.
+/** How the client treats a response body that ends (HTTP 200) and how soon it reopens after a server close. */
+export interface StynxEventStreamServerClose {
+  /** A 200 that ends counts as a failure (default) or is a normal end of stream outside the failure window. */
+  ok?: 'failure' | 'end-of-stream';
+  /** A 200 that ends keeps `Last-Event-ID` (default) or discards it. A 204 always discards it. */
+  cursor?: 'keep' | 'discard';
+  /** Reopen after a close that is not a failure: after the retry delay (default), at once, or at once only when that connection delivered a frame. */
+  reopen?: 'backoff' | 'immediate' | 'immediate-after-frame';
+}
+// 'server-close' is emitted only when serverClose.cursor is 'discard' and a 200 ends while a cursor is held.
 export type StynxEventStreamResyncReason = 'no-content' | 'tenant-change' | 'server-close';
 export interface StynxEventStreamResync { reason: StynxEventStreamResyncReason }
 export interface StynxEventStreamError {
@@ -263,17 +274,26 @@ export class StynxEventStreamService<T = unknown> {
             return;
           }
         } else if (event.type === HttpEventType.Response) {
-          if (event.status === 204) {
-            const hadCursor = this.cursorState() !== null;
-            this.cursorState.set(null); this.seen.clear();
-            if (hadCursor) this.resyncSubject.next({ reason: 'no-content' });
-          }
-          this.failed(generation, undefined, event.status === 204);
+          this.serverClosed(generation, event.status === 204, cursorAdvanced);
         }
       },
       error: (error: unknown) => this.failed(generation, error),
-      complete: () => this.failed(generation),
+      complete: () => this.serverClosed(generation, false, cursorAdvanced),
     });
+  }
+
+  /** The server ended the stream without an error: a 204, a 200 whose body ended, or a bare completion. */
+  private serverClosed(generation: number, noContent: boolean, delivered: boolean): void {
+    if (generation !== this.generation || !this.active) return;
+    const policy = this.config.serverClose;
+    const counted = !noContent && policy?.ok !== 'end-of-stream';
+    if (noContent || policy?.cursor === 'discard') {
+      const hadCursor = this.cursorState() !== null;
+      this.cursorState.set(null); this.seen.clear();
+      if (hadCursor) this.resyncSubject.next({ reason: noContent ? 'no-content' : 'server-close' });
+    }
+    const immediate = !counted && (policy?.reopen === 'immediate' || (policy?.reopen === 'immediate-after-frame' && delivered));
+    this.failed(generation, undefined, !counted, immediate);
   }
 
   private deliver(id: string, event: string, data: string): boolean {
@@ -315,7 +335,7 @@ export class StynxEventStreamService<T = unknown> {
     this.open();
   }
 
-  private failed(generation: number, error?: unknown, freshCursor = false): void {
+  private failed(generation: number, error?: unknown, freshCursor = false, reopenNow = false): void {
     if (generation !== this.generation || !this.active) return;
     this.cancelConnection();
     if (!this.config.sessionActive()
@@ -334,6 +354,8 @@ export class StynxEventStreamService<T = unknown> {
       if (!this.config.sessionActive()) { this.stop(); return; }
       this.tickSubject.next();
     }, this.config.pollingIntervalMs);
+    // A server close outside the failure window reopens at once when the serverClose policy says so.
+    if (reopenNow) { this.open(); return; }
     const header = error instanceof HttpErrorResponse ? error.headers.get('Retry-After') : null;
     const seconds = header ? Number(header) : NaN;
     const date = header ? Date.parse(header) : NaN;
