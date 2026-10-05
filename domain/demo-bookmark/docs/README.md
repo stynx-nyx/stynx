@@ -12,8 +12,8 @@ production dependencies or be treated as a consumer-facing package.
 
 | Layer                  | Status       | Notes                                                                                                                                                                                                                       |
 | ---------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Blueprint              | ✅ landed    | [`docs/framework/product/draft/blueprints/demo-bookmark.json`](../../../docs/framework/product/draft/blueprints/demo-bookmark.json) is the module specification.                                                            |
-| DB migration + seed    | ✅ landed    | Real fields per blueprint, FK relations, soft-delete-aware unique index, PII map registration. See `db/migration.sql` + `database/seed.sql`.                                                                                |
+| Blueprint              | ✅ landed    | [`product/drafts/blueprints/demo-bookmark.json`](../../../product/drafts/blueprints/demo-bookmark.json) is the module specification.                                                                                        |
+| DB migration + seed    | ✅ landed    | Real fields per blueprint, FK relations, soft-delete-aware unique index, PII map registration. See `db/migration.sql` + `db/seed.sql`.                                                                                      |
 | API compile            | ✅ R17 W07   | `pnpm --filter @stynx-domain/demo-bookmark-api build` exits 0. Schema now matches `db/migration.sql`, including `deleted_at`.                                                                                               |
 | API policy guard       | ✅ T2 wired  | Controllers use `@UseGuards(StynxAuthGuard, PermissionGuard)` + `@Permission('demo:bookmark:read'/'demo:bookmark:write')`; local policy/decorator stubs are not used.                                                       |
 | API services           | ✅ R17 W07   | `bookmark.service.ts` + `bookmark-tag.service.ts` use `@stynx-nyx/data` Database with tenant-scoped transactions, active-row reads, tag parent-tenant checks, and `deleted_at` soft delete.                                 |
@@ -28,7 +28,7 @@ production dependencies or be treated as a consumer-facing package.
 ## What landed in C-4 Session S3 (F-9 step 1/N)
 
 1. **DB migration finished** — `db/migration.sql` expanded from the scaffolder's 1-field stub to the full 9-field `demo__bookmark_bookmark` table + the `demo__bookmark_bookmark_tag` join table, with the blueprint's indexes and FK cascade. Includes a `core.pii_map` registration for the `notes` column (incidental PII, P1Y retention) per `INV-PRIVACY-001`.
-2. **Seed authored** — `database/seed.sql` has 3 representative bookmarks + 5 tags under the demo tenant. Idempotent (`ON CONFLICT DO NOTHING`).
+2. **Seed authored** — `db/seed.sql` has 3 representative bookmarks + 5 tags under the demo tenant. Idempotent (`ON CONFLICT DO NOTHING`).
 3. **Workspace registration** — `api/package.json` and `web/package.json` make the module visible to `pnpm install`. Both register as private `@stynx-domain/demo-bookmark-{api,web}` packages.
 4. **tsconfig** — `api/tsconfig.json` extends `@stynx-internal/tsconfig/lib.json`; `web/tsconfig.json` extends `@stynx-internal/tsconfig/angular18.json`.
 
