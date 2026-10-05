@@ -211,7 +211,7 @@ The status path is `idle → live → reconnecting → polling → live`, with `
 
 ### 1.5.x opt-in client options (UPS-NGSSE-11, 13, 14, 15)
 
-**Source:** stynx-nyx/stynx#321 (DETRAN C-0002, R-0022, CTG-0005). These additions are additive within 1.5.x. Each new option is set per `provideStynxEventStream` injector. When it is omitted, the client keeps the 1.5.0 behavior described above. UPS-NGSSE-12, server close as end of stream, is not part of this change: a 200 that ends the body still counts as a failure and keeps the cursor.
+**Source:** stynx-nyx/stynx#321 (DETRAN C-0002, R-0022, CTG-0005). These additions are additive within 1.5.x. Each new option is set per `provideStynxEventStream` injector. When it is omitted, the client keeps the 1.5.0 behavior described above. UPS-NGSSE-12, server close as end of stream, has its own subsection below: without `serverClose`, a 200 that ends the body still counts as a failure and keeps the cursor.
 
 ```ts
 export interface StynxEventStreamConfig {
@@ -242,11 +242,45 @@ export class StynxEventStreamService<T = unknown> {
 
 **`commentActivity` (UPS-NGSSE-13).** With `'stale-only'` (the default), SSE comment lines such as `: connected` and `: heartbeat` only re-arm the silence timer. This is the 1.5.0 behavior. With `'live'`, every comment line received on the current connection has the same effect on state as a delivered frame. Status becomes `live` and `polling()` becomes false. The failure window and consecutive-failure counter are cleared, so the next failure waits `initialMs`. The retry and polling timers are cancelled, so `tick$` stops, and `lastError` is cleared. A comment emits nothing on `events$`. It does not move `lastEventId` and does not enter deduplication. It still re-arms staleness: silence for `heartbeatMs × staleFactor` after the last comment counts as a failure. The generation guard is unchanged. A comment parsed after a subscriber has stopped the stream or changed tenant, even within the same progress chunk, has no effect. The status set on opening is unchanged in both modes: `live` with no prior failure, `reconnecting` or `polling` otherwise. No option holds the previous status until the first line arrives. A consumer that needs that state must derive it.
 
-**`resync$` (UPS-NGSSE-14).** This stream emits once each time the client discards a cursor it holds, that is, when `lastEventId()` was non-null. The emission happens after `lastEventId()` and the deduplication history are cleared, and before the matching reopen is scheduled or opened. The reason is `'no-content'` for an HTTP 204 response and `'tenant-change'` for a tenant switch. Nothing is emitted on the first open, on a 204 or tenant change while no cursor is held, or on any ordinary failure that keeps the cursor (status 0, 5xx, 429, silence, a byte ceiling, or a 200 that ends the body). A subscriber may stop the stream or change tenant synchronously from `resync$`. In that case the old generation does not reopen. `'server-close'` is reserved in the reason union for UPS-NGSSE-12 (server-initiated end of stream) so that adding it does not widen the type later; no 1.5.x release emits it. Consumers that switch on the reason should already handle it.
+**`resync$` (UPS-NGSSE-14).** This stream emits once each time the client discards a cursor it holds, that is, when `lastEventId()` was non-null. The emission happens after `lastEventId()` and the deduplication history are cleared, and before the matching reopen is scheduled or opened. The reason is `'no-content'` for an HTTP 204 response and `'tenant-change'` for a tenant switch. Nothing is emitted on the first open, on a 204 or tenant change while no cursor is held, or on any ordinary failure that keeps the cursor (status 0, 5xx, 429, silence, a byte ceiling, or a 200 that ends the body under the default `serverClose.cursor: 'keep'`). A subscriber may stop the stream or change tenant synchronously from `resync$`. In that case the old generation does not reopen. `'server-close'` is emitted only by the opt-in server-close policy below, when `serverClose.cursor` is `'discard'` and a 200 ends while a cursor is held; 1.5.3 reserved the reason without emitting it, and a client that does not set that option never receives it.
 
 **`lastError` (UPS-NGSSE-15).** This signal holds the most recent error delivered by the transport's error channel, recorded when the client handles it. `outcome` is `'stopped'` for 401/403, `UnauthorizedError` or an inactive session. It is `'polling'` when the failure leaves the stream polling and `'retry'` otherwise. A stop keeps the recorded error, so a terminal 401 remains visible while `stopped`. Failures with no error object, which are silence, completion, a 200 or 204 response and the byte ceiling, leave `lastError` unchanged. The signal is cleared by `start()`, by a tenant change, and whenever a delivered frame (or, with `commentActivity: 'live'`, a comment) returns the stream to `live`. The service does not translate the error into display text: the application maps `status` and `body` to its own message keys.
 
 **`retryAfterFrom` (UPS-NGSSE-15).** This function is called for every non-terminal `HttpErrorResponse` failure, with the response and its decoded body. It is not called for 401/403 or for failures without an HTTP error. The decoded body is the JSON-decoded value when `error.error` is JSON text, as it is under the transport's `responseType: 'text'`. Otherwise it is `error.error` as received. The function returns a delay in milliseconds, or `null`. A non-finite or non-number result, or a thrown exception, contributes no delay, and a negative result counts as zero. The reopen waits for `max(backoff, Retry-After, retryAfterFrom)`. STYNX embeds no consumer error envelope. A consumer whose body carries `context.retryAfter` in seconds returns that value multiplied by 1 000, or `null` when it is absent.
+
+### 1.5.x server-close policy (UPS-NGSSE-12)
+
+**Source:** stynx-nyx/stynx#321. This addition is opt-in per `provideStynxEventStream` injector. Every omitted field keeps the 1.5.0 behavior.
+
+```ts
+export interface StynxEventStreamConfig {
+  // ...fields above...
+  serverClose?: StynxEventStreamServerClose;
+}
+export interface StynxEventStreamServerClose {
+  ok?: 'failure' | 'end-of-stream'; // default 'failure'
+  cursor?: 'keep' | 'discard'; // default 'keep'
+  reopen?: 'backoff' | 'immediate' | 'immediate-after-frame'; // default 'backoff'
+}
+```
+
+A **server close** is a stream the server ends without an error. There are two kinds. A **204** is unchanged in what it means: it never counts as a failure and always discards the cursor. A **200 that ends** is a 2xx response other than 204 whose body ends; a transport that completes without delivering a response is treated the same way. HTTP error responses, status 0, silence and the byte and age ceilings are not server closes, and this policy does not apply to them.
+
+- **`ok`** applies to a 200 that ends. With `'failure'` (the default, 1.5.0) it enters the failure window and the consecutive-failure counter like any other failure, and may lead to polling. With `'end-of-stream'` it is a normal end of stream: it does not enter `failureWindowMs`, does not raise the backoff, and never leads to polling by itself. The status becomes `reconnecting` until the reopen, or stays `polling` when the stream was already polling.
+- **`cursor`** applies to a 200 that ends. With `'keep'` (the default, 1.5.0) the next request carries the same `Last-Event-ID`. With `'discard'` the client clears `lastEventId()` and the deduplication history, exactly as for a 204, and the next request carries no `Last-Event-ID`. When a cursor was held, `resync$` emits `{ reason: 'server-close' }` once, before the reopen is opened or scheduled. `ok` and `cursor` are independent: `ok: 'failure'` with `cursor: 'discard'` counts the failure and discards the cursor.
+- **`reopen`** applies to every server close that is **not** counted as a failure: a 204, and a 200 that ends under `ok: 'end-of-stream'`. With `'backoff'` (the default, 1.5.0 for a 204) the reopen waits the normal retry delay; because the close is not a failure, that delay does not grow from one close to the next. With `'immediate'` the client reopens synchronously, with no timer. With `'immediate-after-frame'` it reopens at once only when the connection that just closed delivered at least one frame, and after the retry delay otherwise. A delivered frame is a complete frame with a new nonempty ID and valid JSON, the same frame that advances the cursor; comment lines, duplicate IDs and frames without an ID do not count. A 200 that ends under `ok: 'failure'` ignores `reopen` and follows the ordinary failure schedule, including `reopenOnPollingEntry`.
+
+Stops keep precedence: an inactive session stops the stream instead of reopening, and a subscriber that stops the stream or changes tenant from `resync$` prevents the reopen of the old generation. A completion that arrives from a connection the client already replaced is ignored. The client never synthesizes an event for a server close, and `lastError` is unchanged by one.
+
+`reopen: 'immediate'` has no rate limit of its own. A server that closes every request at once, for example with repeated 204 responses, is then asked again without pause. Prefer `'immediate-after-frame'` unless the server is known to hold an idle stream open.
+
+| Consumer intent                                                     | `serverClose`                                                                 |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1.5.0 behavior                                                      | omitted, or `{ ok: 'failure', cursor: 'keep', reopen: 'backoff' }`            |
+| Close is a normal end, restart from a fresh cursor at once          | `{ ok: 'end-of-stream', cursor: 'discard', reopen: 'immediate' }`             |
+| Fresh cursor, at once only after a connection that delivered frames | `{ ok: 'end-of-stream', cursor: 'discard', reopen: 'immediate-after-frame' }` |
+
+**Test double fix.** `FakeStynxEventStreamTransport.respond()` now completes the connection it responded on. Before, a response that made the client reopen synchronously completed the newly opened connection instead.
 
 **Transport header.** The built-in `HttpClient` transport sends `Accept: text/event-stream` on every stream request, in addition to `Last-Event-ID` when a cursor is held.
 
@@ -283,8 +317,9 @@ The existing APF secondary entry `packages-web/angular/testing/index.ts` becomes
 | UPS-NGSSE-09 | Type/prefix filtering without rendering data fields as text.                                                     |
 | UPS-NGSSE-10 | Replaceable transport and published testing entry exercise frames/errors/close/clock.                            |
 | UPS-NGSSE-11 | `reopenOnPollingEntry: 'backoff'` reopens on backoff/fixed compass at polling entry; default stays immediate.    |
+| UPS-NGSSE-12 | `serverClose` sets failure or end of stream, cursor and reopen delay for a 200 that ends; reopen delay for 204.  |
 | UPS-NGSSE-13 | `commentActivity: 'live'` comment returns to `live` and clears counters without event or cursor move.            |
-| UPS-NGSSE-14 | `resync$` emits once per held cursor discarded by 204 or tenant change, never on ordinary failure.               |
+| UPS-NGSSE-14 | `resync$` emits once per held cursor discarded by 204, tenant change or opted-in server close, with the reason.  |
 | UPS-NGSSE-15 | `lastError` records status/body/outcome; `retryAfterFrom` body delay joins `max(backoff, Retry-After)`.          |
 | UPS-TEST-01  | `@stynx-nyx/angular/testing` fake is used by STYNX tests and both APF artifacts resolve to a consumer.           |
 
