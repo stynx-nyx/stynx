@@ -16,6 +16,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [DEVAI 1.5.0 adoption and external mutation hardening](2026-09-15-devai-1.5.0-adoption.md)
 - [Mobile/offline E6 promotion from TEAT](ADR-MOBILE-OFFLINE-0001-teat-promotion.md)
 - [ADR-MOBILE-OFFLINE-0002 — Durable offline batch and numbering parity](ADR-MOBILE-OFFLINE-0002-sync-parity.md) — additive CTG9 decision.
+- [ADR-MOBILE-OFFLINE-0003 — Pending queue state, open manual review, typed receipt context and consumer-owned offline storage](ADR-MOBILE-OFFLINE-0003-queue-states-and-consumer-storage.md) — amends ADR-MOBILE-OFFLINE-0002 decisions 2, 4 and 5.
 - [Canonical 1.x package line and registry anomaly correction](ADR-VERSION-LINE-0001.md)
 - [STYNX 1.1.1 campaign control contract](2026-08-24-stynx-1.1.1-campaign-controls.md)
 - [CI economy, release authority, and database isolation](2026-08-24-ci-economy.md)
