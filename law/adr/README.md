@@ -27,6 +27,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 - [ADR-OUTBOX-0002 — Append-only event log and per-event delivery](ADR-OUTBOX-0002-event-log-and-delivery.md) — additive CTG9 decision.
 - [ADR-OUTBOX-0003 — Configurable application role, consumer-owned outbox storage and named destinations](ADR-OUTBOX-0003-configurable-role-and-consumer-storage.md) — amends ADR-OUTBOX-0002 role-name and platform-only storage decisions.
 - [ADR-SIGNATURE-0001 — Verified trust evidence for regulated signatures](ADR-SIGNATURE-0001-trust-evidence.md) — opt-in CTG9 trust gate.
+- [ADR-SIGNATURE-0002 — Minimal PAdES-B-LTA verification and trust-profile sets](ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md) — amends ADR-SIGNATURE-0001 decisions 2, 3 and 4; independent security review required before release.
 - [Trusted local RC evidence and mutation execution boundary](2026-08-16-trusted-local-rc-evidence.md)
 - [ADR-SESSIONS-0001 — Provider-neutral session inventory and control](ADR-SESSIONS-0001-provider-neutral-session-control.md)
 - [ADR-SESSIONS-0002 — Monthly partition maintenance for auth.sessions](ADR-SESSIONS-0002-monthly-partition-maintenance.md)
