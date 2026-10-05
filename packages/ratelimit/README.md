@@ -20,7 +20,7 @@ Backend developers protecting endpoints from abuse, runaway clients, or noisy ne
 pnpm add @stynx-nyx/ratelimit
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `ioredis` (optional, Redis store), `drizzle-orm` (optional, Postgres store).
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
 
 ## Quick start
 

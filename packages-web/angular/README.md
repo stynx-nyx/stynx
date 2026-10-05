@@ -20,7 +20,7 @@ Angular frontend developers building a STYNX-backed app. Typical scenario: you s
 pnpm add @stynx-nyx/angular @stynx-nyx/sdk
 ```
 
-**Peer dependencies:** `@angular/core` `^18`, `@angular/common` `^18`, `@stynx-nyx/sdk` `^1`.
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
 
 ## Quick start
 

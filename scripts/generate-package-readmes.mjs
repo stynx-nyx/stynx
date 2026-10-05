@@ -36,6 +36,22 @@ function renderDependencies(manifest) {
   ].join('\n');
 }
 
+// Version ranges belong only in the generated block. Hand-written copies drift
+// from package.json, so a range outside the markers fails the check.
+const handwrittenRange = /^\*\*Peer dependencies:\*\*|`[^`\n]+`\s+`(?:\^|~|>=|<=|>|<)\d[^`\n]*`/u;
+
+function handwrittenRangeLines(current) {
+  const start = current.indexOf(startMarker);
+  const end = current.indexOf(endMarker);
+  const outside =
+    start === -1 || end === -1
+      ? current
+      : `${current.slice(0, start)}${current.slice(start, end).replace(/[^\n]/gu, '')}${current.slice(end + endMarker.length)}`;
+  return outside
+    .split('\n')
+    .flatMap((line, index) => (handwrittenRange.test(line) ? [index + 1] : []));
+}
+
 function expectedReadme(current, manifest) {
   const generated = renderDependencies(manifest);
   const start = current.indexOf(startMarker);
@@ -57,10 +73,14 @@ function expectedReadme(current, manifest) {
 export function syncPackageReadmes(repoRoot, mode) {
   const packages = discoverPublishablePackages(repoRoot);
   const stale = [];
+  const handwritten = [];
   for (const { dirPath, manifest } of packages) {
     const path = resolve(dirPath, 'README.md');
     const current = existsSync(path) ? readFileSync(path, 'utf8') : '';
     const expected = expectedReadme(current, manifest);
+    for (const line of handwrittenRangeLines(expected)) {
+      handwritten.push(`${relative(repoRoot, path)}:${line}`);
+    }
     if (current === expected) continue;
     stale.push(relative(repoRoot, path));
     if (mode === 'write') writeFileSync(path, expected);
@@ -68,6 +88,11 @@ export function syncPackageReadmes(repoRoot, mode) {
   if (mode === 'check' && stale.length > 0) {
     throw new Error(
       `generated package README dependency sections are stale:\n- ${stale.join('\n- ')}`,
+    );
+  }
+  if (handwritten.length > 0) {
+    throw new Error(
+      `package READMEs state dependency ranges outside the generated section; point to it instead:\n- ${handwritten.join('\n- ')}`,
     );
   }
   return { packageCount: packages.length, changedFiles: stale.length };

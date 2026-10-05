@@ -20,7 +20,7 @@ Backend developers in regulated domains.
 pnpm add @stynx-nyx/signature
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `pdf-lib` `^1` (for PAdES manipulation).
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
 
 ## Quick start
 

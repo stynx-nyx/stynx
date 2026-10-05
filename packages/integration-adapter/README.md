@@ -32,7 +32,7 @@ Backend developers building outbound integrations to 3rd-party APIs (payment pro
 pnpm add @stynx-nyx/integration-adapter
 ```
 
-**Peer dependencies:** `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`. **No HTTP client dependency** — bring your own.
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference). **No HTTP client dependency** — bring your own.
 
 ## Quick start
 

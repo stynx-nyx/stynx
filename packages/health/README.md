@@ -20,7 +20,7 @@ Backend developers + ops. The endpoints are consumed by Kubernetes liveness/read
 pnpm add @stynx-nyx/health
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`.
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
 
 ## Quick start
 

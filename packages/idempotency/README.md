@@ -20,7 +20,7 @@ Backend developers building POST/PUT/PATCH endpoints, mobile-facing APIs, queue 
 pnpm add @stynx-nyx/idempotency
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/data` `^1` (for the default Postgres store), `ioredis` (optional, Redis store).
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
 
 ## Quick start
 

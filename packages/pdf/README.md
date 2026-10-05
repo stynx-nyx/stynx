@@ -21,7 +21,7 @@ pnpm add @stynx-nyx/pdf playwright
 npx playwright install chromium
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `playwright` `^1`, `handlebars` `^4`.
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
 
 ## Quick start
 
