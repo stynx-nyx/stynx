@@ -34,8 +34,10 @@ export class FakeStynxEventStreamTransport implements StynxEventStreamTransport 
   }
 
   respond(status: number, headers: Record<string, string> = {}): void {
-    this.current().subject.next(new HttpResponse<string>({ status, headers: new HttpHeaders(headers), body: '' }));
-    this.current().subject.complete();
+    // Capture the connection first: the response may reopen synchronously, and the completion belongs to this one.
+    const connection = this.current();
+    connection.subject.next(new HttpResponse<string>({ status, headers: new HttpHeaders(headers), body: '' }));
+    connection.subject.complete();
   }
 
   error(status: number, headers: Record<string, string> = {}, body?: unknown): void {
