@@ -5123,7 +5123,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 64,
-      "assertion_digest_sha256": "7e265cbae67db338a636ebbc1fe9d783917b24e5c8983225dec53c7f777c5ff6"
+      "assertion_digest_sha256": "e780b3d0766a2b6438954be2419f0d94d2dd2fa1e550177914200638cdc34092"
     },
     {
       "path": "packages/outbox/test/integration/ctg9-failure-deadline.integration.spec.ts",
