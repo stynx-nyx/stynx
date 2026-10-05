@@ -76,21 +76,21 @@ const outcomes = await outbox.dispatchDue();
 
 ### `OutboxService` — event mode
 
-| Method                                               | Description                                                                                                                                                    |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `appendInTransaction(trx, event)`                    | Appends one event using only the caller's `Transaction` and inserts its `PENDING` delivery row. Returns `OutboxEventRow`.                                      |
-| `appendManyInTransaction(trx, events)`               | Same for several events; one call stamps the whole batch with the same instant.                                                                                |
-| `dispatchEventsDue(limit?)`                          | Trusted scheduler path across all tenants. Claims the oldest non-terminal event per `(tenant, entity, entityId)`, leases it, sends it and records the attempt. |
-| `dispatchTenantEventsDue(limit?)`                    | Same claim and delivery restricted to the request-context tenant, running as the app role.                                                                     |
-| `ackEvent(input)`                                    | Owner-path ACK for an event identified by exactly one of `eventId` or `idempotencyKey`, with the tenant in `input.tenantId`.                                   |
-| `ackTenantEvent(input)`                              | Request-path ACK; the tenant comes from the request context and a runtime `tenantId` field is rejected.                                                        |
-| `recordUnboundAck(rawBody, reason)`                  | Stores an ACK body that could not be bound to an event in the quarantine ledger.                                                                               |
-| `listEvents(query?)`                                 | Keyset-paged tenant events with their delivery state, newest first. `limit` is 1–500, default 50.                                                              |
-| `getEventDelivery(eventId)`                          | One event with its delivery, or `null` for a malformed, missing or foreign id.                                                                                 |
-| `getAggregateDelivery(entity, entityId, { limit? })` | `head` (oldest non-`ACKED` delivery), per-status `counts` and up to `limit` deliveries (1–1000, default 100), or `null`.                                       |
-| `listEventAttempts(eventId, { includeBytes? })`      | Attempt ledger rows ordered by ordinal. Raw request and response bytes are returned only with `includeBytes: true`.                                            |
-| `getQueueHealth(query?)`                             | `{ tenantId, total, byStatus, oldestUnackedCreatedAt }` over the tenant's delivery rows.                                                                       |
-| `retryEvent(eventId, { immediate? })`                | Operator retry of a delivery in `ERROR`; any other state raises `OutboxEventNotFailedError`.                                                                   |
+| Method                                               | Description                                                                                                                                                                                                                                                 |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `appendInTransaction(trx, event)`                    | Appends one event using only the caller's `Transaction` and inserts its `PENDING` delivery row. Returns `OutboxEventRow`.                                                                                                                                   |
+| `appendManyInTransaction(trx, events)`               | Same for several events; one call stamps the whole batch with the same instant.                                                                                                                                                                             |
+| `dispatchEventsDue(limit?, filter?)`                 | Trusted scheduler path across all tenants. An optional `OutboxEntitySelector` filter claims only the deliveries whose `entity` matches. Claims the oldest non-terminal event per `(tenant, entity, entityId)`, leases it, sends it and records the attempt. |
+| `dispatchTenantEventsDue(limit?, filter?)`           | Same claim and delivery restricted to the request-context tenant, running as the app role, with the same optional filter.                                                                                                                                   |
+| `ackEvent(input)`                                    | Owner-path ACK for an event identified by exactly one of `eventId` or `idempotencyKey`, with the tenant in `input.tenantId`.                                                                                                                                |
+| `ackTenantEvent(input)`                              | Request-path ACK; the tenant comes from the request context and a runtime `tenantId` field is rejected.                                                                                                                                                     |
+| `recordUnboundAck(rawBody, reason)`                  | Stores an ACK body that could not be bound to an event in the quarantine ledger.                                                                                                                                                                            |
+| `listEvents(query?)`                                 | Keyset-paged tenant events with their delivery state, newest first. `limit` is 1–500, default 50.                                                                                                                                                           |
+| `getEventDelivery(eventId)`                          | One event with its delivery, or `null` for a malformed, missing or foreign id.                                                                                                                                                                              |
+| `getAggregateDelivery(entity, entityId, { limit? })` | `head` (oldest non-`ACKED` delivery), per-status `counts` and up to `limit` deliveries (1–1000, default 100), or `null`.                                                                                                                                    |
+| `listEventAttempts(eventId, { includeBytes? })`      | Attempt ledger rows ordered by ordinal. Raw request and response bytes are returned only with `includeBytes: true`.                                                                                                                                         |
+| `getQueueHealth(query?)`                             | `{ tenantId, total, byStatus, oldestUnackedCreatedAt }` over the tenant's delivery rows.                                                                                                                                                                    |
+| `retryEvent(eventId, { immediate? })`                | Operator retry of a delivery in `ERROR`; any other state raises `OutboxEventNotFailedError`.                                                                                                                                                                |
 
 ### Dispatchers, backoff, metrics and stream adapter
 
@@ -143,39 +143,41 @@ All extend `StynxOutboxError`, which extends `StynxError` from [`@stynx-nyx/core
 
 ### Types
 
-| Export                                                                                               | Description                                                                   |
-| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `OutboxModuleOptions`                                                                                | `forRoot()` options.                                                          |
-| `OutboxEnvelope`, `OutboxRow`, `OutboxStatus`, `OutboxAckInput`                                      | Legacy-mode input, persisted row, lifecycle state and ACK input.              |
-| `OutboxAppendEvent`, `OutboxEventRow`, `OutboxEventAckInput`                                         | Event-mode append input, stored event and ACK input.                          |
-| `OutboxDispatchOutcome`                                                                              | Per-row result of a dispatch sweep, including `reconciliationRequired`.       |
-| `OutboxDispatcherPort`, `OutboxTransportEvidence`                                                    | Transport port (`send`, optional `sendEvent`) and the evidence it may return. |
-| `OutboxBackoffPolicy`, `ExponentialBackoffOptions`                                                   | Retry scheduling port and the exponential policy options.                     |
-| `OutboxMetricsSink`                                                                                  | Metrics hook: `incrementEnqueued`, `incrementDispatched`, `incrementAcked`.   |
-| `OutboxSqlExecutor`                                                                                  | Minimal `query()` surface `enqueue` needs from a transaction.                 |
-| `HttpOutboxDispatcherOptions`                                                                        | Options of `HttpOutboxDispatcher`.                                            |
-| `OutboxEventDeliveryStatus`, `OutboxEventDeliveryState`, `OutboxEventSummary`, `OutboxEventDelivery` | Delivery projection states and the event read shapes.                         |
-| `OutboxEventListQuery`, `OutboxEventListItem`, `OutboxEventListPage`, `OutboxEventListCursor`        | `listEvents` query, item, page and keyset cursor.                             |
-| `OutboxAggregateDelivery`, `OutboxDeliveryStatusCounts`                                              | `getAggregateDelivery` result and the zero-filled per-status counts.          |
-| `OutboxEventAttempt`, `OutboxEventAttemptResult`                                                     | Attempt ledger row and its result values.                                     |
-| `OutboxQueueHealth`, `OutboxQueueHealthQuery`                                                        | `getQueueHealth` result and filter.                                           |
-| `OutboxStreamScope`, `OutboxStreamCursor`, `OutboxStreamRow`                                         | Scope, cursor and row of `OutboxEventStreamSource`.                           |
+| Export                                                                                               | Description                                                                                                      |
+| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `OutboxModuleOptions`                                                                                | `forRoot()` options.                                                                                             |
+| `OutboxEnvelope`, `OutboxRow`, `OutboxStatus`, `OutboxAckInput`                                      | Legacy-mode input, persisted row, lifecycle state and ACK input.                                                 |
+| `OutboxAppendEvent`, `OutboxEventRow`, `OutboxEventAckInput`                                         | Event-mode append input, stored event and ACK input.                                                             |
+| `OutboxEntitySelector`                                                                               | Entity set (`entities` exact, `entityPrefixes` literal) used by `dispatchableEntities` and the dispatch filters. |
+| `OutboxDispatchOutcome`                                                                              | Per-row result of a dispatch sweep, including `reconciliationRequired`.                                          |
+| `OutboxDispatcherPort`, `OutboxTransportEvidence`                                                    | Transport port (`send`, optional `sendEvent`) and the evidence it may return.                                    |
+| `OutboxBackoffPolicy`, `ExponentialBackoffOptions`                                                   | Retry scheduling port and the exponential policy options.                                                        |
+| `OutboxMetricsSink`                                                                                  | Metrics hook: `incrementEnqueued`, `incrementDispatched`, `incrementAcked`.                                      |
+| `OutboxSqlExecutor`                                                                                  | Minimal `query()` surface `enqueue` needs from a transaction.                                                    |
+| `HttpOutboxDispatcherOptions`                                                                        | Options of `HttpOutboxDispatcher`.                                                                               |
+| `OutboxEventDeliveryStatus`, `OutboxEventDeliveryState`, `OutboxEventSummary`, `OutboxEventDelivery` | Delivery projection states and the event read shapes.                                                            |
+| `OutboxEventListQuery`, `OutboxEventListItem`, `OutboxEventListPage`, `OutboxEventListCursor`        | `listEvents` query, item, page and keyset cursor.                                                                |
+| `OutboxAggregateDelivery`, `OutboxDeliveryStatusCounts`                                              | `getAggregateDelivery` result and the zero-filled per-status counts.                                             |
+| `OutboxEventAttempt`, `OutboxEventAttemptResult`                                                     | Attempt ledger row and its result values.                                                                        |
+| `OutboxQueueHealth`, `OutboxQueueHealthQuery`                                                        | `getQueueHealth` result and filter.                                                                              |
+| `OutboxStreamScope`, `OutboxStreamCursor`, `OutboxStreamRow`                                         | Scope, cursor and row of `OutboxEventStreamSource`.                                                              |
 
 ## Configuration
 
 ### `StynxOutboxModule.forRoot()` options
 
-| Option                         | Type                   | Default                            | Description                                                                              |
-| ------------------------------ | ---------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- |
-| `table`                        | `string`               | `'outbox.messages'`                | Qualified legacy message table. Validated as a qualified SQL identifier at construction. |
-| `ackTable`                     | `string`               | `'outbox.acknowledgements'`        | Qualified legacy acknowledgement table.                                                  |
-| `dispatcher`                   | `OutboxDispatcherPort` | none                               | Transport. Without one, `dispatchDue()` claims and marks rows `SENT` without sending.    |
-| `backoffPolicy`                | `OutboxBackoffPolicy`  | `new FixedIntervalBackoffPolicy()` | Retry scheduling. A `STYNX_OUTBOX_BACKOFF_POLICY` provider takes precedence.             |
-| `metrics`                      | `OutboxMetricsSink`    | none                               | Metrics hook.                                                                            |
-| `dispatchBatchSize`            | `number`               | `25`                               | Default `limit` of the dispatch methods.                                                 |
-| `eventLeaseMs`                 | `number`               | `300_000`                          | Lease for an event send and for the following ACK wait.                                  |
-| `lockTimeoutMs`                | `number`               | `5_000` for append and cutover     | Upper bound on a database lock wait; owner dispatch steps cap it at 250 ms.              |
-| `failurePersistenceDeadlineMs` | `number`               | `5_000`                            | Deadline for persisting a legacy send failure.                                           |
+| Option                         | Type                   | Default                            | Description                                                                                                                                                                   |
+| ------------------------------ | ---------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `table`                        | `string`               | `'outbox.messages'`                | Qualified legacy message table. Validated as a qualified SQL identifier at construction.                                                                                      |
+| `ackTable`                     | `string`               | `'outbox.acknowledgements'`        | Qualified legacy acknowledgement table.                                                                                                                                       |
+| `dispatcher`                   | `OutboxDispatcherPort` | none                               | Transport. Without one, `dispatchDue()` claims and marks rows `SENT` without sending.                                                                                         |
+| `backoffPolicy`                | `OutboxBackoffPolicy`  | `new FixedIntervalBackoffPolicy()` | Retry scheduling. A `STYNX_OUTBOX_BACKOFF_POLICY` provider takes precedence.                                                                                                  |
+| `metrics`                      | `OutboxMetricsSink`    | none                               | Metrics hook.                                                                                                                                                                 |
+| `dispatchBatchSize`            | `number`               | `25`                               | Default `limit` of the dispatch methods.                                                                                                                                      |
+| `eventLeaseMs`                 | `number`               | `300_000`                          | Lease for an event send and for the following ACK wait.                                                                                                                       |
+| `lockTimeoutMs`                | `number`               | `5_000` for append and cutover     | Upper bound on a database lock wait; owner dispatch steps cap it at 250 ms.                                                                                                   |
+| `failurePersistenceDeadlineMs` | `number`               | `5_000`                            | Deadline for persisting a legacy send failure.                                                                                                                                |
+| `dispatchableEntities`         | `OutboxEntitySelector` | every event                        | Event-mode destinations. When set, only an appended event whose `entity` matches gets a delivery row; `{}` makes a pure log. Read at construction and applied at append time. |
 
 `eventLeaseMs`, `lockTimeoutMs` and `failurePersistenceDeadlineMs` must be positive integers; otherwise the `OutboxService` constructor throws a `RangeError`.
 
@@ -243,6 +245,31 @@ if (health.byStatus.ERROR > 0) {
 }
 ```
 
+### Example 5 — an event log where only some events are delivered
+
+```ts
+StynxOutboxModule.forRoot({
+  dispatcher,
+  dispatchableEntities: {
+    entities: ['ch.renach.exam-result'],
+    entityPrefixes: ['SINISTRO_'],
+  },
+});
+```
+
+An event of any other `entity` is written to the log and reaches SSE clients, but it has no delivery row: it is never claimed, never sent, and is not counted by `getQueueHealth`. Without `dispatchableEntities`, every appended event is queued for delivery.
+
+### Example 6 — one job per destination
+
+```ts
+// RENACH job
+await outbox.dispatchEventsDue(50, { entities: ['ch.renach.exam-result'] });
+// RENAEST job
+await outbox.dispatchEventsDue(50, { entityPrefixes: ['SINISTRO_'] });
+```
+
+Each sweep claims only the deliveries its filter matches. `dispatchTenantEventsDue(limit, filter)` does the same inside a request, for the tenant of the request context and under the application role. An empty filter object throws a `RangeError`.
+
 ## Common pitfalls
 
 - **Enqueue outside the domain transaction.** `enqueue` and `appendInTransaction` only give atomicity when they receive the transaction that performs the domain write. Opening a second transaction for the outbox row defeats the purpose.
@@ -254,6 +281,8 @@ if (health.byStatus.ERROR > 0) {
 - **Owner paths in request handlers.** `dispatchDue`, `dispatchEventsDue`, `ack`, `ackEvent`, `retry` and `cutoverLegacyMessages` run in system context as the owner role. Request handlers use `dispatchTenantEventsDue`, `ackTenantEvent` and the tenant read ports.
 - **Unauthorized operator calls.** The tenant read ports and `retryEvent` enforce tenant isolation only. Authorize the actor before `retryEvent` and before `listEventAttempts(..., { includeBytes: true })`.
 - **`reconciliationRequired` outcomes.** The transport completed but the result could not be persisted. The package does not resend in that call; the caller reconciles.
+- **A delivery that is never acknowledged.** A later event of the same `(entity, entityId)` waits for every older delivery that is not `ACKED`. Declare `dispatchableEntities` so that events without a destination never enter the queue.
+- **Changing the declaration later.** `dispatchableEntities` applies when an event is appended. Deliveries created earlier stay in the queue.
 - **Custom tables stay in legacy mode.** `cutoverLegacyMessages()` rejects a custom `table` or `ackTable` before any database call.
 
 ## Related packages
