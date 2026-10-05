@@ -118,7 +118,7 @@ const config = {
           title: 'Engineering Status',
           items: [
             { label: 'Release readiness', to: '/docs/adopters/stynx/release-readiness' },
-            { label: 'Implementation status', to: '/docs/adopters/stynx/implementation-status' },
+            { label: 'Support policy', to: '/docs/adopters/stynx/support-policy' },
           ],
         },
       ],
