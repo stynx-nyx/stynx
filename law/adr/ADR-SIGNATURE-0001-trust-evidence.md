@@ -9,6 +9,8 @@ authors: [Architect]
 
 **Scope:** `@stynx-nyx/signature` opt-in trust profiles and SIG-01…04
 
+**Amendment:** [ADR-SIGNATURE-0002](ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md) admits one minimal PAdES-B-LTA shape in the `stynx-cms` verifier and extends decision 4 to a set of trust profiles. The historical text below remains for provenance.
+
 ## Context
 
 The existing signing facade computes the source hash but may accept provider assertions about certificate status, signing time and signed bytes. Its fallback can construct synthetic CMS or use a local clock. The mock backend deliberately produces synthetic evidence. Those behaviors are useful for existing tests and legacy callers, but cannot prove an ADVANCED or QUALIFIED signature, a trusted minutes manifest, or production readiness. DETRAN C-0002 A1 §8.1 promotes UPS-SIG-01…04 to MUST. DETRAN ADR-0018 owns its document-kind profile matrix and trust-anchor decisions; STYNX must offer a generic boundary.
