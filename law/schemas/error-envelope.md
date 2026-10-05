@@ -91,5 +91,5 @@ Stable shape of error responses produced by @stynx-nyx/core's StynxErrorFilter. 
 
 ## See also
 
-- [Schema browser](index.md) — full catalog of schemas.
-- [Invariants](../arch/invariants/) — how schemas back the invariant contract.
+- [Schema browser](README.md) — full catalog of schemas.
+- [Invariants](../invariants/README.md) — how schemas back the invariant contract.

@@ -8,10 +8,10 @@
 >
 > **Sources read end-to-end for this file:**
 >
-> - `docs/stynx/porting-pack/_DISCOVERY.md` (§6 migration system, §7 linter, §11 open Qs)
-> - `docs/stynx/porting-pack/16-SPEC-EXCERPTS/soft-delete-model.md`
-> - `docs/stynx/porting-pack/16-SPEC-EXCERPTS/audit-model.md`
-> - `docs/stynx/porting-pack/04-INVARIANTS-AND-CONTRACTS.md`
+> - `docs/adopters/stynx/porting-pack/_DISCOVERY.md` (§6 migration system, §7 linter, §11 open Qs)
+> - `docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/soft-delete-model.md`
+> - `docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/audit-model.md`
+> - `docs/adopters/stynx/porting-pack/04-INVARIANTS-AND-CONTRACTS.md`
 > - `specs/STYNX-REFERENCE-MIGRATION.sql` (468 lines, full read)
 > - `packages/data/migrations/platform/0001_roles.sql` … `0012_*.sql`
 >   (full read of `0010_data_helpers.sql`; spot-read of others)
@@ -433,11 +433,7 @@ import { NoSoftDelete } from '@stynx-nyx/data';
 
 export const eventLog = NoSoftDelete(
   'append-only audit-style log; rotation handled by partition detach',
-)(
-  pgTable('event_log', {
-    /* columns … */
-  }),
-);
+)(pgTable('event_log', {/* columns … */}));
 ```
 
 If the SQL annotation is present but the TS marker is not (or vice
@@ -496,11 +492,7 @@ The matching TS marker:
 import { NoAudit, NoSoftDelete } from '@stynx-nyx/data';
 
 export const searchCache = NoAudit('high-volume cache; audit cost would dominate')(
-  NoSoftDelete('regenerable cache')(
-    pgTable('search_cache', {
-      /* … */
-    }),
-  ),
+  NoSoftDelete('regenerable cache')(pgTable('search_cache', {/* … */})),
 );
 ```
 
@@ -870,19 +862,19 @@ Walks the target directory (skipping `node_modules`, `.git`, `dist`,
 `AdoptScanReport`. The report's `invariants` block keys directly to
 I1 / I4 / I5 / I6 / I8 from `04-INVARIANTS-AND-CONTRACTS.md`:
 
-| Section                                       | Key                   | What it detects                                                                                                                                                             |
+| Section | Key | What it detects |
 | --------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | -------- | ---------------------------------------- |
-| `invariants.rawDbConnection`                  | `callSites: string[]` | Lines matching `(?:pool                                                                                                                                                     | client)\.query\(` (`adopt.ts:216`). |
-| `invariants.rawDbConnection`                  | `pgImports: string[]` | Lines matching `from 'pg'` / `require('pg')` (`adopt.ts:219`).                                                                                                              |
-| `invariants.routePermissions`                 | `RouteCandidate[]`    | NestJS `@Get/@Post/@Put/@Patch/@Delete` decorators that are **not** preceded by `@Permission/@Public/@System` (`adopt.ts:153-179`).                                         |
-| `invariants.tenancy.organizationIdTables`     | `string[]`            | Tenant-scoped tables that use the legacy column name `organization_id` instead of `tenant_id`.                                                                              |
-| `invariants.tenancy.missingRlsTables`         | `string[]`            | Tenant-scoped tables without a matching `ALTER TABLE … ENABLE ROW LEVEL SECURITY` in the SQL corpus.                                                                        |
-| `invariants.audit.missingAuditTables`         | `string[]`            | Tenant-scoped tables without a matching `audit.enable_for(<table>)` call.                                                                                                   |
-| `invariants.softDelete.missingArchiveTables`  | `string[]`            | Tenant-scoped non-`_log` tables without a `data.create_soft_deletable_table` / `data.adopt_soft_deletable_table` call **and** without an `archive.<schema>_<table>` mirror. |
-| `invariants.softDelete.adHocSoftDeleteTables` | `string[]`            | Tables that already carry a `deleted` / `deleted_at` column (candidates for `data.adopt_soft_deletable_table`).                                                             |
-| `authLayer.customJwtMiddleware`               | `string[]`            | Files that mention `jwt` and `middleware` (heuristic — flag for manual review against `@stynx-nyx/auth`).                                                                       |
-| `other.readOnlyCandidates`                    | `string[]`            | GET handlers whose name matches `report                                                                                                                                     | utilization                         | calendar | list`— candidates for`@ReadOnly()` (I7). |
-| `other.appendOnlyCandidates`                  | `string[]`            | Tables whose name ends `_log` — candidates for `@NoSoftDelete` and partition-detach retention.                                                                              |
+| `invariants.rawDbConnection` | `callSites: string[]` | Lines matching `(?:pool                                                                                                                                                     | client)\.query\(` (`adopt.ts:216`). |
+| `invariants.rawDbConnection` | `pgImports: string[]` | Lines matching `from 'pg'` / `require('pg')` (`adopt.ts:219`). |
+| `invariants.routePermissions` | `RouteCandidate[]` | NestJS `@Get/@Post/@Put/@Patch/@Delete` decorators that are **not** preceded by `@Permission/@Public/@System` (`adopt.ts:153-179`). |
+| `invariants.tenancy.organizationIdTables` | `string[]` | Tenant-scoped tables that use the legacy column name `organization_id` instead of `tenant_id`. |
+| `invariants.tenancy.missingRlsTables` | `string[]` | Tenant-scoped tables without a matching `ALTER TABLE … ENABLE ROW LEVEL SECURITY` in the SQL corpus. |
+| `invariants.audit.missingAuditTables` | `string[]` | Tenant-scoped tables without a matching `audit.enable_for(<table>)` call. |
+| `invariants.softDelete.missingArchiveTables` | `string[]` | Tenant-scoped non-`_log` tables without a `data.create_soft_deletable_table` / `data.adopt_soft_deletable_table` call **and** without an `archive.<schema>_<table>` mirror. |
+| `invariants.softDelete.adHocSoftDeleteTables` | `string[]` | Tables that already carry a `deleted` / `deleted_at` column (candidates for `data.adopt_soft_deletable_table`). |
+| `authLayer.customJwtMiddleware` | `string[]` | Files that mention `jwt` and `middleware` (heuristic — flag for manual review against `@stynx-nyx/auth`). |
+| `other.readOnlyCandidates` | `string[]` | GET handlers whose name matches `report                                                                                                                                     | utilization                         | calendar | list`— candidates for`@ReadOnly()` (I7). |
+| `other.appendOnlyCandidates` | `string[]` | Tables whose name ends `_log` — candidates for `@NoSoftDelete` and partition-detach retention. |
 
 The detection helpers used by `adoptScan` are:
 
@@ -987,11 +979,11 @@ side-effects — feeds an UPDATE migration the operator authors.
 ## Cross-references
 
 - Soft-delete behavior, restore semantics, cascade limits:
-  `docs/stynx/porting-pack/16-SPEC-EXCERPTS/soft-delete-model.md`.
+  `docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/soft-delete-model.md`.
 - Audit triggers, GUC suppression, retention classes:
-  `docs/stynx/porting-pack/16-SPEC-EXCERPTS/audit-model.md`.
+  `docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/audit-model.md`.
 - Invariants I1, I5, I6, I8 (the migration-relevant ones):
-  `docs/stynx/porting-pack/04-INVARIANTS-AND-CONTRACTS.md`.
+  `docs/adopters/stynx/porting-pack/04-INVARIANTS-AND-CONTRACTS.md`.
 - Reference migration as the canonical worked example:
   `reference/api/migrations/0001_reference.sql`.
 - Helper source of truth:

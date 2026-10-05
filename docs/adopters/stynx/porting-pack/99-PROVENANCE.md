@@ -4,16 +4,16 @@ Reproducibility metadata for this porting pack.
 
 ## Metadata
 
-| Field                    | Value                                                                                                                                                                                             |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Generated at**         | 2026-04-27 (UTC)                                                                                                                                                                                  |
-| **Source repo**          | `/Users/aarusso/Development/stech/stynx`                                                                                                                                                          |
-| **Source commit SHA**    | `670d165253efd66113e338cd0c79d4c8fcbc8be7`                                                                                                                                                        |
-| **Source branch**        | `clean/doc-pass`                                                                                                                                                                                  |
-| **Spec version found**   | `STYNX-SPEC-v0.6.md` (1218 lines)                                                                                                                                                                 |
-| **Generator**            | Claude Code, model `claude-opus-4-7` (Anthropic)                                                                                                                                                  |
-| **Generation method**    | Sequence of `PORT-NN` prompts under `docs/stynx/porting-pack/_PROMPTS/`, executed inline (small docs) and via parallel `general-purpose` Agent dispatches (large docs); see `_GENERATION-PLAN.md` |
-| **Approximate duration** | Single working session, ≈ 90 minutes wall-clock with parallel agent dispatch                                                                                                                      |
+| Field                    | Value                                                                                                                                                                                                      |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Generated at**         | 2026-04-27 (UTC)                                                                                                                                                                                           |
+| **Source repo**          | `/Users/aarusso/Development/stech/stynx`                                                                                                                                                                   |
+| **Source commit SHA**    | `670d165253efd66113e338cd0c79d4c8fcbc8be7`                                                                                                                                                                 |
+| **Source branch**        | `clean/doc-pass`                                                                                                                                                                                           |
+| **Spec version found**   | `STYNX-SPEC-v0.6.md` (1218 lines)                                                                                                                                                                          |
+| **Generator**            | Claude Code, model `claude-opus-4-7` (Anthropic)                                                                                                                                                           |
+| **Generation method**    | Sequence of `PORT-NN` prompts under `docs/adopters/stynx/porting-pack/_PROMPTS/`, executed inline (small docs) and via parallel `general-purpose` Agent dispatches (large docs); see `_GENERATION-PLAN.md` |
+| **Approximate duration** | Single working session, ≈ 90 minutes wall-clock with parallel agent dispatch                                                                                                                               |
 
 ## Files in the pack (final inventory)
 

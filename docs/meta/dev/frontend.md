@@ -115,7 +115,7 @@ Guidance:
 
 ## Testing
 
-Use the R18 W02 taxonomy in [`2026-06-11-test-taxonomy.md`](../adr/2026-06-11-test-taxonomy.md):
+Use the R18 W02 taxonomy in [`2026-06-11-test-taxonomy.md`](../../../law/adr/2026-06-11-test-taxonomy.md):
 
 - Package-local frontend behavior belongs in package Vitest specs.
 - Component and provider behavior should use the R17 TestBed helper pattern when Angular template/provider compilation matters. Representative helpers live in `packages-web/angular/test/support/test-bed.ts`, `packages-web/angular-iam/test/support/test-bed.ts`, and similar package `test/support/` folders.
@@ -134,7 +134,7 @@ Run package-specific Vitest suites with `pnpm --filter <package> test` when chan
 
 ## Production Gates
 
-The old root `frontend/` commands are obsolete. The current production-oriented frontend gates are root `pnpm` scripts:
+The old root-level frontend workspace commands are obsolete. The current production-oriented frontend gates are root `pnpm` scripts:
 
 - `pnpm frontend:production-smoke` checks critical web package test scripts, package test presence, testing exports, consumer fixture imports, and the SDK route smoke script.
 - `pnpm frontend:a11y-gate` checks the reference web Playwright and axe accessibility wiring.

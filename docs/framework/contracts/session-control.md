@@ -1,7 +1,7 @@
 # Session Control Contract v1
 
 **Status:** Architecture contract.
-**Decision:** [ADR-SESSIONS-0001](../../meta/adr/ADR-SESSIONS-0001-provider-neutral-session-control.md).
+**Decision:** [ADR-SESSIONS-0001](../../../law/adr/ADR-SESSIONS-0001-provider-neutral-session-control.md).
 **Target:** additive `@stynx-nyx/sessions/control` and
 `@stynx-nyx/angular-sessions` surfaces.
 
@@ -20,21 +20,9 @@ type SessionAction =
   | 'revoke-subject'
   | 'revoke-tenant';
 type RegistrationState =
-  | 'active'
-  | 'revocation_pending'
-  | 'revoked'
-  | 'failed'
-  | 'unsupported'
-  | 'expired'
-  | 'retired';
+  'active' | 'revocation_pending' | 'revoked' | 'failed' | 'unsupported' | 'expired' | 'retired';
 type ProviderState =
-  | 'active'
-  | 'revocation_pending'
-  | 'revoked'
-  | 'failed'
-  | 'unsupported'
-  | 'expired'
-  | 'unknown';
+  'active' | 'revocation_pending' | 'revoked' | 'failed' | 'unsupported' | 'expired' | 'unknown';
 type MutationStatus = 'pending' | 'revoked' | 'unsupported' | 'failed';
 type InvalidationGuarantee =
   | 'immediate_local'

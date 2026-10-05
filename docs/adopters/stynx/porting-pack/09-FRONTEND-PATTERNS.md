@@ -44,7 +44,7 @@ The SDK path is the intended brownfield path for those teams.
 8. Add or update package Vitest coverage and reference-app Playwright coverage
    according to the R18 W02 taxonomy. Canonical guidance:
    [`Testing`](../../../meta/dev/frontend.md#testing).
-9. Run the current frontend production gates, not legacy root `frontend/`
+9. Run the current frontend production gates, not the removed root frontend workspace
    commands. Canonical guidance:
    [`Production Gates`](../../../meta/dev/frontend.md#production-gates).
 
@@ -86,7 +86,7 @@ headers, tenant local storage, permission parsing, and raw upload calls to:
 - Package catalog:
   [`packages-web/README.md`](/docs/packages-web/).
 - R18 test taxonomy ADR:
-  [`docs/meta/adr/2026-06-11-test-taxonomy.md`](../../../meta/adr/2026-06-11-test-taxonomy.md).
+  [`law/adr/2026-06-11-test-taxonomy.md`](../../../../law/adr/2026-06-11-test-taxonomy.md).
 
 The older prompt file `_PROMPTS/PORT-09-frontend.md` is generation history,
 not current guidance. In particular, its note that

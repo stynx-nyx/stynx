@@ -29,6 +29,6 @@
 
 ## Documentation & CI
 
-- Update the relevant `docs/stynx/*` status page when importing new patterns.
+- Update the relevant `docs/adopters/stynx/*` status page when importing new patterns.
 - Track open questions or follow-ups in the owning spec, work prompt, or issue rather than root coordination files.
 - Keep deployment scripts idempotent and parameterised; never hard-code environment specific credentials.

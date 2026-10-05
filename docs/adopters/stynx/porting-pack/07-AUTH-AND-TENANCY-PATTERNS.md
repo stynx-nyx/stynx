@@ -92,7 +92,7 @@ Minimum-effort migration assuming a typical Express + Passport app:
    middleware.
 2. **Install** `@stynx-nyx/auth`, `@stynx-nyx/sessions`, `@stynx-nyx/data`,
    `@stynx-nyx/core`, `@stynx-nyx/backend` (peer-dep set per
-   `docs/stynx/porting-pack/05-PACKAGE-CATALOG.md`).
+   `docs/adopters/stynx/porting-pack/05-PACKAGE-CATALOG.md`).
 3. **Convert** the host app to NestJS _or_ keep the existing HTTP layer
    and call `StynxJwtValidator.validate(token)` inside your existing
    middleware (it returns the typed claims; from there you populate

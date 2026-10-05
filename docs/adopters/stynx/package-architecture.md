@@ -13,8 +13,7 @@ packages fit together.
   composition.
 - `infra/cdk` — standalone AWS CDK reference app for deployed environments.
 
-Legacy `backend/`, `frontend/`, `bootstrap/`, and `test/` roots are not the
-package API surface.
+The root `test/` harness is not part of the package API surface.
 
 ## Backend Package Groups
 
