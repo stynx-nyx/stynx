@@ -22,7 +22,7 @@ Backend developers building workflow-driven STYNX apps. You mount `StynxFlowModu
 pnpm add @stynx-nyx/flow
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/contracts` `^1`, `@stynx-nyx/data` `^1`, `@stynx-nyx/audit` `^1`, `@stynx-nyx/auth` `^1`.
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
 
 ## Quick start
 

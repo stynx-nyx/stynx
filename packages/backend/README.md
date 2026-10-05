@@ -48,7 +48,7 @@ Backend developers building a STYNX-based NestJS app. Audience-pitch: _"I want t
 pnpm add @stynx-nyx/backend
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@nestjs/core` `^11`, plus the underlying `@stynx-nyx/*` packages each submodule wraps (auth, audit, idempotency, ratelimit, etc.). See the per-submodule pages below.
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
 
 ## Quick start
 

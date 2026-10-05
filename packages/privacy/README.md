@@ -20,7 +20,7 @@ Backend developers in regulated apps (financial, healthcare, public-payroll, etc
 pnpm add @stynx-nyx/privacy
 ```
 
-**Peer dependencies:** `@nestjs/common` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/data` `^1`, `@stynx-nyx/storage` `^1` (for export packaging).
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
 
 ## Quick start
 

@@ -28,7 +28,7 @@ NestJS backend developers writing integration tests. Typical scenario: you have 
 pnpm add -D @stynx-nyx/testing
 ```
 
-**Peer dependencies:** `@nestjs/testing` `^11`, `@stynx-nyx/core` `^1`, `@stynx-nyx/data` `^1`, `testcontainers` `^10`, `vitest` `^2` or `jest` `^29`. **Docker required at runtime** (see R15 pilot retro for the precedent).
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference). **Docker required at runtime.**
 
 **Node:** 24.x.
 
