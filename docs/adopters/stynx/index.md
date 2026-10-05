@@ -18,5 +18,5 @@ foreign application onto STYNX packages.
   current release-evidence posture without hiding open gaps.
 - [Porting Pack](porting-pack/00-README.md) contains the agent-oriented
   migration playbook.
-- [Remaining Work](remaining-work.md) lists open follow-up work by adoption
-  theme.
+- [Support Policy](support-policy.md) states the supported runtime matrix and
+  the active framework line.
