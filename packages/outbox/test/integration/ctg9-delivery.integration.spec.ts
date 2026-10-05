@@ -15,6 +15,13 @@ const ACTOR = 'd2222222-2222-4222-8222-222222222222';
 const asRole = (url: string, role: 'stynx_app' | 'stynx_reader') =>
   `${url}&options=${encodeURIComponent(`-c role=${role}`)}`;
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+// Every case shares one scheduler lease. It must outlast the few database round
+// trips a case makes between a claim and its next assertion even when the host
+// is saturated: a 40 ms lease expired mid-case under load, the row was reclaimed
+// and the unacknowledged event then failed every later case. Reclaim cases wait
+// for real expiry, so the wait is derived from the lease instead of being tuned.
+const EVENT_LEASE_MS = 750;
+const LEASE_EXPIRY_WAIT_MS = EVENT_LEASE_MS + 50;
 const bounded = async <T>(work: Promise<T>): Promise<T> =>
   Promise.race([
     work,
@@ -74,7 +81,7 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
           retry: false,
         }),
         StynxOutboxModule.forRoot({
-          eventLeaseMs: 40,
+          eventLeaseMs: EVENT_LEASE_MS,
           dispatcher: {
             send: (row) => sendLegacy(row),
             sendEvent: (row) => send(row),
@@ -141,7 +148,7 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
     };
     const first = outbox.dispatchEventsDue(1);
     await bounded(firstStarted);
-    await delay(70);
+    await delay(LEASE_EXPIRY_WAIT_MS);
     const second = outbox.dispatchEventsDue(1);
     await bounded(secondStarted);
     rejectFirst(new Error('late attempt one failure'));
@@ -190,7 +197,7 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
     expect(left.length + right.length).toBe(1);
     expect(calls).toBe(1);
     expect(await outbox.dispatchEventsDue(1)).toHaveLength(0);
-    await delay(70);
+    await delay(LEASE_EXPIRY_WAIT_MS);
     const reclaimed = await bounded(outbox.dispatchEventsDue(1));
     expect(reclaimed).toHaveLength(1);
     expect(reclaimed[0]?.row.id).toBe(event.id);
