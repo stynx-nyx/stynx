@@ -25,8 +25,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
+    "test:int": "vitest run --config ./vitest.int.config.ts",
     "bench": "vitest run --config ./vitest.config.ts test/bench/throughput.bench.ts",
-    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+    "test:coverage": "vitest run --config ./vitest.coverage.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "dependencies": {
     "@stynx-nyx/pdf-a": "workspace:*"
