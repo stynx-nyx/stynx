@@ -2,6 +2,7 @@ import { createStrykerConfig } from '../../tools/stryker/base.mjs';
 
 export default createStrykerConfig({
   packageName: '@stynx-nyx/backend',
+  vitestConfig: './vitest.stryker.config.ts',
   mutate: [
     'src/audit/audit.interceptor.ts',
     'src/audit/redaction-policy.ts',
