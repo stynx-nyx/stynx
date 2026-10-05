@@ -6,6 +6,11 @@ on:
       - 'docs/**'
       - 'packages/**'
       - 'packages-web/**'
+      - '**/*.md'
+      - '!work/**'
+      - 'scripts/check-doc-paths.mjs'
+      - 'scripts/check-package-doc-shape.mjs'
+      - 'scripts/lib/publishable-packages.mjs'
       - '.github/workflows/docs.yml'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -17,6 +22,11 @@ on:
       - 'docs/**'
       - 'packages/**'
       - 'packages-web/**'
+      - '**/*.md'
+      - '!work/**'
+      - 'scripts/check-doc-paths.mjs'
+      - 'scripts/check-package-doc-shape.mjs'
+      - 'scripts/lib/publishable-packages.mjs'
       - '.github/workflows/docs.yml'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -51,6 +61,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
+
+      - name: Check package README shape
+        run: node scripts/check-package-doc-shape.mjs --strict --publishable --human
+
+      - name: Check documentation paths
+        run: |
+          node scripts/check-doc-paths.mjs --self-test
+          node scripts/check-doc-paths.mjs
 
       - name: Install Chrome
         id: chrome
