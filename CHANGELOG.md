@@ -1,6 +1,19 @@
 # STYNX Workspace
 
-## Unreleased
+This file is not the release log. The workspace root is a private package and
+is never published.
+
+- Per-package release history lives in `packages/*/CHANGELOG.md` and
+  `packages-web/*/CHANGELOG.md`. Changesets writes those files when the fixed
+  `@stynx-nyx/*` group is versioned.
+- Release notes per version are the GitHub releases of this repository, tagged
+  `v<version>`.
+
+## Historical workspace notes (rounds R12 to R16, before 1.0, mid-2026)
+
+These notes predate the first published release. They are kept as written and
+describe the workspace at that time, including a package count that has since
+changed.
 
 - R16 deepens every published package README from ~50-130 line stubs to
   template-conformant developer references. All 41 packages (24 backend

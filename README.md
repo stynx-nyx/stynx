@@ -3,8 +3,12 @@
 STYNX is a `pnpm` and Turborepo monorepo for reusable NestJS and Angular
 packages published under the `@stynx-nyx/*` scope.
 
-Release preparation is implemented in the repository. STYNX is not considered
-shipped until an explicit versioning and publishing decision is made.
+STYNX is published. The `@stynx-nyx/*` packages are versioned together as one
+fixed group and released to GitHub Packages; each release is tagged
+`v<version>` and has a GitHub release. The current version is the `version`
+field of any published package manifest, such as `packages/core/package.json`.
+The published package roster is `law/policy/stynx-package-roster.json`, and
+each package records its history in its own `CHANGELOG.md`.
 
 ## Workspace shape
 

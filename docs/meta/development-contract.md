@@ -11,8 +11,8 @@ This is the repository-local engineering contract for all contributors.
 - `domain/*` contains product modules and their API, web, database, and docs surfaces.
 - `infra/cdk/` contains AWS CDK infrastructure.
 - `database/ddl/` contains canonical SQL definitions.
-- The legacy `backend/`, `frontend/`, `bootstrap/`, and `test/` trees are outside
-  the active package graph except where root tooling explicitly references them.
+- `test/` contains the central test harness: the workspace test packages under
+  `test/*` and their shared support and performance fixtures.
 
 ## Engineering rules
 
@@ -47,7 +47,9 @@ This is the repository-local engineering contract for all contributors.
 
 ## Release and security references
 
-When release state is uncertain, inspect `docs/adopters/stynx/release-readiness.md`,
-`docs/adopters/stynx/implementation-status.md`, and recent Git history before
+When release state is uncertain, inspect the published package manifests and
+`CHANGELOG.md` files under `packages/*` and `packages-web/*`, the `v<version>`
+release tags, `docs/adopters/stynx/support-policy.md`,
+`docs/adopters/stynx/release-readiness.md`, and recent Git history before
 making a claim. The repository-specific dependency audit procedure is retained
 at `tools/npm-security-upgrade-auditor/`.
