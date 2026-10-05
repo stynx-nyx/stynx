@@ -28,7 +28,7 @@
 //   2  internal error
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const REPO_ROOT = resolve(process.cwd());
 const args = process.argv.slice(2);
@@ -90,7 +90,7 @@ function discoverPackages(filter) {
 // Patterns matched:
 //   export { Foo, Bar } from './x';
 //   export { Foo as default } from './x';
-//   export * from './x';   // we skip — can't resolve
+//   export * from './x';   // followed into the relative module, recursively
 //   export const X = ...;
 //   export function fn(...
 //   export class C {
@@ -98,10 +98,22 @@ function discoverPackages(filter) {
 //   export type T = ...
 //   export enum E {
 //   export default function fn(...
-function extractExports(indexPath) {
-  if (!existsSync(indexPath)) return [];
+function resolveRelativeModule(fromFile, specifier) {
+  const base = resolve(dirname(fromFile), specifier);
+  return [`${base}.ts`, `${base}.tsx`, join(base, 'index.ts')].find((candidate) => existsSync(candidate)) ?? null;
+}
+
+function extractExports(indexPath, seen = new Set(), exports = new Set()) {
+  if (!existsSync(indexPath) || seen.has(indexPath)) return [...exports];
+  seen.add(indexPath);
   const src = readFileSync(indexPath, 'utf8');
-  const exports = new Set();
+  // export * from './x';  → follow the relative module
+  const starReExport = /export\s+\*\s+from\s+['"](\.[^'"]+)['"]/g;
+  let star;
+  while ((star = starReExport.exec(src)) !== null) {
+    const target = resolveRelativeModule(indexPath, star[1]);
+    if (target) extractExports(target, seen, exports);
+  }
   // export { A, B as C } from '...';
   const namedReExport = /export\s+(?:type\s+)?\{([^}]+)\}/g;
   let m;
