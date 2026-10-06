@@ -12,6 +12,7 @@ const finalBaseVersion = '1.5.0-rc.3';
 const stablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.1';
 const secondStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.2';
 const thirdStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.3';
+const fourthStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.4';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -83,6 +84,25 @@ const thirdStablePatchChangesetPaths = Object.freeze([
 ]);
 
 const allowedThirdStablePatchFollowUpPaths = new Set([
+  'law/policy/forbidden-action-authorizations.json',
+  'law/policy/registry-version-anomalies.json',
+  'law/trace.json',
+  'scripts/lib/registry-version-policy.mjs',
+  'scripts/lib/release-context.mjs',
+  'scripts/run-release-preparation.mjs',
+  'test/scripts/local-rc-blocker-contract.test.mjs',
+  'test/scripts/release-version-policy.test.mjs',
+]);
+
+// ADR-DEVAI-ADOPTION-0012: the four changesets the 1.5.4 marker consumes.
+const fourthStablePatchChangesetPaths = Object.freeze([
+  '.changeset/ngsse-server-close-policy.md',
+  '.changeset/outbox-event-destinations.md',
+  '.changeset/readme-generated-dependency-pointer.md',
+  '.changeset/serialize-db-backed-specs.md',
+]);
+
+const allowedFourthStablePatchFollowUpPaths = new Set([
   'law/policy/forbidden-action-authorizations.json',
   'law/policy/registry-version-anomalies.json',
   'law/trace.json',
@@ -501,6 +521,21 @@ export function isThirdStablePatchVersionedCandidate(input) {
   });
 }
 
+/**
+ * The published 1.5.3 main consumes four changesets into 1.5.4
+ * (ADR-DEVAI-ADOPTION-0012); main itself is the 1.5.3 base.
+ */
+export function isFourthStablePatchVersionedCandidate(input) {
+  return isExactStablePatchVersionedCandidate(input, {
+    baseVersion: '1.5.3',
+    parentVersion: '1.5.3',
+    candidateVersion: '1.5.4',
+    changesetPaths: fourthStablePatchChangesetPaths,
+    markerSubject: fourthStablePatchVersionCommitSubject,
+    allowedFollowUpPaths: allowedFourthStablePatchFollowUpPaths,
+  });
+}
+
 export function classifyReleaseContext({
   baseCommit,
   headCommit,
@@ -553,6 +588,7 @@ export const releaseContextConstants = Object.freeze({
   stablePatchVersionCommitSubject,
   secondStablePatchVersionCommitSubject,
   thirdStablePatchVersionCommitSubject,
+  fourthStablePatchVersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',
