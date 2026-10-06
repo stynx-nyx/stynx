@@ -42,6 +42,7 @@ import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 import {
   classifyReleaseContext,
   isFinalVersionedCandidate,
+  isFourthStablePatchVersionedCandidate,
   isSecondStablePatchVersionedCandidate,
   isThirdStablePatchVersionedCandidate,
   isStablePatchVersionedCandidate,
@@ -80,9 +81,9 @@ const packageRoster = JSON.parse(
 // The registry census is validated against the current unified candidate
 // (registryVersionPolicyConstants.candidate), not the historical 1.2.0
 // rebaseline target that unified-rebaseline.mjs still describes.
-const currentCandidate = '1.5.3';
+const currentCandidate = '1.5.4';
 const previousCandidate = '1.5.0-rc.2';
-const preflightLatest = '1.5.0';
+const preflightLatest = '1.5.3';
 
 const campaignPolicy = {
   policy_id: 'stynx.package-roster',
@@ -627,6 +628,99 @@ test('stable 1.5.3 patch context consumes exactly the eleven pending changesets 
   }
 });
 
+test('stable 1.5.4 patch context consumes exactly the four pending changesets from the published 1.5.3 base', () => {
+  const changesets = [
+    '.changeset/ngsse-server-close-policy.md',
+    '.changeset/outbox-event-destinations.md',
+    '.changeset/readme-generated-dependency-pointer.md',
+    '.changeset/serialize-db-backed-specs.md',
+  ];
+  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+    name,
+    manifestPath: relative(repoRoot, manifestPath),
+    parentVersion: '1.5.3',
+    candidateVersion: '1.5.4',
+  }));
+  assert.equal(packageStates.length, 44);
+  const markerChanges = [
+    ...changesets.map((path) => ({ status: 'D', path })),
+    ...packageStates.flatMap(({ manifestPath }) => [
+      { status: 'M', path: manifestPath },
+      { status: 'M', path: manifestPath.replace(/package\.json$/u, 'CHANGELOG.md') },
+    ]),
+    ...[
+      'docs/meta/security/sbom.cdx.json',
+      'package.json',
+      'tools/create-stynx-app/template/package.json',
+      'packages/pdf/README.md',
+      'packages/pdf-a/README.md',
+      'packages/pdf-a-vera-docker/README.md',
+    ].map((path) => ({ status: 'M', path })),
+  ];
+  const input = {
+    baseRootVersion: '1.5.3',
+    markerParentRootVersion: '1.5.3',
+    candidateRootVersion: '1.5.4',
+    markerCommits: [
+      { sha: 'a'.repeat(40), subject: 'docs(repo): govern the 1.5.4 stable patch candidate' },
+      { sha: 'b'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.4' },
+      { sha: 'c'.repeat(40), subject: 'fix(repo): classify the exact 1.5.4 release candidate' },
+    ],
+    markerChanges,
+    // The parent tree lists its changesets in path order; the classifier binds the set.
+    markerParentChangesets: [...changesets].reverse(),
+    followUpChanges: [
+      { status: 'M', path: 'law/policy/forbidden-action-authorizations.json' },
+      { status: 'M', path: 'law/policy/registry-version-anomalies.json' },
+      { status: 'M', path: 'law/trace.json' },
+      { status: 'M', path: 'scripts/lib/registry-version-policy.mjs' },
+      { status: 'M', path: 'scripts/lib/release-context.mjs' },
+      { status: 'M', path: 'scripts/run-release-preparation.mjs' },
+      { status: 'M', path: 'test/scripts/local-rc-blocker-contract.test.mjs' },
+      { status: 'M', path: 'test/scripts/release-version-policy.test.mjs' },
+    ],
+    rootManifestMatchesMarker: true,
+    packageStates,
+    changesetIdsOnDisk: [],
+    preState: null,
+    markerParentPreState: null,
+  };
+  assert.equal(isFourthStablePatchVersionedCandidate(input), true);
+  assert.equal(isThirdStablePatchVersionedCandidate(input), false);
+  assert.equal(isSecondStablePatchVersionedCandidate(input), false);
+
+  for (const [label, mutate] of [
+    ['base is not the published 1.5.3 main', (value) => { value.baseRootVersion = '1.5.2'; }],
+    ['wrong parent root version', (value) => { value.markerParentRootVersion = '1.5.2'; }],
+    ['wrong candidate root version', (value) => { value.candidateRootVersion = '1.5.5'; }],
+    ['wrong marker subject', (value) => { value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.5.3'; }],
+    ['marker first', (value) => { value.markerCommits.shift(); }],
+    ['duplicate marker', (value) => { value.markerCommits.push({ sha: 'd'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.4' }); }],
+    ['one changeset missing from the parent', (value) => { value.markerParentChangesets.pop(); }],
+    ['extra parent changeset', (value) => { value.markerParentChangesets.push('.changeset/late-change.md'); }],
+    ['one changeset deletion missing', (value) => { value.markerChanges.shift(); }],
+    ['missing package manifest', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath); }],
+    ['missing generated support path', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== 'packages/pdf/README.md'); }],
+    ['extra generated path', (value) => { value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' }); }],
+    ['one stale package version', (value) => { value.packageStates[0].candidateVersion = '1.5.3'; }],
+    ['one wrong parent package version', (value) => { value.packageStates[0].parentVersion = '1.5.2'; }],
+    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('late-change'); }],
+    ['pre mode retained', (value) => { value.preState = { mode: 'pre', tag: 'rc' }; }],
+    ['source follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'packages/outbox/src/outbox.service.ts' }); }],
+    ['migration follow-up', (value) => { value.followUpChanges.push({ status: 'A', path: 'packages/data/migrations/platform/0025_late.sql' }); }],
+    ['workflow follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' }); }],
+    ['root manifest follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'package.json' }); }],
+    ['unrelated law follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'law/adr/unrelated.md' }); }],
+    ['second-patch Semgrep follow-up is not carried over', (value) => { value.followUpChanges.push({ status: 'M', path: '.semgrepignore' }); }],
+    ['missing exact root binding', (value) => { value.rootManifestMatchesMarker = false; }],
+    ['deleted follow-up', (value) => { value.followUpChanges.push({ status: 'D', path: 'law/trace.json' }); }],
+  ]) {
+    const invalid = structuredClone(input);
+    mutate(invalid);
+    assert.equal(isFourthStablePatchVersionedCandidate(invalid), false, label);
+  }
+});
+
 test('Semgrep ignore list preserves build exclusions and only exact public PKI fixture keys', () => {
   const entries = readFileSync(join(repoRoot, '.semgrepignore'), 'utf8')
     .split(/\r?\n/u)
@@ -1001,13 +1095,13 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 test('Architect anomaly policy is required at its exact approved digest', () => {
   // The next unified candidate must be explicitly bound in the Architect
   // policy; 1.2.0 remains historical rebaseline data.
-  assert.equal(currentCandidate, '1.5.3');
+  assert.equal(currentCandidate, '1.5.4');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
-  assert.equal(anomalyPolicy.owner_decision.date, '2026-10-04');
-  assert.equal(anomalyPolicy.owner_decision.repository_baseline, '1090eba1333a1361efa4211a0c65c95cf72314b2');
-  assert.equal(anomalyPolicy.owner_decision.repository_tree, 'c2c7fd488c13e41bce7c674ebe1eeb2053cc9456');
+  assert.equal(anomalyPolicy.owner_decision.date, '2026-10-06');
+  assert.equal(anomalyPolicy.owner_decision.repository_baseline, '806217082f9ba1e867d623e4de67730613da4da9');
+  assert.equal(anomalyPolicy.owner_decision.repository_tree, '7bf48236b945b67633ac5765d0b8f952eb60f7b8');
   assert.deepEqual(anomalyPolicy.owner_decision.supersedes, {
-    date: '2026-09-29', next_unified_version: '1.5.2',
+    date: '2026-10-04', next_unified_version: '1.5.3',
   });
   for (const phrase of ['44', previousCandidate, currentCandidate, 'exact-main-SHA', 'rc', 'latest', preflightLatest]) {
     assert.ok(anomalyPolicy.owner_decision.statement.includes(phrase), `Owner statement must name ${phrase}`);
@@ -1714,7 +1808,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
     [['@stynx-nyx/angular-profile', '2.0.0']],
   );
 
-  for (const version of ['1.4.0', '1.5.0-rc.0', '1.5.0-rc.1', previousCandidate, '1.5.1', '1.5.2']) {
+  for (const version of ['1.4.0', '1.5.0-rc.0', '1.5.0-rc.1', previousCandidate, '1.5.1', '1.5.2', '1.5.3']) {
     const history = validRegistryCensus();
     history.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', previousCandidate, version]));
     assert.deepEqual(validate({ registryStatesByPackage: history }), {
@@ -1734,7 +1828,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
     else assertPolicyError(() => validate({ registryStatesByPackage: history }), code);
   }
 
-  for (const candidate of ['1.5.0-rc.1', previousCandidate, '1.5.0-rc.4', '1.5.1', '1.5.2']) {
+  for (const candidate of ['1.5.0-rc.1', previousCandidate, '1.5.0-rc.4', '1.5.1', '1.5.2', '1.5.3']) {
     assertPolicyError(() => loadRegistryAnomalyPolicy(repoRoot, candidate), 'REGISTRY_ANOMALY_POLICY_UNSUPPORTED');
     assertPolicyError(() => validate({ candidate }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
   }
@@ -1831,7 +1925,7 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   assert.match(helperSource, /export function verifyPostPublishDistTags\(\{ candidate, preflightLatest, preflightDistTags, distTags \}\)/u);
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
-  assert.equal(preflightLatest, '1.5.0');
+  assert.equal(preflightLatest, '1.5.3');
   assert.deepEqual(validatePreflightDistTags({
     preflightLatest,
     preflightRc,
@@ -1932,7 +2026,7 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
       (error) => error?.code === code,
     );
   }
-  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 3n]);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 4n]);
   assert.throws(() => parseStableVersionTag(`v${previousCandidate}`), /malformed stable release tag/u);
   const publisher = repositorySource('scripts/publish-release-plan.mjs');
   const workflow = repositorySource('.github/workflows/release.yml');
