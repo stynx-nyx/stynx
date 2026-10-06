@@ -47,17 +47,17 @@ const expectedNotificationsMutate = [
 
 function normalizeRootManifestRcVersion(source) {
   const version = JSON.parse(source).version;
-  assert.match(version, /^(?:1\.5\.0(?:-rc\.[1-9]\d*)?|1\.5\.[1-3])$/u);
+  assert.match(version, /^(?:1\.5\.0(?:-rc\.[1-9]\d*)?|1\.5\.[1-4])$/u);
   const versionLine = `  "version": "${version}",`;
   assert.equal(source.split(versionLine).length, 2);
   return source.replace(versionLine, '  "version": "1.5.0-rc.1",');
 }
 
-test('frozen root manifest normalization accepts 1.5.3 and historical stable and 1.5.0 candidates', () => {
+test('frozen root manifest normalization accepts 1.5.4 and historical stable and 1.5.0 candidates', () => {
   const source = readFileSync(join(repoRoot, 'package.json'), 'utf8');
   const current = JSON.parse(source).version;
   const line = `  "version": "${current}",`;
-  for (const version of ['1.5.3', '1.5.2', '1.5.1', '1.5.0', '1.5.0-rc.1', '1.5.0-rc.3']) {
+  for (const version of ['1.5.4', '1.5.3', '1.5.2', '1.5.1', '1.5.0', '1.5.0-rc.1', '1.5.0-rc.3']) {
     assert.equal(
       normalizeRootManifestRcVersion(source.replace(line, `  "version": "${version}",`)),
       source.replace(line, '  "version": "1.5.0-rc.1",'),
@@ -66,10 +66,10 @@ test('frozen root manifest normalization accepts 1.5.3 and historical stable and
   for (const version of [
     '0.5.2',
     '1.4.0',
-    '1.5.4',
+    '1.5.5',
     '1.6.0',
     '2.5.2',
-    '1.5.3-rc.1',
+    '1.5.4-rc.1',
     '1.5.0-beta.1',
     '1.5.0-rc.0',
   ]) {
