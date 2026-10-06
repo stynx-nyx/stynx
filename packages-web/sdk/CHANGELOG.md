@@ -1,5 +1,7 @@
 # @stynx-nyx/sdk
 
+## 1.5.4
+
 ## 1.5.3
 
 ### Patch Changes
