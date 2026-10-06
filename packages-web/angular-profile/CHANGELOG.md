@@ -1,5 +1,17 @@
 # @stynx-nyx/angular-profile
 
+## 1.5.4
+
+### Patch Changes
+
+- Updated dependencies [4642547]
+  - @stynx-nyx/angular@1.5.4
+  - @stynx-nyx/angular-auth@1.5.4
+  - @stynx-nyx/angular-storage@1.5.4
+  - @stynx-nyx/angular-ui@1.5.4
+  - @stynx-nyx/angular-i18n@1.5.4
+  - @stynx-nyx/sdk@1.5.4
+
 ## 1.5.3
 
 ### Patch Changes

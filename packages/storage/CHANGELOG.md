@@ -1,5 +1,13 @@
 # @stynx-nyx/storage
 
+## 1.5.4
+
+### Patch Changes
+
+- @stynx-nyx/contracts@1.5.4
+- @stynx-nyx/core@1.5.4
+- @stynx-nyx/data@1.5.4
+
 ## 1.5.3
 
 ### Patch Changes
