@@ -1,5 +1,7 @@
 # @stynx-nyx/angular-i18n
 
+## 1.5.4
+
 ## 1.5.3
 
 ### Patch Changes

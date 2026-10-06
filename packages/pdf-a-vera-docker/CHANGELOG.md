@@ -1,5 +1,12 @@
 # @stynx-nyx/pdf-a-vera-docker
 
+## 1.5.4
+
+### Patch Changes
+
+- @stynx-nyx/logging@1.5.4
+- @stynx-nyx/pdf-a@1.5.4
+
 ## 1.5.3
 
 ### Patch Changes
