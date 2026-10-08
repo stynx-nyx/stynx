@@ -1,5 +1,16 @@
 # @stynx-nyx/angular-profile
 
+## 1.5.5
+
+### Patch Changes
+
+- @stynx-nyx/angular@1.5.5
+- @stynx-nyx/angular-auth@1.5.5
+- @stynx-nyx/angular-i18n@1.5.5
+- @stynx-nyx/angular-storage@1.5.5
+- @stynx-nyx/angular-ui@1.5.5
+- @stynx-nyx/sdk@1.5.5
+
 ## 1.5.4
 
 ### Patch Changes

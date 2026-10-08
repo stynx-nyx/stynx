@@ -1,5 +1,13 @@
 # @stynx-nyx/ratelimit
 
+## 1.5.5
+
+### Patch Changes
+
+- @stynx-nyx/auth@1.5.5
+- @stynx-nyx/contracts@1.5.5
+- @stynx-nyx/data@1.5.5
+
 ## 1.5.4
 
 ### Patch Changes
