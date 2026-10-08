@@ -2,6 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+# Compose >= 2.34 delegates --build to buildx bake, which refuses the file-based
+# build secret outside the context; keep the classic builder (ADR-CI-COMPOSE-0001).
+export COMPOSE_BAKE=false
 COMPOSE_FILE="$ROOT_DIR/reference/api/docker-compose.yml"
 BASE_URL="${STYNX_SMOKE_BASE_URL:-http://127.0.0.1:3000}"
 POSTGRES_PORT="${STYNX_SMOKE_POSTGRES_PORT:-${STYNX_POSTGRES_PORT:-55432}}"

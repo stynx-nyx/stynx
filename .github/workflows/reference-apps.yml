@@ -135,6 +135,11 @@ jobs:
           docker compose -f reference/api/docker-compose.yml up -d --build
         env:
           NODE_AUTH_TOKEN: ${{ secrets.DEVAI_REPO_TOKEN || github.token }}
+          # Compose >= 2.34 delegates --build to buildx bake, which refuses the
+          # file-based secret outside the build context ("additional privileges
+          # requested: --allow=fs.read=..."). Keep the classic builder
+          # (ADR-CI-COMPOSE-0001).
+          COMPOSE_BAKE: 'false'
       - name: Wait for reference API health gates
         run: |
           set -euo pipefail
