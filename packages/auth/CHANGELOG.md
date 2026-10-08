@@ -1,5 +1,15 @@
 # @stynx-nyx/auth
 
+## 1.5.5
+
+### Patch Changes
+
+- @stynx-nyx/contracts@1.5.5
+- @stynx-nyx/core@1.5.5
+- @stynx-nyx/data@1.5.5
+- @stynx-nyx/idempotency@1.5.5
+- @stynx-nyx/sessions@1.5.5
+
 ## 1.5.4
 
 ### Patch Changes

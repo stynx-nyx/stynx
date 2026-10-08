@@ -1,5 +1,11 @@
 # @stynx-nyx/data
 
+## 1.5.5
+
+### Patch Changes
+
+- @stynx-nyx/core@1.5.5
+
 ## 1.5.4
 
 ### Patch Changes
