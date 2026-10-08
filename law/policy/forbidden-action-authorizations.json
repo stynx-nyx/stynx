@@ -1333,6 +1333,12 @@
       "commit": "eccff17f1ca8055fac3928f4ee1de59c0abb8d7d",
       "authorized_by": "Owner",
       "reason": "The DEVAI-generated devai-local-rc-verify.yml resets its own runner-temporary verifier directory with rm -rf \"$control\"; the regenerated 1.9.0-verifier workflow keeps that same step. Owner authorization 2026-10-08 (ADR-DEVAI-ADOPTION-0013 decision D2) covers only this exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "4acf61e4c75cdcc89651e629fdc3344ad80261ae",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-10-08 (Auto-fix enabled for the pull request CI failures of #354; ADR-CI-COMPOSE-0001) for exporting COMPOSE_BAKE=false on the compose up --build steps of reference-apps.yml and hardening.yml. This receipt covers only that exact commit."
     }
   ]
 }
