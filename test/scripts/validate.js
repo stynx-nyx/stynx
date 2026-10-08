@@ -759,11 +759,11 @@ function runForbiddenActionTests() {
 }
 
 function runDoctorAdopterPolicyPrecedenceTest() {
-  const exactVersion = '1.9.0';
+  const exactVersion = '2.3.0';
   const exactTarball =
-    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/1.9.0/37594fb078f5098b83b3938a3bc70ac5488c3162';
+    'https://npm.pkg.github.com/download/@aarusso-nyx/devai/2.3.0/9fdfa0ed437bda8d6834b06aa0cf3241677575a5';
   const exactIntegrity =
-    'sha512-5XPsmj5rOCEETMNAoGSN5WRqhrTgIEVcIHmWsU1aNpNPdfBjqh9IsAyHEUDka2csLQ1J1y7JuV3+A1VH+IfzAg==';
+    'sha512-qtQLjq9kPVT4aPKq7xxGU6O2v4ipz3Y3JLKKxKNELTmiBxO77g4BQuzyE23UuVtPBXW6alvr96yxxys4LPmZPQ==';
   // The 1.1.1 campaign policy was retired with the DEVAI adoption migration.
   // Its still-valid DEVAI dependency pin now lives in the STYNX-owned identity
   // policy, which remains the exact adopted package identity.
@@ -777,27 +777,27 @@ function runDoctorAdopterPolicyPrecedenceTest() {
   assertEqual(campaign.devai.integrity, exactIntegrity, 'adopted DEVAI integrity');
   assertEqual(
     campaign.devai.shasum,
-    '37594fb078f5098b83b3938a3bc70ac5488c3162',
+    '9fdfa0ed437bda8d6834b06aa0cf3241677575a5',
     'adopted DEVAI shasum',
   );
   assertEqual(
     campaign.devai.sha256,
-    'b9813b7dc3697e5cfae4d5746ebf067b22563b38e81058d06c63681938b9e374',
+    '51481cf21cbe08760e17acd637fed3eb0375f56e06888dc20505b77317a46eae',
     'adopted DEVAI sha256',
   );
   assertEqual(
     campaign.devai.source_commit,
-    '75343991140c223240b51cea80c060c516226945',
+    'bf9a26164934b9c1279205138480c7b68e1c26d7',
     'adopted DEVAI source commit',
   );
   assertEqual(
     campaign.devai.source_tree,
-    '90f0f5b64bf594677f96eebf26ae80cf7da1149e',
+    '883bb9804bcf911e180a296f98288453f976caa1',
     'adopted DEVAI source tree',
   );
   assertEqual(
     campaign.devai.signed_tag_object,
-    'cdc4d7b1ad3c9ade71d6ab7d73dc2a5e74304308',
+    'fedd2a99d118431341fc9530c04f6f27784f2862',
     'adopted DEVAI signed tag object',
   );
 
