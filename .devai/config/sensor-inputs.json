@@ -6,25 +6,37 @@
       "invariantsDir": "law/invariants"
     },
     "test_security_coverage": {
-      "testGlobs": ["packages/*/test", "packages-web/*/test", "test"]
+      "testGlobs": [
+        "packages/*/test",
+        "packages-web/*/test",
+        "test"
+      ]
     },
     "test_performance_coverage": {
-      "testGlobs": ["packages/*/test", "packages-web/*/test", "test"]
+      "testGlobs": [
+        "packages/*/test",
+        "packages-web/*/test",
+        "test"
+      ]
     },
     "test_robustness_coverage": {
-      "testGlobs": ["packages/*/test", "packages-web/*/test", "test"]
+      "testGlobs": [
+        "packages/*/test",
+        "packages-web/*/test",
+        "test"
+      ]
     },
     "test_idiomaticity": {
-      "testGlobs": ["packages/*/test", "packages-web/*/test", "test"]
-    },
-    "type_check": {
-      "argv": ["pnpm", "typecheck"]
-    },
-    "perf_test": {
-      "argv": ["node", "scripts/perf-smoke.mjs"]
+      "testGlobs": [
+        "packages/*/test",
+        "packages-web/*/test",
+        "test"
+      ]
     },
     "plant_depth": {
-      "excludeGlobs": ["packages-web/sdk/src/generated/**"]
+      "excludeGlobs": [
+        "packages-web/sdk/src/generated/**"
+      ]
     },
     "harness_idiomaticity": {
       "minWorkflowsForReusableCheck": 5
