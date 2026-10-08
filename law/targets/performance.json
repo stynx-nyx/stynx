@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "performance",
+  "kind": "performance",
+  "title": "STYNX repository performance targets",
+  "status": "active",
+  "authority": "Architect",
+  "date": "2026-10-08",
+  "targets": [
+    {
+      "id": "TGT-PERF-001",
+      "title": "Pull-request gate median wall time",
+      "subject": "ci.yml pull-request gate",
+      "statement": "The median wall time of the sampled completed ci.yml pull-request runs against main is at most 900000 ms.",
+      "sensor_kind": "harness_performance",
+      "metric": "median_ms",
+      "metric_source": "metrics",
+      "comparator": "lte",
+      "threshold": 900000,
+      "unit": "ms",
+      "invariants": ["INV-CORE-001"],
+      "source": {
+        "doc": "law/adr/2026-09-27-verified-local-rc-cutover.md",
+        "anchor": "decision"
+      }
+    },
+    {
+      "id": "TGT-PERF-002",
+      "title": "Pull-request gate p95 wall time",
+      "subject": "ci.yml pull-request gate",
+      "statement": "The 95th percentile wall time of the sampled completed ci.yml pull-request runs against main is at most 1800000 ms.",
+      "sensor_kind": "harness_performance",
+      "metric": "p95_ms",
+      "metric_source": "metrics",
+      "comparator": "lte",
+      "threshold": 1800000,
+      "unit": "ms",
+      "invariants": ["INV-CORE-001"],
+      "source": {
+        "doc": "law/adr/2026-09-27-verified-local-rc-cutover.md",
+        "anchor": "decision"
+      }
+    },
+    {
+      "id": "TGT-PERF-003",
+      "title": "Workspace perf smoke p95 latency",
+      "subject": "scripts/perf-smoke.mjs",
+      "statement": "The perf smoke suite reports a p95_ms of at most 9000 ms, the workspace perf policy in tools/repo-config/test-policy.json.",
+      "sensor_kind": "perf_test",
+      "metric": "p95_ms",
+      "metric_source": "metrics",
+      "comparator": "lte",
+      "threshold": 9000,
+      "unit": "ms",
+      "invariants": ["INV-PERF-001"],
+      "source": {
+        "doc": "law/adr/2026-09-12-k6-baseline-comparison.md",
+        "anchor": "decision"
+      }
+    },
+    {
+      "id": "TGT-PERF-004",
+      "title": "Workspace perf smoke p50 latency",
+      "subject": "scripts/perf-smoke.mjs",
+      "statement": "The perf smoke suite reports a p50_ms of at most 5000 ms, the workspace perf policy in tools/repo-config/test-policy.json.",
+      "sensor_kind": "perf_test",
+      "metric": "p50_ms",
+      "metric_source": "metrics",
+      "comparator": "lte",
+      "threshold": 5000,
+      "unit": "ms",
+      "invariants": ["INV-PERF-001"],
+      "source": {
+        "doc": "law/adr/2026-09-12-k6-baseline-comparison.md",
+        "anchor": "decision"
+      }
+    }
+  ]
+}

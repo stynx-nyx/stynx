@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Enable the DEVAI scorecard sensors for STYNX](2026-10-08-devai-scorecard-enablement.md)
 - [Adopt DEVAI 2.3.0 through init upgrade](2026-10-08-devai-2.3.0-adoption.md)
 - [Keep reference-stack compose builds off bake entitlements](2026-10-08-compose-bake-entitlements.md)
 - [Release the fixed group as stable patch 1.5.4](2026-10-06-fourth-stable-patch-1.5.4.md)
