@@ -1,23 +1,8 @@
 {
-  "schemaVersion": "1.0.0",
-  "adapter_id": "post-merge-3018fbb4f5ce8ee1",
+  "schemaVersion": "2.0.0",
+  "adapter_id": "post-merge-host-adapter",
   "adapter_kind": "installed-checkout",
-  "repository": "/Volumes/Thiamat II/stech/stynx",
-  "repository_id": "stynx",
-  "hook_path": "/Volumes/Thiamat II/stech/stynx/.husky/post-merge",
-  "hook_digest_sha256": "0d250c20ee8f26d3b4b06c238dda0b6e50cd76063e83c34891d5489f3959ce9f",
-  "key_digest_sha256": "d9bcc2e5c52b93913afdb0584ecc138ddb93fb18e49939c57e344decd51f795b",
-  "policy_digest_sha256": "75b34ede0d0ea916a4a362755ccf1c27649d43630b9debfb7d7a5b9c1132ca59",
-  "constitution_digest_sha256": "d7f8791f1d00a7247bced66bdcdf8b1af431bb57e49d03b6ddd7024cb52f957d",
-  "package_binding": {
-    "name": "@aarusso-nyx/devai",
-    "version": "1.9.0"
-  },
-  "installed_at_head": "ba00baa9169bb4520955c2c7b2e79501b404045c",
-  "installed_at": "2026-10-04T06:35:48.746Z",
-  "cadence": {
-    "installed_checkout": "persistent",
-    "remote_host": "unknown"
-  },
-  "signature_hmac_sha256": "46f3df3ea9e20e87340fb1ef23c9ddf87a1d27370e3ec2de50cf176bee1b4a8d"
+  "required": true,
+  "local_state": "git-dir",
+  "bind_command": "devai init bind --target . --host-adapter post-merge --as-role architect --write"
 }
