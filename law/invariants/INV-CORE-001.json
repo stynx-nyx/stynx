@@ -65,7 +65,13 @@
       "domain/demo-bookmark/web/src/**",
       "tools/migration-linter/src/**",
       "tools/npm-security-upgrade-auditor/src/**",
-      "tools/repo-config/**"
+      "tools/repo-config/**",
+      "packages/*/src/**",
+      "packages-web/*/src/**",
+      "reference/*/src/**",
+      "domain/*/api/src/**",
+      "domain/*/web/src/**",
+      "tools/*/src/**"
     ]
   },
   "change_policy": {

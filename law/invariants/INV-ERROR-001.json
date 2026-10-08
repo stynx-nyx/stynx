@@ -31,11 +31,11 @@
   "scope": {
     "components": ["api", "error-semantics", "contracts"],
     "code_areas": [
-      "reference/api/src",
-      "packages/core/src",
-      "packages/backend/src",
-      "domain/demo-bookmark/api/src",
-      "docs/contracts"
+      "reference/api/src/**",
+      "packages/core/src/**",
+      "packages/backend/src/**",
+      "domain/demo-bookmark/api/src/**",
+      "docs/framework/contracts/**"
     ]
   },
   "change_policy": {
