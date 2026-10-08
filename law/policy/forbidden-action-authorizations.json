@@ -1315,6 +1315,24 @@
       "commit": "24efa499ae14c66fecdecd92b1cb74b745c51105",
       "authorized_by": "Owner",
       "reason": "Owner post-merge authorization (2026-10-05) for the docs freshness workflow gates as they landed on main through the PR #345 rebase merge, which rewrote the pre-merge receipted commit ecca37d2. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "f8f08583323a396fbd37359b17fc91571fb140c8",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-10-08 (approved DEVAI 2.3.0 adoption plan, ADR-DEVAI-ADOPTION-0013 decisions D1 and D3) for rematerializing .devai/config and the upgrade receipt with devai init upgrade --write from 1.9.0 to 2.3.0. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "eccff17f1ca8055fac3928f4ee1de59c0abb8d7d",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-10-08 (ADR-DEVAI-ADOPTION-0013 decision D2) for the DEVAI 2.3.0 generator rewriting .github/workflows/devai-local-rc-verify.yml so the trusted local-RC verifier moves from @aarusso-nyx/devai@1.5.4 to 1.9.0. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "eccff17f1ca8055fac3928f4ee1de59c0abb8d7d",
+      "authorized_by": "Owner",
+      "reason": "The DEVAI-generated devai-local-rc-verify.yml resets its own runner-temporary verifier directory with rm -rf \"$control\"; the regenerated 1.9.0-verifier workflow keeps that same step. Owner authorization 2026-10-08 (ADR-DEVAI-ADOPTION-0013 decision D2) covers only this exact commit."
     }
   ]
 }
