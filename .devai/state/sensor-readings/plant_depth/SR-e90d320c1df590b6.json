@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-e90d320c1df590b6",
+  "sensor": {
+    "name": "plant-depth",
+    "kind": "plant_depth"
+  },
+  "timestamp": "2026-10-08T23:20:36.899Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-plant-depth",
+  "command_hash": "f81f3e093e5840c1b2aa12c9a06f4d9eca6254edf05460d901005813c218f4c2",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "files_count": 457,
+    "lines_total": 48246,
+    "lines_max": 1361,
+    "lines_mean": 106,
+    "lines_p95": 382,
+    "threshold_pass": 500,
+    "threshold_review": 1000
+  }
+}

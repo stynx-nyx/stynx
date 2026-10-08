@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-2ea8ae45ddab94b4",
+  "sensor": {
+    "name": "decision_citation_resolution",
+    "kind": "decision_citation_resolution"
+  },
+  "timestamp": "2026-10-08T23:22:38.610Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense run decision_citation_resolution",
+  "command_hash": "190a76c829ea0a34b275ccd66b08f17ca72a9660de52094fa2b16d072a2faa9b",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "law/glossary/README.md cites missing ADR-003.",
+      "file": "law/glossary/README.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/framework/arch/developer-documentation.md cites missing ADR-003.",
+      "file": "docs/framework/arch/developer-documentation.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/framework/rbac-matrix.md cites missing ADR-003.",
+      "file": "docs/framework/rbac-matrix.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "packages/data/README.md cites missing ADR-001.",
+      "file": "packages/data/README.md"
+    }
+  ],
+  "metrics": {
+    "finding_count": 4
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-3dd137f50a858ea1",
+  "sensor": {
+    "name": "plant-coverage",
+    "kind": "plant_coverage"
+  },
+  "timestamp": "2026-10-08T23:20:25.817Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense-plant-coverage",
+  "command_hash": "795653f993ca4aadb9de3352e0c028f747f98c7740e2e555f1a02896c8016fa4",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "PLANT_COVERAGE_NO_INVENTORY",
+      "message": "Neither api-map nor routes-inventory found. Run sense-api + sense-routes first."
+    }
+  ],
+  "metrics": {
+    "endpoint_count": 0,
+    "route_count": 0,
+    "missing_files": 0
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-11ed56cace3ba0d9",
+  "sensor": {
+    "name": "action_effect_inference",
+    "kind": "action_effect_inference"
+  },
+  "timestamp": "2026-10-08T23:22:39.669Z",
+  "status": "unknown",
+  "deterministic": true,
+  "command": "devai sense run action_effect_inference",
+  "command_hash": "28839f4758526713a08795db6468a27c12af20dc589113cca49e8e0b63120789",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "ACTION_EFFECT_INFERENCE_INPUT_MISSING",
+      "message": "Required input is absent: /Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement/law/policy/subprocess-effects.json"
+    }
+  ]
+}

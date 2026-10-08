@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-8d99f703eb872800",
+  "sensor": {
+    "name": "inventory-determinism",
+    "kind": "inventory_determinism"
+  },
+  "timestamp": "2026-10-08T23:20:30.027Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-inventory-determinism",
+  "command_hash": "a98e42de47872a05c0a07a0f3bbed050ad244c3e751207208fd8640d37dab650",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "hash_a": "0c7e7c1534da7b335f1e97046b975eabe55ba71195f5b4cbdb8188c6aaf9f857",
+    "hash_b": "0c7e7c1534da7b335f1e97046b975eabe55ba71195f5b4cbdb8188c6aaf9f857",
+    "bytes_a": 274948,
+    "bytes_b": 274948,
+    "equal": 1
+  }
+}

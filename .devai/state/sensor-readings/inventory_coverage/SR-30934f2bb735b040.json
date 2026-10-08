@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-30934f2bb735b040",
+  "sensor": {
+    "name": "inventory:coverage",
+    "kind": "inventory_coverage",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-10-08T23:19:59.978Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense coverage --repo-root .",
+  "command_hash": "ce8408d76cac9f9dac515a2998bee4c3928973f7e1cedf1b0d60eb06b6fe03b2",
+  "tier": "L0",
+  "duration_ms": 10,
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "COVERAGE_REQUIRES_API_MAP",
+      "message": "api-map body not found at record/proofs/sensors/inventory_api/api-map.json. Run 'devai sense run inventory_api' first."
+    },
+    {
+      "severity": "warning",
+      "code": "COVERAGE_REQUIRES_ROUTES",
+      "message": "No routes-inventory body found under record/proofs/sensors/inventory_routes. Run 'devai sense run inventory_routes' first."
+    }
+  ],
+  "metrics": {
+    "route_count": 0,
+    "endpoint_count": 0,
+    "use_case_count": 14,
+    "link_count": 0,
+    "unmapped_route_count": 0,
+    "unmapped_endpoint_count": 0,
+    "inferred_path_match_count": 0,
+    "coverage_hash": "3a01fbd4fc18dafcd9d953a569c33d8b9fc85f9436815b609b241022c4ca021c"
+  }
+}

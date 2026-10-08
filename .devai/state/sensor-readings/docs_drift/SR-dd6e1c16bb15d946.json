@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-dd6e1c16bb15d946",
+  "sensor": {
+    "name": "docs-drift",
+    "kind": "docs_drift"
+  },
+  "timestamp": "2026-10-08T23:22:38.616Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense-docs-drift",
+  "command_hash": "d4eb8adce11fa0786742effb54c913b93dccac3cd1fb44c6b8258decdad01d01",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "DOCS_DRIFT_NO_SCHEMA_COUNT_CLAIM",
+      "message": "README.md carries no schema-count claim (preferred state).",
+      "file": "README.md"
+    },
+    {
+      "severity": "info",
+      "code": "DOCS_DRIFT_NO_SCHEMA_COUNT_CLAIM",
+      "message": "CLAUDE.md carries no schema-count claim (preferred state).",
+      "file": "CLAUDE.md"
+    },
+    {
+      "severity": "info",
+      "code": "DOCS_DRIFT_CAP_CHECK_DISABLED",
+      "message": "worktree_cap_source not configured; cap-coherence check skipped."
+    },
+    {
+      "severity": "error",
+      "code": "DOCS_DRIFT_CONSTITUTION_VERSION",
+      "message": "law/constitution.md is at (no version); .devai/pin/constitution.md pins 1.0.2.",
+      "file": ".devai/pin/constitution.md"
+    }
+  ],
+  "metrics": {
+    "schema_file_count": 1,
+    "claims_checked": 0,
+    "drift_count": 1
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-f4102b724ab233ea",
+  "sensor": {
+    "name": "harness-idiomaticity",
+    "kind": "harness_idiomaticity"
+  },
+  "timestamp": "2026-10-08T23:20:37.178Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense-harness-idiomaticity",
+  "command_hash": "4f6cae04c3a4a4a1c249eb5094fcc34ed9120e1d6199c7c7ff0880e9e3f15b1a",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_IDIOMATICITY_NO_REUSABLE_WORKFLOWS",
+      "message": "No reusable workflow references found. Consider factoring shared CI logic."
+    }
+  ],
+  "metrics": {
+    "workflow_count": 13,
+    "composite_action_uses": 1,
+    "reusable_workflow_uses": 0,
+    "cache_present": 1,
+    "idiomaticity_score": 2
+  }
+}
