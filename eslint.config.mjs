@@ -28,6 +28,9 @@ export default [
       // /* eslint-disable */ headers as "unused directives", making every
       // sdk build dirty the tree against the committed snapshot.
       'packages-web/sdk/src/generated/**',
+      // CLI-generated demo module output (header: "Generated from BP-DEMO-BOOKMARK-001");
+      // the generator's templates, not this tree, own its Angular idioms.
+      'domain/*/web/src/**',
     ],
   },
   {
@@ -52,7 +55,19 @@ export default [
       'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-function-type': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
+  },
+  {
+    // Test files are gated by tools/eslint-config/test.mjs, which enforces the
+    // CW-1 assertion rules and not the recommended set; mirror that here so a
+    // bare `eslint .` agrees with `pnpm lint:tests` on @ts-nocheck test setups.
+    files: ['**/test/**/*.ts', '**/*.spec.ts', '**/*.test.ts', '**/*.e2e.ts'],
+    rules: {
+      '@typescript-eslint/ban-ts-comment': 'off',
     },
   },
   {
