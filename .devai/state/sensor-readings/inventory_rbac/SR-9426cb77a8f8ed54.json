@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-9426cb77a8f8ed54",
+  "sensor": {
+    "name": "inventory:rbac",
+    "kind": "inventory_rbac",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-10-08T23:19:58.258Z",
+  "status": "unknown",
+  "deterministic": true,
+  "command": "devai sense rbac --repo-root .",
+  "command_hash": "e0c5e638501022c0f1e6489d484cc154da7b040c0d15e98518025c1005add63c",
+  "tier": "L0",
+  "duration_ms": 0,
+  "findings": [
+    {
+      "severity": "info",
+      "code": "RBAC_REQUIRES_DATA_MODEL",
+      "message": "Data-model body not found at record/proofs/sensors/inventory_data_model/data-model.json. Run 'devai sense run inventory_data_model' first; nothing measured."
+    }
+  ],
+  "metrics": {
+    "role_table_count": 0,
+    "permission_table_count": 0,
+    "join_table_count": 0,
+    "endpoint_binding_count": 0,
+    "endpoints_without_role_count": 0,
+    "synthetic_guard_permission_count": 0,
+    "synthetic_role_permission_count": 0,
+    "rbac_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+}

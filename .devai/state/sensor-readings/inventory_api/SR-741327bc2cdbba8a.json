@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-741327bc2cdbba8a",
+  "sensor": {
+    "name": "inventory:api",
+    "kind": "inventory_api",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-10-08T23:19:53.073Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense api --repo-root .",
+  "command_hash": "c65789fbdf62cc883860a3a63713405c6dbb5c88e69ee408dd7be964ea54b562",
+  "tier": "L0",
+  "duration_ms": 77,
+  "metrics": {
+    "endpoint_count": 227,
+    "controller_file_count": 42,
+    "endpoints_hash": "20f81921740b08f3acd730b9ae32a283b2385a574ffbdb4056776441dc1e79a6"
+  }
+}

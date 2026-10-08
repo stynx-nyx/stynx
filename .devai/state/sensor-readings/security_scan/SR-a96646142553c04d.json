@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-a96646142553c04d",
+  "sensor": {
+    "name": "security-scan",
+    "kind": "security_scan"
+  },
+  "timestamp": "2026-10-08T23:20:24.094Z",
+  "status": "review",
+  "deterministic": false,
+  "command": "pnpm audit --json",
+  "command_hash": "f94effb1655d1d0b007b3c6543061f5de53dad08a1278a581152253f3f34d247",
+  "tier": "L0",
+  "exit_code": 1,
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "SECURITY_SCAN_HIGH_PRESENT",
+      "message": "2 high-severity vulnerabilities (above PASS threshold 0)."
+    }
+  ],
+  "metrics": {
+    "tool": "pnpm",
+    "total_vulnerabilities": 7,
+    "critical": 0,
+    "high": 2,
+    "moderate": 5,
+    "low": 0,
+    "info": 0,
+    "pass_max_high": 0,
+    "review_max_high": 5
+  }
+}

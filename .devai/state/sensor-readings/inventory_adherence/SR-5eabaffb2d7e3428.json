@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-5eabaffb2d7e3428",
+  "sensor": {
+    "name": "inventory_adherence",
+    "kind": "inventory_adherence"
+  },
+  "timestamp": "2026-10-08T23:20:25.846Z",
+  "status": "unknown",
+  "deterministic": true,
+  "command": "devai sense run inventory_adherence",
+  "command_hash": "e0ce3f2b9ab35d3da326db318ad1471eae2f668971783d0e7cb5ceeb5d7195b6",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "INVENTORY_ADHERENCE_INPUT_MISSING",
+      "message": "Required input is absent: /Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement/.devai/state/inventory/inventory.json"
+    }
+  ]
+}

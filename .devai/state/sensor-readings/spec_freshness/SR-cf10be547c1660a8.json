@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-cf10be547c1660a8",
+  "sensor": {
+    "name": "spec-freshness",
+    "kind": "spec_freshness"
+  },
+  "timestamp": "2026-10-08T23:20:25.817Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-spec-freshness",
+  "command_hash": "3f976fe45b9b8eb999279f43f85fdd1c05e792c74a53e2923a3a8e722fdfdb8c",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "invariants_scanned": 15,
+    "stale_count": 0,
+    "threshold_days": 90
+  }
+}
