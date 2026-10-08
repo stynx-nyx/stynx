@@ -31,10 +31,10 @@
   "scope": {
     "components": ["api", "performance", "ratelimit"],
     "code_areas": [
-      "reference/api/src/sample",
-      "packages/ratelimit/src",
-      "packages/backend/src",
-      "docs/performance"
+      "reference/api/src/sample/**",
+      "packages/ratelimit/src/**",
+      "packages/backend/src/**",
+      "docs/performance/**"
     ]
   },
   "change_policy": {

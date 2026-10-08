@@ -31,11 +31,11 @@
   "scope": {
     "components": ["api", "routes", "coverage", "use-cases"],
     "code_areas": [
-      "reference/api/src",
-      "reference/web/src",
-      "domain/demo-bookmark/api/src",
-      "domain/demo-bookmark/web/src",
-      "product/use-cases"
+      "reference/api/src/**",
+      "reference/web/src/**",
+      "domain/demo-bookmark/api/src/**",
+      "domain/demo-bookmark/web/src/**",
+      "product/use-cases/**"
     ]
   },
   "change_policy": {

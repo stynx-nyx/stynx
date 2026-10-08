@@ -21,16 +21,21 @@
     }
   },
   "authority_docs": {
-    "docs": [{ "doc": "docs/framework/contracts/tenancy-context-1.5.md", "anchor": "requirements" }]
+    "docs": [
+      {
+        "doc": "docs/framework/contracts/tenancy-context-1.5.md",
+        "anchor": "requirements"
+      }
+    ]
   },
   "scope": {
     "components": ["core", "contracts", "auth", "backend", "tenancy"],
     "code_areas": [
-      "packages/core/src",
-      "packages/contracts/src",
-      "packages/auth/src",
-      "packages/backend/src/auth",
-      "packages/tenancy/src"
+      "packages/core/src/**",
+      "packages/contracts/src/**",
+      "packages/auth/src/**",
+      "packages/backend/src/auth/**",
+      "packages/tenancy/src/**"
     ]
   },
   "change_policy": {

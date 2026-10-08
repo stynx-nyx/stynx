@@ -68,7 +68,7 @@
     "mutation_roster": []
   },
   "domains": {
-    "client": ["COVERAGE", "ERROR", "FLOW", "PRIVACY", "RBAC"]
+    "client": ["CLI", "COVERAGE", "ERROR", "FLOW", "OFFLINE", "PRIVACY", "RBAC", "TENANCY"]
   },
   "thresholds": {
     "lint": {

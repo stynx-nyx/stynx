@@ -38,14 +38,13 @@ materializes `sensor-inputs.json`; the adopter authors it against
 1. **Sensor inputs.** `.devai/config/sensor-inputs.json` declares, in this
    order: `spec_depth` over `law/adr` and `law/invariants`; the four
    test-corpus sensors over `packages/*/test`, `packages-web/*/test` and
-   `test`; `type_check` as `pnpm typecheck`; `perf_test` as
-   `node scripts/perf-smoke.mjs`; `plant_depth` excluding the generated SDK
-   client; `harness_idiomaticity` with the five-workflow floor; and the three
-   harness populations on the `ci.yml` pull-request gate against `main`
-   (30 days, minimum samples 20/10/20), with `harness_green_main` counting
-   each pull request once on its final head (`outcomeUnit:
-pull-request-final-head`, DEVAI ADR-SCR-0014). Surfaces are HTTP, database
-   and RBAC present, actions absent.
+   `test`; `plant_depth` excluding the generated SDK client;
+   `harness_idiomaticity` with the five-workflow floor; and the three harness
+   populations on the `ci.yml` pull-request gate against `main` (30 days,
+   minimum samples 20/10/20), with `harness_green_main` counting each pull
+   request once on its final head (`outcomeUnit: pull-request-final-head`,
+   DEVAI ADR-SCR-0014). Surfaces are HTTP, database and RBAC present, actions
+   absent.
 2. **N/A ledger.** The adopter policy declares F1:T1 not applicable, anchored
    to Article 5, beside the package default F4:T5. The declaration is retired
    when DEVAI ships an F1:T1 emitter.
@@ -57,12 +56,26 @@ pull-request-final-head`, DEVAI ADR-SCR-0014). Surfaces are HTTP, database
    `INV-ERROR-001`.
 4. **Deferred.** `unit_test`, `integration_test`, `e2e_test` and
    `test_coverage_depth` need one governed root vitest invocation and a bound
-   coverage population; they stay undeclared, so F3:T1 and F3:T2 read UNKNOWN
-   until a later decision. `migration_check` is run only with a database at
-   hand. The generator-owned `devai-main-observation.yml` carries no
-   concurrency group; that finding is reported upstream rather than
+   coverage population; `type_check` and `perf_test` need an argv the
+   subprocess broker admits (`npx` or `node`, never a `pnpm` script) over a
+   root project that type-checks the whole workspace, which the per-package
+   `tsconfig.json` files do not compose into today. They stay undeclared, so
+   F2:T7, F2:T8, F3:T1 and F3:T2 read UNKNOWN until a later decision.
+   `migration_check` is run only with a database at hand. The
+   generator-owned `devai-main-observation.yml` carries no concurrency group
+   and the two generated workflows pin different action versions, so
+   `harness_coherence` (F5:T3) stays a finding reported upstream rather than
    hand-edited.
-5. **Recording protocol.** Before each observation an Inspector records, at a
+5. **Spec substrate alignment.** The invariants use the schema's `type`
+   enum (the four CLI invariants become `validation`, `data_contract`,
+   `rbac` and `rls`), their `scope.code_areas` are globs, the umbrella
+   `INV-CORE-001` claims every `src` tree generically, the domain taxonomy
+   admits `CLI`, `OFFLINE` and `TENANCY`, and the five trace tests that run
+   through `test/packages/cli-generator/run-integration.mjs` declare
+   `target_type: file`. The root `eslint.config.mjs` ignores the
+   CLI-generated demo module and relaxes `ban-ts-comment` for test files, in
+   step with the package gates.
+6. **Recording protocol.** Before each observation an Inspector records, at a
    clean HEAD: `inventory_regeneration`, the `sweep` preset for the active
    round, the second-pass sensors, then `audit observe --at <sha>`. Readings,
    the chain and the observation bundle are committed as evidence of that
