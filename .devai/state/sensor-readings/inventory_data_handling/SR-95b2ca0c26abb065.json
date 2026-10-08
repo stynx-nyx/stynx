@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-95b2ca0c26abb065",
+  "sensor": {
+    "name": "inventory:data-handling",
+    "kind": "inventory_data_handling",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-10-08T23:19:59.100Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense data-handling --repo-root .",
+  "command_hash": "74b3bcb5765d3e577f73acbce593efe82ad7123753bf01c2e1c07559e011fee2",
+  "tier": "L0",
+  "duration_ms": 0,
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "DATA_HANDLING_REQUIRES_DATA_MODEL",
+      "message": "Data-model body not found at record/proofs/sensors/inventory_data_model/data-model.json. Run 'devai sense run inventory_data_model' first."
+    }
+  ],
+  "metrics": {
+    "table_count": 0,
+    "pii_column_count": 0,
+    "unlabeled_pii_column_count": 0,
+    "data_handling_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+}

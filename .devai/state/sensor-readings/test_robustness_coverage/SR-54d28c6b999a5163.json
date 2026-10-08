@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-54d28c6b999a5163",
+  "sensor": {
+    "name": "test-robustness-coverage",
+    "kind": "test_robustness_coverage"
+  },
+  "timestamp": "2026-10-08T23:20:37.045Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-test-robustness-coverage",
+  "command_hash": "d6de5ea6f2d8804d7ba4272f65600bd52cf98e8fdff70586159a5981864ca240",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "test_files": 445,
+    "robust_tests": 304,
+    "robust_pct": 68.31,
+    "threshold_pass": 10,
+    "threshold_review": 5
+  }
+}

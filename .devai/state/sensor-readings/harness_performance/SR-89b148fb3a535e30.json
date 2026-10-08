@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-89b148fb3a535e30",
+  "sensor": {
+    "name": "harness-performance",
+    "kind": "harness_performance"
+  },
+  "timestamp": "2026-10-08T23:20:41.553Z",
+  "status": "review",
+  "deterministic": false,
+  "command": "gh run list --workflow ci.yml --event pull_request --json attempt,conclusion,createdAt,databaseId,event,headBranch,updatedAt --limit 300 --created >=2026-09-08",
+  "command_hash": "33a1608d193e3755a2dd3cdb9135f870e67787540d59b108c5eea53284331a33",
+  "tier": "L2",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_PERFORMANCE_SLOW",
+      "message": "median 504s, p95 2369s — above pass thresholds."
+    },
+    {
+      "severity": "info",
+      "code": "HARNESS_POPULATION_UNVERIFIED",
+      "message": "Population filters unverified, not applied to the sample: baseBranch main (gh run list rows carry no base branch)."
+    }
+  ],
+  "metrics": {
+    "run_count": 133,
+    "success_count": 114,
+    "sample_size": 114,
+    "median_ms": 504000,
+    "p95_ms": 2369000,
+    "pass_median_ms": 900000,
+    "pass_p95_ms": 1800000,
+    "minimum_sample": 10,
+    "population_workflow": "ci.yml",
+    "population_event": "pull_request",
+    "population_head_branch": "*",
+    "population_base_branch": "main",
+    "population_attempts": "last",
+    "population_include_cancelled": false,
+    "population_lookback_days": 30,
+    "population_base_branch_verified": false,
+    "population_excluded_jobs_unverified": 0,
+    "population_unverified": "baseBranch"
+  }
+}

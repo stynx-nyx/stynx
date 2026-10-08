@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-d8888348fd7542e5",
+  "sensor": {
+    "name": "archive_immutability",
+    "kind": "archive_immutability"
+  },
+  "timestamp": "2026-10-08T23:22:38.611Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense run archive_immutability",
+  "command_hash": "fa57ebdbff50bf5131c34ab3e3e5d0a2c2e90935c170415c87266a7d802ed1a5",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "finding_count": 0
+  }
+}

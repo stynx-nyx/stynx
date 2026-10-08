@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-5ae39a463184f6f5",
+  "sensor": {
+    "name": "harness-invariant-alignment",
+    "kind": "harness_invariant_alignment"
+  },
+  "timestamp": "2026-10-08T23:23:00.041Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense-harness-invariant-alignment",
+  "command_hash": "61224e91865dd8ed30c03cb1acf9f4bc08ada5ec450523d7320c53699a26a720",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-CLI-001 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-CLI-002 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-CLI-003 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-CLI-004 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-COVERAGE-001 has measurable_via=[check, sense inventory, sense run, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-ERROR-001 has measurable_via=[check, triage classify, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-FLOW-001 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-FLOW-002 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-FLOW-003 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-OFFLINE-001 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-PERF-001 has measurable_via=[check, sense run, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-PRIVACY-001 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_INVARIANT_ALIGNMENT_UNMEASURED_IN_CI",
+      "message": "Gate invariant INV-RBAC-001 has measurable_via=[check, sense inventory, audit observe] but none has an executable fail-closed CI step with fresh successful candidate-bound evidence."
+    }
+  ],
+  "metrics": {
+    "gate_invariants": 13,
+    "misaligned": 13,
+    "workflow_count": 13,
+    "executable_run_steps": 91,
+    "evidence_records": 48,
+    "candidate_head_resolved": true
+  }
+}

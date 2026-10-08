@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-f478012ad5d225b9",
+  "sensor": {
+    "name": "harness-green-main",
+    "kind": "harness_green_main"
+  },
+  "timestamp": "2026-10-08T23:20:36.806Z",
+  "status": "review",
+  "deterministic": false,
+  "command": "gh run list --workflow ci.yml --event pull_request --json attempt,conclusion,createdAt,databaseId,event,headBranch,headSha,status,updatedAt --limit 300 --created >=2026-09-08 && gh pr list --state all --limit 1000 --json closedAt,headRefName,headRefOid,mergedAt,number,state",
+  "command_hash": "50283c9e980f50d3a231906fb78e7d2fd0aea9a2b078288cd7b682a8cd153371",
+  "tier": "L2",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_GREEN_MAIN_PARTIAL",
+      "message": "Success rate 82.4% (over 91 pull requests, workflow ci.yml, event pull_request, head branch *, final head per pull request) is below pass threshold 95%."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_GREEN_MAIN_FINAL_HEAD_UNGATED",
+      "message": "11 closed or merged pull request(s) have no completed gate run on their final head in the window and count as not green: #264, #234, #199, #189, #175, #171, #167, #159, #146, #38, #37."
+    },
+    {
+      "severity": "info",
+      "code": "HARNESS_POPULATION_UNVERIFIED",
+      "message": "Population filters unverified, not applied to the sample: baseBranch main (gh run list rows carry no base branch)."
+    }
+  ],
+  "metrics": {
+    "run_count": 91,
+    "success_count": 75,
+    "success_pct": 82.42,
+    "threshold_pass": 95,
+    "threshold_review": 80,
+    "sample_size": 91,
+    "minimum_sample": 20,
+    "population_workflow": "ci.yml",
+    "population_event": "pull_request",
+    "population_head_branch": "*",
+    "population_base_branch": "main",
+    "population_attempts": "last",
+    "population_include_cancelled": false,
+    "population_lookback_days": 30,
+    "population_base_branch_verified": false,
+    "population_excluded_jobs_unverified": 0,
+    "population_unverified": "baseBranch",
+    "population_outcome_unit": "pull-request-final-head",
+    "population_window_runs": 150,
+    "population_pending_open": 0,
+    "final_head_ungated": 11
+  }
+}

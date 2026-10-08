@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-cd0d9b512b854f4e",
+  "sensor": {
+    "name": "lint",
+    "kind": "lint"
+  },
+  "timestamp": "2026-10-08T23:20:16.616Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx eslint --format=json .",
+  "command_hash": "8d9b0650453acd8fb0ff85a50669099fd0cdae99e8e4739d2717eb93a244efb6",
+  "exit_code": 0,
+  "duration_ms": 15113,
+  "out_head": "[{\"filePath\":\"/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement/docs/site/docusaurus.config.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement/docs/site/scripts/generate-api-reference.mjs\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement/docs/site/scripts/run-lighthouse.mjs\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement/docs/site/scripts/sync-content.mjs\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement/docs/site/scripts/verify-api-reference.mjs\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement/docs/site/sidebars.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement/domain/demo-bookmark/api/src/demo-bookmark/controllers/bookmark-tag.controller.ts\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/Volumes/T",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "warning_count": 0,
+    "timeout_ms": 120000
+  }
+}

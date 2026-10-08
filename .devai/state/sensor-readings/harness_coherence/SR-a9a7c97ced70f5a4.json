@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-a9a7c97ced70f5a4",
+  "sensor": {
+    "name": "harness-coherence",
+    "kind": "harness_coherence"
+  },
+  "timestamp": "2026-10-08T23:20:37.151Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense-harness-coherence",
+  "command_hash": "b6c6e606ff19573cb165f392dbd2eaf5adf8f8d5b7febe611b3123414b7641fe",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_ACTION_VERSION_DRIFT",
+      "message": "Action actions/checkout pinned to multiple versions across workflows: df4cb1c069e1874edd31b4311f1884172cec0e10, 3d3c42e5aac5ba805825da76410c181273ba90b1, 11d5960a326750d5838078e36cf38b85af677262"
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_ACTION_VERSION_DRIFT",
+      "message": "Action actions/setup-node pinned to multiple versions across workflows: 48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e, 820762786026740c76f36085b0efc47a31fe5020, 49933ea5288caeca8642d1e84afbd3f7d6820020"
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_ACTION_VERSION_DRIFT",
+      "message": "Action actions/upload-artifact pinned to multiple versions across workflows: ea165f8d65b6e75b540449e92b4886f43607fa02, 043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_PERMISSIONS_MIXED",
+      "message": "10 workflows declare permissions, 3 do not."
+    },
+    {
+      "severity": "info",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_MIXED",
+      "message": "9 workflows declare concurrency, 4 do not."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/audit.yml must declare a non-empty concurrency group with cancel-in-progress: false (serialized)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/ci.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/devai-local-rc-verify.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/devai-main-observation.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/docs.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/hardening.yml must declare a non-empty concurrency group with cancel-in-progress: false (serialized)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/module-demo-bookmark.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/reference-apps.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/release-prep-not-applicable.yml must declare a non-empty concurrency group with cancel-in-progress: false (serialized)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/release-prep.yml must declare a non-empty concurrency group with cancel-in-progress: false (serialized)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/release.yml must declare a non-empty concurrency group with cancel-in-progress: false (serialized)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/reusable-typecheck.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/semantic-pr-title.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    }
+  ],
+  "metrics": {
+    "workflow_count": 13,
+    "action_version_drift_count": 3,
+    "permissions_mixed": 1,
+    "concurrency_mixed": 1,
+    "concurrency_semantic_issues": 13,
+    "incoherence_score": 17,
+    "max_review_incoherence": 3
+  }
+}

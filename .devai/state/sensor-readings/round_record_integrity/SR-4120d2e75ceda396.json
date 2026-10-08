@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-4120d2e75ceda396",
+  "sensor": {
+    "name": "round_record_integrity",
+    "kind": "round_record_integrity"
+  },
+  "timestamp": "2026-10-08T23:22:38.614Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense run round_record_integrity",
+  "command_hash": "3caf8d063d4b08a2b149c4433c038327a76d1b5b1f941461eab627ee351ff980",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "ROUND_RECORD_SCHEMA_INVALID",
+      "message": "R-0003/record.md has invalid frontmatter.",
+      "file": "work/rounds/R-0003/record.md"
+    }
+  ],
+  "metrics": {
+    "finding_count": 1
+  }
+}

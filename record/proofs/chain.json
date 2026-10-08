@@ -1,5 +1,5 @@
 {
-  "head": "7e6d1da3ae75d703c142c39d0ccd95c667436fde1fc70d4fb7c8ed0650eec9c8",
+  "head": "769956d32d9701916bb8f59f204dbb369c08dcec26bfd7f64d4522e5fd89ccfe",
   "records": [
     {
       "schemaVersion": "1.0.0",
@@ -367,6 +367,2737 @@
       "manifest_hash": "7e6d1da3ae75d703c142c39d0ccd95c667436fde1fc70d4fb7c8ed0650eec9c8",
       "sequence": 9,
       "previous_hash": "345fd93ce08a3516d88a676e9135c9084cd80fa8deee5af0b56706c71ac46861"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-6b4371de83324de1",
+      "timestamp": "2026-10-08T23:19:53.574Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json"]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+          "sha256": "520fde34942b0865a88cf810839397009f34bbcb503e2715a31223a9aa90c685",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-741327bc2cdbba8a; kind: inventory_api; sha256: 520fde34942b0865a88cf810839397009f34bbcb503e2715a31223a9aa90c685"
+      ],
+      "previous_run_hash": "7e6d1da3ae75d703c142c39d0ccd95c667436fde1fc70d4fb7c8ed0650eec9c8",
+      "manifest_hash": "7d45cb6e26572f9f2ebafd544aefb13e9cc295cf399ab8769a163d14a1404209",
+      "sequence": 10,
+      "previous_hash": "7e6d1da3ae75d703c142c39d0ccd95c667436fde1fc70d4fb7c8ed0650eec9c8"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-443f8c8299e346d7",
+      "timestamp": "2026-10-08T23:19:55.544Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+          "sha256": "525cdf47dc6d738dd459f2c2de2e97f8e9d81bd36a64eb44e528325e07210195",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-fc8a67d399c609ed; kind: inventory_routes; sha256: 525cdf47dc6d738dd459f2c2de2e97f8e9d81bd36a64eb44e528325e07210195"
+      ],
+      "previous_run_hash": "7d45cb6e26572f9f2ebafd544aefb13e9cc295cf399ab8769a163d14a1404209",
+      "manifest_hash": "f1097a007b90d1e665e5f1175758ce7cd3e097bd27ad80f1041b64442b4c5287",
+      "sequence": 11,
+      "previous_hash": "7d45cb6e26572f9f2ebafd544aefb13e9cc295cf399ab8769a163d14a1404209"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-f483ec58b3c771dc",
+      "timestamp": "2026-10-08T23:19:56.452Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+          "sha256": "7a57950a09b513ce1352c100a802ef0b92a32125570a4710844c248cc38bd29f",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-574040c1df9b283a; kind: inventory_data_model; sha256: 7a57950a09b513ce1352c100a802ef0b92a32125570a4710844c248cc38bd29f"
+      ],
+      "previous_run_hash": "f1097a007b90d1e665e5f1175758ce7cd3e097bd27ad80f1041b64442b4c5287",
+      "manifest_hash": "7923603e1cc5f41a9fdfb692189efeb3b7b60956ca8e7fbe85cef8c0c53e8eec",
+      "sequence": 12,
+      "previous_hash": "f1097a007b90d1e665e5f1175758ce7cd3e097bd27ad80f1041b64442b4c5287"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-d4832868c87337f9",
+      "timestamp": "2026-10-08T23:19:57.834Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+          "sha256": "23f3645a846d44f5bf2b992fbdd6b4c102780744564502848538c79a2b4e7cb0",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-12e9ac0b5570058d; kind: inventory_dep_graph; sha256: 23f3645a846d44f5bf2b992fbdd6b4c102780744564502848538c79a2b4e7cb0"
+      ],
+      "previous_run_hash": "7923603e1cc5f41a9fdfb692189efeb3b7b60956ca8e7fbe85cef8c0c53e8eec",
+      "manifest_hash": "4c782c47caca349b7c76566904cb2b629204c2df1d244d4ee134c4c408fc15f0",
+      "sequence": 13,
+      "previous_hash": "7923603e1cc5f41a9fdfb692189efeb3b7b60956ca8e7fbe85cef8c0c53e8eec"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-229d28ce821633cd",
+      "timestamp": "2026-10-08T23:19:58.670Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+          "sha256": "48de88cbad7c3e8337b2a0cf68b536201299d4f7875accac9c51c6d46b25048d",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-9426cb77a8f8ed54; kind: inventory_rbac; sha256: 48de88cbad7c3e8337b2a0cf68b536201299d4f7875accac9c51c6d46b25048d"
+      ],
+      "previous_run_hash": "4c782c47caca349b7c76566904cb2b629204c2df1d244d4ee134c4c408fc15f0",
+      "manifest_hash": "5c725a8a455f28c63d7632ade9975fec1a913c704484cb4c50f0a3d30882ba9d",
+      "sequence": 14,
+      "previous_hash": "4c782c47caca349b7c76566904cb2b629204c2df1d244d4ee134c4c408fc15f0"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-a09aeff7e3b761b1",
+      "timestamp": "2026-10-08T23:19:59.529Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+          "sha256": "e063a379454e05ccef345a4756ea6a43eb77096adcbf6ff68fc03b3b428c60d8",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-95b2ca0c26abb065; kind: inventory_data_handling; sha256: e063a379454e05ccef345a4756ea6a43eb77096adcbf6ff68fc03b3b428c60d8"
+      ],
+      "previous_run_hash": "5c725a8a455f28c63d7632ade9975fec1a913c704484cb4c50f0a3d30882ba9d",
+      "manifest_hash": "cb7f2bf517122c37b5fa022f32e948202d6b63d8e35645bcc3056f3ac1b24ab0",
+      "sequence": 15,
+      "previous_hash": "5c725a8a455f28c63d7632ade9975fec1a913c704484cb4c50f0a3d30882ba9d"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-dba1e6978651234f",
+      "timestamp": "2026-10-08T23:20:00.414Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+          "sha256": "791d47acd8f2b630d11fbf06a7620573b52ec626850036453ce11466a002dccc",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-30934f2bb735b040; kind: inventory_coverage; sha256: 791d47acd8f2b630d11fbf06a7620573b52ec626850036453ce11466a002dccc"
+      ],
+      "previous_run_hash": "cb7f2bf517122c37b5fa022f32e948202d6b63d8e35645bcc3056f3ac1b24ab0",
+      "manifest_hash": "c246e9d188b864f2e39726d080f0996d52ce453df40a3f83b20fed6979e6055f",
+      "sequence": 16,
+      "previous_hash": "cb7f2bf517122c37b5fa022f32e948202d6b63d8e35645bcc3056f3ac1b24ab0"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-ac49e6ea949a5997",
+      "timestamp": "2026-10-08T23:22:40.638Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+          "sha256": "577c9ef55fa8b1b7a80485799e0d9d1b746a72f0977ab2350e6584fd748cf1d7",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-11ed56cace3ba0d9; kind: action_effect_inference; sha256: 577c9ef55fa8b1b7a80485799e0d9d1b746a72f0977ab2350e6584fd748cf1d7"
+      ],
+      "previous_run_hash": "c246e9d188b864f2e39726d080f0996d52ce453df40a3f83b20fed6979e6055f",
+      "manifest_hash": "4f16a4eb0273970e050983a6b1d8af9253ad6e423def944ffed46f91be3e4321",
+      "sequence": 17,
+      "previous_hash": "c246e9d188b864f2e39726d080f0996d52ce453df40a3f83b20fed6979e6055f"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-1c26d6e5b929298c",
+      "timestamp": "2026-10-08T23:22:41.088Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+          "sha256": "03fd4ea381cd0ff28546c3798d725d104db055901449e052d9aaa302a0dc367a",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-d8888348fd7542e5; kind: archive_immutability; sha256: 03fd4ea381cd0ff28546c3798d725d104db055901449e052d9aaa302a0dc367a"
+      ],
+      "previous_run_hash": "4f16a4eb0273970e050983a6b1d8af9253ad6e423def944ffed46f91be3e4321",
+      "manifest_hash": "eca9409475d0d563cfb8f21d06770829f1592b85680290f20f820399f55c6cae",
+      "sequence": 18,
+      "previous_hash": "4f16a4eb0273970e050983a6b1d8af9253ad6e423def944ffed46f91be3e4321"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-4f40c9fbc1e7a5f5",
+      "timestamp": "2026-10-08T23:22:41.536Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+          "sha256": "4d5a90a90c87a8e5f8702fdd5dc0774c7905be0e7f3f2459b90245aa9d5cc78b",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-2ea8ae45ddab94b4; kind: decision_citation_resolution; sha256: 4d5a90a90c87a8e5f8702fdd5dc0774c7905be0e7f3f2459b90245aa9d5cc78b"
+      ],
+      "previous_run_hash": "eca9409475d0d563cfb8f21d06770829f1592b85680290f20f820399f55c6cae",
+      "manifest_hash": "1aa359bd2867c4e3b9473078c29479824a54d1838de9dfda912f678926ec0171",
+      "sequence": 19,
+      "previous_hash": "eca9409475d0d563cfb8f21d06770829f1592b85680290f20f820399f55c6cae"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-07f4d923c640efe6",
+      "timestamp": "2026-10-08T23:22:41.981Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+          "sha256": "78c6a2d692f3f6fc5b123fb68363ae03af334d92f022652ddc56de99837d16b0",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-0d2ba73f1eb62d99; kind: decision_record_integrity; sha256: 78c6a2d692f3f6fc5b123fb68363ae03af334d92f022652ddc56de99837d16b0"
+      ],
+      "previous_run_hash": "1aa359bd2867c4e3b9473078c29479824a54d1838de9dfda912f678926ec0171",
+      "manifest_hash": "ddbf1f546afe431fc66a6d5b014b9573836fb60f8299c49dea4e674907f2688c",
+      "sequence": 20,
+      "previous_hash": "1aa359bd2867c4e3b9473078c29479824a54d1838de9dfda912f678926ec0171"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-18e87b694cb3a5be",
+      "timestamp": "2026-10-08T23:22:42.412Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+          "sha256": "34fe865d97600bde13bd8395606bdf75e55dd450d2768e509a4eb5c3e0bed0c0",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-dd6e1c16bb15d946; kind: docs_drift; sha256: 34fe865d97600bde13bd8395606bdf75e55dd450d2768e509a4eb5c3e0bed0c0"
+      ],
+      "previous_run_hash": "ddbf1f546afe431fc66a6d5b014b9573836fb60f8299c49dea4e674907f2688c",
+      "manifest_hash": "5fb1acb2d13e26acc386de0d592fd6ed722974ba9977f577e8b8155bac0f3c17",
+      "sequence": 21,
+      "previous_hash": "ddbf1f546afe431fc66a6d5b014b9573836fb60f8299c49dea4e674907f2688c"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-95395a4724bb61ed",
+      "timestamp": "2026-10-08T23:22:42.844Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+          "sha256": "2e5fa0fa98f346db25b483da9a142ab3fe3d74d2dc2c2b9510b4ee407cef9ead",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-a9a7c97ced70f5a4; kind: harness_coherence; sha256: 2e5fa0fa98f346db25b483da9a142ab3fe3d74d2dc2c2b9510b4ee407cef9ead"
+      ],
+      "previous_run_hash": "5fb1acb2d13e26acc386de0d592fd6ed722974ba9977f577e8b8155bac0f3c17",
+      "manifest_hash": "abf42f8a43171c87fb8147750db8feb4eb14c0c7f80a537bcebf38a17b7a6b6a",
+      "sequence": 22,
+      "previous_hash": "5fb1acb2d13e26acc386de0d592fd6ed722974ba9977f577e8b8155bac0f3c17"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-218cb85a7f975645",
+      "timestamp": "2026-10-08T23:22:43.281Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+          "sha256": "3b1c12d31dcbdd9ce6c520ee29ab81796c9237eee59be97dcd9b8d3137c7ebf9",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-a9341ebe7494e8e2; kind: harness_coverage; sha256: 3b1c12d31dcbdd9ce6c520ee29ab81796c9237eee59be97dcd9b8d3137c7ebf9"
+      ],
+      "previous_run_hash": "abf42f8a43171c87fb8147750db8feb4eb14c0c7f80a537bcebf38a17b7a6b6a",
+      "manifest_hash": "7c56336b09df38e8da80b9fb2710bde71ede911b98a257110e09e0eaa7838d61",
+      "sequence": 23,
+      "previous_hash": "abf42f8a43171c87fb8147750db8feb4eb14c0c7f80a537bcebf38a17b7a6b6a"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-fc8e6a1b789552be",
+      "timestamp": "2026-10-08T23:22:43.716Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+          "sha256": "bcc39200f77dad4663bf2aafa828370396f703e3e30bea66b1d4bc6a6bfa46df",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-3cf4fe4411bc9267; kind: harness_depth; sha256: bcc39200f77dad4663bf2aafa828370396f703e3e30bea66b1d4bc6a6bfa46df"
+      ],
+      "previous_run_hash": "7c56336b09df38e8da80b9fb2710bde71ede911b98a257110e09e0eaa7838d61",
+      "manifest_hash": "0ddd7f9db8311b0287e7d9d0055077403fc9020d39681c4b9c30141235289d64",
+      "sequence": 24,
+      "previous_hash": "7c56336b09df38e8da80b9fb2710bde71ede911b98a257110e09e0eaa7838d61"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-7b2627c81e12525e",
+      "timestamp": "2026-10-08T23:22:44.153Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+          "sha256": "5aada9854ef2fe2f96a81bb71663f50f71902302cbbb73f76e8652f71929ba0f",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-f478012ad5d225b9; kind: harness_green_main; sha256: 5aada9854ef2fe2f96a81bb71663f50f71902302cbbb73f76e8652f71929ba0f"
+      ],
+      "previous_run_hash": "0ddd7f9db8311b0287e7d9d0055077403fc9020d39681c4b9c30141235289d64",
+      "manifest_hash": "f07318a0b7da81233e84ecaaa57902f0a4a216a4c4e8b26253414c8faf447c78",
+      "sequence": 25,
+      "previous_hash": "0ddd7f9db8311b0287e7d9d0055077403fc9020d39681c4b9c30141235289d64"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-41c01542a6ebe9e1",
+      "timestamp": "2026-10-08T23:22:44.725Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+          "sha256": "8d7c3066125793c5bae54d6d03ed136700a079e5ce6e5f3b909ddb0535b23631",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-f4102b724ab233ea; kind: harness_idiomaticity; sha256: 8d7c3066125793c5bae54d6d03ed136700a079e5ce6e5f3b909ddb0535b23631"
+      ],
+      "previous_run_hash": "f07318a0b7da81233e84ecaaa57902f0a4a216a4c4e8b26253414c8faf447c78",
+      "manifest_hash": "7ed8b23e1079f0de8c3a7ad300f609bc6fbb127ca75b7dcc32d4621b11d6119e",
+      "sequence": 26,
+      "previous_hash": "f07318a0b7da81233e84ecaaa57902f0a4a216a4c4e8b26253414c8faf447c78"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-473e93f2c61cee27",
+      "timestamp": "2026-10-08T23:22:45.209Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+          "sha256": "4ed3df6b04c4dc99f7e7b234757b48b1da5e5177d9e7b423d01c4c3cab8f92d7",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-89b148fb3a535e30; kind: harness_performance; sha256: 4ed3df6b04c4dc99f7e7b234757b48b1da5e5177d9e7b423d01c4c3cab8f92d7"
+      ],
+      "previous_run_hash": "7ed8b23e1079f0de8c3a7ad300f609bc6fbb127ca75b7dcc32d4621b11d6119e",
+      "manifest_hash": "2c868d82b6c36604803fd17ef291803e655a27553e994c6695d5163376834540",
+      "sequence": 27,
+      "previous_hash": "7ed8b23e1079f0de8c3a7ad300f609bc6fbb127ca75b7dcc32d4621b11d6119e"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-1d14d2ec73b17982",
+      "timestamp": "2026-10-08T23:22:45.633Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+          "sha256": "fe2038f586140653a83a70cbc193d501705a74cf714d8764659e9e10cda38ca4",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-7270c16fbc939e96; kind: harness_robustness; sha256: fe2038f586140653a83a70cbc193d501705a74cf714d8764659e9e10cda38ca4"
+      ],
+      "previous_run_hash": "2c868d82b6c36604803fd17ef291803e655a27553e994c6695d5163376834540",
+      "manifest_hash": "b7991c47878348579f5f5c30b81c47df585f1f536207693a78d355340116bd44",
+      "sequence": 28,
+      "previous_hash": "2c868d82b6c36604803fd17ef291803e655a27553e994c6695d5163376834540"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-a2ef2c51d2869cce",
+      "timestamp": "2026-10-08T23:22:46.054Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+          "sha256": "8d6c2d9258318ff0e1f4bb4f2a37dd7290ff5ab80eb411d8d79d822831c38d64",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-dac8f6d286c12ecb; kind: harness_security; sha256: 8d6c2d9258318ff0e1f4bb4f2a37dd7290ff5ab80eb411d8d79d822831c38d64"
+      ],
+      "previous_run_hash": "b7991c47878348579f5f5c30b81c47df585f1f536207693a78d355340116bd44",
+      "manifest_hash": "1daba95dbd155d4c58938cbf1dca9eaf02657139d240e8da713321c51bbfeb3a",
+      "sequence": 29,
+      "previous_hash": "b7991c47878348579f5f5c30b81c47df585f1f536207693a78d355340116bd44"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-9d5cdcf8f776e3ff",
+      "timestamp": "2026-10-08T23:22:46.476Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+          "sha256": "2cfe2c1a4063c991af18e975074e0b703e52b453852f86bae5ddf33e8c0e4b8f",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-5eabaffb2d7e3428; kind: inventory_adherence; sha256: 2cfe2c1a4063c991af18e975074e0b703e52b453852f86bae5ddf33e8c0e4b8f"
+      ],
+      "previous_run_hash": "1daba95dbd155d4c58938cbf1dca9eaf02657139d240e8da713321c51bbfeb3a",
+      "manifest_hash": "f7c7dddb9d068fb60b0d15385abd23879f121e06594038a9d0be4ce95c24771e",
+      "sequence": 30,
+      "previous_hash": "1daba95dbd155d4c58938cbf1dca9eaf02657139d240e8da713321c51bbfeb3a"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-78dd1a4a8ee97e2d",
+      "timestamp": "2026-10-08T23:22:48.691Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+          "sha256": "44a6110990a02169872a75adf9d890f516858a4ea89e5ab14b7389b36979b10f",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-8d99f703eb872800; kind: inventory_determinism; sha256: 44a6110990a02169872a75adf9d890f516858a4ea89e5ab14b7389b36979b10f"
+      ],
+      "previous_run_hash": "f7c7dddb9d068fb60b0d15385abd23879f121e06594038a9d0be4ce95c24771e",
+      "manifest_hash": "ef0dd242c7a0adfba0fe5c8eaec04f0d3c2d9e92648d8f29f2ad93653a7e7499",
+      "sequence": 31,
+      "previous_hash": "f7c7dddb9d068fb60b0d15385abd23879f121e06594038a9d0be4ce95c24771e"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-fd310d2d17285673",
+      "timestamp": "2026-10-08T23:22:49.840Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+          "sha256": "1d0d17d5e120303612cf1f412ef655e75e1a8cc073408f5cf7298effdd71a6e4",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-cd0d9b512b854f4e; kind: lint; sha256: 1d0d17d5e120303612cf1f412ef655e75e1a8cc073408f5cf7298effdd71a6e4"
+      ],
+      "previous_run_hash": "ef0dd242c7a0adfba0fe5c8eaec04f0d3c2d9e92648d8f29f2ad93653a7e7499",
+      "manifest_hash": "3276c665386c1c0682fc32947d536ce99826ba946f6bf6100faeb09e39b13856",
+      "sequence": 32,
+      "previous_hash": "ef0dd242c7a0adfba0fe5c8eaec04f0d3c2d9e92648d8f29f2ad93653a7e7499"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-81082fccbf2364ae",
+      "timestamp": "2026-10-08T23:22:50.267Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+          "sha256": "e6e75052e463f817ee06a697aa0e4d8911c9e3c8e1c4acdd1bf7f3e250a1d504",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-d6e01ca6067a5037; kind: plant_coherence; sha256: e6e75052e463f817ee06a697aa0e4d8911c9e3c8e1c4acdd1bf7f3e250a1d504"
+      ],
+      "previous_run_hash": "3276c665386c1c0682fc32947d536ce99826ba946f6bf6100faeb09e39b13856",
+      "manifest_hash": "78128909b2d6eba13b65f5d0ca7d28f9337884f29392881abf6dae8560d04513",
+      "sequence": 33,
+      "previous_hash": "3276c665386c1c0682fc32947d536ce99826ba946f6bf6100faeb09e39b13856"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-f55c61379aca5d19",
+      "timestamp": "2026-10-08T23:22:50.692Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+          "sha256": "a6721704d37ba5a8eaa8e0e4fc405bc9d5b1c92fddbbaf313c9746a8b76d54d6",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-3dd137f50a858ea1; kind: plant_coverage; sha256: a6721704d37ba5a8eaa8e0e4fc405bc9d5b1c92fddbbaf313c9746a8b76d54d6"
+      ],
+      "previous_run_hash": "78128909b2d6eba13b65f5d0ca7d28f9337884f29392881abf6dae8560d04513",
+      "manifest_hash": "f236f0320431f880f6d5c85d37a8b2241ae6cb013dd4d291e491371ec3df39ed",
+      "sequence": 34,
+      "previous_hash": "78128909b2d6eba13b65f5d0ca7d28f9337884f29392881abf6dae8560d04513"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-1b13565301f06e1c",
+      "timestamp": "2026-10-08T23:22:51.127Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+          "sha256": "47d8501e38171922a00506e73670ac496c58f63f80045709531d2cbd0a2a7851",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-e90d320c1df590b6; kind: plant_depth; sha256: 47d8501e38171922a00506e73670ac496c58f63f80045709531d2cbd0a2a7851"
+      ],
+      "previous_run_hash": "f236f0320431f880f6d5c85d37a8b2241ae6cb013dd4d291e491371ec3df39ed",
+      "manifest_hash": "e05f84232174f73f9a8bf8869e6264b1eec89c2b7a5d87eb9e44169f5cfd3f31",
+      "sequence": 35,
+      "previous_hash": "f236f0320431f880f6d5c85d37a8b2241ae6cb013dd4d291e491371ec3df39ed"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-b895022cd74c20e3",
+      "timestamp": "2026-10-08T23:22:51.548Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+          "sha256": "4b68f9ba9079e68721d2411b9ed3f5a03c1526d25225225d602d5e8b67b32c24",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-4120d2e75ceda396; kind: round_record_integrity; sha256: 4b68f9ba9079e68721d2411b9ed3f5a03c1526d25225225d602d5e8b67b32c24"
+      ],
+      "previous_run_hash": "e05f84232174f73f9a8bf8869e6264b1eec89c2b7a5d87eb9e44169f5cfd3f31",
+      "manifest_hash": "dac2f2293885d28f496e99a70fbd17f5cd6dfb49d435b23c5b96f230758e134d",
+      "sequence": 36,
+      "previous_hash": "e05f84232174f73f9a8bf8869e6264b1eec89c2b7a5d87eb9e44169f5cfd3f31"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-c5991be4294930e8",
+      "timestamp": "2026-10-08T23:22:51.961Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+          "sha256": "90c597d6a4b3959d70f9d74ca26af2e2b4968ee07c9e7abf376cce3dcf39371a",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-a96646142553c04d; kind: security_scan; sha256: 90c597d6a4b3959d70f9d74ca26af2e2b4968ee07c9e7abf376cce3dcf39371a"
+      ],
+      "previous_run_hash": "dac2f2293885d28f496e99a70fbd17f5cd6dfb49d435b23c5b96f230758e134d",
+      "manifest_hash": "4722fc1d87d5eee8d4cad2cd9421645d6d00ebadab1de2ad1ddc0a5d366f0b9b",
+      "sequence": 37,
+      "previous_hash": "dac2f2293885d28f496e99a70fbd17f5cd6dfb49d435b23c5b96f230758e134d"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-450c3114a2c5350a",
+      "timestamp": "2026-10-08T23:22:52.387Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+          "sha256": "2510294bd833373bf8d6c5eb2038d4fd31ed497ae56595bbf4c62d794a945d78",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-a898f5c058f5b09d; kind: site_drift; sha256: 2510294bd833373bf8d6c5eb2038d4fd31ed497ae56595bbf4c62d794a945d78"
+      ],
+      "previous_run_hash": "4722fc1d87d5eee8d4cad2cd9421645d6d00ebadab1de2ad1ddc0a5d366f0b9b",
+      "manifest_hash": "02c0addaec4aa9a588e45e3681465726209e6792d4ca87f59aba88c3a06d3acb",
+      "sequence": 38,
+      "previous_hash": "4722fc1d87d5eee8d4cad2cd9421645d6d00ebadab1de2ad1ddc0a5d366f0b9b"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-c2e8f760f1eb96a3",
+      "timestamp": "2026-10-08T23:22:52.805Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+          "sha256": "faba66b893c62cdcef40a3cebb4c2ecdb24feb3a110786eb04e1d825fb0adb10",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-bb4d07e3b1050d4e; kind: spec_alignment; sha256: faba66b893c62cdcef40a3cebb4c2ecdb24feb3a110786eb04e1d825fb0adb10"
+      ],
+      "previous_run_hash": "02c0addaec4aa9a588e45e3681465726209e6792d4ca87f59aba88c3a06d3acb",
+      "manifest_hash": "627b4968fd2d3c47a037495964592d3eaebb43b813d836898e539093e9bcb9f5",
+      "sequence": 39,
+      "previous_hash": "02c0addaec4aa9a588e45e3681465726209e6792d4ca87f59aba88c3a06d3acb"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-2cc41e62552e5eb2",
+      "timestamp": "2026-10-08T23:22:53.239Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+          "sha256": "275d3bc11abc632228e92a9dde3c7170028459505ddce3bc1fba7e828e165e24",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-8f264921e0782b0c; kind: spec_depth; sha256: 275d3bc11abc632228e92a9dde3c7170028459505ddce3bc1fba7e828e165e24"
+      ],
+      "previous_run_hash": "627b4968fd2d3c47a037495964592d3eaebb43b813d836898e539093e9bcb9f5",
+      "manifest_hash": "67343de29875ce17756926dd82afbfe17ab3719fa6f6a11277b3f3d651a9c70f",
+      "sequence": 40,
+      "previous_hash": "627b4968fd2d3c47a037495964592d3eaebb43b813d836898e539093e9bcb9f5"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-d8ea4ba0ced9cc64",
+      "timestamp": "2026-10-08T23:22:53.724Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+          "sha256": "17c0dbe6f87ffb4770152df51c7581b8da1c72a6404b9352655cf4b8ad911b3b",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-cf10be547c1660a8; kind: spec_freshness; sha256: 17c0dbe6f87ffb4770152df51c7581b8da1c72a6404b9352655cf4b8ad911b3b"
+      ],
+      "previous_run_hash": "67343de29875ce17756926dd82afbfe17ab3719fa6f6a11277b3f3d651a9c70f",
+      "manifest_hash": "79b9f1dc039f4f5feabf8ac2b260df83dcff39f80985fe3a79ecbfcb23caf893",
+      "sequence": 41,
+      "previous_hash": "67343de29875ce17756926dd82afbfe17ab3719fa6f6a11277b3f3d651a9c70f"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-c04f6b3cc3699691",
+      "timestamp": "2026-10-08T23:22:54.165Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+          "sha256": "5a7a4c99092ef9090fa0a60f49dab09f688d98ef7c295cbc4f457b4ded4ffbbc",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-44a21807e8cafd2e; kind: spec_idiomaticity; sha256: 5a7a4c99092ef9090fa0a60f49dab09f688d98ef7c295cbc4f457b4ded4ffbbc"
+      ],
+      "previous_run_hash": "79b9f1dc039f4f5feabf8ac2b260df83dcff39f80985fe3a79ecbfcb23caf893",
+      "manifest_hash": "3955ec2ae0a4c073194725f159fe6b8f2d8453521b9c101f8901bf4225e33a27",
+      "sequence": 42,
+      "previous_hash": "79b9f1dc039f4f5feabf8ac2b260df83dcff39f80985fe3a79ecbfcb23caf893"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-7b6030b149a29839",
+      "timestamp": "2026-10-08T23:22:54.588Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+          "sha256": "5daf9a780f66d99743527d19b6e7e7210712c7531045ca32390182a1583e5d5a",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-b750694ac633dcd8; kind: spec_performance_targets; sha256: 5daf9a780f66d99743527d19b6e7e7210712c7531045ca32390182a1583e5d5a"
+      ],
+      "previous_run_hash": "3955ec2ae0a4c073194725f159fe6b8f2d8453521b9c101f8901bf4225e33a27",
+      "manifest_hash": "5819c91799c7f45a9fe9ba1e759f7b09bc9a2df52fcdcb03f777156c878b4431",
+      "sequence": 43,
+      "previous_hash": "3955ec2ae0a4c073194725f159fe6b8f2d8453521b9c101f8901bf4225e33a27"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-6376d2cbbcdcdc21",
+      "timestamp": "2026-10-08T23:22:55.018Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+          "sha256": "133dcfdcf497db28ee1e7c15ba5e3af27325e7d69fd90462e74e11b921eca819",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-caa9fd44d3228470; kind: spec_robustness_targets; sha256: 133dcfdcf497db28ee1e7c15ba5e3af27325e7d69fd90462e74e11b921eca819"
+      ],
+      "previous_run_hash": "5819c91799c7f45a9fe9ba1e759f7b09bc9a2df52fcdcb03f777156c878b4431",
+      "manifest_hash": "e5d426657e8a0c71c25b34e3595084fe13998d9947ae2ffa7360ed5c7e719e1c",
+      "sequence": 44,
+      "previous_hash": "5819c91799c7f45a9fe9ba1e759f7b09bc9a2df52fcdcb03f777156c878b4431"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-6f534f0729c72368",
+      "timestamp": "2026-10-08T23:22:55.458Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+          "sha256": "bf06e886f90e7a0ce9512352270bf83bba8a6f881fb02260c85036472e3c0c4a",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-030eee9c75ed536b; kind: spec_security_coverage; sha256: bf06e886f90e7a0ce9512352270bf83bba8a6f881fb02260c85036472e3c0c4a"
+      ],
+      "previous_run_hash": "e5d426657e8a0c71c25b34e3595084fe13998d9947ae2ffa7360ed5c7e719e1c",
+      "manifest_hash": "0fdeb4b7a69e467c574e10dafa75a701a20f058771b789670c7c535d66aa56cb",
+      "sequence": 45,
+      "previous_hash": "e5d426657e8a0c71c25b34e3595084fe13998d9947ae2ffa7360ed5c7e719e1c"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-9466907bfb2961d4",
+      "timestamp": "2026-10-08T23:22:55.903Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+          "sha256": "8afd80ede5511088be99e6bdb51387f0bef915269d8f0cc88cd33eb1c75fb5da",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-e4ef420d8f0463e9; kind: test_coherence; sha256: 8afd80ede5511088be99e6bdb51387f0bef915269d8f0cc88cd33eb1c75fb5da"
+      ],
+      "previous_run_hash": "0fdeb4b7a69e467c574e10dafa75a701a20f058771b789670c7c535d66aa56cb",
+      "manifest_hash": "2c0062e6d147b6acb70fff59416d8fe64a9ec4c2873442ce2b12fe2d66e08afe",
+      "sequence": 46,
+      "previous_hash": "0fdeb4b7a69e467c574e10dafa75a701a20f058771b789670c7c535d66aa56cb"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-f0a8b30c72459c0d",
+      "timestamp": "2026-10-08T23:22:56.323Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+          "sha256": "b34b3a65f8917b567e2d0125ce924420d99dee88e98e3b2231ce45bf20ad9626",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-fdd44a8bbb5d8fbb; kind: test_coverage_depth; sha256: b34b3a65f8917b567e2d0125ce924420d99dee88e98e3b2231ce45bf20ad9626"
+      ],
+      "previous_run_hash": "2c0062e6d147b6acb70fff59416d8fe64a9ec4c2873442ce2b12fe2d66e08afe",
+      "manifest_hash": "26ad9dd877788b355013641c94d6da6fe12eec133fa681d1eb0d19b716199cdd",
+      "sequence": 47,
+      "previous_hash": "2c0062e6d147b6acb70fff59416d8fe64a9ec4c2873442ce2b12fe2d66e08afe"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-f933d0c08c548331",
+      "timestamp": "2026-10-08T23:22:56.759Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+          "sha256": "256344223768f6327c37489a72dec4d3b08e4543fb2994d2bdc1945da4776684",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-8e94b6aa8c2ce03b; kind: test_idiomaticity; sha256: 256344223768f6327c37489a72dec4d3b08e4543fb2994d2bdc1945da4776684"
+      ],
+      "previous_run_hash": "26ad9dd877788b355013641c94d6da6fe12eec133fa681d1eb0d19b716199cdd",
+      "manifest_hash": "8a50d5b01262ca0167e168945c162002e91a1e66421b4e0b2edea7fd16c0dfb8",
+      "sequence": 48,
+      "previous_hash": "26ad9dd877788b355013641c94d6da6fe12eec133fa681d1eb0d19b716199cdd"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-7db3d6a1be24bfbf",
+      "timestamp": "2026-10-08T23:22:57.192Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+            ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json",
+          "sha256": "1b86ff549741b47ddab27cd194b3d1a4ddbe9e3ff1bffba42c73b9ea4d334220",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-c2c3b5d9da1c8b58; kind: test_invariant_alignment; sha256: 1b86ff549741b47ddab27cd194b3d1a4ddbe9e3ff1bffba42c73b9ea4d334220"
+      ],
+      "previous_run_hash": "8a50d5b01262ca0167e168945c162002e91a1e66421b4e0b2edea7fd16c0dfb8",
+      "manifest_hash": "b38f1bb7fe1b74b101ada3d436dad73c14a2eb528ddf512960e73ab908590d03",
+      "sequence": 49,
+      "previous_hash": "8a50d5b01262ca0167e168945c162002e91a1e66421b4e0b2edea7fd16c0dfb8"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-300153e6c9cc5911",
+      "timestamp": "2026-10-08T23:22:57.613Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+            ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json",
+            ".devai/state/sensor-readings/test_performance_coverage/SR-d2400a4fd616aae4.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_performance_coverage/SR-d2400a4fd616aae4.json",
+          "sha256": "9073a09faa51c5b8beba726276121f128057a0008c8e0b9cb9ddd74d1cd54de0",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-d2400a4fd616aae4; kind: test_performance_coverage; sha256: 9073a09faa51c5b8beba726276121f128057a0008c8e0b9cb9ddd74d1cd54de0"
+      ],
+      "previous_run_hash": "b38f1bb7fe1b74b101ada3d436dad73c14a2eb528ddf512960e73ab908590d03",
+      "manifest_hash": "c6b67e006177782a3ef86379a6700314bac2d242d9bcfcf4ab7a09cc71d9e5a4",
+      "sequence": 50,
+      "previous_hash": "b38f1bb7fe1b74b101ada3d436dad73c14a2eb528ddf512960e73ab908590d03"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-5c420f6393fdf6de",
+      "timestamp": "2026-10-08T23:22:58.037Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+            ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json",
+            ".devai/state/sensor-readings/test_performance_coverage/SR-d2400a4fd616aae4.json",
+            ".devai/state/sensor-readings/test_robustness_coverage/SR-54d28c6b999a5163.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_robustness_coverage/SR-54d28c6b999a5163.json",
+          "sha256": "f9ad9f609c8c3a9d5ffbb289da66e6a5506b7066c3cec0d606f40026ec7fae15",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-54d28c6b999a5163; kind: test_robustness_coverage; sha256: f9ad9f609c8c3a9d5ffbb289da66e6a5506b7066c3cec0d606f40026ec7fae15"
+      ],
+      "previous_run_hash": "c6b67e006177782a3ef86379a6700314bac2d242d9bcfcf4ab7a09cc71d9e5a4",
+      "manifest_hash": "09024a8d75174ec94213852c749f2ef803d45fb5a6d980269e33307ae39d37f6",
+      "sequence": 51,
+      "previous_hash": "c6b67e006177782a3ef86379a6700314bac2d242d9bcfcf4ab7a09cc71d9e5a4"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-5fe322b110ab5295",
+      "timestamp": "2026-10-08T23:22:58.482Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+            ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json",
+            ".devai/state/sensor-readings/test_performance_coverage/SR-d2400a4fd616aae4.json",
+            ".devai/state/sensor-readings/test_robustness_coverage/SR-54d28c6b999a5163.json",
+            ".devai/state/sensor-readings/test_security_coverage/SR-3f13f6ba1de6aa5c.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_security_coverage/SR-3f13f6ba1de6aa5c.json",
+          "sha256": "09815a55e9153e69f441935a6188fca751f90ea46c4b6dc8a3712b1eaf995c43",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-3f13f6ba1de6aa5c; kind: test_security_coverage; sha256: 09815a55e9153e69f441935a6188fca751f90ea46c4b6dc8a3712b1eaf995c43"
+      ],
+      "previous_run_hash": "09024a8d75174ec94213852c749f2ef803d45fb5a6d980269e33307ae39d37f6",
+      "manifest_hash": "0e1d7f6f2f3076ef8f352b0c53a30e00473d7d5d8dcf182de316b6b72ef951a3",
+      "sequence": 52,
+      "previous_hash": "09024a8d75174ec94213852c749f2ef803d45fb5a6d980269e33307ae39d37f6"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-db1259386428a98f",
+      "timestamp": "2026-10-08T23:22:58.933Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+            ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json",
+            ".devai/state/sensor-readings/test_performance_coverage/SR-d2400a4fd616aae4.json",
+            ".devai/state/sensor-readings/test_robustness_coverage/SR-54d28c6b999a5163.json",
+            ".devai/state/sensor-readings/test_security_coverage/SR-3f13f6ba1de6aa5c.json",
+            ".devai/state/sensor-readings/test_weakening_review/SR-b4ac87401dcb950a.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_weakening_review/SR-b4ac87401dcb950a.json",
+          "sha256": "dd6ef5a15a308c465e648991caefcae673881a6a2fcdd03b4c3db2636294c945",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-b4ac87401dcb950a; kind: test_weakening_review; sha256: dd6ef5a15a308c465e648991caefcae673881a6a2fcdd03b4c3db2636294c945"
+      ],
+      "previous_run_hash": "0e1d7f6f2f3076ef8f352b0c53a30e00473d7d5d8dcf182de316b6b72ef951a3",
+      "manifest_hash": "ad2c0d44b7d71571245949338ac82c416b520257b924505bc8b5eb4af01c73b2",
+      "sequence": 53,
+      "previous_hash": "0e1d7f6f2f3076ef8f352b0c53a30e00473d7d5d8dcf182de316b6b72ef951a3"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-31d4a9d7d9e64e97",
+      "timestamp": "2026-10-08T23:22:59.384Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+            ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json",
+            ".devai/state/sensor-readings/test_performance_coverage/SR-d2400a4fd616aae4.json",
+            ".devai/state/sensor-readings/test_robustness_coverage/SR-54d28c6b999a5163.json",
+            ".devai/state/sensor-readings/test_security_coverage/SR-3f13f6ba1de6aa5c.json",
+            ".devai/state/sensor-readings/test_weakening_review/SR-b4ac87401dcb950a.json",
+            ".devai/state/sensor-readings/trace_resolution/SR-db16329d5fb3e115.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/trace_resolution/SR-db16329d5fb3e115.json",
+          "sha256": "d93f23d1bd4e2d6c2fe0061a5de23b6d5a89d8a0f252b0f9f640776e16612632",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-db16329d5fb3e115; kind: trace_resolution; sha256: d93f23d1bd4e2d6c2fe0061a5de23b6d5a89d8a0f252b0f9f640776e16612632"
+      ],
+      "previous_run_hash": "ad2c0d44b7d71571245949338ac82c416b520257b924505bc8b5eb4af01c73b2",
+      "manifest_hash": "3d01731919be684e5c4192c20fae70e1efe96e7179a50c6f40cf2adf21522e02",
+      "sequence": 54,
+      "previous_hash": "ad2c0d44b7d71571245949338ac82c416b520257b924505bc8b5eb4af01c73b2"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-ce973cc3c54611cd",
+      "timestamp": "2026-10-08T23:23:00.422Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_invariant_alignment/SR-5ae39a463184f6f5.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+            ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json",
+            ".devai/state/sensor-readings/test_performance_coverage/SR-d2400a4fd616aae4.json",
+            ".devai/state/sensor-readings/test_robustness_coverage/SR-54d28c6b999a5163.json",
+            ".devai/state/sensor-readings/test_security_coverage/SR-3f13f6ba1de6aa5c.json",
+            ".devai/state/sensor-readings/test_weakening_review/SR-b4ac87401dcb950a.json",
+            ".devai/state/sensor-readings/trace_resolution/SR-db16329d5fb3e115.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/harness_invariant_alignment/SR-5ae39a463184f6f5.json",
+          "sha256": "08bc29b7393855283177bb09fde93106bba50469041ba630b4ee87718c0c5ef7",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-5ae39a463184f6f5; kind: harness_invariant_alignment; sha256: 08bc29b7393855283177bb09fde93106bba50469041ba630b4ee87718c0c5ef7"
+      ],
+      "previous_run_hash": "3d01731919be684e5c4192c20fae70e1efe96e7179a50c6f40cf2adf21522e02",
+      "manifest_hash": "5069fe2ee42330ed1ae71862168e358e8f07add40642bbc834bab8ed6228509a",
+      "sequence": 55,
+      "previous_hash": "3d01731919be684e5c4192c20fae70e1efe96e7179a50c6f40cf2adf21522e02"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-bc78b194dafc664f",
+      "timestamp": "2026-10-08T23:23:00.855Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_invariant_alignment/SR-5ae39a463184f6f5.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_performance/SR-2144763888193f2a.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+            ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json",
+            ".devai/state/sensor-readings/test_performance_coverage/SR-d2400a4fd616aae4.json",
+            ".devai/state/sensor-readings/test_robustness_coverage/SR-54d28c6b999a5163.json",
+            ".devai/state/sensor-readings/test_security_coverage/SR-3f13f6ba1de6aa5c.json",
+            ".devai/state/sensor-readings/test_weakening_review/SR-b4ac87401dcb950a.json",
+            ".devai/state/sensor-readings/trace_resolution/SR-db16329d5fb3e115.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_performance/SR-2144763888193f2a.json",
+          "sha256": "25236d89273b9b9328fdc8da930c69ad25c5ca4e5d0193f9abd00292d7e4d310",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-2144763888193f2a; kind: inventory_performance; sha256: 25236d89273b9b9328fdc8da930c69ad25c5ca4e5d0193f9abd00292d7e4d310"
+      ],
+      "previous_run_hash": "5069fe2ee42330ed1ae71862168e358e8f07add40642bbc834bab8ed6228509a",
+      "manifest_hash": "a610e90e6255da07e0f5766ed522d307004b17ceefe7ea8b86b6130028dffbf9",
+      "sequence": 56,
+      "previous_hash": "5069fe2ee42330ed1ae71862168e358e8f07add40642bbc834bab8ed6228509a"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-f6142faeb1e68b2d",
+      "timestamp": "2026-10-08T23:23:04.224Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "audit.observe",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.claude/worktrees/scorecard-enablement",
+        "git": {
+          "head_sha": "f0d53b61a29579c36d63cd2d0762cdcf653e8d70",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/assessment.json",
+            ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/backlog.json",
+            ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/inventory.json",
+            ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/scorecard.json",
+            ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/status.json",
+            ".devai/state/sensor-readings/action_effect_inference/SR-11ed56cace3ba0d9.json",
+            ".devai/state/sensor-readings/archive_immutability/SR-d8888348fd7542e5.json",
+            ".devai/state/sensor-readings/decision_citation_resolution/SR-2ea8ae45ddab94b4.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-0d2ba73f1eb62d99.json",
+            ".devai/state/sensor-readings/docs_drift/SR-dd6e1c16bb15d946.json",
+            ".devai/state/sensor-readings/harness_coherence/SR-a9a7c97ced70f5a4.json",
+            ".devai/state/sensor-readings/harness_coverage/SR-a9341ebe7494e8e2.json",
+            ".devai/state/sensor-readings/harness_depth/SR-3cf4fe4411bc9267.json",
+            ".devai/state/sensor-readings/harness_green_main/SR-f478012ad5d225b9.json",
+            ".devai/state/sensor-readings/harness_idiomaticity/SR-f4102b724ab233ea.json",
+            ".devai/state/sensor-readings/harness_invariant_alignment/SR-5ae39a463184f6f5.json",
+            ".devai/state/sensor-readings/harness_performance/SR-89b148fb3a535e30.json",
+            ".devai/state/sensor-readings/harness_robustness/SR-7270c16fbc939e96.json",
+            ".devai/state/sensor-readings/harness_security/SR-dac8f6d286c12ecb.json",
+            ".devai/state/sensor-readings/inventory_adherence/SR-5eabaffb2d7e3428.json",
+            ".devai/state/sensor-readings/inventory_api/SR-741327bc2cdbba8a.json",
+            ".devai/state/sensor-readings/inventory_coverage/SR-30934f2bb735b040.json",
+            ".devai/state/sensor-readings/inventory_data_handling/SR-95b2ca0c26abb065.json",
+            ".devai/state/sensor-readings/inventory_data_model/SR-574040c1df9b283a.json",
+            ".devai/state/sensor-readings/inventory_dep_graph/SR-12e9ac0b5570058d.json",
+            ".devai/state/sensor-readings/inventory_determinism/SR-8d99f703eb872800.json",
+            ".devai/state/sensor-readings/inventory_performance/SR-2144763888193f2a.json",
+            ".devai/state/sensor-readings/inventory_rbac/SR-9426cb77a8f8ed54.json",
+            ".devai/state/sensor-readings/inventory_routes/SR-fc8a67d399c609ed.json",
+            ".devai/state/sensor-readings/lint/SR-cd0d9b512b854f4e.json",
+            ".devai/state/sensor-readings/plant_coherence/SR-d6e01ca6067a5037.json",
+            ".devai/state/sensor-readings/plant_coverage/SR-3dd137f50a858ea1.json",
+            ".devai/state/sensor-readings/plant_depth/SR-e90d320c1df590b6.json",
+            ".devai/state/sensor-readings/round_record_integrity/SR-4120d2e75ceda396.json",
+            ".devai/state/sensor-readings/security_scan/SR-a96646142553c04d.json",
+            ".devai/state/sensor-readings/site_drift/SR-a898f5c058f5b09d.json",
+            ".devai/state/sensor-readings/spec_alignment/SR-bb4d07e3b1050d4e.json",
+            ".devai/state/sensor-readings/spec_depth/SR-8f264921e0782b0c.json",
+            ".devai/state/sensor-readings/spec_freshness/SR-cf10be547c1660a8.json",
+            ".devai/state/sensor-readings/spec_idiomaticity/SR-44a21807e8cafd2e.json",
+            ".devai/state/sensor-readings/spec_performance_targets/SR-b750694ac633dcd8.json",
+            ".devai/state/sensor-readings/spec_robustness_targets/SR-caa9fd44d3228470.json",
+            ".devai/state/sensor-readings/spec_security_coverage/SR-030eee9c75ed536b.json",
+            ".devai/state/sensor-readings/test_coherence/SR-e4ef420d8f0463e9.json",
+            ".devai/state/sensor-readings/test_coverage_depth/SR-fdd44a8bbb5d8fbb.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-8e94b6aa8c2ce03b.json",
+            ".devai/state/sensor-readings/test_invariant_alignment/SR-c2c3b5d9da1c8b58.json",
+            ".devai/state/sensor-readings/test_performance_coverage/SR-d2400a4fd616aae4.json",
+            ".devai/state/sensor-readings/test_robustness_coverage/SR-54d28c6b999a5163.json",
+            ".devai/state/sensor-readings/test_security_coverage/SR-3f13f6ba1de6aa5c.json",
+            ".devai/state/sensor-readings/test_weakening_review/SR-b4ac87401dcb950a.json",
+            ".devai/state/sensor-readings/trace_resolution/SR-db16329d5fb3e115.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/inventory.json",
+          "sha256": "a58aec3112a7404eee55b3ac99ec129c7b1696ddbdbed3e3ce4050ddf5d49b66",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/scorecard.json",
+          "sha256": "6e3f9b9014352e7843d844aab75504f8da19a8e404a3c6d2d6c5543767115801",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/backlog.json",
+          "sha256": "5e7effce4ef0fedc5a7408753ce0654dde692b46a0e58db348f298f5bc279fd2",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/assessment.json",
+          "sha256": "cd0f61bda1618ba03cef03acbe1dd3fae13b3070b2a6acc0b26b48af4ad0506d",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/f0d53b61a29579c36d63cd2d0762cdcf653e8d70/status.json",
+          "sha256": "cfd42d6800e0091a7b7b24ef23862f91237c8b8d2b2305319ce14b16c9bf936e",
+          "kind": "audit"
+        }
+      ],
+      "notes": ["exact_sha=f0d53b61a29579c36d63cd2d0762cdcf653e8d70", "readiness_promoting=false"],
+      "previous_run_hash": "a610e90e6255da07e0f5766ed522d307004b17ceefe7ea8b86b6130028dffbf9",
+      "manifest_hash": "769956d32d9701916bb8f59f204dbb369c08dcec26bfd7f64d4522e5fd89ccfe",
+      "sequence": 57,
+      "previous_hash": "a610e90e6255da07e0f5766ed522d307004b17ceefe7ea8b86b6130028dffbf9"
     }
   ]
 }
