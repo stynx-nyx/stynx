@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "robustness",
+  "kind": "robustness",
+  "title": "STYNX repository robustness targets",
+  "status": "active",
+  "authority": "Architect",
+  "date": "2026-10-08",
+  "targets": [
+    {
+      "id": "TGT-ROB-001",
+      "title": "Pull-request gate rerun rate",
+      "subject": "ci.yml pull-request gate",
+      "statement": "At most 5 percent of the sampled ci.yml pull-request runs against main needed a rerun attempt, so a red gate is an observation and not noise.",
+      "sensor_kind": "harness_robustness",
+      "metric": "flakiness_pct",
+      "metric_source": "metrics",
+      "comparator": "lte",
+      "threshold": 5,
+      "unit": "percent",
+      "invariants": ["INV-CORE-001"],
+      "source": {
+        "doc": "law/adr/2026-09-27-verified-local-rc-cutover.md",
+        "anchor": "decision"
+      }
+    },
+    {
+      "id": "TGT-ROB-002",
+      "title": "Pull-request final-head success rate",
+      "subject": "ci.yml pull-request gate",
+      "statement": "At least 95 percent of the sampled pull requests conclude green on their final head, so a red final head is a real failure rather than the steady state.",
+      "sensor_kind": "harness_green_main",
+      "metric": "success_pct",
+      "metric_source": "metrics",
+      "comparator": "gte",
+      "threshold": 95,
+      "unit": "percent",
+      "invariants": ["INV-CORE-001"],
+      "source": {
+        "doc": "law/adr/2026-09-27-verified-local-rc-cutover.md",
+        "anchor": "decision"
+      }
+    },
+    {
+      "id": "TGT-ROB-003",
+      "title": "State-mutating endpoints declare their error contract",
+      "subject": "error contract",
+      "statement": "Every state-mutating HTTP endpoint enumerates its failure modes in a declared error contract, so a caller never meets an undeclared error (INV-ERROR-001).",
+      "sensor_kind": "spec_robustness_targets",
+      "metric": "error_contract_declared",
+      "metric_source": "reading",
+      "comparator": "eq",
+      "threshold": 1,
+      "unit": "boolean",
+      "invariants": ["INV-ERROR-001"],
+      "source": {
+        "doc": "law/invariants/INV-ERROR-001.json",
+        "anchor": "statement"
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.4.0",
+  "policy_version": "1.5.0",
   "project": {
     "project_type": "platform-package",
     "repo": {
@@ -79,6 +79,11 @@
   "scorecard_na": {
     "schemaVersion": "1.0.0",
     "cells": [
+      {
+        "cell": "F1:T1",
+        "reason": "Spec x Contract validation has no live emitter in DEVAI 2.3.0: the sensor registry binds no sensor to F1:T1, so the cell has no measurable subject until the package ships one (ADR-DEVAI-ADOPTION-0014).",
+        "constitution_anchor": "Article 5"
+      },
       {
         "cell": "F4:T5",
         "reason": "Inventory x Idiomaticity is the degenerate cell Article 5 names: inventory artifacts are derived deterministically from F1, F2 and F3 and never authored, so idiomaticity has no authored subject to measure.",
