@@ -15,10 +15,13 @@
     "HARNESS"
   ],
   "client": [
+    "CLI",
     "COVERAGE",
     "ERROR",
     "FLOW",
+    "OFFLINE",
     "PRIVACY",
-    "RBAC"
+    "RBAC",
+    "TENANCY"
   ]
 }
