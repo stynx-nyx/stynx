@@ -6,6 +6,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 ## Accepted Decisions
 
 - [Adopt DEVAI 2.3.0 through init upgrade](2026-10-08-devai-2.3.0-adoption.md)
+- [Keep reference-stack compose builds off bake entitlements](2026-10-08-compose-bake-entitlements.md)
 - [Release the fixed group as stable patch 1.5.4](2026-10-06-fourth-stable-patch-1.5.4.md)
 - [Release the fixed group as stable patch 1.5.3](2026-10-04-third-stable-patch-1.5.3.md)
 - [DEVAI 1.9.0 adoption with constitution 1.0.2](2026-10-04-devai-1.9.0-adoption.md)
