@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0.0",
+  "inputs": {
+    "spec_depth": {
+      "adrDir": "law/adr",
+      "invariantsDir": "law/invariants"
+    },
+    "test_security_coverage": {
+      "testGlobs": ["packages/*/test", "packages-web/*/test", "test"]
+    },
+    "test_performance_coverage": {
+      "testGlobs": ["packages/*/test", "packages-web/*/test", "test"]
+    },
+    "test_robustness_coverage": {
+      "testGlobs": ["packages/*/test", "packages-web/*/test", "test"]
+    },
+    "test_idiomaticity": {
+      "testGlobs": ["packages/*/test", "packages-web/*/test", "test"]
+    },
+    "type_check": {
+      "argv": ["pnpm", "typecheck"]
+    },
+    "perf_test": {
+      "argv": ["node", "scripts/perf-smoke.mjs"]
+    },
+    "plant_depth": {
+      "excludeGlobs": ["packages-web/sdk/src/generated/**"]
+    },
+    "harness_idiomaticity": {
+      "minWorkflowsForReusableCheck": 5
+    },
+    "harness_green_main": {
+      "workflow": "ci.yml",
+      "event": "pull_request",
+      "headBranch": "*",
+      "baseBranch": "main",
+      "attempts": "last",
+      "includeCancelled": false,
+      "lookbackDays": 30,
+      "minimumSample": 20,
+      "outcomeUnit": "pull-request-final-head",
+      "excludedJobs": []
+    },
+    "harness_performance": {
+      "workflow": "ci.yml",
+      "event": "pull_request",
+      "headBranch": "*",
+      "baseBranch": "main",
+      "attempts": "last",
+      "includeCancelled": false,
+      "lookbackDays": 30,
+      "minimumSample": 10,
+      "excludedJobs": []
+    },
+    "harness_robustness": {
+      "workflow": "ci.yml",
+      "event": "pull_request",
+      "headBranch": "*",
+      "baseBranch": "main",
+      "attempts": "last",
+      "includeCancelled": false,
+      "lookbackDays": 30,
+      "minimumSample": 20,
+      "excludedJobs": []
+    }
+  },
+  "surfaces": {
+    "http": true,
+    "database": true,
+    "rbac": true,
+    "actions": false
+  }
+}
