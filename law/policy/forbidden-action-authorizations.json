@@ -1351,6 +1351,12 @@
       "commit": "a0847caf64cd60a6157d31a65c669b33737d9615",
       "authorized_by": "Owner",
       "reason": "Owner authorization 2026-10-08 (approved scorecard enablement plan, ADR-DEVAI-ADOPTION-0014 decisions 4 and 6) for rebinding domains.json through init bind --adopter-policy and trimming sensor-inputs.json. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c277fdc21e1ae42a00b33f69043a56a9e541e8d8",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-10-08 (approved scorecard enablement plan, ADR-DEVAI-ADOPTION-0014 decision 5) for recording the 47 sensor readings, the chain entries and the SC-20261008T231951-001 observation bundle as evidence of the exact observed commit. This receipt covers only that exact commit."
     }
   ]
 }
