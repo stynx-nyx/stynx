@@ -120,7 +120,7 @@ test('DEVAI 2.3.0 ownership-matrix bind keeps the attested RC gate and GitHub ho
   );
   assert.deepEqual(
     scorecardNa.cells.map((entry) => entry.cell),
-    ['F4:T5'],
+    ['F1:T1', 'F4:T5'],
   );
 });
 
