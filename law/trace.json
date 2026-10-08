@@ -197,7 +197,8 @@
           "assertions": [
             "the packed consumer denies every generated route without its exact permission"
           ],
-          "mode": "gray_box"
+          "mode": "gray_box",
+          "target_type": "file"
         }
       ],
       "code_areas": []
@@ -1007,7 +1008,8 @@
           "assertions": [
             "the installed CLI rejects existing output and existing SQL namespace without partial changes"
           ],
-          "mode": "gray_box"
+          "mode": "gray_box",
+          "target_type": "file"
         }
       ],
       "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
@@ -1041,7 +1043,8 @@
           "assertions": [
             "an external consumer installs only local STYNX tarballs with verified integrity and compiles generated source"
           ],
-          "mode": "gray_box"
+          "mode": "gray_box",
+          "target_type": "file"
         }
       ],
       "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
@@ -1075,7 +1078,8 @@
           "assertions": [
             "real Nest routes deny missing permissions, validate DTOs and use trusted tenant-scoped repositories"
           ],
-          "mode": "gray_box"
+          "mode": "gray_box",
+          "target_type": "file"
         }
       ],
       "code_areas": ["packages/cli/src", "test/packages/cli-generator"]
@@ -1107,7 +1111,8 @@
           "assertions": [
             "real app-role PostgreSQL rejects tenant A reading or mutating tenant B rows and missing tenant context"
           ],
-          "mode": "gray_box"
+          "mode": "gray_box",
+          "target_type": "file"
         }
       ],
       "code_areas": ["packages/cli/src", "test/packages/cli-generator"]

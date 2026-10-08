@@ -4,7 +4,7 @@
   "id": "INV-CLI-004",
   "domain": "CLI",
   "severity": "gate",
-  "type": "cli-generator",
+  "type": "rls",
   "title": "Generated SQL preserves tenant row isolation",
   "statement": "Every generated table MUST have a non-null tenant_id referencing tenancy.tenants, a tenant index, FORCE row-level security, and policies whose USING and WITH CHECK predicates match app.tenant_id; generated DDL MUST grant only the specified platform roles and fail before table or grant changes when its target schema already exists.",
   "rationale": "The database remains the final isolation boundary even if application-level filters are wrong.",
@@ -30,7 +30,7 @@
   },
   "scope": {
     "components": ["cli", "data"],
-    "code_areas": ["packages/cli/src"]
+    "code_areas": ["packages/cli/src/**"]
   },
   "change_policy": {
     "breaking_change_requires": ["doc_update", "test_update", "human_approval"],

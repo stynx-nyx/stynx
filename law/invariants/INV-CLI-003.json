@@ -4,7 +4,7 @@
   "id": "INV-CLI-003",
   "domain": "CLI",
   "severity": "gate",
-  "type": "cli-generator",
+  "type": "rbac",
   "title": "Generated routes and repositories enforce caller authority",
   "statement": "Every generated HTTP handler MUST have a unique exact resource-operation permission key and run behind host-installed STYNX authentication and PermissionGuard; generated writes MUST reject untrusted tenant and primary-key values and use app-role Database.tx, trusted tenant and actor context, bound query values, and tenant-scoped SQL.",
   "rationale": "A generated route must not infer authority from a path or body, and an app transaction must fail when caller context is missing.",
@@ -30,7 +30,7 @@
   },
   "scope": {
     "components": ["cli", "data", "core", "auth"],
-    "code_areas": ["packages/cli/src"]
+    "code_areas": ["packages/cli/src/**"]
   },
   "change_policy": {
     "breaking_change_requires": ["doc_update", "test_update", "human_approval"],
