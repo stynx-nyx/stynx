@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:1c207ef3-d938-4e57-828e-eedef378b1f0",
+  "serialNumber": "urn:uuid:dc176fde-4be1-4984-8c88-e4c1d2b122f6",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "1c207ef3d9384e57428eeedef378b1f061d6d88051d7ad7a18fbd7e2a8f4ed59"
+        "value": "dc176fde4be1e984fc88e4c1d2b122f6339bc5137487c9267235bb3c4272cb7e"
       },
       {
         "name": "stynx:package-manager",
@@ -1860,7 +1860,7 @@
     {
       "type": "library",
       "name": "commander",
-      "version": "14.0.3",
+      "version": "15.0.0",
       "scope": "required",
       "licenses": [
         {
@@ -1869,7 +1869,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/commander@14.0.3"
+      "purl": "pkg:npm/commander@15.0.0"
     },
     {
       "type": "library",
@@ -2000,7 +2000,7 @@
     {
       "type": "library",
       "name": "handlebars",
-      "version": "4.7.9",
+      "version": "4.7.10",
       "scope": "required",
       "licenses": [
         {
@@ -2009,7 +2009,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/handlebars@4.7.9"
+      "purl": "pkg:npm/handlebars@4.7.10"
     },
     {
       "type": "library",
