@@ -817,7 +817,7 @@ function runDoctorAdopterPolicyPrecedenceTest() {
   const adopterPolicy = JSON.parse(readFileSync(adopterPolicyPath, 'utf8'));
   assertEqual(
     JSON.stringify(adopterPolicy.domains.client),
-    JSON.stringify(['COVERAGE', 'ERROR', 'FLOW', 'PRIVACY', 'RBAC']),
+    JSON.stringify(['CLI', 'COVERAGE', 'ERROR', 'FLOW', 'OFFLINE', 'PRIVACY', 'RBAC', 'TENANCY']),
     'accepted adopter domains',
   );
   const binding = JSON.parse(

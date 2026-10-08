@@ -20,11 +20,12 @@ interface TenantSettingsRow extends Record<string, unknown> {
 type Overrides = Record<string, string>;
 
 function i18nRequest(context: ReferenceApiE2eContext, token: string, tenantId: string) {
-  const authenticated = (method: 'get' | 'put') =>
-    request(context.app.getHttpServer())
-      [method]('/_tenancy/i18n/overrides')
+  const authenticated = (method: 'get' | 'put') => {
+    const agent = request(context.app.getHttpServer());
+    return agent[method]('/_tenancy/i18n/overrides')
       .set('authorization', `Bearer ${token}`)
       .set('x-tenant-id', tenantId);
+  };
 
   return {
     get: () => authenticated('get'),
@@ -65,7 +66,10 @@ async function seedTenantSettings(context: ReferenceApiE2eContext): Promise<void
   );
 }
 
-async function readSettings(context: ReferenceApiE2eContext, tenantId: string): Promise<TenantSettingsRow> {
+async function readSettings(
+  context: ReferenceApiE2eContext,
+  tenantId: string,
+): Promise<TenantSettingsRow> {
   return context.database.withSystemContext('i18n e2e settings read', async () =>
     context.database.tx(
       async (trx) => {
