@@ -1339,6 +1339,12 @@
       "commit": "4acf61e4c75cdcc89651e629fdc3344ad80261ae",
       "authorized_by": "Owner",
       "reason": "Owner authorization 2026-10-08 (Auto-fix enabled for the pull request CI failures of #354; ADR-CI-COMPOSE-0001) for exporting COMPOSE_BAKE=false on the compose up --build steps of reference-apps.yml and hardening.yml. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "da5438c4ca85f546daea435db00e6bd8f6b94728",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-10-08 (approved scorecard enablement plan, ADR-DEVAI-ADOPTION-0014 decisions 1 and 2) for declaring .devai/config/sensor-inputs.json and rematerializing the N/A ledger with init bind --adopter-policy at policy 1.5.0. This receipt covers only that exact commit."
     }
   ]
 }
