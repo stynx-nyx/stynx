@@ -1,6 +1,6 @@
 # STYNX agent guide
 
-STYNX adopts the published `@aarusso-nyx/devai` 1.9.0 package at tier 1
+STYNX adopts the published `@aarusso-nyx/devai` 2.3.0 package at tier 1
 (`.devai/config/project.json`, constitution 1.0.2 pinned). Read the
 repository authority sources in this order before making changes:
 
