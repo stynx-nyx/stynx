@@ -42,6 +42,7 @@ import { discoverMutationRoster } from '../../scripts/lib/mutation-roster.mjs';
 import {
   classifyReleaseContext,
   isFinalVersionedCandidate,
+  isFifthStablePatchVersionedCandidate,
   isFourthStablePatchVersionedCandidate,
   isSecondStablePatchVersionedCandidate,
   isThirdStablePatchVersionedCandidate,
@@ -81,7 +82,7 @@ const packageRoster = JSON.parse(
 // The registry census is validated against the current unified candidate
 // (registryVersionPolicyConstants.candidate), not the historical 1.2.0
 // rebaseline target that unified-rebaseline.mjs still describes.
-const currentCandidate = '1.5.4';
+const currentCandidate = '1.5.5';
 const previousCandidate = '1.5.0-rc.2';
 const preflightLatest = '1.5.3';
 
@@ -247,22 +248,102 @@ test('versioned RC status accepts only the complete consumed fixed-group candida
   assert.equal(isVersionedPreModeCandidate(input), true);
 
   for (const [label, mutate] of [
-    ['no version commit', (value) => { value.versionCommitVersion = null; }],
-    ['marker core drift', (value) => { value.versionCommitVersion = '9.9.9'; }],
-    ['wrong mode', (value) => { value.preState.mode = 'exit'; }],
-    ['wrong tag', (value) => { value.preState.tag = 'latest'; }],
-    ['stable candidate', (value) => { value.candidateRootVersion = '1.5.0'; }],
-    ['same version as base', (value) => { value.baseRootVersion = '1.5.0-rc.1'; }],
-    ['one package omitted', (value) => { value.packageStates.pop(); }],
-    ['one package not versioned', (value) => { value.packageStates[43].candidateVersion = '1.4.0'; }],
-    ['one base mismatch', (value) => { value.packageStates[0].baseVersion = '1.3.1'; }],
-    ['one changed manifest omitted', (value) => { value.changedManifestPaths.pop(); }],
-    ['one unexpected manifest', (value) => { value.changedManifestPaths.push('packages/unrelated/package.json'); }],
-    ['no consumed changeset', (value) => { value.preState.changesets = []; }],
-    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('new-work'); }],
-    ['missing consumed file', (value) => { value.changesetIdsOnDisk = []; }],
-    ['source changed after versioning', (value) => { value.followUpChanges = [{ status: 'M', path: 'packages/core/src/index.ts' }]; }],
-    ['new changeset after versioning', (value) => { value.followUpChanges = [{ status: 'A', path: '.changeset/late.md' }]; }],
+    [
+      'no version commit',
+      (value) => {
+        value.versionCommitVersion = null;
+      },
+    ],
+    [
+      'marker core drift',
+      (value) => {
+        value.versionCommitVersion = '9.9.9';
+      },
+    ],
+    [
+      'wrong mode',
+      (value) => {
+        value.preState.mode = 'exit';
+      },
+    ],
+    [
+      'wrong tag',
+      (value) => {
+        value.preState.tag = 'latest';
+      },
+    ],
+    [
+      'stable candidate',
+      (value) => {
+        value.candidateRootVersion = '1.5.0';
+      },
+    ],
+    [
+      'same version as base',
+      (value) => {
+        value.baseRootVersion = '1.5.0-rc.1';
+      },
+    ],
+    [
+      'one package omitted',
+      (value) => {
+        value.packageStates.pop();
+      },
+    ],
+    [
+      'one package not versioned',
+      (value) => {
+        value.packageStates[43].candidateVersion = '1.4.0';
+      },
+    ],
+    [
+      'one base mismatch',
+      (value) => {
+        value.packageStates[0].baseVersion = '1.3.1';
+      },
+    ],
+    [
+      'one changed manifest omitted',
+      (value) => {
+        value.changedManifestPaths.pop();
+      },
+    ],
+    [
+      'one unexpected manifest',
+      (value) => {
+        value.changedManifestPaths.push('packages/unrelated/package.json');
+      },
+    ],
+    [
+      'no consumed changeset',
+      (value) => {
+        value.preState.changesets = [];
+      },
+    ],
+    [
+      'pending changeset',
+      (value) => {
+        value.changesetIdsOnDisk.push('new-work');
+      },
+    ],
+    [
+      'missing consumed file',
+      (value) => {
+        value.changesetIdsOnDisk = [];
+      },
+    ],
+    [
+      'source changed after versioning',
+      (value) => {
+        value.followUpChanges = [{ status: 'M', path: 'packages/core/src/index.ts' }];
+      },
+    ],
+    [
+      'new changeset after versioning',
+      (value) => {
+        value.followUpChanges = [{ status: 'A', path: '.changeset/late.md' }];
+      },
+    ],
   ]) {
     const invalid = structuredClone(input);
     mutate(invalid);
@@ -283,12 +364,18 @@ test('versioned RC status accepts only the complete consumed fixed-group candida
 
   const repeatedRc = structuredClone(laterRc);
   repeatedRc.candidateRootVersion = '1.5.0-rc.1';
-  repeatedRc.packageStates.forEach((entry) => { entry.candidateVersion = '1.5.0-rc.1'; });
+  repeatedRc.packageStates.forEach((entry) => {
+    entry.candidateVersion = '1.5.0-rc.1';
+  });
   assert.equal(isVersionedPreModeCandidate(repeatedRc), false, 'ordinal must advance');
 
   const discontinuousPre = structuredClone(laterRc);
   discontinuousPre.basePreState.initialVersions[packageStates[0].name] = '1.3.0';
-  assert.equal(isVersionedPreModeCandidate(discontinuousPre), false, 'pre mode initial versions remain bound');
+  assert.equal(
+    isVersionedPreModeCandidate(discontinuousPre),
+    false,
+    'pre mode initial versions remain bound',
+  );
 });
 
 test('final versioned candidate accepts a late single marker and exact generated release surface', () => {
@@ -345,31 +432,170 @@ test('final versioned candidate accepts a late single marker and exact generated
   assert.equal(isFinalVersionedCandidate(input), true);
 
   for (const [label, mutate] of [
-    ['missing marker', (value) => { value.markerCommits.splice(3, 1); }],
-    ['duplicate marker', (value) => { value.markerCommits.push({ sha: 'f'.repeat(40), subject: 'chore(repo): version 1.5.0 final release' }); }],
-    ['wrong base', (value) => { value.baseRootVersion = '1.5.0-rc.2'; }],
-    ['wrong root version', (value) => { value.candidateRootVersion = '1.5.1'; }],
-    ['one base package drift', (value) => { value.packageStates[0].baseVersion = '1.5.0-rc.2'; }],
-    ['one final package drift', (value) => { value.packageStates[0].candidateVersion = '1.5.0-rc.3'; }],
-    ['43 manifests', (value) => { value.packageStates.pop(); }],
-    ['duplicate manifest', (value) => { value.packageStates[43] = structuredClone(value.packageStates[0]); }],
-    ['retained pre state', (value) => { value.preState = { mode: 'exit', tag: 'rc' }; }],
-    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('new-work'); }],
-    ['parent in exit mode', (value) => { value.markerParentPreState.mode = 'exit'; }],
-    ['parent initial version drift', (value) => { value.markerParentPreState.initialVersions[value.packageStates[0].name] = '1.3.0'; }],
-    ['parent changeset drift', (value) => { value.markerParentPreState.changesets.push('untracked'); }],
-    ['missing pre deletion', (value) => { value.markerChanges.shift(); }],
-    ['missing consumed changeset', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== '.changeset/ctg9-outbox.md'); }],
-    ['missing changelog', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath.replace(/package\.json$/u, 'CHANGELOG.md')); }],
-    ['missing root support', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== 'package.json'); }],
-    ['extra generated path', (value) => { value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' }); }],
-    ['source follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'packages/core/src/index.ts' }); }],
-    ['sensor follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'test/scripts/release-version-policy.test.mjs' }); }],
-    ['workflow follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' }); }],
-    ['other round follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'work/rounds/R-0001/review.md' }); }],
-    ['generated proof follow-up', (value) => { value.followUpChanges.push({ status: 'A', path: 'record/proofs/final.json' }); }],
-    ['deleted round note', (value) => { value.followUpChanges.push({ status: 'D', path: 'work/rounds/R-0002/reviews/old.md' }); }],
-    ['added policy authorization', (value) => { value.followUpChanges.push({ status: 'A', path: 'law/policy/forbidden-action-authorizations.json' }); }],
+    [
+      'missing marker',
+      (value) => {
+        value.markerCommits.splice(3, 1);
+      },
+    ],
+    [
+      'duplicate marker',
+      (value) => {
+        value.markerCommits.push({
+          sha: 'f'.repeat(40),
+          subject: 'chore(repo): version 1.5.0 final release',
+        });
+      },
+    ],
+    [
+      'wrong base',
+      (value) => {
+        value.baseRootVersion = '1.5.0-rc.2';
+      },
+    ],
+    [
+      'wrong root version',
+      (value) => {
+        value.candidateRootVersion = '1.5.1';
+      },
+    ],
+    [
+      'one base package drift',
+      (value) => {
+        value.packageStates[0].baseVersion = '1.5.0-rc.2';
+      },
+    ],
+    [
+      'one final package drift',
+      (value) => {
+        value.packageStates[0].candidateVersion = '1.5.0-rc.3';
+      },
+    ],
+    [
+      '43 manifests',
+      (value) => {
+        value.packageStates.pop();
+      },
+    ],
+    [
+      'duplicate manifest',
+      (value) => {
+        value.packageStates[43] = structuredClone(value.packageStates[0]);
+      },
+    ],
+    [
+      'retained pre state',
+      (value) => {
+        value.preState = { mode: 'exit', tag: 'rc' };
+      },
+    ],
+    [
+      'pending changeset',
+      (value) => {
+        value.changesetIdsOnDisk.push('new-work');
+      },
+    ],
+    [
+      'parent in exit mode',
+      (value) => {
+        value.markerParentPreState.mode = 'exit';
+      },
+    ],
+    [
+      'parent initial version drift',
+      (value) => {
+        value.markerParentPreState.initialVersions[value.packageStates[0].name] = '1.3.0';
+      },
+    ],
+    [
+      'parent changeset drift',
+      (value) => {
+        value.markerParentPreState.changesets.push('untracked');
+      },
+    ],
+    [
+      'missing pre deletion',
+      (value) => {
+        value.markerChanges.shift();
+      },
+    ],
+    [
+      'missing consumed changeset',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== '.changeset/ctg9-outbox.md',
+        );
+      },
+    ],
+    [
+      'missing changelog',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) =>
+            path !== value.packageStates[0].manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'),
+        );
+      },
+    ],
+    [
+      'missing root support',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(({ path }) => path !== 'package.json');
+      },
+    ],
+    [
+      'extra generated path',
+      (value) => {
+        value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' });
+      },
+    ],
+    [
+      'source follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'packages/core/src/index.ts' });
+      },
+    ],
+    [
+      'sensor follow-up',
+      (value) => {
+        value.followUpChanges.push({
+          status: 'M',
+          path: 'test/scripts/release-version-policy.test.mjs',
+        });
+      },
+    ],
+    [
+      'workflow follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' });
+      },
+    ],
+    [
+      'other round follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'work/rounds/R-0001/review.md' });
+      },
+    ],
+    [
+      'generated proof follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'A', path: 'record/proofs/final.json' });
+      },
+    ],
+    [
+      'deleted round note',
+      (value) => {
+        value.followUpChanges.push({ status: 'D', path: 'work/rounds/R-0002/reviews/old.md' });
+      },
+    ],
+    [
+      'added policy authorization',
+      (value) => {
+        value.followUpChanges.push({
+          status: 'A',
+          path: 'law/policy/forbidden-action-authorizations.json',
+        });
+      },
+    ],
   ]) {
     const invalid = structuredClone(input);
     mutate(invalid);
@@ -424,22 +650,110 @@ test('stable 1.5.1 patch context consumes one changeset and rejects ungoverned f
   };
   assert.equal(isStablePatchVersionedCandidate(input), true);
   for (const [label, mutate] of [
-    ['wrong base', (value) => { value.baseRootVersion = '1.4.0'; }],
-    ['wrong candidate', (value) => { value.candidateRootVersion = '1.5.2'; }],
-    ['missing marker', (value) => { value.markerCommits.splice(1, 1); }],
-    ['duplicate marker', (value) => { value.markerCommits.push({ sha: 'd'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.1' }); }],
-    ['missing changeset', (value) => { value.markerParentChangesets = []; }],
-    ['extra changeset', (value) => { value.markerParentChangesets.push('.changeset/other.md'); }],
-    ['unconsumed changeset', (value) => { value.markerChanges.shift(); }],
-    ['missing manifest', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath); }],
-    ['missing changelog', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath.replace(/package\.json$/u, 'CHANGELOG.md')); }],
-    ['extra package', (value) => { value.packageStates.push(structuredClone(value.packageStates[0])); }],
-    ['one package stale', (value) => { value.packageStates[0].candidateVersion = '1.5.0'; }],
-    ['retained pre mode', (value) => { value.preState = { mode: 'exit' }; }],
-    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('later'); }],
-    ['source follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'packages/core/src/index.ts' }); }],
-    ['workflow follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' }); }],
-    ['root manifest drift', (value) => { value.rootManifestMatchesMarker = false; }],
+    [
+      'wrong base',
+      (value) => {
+        value.baseRootVersion = '1.4.0';
+      },
+    ],
+    [
+      'wrong candidate',
+      (value) => {
+        value.candidateRootVersion = '1.5.2';
+      },
+    ],
+    [
+      'missing marker',
+      (value) => {
+        value.markerCommits.splice(1, 1);
+      },
+    ],
+    [
+      'duplicate marker',
+      (value) => {
+        value.markerCommits.push({
+          sha: 'd'.repeat(40),
+          subject: 'chore(repo): version fixed group to 1.5.1',
+        });
+      },
+    ],
+    [
+      'missing changeset',
+      (value) => {
+        value.markerParentChangesets = [];
+      },
+    ],
+    [
+      'extra changeset',
+      (value) => {
+        value.markerParentChangesets.push('.changeset/other.md');
+      },
+    ],
+    [
+      'unconsumed changeset',
+      (value) => {
+        value.markerChanges.shift();
+      },
+    ],
+    [
+      'missing manifest',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.packageStates[0].manifestPath,
+        );
+      },
+    ],
+    [
+      'missing changelog',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) =>
+            path !== value.packageStates[0].manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'),
+        );
+      },
+    ],
+    [
+      'extra package',
+      (value) => {
+        value.packageStates.push(structuredClone(value.packageStates[0]));
+      },
+    ],
+    [
+      'one package stale',
+      (value) => {
+        value.packageStates[0].candidateVersion = '1.5.0';
+      },
+    ],
+    [
+      'retained pre mode',
+      (value) => {
+        value.preState = { mode: 'exit' };
+      },
+    ],
+    [
+      'pending changeset',
+      (value) => {
+        value.changesetIdsOnDisk.push('later');
+      },
+    ],
+    [
+      'source follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'packages/core/src/index.ts' });
+      },
+    ],
+    [
+      'workflow follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' });
+      },
+    ],
+    [
+      'root manifest drift',
+      (value) => {
+        value.rootManifestMatchesMarker = false;
+      },
+    ],
   ]) {
     const invalid = structuredClone(input);
     mutate(invalid);
@@ -499,29 +813,163 @@ test('stable 1.5.2 patch context consumes only session policy and rejects unboun
   assert.equal(isSecondStablePatchVersionedCandidate(input), true);
 
   for (const [label, mutate] of [
-    ['wrong parent root version', (value) => { value.markerParentRootVersion = '1.5.0'; }],
-    ['wrong candidate root version', (value) => { value.candidateRootVersion = '1.5.1'; }],
-    ['wrong marker subject', (value) => { value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.5.1'; }],
-    ['duplicate marker', (value) => { value.markerCommits.push({ sha: 'd'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.2' }); }],
-    ['missing changeset', (value) => { value.markerParentChangesets = []; }],
-    ['extra changeset', (value) => { value.markerParentChangesets.push('.changeset/other.md'); }],
-    ['changeset deletion missing', (value) => { value.markerChanges.shift(); }],
-    ['missing package manifest', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath); }],
-    ['missing changelog', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath.replace(/package\.json$/u, 'CHANGELOG.md')); }],
-    ['missing generated support path', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== 'docs/meta/security/sbom.cdx.json'); }],
-    ['extra generated path', (value) => { value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' }); }],
-    ['one stale package version', (value) => { value.packageStates[0].candidateVersion = '1.5.1'; }],
-    ['one wrong parent package version', (value) => { value.packageStates[0].parentVersion = '1.5.0'; }],
-    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('late-change'); }],
-    ['pre mode retained', (value) => { value.preState = { mode: 'pre', tag: 'rc' }; }],
-    ['source follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'packages/sessions/src/session-policy.service.ts' }); }],
-    ['workflow follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' }); }],
-    ['missing exact root binding', (value) => { value.rootManifestMatchesMarker = false; }],
-    ['root manifest follow-up is not allowed', (value) => { value.followUpChanges.push({ status: 'M', path: 'package.json' }); }],
-    ['unrelated law follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'law/adr/unrelated.md' }); }],
-    ['Semgrep allowlist status must be modified', (value) => { value.followUpChanges.push({ status: 'A', path: '.semgrepignore' }); }],
-    ['PKI scan ADR status must be added', (value) => { value.followUpChanges.push({ status: 'M', path: 'law/adr/2026-09-29-postrelease-pki-fixture-scan.md' }); }],
-    ['deleted follow-up', (value) => { value.followUpChanges.push({ status: 'D', path: 'work/rounds/R-0003/reviews/removed.json' }); }],
+    [
+      'wrong parent root version',
+      (value) => {
+        value.markerParentRootVersion = '1.5.0';
+      },
+    ],
+    [
+      'wrong candidate root version',
+      (value) => {
+        value.candidateRootVersion = '1.5.1';
+      },
+    ],
+    [
+      'wrong marker subject',
+      (value) => {
+        value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.5.1';
+      },
+    ],
+    [
+      'duplicate marker',
+      (value) => {
+        value.markerCommits.push({
+          sha: 'd'.repeat(40),
+          subject: 'chore(repo): version fixed group to 1.5.2',
+        });
+      },
+    ],
+    [
+      'missing changeset',
+      (value) => {
+        value.markerParentChangesets = [];
+      },
+    ],
+    [
+      'extra changeset',
+      (value) => {
+        value.markerParentChangesets.push('.changeset/other.md');
+      },
+    ],
+    [
+      'changeset deletion missing',
+      (value) => {
+        value.markerChanges.shift();
+      },
+    ],
+    [
+      'missing package manifest',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.packageStates[0].manifestPath,
+        );
+      },
+    ],
+    [
+      'missing changelog',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) =>
+            path !== value.packageStates[0].manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'),
+        );
+      },
+    ],
+    [
+      'missing generated support path',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== 'docs/meta/security/sbom.cdx.json',
+        );
+      },
+    ],
+    [
+      'extra generated path',
+      (value) => {
+        value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' });
+      },
+    ],
+    [
+      'one stale package version',
+      (value) => {
+        value.packageStates[0].candidateVersion = '1.5.1';
+      },
+    ],
+    [
+      'one wrong parent package version',
+      (value) => {
+        value.packageStates[0].parentVersion = '1.5.0';
+      },
+    ],
+    [
+      'pending changeset',
+      (value) => {
+        value.changesetIdsOnDisk.push('late-change');
+      },
+    ],
+    [
+      'pre mode retained',
+      (value) => {
+        value.preState = { mode: 'pre', tag: 'rc' };
+      },
+    ],
+    [
+      'source follow-up',
+      (value) => {
+        value.followUpChanges.push({
+          status: 'M',
+          path: 'packages/sessions/src/session-policy.service.ts',
+        });
+      },
+    ],
+    [
+      'workflow follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' });
+      },
+    ],
+    [
+      'missing exact root binding',
+      (value) => {
+        value.rootManifestMatchesMarker = false;
+      },
+    ],
+    [
+      'root manifest follow-up is not allowed',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'package.json' });
+      },
+    ],
+    [
+      'unrelated law follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'law/adr/unrelated.md' });
+      },
+    ],
+    [
+      'Semgrep allowlist status must be modified',
+      (value) => {
+        value.followUpChanges.push({ status: 'A', path: '.semgrepignore' });
+      },
+    ],
+    [
+      'PKI scan ADR status must be added',
+      (value) => {
+        value.followUpChanges.push({
+          status: 'M',
+          path: 'law/adr/2026-09-29-postrelease-pki-fixture-scan.md',
+        });
+      },
+    ],
+    [
+      'deleted follow-up',
+      (value) => {
+        value.followUpChanges.push({
+          status: 'D',
+          path: 'work/rounds/R-0003/reviews/removed.json',
+        });
+      },
+    ],
   ]) {
     const invalid = structuredClone(input);
     mutate(invalid);
@@ -597,30 +1045,163 @@ test('stable 1.5.3 patch context consumes exactly the eleven pending changesets 
   assert.equal(isSecondStablePatchVersionedCandidate(input), false);
 
   for (const [label, mutate] of [
-    ['base is not the unpublished 1.5.2 main', (value) => { value.baseRootVersion = '1.5.0'; }],
-    ['wrong parent root version', (value) => { value.markerParentRootVersion = '1.5.1'; }],
-    ['wrong candidate root version', (value) => { value.candidateRootVersion = '1.5.4'; }],
-    ['wrong marker subject', (value) => { value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.5.2'; }],
-    ['marker first', (value) => { value.markerCommits.shift(); }],
-    ['duplicate marker', (value) => { value.markerCommits.push({ sha: 'd'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.3' }); }],
-    ['one changeset missing from the parent', (value) => { value.markerParentChangesets.pop(); }],
-    ['extra parent changeset', (value) => { value.markerParentChangesets.push('.changeset/late-change.md'); }],
-    ['one changeset deletion missing', (value) => { value.markerChanges.shift(); }],
-    ['missing package manifest', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath); }],
-    ['missing generated support path', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== 'packages/pdf/README.md'); }],
-    ['extra generated path', (value) => { value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' }); }],
-    ['one stale package version', (value) => { value.packageStates[0].candidateVersion = '1.5.2'; }],
-    ['one wrong parent package version', (value) => { value.packageStates[0].parentVersion = '1.5.1'; }],
-    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('late-change'); }],
-    ['pre mode retained', (value) => { value.preState = { mode: 'pre', tag: 'rc' }; }],
-    ['source follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'packages/privacy/src/privacy.service.ts' }); }],
-    ['migration follow-up', (value) => { value.followUpChanges.push({ status: 'A', path: 'packages/data/migrations/platform/0025_late.sql' }); }],
-    ['workflow follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' }); }],
-    ['root manifest follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'package.json' }); }],
-    ['unrelated law follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'law/adr/unrelated.md' }); }],
-    ['second-patch Semgrep follow-up is not carried over', (value) => { value.followUpChanges.push({ status: 'M', path: '.semgrepignore' }); }],
-    ['missing exact root binding', (value) => { value.rootManifestMatchesMarker = false; }],
-    ['deleted follow-up', (value) => { value.followUpChanges.push({ status: 'D', path: 'law/trace.json' }); }],
+    [
+      'base is not the unpublished 1.5.2 main',
+      (value) => {
+        value.baseRootVersion = '1.5.0';
+      },
+    ],
+    [
+      'wrong parent root version',
+      (value) => {
+        value.markerParentRootVersion = '1.5.1';
+      },
+    ],
+    [
+      'wrong candidate root version',
+      (value) => {
+        value.candidateRootVersion = '1.5.4';
+      },
+    ],
+    [
+      'wrong marker subject',
+      (value) => {
+        value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.5.2';
+      },
+    ],
+    [
+      'marker first',
+      (value) => {
+        value.markerCommits.shift();
+      },
+    ],
+    [
+      'duplicate marker',
+      (value) => {
+        value.markerCommits.push({
+          sha: 'd'.repeat(40),
+          subject: 'chore(repo): version fixed group to 1.5.3',
+        });
+      },
+    ],
+    [
+      'one changeset missing from the parent',
+      (value) => {
+        value.markerParentChangesets.pop();
+      },
+    ],
+    [
+      'extra parent changeset',
+      (value) => {
+        value.markerParentChangesets.push('.changeset/late-change.md');
+      },
+    ],
+    [
+      'one changeset deletion missing',
+      (value) => {
+        value.markerChanges.shift();
+      },
+    ],
+    [
+      'missing package manifest',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.packageStates[0].manifestPath,
+        );
+      },
+    ],
+    [
+      'missing generated support path',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== 'packages/pdf/README.md',
+        );
+      },
+    ],
+    [
+      'extra generated path',
+      (value) => {
+        value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' });
+      },
+    ],
+    [
+      'one stale package version',
+      (value) => {
+        value.packageStates[0].candidateVersion = '1.5.2';
+      },
+    ],
+    [
+      'one wrong parent package version',
+      (value) => {
+        value.packageStates[0].parentVersion = '1.5.1';
+      },
+    ],
+    [
+      'pending changeset',
+      (value) => {
+        value.changesetIdsOnDisk.push('late-change');
+      },
+    ],
+    [
+      'pre mode retained',
+      (value) => {
+        value.preState = { mode: 'pre', tag: 'rc' };
+      },
+    ],
+    [
+      'source follow-up',
+      (value) => {
+        value.followUpChanges.push({
+          status: 'M',
+          path: 'packages/privacy/src/privacy.service.ts',
+        });
+      },
+    ],
+    [
+      'migration follow-up',
+      (value) => {
+        value.followUpChanges.push({
+          status: 'A',
+          path: 'packages/data/migrations/platform/0025_late.sql',
+        });
+      },
+    ],
+    [
+      'workflow follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' });
+      },
+    ],
+    [
+      'root manifest follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'package.json' });
+      },
+    ],
+    [
+      'unrelated law follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'law/adr/unrelated.md' });
+      },
+    ],
+    [
+      'second-patch Semgrep follow-up is not carried over',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: '.semgrepignore' });
+      },
+    ],
+    [
+      'missing exact root binding',
+      (value) => {
+        value.rootManifestMatchesMarker = false;
+      },
+    ],
+    [
+      'deleted follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'D', path: 'law/trace.json' });
+      },
+    ],
   ]) {
     const invalid = structuredClone(input);
     mutate(invalid);
@@ -690,34 +1271,383 @@ test('stable 1.5.4 patch context consumes exactly the four pending changesets fr
   assert.equal(isSecondStablePatchVersionedCandidate(input), false);
 
   for (const [label, mutate] of [
-    ['base is not the published 1.5.3 main', (value) => { value.baseRootVersion = '1.5.2'; }],
-    ['wrong parent root version', (value) => { value.markerParentRootVersion = '1.5.2'; }],
-    ['wrong candidate root version', (value) => { value.candidateRootVersion = '1.5.5'; }],
-    ['wrong marker subject', (value) => { value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.5.3'; }],
-    ['marker first', (value) => { value.markerCommits.shift(); }],
-    ['duplicate marker', (value) => { value.markerCommits.push({ sha: 'd'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.4' }); }],
-    ['one changeset missing from the parent', (value) => { value.markerParentChangesets.pop(); }],
-    ['extra parent changeset', (value) => { value.markerParentChangesets.push('.changeset/late-change.md'); }],
-    ['one changeset deletion missing', (value) => { value.markerChanges.shift(); }],
-    ['missing package manifest', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== value.packageStates[0].manifestPath); }],
-    ['missing generated support path', (value) => { value.markerChanges = value.markerChanges.filter(({ path }) => path !== 'packages/pdf/README.md'); }],
-    ['extra generated path', (value) => { value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' }); }],
-    ['one stale package version', (value) => { value.packageStates[0].candidateVersion = '1.5.3'; }],
-    ['one wrong parent package version', (value) => { value.packageStates[0].parentVersion = '1.5.2'; }],
-    ['pending changeset', (value) => { value.changesetIdsOnDisk.push('late-change'); }],
-    ['pre mode retained', (value) => { value.preState = { mode: 'pre', tag: 'rc' }; }],
-    ['source follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'packages/outbox/src/outbox.service.ts' }); }],
-    ['migration follow-up', (value) => { value.followUpChanges.push({ status: 'A', path: 'packages/data/migrations/platform/0025_late.sql' }); }],
-    ['workflow follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' }); }],
-    ['root manifest follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'package.json' }); }],
-    ['unrelated law follow-up', (value) => { value.followUpChanges.push({ status: 'M', path: 'law/adr/unrelated.md' }); }],
-    ['second-patch Semgrep follow-up is not carried over', (value) => { value.followUpChanges.push({ status: 'M', path: '.semgrepignore' }); }],
-    ['missing exact root binding', (value) => { value.rootManifestMatchesMarker = false; }],
-    ['deleted follow-up', (value) => { value.followUpChanges.push({ status: 'D', path: 'law/trace.json' }); }],
+    [
+      'base is not the published 1.5.3 main',
+      (value) => {
+        value.baseRootVersion = '1.5.2';
+      },
+    ],
+    [
+      'wrong parent root version',
+      (value) => {
+        value.markerParentRootVersion = '1.5.2';
+      },
+    ],
+    [
+      'wrong candidate root version',
+      (value) => {
+        value.candidateRootVersion = '1.5.5';
+      },
+    ],
+    [
+      'wrong marker subject',
+      (value) => {
+        value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.5.3';
+      },
+    ],
+    [
+      'marker first',
+      (value) => {
+        value.markerCommits.shift();
+      },
+    ],
+    [
+      'duplicate marker',
+      (value) => {
+        value.markerCommits.push({
+          sha: 'd'.repeat(40),
+          subject: 'chore(repo): version fixed group to 1.5.4',
+        });
+      },
+    ],
+    [
+      'one changeset missing from the parent',
+      (value) => {
+        value.markerParentChangesets.pop();
+      },
+    ],
+    [
+      'extra parent changeset',
+      (value) => {
+        value.markerParentChangesets.push('.changeset/late-change.md');
+      },
+    ],
+    [
+      'one changeset deletion missing',
+      (value) => {
+        value.markerChanges.shift();
+      },
+    ],
+    [
+      'missing package manifest',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.packageStates[0].manifestPath,
+        );
+      },
+    ],
+    [
+      'missing generated support path',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== 'packages/pdf/README.md',
+        );
+      },
+    ],
+    [
+      'extra generated path',
+      (value) => {
+        value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' });
+      },
+    ],
+    [
+      'one stale package version',
+      (value) => {
+        value.packageStates[0].candidateVersion = '1.5.3';
+      },
+    ],
+    [
+      'one wrong parent package version',
+      (value) => {
+        value.packageStates[0].parentVersion = '1.5.2';
+      },
+    ],
+    [
+      'pending changeset',
+      (value) => {
+        value.changesetIdsOnDisk.push('late-change');
+      },
+    ],
+    [
+      'pre mode retained',
+      (value) => {
+        value.preState = { mode: 'pre', tag: 'rc' };
+      },
+    ],
+    [
+      'source follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'packages/outbox/src/outbox.service.ts' });
+      },
+    ],
+    [
+      'migration follow-up',
+      (value) => {
+        value.followUpChanges.push({
+          status: 'A',
+          path: 'packages/data/migrations/platform/0025_late.sql',
+        });
+      },
+    ],
+    [
+      'workflow follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' });
+      },
+    ],
+    [
+      'root manifest follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'package.json' });
+      },
+    ],
+    [
+      'unrelated law follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'law/adr/unrelated.md' });
+      },
+    ],
+    [
+      'second-patch Semgrep follow-up is not carried over',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: '.semgrepignore' });
+      },
+    ],
+    [
+      'missing exact root binding',
+      (value) => {
+        value.rootManifestMatchesMarker = false;
+      },
+    ],
+    [
+      'deleted follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'D', path: 'law/trace.json' });
+      },
+    ],
   ]) {
     const invalid = structuredClone(input);
     mutate(invalid);
     assert.equal(isFourthStablePatchVersionedCandidate(invalid), false, label);
+  }
+});
+
+test('stable 1.5.5 patch context consumes exactly the one pending changeset from the unpublished 1.5.4 base', () => {
+  const changesets = ['.changeset/pdf-handlebars-advisories.md'];
+  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+    name,
+    manifestPath: relative(repoRoot, manifestPath),
+    parentVersion: '1.5.4',
+    candidateVersion: '1.5.5',
+  }));
+  assert.equal(packageStates.length, 44);
+  const markerChanges = [
+    ...changesets.map((path) => ({ status: 'D', path })),
+    ...packageStates.flatMap(({ manifestPath }) => [
+      { status: 'M', path: manifestPath },
+      { status: 'M', path: manifestPath.replace(/package\.json$/u, 'CHANGELOG.md') },
+    ]),
+    ...[
+      'docs/meta/security/sbom.cdx.json',
+      'package.json',
+      'tools/create-stynx-app/template/package.json',
+      'packages/pdf/README.md',
+      'packages/pdf-a/README.md',
+      'packages/pdf-a-vera-docker/README.md',
+    ].map((path) => ({ status: 'M', path })),
+  ];
+  const input = {
+    baseRootVersion: '1.5.4',
+    markerParentRootVersion: '1.5.4',
+    candidateRootVersion: '1.5.5',
+    markerCommits: [
+      { sha: 'a'.repeat(40), subject: 'docs(repo): govern the 1.5.5 stable patch candidate' },
+      { sha: 'b'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.5' },
+      { sha: 'c'.repeat(40), subject: 'fix(repo): classify the exact 1.5.5 release candidate' },
+    ],
+    markerChanges,
+    // The parent tree lists its changesets in path order; the classifier binds the set.
+    markerParentChangesets: [...changesets].reverse(),
+    followUpChanges: [
+      { status: 'M', path: 'law/policy/forbidden-action-authorizations.json' },
+      { status: 'M', path: 'law/policy/registry-version-anomalies.json' },
+      { status: 'M', path: 'law/trace.json' },
+      { status: 'M', path: 'scripts/lib/registry-version-policy.mjs' },
+      { status: 'M', path: 'scripts/lib/release-context.mjs' },
+      { status: 'M', path: 'scripts/run-release-preparation.mjs' },
+      { status: 'M', path: 'test/scripts/local-rc-blocker-contract.test.mjs' },
+      { status: 'M', path: 'test/scripts/release-version-policy.test.mjs' },
+    ],
+    rootManifestMatchesMarker: true,
+    packageStates,
+    changesetIdsOnDisk: [],
+    preState: null,
+    markerParentPreState: null,
+  };
+  assert.equal(isFifthStablePatchVersionedCandidate(input), true);
+  assert.equal(isFourthStablePatchVersionedCandidate(input), false);
+  assert.equal(isThirdStablePatchVersionedCandidate(input), false);
+  assert.equal(isSecondStablePatchVersionedCandidate(input), false);
+
+  for (const [label, mutate] of [
+    [
+      'base is not the 1.5.4 main',
+      (value) => {
+        value.baseRootVersion = '1.5.3';
+      },
+    ],
+    [
+      'wrong parent root version',
+      (value) => {
+        value.markerParentRootVersion = '1.5.3';
+      },
+    ],
+    [
+      'wrong candidate root version',
+      (value) => {
+        value.candidateRootVersion = '1.5.6';
+      },
+    ],
+    [
+      'wrong marker subject',
+      (value) => {
+        value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.5.4';
+      },
+    ],
+    [
+      'marker first',
+      (value) => {
+        value.markerCommits.shift();
+      },
+    ],
+    [
+      'duplicate marker',
+      (value) => {
+        value.markerCommits.push({
+          sha: 'd'.repeat(40),
+          subject: 'chore(repo): version fixed group to 1.5.5',
+        });
+      },
+    ],
+    [
+      'one changeset missing from the parent',
+      (value) => {
+        value.markerParentChangesets.pop();
+      },
+    ],
+    [
+      'extra parent changeset',
+      (value) => {
+        value.markerParentChangesets.push('.changeset/late-change.md');
+      },
+    ],
+    [
+      'one changeset deletion missing',
+      (value) => {
+        value.markerChanges.shift();
+      },
+    ],
+    [
+      'missing package manifest',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.packageStates[0].manifestPath,
+        );
+      },
+    ],
+    [
+      'missing generated support path',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== 'packages/pdf/README.md',
+        );
+      },
+    ],
+    [
+      'extra generated path',
+      (value) => {
+        value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' });
+      },
+    ],
+    [
+      'one stale package version',
+      (value) => {
+        value.packageStates[0].candidateVersion = '1.5.4';
+      },
+    ],
+    [
+      'one wrong parent package version',
+      (value) => {
+        value.packageStates[0].parentVersion = '1.5.2';
+      },
+    ],
+    [
+      'pending changeset',
+      (value) => {
+        value.changesetIdsOnDisk.push('late-change');
+      },
+    ],
+    [
+      'pre mode retained',
+      (value) => {
+        value.preState = { mode: 'pre', tag: 'rc' };
+      },
+    ],
+    [
+      'source follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'packages/outbox/src/outbox.service.ts' });
+      },
+    ],
+    [
+      'migration follow-up',
+      (value) => {
+        value.followUpChanges.push({
+          status: 'A',
+          path: 'packages/data/migrations/platform/0025_late.sql',
+        });
+      },
+    ],
+    [
+      'workflow follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' });
+      },
+    ],
+    [
+      'root manifest follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'package.json' });
+      },
+    ],
+    [
+      'unrelated law follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: 'law/adr/unrelated.md' });
+      },
+    ],
+    [
+      'second-patch Semgrep follow-up is not carried over',
+      (value) => {
+        value.followUpChanges.push({ status: 'M', path: '.semgrepignore' });
+      },
+    ],
+    [
+      'missing exact root binding',
+      (value) => {
+        value.rootManifestMatchesMarker = false;
+      },
+    ],
+    [
+      'deleted follow-up',
+      (value) => {
+        value.followUpChanges.push({ status: 'D', path: 'law/trace.json' });
+      },
+    ],
+  ]) {
+    const invalid = structuredClone(input);
+    mutate(invalid);
+    assert.equal(isFifthStablePatchVersionedCandidate(invalid), false, label);
   }
 });
 
@@ -756,9 +1686,15 @@ test('Semgrep ignore list preserves build exclusions and only exact public PKI f
 test('release preparation routes the final candidate to empty status and skips consumed drafts', () => {
   const source = repositorySource('scripts/run-release-preparation.mjs');
   assert.match(source, /isFinalVersionedCandidate/u);
-  assert.match(source, /if \(context\.kind === 'ordinary'\) \{\s*run\('pnpm', \[\s*'exec',\s*'changeset',\s*'status'/u);
+  assert.match(
+    source,
+    /if \(context\.kind === 'ordinary'\) \{\s*run\('pnpm', \[\s*'exec',\s*'changeset',\s*'status'/u,
+  );
   assert.match(source, /JSON\.stringify\(\{ changesets: \[\], releases: \[\] \}, null, 2\)/u);
-  assert.match(source, /if \(context\.kind === 'ordinary'\) \{\s*run\('pnpm', \['run', 'release:drafts'\]\)/u);
+  assert.match(
+    source,
+    /if \(context\.kind === 'ordinary'\) \{\s*run\('pnpm', \['run', 'release:drafts'\]\)/u,
+  );
 });
 
 test('version rebaseline permits only the three generated dependency README consequences', () => {
@@ -886,8 +1822,15 @@ test('complete discovered mutation roster resolves the governed break=90 floor',
 test('complete authenticated registry and inventory census returns 44/44/0', () => {
   const census = validRegistryCensus();
   for (const name of packageNames) {
-    assert.ok(Object.hasOwn(census.get(name).metadata.versions, previousCandidate), `${name} must retain RC2`);
-    assert.equal(census.get(name).metadata['dist-tags'].rc, previousCandidate, `${name} must advertise RC2`);
+    assert.ok(
+      Object.hasOwn(census.get(name).metadata.versions, previousCandidate),
+      `${name} must retain RC2`,
+    );
+    assert.equal(
+      census.get(name).metadata['dist-tags'].rc,
+      previousCandidate,
+      `${name} must advertise RC2`,
+    );
   }
   assert.deepEqual(validate(), {
     anomalyMatches: 1,
@@ -1095,22 +2038,48 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 test('Architect anomaly policy is required at its exact approved digest', () => {
   // The next unified candidate must be explicitly bound in the Architect
   // policy; 1.2.0 remains historical rebaseline data.
-  assert.equal(currentCandidate, '1.5.4');
+  assert.equal(currentCandidate, '1.5.5');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
-  assert.equal(anomalyPolicy.owner_decision.date, '2026-10-06');
-  assert.equal(anomalyPolicy.owner_decision.repository_baseline, '806217082f9ba1e867d623e4de67730613da4da9');
-  assert.equal(anomalyPolicy.owner_decision.repository_tree, '7bf48236b945b67633ac5765d0b8f952eb60f7b8');
+  assert.equal(anomalyPolicy.owner_decision.date, '2026-10-08');
+  assert.equal(
+    anomalyPolicy.owner_decision.repository_baseline,
+    '548e614924248b977568191fc7360546353e3c77',
+  );
+  assert.equal(
+    anomalyPolicy.owner_decision.repository_tree,
+    '24c218546eaa27063bd97e851db6237b6bacdf24',
+  );
   assert.deepEqual(anomalyPolicy.owner_decision.supersedes, {
-    date: '2026-10-04', next_unified_version: '1.5.3',
+    date: '2026-10-06',
+    next_unified_version: '1.5.4',
   });
-  for (const phrase of ['44', previousCandidate, currentCandidate, 'exact-main-SHA', 'rc', 'latest', preflightLatest]) {
-    assert.ok(anomalyPolicy.owner_decision.statement.includes(phrase), `Owner statement must name ${phrase}`);
+  for (const phrase of [
+    '44',
+    previousCandidate,
+    currentCandidate,
+    'exact-main-SHA',
+    'rc',
+    'latest',
+    preflightLatest,
+  ]) {
+    assert.ok(
+      anomalyPolicy.owner_decision.statement.includes(phrase),
+      `Owner statement must name ${phrase}`,
+    );
   }
   assert.equal(anomalyPolicy.preflight_latest_version, preflightLatest);
   assert.notEqual(currentCandidate, unifiedRebaselineTarget);
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.allowed_candidate, currentCandidate);
-  for (const phrase of ['44', currentCandidate, previousCandidate, 'rc', 'latest', 'angular-profile 2.0.0', 'immutable']) {
+  for (const phrase of [
+    '44',
+    currentCandidate,
+    previousCandidate,
+    'rc',
+    'latest',
+    'angular-profile 2.0.0',
+    'immutable',
+  ]) {
     assert.ok(anomaly.closure_condition.includes(phrase), `closure condition must name ${phrase}`);
   }
   const recordedRc2Anomaly = {
@@ -1120,17 +2089,20 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
     github_package_version_id: 1024692931,
     classification: 'erroneous-semver-publication',
     evidence: {
-      npm_integrity: 'sha512-YVcTjo0jNNdn9/Xb2M5b/aeOjkU4fAPyYWsWuW0DFjOh+DJG87meWwfUbFBUgZiS6ZFntnaSOi9MHqrAGMXXtw==',
+      npm_integrity:
+        'sha512-YVcTjo0jNNdn9/Xb2M5b/aeOjkU4fAPyYWsWuW0DFjOh+DJG87meWwfUbFBUgZiS6ZFntnaSOi9MHqrAGMXXtw==',
       tarball_sha256: '7cefacd0535d0f5e7398a8a5d1e44d29415dd4aa234269d36eb28c97f25b7aee',
       observed_at: '2026-08-24T02:04:20.663Z',
     },
-    rationale: 'The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.',
+    rationale:
+      'The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.',
     allowed_candidate: previousCandidate,
     allowed_effects: ['registry-monotonicity-exception'],
     permitted_remediation: ['retain-as-noncanonical-history'],
     deletion_requires: 'new-owner-authorization-naming-version-id-and-recovery-evidence',
     deprecation_requires: 'new-owner-authorization-naming-package-version-action-and-message',
-    closure_condition: 'Unified 1.5.0-rc.2 is verified for all 44 publishable packages, rc resolves to 1.5.0-rc.2, latest remains at 1.4.0, and angular-profile 2.0.0 remains immutable non-canonical history.',
+    closure_condition:
+      'Unified 1.5.0-rc.2 is verified for all 44 publishable packages, rc resolves to 1.5.0-rc.2, latest remains at 1.4.0, and angular-profile 2.0.0 remains immutable non-canonical history.',
     applies_to_other_packages: false,
     applies_to_other_versions: false,
   };
@@ -1808,11 +2780,25 @@ test('final registry monotonicity accepts prerelease history and only its singul
     [['@stynx-nyx/angular-profile', '2.0.0']],
   );
 
-  for (const version of ['1.4.0', '1.5.0-rc.0', '1.5.0-rc.1', previousCandidate, '1.5.1', '1.5.2', '1.5.3']) {
+  for (const version of [
+    '1.4.0',
+    '1.5.0-rc.0',
+    '1.5.0-rc.1',
+    previousCandidate,
+    '1.5.1',
+    '1.5.2',
+    '1.5.3',
+  ]) {
     const history = validRegistryCensus();
-    history.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', previousCandidate, version]));
+    history.set(
+      '@stynx-nyx/sessions',
+      publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', previousCandidate, version]),
+    );
     assert.deepEqual(validate({ registryStatesByPackage: history }), {
-      anomalyMatches: 1, absentPackageCount: 0, packageCount: 44, publishedPackageCount: 44,
+      anomalyMatches: 1,
+      absentPackageCount: 0,
+      packageCount: 44,
+      publishedPackageCount: 44,
     });
   }
 
@@ -1823,26 +2809,45 @@ test('final registry monotonicity accepts prerelease history and only its singul
     ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
   ]) {
     const history = validRegistryCensus();
-    history.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', previousCandidate, version]));
+    history.set(
+      '@stynx-nyx/sessions',
+      publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', previousCandidate, version]),
+    );
     if (code === null) assert.doesNotThrow(() => validate({ registryStatesByPackage: history }));
     else assertPolicyError(() => validate({ registryStatesByPackage: history }), code);
   }
 
-  for (const candidate of ['1.5.0-rc.1', previousCandidate, '1.5.0-rc.4', '1.5.1', '1.5.2', '1.5.3']) {
-    assertPolicyError(() => loadRegistryAnomalyPolicy(repoRoot, candidate), 'REGISTRY_ANOMALY_POLICY_UNSUPPORTED');
+  for (const candidate of [
+    '1.5.0-rc.1',
+    previousCandidate,
+    '1.5.0-rc.4',
+    '1.5.1',
+    '1.5.2',
+    '1.5.3',
+  ]) {
+    assertPolicyError(
+      () => loadRegistryAnomalyPolicy(repoRoot, candidate),
+      'REGISTRY_ANOMALY_POLICY_UNSUPPORTED',
+    );
     assertPolicyError(() => validate({ candidate }), 'REGISTRY_CANDIDATE_UNSUPPORTED');
   }
 });
 
 test('final registry census requires RC2 in every published package after version checks', () => {
   const missingPrevious = validRegistryCensus();
-  missingPrevious.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1']));
+  missingPrevious.set(
+    '@stynx-nyx/sessions',
+    publishedRegistryState('@stynx-nyx/sessions', ['1.1.1']),
+  );
   assertPolicyError(
     () => validate({ registryStatesByPackage: missingPrevious }),
     'REGISTRY_PREVIOUS_CANDIDATE_MISSING',
   );
   const candidateAlreadyExists = validRegistryCensus();
-  candidateAlreadyExists.set('@stynx-nyx/sessions', publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', previousCandidate, currentCandidate]));
+  candidateAlreadyExists.set(
+    '@stynx-nyx/sessions',
+    publishedRegistryState('@stynx-nyx/sessions', ['1.1.1', previousCandidate, currentCandidate]),
+  );
   assertPolicyError(
     () => validate({ registryStatesByPackage: candidateAlreadyExists }),
     'REGISTRY_CANDIDATE_EXISTS',
@@ -1857,7 +2862,10 @@ test('RC2 publication uses only pure dist-tag helpers and preserves latest durin
   const publication = await import('../../scripts/lib/publication-dist-tag.mjs');
   const preState = { mode: 'pre', tag: 'rc', changesets: ['tenancy'] };
   assert.equal(publication.selectPublicationDistTag({ version: '1.5.0-rc.2', preState }), 'rc');
-  assert.equal(publication.selectPublicationDistTag({ version: '1.5.0', preState: undefined }), 'latest');
+  assert.equal(
+    publication.selectPublicationDistTag({ version: '1.5.0', preState: undefined }),
+    'latest',
+  );
   for (const input of [
     { version: '1.5.0-rc.2', preState: undefined },
     { version: '1.5.0-rc.2', preState: { ...preState, tag: 'beta' } },
@@ -1872,24 +2880,48 @@ test('RC2 publication uses only pure dist-tag helpers and preserves latest durin
   }
   assert.deepEqual(
     publication.buildNpmPublishArgs({
-      tarball: 'fixture.tgz', registry: 'https://npm.pkg.github.com', tag: 'rc', version: '1.5.0-rc.2',
+      tarball: 'fixture.tgz',
+      registry: 'https://npm.pkg.github.com',
+      tag: 'rc',
+      version: '1.5.0-rc.2',
     }),
-    ['publish', 'fixture.tgz', '--registry', 'https://npm.pkg.github.com', '--tag', 'rc', '--access', 'restricted'],
+    [
+      'publish',
+      'fixture.tgz',
+      '--registry',
+      'https://npm.pkg.github.com',
+      '--tag',
+      'rc',
+      '--access',
+      'restricted',
+    ],
   );
   assert.throws(
-    () => publication.buildNpmPublishArgs({ tarball: 'fixture.tgz', registry: 'https://npm.pkg.github.com', tag: 'latest', version: '1.5.0-rc.2' }),
+    () =>
+      publication.buildNpmPublishArgs({
+        tarball: 'fixture.tgz',
+        registry: 'https://npm.pkg.github.com',
+        tag: 'latest',
+        version: '1.5.0-rc.2',
+      }),
     (error) => error?.code === 'PUBLICATION_DIST_TAG_INVALID',
   );
-  assert.doesNotThrow(() => publication.verifyPostPublishDistTags({
-    candidate: '1.5.0-rc.2', preflightLatest: '1.4.0',
-    preflightDistTags: { latest: '1.4.0', legacy: '0.9.0' },
-    distTags: { latest: '1.4.0', rc: '1.5.0-rc.2', legacy: '0.9.0' },
-  }));
-  assert.doesNotThrow(() => publication.verifyPostPublishDistTags({
-    candidate: '1.5.0-rc.2', preflightLatest: '1.4.0',
-    preflightDistTags: { latest: '1.4.0', rc: '1.5.0-rc.1' },
-    distTags: { latest: '1.4.0', rc: '1.5.0-rc.2' },
-  }));
+  assert.doesNotThrow(() =>
+    publication.verifyPostPublishDistTags({
+      candidate: '1.5.0-rc.2',
+      preflightLatest: '1.4.0',
+      preflightDistTags: { latest: '1.4.0', legacy: '0.9.0' },
+      distTags: { latest: '1.4.0', rc: '1.5.0-rc.2', legacy: '0.9.0' },
+    }),
+  );
+  assert.doesNotThrow(() =>
+    publication.verifyPostPublishDistTags({
+      candidate: '1.5.0-rc.2',
+      preflightLatest: '1.4.0',
+      preflightDistTags: { latest: '1.4.0', rc: '1.5.0-rc.1' },
+      distTags: { latest: '1.4.0', rc: '1.5.0-rc.2' },
+    }),
+  );
   for (const [distTags, code] of [
     [{ latest: '1.4.0', legacy: '0.9.0' }, 'PUBLICATION_DIST_TAG_UNKNOWN'],
     [{ latest: '1.4.0', rc: '1.5.0-rc.2' }, 'PUBLICATION_DIST_TAG_DRIFT'],
@@ -1897,16 +2929,25 @@ test('RC2 publication uses only pure dist-tag helpers and preserves latest durin
     [{ latest: '1.4.0', rc: '1.5.0-rc.2', legacy: '0.9.1' }, 'PUBLICATION_DIST_TAG_DRIFT'],
   ]) {
     assert.throws(
-      () => publication.verifyPostPublishDistTags({
-        candidate: '1.5.0-rc.2', preflightLatest: '1.4.0',
-        preflightDistTags: { latest: '1.4.0', legacy: '0.9.0' }, distTags,
-      }),
+      () =>
+        publication.verifyPostPublishDistTags({
+          candidate: '1.5.0-rc.2',
+          preflightLatest: '1.4.0',
+          preflightDistTags: { latest: '1.4.0', legacy: '0.9.0' },
+          distTags,
+        }),
       (error) => error?.code === code,
     );
   }
-  assert.doesNotThrow(() => publication.assertNoPendingPreChangesets({ preState, changesetIds: ['tenancy'] }));
+  assert.doesNotThrow(() =>
+    publication.assertNoPendingPreChangesets({ preState, changesetIds: ['tenancy'] }),
+  );
   assert.throws(
-    () => publication.assertNoPendingPreChangesets({ preState, changesetIds: ['tenancy', 'future-ctg'] }),
+    () =>
+      publication.assertNoPendingPreChangesets({
+        preState,
+        changesetIds: ['tenancy', 'future-ctg'],
+      }),
     (error) => error?.code === 'PUBLICATION_DIST_TAG_INVALID',
   );
 
@@ -1922,23 +2963,39 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   const publisher = repositorySource('scripts/publish-release-plan.mjs');
   assert.match(publisher, /preflightRc:\s*registryVersionPolicyConstants\.previousCandidate/u);
   const helperSource = repositorySource('scripts/lib/publication-dist-tag.mjs');
-  assert.match(helperSource, /export function verifyPostPublishDistTags\(\{ candidate, preflightLatest, preflightDistTags, distTags \}\)/u);
+  assert.match(
+    helperSource,
+    /export function verifyPostPublishDistTags\(\{ candidate, preflightLatest, preflightDistTags, distTags \}\)/u,
+  );
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
   assert.equal(preflightLatest, '1.5.3');
-  assert.deepEqual(validatePreflightDistTags({
-    preflightLatest,
-    preflightRc,
-    distTags: { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' },
-  }), { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' });
+  assert.deepEqual(
+    validatePreflightDistTags({
+      preflightLatest,
+      preflightRc,
+      distTags: { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' },
+    }),
+    { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' },
+  );
   for (const latest of ['2.0.0', currentCandidate, '1.4.0']) {
     assert.throws(
-      () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags: { latest, rc: previousCandidate } }),
+      () =>
+        validatePreflightDistTags({
+          preflightLatest,
+          preflightRc,
+          distTags: { latest, rc: previousCandidate },
+        }),
       (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT',
     );
   }
   for (const distTags of [
-    { rc: previousCandidate }, null, [], {}, { latest: 1 }, { '': preflightLatest },
+    { rc: previousCandidate },
+    null,
+    [],
+    {},
+    { latest: 1 },
+    { '': preflightLatest },
   ]) {
     assert.throws(
       () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags }),
@@ -1946,12 +3003,22 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
     );
   }
   assert.throws(
-    () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags: { latest: preflightLatest } }),
+    () =>
+      validatePreflightDistTags({
+        preflightLatest,
+        preflightRc,
+        distTags: { latest: preflightLatest },
+      }),
     (error) => error?.code === 'PUBLICATION_DIST_TAG_UNKNOWN',
   );
   for (const rc of ['1.5.0-rc.1', currentCandidate]) {
     assert.throws(
-      () => validatePreflightDistTags({ preflightLatest, preflightRc, distTags: { latest: preflightLatest, rc } }),
+      () =>
+        validatePreflightDistTags({
+          preflightLatest,
+          preflightRc,
+          distTags: { latest: preflightLatest, rc },
+        }),
       (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT',
     );
   }
@@ -1965,33 +3032,46 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
 test('final publication moves only latest while RC2 and other tags stay fixed', async () => {
   const { verifyPostPublishDistTags } = await import('../../scripts/lib/publication-dist-tag.mjs');
   const preflightDistTags = { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' };
-  assert.doesNotThrow(() => verifyPostPublishDistTags({
-    candidate: currentCandidate,
-    preflightLatest,
-    preflightDistTags,
-    distTags: { latest: currentCandidate, rc: previousCandidate, legacy: '0.9.0' },
-  }));
-  assert.throws(() => verifyPostPublishDistTags({
-    candidate: currentCandidate,
-    preflightLatest,
-    preflightDistTags,
-    distTags: { latest: currentCandidate, rc: currentCandidate, legacy: '0.9.0' },
-  }), (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT');
-  assert.throws(() => verifyPostPublishDistTags({
-    candidate: currentCandidate,
-    preflightLatest,
-    preflightDistTags,
-    distTags: { latest: '1.5.1', rc: previousCandidate, legacy: '0.9.0' },
-  }), (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT');
+  assert.doesNotThrow(() =>
+    verifyPostPublishDistTags({
+      candidate: currentCandidate,
+      preflightLatest,
+      preflightDistTags,
+      distTags: { latest: currentCandidate, rc: previousCandidate, legacy: '0.9.0' },
+    }),
+  );
+  assert.throws(
+    () =>
+      verifyPostPublishDistTags({
+        candidate: currentCandidate,
+        preflightLatest,
+        preflightDistTags,
+        distTags: { latest: currentCandidate, rc: currentCandidate, legacy: '0.9.0' },
+      }),
+    (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT',
+  );
+  assert.throws(
+    () =>
+      verifyPostPublishDistTags({
+        candidate: currentCandidate,
+        preflightLatest,
+        preflightDistTags,
+        distTags: { latest: '1.5.1', rc: previousCandidate, legacy: '0.9.0' },
+      }),
+    (error) => error?.code === 'PUBLICATION_DIST_TAG_DRIFT',
+  );
 });
 
 test('final stable publication roster, rc2 visibility, bounded rereads, and stable release tags', async () => {
   const publication = await import('../../scripts/lib/publication-dist-tag.mjs');
-  const { discoverPublishablePackages } = await import('../../scripts/lib/publishable-packages.mjs');
-  const { parseStableVersionTag } = await import('../../scripts/resolve-release-forbidden-range.mjs');
+  const { discoverPublishablePackages } =
+    await import('../../scripts/lib/publishable-packages.mjs');
+  const { parseStableVersionTag } =
+    await import('../../scripts/resolve-release-forbidden-range.mjs');
   const candidate = currentCandidate;
   const packages = discoverPublishablePackages(repoRoot).map((entry) => ({
-    ...entry, manifest: { ...entry.manifest, version: candidate },
+    ...entry,
+    manifest: { ...entry.manifest, version: candidate },
   }));
   assert.equal(packages.length, 44);
   assert.equal(packages[0].name, '@stynx-nyx/angular');
@@ -2003,9 +3083,14 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
     );
   }
   assert.throws(
-    () => publication.validatePublicationRoster([
-      { ...packages[0], manifest: { ...packages[0].manifest, version: '1.5.0-rc.3' } }, ...packages.slice(1),
-    ], candidate),
+    () =>
+      publication.validatePublicationRoster(
+        [
+          { ...packages[0], manifest: { ...packages[0].manifest, version: '1.5.0-rc.3' } },
+          ...packages.slice(1),
+        ],
+        candidate,
+      ),
     (error) => error?.code === 'PUBLICATION_VERSION_DRIFT',
   );
   assert.equal(publication.publicationPlanConstants.canaryPackage, '@stynx-nyx/angular');
@@ -2017,17 +3102,21 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
     ['1.5.0-rc.0', 'PUBLICATION_DIST_TAG_DRIFT'],
   ]) {
     assert.throws(
-      () => publication.verifyPostPublishDistTags({
-        candidate,
-        preflightLatest: registryVersionPolicyConstants.preflightLatestVersion,
-        preflightDistTags: { latest: preflightLatest, rc: previousCandidate },
-        distTags: { latest: preflightLatest, rc },
-      }),
+      () =>
+        publication.verifyPostPublishDistTags({
+          candidate,
+          preflightLatest: registryVersionPolicyConstants.preflightLatestVersion,
+          preflightDistTags: { latest: preflightLatest, rc: previousCandidate },
+          distTags: { latest: preflightLatest, rc },
+        }),
       (error) => error?.code === code,
     );
   }
-  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 4n]);
-  assert.throws(() => parseStableVersionTag(`v${previousCandidate}`), /malformed stable release tag/u);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 5n]);
+  assert.throws(
+    () => parseStableVersionTag(`v${previousCandidate}`),
+    /malformed stable release tag/u,
+  );
   const publisher = repositorySource('scripts/publish-release-plan.mjs');
   const workflow = repositorySource('.github/workflows/release.yml');
   assert.match(publisher, /publicationPlanConstants\.maxVisibilityRereads/u);
@@ -2049,10 +3138,7 @@ test('RC1 default planning keeps a future pre-mode changeset while publication p
   try {
     writeRcPreState(fixture, { changesets: ['consumed'] });
     const before = readFileSync(join(fixture.root, '.changeset', 'pre.json'), 'utf8');
-    assert.deepEqual(
-      validateReleaseVersionPolicy(fixture.root, { fixed: [fixture.names] }),
-      [],
-    );
+    assert.deepEqual(validateReleaseVersionPolicy(fixture.root, { fixed: [fixture.names] }), []);
     const plan = planFixedGroupVersion(fixture.root, { fixed: [fixture.names] });
     assert.equal(plan.expected, '1.5.0-rc.2');
     assert.equal(readFileSync(join(fixture.root, '.changeset', 'pre.json'), 'utf8'), before);
@@ -2096,19 +3182,15 @@ function createFixedGroupFixture({ version = '1.3.0', changesets = [] } = {}) {
   return { root, names };
 }
 
-function writeRcPreState(fixture, {
-  mode = 'pre',
-  tag = 'rc',
-  initialVersion = '1.4.0',
-  changesets = [],
-  initialVersions,
-} = {}) {
+function writeRcPreState(
+  fixture,
+  { mode = 'pre', tag = 'rc', initialVersion = '1.4.0', changesets = [], initialVersions } = {},
+) {
   writeJson(join(fixture.root, '.changeset', 'pre.json'), {
     mode,
     tag,
-    initialVersions: initialVersions ?? Object.fromEntries(
-      fixture.names.map((name) => [name, initialVersion]),
-    ),
+    initialVersions:
+      initialVersions ?? Object.fromEntries(fixture.names.map((name) => [name, initialVersion])),
     changesets,
   });
 }
@@ -2304,7 +3386,9 @@ test('RC1 pre mode starts at rc.1 and advances only for changesets not already c
 test('RC1 exit consumes retained changesets and rejects a recomputed major base', () => {
   const fixture = createFixedGroupFixture({
     version: '1.5.0-rc.2',
-    changesets: { 'tenancy.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nConsumed tenancy.\n" },
+    changesets: {
+      'tenancy.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nConsumed tenancy.\n",
+    },
   });
   try {
     writeRcPreState(fixture, { mode: 'exit', changesets: ['tenancy'] });
@@ -2313,7 +3397,10 @@ test('RC1 exit consumes retained changesets and rejects a recomputed major base'
     assert.equal(plan.expected, '1.5.0');
     assert.notEqual(plan.changesets.length, 0);
 
-    writeFileSync(join(fixture.root, '.changeset', 'owner-od-required.md'), "---\n'@stynx-nyx/fixture-sdk': major\n---\n\nMajor.\n");
+    writeFileSync(
+      join(fixture.root, '.changeset', 'owner-od-required.md'),
+      "---\n'@stynx-nyx/fixture-sdk': major\n---\n\nMajor.\n",
+    );
     assertAnyFixedGroupError(() => planFixedGroupVersion(fixture.root, { fixed: [fixture.names] }));
   } finally {
     rmSync(fixture.root, { recursive: true, force: true });
@@ -2333,7 +3420,9 @@ test('RC1 fails closed for malformed pre state, drift, and missing retained chan
     const fixture = createFixedGroupFixture({ version: '1.4.0' });
     try {
       writeJson(join(fixture.root, '.changeset', 'pre.json'), state);
-      assertAnyFixedGroupError(() => planFixedGroupVersion(fixture.root, { fixed: [fixture.names] }));
+      assertAnyFixedGroupError(() =>
+        planFixedGroupVersion(fixture.root, { fixed: [fixture.names] }),
+      );
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
     }
@@ -2342,7 +3431,9 @@ test('RC1 fails closed for malformed pre state, drift, and missing retained chan
   const invalidJson = createFixedGroupFixture({ version: '1.4.0' });
   try {
     writeFileSync(join(invalidJson.root, '.changeset', 'pre.json'), '{ invalid json');
-    assertAnyFixedGroupError(() => planFixedGroupVersion(invalidJson.root, { fixed: [invalidJson.names] }));
+    assertAnyFixedGroupError(() =>
+      planFixedGroupVersion(invalidJson.root, { fixed: [invalidJson.names] }),
+    );
   } finally {
     rmSync(invalidJson.root, { recursive: true, force: true });
   }
@@ -2352,7 +3443,10 @@ test('RC1 fails closed for malformed pre state, drift, and missing retained chan
     changesets: { 'retained.md': "---\n'@stynx-nyx/fixture-auth': minor\n---\n\nRetained.\n" },
   });
   try {
-    writeRcPreState(drift, { changesets: ['retained'], initialVersions: { [drift.names[0]]: '1.4.0' } });
+    writeRcPreState(drift, {
+      changesets: ['retained'],
+      initialVersions: { [drift.names[0]]: '1.4.0' },
+    });
     assertAnyFixedGroupError(() => planFixedGroupVersion(drift.root, { fixed: [drift.names] }));
     writeRcPreState(drift, { changesets: ['missing'] });
     assertAnyFixedGroupError(() => planFixedGroupVersion(drift.root, { fixed: [drift.names] }));
@@ -2366,7 +3460,9 @@ test('RC1 fails closed for malformed pre state, drift, and missing retained chan
 test('RC1 rejects pre-mode majors and prerelease manifest drift before a generated version can be rewritten', () => {
   const major = createFixedGroupFixture({
     version: '1.5.0-rc.1',
-    changesets: { 'major.md': "---\n'@stynx-nyx/fixture-core': major\n---\n\nOwner decision required.\n" },
+    changesets: {
+      'major.md': "---\n'@stynx-nyx/fixture-core': major\n---\n\nOwner decision required.\n",
+    },
   });
   try {
     writeRcPreState(major);
@@ -2386,7 +3482,9 @@ test('RC1 rejects pre-mode majors and prerelease manifest drift before a generat
     });
     try {
       writeRcPreState(fixture, { changesets });
-      assertAnyFixedGroupError(() => planFixedGroupVersion(fixture.root, { fixed: [fixture.names] }));
+      assertAnyFixedGroupError(() =>
+        planFixedGroupVersion(fixture.root, { fixed: [fixture.names] }),
+      );
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
     }
@@ -2398,18 +3496,30 @@ test('RC1 applies the native rc.0 result as rc.1 and rewrites exact sibling refe
   try {
     for (const name of fixture.names) {
       const directory = join(fixture.root, 'packages', name.split('/')[1]);
-      writeFileSync(join(directory, 'CHANGELOG.md'), `# ${name}\n\n## 1.5.0-rc.0\n\n### Minor Changes\n\n- Candidate.\n\n### Patch Changes\n\n- Updated dependencies\n  - ${fixture.names[0]}@1.5.0-rc.0\n`);
+      writeFileSync(
+        join(directory, 'CHANGELOG.md'),
+        `# ${name}\n\n## 1.5.0-rc.0\n\n### Minor Changes\n\n- Candidate.\n\n### Patch Changes\n\n- Updated dependencies\n  - ${fixture.names[0]}@1.5.0-rc.0\n`,
+      );
     }
-    assert.deepEqual(applyFixedGroupVersion(fixture.root, { from: '1.5.0-rc.0', to: '1.5.0-rc.1' }), {
-      manifests: fixture.names.length,
-      changelogs: fixture.names.length,
-    });
+    assert.deepEqual(
+      applyFixedGroupVersion(fixture.root, { from: '1.5.0-rc.0', to: '1.5.0-rc.1' }),
+      {
+        manifests: fixture.names.length,
+        changelogs: fixture.names.length,
+      },
+    );
     for (const name of fixture.names) {
       const directory = join(fixture.root, 'packages', name.split('/')[1]);
-      assert.equal(JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')).version, '1.5.0-rc.1');
+      assert.equal(
+        JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')).version,
+        '1.5.0-rc.1',
+      );
       const changelog = readFileSync(join(directory, 'CHANGELOG.md'), 'utf8');
       assert.match(changelog, /^## 1\.5\.0-rc\.1$/mu);
-      assert.match(changelog, new RegExp(`^ {2}- ${fixture.names[0].replace('/', '\\/')}@1\\.5\\.0-rc\\.1$`, 'mu'));
+      assert.match(
+        changelog,
+        new RegExp(`^ {2}- ${fixture.names[0].replace('/', '\\/')}@1\\.5\\.0-rc\\.1$`, 'mu'),
+      );
     }
   } finally {
     rmSync(fixture.root, { recursive: true, force: true });
@@ -2418,26 +3528,33 @@ test('RC1 applies the native rc.0 result as rc.1 and rewrites exact sibling refe
 
 test('RC1 validates Changesets pre-state transition before correcting the generated candidate', () => {
   const firstBefore = {
-    mode: 'pre', tag: 'rc', initialVersions: { '@stynx-nyx/fixture-auth': '1.4.0' }, changesets: [],
+    mode: 'pre',
+    tag: 'rc',
+    initialVersions: { '@stynx-nyx/fixture-auth': '1.4.0' },
+    changesets: [],
   };
   const firstAfter = { ...firstBefore, changesets: ['tenancy'] };
-  assert.doesNotThrow(() => fixedGroupVersion.validateGeneratedVersionTransition({
-    beforePreState: firstBefore,
-    afterPreState: firstAfter,
-    current: '1.4.0',
-    generated: '1.5.0-rc.0',
-    pendingIds: ['tenancy'],
-  }));
+  assert.doesNotThrow(() =>
+    fixedGroupVersion.validateGeneratedVersionTransition({
+      beforePreState: firstBefore,
+      afterPreState: firstAfter,
+      current: '1.4.0',
+      generated: '1.5.0-rc.0',
+      pendingIds: ['tenancy'],
+    }),
+  );
 
   const nextBefore = { ...firstAfter };
   const nextAfter = { ...nextBefore, changesets: ['tenancy', 'follow-up'] };
-  assert.doesNotThrow(() => fixedGroupVersion.validateGeneratedVersionTransition({
-    beforePreState: nextBefore,
-    afterPreState: nextAfter,
-    current: '1.5.0-rc.1',
-    generated: '1.5.0-rc.2',
-    pendingIds: ['follow-up'],
-  }));
+  assert.doesNotThrow(() =>
+    fixedGroupVersion.validateGeneratedVersionTransition({
+      beforePreState: nextBefore,
+      afterPreState: nextAfter,
+      current: '1.5.0-rc.1',
+      generated: '1.5.0-rc.2',
+      pendingIds: ['follow-up'],
+    }),
+  );
 
   const invalidTransitions = [
     { generated: '1.5.0-beta.2' },
@@ -2450,14 +3567,16 @@ test('RC1 validates Changesets pre-state transition before correcting the genera
     { afterPreState: { ...nextAfter, tag: 'beta' } },
   ];
   for (const invalid of invalidTransitions) {
-    assert.throws(() => fixedGroupVersion.validateGeneratedVersionTransition({
-      beforePreState: nextBefore,
-      afterPreState: nextAfter,
-      current: '1.5.0-rc.1',
-      generated: '1.5.0-rc.2',
-      pendingIds: ['follow-up'],
-      ...invalid,
-    }));
+    assert.throws(() =>
+      fixedGroupVersion.validateGeneratedVersionTransition({
+        beforePreState: nextBefore,
+        afterPreState: nextAfter,
+        current: '1.5.0-rc.1',
+        generated: '1.5.0-rc.2',
+        pendingIds: ['follow-up'],
+        ...invalid,
+      }),
+    );
   }
 });
 
@@ -2470,7 +3589,10 @@ test('RC1 rewrite changes only the generated rc section and preserves exact rc.1
       manifest.version = '2.0.0-rc.2';
       writeJson(join(directory, 'package.json'), manifest);
       const prior = `## 1.5.0-rc.1\n\n### Minor Changes\n\n- Prior RC history.\n`;
-      writeFileSync(join(directory, 'CHANGELOG.md'), `# ${name}\n\n## 2.0.0-rc.2\n\n### Minor Changes\n\n- New patch.\n\n### Patch Changes\n\n- Updated dependencies\n  - ${fixture.names[0]}@2.0.0-rc.2\n  - @stynx-nyx/outside@2.0.0-rc.2\n\n${prior}`);
+      writeFileSync(
+        join(directory, 'CHANGELOG.md'),
+        `# ${name}\n\n## 2.0.0-rc.2\n\n### Minor Changes\n\n- New patch.\n\n### Patch Changes\n\n- Updated dependencies\n  - ${fixture.names[0]}@2.0.0-rc.2\n  - @stynx-nyx/outside@2.0.0-rc.2\n\n${prior}`,
+      );
     }
     applyFixedGroupVersion(fixture.root, { from: '2.0.0-rc.2', to: '1.5.0-rc.2' });
     for (const name of fixture.names) {
@@ -2479,7 +3601,10 @@ test('RC1 rewrite changes only the generated rc section and preserves exact rc.1
       const changelog = readFileSync(join(directory, 'CHANGELOG.md'), 'utf8');
       assert.match(changelog, /^## 1\.5\.0-rc\.2$/mu);
       assert.doesNotMatch(changelog, /^### Major Changes$/mu);
-      assert.match(changelog, new RegExp(`^ {2}- ${fixture.names[0].replace('/', '\\/')}@1\\.5\\.0-rc\\.2$`, 'mu'));
+      assert.match(
+        changelog,
+        new RegExp(`^ {2}- ${fixture.names[0].replace('/', '\\/')}@1\\.5\\.0-rc\\.2$`, 'mu'),
+      );
       assert.match(changelog, /^ {2}- @stynx-nyx\/outside@2\.0\.0-rc\.2$/mu);
       assert.equal(changelog.slice(changelog.indexOf('## 1.5.0-rc.1')), prior);
     }
