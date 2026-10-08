@@ -52,6 +52,8 @@ jobs:
           STYNX_K6_PREALLOCATED_VUS: '4'
           STYNX_K6_MAX_VUS: '25'
           STYNX_K6_STORAGE_PRESIGN_P99_MS: '500'
+          # Keep compose --build on the classic builder (ADR-CI-COMPOSE-0001).
+          COMPOSE_BAKE: 'false'
         run: |
           set -euo pipefail
           NODE_AUTH_TOKEN_FILE="$(mktemp)"
