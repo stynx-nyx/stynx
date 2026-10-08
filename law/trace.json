@@ -4596,7 +4596,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 65,
-      "assertion_digest_sha256": "7bbed2929ae76882c5cec238370df2a4f245fb6f474356250db6d5d7cb037b63"
+      "assertion_digest_sha256": "1259f6104594d0356b82df0e81807c91ee7e582c66d73268a697e661bd595a3f"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
