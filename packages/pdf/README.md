@@ -171,7 +171,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 ### Runtime dependencies
 
 - `@pdf-lib/fontkit`: `^1.1.1`
-- `handlebars`: `4.7.9`
+- `handlebars`: `4.7.10`
 - `pdf-lib`: `^1.17.1`
 - `playwright`: `^1.60.0`
 
