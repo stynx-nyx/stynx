@@ -33,6 +33,12 @@
         "test"
       ]
     },
+    "type_check": {
+      "argv": [
+        "pnpm",
+        "typecheck"
+      ]
+    },
     "plant_depth": {
       "excludeGlobs": [
         "packages-web/sdk/src/generated/**"

@@ -38,7 +38,8 @@ materializes `sensor-inputs.json`; the adopter authors it against
 1. **Sensor inputs.** `.devai/config/sensor-inputs.json` declares, in this
    order: `spec_depth` over `law/adr` and `law/invariants`; the four
    test-corpus sensors over `packages/*/test`, `packages-web/*/test` and
-   `test`; `plant_depth` excluding the generated SDK client;
+   `test`; `type_check` as the repository gate `pnpm typecheck`;
+   `plant_depth` excluding the generated SDK client;
    `harness_idiomaticity` with the five-workflow floor; and the three harness
    populations on the `ci.yml` pull-request gate against `main` (30 days,
    minimum samples 20/10/20), with `harness_green_main` counting each pull
@@ -56,11 +57,17 @@ materializes `sensor-inputs.json`; the adopter authors it against
    `INV-ERROR-001`.
 4. **Deferred.** `unit_test`, `integration_test`, `e2e_test` and
    `test_coverage_depth` need one governed root vitest invocation and a bound
-   coverage population; `type_check` and `perf_test` need an argv the
-   subprocess broker admits (`npx` or `node`, never a `pnpm` script) over a
-   root project that type-checks the whole workspace, which the per-package
-   `tsconfig.json` files do not compose into today. They stay undeclared, so
-   F2:T7, F2:T8, F3:T1 and F3:T2 read UNKNOWN until a later decision.
+   coverage population. The subprocess broker admits `npx` and `node`
+   executables but no `pnpm` script, so the declared `type_check` gate
+   (`pnpm typecheck`) and the perf smoke (`node scripts/perf-smoke.mjs`, which
+   spawns `pnpm` itself) are refused and produce no reading; a root project
+   that type-checks the whole workspace does not exist, because the
+   per-package `tsconfig.json` files do not compose. F2:T7, F2:T8, F3:T1 and
+   F3:T2 therefore read UNKNOWN until a later decision. The inventory bodies
+   that `plant_coverage`, `inventory_rbac`, `inventory_data_handling` and
+   `inventory_coverage` read under `record/proofs/sensors/` are never
+   persisted by a read-only sweep in DEVAI 2.3.0, so F2:T1 and F4:T1, F4:T2
+   and F4:T6 wait for an Inspector-produced body set.
    `migration_check` is run only with a database at hand. The
    generator-owned `devai-main-observation.yml` carries no concurrency group
    and the two generated workflows pin different action versions, so
