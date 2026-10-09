@@ -93,13 +93,16 @@ export class SignedPdfService {
 
 ### `StynxSignatureModule.forRoot()` options
 
-| Option           | Type                        | Default                                  | Description                                        |
-| ---------------- | --------------------------- | ---------------------------------------- | -------------------------------------------------- |
-| `provider`       | `'govbr-sandbox' \| 'http'` | (required)                               | Provider backend.                                  |
-| `govbr`          | `GovBrOptions`              | required for `provider: 'govbr-sandbox'` | GovBR sandbox creds.                               |
-| `http`           | `HttpProviderOptions`       | required for `provider: 'http'`          | Custom-provider HTTP config.                       |
-| `tsa.url`        | `string`                    | n/a                                      | TSA endpoint. Required for `PAdES-B-T` and higher. |
-| `defaultProfile` | `PadesProfile`              | `'PAdES-B-B'`                            | Default profile.                                   |
+| Option                    | Type                               | Default                                  | Description                                                                                                                                                                                                                                           |
+| ------------------------- | ---------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `provider`                | `'govbr-sandbox' \| 'http'`        | (required)                               | Provider backend.                                                                                                                                                                                                                                     |
+| `govbr`                   | `GovBrOptions`                     | required for `provider: 'govbr-sandbox'` | GovBR sandbox creds.                                                                                                                                                                                                                                  |
+| `http`                    | `HttpProviderOptions`              | required for `provider: 'http'`          | Custom-provider HTTP config.                                                                                                                                                                                                                          |
+| `tsa.url`                 | `string`                           | n/a                                      | TSA endpoint. Required for `PAdES-B-T` and higher.                                                                                                                                                                                                    |
+| `defaultProfile`          | `PadesProfile`                     | `'PAdES-B-B'`                            | Default profile.                                                                                                                                                                                                                                      |
+| `trustProfile`            | `SignatureTrustProfile`            | none                                     | Single regulated trust profile (1.5.0).                                                                                                                                                                                                               |
+| `trustProfiles`           | `readonly SignatureTrustProfile[]` | none                                     | Further declared profiles (UPS-SIG-07). The declared set is `trustProfile` plus this list; a repeated `id` throws at `forRoot`. Once set, a regulated call naming a production profile outside the set fails with `SignatureProfileNotDeclaredError`. |
+| `trustProfileAggregation` | `'all' \| 'any'`                   | `'all'`                                  | Readiness rule over the declared set: `all` is down when any declared profile is down; `any` is up while one is ready, with the failing profiles listed.                                                                                              |
 
 ## Examples
 
@@ -126,8 +129,57 @@ const signed1 = await pades.sign(bytes, { signer: 'employer' });
 const signed2 = await sequentialSigner.append(signed1, { signer: 'employee' });
 ```
 
+### Example 4 — several trust profiles in one module (UPS-SIG-07)
+
+One module serves two tenants whose profiles trust disjoint roots. The verifier
+takes the union of both anchor sets; each profile's own `trustAnchorsPem` is
+intersected with it per call, so an artifact anchored only in tenant A's root is
+refused under tenant B's profile. Profile selection per request stays in your
+code.
+
+```ts
+const tenantA = {
+  id: 'tenant-a-clinical',
+  revision: '3',
+  environment: 'production',
+  trustAnchorsPem: [rootA] /* ... */,
+};
+const tenantB = {
+  id: 'tenant-b-clinical',
+  revision: '1',
+  environment: 'production',
+  trustAnchorsPem: [rootB] /* ... */,
+};
+
+SignatureHealthIntegration.forRoot({
+  signatureOptions: {
+    provider: { pathPrefix: '/pades' },
+    trustProfiles: [tenantA, tenantB],
+    trustProfileAggregation: 'any', // one tenant down does not down the other
+    verifier: createCmsTrustVerifier({
+      trustAnchorsPem: [rootA, rootB],
+      tsaTrustAnchorsPem: [rootA, rootB],
+      // Real signed bytes that verify fully under the named profile and revision.
+      readinessChallenge: async (profile) => challengeStore.load(profile.id, profile.revision),
+    }),
+  },
+});
+
+// Per request: resolve the profile by tenant and document kind, then call as usual.
+await signatureService.sign({
+  ...request,
+  minimumSignatureLevel: 'ADVANCED',
+  trustProfile: resolve(tenantId, kind),
+});
+```
+
+`/readiness` then reports `signature.profiles[]` with each profile's `id`,
+`revision`, status, capabilities and `verifierKind`, or its down reason.
+
 ## Common pitfalls
 
+- **A new profile revision needs a new challenge artifact.** `readinessChallenge` must return bytes labelled with the exact `id` and `revision`; after a revision bump the profile stays down until the store has a challenge for it. Nothing is cached across profiles.
+- **Undeclared production profiles are refused once `trustProfiles` is set**, by `id` and `revision`, with `SignatureProfileNotDeclaredError`; add the profile to the list (one revision per `id`) rather than passing it ad hoc.
 - **Canonicalization order matters** for some providers — apply your provider's documented order; otherwise validation fails downstream.
 - **TSA latency** can be high (seconds to tens-of-seconds). Don't run signing on a request path; use a background job.
 - **Certificate chain not trusted** at the verifier — bundle the chain in the signature or pre-distribute trust anchors.

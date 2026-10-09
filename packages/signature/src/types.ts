@@ -7,6 +7,8 @@ export type DigestAlgorithm = 'sha256';
 export type RevocationSource = 'ocsp' | 'crl' | 'embedded' | 'none';
 export type SignatureLevel = 'ADVANCED' | 'QUALIFIED';
 export type SignatureVerifierKind = 'stynx-cms' | 'consumer-owned';
+/** Readiness rule over the declared trust-profile set: `all` is down when any declared profile is down, `any` is up while one is ready. */
+export type SignatureTrustProfileAggregation = 'all' | 'any';
 /** Rule by which the STYNX verifier attained QUALIFIED: a profile/verifier policy OID or the consumer predicate. */
 export type SignatureQualificationRule = 'certificate-policy' | 'consumer-predicate';
 export interface SignatureTrustProfile {
@@ -239,6 +241,14 @@ export interface HttpSignatureProviderOptions {
 export interface StynxSignatureModuleOptions {
   healthWitness?: object;
   trustProfile?: SignatureTrustProfile;
+  /**
+   * Further declared profiles; the declared set is `trustProfile`, if present, plus this list.
+   * Two entries with the same `id` are a configuration error at `forRoot`. Once this list is
+   * configured, a regulated call naming a production profile outside the set is refused.
+   */
+  trustProfiles?: readonly SignatureTrustProfile[];
+  /** Readiness aggregation over the declared set; defaults to `all`. */
+  trustProfileAggregation?: SignatureTrustProfileAggregation;
   verifier?: SignatureTrustVerifier;
   trustVerifier?: SignatureTrustVerifier;
   consumerOwnedVerifier?: { acknowledged: true };
