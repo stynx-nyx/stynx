@@ -210,6 +210,60 @@ describe('signature readiness', () => {
     });
   });
 
+  // UPS-SIG-07 regression (ADR-SIGNATURE-0002 D2 items 2 and 4): with only
+  // `trustProfile`, the boot guard and the health output are those of 1.5.3.
+  it('keeps the exact 1.5.3 guard and health output with only trustProfile', async () => {
+    const verifier = { capabilities: vi.fn().mockResolvedValue(all()), verifySignedArtifact: vi.fn() };
+    const moduleRef = await Test.createTestingModule({
+      imports: [api.SignatureHealthIntegration.forRoot({
+        signatureOptions: {
+          backend: { sign: vi.fn(), verify: vi.fn() },
+          verifier,
+          trustProfile: { ...profile, environment: 'production' },
+          consumerOwnedVerifier: { acknowledged: true },
+        },
+      })],
+    }).compile();
+    try {
+      await moduleRef.init();
+      const readiness = await moduleRef.get(StynxHealthService).readiness();
+      expect(readiness.info.signature).toStrictEqual({
+        status: 'up',
+        ...all(),
+        verifierKind: 'consumer-owned',
+      });
+      expect(verifier.capabilities).toHaveBeenCalledTimes(1);
+    } finally {
+      await moduleRef.close();
+    }
+    const indicator = new api.SignatureReadinessIndicator(
+      { checkReadiness: vi.fn().mockRejectedValue(new Error('unavailable')) },
+      { ...profile, environment: 'production' },
+      'consumer-owned',
+    );
+    expect(await indicator.check()).toStrictEqual({
+      status: 'down',
+      details: { reason: 'SIGNATURE_CAPABILITY_UNAVAILABLE', verifierKind: 'consumer-owned' },
+    });
+    await expect(
+      Test.createTestingModule({
+        imports: [sig.StynxSignatureModule.forRoot({
+          backend: sig.createMockSignatureBackend(),
+          trustProfile: profile,
+          verifier,
+        } as any)],
+      })
+        .compile()
+        .then(async (testOnly) => {
+          try {
+            await testOnly.init();
+          } finally {
+            await testOnly.close();
+          }
+        }),
+    ).resolves.toBeUndefined();
+  });
+
   it('keeps health independent of signature at the module boundary', async () => {
     const health = await import('@stynx-nyx/health');
     expect(health.StynxHealthModule).toEqual(expect.any(Function));

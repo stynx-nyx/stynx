@@ -76,3 +76,6 @@ python3 - <<'PYCOVER'
 from pathlib import Path
 Path('pades-covered.bin').unlink()
 PYCOVER
+# Second, disjoint trust root (ADR-SIGNATURE-0002 D2): kept in its own script so
+# the first root above can be regenerated without touching the root2 fixtures.
+sh generate-root2.sh
