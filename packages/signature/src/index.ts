@@ -21,6 +21,7 @@ export * from './sequential';
 export * from './signature.module';
 export * from './signature.service';
 export * from './tokens';
+export * from './trust-profile-set';
 export * from './types';
 export * from './xmldsig';
 
