@@ -46,6 +46,23 @@ export const request = {
   trustProfile: profile,
 } as const;
 
+// Second, disjoint test PKI (generate-root2.sh): nothing below chains to root.cert.pem.
+// Used by the trust-profile-set proofs (ADR-SIGNATURE-0002 D2, UPS-SIG-07).
+export const root2Pem = readFileSync(join(pki, 'root2.cert.pem'), 'utf8');
+export const signer2Pem = readFileSync(join(pki, 'signer2.cert.pem'), 'utf8');
+export const certificate2 = {
+  subject: 'CN=STYNX Test Signer 2',
+  issuer: 'CN=STYNX Test Trust Root 2',
+  serialNumber: '2001',
+  pem: signer2Pem,
+};
+export const blt2SourceDocument = bytes('pades-root2-source.pdf');
+export const blt2SignedDocument = bytes('pades-root2-blt.pdf');
+export const blt2CmsSignature = bytes('pades-root2-blt.cms.der');
+// root2 fixtures were generated on 2026-10-09; every freshness rule is "not
+// after now", so one later fixed instant is valid for both roots' artifacts.
+export const now2 = new Date('2026-10-10T12:00:00.000Z');
+
 export function signedResult(overrides: Record<string, unknown> = {}) {
   return {
     status: 'signed',
