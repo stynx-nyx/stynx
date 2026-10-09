@@ -28,7 +28,7 @@ describe('UPS-JOB-01/02 actorful execution under real PostgreSQL RLS', () => {
           StynxDataModule.forRoot({
             connections: {
               owner: { connectionString: testDatabase.connectionString('jobs-owner') },
-              app: { connectionString: asRole(testDatabase.connectionString('jobs-app'), 'stynx_app') },
+              app: { connectionString: testDatabase.appConnectionString('jobs-app') },
               reader: { connectionString: asRole(testDatabase.connectionString('jobs-reader'), 'stynx_reader') },
             },
             migrations: { enabled: true },

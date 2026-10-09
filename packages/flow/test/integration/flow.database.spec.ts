@@ -1,7 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { StynxDataModule } from '@stynx-nyx/data';
 import type { Client } from 'pg';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import { asAppRole, createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 
 const tenantA = '01978f4a-32bf-7c27-a131-fd73a9e101a1';
 const tenantB = '01978f4a-32bf-7c27-a131-fd73a9e101b2';
@@ -37,7 +37,7 @@ async function createMigratedModule(connectionString: string): Promise<TestingMo
       StynxDataModule.forRoot({
         connections: {
           owner: { connectionString },
-          app: { connectionString },
+          app: { connectionString: asAppRole(connectionString) },
           reader: { connectionString },
         },
         migrations: { enabled: true },

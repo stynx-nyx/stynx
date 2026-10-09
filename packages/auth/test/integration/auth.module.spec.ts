@@ -164,7 +164,7 @@ describe('StynxAuthModule integration', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: database.connectionString('@stynx-nyx/auth:owner') },
-            app: { connectionString: database.connectionString('@stynx-nyx/auth:app') },
+            app: { connectionString: database.appConnectionString('@stynx-nyx/auth:app') },
             reader: { connectionString: database.connectionString('@stynx-nyx/auth:reader') },
           },
           migrations: { enabled: true },
