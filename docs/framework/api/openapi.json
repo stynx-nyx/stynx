@@ -1504,9 +1504,64 @@
         ],
         "x-stynx-source": "packages/offline-sync/src/types.ts"
       },
+      "OfflineSyncConsumerAttributes": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/JsonValue"
+        },
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
       "OfflineSyncQueueStatus": {
         "type": "string",
-        "enum": ["received", "applied", "conflict", "rejected"],
+        "enum": ["received", "applied", "conflict", "rejected", "pending"],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
+      "OfflineSyncStynxContext": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "appliedAt": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "number"
+          },
+          "consumerAttributes": {
+            "$ref": "#/components/schemas/OfflineSyncConsumerAttributes"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "receiptId": {
+            "type": "string"
+          },
+          "receivedPayloadHash": {
+            "type": "string"
+          },
+          "relatedQueueItemId": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "serverEntityId": {
+            "type": "string"
+          },
+          "storedPayloadHash": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number",
+            "const": 1
+          }
+        },
+        "required": ["version"],
         "x-stynx-source": "packages/offline-sync/src/types.ts"
       },
       "PlatformProfile": {
@@ -1735,6 +1790,29 @@
         "required": ["downloadUrl", "expiresInSeconds", "exportId", "objectKey", "tables"],
         "x-stynx-source": "packages/privacy/src/types.ts"
       },
+      "PrivacyPartitionRetentionItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dropped": {
+            "type": "boolean"
+          },
+          "monthEnd": {
+            "type": "string"
+          },
+          "partition": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "table": {
+            "type": "string"
+          }
+        },
+        "required": ["dropped", "monthEnd", "partition", "reason", "table"],
+        "x-stynx-source": "packages/privacy/src/types.ts"
+      },
       "PrivacyRetentionPlanItem": {
         "type": "object",
         "additionalProperties": false,
@@ -1770,9 +1848,15 @@
           },
           "dryRun": {
             "type": "boolean"
+          },
+          "partitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrivacyPartitionRetentionItem"
+            }
           }
         },
-        "required": ["actions", "dryRun"],
+        "required": ["actions", "dryRun", "partitions"],
         "x-stynx-source": "packages/privacy/src/types.ts"
       },
       "PrivacyRetentionTarget": {
@@ -1929,6 +2013,9 @@
             "type": "string"
           },
           "entityType": {
+            "type": "string"
+          },
+          "idempotencyKey": {
             "type": "string"
           },
           "orgUnitId": {
@@ -2407,6 +2494,9 @@
             "type": "string",
             "enum": ["open", "resolved"]
           },
+          "stynx": {
+            "$ref": "#/components/schemas/OfflineSyncStynxContext"
+          },
           "tenantId": {
             "type": "string"
           }
@@ -2441,6 +2531,9 @@
           },
           "status": {
             "$ref": "#/components/schemas/OfflineSyncQueueStatus"
+          },
+          "stynx": {
+            "$ref": "#/components/schemas/OfflineSyncStynxContext"
           }
         },
         "required": ["queueItemId", "status"],
@@ -25125,6 +25218,21 @@
                       "resolvedAt": "example",
                       "resolvedBy": "example",
                       "status": "open",
+                      "stynx": {
+                        "appliedAt": "example",
+                        "attempts": 1,
+                        "consumerAttributes": {},
+                        "errorCode": "example",
+                        "errorMessage": "example",
+                        "reasonCode": "example",
+                        "receiptId": "example",
+                        "receivedPayloadHash": "example",
+                        "relatedQueueItemId": "example",
+                        "retryable": true,
+                        "serverEntityId": "example",
+                        "storedPayloadHash": "example",
+                        "version": 1
+                      },
                       "tenantId": "example"
                     }
                   }
@@ -25252,6 +25360,7 @@
                   "value": {
                     "deviceId": "example",
                     "entityType": "example",
+                    "idempotencyKey": "example",
                     "orgUnitId": "example",
                     "rangeId": "example",
                     "requestedSize": 1,
@@ -26748,7 +26857,22 @@
                       "context": {},
                       "errorCode": "example",
                       "queueItemId": "example",
-                      "status": "received"
+                      "status": "received",
+                      "stynx": {
+                        "appliedAt": "example",
+                        "attempts": 1,
+                        "consumerAttributes": {},
+                        "errorCode": "example",
+                        "errorMessage": "example",
+                        "reasonCode": "example",
+                        "receiptId": "example",
+                        "receivedPayloadHash": "example",
+                        "relatedQueueItemId": "example",
+                        "retryable": true,
+                        "serverEntityId": "example",
+                        "storedPayloadHash": "example",
+                        "version": 1
+                      }
                     }
                   }
                 }
@@ -27224,7 +27348,16 @@
                           "target": "live"
                         }
                       ],
-                      "dryRun": true
+                      "dryRun": true,
+                      "partitions": [
+                        {
+                          "dropped": true,
+                          "monthEnd": "example",
+                          "partition": "example",
+                          "reason": "example",
+                          "table": "example"
+                        }
+                      ]
                     }
                   }
                 }

@@ -16,6 +16,16 @@
       "patterns": ["sync_batch_transport_keys", "'tenant_id', 'transport_key'", "code: '42501'"]
     },
     {
+      "surface": "offline-sync-conflict-actions",
+      "file": "test/db/offline-sync-pending-migration.spec.ts",
+      "patterns": [
+        "sync_conflict_actions",
+        "app_update: false, app_delete: false",
+        "policies: ['offline_tenant_isolation']",
+        "code: '42501'"
+      ]
+    },
+    {
       "surface": "auth",
       "file": "test/db/runtime/auth/rls-policies.runtime.spec.ts",
       "patterns": [
