@@ -61,6 +61,15 @@ const FIXTURE_MIGRATIONS = [
     $$);
 
     select data.register_softdelete_fk('fixture', 'parents', 'fixture', 'children', 'children_parent_id_fkey', 'block');
+
+    -- The app pool logs in as stynx_app (ADR-OUTBOX-0003 D1): bind the fixture
+    -- tables and their archive mirrors the way a platform migration would.
+    grant select, insert, update, delete on all tables in schema fixture to stynx_app;
+    grant select on all tables in schema fixture to stynx_reader;
+    grant usage on schema archive to stynx_app, stynx_reader;
+    grant select, insert, update, delete on archive.fixture_parents, archive.fixture_children to stynx_app;
+    grant select on archive.fixture_parents, archive.fixture_children to stynx_reader;
+    grant usage, select on all sequences in schema archive to stynx_app;
   `,
 ];
 
