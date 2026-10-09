@@ -72,20 +72,22 @@ export async function pgListQueueItems(database: Database, scope: TrustedOffline
       ...(row.reserved_number === null ? {} : { reservedNumber: Number(row.reserved_number) }), status: row.status, receivedAt: iso(row.received_at) }));
 }
 
-/** Tenant conflicts, newest `created_at` first, tie-broken by conflict id. */
+/** Tenant conflicts, newest `created_at` first, tie-broken by conflict id; the device comes from the referenced queue item. */
 export async function pgListConflicts(database: Database, scope: TrustedOfflineSyncScope, input: ListSyncConflictsInput): Promise<OfflineSyncPage<SyncConflictRecord>> {
   const after = decodeCursor(input.cursor, 2);
-  return page<Sorted & { id: string; tenant_id: string; sync_queue_item_id: string; local_entity_id: string; payload_hash: string; conflict_type: string; description: string; status: SyncConflictRecord['status']; resolution: OfflineSyncConflictResolutionStrategy | null; resolved_by: string | null; resolved_at: Date | null; created_at: Date }, SyncConflictRecord>(database,
-    `select id,tenant_id,sync_queue_item_id,local_entity_id,payload_hash,conflict_type,description,status,resolution,resolved_by,resolved_at,created_at,
-            ${pgSortInstant('created_at')} as sort_at
-       from offline.sync_conflicts
-      where tenant_id=$1::uuid and ($2::text is null or status=$2) and ($3::text is null or conflict_type=$3) and ($4::text is null or sync_queue_item_id=$4)
-        and ($5::timestamptz is null or (created_at,id::text collate "C") < ($5::timestamptz,$6::text collate "C"))
-      order by created_at desc,id::text collate "C" desc limit $7`,
-    [scope.tenantId, input.status ?? null, input.conflictType ?? null, input.queueItemId ?? null, after?.[0] ?? null, after?.[1] ?? null], input.limit,
+  return page<Sorted & { id: string; tenant_id: string; sync_queue_item_id: string; local_entity_id: string; payload_hash: string; conflict_type: string; description: string; status: SyncConflictRecord['status']; resolution: OfflineSyncConflictResolutionStrategy | null; resolved_by: string | null; resolved_at: Date | null; created_at: Date; device_id: string }, SyncConflictRecord>(database,
+    `select c.id,c.tenant_id,c.sync_queue_item_id,c.local_entity_id,c.payload_hash,c.conflict_type,c.description,c.status,c.resolution,c.resolved_by,c.resolved_at,c.created_at,
+            q.device_id,${pgSortInstant('c.created_at')} as sort_at
+       from offline.sync_conflicts c
+       join offline.sync_queue_items q on q.tenant_id=c.tenant_id and q.id=c.sync_queue_item_id
+      where c.tenant_id=$1::uuid and ($2::text is null or c.status=$2) and ($3::text is null or c.conflict_type=$3) and ($4::text is null or c.sync_queue_item_id=$4)
+        and ($5::text is null or q.device_id=$5)
+        and ($6::timestamptz is null or (c.created_at,c.id::text collate "C") < ($6::timestamptz,$7::text collate "C"))
+      order by c.created_at desc,c.id::text collate "C" desc limit $8`,
+    [scope.tenantId, input.status ?? null, input.conflictType ?? null, input.queueItemId ?? null, input.deviceId ?? null, after?.[0] ?? null, after?.[1] ?? null], input.limit,
     row => [row.id],
     row => ({ conflictId: row.id, tenantId: row.tenant_id, queueItemId: row.sync_queue_item_id, localEntityId: row.local_entity_id,
       payloadHash: row.payload_hash, conflictType: row.conflict_type, description: row.description, status: row.status,
       ...(row.resolution === null ? {} : { resolution: row.resolution }), ...(row.resolved_by === null ? {} : { resolvedBy: row.resolved_by }),
-      ...(row.resolved_at === null ? {} : { resolvedAt: iso(row.resolved_at) }), createdAt: iso(row.created_at) }));
+      ...(row.resolved_at === null ? {} : { resolvedAt: iso(row.resolved_at) }), deviceId: row.device_id, createdAt: iso(row.created_at) }));
 }
