@@ -4641,7 +4641,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 318,
-      "assertion_digest_sha256": "6653ccee2b4383abc51f0414b8dcb039f4c2eb0f0523ab4eac7c0a07e563d98c"
+      "assertion_digest_sha256": "dbe4a56318e5e0393dcc93f32680f774812f45768f9b2a92f2c007b86661c867"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -5100,6 +5100,14 @@
       "assertion_digest_sha256": "1845b5da3d339257a8ddea9515c1fb9eaa3e01fb6f6a6c28ce699f571cfbf81c"
     },
     {
+      "path": "packages/signature/test/integration/trust-profile-sets.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 38,
+      "assertion_digest_sha256": "6bc5025893c9425edd86122493d5a77a1661cd6c17484b41c41e15a48c443b80"
+    },
+    {
       "path": "packages/signature/test/unit/manifest.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
@@ -5112,8 +5120,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 20,
-      "assertion_digest_sha256": "90e1c6ae5c92b403f5e6309e584610353a623790da49891e3b875b2a34ff2794"
+      "assertion_count": 24,
+      "assertion_digest_sha256": "a59c9b12920c238c823d3e754a480eb5cb4d266378754e875019cbb144b9e9e1"
     },
     {
       "path": "packages/signature/test/unit/withdrawal.spec.ts",
