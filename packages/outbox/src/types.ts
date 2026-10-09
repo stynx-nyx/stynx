@@ -131,6 +131,28 @@ export interface OutboxEntitySelector {
   entityPrefixes?: readonly string[];
 }
 
+/**
+ * One named destination (ADR-OUTBOX-0003 D4): a name that stands for the entity set of
+ * `selector` wherever a dispatch sweep or queue health accepts an entity filter, and the
+ * port that receives the claimed events of those entities. Nothing is stored: a delivery
+ * row records no destination.
+ */
+export interface OutboxDestination {
+  name: string;
+  /** At least one entity or literal prefix; no two destinations may match one entity. */
+  selector: OutboxEntitySelector;
+  /** Port for this destination's events; the module `dispatcher` when omitted. */
+  dispatcher?: OutboxDispatcherPort;
+}
+
+/** Names a registered destination in place of its entity selector. */
+export interface OutboxDestinationFilter {
+  destination: string;
+}
+
+/** Filter of `dispatchEventsDue` and `dispatchTenantEventsDue`: an entity set or a destination name. */
+export type OutboxDispatchFilter = OutboxEntitySelector | OutboxDestinationFilter;
+
 export interface OutboxTransportEvidence {
   provider?: string;
   protocol?: string;
@@ -192,6 +214,17 @@ export interface OutboxModuleOptions {
    * is dispatchable, as in 1.5.0.
    */
   dispatchableEntities?: OutboxEntitySelector;
+  /**
+   * Named destinations (ADR-OUTBOX-0003 D4), sugar over the entity selector. A name is
+   * accepted by `dispatchEventsDue`, `dispatchTenantEventsDue` and `getQueueHealth` in place
+   * of its selector, and the events it matches are sent through its own `dispatcher` or,
+   * without one, the module `dispatcher`. Validated when `OutboxService` is constructed:
+   * names are unique, no entity can match two destinations, and with `dispatchableEntities`
+   * every destination entity and prefix must be covered by it. The registry does not decide
+   * which events get a delivery row and never changes the per-aggregate order. Omitted: the
+   * behaviour of 1.5.5. A `STYNX_OUTBOX_DESTINATIONS` provider takes precedence.
+   */
+  destinations?: readonly OutboxDestination[];
 }
 
 /** Event-mode delivery projection states (`outbox.event_delivery.status`). */
@@ -303,4 +336,6 @@ export interface OutboxQueueHealth {
 export interface OutboxQueueHealthQuery {
   entity?: string;
   entityPrefix?: string;
+  /** Name of a registered destination; counts only deliveries whose `entity` its selector matches. */
+  destination?: string;
 }
