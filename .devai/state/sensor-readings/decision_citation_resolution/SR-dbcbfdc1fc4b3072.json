@@ -1,0 +1,379 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-dbcbfdc1fc4b3072",
+  "sensor": {
+    "name": "decision_citation_resolution",
+    "kind": "decision_citation_resolution"
+  },
+  "timestamp": "2026-10-09T15:56:43.208Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense run decision_citation_resolution",
+  "command_hash": "190a76c829ea0a34b275ccd66b08f17ca72a9660de52094fa2b16d072a2faa9b",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "law/glossary/README.md cites missing ADR-003.",
+      "file": "law/glossary/README.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/framework/arch/developer-documentation.md cites missing ADR-003.",
+      "file": "docs/framework/arch/developer-documentation.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/framework/rbac-matrix.md cites missing ADR-003.",
+      "file": "docs/framework/rbac-matrix.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.docusaurus/docusaurus-plugin-content-docs/default/site-generated-site-docs-adr-adr-001-soft-delete-md-c35.json cites missing ADR-001.",
+      "file": "docs/site/.docusaurus/docusaurus-plugin-content-docs/default/site-generated-site-docs-adr-adr-001-soft-delete-md-c35.json"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.docusaurus/docusaurus-plugin-content-docs/default/site-generated-site-docs-adr-adr-002-perms-caching-md-f4a.json cites missing ADR-002.",
+      "file": "docs/site/.docusaurus/docusaurus-plugin-content-docs/default/site-generated-site-docs-adr-adr-002-perms-caching-md-f4a.json"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.docusaurus/docusaurus-plugin-content-docs/default/site-generated-site-docs-adr-adr-003-rbac-matrix-role-md-321.json cites missing ADR-003.",
+      "file": "docs/site/.docusaurus/docusaurus-plugin-content-docs/default/site-generated-site-docs-adr-adr-003-rbac-matrix-role-md-321.json"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/01-WHAT-IS-STYNX.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/01-WHAT-IS-STYNX.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/01-WHAT-IS-STYNX.md cites missing ADR-001.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/01-WHAT-IS-STYNX.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/03-CORE-CONCEPTS.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/03-CORE-CONCEPTS.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/05-PACKAGE-CATALOG.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/05-PACKAGE-CATALOG.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/07-AUTH-AND-TENANCY-PATTERNS.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/07-AUTH-AND-TENANCY-PATTERNS.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/08-MIGRATION-PATTERNS.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/08-MIGRATION-PATTERNS.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/12-DECISION-TREES.md cites missing ADR-001.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/12-DECISION-TREES.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/12-DECISION-TREES.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/12-DECISION-TREES.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/14-VERIFICATION-CHECKLIST.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/14-VERIFICATION-CHECKLIST.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/permission-model.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/permission-model.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/soft-delete-model.md cites missing ADR-001.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/16-SPEC-EXCERPTS/soft-delete-model.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/18-GAPS-AND-OPEN-QUESTIONS.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/18-GAPS-AND-OPEN-QUESTIONS.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/_DISCOVERY.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/_DISCOVERY.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/_DISCOVERY.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/adopters/stynx/porting-pack/_DISCOVERY.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adr/ADR-001-soft-delete.md cites missing ADR-001.",
+      "file": "docs/site/.generated/site-docs/adr/ADR-001-soft-delete.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adr/ADR-002-perms-caching.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adr/ADR-002-perms-caching.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adr/ADR-003-rbac-matrix-role.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/adr/ADR-003-rbac-matrix-role.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adr/ADR-WORKLIST-0001-flow-boundary-distribution-sla.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/adr/ADR-WORKLIST-0001-flow-boundary-distribution-sla.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adr/index.md cites missing ADR-001.",
+      "file": "docs/site/.generated/site-docs/adr/index.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adr/index.md cites missing ADR-002.",
+      "file": "docs/site/.generated/site-docs/adr/index.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/adr/index.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/adr/index.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/arch/developer-documentation.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/arch/developer-documentation.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/framework/arch/developer-documentation.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/framework/arch/developer-documentation.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/framework/rbac-matrix.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/framework/rbac-matrix.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/glossary/index.md cites missing ADR-003.",
+      "file": "docs/site/.generated/site-docs/glossary/index.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/.generated/site-docs/packages/data.md cites missing ADR-001.",
+      "file": "docs/site/.generated/site-docs/packages/data.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/0cc97376.d80b8835.js cites missing ADR-002.",
+      "file": "docs/site/build/assets/js/0cc97376.d80b8835.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/321c6ce6.25ca66da.js cites missing ADR-003.",
+      "file": "docs/site/build/assets/js/321c6ce6.25ca66da.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/41182407.1375b484.js cites missing ADR-002.",
+      "file": "docs/site/build/assets/js/41182407.1375b484.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/43d2210d.ad8f3240.js cites missing ADR-002.",
+      "file": "docs/site/build/assets/js/43d2210d.ad8f3240.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/43d2210d.ad8f3240.js cites missing ADR-001.",
+      "file": "docs/site/build/assets/js/43d2210d.ad8f3240.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/4a59090f.6e57c977.js cites missing ADR-001.",
+      "file": "docs/site/build/assets/js/4a59090f.6e57c977.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/65a16fbd.5453e099.js cites missing ADR-003.",
+      "file": "docs/site/build/assets/js/65a16fbd.5453e099.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/6aa5c8bb.8084f15c.js cites missing ADR-003.",
+      "file": "docs/site/build/assets/js/6aa5c8bb.8084f15c.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/6bd02de1.21049226.js cites missing ADR-003.",
+      "file": "docs/site/build/assets/js/6bd02de1.21049226.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/8bbe0b50.f72b2188.js cites missing ADR-002.",
+      "file": "docs/site/build/assets/js/8bbe0b50.f72b2188.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/8bbe0b50.f72b2188.js cites missing ADR-001.",
+      "file": "docs/site/build/assets/js/8bbe0b50.f72b2188.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/8c7c8fbd.bf1954f2.js cites missing ADR-002.",
+      "file": "docs/site/build/assets/js/8c7c8fbd.bf1954f2.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/8ce8fd26.6d784a1e.js cites missing ADR-003.",
+      "file": "docs/site/build/assets/js/8ce8fd26.6d784a1e.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/adc3735c.ab94023f.js cites missing ADR-003.",
+      "file": "docs/site/build/assets/js/adc3735c.ab94023f.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/c3588df6.4b95cf94.js cites missing ADR-001.",
+      "file": "docs/site/build/assets/js/c3588df6.4b95cf94.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/d1e151ad.c0a14407.js cites missing ADR-002.",
+      "file": "docs/site/build/assets/js/d1e151ad.c0a14407.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/d717aaea.565a1cb9.js cites missing ADR-002.",
+      "file": "docs/site/build/assets/js/d717aaea.565a1cb9.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/ddb89fca.4f6feeb5.js cites missing ADR-001.",
+      "file": "docs/site/build/assets/js/ddb89fca.4f6feeb5.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/e0f17cea.5ad0518f.js cites missing ADR-001.",
+      "file": "docs/site/build/assets/js/e0f17cea.5ad0518f.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/e0f17cea.5ad0518f.js cites missing ADR-002.",
+      "file": "docs/site/build/assets/js/e0f17cea.5ad0518f.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/e0f17cea.5ad0518f.js cites missing ADR-003.",
+      "file": "docs/site/build/assets/js/e0f17cea.5ad0518f.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/eeb60adc.07893a53.js cites missing ADR-003.",
+      "file": "docs/site/build/assets/js/eeb60adc.07893a53.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/efa218a6.6e589a18.js cites missing ADR-003.",
+      "file": "docs/site/build/assets/js/efa218a6.6e589a18.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/assets/js/f4a36504.1414fa7d.js cites missing ADR-002.",
+      "file": "docs/site/build/assets/js/f4a36504.1414fa7d.js"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/search-index.json cites missing ADR-001.",
+      "file": "docs/site/build/search-index.json"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/search-index.json cites missing ADR-002.",
+      "file": "docs/site/build/search-index.json"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "docs/site/build/search-index.json cites missing ADR-003.",
+      "file": "docs/site/build/search-index.json"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_CITATION_UNRESOLVED",
+      "message": "packages/data/README.md cites missing ADR-001.",
+      "file": "packages/data/README.md"
+    }
+  ],
+  "metrics": {
+    "finding_count": 60
+  }
+}
