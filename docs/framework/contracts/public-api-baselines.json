@@ -1654,20 +1654,21 @@
         "integration-adapter/src/webhook-signature.d.ts": "7937c6326f3e7040ed8e200aa8032a059369119ed924e6db3b6c6ec378c3c9b4",
         "offline-sync/src/ctg9-offline-sync.controller.d.ts": "3acf1f62e8fffae7e679db264ef28ccc41c8df29cec7bcd32bd165c859d4a3e1",
         "offline-sync/src/errors.d.ts": "a4f72d27d01dfad872a15df2c0322e08a31cca2a2aff18d40f4f3bd3e44e5d97",
-        "offline-sync/src/in-memory-offline-sync.store.d.ts": "fdcb4e1e0693bba969b2c4380ecddec460d872b3bb66e154907d6f3e9ad59a48",
-        "offline-sync/src/index.d.ts": "30b03bad9fb7a01b6784585151022ae2a8acd2f286a9ffe1ca22bb172b20a88d",
+        "offline-sync/src/in-memory-offline-sync.store.d.ts": "b856120eff88c97f6c2acd0f844d70fc01790e032cbdf38bc14069d1598ad5c1",
+        "offline-sync/src/index.d.ts": "8d5761f2c7ba79de89bbe1314c29d5925a4beda390940a42f59c949be43255f4",
         "offline-sync/src/listing.d.ts": "c4f763bec8a711b041dfe352f72296f87941e90bc66bc11a78282d4bd11ab3b1",
         "offline-sync/src/numbering.d.ts": "95d6ffdf2d1f7cd04557e8afdae96cb7dddc706a75fd89c9a47fc78a42c3a02d",
         "offline-sync/src/offline-sync.controller.d.ts": "927f3e73cab442d00d173605ea96aa69a8508ddb1de52047baf5de7dba17a46d",
         "offline-sync/src/offline-sync.module.d.ts": "552fc2c0033b05a16d1f962b75b0493ea35891e1b0531333ec591970a5f42a7b",
-        "offline-sync/src/offline-sync.service.d.ts": "2a9058f78e4791444e88b2cc1cc386d11f7780b907e11127d0afa9fe63476aa8",
+        "offline-sync/src/offline-sync.service.d.ts": "3fb49ce82c7196df9c13b534a024d123a3f8b66e169b157bc52f09426209e58c",
         "offline-sync/src/postgres-durable.d.ts": "08fe1314a10d7249b2fac63723f2f49a7dff6af3636b97ca637bbc8f7f744790",
-        "offline-sync/src/postgres-listing.d.ts": "d80ce5a68f538097900282896a489a131fe23820f3d038196c3c1ea737cb1819",
-        "offline-sync/src/postgres-offline-sync.store.d.ts": "c865a2380d216d8f258668b2d9455a8c3beab64cbf927e956553664bc405fe64",
+        "offline-sync/src/postgres-listing.d.ts": "fefbbc29f55c6e0e124a7337cd6b7de8d879a4ef89c6808a393bfee7e63df725",
+        "offline-sync/src/postgres-offline-sync.store.d.ts": "395a8581173dce5549898121a4e1d53425c5f10c0e4911d071f05a5cd9fcbbc5",
+        "offline-sync/src/stynx-context.d.ts": "2a9d01488d09c12d0c1d43194b5edfb5ae1f05ada3281cd6ee2784e035ef180c",
         "offline-sync/src/stynx-offline-sync.context.d.ts": "fcebc8134cc5adf24633a46aa8be589538a8d627496b56c95672ccf981d22d68",
         "offline-sync/src/tokens.d.ts": "4e61e74969a88170ece0593c2a5adc7350fa5d92839c1c6d919a1faa6e1fb7ae",
         "offline-sync/src/transport.d.ts": "c0308ac7f83cc79ecbaf9b7f5e98482e2f58e87b70b365890dc397b4409a9a44",
-        "offline-sync/src/types.d.ts": "f0465e00974060d2711eca4d7489da5750c57fecb2bdaa13bea206a45f716c79",
+        "offline-sync/src/types.d.ts": "f59fa344d4c0a8bffff8035a96365b821b4c92c5664a256f1426cc4568cde5b6",
         "ratelimit/src/constants.d.ts": "f1630757acaa18c99b46f14333e41ee658ce8074fa4491b0d8eeeff290bfe2d9",
         "ratelimit/src/decorators.d.ts": "f65c70534099fabe4dbbc0b966626223b0ac408466c137899a786044a33ac478",
         "ratelimit/src/index.d.ts": "7a47d53410475bc838cd640bc0e09339cf9e8af42cf9eb93d5702216dc16c6e8",
@@ -2215,7 +2216,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-sdk-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-sdk.d.ts": "840bc182722ebb5fe6b4731ae4af7353b287eadb0995ab53a2d085dec0a52acb"
+        "types/stynx-nyx-sdk.d.ts": "924f61198f2c75da5a2fbc75097db1fd47afb7fb307b4b21fbc2a076bccf30b7"
       }
     },
     "@stynx-nyx/sessions": {
