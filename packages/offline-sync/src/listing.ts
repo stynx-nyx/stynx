@@ -4,6 +4,8 @@ import { stableStringify } from './transport';
 import type { NumberingRange, OfflineSyncPage, ReserveNumberingInput, TrustedOfflineSyncScope } from './types';
 
 export const listDefaultLimit = 50;
+/** Canonical payload hash (`sha256:` + 64 lowercase hex digits), INV-OFFLINE-001. */
+export const canonicalPayloadHash = /^sha256:[0-9a-f]{64}$/u;
 export const listMaxLimit = 200;
 const sortInstant = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/u;
 /** Keyset ordering key: UTC instant with microseconds, then tie-break identifiers. */

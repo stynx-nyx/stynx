@@ -161,6 +161,7 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
               org_unit_id = $3
               and entity_type = $4
               and ($5::text is null or series = $5)
+              and ($5::text is not null or status <> 'cancelled')
             ))
           order by series
           limit 1
@@ -316,10 +317,13 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
           [scope.tenantId, reservationId],
         );
         const next = Math.max(Number(row.start_number), Number(highest.rows[0]?.number ?? Number(row.start_number) - 1) + 1);
+        // Returning an unused tail reactivates only an exhausted range; a consumer-cancelled range
+        // is never revived or rewound (ADR-MOBILE-OFFLINE-0003 D5).
         await trx.query(
           `update offline.numbering_ranges set next_number=$3,
-             status='active',updated_at=$4::timestamptz
-           where tenant_id=$1::uuid and id=$2::uuid and next_number=$5`,
+             status=case when status='exhausted' then 'active' else status end,
+             updated_at=$4::timestamptz
+           where tenant_id=$1::uuid and id=$2::uuid and next_number=$5 and status<>'cancelled'`,
           [scope.tenantId, row.range_id, next, now, Number(row.end_number) + 1],
         );
       }
