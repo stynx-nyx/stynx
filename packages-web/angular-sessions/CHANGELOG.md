@@ -1,5 +1,15 @@
 # @stynx-nyx/angular-sessions
 
+## 1.5.6
+
+### Patch Changes
+
+- Updated dependencies [4a4167b]
+  - @stynx-nyx/angular@1.5.6
+  - @stynx-nyx/angular-auth@1.5.6
+  - @stynx-nyx/angular-ui@1.5.6
+  - @stynx-nyx/angular-i18n@1.5.6
+
 ## 1.5.5
 
 ### Patch Changes

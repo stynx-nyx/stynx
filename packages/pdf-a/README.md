@@ -129,7 +129,7 @@ _None._
 
 ### Peer dependencies
 
-- `@stynx-nyx/logging`: `^1.5.5`
+- `@stynx-nyx/logging`: `^1.5.6`
 
 ### Development-only dependencies
 

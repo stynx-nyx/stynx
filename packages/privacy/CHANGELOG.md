@@ -1,5 +1,13 @@
 # @stynx-nyx/privacy
 
+## 1.5.6
+
+### Patch Changes
+
+- @stynx-nyx/core@1.5.6
+- @stynx-nyx/data@1.5.6
+- @stynx-nyx/storage@1.5.6
+
 ## 1.5.5
 
 ### Patch Changes

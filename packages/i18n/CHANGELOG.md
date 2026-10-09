@@ -1,5 +1,12 @@
 # @stynx-nyx/i18n
 
+## 1.5.6
+
+### Patch Changes
+
+- @stynx-nyx/core@1.5.6
+- @stynx-nyx/data@1.5.6
+
 ## 1.5.5
 
 ### Patch Changes

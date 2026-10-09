@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.6
+
+### Patch Changes
+
+- @stynx-nyx/angular-auth@1.5.6
+- @stynx-nyx/angular-storage@1.5.6
+- @stynx-nyx/angular-ui@1.5.6
+- @stynx-nyx/angular-i18n@1.5.6
+- @stynx-nyx/sdk@1.5.6
+
 ## 1.5.5
 
 ### Patch Changes
