@@ -548,7 +548,7 @@
           "path": "reference/api/test/integration/reference-api.runtime.spec.ts",
           "names": ["INV-CORE-001"],
           "assertions": [
-            "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment ≥80%)"
+            "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment \u226580%)"
           ],
           "mode": "gray_box"
         },
@@ -5032,8 +5032,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 40,
-      "assertion_digest_sha256": "d1031a60a53a4ff270fe405c663b1de0e822f47a47d77874dfdbf4cc09d33741"
+      "assertion_count": 87,
+      "assertion_digest_sha256": "051d77d57147f8e36c709724723f768ee6208fbb2c4507a94deff2aa79bd2086"
     },
     {
       "path": "packages/offline-sync/test/unit/ctg9-parity.spec.ts",
@@ -5048,8 +5048,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 77,
-      "assertion_digest_sha256": "bc63de849e8259f029d29cd87925e177f0d7017a32f696d408589fa8e2bc8ea8"
+      "assertion_count": 199,
+      "assertion_digest_sha256": "76fe7eb2de393680ee3c3a4270f8bb134d1d6dd0468f56e051312489cf4cfcf1"
     },
     {
       "path": "packages/offline-sync/test/unit/postgres-lists-reserve.spec.ts",
@@ -5057,7 +5057,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 22,
-      "assertion_digest_sha256": "31af2635caf4bd1755dbee778409940fd2d2f60d6ff2c5595c9f20f9f5e2d4d7"
+      "assertion_digest_sha256": "2dc176fe3df81442438ba509815bb149f7fa344c62c8021d33a0078659502690"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-sync-reserve-replay.spec.ts",
@@ -5289,7 +5289,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 69,
-      "assertion_digest_sha256": "3e39f96a25b05f0b004711d7c9ce241df51b6c72297e4efbf515ab71d169ff90"
+      "assertion_digest_sha256": "9f1df655e8880ba6cfa8e2200ba09c210e5651307f1572263953f57562dfc7e7"
     },
     {
       "path": "packages/offline-sync/test/unit/postgres-durable-coverage.spec.ts",
