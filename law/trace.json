@@ -2465,7 +2465,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 8,
-      "assertion_digest_sha256": "7e8e862978cffce28e9ebe7aecdb0450b05ea68254bbd3a20fde1343a8bcb816"
+      "assertion_digest_sha256": "7370f066322ba8ceed8715efdc508ac16a584d02eb3f1d4c3562ec47f6c16c88"
     },
     {
       "path": "packages/data/test/integration/migrations.spec.ts",
@@ -2481,7 +2481,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 30,
-      "assertion_digest_sha256": "6881ae9bf2a7b4dae12ea6bd9effc419256b1530c8c79b6ccb07c3371686ffc9"
+      "assertion_digest_sha256": "94ebafd68609229c1e2e4d9bb7d7097ad24b10eb1521d542dc82c54b4b5d7764"
     },
     {
       "path": "packages/data/test/unit/barrel-load.spec.ts",
@@ -2505,7 +2505,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 80,
-      "assertion_digest_sha256": "4c0287510e75a774d6f460e0f6b48a04d96021266811b3688cf878461235f8fa"
+      "assertion_digest_sha256": "a586eed4aeed121335aef9a5f5957af6844b18f1eb648472a38aa8a021ca0ffe"
     },
     {
       "path": "packages/data/test/unit/errors.spec.ts",
@@ -4916,6 +4916,14 @@
       "assertion_digest_sha256": "acafd0f4f02c76f5fb1f8badaecdf360febb8eae66b5d9e5700f06a6e37b26e2"
     },
     {
+      "path": "packages/data/test/unit/app-role-property-check.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 64,
+      "assertion_digest_sha256": "876aa4a6ba6da577d6feb3ffa5922ef4d2181d1425bd0bc1459e42608aae708b"
+    },
+    {
       "path": "packages/tenancy/test/unit/command-context-provenance.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-TENANCY-001", "INV-RBAC-001"],
@@ -5018,6 +5026,14 @@
       "lifecycle": "supported",
       "assertion_count": 6,
       "assertion_digest_sha256": "a00fe6a3314646b19a8cb430175a2e305050f2cd97ec737fc93f20051bd38df5"
+    },
+    {
+      "path": "packages/data/test/integration/app-role-name.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 13,
+      "assertion_digest_sha256": "006ed5e7b7fed534f10a917a09355ad324d41def01abab6698728b6fdf347281"
     },
     {
       "path": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts",
@@ -5177,7 +5193,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 7,
-      "assertion_digest_sha256": "f39dc41daa5260b1e0a88926a82daba488d5e5368911b8882e427f226cceb52b"
+      "assertion_digest_sha256": "8f2387d5ab5aedb09d8506417a6abde1416fdc3303a8e9364fe2f65e0ac06218"
     },
     {
       "path": "packages/outbox/test/unit/ctg9-wrapped-persistence.spec.ts",
@@ -5204,12 +5220,20 @@
       "assertion_digest_sha256": "375207551ae40a9fc55c37c7581a82f34a8f481ba1007540e5dcbf213d72fc74"
     },
     {
+      "path": "test/db/outbox-attempt-guard-migration.spec.ts",
+      "suite": "db",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "5677d75d7cb92302d4546b2e50cce0dc169a10d44d3b9251e59fa2527336c34d"
+    },
+    {
       "path": "packages/outbox/test/integration/request-path-rls.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 29,
-      "assertion_digest_sha256": "2e6b341b00c13b80b4bf375cb87e9252b46e8983c35303d8797e29dfc5ffbc98"
+      "assertion_digest_sha256": "34bc33f112ffe20ca25ba7bc7abc22d9e60027406fce7baa3bd3686620499905"
     },
     {
       "path": "packages/outbox/test/integration/event-reads-retry-rls.integration.spec.ts",
@@ -5242,6 +5266,14 @@
       "lifecycle": "supported",
       "assertion_count": 16,
       "assertion_digest_sha256": "2e0ee38d1ecb01a757d29763137577d5c2a51a2ab2e296b6a835a6911b109da8"
+    },
+    {
+      "path": "packages/outbox/test/integration/app-role.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 23,
+      "assertion_digest_sha256": "c48d15885abd40be05a0f5eebb5e6903d7ac891154c68db2273837690c27133b"
     },
     {
       "path": "packages/auth/test/integration/session-policy-http.integration.spec.ts",
@@ -5305,7 +5337,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 39,
-      "assertion_digest_sha256": "f62ee50a2d3086a74ed2d07c8dadd49c6440422711492bfbe1b5d46950dfef38"
+      "assertion_digest_sha256": "85be2948ecad2b127c3e0f1f4742dd000b42ce1137be6a725115b54e65164910"
     },
     {
       "path": "packages/outbox/test/unit/outbox-events.spec.ts",
@@ -5313,7 +5345,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 99,
-      "assertion_digest_sha256": "e0b66ce39d88a3172c5b9175c912755b836faf501ba4067fbfa574c63363537a"
+      "assertion_digest_sha256": "04affe3190d80b9d5853c05c89266bac05397f4c31091e1e2dade31494d30373"
     },
     {
       "path": "packages/outbox/test/unit/outbox-event-reads.spec.ts",
@@ -5321,7 +5353,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 72,
-      "assertion_digest_sha256": "d89d9fcdc2fa10a7d22abc6db43331be95ee09d02a91832f179d5ee9b88b817d"
+      "assertion_digest_sha256": "d9d9566aa2460463e4ff63b5caafb287c929bfafd7788fc4158f8762ebe943a0"
     },
     {
       "path": "packages/outbox/test/unit/outbox-event-destinations.spec.ts",
@@ -5345,7 +5377,15 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 38,
-      "assertion_digest_sha256": "df63d4713f54a08a3ed0d287d561ccf498beb180df79dd09e3460e5d4372f9e6"
+      "assertion_digest_sha256": "3bde4aed392647ba7b73a8895a7e65e282c596ed78f5864507182cca5fe3d008"
+    },
+    {
+      "path": "packages/outbox/test/unit/outbox-app-role.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 33,
+      "assertion_digest_sha256": "33dd0c2228c4aa620e25ccaa3b726563efe9e1385a5c4ba2b70c4eb8756242ed"
     },
     {
       "path": "packages/pdf/test/unit/assets-missing.spec.ts",
