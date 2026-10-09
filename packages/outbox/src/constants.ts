@@ -2,6 +2,8 @@ export const STYNX_OUTBOX_OPTIONS = Symbol('STYNX_OUTBOX_OPTIONS');
 export const STYNX_OUTBOX_DISPATCHER = Symbol('STYNX_OUTBOX_DISPATCHER');
 export const STYNX_OUTBOX_BACKOFF_POLICY = Symbol('STYNX_OUTBOX_BACKOFF_POLICY');
 export const STYNX_OUTBOX_METRICS = Symbol('STYNX_OUTBOX_METRICS');
+/** Named destination registry (`readonly OutboxDestination[]`); overrides `options.destinations`. */
+export const STYNX_OUTBOX_DESTINATIONS = Symbol('STYNX_OUTBOX_DESTINATIONS');
 
 export const DEFAULT_OUTBOX_TABLE = 'outbox.messages';
 export const DEFAULT_OUTBOX_ACK_TABLE = 'outbox.acknowledgements';
