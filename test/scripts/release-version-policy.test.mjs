@@ -1677,6 +1677,9 @@ test('stable 1.5.6 patch context consumes exactly the 4 pending changesets from 
       'docs/meta/security/sbom.cdx.json',
       'package.json',
       'tools/create-stynx-app/template/package.json',
+      'packages/pdf/README.md',
+      'packages/pdf-a/README.md',
+      'packages/pdf-a-vera-docker/README.md',
     ].map((path) => ({ status: 'M', path })),
   ];
   const input = {
@@ -1783,14 +1786,14 @@ test('stable 1.5.6 patch context consumes exactly the 4 pending changesets from 
       'missing generated support path',
       (value) => {
         value.markerChanges = value.markerChanges.filter(
-          ({ path }) => path !== 'docs/meta/security/sbom.cdx.json',
+          ({ path }) => path !== 'packages/pdf/README.md',
         );
       },
     ],
     [
       'extra generated path',
       (value) => {
-        value.markerChanges.push({ status: 'M', path: 'packages/pdf/README.md' });
+        value.markerChanges.push({ status: 'M', path: 'packages/core/README.md' });
       },
     ],
     [
@@ -3196,7 +3199,7 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   );
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
-  assert.equal(preflightLatest, '1.5.3');
+  assert.equal(preflightLatest, '1.5.5');
   assert.deepEqual(
     validatePreflightDistTags({
       preflightLatest,
