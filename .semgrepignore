@@ -23,3 +23,8 @@ packages/signature/test/fixtures/pki/bad-responder.key.pem
 packages/signature/test/fixtures/pki/chain-signer.key.pem
 packages/signature/test/fixtures/pki/expired-tsa.key.pem
 packages/signature/test/fixtures/pki/intermediate.key.pem
+# Second, disjoint public PKI test root admitted by ADR-SIGNATURE-0002 (Consequences,
+# "Fixtures") for the UPS-SIG-07 trust-profile-set proofs: exact paths, no glob.
+packages/signature/test/fixtures/pki/root2.key.pem
+packages/signature/test/fixtures/pki/signer2.key.pem
+packages/signature/test/fixtures/pki/tsa2.key.pem
