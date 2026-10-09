@@ -1680,6 +1680,9 @@ test('Semgrep ignore list preserves build exclusions and only exact public PKI f
     'packages/signature/test/fixtures/pki/chain-signer.key.pem',
     'packages/signature/test/fixtures/pki/expired-tsa.key.pem',
     'packages/signature/test/fixtures/pki/intermediate.key.pem',
+    'packages/signature/test/fixtures/pki/root2.key.pem',
+    'packages/signature/test/fixtures/pki/signer2.key.pem',
+    'packages/signature/test/fixtures/pki/tsa2.key.pem',
   ]);
 });
 
