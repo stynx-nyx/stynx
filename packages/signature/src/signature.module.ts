@@ -6,6 +6,7 @@ import { isMockSignatureBackend } from './backend-identity';
 import { HttpSignatureProviderClient } from './http-provider-client';
 import { ProviderBackedSignatureBackend } from './provider-backend';
 import { SignatureService } from './signature.service';
+import { declaredTrustProfiles } from './trust-profile-set';
 import {
   STYNX_SIGNATURE_BACKEND,
   STYNX_SIGNATURE_OPTIONS,
@@ -21,7 +22,10 @@ import type {
 class SignatureBootstrapGuard implements OnApplicationBootstrap {
   constructor(@Inject(STYNX_SIGNATURE_OPTIONS) private readonly options: StynxSignatureModuleOptions) {}
   onApplicationBootstrap(): void {
-    if (this.options.trustProfile?.environment !== 'production') return;
+    // Every declared profile is evaluated; the production conditions apply to the module
+    // as soon as one of them is production (ADR-SIGNATURE-0002 D2 item 2).
+    const declared = declaredTrustProfiles(this.options);
+    if (!declared.some((candidate) => candidate.environment === 'production')) return;
     const verifier = this.options.verifier ?? this.options.trustVerifier;
     if (!verifier || (!isCmsTrustVerifier(verifier) && !this.options.consumerOwnedVerifier?.acknowledged))
       throw new SignatureProviderConfigurationError('Production verifier is not trusted');
@@ -37,6 +41,8 @@ class SignatureBootstrapGuard implements OnApplicationBootstrap {
 @Module({})
 export class StynxSignatureModule {
   static forRoot(options: StynxSignatureModuleOptions = {}): DynamicModule {
+    const declared = declaredTrustProfiles(options);
+    const trustProfiles = options.trustProfiles ? declared : undefined;
     return {
       module: StynxSignatureModule,
       global: true,
@@ -67,6 +73,7 @@ export class StynxSignatureModule {
           useFactory: (backend: SignatureBackend): SignatureService => new SignatureService(backend, {
             verifier:options.verifier ?? options.trustVerifier,
             consumerOwnedVerifier:options.consumerOwnedVerifier,
+            trustProfiles,
           }),
           inject: [STYNX_SIGNATURE_BACKEND],
         },
