@@ -5,6 +5,7 @@
  */
 export * from './errors';
 export * from './in-memory-offline-sync.store';
+export * from './numbering';
 export * from './offline-sync.controller';
 export * from './ctg9-offline-sync.controller';
 export * from './offline-sync.module';

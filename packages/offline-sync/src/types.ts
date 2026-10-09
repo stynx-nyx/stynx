@@ -302,7 +302,7 @@ export interface OfflineSyncListInput { readonly limit?: number; readonly cursor
 export interface ListSyncBatchReceiptsInput extends OfflineSyncListInput { readonly deviceId?: string; readonly status?: SyncBatchReceipt['status'] }
 export interface ListSyncItemReceiptsInput extends OfflineSyncListInput { readonly deviceId?: string; readonly deviceBatchId?: string; readonly status?: OfflineSyncQueueStatus }
 export interface ListSyncQueueItemsInput extends OfflineSyncListInput { readonly deviceId?: string; readonly status?: OfflineSyncQueueStatus; readonly entityType?: string }
-export interface ListSyncConflictsInput extends OfflineSyncListInput { readonly status?: SyncConflict['status']; readonly conflictType?: string; readonly queueItemId?: string }
+export interface ListSyncConflictsInput extends OfflineSyncListInput { readonly status?: SyncConflict['status']; readonly conflictType?: string; readonly queueItemId?: string; /** Device of the referenced queue item (UPS-OFS-11). */ readonly deviceId?: string }
 export interface SyncBatchReceiptSummary {
   readonly deviceId: string;
   readonly deviceBatchId: string;
@@ -320,4 +320,8 @@ export interface SyncItemReceiptRecord extends SyncItemReceipt {
   readonly receivedAt: string;
 }
 export interface SyncQueueItemRecord extends StoredSyncQueueItem { readonly deviceBatchId: string }
-export interface SyncConflictRecord extends SyncConflict { readonly createdAt: string }
+export interface SyncConflictRecord extends SyncConflict {
+  /** Device of the referenced queue item (UPS-OFS-11). */
+  readonly deviceId: string;
+  readonly createdAt: string;
+}

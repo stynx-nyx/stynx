@@ -10,6 +10,7 @@ import type {
 } from './types';
 import { OfflineSyncConfigurationError, OfflineSyncError, OfflineSyncNumberingOutcome, OfflineSyncUpgradeRequiredError } from './errors';
 import { applyReplayResponse, batchContextFingerprint, captureReplayableHeaders, transportCompositeKey, transportFingerprint } from './transport';
+import { canonicalPayloadHash } from './listing';
 
 interface BatchRow {
   device_id: string; device_batch_id: string; batch_sequence: string | null; status: SyncBatchReceipt['status'];
@@ -277,6 +278,18 @@ export async function pgSubmit(database: Database, scope: TrustedOfflineSyncScop
     const preflight = await txDurable(database,async trx => {
       await renewLease(trx,scope,input,token,generation);
       await trx.query(`select pg_advisory_xact_lock(hashtextextended($1,0))`,[`${scope.tenantId}:${key}`]);
+      if (!canonicalPayloadHash.test(item.payloadHash)) {
+        // ADR-MOBILE-OFFLINE-0003 D4: a non-canonical hash is diverted here, before any statement a
+        // CHECK could reject. Only the attempt row records the received value; no queue row, item
+        // receipt, consumption or effect exists, so the key stays unconsumed. When the key already has
+        // an original, the D3 item 6 integrity conflict row is deferred to the next patch.
+        await trx.query(`insert into offline.sync_item_attempts
+          (tenant_id,device_id,device_batch_id,queue_item_id,idempotency_key,payload_hash,status,error_code)
+          values ($1::uuid,$2,$3,$4,$5,$6,'rejected','OFFLINE_SYNC_ITEM_INTEGRITY')
+          on conflict (tenant_id,device_id,device_batch_id,queue_item_id) do nothing`,
+          [scope.tenantId,input.deviceId,input.deviceBatchId,item.queueItemId,key,item.payloadHash]);
+        return {kind:'non-canonical' as const,receipt:{queue_item_id:item.queueItemId,status:'rejected' as const,error_code:'OFFLINE_SYNC_ITEM_INTEGRITY',payload_hash:item.payloadHash}};
+      }
       await trx.query(`insert into offline.sync_queue_items
         (id,tenant_id,device_batch_id,org_unit_id,agent_id,device_id,entity_type,local_entity_id,
          idempotency_key,payload_hash,payload_json,reserved_number,status,created_locally_at,received_at,identity_mode)
@@ -351,7 +364,7 @@ export async function pgSubmit(database: Database, scope: TrustedOfflineSyncScop
       if (preflight.kind === 'legacy-received' || (preflight.kind === 'duplicate' &&
           (preflight.receipt.device_id !== input.deviceId || preflight.receipt.device_batch_id !== input.deviceBatchId)))
         duplicates += 1;
-      const status: SyncItemReceipt['status'] = preflight.kind === 'integrity' || preflight.kind === 'queue-reused' || preflight.kind === 'legacy-received' ? 'rejected' : preflight.receipt.status;
+      const status: SyncItemReceipt['status'] = preflight.kind === 'integrity' || preflight.kind === 'non-canonical' || preflight.kind === 'queue-reused' || preflight.kind === 'legacy-received' ? 'rejected' : preflight.receipt.status;
       const errorCode = preflight.kind === 'integrity' ? 'OFFLINE_SYNC_ITEM_INTEGRITY' : preflight.receipt.error_code;
       if (status === 'received' && item.idempotencyKey && options.ports.itemApplier) retryable = true;
       const duplicateContext = preflight.kind === 'duplicate' ? {
