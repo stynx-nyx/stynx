@@ -24,24 +24,29 @@ BYTE_RANGE_SPACES = os.environ.get('STYNX_BYTE_RANGE_SPACES') == '1'
 REVOKE_SIGNER_OCSP = os.environ.get('STYNX_REVOKE_SIGNER_OCSP') == '1'
 REVOKE_SIGNER_CRL = os.environ.get('STYNX_REVOKE_SIGNER_CRL') == '1'
 ESS_SPOOF = os.environ.get('STYNX_ESS_SPOOF') == '1'
+# Trust root of the whole artifact: 'root' (default) or 'root2', the second,
+# disjoint test PKI used by the trust-profile-set proofs (ADR-SIGNATURE-0002 D2).
+ROOT_KIND = os.environ.get('STYNX_ROOT_KIND', 'root')
+if ROOT_KIND not in ('root', 'root2'):
+    raise ValueError('STYNX_ROOT_KIND must be root or root2')
 SIGNER_KIND = os.environ.get('STYNX_SIGNER_KIND', 'signer')
-SIGNER_ISSUER_KIND = os.environ.get('STYNX_SIGNER_ISSUER_KIND', 'root')
+SIGNER_ISSUER_KIND = os.environ.get('STYNX_SIGNER_ISSUER_KIND', ROOT_KIND)
 OCSP_RESPONDER_KIND = os.environ.get('STYNX_OCSP_RESPONDER_KIND', SIGNER_ISSUER_KIND)
 TSA_KIND = os.environ.get('STYNX_TSA_KIND', 'tsa')
 REVOKE_INTERMEDIATE_OCSP = os.environ.get('STYNX_REVOKE_INTERMEDIATE_OCSP') == '1'
 FINAL_XREF_KIND = os.environ.get('STYNX_FINAL_XREF_KIND', 'table')
 if FINAL_XREF_KIND not in ('table', 'stream', 'hybrid'):
     raise ValueError('STYNX_FINAL_XREF_KIND must be table, stream, or hybrid')
-if TSA_KIND not in ('tsa', 'expired-tsa'):
-    raise ValueError('STYNX_TSA_KIND must be tsa or expired-tsa')
+if TSA_KIND not in ('tsa', 'expired-tsa', 'tsa2'):
+    raise ValueError('STYNX_TSA_KIND must be tsa, expired-tsa, or tsa2')
 ATTACHED_CMS = os.environ.get('STYNX_ATTACHED_CMS') == '1'
 PRE_TST_GOOD = os.environ.get('STYNX_PRE_TST_GOOD') == '1'
 STALE_SIGNER_OCSP = os.environ.get('STYNX_STALE_SIGNER_OCSP') == '1'
 INCLUDE_FRESH_SIGNER_OCSP = os.environ.get('STYNX_INCLUDE_FRESH_SIGNER_OCSP') == '1'
-if SIGNER_KIND not in ('signer', 'spoof', 'chain-signer'):
-    raise ValueError('STYNX_SIGNER_KIND must be signer, spoof, or chain-signer')
-if SIGNER_ISSUER_KIND not in ('root', 'intermediate'):
-    raise ValueError('STYNX_SIGNER_ISSUER_KIND must be root or intermediate')
+if SIGNER_KIND not in ('signer', 'spoof', 'chain-signer', 'signer2'):
+    raise ValueError('STYNX_SIGNER_KIND must be signer, spoof, chain-signer, or signer2')
+if SIGNER_ISSUER_KIND not in (ROOT_KIND, 'intermediate'):
+    raise ValueError('STYNX_SIGNER_ISSUER_KIND must be the selected root or intermediate')
 if MANIFEST and (len(MANIFEST) != 64 or any(c not in '0123456789abcdef' for c in MANIFEST)):
     raise ValueError('STYNX_MANIFEST_SHA256 must be lowercase SHA-256 hex')
 if WITHDRAWAL and (len(WITHDRAWAL) != 64 or any(c not in '0123456789abcdef' for c in WITHDRAWAL)):
@@ -145,13 +150,13 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
     (work / 'content.bin').write_bytes(revision[:gap_start] + revision[gap_end:])
     if ATTACHED_CMS:
         (work / 'unrelated.bin').write_bytes(b'Unrelated CMS content, not the selected PDF ByteRange.\n')
-    certfile = ROOT / 'root.cert.pem'
+    certfile = ROOT / f'{ROOT_KIND}.cert.pem'
     if SIGNER_ISSUER_KIND == 'intermediate':
         (work / 'cms-chain.pem').write_bytes((ROOT / 'intermediate.cert.pem').read_bytes() +
-                                             (ROOT / 'root.cert.pem').read_bytes())
+                                             (ROOT / f'{ROOT_KIND}.cert.pem').read_bytes())
         certfile = work / 'cms-chain.pem'
     if ESS_SPOOF:
-        (work / 'cms-certs.pem').write_bytes((ROOT / 'root.cert.pem').read_bytes() +
+        (work / 'cms-certs.pem').write_bytes((ROOT / f'{ROOT_KIND}.cert.pem').read_bytes() +
                                               (ROOT / 'spoof.cert.pem').read_bytes())
         certfile = work / 'cms-certs.pem'
     signing = [OPENSSL, 'cms', '-sign', '-binary', '-cades']
@@ -165,14 +170,15 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
             str(ROOT / 'spoof.cert.der'), 'spoof.cms.der', cwd=work)
         shutil.move(work / 'spoof.cms.der', work / 'base.cms.der')
     def generate_revocation():
-        serial = {'signer': '03E9', 'spoof': '03EB', 'chain-signer': '03EC'}[SIGNER_KIND]
+        serial = {'signer': '03E9', 'spoof': '03EB', 'chain-signer': '03EC', 'signer2': '07D1'}[SIGNER_KIND]
         subject = {'signer': 'STYNX Test Signer', 'spoof': 'STYNX Test Spoofed Party B',
-                   'chain-signer': 'STYNX Test Chain Signer'}[SIGNER_KIND]
+                   'chain-signer': 'STYNX Test Chain Signer', 'signer2': 'STYNX Test Signer 2'}[SIGNER_KIND]
         signer_index = (f'R\t270928000000Z\t260928000000Z\t{serial}\tunknown\t/CN={subject}\n'
                         if REVOKE_SIGNER_OCSP else
                         f'V\t270928000000Z\t\t{serial}\tunknown\t/CN={subject}\n')
-        tsa_serial = '03EA' if TSA_KIND == 'tsa' else '03ED'
-        tsa_subject = 'STYNX Test TSA' if TSA_KIND == 'tsa' else 'STYNX Expiring TSA'
+        tsa_serial = {'tsa': '03EA', 'expired-tsa': '03ED', 'tsa2': '07D2'}[TSA_KIND]
+        tsa_subject = {'tsa': 'STYNX Test TSA', 'expired-tsa': 'STYNX Expiring TSA',
+                       'tsa2': 'STYNX Test TSA 2'}[TSA_KIND]
         (work / 'ocsp-index.txt').write_text(signer_index +
             f'V\t270928000000Z\t\t{tsa_serial}\tunknown\t/CN={tsa_subject}\n')
         crl_signer_index = (f'R\t270928000000Z\t260928000000Z\t{serial}\tunknown\t/CN={subject}\n'
@@ -181,8 +187,8 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
         (work / 'crl-index.txt').write_text(crl_signer_index +
             f'V\t270928000000Z\t\t{tsa_serial}\tunknown\t/CN={tsa_subject}\n')
         for name in (SIGNER_KIND, TSA_KIND):
-            issuer_kind = SIGNER_ISSUER_KIND if name == SIGNER_KIND else 'root'
-            responder_kind = OCSP_RESPONDER_KIND if name == SIGNER_KIND else 'root'
+            issuer_kind = SIGNER_ISSUER_KIND if name == SIGNER_KIND else ROOT_KIND
+            responder_kind = OCSP_RESPONDER_KIND if name == SIGNER_KIND else ROOT_KIND
             run(OPENSSL, 'ocsp', '-issuer', str(ROOT / f'{issuer_kind}.cert.pem'),
                 '-cert', str(ROOT / f'{name}.cert.pem'), '-reqout', f'{name}.ocsp.req.der', '-no_nonce', cwd=work)
             run(OPENSSL, 'ocsp', '-index', 'ocsp-index.txt',
@@ -207,7 +213,7 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
         (work / 'ca.cnf').write_text('\n'.join([
             '[ ca ]', 'default_ca = ca_default', '[ ca_default ]', f'dir = {work}',
             'database = crl-index.txt', 'serial = ca.serial', 'crlnumber = crl.serial',
-            f'certificate = {ROOT / "root.cert.pem"}', f'private_key = {ROOT / "root.key.pem"}',
+            f'certificate = {ROOT / f"{ROOT_KIND}.cert.pem"}', f'private_key = {ROOT / f"{ROOT_KIND}.key.pem"}',
             'default_md = sha256', 'default_crl_days = 7', 'policy = policy_any',
             '[ policy_any ]', 'commonName = supplied',
         ]) + '\n')
@@ -224,7 +230,7 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
         '[ tsa ]', 'default_tsa = tsa_config1', '[ tsa_config1 ]',
         f'dir = {work}', 'serial = tsa.serial',
         f'signer_cert = {ROOT / f"{TSA_KIND}.cert.pem"}', f'signer_key = {ROOT / f"{TSA_KIND}.key.pem"}',
-        f'certs = {ROOT / "root.cert.pem"}', 'default_policy = 1.2.3.4.5.6.7',
+        f'certs = {ROOT / f"{ROOT_KIND}.cert.pem"}', 'default_policy = 1.2.3.4.5.6.7',
         'crypto_device = builtin', 'signer_digest = sha256', 'digests = sha256',
         'accuracy = secs:1', 'ordering = yes', 'tsa_name = yes',
         'ess_cert_id_chain = no',
@@ -253,7 +259,7 @@ with tempfile.TemporaryDirectory(prefix='stynx-pades-blt-') as temp:
         verification.append('-cades')
     verify_content = [] if ATTACHED_CMS else ['-content', 'covered.bin']
     run(*verification, '-inform', 'DER', '-in',
-        'base.cms.der' if B_B_ONLY else 'final.cms.der', *verify_content, '-CAfile', str(ROOT / 'root.cert.pem'),
+        'base.cms.der' if B_B_ONLY else 'final.cms.der', *verify_content, '-CAfile', str(ROOT / f'{ROOT_KIND}.cert.pem'),
         '-out', 'verified.bin', cwd=work)
 
 if B_B_ONLY or NO_DSS:
