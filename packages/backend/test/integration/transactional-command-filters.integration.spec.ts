@@ -66,7 +66,7 @@ describe('transactional command method filter precedence over real Nest HTTP and
       connections: {
         owner: { connectionString: postgres!.connectionString('ctg5-filter-owner') },
         app: {
-          connectionString: asRole(postgres!.connectionString('ctg5-filter-app'), 'stynx_app'),
+          connectionString: postgres!.appConnectionString('ctg5-filter-app'),
         },
         reader: {
           connectionString: asRole(

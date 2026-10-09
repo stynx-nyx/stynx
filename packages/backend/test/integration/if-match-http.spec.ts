@@ -175,8 +175,6 @@ describe('If-Match decorators on real Nest HTTP routes with StynxCoreModule', ()
 
 const COMMAND_TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const COMMAND_ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2831a';
-const asAppRole = (connectionString: string): string =>
-  `${connectionString}&options=${encodeURIComponent('-c role=stynx_app')}`;
 
 describe('If-Match and transactional command composition over Nest HTTP and PostgreSQL', () => {
   let postgres: PostgresTestDatabase | undefined;
@@ -255,7 +253,7 @@ describe('If-Match and transactional command composition over Nest HTTP and Post
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('if-match-owner') },
-            app: { connectionString: asAppRole(postgres.connectionString('if-match-app')) },
+            app: { connectionString: postgres.appConnectionString('if-match-app') },
             reader: { connectionString: `${postgres.connectionString('if-match-reader')}&options=${encodeURIComponent('-c role=stynx_reader')}` },
           },
           migrations: { enabled: true },

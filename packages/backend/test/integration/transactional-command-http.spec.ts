@@ -179,7 +179,7 @@ describe('transactional command committed wire response over Nest HTTP and Postg
           connections: {
             owner: { connectionString: postgres.connectionString('ctg5-wire-owner') },
             app: {
-              connectionString: asRole(postgres.connectionString('ctg5-wire-app'), 'stynx_app'),
+              connectionString: postgres.appConnectionString('ctg5-wire-app'),
             },
             reader: {
               connectionString: asRole(

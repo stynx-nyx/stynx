@@ -134,7 +134,7 @@ describe('transactional command canonical configuration rejections over Nest HTT
         StynxCoreModule.forRoot({ appName: 'transactional-command-errors', schema: z.object({}) }),
         StynxDataModule.forRoot({ connections: {
           owner: { connectionString: postgres.connectionString('command-errors-owner') },
-          app: { connectionString: asRole(postgres.connectionString('command-errors-app'), 'stynx_app') },
+          app: { connectionString: postgres.appConnectionString('command-errors-app') },
           reader: { connectionString: asRole(postgres.connectionString('command-errors-reader'), 'stynx_reader') },
         }, migrations: { enabled: true } }),
         StynxAuthModule.forRoot({ tokenVerifier: { verifyAuthorizationHeader: async () => ({ principal: {

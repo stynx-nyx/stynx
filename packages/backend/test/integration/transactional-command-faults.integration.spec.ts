@@ -27,8 +27,6 @@ import {
 
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9d1';
 const ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2832a';
-const asAppRole = (connectionString: string): string =>
-  `${connectionString}&options=${encodeURIComponent('-c role=stynx_app')}`;
 const asReaderRole = (connectionString: string): string =>
   `${connectionString}&options=${encodeURIComponent('-c role=stynx_reader')}`;
 
@@ -298,7 +296,7 @@ describe('transactional command rollback and concurrency over app-role PostgreSQ
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ctg5-fault-owner') },
-            app: { connectionString: asAppRole(postgres.connectionString('ctg5-fault-app')) },
+            app: { connectionString: postgres.appConnectionString('ctg5-fault-app') },
             reader: {
               connectionString: asReaderRole(postgres.connectionString('ctg5-fault-reader')),
             },

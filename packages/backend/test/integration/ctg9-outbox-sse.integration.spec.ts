@@ -78,7 +78,7 @@ describe('CTG9 PostgreSQL outbox SSE adapter through backend', () => {
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-sse-owner') },
             app: {
-              connectionString: asRole(postgres.connectionString('ctg9-sse-app'), 'stynx_app'),
+              connectionString: postgres.appConnectionString('ctg9-sse-app'),
             },
             reader: {
               connectionString: asRole(
