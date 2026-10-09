@@ -95,7 +95,7 @@ describe('UPS-OBX-04/05 tenant event reads and operator retry (PostgreSQL/FORCE 
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('outbox-reads-owner') },
-            app: { connectionString: asRole(postgres.connectionString('outbox-reads-app'), 'stynx_app') },
+            app: { connectionString: postgres.appConnectionString('outbox-reads-app') },
             reader: { connectionString: asRole(postgres.connectionString('outbox-reads-reader'), 'stynx_reader') },
           },
           migrations: { enabled: true },

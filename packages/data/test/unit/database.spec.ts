@@ -98,6 +98,7 @@ describe('Database', () => {
         get: vi.fn((_role: string, _replica: boolean) => ({
           connect: vi.fn(async () => client),
         })),
+        ensureAppRole: vi.fn(async () => undefined),
       } as unknown as StynxPoolRegistry,
       overrides.cls ??
         ({
@@ -154,6 +155,7 @@ describe('Database', () => {
             release: () => undefined,
           }),
         }),
+        ensureAppRole: async () => undefined,
       } as unknown as StynxPoolRegistry,
       {
         get: () => undefined,

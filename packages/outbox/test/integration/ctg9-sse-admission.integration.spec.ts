@@ -25,10 +25,7 @@ describe('CTG9 one SSE clock preflight per tenant (PostgreSQL)', () => {
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-admission-owner') },
             app: {
-              connectionString: asRole(
-                postgres.connectionString('ctg9-admission-app'),
-                'stynx_app',
-              ),
+              connectionString: postgres.appConnectionString('ctg9-admission-app'),
             },
             reader: {
               connectionString: asRole(

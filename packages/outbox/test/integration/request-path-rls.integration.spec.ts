@@ -70,10 +70,7 @@ describe('request-path outbox delivery and ACK (PostgreSQL/FORCE RLS)', () => {
           connections: {
             owner: { connectionString: postgres.connectionString('outbox-request-owner') },
             app: {
-              connectionString: asRole(
-                postgres.connectionString('outbox-request-app'),
-                'stynx_app',
-              ),
+              connectionString: postgres.appConnectionString('outbox-request-app'),
             },
             reader: {
               connectionString: asRole(

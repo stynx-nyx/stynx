@@ -3,7 +3,7 @@ import { RequestContextMutator, SystemContextRequiredError } from '@stynx-nyx/co
 import { ActorContextMissingError, ReadOnlyViolationError } from '../../src/errors';
 import { Database } from '../../src/database';
 import { StynxDataModule } from '../../src/data.module';
-import { createPostgresTestDatabase } from '../support/postgres';
+import { asAppRole, createPostgresTestDatabase } from '../support/postgres';
 
 describe('StynxDataModule integration', () => {
 
@@ -17,7 +17,7 @@ describe('StynxDataModule integration', () => {
           StynxDataModule.forRoot({
             connections: {
               owner: { connectionString: testDatabase.connectionString('stynx-owner') },
-              app: { connectionString: testDatabase.connectionString('stynx-app') },
+              app: { connectionString: testDatabase.appConnectionString('stynx-app') },
               reader: { connectionString: testDatabase.connectionString('stynx-reader') },
             },
           }),
@@ -127,17 +127,13 @@ describe('StynxDataModule integration', () => {
       expect(attempts).toBe(2);
       expect(retryResult).toBe(1);
 
-      await requestContextMutator.runWithRequestContext(
-        {
-          requestId: 'req-4',
-          tenantId: 'tenant-1',
-          actorId: 'actor-1',
-          startedAt: new Date(),
-        },
-        () =>
-          database.tx(async (trx) => {
+      await database.withSystemContext('reader probe table', () =>
+        database.tx(
+          async (trx) => {
             await trx.query('create table if not exists stynx_reader_probe(id int primary key)');
-          }),
+          },
+          { role: 'owner' },
+        ),
       );
 
       await expect(
@@ -174,7 +170,7 @@ describe('StynxDataModule integration', () => {
           StynxDataModule.forRoot({
             connections: {
               owner: { connectionString: baseConnectionString },
-              app: { connectionString: baseConnectionString },
+              app: { connectionString: asAppRole(baseConnectionString) },
               reader: { connectionString: baseConnectionString },
             },
           }),
@@ -207,7 +203,7 @@ describe('StynxDataModule integration', () => {
           StynxDataModule.forRoot({
             connections: {
               owner: { connectionString: baseConnectionString },
-              app: { connectionString: baseConnectionString },
+              app: { connectionString: asAppRole(baseConnectionString) },
               reader: { connectionString: baseConnectionString },
             },
           }),

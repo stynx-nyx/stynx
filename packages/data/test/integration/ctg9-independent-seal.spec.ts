@@ -34,7 +34,7 @@ describe('CTG9 strict independent item transaction (PostgreSQL)', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-seal-owner') },
-            app: { connectionString: postgres.connectionString('ctg9-seal-app'), max: 1 },
+            app: { connectionString: postgres.appConnectionString('ctg9-seal-app'), max: 1 },
             reader: { connectionString: postgres.connectionString('ctg9-seal-reader') },
           },
           migrations: { enabled: true },

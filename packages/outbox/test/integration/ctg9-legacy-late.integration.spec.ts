@@ -39,7 +39,7 @@ describe('CTG9 in-flight legacy failure after cutover (PostgreSQL)', () => {
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-late-owner') },
             app: {
-              connectionString: asRole(postgres.connectionString('ctg9-late-app'), 'stynx_app'),
+              connectionString: postgres.appConnectionString('ctg9-late-app'),
             },
             reader: {
               connectionString: asRole(

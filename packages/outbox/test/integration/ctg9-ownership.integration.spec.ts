@@ -26,7 +26,7 @@ describe('CTG9 legacy ownership barrier (PostgreSQL)', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-owner') },
-            app: { connectionString: asRole(postgres.connectionString('ctg9-app'), 'stynx_app') },
+            app: { connectionString: postgres.appConnectionString('ctg9-app') },
             reader: {
               connectionString: asRole(postgres.connectionString('ctg9-reader'), 'stynx_reader'),
             },

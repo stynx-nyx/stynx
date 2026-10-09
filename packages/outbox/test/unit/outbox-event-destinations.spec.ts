@@ -31,7 +31,7 @@ function appendTrx(replayed: readonly string[] = []) {
   return { trx: { role: 'app', query } as never, deliveries };
 }
 
-const database = { currentTenantId: () => tenant };
+const database = { appRoleName: 'stynx_app', currentTenantId: () => tenant };
 
 function dispatchDatabase() {
   const calls: Array<{ sql: string; params: readonly unknown[] | undefined }> = [];
@@ -39,7 +39,7 @@ function dispatchDatabase() {
   const tx = vi.fn(async (fn: (trx: never) => Promise<unknown>) => fn({ role: 'app', query } as never));
   return {
     calls, tx,
-    database: { currentTenantId: () => tenant, withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()), tx },
+    database: { appRoleName: 'stynx_app', currentTenantId: () => tenant, withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()), tx },
   };
 }
 
