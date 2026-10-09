@@ -1381,6 +1381,12 @@
       "commit": "b011920bfd1abd924f58cf6b2d71d1be05f6ee19",
       "authorized_by": "Owner",
       "reason": "Owner post-merge authorization (2026-10-08) for the COMPOSE_BAKE=false workflow change (ADR-CI-COMPOSE-0001) as it landed on main through the PR #354 rebase merge, which rewrote the pre-merge receipted commit. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "0dce72e184236ba79240a5bc2b394894068f3738",
+      "authorized_by": "Owner",
+      "reason": "Owner post-merge authorization (2026-10-09) for the first measured scorecard observation evidence (readings, chain entries and the SC-20261008T231951-001 bundle, ADR-DEVAI-ADOPTION-0014 decision 5) as it landed on main through the PR #356 rebase merge, which rewrote the pre-merge receipted commit. This receipt covers only that exact commit."
     }
   ]
 }
