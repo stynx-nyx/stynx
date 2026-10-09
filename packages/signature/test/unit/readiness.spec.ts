@@ -257,11 +257,12 @@ describe('signature readiness', () => {
         .then(async (testOnly) => {
           try {
             await testOnly.init();
+            return 'started';
           } finally {
             await testOnly.close();
           }
         }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe('started');
   });
 
   it('keeps health independent of signature at the module boundary', async () => {
