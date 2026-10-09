@@ -14,6 +14,7 @@ const secondStablePatchVersionCommitSubject = 'chore(repo): version fixed group 
 const thirdStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.3';
 const fourthStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.4';
 const fifthStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.5';
+const sixthStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.6';
 
 const allowedVersionSupportPaths = new Set([
   'docs/meta/security/sbom.cdx.json',
@@ -118,6 +119,25 @@ const allowedFourthStablePatchFollowUpPaths = new Set([
 const fifthStablePatchChangesetPaths = Object.freeze(['.changeset/pdf-handlebars-advisories.md']);
 
 const allowedFifthStablePatchFollowUpPaths = new Set([
+  'law/policy/forbidden-action-authorizations.json',
+  'law/policy/registry-version-anomalies.json',
+  'law/trace.json',
+  'scripts/lib/registry-version-policy.mjs',
+  'scripts/lib/release-context.mjs',
+  'scripts/run-release-preparation.mjs',
+  'test/scripts/local-rc-blocker-contract.test.mjs',
+  'test/scripts/release-version-policy.test.mjs',
+]);
+
+// ADR-DEVAI-ADOPTION-0016: the changesets the 1.5.6 marker consumes.
+const sixthStablePatchChangesetPaths = Object.freeze([
+  '.changeset/ngsse-open-status.md',
+  '.changeset/offline-sync-1-5-6-slice.md',
+  '.changeset/outbox-named-destinations.md',
+  '.changeset/signature-trust-profile-sets.md',
+]);
+
+const allowedSixthStablePatchFollowUpPaths = new Set([
   'law/policy/forbidden-action-authorizations.json',
   'law/policy/registry-version-anomalies.json',
   'law/trace.json',
@@ -566,6 +586,21 @@ export function isFifthStablePatchVersionedCandidate(input) {
   });
 }
 
+/**
+ * The published 1.5.5 main consumes the slice-2 changesets into 1.5.6
+ * (ADR-DEVAI-ADOPTION-0016); main itself is the 1.5.5 base.
+ */
+export function isSixthStablePatchVersionedCandidate(input) {
+  return isExactStablePatchVersionedCandidate(input, {
+    baseVersion: '1.5.5',
+    parentVersion: '1.5.5',
+    candidateVersion: '1.5.6',
+    changesetPaths: sixthStablePatchChangesetPaths,
+    markerSubject: sixthStablePatchVersionCommitSubject,
+    allowedFollowUpPaths: allowedSixthStablePatchFollowUpPaths,
+  });
+}
+
 export function classifyReleaseContext({
   baseCommit,
   headCommit,
@@ -620,6 +655,7 @@ export const releaseContextConstants = Object.freeze({
   thirdStablePatchVersionCommitSubject,
   fourthStablePatchVersionCommitSubject,
   fifthStablePatchVersionCommitSubject,
+  sixthStablePatchVersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',

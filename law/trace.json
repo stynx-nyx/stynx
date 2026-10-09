@@ -4609,7 +4609,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 853,
-      "assertion_digest_sha256": "19277235d058b75c542548637280689290a53a196cd505fd2a36bc175a1c051c"
+      "assertion_digest_sha256": "b14a328ca25d91cdd450e0d041ccdb1e1b4d549847c09b8c80e069307e822d8d"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -4640,8 +4640,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 318,
-      "assertion_digest_sha256": "dbe4a56318e5e0393dcc93f32680f774812f45768f9b2a92f2c007b86661c867"
+      "assertion_count": 326,
+      "assertion_digest_sha256": "47cc9a6cbbd9a7cdc4bf61e6917429001fa663998dda438dc9bc71591380cd6c"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",

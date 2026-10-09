@@ -1399,6 +1399,12 @@
       "commit": "a4b73779fa8637dd5cd3dd63e46c5c9c6579e7b8",
       "authorized_by": "Owner",
       "reason": "Owner post-merge authorization (2026-10-09) for the SC-20261009T155331-001 observation evidence of the published 1.5.5 candidate (ADR-DEVAI-ADOPTION-0014 decision 5) as it landed on main through the PR #358 rebase merge, which rewrote the pre-merge receipted commit. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "b81f582d7782a9ab2e558a3add86e62744cd2d84",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-10-09 (slice-2 execution mandate; ADR-DEVAI-ADOPTION-0016) for retiring the SC-20261008T231951-001 observation bundle recorded at the pre-merge branch commit f0d53b61a29579c36d63cd2d0762cdcf653e8d70, which main never carried and whose absence after branch deletion breaks the main observation walk; the published-candidate observation SC-20261009T155331-001 at 1a03a9156b6e6429fb2a84964b95e514a2da2cb8 remains. This receipt covers only that exact commit."
     }
   ]
 }

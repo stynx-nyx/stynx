@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Release the fixed group as stable patch 1.5.6](2026-10-09-sixth-stable-patch-1.5.6.md)
 - [Release the fixed group as stable patch 1.5.5](2026-10-08-fifth-stable-patch-1.5.5.md)
 - [Enable the DEVAI scorecard sensors for STYNX](2026-10-08-devai-scorecard-enablement.md)
 - [Adopt DEVAI 2.3.0 through init upgrade](2026-10-08-devai-2.3.0-adoption.md)

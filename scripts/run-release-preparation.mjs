@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   classifyReleaseContext,
   isFinalVersionedCandidate,
+  isSixthStablePatchVersionedCandidate,
   isFifthStablePatchVersionedCandidate,
   isFourthStablePatchVersionedCandidate,
   isSecondStablePatchVersionedCandidate,
@@ -361,6 +362,10 @@ function releaseContext() {
   return classified.kind === 'ordinary'
     ? (versionedPreModeContext(baseCommit, headCommit, commits) ??
         finalVersionedContext(baseCommit, headCommit, commits) ??
+        stablePatchVersionedContext(baseCommit, headCommit, commits, {
+          markerSubject: releaseContextConstants.sixthStablePatchVersionCommitSubject,
+          predicate: isSixthStablePatchVersionedCandidate,
+        }) ??
         stablePatchVersionedContext(baseCommit, headCommit, commits, {
           markerSubject: releaseContextConstants.fifthStablePatchVersionCommitSubject,
           predicate: isFifthStablePatchVersionedCandidate,
