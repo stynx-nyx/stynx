@@ -155,7 +155,7 @@ describe('public tenant route contract', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('public-tenant-owner') },
-            app: { connectionString: postgres.connectionString('public-tenant-app') },
+            app: { connectionString: postgres.appConnectionString('public-tenant-app') },
             reader: { connectionString: postgres.connectionString('public-tenant-reader') },
           },
           migrations: { enabled: true },
@@ -201,6 +201,14 @@ describe('public tenant route contract', () => {
         insert into auth.memberships (id, tenant_id, user_id, is_active, created_at)
         values ($1::uuid, $2::uuid, $3::uuid, true, clock_timestamp())
       `, ['0197481e-7294-7c53-8b03-5c36d7c2832a', TENANT_A, VERIFIED_MEMBER_A]);
+      // The app pool logs in as stynx_app (ADR-OUTBOX-0003 D1). The portal
+      // probe calls audit.write() directly, which the platform reserves for the
+      // owner; grant the probe what it previously took from the superuser so
+      // the proof stays about RLS visibility, not about privileges.
+      await admin.query(`grant execute on function audit.write(uuid, uuid, text, text, text, text, jsonb,
+        text, text, text, jsonb, jsonb, jsonb) to stynx_app`);
+      await admin.query('grant execute on function audit.lock_chain(uuid) to stynx_app');
+      await admin.query('grant insert on audit.events, audit.log to stynx_app');
     } finally {
       await admin.end();
     }
