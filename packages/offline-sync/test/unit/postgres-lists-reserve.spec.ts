@@ -5,7 +5,7 @@ import { encodeCursor, reservationFingerprint } from '../../src/listing';
 import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
 import { pgListBatches, pgListConflicts, pgListItemReceipts, pgListQueueItems } from '../../src/postgres-listing';
 
-// INV-OFFLINE-001; UPS-OFS-05, UPS-OFS-11 (#317): SQL-boundary sensors for the PostgreSQL store.
+// INV-OFFLINE-001; UPS-OFS-05, UPS-OFS-11 (#317, conflict device filter): SQL-boundary sensors for the PostgreSQL store.
 const scope = { tenantId: '00000000-0000-4000-8000-000000000001', actorId: 'actor-a' };
 const input = { orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'shift-a', entityType: 'record', requestedSize: 1 };
 const at = new Date('2026-09-28T12:00:00.000Z');
@@ -71,26 +71,28 @@ describe('PostgreSQL listing boundary', () => {
     await pgListBatches(database, scope, { deviceId: 'd', status: 'closed', limit: 5, cursor: encodeCursor([at6, 'd', 'b']) });
     await pgListItemReceipts(database, scope, { deviceId: 'd', deviceBatchId: 'b', status: 'applied', cursor: encodeCursor([at6, 'k']) });
     await pgListQueueItems(database, scope, { deviceId: 'd', status: 'applied', entityType: 'e', limit: 1 });
-    await pgListConflicts(database, scope, { status: 'open', conflictType: 'c', queueItemId: 'q', cursor: encodeCursor([at6, 'id']) });
+    await pgListConflicts(database, scope, { status: 'open', conflictType: 'c', queueItemId: 'q', deviceId: 'd', cursor: encodeCursor([at6, 'id']) });
+    await pgListConflicts(database, scope, {});
     expect(calls).toEqual([
       [scope.tenantId, 'd', 'closed', at6, 'd', 'b', 6],
       [scope.tenantId, 'd', 'b', 'applied', at6, 'k', 51],
       [scope.tenantId, 'd', 'applied', 'e', null, null, 2],
-      [scope.tenantId, 'open', 'c', 'q', at6, 'id', 51],
+      [scope.tenantId, 'open', 'c', 'q', 'd', at6, 'id', 51],
+      [scope.tenantId, null, null, null, null, null, null, 51],
     ]);
   });
 
   it('maps optional columns and a missing schema to the published upgrade error', async () => {
     const rows = [{ id: 'c-2', tenant_id: scope.tenantId, sync_queue_item_id: 'q', local_entity_id: 'l', payload_hash: 'h', conflict_type: 'x', description: 'd',
-      status: 'open', resolution: null, resolved_by: null, resolved_at: null, created_at: at, sort_at: '2026-09-28T12:00:00.000000Z' },
+      status: 'open', resolution: null, resolved_by: null, resolved_at: null, created_at: at, device_id: 'dev', sort_at: '2026-09-28T12:00:00.000000Z' },
     { id: 'c-1', tenant_id: scope.tenantId, sync_queue_item_id: 'q', local_entity_id: 'l', payload_hash: 'h', conflict_type: 'x', description: 'd',
-      status: 'resolved', resolution: 'reject', resolved_by: 'actor-a', resolved_at: at, created_at: at, sort_at: '2026-09-28T12:00:00.000000Z' }];
+      status: 'resolved', resolution: 'reject', resolved_by: 'actor-a', resolved_at: at, created_at: at, device_id: 'dev', sort_at: '2026-09-28T12:00:00.000000Z' }];
     const database = { tx: vi.fn(async (fn: (trx: unknown) => Promise<unknown>) => fn({ query: async () => ({ rows }) })) } as unknown as Database;
     const page = await pgListConflicts(database, scope, { limit: 1 });
     expect(page.items).toEqual([{ conflictId: 'c-2', tenantId: scope.tenantId, queueItemId: 'q', localEntityId: 'l', payloadHash: 'h', conflictType: 'x',
-      description: 'd', status: 'open', createdAt: at.toISOString() }]);
+      description: 'd', status: 'open', deviceId: 'dev', createdAt: at.toISOString() }]);
     expect(page.nextCursor).toBe(encodeCursor(['2026-09-28T12:00:00.000000Z', 'c-2']));
-    expect((await pgListConflicts(database, scope, {})).items[1]).toMatchObject({ resolution: 'reject', resolvedBy: 'actor-a', resolvedAt: at.toISOString() });
+    expect((await pgListConflicts(database, scope, {})).items[1]).toMatchObject({ resolution: 'reject', resolvedBy: 'actor-a', resolvedAt: at.toISOString(), deviceId: 'dev' });
     const receipt = { idempotency_key: 'k', queue_item_id: 'q', device_id: 'd', device_batch_id: 'b', payload_hash: 'h', status: 'rejected', error_code: 'E',
       context_json: { a: 1 }, received_at: at, sort_at: 'x' };
     const receipts = { tx: vi.fn(async (fn: (trx: unknown) => Promise<unknown>) => fn({ query: async () => ({ rows: [receipt] }) })) } as unknown as Database;

@@ -208,15 +208,17 @@ describe('InMemoryOfflineSyncStore direct CTG9 contracts', () => {
     expect(sameQueue).toMatchObject({ items: [{ status: 'rejected', errorCode: 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED' }] });
 
     const appliedStore = new InMemoryOfflineSyncStore();
-    const another = item('another-legacy', { idempotencyKey: 'applied-key', payloadHash: `${digest}-applied` });
+    // A stored legacy row always carries a canonical hash (the PostgreSQL CHECK admits nothing else).
+    const appliedDigest = `sha256:${'d'.repeat(64)}`;
+    const another = item('another-legacy', { idempotencyKey: 'applied-key', payloadHash: appliedDigest });
     await appliedStore.submitSyncBatch(scope, {
       orgUnitId: 'org-a', deviceId: 'device-a', deviceBatchId: 'applied-old', items: [another],
     }, now);
     const conflict = await appliedStore.openConflict(scope, 'another-legacy', { conflictType: 'version', description: 'resolve' }, now);
     await appliedStore.resolveConflict(scope, conflict.conflictId, { resolution: 'device-wins' }, now);
-    const appliedReplay = await appliedStore.submitDurableSyncBatch(scope, batch('applied-new', [item('renamed-queue', { idempotencyKey: 'applied-key', payloadHash: `${digest}-applied` })]), options(), now);
+    const appliedReplay = await appliedStore.submitDurableSyncBatch(scope, batch('applied-new', [item('renamed-queue', { idempotencyKey: 'applied-key', payloadHash: appliedDigest })]), options(), now);
     expect(appliedReplay).toMatchObject({ duplicateItems: 1, items: [{ status: 'applied', context: { originalQueueItemId: 'another-legacy' } }] });
-    const appliedSameQueue = await appliedStore.submitDurableSyncBatch(scope, batch('applied-same-queue', [item('another-legacy', { idempotencyKey: 'applied-key', payloadHash: `${digest}-applied` })]), options({ transportIdempotencyKey: 'applied-same-queue-transport' }), now);
+    const appliedSameQueue = await appliedStore.submitDurableSyncBatch(scope, batch('applied-same-queue', [item('another-legacy', { idempotencyKey: 'applied-key', payloadHash: appliedDigest })]), options({ transportIdempotencyKey: 'applied-same-queue-transport' }), now);
     expect(appliedSameQueue).toMatchObject({ items: [{ status: 'applied' }] });
 
     const changedPayload = { value: 2 };
