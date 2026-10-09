@@ -58,7 +58,10 @@ const artifactB = {
   cmsSignature: blt2CmsSignature,
   certificate: certificate2,
 };
-const artifacts: Record<string, typeof artifactA> = { 'tenant-a': artifactA, 'tenant-b': artifactB };
+const artifacts: Record<string, typeof artifactA> = {
+  'tenant-a': artifactA,
+  'tenant-b': artifactB,
+};
 
 // One verifier with the union of both tenants' anchors (D2 item 6); the
 // intersection with each profile keeps the trust of each tenant separate.
@@ -125,6 +128,7 @@ const bootstrap = async (moduleOptions: Record<string, unknown>) => {
   }).compile();
   try {
     await moduleRef.init();
+    return 'started';
   } finally {
     await moduleRef.close();
   }
@@ -158,14 +162,18 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
       ).resolves.toMatchObject({
         profileId: profileA.id,
         padesProfile: 'PAdES-B-LT',
-        signerCertificateSha256: hex(Buffer.from(certificate.pem.replace(/-----[^-]+-----|\s/gu, ''), 'base64')),
+        signerCertificateSha256: hex(
+          Buffer.from(certificate.pem.replace(/-----[^-]+-----|\s/gu, ''), 'base64'),
+        ),
       });
       await expect(
         shared.verifySignedArtifact({ ...artifactB, profile: profileB }),
       ).resolves.toMatchObject({
         profileId: profileB.id,
         padesProfile: 'PAdES-B-LT',
-        signerCertificateSha256: hex(Buffer.from(certificate2.pem.replace(/-----[^-]+-----|\s/gu, ''), 'base64')),
+        signerCertificateSha256: hex(
+          Buffer.from(certificate2.pem.replace(/-----[^-]+-----|\s/gu, ''), 'base64'),
+        ),
       });
     });
 
@@ -187,23 +195,33 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
       });
       try {
         const service = moduleRef.get(sig.SignatureService);
-        await expect(service.verify(verifyRequest('tenant-a', resolveProfile('tenant-a')))).resolves
-          .toMatchObject({ status: 'valid', trustProof: { profileId: profileA.id } });
-        await expect(service.verify(verifyRequest('tenant-b', resolveProfile('tenant-b')))).resolves
-          .toMatchObject({ status: 'valid', trustProof: { profileId: profileB.id } });
-        await expect(service.verify(verifyRequest('tenant-a', resolveProfile('tenant-b')))).resolves
-          .toMatchObject({ status: 'invalid', reasons: ['TRUST_PROOF_FAILED'] });
-        await expect(service.verify(verifyRequest('tenant-b', resolveProfile('tenant-a')))).resolves
-          .toMatchObject({ status: 'invalid', reasons: ['TRUST_PROOF_FAILED'] });
+        await expect(
+          service.verify(verifyRequest('tenant-a', resolveProfile('tenant-a'))),
+        ).resolves.toMatchObject({ status: 'valid', trustProof: { profileId: profileA.id } });
+        await expect(
+          service.verify(verifyRequest('tenant-b', resolveProfile('tenant-b'))),
+        ).resolves.toMatchObject({ status: 'valid', trustProof: { profileId: profileB.id } });
+        await expect(
+          service.verify(verifyRequest('tenant-a', resolveProfile('tenant-b'))),
+        ).resolves.toMatchObject({ status: 'invalid', reasons: ['TRUST_PROOF_FAILED'] });
+        await expect(
+          service.verify(verifyRequest('tenant-b', resolveProfile('tenant-a'))),
+        ).resolves.toMatchObject({ status: 'invalid', reasons: ['TRUST_PROOF_FAILED'] });
       } finally {
         await moduleRef.close();
       }
     });
 
-    it("signs under the resolved profile and refuses a provider artifact anchored in the other tenant", async () => {
+    it('signs under the resolved profile and refuses a provider artifact anchored in the other tenant', async () => {
       const b = backend();
-      b.sign.mockResolvedValueOnce(signedResultFor('tenant-b')).mockResolvedValueOnce(signedResultFor('tenant-a'));
-      const moduleRef = await integration({ backend: b, verifier: verifier(), trustProfiles: [profileA, profileB] });
+      b.sign
+        .mockResolvedValueOnce(signedResultFor('tenant-b'))
+        .mockResolvedValueOnce(signedResultFor('tenant-a'));
+      const moduleRef = await integration({
+        backend: b,
+        verifier: verifier(),
+        trustProfiles: [profileA, profileB],
+      });
       try {
         const service = moduleRef.get(sig.SignatureService);
         await expect(service.sign(signRequest('tenant-b') as any)).resolves.toMatchObject({
@@ -280,7 +298,11 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
         await expect(moduleRef.get(StynxHealthService).readiness()).resolves.toMatchObject({
           status: 'ok',
           info: {
-            signature: { status: 'up', aggregation: 'any', profiles: [up(profileA), down(profileB)] },
+            signature: {
+              status: 'up',
+              aggregation: 'any',
+              profiles: [up(profileA), down(profileB)],
+            },
           },
         });
         // Aggregation never authorizes: the failing profile is still not ready per call.
@@ -345,7 +367,9 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
         await expect(moduleRef.get(StynxHealthService).readiness()).resolves.toMatchObject({
           info: { signature: { status: 'up', profiles: [up(profileA), down(revised)] } },
         });
-        await expect(moduleRef.get(sig.SignatureService).checkReadiness(revised)).rejects.toMatchObject({
+        await expect(
+          moduleRef.get(sig.SignatureService).checkReadiness(revised),
+        ).rejects.toMatchObject({
           name: 'SignatureCapabilityError',
         });
       } finally {
@@ -356,7 +380,11 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
     it('accepts the single-profile constructor and the profile-list constructor', async () => {
       const checkReadiness = vi
         .fn()
-        .mockResolvedValueOnce({ ok: true, capabilities: { pades: true }, verifierKind: 'stynx-cms' })
+        .mockResolvedValueOnce({
+          ok: true,
+          capabilities: { pades: true },
+          verifierKind: 'stynx-cms',
+        })
         .mockRejectedValueOnce(new Error('unavailable'));
       const listed = new api.SignatureReadinessIndicator(
         { checkReadiness },
@@ -370,7 +398,13 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
         details: {
           aggregation: 'any',
           profiles: [
-            { id: profileA.id, revision: '1', status: 'up', pades: true, verifierKind: 'stynx-cms' },
+            {
+              id: profileA.id,
+              revision: '1',
+              status: 'up',
+              pades: true,
+              verifierKind: 'stynx-cms',
+            },
             {
               id: profileB.id,
               revision: '1',
@@ -382,7 +416,13 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
         },
       });
       const single = new api.SignatureReadinessIndicator(
-        { checkReadiness: vi.fn().mockResolvedValue({ ok: true, capabilities: { pades: true }, verifierKind: 'stynx-cms' }) },
+        {
+          checkReadiness: vi.fn().mockResolvedValue({
+            ok: true,
+            capabilities: { pades: true },
+            verifierKind: 'stynx-cms',
+          }),
+        },
         profileA,
       );
       expect(await single.check()).toEqual({
@@ -407,7 +447,11 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
 
     it('refuses startup when a listed production profile has no health witness', async () => {
       await expect(
-        bootstrap({ backend: backend(), trustProfiles: [profileA, profileB], verifier: verifier() }),
+        bootstrap({
+          backend: backend(),
+          trustProfiles: [profileA, profileB],
+          verifier: verifier(),
+        }),
       ).rejects.toMatchObject({ name: 'SignatureProviderConfigurationError' });
     });
 
@@ -425,7 +469,7 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
     it('starts with test-only profiles exactly as before', async () => {
       await expect(
         bootstrap({ backend: sig.createMockSignatureBackend(), trustProfiles: [profile] }),
-      ).resolves.toBeUndefined();
+      ).resolves.toBe('started');
     });
 
     it('refuses a duplicate profile id at forRoot', () => {
@@ -437,11 +481,18 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
         } as any),
       ).toThrow(sig.SignatureProviderConfigurationError);
       expect(() =>
-        sig.StynxSignatureModule.forRoot({ backend: backend(), trustProfiles: [profileB, profileB] } as any),
+        sig.StynxSignatureModule.forRoot({
+          backend: backend(),
+          trustProfiles: [profileB, profileB],
+        } as any),
       ).toThrow(sig.SignatureProviderConfigurationError);
       expect(() =>
         api.SignatureHealthIntegration.forRoot({
-          signatureOptions: { backend: backend(), verifier: verifier(), trustProfiles: [profileA, profileA] },
+          signatureOptions: {
+            backend: backend(),
+            verifier: verifier(),
+            trustProfiles: [profileA, profileA],
+          },
         }),
       ).toThrow(sig.SignatureProviderConfigurationError);
     });
@@ -450,13 +501,19 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
   describe('declared profiles only', () => {
     it('refuses an undeclared production profile per call with a typed error', async () => {
       const b = backend();
-      const moduleRef = await integration({ backend: b, verifier: verifier(), trustProfiles: [profileA] });
+      const moduleRef = await integration({
+        backend: b,
+        verifier: verifier(),
+        trustProfiles: [profileA],
+      });
       try {
         const service = moduleRef.get(sig.SignatureService);
         expect(api.SignatureProfileNotDeclaredError).toEqual(expect.any(Function));
         const undeclared = [profileB, { ...profileA, revision: '2' }];
         for (const selected of undeclared) {
-          await expect(service.sign(signRequest('tenant-b', selected) as any)).rejects.toMatchObject({
+          await expect(
+            service.sign(signRequest('tenant-b', selected) as any),
+          ).rejects.toMatchObject({
             name: 'SignatureProfileNotDeclaredError',
           });
           await expect(service.verify(verifyRequest('tenant-b', selected))).rejects.toMatchObject({
@@ -476,7 +533,11 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
     });
 
     it('keeps 1.5.3 per-call behavior for test profiles and without trustProfiles', async () => {
-      const declaredOnlyA = await integration({ backend: backend(), verifier: verifier(), trustProfiles: [profileA] });
+      const declaredOnlyA = await integration({
+        backend: backend(),
+        verifier: verifier(),
+        trustProfiles: [profileA],
+      });
       try {
         // A test-environment profile is not subject to the declared-only rule.
         await expect(
@@ -485,7 +546,11 @@ describe('trust-profile sets (UPS-SIG-07)', () => {
       } finally {
         await declaredOnlyA.close();
       }
-      const singleProfile = await integration({ backend: backend(), verifier: verifier(), trustProfile: profileA });
+      const singleProfile = await integration({
+        backend: backend(),
+        verifier: verifier(),
+        trustProfile: profileA,
+      });
       try {
         // Without trustProfiles an undeclared production profile is evaluated as in 1.5.3.
         await expect(
