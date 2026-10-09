@@ -91,6 +91,10 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       const next = (await readdir(migrationDir)).filter((name) => /^0002_.*\.sql$/.test(name));
       expect(next).toHaveLength(1);
       await admin.query(await readFile(resolve(migrationDir, next[0]!), 'utf8'));
+      // Conflict resolution through the host resolver needs the 0004 action history (ADR-MOBILE-OFFLINE-0003 D2);
+      // the 0001→0002 assertions below are unchanged by the later forward-only migrations.
+      for (const name of ['0003_reservation_idempotency.sql', '0004_pending_state_and_conflict_actions.sql'])
+        await admin.query(await readFile(resolve(migrationDir, name), 'utf8'));
       await admin.query(`create table offline.ctg9_item_effect_probe (
         tenant_id uuid not null,
         queue_item_id text not null,
