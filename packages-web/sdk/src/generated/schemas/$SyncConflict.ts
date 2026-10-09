@@ -41,6 +41,9 @@ export const $SyncConflict = {
             type: 'Enum',
             isRequired: true,
         },
+        stynx: {
+            type: 'OfflineSyncStynxContext',
+        },
         tenantId: {
             type: 'string',
             isRequired: true,

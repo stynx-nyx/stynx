@@ -30,13 +30,13 @@ import type {
   SyncItemReceipt,
   TrustedOfflineSyncScope,
   DurableBatchExecutionOptions,
-  ListSyncBatchReceiptsInput, ListSyncConflictsInput, ListSyncItemReceiptsInput, ListSyncQueueItemsInput,
-  OfflineSyncListInput, OfflineSyncPage, SyncBatchReceiptSummary, SyncConflictRecord, SyncItemReceiptRecord, SyncQueueItemRecord,
+  ListSyncBatchReceiptsInput, ListSyncConflictActionsInput, ListSyncConflictsInput, ListSyncItemReceiptsInput, ListSyncQueueItemsInput,
+  OfflineSyncListInput, OfflineSyncPage, SyncBatchReceiptSummary, SyncConflictActionRecord, SyncConflictRecord, SyncItemReceiptRecord, SyncQueueItemRecord,
 } from './types';
 import { canonicalPayloadHash, listDefaultLimit, listMaxLimit } from './listing';
 import { OFFLINE_SYNC_NO_SHIFT } from './numbering';
 
-const queueStatuses = ['received', 'applied', 'conflict', 'rejected'];
+const queueStatuses = ['received', 'applied', 'conflict', 'rejected', 'pending'];
 
 @Injectable()
 export class OfflineSyncService {
@@ -158,6 +158,11 @@ export class OfflineSyncService {
     if (input.status !== undefined && !['open', 'resolved'].includes(input.status)) this.invalid('status is invalid.');
     return this.listing('listSyncConflicts').call(this.durable, this.context.current(), this.page(input));
   }
+  /** Action history of one tenant conflict, newest first (UPS-OFS-07, ADR-MOBILE-OFFLINE-0003 D2.6). */
+  async listSyncConflictActions(input: ListSyncConflictActionsInput): Promise<OfflineSyncPage<SyncConflictActionRecord>> {
+    this.assertText(input.conflictId, 'conflictId');
+    return this.listing('listSyncConflictActions').call(this.durable, this.context.current(), this.page(input));
+  }
 
   async submitSyncBatch(input: SubmitSyncBatchInput): Promise<SubmitSyncBatchResult>;
   async submitSyncBatch(input: CTG9SubmitSyncBatchInput, options: SubmitSyncBatchOptions): Promise<CTG9SubmitSyncBatchResult>;
@@ -256,7 +261,7 @@ export class OfflineSyncService {
 
   private get durable(): OfflineSyncDurableStore { return this.store as OfflineSyncDurableStore; }
 
-  private listing<K extends 'listSyncBatchReceipts' | 'listSyncItemReceipts' | 'listSyncQueueItems' | 'listSyncConflicts'>(name: K): NonNullable<OfflineSyncDurableStore[K]> {
+  private listing<K extends 'listSyncBatchReceipts' | 'listSyncItemReceipts' | 'listSyncQueueItems' | 'listSyncConflicts' | 'listSyncConflictActions'>(name: K): NonNullable<OfflineSyncDurableStore[K]> {
     const operation = this.durable[name];
     if (typeof operation !== 'function') throw new OfflineSyncConfigurationError(name);
     return operation as NonNullable<OfflineSyncDurableStore[K]>;

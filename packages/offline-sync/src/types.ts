@@ -1,4 +1,36 @@
-export type OfflineSyncQueueStatus = 'received' | 'applied' | 'conflict' | 'rejected';
+/** `pending` is entered only by `retry_after_correction` in CTG9 mode (ADR-MOBILE-OFFLINE-0003 D1). */
+export type OfflineSyncQueueStatus = 'received' | 'applied' | 'conflict' | 'rejected' | 'pending';
+
+/** Opaque consumer attributes (ADR-MOBILE-OFFLINE-0003 D3.3): a size-bounded JSON object stored and returned verbatim. */
+export type OfflineSyncConsumerAttributes = Record<string, unknown>;
+
+/**
+ * Versioned platform context carried under the reserved `stynx` key of `context_json` (item receipts
+ * and attempts) and `evidence` (conflict evidence), ADR-MOBILE-OFFLINE-0003 D3. A field the platform
+ * did not produce on the writing path is absent; nothing is fabricated for rows written before 0004.
+ */
+export interface OfflineSyncStynxContext {
+  readonly version: 1;
+  /** Tenant-scoped storage key of the item receipt (same as `OfflineSyncItemContext.receiptId`). */
+  readonly receiptId?: string;
+  /** Instant of the original application, from the injected clock; never recomputed on replay. */
+  readonly appliedAt?: string;
+  /** `OfflineSyncApplyResult.serverEntityId` of the original application. */
+  readonly serverEntityId?: string;
+  readonly errorCode?: string;
+  readonly errorMessage?: string;
+  /** Item transactions started for the receipt; replay and reads never increase it. */
+  readonly attempts?: number;
+  /** Numbering outcome code, `OFFLINE_SYNC_ITEM_INTEGRITY` or `OFFLINE_SYNC_CONCURRENCY_SUSPECTED`. */
+  readonly reasonCode?: string;
+  /** Hash received by a rejected integrity submission, verbatim (including a non-canonical one). */
+  readonly receivedPayloadHash?: string;
+  /** Hash stored for the original item of an integrity rejection. */
+  readonly storedPayloadHash?: string;
+  readonly relatedQueueItemId?: string;
+  readonly retryable?: boolean;
+  readonly consumerAttributes?: OfflineSyncConsumerAttributes;
+}
 
 export type OfflineSyncConflictResolutionStrategy = 'device-wins' | 'server-wins' | 'manual-review' | 'accept_server' | 'reject' | 'retry_after_correction' | 'manual_review';
 
@@ -119,6 +151,21 @@ export interface SyncConflict {
   readonly resolution?: OfflineSyncConflictResolutionStrategy;
   readonly resolvedBy?: string;
   readonly resolvedAt?: string;
+  /** Platform context of the conflict evidence (ADR-MOBILE-OFFLINE-0003 D3.5), CTG9 conflicts only. */
+  readonly stynx?: OfflineSyncStynxContext;
+}
+
+/** One accepted resolution action (ADR-MOBILE-OFFLINE-0003 D2), from `offline.sync_conflict_actions`. */
+export interface SyncConflictActionRecord {
+  readonly actionId: string;
+  readonly tenantId: string;
+  readonly conflictId: string;
+  readonly action: OfflineSyncConflictResolutionStrategy;
+  readonly reason?: string;
+  readonly userRef?: string;
+  readonly actorId: string;
+  readonly resultingStatus: SyncConflict['status'];
+  readonly createdAt: string;
 }
 
 export interface OfflineSyncStore {
@@ -209,7 +256,11 @@ export interface OfflineSyncItemContext extends TrustedOfflineSyncScope {
   /** Stable item receipt identifier: the tenant-scoped storage key of the item receipt (UPS-OFS-09). */
   readonly receiptId?: string;
 }
-export interface OfflineSyncApplyResult { readonly serverEntityId: string }
+export interface OfflineSyncApplyResult {
+  readonly serverEntityId: string;
+  /** Optional opaque attributes stored under `stynx.consumerAttributes` of the item receipt (D3.3). */
+  readonly consumerAttributes?: OfflineSyncConsumerAttributes;
+}
 export interface OfflineSyncEvent {
   readonly entity: string;
   readonly entityId: string;
@@ -232,8 +283,13 @@ export interface OfflineSyncConcurrencyDetector {
 export interface OfflineSyncHandoffPort {
   permits(trx: import('@stynx-nyx/data').Transaction, pair: OfflineSyncConcurrentPair, context: OfflineSyncItemContext): Promise<boolean>;
 }
+/** Resolver result: `status: 'open'` records the action and keeps the conflict open (D2); `resolved` closes it. */
+export interface OfflineSyncConflictResolution extends SyncConflict {
+  /** Optional opaque attributes stored under `stynx.consumerAttributes` of the conflict evidence (D3.3). */
+  readonly consumerAttributes?: OfflineSyncConsumerAttributes;
+}
 export interface OfflineSyncConflictResolver {
-  resolve(trx: import('@stynx-nyx/data').Transaction, conflictId: string, action: string, context: OfflineSyncItemContext): Promise<SyncConflict>;
+  resolve(trx: import('@stynx-nyx/data').Transaction, conflictId: string, action: string, context: OfflineSyncItemContext): Promise<OfflineSyncConflictResolution>;
   allowedActions?(trx: import('@stynx-nyx/data').Transaction, conflictId: string, context: OfflineSyncItemContext): Promise<readonly OfflineSyncConflictResolutionStrategy[]>;
 }
 export type NumberingReservationStatus = NumberingReservation['status'] | 'blocked';
@@ -259,7 +315,10 @@ export interface SyncItemReceipt {
   readonly queueItemId: string;
   readonly status: OfflineSyncQueueStatus;
   readonly errorCode?: string;
+  /** Host-visible context without the reserved `stynx` key, whose bytes are unchanged by D3. */
   readonly context?: Record<string, unknown>;
+  /** Platform context (ADR-MOBILE-OFFLINE-0003 D3.5); absent for rows written before 0004 and for E6 rows. */
+  readonly stynx?: OfflineSyncStynxContext;
 }
 export interface SyncBatchReceipt {
   readonly deviceId: string;
@@ -295,6 +354,8 @@ export interface OfflineSyncDurableStore extends OfflineSyncStore {
   listSyncItemReceipts?(scope: TrustedOfflineSyncScope, input: ListSyncItemReceiptsInput): Promise<OfflineSyncPage<SyncItemReceiptRecord>>;
   listSyncQueueItems?(scope: TrustedOfflineSyncScope, input: ListSyncQueueItemsInput): Promise<OfflineSyncPage<SyncQueueItemRecord>>;
   listSyncConflicts?(scope: TrustedOfflineSyncScope, input: ListSyncConflictsInput): Promise<OfflineSyncPage<SyncConflictRecord>>;
+  /** Action history of one conflict, newest first (ADR-MOBILE-OFFLINE-0003 D2.6). */
+  listSyncConflictActions?(scope: TrustedOfflineSyncScope, input: ListSyncConflictActionsInput): Promise<OfflineSyncPage<SyncConflictActionRecord>>;
 }
 /** One keyset page, newest first. `nextCursor` is opaque and `null` on the last page. */
 export interface OfflineSyncPage<T> { readonly items: readonly T[]; readonly nextCursor: string | null }
@@ -302,6 +363,7 @@ export interface OfflineSyncListInput { readonly limit?: number; readonly cursor
 export interface ListSyncBatchReceiptsInput extends OfflineSyncListInput { readonly deviceId?: string; readonly status?: SyncBatchReceipt['status'] }
 export interface ListSyncItemReceiptsInput extends OfflineSyncListInput { readonly deviceId?: string; readonly deviceBatchId?: string; readonly status?: OfflineSyncQueueStatus }
 export interface ListSyncQueueItemsInput extends OfflineSyncListInput { readonly deviceId?: string; readonly status?: OfflineSyncQueueStatus; readonly entityType?: string }
+export interface ListSyncConflictActionsInput extends OfflineSyncListInput { readonly conflictId: string }
 export interface ListSyncConflictsInput extends OfflineSyncListInput { readonly status?: SyncConflict['status']; readonly conflictType?: string; readonly queueItemId?: string; /** Device of the referenced queue item (UPS-OFS-11). */ readonly deviceId?: string }
 export interface SyncBatchReceiptSummary {
   readonly deviceId: string;
@@ -319,7 +381,11 @@ export interface SyncItemReceiptRecord extends SyncItemReceipt {
   readonly payloadHash: string;
   readonly receivedAt: string;
 }
-export interface SyncQueueItemRecord extends StoredSyncQueueItem { readonly deviceBatchId: string }
+export interface SyncQueueItemRecord extends StoredSyncQueueItem {
+  readonly deviceBatchId: string;
+  /** Platform context of the item receipt under the same key (ADR-MOBILE-OFFLINE-0003 D3.5). */
+  readonly stynx?: OfflineSyncStynxContext;
+}
 export interface SyncConflictRecord extends SyncConflict {
   /** Device of the referenced queue item (UPS-OFS-11). */
   readonly deviceId: string;
