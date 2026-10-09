@@ -8,6 +8,7 @@ import {
   DEFAULT_OUTBOX_DISPATCH_BATCH_SIZE,
   DEFAULT_OUTBOX_TABLE,
   STYNX_OUTBOX_BACKOFF_POLICY,
+  STYNX_OUTBOX_DESTINATIONS,
   STYNX_OUTBOX_DISPATCHER,
   STYNX_OUTBOX_METRICS,
   STYNX_OUTBOX_OPTIONS,
@@ -40,6 +41,9 @@ import type {
   OutboxQueueHealth,
   OutboxQueueHealthQuery,
   OutboxEntitySelector,
+  OutboxDestination,
+  OutboxDestinationFilter,
+  OutboxDispatchFilter,
 } from './types';
 
 const EVENT_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
@@ -94,6 +98,72 @@ function entityMatcher(value: OutboxEntitySelector | undefined, name: string, al
   return matcher;
 }
 
+function matchesEntity(matcher: EntityMatcher, entity: string): boolean {
+  return matcher.entities.includes(entity) || matcher.prefixes.some((prefix) => entity.startsWith(prefix));
+}
+
+/** One registered destination (ADR-OUTBOX-0003 D4): a name, its entity set and an optional port. */
+interface Destination { name: string; matcher: EntityMatcher; dispatcher?: OutboxDispatcherPort }
+
+/** An entity both selectors would match, or `null` when they are disjoint. */
+function sharedEntity(left: EntityMatcher, right: EntityMatcher): string | null {
+  const exact = left.entities.find((entity) => matchesEntity(right, entity))
+    ?? right.entities.find((entity) => matchesEntity(left, entity));
+  if (exact !== undefined) return exact;
+  // Two prefixes meet when one extends the other: the longer one is an entity both match.
+  for (const prefix of left.prefixes) {
+    const other = right.prefixes.find((candidate) => candidate.startsWith(prefix) || prefix.startsWith(candidate));
+    if (other !== undefined) return other.length >= prefix.length ? other : prefix;
+  }
+  return null;
+}
+
+/** A destination may only name entities that `dispatchableEntities` gives a delivery row. */
+function assertCovered(destination: Destination, dispatchable: EntityMatcher): void {
+  for (const entity of destination.matcher.entities) {
+    if (!matchesEntity(dispatchable, entity)) {
+      throw new RangeError(`destinations "${destination.name}" names entity "${entity}", which dispatchableEntities does not cover`);
+    }
+  }
+  for (const prefix of destination.matcher.prefixes) {
+    // Only a dispatchable prefix that this prefix extends covers every entity it can match.
+    if (!dispatchable.prefixes.some((covering) => prefix.startsWith(covering))) {
+      throw new RangeError(`destinations "${destination.name}" names entity prefix "${prefix}", which dispatchableEntities does not cover`);
+    }
+  }
+}
+
+/** Validates the named-destination registry; unique names, disjoint selectors, covered by `dispatchable`. */
+function destinationRegistry(value: readonly OutboxDestination[] | undefined, dispatchable: EntityMatcher | null): Map<string, Destination> {
+  const registry = new Map<string, Destination>();
+  if (value === undefined) return registry;
+  if (!Array.isArray(value)) throw new RangeError('destinations must be a list of destinations');
+  value.forEach((entry: OutboxDestination | null, index) => {
+    const name = `destinations[${index}]`;
+    if (entry === null || typeof entry !== 'object') throw new RangeError(`${name} must be a destination`);
+    if (typeof entry.name !== 'string' || entry.name.length === 0) throw new RangeError(`${name}.name must be a non-empty string`);
+    if (registry.has(entry.name)) throw new RangeError(`${name}.name "${entry.name}" is already registered`);
+    const matcher = entityMatcher(entry.selector, `${name}.selector`, false);
+    if (!matcher) throw new RangeError(`${name}.selector must be an entity selector`);
+    const port: unknown = entry.dispatcher;
+    if (port !== undefined && (port === null || typeof port !== 'object' || typeof (port as OutboxDispatcherPort).send !== 'function')) {
+      throw new RangeError(`${name}.dispatcher must implement OutboxDispatcherPort`);
+    }
+    const destination: Destination = { name: entry.name, matcher, ...(entry.dispatcher ? { dispatcher: entry.dispatcher } : {}) };
+    for (const other of registry.values()) {
+      const entity = sharedEntity(other.matcher, matcher);
+      if (entity !== null) throw new RangeError(`destinations "${other.name}" and "${entry.name}" both match entity "${entity}"`);
+    }
+    if (dispatchable) assertCovered(destination, dispatchable);
+    registry.set(entry.name, destination);
+  });
+  return registry;
+}
+
+function isDestinationFilter(value: unknown): value is OutboxDestinationFilter {
+  return value !== null && typeof value === 'object' && 'destination' in value;
+}
+
 /** Claim predicate for a dispatch filter; `first` is the index of its first SQL parameter. */
 function entityFilterSql(first: number): string {
   return `and (e.entity=any($${first}::text[]) or exists (
@@ -144,6 +214,8 @@ export class OutboxService {
   private readonly backoffPolicy: OutboxBackoffPolicy;
   /** Declared event-mode destinations; `null` keeps every appended event dispatchable. */
   private readonly dispatchable: EntityMatcher | null;
+  /** Named destinations by name; empty without a registry. */
+  private readonly destinations: Map<string, Destination>;
   private get platformLegacyTable(): boolean { return this.table === DEFAULT_OUTBOX_TABLE && this.ackTable === DEFAULT_OUTBOX_ACK_TABLE; }
   private get ownershipCte(): string {
     return this.platformLegacyTable
@@ -185,7 +257,30 @@ export class OutboxService {
   /** Whether an appended event of this `entity` gets a delivery row. */
   private hasDestination(entity: string): boolean {
     const declared = this.dispatchable;
-    return !declared || declared.entities.includes(entity) || declared.prefixes.some((prefix) => entity.startsWith(prefix));
+    return !declared || matchesEntity(declared, entity);
+  }
+
+  /** The registered destination called `name`; `RangeError` for a malformed or unknown name. */
+  private destination(name: unknown, field: string): Destination {
+    if (typeof name !== 'string' || name.length === 0) throw new RangeError(`${field} must be a non-empty string`);
+    const found = this.destinations.get(name);
+    if (!found) throw new RangeError(`${field} "${name}" is not a registered destination`);
+    return found;
+  }
+
+  /** Expands a dispatch filter: a destination name stands for its selector. */
+  private dispatchMatcher(filter: OutboxDispatchFilter | undefined): EntityMatcher | null {
+    return isDestinationFilter(filter)
+      ? this.destination(filter.destination, 'filter.destination').matcher
+      : entityMatcher(filter, 'filter', false);
+  }
+
+  /** Port for a claimed event: its destination's own port, else the module dispatcher. */
+  private portFor(entity: string): OutboxDispatcherPort | undefined {
+    for (const destination of this.destinations.values()) {
+      if (matchesEntity(destination.matcher, entity)) return destination.dispatcher ?? this.dispatcher;
+    }
+    return this.dispatcher;
   }
 
   async appendInTransaction(trx: Transaction, event: OutboxAppendEvent): Promise<OutboxEventRow> {
@@ -447,13 +542,14 @@ export class OutboxService {
 
   /**
    * Claim and deliver only events visible to the active app-role tenant. With `filter`,
-   * only deliveries whose event `entity` matches are claimed.
+   * only deliveries whose event `entity` matches are claimed; a destination name stands
+   * for its selector.
    */
-  async dispatchTenantEventsDue(limit: number = this.dispatchBatchSize, filter?: OutboxEntitySelector): Promise<OutboxDispatchOutcome[]> {
+  async dispatchTenantEventsDue(limit: number = this.dispatchBatchSize, filter?: OutboxDispatchFilter): Promise<OutboxDispatchOutcome[]> {
     const tenantId = this.database.currentTenantId();
     if (!tenantId) throw new OutboxNotFoundError({ reason: 'missing-tenant-context' });
     if (!Number.isSafeInteger(limit) || limit < 1) throw new RangeError('limit must be a positive integer');
-    const only = entityMatcher(filter, 'filter', false);
+    const only = this.dispatchMatcher(filter);
     const claimed = await this.database.tx(async (trx) => {
       const result = await trx.query<{
         tenant_id: string; event_id: string; attempts: number;
@@ -509,14 +605,15 @@ export class OutboxService {
         status: 'SENT', attempts: claim.attempts, lastError: null, ackTime: null,
         nextAttemptAt: null, createdAt: claim.created_at.toISOString(), updatedAt: new Date().toISOString(),
       };
-      if (!this.dispatcher) { outcomes.push({ row, dispatched: false }); continue; }
+      const port = this.portFor(claim.entity);
+      if (!port) { outcomes.push({ row, dispatched: false }); continue; }
       let evidence: OutboxTransportEvidence | undefined;
       let transportError: unknown;
       let transportFailed = false;
       try {
-        evidence = this.dispatcher.sendEvent
-          ? await this.dispatcher.sendEvent(row)
-          : (await this.dispatcher.send(row), {} as OutboxTransportEvidence);
+        evidence = port.sendEvent
+          ? await port.sendEvent(row)
+          : (await port.send(row), {} as OutboxTransportEvidence);
       } catch (error) {
         transportFailed = true;
         transportError = error;
@@ -710,11 +807,12 @@ export class OutboxService {
     return result.rows;
   }
 
-  /** Delivery counts by status for the context tenant, optionally per `entity`. */
+  /** Delivery counts by status for the context tenant, optionally per `entity` or per named destination. */
   async getQueueHealth(query: OutboxQueueHealthQuery = {}): Promise<OutboxQueueHealth> {
     const tenantId = this.requestTenant();
     const entity = filterText(query.entity, 'entity');
     const entityPrefix = filterText(query.entityPrefix, 'entityPrefix');
+    const only = query.destination === undefined ? null : this.destination(query.destination, 'destination').matcher;
     const result = await this.tenantRead((trx) => trx.query<{ status: OutboxEventDeliveryStatus; count: number; oldest: Date | null }>(
       `select d.status,count(*)::integer as count,min(e.created_at) filter (where d.status<>'ACKED') as oldest
          from outbox.event_delivery d join outbox.events e
@@ -722,8 +820,9 @@ export class OutboxService {
         where d.tenant_id=$1::uuid
           and ($2::text is null or e.entity=$2)
           and ($3::text is null or left(e.entity,length($3))=$3)
+          ${only ? entityFilterSql(4) : ''}
         group by d.status`,
-      [tenantId, entity, entityPrefix],
+      [tenantId, entity, entityPrefix, ...(only ? [only.entities, only.prefixes] : [])],
     ));
     const oldest = result.rows.map((row) => row.oldest).filter((value): value is Date => value !== null)
       .sort((left, right) => left.getTime() - right.getTime())[0] ?? null;
@@ -810,10 +909,11 @@ export class OutboxService {
 
   /**
    * Trusted scheduler sweep over every tenant. With `filter`, only deliveries whose event
-   * `entity` matches are claimed, so each destination can be drained by its own job.
+   * `entity` matches are claimed, so each destination can be drained by its own job; a
+   * destination name stands for its selector.
    */
-  async dispatchEventsDue(limit: number = this.dispatchBatchSize, filter?: OutboxEntitySelector): Promise<OutboxDispatchOutcome[]> {
-    const only = entityMatcher(filter, 'filter', false);
+  async dispatchEventsDue(limit: number = this.dispatchBatchSize, filter?: OutboxDispatchFilter): Promise<OutboxDispatchOutcome[]> {
+    const only = this.dispatchMatcher(filter);
     const claimed = await this.ownerRetry('outbox event claim', async (trx) => {
       const result = await trx.query<{
         tenant_id: string; event_id: string; attempts: number; status: string;
@@ -869,14 +969,15 @@ export class OutboxService {
         attempts: claim.attempts, lastError: null, ackTime: null, nextAttemptAt: null,
         createdAt: claim.created_at.toISOString(), updatedAt: new Date().toISOString(),
       };
-      if (!this.dispatcher) { outcomes.push({ row, dispatched: false }); continue; }
+      const port = this.portFor(claim.entity);
+      if (!port) { outcomes.push({ row, dispatched: false }); continue; }
       let evidence: OutboxTransportEvidence | undefined;
       let transportError: unknown;
       let transportFailed = false;
       try {
-        evidence = this.dispatcher.sendEvent
-          ? await this.dispatcher.sendEvent(row)
-          : (await this.dispatcher.send(row), {} as OutboxTransportEvidence);
+        evidence = port.sendEvent
+          ? await port.sendEvent(row)
+          : (await port.send(row), {} as OutboxTransportEvidence);
       } catch (error) {
         transportFailed = true;
         transportError = error;
@@ -974,6 +1075,9 @@ export class OutboxService {
     @Optional()
     @Inject(STYNX_OUTBOX_METRICS)
     private readonly metrics?: OutboxMetricsSink,
+    @Optional()
+    @Inject(STYNX_OUTBOX_DESTINATIONS)
+    injectedDestinations?: readonly OutboxDestination[],
   ) {
     positiveMilliseconds(options.eventLeaseMs, 'eventLeaseMs');
     positiveMilliseconds(options.lockTimeoutMs, 'lockTimeoutMs');
@@ -983,6 +1087,7 @@ export class OutboxService {
     this.dispatchBatchSize = options.dispatchBatchSize ?? DEFAULT_OUTBOX_DISPATCH_BATCH_SIZE;
     this.backoffPolicy = injectedBackoffPolicy ?? options.backoffPolicy ?? new FixedIntervalBackoffPolicy();
     this.dispatchable = entityMatcher(options.dispatchableEntities, 'dispatchableEntities', true);
+    this.destinations = destinationRegistry(injectedDestinations ?? options.destinations, this.dispatchable);
   }
 
   /**
