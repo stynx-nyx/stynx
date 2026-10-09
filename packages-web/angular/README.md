@@ -231,6 +231,7 @@ Each option below is set per `provideStynxEventStream` call and defaults to the 
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `reopenOnPollingEntry: 'backoff'` | The failure that enters polling reopens after the normal retry delay instead of at once.                                                                |
 | `commentActivity: 'live'`         | A comment line such as `: heartbeat` returns the stream to `live` and clears the failure counters.                                                      |
+| `openStatus: 'first-line'`        | Opening a connection holds the previous status (`idle` on start) until its first line arrives instead of setting `live` at once; silence still counts.  |
 | `retryAfterFrom(error, body)`     | Adds a retry delay in milliseconds read from an HTTP error body; the reopen waits for the largest of backoff, `Retry-After` and this value.             |
 | `serverClose`                     | Policy for a stream the server ends without an error; see below.                                                                                        |
 | `resync$`                         | Emits once when a held cursor is discarded, with the reason `'no-content'`, `'tenant-change'` or `'server-close'`. Reload state by query when it fires. |

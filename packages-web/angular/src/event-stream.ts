@@ -42,6 +42,8 @@ export interface StynxEventStreamConfig {
   retryAfterFrom?: (error: HttpErrorResponse, body: unknown) => number | null;
   /** Policy for a stream the server ends without an error; every omitted field keeps the 1.5.0 behavior. */
   serverClose?: StynxEventStreamServerClose;
+  /** Set the status when a connection opens (default) or hold the previous one until that connection's first line. */
+  openStatus?: 'immediate' | 'first-line';
 }
 /** How the client treats a response body that ends (HTTP 200) and how soon it reopens after a server close. */
 export interface StynxEventStreamServerClose {
@@ -101,6 +103,7 @@ export function provideStynxEventStream(config: StynxEventStreamConfig): Environ
   if (!config.url) throw new Error('url is required');
   for (const name of ['pollingIntervalMs', 'initialMs', 'maxMs', 'failuresBeforePolling', 'failureWindowMs', 'heartbeatMs', 'staleFactor', 'maxConnectionBytes', 'maxConnectionAgeMs'] as const) positive(config[name], name);
   if (config.pollingIntervalMs === undefined) throw new Error('pollingIntervalMs is required');
+  if (config.openStatus !== undefined && config.openStatus !== 'immediate' && config.openStatus !== 'first-line') throw new Error("openStatus must be 'immediate' or 'first-line'");
   return makeEnvironmentProviders([
     { provide: SSE_CONFIG, useValue: config },
     HttpStynxEventStreamTransport,
@@ -192,6 +195,8 @@ export class StynxEventStreamService<T = unknown> {
     if (!this.config.sessionActive()) { this.statusState.set('stopped'); return; }
     this.active = true;
     this.errorState.set(null);
+    // Under 'first-line' a start, including one after stop, waits in idle rather than in the status it opens with.
+    if (this.config.openStatus === 'first-line') this.statusState.set('idle');
     this.currentTenant = this.tenant?.tenantId() ?? null;
     this.tenantSubscription = this.tenant?.tenantChanged$.subscribe(() => {
       const next = this.tenant?.tenantId() ?? null;
@@ -238,16 +243,21 @@ export class StynxEventStreamService<T = unknown> {
     this.receivedBytes = 0;
     this.pendingHighSurrogate = '';
     let cursorAdvanced = false;
+    const opening: StynxEventStreamStatus = this.pollingTimer ? 'polling' : this.consecutiveFailures ? 'reconnecting' : 'live';
+    // Under 'first-line' the opening status belongs to this generation and is applied by its first line, before any frame.
+    let held: StynxEventStreamStatus | null = this.config.openStatus === 'first-line' ? opening : null;
+    if (held === null) this.statusState.set(opening);
     const parser = new FrameParser((id, event, data) => {
       if (generation !== this.generation || !this.active) return;
       if (this.deliver(id, event, data)) cursorAdvanced = true;
     }, () => {
-      if (generation === this.generation && this.active) this.armStale(generation);
+      if (generation !== this.generation || !this.active) return;
+      if (held !== null) { this.statusState.set(held); held = null; }
+      this.armStale(generation);
     }, () => {
       if (generation === this.generation && this.active && this.config.commentActivity === 'live') this.alive();
     });
     const request = { url: this.config.url, lastEventId: this.cursorState(), context: new HttpContext().set(STYNX_SSE_REQUEST, true) };
-    this.statusState.set(this.pollingTimer ? 'polling' : this.consecutiveFailures ? 'reconnecting' : 'live');
     this.armStale(generation);
     this.ageTimer = this.clock.setTimeout(() => this.reopenPlanned(generation), this.config.maxConnectionAgeMs ?? 1_800_000);
     this.connection = this.transport.connect(request).subscribe({
