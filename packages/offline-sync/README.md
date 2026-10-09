@@ -14,7 +14,7 @@ Tenant and actor identity always come from the trusted request context. A reques
 
 The module runs in one of two modes, chosen at bootstrap. Without a `policyResolver` it keeps the published E6 behaviour: queue items are deduplicated by payload hash, the reservation time-to-live and the 100-item batch limit are fixed defaults, and cancelling a reservation twice is an error. Supplying a `policyResolver` selects the CTG9 durable mode: items are identified by tenant and idempotency key with the hash used for integrity, batches have durable receipts, policy is resolved per tenant and org unit, and the additional ports listed under [Configuration](#configuration) become available.
 
-What it does not do: it does not create numbering ranges (provisioning range rows is a host-domain responsibility), it does not interpret `entityType` values, and it does not apply synced items to domain tables unless the host supplies an `OfflineSyncItemApplier`.
+What it does not do: it does not create numbering ranges (a consumer provisions `offline.numbering_ranges` rows itself under the [numbering range write contract](#numbering-ranges)), it does not interpret `entityType` values, and it does not apply synced items to domain tables unless the host supplies an `OfflineSyncItemApplier`.
 
 ## Audience
 
@@ -71,19 +71,19 @@ const reservation = await offlineSync.reserveNumbering({
 
 `OfflineSyncService` methods. Each reads the tenant and actor from the context port.
 
-| Method                                                                                     | Description                                                                                                                                      |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `reserveNumbering(input: ReserveNumberingInput)`                                           | Reserves `requestedSize` numbers (1 to 100). With `idempotencyKey`, a repeated identical request returns the original reservation.               |
-| `cancelNumberingReservation(reservationId, input?)`                                        | Cancels a reservation; optional `reason` of at most 500 characters.                                                                              |
-| `submitSyncBatch(input: SubmitSyncBatchInput)`                                             | Validates and stores a device batch. Returns accepted and duplicate counts, conflicts and the stored items.                                      |
-| `submitSyncBatch(input: CTG9SubmitSyncBatchInput, options: SubmitSyncBatchOptions)`        | CTG9 form used by the mounted controller; carries the transport idempotency key, method and path and returns a result with a `SyncBatchReceipt`. |
-| `openConflict(queueItemId, input: OpenSyncConflictInput)`                                  | Opens a conflict for a stored queue item.                                                                                                        |
-| `resolveConflict(conflictId, input: ResolveSyncConflictInput)`                             | Resolves a conflict. Without a `conflictResolver` the resolution must be `device-wins`, `server-wins` or `manual-review`.                        |
-| `blockNumberingReservation`, `closeNumberingReservation`, `settleNumberingReservation`     | Reservation transitions `(id, input?)` returning a `CTG9NumberingReservation`.                                                                   |
-| `reconcileNumberingReservation(id, input: ReconcileNumberingInput)`                        | Compares device-claimed numbers with server consumption and returns a `ReconcileNumberingResult`.                                                |
-| `getNumberingConsumption(id)`                                                              | Per-number consumption of a reservation.                                                                                                         |
-| `getSyncBatchReceipt(deviceId, deviceBatchId)`, `getSyncItemReceipt(idempotencyKey)`       | Durable receipts; throw a 404 `OfflineSyncError` when absent.                                                                                    |
-| `listSyncBatchReceipts`, `listSyncItemReceipts`, `listSyncQueueItems`, `listSyncConflicts` | Keyset-paginated tenant listings, newest first, returning `OfflineSyncPage`. `limit` defaults to 50 and must be between 1 and 200.               |
+| Method                                                                                     | Description                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `reserveNumbering(input: ReserveNumberingInput)`                                           | Reserves `requestedSize` numbers (1 to 100). With `idempotencyKey`, a repeated identical request returns the original reservation.                                                                  |
+| `cancelNumberingReservation(reservationId, input?)`                                        | Cancels a reservation; optional `reason` of at most 500 characters.                                                                                                                                 |
+| `submitSyncBatch(input: SubmitSyncBatchInput)`                                             | Validates and stores a device batch. Returns accepted and duplicate counts, conflicts and the stored items.                                                                                         |
+| `submitSyncBatch(input: CTG9SubmitSyncBatchInput, options: SubmitSyncBatchOptions)`        | CTG9 form used by the mounted controller; carries the transport idempotency key, method and path and returns a result with a `SyncBatchReceipt`.                                                    |
+| `openConflict(queueItemId, input: OpenSyncConflictInput)`                                  | Opens a conflict for a stored queue item.                                                                                                                                                           |
+| `resolveConflict(conflictId, input: ResolveSyncConflictInput)`                             | Resolves a conflict. Without a `conflictResolver` the resolution must be `device-wins`, `server-wins` or `manual-review`.                                                                           |
+| `blockNumberingReservation`, `closeNumberingReservation`, `settleNumberingReservation`     | Reservation transitions `(id, input?)` returning a `CTG9NumberingReservation`.                                                                                                                      |
+| `reconcileNumberingReservation(id, input: ReconcileNumberingInput)`                        | Compares device-claimed numbers with server consumption and returns a `ReconcileNumberingResult`.                                                                                                   |
+| `getNumberingConsumption(id)`                                                              | Per-number consumption of a reservation.                                                                                                                                                            |
+| `getSyncBatchReceipt(deviceId, deviceBatchId)`, `getSyncItemReceipt(idempotencyKey)`       | Durable receipts; throw a 404 `OfflineSyncError` when absent.                                                                                                                                       |
+| `listSyncBatchReceipts`, `listSyncItemReceipts`, `listSyncQueueItems`, `listSyncConflicts` | Keyset-paginated tenant listings, newest first, returning `OfflineSyncPage`. `limit` defaults to 50 and must be between 1 and 200. Conflicts filter by `deviceId` of the referenced queue item too. |
 
 The transition, consumption, receipt and listing methods need a store that implements `OfflineSyncDurableStore`; both bundled stores do. The listing methods are not exposed by either controller.
 
@@ -115,13 +115,14 @@ Every `POST` route is audited and uses `@Idempotent('Idempotency-Key')`, except 
 | `InMemoryOfflineSyncStore` | Test store implementing the same interface. `seedNumberingRange(range)` adds a range; `getQueueItem(tenantId, queueItemId)` reads a stored item. |
 | `StynxOfflineSyncContext`  | Default `OfflineSyncContextPort`; reads tenant and actor from `RequestContext` in `@stynx-nyx/core`.                                             |
 
-### Tokens
+### Tokens and constants
 
-| Export                       | Description                               |
-| ---------------------------- | ----------------------------------------- |
-| `STYNX_OFFLINE_SYNC_OPTIONS` | The options object passed to `forRoot()`. |
-| `STYNX_OFFLINE_SYNC_STORE`   | The active `OfflineSyncStore`.            |
-| `STYNX_OFFLINE_SYNC_CONTEXT` | The active `OfflineSyncContextPort`.      |
+| Export                       | Description                                                                                                                                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `STYNX_OFFLINE_SYNC_OPTIONS` | The options object passed to `forRoot()`.                                                                                                                                           |
+| `STYNX_OFFLINE_SYNC_STORE`   | The active `OfflineSyncStore`.                                                                                                                                                      |
+| `STYNX_OFFLINE_SYNC_CONTEXT` | The active `OfflineSyncContextPort`.                                                                                                                                                |
+| `OFFLINE_SYNC_NO_SHIFT`      | `'stynx:no-shift'`, the documented `shiftId` for a reservation without a shift. Every other `stynx:`-prefixed `shiftId` is reserved and rejected with `OFFLINE_SYNC_INVALID_INPUT`. |
 
 ### Errors
 
@@ -183,6 +184,17 @@ Passing any option marked CTG9 only without a `policyResolver` throws `OfflineSy
 In E6 mode a batch holds 1 to 100 items. In CTG9 mode the maximum is `maxBatchItems` from the resolved policy, and a policy without a positive `reservationTtlMs` makes `reserveNumbering` fail with `OFFLINE_SYNC_INVALID_INPUT`.
 
 The package reads no environment variables.
+
+### Numbering ranges
+
+The package never creates `offline.numbering_ranges` rows. Writing them under the application role, the tenant context (`app.tenant_id`) and FORCE RLS is a supported consumer operation (ADR-MOBILE-OFFLINE-0003 D5):
+
+- **Insertable columns:** `tenant_id`, `org_unit_id`, `entity_type`, `series`, `start_number`, `end_number`, `next_number` and optionally `id` and `status`. `next_number` must equal `start_number` at creation; afterwards only the package writes it. `(tenant_id, org_unit_id, entity_type, series)` is unique.
+- **Immutable once referenced:** `start_number`, `end_number`, `org_unit_id`, `entity_type` and `series` must not change once a reservation references the range.
+- **Status:** the only consumer change is `active` to `cancelled`, made while holding the range row lock that reservations take (`select … for update` on the row in the same transaction as the update). `exhausted` is written by the package when the last number is reserved; returning an unused tail with `cancelNumberingReservation` reactivates an `exhausted` range but never a `cancelled` one.
+- **Selection:** `reserveNumbering` with `rangeId` or `series` addresses that range and reports a cancelled one as `OFFLINE_SYNC_RANGE_UNAVAILABLE` with `reason: 'inactive'`. Without `series`, cancelled ranges are skipped and the first remaining range by `series` is used; when none remains the result is `OFFLINE_SYNC_RANGE_NOT_FOUND`.
+- **Consumer attributes** (for example a usage mode) are not stored by the package; keep them in your own table keyed by tenant and range id.
+- **No shift:** send `OFFLINE_SYNC_NO_SHIFT` (`'stynx:no-shift'`) as `shiftId` when the host has no shift and map it back on output. It is an ordinary value to the store and to the reservation idempotency fingerprint.
 
 ## Examples
 
@@ -261,8 +273,9 @@ await offlineSync.resolveConflict(conflict.conflictId, { resolution: 'server-win
 ## Common pitfalls
 
 - **Do not send identity in the body.** Any of `tenantId`, `tenant_id`, `agentId`, `agent_id`, `actorId`, `actor_id`, `userId` or `user_id` in a controller request body is rejected with `OFFLINE_SYNC_CONTEXT_OVERRIDE`.
-- **A numbering range must exist first.** The package never creates range rows; without a matching range `reserveNumbering` fails with `OFFLINE_SYNC_RANGE_NOT_FOUND`.
-- **`payloadHash` must be canonical.** Only `sha256:` followed by 64 lowercase hexadecimal characters is accepted.
+- **A numbering range must exist first.** The package never creates range rows; write them under the [numbering range write contract](#numbering-ranges). Without a matching range `reserveNumbering` fails with `OFFLINE_SYNC_RANGE_NOT_FOUND`; a cancelled range is skipped when `series` is omitted and refused as `inactive` when addressed by `series` or `rangeId`.
+- **`payloadHash` must be canonical to be stored.** Only `sha256:` followed by 64 lowercase hexadecimal characters is ever stored or applied. In E6 mode any other value is a 400 for the batch. In CTG9 mode a string of 1 to 255 bytes that is not canonical is a per-item `rejected` receipt with `OFFLINE_SYNC_ITEM_INTEGRITY` (recorded in `offline.sync_item_attempts` with the received value, no queue row, no receipt, key not consumed); a missing, non-string, empty or over-long value is still a 400 for the batch.
+- **`shiftId` values starting with `stynx:` are reserved.** Only `OFFLINE_SYNC_NO_SHIFT` is accepted; any other `stynx:` shift is `OFFLINE_SYNC_INVALID_INPUT`.
 - **Mode cannot be switched per request.** It is decided once at bootstrap by the presence of `policyResolver`, including when `mountControllers` is `false`.
 - **E6 mode deduplicates by payload hash.** Two items with identical payload hashes are treated as the same item even under different idempotency keys. CTG9 mode uses the tenant and item key instead.
 - **Reusing a `queueItemId` with a different payload hash is an error** (`OFFLINE_SYNC_QUEUE_ID_REUSED`), as is repeating a `queueItemId` within one batch.
@@ -280,7 +293,7 @@ await offlineSync.resolveConflict(conflict.conflictId, { resolution: 'server-win
 - [`@stynx-nyx/core`](/docs/packages/core/) — `RequestContext`, the source of the trusted tenant and actor.
 - [`@stynx-nyx/data`](/docs/packages/data/) — `Database` and `Transaction`, used by the PostgreSQL store and passed to the CTG9 ports.
 
-Contract and decisions: `docs/framework/contracts/offline-sync-api.md`, `law/adr/ADR-MOBILE-OFFLINE-0001-teat-promotion.md` and `law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md`.
+Contract and decisions: `docs/framework/contracts/offline-sync-api.md`, `law/adr/ADR-MOBILE-OFFLINE-0001-teat-promotion.md`, `law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md` and `law/adr/ADR-MOBILE-OFFLINE-0003-queue-states-and-consumer-storage.md`.
 
 <!-- stynx:generated-dependencies:start -->
 

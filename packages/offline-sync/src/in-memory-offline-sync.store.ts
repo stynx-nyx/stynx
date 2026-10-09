@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { HttpException, UnprocessableEntityException } from '@nestjs/common';
 import { OfflineSyncConfigurationError, OfflineSyncError, OfflineSyncNumberingOutcome, OfflineSyncRangeUnavailableError, OfflineSyncReservationReplayError } from './errors';
-import { pageOf, rangeUnavailableReason, reservationFingerprint, sortInstantOf } from './listing';
+import { canonicalPayloadHash, pageOf, rangeUnavailableReason, reservationFingerprint, sortInstantOf } from './listing';
 import { applyReplayResponse, batchContextFingerprint, captureReplayableHeaders, transportCompositeKey, transportFingerprint } from './transport';
 import type {
   CancelNumberingReservationInput,
@@ -61,7 +61,8 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           ? candidate.id === input.rangeId
           : candidate.orgUnitId === input.orgUnitId &&
             candidate.entityType === input.entityType &&
-            (!input.series || candidate.series === input.series)),
+            // Without a series a cancelled range is not a candidate (ADR-MOBILE-OFFLINE-0003 D5).
+            (input.series ? candidate.series === input.series : candidate.status !== 'cancelled')),
     );
     if (!range) {
       throw new OfflineSyncError(
@@ -153,7 +154,8 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       const range = this.ranges.get(rangeKey);
       const entries = this.consumption.get(key)!;
       const highestApplied = Math.max(reservation.startNumber - 1, ...[...entries.values()].filter(entry => ['applied','claimed-locally'].includes(entry.status)).map(entry => entry.number));
-      if (range && range.nextNumber === reservation.endNumber + 1) this.ranges.set(rangeKey, { ...range, nextNumber: highestApplied + 1, status: 'active' });
+      // A returned tail reactivates only an exhausted range; a cancelled range is never revived.
+      if (range && range.nextNumber === reservation.endNumber + 1 && range.status !== 'cancelled') this.ranges.set(rangeKey, { ...range, nextNumber: highestApplied + 1, status: 'active' });
       for (const [number,entry] of entries) if (entry.status === 'available') entries.set(number,{...entry,status:'expired'});
     }
     return cancelled;
@@ -432,6 +434,14 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       let retryable = false;
       for (const item of input.items) {
         const key = itemKeys.get(item.queueItemId)!;
+        if (!canonicalPayloadHash.test(item.payloadHash)) {
+          // ADR-MOBILE-OFFLINE-0003 D4: per-item integrity rejection; no queue row, receipt or effect.
+          const rejected = { ...item, tenantId:scope.tenantId,agentId:runtime.agentId,orgUnitId:input.orgUnitId,
+            deviceId:input.deviceId,status:'rejected' as const,receivedAt:now,errorCode:'OFFLINE_SYNC_ITEM_INTEGRITY' };
+          stored.push(rejected);
+          itemReceipts.push({queueItemId:item.queueItemId,status:'rejected',errorCode:'OFFLINE_SYNC_ITEM_INTEGRITY'});
+          continue;
+        }
         const previousQueue = this.queueItems.get(this.key(scope.tenantId,item.queueItemId));
         if (previousQueue && previousQueue.idempotencyKey !== key) {
           const rejected = { ...item, tenantId:scope.tenantId,agentId:runtime.agentId,orgUnitId:input.orgUnitId,
@@ -595,12 +605,13 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   }
 
   async listSyncConflicts(scope: TrustedOfflineSyncScope, input: ListSyncConflictsInput): Promise<OfflineSyncPage<SyncConflictRecord>> {
+    const deviceOf = (conflict: SyncConflict): string => this.queueItems.get(this.key(scope.tenantId, conflict.queueItemId))!.deviceId;
     return pageOf([...this.conflicts.entries()].filter(([key, conflict]) => key.startsWith(`${scope.tenantId}:`) &&
       (input.status === undefined || conflict.status === input.status) && (input.conflictType === undefined || conflict.conflictType === input.conflictType) &&
-      (input.queueItemId === undefined || conflict.queueItemId === input.queueItemId))
+      (input.queueItemId === undefined || conflict.queueItemId === input.queueItemId) && (input.deviceId === undefined || deviceOf(conflict) === input.deviceId))
       .map(([key, conflict]) => {
         const createdAt = this.conflictCreatedAt.get(key)!;
-        return { key: [sortInstantOf(createdAt), conflict.conflictId], value: { ...conflict, createdAt: new Date(createdAt).toISOString() } };
+        return { key: [sortInstantOf(createdAt), conflict.conflictId], value: { ...conflict, deviceId: deviceOf(conflict), createdAt: new Date(createdAt).toISOString() } };
       }), 2, input.cursor, input.limit);
   }
 

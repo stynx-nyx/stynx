@@ -33,9 +33,9 @@ import type {
   ListSyncBatchReceiptsInput, ListSyncConflictsInput, ListSyncItemReceiptsInput, ListSyncQueueItemsInput,
   OfflineSyncListInput, OfflineSyncPage, SyncBatchReceiptSummary, SyncConflictRecord, SyncItemReceiptRecord, SyncQueueItemRecord,
 } from './types';
-import { listDefaultLimit, listMaxLimit } from './listing';
+import { canonicalPayloadHash, listDefaultLimit, listMaxLimit } from './listing';
+import { OFFLINE_SYNC_NO_SHIFT } from './numbering';
 
-const sha256Pattern = /^sha256:[0-9a-f]{64}$/u;
 const queueStatuses = ['received', 'applied', 'conflict', 'rejected'];
 
 @Injectable()
@@ -51,6 +51,7 @@ export class OfflineSyncService {
     this.assertText(input.orgUnitId, 'orgUnitId');
     this.assertText(input.deviceId, 'deviceId');
     this.assertText(input.shiftId, 'shiftId');
+    if (input.shiftId.startsWith('stynx:') && input.shiftId !== OFFLINE_SYNC_NO_SHIFT) this.invalid('shiftId uses a reserved namespace.');
     this.assertEntityType(input.entityType);
     if (input.idempotencyKey !== undefined) {
       this.assertText(input.idempotencyKey, 'idempotencyKey');
@@ -153,7 +154,7 @@ export class OfflineSyncService {
   }
   /** Tenant conflicts, newest first (UPS-OFS-11). */
   async listSyncConflicts(input: ListSyncConflictsInput = {}): Promise<OfflineSyncPage<SyncConflictRecord>> {
-    this.assertFilters(input, ['conflictType', 'queueItemId']);
+    this.assertFilters(input, ['deviceId', 'conflictType', 'queueItemId']);
     if (input.status !== undefined && !['open', 'resolved'].includes(input.status)) this.invalid('status is invalid.');
     return this.listing('listSyncConflicts').call(this.durable, this.context.current(), this.page(input));
   }
@@ -191,7 +192,12 @@ export class OfflineSyncService {
       if (this.options.policyResolver && item.reservedNumber !== undefined && !Number.isSafeInteger(item.reservedNumber)) {
         this.invalid('reservedNumber must be a safe integer.');
       }
-      if (!sha256Pattern.test(item.payloadHash)) {
+      // ADR-MOBILE-OFFLINE-0003 D4: in CTG9 mode only the structure is a batch-wide 400; a non-canonical
+      // value within bounds becomes a per-item integrity rejection in the durable store. E6 keeps the 400.
+      if (this.options.policyResolver) {
+        if (typeof item.payloadHash !== 'string' || item.payloadHash.length === 0 || Buffer.byteLength(item.payloadHash) > 255)
+          this.invalid('payloadHash must be a string of 1 to 255 bytes.');
+      } else if (!canonicalPayloadHash.test(item.payloadHash)) {
         this.invalid('payloadHash must be a canonical sha256-prefixed hexadecimal digest.');
       }
       if (!Number.isFinite(Date.parse(item.createdLocallyAt))) {
