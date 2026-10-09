@@ -35,12 +35,14 @@ function adminConfig(database = 'postgres'): ClientConfig {
     database,
   };
 }
+const APP_ROLE_PASSWORD = process.env.STYNX_TEST_PG_PASSWORD ?? 'stynx_test_role';
 function appConfig(database: string): ClientConfig {
-  // Authenticate with the CI-provided admin credential, then enter the app role
-  // before any SQL runs. current_user stays stynx_app, so FORCE RLS is exercised.
+  // Log in as the application role itself (ADR-OUTBOX-0003 D1 refuses a privileged
+  // session_user behind SET ROLE). current_user is stynx_app, so FORCE RLS is exercised.
   return {
     ...adminConfig(database),
-    options: '-c role=stynx_app',
+    user: 'stynx_app',
+    password: APP_ROLE_PASSWORD,
   };
 }
 function connectionString(config: ClientConfig): string {
@@ -74,10 +76,12 @@ async function inTenant<T>(mutator: RequestContextMutator, tenantId: string | un
     ...(tenantId ? { tenantId } : {}), ...(actorId ? { actorId } : {}),
   }, fn));
 }
-async function directRoleProbe(client: Client, adminUser: string | undefined): Promise<{ recordA: string; recordB: string; noteA: string }> {
+async function directRoleProbe(client: Client): Promise<{ recordA: string; recordB: string; noteA: string }> {
   const current = await client.query<{ current_user: string; session_user: string }>('select current_user, session_user');
   assert(current.rows[0]?.current_user === 'stynx_app', 'direct SQL probe effective role is not stynx_app');
-  assert(current.rows[0]?.session_user === adminUser, 'direct SQL probe did not authenticate with the CI admin login');
+  // ADR-OUTBOX-0003 D1: the application pool authenticates as the role itself,
+  // never as a privileged login that enters it with SET ROLE.
+  assert(current.rows[0]?.session_user === 'stynx_app', 'direct SQL probe did not authenticate as the application role');
   async function insertFor(tenant: string, label: string): Promise<string> {
     await client.query('begin');
     try {
@@ -203,6 +207,7 @@ async function main(): Promise<void> {
     postgres = await connect(adminConfig());
     await postgres.query(`create database "${prefix}"`);
     created = true;
+    await postgres.query(`alter role stynx_app with login password ${postgres.escapeLiteral(APP_ROLE_PASSWORD)}`);
     const adminCfg = adminConfig(prefix);
     const appCfg = appConfig(prefix);
     const moduleRef = await Test.createTestingModule({
@@ -256,7 +261,7 @@ async function main(): Promise<void> {
     await admin.query(`insert into tenancy.tenants(id,slug,name) values ($1,'cli-tenant-a','CLI Tenant A'),($2,'cli-tenant-b','CLI Tenant B')`, [tenantA, tenantB]);
     await catalogProbe(admin);
     appRole = await connect(appCfg);
-    const ids = await directRoleProbe(appRole, adminCfg.user);
+    const ids = await directRoleProbe(appRole);
     const database = moduleRef.get(Database);
     const repository = moduleRef.get(CrudProbeRepository);
     const mutator = moduleRef.get(RequestContextMutator);
@@ -265,7 +270,7 @@ async function main(): Promise<void> {
       return result.rows[0];
     }, { role: 'app', requireActor: true }));
     assert(poolIdentity?.current_user === 'stynx_app', 'Database app pool effective role is not stynx_app');
-    assert(poolIdentity?.session_user === adminCfg.user, 'Database app pool did not authenticate with the CI admin login');
+    assert(poolIdentity?.session_user === 'stynx_app', 'Database app pool did not authenticate as the application role');
     const hiddenUpdate = await inTenant(mutator, tenantB, actorB, () => repository.updateRecordItem(ids.recordA, { label: 'cross-tenant' }));
     assert(hiddenUpdate === null, 'tenant B repository updated tenant A row');
     const hiddenDelete = await inTenant(mutator, tenantB, actorB, () => repository.deleteRecordItem(ids.recordA));
