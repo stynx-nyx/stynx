@@ -1387,6 +1387,12 @@
       "commit": "0dce72e184236ba79240a5bc2b394894068f3738",
       "authorized_by": "Owner",
       "reason": "Owner post-merge authorization (2026-10-09) for the first measured scorecard observation evidence (readings, chain entries and the SC-20261008T231951-001 bundle, ADR-DEVAI-ADOPTION-0014 decision 5) as it landed on main through the PR #356 rebase merge, which rewrote the pre-merge receipted commit. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "e8553274f8f7ab78786a1d0fb07411c3f94ec967",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization 2026-10-09 (publication of 1.5.5 approved; ADR-DEVAI-ADOPTION-0014 decision 5, ADR-DEVAI-ADOPTION-0015 decision 4) for recording the SC-20261009T155331-001 observation bundle, its readings and chain entries as evidence of the published candidate 1a03a9156b6e6429fb2a84964b95e514a2da2cb8. This receipt covers only that exact commit."
     }
   ]
 }
