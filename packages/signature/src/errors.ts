@@ -45,3 +45,9 @@ export class SignatureTrustError extends SignatureError {}
 export class SignatureTrustUnavailableError extends SignatureCapabilityError {}
 export class SignatureLevelNotMetError extends SignatureTrustError {}
 export class SignatureEvidenceMismatchError extends SignatureTrustError {}
+/** A regulated call named a production profile outside the module's declared set (ADR-SIGNATURE-0002 D2). */
+export class SignatureProfileNotDeclaredError extends SignatureProviderConfigurationError {
+  constructor(message = 'Trust profile is not declared on the signature module') {
+    super(message);
+  }
+}

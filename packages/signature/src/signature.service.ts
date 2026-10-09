@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   SignatureHashMismatchError,
+  SignatureProfileNotDeclaredError,
   SignatureProviderConfigurationError,
   SignatureProviderResponseError,
   SignatureCapabilityError,
@@ -48,16 +49,32 @@ export class SignatureService {
   constructor(
     private readonly backend: SignatureBackend = new MissingSignatureBackend(),
     private readonly options: { verifier?: SignatureTrustVerifier | undefined; trustVerifier?: SignatureTrustVerifier | undefined;
-      consumerOwnedVerifier?: {acknowledged:true} | undefined } = {},
+      consumerOwnedVerifier?: {acknowledged:true} | undefined;
+      /** Declared set; when present, a production profile must be one of these by `id` and `revision`. */
+      trustProfiles?: readonly SignatureTrustProfile[] | undefined } = {},
   ) {}
 
   private get verifier(): SignatureTrustVerifier | undefined {
     return this.options.trustVerifier ?? this.options.verifier;
   }
 
-  async checkReadiness(profile: SignatureTrustProfile): Promise<{ok: true; capabilities: Awaited<ReturnType<SignatureTrustVerifier['capabilities']>>;verifierKind:'stynx-cms'|'consumer-owned'}> {
+  /**
+   * Declared-profiles-only rule (ADR-SIGNATURE-0002 D2 item 3): with a declared set, a production
+   * profile selects its declared entry by `id` and `revision`, and that entry governs the call;
+   * an undeclared one fails closed. Test profiles and modules without `trustProfiles` keep 1.5.3.
+   */
+  private declared(profile: SignatureTrustProfile): SignatureTrustProfile {
+    const declared = this.options.trustProfiles;
+    if (!declared || profile.environment !== 'production') return profile;
+    const match = declared.find((c) => c.id === profile.id && c.revision === profile.revision);
+    if (!match) throw new SignatureProfileNotDeclaredError();
+    return match;
+  }
+
+  async checkReadiness(requested: SignatureTrustProfile): Promise<{ok: true; capabilities: Awaited<ReturnType<SignatureTrustVerifier['capabilities']>>;verifierKind:'stynx-cms'|'consumer-owned'}> {
     const verifier = this.verifier;
     if (!verifier) throw new SignatureProviderConfigurationError('Trust verifier is required');
+    const profile = this.declared(requested);
     if (profile.environment === 'production' && isMockSignatureBackend(this.backend))
       throw new SignatureCapabilityError('Simulated signature backend is unavailable in production');
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -90,8 +107,9 @@ export class SignatureService {
     return {ok: true, capabilities: c,verifierKind:isCmsTrustVerifier(verifier) ? 'stynx-cms':'consumer-owned'};
   }
 
-  private regulatedProfile(minimum: NonNullable<SignatureRequest['minimumSignatureLevel']>, profile?: SignatureTrustProfile): SignatureTrustProfile {
-    if (!profile || !this.verifier) throw new SignatureProviderConfigurationError('Trust profile and verifier are required');
+  private regulatedProfile(minimum: NonNullable<SignatureRequest['minimumSignatureLevel']>, requested?: SignatureTrustProfile): SignatureTrustProfile {
+    if (!requested || !this.verifier) throw new SignatureProviderConfigurationError('Trust profile and verifier are required');
+    const profile = this.declared(requested);
     if (profile.environment === 'production' && !isCmsTrustVerifier(this.verifier) &&
       !this.options.consumerOwnedVerifier?.acknowledged)
       throw new SignatureProviderConfigurationError('Production trust verifier is unacknowledged');
@@ -139,14 +157,14 @@ export class SignatureService {
 
   async sign(request: SignatureRequest): Promise<SignatureResult> {
     assertDocumentHash(request.document, request.documentSha256);
-    if (request.minimumSignatureLevel) this.regulatedProfile(request.minimumSignatureLevel, request.trustProfile);
+    const profile = request.minimumSignatureLevel
+      ? this.regulatedProfile(request.minimumSignatureLevel, request.trustProfile) : undefined;
     const result = await this.backend.sign({
       ...request,
       algorithm: request.algorithm ?? 'pades-ltv',
       digestAlgorithm: request.digestAlgorithm ?? 'sha256',
     });
-    if (!request.minimumSignatureLevel) return result;
-    const profile = request.trustProfile!;
+    if (!request.minimumSignatureLevel || !profile) return result;
     if (!result.signedDocument?.length || !result.cmsSignature?.length)
       throw new SignatureProviderResponseError('Signed PDF and CMS are required');
     if (result.evidence.documentSha256 !== request.documentSha256)
