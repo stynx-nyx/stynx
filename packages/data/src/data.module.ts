@@ -1,6 +1,7 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
+import { resolveAppRoleName } from './app-role';
 import { Database } from './database';
 import { StynxMigrationRunner } from './migration-runner';
 import { StynxPoolRegistry } from './pools';
@@ -16,6 +17,7 @@ export type { StynxDataModuleOptions } from './tokens';
 @Module({})
 export class StynxDataModule {
   static forRoot(options: StynxDataModuleOptions): DynamicModule {
+    resolveAppRoleName(options);
     return {
       module: StynxDataModule,
       global: true,

@@ -1,6 +1,7 @@
 import { SecretLoader } from '@stynx-nyx/core';
 import { Injectable, Inject, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { Pool, type PoolConfig } from 'pg';
+import { AppRoleVerifier, resolveAppRoleName } from './app-role';
 import { STYNX_DATA_OPTIONS, type StynxDataModuleOptions, type StynxDataRole } from './tokens';
 
 export interface StynxPgPoolOptions {
@@ -87,7 +88,10 @@ export function createStynxPgPool(options: StynxPgPoolOptions): Pool {
 @Injectable()
 export class StynxPoolRegistry implements OnModuleInit, OnModuleDestroy {
   readonly pools: Record<StynxDataRole, Pool>;
+  /** Resolved application SQL role name (ADR-OUTBOX-0003 D1). */
+  readonly appRoleName: string;
   private initialized = false;
+  private appRole: AppRoleVerifier | undefined;
 
   constructor(
     @Inject(STYNX_DATA_OPTIONS)
@@ -95,6 +99,7 @@ export class StynxPoolRegistry implements OnModuleInit, OnModuleDestroy {
     private readonly secretLoader: SecretLoader,
   ) {
     this.pools = {} as Record<StynxDataRole, Pool>;
+    this.appRoleName = resolveAppRoleName(options);
   }
 
   async onModuleInit(): Promise<void> {
@@ -117,6 +122,17 @@ export class StynxPoolRegistry implements OnModuleInit, OnModuleDestroy {
       this.options.connections.reader,
     );
     this.initialized = true;
+    await this.appRoleVerifier().prime();
+  }
+
+  /** Proves the application role's properties once before the app pool serves a transaction. */
+  ensureAppRole(): Promise<void> {
+    return this.appRoleVerifier().ensure();
+  }
+
+  private appRoleVerifier(): AppRoleVerifier {
+    this.appRole ??= new AppRoleVerifier(() => this.pools.app, this.appRoleName);
+    return this.appRole;
   }
 
   get(role: StynxDataRole, replica = false): Pool {

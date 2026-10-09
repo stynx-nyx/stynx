@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable, Optional, type OnModuleInit } from '@nestjs/common';
 import { AuditChainKeyMismatchError, Database, IndependentTransactionConnectionError } from '@stynx-nyx/data';
 import { createHash } from 'node:crypto';
 import type { Transaction } from '@stynx-nyx/data';
@@ -6,6 +6,7 @@ import { FixedIntervalBackoffPolicy } from './backoff';
 import {
   DEFAULT_OUTBOX_ACK_TABLE,
   DEFAULT_OUTBOX_DISPATCH_BATCH_SIZE,
+  OUTBOX_APP_ROLE_CHECKED_RELATIONS,
   DEFAULT_OUTBOX_TABLE,
   STYNX_OUTBOX_BACKOFF_POLICY,
   STYNX_OUTBOX_DESTINATIONS,
@@ -13,7 +14,7 @@ import {
   STYNX_OUTBOX_METRICS,
   STYNX_OUTBOX_OPTIONS,
 } from './constants';
-import { OutboxAckQuarantineUnavailableError, OutboxAlreadyEnqueuedError, OutboxAmbiguousAckError, OutboxNotFoundError, OutboxEventConflictError, OutboxEventTransactionError, OutboxOwnershipContentionError, OutboxLegacyCutoverError, OutboxCustomTableCutoverUnsupportedError, OutboxCutoverAuditedTableError, OutboxEventNotFailedError } from './errors';
+import { OutboxAckQuarantineUnavailableError, OutboxAlreadyEnqueuedError, OutboxAmbiguousAckError, OutboxAppRoleOwnershipError, OutboxNotFoundError, OutboxEventConflictError, OutboxEventTransactionError, OutboxOwnershipContentionError, OutboxLegacyCutoverError, OutboxCustomTableCutoverUnsupportedError, OutboxCutoverAuditedTableError, OutboxEventNotFailedError } from './errors';
 import { assertQualifiedIdentifier, errorMessage, isUniqueViolation, outboxColumns, toRows } from './row-mapper';
 import type {
   OutboxAckInput,
@@ -207,7 +208,7 @@ function retryableSqlCode(error: unknown): '40P01' | '55P03' | undefined {
  * transaction via the injected `Database`, matching pec's shape 1:1.
  */
 @Injectable()
-export class OutboxService {
+export class OutboxService implements OnModuleInit {
   private readonly table: string;
   private readonly ackTable: string;
   private readonly dispatchBatchSize: number;
@@ -283,6 +284,40 @@ export class OutboxService {
     return this.dispatcher;
   }
 
+  /**
+   * ADR-OUTBOX-0003 D1 item 7: the application role must neither own nor be a
+   * member of the owner of any relation in the D2 closed list. Runs on the
+   * owner connection at bootstrap; any failure prevents startup.
+   */
+  async onModuleInit(): Promise<void> {
+    const role = this.database.appRoleName;
+    const rows = await this.database.withSystemContext('outbox application role check', () =>
+      this.database.tx(async (trx) => {
+        const result = await trx.query<{ relation: string; owner: string; owns: boolean | null; member: boolean | null }>(
+          `select c.relname as relation, o.rolname::text as owner,
+                  (a.oid = c.relowner) as owns,
+                  pg_catalog.pg_has_role(a.oid, c.relowner, 'MEMBER') as member
+             from pg_catalog.pg_class c
+             join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+             join pg_catalog.pg_roles o on o.oid = c.relowner
+             left join pg_catalog.pg_roles a on a.rolname = $1
+            where n.nspname = 'outbox' and c.relname = any($2::text[])
+            order by c.relname`,
+          [role, [...OUTBOX_APP_ROLE_CHECKED_RELATIONS]],
+        );
+        return result.rows;
+      }, { role: 'owner', readonly: true, retry: false }));
+    for (const row of rows) {
+      const property = row.owns === null || row.member === null ? 'exists'
+        : row.owns ? 'owns'
+          : row.member ? 'member'
+            : undefined;
+      if (property) {
+        throw new OutboxAppRoleOwnershipError({ property, role, relation: `outbox.${row.relation}`, owner: row.owner });
+      }
+    }
+  }
+
   async appendInTransaction(trx: Transaction, event: OutboxAppendEvent): Promise<OutboxEventRow> {
     const rows = await this.appendManyInTransaction(trx, [event]);
     return rows[0]!;
@@ -299,10 +334,15 @@ export class OutboxService {
               pg_is_in_recovery() as recovery`,
     );
     const live = state.rows[0];
-    if (trx.role !== 'app' || !live?.tenant_id || live.role !== 'app' || live.sql_role !== 'stynx_app'
-      || live.isolation !== 'read committed' || live.read_only !== 'off' || live.recovery) {
-      throw new OutboxEventTransactionError();
-    }
+    if (trx.role !== 'app') throw new OutboxEventTransactionError('transaction_role');
+    if (!live?.tenant_id) throw new OutboxEventTransactionError('tenant');
+    const reason = live.role !== 'app' ? 'app_role'
+      : live.sql_role !== this.database.appRoleName ? 'sql_role'
+        : live.isolation !== 'read committed' ? 'isolation'
+          : live.read_only !== 'off' ? 'read_only'
+            : live.recovery ? 'recovery'
+              : undefined;
+    if (reason) throw new OutboxEventTransactionError(reason);
     if (this.database.currentTenantId()?.toLowerCase() !== live.tenant_id) {
       throw new AuditChainKeyMismatchError();
     }

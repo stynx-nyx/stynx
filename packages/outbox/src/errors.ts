@@ -42,8 +42,35 @@ export class OutboxAmbiguousAckError extends StynxOutboxError {
 export class OutboxEventConflictError extends StynxOutboxError {
   constructor() { super('Outbox idempotency key has different content', { code: 'OUTBOX_EVENT_CONFLICT', status: 409 }); }
 }
+/**
+ * Which request-path guard refused the transaction (ADR-OUTBOX-0003 D1 item 5):
+ * `sql_role` is `current_user` differing from the configured application role.
+ */
+export type OutboxEventTransactionReason =
+  | 'transaction_role'
+  | 'tenant'
+  | 'app_role'
+  | 'sql_role'
+  | 'isolation'
+  | 'read_only'
+  | 'recovery';
 export class OutboxEventTransactionError extends StynxOutboxError {
-  constructor() { super('Append requires a writable READ COMMITTED app transaction on primary', { code: 'OUTBOX_EVENT_TRANSACTION', status: 409 }); }
+  /** Typed reason; `undefined` when raised without one. Also carried as `context.reason`. */
+  readonly reason: OutboxEventTransactionReason | undefined;
+  constructor(reason?: OutboxEventTransactionReason) {
+    super('Append requires a writable READ COMMITTED app transaction on primary',
+      { code: 'OUTBOX_EVENT_TRANSACTION', status: 409, ...(reason ? { context: { reason } } : {}) });
+    this.reason = reason;
+  }
+}
+/** What the bootstrap ownership check found about the application role (ADR-OUTBOX-0003 D1 item 7). */
+export type OutboxAppRoleOwnershipProperty = 'exists' | 'owns' | 'member';
+/** Startup is prevented: the application role owns, or is a member of the owner of, an outbox relation. */
+export class OutboxAppRoleOwnershipError extends StynxOutboxError {
+  constructor(context: { property: OutboxAppRoleOwnershipProperty; role: string; relation: string; owner: string }) {
+    super('Outbox application role must not own or belong to the owner of an outbox relation',
+      { code: 'OUTBOX_APP_ROLE_OWNERSHIP', status: 500, context });
+  }
 }
 export class OutboxOwnershipContentionError extends StynxOutboxError {
   constructor() { super('Outbox ownership marker is locked by cutover', { code: 'OUTBOX_OWNERSHIP_CONTENTION', status: 503 }); }

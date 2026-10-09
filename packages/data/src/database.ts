@@ -21,7 +21,9 @@ import {
   StatementTimeoutError,
   TenantContextMissingError,
   TransactionIdentityMismatchError,
+  type TransactionIdentityMismatchReason,
 } from './errors';
+import { resolveAppRoleName } from './app-role';
 import { StynxPoolRegistry } from './pools';
 import { createDrizzle, Transaction, type StynxDrizzleDatabase } from './transaction';
 import {
@@ -77,6 +79,8 @@ async function sleep(ms: number): Promise<void> {
 
 @Injectable()
 export class Database extends CoreDatabase {
+  private readonly resolvedAppRoleName: string;
+
   constructor(
     private readonly requestContext: RequestContext,
     private readonly systemContext: SystemContext,
@@ -90,6 +94,12 @@ export class Database extends CoreDatabase {
     private readonly requestContextMutator?: RequestContextMutator,
   ) {
     super();
+    this.resolvedAppRoleName = resolveAppRoleName(options);
+  }
+
+  /** Application SQL role the app pool must present as `current_user` (ADR-OUTBOX-0003 D1). */
+  get appRoleName(): string {
+    return this.resolvedAppRoleName;
   }
 
   async tx<T>(fn: (trx: Transaction) => Promise<T>, options: TxOptions = {}): Promise<T> {
@@ -119,7 +129,7 @@ export class Database extends CoreDatabase {
     const retry = options.retry ?? this.options.retry ?? { attempts: 3, jitterMs: [10, 50] as [number, number] };
     const retryConfig = retry === false ? undefined : retry;
     if (options.requireActor && resolvedRole !== 'app') {
-      throw new TransactionIdentityMismatchError({ reason: 'requireActor requires app role' });
+      throw new TransactionIdentityMismatchError({ reason: 'requireActor requires app role' }, 'transaction_role');
     }
     this.assertRoleConstraints(resolvedRole, resolvedReadonly, options.replica ?? false);
     const executionContext = this.resolveExecutionContext(resolvedRole);
@@ -133,7 +143,7 @@ export class Database extends CoreDatabase {
         throw new IndependentTransactionConnectionError();
       }
       if (options.isolation && options.isolation !== active.isolation) {
-        throw new TransactionIdentityMismatchError({ reason: 'nested transaction isolation mismatch' });
+        throw new TransactionIdentityMismatchError({ reason: 'nested transaction isolation mismatch' }, 'isolation');
       }
       if (options.requireActor) {
         await this.assertLiveCommandIdentity(active.client, executionContext);
@@ -146,6 +156,9 @@ export class Database extends CoreDatabase {
     }
 
     const pool = this.pools.get(resolvedRole, options.replica ?? false);
+    if (resolvedRole === 'app' && !(options.replica ?? false)) {
+      await this.pools.ensureAppRole();
+    }
     const attempts = retryConfig === undefined ? 1 : Math.max(retryConfig.attempts, 1);
     let lastError: unknown;
 
@@ -280,14 +293,14 @@ export class Database extends CoreDatabase {
               current_setting('app.tenant_id', true) AS tenant_id,
               current_setting('app.actor_id', true) AS actor_id`);
     const live = result.rows[0];
-    if (
-      !live
-      || live.current_user !== 'stynx_app'
-      || live.role !== 'app'
-      || live.tenant_id !== expected.tenantId
-      || live.actor_id !== expected.actorId
-    ) {
-      throw new TransactionIdentityMismatchError({ reason: 'live app identity mismatch' });
+    const mismatch: TransactionIdentityMismatchReason | undefined =
+      !live || live.current_user !== this.resolvedAppRoleName ? 'sql_role'
+        : live.role !== 'app' ? 'app_role'
+          : live.tenant_id !== expected.tenantId ? 'tenant'
+            : live.actor_id !== expected.actorId ? 'actor'
+              : undefined;
+    if (mismatch) {
+      throw new TransactionIdentityMismatchError({ reason: 'live app identity mismatch' }, mismatch);
     }
   }
 

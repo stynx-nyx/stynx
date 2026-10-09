@@ -14,9 +14,12 @@ export class OutboxEventStreamSource {
     const state = await trx.query<{ recovery: boolean; role: string | null; sql_role: string }>(
       `select pg_is_in_recovery() as recovery,current_setting('app.role',true) as role,current_user as sql_role`,
     );
-    if (state.rows[0]?.recovery || state.rows[0]?.role !== 'app' || state.rows[0]?.sql_role !== 'stynx_app') {
-      throw new OutboxEventTransactionError();
-    }
+    const live = state.rows[0];
+    const reason = live?.recovery ? 'recovery'
+      : live?.role !== 'app' ? 'app_role'
+        : live.sql_role !== this.database.appRoleName ? 'sql_role'
+          : undefined;
+    if (reason) throw new OutboxEventTransactionError(reason);
   }
 
   async now(scope: OutboxStreamScope): Promise<Date> {
