@@ -2,16 +2,16 @@
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.registry-version-anomalies",
   "canonical_line": "1.x",
-  "next_unified_version": "1.5.5",
-  "preflight_latest_version": "1.5.3",
+  "next_unified_version": "1.5.6",
+  "preflight_latest_version": "1.5.5",
   "owner_decision": {
-    "date": "2026-10-08",
-    "repository_baseline": "548e614924248b977568191fc7360546353e3c77",
-    "repository_tree": "24c218546eaa27063bd97e851db6237b6bacdf24",
-    "statement": "The Owner decided on 2026-10-08 to release 1.5.5. Stable 1.5.3 is published for all 44 fixed-group packages: authenticated registry census on 2026-10-05 observed latest 1.5.3 and rc 1.5.0-rc.2 after the v1.5.3 publication from main 2505251f883283908056cd1a8fa031d6bb8f33c5. The historical 1.5.1, 1.5.2 and 1.5.4 candidates were never published; 1.5.4 carried the DEVAI 2.3.0 adoption after its marker and is superseded. One changeset pending on origin/main (the @stynx-nyx/pdf handlebars patch) advances the fixed group from 1.5.4 to 1.5.5 under scripts/version-packages.mjs, and the candidate ships with the first measured DEVAI scorecard. Publish only with the latest dist-tag and an action-specific exact-main-SHA Owner receipt; preflight latest must remain 1.5.3 and rc must remain 1.5.0-rc.2 until publication. This decision does not authorize angular-profile 2.0.0 remediation.",
+    "date": "2026-10-09",
+    "repository_baseline": "f3edd68f7c5c78c9e614b3b70629b5ec76959049",
+    "repository_tree": "3e338000650a34ff4bb767e393a69c257c48a6be",
+    "statement": "The Owner decided on 2026-10-09 to release 1.5.6. Stable 1.5.5 is published for all 44 fixed-group packages: authenticated registry census on 2026-10-09 observed latest 1.5.5 and rc 1.5.0-rc.2 after the v1.5.5 publication from main 1a03a9156b6e6429fb2a84964b95e514a2da2cb8 with scorecard observation SC-20261009T155331-001. Four changesets pending on origin/main (the @stynx-nyx/angular openStatus option, @stynx-nyx/outbox named destinations, @stynx-nyx/signature trust-profile sets and the @stynx-nyx/offline-sync 1.5.6 slice; DETRAN requests UPS-NGSSE-13, UPS-OBX-11, UPS-SIG-07 and UPS-OFS-10/11/12/14 under ADR-DEVAI-ADOPTION-0016) advance the fixed group from 1.5.5 to 1.5.6 under scripts/version-packages.mjs. Publish only with the latest dist-tag and an action-specific exact-main-SHA Owner receipt; preflight latest must remain 1.5.5 and rc must remain 1.5.0-rc.2 until publication. This decision does not authorize angular-profile 2.0.0 remediation.",
     "supersedes": {
-      "date": "2026-10-06",
-      "next_unified_version": "1.5.4"
+      "date": "2026-10-08",
+      "next_unified_version": "1.5.5"
     }
   },
   "anomalies": [
@@ -27,12 +27,12 @@
         "observed_at": "2026-08-24T02:04:20.663Z"
       },
       "rationale": "The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.",
-      "allowed_candidate": "1.5.5",
+      "allowed_candidate": "1.5.6",
       "allowed_effects": ["registry-monotonicity-exception"],
       "permitted_remediation": ["retain-as-noncanonical-history"],
       "deletion_requires": "new-owner-authorization-naming-version-id-and-recovery-evidence",
       "deprecation_requires": "new-owner-authorization-naming-package-version-action-and-message",
-      "closure_condition": "Unified stable 1.5.5 is verified for all 44 publishable packages, latest resolves to 1.5.5, rc remains at 1.5.0-rc.2, and angular-profile 2.0.0 remains immutable non-canonical history.",
+      "closure_condition": "Unified stable 1.5.6 is verified for all 44 publishable packages, latest resolves to 1.5.6, rc remains at 1.5.0-rc.2, and angular-profile 2.0.0 remains immutable non-canonical history.",
       "applies_to_other_packages": false,
       "applies_to_other_versions": false
     }
