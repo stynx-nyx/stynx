@@ -43,6 +43,7 @@ import {
   classifyReleaseContext,
   isFinalVersionedCandidate,
   isSixthStablePatchVersionedCandidate,
+  isSeventhStablePatchVersionedCandidate,
   isFifthStablePatchVersionedCandidate,
   isFourthStablePatchVersionedCandidate,
   isSecondStablePatchVersionedCandidate,
@@ -1875,6 +1876,138 @@ test('stable 1.5.6 patch context consumes exactly the 4 pending changesets from 
     const invalid = structuredClone(input);
     mutate(invalid);
     assert.equal(isSixthStablePatchVersionedCandidate(invalid), false, label);
+  }
+});
+
+function seventhStablePatchFixture() {
+  const changesets = [
+    '.changeset/offline-sync-1-5-7-pending-review-context.md',
+    '.changeset/outbox-configurable-app-role.md',
+  ];
+  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+    name,
+    manifestPath: relative(repoRoot, manifestPath),
+    parentVersion: '1.5.6',
+    candidateVersion: '1.5.7',
+  }));
+  return {
+    baseRootVersion: '1.5.6',
+    markerParentRootVersion: '1.5.6',
+    candidateRootVersion: '1.5.7',
+    markerCommits: [
+      { sha: 'a'.repeat(40), subject: 'docs(repo): govern the 1.5.7 stable patch candidate' },
+      { sha: 'b'.repeat(40), subject: 'chore(repo): version fixed group to 1.5.7' },
+      { sha: 'c'.repeat(40), subject: 'test(repo): bind the 1.5.7 release candidate' },
+    ],
+    markerChanges: [
+      ...changesets.map((path) => ({ status: 'D', path })),
+      ...packageStates.flatMap(({ manifestPath }) => [
+        { status: 'M', path: manifestPath },
+        { status: 'M', path: manifestPath.replace(/package\.json$/u, 'CHANGELOG.md') },
+      ]),
+      ...[
+        'docs/meta/security/sbom.cdx.json',
+        'package.json',
+        'tools/create-stynx-app/template/package.json',
+        'packages/pdf/README.md',
+        'packages/pdf-a/README.md',
+        'packages/pdf-a-vera-docker/README.md',
+      ].map((path) => ({ status: 'M', path })),
+    ],
+    markerParentChangesets: [...changesets].reverse(),
+    followUpChanges: [
+      { status: 'M', path: 'law/policy/forbidden-action-authorizations.json' },
+      { status: 'M', path: 'law/policy/registry-version-anomalies.json' },
+      { status: 'M', path: 'law/trace.json' },
+      { status: 'M', path: 'test/scripts/local-rc-blocker-contract.test.mjs' },
+      { status: 'M', path: 'test/scripts/release-version-policy.test.mjs' },
+    ],
+    rootManifestMatchesMarker: true,
+    packageStates,
+    changesetIdsOnDisk: [],
+    preState: null,
+    markerParentPreState: null,
+  };
+}
+
+test('stable 1.5.7 patch context accepts exactly the two feature changesets and 44 packages from published 1.5.6', () => {
+  const input = seventhStablePatchFixture();
+  assert.equal(input.packageStates.length, 44);
+  assert.equal(input.markerParentChangesets.length, 2);
+  assert.equal(isSeventhStablePatchVersionedCandidate(input), true);
+  assert.equal(isSixthStablePatchVersionedCandidate(input), false);
+  assert.equal(
+    isSeventhStablePatchVersionedCandidate({ ...input, followUpChanges: [] }),
+    true,
+    'the version marker itself is sufficient without later evidence commits',
+  );
+});
+
+test('stable 1.5.7 patch context rejects drift in release identity, marker, package population and follow-up scope', () => {
+  const input = seventhStablePatchFixture();
+  const mutations = [
+    ['wrong published base', (value) => (value.baseRootVersion = '1.5.5')],
+    ['wrong marker parent', (value) => (value.markerParentRootVersion = '1.5.5')],
+    ['wrong candidate', (value) => (value.candidateRootVersion = '1.5.8')],
+    ['missing parent changeset', (value) => value.markerParentChangesets.pop()],
+    [
+      'unexpected parent changeset',
+      (value) => value.markerParentChangesets.push('.changeset/unrelated-feature.md'),
+    ],
+    ['unconsumed changeset', (value) => value.changesetIdsOnDisk.push('late-change')],
+    ['missing changeset deletion', (value) => value.markerChanges.shift()],
+    [
+      'wrong marker version',
+      (value) => (value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.5.6'),
+    ],
+    [
+      'extra version marker',
+      (value) =>
+        value.markerCommits.push({
+          sha: 'd'.repeat(40),
+          subject: 'chore(repo): version fixed group to 1.5.7',
+        }),
+    ],
+    ['marker without preparation', (value) => value.markerCommits.shift()],
+    ['missing package', (value) => value.packageStates.pop()],
+    [
+      'duplicate package identity',
+      (value) => (value.packageStates[1].name = value.packageStates[0].name),
+    ],
+    [
+      'duplicate package manifest',
+      (value) => (value.packageStates[1].manifestPath = value.packageStates[0].manifestPath),
+    ],
+    ['stale package version', (value) => (value.packageStates[0].candidateVersion = '1.5.6')],
+    ['wrong parent package version', (value) => (value.packageStates[0].parentVersion = '1.5.5')],
+    [
+      'missing package marker change',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.packageStates[0].manifestPath,
+        );
+      },
+    ],
+    ['root bytes changed after marker', (value) => (value.rootManifestMatchesMarker = false)],
+    ['prerelease state retained', (value) => (value.preState = { mode: 'pre', tag: 'rc' })],
+  ];
+  for (const path of [
+    'packages/offline-sync/src/offline-sync.service.ts',
+    'packages/offline-sync/migrations/0005_unreviewed.sql',
+    '.github/workflows/release.yml',
+    'package.json',
+    'law/adr/unrelated.md',
+    'test/scripts/unrelated.test.mjs',
+  ]) {
+    mutations.push([
+      `unapproved post-marker path: ${path}`,
+      (value) => value.followUpChanges.push({ status: 'M', path }),
+    ]);
+  }
+  for (const [label, mutate] of mutations) {
+    const invalid = structuredClone(input);
+    mutate(invalid);
+    assert.equal(isSeventhStablePatchVersionedCandidate(invalid), false, label);
   }
 });
 
