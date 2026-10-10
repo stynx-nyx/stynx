@@ -121,6 +121,24 @@ Ordinary hard gates retain their own results.
    This harness conformance correction changes no published package,
    dependency, workflow or changeset and lands before the version marker.
 
+   The same D1.7 conformance exception covers the private canonical fixture
+   `reference/api/docker-compose.yml` used by the existing reference-app
+   workflow. Its PostgreSQL service may mount only the new owned fixture
+   `reference/api/postgres/init-app-role.sql` read-only into
+   `/docker-entrypoint-initdb.d/`. That initialization SQL creates the direct
+   `stynx_app` test login with password `stynx_app`, `NOINHERIT`,
+   `NOSUPERUSER` and `NOBYPASSRLS`, without owner membership or ownership.
+   Only its application database URL changes to that matching restricted
+   identity. Existing owner/reader identities, service definitions, images,
+   healthchecks, ports, dependencies, authentication secret handling and
+   cleanup stay unchanged; the only added mount is that initialization file.
+   This is local disposable fixture provisioning, not a production migration
+   or a workflow change. Inspector may rebind only the corresponding
+   obsolete fixture hash and identity expectations while retaining assertions
+   for every other frozen surface and the restricted role properties.
+   Engineer scope extends only to this Compose file and initialization SQL;
+   both changes land before the marker under the existing two changesets.
+
 4. Ship only the forward migrations already reviewed:
    `packages/data/migrations/platform/0025_outbox_attempt_guard_role_independent.sql`
    and
