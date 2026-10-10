@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stynx.dev/schemas/http-api-compositions.schema.json",
+  "title": "HTTP declaration composition and published operation ID compatibility registry",
+  "description": "Architect authority under ADR-PERF-0001. This registry declares exact known alternative source controllers and immutable published ID compatibility; it is not complete mounted-runtime evidence. Structural schema validity does not replace source/baseline/collision/custody checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policyId",
+    "policyVersion",
+    "repositoryId",
+    "authority",
+    "scope",
+    "compatibilityBaseline",
+    "compositions",
+    "alternatives",
+    "operationIdCompatibility"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "policyId": {
+      "const": "stynx.http-api-compositions"
+    },
+    "policyVersion": {
+      "const": "1.0.0"
+    },
+    "repositoryId": {
+      "const": "stynx-nyx/stynx"
+    },
+    "authority": {
+      "const": "Architect"
+    },
+    "scope": {
+      "const": "declaration-alternatives-and-operation-id-compatibility"
+    },
+    "compatibilityBaseline": {
+      "$ref": "#/$defs/baseline"
+    },
+    "compositions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/composition"
+      }
+    },
+    "alternatives": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/alternative"
+      }
+    },
+    "operationIdCompatibility": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/compatibility"
+      }
+    }
+  },
+  "$defs": {
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release", "commit", "path", "sha256"],
+      "properties": {
+        "release": {
+          "const": "1.5.7"
+        },
+        "commit": {
+          "const": "03f9a6ae8938dfaa64a33870d60f9f8b448efe10"
+        },
+        "path": {
+          "const": "docs/framework/contracts/openapi.json"
+        },
+        "sha256": {
+          "const": "8b02df7a376724c08c2801444acdad0a7f3c29ed93b000adf41825372600ef5d"
+        }
+      }
+    },
+    "controller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "className"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "pattern": "^(?:packages|packages-web|reference|domain)/[A-Za-z0-9_./-]+\\.ts$",
+          "description": "Repository-relative source identity; runtime additionally refuses empty/dot/parent segments and escapes."
+        },
+        "className": {
+          "type": "string",
+          "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"
+        }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "controller", "artifactPath"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "controller": {
+          "$ref": "#/$defs/controller"
+        },
+        "artifactPath": {
+          "type": "string",
+          "pattern": "^docs/framework/contracts/openapi-compositions/[a-z][a-z0-9-]*\\.json$"
+        }
+      }
+    },
+    "alternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "path", "primaryCompositionId", "compositionIds"],
+      "properties": {
+        "method": {
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE"]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^/[^?#\\s]*$",
+          "description": "Exact normalized OpenAPI route with named {parameters}; no URL rewriting or unnamed-parameter collapse. Semantic validation refuses dot segments, duplicate slashes and invalid placeholders."
+        },
+        "primaryCompositionId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "compositionIds": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          }
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "className",
+        "handler",
+        "method",
+        "path",
+        "operationId",
+        "baselineSourceSha256"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "pattern": "^(?:packages|packages-web|reference|domain)/[A-Za-z0-9_./-]+\\.ts$",
+          "description": "Repository-relative source identity; runtime additionally refuses empty/dot/parent segments and escapes."
+        },
+        "className": {
+          "type": "string",
+          "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"
+        },
+        "handler": {
+          "type": "string",
+          "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"
+        },
+        "method": {
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE"]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^/[^?#\\s]*$",
+          "description": "Exact normalized OpenAPI route with named {parameters}; no URL rewriting or unnamed-parameter collapse. Semantic validation refuses dot segments, duplicate slashes and invalid placeholders."
+        },
+        "operationId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baselineSourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

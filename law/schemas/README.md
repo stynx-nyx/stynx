@@ -18,3 +18,10 @@ Raw offline import text enters through exported `parseOfflineImportManifest`,
 which detects duplicate decoded object names before closed validation. A schema
 validator applied to an already parsed object cannot recover discarded keys;
 object import still validates independently and performs the live checks.
+
+`http-api-compositions.schema.json` defines the closed declaration-alternative and
+published operation-ID compatibility registry in
+`law/policy/http-api-compositions.json`. Exact source/controller/method/path
+membership, immutable 1.5.7 provenance, uniqueness, complete variant coverage and
+source/mounted/OpenAPI agreement are additional semantic obligations. This
+registry is not evidence that a runtime composition was mounted or measured.

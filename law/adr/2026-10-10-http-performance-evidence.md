@@ -114,3 +114,22 @@ exact task/sensor admission, independent fail-closed tests and fresh complete
 nominal HTTP evidence on the actual candidate. Until then the missing measurement
 remains explicit. No existing test, load, threshold, sample requirement or
 mandatory task population is weakened.
+
+## Composition registry and minor SDK compatibility
+
+The Architect-owned `law/policy/http-api-compositions.json` and its closed schema
+bind the two exact E6/CTG9 controller alternatives, four known POST collision
+groups, explicit E6 compatibility primary and confined per-composition artifacts.
+Unknown groups or variants remain refused. Their declaration mapping does not
+substitute for actual mounted-runtime evidence.
+
+The same registry records 26 exact published operation-ID compatibility mappings,
+derived only from the raw 1.5.7 OpenAPI and source at immutable base
+`03f9a6ae8938dfaa64a33870d60f9f8b448efe10`. Preserve existing primary SDK names
+and exports while exposing the corrected actual handler in `x-stynx-handler`.
+New endpoints/fixtures without an exact mapping use actual handler IDs. Correct
+request/query/security metadata remains required; identity compatibility is not
+permission to freeze a defect or admit cross-variant schemas. Follow the exact
+registry semantics in the endpoint contract, and independently verify all old
+primary client operations plus every admitted variant. No generated file or
+mutable operation spelling can create compatibility authority.

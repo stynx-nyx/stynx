@@ -158,6 +158,77 @@ not grounds to narrow the population. Source counts alone still do not resolve
 mounted inheritance or dynamic registrations. All known additions are listed
 below; no machine PASS is claimed from this document.
 
+## Governed composition and published SDK identity registry
+
+Canonical authority is
+[http-api-compositions.json](../../law/policy/http-api-compositions.json), with
+[its closed schema](../../law/schemas/http-api-compositions.schema.json).
+`schemaVersion`, `policyId`, `policyVersion`, `repositoryId`, `authority` and
+`scope` identify this declaration-alternative/ID-compatibility registry.
+`compatibilityBaseline` pins release 1.5.7, exact commit
+`03f9a6ae8938dfaa64a33870d60f9f8b448efe10`, the canonical OpenAPI path and raw
+SHA-256 `8b02df7a376724c08c2801444acdad0a7f3c29ed93b000adf41825372600ef5d`.
+Mutable generated OpenAPI is never authority for adding a compatibility entry.
+
+Each `compositions` entry has stable `id`, exact controller `source`/`className`
+and confined `artifactPath`. The initial entries are `offline-e6` and
+`offline-ctg9`; they select `OfflineSyncController` and
+`CTG9OfflineSyncController`, respectively. Each `alternatives` entry names exact
+uppercase `method`, normalized OpenAPI `path` with named parameters,
+`primaryCompositionId` and complete unique `compositionIds`. Only the four
+explicit POST collision groups are admitted, with E6 primary. Additional groups
+require an Architect registry amendment; a source sort order cannot add authority.
+
+Validate the schema plus semantic identity: unique composition IDs/controller
+identities/artifact paths; known referenced composition IDs; primary membership;
+no duplicate method/path group; actual source declarations exactly matching every
+registered group; no missing, extra or ambiguous variants; and collision refusal
+inside one mounted composition. Preserve parameter names, selectors and URLs;
+do not collapse distinct sources because parameter-erased paths happen to match.
+Missing/unknown/mismatched policy, unsafe paths or an unresolved source identity
+refuse the affected generation/verification rather than inventing a primary.
+
+Generate each composition artifact with the exact selected controller's own
+operation contracts and all referenced schemas. A global compatibility projection
+retains E6 for the four groups, identifies its selected composition explicitly,
+and carries complete `x-stynx-operation-variants` records. Each record contains
+its `compositionId`, exact source/controller/handler and complete operation
+metadata (parameters, request body, responses, security and actual operation ID),
+without recursively nesting the variant array. Every referenced component must
+resolve. Composition artifacts retain their own exact variant identity and
+cannot be replaced by a global last-writer projection. SDK smoke must exercise
+actual client operations from the corresponding artifacts, preserving the current
+E6 surface and adding CTG9 under a reviewed additive namespace when necessary.
+
+`operationIdCompatibility` is a closed set of 26 real published identities across
+eight source files whose handler-based IDs change under corrected discovery.
+Each entry binds exact `source`, `className`, current/immutable-base `handler`,
+uppercase `method`, named OpenAPI `path`, the old public `operationId` and raw
+`baselineSourceSha256`. The IDs and source hashes were derived from the immutable
+base OpenAPI and source, not inferred from names in today's generated output.
+Keep these exact old primary operation IDs and resulting SDK methods; emit
+`x-stynx-handler` with the actual discovered handler so compatibility spelling is
+never confused with source identity. Keep the source/tag/service identity and
+all existing public SDK exports. Newly discovered handlers/endpoints and isolated
+fixtures without such an exact immutable-baseline entry use the actual handler
+ID; never apply a blanket `handler` suffix or source/path wildcard.
+
+Compatibility is about public identity, not freezing defective metadata. Correct
+body/query/parameter/response/security information from exact AST/runtime
+contracts still applies while preserving old operation names and supported calls.
+Do not remove a published method or make its old valid invocation invalid merely
+because the discovery implementation improved. Independently compare the entire
+211-operation 1.5.7 primary roster and emitted SDK surface, not just the 26 entries;
+unchanged identities must also survive. Stale/reassigned mappings or duplicate
+output operation IDs are blocking. Adding mappings requires Architect review and
+immutable published provenance; it cannot bless a new fixture's arbitrary ID.
+
+This registry does not assert that either controller has been mounted, that
+inheritance is closed or that an HTTP workload ran. The later runtime producer
+must separately bind actual class/composition/config identities and reconcile all
+routes. Existing API source roots and the separate domain population stay as
+declared above. Schema-valid policy or generated variants alone cannot earn PASS.
+
 ## Additive task and workload
 
 Proposed required node `test:http-performance`, runner

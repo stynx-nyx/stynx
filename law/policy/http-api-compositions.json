@@ -1,0 +1,294 @@
+{
+  "schemaVersion": "1.0.0",
+  "policyId": "stynx.http-api-compositions",
+  "policyVersion": "1.0.0",
+  "repositoryId": "stynx-nyx/stynx",
+  "authority": "Architect",
+  "scope": "declaration-alternatives-and-operation-id-compatibility",
+  "compatibilityBaseline": {
+    "release": "1.5.7",
+    "commit": "03f9a6ae8938dfaa64a33870d60f9f8b448efe10",
+    "path": "docs/framework/contracts/openapi.json",
+    "sha256": "8b02df7a376724c08c2801444acdad0a7f3c29ed93b000adf41825372600ef5d"
+  },
+  "compositions": [
+    {
+      "id": "offline-e6",
+      "controller": {
+        "source": "packages/offline-sync/src/offline-sync.controller.ts",
+        "className": "OfflineSyncController"
+      },
+      "artifactPath": "docs/framework/contracts/openapi-compositions/offline-e6.json"
+    },
+    {
+      "id": "offline-ctg9",
+      "controller": {
+        "source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+        "className": "CTG9OfflineSyncController"
+      },
+      "artifactPath": "docs/framework/contracts/openapi-compositions/offline-ctg9.json"
+    }
+  ],
+  "alternatives": [
+    {
+      "method": "POST",
+      "path": "/offline-sync/conflicts/{id}/resolve",
+      "primaryCompositionId": "offline-e6",
+      "compositionIds": ["offline-e6", "offline-ctg9"]
+    },
+    {
+      "method": "POST",
+      "path": "/offline-sync/numbering-reservations",
+      "primaryCompositionId": "offline-e6",
+      "compositionIds": ["offline-e6", "offline-ctg9"]
+    },
+    {
+      "method": "POST",
+      "path": "/offline-sync/numbering-reservations/{id}/cancel",
+      "primaryCompositionId": "offline-e6",
+      "compositionIds": ["offline-e6", "offline-ctg9"]
+    },
+    {
+      "method": "POST",
+      "path": "/offline-sync/sync-batches",
+      "primaryCompositionId": "offline-e6",
+      "compositionIds": ["offline-e6", "offline-ctg9"]
+    }
+  ],
+  "operationIdCompatibility": [
+    {
+      "source": "packages/auth/src/auth.controller.ts",
+      "className": "StynxAuthController",
+      "handler": "invalidate",
+      "method": "POST",
+      "path": "/_platform/perms/{sid}/invalidate",
+      "operationId": "StynxAuth-post-platform-perms-by-sid-invalidate-handler",
+      "baselineSourceSha256": "fca8a4c947a3e82583b71a7b5f088e773fde756304d688eedd81a4eb9338876c"
+    },
+    {
+      "source": "reference/api/src/sample/reference-probes.controller.ts",
+      "className": "ReferenceProbesController",
+      "handler": "dataTx",
+      "method": "GET",
+      "path": "/_probes/data-tx",
+      "operationId": "ReferenceProbes-get-probes-data-tx-handler",
+      "baselineSourceSha256": "85c8c09520670aaf6cb04af1fb9993fafe103fc26d9575958de9a07882e97fd0"
+    },
+    {
+      "source": "reference/api/src/sample/reference-probes.controller.ts",
+      "className": "ReferenceProbesController",
+      "handler": "rateLimit",
+      "method": "GET",
+      "path": "/_probes/ratelimit",
+      "operationId": "ReferenceProbes-get-probes-ratelimit-handler",
+      "baselineSourceSha256": "85c8c09520670aaf6cb04af1fb9993fafe103fc26d9575958de9a07882e97fd0"
+    },
+    {
+      "source": "reference/api/src/sample/reference-probes.controller.ts",
+      "className": "ReferenceProbesController",
+      "handler": "readonlyWrite",
+      "method": "GET",
+      "path": "/_probes/readonly-write",
+      "operationId": "ReferenceProbes-get-probes-readonly-write-handler",
+      "baselineSourceSha256": "85c8c09520670aaf6cb04af1fb9993fafe103fc26d9575958de9a07882e97fd0"
+    },
+    {
+      "source": "reference/api/src/sample/reference-dev-auth.controller.ts",
+      "className": "ReferenceDevAuthController",
+      "handler": "authVerify",
+      "method": "GET",
+      "path": "/_reference/auth-verify",
+      "operationId": "ReferenceDevAuth-get-reference-auth-verify-handler",
+      "baselineSourceSha256": "b2fb045cb1afc54587befcb40e21abf3b767e96d207fa8af8e255629069d02c8"
+    },
+    {
+      "source": "packages/sessions/src/jwks.controller.ts",
+      "className": "SessionJwksController",
+      "handler": "jwks",
+      "method": "GET",
+      "path": "/.well-known/jwks.json",
+      "operationId": "SessionJwks-get-well-known-jwks-json-handler",
+      "baselineSourceSha256": "90200c1059e82b4f7cd4c5443275eb4c4d02cae1d94279594df42b0148a2d110"
+    },
+    {
+      "source": "packages/sessions/src/control/session-control.controller.ts",
+      "className": "SessionControlController",
+      "handler": "subject",
+      "method": "POST",
+      "path": "/auth/session-administration/subjects/{subjectId}/revoke",
+      "operationId": "SessionControl-post-auth-session-administration-subjects-by-subjectId-revoke-handler",
+      "baselineSourceSha256": "77c16de40b45e7e584eb863cbcb851b479070f49904c8829489f4627e22c8e1b"
+    },
+    {
+      "source": "packages/sessions/src/control/session-control.controller.ts",
+      "className": "SessionControlController",
+      "handler": "operation",
+      "method": "GET",
+      "path": "/auth/session-operations/{operationId}",
+      "operationId": "SessionControl-get-auth-session-operations-by-operationId-handler",
+      "baselineSourceSha256": "77c16de40b45e7e584eb863cbcb851b479070f49904c8829489f4627e22c8e1b"
+    },
+    {
+      "source": "packages/sessions/src/control/session-control.controller.ts",
+      "className": "SessionControlController",
+      "handler": "list",
+      "method": "GET",
+      "path": "/auth/sessions",
+      "operationId": "SessionControl-get-auth-sessions-handler",
+      "baselineSourceSha256": "77c16de40b45e7e584eb863cbcb851b479070f49904c8829489f4627e22c8e1b"
+    },
+    {
+      "source": "packages/sessions/src/control/session-control.controller.ts",
+      "className": "SessionControlController",
+      "handler": "revoke",
+      "method": "DELETE",
+      "path": "/auth/sessions/{sid}",
+      "operationId": "SessionControl-delete-auth-sessions-by-sid-handler",
+      "baselineSourceSha256": "77c16de40b45e7e584eb863cbcb851b479070f49904c8829489f4627e22c8e1b"
+    },
+    {
+      "source": "packages/sessions/src/control/session-control.controller.ts",
+      "className": "SessionControlController",
+      "handler": "logout",
+      "method": "POST",
+      "path": "/auth/sessions/logout-current",
+      "operationId": "SessionControl-post-auth-sessions-logout-current-handler",
+      "baselineSourceSha256": "77c16de40b45e7e584eb863cbcb851b479070f49904c8829489f4627e22c8e1b"
+    },
+    {
+      "source": "packages/sessions/src/control/session-control.controller.ts",
+      "className": "SessionControlController",
+      "handler": "all",
+      "method": "POST",
+      "path": "/auth/sessions/revoke-all",
+      "operationId": "SessionControl-post-auth-sessions-revoke-all-handler",
+      "baselineSourceSha256": "77c16de40b45e7e584eb863cbcb851b479070f49904c8829489f4627e22c8e1b"
+    },
+    {
+      "source": "packages/sessions/src/control/session-control.controller.ts",
+      "className": "SessionControlController",
+      "handler": "others",
+      "method": "POST",
+      "path": "/auth/sessions/revoke-others",
+      "operationId": "SessionControl-post-auth-sessions-revoke-others-handler",
+      "baselineSourceSha256": "77c16de40b45e7e584eb863cbcb851b479070f49904c8829489f4627e22c8e1b"
+    },
+    {
+      "source": "reference/api/src/sample/documents.controller.ts",
+      "className": "DocumentsController",
+      "handler": "create",
+      "method": "POST",
+      "path": "/documents",
+      "operationId": "Documents-post-documents-handler",
+      "baselineSourceSha256": "87075e6e63784896a84317f3d79c40ae7a5251a66325fdece42fceb556b72cd9"
+    },
+    {
+      "source": "packages/health/src/health.controller.ts",
+      "className": "StynxHealthController",
+      "handler": "metricsEndpoint",
+      "method": "GET",
+      "path": "/metrics",
+      "operationId": "StynxHealth-get-metrics-handler",
+      "baselineSourceSha256": "786fe143262118e8b4075e91568e82c9aa732e1880b57198f02090457c9eb46e"
+    },
+    {
+      "source": "packages/preferences/src/preferences.controller.ts",
+      "className": "PreferencesController",
+      "handler": "profile",
+      "method": "GET",
+      "path": "/profile",
+      "operationId": "Preferences-get-profile-handler",
+      "baselineSourceSha256": "fa84fffc4b70045ee512205bcc248fee22d37b571b7688f116f22e7b11ac9119"
+    },
+    {
+      "source": "packages/preferences/src/preferences.controller.ts",
+      "className": "PreferencesController",
+      "handler": "patchProfile",
+      "method": "PATCH",
+      "path": "/profile",
+      "operationId": "Preferences-patch-profile-handler",
+      "baselineSourceSha256": "fa84fffc4b70045ee512205bcc248fee22d37b571b7688f116f22e7b11ac9119"
+    },
+    {
+      "source": "packages/preferences/src/preferences.controller.ts",
+      "className": "PreferencesController",
+      "handler": "reset",
+      "method": "DELETE",
+      "path": "/profile/preferences",
+      "operationId": "Preferences-delete-profile-preferences-handler",
+      "baselineSourceSha256": "fa84fffc4b70045ee512205bcc248fee22d37b571b7688f116f22e7b11ac9119"
+    },
+    {
+      "source": "packages/preferences/src/preferences.controller.ts",
+      "className": "PreferencesController",
+      "handler": "get",
+      "method": "GET",
+      "path": "/profile/preferences",
+      "operationId": "Preferences-get-profile-preferences-handler",
+      "baselineSourceSha256": "fa84fffc4b70045ee512205bcc248fee22d37b571b7688f116f22e7b11ac9119"
+    },
+    {
+      "source": "packages/preferences/src/preferences.controller.ts",
+      "className": "PreferencesController",
+      "handler": "patch",
+      "method": "PATCH",
+      "path": "/profile/preferences",
+      "operationId": "Preferences-patch-profile-preferences-handler",
+      "baselineSourceSha256": "fa84fffc4b70045ee512205bcc248fee22d37b571b7688f116f22e7b11ac9119"
+    },
+    {
+      "source": "packages/preferences/src/preferences.controller.ts",
+      "className": "PreferencesController",
+      "handler": "put",
+      "method": "PUT",
+      "path": "/profile/preferences",
+      "operationId": "Preferences-put-profile-preferences-handler",
+      "baselineSourceSha256": "fa84fffc4b70045ee512205bcc248fee22d37b571b7688f116f22e7b11ac9119"
+    },
+    {
+      "source": "packages/preferences/src/preferences.controller.ts",
+      "className": "PreferencesController",
+      "handler": "resetCategory",
+      "method": "DELETE",
+      "path": "/profile/preferences/{category}",
+      "operationId": "Preferences-delete-profile-preferences-by-category-handler",
+      "baselineSourceSha256": "fa84fffc4b70045ee512205bcc248fee22d37b571b7688f116f22e7b11ac9119"
+    },
+    {
+      "source": "packages/health/src/health.controller.ts",
+      "className": "StynxHealthController",
+      "handler": "readiness",
+      "method": "GET",
+      "path": "/readyz",
+      "operationId": "StynxHealth-get-readyz-handler",
+      "baselineSourceSha256": "786fe143262118e8b4075e91568e82c9aa732e1880b57198f02090457c9eb46e"
+    },
+    {
+      "source": "packages/auth/src/auth.controller.ts",
+      "className": "StynxAuthController",
+      "handler": "createSession",
+      "method": "POST",
+      "path": "/sessions",
+      "operationId": "StynxAuth-post-sessions-handler",
+      "baselineSourceSha256": "fca8a4c947a3e82583b71a7b5f088e773fde756304d688eedd81a4eb9338876c"
+    },
+    {
+      "source": "packages/auth/src/auth.controller.ts",
+      "className": "StynxAuthController",
+      "handler": "logout",
+      "method": "POST",
+      "path": "/sessions/logout",
+      "operationId": "StynxAuth-post-sessions-logout-handler",
+      "baselineSourceSha256": "fca8a4c947a3e82583b71a7b5f088e773fde756304d688eedd81a4eb9338876c"
+    },
+    {
+      "source": "packages/auth/src/auth.controller.ts",
+      "className": "StynxAuthController",
+      "handler": "switchSession",
+      "method": "POST",
+      "path": "/sessions/switch",
+      "operationId": "StynxAuth-post-sessions-switch-handler",
+      "baselineSourceSha256": "fca8a4c947a3e82583b71a7b5f088e773fde756304d688eedd81a4eb9338876c"
+    }
+  ]
+}
