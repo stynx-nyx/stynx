@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "meta": {
-    "last_updated": "2026-10-10T23:31:06.441Z",
+    "last_updated": "2026-10-10T23:45:03.312Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -65,7 +65,8 @@
       "STYNX 1.6.0 Architect rebind preserves every prior executable relationship and binds protected i18n tenant administration, independent transaction/cache publication, actual HTTP provenance/error isolation, standalone constructor compatibility, the conditional quota ledger and published DEVAI 2.4.0 adoption assertions. No qualifying HTTP performance or overall audit PASS is established by these bindings.",
       "STYNX 1.6.0 Architect binds strict performance-document mirroring and all baseline archive/JSON, identity/transport and collector regression projections. Existing corpus relationships, gate mappings and assertion sites remain unchanged. Controlled transport fixtures do not establish authenticated live acquisition, exact historical attempt provenance, complete endpoint performance or overall audit PASS.",
       "STYNX 1.6.0 Architect rebinds six existing tenancy/offline-import/reference-SSE assertion projections after independently verified restricted-reader admission, held-connection refusal and real authenticated HTTP fixtures. Every existing corpus/invariant relationship and gate obligation is retained. Installed i18n eight-tarball functional acceptance remains separately candidate-bound; these bindings do not confer HTTP performance, provider, publication or overall audit PASS.",
-      "STYNX 1.6.0 Architect binding preserves all existing invariant relationships and assertion sites after preflight test hygiene, and adds the private reference bootstrap orchestration/Helmet/CORS/startup regressions. Explicit unit ports do not qualify the full AppModule, real provider effects, source/build custody or HTTP performance; unchanged projection bindings remain byte-identical."
+      "STYNX 1.6.0 Architect binding preserves all existing invariant relationships and assertion sites after preflight test hygiene, and adds the private reference bootstrap orchestration/Helmet/CORS/startup regressions. Explicit unit ports do not qualify the full AppModule, real provider effects, source/build custody or HTTP performance; unchanged projection bindings remain byte-identical.",
+      "STYNX 1.6.0 Architect binds the real fresh-Node synchronous module-loader custody refusal sensors while retaining every existing test projection and invariant relationship. These bounded module observations do not establish supervisor freshness, complete source/build or object provenance, actual middleware custody, six-root HTTP performance, provider acceptance or release readiness."
     ]
   },
   "invariants": [
@@ -703,6 +704,15 @@
             "Actual collector composition over controlled external responses enforces paginated discovery, selected-run artifact identity, digest/archive/JSON checks, fixed cutoff, acquisition-time expiry and incomplete attempt provenance; legacy acquisition cannot qualify endpoint performance or presign thresholds."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-module-custody.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Fresh pinned Node workers observe actual ESM, CommonJS and JSON resolution/evaluation bytes, reject unbound or changed modules and invalid receipts, and retain sticky refusal and detached snapshots without claiming complete runtime custody."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["reference/api/src/sample", "packages/ratelimit/src", "packages/backend/src"]
@@ -909,6 +919,15 @@
             "Actual collector composition over controlled external responses enforces paginated discovery, selected-run artifact identity, digest/archive/JSON checks, fixed cutoff, acquisition-time expiry and incomplete attempt provenance; legacy acquisition cannot qualify endpoint performance or presign thresholds."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-module-custody.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Fresh pinned Node workers observe actual ESM, CommonJS and JSON resolution/evaluation bytes, reject unbound or changed modules and invalid receipts, and retain sticky refusal and detached snapshots without claiming complete runtime custody."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["packages/**", "packages-web/**", "reference/**", "domain/**", "tools/**"]
@@ -6539,6 +6558,14 @@
       "lifecycle": "supported",
       "assertion_count": 74,
       "assertion_digest_sha256": "7ef55e08d2e4739916b3f01f39bb5e8693e8ceba07efe025f495cfa332000654"
+    },
+    {
+      "path": "test/scripts/http-module-custody.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 69,
+      "assertion_digest_sha256": "f43ce129e5d53fed44017f868b240c317d6484f08162fbe91eabe2e8dd53e0ae"
     }
   ],
   "suites": {
