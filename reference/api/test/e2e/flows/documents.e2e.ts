@@ -151,7 +151,7 @@ function setRuntimeEnvironment(postgres: PostgresTestDatabase, redisUrl: string,
   process.env.AWS_REGION = 'us-east-1';
   process.env.AWS_EC2_METADATA_DISABLED = 'true';
   process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-documents-e2e:owner');
-  process.env.STYNX_APP_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-documents-e2e:app');
+  process.env.STYNX_APP_DATABASE_URL = postgres.appConnectionString('@stynx-nyx/reference-api-documents-e2e:app');
   process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-documents-e2e:reader');
   process.env.STYNX_REDIS_URL = redisUrl;
   process.env.STYNX_STORAGE_ENDPOINT = storageEndpoint;

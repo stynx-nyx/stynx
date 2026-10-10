@@ -318,7 +318,7 @@ describe('ReferenceProbesController API error matrix', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('@stynx-nyx/reference-api-probes:owner') },
-            app: { connectionString: postgres.connectionString('@stynx-nyx/reference-api-probes:app') },
+            app: { connectionString: postgres.appConnectionString('@stynx-nyx/reference-api-probes:app') },
             reader: { connectionString: postgres.connectionString('@stynx-nyx/reference-api-probes:reader') },
           },
           migrations: { enabled: true },
