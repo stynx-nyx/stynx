@@ -307,6 +307,26 @@ This exception does not admit arbitrary context subsets: attempts outside this
 exact duplicate shape retain exact source-context matching, and missing or
 contradictory identity, snapshot outcome or independent proof refuses verification.
 
+For an original submission without a durable attempt, require exactly one
+source queue row and exactly one canonical receipt matching its tenant, device,
+batch, queue ID, key and payload hash. Bind the archived item to those stable
+identities and its exact declared-key rules. Queue and canonical receipt status,
+error and context may have changed after the response closed; preserve their
+actual imported values, but do not use their present values as an archive-time
+outcome oracle. The ACK item and inner receipt entry must still agree exactly.
+
+In this fallback, historical outcome/context custody comes from the independently
+retained original transport capture: exact raw response bytes, status and headers,
+bound to the original authenticated request/transport identity, source snapshot
+and complete mappings. The trusted archive verifier must check that original
+capture and its provenance, including the exact historical outcome/context.
+Rehashing the submitted ACK or echoing its manifest/body digests into a verifier
+result is not independent evidence. The same rule governs historical host context
+not retained by a supported partial duplicate attempt. Do not synthesize missing
+history or replace it with current storage. Without independent proof, retain
+`legacy_closed_unverified`; contradictory immutable capture or stable source
+identity refuses verification. Shape validation alone never promotes an archive.
+
 Header names must be valid HTTP tokens and case-insensitively unique. Values
 must be accepted by the actual HTTP adapter's header-value validation; reject
 CR/LF/NUL, invalid control/unrepresentable values and forbidden replay headers.

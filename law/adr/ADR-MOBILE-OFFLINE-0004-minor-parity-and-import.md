@@ -411,6 +411,18 @@ outcomes with mutable present canonical outcomes. This is one named writer
 shape, not a general subset-context allowance; all other attempt contexts retain
 exact matching and contradictory or unproven archives refuse verification.
 
+An original submission without a durable attempt requires exactly one source
+queue and matching canonical receipt bound by tenant/device/batch/queue/key/hash.
+Their present outcome/context may differ from the closed response; preserve
+those current source facts and do not substitute them for archive-time evidence.
+Historical ACK outcome/context must instead bind an independently retained
+original raw response/status/headers and authenticated request/transport,
+source-snapshot and complete mapping provenance through the trusted verifier.
+ACK item/inner receipt agreement remains exact. Recomputed submitted digests or
+a callback echo are not independent custody. Missing proof stays unverified;
+contradictory immutable capture or stable identity refuses, without inventing
+missing history or relaxing available attempt snapshots.
+
 Export `parseOfflineImportManifest(text: string): OfflineImportManifest` for
 strict duplicate-aware raw JSON admission before the same closed/legal/static
 manifest validation. Duplicate decoded property names at every depth, including
