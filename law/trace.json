@@ -3559,7 +3559,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 129,
-      "assertion_digest_sha256": "7a5e20b13c2ffc72f4ef030ee7b715004c5f87c7e539a64fb0dcd3d96b721ca3"
+      "assertion_digest_sha256": "bb018e710bdd59dbe6c9b2ba89d3971a554a09aeb4fc9bd7f542b53e35aa4d29"
     },
     {
       "path": "reference/api/test/integration/reference-sse.rls.integration.spec.ts",
@@ -3607,7 +3607,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 48,
-      "assertion_digest_sha256": "d2ad93c86c7918d1518005e245bd2b0e0d05ca6039d6be8c05af517eb8eb79ab"
+      "assertion_digest_sha256": "bc680be456ff8802d66ce4e5ceef0eccf13c533dfe3e7fe91dc40a250df10cd1"
     },
     {
       "path": "reference/api/test/integration/sample.schema.spec.ts",
