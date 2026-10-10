@@ -138,6 +138,15 @@ guard. Ordinary batches default false and retain existing replay serialization.
 Do not provide this marker in source manifests or set it from application code;
 only independently verified owner import derives true. Live verification checks
 matching immutable archive custody before raw-byte replay is supported.
+If you mount a custom batch transport, implement the synchronous
+`replayArchivedBody(bytes, headers)` capture hook and preserve those original
+bytes after successful service completion. The standard CTG9 controller returns
+Nest `StreamableFile` for verified imported archives. Check that your real
+interceptors/adapter preserve its raw body rather than applying an envelope or
+JSON serialization; ordinary replay remains unchanged. DETRAN must record actual
+HTTP characterization before consumer archive acceptance. Roll back import
+transactions after SQL-phase refusal; they are deliberately aborted so a caught
+error followed by COMMIT cannot publish partial imported state.
 
 The [offline API](../../framework/contracts/offline-sync-api.md) and accepted
 ADR-MOBILE-OFFLINE-0004 define atomicity, key/hash identity, numbering and replay.

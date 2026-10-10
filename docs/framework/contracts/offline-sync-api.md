@@ -279,6 +279,23 @@ E6 mapping rejects null/`blocked` before mutation rather than casting the result
 `OFFLINE_SYNC_ACTIVE_RESERVATION` is a nonretryable 409 with message "An active
 numbering reservation already exists for this device and shift."
 
+## Verified imported archive transport — 1.6
+
+`SubmitSyncBatchOptions` adds
+`replayArchivedBody?: (bytes: Uint8Array, headers: Readonly<Record<string, string>>) => void`.
+Only replay of an independently verified imported archive requires this hook;
+missing support refuses `OfflineSyncConfigurationError('archivedReplayTransport')`.
+The store supplies detached exact bytes/readonly stored headers and separately
+decodes its programmatic result. The mounted CTG9 controller captures the hook
+and returns Nest `StreamableFile`; consumer envelope/serialization interceptors
+must preserve its raw body. Do not stringify the decoded result or wrap the file.
+Ordinary new/closed replay remains on its existing JSON/envelope path.
+
+The exact adapter, internal marker/custody and import transaction obligations
+are in [offline storage/import](offline-storage-import.md). Actual DETRAN HTTP
+characterization with its real mounted interceptors is required for consumer
+acceptance; package-only tests do not establish byte-equivalent consumer replay.
+
 ## CTG9 1.5 public services and ports
 
 `OfflineSyncService` retains `reserveNumbering`, `cancelNumberingReservation`,

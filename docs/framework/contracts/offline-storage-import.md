@@ -223,6 +223,15 @@ same manifest; a committed import replays its receipt. There is no partially
 visible chunk/resume checkpoint. Any refusal requires rollback of the caller's
 transaction; no successful prefix or orphan receipt may commit.
 
+Raw-text parsing and invalid object/options validation before SQL perform no
+SQL and cannot persist a prefix. Once the importer enters its SQL phase, a
+semantic/JavaScript refusal also marks the supplied PostgreSQL transaction
+aborted using a fixed, non-input-derived failing statement before propagating
+the error. Native SQL failures already abort it. Accidentally issuing COMMIT
+after catching such an error cannot publish an imported prefix or receipt;
+the caller must roll back and start a new transaction before retry. The importer
+still does not own rollback/commit or hide the original refusal.
+
 Use a typed `OfflineImportError` with closed `reason` values `invalid-manifest`,
 `source-conflict`, `storage-unsupported`, `maintenance-required`,
 `record-conflict`, `invariant-violation` or `archive-invalid`. These are owner-port
@@ -269,6 +278,43 @@ key order or encoding. Existing current-request replay markers and correlation
 headers retain their existing semantics. Do not change the CTG9 route, status,
 ACK envelope or ordinary newly produced response assertions. The legacy
 unverified state refuses replay as before; it never gets a synthesized ACK.
+
+### Exact archived-body adapter port
+
+The additive consumer hook is:
+
+```ts
+interface SubmitSyncBatchOptions {
+  replayArchivedBody?: (bytes: Uint8Array, headers: Readonly<Record<string, string>>) => void;
+}
+```
+
+It is required only when replay selects a stored verified true archive marker;
+omission refuses configuration (`OfflineSyncConfigurationError`,
+`archivedReplayTransport`). False/ordinary paths do not require or invoke it.
+The store gives the hook detached exact body bytes and a detached readonly
+stored-header object, while separately decoding the programmatic result.
+The hook is synchronous; no returned promise is awaited. Capture the bytes for
+transport after successful service completion; do not mutate or reconstruct them,
+perform domain effects, or treat the decoded programmatic return as equivalent
+wire output. Stored status/headers and current replay-marker behavior continue
+through the existing response adapter.
+
+The mounted CTG9 controller captures this hook and returns Nest `StreamableFile`
+with the original bytes, archived content type (default `application/json`) and
+actual byte length. The consumer's envelope/serialization/interceptor chain and
+HTTP adapter must preserve that raw binary body; it must not wrap it in JSON,
+serialize the file object, stringify the decoded ACK, alter whitespace/key order
+or substitute a new body. Ordinary new and closed replay paths keep their
+existing JSON/envelope behavior. This obligation concerns only the verified
+archive branch, not a blanket response-interceptor exception.
+
+Actual DETRAN HTTP characterization through its mounted adapter and real
+interceptors is required before claiming consumer archive-replay acceptance.
+Compare original body bytes, status, permitted stored headers and current replay
+markers, preserving all existing route/status/envelope assertions and ordinary
+replay regressions. Framework/store tests alone cannot certify that consumer
+pipeline; no test PKI/provider or machine readiness claim supplies this evidence.
 
 ## Complete storage verification and acceptance
 

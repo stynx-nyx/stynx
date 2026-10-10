@@ -410,6 +410,20 @@ route/status/envelope and replay-marker assertions. An unverified archive remain
 `legacy_closed_unverified` and retains its original source bytes in the receipt.
 The consumer remains responsible for source collection/mapping and archive trust.
 
+The additive exact consumer hook is
+`SubmitSyncBatchOptions.replayArchivedBody?: (bytes: Uint8Array, headers: Readonly<Record<string, string>>) => void`.
+Stored verified archive replay requires it, provides detached bytes/headers and
+separately decodes the programmatic result. The CTG9 controller returns Nest
+`StreamableFile` for this branch only; consumer envelope/serialization interceptors
+must preserve its original raw body. Require actual DETRAN adapter/interceptor
+HTTP characterization before consumer archive acceptance, preserving ordinary
+route/status/envelope/replay assertions. Missing hook support refuses configuration.
+
+Parser/invalid-input preflight is SQL-free. Once import enters SQL, semantic
+refusals must also abort the supplied transaction with fixed non-input-derived
+failing SQL before rethrow, so accidental COMMIT cannot persist a successful
+prefix. Caller still owns rollback/commit; no partial receipt is admissible.
+
 The unpublished forward 0008 also adds internal
 `sync_batches.response_body_is_archived boolean NOT NULL DEFAULT false` and
 its immutable archive-history guard. The source DTO excludes this field;
