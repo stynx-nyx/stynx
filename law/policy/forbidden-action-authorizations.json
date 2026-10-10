@@ -1411,6 +1411,12 @@
       "commit": "a2c3739088c2e991a9810502695ebc0b77ee842c",
       "authorized_by": "Owner",
       "reason": "Owner authorization on 2026-10-10 to proceed until complete 1.5.7 final publication, binding the previously approved DEVAI 2.3.2 registered upgrade CI action to its exact landed commit after the PR #370 rebase merge. The Architect verified that the landed workflow/configuration delta is byte-identical to original commit 1a9fdf0f686703a7f5199bf2588b601c5038cf57. Under ADR-DEVAI-ADOPTION-0017 decision 3, this covers only .github/workflows/devai-main-observation.yml action pins, per-commit concurrency without cancelling running observations, and frozen dependency installation with lifecycle scripts disabled. The original receipt remains preserved; this receipt covers only the exact landed commit and CI action."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "c8791d05100191f882b62a631d575a94f275dd8c",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization on 2026-10-10 to proceed until complete 1.5.7 final publication includes the required persistence of verified 1.5.6 observation evidence under ADR-DEVAI-ADOPTION-0014 decision 6 and ADR-DEVAI-ADOPTION-0016 decision 5. This agent-bound exact commit was authored by DEVAI Inspector after the Inspector recordings and independently authorized Auditor observation at published main 6dabf052b2948fe0c2688cdb23c9d390c16af5ed: SC-20261010T050509-001, evidence EV-1cb333b904ec12a1, 15 verified raw artifacts and the 75-record proof chain preserving its 64-record historical prefix. The observation remains RED and non-promoting; no specification, threshold, product code or test is weakened. This receipt covers only that exact generated-evidence commit; a rewritten landed commit requires its own exact receipt."
     }
   ]
 }
