@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "meta": {
-    "last_updated": "2026-10-10T20:45:51.508Z",
+    "last_updated": "2026-10-10T21:40:46.289Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -61,7 +61,8 @@
       "STYNX 1.5.0 CTG-0005 envelope Architect rebind pins canonical HTTP rejections, rollback, bootstrap grammar, legacy data bodies, and defensive no-SQL checks.",
       "STYNX 1.5.0 CTG-0005 envelope sensor triage rebinding separates internal exception metadata from the HTTP envelope and pins the complete actor-provenance 403 body.",
       "STYNX 1.6.0 Architect checkpoint rebinds real-auth integration and PostgreSQL fixture projections, complete API discovery and packed SDK compatibility sensors, and the registration-only runtime census refusal matrix. Runtime source/build custody and complete endpoint performance remain unverified; these bindings do not establish nominal HTTP PASS.",
-      "STYNX 1.6.0 Architect corpus correction binds all 16 tracked reference API .e2e.ts system suites and 13 .wiring-spec.ts package-local suites admitted by ADR-TEST-TAXONOMY-2026-06-11 D2/D4 and their actual runner configurations. Adds the exact trace-discovery regression and endpoint-distribution sensors, refreshes strengthened strict k6 assertions, and retains every previous binding/relationship. Functional readonly rollback and statistical reconstruction do not establish complete nominal HTTP performance or candidate custody."
+      "STYNX 1.6.0 Architect corpus correction binds all 16 tracked reference API .e2e.ts system suites and 13 .wiring-spec.ts package-local suites admitted by ADR-TEST-TAXONOMY-2026-06-11 D2/D4 and their actual runner configurations. Adds the exact trace-discovery regression and endpoint-distribution sensors, refreshes strengthened strict k6 assertions, and retains every previous binding/relationship. Functional readonly rollback and statistical reconstruction do not establish complete nominal HTTP performance or candidate custody.",
+      "STYNX 1.6.0 Architect rebind preserves every prior executable relationship and binds protected i18n tenant administration, independent transaction/cache publication, actual HTTP provenance/error isolation, standalone constructor compatibility, the conditional quota ledger and published DEVAI 2.4.0 adoption assertions. No qualifying HTTP performance or overall audit PASS is established by these bindings."
     ]
   },
   "invariants": [
@@ -210,6 +211,24 @@
             "Real HTTP authentication, missing-permission refusal, grant/cache invalidation/revocation and tenant-scoped introspection preserve deny-by-default behavior."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "Real authenticated HTTP rejects missing permissions, nominal identities and revoked sessions; actual reader/app logins preserve tenant and actor without owner elevation."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/i18n/test/unit/tenant-boundary.spec.ts",
+          "names": ["INV-RBAC-001"],
+          "assertions": [
+            "Normal administration requires tenant/actor context, internal owner capability is explicit, and incompatible frames refuse before SQL/cache access."
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": []
@@ -636,6 +655,15 @@
             "Strict comparison requires dense own-data admitted metric populations and both actual tails plus reference floors; unchanged both-tail AND and exclusive 10 percent/1 ms math is preserved without environment or prototype overrides."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-quota-ledger.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Conservative weighted rolling-window arithmetic includes setup/cleanup, timestamp lag and globally unique Redis members; collisions, unbounded clocks and incomplete custody cannot claim admission."
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": ["reference/api/src/sample", "packages/ratelimit/src", "packages/backend/src"]
@@ -658,7 +686,7 @@
           "path": "reference/api/test/integration/reference-api.runtime.spec.ts",
           "names": ["INV-CORE-001"],
           "assertions": [
-            "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment ≥80%)"
+            "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment \u226580%)"
           ],
           "mode": "gray_box"
         },
@@ -779,6 +807,33 @@
             "tenant-scoped outbox claim, attempt evidence and ACK remain atomic and durable under app-role transactions"
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/i18n/test/unit/locale-interceptor.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Standalone public constructor compatibility retains global locale behavior."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/i18n/test/unit/tenant-boundary.spec.ts",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Commit completion precedes cache publication and explicit internal-system compatibility remains available."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-quota-ledger.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Closed data-only quota inputs reject getters, proxies, unknown fields and numeric coercion."
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": ["packages/**", "packages-web/**", "reference/**", "domain/**", "tools/**"]
@@ -897,6 +952,15 @@
             "non-HTTP commands and defensive marking, context, actor, lock timeout, and TTL checks reject before SQL"
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+          "names": ["INV-ERROR-001"],
+          "assertions": [
+            "Authentication, malformed bodies and tenant membership return the existing error envelope; localized failures retain actual nominal/protected request provenance."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": [
@@ -1086,6 +1150,33 @@
             "Reference tenant lifecycle HTTP operations require platform authorization and preserve tenant-scoped real database RLS reads."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "Two authenticated tenants retain separate settings/caches; FORCE RLS, held-transaction refusal, committed cache publication and concurrent HTTP error provenance reject tenant leakage."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/i18n/test/unit/tenant-boundary.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "Missing/mismatched contexts, COMMIT failure, asynchronous context changes and public pre-authentication refuse tenant cache/SQL access."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/i18n/test/unit/locale-interceptor.spec.ts",
+          "names": ["INV-TENANCY-001"],
+          "assertions": [
+            "Legacy one-argument interceptor construction preserves global locale resolution without admitting a warm tenant cache."
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": [
@@ -2143,8 +2234,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 46,
-      "assertion_digest_sha256": "9d8e659e711cad8e3b8a2ccb956cb603d2a21920b1f3ac506ae5f9da8130701c"
+      "assertion_count": 53,
+      "assertion_digest_sha256": "3252275c26dfac4235226b3f203776147aeb044ecb01c04093f187c455542ac7"
     },
     {
       "path": "packages/auth/test/unit/utils.spec.ts",
@@ -2963,10 +3054,16 @@
     {
       "path": "packages/i18n/test/integration/i18n.api-matrix.spec.ts",
       "suite": "int",
-      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
+      "invariant_ids": [
+        "INV-CORE-001",
+        "INV-COVERAGE-001",
+        "INV-ERROR-001",
+        "INV-RBAC-001",
+        "INV-TENANCY-001"
+      ],
       "lifecycle": "supported",
-      "assertion_count": 17,
-      "assertion_digest_sha256": "1cd647fc2168ee0f4a7cc887f0a2927e3e4f54dcccf0aefea8383faa0d225060"
+      "assertion_count": 101,
+      "assertion_digest_sha256": "31039f320366d3b8ec659ad1cf6aad138c5fba3dfd671116467322ac382e3558"
     },
     {
       "path": "packages/i18n/test/integration/i18n.module.spec.ts",
@@ -2974,15 +3071,15 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 8,
-      "assertion_digest_sha256": "88d315a5983b22b0f962fd850a0c8c8d8eae8ef58f33a46730e3e6d709e530b2"
+      "assertion_digest_sha256": "12d1321852b227a2b15b1902dd8469d95f5d8e62d451100f268b2535099c6325"
     },
     {
       "path": "packages/i18n/test/unit/catalog.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 20,
-      "assertion_digest_sha256": "99bfae6b5f1c4a3a23acbe9bb415d563301d27a0c162e57112b712f945ead712"
+      "assertion_digest_sha256": "9b9c3310455ff1c56ac5f897b3226bfc27150f91716d2fe11fea109a81001004"
     },
     {
       "path": "packages/i18n/test/unit/error-translator.spec.ts",
@@ -2995,10 +3092,10 @@
     {
       "path": "packages/i18n/test/unit/i18n-admin.service.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 13,
-      "assertion_digest_sha256": "9ceed06a2e35ac1cda70d94a94b75211ca6fa185fe0e393c964fa44b0f9d8111"
+      "assertion_digest_sha256": "49a7f657338517e318acb9ad1065d32a5668f4d6ec1baa4935f44f76a9a819a1"
     },
     {
       "path": "packages/i18n/test/unit/i18n.controller.spec.ts",
@@ -3006,23 +3103,23 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 9,
-      "assertion_digest_sha256": "d8cc85b6a2bfc7afea8ed6357a15125aaac8529278fa8a0e80462b54bafcd0c3"
+      "assertion_digest_sha256": "d682daa40eb86a17900fdaa544444bb5b69fba21d86dc42353c7b4894c30989d"
     },
     {
       "path": "packages/i18n/test/unit/locale.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 27,
-      "assertion_digest_sha256": "8bf9fab5948afe7d9b31bf6d28e828b66301a4d848b193a002225a102668cd8d"
+      "assertion_digest_sha256": "3ed0635d1fcfc84fa08259bc51a816ddf9b294abd260e17ef26e5a8a09160086"
     },
     {
       "path": "packages/i18n/test/unit/localized-error.filter.spec.ts",
       "suite": "unit",
-      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 13,
-      "assertion_digest_sha256": "e9275514391929a74e9bcb0d0091a4a3c7414c5730fb9370dde5b9ca1d74da49"
+      "assertion_digest_sha256": "fd187e9f43063b0cbbf94ddda54c449caab4ae1bb8f33e6924b416787317caec"
     },
     {
       "path": "packages/idempotency/test/integration/idempotency.integration.spec.ts",
@@ -4719,8 +4816,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 65,
-      "assertion_digest_sha256": "9dd699b67eebfd1dc93639840108bd71171264e4ea0aa82008621e98c239466e"
+      "assertion_count": 116,
+      "assertion_digest_sha256": "8be8f0d0e258e791f4c6ad6b6917ac81c1770fd45a8376fae6dfacb6d21efd5b"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
@@ -6088,7 +6185,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 3,
-      "assertion_digest_sha256": "c6ec15aa2ca2672c1352e1df0a0da0750332d121e34b4d629bb208b0a6aa5c5f"
+      "assertion_digest_sha256": "945d6f99dc8a3500ea6c8ddab6767687fa588cb2b9ec863a1fd63424f864a31d"
     },
     {
       "path": "packages/offline-sync/test/wiring/ctg9-extended-routes.wiring-spec.ts",
@@ -6303,6 +6400,30 @@
       "lifecycle": "supported",
       "assertion_count": 57,
       "assertion_digest_sha256": "7d1b3691d8a16737634299e2acaf492e5889d3759eebb5738da04b835b00daf6"
+    },
+    {
+      "path": "packages/i18n/test/unit/locale-interceptor.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 3,
+      "assertion_digest_sha256": "15bae48695e39c3bc9cc2f02a5329e82be63c64327d72d6625441df9b064b29f"
+    },
+    {
+      "path": "packages/i18n/test/unit/tenant-boundary.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 42,
+      "assertion_digest_sha256": "9dc6d5ecc5d2ac5447a354913d6065a9f13959469e07b02b1eade9c81f5d11af"
+    },
+    {
+      "path": "test/scripts/http-quota-ledger.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 88,
+      "assertion_digest_sha256": "dc1e6074441da7e223843560e693ddad75ec866ceeaa2bc10f4d8dd8be2e51b1"
     }
   ],
   "suites": {
