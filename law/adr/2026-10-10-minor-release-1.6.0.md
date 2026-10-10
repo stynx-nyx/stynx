@@ -63,6 +63,21 @@ observation is historical evidence and is not repaired or relabeled.
    opt-in restoration and committed post-publication evidence; no bypass or
    weakened release descriptor is authorized.
 
+## Audit integration clarification — definitive session admission
+
+The full audit-remediation scope includes reconciling the existing public-tenant
+revocation behavior with the sessions package's separately asserted legacy API.
+Accept additive `SessionService.getActive(sid): Promise<SessionRecord | null>`
+under the exact [session admission contract](../../docs/framework/contracts/authorization-session-1.5.md#active-session-admission-in-160).
+It performs one store read, distinguishes validated inactive state from malformed
+state and infrastructure failure, preserves expiry cleanup, and propagates
+store/clock/cleanup failures. Both applicable built-in guard paths use it without
+fallback. Definitive null means nominal optional authentication or protected
+401; failure is never nominal. Preserve `get`'s revoked-session
+`InvalidRefreshTokenError` behavior and every existing assertion. This adds no
+broader credential catch or new backend-to-sessions dependency. The existing
+membership-denial 403 contract remains mandatory.
+
 ## Completion evidence
 
 Each issue closes only against its actual acceptance evidence, with upstream

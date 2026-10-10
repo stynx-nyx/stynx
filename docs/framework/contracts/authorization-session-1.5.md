@@ -105,6 +105,50 @@ keep their present behavior. Tests assert both grants and denials.
 
 ## Sessions
 
+### Active session admission in 1.6.0
+
+The additive `SessionService.getActive(sid: string): Promise<SessionRecord | null>`
+is the built-in authentication admission seam. Existing `get(sid)` behavior is
+unchanged: in particular, a revoked/non-active record still throws
+`InvalidRefreshTokenError` there. Do not implement guard admission by changing
+that result or catching the general refresh-token error class.
+
+`getActive` reads `SessionStore.getSession(sid)` exactly once. Only a literal
+null means absent; undefined or a malformed non-null result fails. A returned
+record must be a non-array object with the exact requested `sid` and nonempty
+string `userId`, `tenantId`, `cognitoSub`, `refreshFamilyId` and
+`refreshTokenHash`. Its status is exactly `active`, `revoked` or
+`reuse_detected`. Required `createdAt`, `updatedAt`, `lastTouchedAt`, `expiresAt`
+and `idleExpiresAt` are strings denoting finite instants. Require
+`createdAt <= lastTouchedAt <= updatedAt`,
+`createdAt <= idleExpiresAt <= expiresAt` and `lastTouchedAt <= expiresAt`.
+Do not require `updatedAt <= expiresAt`: legitimate expiry/revocation cleanup
+can update a record afterward. Optional `revokedAt`, when present, is a finite
+string instant at or after creation. Optional `strongFactorVerifiedAt` is a
+finite string instant but may precede creation when inherited from a prior
+session; preserve that original proof. These checks do not impose a new global
+future-clock-skew bound, close consumer device metadata, or fabricate missing
+optional provenance.
+
+Validate the record and the configured clock's finite `Date` before treating a
+returned record as inactive. A valid `revoked` or `reuse_detected` record returns
+null. An active record returns only when both absolute and idle expiry are
+strictly after now. Equality at either expiry is expired: preserve the existing
+expiry revocation cleanup and return null only after that cleanup succeeds.
+Malformed identity, status, date, ordering or clock is a non-credential failure,
+never null. Store, configured-clock and cleanup exceptions propagate unchanged;
+there is no broad catch or error-name/message classification, including for a
+store-thrown `InvalidRefreshTokenError`.
+
+Both applicable built-in auth-guard paths use this method with no fallback to
+legacy `get`. Definitive null permits the nominal actor only on an optional
+public-tenant route; the protected route retains its 401 denial. Infrastructure
+or malformed-state failure permits neither authenticated identity nor nominal
+downgrade. Independent tests retain legacy revoked-get rejection, prove active,
+revoked, reuse-detected and both expiry boundaries through the real service,
+verify the one-read and cleanup behavior, and exercise real optional/protected
+HTTP outcomes and propagated lookup/clock/cleanup failures.
+
 `@stynx-nyx/sessions` adds optional, independent policy settings:
 
 ```ts
