@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-594b85f8347ae9e3",
+  "sensor": {
+    "name": "harness-green-main",
+    "kind": "harness_green_main"
+  },
+  "timestamp": "2026-10-10T05:06:57.652Z",
+  "status": "review",
+  "deterministic": false,
+  "command": "gh run list --workflow ci.yml --event pull_request --json attempt,conclusion,createdAt,databaseId,event,headBranch,headSha,status,updatedAt --limit 1000 --created >=2026-09-10 && gh pr list --state all --limit 1000 --json baseRefName,closedAt,createdAt,headRefName,headRefOid,mergedAt,number,state",
+  "command_hash": "3c4b3db2c76943d908f357ac0fbe3079e05f3d4503550b303ac100738de53cb1",
+  "tier": "L2",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_GREEN_MAIN_PARTIAL",
+      "message": "Success rate 92.6% (over 94 pull requests, workflow ci.yml, event pull_request, head branch *, final head per pull request) is below pass threshold 95%."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_GREEN_MAIN_FINAL_HEAD_UNGATED",
+      "message": "1 closed or merged pull request(s) have no completed gate run on their final head in the window and count as not green: #234."
+    }
+  ],
+  "metrics": {
+    "run_count": 94,
+    "success_count": 87,
+    "success_pct": 92.55,
+    "threshold_pass": 95,
+    "threshold_review": 80,
+    "sample_size": 94,
+    "minimum_sample": 20,
+    "population_workflow": "ci.yml",
+    "population_event": "pull_request",
+    "population_head_branch": "*",
+    "population_base_branch": "main",
+    "population_attempts": "last",
+    "population_include_cancelled": false,
+    "population_lookback_days": 30,
+    "population_base_branch_verified": true,
+    "population_excluded_jobs_unverified": 0,
+    "population_unverified": "",
+    "population_outcome_unit": "pull-request-final-head",
+    "population_window_runs": 166,
+    "population_pending_open": 0,
+    "final_head_ungated": 1
+  }
+}
