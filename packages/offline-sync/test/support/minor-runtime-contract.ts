@@ -324,6 +324,34 @@ export function registerOfflineMinorRuntimeContracts(harness: () => RuntimeHarne
       h.service(safe).getSyncItemReceipt('key-rollback-sibling'),
     );
     const foreign = h.service(safe, MINOR_TENANT_B);
+    await h.run(MINOR_TENANT_B, () => foreign.submitSyncBatch(batch('rollback-foreign-sibling')));
+    const foreignConflict = h.service(
+      {
+        ...safe,
+        preApplyDetector: {
+          detect: async () => ({
+            suspected: true,
+            pairs: [
+              {
+                firstItemId: 'rollback-foreign-conflict',
+                secondItemId: 'rollback-foreign-sibling',
+              },
+            ],
+          }),
+        },
+      },
+      MINOR_TENANT_B,
+    );
+    await h.run(MINOR_TENANT_B, () =>
+      foreignConflict.submitSyncBatch(batch('rollback-foreign-conflict')),
+    );
+    const foreignBefore = await h.run(MINOR_TENANT_B, () => foreignConflict.listSyncConflicts({}));
+    expect(foreignBefore.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ queueItemId: 'rollback-foreign-conflict' }),
+      ]),
+    );
+
     let entered!: () => void;
     let release!: () => void;
     const started = new Promise<void>((resolve) => {
@@ -367,6 +395,9 @@ export function registerOfflineMinorRuntimeContracts(harness: () => RuntimeHarne
     expect(
       await h.run(MINOR_TENANT_B, () => foreign.getSyncItemReceipt('key-rollback-foreign')),
     ).toMatchObject({ status: 'applied' });
+    expect(await h.run(MINOR_TENANT_B, () => foreignConflict.listSyncConflicts({}))).toEqual(
+      foreignBefore,
+    );
     expect((await h.run(MINOR_TENANT_A, () => failed.listSyncConflicts({}))).items).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ queueItemId: 'rollback-current' }),
@@ -374,6 +405,87 @@ export function registerOfflineMinorRuntimeContracts(harness: () => RuntimeHarne
       ]),
     );
   });
+  it('UPS-OFS-10 deduplicates a reversed post-apply pair against pre-apply evidence', async () => {
+    const h = harness();
+    const base = {
+      itemApplier: { apply: async () => ({ serverEntityId: 'dedup-server' }) },
+      eventPort: {
+        appendInTransaction: async () => undefined,
+        appendManyInTransaction: async () => undefined,
+      },
+    };
+    await h.run(MINOR_TENANT_A, () => h.service(base).submitSyncBatch(batch('dedup-sibling')));
+    const pair = { firstItemId: 'dedup-current', secondItemId: 'dedup-sibling' };
+    const service = h.service({
+      ...base,
+      preApplyDetector: { detect: async () => ({ suspected: true, pairs: [pair] }) },
+      concurrencyDetector: {
+        detect: async () => ({
+          suspected: true,
+          pairs: [{ firstItemId: pair.secondItemId, secondItemId: pair.firstItemId }],
+        }),
+      },
+      policyResolver: {
+        resolve: async () => ({ concurrencyApplication: 'apply', concurrencyWindowMinutes: 30 }),
+      },
+    });
+    await h.run(MINOR_TENANT_A, () => service.submitSyncBatch(batch('dedup-current')));
+    expect(
+      await h.run(MINOR_TENANT_A, () => service.getSyncItemReceipt('key-dedup-current')),
+    ).toMatchObject({ status: 'conflict', stynx: { concurrentPairs: [pair] } });
+  });
+
+  it('UPS-OFS-11 retains the first raw rejection when another item keeps its batch open across retry', async () => {
+    const h = harness();
+    const apply = vi.fn(async () => {
+      throw new Error('retryable second item');
+    });
+    const service = h.service({
+      itemApplier: { apply },
+      eventPort: {
+        appendInTransaction: async () => undefined,
+        appendManyInTransaction: async () => undefined,
+      },
+    });
+    const body = batch('raw-open', { payloadHash: 'raw-invalid-open' });
+    body.items.push(batch('raw-open-second').items[0]!);
+    const identity = {
+      deviceId: body.deviceId,
+      deviceBatchId: body.deviceBatchId,
+      queueItemId: 'raw-open',
+    };
+    expect((await h.run(MINOR_TENANT_A, () => service.submitSyncBatch(body))).receipt.status).toBe(
+      'open',
+    );
+    const first = await h.run(MINOR_TENANT_A, () => service.getSyncIntegrityRejection(identity));
+    expect((await h.run(MINOR_TENANT_A, () => service.submitSyncBatch(body))).receipt.status).toBe(
+      'open',
+    );
+    expect(await h.run(MINOR_TENANT_A, () => service.getSyncIntegrityRejection(identity))).toEqual(
+      first,
+    );
+    expect(apply).toHaveBeenCalledTimes(2);
+  });
+
+  it('UPS-OFS-10 propagates invalid pre-apply configuration instead of converting it into a retryable item outcome', async () => {
+    const h = harness();
+    const apply = vi.fn(async () => ({ serverEntityId: 'must-not-apply' }));
+    const append = vi.fn(async () => undefined);
+    const service = h.service({
+      itemApplier: { apply },
+      eventPort: { appendInTransaction: append, appendManyInTransaction: async () => undefined },
+      preApplyDetector: { detect: async () => ({ suspected: true, pairs: [] }) },
+    });
+    await expect(
+      h.run(MINOR_TENANT_A, () => service.submitSyncBatch(batch('bad-pre-contract'))),
+    ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFIGURATION_ERROR' });
+    expect(apply).not.toHaveBeenCalled();
+    expect(append).not.toHaveBeenCalled();
+    expect((await h.run(MINOR_TENANT_A, () => service.listSyncConflicts({}))).items).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ queueItemId: 'bad-pre-contract' })]),
+    );
+  });
+
   it('UPS-OFS-09 fences an initial-pending later-batch retry against the original open batch and preserves original receipt binding', async () => {
     const h = harness();
     const apply = vi.fn(async () => {
