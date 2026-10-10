@@ -15,5 +15,12 @@ export const $PrivacyRetentionResult = {
             type: 'boolean',
             isRequired: true,
         },
+        partitions: {
+            type: 'array',
+            contains: {
+                type: 'PrivacyPartitionRetentionItem',
+            },
+            isRequired: true,
+        },
     },
 } as const;

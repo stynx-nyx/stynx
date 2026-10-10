@@ -2,4 +2,5 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type OfflineSyncQueueStatus = 'received' | 'applied' | 'conflict' | 'rejected' | 'pending';
+import type { JsonValue } from './JsonValue';
+export type OfflineSyncConsumerAttributes = Record<string, JsonValue>;

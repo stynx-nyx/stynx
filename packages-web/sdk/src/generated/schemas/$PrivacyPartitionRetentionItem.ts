@@ -2,27 +2,27 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $SyncItemReceipt = {
+export const $PrivacyPartitionRetentionItem = {
     properties: {
-        context: {
-            type: 'dictionary',
-            contains: {
-                type: 'JsonValue',
-            },
+        dropped: {
+            type: 'boolean',
+            isRequired: true,
         },
-        errorCode: {
-            type: 'string',
-        },
-        queueItemId: {
+        monthEnd: {
             type: 'string',
             isRequired: true,
         },
-        status: {
-            type: 'OfflineSyncQueueStatus',
+        partition: {
+            type: 'string',
             isRequired: true,
         },
-        stynx: {
-            type: 'OfflineSyncStynxContext',
+        reason: {
+            type: 'string',
+            isRequired: true,
+        },
+        table: {
+            type: 'string',
+            isRequired: true,
         },
     },
 } as const;

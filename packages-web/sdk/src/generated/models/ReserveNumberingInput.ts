@@ -5,6 +5,7 @@
 export type ReserveNumberingInput = {
     deviceId: string;
     entityType: string;
+    idempotencyKey?: string;
     orgUnitId: string;
     rangeId?: string;
     requestedSize: number;

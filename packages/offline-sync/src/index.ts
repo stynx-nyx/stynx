@@ -11,6 +11,7 @@ export * from './ctg9-offline-sync.controller';
 export * from './offline-sync.module';
 export * from './offline-sync.service';
 export * from './postgres-offline-sync.store';
+export { OFFLINE_SYNC_CONSUMER_ATTRIBUTES_MAX_BYTES } from './stynx-context';
 export * from './stynx-offline-sync.context';
 export * from './tokens';
 export * from './types';

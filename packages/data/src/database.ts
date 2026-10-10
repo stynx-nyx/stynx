@@ -21,7 +21,9 @@ import {
   StatementTimeoutError,
   TenantContextMissingError,
   TransactionIdentityMismatchError,
+  type TransactionIdentityMismatchReason,
 } from './errors';
+import { resolveAppRoleName } from './app-role';
 import { StynxPoolRegistry } from './pools';
 import { createDrizzle, Transaction, type StynxDrizzleDatabase } from './transaction';
 import {
@@ -39,7 +41,10 @@ interface TransactionContextState {
   isolation: NonNullable<TxOptions['isolation']>;
 }
 
-interface ConnectionHolder { held: boolean; strict: boolean }
+interface ConnectionHolder {
+  held: boolean;
+  strict: boolean;
+}
 const connectionHolder = new AsyncLocalStorage<ConnectionHolder>();
 
 interface ResolvedExecutionContext {
@@ -52,8 +57,11 @@ interface ResolvedExecutionContext {
 const TX_CONTEXT_KEY = Symbol('stynx.data.tx');
 
 function isRetryableError(error: unknown): error is Error & { code: string } {
-  return error instanceof Error && (error as Error & { code?: string }).code !== undefined
-    && ['40001', '40P01'].includes((error as Error & { code: string }).code);
+  return (
+    error instanceof Error &&
+    (error as Error & { code?: string }).code !== undefined &&
+    ['40001', '40P01'].includes((error as Error & { code: string }).code)
+  );
 }
 
 function mapTransactionError(error: unknown): unknown {
@@ -77,6 +85,8 @@ async function sleep(ms: number): Promise<void> {
 
 @Injectable()
 export class Database extends CoreDatabase {
+  private readonly resolvedAppRoleName: string;
+
   constructor(
     private readonly requestContext: RequestContext,
     private readonly systemContext: SystemContext,
@@ -90,14 +100,26 @@ export class Database extends CoreDatabase {
     private readonly requestContextMutator?: RequestContextMutator,
   ) {
     super();
+    this.resolvedAppRoleName = resolveAppRoleName(options);
+  }
+
+  /** Application SQL role the app pool must present as `current_user` (ADR-OUTBOX-0003 D1). */
+  get appRoleName(): string {
+    return this.resolvedAppRoleName;
   }
 
   async tx<T>(fn: (trx: Transaction) => Promise<T>, options: TxOptions = {}): Promise<T> {
     return this.runTransaction(fn, options, false);
   }
 
-  async txIndependent<T>(fn: (trx: Transaction) => Promise<T>, options: TxOptions = {}): Promise<T> {
-    if (connectionHolder.getStore()?.held || this.cls.get<TransactionContextState>(TX_CONTEXT_KEY)) {
+  async txIndependent<T>(
+    fn: (trx: Transaction) => Promise<T>,
+    options: TxOptions = {},
+  ): Promise<T> {
+    if (
+      connectionHolder.getStore()?.held ||
+      this.cls.get<TransactionContextState>(TX_CONTEXT_KEY)
+    ) {
       throw new IndependentTransactionConnectionError();
     }
     return this.runTransaction(fn, options, true);
@@ -105,21 +127,34 @@ export class Database extends CoreDatabase {
 
   /** Detects a held connection even when a derived request context hides the CLS transaction. */
   hasHeldConnection(): boolean {
-    return connectionHolder.getStore()?.held === true || Boolean(this.cls.get<TransactionContextState>(TX_CONTEXT_KEY));
+    return (
+      connectionHolder.getStore()?.held === true ||
+      Boolean(this.cls.get<TransactionContextState>(TX_CONTEXT_KEY))
+    );
   }
 
   /** Tenant asserted by the request-context boundary, independent of SQL settings. */
   currentTenantId(): string | undefined {
-    return this.requestContext.hasActiveContext() ? this.requestContext.snapshot().tenantId : undefined;
+    return this.requestContext.hasActiveContext()
+      ? this.requestContext.snapshot().tenantId
+      : undefined;
   }
 
-  private async runTransaction<T>(fn: (trx: Transaction) => Promise<T>, options: TxOptions, independent: boolean): Promise<T> {
+  private async runTransaction<T>(
+    fn: (trx: Transaction) => Promise<T>,
+    options: TxOptions,
+    independent: boolean,
+  ): Promise<T> {
     const resolvedRole = options.role ?? 'app';
     const resolvedReadonly = options.readonly ?? false;
-    const retry = options.retry ?? this.options.retry ?? { attempts: 3, jitterMs: [10, 50] as [number, number] };
+    const retry = options.retry ??
+      this.options.retry ?? { attempts: 3, jitterMs: [10, 50] as [number, number] };
     const retryConfig = retry === false ? undefined : retry;
     if (options.requireActor && resolvedRole !== 'app') {
-      throw new TransactionIdentityMismatchError({ reason: 'requireActor requires app role' });
+      throw new TransactionIdentityMismatchError(
+        { reason: 'requireActor requires app role' },
+        'transaction_role',
+      );
     }
     this.assertRoleConstraints(resolvedRole, resolvedReadonly, options.replica ?? false);
     const executionContext = this.resolveExecutionContext(resolvedRole);
@@ -133,7 +168,10 @@ export class Database extends CoreDatabase {
         throw new IndependentTransactionConnectionError();
       }
       if (options.isolation && options.isolation !== active.isolation) {
-        throw new TransactionIdentityMismatchError({ reason: 'nested transaction isolation mismatch' });
+        throw new TransactionIdentityMismatchError(
+          { reason: 'nested transaction isolation mismatch' },
+          'isolation',
+        );
       }
       if (options.requireActor) {
         await this.assertLiveCommandIdentity(active.client, executionContext);
@@ -146,6 +184,9 @@ export class Database extends CoreDatabase {
     }
 
     const pool = this.pools.get(resolvedRole, options.replica ?? false);
+    if (resolvedRole === 'app' && !(options.replica ?? false)) {
+      await this.pools.ensureAppRole();
+    }
     const attempts = retryConfig === undefined ? 1 : Math.max(retryConfig.attempts, 1);
     let lastError: unknown;
 
@@ -178,7 +219,13 @@ export class Database extends CoreDatabase {
           isolation: options.isolation ?? 'read committed',
         };
         this.cls.set(TX_CONTEXT_KEY, txState);
-        const activeTrx = new Transaction(client, db, resolvedRole, this.metrics, options.strictItemMode === true);
+        const activeTrx = new Transaction(
+          client,
+          db,
+          resolvedRole,
+          this.metrics,
+          options.strictItemMode === true,
+        );
         trx = activeTrx;
         holder = { held: true, strict: options.strictItemMode === true };
         const result = await connectionHolder.run(holder, () => fn(activeTrx));
@@ -190,7 +237,8 @@ export class Database extends CoreDatabase {
         const mapped = mapTransactionError(error);
         if (attempt < attempts && isRetryableError(mapped)) {
           const [minJitter, maxJitter] = retryConfig!.jitterMs;
-          const jitter = minJitter + Math.floor(Math.random() * Math.max(1, maxJitter - minJitter + 1));
+          const jitter =
+            minJitter + Math.floor(Math.random() * Math.max(1, maxJitter - minJitter + 1));
           await sleep(jitter);
           lastError = mapped;
           continue;
@@ -203,7 +251,7 @@ export class Database extends CoreDatabase {
           });
         }
         throw mapped;
-      /* v8 ignore next -- v8 reports a synthetic branch on the finally boundary; cleanup paths are covered. */
+        /* v8 ignore next -- v8 reports a synthetic branch on the finally boundary; cleanup paths are covered. */
       } finally {
         trx?.close();
         if (holder) holder.held = false;
@@ -251,7 +299,7 @@ export class Database extends CoreDatabase {
     role: 'owner' | 'app' | 'reader',
     fn: (trx: Transaction) => Promise<T>,
   ): Promise<T> {
-    const savepointName = `stynx_sp_${active.savepointCounter += 1}`;
+    const savepointName = `stynx_sp_${(active.savepointCounter += 1)}`;
     await active.client.query(`SAVEPOINT ${savepointName}`);
     const trx = new Transaction(active.client, active.db, role, this.metrics);
     try {
@@ -280,18 +328,29 @@ export class Database extends CoreDatabase {
               current_setting('app.tenant_id', true) AS tenant_id,
               current_setting('app.actor_id', true) AS actor_id`);
     const live = result.rows[0];
-    if (
-      !live
-      || live.current_user !== 'stynx_app'
-      || live.role !== 'app'
-      || live.tenant_id !== expected.tenantId
-      || live.actor_id !== expected.actorId
-    ) {
-      throw new TransactionIdentityMismatchError({ reason: 'live app identity mismatch' });
+    const mismatch: TransactionIdentityMismatchReason | undefined =
+      !live || live.current_user !== this.resolvedAppRoleName
+        ? 'sql_role'
+        : live.role !== 'app'
+          ? 'app_role'
+          : live.tenant_id !== expected.tenantId
+            ? 'tenant'
+            : live.actor_id !== expected.actorId
+              ? 'actor'
+              : undefined;
+    if (mismatch) {
+      throw new TransactionIdentityMismatchError(
+        { reason: 'live app identity mismatch' },
+        mismatch,
+      );
     }
   }
 
-  private assertRoleConstraints(role: 'owner' | 'app' | 'reader', readonly: boolean, replica: boolean): void {
+  private assertRoleConstraints(
+    role: 'owner' | 'app' | 'reader',
+    readonly: boolean,
+    replica: boolean,
+  ): void {
     if (role === 'reader' && !readonly) {
       throw new ReadOnlyViolationError({ role, readonly });
     }
@@ -318,18 +377,22 @@ export class Database extends CoreDatabase {
     await client.query(`SELECT set_config('app.role', $1, true)`, [role]);
 
     if (executionContext.requestId) {
-      await client.query(`SELECT set_config('app.request_id', $1, true)`, [executionContext.requestId]);
-    }
-    if (executionContext.tenantId) {
-      await client.query(`SELECT set_config('app.tenant_id', $1, true)`, [executionContext.tenantId]);
-    }
-    if (executionContext.actorId) {
-      await client.query(`SELECT set_config('app.actor_id', $1, true)`, [
-        executionContext.actorId,
+      await client.query(`SELECT set_config('app.request_id', $1, true)`, [
+        executionContext.requestId,
       ]);
     }
+    if (executionContext.tenantId) {
+      await client.query(`SELECT set_config('app.tenant_id', $1, true)`, [
+        executionContext.tenantId,
+      ]);
+    }
+    if (executionContext.actorId) {
+      await client.query(`SELECT set_config('app.actor_id', $1, true)`, [executionContext.actorId]);
+    }
     if (executionContext.sessionId) {
-      await client.query(`SELECT set_config('app.session_id', $1, true)`, [executionContext.sessionId]);
+      await client.query(`SELECT set_config('app.session_id', $1, true)`, [
+        executionContext.sessionId,
+      ]);
     }
 
     if (readonly) {

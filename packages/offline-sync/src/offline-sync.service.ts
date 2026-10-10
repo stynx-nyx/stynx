@@ -30,13 +30,23 @@ import type {
   SyncItemReceipt,
   TrustedOfflineSyncScope,
   DurableBatchExecutionOptions,
-  ListSyncBatchReceiptsInput, ListSyncConflictsInput, ListSyncItemReceiptsInput, ListSyncQueueItemsInput,
-  OfflineSyncListInput, OfflineSyncPage, SyncBatchReceiptSummary, SyncConflictRecord, SyncItemReceiptRecord, SyncQueueItemRecord,
+  ListSyncBatchReceiptsInput,
+  ListSyncConflictActionsInput,
+  ListSyncConflictsInput,
+  ListSyncItemReceiptsInput,
+  ListSyncQueueItemsInput,
+  OfflineSyncListInput,
+  OfflineSyncPage,
+  SyncBatchReceiptSummary,
+  SyncConflictActionRecord,
+  SyncConflictRecord,
+  SyncItemReceiptRecord,
+  SyncQueueItemRecord,
 } from './types';
 import { canonicalPayloadHash, listDefaultLimit, listMaxLimit } from './listing';
 import { OFFLINE_SYNC_NO_SHIFT } from './numbering';
 
-const queueStatuses = ['received', 'applied', 'conflict', 'rejected'];
+const queueStatuses = ['received', 'applied', 'conflict', 'rejected', 'pending'];
 
 @Injectable()
 export class OfflineSyncService {
@@ -51,11 +61,13 @@ export class OfflineSyncService {
     this.assertText(input.orgUnitId, 'orgUnitId');
     this.assertText(input.deviceId, 'deviceId');
     this.assertText(input.shiftId, 'shiftId');
-    if (input.shiftId.startsWith('stynx:') && input.shiftId !== OFFLINE_SYNC_NO_SHIFT) this.invalid('shiftId uses a reserved namespace.');
+    if (input.shiftId.startsWith('stynx:') && input.shiftId !== OFFLINE_SYNC_NO_SHIFT)
+      this.invalid('shiftId uses a reserved namespace.');
     this.assertEntityType(input.entityType);
     if (input.idempotencyKey !== undefined) {
       this.assertText(input.idempotencyKey, 'idempotencyKey');
-      if (Buffer.byteLength(input.idempotencyKey) > 255) this.invalid('idempotencyKey must not exceed 255 bytes.');
+      if (Buffer.byteLength(input.idempotencyKey) > 255)
+        this.invalid('idempotencyKey must not exceed 255 bytes.');
     }
     if (
       !Number.isSafeInteger(input.requestedSize) ||
@@ -72,22 +84,37 @@ export class OfflineSyncService {
     }
     const now = this.now();
     const scope = this.context.current();
-    const policy = this.options.policyResolver ? await this.options.policyResolver.resolve({
-      tenantId: scope.tenantId, orgUnitId: input.orgUnitId, operation: 'reserve-numbering', at: now,
-    }) : undefined;
-    const ttl = this.options.policyResolver ? policy?.reservationTtlMs : (this.options.reservationTtlMs ?? 86_400_000);
-    if (ttl === undefined || !Number.isFinite(ttl) || ttl <= 0) this.invalid('reservation policy is missing.');
+    const policy = this.options.policyResolver
+      ? await this.options.policyResolver.resolve({
+          tenantId: scope.tenantId,
+          orgUnitId: input.orgUnitId,
+          operation: 'reserve-numbering',
+          at: now,
+        })
+      : undefined;
+    const ttl = this.options.policyResolver
+      ? policy?.reservationTtlMs
+      : (this.options.reservationTtlMs ?? 86_400_000);
+    if (ttl === undefined || !Number.isFinite(ttl) || ttl <= 0)
+      this.invalid('reservation policy is missing.');
     const validUntil = new Date(Date.parse(now) + ttl).toISOString();
     if (input.validUntil && Date.parse(input.validUntil) <= Date.parse(now)) {
       this.invalid('validUntil must be later than the current time.');
     }
-    return this.store.reserveNumbering(keyed ?? await this.reservationScope(), input, now, validUntil);
+    return this.store.reserveNumbering(
+      keyed ?? (await this.reservationScope()),
+      input,
+      now,
+      validUntil,
+    );
   }
 
   private async reservationScope(): Promise<TrustedOfflineSyncScope> {
     const scope = this.context.current();
-    const agentId = this.options.agentResolver ? await this.options.agentResolver.resolve(scope, 'reserve-numbering') : scope.actorId;
-    return this.options.policyResolver ? { ...scope, agentId } as TrustedOfflineSyncScope : scope;
+    const agentId = this.options.agentResolver
+      ? await this.options.agentResolver.resolve(scope, 'reserve-numbering')
+      : scope.actorId;
+    return this.options.policyResolver ? ({ ...scope, agentId } as TrustedOfflineSyncScope) : scope;
   }
 
   async cancelNumberingReservation(
@@ -100,82 +127,176 @@ export class OfflineSyncService {
     }
     const scope = this.context.current();
     const cancelScope = this.options.policyResolver ? { ...scope, ctg9: true } : scope;
-    return this.store.cancelNumberingReservation(
-      cancelScope,
-      reservationId,
+    return this.store.cancelNumberingReservation(cancelScope, reservationId, input, this.now());
+  }
+
+  async blockNumberingReservation(
+    id: string,
+    input: CancelNumberingReservationInput = {},
+  ): Promise<CTG9NumberingReservation> {
+    return this.durable.blockNumberingReservation(this.context.current(), id, input, this.now());
+  }
+  async closeNumberingReservation(
+    id: string,
+    input: CancelNumberingReservationInput = {},
+  ): Promise<CTG9NumberingReservation> {
+    return this.durable.closeNumberingReservation(this.context.current(), id, input, this.now());
+  }
+  async reconcileNumberingReservation(
+    id: string,
+    input: ReconcileNumberingInput,
+  ): Promise<ReconcileNumberingResult> {
+    return this.durable.reconcileNumberingReservation(
+      this.context.current(),
+      id,
       input,
       this.now(),
     );
   }
-
-  async blockNumberingReservation(id: string, input: CancelNumberingReservationInput = {}): Promise<CTG9NumberingReservation> {
-    return this.durable.blockNumberingReservation(this.context.current(), id, input, this.now());
-  }
-  async closeNumberingReservation(id: string, input: CancelNumberingReservationInput = {}): Promise<CTG9NumberingReservation> {
-    return this.durable.closeNumberingReservation(this.context.current(), id, input, this.now());
-  }
-  async reconcileNumberingReservation(id: string, input: ReconcileNumberingInput): Promise<ReconcileNumberingResult> {
-    return this.durable.reconcileNumberingReservation(this.context.current(), id, input, this.now());
-  }
-  async settleNumberingReservation(id: string, input: SettleNumberingInput = {}): Promise<CTG9NumberingReservation> {
+  async settleNumberingReservation(
+    id: string,
+    input: SettleNumberingInput = {},
+  ): Promise<CTG9NumberingReservation> {
     return this.durable.settleNumberingReservation(this.context.current(), id, input, this.now());
   }
   async getNumberingConsumption(id: string): Promise<NumberingConsumptionResult> {
     return this.durable.getNumberingConsumption(this.context.current(), id);
   }
   async getSyncBatchReceipt(deviceId: string, deviceBatchId: string): Promise<SyncBatchReceipt> {
-    const receipt = await this.durable.getSyncBatchReceipt(this.context.current(), deviceId, deviceBatchId);
-    if (!receipt) throw new OfflineSyncError('OFFLINE_SYNC_BATCH_CONFLICT', 404, 'Batch receipt was not found.');
+    const receipt = await this.durable.getSyncBatchReceipt(
+      this.context.current(),
+      deviceId,
+      deviceBatchId,
+    );
+    if (!receipt)
+      throw new OfflineSyncError(
+        'OFFLINE_SYNC_BATCH_CONFLICT',
+        404,
+        'Batch receipt was not found.',
+      );
     return receipt;
   }
   async getSyncItemReceipt(idempotencyKey: string): Promise<SyncItemReceipt> {
     const receipt = await this.durable.getSyncItemReceipt(this.context.current(), idempotencyKey);
-    if (!receipt) throw new OfflineSyncError('OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND', 404, 'Item receipt was not found.');
+    if (!receipt)
+      throw new OfflineSyncError(
+        'OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND',
+        404,
+        'Item receipt was not found.',
+      );
     return receipt;
   }
 
   /** Tenant batch receipts, newest first (UPS-OFS-11). */
-  async listSyncBatchReceipts(input: ListSyncBatchReceiptsInput = {}): Promise<OfflineSyncPage<SyncBatchReceiptSummary>> {
+  async listSyncBatchReceipts(
+    input: ListSyncBatchReceiptsInput = {},
+  ): Promise<OfflineSyncPage<SyncBatchReceiptSummary>> {
     this.assertFilters(input, ['deviceId']);
-    if (input.status !== undefined && !['open', 'closed', 'legacy_closed_unverified'].includes(input.status)) this.invalid('status is invalid.');
-    return this.listing('listSyncBatchReceipts').call(this.durable, this.context.current(), this.page(input));
+    if (
+      input.status !== undefined &&
+      !['open', 'closed', 'legacy_closed_unverified'].includes(input.status)
+    )
+      this.invalid('status is invalid.');
+    return this.listing('listSyncBatchReceipts').call(
+      this.durable,
+      this.context.current(),
+      this.page(input),
+    );
   }
   /** Tenant item receipts, newest first (UPS-OFS-11). */
-  async listSyncItemReceipts(input: ListSyncItemReceiptsInput = {}): Promise<OfflineSyncPage<SyncItemReceiptRecord>> {
+  async listSyncItemReceipts(
+    input: ListSyncItemReceiptsInput = {},
+  ): Promise<OfflineSyncPage<SyncItemReceiptRecord>> {
     this.assertFilters(input, ['deviceId', 'deviceBatchId']);
-    if (input.status !== undefined && !queueStatuses.includes(input.status)) this.invalid('status is invalid.');
-    return this.listing('listSyncItemReceipts').call(this.durable, this.context.current(), this.page(input));
+    if (input.status !== undefined && !queueStatuses.includes(input.status))
+      this.invalid('status is invalid.');
+    return this.listing('listSyncItemReceipts').call(
+      this.durable,
+      this.context.current(),
+      this.page(input),
+    );
   }
   /** Tenant queue items, newest first (UPS-OFS-11). */
-  async listSyncQueueItems(input: ListSyncQueueItemsInput = {}): Promise<OfflineSyncPage<SyncQueueItemRecord>> {
+  async listSyncQueueItems(
+    input: ListSyncQueueItemsInput = {},
+  ): Promise<OfflineSyncPage<SyncQueueItemRecord>> {
     this.assertFilters(input, ['deviceId', 'entityType']);
-    if (input.status !== undefined && !queueStatuses.includes(input.status)) this.invalid('status is invalid.');
-    return this.listing('listSyncQueueItems').call(this.durable, this.context.current(), this.page(input));
+    if (input.status !== undefined && !queueStatuses.includes(input.status))
+      this.invalid('status is invalid.');
+    return this.listing('listSyncQueueItems').call(
+      this.durable,
+      this.context.current(),
+      this.page(input),
+    );
   }
   /** Tenant conflicts, newest first (UPS-OFS-11). */
-  async listSyncConflicts(input: ListSyncConflictsInput = {}): Promise<OfflineSyncPage<SyncConflictRecord>> {
+  async listSyncConflicts(
+    input: ListSyncConflictsInput = {},
+  ): Promise<OfflineSyncPage<SyncConflictRecord>> {
     this.assertFilters(input, ['deviceId', 'conflictType', 'queueItemId']);
-    if (input.status !== undefined && !['open', 'resolved'].includes(input.status)) this.invalid('status is invalid.');
-    return this.listing('listSyncConflicts').call(this.durable, this.context.current(), this.page(input));
+    if (input.status !== undefined && !['open', 'resolved'].includes(input.status))
+      this.invalid('status is invalid.');
+    return this.listing('listSyncConflicts').call(
+      this.durable,
+      this.context.current(),
+      this.page(input),
+    );
+  }
+  /** Action history of one tenant conflict, newest first (UPS-OFS-07, ADR-MOBILE-OFFLINE-0003 D2.6). */
+  async listSyncConflictActions(
+    input: ListSyncConflictActionsInput,
+  ): Promise<OfflineSyncPage<SyncConflictActionRecord>> {
+    this.assertText(input.conflictId, 'conflictId');
+    return this.listing('listSyncConflictActions').call(
+      this.durable,
+      this.context.current(),
+      this.page(input),
+    );
   }
 
   async submitSyncBatch(input: SubmitSyncBatchInput): Promise<SubmitSyncBatchResult>;
-  async submitSyncBatch(input: CTG9SubmitSyncBatchInput, options: SubmitSyncBatchOptions): Promise<CTG9SubmitSyncBatchResult>;
-  async submitSyncBatch(input: SubmitSyncBatchInput | CTG9SubmitSyncBatchInput, options?: SubmitSyncBatchOptions): Promise<SubmitSyncBatchResult | CTG9SubmitSyncBatchResult> {
+  async submitSyncBatch(
+    input: CTG9SubmitSyncBatchInput,
+    options: SubmitSyncBatchOptions,
+  ): Promise<CTG9SubmitSyncBatchResult>;
+  async submitSyncBatch(
+    input: SubmitSyncBatchInput | CTG9SubmitSyncBatchInput,
+    options?: SubmitSyncBatchOptions,
+  ): Promise<SubmitSyncBatchResult | CTG9SubmitSyncBatchResult> {
     this.assertText(input.orgUnitId, 'orgUnitId');
     this.assertText(input.deviceId, 'deviceId');
     this.assertText(input.deviceBatchId, 'deviceBatchId');
     const scope = this.context.current();
     const now = this.now();
-    const policy = this.options.policyResolver ? await this.options.policyResolver.resolve({
-      tenantId: scope.tenantId, orgUnitId: input.orgUnitId, operation: 'submit-sync-batch', at: now,
-    }) : undefined;
-    if (this.options.policyResolver && this.options.concurrencyDetector && !policy?.concurrencyWindowMinutes) {
-      Logger.warn('Offline sync concurrency window is unavailable; host detection policy must review this batch.', 'OfflineSyncService');
+    const policy = this.options.policyResolver
+      ? await this.options.policyResolver.resolve({
+          tenantId: scope.tenantId,
+          orgUnitId: input.orgUnitId,
+          operation: 'submit-sync-batch',
+          at: now,
+        })
+      : undefined;
+    if (
+      this.options.policyResolver &&
+      this.options.concurrencyDetector &&
+      !policy?.concurrencyWindowMinutes
+    ) {
+      Logger.warn(
+        'Offline sync concurrency window is unavailable; host detection policy must review this batch.',
+        'OfflineSyncService',
+      );
     }
     const maximum = this.options.policyResolver ? policy?.maxBatchItems : 100;
-    if (!Array.isArray(input.items) || input.items.length < 1 || (maximum != null && input.items.length > maximum)) {
-      this.invalid(maximum == null ? 'items must contain at least 1 queue item.' : `items must contain between 1 and ${maximum} queue items.`);
+    if (
+      !Array.isArray(input.items) ||
+      input.items.length < 1 ||
+      (maximum != null && input.items.length > maximum)
+    ) {
+      this.invalid(
+        maximum == null
+          ? 'items must contain at least 1 queue item.'
+          : `items must contain between 1 and ${maximum} queue items.`,
+      );
     }
     const queueIds = new Set<string>();
     const itemKeys = new Set<string>();
@@ -183,19 +304,36 @@ export class OfflineSyncService {
       this.assertText(item.queueItemId, 'queueItemId');
       this.assertEntityType(item.entityType);
       this.assertText(item.localEntityId, 'localEntityId');
-      if (!this.options.policyResolver || item.idempotencyKey !== undefined) this.assertText(item.idempotencyKey as string, 'idempotencyKey');
-      if (item.idempotencyKey?.startsWith('stynx:legacy:')) this.invalid('idempotencyKey uses a reserved namespace.');
-      if (this.options.policyResolver && 'reservationId' in item && item.reservationId !== undefined &&
-          (typeof item.reservationId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.reservationId))) {
+      if (!this.options.policyResolver || item.idempotencyKey !== undefined)
+        this.assertText(item.idempotencyKey as string, 'idempotencyKey');
+      if (item.idempotencyKey?.startsWith('stynx:legacy:'))
+        this.invalid('idempotencyKey uses a reserved namespace.');
+      if (
+        this.options.policyResolver &&
+        'reservationId' in item &&
+        item.reservationId !== undefined &&
+        (typeof item.reservationId !== 'string' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            item.reservationId,
+          ))
+      ) {
         this.invalid('reservationId must be a UUID.');
       }
-      if (this.options.policyResolver && item.reservedNumber !== undefined && !Number.isSafeInteger(item.reservedNumber)) {
+      if (
+        this.options.policyResolver &&
+        item.reservedNumber !== undefined &&
+        !Number.isSafeInteger(item.reservedNumber)
+      ) {
         this.invalid('reservedNumber must be a safe integer.');
       }
       // ADR-MOBILE-OFFLINE-0003 D4: in CTG9 mode only the structure is a batch-wide 400; a non-canonical
       // value within bounds becomes a per-item integrity rejection in the durable store. E6 keeps the 400.
       if (this.options.policyResolver) {
-        if (typeof item.payloadHash !== 'string' || item.payloadHash.length === 0 || Buffer.byteLength(item.payloadHash) > 255)
+        if (
+          typeof item.payloadHash !== 'string' ||
+          item.payloadHash.length === 0 ||
+          Buffer.byteLength(item.payloadHash) > 255
+        )
           this.invalid('payloadHash must be a string of 1 to 255 bytes.');
       } else if (!canonicalPayloadHash.test(item.payloadHash)) {
         this.invalid('payloadHash must be a canonical sha256-prefixed hexadecimal digest.');
@@ -215,17 +353,34 @@ export class OfflineSyncService {
       }
       queueIds.add(item.queueItemId);
       if (this.options.policyResolver && item.idempotencyKey) {
-        if (itemKeys.has(item.idempotencyKey)) this.invalid(`idempotencyKey ${item.idempotencyKey} appears more than once in the batch.`);
+        if (itemKeys.has(item.idempotencyKey))
+          this.invalid(
+            `idempotencyKey ${item.idempotencyKey} appears more than once in the batch.`,
+          );
         itemKeys.add(item.idempotencyKey);
       }
     }
-    if (!this.options.policyResolver) return this.store.submitSyncBatch(scope, input as SubmitSyncBatchInput, now);
-    if (!this.options.itemApplier && input.items.some(item => item.idempotencyKey && item.reservedNumber !== undefined))
+    if (!this.options.policyResolver)
+      return this.store.submitSyncBatch(scope, input as SubmitSyncBatchInput, now);
+    if (
+      !this.options.itemApplier &&
+      input.items.some((item) => item.idempotencyKey && item.reservedNumber !== undefined)
+    )
       throw new OfflineSyncConfigurationError('itemApplier');
-    const agentId = this.options.agentResolver ? await this.options.agentResolver.resolve(scope, 'submit-sync-batch') : scope.actorId;
-    const transport = options ?? { transportIdempotencyKey: `service:${input.deviceId}:${input.deviceBatchId}`, method: 'POST' as const, path: '/offline-sync/sync-batches' };
+    const agentId = this.options.agentResolver
+      ? await this.options.agentResolver.resolve(scope, 'submit-sync-batch')
+      : scope.actorId;
+    const transport = options ?? {
+      transportIdempotencyKey: `service:${input.deviceId}:${input.deviceBatchId}`,
+      method: 'POST' as const,
+      path: '/offline-sync/sync-batches',
+    };
     const execution: DurableBatchExecutionOptions = {
-      ...transport, agentId, policy: policy ?? {}, ports: this.options, transport,
+      ...transport,
+      agentId,
+      policy: policy ?? {},
+      ports: this.options,
+      transport,
     };
     return this.durable.submitDurableSyncBatch(scope, input, execution, now);
   }
@@ -242,21 +397,60 @@ export class OfflineSyncService {
     input: ResolveSyncConflictInput,
   ): Promise<SyncConflict> {
     this.assertText(conflictId, 'conflictId');
-    if (!this.options.conflictResolver && !['device-wins', 'server-wins', 'manual-review'].includes(input.resolution)) {
+    if (
+      !this.options.conflictResolver &&
+      !['device-wins', 'server-wins', 'manual-review'].includes(input.resolution)
+    ) {
       this.invalid('resolution must be device-wins, server-wins or manual-review.');
     }
     if (this.options.conflictResolver) {
       const scope = this.context.current();
-      const specialized = this.store as OfflineSyncStore & { resolveWithPort?: (scope: TrustedOfflineSyncScope, id: string, input: ResolveSyncConflictInput, now: string, port: NonNullable<StynxOfflineSyncModuleOptions['conflictResolver']>) => Promise<SyncConflict> };
-      if (specialized.resolveWithPort) return specialized.resolveWithPort(scope,conflictId,input,this.now(),this.options.conflictResolver);
-      return this.options.conflictResolver.resolve({} as import('@stynx-nyx/data').Transaction, conflictId, input.resolution, { ...scope, agentId: scope.actorId, orgUnitId: '', deviceId: '', batchId: '', now: this.now() });
+      const specialized = this.store as OfflineSyncStore & {
+        resolveWithPort?: (
+          scope: TrustedOfflineSyncScope,
+          id: string,
+          input: ResolveSyncConflictInput,
+          now: string,
+          port: NonNullable<StynxOfflineSyncModuleOptions['conflictResolver']>,
+        ) => Promise<SyncConflict>;
+      };
+      if (specialized.resolveWithPort)
+        return specialized.resolveWithPort(
+          scope,
+          conflictId,
+          input,
+          this.now(),
+          this.options.conflictResolver,
+        );
+      return this.options.conflictResolver.resolve(
+        {} as import('@stynx-nyx/data').Transaction,
+        conflictId,
+        input.resolution,
+        {
+          ...scope,
+          agentId: scope.actorId,
+          orgUnitId: '',
+          deviceId: '',
+          batchId: '',
+          now: this.now(),
+        },
+      );
     }
     return this.store.resolveConflict(this.context.current(), conflictId, input, this.now());
   }
 
-  private get durable(): OfflineSyncDurableStore { return this.store as OfflineSyncDurableStore; }
+  private get durable(): OfflineSyncDurableStore {
+    return this.store as OfflineSyncDurableStore;
+  }
 
-  private listing<K extends 'listSyncBatchReceipts' | 'listSyncItemReceipts' | 'listSyncQueueItems' | 'listSyncConflicts'>(name: K): NonNullable<OfflineSyncDurableStore[K]> {
+  private listing<
+    K extends
+      | 'listSyncBatchReceipts'
+      | 'listSyncItemReceipts'
+      | 'listSyncQueueItems'
+      | 'listSyncConflicts'
+      | 'listSyncConflictActions',
+  >(name: K): NonNullable<OfflineSyncDurableStore[K]> {
     const operation = this.durable[name];
     if (typeof operation !== 'function') throw new OfflineSyncConfigurationError(name);
     return operation as NonNullable<OfflineSyncDurableStore[K]>;
@@ -271,7 +465,8 @@ export class OfflineSyncService {
 
   private page<T extends OfflineSyncListInput>(input: T): T & { limit: number } {
     const limit = input.limit ?? listDefaultLimit;
-    if (!Number.isSafeInteger(limit) || limit < 1 || limit > listMaxLimit) this.invalid(`limit must be an integer between 1 and ${listMaxLimit}.`);
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > listMaxLimit)
+      this.invalid(`limit must be an integer between 1 and ${listMaxLimit}.`);
     if (input.cursor !== undefined) this.assertText(input.cursor, 'cursor');
     return { ...input, limit };
   }
