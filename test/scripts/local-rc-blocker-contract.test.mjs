@@ -1367,14 +1367,14 @@ function d22PostgresMappingFixture({ mappingText, hostOverride, inheritedPort = 
     const discoveredPort = parseD22OwnedPostgresMapping(mappingText, hostOverrideDeclared);
     const endpointHost = hostOverride ?? '127.0.0.1';
     const databaseUrl = `postgresql://postgres:postgres@${endpointHost}:${discoveredPort}/postgres`;
-    operations.push('build-input-verification', 'child-spawn');
+    operations.push('app-role-provisioning', 'build-input-verification', 'child-spawn');
     return {
       accepted: true,
       postgresPublish: hostOverrideDeclared ? '0.0.0.0::5432' : '127.0.0.1::5432',
       mappingCommand: ['compose', '-f', 'owned-compose-file', 'port', 'postgres', '5432'],
       childEnvironment: {
         STYNX_OWNER_DATABASE_URL: databaseUrl,
-        STYNX_APP_DATABASE_URL: databaseUrl,
+        STYNX_APP_DATABASE_URL: `postgresql://stynx_app:stynx_app@${endpointHost}:${discoveredPort}/postgres`,
         STYNX_READER_DATABASE_URL: databaseUrl,
       },
       operations,
@@ -1888,6 +1888,12 @@ childProcess.spawn = (command, args = []) => {
     later(() => child.finish(0));
     return child;
   }
+  if (command === 'docker' && args.includes('exec')) {
+    action('role');
+    const child = new SeamChild('role');
+    later(() => child.finish(0));
+    return child;
+  }
   if (command === 'docker' && args.includes('down')) {
     action('async-down');
     const child = new SeamChild('down');
@@ -2038,7 +2044,7 @@ function boundedHelperFailureViolations(result, expectedCodes) {
 }
 
 function runActualHelperFailureScenario(scenario) {
-  assert.ok(['run-checked', 'redis-mapping'].includes(scenario));
+  assert.ok(['run-checked', 'redis-mapping', 'role-provision'].includes(scenario));
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-d16-helper-fixture-'));
   const helperSource = readFileSync(
     join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
@@ -2048,6 +2054,8 @@ function runActualHelperFailureScenario(scenario) {
   const composeRoot = join(fixtureRoot, 'owned-compose');
   const fakeBin = join(fixtureRoot, 'bin');
   const dockerLog = join(fixtureRoot, 'docker-actions.log');
+  const roleArgsPath = join(fixtureRoot, 'role-args.log');
+  const unrelatedPath = join(fixtureRoot, 'unrelated-resource');
   try {
     for (const directory of [
       dirname(helperPath),
@@ -2064,9 +2072,10 @@ function runActualHelperFailureScenario(scenario) {
       'fixture must execute exact helper bytes',
     );
     writeFileSync(join(composeRoot, 'compose.yml'), 'services: {}\n');
+    writeFileSync(unrelatedPath, 'preserve me');
     writeFileSync(
       join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs'),
-      'process.exit(0);\n',
+      "import { appendFileSync } from 'node:fs'; appendFileSync(process.env.D16_DOCKER_ACTIONS, 'verify\\n'); process.exit(0);\n",
     );
     writeFileSync(
       join(fakeBin, 'docker'),
@@ -2083,8 +2092,15 @@ case " $* " in
     ;;
   *" port redis 6379 "*)
     printf '%s\\n' port >> "$D16_DOCKER_ACTIONS"
-    printf '%s\\n' not-a-mapping
+    printf '%s\\n' ${scenario === 'role-provision' ? '127.0.0.1:49152' : 'not-a-mapping'}
     exit 0
+    ;;
+  *" exec "*)
+    printf '%s\\n' role >> "$D16_DOCKER_ACTIONS"
+    printf '%s\\n' "$@" > "$D22_ROLE_ARGS"
+    printf '%s\\n' 'raw credential postgres://private secret command'
+    printf '%s\\n' 'raw stack /private/workstation env token' >&2
+    exit 23
     ;;
   *" down "*)
     printf '%s\\n' down >> "$D16_DOCKER_ACTIONS"
@@ -2105,6 +2121,7 @@ exit 97
         HOME: process.env.HOME,
         TMPDIR: tmpdir(),
         D16_DOCKER_ACTIONS: dockerLog,
+        D22_ROLE_ARGS: roleArgsPath,
         STYNX_REFERENCE_API_STACK_COMPOSE_DIR: composeRoot,
       },
     });
@@ -2119,6 +2136,11 @@ exit 97
       dockerActions: existsSync(dockerLog)
         ? readFileSync(dockerLog, 'utf8').trim().split(/\r?\n/u)
         : [],
+      roleArgs: existsSync(roleArgsPath)
+        ? readFileSync(roleArgsPath, 'utf8').trimEnd().split(/\r?\n/u)
+        : [],
+      ownedComposeFile: join(composeRoot, 'compose.yml'),
+      unrelatedPreserved: readFileSync(unrelatedPath, 'utf8') === 'preserve me',
       composeRemoved: !existsSync(composeRoot),
       leakedFixturePath: stdout.includes(fixtureRoot) || stderr.includes(fixtureRoot),
     };
@@ -2262,6 +2284,12 @@ if (scenario === 'watchdog-worker-rmsync-throw') {
 childProcess.spawn = (command, args = [], options = {}) => {
   if (command === 'docker' && args.includes('up')) {
     action('up');
+    const child = new SeamChild();
+    later(() => child.finish(0));
+    return child;
+  }
+  if (command === 'docker' && args.includes('exec')) {
+    action('role');
     const child = new SeamChild();
     later(() => child.finish(0));
     return child;
@@ -2800,7 +2828,7 @@ test('D16.1 production contains every remaining setup, child, watchdog, and clea
   const throughVerifier = helperCodes.slice(0, 3);
   const throughBuild = helperCodes.slice(0, 4);
   const throughChild = helperCodes;
-  const childActions = ['up', 'port', 'port', 'verify', 'api', 'watchdog'];
+  const childActions = ['up', 'port', 'port', 'role', 'verify', 'api', 'watchdog'];
   const syncCleanupActions = [
     ...childActions,
     'watchdog-spawn-observed',
@@ -2815,7 +2843,7 @@ test('D16.1 production contains every remaining setup, child, watchdog, and clea
     {
       name: 'build-verifier-failure',
       codes: throughVerifier,
-      actions: ['up', 'port', 'port', 'verify', 'down'],
+      actions: ['up', 'port', 'port', 'role', 'verify', 'down'],
     },
     {
       name: 'child-raw-error',
@@ -2957,7 +2985,7 @@ test('D16.1 lifecycle-seam oracle distinguishes consumed failures from silenced 
 });
 
 test('D16.1 production contains watchdog-worker rmSync and shutdown child-kill throws', () => {
-  const childActions = ['up', 'port', 'port', 'verify', 'api', 'watchdog'];
+  const childActions = ['up', 'port', 'port', 'role', 'verify', 'api', 'watchdog'];
   const scenarios = [
     {
       name: 'watchdog-worker-rmsync-throw',
@@ -4416,6 +4444,7 @@ test('D22 PostgreSQL mapping oracle generates atomic publications and accepts on
   assert.deepEqual(local.operations, [
     'compose-up',
     'postgres-port-query',
+    'app-role-provisioning',
     'build-input-verification',
     'child-spawn',
   ]);
@@ -4488,9 +4517,11 @@ test('D22 PostgreSQL endpoint handoff ignores inherited fixed ports and retains 
     'STYNX_OWNER_DATABASE_URL',
     'STYNX_READER_DATABASE_URL',
   ]);
-  assert.equal(new Set(Object.values(first.childEnvironment)).size, 1);
-  for (const url of Object.values(first.childEnvironment)) {
-    assert.equal(url, 'postgresql://postgres:postgres@127.0.0.1:49321/postgres');
+  assert.equal(new Set(Object.values(first.childEnvironment)).size, 2);
+  for (const [name, url] of Object.entries(first.childEnvironment)) {
+    const identity =
+      name === 'STYNX_APP_DATABASE_URL' ? 'stynx_app:stynx_app' : 'postgres:postgres';
+    assert.equal(url, `postgresql://${identity}@127.0.0.1:49321/postgres`);
     assert.equal(url.includes('55433'), false);
   }
   const overridden = d22PostgresMappingFixture({
@@ -4498,14 +4529,93 @@ test('D22 PostgreSQL endpoint handoff ignores inherited fixed ports and retains 
     hostOverride: 'owned-docker-host',
     inheritedPort: '55433',
   });
-  for (const url of Object.values(overridden.childEnvironment)) {
-    assert.equal(url, 'postgresql://postgres:postgres@owned-docker-host:49444/postgres');
+  for (const [name, url] of Object.entries(overridden.childEnvironment)) {
+    const identity =
+      name === 'STYNX_APP_DATABASE_URL' ? 'stynx_app:stynx_app' : 'postgres:postgres';
+    assert.equal(url, `postgresql://${identity}@owned-docker-host:49444/postgres`);
   }
   const projection = JSON.stringify({ first, overridden });
   assert.doesNotMatch(projection, /127\.0\.0\.1:49321\n|\[::\]:49444|55433/u);
   assert.doesNotMatch(
     `${parseD22OwnedPostgresMapping}\n${d22PostgresMappingFixture}`,
     /\b(?:setTimeout|setInterval|sleep|retry|poll|fallback)\s*\(/iu,
+  );
+});
+
+test('D22 actual helper confines failed restricted app provisioning before child startup', () => {
+  const result = runActualHelperFailureScenario('role-provision');
+  assert.deepEqual(result.dockerActions, ['up', 'port', 'port', 'role', 'down']);
+  assert.deepEqual(
+    boundedHelperFailureViolations(result, [
+      'helper-entered',
+      'compose-ready',
+      'redis-mapping-resolved',
+    ]),
+    [],
+  );
+  assert.equal(result.unrelatedPreserved, true);
+  assert.deepEqual(result.roleArgs.slice(0, 14), [
+    'compose',
+    '-f',
+    result.ownedComposeFile,
+    'exec',
+    '-T',
+    'postgres',
+    'psql',
+    '-v',
+    'ON_ERROR_STOP=1',
+    '-U',
+    'postgres',
+    '-d',
+    'postgres',
+    '-c',
+  ]);
+  const sql = result.roleArgs.slice(14).join('\n');
+  assert.match(sql, /CREATE ROLE stynx_app LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS;/u);
+  assert.match(sql, /ALTER ROLE stynx_app LOGIN PASSWORD 'stynx_app';/u);
+  assert.doesNotMatch(sql, /GRANT|OWNER TO|SUPERUSER true|BYPASSRLS true/iu);
+});
+
+test('D22 canonical Compose provisions only the restricted app identity without unrelated drift', () => {
+  const source = readFileSync(join(repoRoot, 'reference/api/docker-compose.yml'), 'utf8');
+  const { parse } = createRequire(import.meta.url)('yaml');
+  const compose = parse(source);
+  const mount = './postgres/init-app-role.sql:/docker-entrypoint-initdb.d/10-stynx-app-role.sql:ro';
+  assert.deepEqual(compose.services.postgres.volumes, [mount]);
+  const environment = compose.services['reference-api'].environment;
+  assert.equal(
+    environment.STYNX_OWNER_DATABASE_URL,
+    'postgresql://postgres:postgres@postgres:5432/postgres',
+  );
+  assert.equal(environment.STYNX_READER_DATABASE_URL, environment.STYNX_OWNER_DATABASE_URL);
+  assert.equal(
+    environment.STYNX_APP_DATABASE_URL,
+    'postgresql://stynx_app:stynx_app@postgres:5432/postgres',
+  );
+  for (const name of ['OWNER', 'APP', 'READER']) {
+    const url = new URL(environment[`STYNX_${name}_DATABASE_URL`]);
+    assert.equal(url.hostname, 'postgres');
+    assert.equal(url.port, '5432');
+    assert.equal(url.pathname, '/postgres');
+  }
+  // Reconstruct the pre-correction fixture at b76d50f5: only app identity and this mount may differ.
+  const mountLines = `    volumes:\n      - ${mount}\n`;
+  assert.equal(source.split(mountLines).length, 2);
+  const normalized = source
+    .replace(mountLines, '')
+    .replace(
+      'STYNX_APP_DATABASE_URL: postgresql://stynx_app:stynx_app@postgres:5432/postgres',
+      'STYNX_APP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres',
+    );
+  assert.equal(
+    createHash('sha256').update(normalized).digest('hex'),
+    '818c40d343d148576c393831f9e97b28c88d5d82caa5733642a13901615ed2cc',
+  );
+  const sql = readFileSync(join(repoRoot, 'reference/api/postgres/init-app-role.sql'), 'utf8');
+  const statements = sql.replace(/^--[^\n]*$/gmu, '').trim();
+  assert.equal(
+    statements,
+    "CREATE ROLE stynx_app LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD 'stynx_app';",
   );
 });
 
@@ -4569,6 +4679,30 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
   assert.match(
     helper,
     /\[\s*['"]compose['"],\s*['"]-f['"],\s*composeFile,\s*['"]port['"],\s*['"]postgres['"],\s*['"]5432['"]\s*\]/su,
+  );
+  assert.match(
+    helper,
+    /STYNX_APP_DATABASE_URL:\s*`postgresql:\/\/stynx_app:stynx_app@\$\{redisHost\}:\$\{postgresPort\}\/postgres`/u,
+  );
+  for (const role of ['OWNER', 'READER']) {
+    assert.equal(
+      helper.includes(
+        `STYNX_${role}_DATABASE_URL: \`postgresql://postgres:postgres@\${redisHost}:\${postgresPort}/postgres\``,
+      ),
+      true,
+    );
+  }
+  const provisioning = helper.indexOf(
+    "'exec'",
+    helper.indexOf('postgresPort = discoverOwnedPostgresPort();'),
+  );
+  assert.ok(provisioning > helper.indexOf("recordStartupCode('redis-mapping-resolved');"));
+  assert.ok(
+    provisioning < helper.indexOf("await runChecked('node', [verifyReferenceApiBuildInputs]);"),
+  );
+  assert.match(
+    helper,
+    /'compose',\s*'-f',\s*composeFile,\s*'exec',\s*'-T',\s*'postgres',\s*'psql',\s*'-v',\s*'ON_ERROR_STOP=1'/u,
   );
   assert.equal((helper.match(/STYNX_(?:OWNER|APP|READER)_DATABASE_URL:/gu) ?? []).length, 3);
   assert.doesNotMatch(
