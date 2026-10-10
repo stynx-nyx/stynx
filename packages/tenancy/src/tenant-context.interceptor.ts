@@ -8,9 +8,19 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
-import { RequestContext, RequestContextMutator, StynxError } from '@stynx-nyx/core';
-import { STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
-import { Database } from '@stynx-nyx/data';
+import {
+  generateRequestId,
+  RequestContext,
+  RequestContextMutator,
+  StynxError,
+} from '@stynx-nyx/core';
+import {
+  STYNX_PUBLIC_TENANT_ROUTE,
+  STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL,
+  STYNX_VERIFIED_TENANT_ID,
+  type PublicTenantRouteOptions,
+} from '@stynx-nyx/contracts';
+import { Database, type Transaction } from '@stynx-nyx/data';
 import { Observable, type Subscription } from 'rxjs';
 import { MembershipAccessCache } from './membership-cache';
 import { recordResolvedTenantCommandContext } from './command-context.port';
@@ -40,9 +50,17 @@ export class TenantContextInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<RequestLike>();
-    const marker = this.reflector?.getAllAndOverride<PublicTenantRouteOptions | boolean>(STYNX_PUBLIC_TENANT_ROUTE, [context.getHandler(), context.getClass()])
-      ?? (context.getHandler ? Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, context.getHandler()) : undefined)
-      ?? (context.getClass ? Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, context.getClass()) : undefined);
+    const marker =
+      this.reflector?.getAllAndOverride<PublicTenantRouteOptions | boolean>(
+        STYNX_PUBLIC_TENANT_ROUTE,
+        [context.getHandler(), context.getClass()],
+      ) ??
+      (context.getHandler
+        ? Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, context.getHandler())
+        : undefined) ??
+      (context.getClass
+        ? Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, context.getClass())
+        : undefined);
     if (marker !== undefined && marker !== false) {
       request.publicTenantRoute = true;
       request.publicTenantOptionalAuth = marker === true ? false : Boolean(marker.optionalAuth);
@@ -52,11 +70,20 @@ export class TenantContextInterceptor implements NestInterceptor {
 
       void this.resolveAndValidate(request)
         .then(({ tenantId, actorId, public: publicTenant, checkedActorId }) => {
-          const verified = publicTenant && request.publicTenantOptionalAuth && Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL) === true;
+          const verified =
+            publicTenant &&
+            request.publicTenantOptionalAuth &&
+            Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL) === true;
           const patch = {
             ...(tenantId !== undefined ? { tenantId } : {}),
             ...(actorId !== undefined ? { actorId } : {}),
-            ...(publicTenant ? { sessionId: verified ? (request.stynxClaims?.sid ?? request.verifiedSessionId) : undefined } : {}),
+            ...(publicTenant
+              ? {
+                  sessionId: verified
+                    ? (request.stynxClaims?.sid ?? request.verifiedSessionId)
+                    : undefined,
+                }
+              : {}),
           };
           const run = () => {
             if (tenantId && (publicTenant || checkedActorId)) {
@@ -64,16 +91,39 @@ export class TenantContextInterceptor implements NestInterceptor {
               const principalId = request.principal?.id;
               if (publicTenant && verified) {
                 const claims = request.stynxClaims;
-                if (principalId && actorId === principalId && active.tenantId === tenantId && active.actorId === principalId
-                  && (!claims || (claims.sub === principalId && claims.tenantId === tenantId))) {
-                  recordResolvedTenantCommandContext(request, { tenantId, actorId: principalId, mode: 'verified' });
+                if (
+                  principalId &&
+                  actorId === principalId &&
+                  active.tenantId === tenantId &&
+                  active.actorId === principalId &&
+                  (!claims || (claims.sub === principalId && claims.tenantId === tenantId))
+                ) {
+                  recordResolvedTenantCommandContext(request, {
+                    tenantId,
+                    actorId: principalId,
+                    mode: 'verified',
+                  });
                 }
-              } else if (publicTenant && actorId && active.tenantId === tenantId && active.actorId === actorId) {
+              } else if (
+                publicTenant &&
+                actorId &&
+                active.tenantId === tenantId &&
+                active.actorId === actorId
+              ) {
                 recordResolvedTenantCommandContext(request, { tenantId, actorId, mode: 'nominal' });
-              } else if (!publicTenant && checkedActorId && principalId === checkedActorId
-                && active.tenantId === tenantId && active.actorId === checkedActorId
-                && Reflect.get(request, STYNX_VERIFIED_TENANT_ID) === tenantId) {
-                recordResolvedTenantCommandContext(request, { tenantId, actorId: checkedActorId, mode: 'protected' });
+              } else if (
+                !publicTenant &&
+                checkedActorId &&
+                principalId === checkedActorId &&
+                active.tenantId === tenantId &&
+                active.actorId === checkedActorId &&
+                Reflect.get(request, STYNX_VERIFIED_TENANT_ID) === tenantId
+              ) {
+                recordResolvedTenantCommandContext(request, {
+                  tenantId,
+                  actorId: checkedActorId,
+                  mode: 'protected',
+                });
               }
             }
             subscription = next.handle().subscribe({
@@ -83,13 +133,22 @@ export class TenantContextInterceptor implements NestInterceptor {
             });
           };
           if (this.requestContext.hasActiveContext?.()) {
-            this.requestContextMutator.patch(patch as Parameters<RequestContextMutator['patch']>[0]);
+            this.requestContextMutator.patch(
+              patch as Parameters<RequestContextMutator['patch']>[0],
+            );
             run();
           } else {
             const snapshot = { ...this.requestContext.snapshot() };
             if (publicTenant) delete snapshot.sessionId;
             const { sessionId: nextSessionId, ...contextPatch } = patch;
-            this.requestContextMutator.runWithRequestContext({ ...snapshot, ...contextPatch, ...(nextSessionId ? { sessionId: nextSessionId } : {}) }, run);
+            this.requestContextMutator.runWithRequestContext(
+              {
+                ...snapshot,
+                ...contextPatch,
+                ...(nextSessionId ? { sessionId: nextSessionId } : {}),
+              },
+              run,
+            );
           }
         })
         .catch((error: unknown) => subscriber.error(error));
@@ -98,31 +157,61 @@ export class TenantContextInterceptor implements NestInterceptor {
     });
   }
 
-  private async resolveAndValidate(request: RequestLike): Promise<{ tenantId?: string; actorId?: string; public?: boolean; checkedActorId?: string }> {
+  private async resolveAndValidate(
+    request: RequestLike,
+  ): Promise<{ tenantId?: string; actorId?: string; public?: boolean; checkedActorId?: string }> {
     const path = normalizedPath(request);
     if (request.publicTenantRoute) {
       const headerName = this.options.headerName.toLowerCase();
-      const headerTenantId = headerToString(request.headers[this.options.headerName] ?? request.headers[headerName])?.trim();
+      const headerTenantId = headerToString(
+        request.headers[this.options.headerName] ?? request.headers[headerName],
+      )?.trim();
       const host = headerToString(request.headers.host);
-      const candidate = await this.options.publicTenant?.resolveHost({ ...(host ? { host } : {}), path });
-      if (!candidate) throw new BadRequestException(`Tenant context is required: provide ${this.options.headerName}, a tenant bearer claim, or a matching subdomain`);
-      if (!isUuidV7(candidate)) throw new BadRequestException('Tenant identifier must be a valid UUIDv7');
-      if (headerTenantId && headerTenantId.toLowerCase() !== candidate.toLowerCase()) throw new StynxError(`Tenant source conflict: Host and ${this.options.headerName} disagree`, { status: 400, code: 'TENANCY:CONFLICT:host-header' });
-      const verified = request.publicTenantOptionalAuth && Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL) === true;
-      const verifiedClaim = verified ? request.stynxClaims?.tenantId ?? request.verifiedTenantClaim : undefined;
-      if (verifiedClaim && verifiedClaim.trim().toLowerCase() !== candidate.toLowerCase()) throw new StynxError('Tenant source conflict: Host and authenticated claim disagree', { status: 400, code: 'TENANCY:CONFLICT:host-claim' });
-      if (!await this.isActiveTenant(candidate)) throw new ForbiddenException('TENANT_ACCESS_DENIED');
-      const verifiedActor = verified ? request.stynxClaims?.sub ?? request.principal?.id : undefined;
-      if (verifiedActor && !await this.hasActiveMembership(verifiedActor, candidate)) throw new ForbiddenException('TENANT_ACCESS_DENIED');
+      const candidate = await this.options.publicTenant?.resolveHost({
+        ...(host ? { host } : {}),
+        path,
+      });
+      if (!candidate)
+        throw new BadRequestException(
+          `Tenant context is required: provide ${this.options.headerName}, a tenant bearer claim, or a matching subdomain`,
+        );
+      if (!isUuidV7(candidate))
+        throw new BadRequestException('Tenant identifier must be a valid UUIDv7');
+      if (headerTenantId && headerTenantId.toLowerCase() !== candidate.toLowerCase())
+        throw new StynxError(
+          `Tenant source conflict: Host and ${this.options.headerName} disagree`,
+          { status: 400, code: 'TENANCY:CONFLICT:host-header' },
+        );
+      const verified =
+        request.publicTenantOptionalAuth &&
+        Reflect.get(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL) === true;
+      const verifiedClaim = verified
+        ? (request.stynxClaims?.tenantId ?? request.verifiedTenantClaim)
+        : undefined;
+      if (verifiedClaim && verifiedClaim.trim().toLowerCase() !== candidate.toLowerCase())
+        throw new StynxError('Tenant source conflict: Host and authenticated claim disagree', {
+          status: 400,
+          code: 'TENANCY:CONFLICT:host-claim',
+        });
+      const verifiedActor = verified
+        ? (request.stynxClaims?.sub ?? request.principal?.id)
+        : undefined;
+      const publicActorId = this.options.publicTenant?.actorId;
+      if (!publicActorId)
+        throw new Error('PublicTenantRoute requires StynxTenancyModule publicTenant options');
+      const actorId = verifiedActor ?? publicActorId;
+      if (!(await this.isActiveTenant(candidate, publicActorId)))
+        throw new ForbiddenException('TENANT_ACCESS_DENIED');
+      if (verifiedActor && !(await this.hasActiveMembership(verifiedActor, candidate)))
+        throw new ForbiddenException('TENANT_ACCESS_DENIED');
       if (verifiedActor && request.verifiedTenantEntitlement) {
         try {
-          if (!await request.verifiedTenantEntitlement(candidate)) throw new ForbiddenException('Principal is not entitled for tenant context');
+          if (!(await request.verifiedTenantEntitlement(candidate)))
+            throw new ForbiddenException('Principal is not entitled for tenant context');
         } catch {
           throw new ForbiddenException('Principal is not entitled for tenant context');
         }
       }
-      const actorId = verifiedActor ?? this.options.publicTenant?.actorId;
-      if (!actorId) throw new Error('PublicTenantRoute requires StynxTenancyModule publicTenant options');
       if (!verified) {
         delete request.stynxClaims;
         delete request.principal;
@@ -147,7 +236,10 @@ export class TenantContextInterceptor implements NestInterceptor {
     const bearerClaims = parseBearerTenantClaims(request.headers.authorization);
     const claimTenantId = request.stynxClaims?.tenantId?.trim() ?? bearerClaims?.tenantId?.trim();
     const subdomainTenantId = this.options.allowSubdomain
-      ? resolveSubdomainTenantId(request.headers.host ?? request.host ?? request.hostname, this.options.subdomainPattern)
+      ? resolveSubdomainTenantId(
+          request.headers.host ?? request.host ?? request.hostname,
+          this.options.subdomainPattern,
+        )
       : undefined;
 
     const candidate = headerTenantId ?? claimTenantId ?? subdomainTenantId;
@@ -179,23 +271,23 @@ export class TenantContextInterceptor implements NestInterceptor {
     return { tenantId: candidate, checkedActorId: actorId };
   }
 
-  private async isActiveTenant(tenantId: string): Promise<boolean> {
-    const database = this.requireDatabase();
-    return database.withSystemContext('public tenant validation', async () =>
-      database.tx(async (trx) => {
-        const result = await trx.query<{ allowed: boolean }>(
-          `select exists (select 1 from tenancy.tenants where id = $1::uuid and is_active = true and coalesce(state, 'active') = 'active') as allowed`,
-          [tenantId],
-        );
-        return result.rows[0]?.allowed === true;
-      }, { role: 'owner', readonly: true }));
+  private async isActiveTenant(tenantId: string, actorId: string): Promise<boolean> {
+    return this.readTenantAdmission(tenantId, actorId, async (trx) => {
+      const result = await trx.query<{ allowed: boolean }>(
+        `select exists (select 1 from tenancy.tenants where id = $1::uuid and is_active = true and coalesce(state, 'active') = 'active') as allowed`,
+        [tenantId],
+      );
+      return result.rows[0]?.allowed === true;
+    });
   }
 
   private resolveActorId(request: RequestLike): string | undefined {
-    return request.stynxClaims?.sub
-      ?? parseBearerTenantClaims(request.headers.authorization)?.sub
-      ?? request.principal?.id
-      ?? request.user?.id;
+    return (
+      request.stynxClaims?.sub ??
+      parseBearerTenantClaims(request.headers.authorization)?.sub ??
+      request.principal?.id ??
+      request.user?.id
+    );
   }
 
   private async hasActiveMembership(userId: string, tenantId: string): Promise<boolean> {
@@ -204,33 +296,44 @@ export class TenantContextInterceptor implements NestInterceptor {
       return cached;
     }
 
-    const database = this.requireDatabase();
-    const allowed = await database.withSystemContext(
-      'tenant membership validation',
-      async () =>
-        database.tx(async (trx) => {
-          const result = await trx.query<{ allowed: boolean }>(
-            `
-              select exists (
-                select 1
-                from auth.memberships membership
-                join tenancy.tenants tenant
-                  on tenant.id = membership.tenant_id
-                where membership.user_id = $1::uuid
-                  and membership.tenant_id = $2::uuid
-                  and membership.is_active = true
-                  and tenant.is_active = true
-                  and coalesce(tenant.state, 'active') = 'active'
-              ) as allowed
-            `,
-            [userId, tenantId],
-          );
-          return result.rows[0]?.allowed === true;
-        }, { role: 'owner', readonly: true }),
-    );
+    const allowed = await this.readTenantAdmission(tenantId, userId, async (trx) => {
+      const result = await trx.query<{ allowed: boolean }>(
+        `
+          select exists (
+            select 1
+            from auth.memberships membership
+            join tenancy.tenants tenant
+              on tenant.id = membership.tenant_id
+            where membership.user_id = $1::uuid
+              and membership.tenant_id = $2::uuid
+              and membership.is_active = true
+              and tenant.is_active = true
+              and coalesce(tenant.state, 'active') = 'active'
+          ) as allowed
+        `,
+        [userId, tenantId],
+      );
+      return result.rows[0]?.allowed === true;
+    });
 
     this.membershipCache.set(userId, tenantId, allowed);
     return allowed;
+  }
+
+  private async readTenantAdmission<T>(
+    tenantId: string,
+    actorId: string,
+    operation: (transaction: Transaction) => Promise<T>,
+  ): Promise<T> {
+    const database = this.requireDatabase();
+    const current = this.requestContext.hasActiveContext()
+      ? this.requestContext.snapshot()
+      : { requestId: generateRequestId(), startedAt: new Date() };
+    // This temporary, scoped SQL frame is not an admitted HTTP proof. That
+    // proof is recorded only after the restricted membership check succeeds.
+    return this.requestContextMutator.runWithRequestContext({ ...current, tenantId, actorId }, () =>
+      database.txIndependent(operation, { role: 'reader', readonly: true, replica: false }),
+    );
   }
 
   private requireDatabase(): Database {
