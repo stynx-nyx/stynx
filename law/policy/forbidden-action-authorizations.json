@@ -1423,6 +1423,12 @@
       "commit": "ca0bac8f95997a94d0838d1bea00066760c5cf2c",
       "authorized_by": "Owner",
       "reason": "Owner authorization on 2026-10-10 to proceed until complete 1.5.7 final publication includes the required persistence of verified 1.5.6 observation evidence under ADR-DEVAI-ADOPTION-0014 decision 6, ADR-DEVAI-ADOPTION-0016 decision 5 and ADR-DEVAI-ADOPTION-0018 decision 7. This agent-bound receipt maps source Inspector commit c8791d05100191f882b62a631d575a94f275dd8c to exact landed Inspector commit ca0bac8f95997a94d0838d1bea00066760c5cf2c after PR #375's normal rebase merge; both trees are byte-identical at 93fec8be2c0803ceead632f5ce00835f93cd909f. The evidence observes published 1.5.6 main 6dabf052b2948fe0c2688cdb23c9d390c16af5ed: SC-20261010T050509-001, EV-1cb333b904ec12a1, 15 verified raw artifacts and the 75-record proof chain preserving its 64-record historical prefix. The actual observation remains RED and non-promoting; no specification, threshold, product code or test is weakened. The original source receipt is preserved. This receipt covers only this exact landed generated-evidence commit and does not claim that the Owner supplied the computed SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "0346c3439b60085ea6895a7a4bd7ed28683a5453",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization on 2026-10-10 to proceed until complete 1.5.7 final publication includes the required persistence of actual published-candidate observation evidence under ADR-DEVAI-ADOPTION-0014 decision 6 and ADR-DEVAI-ADOPTION-0018 decision 9. This agent-bound exact source commit was authored by DEVAI Inspector after recordings and independent authorized Auditor observation at published 1.5.7 main 2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e. It contains exactly ten generated-evidence paths: nine raw observation/reading artifacts and the 80-record proof chain preserving its 75-record historical prefix. Scorecard SC-20261010T081604-001 records 24 PASS, 4 FAIL, 9 REVIEW, 6 UNKNOWN and 2 N/A cells, overall FAIL/RED and readiness_promoting=false. No specification, threshold, product code or test is weakened, and no missing measurements are fabricated. This receipt covers only that exact generated-evidence commit; a rewritten landed commit requires its own exact receipt. The Owner supplied the end-to-end action mandate, not this computed SHA."
     }
   ]
 }
