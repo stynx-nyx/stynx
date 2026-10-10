@@ -117,22 +117,42 @@ function runVerifierTests() {
   try {
     mkdirSync(join(apiRoot, 'docs', 'framework', 'contracts'), { recursive: true });
     mkdirSync(join(apiRoot, 'src'), { recursive: true });
-    writeJson(join(apiRoot, 'docs', 'framework', 'contracts', 'openapi.json'), {
-      paths: {
-        '/v1/aits/{id}/': {},
-      },
-    });
     writeFileSync(
       join(apiRoot, 'src', 'ait.controller.ts'),
       [
         "import { Controller, Get } from '@nestjs/common';",
+        'interface AitResponse { id: string; }',
         "@Controller('/v1/aits')",
         'export class AitController {',
         "  @Get(':id')",
-        '  get() {}',
+        "  get(): AitResponse { return { id: 'fixture-id' }; }",
         '}',
         '',
       ].join('\n'),
+    );
+    const openapiPath = join(apiRoot, 'docs', 'framework', 'contracts', 'openapi.json');
+    // Exercise the actual writer only in this owned fixture, then independently verify it.
+    run(
+      'node',
+      [
+        join(repoRoot, 'scripts', 'verify-api-coverage.mjs'),
+        '--write-openapi',
+        '--strict',
+        '--json',
+      ],
+      { cwd: apiRoot },
+    );
+    const contract = JSON.parse(readFileSync(openapiPath, 'utf8'));
+    assertEqual(contract.openapi, '3.1.0', 'api fixture document identity');
+    assertEqual(
+      contract.components.schemas.AitResponse.properties.id.type,
+      'string',
+      'api fixture response schema',
+    );
+    assertEqual(
+      contract.paths['/v1/aits/{id}'].get['x-stynx-handler'],
+      'get',
+      'api fixture actual handler identity',
     );
     const strict = run(
       'node',
@@ -144,11 +164,11 @@ function runVerifierTests() {
     assertIncludes(strict, '"parameterNameMismatches": []', 'api strict output');
     assertIncludes(strict, '"missingInCode": []', 'api strict output');
 
-    writeJson(join(apiRoot, 'docs', 'framework', 'contracts', 'openapi.json'), {
-      paths: {
-        '/v1/aits/{id}/events': {},
-      },
-    });
+    const missingRoute = structuredClone(contract);
+    missingRoute.paths = {
+      '/v1/aits/{id}/events': missingRoute.paths['/v1/aits/{id}'],
+    };
+    writeJson(openapiPath, missingRoute);
     const failed = run(
       'node',
       [join(repoRoot, 'scripts', 'verify-api-coverage.mjs'), '--strict', '--json'],
@@ -159,6 +179,40 @@ function runVerifierTests() {
     );
     assertIncludes(failed, '"path": "/v1/aits/{id}/events"', 'api strict failure');
     assertIncludes(failed, '"normalized": "/v1/aits/{}/events"', 'api strict failure');
+
+    for (const [label, mutate, reason] of [
+      [
+        'document',
+        (value) => {
+          value.openapi = '3.0.0';
+        },
+        'document-identity-mismatch',
+      ],
+      [
+        'schema',
+        (value) => {
+          value.components.schemas.AitResponse.properties.id.type = 'number';
+        },
+        'schema-components-mismatch',
+      ],
+      [
+        'operation',
+        (value) => {
+          value.paths['/v1/aits/{id}'].get.operationId = 'unregisteredFixtureOperation';
+        },
+        'operation-contract-mismatch',
+      ],
+    ]) {
+      const drifted = structuredClone(contract);
+      mutate(drifted);
+      writeJson(openapiPath, drifted);
+      const refused = run(
+        'node',
+        [join(repoRoot, 'scripts', 'verify-api-coverage.mjs'), '--strict', '--json'],
+        { cwd: apiRoot, status: 1 },
+      );
+      assertIncludes(refused, `"reason": "${reason}"`, `api strict ${label} drift`);
+    }
   } finally {
     rmSync(apiRoot, { recursive: true, force: true });
   }
