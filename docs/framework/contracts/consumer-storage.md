@@ -225,3 +225,10 @@ clock and actual history. Offline import uses the explicit owner-only verified
 manifest seam in MOBILE-OFFLINE-0004 D6, with writers stopped, atomic idempotent
 mapping and post-import verification. Missing archived response bytes keep a
 batch `legacy_closed_unverified`; missing evidence never becomes invented replay.
+
+The exact offline renderer/verifier and `importOfflineState` owner maintenance
+port are defined in [offline storage/import](offline-storage-import.md). The
+closed artifact includes 0001–0007 and forward 0008's immutable owner-only import
+receipt ledger, including range creation/cancellation guards and the derived
+scope fence. Import never makes the public verifier writable or treats missing
+source/ACK evidence as a supported replay.

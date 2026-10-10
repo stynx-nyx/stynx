@@ -123,6 +123,17 @@ protocol tests before resuming writes. A batch without independently verified
 archived response bytes remains `legacy_closed_unverified`; never manufacture
 replay responses or missing history.
 
+Apply forward `0008` and use the exact closed
+[offline storage/import contract](../../framework/contracts/offline-storage-import.md).
+Retain the immutable raw source capture, full validated manifest and independent
+archive evidence. Preserve bigint decimal strings and PostgreSQL-microsecond
+instant text without a JavaScript Date roundtrip. Stop ordinary writers; the
+configured owner must have full visibility and hold the required exclusive
+maintenance locks. Exact source replay returns the original receipt; changed
+content under the same source identity refuses. Only independently verified
+archives enable exact raw-byte closed replay. Keep unverified original bytes
+in the owner-only receipt and the batch `legacy_closed_unverified`.
+
 The [offline API](../../framework/contracts/offline-sync-api.md) and accepted
 ADR-MOBILE-OFFLINE-0004 define atomicity, key/hash identity, numbering and replay.
 

@@ -376,6 +376,32 @@ possible. A failed invariant, tenant mismatch, ambiguous mapping or unsupported
 source format aborts without partial state transfer. After import, the live
 verifier and real consumer protocol tests must pass before writes resume.
 
+### D6.1 — Exact closed import and transport contract
+
+The exact ports, lossless eleven-kind row DTO union, primary-key mapping,
+non-self-referential canonical manifest digest, immutable source receipt and
+independent archived-response verification are frozen in
+[offline storage/import](../../docs/framework/contracts/offline-storage-import.md)
+and [offline import schema](../schemas/offline-import.schema.json).
+Use `importOfflineState` in one caller-owned writable configured-owner READ
+COMMITTED transaction, with full visibility and fixed-order ACCESS EXCLUSIVE
+locks. The public `verifyOfflineStorage` remains read-only. No application-role
+or arbitrary-SQL import seam is admitted.
+
+Render and verify all 0001–0007 objects, the derived scope fence and forward
+0008 owner-only `offline.sync_import_receipts`. Preserve the original complete
+manifest and unverified archive facts; source identity/digest replay is atomic,
+immutable and never a partially visible chunk. Derived fence generations are
+maintenance state, not invented business history. Missing historical context
+stays absent; unsupported precision, unsafe counters, ambiguous mappings and
+unverified replay refuse rather than being repaired silently.
+
+Independently verified archives use a confined raw-byte transport seam so JSON
+parse/stringify cannot alter the original ACK wire bytes. Preserve existing CTG9
+route/status/envelope and replay-marker assertions. An unverified archive remains
+`legacy_closed_unverified` and retains its original source bytes in the receipt.
+The consumer remains responsible for source collection/mapping and archive trust.
+
 ## Migration and compatibility
 
 Use forward offline migrations after `0004`; preserve `0001`–`0004`, legacy
