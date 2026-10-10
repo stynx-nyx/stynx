@@ -1029,6 +1029,29 @@ try {
   postgresPort = discoverOwnedPostgresPort();
   redisPort = discoverOwnedRedisPort();
   recordStartupCode('redis-mapping-resolved');
+  await runChecked('docker', [
+    'compose',
+    '-f',
+    composeFile,
+    'exec',
+    '-T',
+    'postgres',
+    'psql',
+    '-v',
+    'ON_ERROR_STOP=1',
+    '-U',
+    'postgres',
+    '-d',
+    'postgres',
+    '-c',
+    `DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'stynx_app') THEN
+    CREATE ROLE stynx_app LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS;
+  END IF;
+END $$;
+ALTER ROLE stynx_app LOGIN PASSWORD 'stynx_app';`,
+  ]);
   await runChecked('node', [verifyReferenceApiBuildInputs]);
   recordStartupCode('build-inputs-verified');
 } catch {
@@ -1059,7 +1082,7 @@ apiProcess = run('node', [referenceApiMain], {
     PORT: ownedRouteClassifierEnabled ? String(ownedRoutePort) : '3000',
     STYNX_ENVIRONMENT: 'local',
     STYNX_OWNER_DATABASE_URL: `postgresql://postgres:postgres@${redisHost}:${postgresPort}/postgres`,
-    STYNX_APP_DATABASE_URL: `postgresql://postgres:postgres@${redisHost}:${postgresPort}/postgres`,
+    STYNX_APP_DATABASE_URL: `postgresql://stynx_app:stynx_app@${redisHost}:${postgresPort}/postgres`,
     STYNX_READER_DATABASE_URL: `postgresql://postgres:postgres@${redisHost}:${postgresPort}/postgres`,
     STYNX_REDIS_URL: `redis://${redisHost}:${redisPort}`,
     STYNX_STORAGE_ENDPOINT: process.env.STYNX_STORAGE_ENDPOINT ?? 'http://127.0.0.1:4566',
