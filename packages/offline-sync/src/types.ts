@@ -452,6 +452,11 @@ export interface SubmitSyncBatchOptions {
   readonly path: string;
   readonly transportUserId?: string | null;
   readonly requestBody?: unknown;
+  /** Required only for verified imported wire responses; ordinary replay is unchanged. */
+  readonly replayArchivedBody?: (
+    bytes: Uint8Array,
+    headers: Readonly<Record<string, string>>,
+  ) => void;
   readonly response?: {
     status(code: number): unknown;
     setHeader(name: string, value: string): unknown;

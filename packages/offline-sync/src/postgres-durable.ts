@@ -47,6 +47,7 @@ import {
 } from './stynx-context';
 
 interface BatchRow {
+  response_body_is_archived?: boolean;
   initial_queue_status?: 'received' | 'pending';
   device_id: string;
   device_batch_id: string;
@@ -653,6 +654,28 @@ async function pgRecordConcurrency(
   return { conflict: concurrencyConflict, marks: conflictMarks };
 }
 
+function replayClosedBatch(
+  row: BatchRow,
+  options: DurableBatchExecutionOptions,
+): CTG9SubmitSyncBatchResult {
+  if (row.response_body_is_archived && typeof options.transport.replayArchivedBody !== 'function')
+    throw new OfflineSyncConfigurationError('archivedReplayTransport');
+  applyReplayResponse(
+    options.transport,
+    options.ports,
+    row.response_status ?? 201,
+    row.response_headers,
+  );
+  const bytes = Buffer.from(row.response_body_bytes ?? '');
+  if (row.response_body_is_archived)
+    options.transport.replayArchivedBody!(
+      Buffer.from(bytes),
+      Object.freeze({ ...row.response_headers }),
+    );
+  // Programmatic return is decoded separately; the archived wire bytes are never reserialized.
+  return JSON.parse(bytes.toString('utf8')) as CTG9SubmitSyncBatchResult;
+}
+
 export async function pgSubmit(
   database: Database,
   scope: TrustedOfflineSyncScope,
@@ -905,33 +928,14 @@ export async function pgSubmit(
     applyReplayResponse(options.transport, options.ports, entry.statusCode, entry.headers);
     return entry.body as CTG9SubmitSyncBatchResult;
   }
-  if (row.status === 'closed') {
-    applyReplayResponse(
-      options.transport,
-      options.ports,
-      row.response_status ?? 201,
-      row.response_headers,
-    );
-    return JSON.parse(
-      Buffer.from(row.response_body_bytes ?? '').toString('utf8'),
-    ) as CTG9SubmitSyncBatchResult;
-  }
+  if (row.status === 'closed') return replayClosedBatch(row, options);
   if (!acquired) {
     const deadline = Date.now() + (options.ports.leaseWaitMs ?? 750);
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 50));
-      const current = await pgGetBatch(database, scope, input.deviceId, input.deviceBatchId);
-      if (current?.status === 'closed' && current.responseBodyBytes) {
-        applyReplayResponse(
-          options.transport,
-          options.ports,
-          current.responseStatus ?? 201,
-          current.responseHeaders,
-        );
-        return JSON.parse(
-          Buffer.from(current.responseBodyBytes).toString('utf8'),
-        ) as CTG9SubmitSyncBatchResult;
-      }
+      const current = await txDurable(database, (trx) => readBatch(trx, scope, input));
+      if (current?.status === 'closed' && current.response_body_bytes)
+        return replayClosedBatch(current, options);
       const taken = await txDurable(database, async (trx) => {
         await trx.query(`set local lock_timeout = '100ms'`);
         return (

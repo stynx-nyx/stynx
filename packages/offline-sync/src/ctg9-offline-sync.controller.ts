@@ -10,6 +10,7 @@ import {
   Req,
   Res,
   Optional,
+  StreamableFile,
 } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
@@ -145,14 +146,28 @@ export class CTG9OfflineSyncController {
     try {
       const path = (req.originalUrl ?? req.url ?? '/offline-sync/sync-batches').split('?')[0]!;
       const userId = req.principal?.id ?? req.actor?.id ?? req.user?.id;
+      let archived: { bytes: Uint8Array; headers: Readonly<Record<string, string>> } | undefined;
       const result = await this.service.submitSyncBatch(input, {
         transportIdempotencyKey: key,
         method: 'POST',
         path,
         transportUserId: userId ?? null,
         requestBody: req.body,
+        replayArchivedBody: (bytes, headers) => {
+          archived = { bytes, headers };
+        },
         response,
       });
+      if (archived) {
+        const type =
+          Object.entries(archived.headers).find(
+            ([name]) => name.toLowerCase() === 'content-type',
+          )?.[1] ?? 'application/json';
+        return new StreamableFile(Buffer.from(archived.bytes), {
+          type,
+          length: archived.bytes.length,
+        });
+      }
       if (result.receipt?.status === 'open') {
         response.setHeader('Retry-After', '1');
         throw new OfflineSyncError(

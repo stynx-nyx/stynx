@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Database, type Transaction } from '@stynx-nyx/data';
 import { OfflineSyncConfigurationError, OfflineSyncUpgradeRequiredError } from './errors';
 import { canonicalOfflineSyncPayload } from './payload-integrity';
+import { importInstantMicroseconds } from './import-validation';
 import {
   cloneRange,
   rangeCancellation,
@@ -39,6 +40,7 @@ interface RangeRow {
   cancellation_reason: string | null;
   creation_fingerprint: string | null;
   creation_receipt: NumberingRange | null;
+  created_us?: string;
 }
 const columns = `id,tenant_id,org_unit_id,entity_type,series,start_number,end_number,next_number,status,
   consumer_attributes,created_by,created_at,updated_at,cancelled_by,cancelled_at,cancellation_reason,
@@ -111,13 +113,25 @@ export async function pgCreateNumberingRange(
       ]);
       const prior = (
         await trx.query<RangeRow>(
-          `select ${columns} from offline.numbering_ranges
+          `select ${columns},(extract(epoch from created_at)*1000000)::numeric(30,0)::text as created_us from offline.numbering_ranges
         where tenant_id=$1::uuid and creation_key=$2`,
           [scope.tenantId, input.idempotencyKey],
         )
       ).rows[0];
       if (prior) {
         if (prior.creation_fingerprint !== fingerprint) throw rangeConflict('key');
+        let receiptInstantMatches = false;
+        try {
+          receiptInstantMatches =
+            prior.creation_receipt !== null &&
+            typeof prior.creation_receipt.createdAt === 'string' &&
+            prior.created_us !== undefined &&
+            importInstantMicroseconds(prior.creation_receipt.createdAt) ===
+              BigInt(prior.created_us);
+        } catch {
+          /* Malformed persisted creation evidence fails closed. */
+        }
+        if (!receiptInstantMatches) throw new OfflineSyncConfigurationError('rangeCreationReceipt');
         const expected: NumberingRange = {
           id: prior.id,
           tenantId: scope.tenantId,
@@ -128,7 +142,7 @@ export async function pgCreateNumberingRange(
           endNumber: input.endNumber,
           nextNumber: input.startNumber,
           status: 'active',
-          createdAt: instant(prior.created_at),
+          createdAt: prior.creation_receipt!.createdAt!,
           createdBy: prior.created_by!,
           ...(input.consumerAttributes === undefined
             ? {}

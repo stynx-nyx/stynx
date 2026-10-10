@@ -56,5 +56,8 @@
     "type": "git",
     "url": "git+https://github.com/stynx-nyx/stynx.git",
     "directory": "packages/offline-sync"
+  },
+  "bin": {
+    "stynx-offline-storage": "dist/offline-sync/src/storage-cli.js"
   }
 }

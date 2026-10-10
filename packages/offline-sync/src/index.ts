@@ -17,3 +17,26 @@ export * from './tokens';
 export * from './types';
 
 export { canonicalOfflineSyncPayload, canonicalOfflineSyncPayloadHash } from './payload-integrity';
+
+export { renderOfflineStorage, verifyOfflineStorage } from './storage';
+export type {
+  OfflineStorageOptions,
+  OfflineStorageManifest,
+  OfflineStorageArtifact,
+} from './storage';
+export { importOfflineState } from './import-state';
+export { parseOfflineImportManifest } from './import-validation';
+export { OfflineImportError } from './import-contract';
+export type {
+  OfflineImportErrorReason,
+  OfflineImportOptions,
+  OfflineImportReceipt,
+  OfflineArchiveVerificationPort,
+  OfflineArchiveVerification,
+  OfflineArchivedResponse,
+} from './import-contract';
+export type {
+  OfflineImportManifest,
+  OfflineImportRecord,
+  OfflineImportMapping,
+} from './import-schema.generated';
