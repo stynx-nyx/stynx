@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:4c54e905-13c8-44f0-8bc3-1490a826212a",
+  "serialNumber": "urn:uuid:bf42acd1-cffe-4d79-89d5-7c58ca534a30",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "4c54e90513c8d4f0bbc31490a826212a6864ed5badb5a26aeb289bb248c06631"
+        "value": "bf42acd1cffe2d7919d57c58ca534a3025a87e08e72515ce7290dfa281601fcc"
       },
       {
         "name": "stynx:package-manager",
@@ -1831,6 +1831,25 @@
     },
     {
       "type": "library",
+      "name": "braces",
+      "version": "3.0.4-stynx.1",
+      "scope": "excluded",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "tools/braces-safe"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "class-validator",
       "version": "0.15.1",
       "scope": "required",
@@ -1971,6 +1990,20 @@
     },
     {
       "type": "library",
+      "name": "fill-range",
+      "version": "7.1.1",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/fill-range@7.1.1"
+    },
+    {
+      "type": "library",
       "name": "github-actionlint",
       "version": "1.7.12",
       "scope": "required",
@@ -2024,6 +2057,25 @@
         }
       ],
       "purl": "pkg:npm/helmet@8.2.0"
+    },
+    {
+      "type": "library",
+      "name": "http-cache-semantics",
+      "version": "4.3.1-stynx.1",
+      "scope": "excluded",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "tools/http-cache-semantics-safe"
+        }
+      ]
     },
     {
       "type": "library",
