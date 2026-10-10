@@ -4,16 +4,15 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type FlowGraphImportNode = {
-    allowedActions?: Array<string>;
-    code: string;
-    decisionPolicy?: string;
-    entryRule?: string;
-    exitRule?: string;
-    kind: string;
-    meta?: FlowJsonObject;
-    name?: string;
-    quorumRatio?: string;
-    slaSeconds?: number;
-    sortOrder?: number;
+  allowedActions?: Array<string>;
+  code: string;
+  decisionPolicy?: string;
+  entryRule?: string;
+  exitRule?: string;
+  kind: string;
+  meta?: FlowJsonObject;
+  name?: string;
+  quorumRatio?: string;
+  slaSeconds?: number;
+  sortOrder?: number;
 };
-

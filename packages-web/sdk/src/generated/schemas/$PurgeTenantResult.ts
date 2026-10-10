@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $PurgeTenantResult = {
-    properties: {
-        tenant: {
-            type: 'TenantDetail',
-            isRequired: true,
-        },
+  properties: {
+    tenant: {
+      type: 'TenantDetail',
+      isRequired: true,
     },
+  },
 } as const;

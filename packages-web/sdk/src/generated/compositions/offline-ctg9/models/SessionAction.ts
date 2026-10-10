@@ -2,4 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SessionAction = 'logout-current' | 'revoke-one' | 'revoke-others' | 'revoke-all' | 'revoke-subject' | 'revoke-tenant';
+export type SessionAction =
+  | 'logout-current'
+  | 'revoke-one'
+  | 'revoke-others'
+  | 'revoke-all'
+  | 'revoke-subject'
+  | 'revoke-tenant';

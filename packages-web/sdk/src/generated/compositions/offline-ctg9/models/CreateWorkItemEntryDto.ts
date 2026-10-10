@@ -3,9 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CreateWorkItemEntryDto = {
-    description: string;
-    quantity: string;
-    unitUnits: number;
-    workItemId: string;
+  description: string;
+  quantity: string;
+  unitUnits: number;
+  workItemId: string;
 };
-

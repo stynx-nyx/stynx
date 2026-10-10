@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $SuspendTenantInput = {
-    properties: {
-        reason: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    reason: {
+      type: 'string',
+      isRequired: true,
     },
+  },
 } as const;

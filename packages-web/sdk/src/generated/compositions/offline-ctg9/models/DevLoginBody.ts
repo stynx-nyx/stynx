@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type DevLoginBody = {
-    email?: string;
-    tenantId?: string;
-    tenantSlug?: string;
+  email?: string;
+  tenantId?: string;
+  tenantSlug?: string;
 };
-

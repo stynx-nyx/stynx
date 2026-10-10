@@ -4,8 +4,7 @@
 /* eslint-disable */
 import type { PreferenceValues } from './PreferenceValues';
 export type PreferencesDocument = {
-    revision: number;
-    updatedAt: (string | null);
-    values: PreferenceValues;
+  revision: number;
+  updatedAt: string | null;
+  values: PreferenceValues;
 };
-

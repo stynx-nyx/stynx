@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type AccessibilityPreferences = {
-    largeText: boolean;
-    reduceMotion: boolean;
-    screenReaderOptimized: boolean;
+  largeText: boolean;
+  reduceMotion: boolean;
+  screenReaderOptimized: boolean;
 };
-

@@ -7,11 +7,10 @@ import type { FlowGraphImportNode } from './FlowGraphImportNode';
 import type { FlowJsonObject } from './FlowJsonObject';
 import type { JsonValue } from './JsonValue';
 export type FlowGraphImportDocument = {
-    agentRules?: Array<Record<string, JsonValue>>;
-    edges?: Array<FlowGraphImportEdge>;
-    graph: FlowJsonObject;
-    nodeFormRules?: Array<Record<string, JsonValue>>;
-    nodes: Array<FlowGraphImportNode>;
-    transitionEffects?: Array<FlowJsonObject>;
+  agentRules?: Array<Record<string, JsonValue>>;
+  edges?: Array<FlowGraphImportEdge>;
+  graph: FlowJsonObject;
+  nodeFormRules?: Array<Record<string, JsonValue>>;
+  nodes: Array<FlowGraphImportNode>;
+  transitionEffects?: Array<FlowJsonObject>;
 };
-

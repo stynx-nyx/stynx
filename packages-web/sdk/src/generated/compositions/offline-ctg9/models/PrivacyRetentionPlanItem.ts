@@ -5,10 +5,9 @@
 import type { PrivacyRetentionTarget } from './PrivacyRetentionTarget';
 import type { PrivacyStrategy } from './PrivacyStrategy';
 export type PrivacyRetentionPlanItem = {
-    affectedRows: number;
-    reason: string;
-    strategy: PrivacyStrategy;
-    table: string;
-    target: PrivacyRetentionTarget;
+  affectedRows: number;
+  reason: string;
+  strategy: PrivacyStrategy;
+  table: string;
+  target: PrivacyRetentionTarget;
 };
-

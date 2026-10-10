@@ -3,10 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CreateWorkItemLockDto = {
-    amountUnits: number;
-    externalRef?: (string | null);
-    lockedAt: string;
-    reason: 'manual' | 'external' | 'review' | 'hold';
-    workItemId: string;
+  amountUnits: number;
+  externalRef?: string | null;
+  lockedAt: string;
+  reason: 'manual' | 'external' | 'review' | 'hold';
+  workItemId: string;
 };
-

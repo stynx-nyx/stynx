@@ -3,14 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ReserveNumberingInput = {
-    deviceId: string;
-    entityType: string;
-    idempotencyKey?: string;
-    orgUnitId: string;
-    rangeId?: string;
-    requestedSize: number;
-    series?: string;
-    shiftId: string;
-    validUntil?: string;
+  deviceId: string;
+  entityType: string;
+  idempotencyKey?: string;
+  orgUnitId: string;
+  rangeId?: string;
+  requestedSize: number;
+  series?: string;
+  shiftId: string;
+  validUntil?: string;
 };
-

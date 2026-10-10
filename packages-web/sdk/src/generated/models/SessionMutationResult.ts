@@ -8,13 +8,12 @@ import type { SessionGuarantee } from './SessionGuarantee';
 import type { SessionItemResult } from './SessionItemResult';
 import type { SessionScope } from './SessionScope';
 export type SessionMutationResult = {
-    action: SessionAction;
-    effectiveBy: (string | null);
-    errorCode?: string;
-    guarantee: SessionGuarantee;
-    operationId: string;
-    results: Array<SessionItemResult>;
-    scope: SessionScope;
-    status: MutationStatus;
+  action: SessionAction;
+  effectiveBy: string | null;
+  errorCode?: string;
+  guarantee: SessionGuarantee;
+  operationId: string;
+  results: Array<SessionItemResult>;
+  scope: SessionScope;
+  status: MutationStatus;
 };
-

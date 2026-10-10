@@ -4,12 +4,11 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type CreateFlowFormDto = {
-    code: string;
-    description?: string;
-    isActive?: boolean;
-    meta?: FlowJsonObject;
-    scopeId: string;
-    title: string;
-    version?: string;
+  code: string;
+  description?: string;
+  isActive?: boolean;
+  meta?: FlowJsonObject;
+  scopeId: string;
+  title: string;
+  version?: string;
 };
-

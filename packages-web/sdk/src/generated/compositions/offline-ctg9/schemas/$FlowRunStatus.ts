@@ -3,5 +3,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $FlowRunStatus = {
-    type: 'Enum',
+  type: 'Enum',
 } as const;

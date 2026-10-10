@@ -4,9 +4,8 @@
 /* eslint-disable */
 import type { InvalidationGuarantee } from './InvalidationGuarantee';
 export type SessionGuarantee = {
-    accessTokenExpiresAt: (string | null);
-    effectiveBy: (string | null);
-    kind: InvalidationGuarantee;
-    propagationBoundSeconds: (number | null);
+  accessTokenExpiresAt: string | null;
+  effectiveBy: string | null;
+  kind: InvalidationGuarantee;
+  propagationBoundSeconds: number | null;
 };
-

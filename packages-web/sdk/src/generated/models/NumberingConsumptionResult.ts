@@ -5,8 +5,7 @@
 import type { NumberingConsumptionEntry } from './NumberingConsumptionEntry';
 import type { NumberingReservationStatus } from './NumberingReservationStatus';
 export type NumberingConsumptionResult = {
-    consumption: Array<NumberingConsumptionEntry>;
-    reservationId: string;
-    status: NumberingReservationStatus;
+  consumption: Array<NumberingConsumptionEntry>;
+  reservationId: string;
+  status: NumberingReservationStatus;
 };
-

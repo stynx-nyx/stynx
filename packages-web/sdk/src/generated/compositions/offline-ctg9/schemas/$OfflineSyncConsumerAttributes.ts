@@ -3,8 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $OfflineSyncConsumerAttributes = {
-    type: 'dictionary',
-    contains: {
-        type: 'JsonValue',
-    },
+  type: 'dictionary',
+  contains: {
+    type: 'JsonValue',
+  },
 } as const;

@@ -3,32 +3,38 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $NumberingConsumptionEntry = {
-    properties: {
-        finalizedAt: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-            isRequired: true,
+  properties: {
+    finalizedAt: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
         },
-        number: {
-            type: 'number',
-            isRequired: true,
+        {
+          type: 'null',
         },
-        serverEntityId: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-            isRequired: true,
-        },
-        status: {
-            type: 'Enum',
-            isRequired: true,
-        },
+      ],
+      isRequired: true,
     },
+    number: {
+      type: 'number',
+      isRequired: true,
+    },
+    serverEntityId: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
+        },
+        {
+          type: 'null',
+        },
+      ],
+      isRequired: true,
+    },
+    status: {
+      type: 'Enum',
+      isRequired: true,
+    },
+  },
 } as const;

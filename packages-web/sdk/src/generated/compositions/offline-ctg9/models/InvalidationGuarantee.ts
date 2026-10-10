@@ -2,4 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type InvalidationGuarantee = 'immediate_local' | 'bounded_local' | 'refresh_revoked_access_expires' | 'provider_confirmed' | 'none';
+export type InvalidationGuarantee =
+  | 'immediate_local'
+  | 'bounded_local'
+  | 'refresh_revoked_access_expires'
+  | 'provider_confirmed'
+  | 'none';

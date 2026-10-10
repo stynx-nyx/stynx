@@ -4,11 +4,10 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type UpdateFlowFormDto = {
-    code?: string;
-    description?: string;
-    isActive?: boolean;
-    meta?: FlowJsonObject;
-    title?: string;
-    version?: string;
+  code?: string;
+  description?: string;
+  isActive?: boolean;
+  meta?: FlowJsonObject;
+  title?: string;
+  version?: string;
 };
-

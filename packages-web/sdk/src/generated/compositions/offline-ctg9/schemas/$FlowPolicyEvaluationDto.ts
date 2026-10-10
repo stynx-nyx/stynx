@@ -3,36 +3,36 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $FlowPolicyEvaluationDto = {
-    properties: {
-        action: {
-            type: 'string',
-        },
-        capability: {
-            type: 'string',
-        },
-        facts: {
-            type: 'FlowJsonObject',
-        },
-        nodeCode: {
-            type: 'string',
-        },
-        policySetId: {
-            type: 'string',
-        },
-        scopeCode: {
-            type: 'string',
-        },
-        scopeId: {
-            type: 'string',
-        },
-        statusCode: {
-            type: 'string',
-        },
-        targetId: {
-            type: 'string',
-        },
-        targetType: {
-            type: 'string',
-        },
+  properties: {
+    action: {
+      type: 'string',
     },
+    capability: {
+      type: 'string',
+    },
+    facts: {
+      type: 'FlowJsonObject',
+    },
+    nodeCode: {
+      type: 'string',
+    },
+    policySetId: {
+      type: 'string',
+    },
+    scopeCode: {
+      type: 'string',
+    },
+    scopeId: {
+      type: 'string',
+    },
+    statusCode: {
+      type: 'string',
+    },
+    targetId: {
+      type: 'string',
+    },
+    targetType: {
+      type: 'string',
+    },
+  },
 } as const;

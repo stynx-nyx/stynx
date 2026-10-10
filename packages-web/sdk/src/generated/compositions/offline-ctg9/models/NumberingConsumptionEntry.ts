@@ -3,9 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export type NumberingConsumptionEntry = {
-    finalizedAt: (string | null);
-    number: number;
-    serverEntityId: (string | null);
-    status: 'available' | 'claimed-locally' | 'applied' | 'blocked' | 'expired';
+  finalizedAt: string | null;
+  number: number;
+  serverEntityId: string | null;
+  status: 'available' | 'claimed-locally' | 'applied' | 'blocked' | 'expired';
 };
-

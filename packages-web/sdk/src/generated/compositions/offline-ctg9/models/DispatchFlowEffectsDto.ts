@@ -3,9 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export type DispatchFlowEffectsDto = {
-    effectEventId?: string;
-    limit?: number;
-    reason?: string;
-    runId?: string;
+  effectEventId?: string;
+  limit?: number;
+  reason?: string;
+  runId?: string;
 };
-

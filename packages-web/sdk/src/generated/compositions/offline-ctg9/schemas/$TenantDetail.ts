@@ -3,73 +3,85 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $TenantDetail = {
-    properties: {
-        archivedAt: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
+  properties: {
+    archivedAt: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
         },
-        createdAt: {
-            type: 'string',
-            isRequired: true,
+        {
+          type: 'null',
         },
-        id: {
-            type: 'string',
-            isRequired: true,
-        },
-        isActive: {
-            type: 'boolean',
-            isRequired: true,
-        },
-        locale: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
-        name: {
-            type: 'string',
-            isRequired: true,
-        },
-        settings: {
-            type: 'dictionary',
-            contains: {
-                type: 'JsonValue',
-            },
-            isRequired: true,
-        },
-        slug: {
-            type: 'string',
-            isRequired: true,
-        },
-        state: {
-            type: 'TenantState',
-            isRequired: true,
-        },
-        suspendedReason: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
-        timezone: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-        },
-        updatedAt: {
-            type: 'string',
-            isRequired: true,
-        },
+      ],
     },
+    createdAt: {
+      type: 'string',
+      isRequired: true,
+    },
+    id: {
+      type: 'string',
+      isRequired: true,
+    },
+    isActive: {
+      type: 'boolean',
+      isRequired: true,
+    },
+    locale: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    name: {
+      type: 'string',
+      isRequired: true,
+    },
+    settings: {
+      type: 'dictionary',
+      contains: {
+        type: 'JsonValue',
+      },
+      isRequired: true,
+    },
+    slug: {
+      type: 'string',
+      isRequired: true,
+    },
+    state: {
+      type: 'TenantState',
+      isRequired: true,
+    },
+    suspendedReason: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    timezone: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    updatedAt: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

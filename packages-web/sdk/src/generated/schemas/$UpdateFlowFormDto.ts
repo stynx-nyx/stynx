@@ -3,24 +3,24 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UpdateFlowFormDto = {
-    properties: {
-        code: {
-            type: 'string',
-        },
-        description: {
-            type: 'string',
-        },
-        isActive: {
-            type: 'boolean',
-        },
-        meta: {
-            type: 'FlowJsonObject',
-        },
-        title: {
-            type: 'string',
-        },
-        version: {
-            type: 'string',
-        },
+  properties: {
+    code: {
+      type: 'string',
     },
+    description: {
+      type: 'string',
+    },
+    isActive: {
+      type: 'boolean',
+    },
+    meta: {
+      type: 'FlowJsonObject',
+    },
+    title: {
+      type: 'string',
+    },
+    version: {
+      type: 'string',
+    },
+  },
 } as const;

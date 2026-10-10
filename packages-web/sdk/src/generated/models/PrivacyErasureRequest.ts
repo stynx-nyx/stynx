@@ -3,6 +3,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type PrivacyErasureRequest = {
-    subjectUserId: string;
+  subjectUserId: string;
 };
-

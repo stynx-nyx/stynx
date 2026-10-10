@@ -4,12 +4,11 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type FlowGraphImportEdge = {
-    action?: string;
-    fromNodeCode: string;
-    meta?: FlowJsonObject;
-    rule?: string;
-    sortOrder?: number;
-    spawn?: boolean;
-    toNodeCode: string;
+  action?: string;
+  fromNodeCode: string;
+  meta?: FlowJsonObject;
+  rule?: string;
+  sortOrder?: number;
+  spawn?: boolean;
+  toNodeCode: string;
 };
-

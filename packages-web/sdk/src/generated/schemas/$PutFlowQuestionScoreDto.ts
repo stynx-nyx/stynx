@@ -3,15 +3,15 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $PutFlowQuestionScoreDto = {
-    properties: {
-        failPoints: {
-            type: 'string',
-        },
-        meta: {
-            type: 'FlowJsonObject',
-        },
-        passPoints: {
-            type: 'string',
-        },
+  properties: {
+    failPoints: {
+      type: 'string',
     },
+    meta: {
+      type: 'FlowJsonObject',
+    },
+    passPoints: {
+      type: 'string',
+    },
+  },
 } as const;

@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ReconcileNumberingInput = {
-    claimedNumbers?: Array<number>;
-    userRef?: string;
+  claimedNumbers?: Array<number>;
+  userRef?: string;
 };
-

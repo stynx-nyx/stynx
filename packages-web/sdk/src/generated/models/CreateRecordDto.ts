@@ -3,10 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CreateRecordDto = {
-    email: string;
-    externalRef?: string;
-    ownerUserId?: (string | null);
-    status?: 'active' | 'pending' | 'inactive';
-    title: string;
+  email: string;
+  externalRef?: string;
+  ownerUserId?: string | null;
+  status?: 'active' | 'pending' | 'inactive';
+  title: string;
 };
-

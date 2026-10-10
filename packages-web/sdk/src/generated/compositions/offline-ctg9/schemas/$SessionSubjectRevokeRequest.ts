@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $SessionSubjectRevokeRequest = {
-    properties: {
-        scope: {
-            type: 'SessionScope',
-        },
+  properties: {
+    scope: {
+      type: 'SessionScope',
     },
+  },
 } as const;

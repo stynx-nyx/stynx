@@ -4,10 +4,9 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type UpdateFlowTransitionEffectDto = {
-    action?: string;
-    effectKey?: string;
-    nodeCode?: string;
-    payload?: FlowJsonObject;
-    sortOrder?: number;
+  action?: string;
+  effectKey?: string;
+  nodeCode?: string;
+  payload?: FlowJsonObject;
+  sortOrder?: number;
 };
-

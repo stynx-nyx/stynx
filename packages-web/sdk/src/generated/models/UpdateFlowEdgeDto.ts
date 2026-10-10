@@ -4,12 +4,11 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type UpdateFlowEdgeDto = {
-    action?: string;
-    fromNodeId?: string;
-    meta?: FlowJsonObject;
-    rule?: string;
-    sortOrder?: number;
-    spawn?: boolean;
-    toNodeId?: string;
+  action?: string;
+  fromNodeId?: string;
+  meta?: FlowJsonObject;
+  rule?: string;
+  sortOrder?: number;
+  spawn?: boolean;
+  toNodeId?: string;
 };
-

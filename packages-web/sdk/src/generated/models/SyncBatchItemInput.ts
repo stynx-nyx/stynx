@@ -4,13 +4,12 @@
 /* eslint-disable */
 import type { JsonValue } from './JsonValue';
 export type SyncBatchItemInput = {
-    createdLocallyAt: string;
-    entityType: string;
-    idempotencyKey: string;
-    localEntityId: string;
-    payloadHash: string;
-    payloadJson: Record<string, JsonValue>;
-    queueItemId: string;
-    reservedNumber?: number;
+  createdLocallyAt: string;
+  entityType: string;
+  idempotencyKey: string;
+  localEntityId: string;
+  payloadHash: string;
+  payloadJson: Record<string, JsonValue>;
+  queueItemId: string;
+  reservedNumber?: number;
 };
-

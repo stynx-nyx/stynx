@@ -3,39 +3,39 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UpdateFlowQuestionDto = {
-    properties: {
-        blocksSubmit: {
-            type: 'boolean',
-        },
-        fieldType: {
-            type: 'FlowQuestionFieldType',
-        },
-        key: {
-            type: 'string',
-        },
-        label: {
-            type: 'string',
-        },
-        meta: {
-            type: 'FlowJsonObject',
-        },
-        options: {
-            type: 'array',
-            contains: {
-                type: 'JsonValue',
-            },
-        },
-        required: {
-            type: 'boolean',
-        },
-        sortOrder: {
-            type: 'number',
-        },
-        validators: {
-            type: 'FlowJsonObject',
-        },
-        visibleIf: {
-            type: 'FlowJsonObject',
-        },
+  properties: {
+    blocksSubmit: {
+      type: 'boolean',
     },
+    fieldType: {
+      type: 'FlowQuestionFieldType',
+    },
+    key: {
+      type: 'string',
+    },
+    label: {
+      type: 'string',
+    },
+    meta: {
+      type: 'FlowJsonObject',
+    },
+    options: {
+      type: 'array',
+      contains: {
+        type: 'JsonValue',
+      },
+    },
+    required: {
+      type: 'boolean',
+    },
+    sortOrder: {
+      type: 'number',
+    },
+    validators: {
+      type: 'FlowJsonObject',
+    },
+    visibleIf: {
+      type: 'FlowJsonObject',
+    },
+  },
 } as const;

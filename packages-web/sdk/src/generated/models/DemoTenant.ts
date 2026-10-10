@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type DemoTenant = {
-    id: string;
-    name: string;
-    slug: string;
+  id: string;
+  name: string;
+  slug: string;
 };
-

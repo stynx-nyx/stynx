@@ -5,9 +5,8 @@
 import type { MutationStatus } from './MutationStatus';
 import type { SessionGuarantee } from './SessionGuarantee';
 export type SessionItemResult = {
-    errorCode?: string;
-    guarantee: SessionGuarantee;
-    sid: string;
-    status: MutationStatus;
+  errorCode?: string;
+  guarantee: SessionGuarantee;
+  sid: string;
+  status: MutationStatus;
 };
-

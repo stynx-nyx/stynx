@@ -3,10 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ProvisionTenantInput = {
-    name: string;
-    ownerEmail: string;
-    ownerLocale?: string;
-    ownerUserId?: string;
-    slug: string;
+  name: string;
+  ownerEmail: string;
+  ownerLocale?: string;
+  ownerUserId?: string;
+  slug: string;
 };
-

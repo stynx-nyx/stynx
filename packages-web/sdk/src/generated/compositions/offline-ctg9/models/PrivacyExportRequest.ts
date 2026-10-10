@@ -4,8 +4,7 @@
 /* eslint-disable */
 import type { PrivacyExportFormat } from './PrivacyExportFormat';
 export type PrivacyExportRequest = {
-    format: PrivacyExportFormat;
-    subjectUserId?: string;
-    tenantId?: string;
+  format: PrivacyExportFormat;
+  subjectUserId?: string;
+  tenantId?: string;
 };
-

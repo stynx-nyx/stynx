@@ -3,22 +3,28 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ProfilePatch = {
-    properties: {
-        avatarDocumentId: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
+  properties: {
+    avatarDocumentId: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
         },
-        displayName: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
+        {
+          type: 'null',
         },
+      ],
     },
+    displayName: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+  },
 } as const;

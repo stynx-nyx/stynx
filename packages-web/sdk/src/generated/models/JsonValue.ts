@@ -5,6 +5,4 @@
 /**
  * Any JSON-compatible response value.
  */
-export type JsonValue = {
-};
-
+export type JsonValue = {};

@@ -3,8 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $JsonObject = {
-    type: 'dictionary',
-    contains: {
-        type: 'JsonValue',
-    },
+  type: 'dictionary',
+  contains: {
+    type: 'JsonValue',
+  },
 } as const;

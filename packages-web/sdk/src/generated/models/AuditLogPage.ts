@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { AuditLogItem } from './AuditLogItem';
 export type AuditLogPage = {
-    items: Array<AuditLogItem>;
-    nextCursor?: string;
+  items: Array<AuditLogItem>;
+  nextCursor?: string;
 };
-

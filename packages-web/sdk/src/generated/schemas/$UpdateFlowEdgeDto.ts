@@ -3,27 +3,27 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UpdateFlowEdgeDto = {
-    properties: {
-        action: {
-            type: 'string',
-        },
-        fromNodeId: {
-            type: 'string',
-        },
-        meta: {
-            type: 'FlowJsonObject',
-        },
-        rule: {
-            type: 'string',
-        },
-        sortOrder: {
-            type: 'number',
-        },
-        spawn: {
-            type: 'boolean',
-        },
-        toNodeId: {
-            type: 'string',
-        },
+  properties: {
+    action: {
+      type: 'string',
     },
+    fromNodeId: {
+      type: 'string',
+    },
+    meta: {
+      type: 'FlowJsonObject',
+    },
+    rule: {
+      type: 'string',
+    },
+    sortOrder: {
+      type: 'number',
+    },
+    spawn: {
+      type: 'boolean',
+    },
+    toNodeId: {
+      type: 'string',
+    },
+  },
 } as const;

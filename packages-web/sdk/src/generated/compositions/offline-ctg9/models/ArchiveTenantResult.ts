@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { TenantDetail } from './TenantDetail';
 export type ArchiveTenantResult = {
-    exportKey: string;
-    tenant: TenantDetail;
+  exportKey: string;
+  tenant: TenantDetail;
 };
-

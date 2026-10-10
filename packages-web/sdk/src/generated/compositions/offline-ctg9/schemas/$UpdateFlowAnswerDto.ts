@@ -3,18 +3,18 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UpdateFlowAnswerDto = {
-    properties: {
-        attachment: {
-            type: 'JsonValue',
-        },
-        itemId: {
-            type: 'string',
-        },
-        questionId: {
-            type: 'string',
-        },
-        value: {
-            type: 'JsonValue',
-        },
+  properties: {
+    attachment: {
+      type: 'JsonValue',
     },
+    itemId: {
+      type: 'string',
+    },
+    questionId: {
+      type: 'string',
+    },
+    value: {
+      type: 'JsonValue',
+    },
+  },
 } as const;

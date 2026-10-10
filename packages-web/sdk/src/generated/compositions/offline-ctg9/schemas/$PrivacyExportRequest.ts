@@ -3,16 +3,16 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $PrivacyExportRequest = {
-    properties: {
-        format: {
-            type: 'PrivacyExportFormat',
-            isRequired: true,
-        },
-        subjectUserId: {
-            type: 'string',
-        },
-        tenantId: {
-            type: 'string',
-        },
+  properties: {
+    format: {
+      type: 'PrivacyExportFormat',
+      isRequired: true,
     },
+    subjectUserId: {
+      type: 'string',
+    },
+    tenantId: {
+      type: 'string',
+    },
+  },
 } as const;

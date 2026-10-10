@@ -3,15 +3,15 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ReconcileNumberingInput = {
-    properties: {
-        claimedNumbers: {
-            type: 'array',
-            contains: {
-                type: 'number',
-            },
-        },
-        userRef: {
-            type: 'string',
-        },
+  properties: {
+    claimedNumbers: {
+      type: 'array',
+      contains: {
+        type: 'number',
+      },
     },
+    userRef: {
+      type: 'string',
+    },
+  },
 } as const;

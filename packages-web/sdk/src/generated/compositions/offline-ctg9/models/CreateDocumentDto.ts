@@ -3,11 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CreateDocumentDto = {
-    byteSize: number;
-    checksumSha256: string;
-    classification?: string;
-    collection: string;
-    filename: string;
-    mimeType: string;
+  byteSize: number;
+  checksumSha256: string;
+  classification?: string;
+  collection: string;
+  filename: string;
+  mimeType: string;
 };
-

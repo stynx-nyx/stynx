@@ -2,4 +2,5 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type FlowNodeFormGatingMode = 'all_required' | 'any' | 'threshold' | 'any_answered' | 'score_threshold';
+export type FlowNodeFormGatingMode =
+  'all_required' | 'any' | 'threshold' | 'any_answered' | 'score_threshold';

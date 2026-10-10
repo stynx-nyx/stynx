@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { JsonValue } from './JsonValue';
 export type SessionSwitchBody = {
-    deviceMeta?: Record<string, JsonValue>;
-    tenantId?: string;
+  deviceMeta?: Record<string, JsonValue>;
+  tenantId?: string;
 };
-

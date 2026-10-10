@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UpdateFlowRunDto = {
-    properties: {
-        status: {
-            type: 'FlowRunStatus',
-            isRequired: true,
-        },
+  properties: {
+    status: {
+      type: 'FlowRunStatus',
+      isRequired: true,
     },
+  },
 } as const;

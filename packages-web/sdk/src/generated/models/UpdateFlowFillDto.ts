@@ -4,9 +4,8 @@
 /* eslint-disable */
 import type { FlowFillStatus } from './FlowFillStatus';
 export type UpdateFlowFillDto = {
-    nodeRunId?: string;
-    runId?: string;
-    status?: FlowFillStatus;
-    taskId?: string;
+  nodeRunId?: string;
+  runId?: string;
+  status?: FlowFillStatus;
+  taskId?: string;
 };
-

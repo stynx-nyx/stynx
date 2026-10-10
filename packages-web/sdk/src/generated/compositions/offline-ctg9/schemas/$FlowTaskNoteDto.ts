@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $FlowTaskNoteDto = {
-    properties: {
-        note: {
-            type: 'string',
-        },
+  properties: {
+    note: {
+      type: 'string',
     },
+  },
 } as const;

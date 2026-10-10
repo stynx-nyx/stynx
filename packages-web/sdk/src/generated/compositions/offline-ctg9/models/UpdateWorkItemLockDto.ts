@@ -3,9 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UpdateWorkItemLockDto = {
-    amountUnits?: number;
-    externalRef?: (string | null);
-    lockedAt?: string;
-    reason?: 'manual' | 'external' | 'review' | 'hold';
+  amountUnits?: number;
+  externalRef?: string | null;
+  lockedAt?: string;
+  reason?: 'manual' | 'external' | 'review' | 'hold';
 };
-

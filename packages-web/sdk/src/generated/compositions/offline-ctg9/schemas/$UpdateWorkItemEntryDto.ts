@@ -3,15 +3,15 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UpdateWorkItemEntryDto = {
-    properties: {
-        description: {
-            type: 'string',
-        },
-        quantity: {
-            type: 'string',
-        },
-        unitUnits: {
-            type: 'number',
-        },
+  properties: {
+    description: {
+      type: 'string',
     },
+    quantity: {
+      type: 'string',
+    },
+    unitUnits: {
+      type: 'number',
+    },
+  },
 } as const;

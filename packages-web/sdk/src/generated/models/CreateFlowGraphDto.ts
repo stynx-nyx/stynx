@@ -4,12 +4,11 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type CreateFlowGraphDto = {
-    code: string;
-    description?: string;
-    isActive?: boolean;
-    meta?: FlowJsonObject;
-    name?: string;
-    scopeId: string;
-    version?: string;
+  code: string;
+  description?: string;
+  isActive?: boolean;
+  meta?: FlowJsonObject;
+  name?: string;
+  scopeId: string;
+  version?: string;
 };
-

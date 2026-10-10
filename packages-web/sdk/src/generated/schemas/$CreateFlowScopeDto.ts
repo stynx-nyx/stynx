@@ -3,24 +3,24 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $CreateFlowScopeDto = {
-    properties: {
-        adapterConfig: {
-            type: 'FlowJsonObject',
-        },
-        adapterKey: {
-            type: 'string',
-            isRequired: true,
-        },
-        code: {
-            type: 'string',
-            isRequired: true,
-        },
-        label: {
-            type: 'string',
-            isRequired: true,
-        },
-        meta: {
-            type: 'FlowJsonObject',
-        },
+  properties: {
+    adapterConfig: {
+      type: 'FlowJsonObject',
     },
+    adapterKey: {
+      type: 'string',
+      isRequired: true,
+    },
+    code: {
+      type: 'string',
+      isRequired: true,
+    },
+    label: {
+      type: 'string',
+      isRequired: true,
+    },
+    meta: {
+      type: 'FlowJsonObject',
+    },
+  },
 } as const;

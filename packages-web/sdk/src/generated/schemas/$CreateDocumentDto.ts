@@ -3,29 +3,29 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $CreateDocumentDto = {
-    properties: {
-        byteSize: {
-            type: 'number',
-            isRequired: true,
-        },
-        checksumSha256: {
-            type: 'string',
-            isRequired: true,
-        },
-        classification: {
-            type: 'string',
-        },
-        collection: {
-            type: 'string',
-            isRequired: true,
-        },
-        filename: {
-            type: 'string',
-            isRequired: true,
-        },
-        mimeType: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    byteSize: {
+      type: 'number',
+      isRequired: true,
     },
+    checksumSha256: {
+      type: 'string',
+      isRequired: true,
+    },
+    classification: {
+      type: 'string',
+    },
+    collection: {
+      type: 'string',
+      isRequired: true,
+    },
+    filename: {
+      type: 'string',
+      isRequired: true,
+    },
+    mimeType: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

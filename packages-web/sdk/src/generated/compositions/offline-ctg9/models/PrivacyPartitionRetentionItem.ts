@@ -3,10 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type PrivacyPartitionRetentionItem = {
-    dropped: boolean;
-    monthEnd: string;
-    partition: string;
-    reason: string;
-    table: string;
+  dropped: boolean;
+  monthEnd: string;
+  partition: string;
+  reason: string;
+  table: string;
 };
-

@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UpdateWorkItemEntryDto = {
-    description?: string;
-    quantity?: string;
-    unitUnits?: number;
+  description?: string;
+  quantity?: string;
+  unitUnits?: number;
 };
-

@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type OfflineSyncConcurrentPair = {
-    firstItemId: string;
-    secondItemId: string;
+  firstItemId: string;
+  secondItemId: string;
 };
-

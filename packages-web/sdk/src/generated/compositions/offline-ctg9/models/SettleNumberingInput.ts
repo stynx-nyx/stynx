@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type SettleNumberingInput = {
-    reason?: string;
-    userRef?: string;
+  reason?: string;
+  userRef?: string;
 };
-

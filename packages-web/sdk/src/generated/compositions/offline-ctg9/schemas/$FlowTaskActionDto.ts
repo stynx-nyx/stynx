@@ -3,21 +3,24 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $FlowTaskActionDto = {
-    properties: {
-        action: {
-            type: 'string',
-            isRequired: true,
-        },
-        note: {
-            type: 'string',
-        },
-        payload: {
-            type: 'any-of',
-            contains: [{
-                type: 'FlowJsonObject',
-            }, {
-                type: 'null',
-            }],
-        },
+  properties: {
+    action: {
+      type: 'string',
+      isRequired: true,
     },
+    note: {
+      type: 'string',
+    },
+    payload: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'FlowJsonObject',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+  },
 } as const;

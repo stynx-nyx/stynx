@@ -3,14 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $SuspendTenantResult = {
-    properties: {
-        activeSessionCount: {
-            type: 'number',
-            isRequired: true,
-        },
-        tenant: {
-            type: 'TenantDetail',
-            isRequired: true,
-        },
+  properties: {
+    activeSessionCount: {
+      type: 'number',
+      isRequired: true,
     },
+    tenant: {
+      type: 'TenantDetail',
+      isRequired: true,
+    },
+  },
 } as const;

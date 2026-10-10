@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type LocalePreferences = {
-    locale: string;
-    timezone: string;
+  locale: string;
+  timezone: string;
 };
-

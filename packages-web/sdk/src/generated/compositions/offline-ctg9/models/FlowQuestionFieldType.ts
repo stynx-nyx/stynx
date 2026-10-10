@@ -2,4 +2,15 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type FlowQuestionFieldType = 'boolean' | 'string' | 'text' | 'number' | 'date' | 'select' | 'multiselect' | 'file' | 'url' | 'cnpj' | 'email';
+export type FlowQuestionFieldType =
+  | 'boolean'
+  | 'string'
+  | 'text'
+  | 'number'
+  | 'date'
+  | 'select'
+  | 'multiselect'
+  | 'file'
+  | 'url'
+  | 'cnpj'
+  | 'email';

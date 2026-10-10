@@ -3,21 +3,21 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $NumberingConsumptionResult = {
-    properties: {
-        consumption: {
-            type: 'array',
-            contains: {
-                type: 'NumberingConsumptionEntry',
-            },
-            isRequired: true,
-        },
-        reservationId: {
-            type: 'string',
-            isRequired: true,
-        },
-        status: {
-            type: 'NumberingReservationStatus',
-            isRequired: true,
-        },
+  properties: {
+    consumption: {
+      type: 'array',
+      contains: {
+        type: 'NumberingConsumptionEntry',
+      },
+      isRequired: true,
     },
+    reservationId: {
+      type: 'string',
+      isRequired: true,
+    },
+    status: {
+      type: 'NumberingReservationStatus',
+      isRequired: true,
+    },
+  },
 } as const;

@@ -4,5 +4,4 @@
 /* eslint-disable */
 import type { BulkFlowAnswerWriteDto } from './BulkFlowAnswerWriteDto';
 import type { FlowAnswerWriteDto } from './FlowAnswerWriteDto';
-export type BulkFlowAnswerWriteRequestDto = (Array<FlowAnswerWriteDto> | BulkFlowAnswerWriteDto);
-
+export type BulkFlowAnswerWriteRequestDto = Array<FlowAnswerWriteDto> | BulkFlowAnswerWriteDto;

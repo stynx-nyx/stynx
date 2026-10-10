@@ -3,13 +3,16 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $BulkFlowAnswerWriteRequestDto = {
-    type: 'any-of',
-    contains: [{
-        type: 'array',
-        contains: {
-            type: 'FlowAnswerWriteDto',
-        },
-    }, {
-        type: 'BulkFlowAnswerWriteDto',
-    }],
+  type: 'any-of',
+  contains: [
+    {
+      type: 'array',
+      contains: {
+        type: 'FlowAnswerWriteDto',
+      },
+    },
+    {
+      type: 'BulkFlowAnswerWriteDto',
+    },
+  ],
 } as const;

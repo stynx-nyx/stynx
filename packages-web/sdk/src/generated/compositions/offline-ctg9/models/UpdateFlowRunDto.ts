@@ -4,6 +4,5 @@
 /* eslint-disable */
 import type { FlowRunStatus } from './FlowRunStatus';
 export type UpdateFlowRunDto = {
-    status: FlowRunStatus;
+  status: FlowRunStatus;
 };
-

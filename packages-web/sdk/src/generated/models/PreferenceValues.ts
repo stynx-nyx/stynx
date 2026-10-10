@@ -7,9 +7,8 @@ import type { LocalePreferences } from './LocalePreferences';
 import type { NotificationDeliveryPreferences } from './NotificationDeliveryPreferences';
 import type { ThemePreferences } from './ThemePreferences';
 export type PreferenceValues = {
-    accessibility: AccessibilityPreferences;
-    locale: LocalePreferences;
-    notificationDelivery: NotificationDeliveryPreferences;
-    theme: ThemePreferences;
+  accessibility: AccessibilityPreferences;
+  locale: LocalePreferences;
+  notificationDelivery: NotificationDeliveryPreferences;
+  theme: ThemePreferences;
 };
-

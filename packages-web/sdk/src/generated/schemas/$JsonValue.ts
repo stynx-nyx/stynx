@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $JsonValue = {
-    description: `Any JSON-compatible response value.`,
-    properties: {
-    },
+  description: `Any JSON-compatible response value.`,
+  properties: {},
 } as const;

@@ -4,12 +4,11 @@
 /* eslint-disable */
 import type { TenantState } from './TenantState';
 export type TenantSummary = {
-    createdAt: string;
-    id: string;
-    isActive: boolean;
-    name: string;
-    slug: string;
-    state: TenantState;
-    updatedAt: string;
+  createdAt: string;
+  id: string;
+  isActive: boolean;
+  name: string;
+  slug: string;
+  state: TenantState;
+  updatedAt: string;
 };
-

@@ -5,11 +5,10 @@
 import type { FlowJsonObject } from './FlowJsonObject';
 import type { FlowNodeFormGatingMode } from './FlowNodeFormGatingMode';
 export type UpdateFlowNodeFormRuleDto = {
-    applicability?: FlowJsonObject;
-    gatingMode?: FlowNodeFormGatingMode;
-    meta?: FlowJsonObject;
-    required?: boolean;
-    threshold?: string;
-    weight?: string;
+  applicability?: FlowJsonObject;
+  gatingMode?: FlowNodeFormGatingMode;
+  meta?: FlowJsonObject;
+  required?: boolean;
+  threshold?: string;
+  weight?: string;
 };
-

@@ -3,12 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $PublishFlowGraphDto = {
-    properties: {
-        expectedDraftVersion: {
-            type: 'string',
-        },
-        notes: {
-            type: 'string',
-        },
+  properties: {
+    expectedDraftVersion: {
+      type: 'string',
     },
+    notes: {
+      type: 'string',
+    },
+  },
 } as const;

@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ProfilePatch = {
-    avatarDocumentId?: (string | null);
-    displayName?: (string | null);
+  avatarDocumentId?: string | null;
+  displayName?: string | null;
 };
-

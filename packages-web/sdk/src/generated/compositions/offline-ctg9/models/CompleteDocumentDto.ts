@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CompleteDocumentDto = {
-    checksumSha256?: string;
-    contentType?: string;
+  checksumSha256?: string;
+  contentType?: string;
 };
-

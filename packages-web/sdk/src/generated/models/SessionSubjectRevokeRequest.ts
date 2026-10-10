@@ -4,6 +4,5 @@
 /* eslint-disable */
 import type { SessionScope } from './SessionScope';
 export type SessionSubjectRevokeRequest = {
-    scope?: SessionScope;
+  scope?: SessionScope;
 };
-

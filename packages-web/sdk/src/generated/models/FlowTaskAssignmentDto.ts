@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type FlowTaskAssignmentDto = {
-    note?: string;
-    userId: string;
+  note?: string;
+  userId: string;
 };
-

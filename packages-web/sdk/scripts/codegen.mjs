@@ -1,10 +1,11 @@
 import { spawnSync } from 'node:child_process';
-import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import { generate } from 'openapi-typescript-codegen';
+import { format, resolveConfig } from 'prettier';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDir, '..');
@@ -124,11 +125,26 @@ async function replaceGeneratedOutput() {
       );
     }
 
+    const formatting = await resolveConfig(resolve(workspaceRoot, 'package.json'));
+    await formatGeneratedTypescript(tempOutputPath, formatting ?? {});
     await rm(outputPath, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     await rename(tempOutputPath, outputPath);
   } catch (error) {
     await rm(tempOutputPath, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     throw error;
+  }
+}
+
+async function formatGeneratedTypescript(directory, configuration) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const path = resolve(directory, entry.name);
+    if (entry.isDirectory()) await formatGeneratedTypescript(path, configuration);
+    else if (entry.isFile() && entry.name.endsWith('.ts'))
+      await writeFile(
+        path,
+        await format(await readFile(path, 'utf8'), { ...configuration, filepath: path }),
+      );
+    else throw new Error(`Unsupported SDK generated output entry: ${entry.name}`);
   }
 }
 

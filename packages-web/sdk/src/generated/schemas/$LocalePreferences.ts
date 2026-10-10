@@ -3,14 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $LocalePreferences = {
-    properties: {
-        locale: {
-            type: 'string',
-            isRequired: true,
-        },
-        timezone: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    locale: {
+      type: 'string',
+      isRequired: true,
     },
+    timezone: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

@@ -3,12 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 export type SessionDisplayMetadata = {
-    client?: string;
-    country?: string;
-    deviceClass?: string;
-    deviceLabel?: string;
-    providerLabel?: string;
-    region?: string;
-    userAgentFamily?: string;
+  client?: string;
+  country?: string;
+  deviceClass?: string;
+  deviceLabel?: string;
+  providerLabel?: string;
+  region?: string;
+  userAgentFamily?: string;
 };
-

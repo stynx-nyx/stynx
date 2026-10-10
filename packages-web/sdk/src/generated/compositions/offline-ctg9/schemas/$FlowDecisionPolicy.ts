@@ -3,5 +3,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $FlowDecisionPolicy = {
-    type: 'Enum',
+  type: 'Enum',
 } as const;

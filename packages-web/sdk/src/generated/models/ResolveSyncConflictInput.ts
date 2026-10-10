@@ -4,8 +4,7 @@
 /* eslint-disable */
 import type { OfflineSyncConflictResolutionStrategy } from './OfflineSyncConflictResolutionStrategy';
 export type ResolveSyncConflictInput = {
-    description?: string;
-    resolution: OfflineSyncConflictResolutionStrategy;
-    userRef?: string;
+  description?: string;
+  resolution: OfflineSyncConflictResolutionStrategy;
+  userRef?: string;
 };
-

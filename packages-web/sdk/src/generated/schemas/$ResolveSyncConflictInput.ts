@@ -3,16 +3,16 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ResolveSyncConflictInput = {
-    properties: {
-        description: {
-            type: 'string',
-        },
-        resolution: {
-            type: 'OfflineSyncConflictResolutionStrategy',
-            isRequired: true,
-        },
-        userRef: {
-            type: 'string',
-        },
+  properties: {
+    description: {
+      type: 'string',
     },
+    resolution: {
+      type: 'OfflineSyncConflictResolutionStrategy',
+      isRequired: true,
+    },
+    userRef: {
+      type: 'string',
+    },
+  },
 } as const;

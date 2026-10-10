@@ -3,18 +3,18 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ThemePreferences = {
-    properties: {
-        colorScheme: {
-            type: 'Enum',
-            isRequired: true,
-        },
-        contrast: {
-            type: 'Enum',
-            isRequired: true,
-        },
-        density: {
-            type: 'Enum',
-            isRequired: true,
-        },
+  properties: {
+    colorScheme: {
+      type: 'Enum',
+      isRequired: true,
     },
+    contrast: {
+      type: 'Enum',
+      isRequired: true,
+    },
+    density: {
+      type: 'Enum',
+      isRequired: true,
+    },
+  },
 } as const;

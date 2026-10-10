@@ -3,42 +3,42 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $PrivacyExportResult = {
-    properties: {
-        downloadUrl: {
-            type: 'string',
-            isRequired: true,
-        },
-        expiresInSeconds: {
+  properties: {
+    downloadUrl: {
+      type: 'string',
+      isRequired: true,
+    },
+    expiresInSeconds: {
+      type: 'number',
+      isRequired: true,
+    },
+    exportId: {
+      type: 'string',
+      isRequired: true,
+    },
+    objectKey: {
+      type: 'string',
+      isRequired: true,
+    },
+    tables: {
+      type: 'array',
+      contains: {
+        properties: {
+          archiveRows: {
             type: 'number',
             isRequired: true,
-        },
-        exportId: {
+          },
+          liveRows: {
+            type: 'number',
+            isRequired: true,
+          },
+          table: {
             type: 'string',
             isRequired: true,
+          },
         },
-        objectKey: {
-            type: 'string',
-            isRequired: true,
-        },
-        tables: {
-            type: 'array',
-            contains: {
-                properties: {
-                    archiveRows: {
-                        type: 'number',
-                        isRequired: true,
-                    },
-                    liveRows: {
-                        type: 'number',
-                        isRequired: true,
-                    },
-                    table: {
-                        type: 'string',
-                        isRequired: true,
-                    },
-                },
-            },
-            isRequired: true,
-        },
+      },
+      isRequired: true,
     },
+  },
 } as const;

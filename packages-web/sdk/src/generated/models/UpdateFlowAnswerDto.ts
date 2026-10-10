@@ -4,9 +4,8 @@
 /* eslint-disable */
 import type { JsonValue } from './JsonValue';
 export type UpdateFlowAnswerDto = {
-    attachment?: JsonValue;
-    itemId?: string;
-    questionId?: string;
-    value?: JsonValue;
+  attachment?: JsonValue;
+  itemId?: string;
+  questionId?: string;
+  value?: JsonValue;
 };
-

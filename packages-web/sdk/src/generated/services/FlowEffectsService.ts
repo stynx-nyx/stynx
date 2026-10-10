@@ -8,28 +8,28 @@ import type { ProblemDetails } from '../models/ProblemDetails';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class FlowEffectsService {
-    constructor(public readonly httpRequest: BaseHttpRequest) {}
-    /**
-     * @returns JsonValue OK
-     * @returns ProblemDetails Unexpected error
-     * @throws ApiError
-     */
-    public flowEffectsPostFlowEffectsDispatchDispatch({
-        requestBody,
-    }: {
-        requestBody: DispatchFlowEffectsDto,
-    }): CancelablePromise<Record<string, JsonValue> | ProblemDetails> {
-        return this.httpRequest.request({
-            method: 'POST',
-            url: '/flow/effects/dispatch',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not found`,
-            },
-        });
-    }
+  constructor(public readonly httpRequest: BaseHttpRequest) {}
+  /**
+   * @returns JsonValue OK
+   * @returns ProblemDetails Unexpected error
+   * @throws ApiError
+   */
+  public flowEffectsPostFlowEffectsDispatchDispatch({
+    requestBody,
+  }: {
+    requestBody: DispatchFlowEffectsDto;
+  }): CancelablePromise<Record<string, JsonValue> | ProblemDetails> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/flow/effects/dispatch',
+      body: requestBody,
+      mediaType: 'application/json',
+      errors: {
+        400: `Bad request`,
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not found`,
+      },
+    });
+  }
 }

@@ -3,10 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UpdateRecordDto = {
-    email?: string;
-    externalRef?: (string | null);
-    ownerUserId?: (string | null);
-    status?: 'active' | 'pending' | 'inactive';
-    title?: string;
+  email?: string;
+  externalRef?: string | null;
+  ownerUserId?: string | null;
+  status?: 'active' | 'pending' | 'inactive';
+  title?: string;
 };
-

@@ -5,12 +5,11 @@
 import type { FlowAgentRuleType } from './FlowAgentRuleType';
 import type { FlowJsonObject } from './FlowJsonObject';
 export type CreateFlowAgentRuleDto = {
-    nodeId: string;
-    params?: FlowJsonObject;
-    permissionKey?: string;
-    resolverKey?: string;
-    ruleType: FlowAgentRuleType;
-    sortOrder?: number;
-    userId?: string;
+  nodeId: string;
+  params?: FlowJsonObject;
+  permissionKey?: string;
+  resolverKey?: string;
+  ruleType: FlowAgentRuleType;
+  sortOrder?: number;
+  userId?: string;
 };
-

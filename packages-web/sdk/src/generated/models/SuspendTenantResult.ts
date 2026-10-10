@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { TenantDetail } from './TenantDetail';
 export type SuspendTenantResult = {
-    activeSessionCount: number;
-    tenant: TenantDetail;
+  activeSessionCount: number;
+  tenant: TenantDetail;
 };
-

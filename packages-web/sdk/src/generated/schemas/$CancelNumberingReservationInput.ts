@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $CancelNumberingReservationInput = {
-    properties: {
-        reason: {
-            type: 'string',
-        },
+  properties: {
+    reason: {
+      type: 'string',
     },
+  },
 } as const;

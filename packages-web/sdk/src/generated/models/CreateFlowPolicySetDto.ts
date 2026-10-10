@@ -4,11 +4,10 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type CreateFlowPolicySetDto = {
-    description?: string;
-    isActive?: boolean;
-    meta?: FlowJsonObject;
-    name?: string;
-    scopeId: string;
-    version: string;
+  description?: string;
+  isActive?: boolean;
+  meta?: FlowJsonObject;
+  name?: string;
+  scopeId: string;
+  version: string;
 };
-

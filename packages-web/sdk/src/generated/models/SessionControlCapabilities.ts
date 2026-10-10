@@ -4,16 +4,15 @@
 /* eslint-disable */
 import type { SessionScope } from './SessionScope';
 export type SessionControlCapabilities = {
-    controlScopes: Array<SessionScope>;
-    identityGlobalAuthority: boolean;
-    listScopes: Array<SessionScope>;
-    localEnforcement: 'immediate' | 'bounded' | 'none';
-    providerConfirmation: boolean;
-    retryReconciliation: boolean;
-    revokeAll: boolean;
-    revokeOne: boolean;
-    revokeOthers: boolean;
-    sharedAnchorBlastRadius: boolean;
-    stableSessionIdentity: boolean;
+  controlScopes: Array<SessionScope>;
+  identityGlobalAuthority: boolean;
+  listScopes: Array<SessionScope>;
+  localEnforcement: 'immediate' | 'bounded' | 'none';
+  providerConfirmation: boolean;
+  retryReconciliation: boolean;
+  revokeAll: boolean;
+  revokeOne: boolean;
+  revokeOthers: boolean;
+  sharedAnchorBlastRadius: boolean;
+  stableSessionIdentity: boolean;
 };
-

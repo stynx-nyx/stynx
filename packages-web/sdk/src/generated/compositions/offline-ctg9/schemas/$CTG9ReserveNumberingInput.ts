@@ -3,43 +3,46 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $CTG9ReserveNumberingInput = {
-    properties: {
-        deviceId: {
-            type: 'string',
-            isRequired: true,
-        },
-        entityType: {
-            type: 'string',
-            isRequired: true,
-        },
-        idempotencyKey: {
-            type: 'string',
-        },
-        orgUnitId: {
-            type: 'string',
-            isRequired: true,
-        },
-        rangeId: {
-            type: 'string',
-        },
-        requestedSize: {
-            type: 'number',
-            isRequired: true,
-        },
-        series: {
-            type: 'string',
-        },
-        shiftId: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-            isRequired: true,
-        },
-        validUntil: {
-            type: 'string',
-        },
+  properties: {
+    deviceId: {
+      type: 'string',
+      isRequired: true,
     },
+    entityType: {
+      type: 'string',
+      isRequired: true,
+    },
+    idempotencyKey: {
+      type: 'string',
+    },
+    orgUnitId: {
+      type: 'string',
+      isRequired: true,
+    },
+    rangeId: {
+      type: 'string',
+    },
+    requestedSize: {
+      type: 'number',
+      isRequired: true,
+    },
+    series: {
+      type: 'string',
+    },
+    shiftId: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
+        },
+        {
+          type: 'null',
+        },
+      ],
+      isRequired: true,
+    },
+    validUntil: {
+      type: 'string',
+    },
+  },
 } as const;

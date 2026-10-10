@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type TenantOverrideUpdateInput = {
-    catalog: Record<string, string>;
-    locale: string;
+  catalog: Record<string, string>;
+  locale: string;
 };
-
