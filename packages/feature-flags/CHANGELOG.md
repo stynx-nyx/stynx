@@ -1,5 +1,7 @@
 # @stynx-nyx/feature-flags
 
+## 1.5.6
+
 ## 1.5.5
 
 ## 1.5.4

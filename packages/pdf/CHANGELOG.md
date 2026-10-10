@@ -1,5 +1,12 @@
 # @stynx-nyx/pdf
 
+## 1.5.6
+
+### Patch Changes
+
+- Updated dependencies [719be6c]
+  - @stynx-nyx/signature@1.5.6
+
 ## 1.5.5
 
 ### Patch Changes
