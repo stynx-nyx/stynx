@@ -79,6 +79,67 @@ export function compareSummaries({
   return { degradations, observations };
 }
 
+// Required-tail admission for complete HTTP evidence. This comparison does not
+// authenticate a previous-success artifact, establish candidate custody, or
+// confer a producer verdict. Those obligations remain with the owning producer.
+// Legacy threshold-only and missing-metric behavior above remains unchanged.
+export function compareRequiredMetricTails(options) {
+  const allowed = new Set(['current', 'baseline', 'reference', 'requiredMetrics']);
+  if (
+    !options ||
+    typeof options !== 'object' ||
+    Array.isArray(options) ||
+    Reflect.ownKeys(options).some((key) => !allowed.has(key))
+  )
+    throw new Error('Strict k6 comparison requires only declared comparison options');
+  const { current, baseline, reference, requiredMetrics } = options;
+  if (
+    !Array.isArray(requiredMetrics) ||
+    requiredMetrics.length === 0 ||
+    new Set(requiredMetrics).size !== requiredMetrics.length ||
+    [...requiredMetrics].some((metric) => !trackedMetrics.includes(metric))
+  )
+    throw new Error('Strict k6 comparison requires unique known nonempty requiredMetrics');
+  const selected = {
+    current: { metrics: {} },
+    baseline: { metrics: {} },
+    reference: { metrics: {} },
+  };
+  for (const metric of requiredMetrics) {
+    const tails = {};
+    for (const [name, input] of Object.entries({ current, baseline, reference })) {
+      tails[name] = {};
+      for (const statistic of comparedStatistics) {
+        const value =
+          name === 'reference'
+            ? input?.metrics?.[metric]?.[statistic]
+            : input?.metrics?.[metric]?.values?.[statistic];
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0)
+          throw new Error(`Strict k6 comparison requires usable ${name} ${metric} ${statistic}`);
+        tails[name][statistic] = value;
+      }
+      selected[name].metrics[metric] = name === 'reference' ? tails[name] : { values: tails[name] };
+    }
+    for (const statistic of comparedStatistics) {
+      if (Math.max(tails.baseline[statistic], tails.reference[statistic]) <= 0)
+        throw new Error(
+          `Strict k6 comparison requires positive effective baseline ${metric} ${statistic}`,
+        );
+    }
+  }
+  const report = compareSummaries({
+    ...selected,
+    maxRelativeIncreasePercent: 10,
+    minAbsoluteIncreaseMs: 1,
+  });
+  return {
+    observations: requiredMetrics.map((metric) =>
+      report.observations.find((entry) => entry.metric === metric),
+    ),
+    degradations: report.degradations.filter((entry) => requiredMetrics.includes(entry.metric)),
+  };
+}
+
 export function loadReference(path) {
   if (!path || !existsSync(path)) return null;
   const reference = readJson(path);
