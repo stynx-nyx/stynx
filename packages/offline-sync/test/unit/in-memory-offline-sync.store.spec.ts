@@ -104,8 +104,13 @@ describe('InMemoryOfflineSyncStore direct CTG9 contracts', () => {
       .rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_NOT_FOUND' });
 
     const second = await store.openConflict(scope, legacy.queueItemId, { conflictType: 'version', description: 'again' }, now);
+    // ADR-MOBILE-OFFLINE-0003 D2: an `open` result is recorded and keeps the conflict open; any other status is refused.
+    await expect(store.resolveWithPort(scope, second.conflictId, { resolution: 'manual-review' }, now, {
+      resolve: async () => ({ ...second, status: 'open', resolution: 'manual-review', resolvedAt: now }),
+    })).resolves.toEqual({ ...second, status: 'open' });
+    expect((await store.listSyncConflictActions(scope, { conflictId: second.conflictId })).items).toMatchObject([{ action: 'manual-review', resultingStatus: 'open', actorId: scope.actorId }]);
     await expect(store.resolveWithPort(scope, second.conflictId, { resolution: 'server-wins' }, now, {
-      resolve: async () => ({ ...second, status: 'open' }),
+      resolve: async () => ({ ...second, status: 'closed' as never }),
     })).rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_RESOLUTION' });
     await expect(store.resolveWithPort(scope, second.conflictId, { resolution: 'server-wins' }, now, {
       allowedActions: async () => ['device-wins'], resolve: resolve as never,

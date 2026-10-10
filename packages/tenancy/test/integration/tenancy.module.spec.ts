@@ -79,7 +79,7 @@ describe('StynxTenancyModule integration', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: database.connectionString('@stynx-nyx/tenancy:owner') },
-            app: { connectionString: database.connectionString('@stynx-nyx/tenancy:app') },
+            app: { connectionString: database.appConnectionString('@stynx-nyx/tenancy:app') },
             reader: { connectionString: database.connectionString('@stynx-nyx/tenancy:reader') },
           },
           migrations: { enabled: true },

@@ -43,7 +43,7 @@ describe('StynxAuditController API error matrix', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: database.connectionString('@stynx-nyx/audit:api-matrix:owner') },
-            app: { connectionString: database.connectionString('@stynx-nyx/audit:api-matrix:app') },
+            app: { connectionString: database.appConnectionString('@stynx-nyx/audit:api-matrix:app') },
             reader: { connectionString: database.connectionString('@stynx-nyx/audit:api-matrix:reader') },
           },
           migrations: { enabled: true },

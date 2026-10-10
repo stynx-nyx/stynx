@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import type { Client } from 'pg';
 import { StynxDataModule } from '../../src/data.module';
 import { StynxMigrationRunner } from '../../src/migration-runner';
-import { createPostgresTestDatabase } from '../support/postgres';
+import { asAppRole, createPostgresTestDatabase } from '../support/postgres';
 
 async function expectedPlatformMigrationIds(): Promise<string[]> {
   const migrationDir = resolve(__dirname, '../../migrations/platform');
@@ -18,7 +18,7 @@ async function createMigratedModule(connectionString: string): Promise<TestingMo
       StynxDataModule.forRoot({
         connections: {
           owner: { connectionString },
-          app: { connectionString },
+          app: { connectionString: asAppRole(connectionString) },
           reader: { connectionString },
         },
         migrations: {

@@ -83,7 +83,7 @@ describe('UPS-OBX-11 named destinations over the entity selector (PostgreSQL/FOR
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('outbox-named-owner') },
-            app: { connectionString: asRole(postgres.connectionString('outbox-named-app'), 'stynx_app') },
+            app: { connectionString: postgres.appConnectionString('outbox-named-app') },
             reader: { connectionString: asRole(postgres.connectionString('outbox-named-reader'), 'stynx_reader') },
           },
           migrations: { enabled: true },

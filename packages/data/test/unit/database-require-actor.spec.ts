@@ -43,7 +43,7 @@ function harness(live: { user: string; role: string; tenant: string; actor: stri
     get: vi.fn(() => active),
     set: vi.fn((_key: PropertyKey, value: unknown) => { active = value; }),
   } as unknown as ClsService<Record<PropertyKey, unknown>>;
-  const pools = { get: vi.fn(() => ({ connect: async () => client })) } as unknown as StynxPoolRegistry;
+  const pools = { get: vi.fn(() => ({ connect: async () => client })), ensureAppRole: async () => undefined } as unknown as StynxPoolRegistry;
   return { database: new Database(requestContext, systemContext, pools, cls, options), statements, pools, client };
 }
 

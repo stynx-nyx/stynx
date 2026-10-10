@@ -76,7 +76,7 @@ async function createPolicyApp(
       StynxDataModule.forRoot({
         connections: {
           owner: { connectionString: database.connectionString(`@stynx-nyx/${name}:owner`) },
-          app: { connectionString: database.connectionString(`@stynx-nyx/${name}:app`) },
+          app: { connectionString: database.appConnectionString(`@stynx-nyx/${name}:app`) },
           reader: { connectionString: database.connectionString(`@stynx-nyx/${name}:reader`) },
         },
         migrations: { enabled: true },

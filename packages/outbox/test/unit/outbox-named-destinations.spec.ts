@@ -40,14 +40,14 @@ function dispatchDatabase(claims: ReturnType<typeof claim>[] = []) {
   const tx = vi.fn(async (fn: (trx: never) => Promise<unknown>) => fn({ role: 'app', query } as never));
   return {
     calls, tx,
-    database: { currentTenantId: () => tenant, withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()), tx },
+    database: { appRoleName: 'stynx_app', currentTenantId: () => tenant, withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()), tx },
   };
 }
 
 const entities = (sendEvent: ReturnType<typeof vi.fn>) => sendEvent.mock.calls.map(([row]) => (row as OutboxRow).entity);
 
 describe('UPS-OBX-11 named destination registry validation', () => {
-  const database = { currentTenantId: () => tenant };
+  const database = { appRoleName: 'stynx_app', currentTenantId: () => tenant };
   const construct = (options: Record<string, unknown>) => () => new OutboxService(database as never, options as never);
 
   it('accepts a well-formed registry, an empty one and none at all', () => {
@@ -245,7 +245,7 @@ describe('UPS-OBX-11 queue health by destination name', () => {
     const options: unknown[] = [];
     const query = vi.fn(async (sql: string, params?: readonly unknown[]) => { calls.push({ sql: flat(sql), params }); return { rows }; });
     const tx = vi.fn(async (fn: (trx: never) => Promise<unknown>, txOptions: unknown) => { options.push(txOptions); return fn({ role: 'app', query } as never); });
-    return { calls, options, tx, database: { currentTenantId: () => tenant, withSystemContext: vi.fn(), tx } };
+    return { calls, options, tx, database: { appRoleName: 'stynx_app', currentTenantId: () => tenant, withSystemContext: vi.fn(), tx } };
   }
 
   it('adds the selector predicate and its two parameters only when a destination is named', async () => {

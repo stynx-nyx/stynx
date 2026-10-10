@@ -35,7 +35,7 @@ describe('CTG9 A/B/C ownership queue (PostgreSQL)', () => {
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-queue-owner') },
             app: {
-              connectionString: asRole(postgres.connectionString('ctg9-queue-app'), 'stynx_app'),
+              connectionString: postgres.appConnectionString('ctg9-queue-app'),
             },
             reader: {
               connectionString: asRole(

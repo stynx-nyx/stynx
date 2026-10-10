@@ -20,8 +20,6 @@ const tenantB = '00000000-0000-4000-8000-0000000000b5';
 const payload = {};
 const hash = `sha256:${createHash('sha256').update(JSON.stringify(payload)).digest('hex')}`;
 const migrationDir = resolve(__dirname, '../../migrations');
-const asRole = (connectionString: string, role: 'stynx_app'): string =>
-  `${connectionString}&options=${encodeURIComponent(`-c role=${role}`)}`;
 const reserve = { orgUnitId: 'org-a', deviceId: 'device-a', shiftId: 'shift-a', entityType: 'citation', requestedSize: 3 };
 const item = (id: string, key: string | null = id) => ({
   queueItemId: id, entityType: 'citation', localEntityId: `local-${id}`, payloadHash: hash, payloadJson: payload,
@@ -55,7 +53,7 @@ describe('UPS-OFS-05/-09/-10/-11/-12 PostgreSQL reservation idempotency, listing
       imports: [StynxDataModule.forRoot({
         connections: {
           owner: { connectionString: pg.connectionString('ofs317-owner') },
-          app: { connectionString: asRole(pg.connectionString('ofs317-app'), 'stynx_app'), max: 10 },
+          app: { connectionString: pg.appConnectionString('ofs317-app'), max: 10 },
           reader: { connectionString: pg.connectionString('ofs317-reader') },
         },
         migrations: { enabled: true },
@@ -179,7 +177,8 @@ describe('UPS-OFS-05/-09/-10/-11/-12 PostgreSQL reservation idempotency, listing
     expect(receipts.items.map(receipt => receipt.deviceBatchId)).toEqual(['lb-1', 'lb-1', 'lb-1']);
     // Item receipts order by their database insertion time (received_at defaults to clock_timestamp()).
     expect(receipts.items.find(receipt => receipt.queueItemId === 'l-a1')).toEqual({ receiptId: 'l-a1', queueItemId: 'l-a1',
-      deviceId: 'list-a', deviceBatchId: 'lb-1', payloadHash: hash, status: 'applied', receivedAt: expect.stringMatching(/Z$/u) });
+      deviceId: 'list-a', deviceBatchId: 'lb-1', payloadHash: hash, status: 'applied', receivedAt: expect.stringMatching(/Z$/u),
+      stynx: { version: 1, receiptId: 'l-a1', appliedAt: '2026-09-28T13:00:00.000Z', serverEntityId: 'server-l-a1', attempts: 1 } });
     expect((await run(tenantA, () => a.listSyncItemReceipts({ status: 'received', deviceBatchId: 'lb-1' }))).items)
       .toMatchObject([{ queueItemId: 'l-a3', errorCode: 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED' }]);
     expect((await run(tenantA, () => a.listSyncItemReceipts({ status: 'conflict' }))).items.map(receipt => receipt.queueItemId).sort()).toEqual(['l-a2', 'l-b1']);
@@ -300,7 +299,8 @@ describe('UPS-OFS-05/-09/-10/-11/-12 PostgreSQL reservation idempotency, listing
     // An existing original with a non-canonical resubmission is still a per-item rejection; the original is untouched.
     const again = await run(tenantA, () => a.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'hash-dev', deviceBatchId: 'hb-3', items: [{ ...item('h-5', 'h-1'), payloadHash: oneByte }] }, transport('ht-3')));
     expect(again.receipt.items).toEqual([{ queueItemId: 'h-5', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' }]);
-    expect(await run(tenantA, () => a.getSyncItemReceipt('h-1'))).toEqual({ queueItemId: 'h-1', status: 'applied' });
+    expect(await run(tenantA, () => a.getSyncItemReceipt('h-1'))).toEqual({ queueItemId: 'h-1', status: 'applied',
+      stynx: { version: 1, receiptId: 'h-1', appliedAt: '2026-09-28T13:00:01.000Z', serverEntityId: 'server-h-1', attempts: 1 } });
     // Structural hashes stay a batch-wide 400 in CTG9 mode; E6 mode keeps its 400 for any non-canonical value.
     await expect(run(tenantA, () => a.submitSyncBatch({ orgUnitId: 'org-a', deviceId: 'hash-dev', deviceBatchId: 'hb-4', items: [{ ...item('h-6'), payloadHash: 'é'.repeat(128) }] }, transport('ht-4'))))
       .rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT', message: 'payloadHash must be a string of 1 to 255 bytes.' });

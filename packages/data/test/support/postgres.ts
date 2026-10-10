@@ -22,6 +22,18 @@ function localHost(): string | undefined {
   return process.env.STYNX_TEST_PG_HOST;
 }
 
+/** Platform application role of `0001_roles.sql`; it logs in directly for app pools. */
+export const TEST_APP_ROLE = 'stynx_app';
+
+/**
+ * Password bound to the login roles that app pools use. The maintainer's
+ * test login is a superuser, which the ADR-OUTBOX-0003 D1 property check
+ * refuses behind `SET ROLE`, so app pools log in as the role itself.
+ */
+function roleLoginPassword(): string {
+  return localPassword() ?? 'stynx_test_role';
+}
+
 function databaseName(prefix: string): string {
   return `${prefix}_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
 }
@@ -58,21 +70,54 @@ function adminConfig(database = 'postgres'): ClientConfig {
   };
 }
 
-function connectionString(database: string, applicationName: string): string {
+function connectionString(
+  database: string,
+  applicationName: string,
+  login: { user: string; password?: string } = { user: localUser(), password: localPassword() },
+): string {
   const host = localHost();
   if (host) {
     const url = new URL(
-      `postgresql://${encodeURIComponent(localUser())}@${host}:${localPort()}/${database}`,
+      `postgresql://${encodeURIComponent(login.user)}@${host}:${localPort()}/${database}`,
     );
-    const password = localPassword();
-    if (password) {
-      url.password = password;
+    if (login.password) {
+      url.password = login.password;
     }
     url.searchParams.set('application_name', applicationName);
     return url.toString();
   }
 
-  return `postgresql://${encodeURIComponent(localUser())}@/${encodeURIComponent(database)}?host=${encodeURIComponent(localSocketDir())}&application_name=${encodeURIComponent(applicationName)}`;
+  return `postgresql://${encodeURIComponent(login.user)}@/${encodeURIComponent(database)}?host=${encodeURIComponent(localSocketDir())}&application_name=${encodeURIComponent(applicationName)}`;
+}
+
+/** Rewrites a test connection string so the pool logs in as `role` (default `stynx_app`). */
+export function asAppRole(connectionString: string, role = TEST_APP_ROLE): string {
+  const url = new URL(connectionString);
+  url.username = role;
+  url.password = roleLoginPassword();
+  return url.toString();
+}
+
+/**
+ * Gives an existing cluster role a login password so a pool can connect as
+ * that role itself (`session_user = current_user`). Idempotent; a role the
+ * cluster does not have yet (fresh cluster before `0001_roles.sql`) is skipped.
+ */
+async function ensureRoleLogin(client: Client, role: string): Promise<void> {
+  const exists = await client.query('select 1 from pg_roles where rolname = $1', [role]);
+  if (exists.rowCount === 0) return;
+  // Suites run in parallel against one cluster; serialize the shared catalog row.
+  await client.query('begin');
+  try {
+    await client.query(`select pg_advisory_xact_lock(hashtext('stynx_test_role_login'))`);
+    await client.query(
+      `alter role ${client.escapeIdentifier(role)} with login password ${client.escapeLiteral(roleLoginPassword())}`,
+    );
+    await client.query('commit');
+  } catch (error) {
+    await client.query('rollback').catch(() => undefined);
+    throw error;
+  }
 }
 
 async function withClient<T>(config: ClientConfig, fn: (client: Client) => Promise<T>): Promise<T> {
@@ -88,6 +133,10 @@ async function withClient<T>(config: ClientConfig, fn: (client: Client) => Promi
 export interface PostgresTestDatabase {
   readonly database: string;
   connectionString(applicationName: string): string;
+  /** Connection string that logs in as `role` (default `stynx_app`) rather than the test login. */
+  appConnectionString(applicationName: string, role?: string): string;
+  /** Binds the login password to a role created after the database (test-created roles). */
+  ensureRoleLogin(role: string): Promise<void>;
   adminConnectionString(applicationName: string): string;
   connectAsAdmin(): Promise<Client>;
   dispose(): Promise<void>;
@@ -117,12 +166,19 @@ export async function createPostgresTestDatabase(
     } else {
       await client.query(`create database "${database}"`);
     }
+    await ensureRoleLogin(client, TEST_APP_ROLE);
   });
 
   return {
     database,
     connectionString(applicationName: string): string {
       return connectionString(database, applicationName);
+    },
+    appConnectionString(applicationName: string, role = TEST_APP_ROLE): string {
+      return connectionString(database, applicationName, { user: role, password: roleLoginPassword() });
+    },
+    async ensureRoleLogin(role: string): Promise<void> {
+      await withClient(adminConfig(), (client) => ensureRoleLogin(client, role));
     },
     adminConnectionString(applicationName: string): string {
       return connectionString(database, applicationName);

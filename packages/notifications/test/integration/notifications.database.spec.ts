@@ -16,7 +16,7 @@ describe('notifications database integration', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('@stynx-nyx/notifications:owner') },
-            app: { connectionString: postgres.connectionString('@stynx-nyx/notifications:app') },
+            app: { connectionString: postgres.appConnectionString('@stynx-nyx/notifications:app') },
             reader: { connectionString: postgres.connectionString('@stynx-nyx/notifications:reader') },
           },
           migrations: { enabled: true },

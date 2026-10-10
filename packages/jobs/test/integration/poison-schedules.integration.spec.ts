@@ -11,7 +11,6 @@ const tenantA = '31111111-1111-4111-8111-111111111111';
 const tenantB = '32222222-2222-4222-8222-222222222222';
 const actorA = '3aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const actorB = '3bbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
-const asApp = (url: string): string => `${url}&options=${encodeURIComponent('-c role=stynx_app')}`;
 
 // INV-RBAC-001; CTG-0004: direct application-role writes can persist invalid cron rows.
 describe('CTG-0004 poisoned schedule isolation under FORCE RLS', () => {
@@ -28,7 +27,7 @@ describe('CTG-0004 poisoned schedule isolation under FORCE RLS', () => {
           StynxDataModule.forRoot({
             connections: {
               owner: { connectionString: testDatabase.connectionString('poison-owner') },
-              app: { connectionString: asApp(testDatabase.connectionString('poison-app')) },
+              app: { connectionString: testDatabase.appConnectionString('poison-app') },
               reader: { connectionString: testDatabase.connectionString('poison-reader') },
             },
             migrations: { enabled: true },

@@ -34,7 +34,7 @@ describe('Rate limit integration', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('@stynx-nyx/ratelimit:owner') },
-            app: { connectionString: postgres.connectionString('@stynx-nyx/ratelimit:app') },
+            app: { connectionString: postgres.appConnectionString('@stynx-nyx/ratelimit:app') },
             reader: { connectionString: postgres.connectionString('@stynx-nyx/ratelimit:reader') },
           },
           migrations: { enabled: true },

@@ -15,7 +15,7 @@ import {
 import { StynxDataModule } from '../../src/data.module';
 import { makeLiveOnly, softDeletable } from '../../src/table-markers';
 import type { StynxDataMetricsSink } from '../../src/tokens';
-import { createPostgresTestDatabase } from '../support/postgres';
+import { asAppRole, createPostgresTestDatabase } from '../support/postgres';
 
 const demoSchema = pgSchema('demo');
 
@@ -97,7 +97,7 @@ async function createMigratedModule(
       StynxDataModule.forRoot({
         connections: {
           owner: { connectionString },
-          app: { connectionString },
+          app: { connectionString: asAppRole(connectionString) },
           reader: { connectionString },
         },
         migrations: {
@@ -242,6 +242,16 @@ async function bootstrapDemoSchema(client: Client): Promise<void> {
       'block'
     )
   `);
+  // The app pool is the real stynx_app (ADR-OUTBOX-0003 D1): bind the demo
+  // schema and its archive mirrors the way a platform migration would.
+  await client.query('grant select, insert, update, delete on all tables in schema demo to stynx_app');
+  await client.query('grant select on all tables in schema demo to stynx_reader');
+  await client.query('grant usage, select on all sequences in schema demo to stynx_app');
+  await client.query('grant usage on schema archive to stynx_app, stynx_reader');
+  await client.query(`grant select, insert, update, delete on archive.demo_customer, archive.demo_customer_address,
+    archive.demo_customer_note, archive.demo_invoice, archive.demo_invoice_line_item, archive.demo_invoice_payment
+    to stynx_app`);
+  await client.query('grant usage, select on all sequences in schema archive to stynx_app');
   await client.query('reset role');
 }
 

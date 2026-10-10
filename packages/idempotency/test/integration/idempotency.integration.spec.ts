@@ -60,7 +60,7 @@ describe('Idempotency integration', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('@stynx-nyx/idempotency:owner') },
-            app: { connectionString: postgres.connectionString('@stynx-nyx/idempotency:app') },
+            app: { connectionString: postgres.appConnectionString('@stynx-nyx/idempotency:app') },
             reader: { connectionString: postgres.connectionString('@stynx-nyx/idempotency:reader') },
           },
           migrations: { enabled: true },

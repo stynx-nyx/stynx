@@ -68,7 +68,7 @@ describe('CTG9 event delivery leases and evidence (PostgreSQL)', () => {
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-delivery-owner') },
             app: {
-              connectionString: asRole(postgres.connectionString('ctg9-delivery-app'), 'stynx_app'),
+              connectionString: postgres.appConnectionString('ctg9-delivery-app'),
             },
             reader: {
               connectionString: asRole(

@@ -132,7 +132,7 @@ describe('StynxAuthController API error matrix', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: database.connectionString('@stynx-nyx/auth-matrix:owner') },
-            app: { connectionString: database.connectionString('@stynx-nyx/auth-matrix:app') },
+            app: { connectionString: database.appConnectionString('@stynx-nyx/auth-matrix:app') },
             reader: { connectionString: database.connectionString('@stynx-nyx/auth-matrix:reader') },
           },
           migrations: { enabled: true },

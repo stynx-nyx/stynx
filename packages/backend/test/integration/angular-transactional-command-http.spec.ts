@@ -68,7 +68,7 @@ describe('Angular NGIDEM to transactional command over live HTTP and PostgreSQL'
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ngidem-owner') },
-            app: { connectionString: asRole(postgres.connectionString('ngidem-app'), 'stynx_app') },
+            app: { connectionString: postgres.appConnectionString('ngidem-app') },
             reader: { connectionString: asRole(postgres.connectionString('ngidem-reader'), 'stynx_reader') },
           },
           migrations: { enabled: true },

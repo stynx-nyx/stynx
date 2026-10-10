@@ -72,7 +72,7 @@ describe('CTG9 append-only outbox facts (PostgreSQL/RLS)', () => {
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-append-owner') },
             app: {
-              connectionString: asRole(postgres.connectionString('ctg9-append-app'), 'stynx_app'),
+              connectionString: postgres.appConnectionString('ctg9-append-app'),
             },
             reader: {
               connectionString: asRole(
