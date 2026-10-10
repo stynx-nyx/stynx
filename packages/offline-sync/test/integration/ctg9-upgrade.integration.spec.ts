@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
-import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
+import { realOfflineHttpAuthentication } from '../support/real-http-authentication';
 import request from 'supertest';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
 import { RequestContextMutator, StynxCoreModule } from '@stynx-nyx/core';
@@ -31,6 +31,7 @@ const asRole = (connectionString: string, role: 'stynx_app' | 'stynx_reader'): s
 describe('CTG9 OFS additive PostgreSQL upgrade', () => {
   let pg: PostgresTestDatabase;
   let moduleRef: TestingModule;
+  let authentication: Awaited<ReturnType<typeof realOfflineHttpAuthentication>>;
   beforeAll(async () => {
     pg = await createPostgresTestDatabase('stynx_ctg9_ofs', { useTemplate: false });
     moduleRef = await Test.createTestingModule({
@@ -118,6 +119,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     } finally {
       await admin.end();
     }
+    authentication = await realOfflineHttpAuthentication(pg, tenantA);
   }, 60_000);
   afterAll(async () => {
     await moduleRef?.close();
@@ -515,14 +517,17 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       clearReservation: vi.fn(),
     };
     const module = await Test.createTestingModule({
+      providers: authentication.providers,
       imports: [
+        authentication.dataModule,
+        authentication.authModule,
         StynxCoreModule.forRoot({
           appName: 'ctg9-http-proof',
           schema: { safeParseAsync: async () => ({ success: true, data: {} }) } as never,
         }),
         StynxOfflineSyncModule.forRoot({
           store: new PostgresOfflineSyncStore(moduleRef),
-          context: { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) },
+          context: { current: () => ({ tenantId: tenantA, actorId: authentication.actorId }) },
           policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
           legacyIdempotencyStore: legacy as never,
           itemApplier: {
@@ -536,12 +541,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
           },
         } as never),
       ],
-    })
-      .overrideGuard(StynxAuthGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(PermissionGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
+    }).compile();
     const app: INestApplication = module.createNestApplication();
     app.setGlobalPrefix('gateway/v2');
     const contexts = moduleRef.get(RequestContextMutator);
@@ -550,7 +550,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
         {
           requestId: 'ctg9-prefixed-http-bridge',
           tenantId: tenantA,
-          actorId: 'actor-a',
+          actorId: authentication.actorId,
           startedAt: new Date('2026-09-28T12:00:00.000Z'),
         },
         next,
@@ -558,8 +558,19 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
     );
     await app.init();
     try {
+      await request(app.getHttpServer())
+        .post('/gateway/v2/offline-sync/sync-batches')
+        .send({})
+        .expect(401);
+      await request(app.getHttpServer())
+        .post('/gateway/v2/offline-sync/sync-batches')
+        .set('Authorization', 'Bearer ' + authentication.unprivilegedToken)
+        .send({})
+        .expect(403);
+      expect(legacy.lookup).not.toHaveBeenCalled();
       const response = await request(app.getHttpServer())
         .post('/gateway/v2/offline-sync/sync-batches')
+        .set('Authorization', 'Bearer ' + authentication.accessToken)
         .set('Idempotency-Key', 'legacy-transport-key')
         .send({
           orgUnitId: 'org-a',
@@ -587,6 +598,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       );
       const missingHeader = await request(app.getHttpServer())
         .post('/gateway/v2/offline-sync/sync-batches')
+        .set('Authorization', 'Bearer ' + authentication.accessToken)
         .send({
           orgUnitId: 'org-a',
           deviceId: 'missing-key-device',
@@ -620,11 +632,13 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       };
       const transportFirst = await request(app.getHttpServer())
         .post('/gateway/v2/offline-sync/sync-batches')
+        .set('Authorization', 'Bearer ' + authentication.accessToken)
         .set('Idempotency-Key', 'same-transport-key')
         .send(transportBody('transport-first', 'one'));
       expect(transportFirst.status).toBe(201);
       const transportReuse = await request(app.getHttpServer())
         .post('/gateway/v2/offline-sync/sync-batches')
+        .set('Authorization', 'Bearer ' + authentication.accessToken)
         .set('Idempotency-Key', 'same-transport-key')
         .send(transportBody('transport-second', 'two'));
       expect(transportReuse.status).toBe(422);
@@ -639,16 +653,18 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
   }, 60_000);
 
   it('returns retryable 503 and leaves an internal item failure open over HTTP', async () => {
-    let requestContexts!: RequestContextMutator;
     const module = await Test.createTestingModule({
+      providers: authentication.providers,
       imports: [
+        authentication.dataModule,
+        authentication.authModule,
         StynxCoreModule.forRoot({
           appName: 'ctg9-http-proof',
           schema: { safeParseAsync: async () => ({ success: true, data: {} }) } as never,
         }),
         StynxOfflineSyncModule.forRoot({
           store: new PostgresOfflineSyncStore(moduleRef),
-          context: { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) },
+          context: { current: () => ({ tenantId: tenantA, actorId: authentication.actorId }) },
           policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) },
           itemApplier: {
             apply: async () => {
@@ -661,19 +677,20 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
           },
         } as never),
       ],
-    })
-      .overrideGuard(StynxAuthGuard)
-      .useValue({
-        canActivate: () => {
-          requestContexts.patch({ tenantId: tenantA, actorId: 'actor-a' });
-          return true;
-        },
-      })
-      .overrideGuard(PermissionGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
+    }).compile();
     const app: INestApplication = module.createNestApplication();
-    requestContexts = module.get(RequestContextMutator);
+    const contexts = moduleRef.get(RequestContextMutator);
+    app.use((_req: unknown, _res: unknown, next: () => void) =>
+      contexts.runWithRequestContext(
+        {
+          requestId: 'ctg9-http-failure',
+          tenantId: tenantA,
+          actorId: authentication.actorId,
+          startedAt: new Date(),
+        },
+        next,
+      ),
+    );
     await app.init();
     try {
       const body = {
@@ -694,6 +711,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       };
       const response = await request(app.getHttpServer())
         .post('/offline-sync/sync-batches')
+        .set('Authorization', 'Bearer ' + authentication.accessToken)
         .set('X-Request-Id', '0198d132-0000-7000-8000-000000000001')
         .set('Idempotency-Key', 'internal-failure-transport')
         .send(body);
@@ -709,17 +727,15 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
         { current: () => ({ tenantId: tenantA, actorId: 'actor-a' }) },
         { policyResolver: { resolve: async () => ({ maxBatchItems: 150 }) } } as never,
       );
-      const receipt = await moduleRef
-        .get(RequestContextMutator)
-        .runWithRequestContext(
-          {
-            requestId: 'ctg9-internal-failure-receipt',
-            tenantId: tenantA,
-            actorId: 'actor-a',
-            startedAt: new Date('2026-09-28T12:00:00.000Z'),
-          },
-          () => receiptService.getSyncBatchReceipt(body.deviceId, body.deviceBatchId),
-        );
+      const receipt = await moduleRef.get(RequestContextMutator).runWithRequestContext(
+        {
+          requestId: 'ctg9-internal-failure-receipt',
+          tenantId: tenantA,
+          actorId: 'actor-a',
+          startedAt: new Date('2026-09-28T12:00:00.000Z'),
+        },
+        () => receiptService.getSyncBatchReceipt(body.deviceId, body.deviceBatchId),
+      );
       expect(receipt).toMatchObject({ status: 'open', responseStatus: null });
       expect(receipt.items).toMatchObject([
         { queueItemId: 'internal-failure-item', status: 'received' },
@@ -1279,9 +1295,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
         },
       } as never,
     ) as OfflineSyncService & {
-      getNumberingConsumption(
-        id: string,
-      ): Promise<{
+      getNumberingConsumption(id: string): Promise<{
         consumption: Array<{ number: number; status: string; serverEntityId: string | null }>;
       }>;
     };
@@ -2884,9 +2898,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
         entityType: string;
         requestedSize: number;
       }): Promise<{ reservationId: string; startNumber: number }>;
-      getNumberingConsumption(
-        id: string,
-      ): Promise<{
+      getNumberingConsumption(id: string): Promise<{
         status: string;
         consumption: Array<{ status: string; serverEntityId: string | null }>;
       }>;
