@@ -90,6 +90,18 @@ not yet been reconciled into complete performance evidence.
    no-baseline branch cannot confer complete PASS. Keep the existing first-seed
    rule only for proven absence of a prior successful main run; a lost/expired
    artifact is not permission to seed.
+   Fix discovery to the current workflow run's original `created_at`, including
+   reruns. Select the latest prior-created successful main run by creation time
+   and run ID, with completion proved strictly before that cutoff, independently
+   of artifact availability. Refuse unresolved prior rerun history and
+   second-resolution completion/cutoff equality before selecting an older run.
+   Empty, deleted or truncated history cannot prove first seed in this repository
+   with known successful history. Require authenticated complete discovery,
+   HTTPS transport with credentials separated from archive delivery, a closed
+   archive roster and exact raw digests. Artifact metadata alone does not verify
+   the run attempt; keep attempt provenance unverified until independently
+   established. Legacy archives do not retroactively prove complete endpoint
+   qualification or the accepted 50 ms presign gate.
 7. **Exact admission and tooling.** Bind source/build/SLO/population inputs,
    actual executable and container identities and a closed reviewed environment.
    Docker/DB writes require the published CLI's supported explicit local-write

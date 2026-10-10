@@ -390,6 +390,31 @@ artifacts fail closed. First seed remains allowed only when actual discovery
 proves there was no prior successful main run. The helper's no-baseline and
 unusable-metric skips do not establish complete PASS.
 
+Use the current workflow run's original `created_at` as the fixed discovery
+cutoff, including current reruns. From authenticated complete main-run discovery,
+select the latest prior-created successful run by creation time and run ID whose
+completion is proved strictly before the cutoff. Select the run before looking
+for its artifacts; a scenario-only run or missing artifact never permits an older
+substitute. If another prior-created main run has `run_attempt > 1` and
+`updated_at` after the cutoff, refuse unresolved historical rerun state until
+authenticated attempt history resolves it. If another successful main run was
+created at or before the cutoff and its completion timestamp equals the cutoff,
+refuse the ambiguous second-resolution order before considering an older run.
+Empty, deleted or truncated discovery cannot establish first seed in this
+repository with known prior successful runs.
+
+Read-only transport must authenticate the canonical repository/workflow and
+complete pagination, retain exact response/archive digests, and reject duplicate
+or truncated populations. Use HTTPS with credentials kept on the authenticated
+API origin and separated from redirected archive delivery. Validate the closed
+archive member roster and exact bytes before consuming summaries. Artifact API
+metadata alone does not establish the run attempt; retain
+`attemptVerified: false` until exact attempt provenance is independently proved.
+Metadata projection, ZIP parsing and comparison helpers alone confer no origin,
+transport or readiness verdict. Existing archives must retain their actual
+scenario/profile and executed thresholds; they cannot retroactively qualify
+complete endpoint coverage or the 50 ms presign gate.
+
 ## Toolchain, inputs and admitted environment
 
 Bind the new producer, workload/SLO/route manifest and census/coverage producers;
