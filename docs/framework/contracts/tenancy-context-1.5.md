@@ -60,6 +60,21 @@ For an anonymous public request, tenancy sets `request.tenantId` and patches `Re
 
 Existing protected routes keep `isOptionalTenancyPath`, configurable `headerName`, `allowSubdomain`, membership cache, UUIDv7 tenant validation, and current messages. Header/claim disagreement, actor absent, and missing or inactive membership continue to fail closed with 403 `TENANT_ACCESS_DENIED`. A tenant UUID that is not v7 remains 400. A principal with membership only in A cannot select B. Public requests under A cannot read B's rows under real PostgreSQL RLS. Request context and audited writes must work for nominal UUID actors under A's RLS.
 
+For 1.6.0, active-tenant and membership SQL during normal HTTP admission use the
+restricted reader role, readonly primary routing and `Database.txIndependent` in
+a private temporary candidate-tenant/actor RequestContext frame. Do not create
+SystemContext, borrow owner or an ambient transaction, or emit the resolved-
+command proof before admission succeeds. The frame restores the prior context
+and is not a protected/verified proof. Public active-tenant lookup always uses
+the configured `publicTenant.actorId`; optional verified membership uses the
+verified actor. Preserve selection, source-conflict errors, membership predicates
+and cache policy, public nominal-actor behavior and the existing legacy plain-
+public/unverified fallback boundary. This role correction does not promote
+fallback fields into verified provenance. Independently prove actual reader
+`current_user`, tenant/actor GUCs, no request-time owner query, both tenants, and
+held-connection refusal even after derived/reset CLS context. Existing explicit
+internal tenant-admin owner operations remain unchanged.
+
 The exact runtime errors under the current `StynxErrorFilter` are:
 
 | Case                 | Exception                          | HTTP | JSON body without `STYNX_ERROR_TRANSLATOR`                                                                                                             |

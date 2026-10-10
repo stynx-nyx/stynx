@@ -42,6 +42,21 @@ the app role. Both retain tenant and actor session settings, tenant predicates
 and FORCE RLS. No normal request creates SystemContext or borrows an owner
 connection to make a query succeed.
 
+The real HTTP admission chain follows the same boundary. Active-tenant and
+membership validation in `TenantContextInterceptor` use primary restricted-reader
+readonly independent transactions. These checks precede the final resolved-command
+proof, so their private SQL frame temporarily scopes RequestContext to the
+candidate tenant and admission actor, preserving request identity and restoring
+the outer frame afterward. That frame is not admitted HTTP provenance and cannot
+authorize locale/catalog/cache access. Protected authentication supplies its
+verified principal. A public-tenant active lookup always uses the configured
+`publicTenant.actorId` with the Host-resolved candidate after existing source-
+conflict checks; optional verified membership uses the actually verified actor.
+Headers and unsigned bearer fields do not become verified provenance. Publish
+final request context and command proof only after every required admission check
+succeeds; hidden/held connections remain explicit refusals. Existing FORCE RLS
+and reader SELECT grants apply. Explicit tenant-admin system ports stay separate.
+
 Use the existing `Database.txIndependent` for administration list/update and
 cold catalog/locale SQL. An ambient held connection or transaction, including
 one concealed by a derived/reset CLS context, is an explicit refusal. Do not
