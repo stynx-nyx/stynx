@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "meta": {
-    "last_updated": "2026-10-10T21:40:46.289Z",
+    "last_updated": "2026-10-10T22:24:53.481Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -62,7 +62,8 @@
       "STYNX 1.5.0 CTG-0005 envelope sensor triage rebinding separates internal exception metadata from the HTTP envelope and pins the complete actor-provenance 403 body.",
       "STYNX 1.6.0 Architect checkpoint rebinds real-auth integration and PostgreSQL fixture projections, complete API discovery and packed SDK compatibility sensors, and the registration-only runtime census refusal matrix. Runtime source/build custody and complete endpoint performance remain unverified; these bindings do not establish nominal HTTP PASS.",
       "STYNX 1.6.0 Architect corpus correction binds all 16 tracked reference API .e2e.ts system suites and 13 .wiring-spec.ts package-local suites admitted by ADR-TEST-TAXONOMY-2026-06-11 D2/D4 and their actual runner configurations. Adds the exact trace-discovery regression and endpoint-distribution sensors, refreshes strengthened strict k6 assertions, and retains every previous binding/relationship. Functional readonly rollback and statistical reconstruction do not establish complete nominal HTTP performance or candidate custody.",
-      "STYNX 1.6.0 Architect rebind preserves every prior executable relationship and binds protected i18n tenant administration, independent transaction/cache publication, actual HTTP provenance/error isolation, standalone constructor compatibility, the conditional quota ledger and published DEVAI 2.4.0 adoption assertions. No qualifying HTTP performance or overall audit PASS is established by these bindings."
+      "STYNX 1.6.0 Architect rebind preserves every prior executable relationship and binds protected i18n tenant administration, independent transaction/cache publication, actual HTTP provenance/error isolation, standalone constructor compatibility, the conditional quota ledger and published DEVAI 2.4.0 adoption assertions. No qualifying HTTP performance or overall audit PASS is established by these bindings.",
+      "STYNX 1.6.0 Architect binds strict performance-document mirroring and all baseline archive/JSON, identity/transport and collector regression projections. Existing corpus relationships, gate mappings and assertion sites remain unchanged. Controlled transport fixtures do not establish authenticated live acquisition, exact historical attempt provenance, complete endpoint performance or overall audit PASS."
     ]
   },
   "invariants": [
@@ -583,6 +584,15 @@
             "Real Git fixture execution admits the four documented executable suffixes, rejects missing and stale bindings, preserves existing assertion digests and excludes actual support modules without admitting arbitrary suffixes."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/docs-content-sync.test.mjs",
+          "names": ["INV-COVERAGE-001"],
+          "assertions": [
+            "Actual content-sync subprocess and installed strict Docusaurus checker preserve performance-document bytes and anchors, remove stale mirrors, and refuse missing documents or unresolved anchors."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["product/use-cases/**", "product/use-cases/**"]
@@ -664,6 +674,33 @@
             "Conservative weighted rolling-window arithmetic includes setup/cleanup, timestamp lag and globally unique Redis members; collisions, unbounded clocks and incomplete custody cannot claim admission."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/k6-baseline-kernels.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Closed ZIP and strict JSON kernels verify exact digests, complete member rosters, binary structure and bounded native data; malformed or duplicate input refuses without conferring origin or readiness."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/k6-baseline-identity-transport.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Run selection and bounded transport reject historical rerun or equal-second ambiguity, wrong repository/workflow/attempt facts, unsafe redirects, secret-bearing failures and truncated bodies without fallback or origin overclaim."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/k6-baseline-collector.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Actual collector composition over controlled external responses enforces paginated discovery, selected-run artifact identity, digest/archive/JSON checks, fixed cutoff, acquisition-time expiry and incomplete attempt provenance; legacy acquisition cannot qualify endpoint performance or presign thresholds."
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": ["reference/api/src/sample", "packages/ratelimit/src", "packages/backend/src"]
@@ -686,7 +723,7 @@
           "path": "reference/api/test/integration/reference-api.runtime.spec.ts",
           "names": ["INV-CORE-001"],
           "assertions": [
-            "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment \u226580%)"
+            "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment ≥80%)"
           ],
           "mode": "gray_box"
         },
@@ -832,6 +869,42 @@
           "names": ["INV-CORE-001"],
           "assertions": [
             "Closed data-only quota inputs reject getters, proxies, unknown fields and numeric coercion."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/docs-content-sync.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Actual content-sync subprocess and installed strict Docusaurus checker preserve performance-document bytes and anchors, remove stale mirrors, and refuse missing documents or unresolved anchors."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/k6-baseline-kernels.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Closed ZIP and strict JSON kernels verify exact digests, complete member rosters, binary structure and bounded native data; malformed or duplicate input refuses without conferring origin or readiness."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/k6-baseline-identity-transport.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Run selection and bounded transport reject historical rerun or equal-second ambiguity, wrong repository/workflow/attempt facts, unsafe redirects, secret-bearing failures and truncated bodies without fallback or origin overclaim."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/k6-baseline-collector.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Actual collector composition over controlled external responses enforces paginated discovery, selected-run artifact identity, digest/archive/JSON checks, fixed cutoff, acquisition-time expiry and incomplete attempt provenance; legacy acquisition cannot qualify endpoint performance or presign thresholds."
           ],
           "mode": "white_box"
         }
@@ -6424,6 +6497,38 @@
       "lifecycle": "supported",
       "assertion_count": 88,
       "assertion_digest_sha256": "dc1e6074441da7e223843560e693ddad75ec866ceeaa2bc10f4d8dd8be2e51b1"
+    },
+    {
+      "path": "test/scripts/docs-content-sync.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 13,
+      "assertion_digest_sha256": "8e34c49b4fef222ee9a3639e5347dd68c7ae9bd5b10cbb22b1e63fc040ad9de0"
+    },
+    {
+      "path": "test/scripts/k6-baseline-kernels.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 58,
+      "assertion_digest_sha256": "d296227e90eb62be038d23342238bb3feff05f17da32de15d9c7ab36e17c17fe"
+    },
+    {
+      "path": "test/scripts/k6-baseline-identity-transport.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 112,
+      "assertion_digest_sha256": "21644efcf4bb796a61a30dba453b68dd9c82f56dbc8bc9b6665f6b2476496082"
+    },
+    {
+      "path": "test/scripts/k6-baseline-collector.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 41,
+      "assertion_digest_sha256": "82401cf03f3fdf7e3e63977f586e6507a877debdf4ac188dd4bdf677a13037ea"
     }
   ],
   "suites": {
