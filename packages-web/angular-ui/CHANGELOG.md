@@ -1,5 +1,12 @@
 # @stynx-nyx/angular-ui
 
+## 1.5.7
+
+### Patch Changes
+
+- @stynx-nyx/angular@1.5.7
+- @stynx-nyx/angular-i18n@1.5.7
+
 ## 1.5.6
 
 ### Patch Changes

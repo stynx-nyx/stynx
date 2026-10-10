@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.7
+
+### Patch Changes
+
+- Updated dependencies [64e3d08]
+  - @stynx-nyx/sdk@1.5.7
+  - @stynx-nyx/angular-auth@1.5.7
+  - @stynx-nyx/angular-storage@1.5.7
+  - @stynx-nyx/angular-ui@1.5.7
+  - @stynx-nyx/angular-i18n@1.5.7
+
 ## 1.5.6
 
 ### Patch Changes

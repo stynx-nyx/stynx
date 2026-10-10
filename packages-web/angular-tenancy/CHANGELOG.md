@@ -1,5 +1,11 @@
 # @stynx-nyx/angular-tenancy
 
+## 1.5.7
+
+### Patch Changes
+
+- @stynx-nyx/angular-i18n@1.5.7
+
 ## 1.5.6
 
 ### Patch Changes
