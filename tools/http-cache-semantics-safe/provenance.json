@@ -1,0 +1,18 @@
+{
+  "upstream": {
+    "package": "http-cache-semantics",
+    "version": "4.3.0",
+    "advisory": "GHSA-ch52-4w7c-c8xp",
+    "files": {
+      "index.js": "ede1cc404a492fa348eb9d97a3007a0d72aa717bd22cd86a56bd0824c19729ca",
+      "LICENSE": "ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3",
+      "package.json": "dbe99941ed2092d43257294405cfb389a476ef54a029488b51125e6f3a777fde"
+    }
+  },
+  "patch": "Response admission before stale reuse; case-insensitive parsing and legacy restoration; shared-cache restrictions; matching requests and complete allowed 304 header updates.",
+  "patchedFiles": {
+    "LICENSE": "ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3",
+    "index.js": "bffe53c3fea5ac2483ec418736fcf5d357ce63a127e0e635be5f6685c7f03288",
+    "package.json": "11fa5469aadb33db1f23289ca9a5d58a84adee0368dd6f84510266086f3d111d"
+  }
+}
