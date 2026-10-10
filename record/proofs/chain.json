@@ -1,5 +1,5 @@
 {
-  "head": "c40424c7ebc146912e86db1dcab875b529e56c2c34284bf731027eb2744ab0f3",
+  "head": "7205429c5231b00d25abb2e097f4bbfc70f7e40b0f18420994b5ecfe631fd5b6",
   "records": [
     {
       "schemaVersion": "1.0.0",
@@ -3810,6 +3810,202 @@
       "manifest_hash": "c40424c7ebc146912e86db1dcab875b529e56c2c34284bf731027eb2744ab0f3",
       "sequence": 75,
       "previous_hash": "c796419cb87dc4963c7929ee0d57eaa2345d72a6e8e66b847d8c1d13e7f41b54"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-9684b73ab7ad8225",
+      "timestamp": "2026-10-10T08:18:39.963Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation",
+        "git": {
+          "head_sha": "2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e",
+          "dirty_files": [
+            ".devai/state/sensor-readings/inventory_regeneration/SR-962de269df4192b1.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/inventory_regeneration/SR-962de269df4192b1.json",
+          "sha256": "5862cce7c96bb026a7d16f3de3f832122ab0aec9d49e3795a850c24c5b66f5a6",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-962de269df4192b1; kind: inventory_regeneration; sha256: 5862cce7c96bb026a7d16f3de3f832122ab0aec9d49e3795a850c24c5b66f5a6"
+      ],
+      "previous_run_hash": "c40424c7ebc146912e86db1dcab875b529e56c2c34284bf731027eb2744ab0f3",
+      "manifest_hash": "488057ddc5a55b9637c886c063340250c88c2023d99e1b899ec6368d7a28bde3",
+      "sequence": 76,
+      "previous_hash": "c40424c7ebc146912e86db1dcab875b529e56c2c34284bf731027eb2744ab0f3"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-aed9055569c650fc",
+      "timestamp": "2026-10-10T08:20:49.327Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation",
+        "git": {
+          "head_sha": "2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/inventory_regeneration/SR-962de269df4192b1.json",
+            ".devai/state/sensor-readings/test_weakening_review/SR-8d504c71d393a83f.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_weakening_review/SR-8d504c71d393a83f.json",
+          "sha256": "1197b8a6c9dc724e48637ae7ce2c22bab87e4e8e43afb4b50d271edad7fc4aad",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-8d504c71d393a83f; kind: test_weakening_review; sha256: 1197b8a6c9dc724e48637ae7ce2c22bab87e4e8e43afb4b50d271edad7fc4aad"
+      ],
+      "previous_run_hash": "488057ddc5a55b9637c886c063340250c88c2023d99e1b899ec6368d7a28bde3",
+      "manifest_hash": "fc4e807a583bff9dc48d2e45cd32561df5b536ddb8f3729482515aa2a2ed7ac1",
+      "sequence": 77,
+      "previous_hash": "488057ddc5a55b9637c886c063340250c88c2023d99e1b899ec6368d7a28bde3"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-dcd9df5b36a0c399",
+      "timestamp": "2026-10-10T08:21:03.855Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation",
+        "git": {
+          "head_sha": "2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/inventory_regeneration/SR-962de269df4192b1.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-7545ae41382687ae.json",
+            ".devai/state/sensor-readings/test_weakening_review/SR-8d504c71d393a83f.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/test_idiomaticity/SR-7545ae41382687ae.json",
+          "sha256": "23b310df39d77963c83d4fe77a4a8305b3cc4d9642206bef2d4633efdd833228",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-7545ae41382687ae; kind: test_idiomaticity; sha256: 23b310df39d77963c83d4fe77a4a8305b3cc4d9642206bef2d4633efdd833228"
+      ],
+      "previous_run_hash": "fc4e807a583bff9dc48d2e45cd32561df5b536ddb8f3729482515aa2a2ed7ac1",
+      "manifest_hash": "8c108dd1ef25769b01c1d8dd5bb8d6d17b2f2313ea1a3cdeb57aecc046df7332",
+      "sequence": 78,
+      "previous_hash": "fc4e807a583bff9dc48d2e45cd32561df5b536ddb8f3729482515aa2a2ed7ac1"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-917630364fc6914b",
+      "timestamp": "2026-10-10T08:21:09.263Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "sense.readings.record",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation",
+        "git": {
+          "head_sha": "2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-5e6ddb582f2e2453.json",
+            ".devai/state/sensor-readings/inventory_regeneration/SR-962de269df4192b1.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-7545ae41382687ae.json",
+            ".devai/state/sensor-readings/test_weakening_review/SR-8d504c71d393a83f.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/sensor-readings/decision_record_integrity/SR-5e6ddb582f2e2453.json",
+          "sha256": "acd27735c855cdfccf13529d9203a8e0aa512a5b63f34c2fc97c497af57eabca",
+          "kind": "sensor-reading"
+        }
+      ],
+      "notes": [
+        "sensor-reading id: SR-5e6ddb582f2e2453; kind: decision_record_integrity; sha256: acd27735c855cdfccf13529d9203a8e0aa512a5b63f34c2fc97c497af57eabca"
+      ],
+      "previous_run_hash": "8c108dd1ef25769b01c1d8dd5bb8d6d17b2f2313ea1a3cdeb57aecc046df7332",
+      "manifest_hash": "5177cfbe206c8a5f7b3cbcbb5e9d127c3a96e555f4dbf23101477e1975e2cda9",
+      "sequence": 79,
+      "previous_hash": "8c108dd1ef25769b01c1d8dd5bb8d6d17b2f2313ea1a3cdeb57aecc046df7332"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "id": "EV-8e62770ffdb6fc4e",
+      "timestamp": "2026-10-10T08:22:43.794Z",
+      "actor": "devai-cli",
+      "actor_role": "harness",
+      "action": "audit.observe",
+      "status": "completed",
+      "context": {
+        "repo_root": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation",
+        "git": {
+          "head_sha": "2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e",
+          "dirty_files": [
+            "record/proofs/chain.json",
+            ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/assessment.json",
+            ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/backlog.json",
+            ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/inventory.json",
+            ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/scorecard.json",
+            ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/status.json",
+            ".devai/state/sensor-readings/decision_record_integrity/SR-5e6ddb582f2e2453.json",
+            ".devai/state/sensor-readings/inventory_regeneration/SR-962de269df4192b1.json",
+            ".devai/state/sensor-readings/test_idiomaticity/SR-7545ae41382687ae.json",
+            ".devai/state/sensor-readings/test_weakening_review/SR-8d504c71d393a83f.json"
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "path": ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/inventory.json",
+          "sha256": "135da8949ff75901cc1941b7724871a065f6a809db507287b19c8da74f19dabb",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/scorecard.json",
+          "sha256": "60df4b33f8b17bd632e8184b5219c0c0346d6f404779719c30be1597e0ef5295",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/backlog.json",
+          "sha256": "cb2ae38a44127fdd2ff4f7c6f326e658042d823816163d90327b29f84ba70008",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/assessment.json",
+          "sha256": "55fe1be130d316fcf1cdca5e61688f2aaec088175ac06f382abe77c540929d98",
+          "kind": "audit"
+        },
+        {
+          "path": ".devai/state/audit-observations/2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e/status.json",
+          "sha256": "45ca377790f29c31cde412d45bfc987c2819647ea48c4fba8578f11401dbcd93",
+          "kind": "audit"
+        }
+      ],
+      "notes": ["exact_sha=2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e", "readiness_promoting=false"],
+      "previous_run_hash": "5177cfbe206c8a5f7b3cbcbb5e9d127c3a96e555f4dbf23101477e1975e2cda9",
+      "manifest_hash": "7205429c5231b00d25abb2e097f4bbfc70f7e40b0f18420994b5ecfe631fd5b6",
+      "sequence": 80,
+      "previous_hash": "5177cfbe206c8a5f7b3cbcbb5e9d127c3a96e555f4dbf23101477e1975e2cda9"
     }
   ]
 }

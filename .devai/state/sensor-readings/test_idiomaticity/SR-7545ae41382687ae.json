@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-7545ae41382687ae",
+  "sensor": {
+    "name": "test-idiomaticity",
+    "kind": "test_idiomaticity"
+  },
+  "timestamp": "2026-10-10T08:19:10.500Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense-test-idiomaticity",
+  "command_hash": "ba9a215bfa7e188ae25b1f24d0fc0e91238fcb9a3db3092089b3588d364451d7",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/authorization-app-guard.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/authorization-app-guard.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/ctg9-outbox-sse.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/ctg9-outbox-sse.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-advanced.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-errors.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-faults.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-filters.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-no-module.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/backend/test/integration/transactional-command-provenance.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/data/test/integration/app-role-name.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/data/test/integration/app-role-name.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/jobs/test/integration/actor-rls.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/jobs/test/integration/actor-rls.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/offline-sync/test/integration/offline-sync-pending-review-context.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/offline-sync/test/integration/offline-sync-pending-review-context.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/outbox/test/integration/ctg9-delivery.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/outbox/test/integration/ctg9-delivery.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file uses mocks: /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/outbox/test/integration/ctg9-sse-admission.integration.spec.ts",
+      "file": "/Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/packages/outbox/test/integration/ctg9-sse-admission.integration.spec.ts"
+    }
+  ],
+  "metrics": {
+    "test_files": 457,
+    "mock_calls": 3290,
+    "fixture_calls": 308,
+    "snapshot_calls": 0,
+    "mock_heavy_files": 206,
+    "mock_heavy_ratio": 0.451,
+    "mocks_in_integration_files": 15
+  }
+}
