@@ -2,9 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UnknownJson } from './UnknownJson';
 export type ReconcileNumberingInput = {
-    claimedNumbers?: UnknownJson;
+    claimedNumbers?: Array<number>;
     userRef?: string;
 };
 

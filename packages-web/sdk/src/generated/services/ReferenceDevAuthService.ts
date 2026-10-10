@@ -6,7 +6,6 @@ import type { DemoTenant } from '../models/DemoTenant';
 import type { DevLoginBody } from '../models/DevLoginBody';
 import type { JsonValue } from '../models/JsonValue';
 import type { ProblemDetails } from '../models/ProblemDetails';
-import type { SessionBundle } from '../models/SessionBundle';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class ReferenceDevAuthService {
@@ -54,11 +53,18 @@ export class ReferenceDevAuthService {
         requestBody,
     }: {
         requestBody: DevLoginBody,
-    }): CancelablePromise<(SessionBundle & {
+    }): CancelablePromise<{
+        accessToken: string;
+        accessTokenExpiresAt: string;
         email: string;
+        expiresAt: string;
+        idleExpiresAt: string;
         permissions: Array<string>;
+        refreshToken: string;
+        revokedSessionIds?: Array<string>;
+        sid: string;
         tenantId: string;
-    }) | ProblemDetails> {
+    } | ProblemDetails> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/_reference/dev-login',

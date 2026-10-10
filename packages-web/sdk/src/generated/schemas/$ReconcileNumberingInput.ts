@@ -5,7 +5,10 @@
 export const $ReconcileNumberingInput = {
     properties: {
         claimedNumbers: {
-            type: 'UnknownJson',
+            type: 'array',
+            contains: {
+                type: 'number',
+            },
         },
         userRef: {
             type: 'string',

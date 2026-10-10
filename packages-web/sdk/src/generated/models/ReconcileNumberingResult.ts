@@ -2,9 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UnknownJson } from './UnknownJson';
+import type { NumberingConsumptionEntry } from './NumberingConsumptionEntry';
+import type { NumberingReservationStatus } from './NumberingReservationStatus';
 export type ReconcileNumberingResult = {
-    missingOnServer: UnknownJson;
-    unexpectedOnServer: UnknownJson;
+    consumption: Array<NumberingConsumptionEntry>;
+    missingOnServer: Array<number>;
+    reservationId: string;
+    status: NumberingReservationStatus;
+    unexpectedOnServer: Array<number>;
 };
 

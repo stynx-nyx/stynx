@@ -10,6 +10,15 @@ export const $OfflineSyncStynxContext = {
         attempts: {
             type: 'number',
         },
+        concurrencySuspected: {
+            type: 'boolean',
+        },
+        concurrentPairs: {
+            type: 'array',
+            contains: {
+                type: 'OfflineSyncConcurrentPair',
+            },
+        },
         consumerAttributes: {
             type: 'OfflineSyncConsumerAttributes',
         },

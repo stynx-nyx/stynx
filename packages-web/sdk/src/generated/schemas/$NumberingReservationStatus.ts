@@ -5,7 +5,7 @@
 export const $NumberingReservationStatus = {
     type: 'any-of',
     contains: [{
-        type: 'UnknownJson',
+        type: 'Enum',
     }, {
         type: 'string',
     }],

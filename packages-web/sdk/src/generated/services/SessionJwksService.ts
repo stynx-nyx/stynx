@@ -13,11 +13,7 @@ export class SessionJwksService {
      * @throws ApiError
      */
     public sessionJwksGetWellKnownJwksJsonHandler(): CancelablePromise<{
-        keys: Array<(Record<string, string> & {
-            alg: string;
-            kid: string;
-            use: string;
-        })>;
+        keys: Array<Record<string, string>>;
     } | ProblemDetails> {
         return this.httpRequest.request({
             method: 'GET',

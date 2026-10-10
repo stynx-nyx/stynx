@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { NumberingConsumptionEntry } from './NumberingConsumptionEntry';
 import type { NumberingReservationStatus } from './NumberingReservationStatus';
-import type { UnknownJson } from './UnknownJson';
 export type NumberingConsumptionResult = {
-    consumption: UnknownJson;
+    consumption: Array<NumberingConsumptionEntry>;
     reservationId: string;
     status: NumberingReservationStatus;
 };

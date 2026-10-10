@@ -5,7 +5,10 @@
 export const $NumberingConsumptionResult = {
     properties: {
         consumption: {
-            type: 'UnknownJson',
+            type: 'array',
+            contains: {
+                type: 'NumberingConsumptionEntry',
+            },
             isRequired: true,
         },
         reservationId: {

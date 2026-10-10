@@ -22,7 +22,10 @@ export const $SyncBatchReceipt = {
             isRequired: true,
         },
         items: {
-            type: 'UnknownJson',
+            type: 'array',
+            contains: {
+                type: 'SyncItemReceipt',
+            },
             isRequired: true,
         },
         responseBodyBytes: {

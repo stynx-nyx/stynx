@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UnknownJson } from './UnknownJson';
+import type { SyncItemReceipt } from './SyncItemReceipt';
 export type SyncBatchReceipt = {
     batchSequence: (number | null);
     deviceBatchId: string;
     deviceId: string;
-    items: UnknownJson;
+    items: Array<SyncItemReceipt>;
     responseBodyBytes: (Blob | null);
     responseHeaders: Record<string, string>;
     responseStatus: (number | null);

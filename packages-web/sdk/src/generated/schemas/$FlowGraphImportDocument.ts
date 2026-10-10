@@ -7,17 +7,10 @@ export const $FlowGraphImportDocument = {
         agentRules: {
             type: 'array',
             contains: {
-                type: 'all-of',
-                contains: [{
-                    type: 'FlowJsonObject',
-                }, {
-                    properties: {
-                        nodeCode: {
-                            type: 'string',
-                            isRequired: true,
-                        },
-                    },
-                }],
+                type: 'dictionary',
+                contains: {
+                    type: 'JsonValue',
+                },
             },
         },
         edges: {
@@ -33,17 +26,10 @@ export const $FlowGraphImportDocument = {
         nodeFormRules: {
             type: 'array',
             contains: {
-                type: 'all-of',
-                contains: [{
-                    type: 'FlowJsonObject',
-                }, {
-                    properties: {
-                        nodeCode: {
-                            type: 'string',
-                            isRequired: true,
-                        },
-                    },
-                }],
+                type: 'dictionary',
+                contains: {
+                    type: 'JsonValue',
+                },
             },
         },
         nodes: {

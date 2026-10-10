@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UnknownJson } from './UnknownJson';
+import type { StoredSyncQueueItem } from './StoredSyncQueueItem';
 export type SubmitSyncBatchResult = {
     acceptedItems: number;
     batchId: string;
-    conflicts: UnknownJson;
+    conflicts: Array<string>;
     duplicateItems: number;
-    items: UnknownJson;
+    items: Array<StoredSyncQueueItem>;
 };
 

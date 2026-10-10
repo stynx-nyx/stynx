@@ -4,8 +4,16 @@
 /* eslint-disable */
 export const $SessionView = {
     properties: {
+        capabilities: {
+            type: 'SessionControlCapabilities',
+            isRequired: true,
+        },
         client: {
             type: 'string',
+        },
+        createdAt: {
+            type: 'string',
+            isRequired: true,
         },
         current: {
             type: 'boolean',
@@ -14,8 +22,49 @@ export const $SessionView = {
         deviceLabel: {
             type: 'string',
         },
+        expiresAt: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+            isRequired: true,
+        },
         guarantee: {
-            type: 'UnknownJson',
+            properties: {
+                effectiveBy: {
+                    type: 'any-of',
+                    contains: [{
+                        type: 'string',
+                    }, {
+                        type: 'null',
+                    }],
+                    isRequired: true,
+                },
+                kind: {
+                    type: 'InvalidationGuarantee',
+                    isRequired: true,
+                },
+                propagationBoundSeconds: {
+                    type: 'any-of',
+                    contains: [{
+                        type: 'number',
+                    }, {
+                        type: 'null',
+                    }],
+                    isRequired: true,
+                },
+            },
+            isRequired: true,
+        },
+        lastSeenAt: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
             isRequired: true,
         },
         location: {
@@ -28,8 +77,33 @@ export const $SessionView = {
                 },
             },
         },
+        provider: {
+            type: 'string',
+            isRequired: true,
+        },
         sessionId: {
             type: 'string',
+            isRequired: true,
+        },
+        sid: {
+            type: 'string',
+            isRequired: true,
+        },
+        state: {
+            type: 'RegistrationState',
+            isRequired: true,
+        },
+        tenantId: {
+            type: 'string',
+            isRequired: true,
+        },
+        terminalAt: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
             isRequired: true,
         },
         userAgent: {

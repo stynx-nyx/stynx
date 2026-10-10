@@ -13,7 +13,10 @@ export const $SubmitSyncBatchInput = {
             isRequired: true,
         },
         items: {
-            type: 'UnknownJson',
+            type: 'array',
+            contains: {
+                type: 'SyncBatchItemInput',
+            },
             isRequired: true,
         },
         orgUnitId: {

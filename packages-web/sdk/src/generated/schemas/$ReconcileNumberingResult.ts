@@ -4,12 +4,33 @@
 /* eslint-disable */
 export const $ReconcileNumberingResult = {
     properties: {
+        consumption: {
+            type: 'array',
+            contains: {
+                type: 'NumberingConsumptionEntry',
+            },
+            isRequired: true,
+        },
         missingOnServer: {
-            type: 'UnknownJson',
+            type: 'array',
+            contains: {
+                type: 'number',
+            },
+            isRequired: true,
+        },
+        reservationId: {
+            type: 'string',
+            isRequired: true,
+        },
+        status: {
+            type: 'NumberingReservationStatus',
             isRequired: true,
         },
         unexpectedOnServer: {
-            type: 'UnknownJson',
+            type: 'array',
+            contains: {
+                type: 'number',
+            },
             isRequired: true,
         },
     },

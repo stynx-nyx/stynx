@@ -2,6 +2,5 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UnknownJson } from './UnknownJson';
-export type NumberingReservationStatus = (UnknownJson | string);
+export type NumberingReservationStatus = ('reserved' | 'consumed' | 'expired' | 'cancelled' | string);
 

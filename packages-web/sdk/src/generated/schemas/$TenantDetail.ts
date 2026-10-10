@@ -12,6 +12,18 @@ export const $TenantDetail = {
                 type: 'null',
             }],
         },
+        createdAt: {
+            type: 'string',
+            isRequired: true,
+        },
+        id: {
+            type: 'string',
+            isRequired: true,
+        },
+        isActive: {
+            type: 'boolean',
+            isRequired: true,
+        },
         locale: {
             type: 'any-of',
             contains: [{
@@ -20,11 +32,23 @@ export const $TenantDetail = {
                 type: 'null',
             }],
         },
+        name: {
+            type: 'string',
+            isRequired: true,
+        },
         settings: {
             type: 'dictionary',
             contains: {
                 type: 'JsonValue',
             },
+            isRequired: true,
+        },
+        slug: {
+            type: 'string',
+            isRequired: true,
+        },
+        state: {
+            type: 'TenantState',
             isRequired: true,
         },
         suspendedReason: {
@@ -42,6 +66,10 @@ export const $TenantDetail = {
             }, {
                 type: 'null',
             }],
+        },
+        updatedAt: {
+            type: 'string',
+            isRequired: true,
         },
     },
 } as const;

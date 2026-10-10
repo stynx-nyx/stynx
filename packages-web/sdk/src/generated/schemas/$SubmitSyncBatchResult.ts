@@ -13,7 +13,10 @@ export const $SubmitSyncBatchResult = {
             isRequired: true,
         },
         conflicts: {
-            type: 'UnknownJson',
+            type: 'array',
+            contains: {
+                type: 'string',
+            },
             isRequired: true,
         },
         duplicateItems: {
@@ -21,7 +24,10 @@ export const $SubmitSyncBatchResult = {
             isRequired: true,
         },
         items: {
-            type: 'UnknownJson',
+            type: 'array',
+            contains: {
+                type: 'StoredSyncQueueItem',
+            },
             isRequired: true,
         },
     },

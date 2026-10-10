@@ -2,10 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { OfflineSyncConcurrentPair } from './OfflineSyncConcurrentPair';
 import type { OfflineSyncConsumerAttributes } from './OfflineSyncConsumerAttributes';
 export type OfflineSyncStynxContext = {
     appliedAt?: string;
     attempts?: number;
+    concurrencySuspected?: boolean;
+    concurrentPairs?: Array<OfflineSyncConcurrentPair>;
     consumerAttributes?: OfflineSyncConsumerAttributes;
     errorCode?: string;
     errorMessage?: string;
