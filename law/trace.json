@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "meta": {
-    "last_updated": "2026-10-10T20:26:45.372Z",
+    "last_updated": "2026-10-10T20:45:51.508Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -60,7 +60,8 @@
       "STYNX 1.5.0 CTG-0008 final hardening Architect rebind pins negative PostgreSQL reserved and restricted SQL identifier vectors before implementation.",
       "STYNX 1.5.0 CTG-0005 envelope Architect rebind pins canonical HTTP rejections, rollback, bootstrap grammar, legacy data bodies, and defensive no-SQL checks.",
       "STYNX 1.5.0 CTG-0005 envelope sensor triage rebinding separates internal exception metadata from the HTTP envelope and pins the complete actor-provenance 403 body.",
-      "STYNX 1.6.0 Architect checkpoint rebinds real-auth integration and PostgreSQL fixture projections, complete API discovery and packed SDK compatibility sensors, and the registration-only runtime census refusal matrix. Runtime source/build custody and complete endpoint performance remain unverified; these bindings do not establish nominal HTTP PASS."
+      "STYNX 1.6.0 Architect checkpoint rebinds real-auth integration and PostgreSQL fixture projections, complete API discovery and packed SDK compatibility sensors, and the registration-only runtime census refusal matrix. Runtime source/build custody and complete endpoint performance remain unverified; these bindings do not establish nominal HTTP PASS.",
+      "STYNX 1.6.0 Architect corpus correction binds all 16 tracked reference API .e2e.ts system suites and 13 .wiring-spec.ts package-local suites admitted by ADR-TEST-TAXONOMY-2026-06-11 D2/D4 and their actual runner configurations. Adds the exact trace-discovery regression and endpoint-distribution sensors, refreshes strengthened strict k6 assertions, and retains every previous binding/relationship. Functional readonly rollback and statistical reconstruction do not establish complete nominal HTTP performance or candidate custody."
     ]
   },
   "invariants": [
@@ -200,6 +201,15 @@
           ],
           "mode": "gray_box",
           "target_type": "script"
+        },
+        {
+          "suite": "e2e",
+          "path": "reference/api/test/e2e/flows/auth-and-permissions.e2e.ts",
+          "names": ["e2e auth and permissions"],
+          "assertions": [
+            "Real HTTP authentication, missing-permission refusal, grant/cache invalidation/revocation and tenant-scoped introspection preserve deny-by-default behavior."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": []
@@ -261,6 +271,15 @@
             "The tracked config-attestation participates in the canonical int verification surface."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "e2e",
+          "path": "reference/api/test/e2e/flows/privacy.e2e.ts",
+          "names": ["e2e privacy"],
+          "assertions": [
+            "Actual reference flows export live/archive subject data, reject missing selectors, preserve tenant RLS, dry-run retention and audit subject erasure."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": []
@@ -301,6 +320,15 @@
             "all offline tables enforce forced tenant RLS",
             "entity-scoped numbering intervals are allocated atomically",
             "payload hash replay is idempotent within a tenant and independent across tenants"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/offline-sync/test/wiring/ctg9-http.wiring-spec.ts",
+          "names": ["CTG9 OFS batch HTTP contract"],
+          "assertions": [
+            "Actual mounted CTG9 controller transport preserves trusted context precedence, batch replay bytes/status/headers, bounded held-lease refusal and transport fingerprint conflicts; package wiring evidence, not consumer adoption or real-store parity."
           ],
           "mode": "gray_box"
         }
@@ -371,6 +399,15 @@
             "The tracked script participates in the canonical sec verification surface."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "e2e",
+          "path": "reference/api/test/e2e/flows/flow-design-and-runtime.e2e.ts",
+          "names": ["e2e flow design and runtime"],
+          "assertions": [
+            "The real reference design/runtime flow preserves tenant-scoped run visibility and denies unauthorized mutations."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": [
@@ -446,6 +483,15 @@
             "mutation routes are private, permissioned, audited, and idempotent where retryable"
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "e2e",
+          "path": "reference/api/test/e2e/flows/flow-design-and-runtime.e2e.ts",
+          "names": ["e2e flow design and runtime"],
+          "assertions": [
+            "Reference workflow execution, form completion, signals and analytics retain their platform audit rows alongside the workflow event path."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": [
@@ -509,6 +555,15 @@
             "The real packed SDK preserves all immutable primary operations and exposes four independent CTG9 operations through its public namespace with installed declaration checks."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/devai-trace-contract.test.mjs",
+          "names": ["INV-COVERAGE-001"],
+          "assertions": [
+            "Real Git fixture execution admits the four documented executable suffixes, rejects missing and stale bindings, preserves existing assertion digests and excludes actual support modules without admitting arbitrary suffixes."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["product/use-cases/**", "product/use-cases/**"]
@@ -552,6 +607,33 @@
           "names": ["INV-PERF-001"],
           "assertions": [
             "Actual Nest/Express registrations reconcile metadata, inheritance, URI selectors and same-pattern HEAD fallback; unknown middleware, routing drift and unsupported selectors refuse while incomplete custody remains explicit."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "e2e",
+          "path": "reference/api/test/e2e/flows/readonly-write-rollback.e2e.ts",
+          "names": ["readonly probe independent full-visibility business-state proof"],
+          "assertions": [
+            "The real authenticated restricted-role HTTP handler emits exactly 500/READONLY_VIOLATION while full-visibility read-only owner snapshots and digests prove unchanged tenant settings for both absent and present target rows; functional rollback evidence only, never nominal latency PASS."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-endpoint-distribution.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Pinned k6 interpolation reconstructs exact sequence-bound raw samples; missing populations, hostile objects, unexpected outcomes, weakened SLOs and strict equality breaches cannot disappear or produce readiness."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/k6-check-summary.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Strict comparison requires dense own-data admitted metric populations and both actual tails plus reference floors; unchanged both-tail AND and exclusive 10 percent/1 ms math is preserved without environment or prototype overrides."
           ],
           "mode": "gray_box"
         }
@@ -993,6 +1075,15 @@
           "names": ["INV-TENANCY-001"],
           "assertions": [
             "two real tenants prove request-path app role, FORCE RLS, actor context and cross-tenant rejection"
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "e2e",
+          "path": "reference/api/test/e2e/flows/tenancy.e2e.ts",
+          "names": ["e2e tenancy"],
+          "assertions": [
+            "Reference tenant lifecycle HTTP operations require platform authorization and preserve tenant-scoped real database RLS reads."
           ],
           "mode": "gray_box"
         }
@@ -4652,8 +4743,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "b5788ac2f8c1db5d2fda5ee7411a8967bee12592d3ee24ab6a3b90895cc78509"
+      "assertion_count": 81,
+      "assertion_digest_sha256": "c02107ec1d55248feb770d3e22e8ec51ae5fbf0da923b168f0bf85e12c846686"
     },
     {
       "path": "test/scripts/private-workspace-version.test.mjs",
@@ -5958,6 +6049,260 @@
       "lifecycle": "supported",
       "assertion_count": 155,
       "assertion_digest_sha256": "dacf7a8bda59002f41a5cd0c38098af19837825630410cb2e97ddb81894acd46"
+    },
+    {
+      "path": "packages/audit/test/wiring/audit-http.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 3,
+      "assertion_digest_sha256": "0a8ed9c57332c2fae6a2effa232d348ac53ee273a00cb1014b14dac2778c8106"
+    },
+    {
+      "path": "packages/auth/test/wiring/auth-http.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 2,
+      "assertion_digest_sha256": "18f1349db3c4f65e475c3e418e122021b735703fb9f3d0a5832684e5abd946d9"
+    },
+    {
+      "path": "packages/flow/test/wiring/flow-routes.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 4,
+      "assertion_digest_sha256": "4c855b876b383f3e807150f279a289f3d2ea1a0d9dbe2048a48c97f0fe160fdb"
+    },
+    {
+      "path": "packages/health/test/wiring/health-http.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 5,
+      "assertion_digest_sha256": "441e2878daed8ec027424b5867d12fb1c25de4bbdcedc99855108a64ff92c0f9"
+    },
+    {
+      "path": "packages/i18n/test/wiring/i18n-http.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 3,
+      "assertion_digest_sha256": "c6ec15aa2ca2672c1352e1df0a0da0750332d121e34b4d629bb208b0a6aa5c5f"
+    },
+    {
+      "path": "packages/offline-sync/test/wiring/ctg9-extended-routes.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "766dff85d5861b4e185ae5759fc57732e2d8f30c7cbb9b01b0d4e1acd1cae98b"
+    },
+    {
+      "path": "packages/offline-sync/test/wiring/ctg9-http.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 25,
+      "assertion_digest_sha256": "f32458d2ec469e7817349622451b13fabfad91a72cf39ca6777a3aae5f96c854"
+    },
+    {
+      "path": "packages/offline-sync/test/wiring/ctg9-legacy-http.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "66542ecf8f8f7524f6a0dfcec68a088c75143e03b5449cac60a026bb19f0028c"
+    },
+    {
+      "path": "packages/offline-sync/test/wiring/ctg9-mode.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "6deeba3fb03fa93a44e49d7652b1f45f16d418190211cd062df4716f40e5a321"
+    },
+    {
+      "path": "packages/offline-sync/test/wiring/offline-sync.controller.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "2bd3cf97af331745db2a7ccb8538bcc32c2a059dd5725b3dbbbe05efe080b56a"
+    },
+    {
+      "path": "packages/privacy/test/wiring/privacy-http.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 3,
+      "assertion_digest_sha256": "0da88d0ba7486b031b5ec5d9cf746bd6ca469983a83d846c5ec43b8769ec53aa"
+    },
+    {
+      "path": "packages/sessions/test/wiring/sessions-jwks.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 2,
+      "assertion_digest_sha256": "8485b9bb64781b6bf1860a8bb4ceeec745c66b6163a2ddf97814763b1979556d"
+    },
+    {
+      "path": "packages/tenancy/test/wiring/tenancy-http.wiring-spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 2,
+      "assertion_digest_sha256": "3cdd6d8bbaefce98ce6774301a01359b8205592d716cd98e911b8b500b953103"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/audit.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 18,
+      "assertion_digest_sha256": "d9bceaae59451a571f854ecf373655a60e78da041083d12bf2ed3636574494b8"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/auth-and-permissions.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 39,
+      "assertion_digest_sha256": "5b4d367e6d3ec077c843802bfc5ed8b0c56f5f723931b304f71a2d6e9c076f81"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/documents.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 23,
+      "assertion_digest_sha256": "c3ff5bbf769ca59fa107f1a4fee421093ecbbcbd342ec3ab8f76565683d434a9"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/error-matrix.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 31,
+      "assertion_digest_sha256": "23b2cc625e09eec7945d40b57ae71683e07ce88cfa597ba96b904f2292b280da"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/flow-design-and-runtime.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": [
+        "INV-CORE-001",
+        "INV-FLOW-001",
+        "INV-FLOW-003",
+        "INV-RBAC-001",
+        "INV-TENANCY-001"
+      ],
+      "lifecycle": "supported",
+      "assertion_count": 57,
+      "assertion_digest_sha256": "0ed7399f2739342767b4b126ce790b2d43cdbf8c77593f922ab54fe89c5a9a6f"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/i18n.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "15b7a36c7429236363f2c0043583cc3dc7633ff57b0d49d548b88ec4f8c1f0d5"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/idempotency.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 29,
+      "assertion_digest_sha256": "d08039acf0ee1e46ff4f20c1264ed5161c3bd23c566c2fd475963607ad22f3ad"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/privacy.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 31,
+      "assertion_digest_sha256": "a56558a81be7d05c4b935af9336be7cd6678f6a87ae045b87fb287040b55b656"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/profile-and-preferences.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 35,
+      "assertion_digest_sha256": "0a2a91e4daaa4111b4446589f1cd3a666176f82a466dff1f3c066e3015c17638"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/rate-limit.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 14,
+      "assertion_digest_sha256": "2f8270dd68295509b0251f8e56d92b2e9189131204723f491c2ef367c175b741"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/readonly-write-rollback.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 10,
+      "assertion_digest_sha256": "b5510f463699e141d96e6f278e563be8c15f38cf5528db6a370fd6fc673cf131"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/records-and-notes.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 33,
+      "assertion_digest_sha256": "a3ebd6b897e5bbb57bf12c798b416a81476261c0854ae745c5df21aeac046a40"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/role-and-permission-management.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 14,
+      "assertion_digest_sha256": "bea5e807b9bd6c684d833fccd51ef4404bb65576d6706d57c0304dce1c2a68df"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/sessions-management.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 27,
+      "assertion_digest_sha256": "badd0c40510f4a8f485a9744c866bb971b00f23ca0e515dc83f25d2b8938df49"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/tenancy.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "5e221727162efafa018513e5cd88f688c77bfdf1f409ef4076413b732e8fbebd"
+    },
+    {
+      "path": "reference/api/test/e2e/flows/work-items.e2e.ts",
+      "suite": "e2e",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 48,
+      "assertion_digest_sha256": "699869ebb58e8c94da2029922fe01b44dc69f5ab35ffb0f6aacbf6424a15fa5f"
+    },
+    {
+      "path": "test/scripts/devai-trace-contract.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 27,
+      "assertion_digest_sha256": "c45348c7fa45e80bca8612af11c0d6ff489340174be5d92260d419e6c56f2309"
+    },
+    {
+      "path": "test/scripts/http-endpoint-distribution.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 57,
+      "assertion_digest_sha256": "7d1b3691d8a16737634299e2acaf492e5889d3759eebb5738da04b835b00daf6"
     }
   ],
   "suites": {
