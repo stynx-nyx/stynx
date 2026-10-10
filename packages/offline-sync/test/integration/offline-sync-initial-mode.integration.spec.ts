@@ -150,6 +150,7 @@ describe('UPS-OFS-09 PostgreSQL initial-mode persistence and populated 0005 upgr
         },
       ),
     run,
+    assertClosedReplay: (actual, original) => expect(actual).toEqual(original),
   }));
 
   it('defaults populated legacy rows to received without rewriting contexts or archived ACK bytes, and rejects unsupported mode at storage', async () => {

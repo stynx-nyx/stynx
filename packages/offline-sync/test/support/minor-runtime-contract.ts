@@ -4,6 +4,7 @@ import type { OfflineSyncService } from '../../src/offline-sync.service';
 import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
 import type {
   CTG9SubmitSyncBatchInput,
+  CTG9SubmitSyncBatchResult,
   OfflineSyncItemContext,
   StynxOfflineSyncModuleOptions,
 } from '../../src/types';
@@ -32,6 +33,7 @@ const batch = (id: string, overrides: Record<string, unknown> = {}): CTG9SubmitS
 interface RuntimeHarness {
   service(options?: Partial<StynxOfflineSyncModuleOptions>, tenantId?: string): OfflineSyncService;
   run<T>(tenantId: string, operation: () => Promise<T>): Promise<T>;
+  assertClosedReplay(actual: CTG9SubmitSyncBatchResult, original: CTG9SubmitSyncBatchResult): void;
 }
 /** The same public behavior is exercised through independent memory and real-PostgreSQL stores. */
 export function registerOfflineMinorRuntimeContracts(harness: () => RuntimeHarness): void {
@@ -92,7 +94,8 @@ export function registerOfflineMinorRuntimeContracts(harness: () => RuntimeHarne
     expect(await h.run(MINOR_TENANT_A, () => service.getSyncIntegrityRejection(identity))).toEqual(
       proof,
     );
-    expect(await h.run(MINOR_TENANT_A, () => service.submitSyncBatch(rejectedInput))).toEqual(
+    h.assertClosedReplay(
+      await h.run(MINOR_TENANT_A, () => service.submitSyncBatch(rejectedInput)),
       rejected,
     );
     expect(hash).toHaveBeenCalledOnce();

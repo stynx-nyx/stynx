@@ -1,4 +1,4 @@
-import { describe } from 'vitest';
+import { describe, expect } from 'vitest';
 import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
 import { OfflineSyncService } from '../../src/offline-sync.service';
 import {
@@ -32,5 +32,6 @@ describe('In-memory minor runtime contracts', () => {
         },
       ),
     run: async (_tenantId, operation) => operation(),
+    assertClosedReplay: (actual, original) => expect(actual).toEqual(original),
   }));
 });
