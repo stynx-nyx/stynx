@@ -409,23 +409,23 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     const prefix = `${scope.tenantId}:`;
     const itemKey = this.key(scope.tenantId, conflict.queueItemId);
     const item = this.queueItems.get(itemKey)!;
-    const context = {
-      ...scope,
-      agentId: item.agentId,
-      orgUnitId: item.orgUnitId,
-      deviceId: item.deviceId,
-      batchId: '',
-      now,
-    };
     const trx = { token: randomUUID() } as unknown as import('@stynx-nyx/data').Transaction;
     const receiptEntry = [...this.itemReceipts.entries()].find(
       ([storedKey, value]) =>
         storedKey.startsWith(prefix) && value.item.queueItemId === conflict.queueItemId,
     );
     const receipt = receiptEntry?.[1].receipt;
-    const allowed = this.conflictAllowedActions.get(key) ??
-      (receipt?.context?.allowedActions as readonly string[] | undefined) ??
-      (await port.allowedActions?.(trx, id, context)) ?? [
+    const context = {
+      ...scope,
+      agentId: item.agentId,
+      orgUnitId: item.orgUnitId,
+      deviceId: item.deviceId,
+      batchId: receiptEntry?.[1].deviceBatchId ?? '',
+      now,
+    };
+    const allowed = (await port.allowedActions?.(trx, id, context)) ??
+      this.conflictAllowedActions.get(key) ??
+      (receipt?.context?.allowedActions as readonly string[] | undefined) ?? [
         'device-wins',
         'server-wins',
         'manual-review',
