@@ -262,6 +262,77 @@ uses the same range row lock as reservation, and only transitions active to
 cancelled; it cannot undo consumption or erase history. List/read operations
 are read-only with deterministic keyset order and bounded pages.
 
+The exact creation input is `CreateNumberingRangeInput` with required
+`orgUnitId`, `entityType`, `series`, `startNumber`, `endNumber` and optional
+`idempotencyKey`, `consumerAttributes`. `CancelNumberingRangeInput` has optional
+`reason`. `ListNumberingRangesInput` has optional exact `orgUnitId`, `entityType`,
+`series`, `status`, `limit` and `cursor` filters.
+`NumberingRangePage = OfflineSyncPage<NumberingRange>`. Service signatures are:
+
+```ts
+createNumberingRange(input: CreateNumberingRangeInput): Promise<NumberingRange>;
+getNumberingRange(id: string): Promise<NumberingRange>;
+listNumberingRanges(input?: ListNumberingRangesInput): Promise<NumberingRangePage>;
+cancelNumberingRange(id: string, input: CancelNumberingRangeInput): Promise<NumberingRange>;
+```
+
+Optional durable-store methods use these names and take trusted scope first;
+create/cancel additionally take the current instant. Store get returns null
+when absent; service get/cancel return existing `OFFLINE_SYNC_RANGE_NOT_FOUND`
+(404) for absent/other-tenant IDs. Unsupported custom-store operations refuse
+configuration. No new HTTP route is introduced; E6 range mapping is unchanged.
+
+Creation generates the UUID, initializes active status and `nextNumber=startNumber`.
+Keep existing text bounds; endpoint integers and `endNumber + 1` must be safe
+integers. The operation key is nonempty and at most 255 UTF-8 bytes. Attributes
+use the existing 4096-byte JSON-object bound. Invalid input/filters/cursors and
+identity/status/counter/provenance overrides give `OFFLINE_SYNC_INVALID_INPUT`
+(400). No update-bounds or status-override operation is introduced.
+
+Keyed creation stores an immutable actual initial result snapshot, fingerprint
+and operation identity atomically with the new range. The tenant-scoped
+fingerprint binds all explicit creation fields and attributes (absence differs
+from `{}`), excluding generated ID/time and the replaying actor. Equal replay
+returns the original snapshot before new-allocation checks, even if the range
+was later allocated/cancelled; get returns current state. Never reconstruct
+the receipt from the later row. Changed key content gives
+`OFFLINE_SYNC_RANGE_IDEMPOTENCY_CONFLICT` (409); a distinct creation violating
+tenant/org-unit/entity/series uniqueness gives `OFFLINE_SYNC_RANGE_CONFLICT`
+(409). Concurrent equal keys produce one range and one creation record.
+
+`NumberingRange` gains optional actual `consumerAttributes`, `createdBy`,
+`createdAt`, `updatedAt`, `cancelledBy`, `cancellationReason` and `cancelledAt`.
+Actors are trusted audit actors, not business agents or input. Historical absent
+provenance stays absent. The new admin mapper may expose real PostgreSQL
+`created_at`; memory seeds without timestamps gain none. No actor/time is
+backfilled as invented historical evidence.
+
+Cancellation records actual actor, optional reason and instant under the range
+row lock. If supplied, reason is nonblank and at most 500 UTF-8 bytes. Repeated
+cancellation returns the first stored cancellation facts, even for another
+actor/reason; no second history or counter change occurs. Exhausted cancellation
+gives `OFFLINE_SYNC_RANGE_STATE` (409). Cancellation reverses no reservation or
+consumption. List order is UUID ID ascending, exclusive last-ID cursor, default
+50/maximum 200. Cursor must be a UUID; `nextCursor` is the last returned ID only
+when another matching row exists, otherwise null. Reads perform no effects.
+
+Forward `0007` adds bounded attributes, actual creation/cancellation provenance
+and immutable keyed creation receipt/fingerprint storage. Preserve historical
+rows/fingerprints and actual first create/cancel facts. Enforce allocated
+scope/bounds immutability and no cancelled reactivation; consumers cannot mutate
+a creation receipt or first cancellation provenance. Include new columns, keys,
+guards and any history objects in the closed manifest/verifier and independent
+PostgreSQL upgrade/equivalence tests. The three new 409s are nonretryable
+`OfflineSyncError` bodies with exact messages in the error catalog.
+
+Receipt columns on `offline.numbering_ranges` are sufficient: `creation_key`,
+`creation_fingerprint`, actual initial `creation_receipt` JSON, `created_by` and
+first cancellation fields. No separate receipt/history table is mandated.
+UPDATE guards preserve those immutable facts; DELETE guards protect ranges
+with a creation receipt or actual admin provenance so deletion cannot free a
+creation key or erase its first facts. Legacy unadministered E6 rows retain
+their prior behavior. Historical unknown `created_by` stays null/absent.
+
 Reconciliation continues to report actual available/claimed/applied/blocked/
 expired consumption and missing/unexpected server numbers. Add typed context
 and opaque attributes only from actual stored consumer evidence. It must

@@ -100,6 +100,20 @@ Use tenant-scoped range administration, keep allocated bounds immutable and
 treat consumer attributes as opaque bounded JSON. Reconciliation distinguishes
 assigned numbers from actual applied effects.
 
+Apply forward `0007` for `createNumberingRange`, `getNumberingRange`,
+`listNumberingRanges` and `cancelNumberingRange`. Creation generates an active
+range; it accepts no caller ID/status/counter/provenance. Keep full keyed-create
+requests, including attributes, stable: replay returns the immutable original
+creation snapshot, while get returns current state. Changed key content gives
+`OFFLINE_SYNC_RANGE_IDEMPOTENCY_CONFLICT`; another creation in the same
+tenant/org-unit/entity/series gives `OFFLINE_SYNC_RANGE_CONFLICT` (both 409).
+Cancel records the trusted actor's first facts, never rewinds allocation, and
+repeated cancel returns those same facts. Exhausted cancellation refuses
+`OFFLINE_SYNC_RANGE_STATE` (409). Lists use ascending UUID IDs, an exclusive
+last-ID cursor and 50/default, 200/maximum pages. Historical absent provenance
+remains absent. Custom stores must implement these optional admin ports before
+use; no new HTTP route is implied.
+
 ## Import only verified legacy state
 
 Use the explicit owner-only offline import seam with writers stopped and a

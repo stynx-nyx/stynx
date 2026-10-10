@@ -156,13 +156,15 @@ short-circuit these checks is unsupported and fails at bootstrap or before writi
 
 Adopters must apply the shipped `migrations/0001_offline_sync.sql` with the STYNX migration owner
 before mounting the PostgreSQL-backed module, then 0002, for keyed reservations 0003, and before any
-resolution through a `conflictResolver` 0004 (see [Migration 0004](#migration-0004)). The package
-does not create consumer numbering-range rows; a consumer writes them under the following contract.
+resolution through a `conflictResolver` 0004 (see [Migration 0004](#migration-0004)).
+The 1.5.x package required consumers to create range rows under the contract below.
+The 1.6.0 typed administration seam adds supported create/get/list/cancel operations.
 
 ### Numbering ranges: consumer write contract (UPS-OFS-12, ADR-MOBILE-OFFLINE-0003 D5)
 
 Writing `offline.numbering_ranges` under the application role, the tenant context (`app.tenant_id`)
-and FORCE RLS is a supported consumer operation. No DDL changes: the table is the 0001 table.
+and FORCE RLS remains supported. The following table records the 1.5.x boundary;
+1.6.0 adds forward `0007` and the typed administration contract below.
 
 | Rule          | Contract                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -178,6 +180,55 @@ and FORCE RLS is a supported consumer operation. No DDL changes: the table is th
 The 1.5.x line deferred nullable `shift_id`, range administration, consumer
 attributes and single-active admission; the 1.6.0 upgrade contract above
 supersedes that deferral.
+
+### CTG9 1.6 range administration
+
+`CreateNumberingRangeInput` requires `orgUnitId`, `entityType`, `series`,
+`startNumber`, `endNumber`; optional fields are `idempotencyKey` and bounded
+`consumerAttributes`. `CancelNumberingRangeInput` has optional `reason`.
+`ListNumberingRangesInput` accepts optional exact org-unit/entity/series/status
+filters plus `limit` and UUID `cursor`. Public service methods are
+`createNumberingRange(input)`, `getNumberingRange(id)`,
+`listNumberingRanges(input?)` and `cancelNumberingRange(id,input)`.
+Create/get/cancel return `Promise<NumberingRange>`; list returns
+`Promise<NumberingRangePage>`, an alias of `OfflineSyncPage<NumberingRange>`.
+Optional durable-store ports take trusted scope first, with current instant for
+create/cancel; store get returns null when absent. Unsupported custom stores
+refuse configuration. No new HTTP route or E6 mapper change is implied.
+
+Create validates existing text limits, safe integer endpoints and `endNumber+1`,
+`startNumber<=endNumber`, optional nonempty 255-byte operation key and 4096-byte
+JSON-object attributes. ID is generated, status active, nextNumber startNumber.
+Identity/status/counter/provenance overrides and invalid filters/cursors return
+`OFFLINE_SYNC_INVALID_INPUT` (400). Keyed creation persists the actual initial
+result snapshot atomically. Replay of the same full request returns that
+immutable snapshot, even after allocation/cancellation; get returns current
+state. The fingerprint binds tenant/request/attributes, distinguishes absent
+attributes from `{}`, and excludes generated ID/time/replaying actor. Changed
+key content is `OFFLINE_SYNC_RANGE_IDEMPOTENCY_CONFLICT` (409); a distinct
+tenant/org-unit/entity/series duplicate is `OFFLINE_SYNC_RANGE_CONFLICT` (409).
+
+Optional actual result fields are `consumerAttributes`, `createdBy`, `createdAt`,
+`updatedAt`, `cancelledBy`, `cancellationReason`, `cancelledAt`. Actors come from
+trusted audit context, separately from business agent. Preserve absent historical
+facts; real PostgreSQL timestamps may be exposed, but memory seeds gain none.
+Cancel locks the range as allocation does, records the first active→cancelled
+actor/instant/reason, and changes no counter or consumption. Optional reason is
+nonblank and at most 500 UTF-8 bytes. Repeated cancel returns the first facts,
+even for a changed actor/reason; exhausted refuses `OFFLINE_SYNC_RANGE_STATE`
+(409). Get/cancel absent or other-tenant IDs give `OFFLINE_SYNC_RANGE_NOT_FOUND`
+(404). Cancelled ranges never reactivate.
+
+List is UUID ID ascending, exclusive after cursor, default 50/max 200. Its page
+has `items` and `nextCursor`: last returned ID when more matches exist, null
+otherwise. No timestamp is fabricated for ordering. Forward `0007` preserves
+historical rows, adds attributes/provenance and immutable creation receipt/key/
+fingerprint storage, and enforces allocated scope/bounds immutability and first
+cancellation facts. These structures belong in closed-storage verification.
+Immutable receipt/provenance columns on the range are sufficient; a separate
+history table is not required. UPDATE guards retain first facts and DELETE
+guards protect administered rows so their operation keys cannot be reused by
+deleting the row. Legacy unadministered E6 rows retain their prior behavior.
 
 ### CTG9 1.6 durable reservation seam
 
