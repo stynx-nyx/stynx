@@ -19,7 +19,11 @@ import {
   STYNX_VERIFIED_TENANT_ID,
   type ResolvedTenantCommandContextPort,
 } from '@stynx-nyx/contracts';
-import { TenantContextInterceptor } from '@stynx-nyx/tenancy';
+import {
+  TenantContextInterceptor,
+  STYNX_TENANT_MEMBERSHIP_CACHE,
+  type MembershipAccessCache,
+} from '@stynx-nyx/tenancy';
 import { IndependentTransactionConnectionError } from '@stynx-nyx/data';
 import { StynxJwtValidator } from '@stynx-nyx/auth';
 import {
@@ -322,9 +326,9 @@ async function main() {
           STYNX_RESOLVED_TENANT_COMMAND_CONTEXT,
           { strict: false },
         );
-        const runAdmission = async (tenant = B) => {
+        const createAdmission = (tenant: string) => {
           const req = {
-            headers: { 'x-tenant-id': B },
+            headers: { 'x-tenant-id': tenant },
             originalUrl: '/records',
             principal: { id: ACTOR_ID },
           };
@@ -334,6 +338,27 @@ async function main() {
             getHandler: () => () => undefined,
             getClass: () => class Admission {},
           } as unknown as ExecutionContext;
+          return { req, context };
+        };
+        const cache = fixture.moduleRef.get<MembershipAccessCache>(STYNX_TENANT_MEMBERSHIP_CACHE, {
+          strict: false,
+        });
+        const admitControl = async () => {
+          const { req, context } = createAdmission(A);
+          assert.equal(
+            await lastValueFrom(
+              interceptor.intercept(context, {
+                handle: () => of('admitted-control'),
+              } as CallHandler),
+            ),
+            'admitted-control',
+          );
+          assert.equal(req.headers['x-tenant-id'], A);
+          assert.deepEqual(proof.get(req), { tenantId: A, actorId: ACTOR_ID, mode: 'protected' });
+        };
+        const runAdmission = async (tenant = B) => {
+          const { req, context } = createAdmission(tenant);
+          assert.equal(req.headers['x-tenant-id'], tenant);
           let handled = false;
           await assert.rejects(
             lastValueFrom(
@@ -352,6 +377,24 @@ async function main() {
         };
         await internal(A, ACTOR_ID, async () => {
           const before = fixture.moduleRef.get(RequestContext).snapshot();
+          cache.invalidateTenant(A);
+          assert.equal(cache.get(ACTOR_ID, A), undefined);
+          const beforeMiss = fixture.businessQueries.length;
+          await admitControl();
+          const membershipReads = fixture.businessQueries
+            .slice(beforeMiss)
+            .filter((row) => typeof row.sql === 'string' && row.sql.includes('auth.memberships'));
+          assert.equal(membershipReads.length, 1);
+          assert.equal(membershipReads[0].tenant, A);
+          assert.equal(membershipReads[0].actor, ACTOR_ID);
+          assert.equal(membershipReads[0].current_user, 'stynx_reader');
+          assert.equal(membershipReads[0].session_user, 'stynx_reader');
+          assert.equal(membershipReads[0].readonly, 'on');
+          assert.equal(cache.get(ACTOR_ID, A), true);
+          const beforeHit = fixture.businessQueries.length;
+          await admitControl();
+          assert.equal(fixture.businessQueries.length, beforeHit);
+          assert.equal(cache.get(ACTOR_ID, A), true);
           await fixture.database.tx(async () => {
             await runAdmission();
             await internal(A, ACTOR_ID, () => runAdmission());
@@ -359,6 +402,7 @@ async function main() {
             await internal(A, ACTOR_ID, () => runAdmission(A));
           });
           assert.deepEqual(fixture.moduleRef.get(RequestContext).snapshot(), before);
+          assert.equal(cache.get(ACTOR_ID, A), true);
         });
       },
     );
