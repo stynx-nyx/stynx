@@ -2,10 +2,34 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
-import { OfflineSyncError, OfflineSyncRangeUnavailableError, OfflineSyncReservationReplayError, OfflineSyncUpgradeRequiredError } from './errors';
+import {
+  OfflineSyncError,
+  OfflineSyncRangeUnavailableError,
+  OfflineSyncReservationReplayError,
+  OfflineSyncUpgradeRequiredError,
+} from './errors';
 import { rangeUnavailableReason, reservationFingerprint } from './listing';
-import { pgListBatches, pgListConflicts, pgListItemReceipts, pgListQueueItems } from './postgres-listing';
-import { pgGetBatch, pgGetItem, pgTransition, pgConsumption, pgReconcile, pgSubmit } from './postgres-durable';
+import {
+  pgListBatches,
+  pgListConflictActions,
+  pgListConflicts,
+  pgListItemReceipts,
+  pgListQueueItems,
+} from './postgres-listing';
+import {
+  boundedConsumerAttributes,
+  mergeStynxSql,
+  splitStynxContext,
+  withoutResolution,
+} from './stynx-context';
+import {
+  pgGetBatch,
+  pgGetItem,
+  pgTransition,
+  pgConsumption,
+  pgReconcile,
+  pgSubmit,
+} from './postgres-durable';
 import type {
   CancelNumberingReservationInput,
   NumberingRange,
@@ -19,13 +43,30 @@ import type {
   SubmitSyncBatchResult,
   SyncConflict,
   TrustedOfflineSyncScope,
-  OfflineSyncDurableStore, CTG9NumberingReservation, ReconcileNumberingInput,
-  ReconcileNumberingResult, SettleNumberingInput, NumberingConsumptionResult,
-  CTG9SubmitSyncBatchInput, CTG9SubmitSyncBatchResult, DurableBatchExecutionOptions, SubmitSyncBatchOptions,
-  SyncBatchReceipt, SyncItemReceipt,
+  OfflineSyncDurableStore,
+  CTG9NumberingReservation,
+  ReconcileNumberingInput,
+  ReconcileNumberingResult,
+  SettleNumberingInput,
+  NumberingConsumptionResult,
+  CTG9SubmitSyncBatchInput,
+  CTG9SubmitSyncBatchResult,
+  DurableBatchExecutionOptions,
+  SubmitSyncBatchOptions,
+  SyncBatchReceipt,
+  SyncItemReceipt,
   OfflineSyncConflictResolver,
-  ListSyncBatchReceiptsInput, ListSyncConflictsInput, ListSyncItemReceiptsInput, ListSyncQueueItemsInput,
-  OfflineSyncPage, SyncBatchReceiptSummary, SyncConflictRecord, SyncItemReceiptRecord, SyncQueueItemRecord,
+  ListSyncBatchReceiptsInput,
+  ListSyncConflictActionsInput,
+  ListSyncConflictsInput,
+  ListSyncItemReceiptsInput,
+  ListSyncQueueItemsInput,
+  OfflineSyncPage,
+  SyncBatchReceiptSummary,
+  SyncConflictActionRecord,
+  SyncConflictRecord,
+  SyncItemReceiptRecord,
+  SyncQueueItemRecord,
 } from './types';
 
 interface NumberingRangeRow {
@@ -92,47 +133,305 @@ interface ConflictRow {
 export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
   constructor(private readonly moduleRef: ModuleRef) {}
 
-  blockNumberingReservation(scope: TrustedOfflineSyncScope, id: string, input: CancelNumberingReservationInput, now: string): Promise<CTG9NumberingReservation> { return pgTransition(this.database,scope,id,'blocked',input,now,'block'); }
-  closeNumberingReservation(scope: TrustedOfflineSyncScope, id: string, input: CancelNumberingReservationInput, now: string): Promise<CTG9NumberingReservation> { return pgTransition(this.database,scope,id,'consumed',input,now,'close'); }
-  settleNumberingReservation(scope: TrustedOfflineSyncScope, id: string, input: SettleNumberingInput, now: string): Promise<CTG9NumberingReservation> { return pgTransition(this.database,scope,id,'consumed',input,now,'settle'); }
-  reconcileNumberingReservation(scope: TrustedOfflineSyncScope, id: string, input: ReconcileNumberingInput, now: string): Promise<ReconcileNumberingResult> { return pgReconcile(this.database,scope,id,input,now); }
-  getNumberingConsumption(scope: TrustedOfflineSyncScope, id: string): Promise<NumberingConsumptionResult> { return pgConsumption(this.database,scope,id); }
-  submitDurableSyncBatch(scope: TrustedOfflineSyncScope, input: CTG9SubmitSyncBatchInput, options: SubmitSyncBatchOptions, now: string): Promise<CTG9SubmitSyncBatchResult> {
-    const supplied = options as Partial<DurableBatchExecutionOptions>;
-    return pgSubmit(this.database,scope,input,{
-      ...options, agentId: supplied.agentId ?? scope.actorId,
-      policy: supplied.policy ?? {}, ports: supplied.ports ?? {},
-      transport: supplied.transport ?? options,
-    },now);
+  blockNumberingReservation(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: CancelNumberingReservationInput,
+    now: string,
+  ): Promise<CTG9NumberingReservation> {
+    return pgTransition(this.database, scope, id, 'blocked', input, now, 'block');
   }
-  getSyncBatchReceipt(scope: TrustedOfflineSyncScope, deviceId: string, deviceBatchId: string): Promise<SyncBatchReceipt | null> { return pgGetBatch(this.database,scope,deviceId,deviceBatchId); }
-  getSyncItemReceipt(scope: TrustedOfflineSyncScope, key: string): Promise<SyncItemReceipt | null> { return pgGetItem(this.database,scope,key); }
-  listSyncBatchReceipts(scope: TrustedOfflineSyncScope, input: ListSyncBatchReceiptsInput): Promise<OfflineSyncPage<SyncBatchReceiptSummary>> { return pgListBatches(this.database,scope,input); }
-  listSyncItemReceipts(scope: TrustedOfflineSyncScope, input: ListSyncItemReceiptsInput): Promise<OfflineSyncPage<SyncItemReceiptRecord>> { return pgListItemReceipts(this.database,scope,input); }
-  listSyncQueueItems(scope: TrustedOfflineSyncScope, input: ListSyncQueueItemsInput): Promise<OfflineSyncPage<SyncQueueItemRecord>> { return pgListQueueItems(this.database,scope,input); }
-  listSyncConflicts(scope: TrustedOfflineSyncScope, input: ListSyncConflictsInput): Promise<OfflineSyncPage<SyncConflictRecord>> { return pgListConflicts(this.database,scope,input); }
-  resolveWithPort(scope: TrustedOfflineSyncScope, id: string, input: ResolveSyncConflictInput, now: string, port: OfflineSyncConflictResolver): Promise<SyncConflict> {
-    return this.database.tx(async trx => {
-      const result = await trx.query<{org_unit_id:string;device_id:string;agent_id:string;device_batch_id:string}>(
-        `select q.org_unit_id,q.device_id,q.agent_id,q.device_batch_id from offline.sync_conflicts c
+  closeNumberingReservation(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: CancelNumberingReservationInput,
+    now: string,
+  ): Promise<CTG9NumberingReservation> {
+    return pgTransition(this.database, scope, id, 'consumed', input, now, 'close');
+  }
+  settleNumberingReservation(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: SettleNumberingInput,
+    now: string,
+  ): Promise<CTG9NumberingReservation> {
+    return pgTransition(this.database, scope, id, 'consumed', input, now, 'settle');
+  }
+  reconcileNumberingReservation(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: ReconcileNumberingInput,
+    now: string,
+  ): Promise<ReconcileNumberingResult> {
+    return pgReconcile(this.database, scope, id, input, now);
+  }
+  getNumberingConsumption(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+  ): Promise<NumberingConsumptionResult> {
+    return pgConsumption(this.database, scope, id);
+  }
+  submitDurableSyncBatch(
+    scope: TrustedOfflineSyncScope,
+    input: CTG9SubmitSyncBatchInput,
+    options: SubmitSyncBatchOptions,
+    now: string,
+  ): Promise<CTG9SubmitSyncBatchResult> {
+    const supplied = options as Partial<DurableBatchExecutionOptions>;
+    return pgSubmit(
+      this.database,
+      scope,
+      input,
+      {
+        ...options,
+        agentId: supplied.agentId ?? scope.actorId,
+        policy: supplied.policy ?? {},
+        ports: supplied.ports ?? {},
+        transport: supplied.transport ?? options,
+      },
+      now,
+    );
+  }
+  getSyncBatchReceipt(
+    scope: TrustedOfflineSyncScope,
+    deviceId: string,
+    deviceBatchId: string,
+  ): Promise<SyncBatchReceipt | null> {
+    return pgGetBatch(this.database, scope, deviceId, deviceBatchId);
+  }
+  getSyncItemReceipt(scope: TrustedOfflineSyncScope, key: string): Promise<SyncItemReceipt | null> {
+    return pgGetItem(this.database, scope, key);
+  }
+  listSyncBatchReceipts(
+    scope: TrustedOfflineSyncScope,
+    input: ListSyncBatchReceiptsInput,
+  ): Promise<OfflineSyncPage<SyncBatchReceiptSummary>> {
+    return pgListBatches(this.database, scope, input);
+  }
+  listSyncItemReceipts(
+    scope: TrustedOfflineSyncScope,
+    input: ListSyncItemReceiptsInput,
+  ): Promise<OfflineSyncPage<SyncItemReceiptRecord>> {
+    return pgListItemReceipts(this.database, scope, input);
+  }
+  listSyncQueueItems(
+    scope: TrustedOfflineSyncScope,
+    input: ListSyncQueueItemsInput,
+  ): Promise<OfflineSyncPage<SyncQueueItemRecord>> {
+    return pgListQueueItems(this.database, scope, input);
+  }
+  listSyncConflicts(
+    scope: TrustedOfflineSyncScope,
+    input: ListSyncConflictsInput,
+  ): Promise<OfflineSyncPage<SyncConflictRecord>> {
+    return pgListConflicts(this.database, scope, input);
+  }
+  listSyncConflictActions(
+    scope: TrustedOfflineSyncScope,
+    input: ListSyncConflictActionsInput,
+  ): Promise<OfflineSyncPage<SyncConflictActionRecord>> {
+    return pgListConflictActions(this.database, scope, input);
+  }
+  /**
+   * CTG9 resolution through the host resolver (ADR-MOBILE-OFFLINE-0003 D1 and D2). One transaction: the
+   * conflict row is locked, `allowedActions` governs refusal, the resolver returns `open` (recorded, the
+   * conflict stays open) or `resolved` (closed as before). `retry_after_correction` additionally moves
+   * the queue item and its receipt from `conflict` to `pending` when no effect was committed.
+   */
+  resolveWithPort(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: ResolveSyncConflictInput,
+    now: string,
+    port: OfflineSyncConflictResolver,
+  ): Promise<SyncConflict> {
+    return this.database
+      .tx(async (trx) => {
+        const result = await trx.query<{
+          org_unit_id: string;
+          device_id: string;
+          agent_id: string;
+          device_batch_id: string;
+          queue_item_id: string;
+          idempotency_key: string;
+          item_status: string;
+          reserved_number: string | null;
+          entity_type: string;
+        }>(
+          `select q.org_unit_id,q.device_id,q.agent_id,q.device_batch_id,q.id as queue_item_id,q.idempotency_key,q.status as item_status,q.reserved_number,q.entity_type
+          from offline.sync_conflicts c
           join offline.sync_queue_items q on q.tenant_id=c.tenant_id and q.id=c.sync_queue_item_id
-          where c.tenant_id=$1::uuid and c.id=$2::uuid and c.status='open' for update of c`,[scope.tenantId,id]);
-      const row = result.rows[0];
-      if (!row) throw new OfflineSyncError('OFFLINE_SYNC_CONFLICT_NOT_FOUND',404,'Conflict was not found.');
-      const evidence = await trx.query<{allowed_actions: string[]}>(`select allowed_actions from offline.sync_conflict_evidence where tenant_id=$1::uuid and conflict_id=$2::uuid limit 1`,[scope.tenantId,id]);
-      if (evidence.rows[0] && !evidence.rows[0].allowed_actions.includes(input.resolution)) throw new OfflineSyncError('OFFLINE_SYNC_CONFLICT_RESOLUTION',409,'Resolution action is not allowed.');
-      const resolved = await port.resolve(trx,id,input.resolution,{...scope,agentId:row.agent_id,orgUnitId:row.org_unit_id,deviceId:row.device_id,batchId:row.device_batch_id,now});
-      if (resolved.status !== 'resolved') throw new OfflineSyncError('OFFLINE_SYNC_CONFLICT_RESOLUTION',409,'Conflict resolver did not resolve the conflict.');
-      await trx.query(`update offline.sync_conflicts set status='resolved',resolution=$3,
+          where c.tenant_id=$1::uuid and c.id=$2::uuid and c.status='open' for update of c`,
+          [scope.tenantId, id],
+        );
+        const row = result.rows[0];
+        if (!row)
+          throw new OfflineSyncError(
+            'OFFLINE_SYNC_CONFLICT_NOT_FOUND',
+            404,
+            'Conflict was not found.',
+          );
+        const evidence = await trx.query<{ allowed_actions: string[] }>(
+          `select allowed_actions from offline.sync_conflict_evidence where tenant_id=$1::uuid and conflict_id=$2::uuid limit 1`,
+          [scope.tenantId, id],
+        );
+        if (evidence.rows[0] && !evidence.rows[0].allowed_actions.includes(input.resolution))
+          throw new OfflineSyncError(
+            'OFFLINE_SYNC_CONFLICT_RESOLUTION',
+            409,
+            'Resolution action is not allowed.',
+          );
+        const { consumerAttributes: supplied, ...resolved } = await port.resolve(
+          trx,
+          id,
+          input.resolution,
+          {
+            ...scope,
+            agentId: row.agent_id,
+            orgUnitId: row.org_unit_id,
+            deviceId: row.device_id,
+            batchId: row.device_batch_id,
+            now,
+          },
+        );
+        if (resolved.status !== 'resolved' && resolved.status !== 'open')
+          throw new OfflineSyncError(
+            'OFFLINE_SYNC_CONFLICT_RESOLUTION',
+            409,
+            'Conflict resolver did not resolve the conflict.',
+          );
+        const consumerAttributes = boundedConsumerAttributes(supplied);
+        if (resolved.status === 'resolved' && input.resolution === 'retry_after_correction')
+          await this.returnToPending(trx, scope, id, row, now);
+        await trx.query(
+          `insert into offline.sync_conflict_actions (tenant_id,conflict_id,action,reason,user_ref,actor_id,resulting_status)
+        values ($1::uuid,$2::uuid,$3,$4,$5,$6,$7)`,
+          [
+            scope.tenantId,
+            id,
+            input.resolution,
+            input.description ?? null,
+            input.userRef ?? null,
+            scope.actorId,
+            resolved.status,
+          ],
+        );
+        if (resolved.status === 'resolved')
+          await trx.query(
+            `update offline.sync_conflicts set status='resolved',resolution=$3,
         resolution_reason=$4,resolution_user_ref=$5,resolved_by=$6,resolved_at=$7::timestamptz,
         updated_at=$7::timestamptz where tenant_id=$1::uuid and id=$2::uuid`,
-        [scope.tenantId,id,input.resolution,input.description ?? null,input.userRef ?? null,scope.actorId,now]);
-      await trx.query(`update offline.sync_conflict_evidence set evidence=evidence || $3::jsonb
-        where tenant_id=$1::uuid and conflict_id=$2::uuid`,
-        [scope.tenantId,id,JSON.stringify({resolutionAction:input.resolution,resolutionReason:input.description ?? null,
-          resolutionUserRef:input.userRef ?? null,resolvedBy:scope.actorId,resolvedAt:now,resultingStatus:resolved.status})]);
-      return {...resolved,resolution:input.resolution,resolvedBy:scope.actorId,resolvedAt:now};
-    });
+            [
+              scope.tenantId,
+              id,
+              input.resolution,
+              input.description ?? null,
+              input.userRef ?? null,
+              scope.actorId,
+              now,
+            ],
+          );
+        const stored = await trx.query<{ evidence: Record<string, unknown> }>(
+          `update offline.sync_conflict_evidence set evidence=${mergeStynxSql('evidence', '$3', '$4')}
+        where tenant_id=$1::uuid and conflict_id=$2::uuid returning evidence`,
+          [
+            scope.tenantId,
+            id,
+            resolved.status === 'resolved'
+              ? JSON.stringify({
+                  resolutionAction: input.resolution,
+                  resolutionReason: input.description ?? null,
+                  resolutionUserRef: input.userRef ?? null,
+                  resolvedBy: scope.actorId,
+                  resolvedAt: now,
+                  resultingStatus: resolved.status,
+                })
+              : null,
+            JSON.stringify(consumerAttributes === undefined ? {} : { consumerAttributes }),
+          ],
+        );
+        const platform = splitStynxContext(stored.rows[0]?.evidence);
+        return resolved.status === 'resolved'
+          ? {
+              ...resolved,
+              resolution: input.resolution,
+              resolvedBy: scope.actorId,
+              resolvedAt: now,
+              ...(platform.stynx ? { stynx: platform.stynx } : {}),
+            }
+          : {
+              ...withoutResolution(resolved),
+              ...(platform.stynx ? { stynx: platform.stynx } : {}),
+            };
+      })
+      .catch((error: unknown) => {
+        const { code, message } = error as { code?: string; message?: string };
+        if (code === '23514' || (code === '42P01' && message?.includes('sync_conflict_actions')))
+          throw new OfflineSyncUpgradeRequiredError('0004');
+        throw error;
+      });
+  }
+
+  /** D1 items 2 and 3: refused unless the item is `conflict`, has no `appliedAt`, no applied number and no other open conflict. */
+  private async returnToPending(
+    trx: Transaction,
+    scope: TrustedOfflineSyncScope,
+    conflictId: string,
+    row: {
+      queue_item_id: string;
+      idempotency_key: string;
+      item_status: string;
+      reserved_number: string | null;
+      device_id: string;
+      org_unit_id: string;
+      entity_type: string;
+    },
+    now: string,
+  ): Promise<void> {
+    const receipt = (
+      await trx.query<{ status: string; context_json: Record<string, unknown> | null }>(
+        `select status,context_json from offline.sync_item_receipts where tenant_id=$1::uuid and idempotency_key=$2 for update`,
+        [scope.tenantId, row.idempotency_key],
+      )
+    ).rows[0];
+    const guard = (
+      await trx.query<{ applied_number: boolean; other_open: boolean }>(
+        `select exists (select 1 from offline.numbering_consumption n
+          join offline.numbering_reservations r on r.tenant_id=n.tenant_id and r.id=n.reservation_id
+          where n.tenant_id=$1::uuid and $3::bigint is not null and n.number=$3::bigint and n.status='applied'
+            and r.device_id=$4 and r.org_unit_id=$5 and r.entity_type=$6) as applied_number,
+        exists (select 1 from offline.sync_conflicts where tenant_id=$1::uuid and sync_queue_item_id=$2 and status='open' and id<>$7::uuid) as other_open`,
+        [
+          scope.tenantId,
+          row.queue_item_id,
+          row.reserved_number,
+          row.device_id,
+          row.org_unit_id,
+          row.entity_type,
+          conflictId,
+        ],
+      )
+    ).rows[0]!;
+    if (
+      row.item_status !== 'conflict' ||
+      receipt?.status !== 'conflict' ||
+      splitStynxContext(receipt.context_json).stynx?.appliedAt !== undefined ||
+      guard.applied_number ||
+      guard.other_open
+    )
+      throw new OfflineSyncError(
+        'OFFLINE_SYNC_CONFLICT_RESOLUTION',
+        409,
+        'The item cannot return to pending.',
+      );
+    await trx.query(
+      `update offline.sync_queue_items set status='pending',updated_at=$3::timestamptz where tenant_id=$1::uuid and id=$2`,
+      [scope.tenantId, row.queue_item_id, now],
+    );
+    await trx.query(
+      `update offline.sync_item_receipts set status='pending',error_code=null,updated_at=$3::timestamptz where tenant_id=$1::uuid and idempotency_key=$2`,
+      [scope.tenantId, row.idempotency_key, now],
+    );
   }
 
   async reserveNumbering(
@@ -146,7 +445,9 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
     return this.txE6(async (trx) => {
       if (key !== undefined) {
         // Same-key requests serialize here; READ COMMITTED lets the waiter see the committed original.
-        await trx.query('select pg_advisory_xact_lock(hashtextextended($1,0))', [`${scope.tenantId}:numbering-reserve:${key}`]);
+        await trx.query('select pg_advisory_xact_lock(hashtextextended($1,0))', [
+          `${scope.tenantId}:numbering-reserve:${key}`,
+        ]);
         const prior = await this.keyedReservation(trx, scope, key, fingerprint!);
         if (prior) return prior;
       }
@@ -240,28 +541,44 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
       );
       return this.mapReservation(inserted.rows[0]!);
     }).catch((error: unknown) => {
-      if (key !== undefined && error instanceof OfflineSyncUpgradeRequiredError) throw new OfflineSyncUpgradeRequiredError('0003');
+      if (key !== undefined && error instanceof OfflineSyncUpgradeRequiredError)
+        throw new OfflineSyncUpgradeRequiredError('0003');
       throw error;
     });
   }
 
-  async replayNumberingReservation(scope: TrustedOfflineSyncScope, input: ReserveNumberingInput): Promise<NumberingReservation | null> {
+  async replayNumberingReservation(
+    scope: TrustedOfflineSyncScope,
+    input: ReserveNumberingInput,
+  ): Promise<NumberingReservation | null> {
     const key = input.idempotencyKey;
     if (key === undefined) return null;
-    return this.txE6(trx => this.keyedReservation(trx, scope, key, reservationFingerprint(scope, input))).catch((error: unknown) => {
-      if (error instanceof OfflineSyncUpgradeRequiredError) throw new OfflineSyncUpgradeRequiredError('0003');
+    return this.txE6((trx) =>
+      this.keyedReservation(trx, scope, key, reservationFingerprint(scope, input)),
+    ).catch((error: unknown) => {
+      if (error instanceof OfflineSyncUpgradeRequiredError)
+        throw new OfflineSyncUpgradeRequiredError('0003');
       throw error;
     });
   }
 
-  private async keyedReservation(trx: Transaction, scope: TrustedOfflineSyncScope, key: string, fingerprint: string): Promise<NumberingReservation | null> {
-    const prior = (await trx.query<NumberingReservationRow & { idempotency_fingerprint: string }>(
-      `select id, tenant_id, range_id, org_unit_id, entity_type, series, agent_id, device_id, shift_id,
+  private async keyedReservation(
+    trx: Transaction,
+    scope: TrustedOfflineSyncScope,
+    key: string,
+    fingerprint: string,
+  ): Promise<NumberingReservation | null> {
+    const prior = (
+      await trx.query<NumberingReservationRow & { idempotency_fingerprint: string }>(
+        `select id, tenant_id, range_id, org_unit_id, entity_type, series, agent_id, device_id, shift_id,
               start_number, end_number, next_number, valid_until, status, idempotency_fingerprint
          from offline.numbering_reservations where tenant_id = $1::uuid and idempotency_key = $2`,
-      [scope.tenantId, key])).rows[0];
+        [scope.tenantId, key],
+      )
+    ).rows[0];
     if (!prior) return null;
-    if (prior.idempotency_fingerprint !== fingerprint) throw new OfflineSyncReservationReplayError();
+    if (prior.idempotency_fingerprint !== fingerprint)
+      throw new OfflineSyncReservationReplayError();
     return this.mapReservation(prior);
   }
 
@@ -316,7 +633,10 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
             where tenant_id=$1::uuid and reservation_id=$2::uuid and status in ('applied','claimed-locally')`,
           [scope.tenantId, reservationId],
         );
-        const next = Math.max(Number(row.start_number), Number(highest.rows[0]?.number ?? Number(row.start_number) - 1) + 1);
+        const next = Math.max(
+          Number(row.start_number),
+          Number(highest.rows[0]?.number ?? Number(row.start_number) - 1) + 1,
+        );
         // Returning an unused tail reactivates only an exhausted range; a consumer-cancelled range
         // is never revived or rewound (ADR-MOBILE-OFFLINE-0003 D5).
         await trx.query(
@@ -521,9 +841,11 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
   }
 
   private async txE6<T>(fn: (trx: Transaction) => Promise<T>): Promise<T> {
-    try { return await this.database.tx(fn); }
-    catch (error) {
-      if (['42703','42P01'].includes((error as { code?: string }).code ?? '')) throw new OfflineSyncUpgradeRequiredError();
+    try {
+      return await this.database.tx(fn);
+    } catch (error) {
+      if (['42703', '42P01'].includes((error as { code?: string }).code ?? ''))
+        throw new OfflineSyncUpgradeRequiredError();
       throw error;
     }
   }

@@ -8,6 +8,8 @@
 export { StynxDataModule, StynxDataModule as DataModule } from './data.module';
 /** Database service export. */
 export { Database } from './database';
+/** Application SQL role configuration exports (ADR-OUTBOX-0003 D1). */
+export { APP_ROLE_NAME_MAX_BYTES, DEFAULT_APP_ROLE_NAME, resolveAppRoleName } from './app-role';
 /** Transaction and Drizzle helper exports. */
 export { Transaction, createDrizzle, type StynxDrizzleDatabase } from './transaction';
 /** PostgreSQL pool registry exports. */

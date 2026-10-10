@@ -12,6 +12,9 @@ export const $ReserveNumberingInput = {
             type: 'string',
             isRequired: true,
         },
+        idempotencyKey: {
+            type: 'string',
+        },
         orgUnitId: {
             type: 'string',
             isRequired: true,

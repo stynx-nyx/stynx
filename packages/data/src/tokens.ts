@@ -29,6 +29,14 @@ export interface StynxDataModuleOptions {
   retry?: RetryPolicy;
   migrations?: StynxDataMigrationOptions;
   metrics?: StynxDataMetricsSink;
+  /**
+   * Application SQL role expected as `current_user` on the app pool
+   * (ADR-OUTBOX-0003 D1). Default `'stynx_app'`; a non-empty PostgreSQL
+   * identifier of at most 63 bytes, compared by exact equality and never
+   * concatenated into SQL. Its properties are verified before the pool
+   * serves its first app-role transaction.
+   */
+  appRoleName?: string;
 }
 
 export interface StynxDataMetricsSink {

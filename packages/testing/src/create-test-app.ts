@@ -122,6 +122,40 @@ function connectionStringWithAppName(base: string, appName: string): string {
   return url.toString();
 }
 
+/** Platform application role of `0001_roles.sql`; the app pool logs in as it. */
+const APP_ROLE = 'stynx_app';
+const APP_ROLE_PASSWORD = 'stynx_app';
+
+/**
+ * ADR-OUTBOX-0003 D1 refuses an application pool whose `current_user` is not
+ * the application role or whose login is privileged, so the container's
+ * superuser cannot serve the app pool. Create the role ahead of the platform
+ * migrations (which keep it: `0001_roles.sql` is `IF NOT EXISTS`) and bind a
+ * login password for the test container only.
+ */
+async function bindApplicationRoleLogin(adminConnectionString: string): Promise<void> {
+  const client = createStynxPgClient({ connectionString: adminConnectionString });
+  await client.connect();
+  try {
+    await client.query(`do $$
+      begin
+        if not exists (select 1 from pg_catalog.pg_roles where rolname = '${APP_ROLE}') then
+          create role ${APP_ROLE} login noinherit nobypassrls;
+        end if;
+      end $$`);
+    await client.query(`alter role ${APP_ROLE} with login password '${APP_ROLE_PASSWORD}'`);
+  } finally {
+    await client.end();
+  }
+}
+
+function applicationConnectionString(base: string, appName: string): string {
+  const url = new URL(connectionStringWithAppName(base, appName));
+  url.username = APP_ROLE;
+  url.password = APP_ROLE_PASSWORD;
+  return url.toString();
+}
+
 export async function createTestApp(options: CreateTestAppOptions = {}): Promise<TestAppContext> {
   let postgres: StartedPostgresHandle | undefined;
   let redis: StartedRedisHandle | undefined;
@@ -141,6 +175,8 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
       ? await startCognitoContainer(options.cognito.image ?? 'jagregory/cognito-local:latest')
       : undefined;
 
+    await bindApplicationRoleLogin(postgres.adminConnectionString);
+
     testingModule = await Test.createTestingModule({
       imports: [
         StynxDataModule.forRoot({
@@ -152,7 +188,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
               ),
             },
             app: {
-              connectionString: connectionStringWithAppName(
+              connectionString: applicationConnectionString(
                 postgres.connectionString,
                 '@stynx-nyx/testing:app',
               ),

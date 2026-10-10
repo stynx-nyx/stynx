@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { OfflineSyncConflictResolutionStrategy } from './OfflineSyncConflictResolutionStrategy';
+import type { OfflineSyncStynxContext } from './OfflineSyncStynxContext';
 export type SyncConflict = {
     conflictId: string;
     conflictType: string;
@@ -14,6 +15,7 @@ export type SyncConflict = {
     resolvedAt?: string;
     resolvedBy?: string;
     status: 'open' | 'resolved';
+    stynx?: OfflineSyncStynxContext;
     tenantId: string;
 };
 
