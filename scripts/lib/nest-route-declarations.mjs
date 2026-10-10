@@ -14,6 +14,17 @@ const verbs = new Map([
   ['Sse', 'GET'],
 ]);
 const authMarkers = new Set(['Public', 'PublicTenantRoute', 'Permission', 'ReadOnly', 'System']);
+const unsupportedRouteFactories = new Set([
+  'RequestMapping',
+  'QueryMethod',
+  'Propfind',
+  'Proppatch',
+  'Mkcol',
+  'Copy',
+  'Move',
+  'Lock',
+  'Unlock',
+]);
 
 /** Source declarations only. Mounting and inherited registrations are separate evidence. */
 export function parseNestControllerDeclarations(text, { file = 'controller.ts' } = {}) {
@@ -93,8 +104,13 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
       const expression = decorator.expression;
       const call = ts.isCallExpression(expression) ? expression : null;
       const identity = symbol(call ? call.expression : expression);
-      if (!knownOrigin(identity))
+      if (!identity.importSource || !knownOrigin(identity))
         refuse(decorator, `unresolved decorator identity ${identity.localName}`);
+      if (
+        unsupportedRouteFactories.has(identity.name) &&
+        identity.importSource === '@nestjs/common'
+      )
+        refuse(decorator, `unsupported HTTP decorator ${identity.localName}`);
       if (
         (identity.name === 'Controller' ||
           verbs.has(identity.name) ||
@@ -130,13 +146,13 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
       if (!node.elements.length) refuse(node, 'empty route selector array');
       return node.elements.map(literalValue);
     }
-    if (ts.isIdentifier(node)) {
+    if (ts.isIdentifier(node) || ts.isPropertyAccessExpression(node)) {
       const identity = symbol(node);
       if (identity.name === 'VERSION_NEUTRAL' && identity.importSource === '@nestjs/common') {
         return { symbol: 'VERSION_NEUTRAL', importSource: identity.importSource };
       }
     }
-    if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression)) {
+    if (ts.isPropertyAccessExpression(node)) {
       const identity = symbol(node.expression);
       if (
         identity.name === 'Scope' &&
@@ -147,6 +163,22 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
       }
     }
     return refuse(node, `unsupported computed route selector ${node.getText(source)}`);
+  };
+  const optionValue = (key, node) => {
+    const value = literalValue(node);
+    const flat = Array.isArray(value) ? value : [value];
+    const neutral = (item) => item?.symbol === 'VERSION_NEUTRAL';
+    const valid =
+      key === 'version'
+        ? flat.every((item) => typeof item === 'string' || neutral(item))
+        : key === 'host'
+          ? flat.every((item) => typeof item === 'string')
+          : key === 'scope'
+            ? !Array.isArray(value) &&
+              ['Scope.DEFAULT', 'Scope.REQUEST', 'Scope.TRANSIENT'].includes(value?.symbol)
+            : key === 'durable' && typeof value === 'boolean';
+    if (!valid) refuse(node, `invalid Controller ${key} option`);
+    return value;
   };
   const paths = (node) => {
     if (!node) return [''];
@@ -184,7 +216,7 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
         }
         seen.add(key);
         if (key === 'path') controllerPaths = paths(property.initializer);
-        else options[key] = literalValue(property.initializer);
+        else options[key] = optionValue(key, property.initializer);
       }
     } else if (argument) controllerPaths = paths(argument);
     const methods = [];
