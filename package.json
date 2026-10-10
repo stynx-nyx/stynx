@@ -85,7 +85,7 @@
     "check:offline-storage": "node scripts/offline-import-schema-generate.mjs --check && node scripts/offline-storage-generate.mjs --check && node scripts/verify-offline-storage-references.mjs"
   },
   "devDependencies": {
-    "@aarusso-nyx/devai": "2.3.2",
+    "@aarusso-nyx/devai": "2.4.0",
     "@angular-eslint/eslint-plugin": "22.0.0",
     "@angular-eslint/eslint-plugin-template": "22.0.0",
     "@angular-eslint/template-parser": "22.0.0",
