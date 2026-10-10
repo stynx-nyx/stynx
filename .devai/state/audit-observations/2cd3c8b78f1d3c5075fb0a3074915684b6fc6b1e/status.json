@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0.0",
+  "merge_sha": "2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e",
+  "status": "completed",
+  "generated_at": "2026-10-10T05:16:04-03:00",
+  "readiness_promoting": false,
+  "previous_observation_digest_sha256": "fd620371801e2e31b95f6a558f50a9702c2f28cd8c6ea1a7abdaa1e8d7c6639b",
+  "previous_observation_record": "EV-1cb333b904ec12a1",
+  "artifact_digest_sha256": "0e3832af592dce900bec93e2b0e209482ac4167fb74e9ae9578bb7ca8e58c683",
+  "observation_digest_sha256": "3cbf53214bfc1de022686ad94f5e8aaceb763cd83959f31b112abf6e950a5d1d"
+}
