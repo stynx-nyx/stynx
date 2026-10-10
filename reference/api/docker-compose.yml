@@ -15,6 +15,8 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./postgres/init-app-role.sql:/docker-entrypoint-initdb.d/10-stynx-app-role.sql:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
       interval: 5s
@@ -87,7 +89,7 @@ services:
       PORT: 3000
       STYNX_ENVIRONMENT: local
       STYNX_OWNER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
-      STYNX_APP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
+      STYNX_APP_DATABASE_URL: postgresql://stynx_app:stynx_app@postgres:5432/postgres
       STYNX_READER_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
       STYNX_REDIS_URL: redis://redis:6379
       STYNX_COGNITO_ISSUER: http://cognito-local:9229
