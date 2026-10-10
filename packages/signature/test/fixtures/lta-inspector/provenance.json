@@ -1,0 +1,862 @@
+{
+  "classification": "FRESH INSPECTOR SYNTHETIC TEST ONLY; no provider or production policy claim",
+  "archiveAt": "2026-10-10T17:44:18.000Z",
+  "generatorSha256": "3d92b15330e71caf995e381070d60b01ca2c6dbf5471f0483db078020c62d6ed",
+  "seedBuilderSha256": "b096212ac18fabe8426d6270a7e2c3a1e29beeaa17b93ae0a9138edc25be2812",
+  "files": [
+    {
+      "path": "source.pdf",
+      "bytes": 616,
+      "sha256": "0ccf9cead56ee2d5acbc9dfde3ae07e746be4339b92fd2702744a2ae13716f39"
+    },
+    {
+      "path": "signature.cms.der",
+      "bytes": 4872,
+      "sha256": "e9261a638104e3e9b80f0d1033943735ee726f514643fe76eb9679e7501da7aa"
+    },
+    {
+      "path": "signer.ocsp.der",
+      "bytes": 1319,
+      "sha256": "0fb8992a2efe45cedce60147889b15e26982d9d7bd738eb8793ac6b5c5facc90"
+    },
+    {
+      "path": "minimal-lta.pdf",
+      "bytes": 93127,
+      "sha256": "899d859150f347f1fd254927b74b488199861ca9b828e2f9ddbfe2b62e3766df"
+    },
+    {
+      "path": "signer.cert.pem",
+      "bytes": 1180,
+      "sha256": "78424f224cc9b03cabf638cb3f63ff82a2f837c4d4a78d8b8e4f308d5ef0f4f5"
+    },
+    {
+      "path": "signer.cert.der",
+      "bytes": 830,
+      "sha256": "0ef8ecbd3f24fdb6f69c7417b7fe7634b256b1a81e1fdefe5bf930e9a8914c36"
+    },
+    {
+      "path": "signer-root.cert.pem",
+      "bytes": 1188,
+      "sha256": "ccb879322a3b75e6bdab2e7d8bd96a4e03337c00e1744b2d22c94970f2f55e2a"
+    },
+    {
+      "path": "signature-tsa-root.cert.pem",
+      "bytes": 1204,
+      "sha256": "879d75349af0962436a2d4d7b0459ff248f1b1ced19a50f0a45b39908a59dfcd"
+    },
+    {
+      "path": "archive-tsa-root.cert.pem",
+      "bytes": 1200,
+      "sha256": "d0d0d15423b5a5958fd72eae944000a37c0eaf93ea685741edb62b2faef06b8d"
+    },
+    {
+      "path": "token-container-content-type.pdf",
+      "bytes": 93127,
+      "sha256": "0a24d22efeffa61d70505a2d0a0e0854e45c18bd2a5dc99a89865d4eb066fe6c",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-container-content-type"
+    },
+    {
+      "path": "token-multiple-signers.pdf",
+      "bytes": 93127,
+      "sha256": "715ece40383c94ea837520c07710747243e07fec987f06e689431e3aef0d6758",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-multiple-signers"
+    },
+    {
+      "path": "positive-ess-sha1.pdf",
+      "bytes": 93127,
+      "sha256": "502cdb061fb521d4be2bc4b2aea37ab2fbd5d2df3555cf3caab894277b2a722f",
+      "cryptographicTokenSignatureVerified": true,
+      "positive": "positive-ess-sha1"
+    },
+    {
+      "path": "positive-ess-sha1-issuer.pdf",
+      "bytes": 93127,
+      "sha256": "5c43fe79eb58c23021170ebdc7e56f4bf92d4cb0468cbaf0286e7e6a8ca1ae10",
+      "cryptographicTokenSignatureVerified": true,
+      "positive": "positive-ess-sha1-issuer"
+    },
+    {
+      "path": "token-ess-sha1-wrong-hash.pdf",
+      "bytes": 93127,
+      "sha256": "d50b932b8dfe8d0b3dc308135a12ff0720605811159964f07f3c1b3b08c187bb",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-ess-sha1-wrong-hash"
+    },
+    {
+      "path": "token-ess-sha1-wrong-issuer.pdf",
+      "bytes": 93127,
+      "sha256": "1c574955dd3b08a7767ba6e91b98e96399e0fe4fc301e2f64dc8b7c727211289",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-ess-sha1-wrong-issuer"
+    },
+    {
+      "path": "token-ess-sha1-wrong-serial.pdf",
+      "bytes": 93127,
+      "sha256": "eb4f0be492f24d8442f6b8d9dc2213f3d2abd1ce20826e9e416ff445da3819c6",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-ess-sha1-wrong-serial"
+    },
+    {
+      "path": "token-missing-digest.pdf",
+      "bytes": 93127,
+      "sha256": "a6f4706c652e3b76a17a931ceb31088c5fb006986aa0bf1614f76df946709f5f",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-missing-digest"
+    },
+    {
+      "path": "token-multiple-digests.pdf",
+      "bytes": 93127,
+      "sha256": "f354d14e2c62652208da0a2c496dcfe59787ca582a26a2a0f069a4f9d6d7122a",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-multiple-digests"
+    },
+    {
+      "path": "token-content-type-wrong-type.pdf",
+      "bytes": 93127,
+      "sha256": "2c74451670434dbc0d4fb5646ef7d92f1cc07588bfffdeef3676a20bdc55e685",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-content-type-wrong-type"
+    },
+    {
+      "path": "positive-certificate-no-key-usage.pdf",
+      "bytes": 93127,
+      "sha256": "3864488f72e50872bb711ae39845aa078fc06fb0d01b03e5c8b14218a23ecf60",
+      "cryptographicTokenSignatureVerified": true,
+      "positive": "positive-certificate-no-key-usage"
+    },
+    {
+      "path": "certificate-duplicate-key-usage.pdf",
+      "bytes": 93127,
+      "sha256": "eb50314177981d87f12c4121dcae1df37640b4deac6973fd2b86f4a8361a655e",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "certificate-duplicate-key-usage"
+    },
+    {
+      "path": "certificate-duplicate-eku.pdf",
+      "bytes": 93127,
+      "sha256": "02afc52655c99029804af0b844f0da87ae94cfa0d1df8f329ba828471208afd7",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "certificate-duplicate-eku"
+    },
+    {
+      "path": "positive-max-clock-skew.pdf",
+      "bytes": 93127,
+      "sha256": "d6f8f9985e91550bce2889aaaff289c17db41ba3f0f2d24210e637a031bdd8b2",
+      "cryptographicTokenSignatureVerified": true,
+      "positive": "positive-max-clock-skew"
+    },
+    {
+      "path": "token-content-type-data.pdf",
+      "bytes": 93127,
+      "sha256": "587b8678dad4f7bf7262601110365fb0a133d59cc27d19290dd9c7a9f578aac3",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-content-type-data"
+    },
+    {
+      "path": "token-content-type-multiple.pdf",
+      "bytes": 93127,
+      "sha256": "bd9b7165b8efee28b11b7e26eaf9effe0dc44cb91ffcd61f2e7fb9c37cfabdcd",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-content-type-multiple"
+    },
+    {
+      "path": "token-duplicate-attribute.pdf",
+      "bytes": 93127,
+      "sha256": "ec637cc932e463a43777b975b562b65da96ab9766e1f1b22f281aea4835cea81",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-duplicate-attribute"
+    },
+    {
+      "path": "token-missing-content-type.pdf",
+      "bytes": 93127,
+      "sha256": "909a32e8f335fba828cc4c0a6ce19ebf1e009f16cf143cdcf9dd7a26e8abe15e",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-missing-content-type"
+    },
+    {
+      "path": "token-digest-wrong-type.pdf",
+      "bytes": 93127,
+      "sha256": "694f2e4d2a76edf0fed46f6d96c2745fdf71c7ccdb96284a2779cef65d9abaac",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-digest-wrong-type"
+    },
+    {
+      "path": "token-missing-ess.pdf",
+      "bytes": 93127,
+      "sha256": "3c9c8877128de1db4d765c329bd2347b59d7dd4aa830d51b726f1c6d141cdbb8",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-missing-ess"
+    },
+    {
+      "path": "token-wrong-ess.pdf",
+      "bytes": 93127,
+      "sha256": "1c892fea3b368886f409d2ad2669b5f38c2a2e6dba221dfd3ef438a047369958",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-wrong-ess"
+    },
+    {
+      "path": "token-tst-version-two.pdf",
+      "bytes": 93127,
+      "sha256": "499d9d78814c2332f519787021f1a79bcb1103ebe78182871b75906f15b40828",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-tst-version-two"
+    },
+    {
+      "path": "token-future-time.pdf",
+      "bytes": 93127,
+      "sha256": "baeaac207c73ffde2bceb94c7a335146fe93f8f0d18396103cf6b484207bee2c",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-future-time"
+    },
+    {
+      "path": "token-before-signature-time.pdf",
+      "bytes": 93127,
+      "sha256": "dab160685fee77bab02bd63ac77f270e06727d720f87706fdb2a5163fe160732",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-before-signature-time"
+    },
+    {
+      "path": "token-wrong-imprint.pdf",
+      "bytes": 93127,
+      "sha256": "7c32f4daf614ad303d2763fe36aa48466f9de0b27d45093a16f5b7a6a06324db",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "token-wrong-imprint"
+    },
+    {
+      "path": "certificate-noncritical-eku.pdf",
+      "bytes": 93127,
+      "sha256": "c0fe3fc59f30415bf8e2e1788194f55d97b44f0ae9a632bdf47cf49cf595ed32",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "certificate-noncritical-eku"
+    },
+    {
+      "path": "certificate-multiple-eku.pdf",
+      "bytes": 93127,
+      "sha256": "e6b51930ba6284b673ebbfa8b9f0cbb1f05edeea3e0c268aa95802ab905d7adf",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "certificate-multiple-eku"
+    },
+    {
+      "path": "certificate-no-digital-signature.pdf",
+      "bytes": 93127,
+      "sha256": "e212a149893b30755d43a73e9c1fe18599daa083c04b6cafa9d102290d67d67c",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "certificate-no-digital-signature"
+    },
+    {
+      "path": "certificate-malformed-key-usage.pdf",
+      "bytes": 93127,
+      "sha256": "757fd83f2ea89bb6b28c0d4ded43a3f49ff3740697f715919d088aff076ccb62",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "certificate-malformed-key-usage"
+    },
+    {
+      "path": "certificate-expired-at-verification.pdf",
+      "bytes": 93127,
+      "sha256": "c7db5a6a95a1db2afe758ce903a5f2f99c5234e2daebcf12c3785b41e555a251",
+      "cryptographicTokenSignatureVerified": true,
+      "negative": "certificate-expired-at-verification"
+    },
+    {
+      "path": "historical-crl-equality.pdf",
+      "bytes": 93345,
+      "sha256": "a544909810bb728c71350a2ce6c97f33368c43a1c7f0fbb4a07461d1e4015dc9",
+      "statusScenario": "historical-crl-equality",
+      "expected": "pass",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-crl-expired.pdf",
+      "bytes": 93343,
+      "sha256": "4cfc1ec4b3416c61b414b987512f1b638eb6ae40c67c54420f2d9682d225ee3a",
+      "statusScenario": "historical-crl-expired",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-crl-late.pdf",
+      "bytes": 93343,
+      "sha256": "a0fd0becbf84a4458a3810bdf8a3bbda4fe2039142334f4542d36d802220b6dd",
+      "statusScenario": "historical-crl-late",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-crl-good-then-late.pdf",
+      "bytes": 93821,
+      "sha256": "9b80f86db537394873dfdb1fbf4e6f6773473baaa399b1ede3f9a8e00225e752",
+      "statusScenario": "historical-crl-good-then-late",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-crl-late-then-good.pdf",
+      "bytes": 93821,
+      "sha256": "26a7260df5b85f117bed254306c2b358ea5dead991fcb09e24e05dccb214b99c",
+      "statusScenario": "historical-crl-late-then-good",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-global-only-late-crl.pdf",
+      "bytes": 93814,
+      "sha256": "856ab4ee8c5e214a576d4cc00bf198cf66bb16d3d0570e927467b8cef5db75e1",
+      "statusScenario": "historical-global-only-late-crl",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-global-only-revoked-crl.pdf",
+      "bytes": 93838,
+      "sha256": "c337d2692ef1a4a087e0c93951619a25cbb942f02d4e4d65f13bc0031013e123",
+      "statusScenario": "historical-global-only-revoked-crl",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-duplicate-same-hash.pdf",
+      "bytes": 93446,
+      "sha256": "c289f38faf4539403b7811529b8aaecd217e6622a5323d5c09b629f6e49caca6",
+      "statusScenario": "historical-ocsp-duplicate-same-hash",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-duplicate-different-hash.pdf",
+      "bytes": 93474,
+      "sha256": "85c5ef86442b967bc04fc960c6ff4961e714b1e6174895315dac59ac139420e2",
+      "statusScenario": "historical-ocsp-duplicate-different-hash",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-duplicate-contradictory.pdf",
+      "bytes": 93463,
+      "sha256": "f535c6c60455c2445af69b0d4e98640b3f45e1a03fb23a591fa8767938a9cd37",
+      "statusScenario": "historical-ocsp-duplicate-contradictory",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-delegated-good.pdf",
+      "bytes": 94156,
+      "sha256": "801e76c16583bc2895be26759cb14ea9a4e544fb77ab9107188c66911bd74993",
+      "statusScenario": "historical-ocsp-delegated-good",
+      "expected": "pass",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-delegated-no-digital-signature.pdf",
+      "bytes": 94188,
+      "sha256": "f29be2ad889160987d56accb10efe7b4e0aae47a5ffb5b91c77ebcf20cafbd1f",
+      "statusScenario": "historical-ocsp-delegated-no-digital-signature",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-delegated-malformed.pdf",
+      "bytes": 94164,
+      "sha256": "5426325bc8b260bf155fbaf79216a8e700997c17a54c3319e070967c6445eab2",
+      "statusScenario": "historical-ocsp-delegated-malformed",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-global-only-late-ocsp.pdf",
+      "bytes": 94747,
+      "sha256": "34a22bb7d19fd5d34583265bbd68f2eb97f74089a3f6800a466dc5026d795468",
+      "statusScenario": "historical-global-only-late-ocsp",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-good-then-late.pdf",
+      "bytes": 94754,
+      "sha256": "3a5d1b436fa6ff1655db5feaf1668563f95237da77fa01866f64e0a3e0d949f7",
+      "statusScenario": "historical-ocsp-good-then-late",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-late-then-good.pdf",
+      "bytes": 94754,
+      "sha256": "c5fdd5eff484e6fe3397491ded67aae99e0bbb9373d40d18a5bef95b7fa5bfa8",
+      "statusScenario": "historical-ocsp-late-then-good",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-equality.pdf",
+      "bytes": 93343,
+      "sha256": "b5529515260ceef57fdf85d7cbae2e6cb5a71b4d720bca9a7f3ce1a3aad8cac4",
+      "statusScenario": "historical-ocsp-equality",
+      "expected": "pass",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-responder-by-key.pdf",
+      "bytes": 93324,
+      "sha256": "0a5b9323a093e6c9657f72abc3f5a312d98d39250fa26c43ddaded2c25137cd7",
+      "statusScenario": "historical-ocsp-responder-by-key",
+      "expected": "pass",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-responder-certificate-missing.pdf",
+      "bytes": 92503,
+      "sha256": "9984bca7f85df7af05c8f910d9a45686024d0111f5c34313be0f85a514afe60b",
+      "statusScenario": "historical-ocsp-responder-certificate-missing",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-responder-certificate-ambiguous.pdf",
+      "bytes": 94178,
+      "sha256": "7a26b111768a766cb042147bd8c44a841c899fb853b38682a184d3e578badf61",
+      "statusScenario": "historical-ocsp-responder-certificate-ambiguous",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-late-update.pdf",
+      "bytes": 93343,
+      "sha256": "a3e2f90acfe9652c4b336f98a5773a6a2fbb932bf3e4fda2b52725461286edb6",
+      "statusScenario": "historical-ocsp-late-update",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-expired.pdf",
+      "bytes": 93343,
+      "sha256": "b4af5124542bc16f26e68d07efc9012ee01bdf81ea03a7a51fd16b8568483664",
+      "statusScenario": "historical-ocsp-expired",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-no-next-update.pdf",
+      "bytes": 93324,
+      "sha256": "984a834347885863791cfe92dd7c82e9d911d2e951bcf1994aaaabcfbca88b25",
+      "statusScenario": "historical-ocsp-no-next-update",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-crl-no-next-update.pdf",
+      "bytes": 93326,
+      "sha256": "ae8c61a3e6813474ab17e0dea8d4b20060aa4204f5a5756f6c69cd7fc98cc13b",
+      "statusScenario": "historical-crl-no-next-update",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "historical-ocsp-failed-response-with-good.pdf",
+      "bytes": 93439,
+      "sha256": "caa5d74ccef4e9b1b7d110799ca51c2b145799783ee91f67a0a02e06b29d5212",
+      "statusScenario": "historical-ocsp-failed-response-with-good",
+      "expected": "pass",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "current-archive-plus-day.crl.der",
+      "bytes": 392,
+      "sha256": "76dd9af4aea357e9a9320c3e10518efb6de9b5700c0e0e17fb0598f7e5b70b70"
+    },
+    {
+      "path": "current-archive-revoked.crl.der",
+      "bytes": 418,
+      "sha256": "d26cb6aec3f38948018745bfef97b6c1fd80fe5041bbeeae14505002b41fdda4"
+    },
+    {
+      "path": "historical-missing-signer-status.pdf",
+      "bytes": 91456,
+      "sha256": "d1d673d805cacf25bbc3b9a925bee84eceec81a27092148dce02f2e32a37276a",
+      "statusScenario": "historical-missing-signer-status",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-escaped-type.pdf",
+      "bytes": 93367,
+      "sha256": "91856a86bc36eab55eb3d4df0e872c7d1e353f379e337d835455514d2626e239",
+      "statusScenario": "structural-escaped-type",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-escaped-subfilter.pdf",
+      "bytes": 93372,
+      "sha256": "9736ae6481e4402821771b5f681c5e9345526464cd24b7827e43925baee64ca5",
+      "statusScenario": "structural-escaped-subfilter",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-visible-field.pdf",
+      "bytes": 93347,
+      "sha256": "b40dfd33c2f0baab0f8a8efe5e5e7cb35e4a36225d8cc40d11d912796f390c2a",
+      "statusScenario": "structural-visible-field",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-removed-field.pdf",
+      "bytes": 93339,
+      "sha256": "fc2b94bbcc217e3b00af8c0065ed430150dec183ff7abebaf8f627401304b70f",
+      "statusScenario": "structural-removed-field",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-changed-sigflags.pdf",
+      "bytes": 93345,
+      "sha256": "a4a9528c38436cbbca2092f17a80e806a6ce0e602d88b1049e2d38310de35b99",
+      "statusScenario": "structural-changed-sigflags",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-unknown-timestamp-entry.pdf",
+      "bytes": 93362,
+      "sha256": "98cb4c54d26bc77d1188188653821857f5b66f59786d0b762bde5e16c3500d00",
+      "statusScenario": "structural-unknown-timestamp-entry",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-changed-old-field.pdf",
+      "bytes": 93429,
+      "sha256": "b1c0367a2fa9cf83739e57f8f035f6715c8fef66646824e96f17659b16fccd16",
+      "statusScenario": "structural-changed-old-field",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-unreferenced-object.pdf",
+      "bytes": 93428,
+      "sha256": "ccc25953ddd77b0ad4c9d578c4a8ca35efa5d15072469e7d8a2053ea16f60e25",
+      "statusScenario": "structural-unreferenced-object",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-catalog-metadata.pdf",
+      "bytes": 93456,
+      "sha256": "ee58f168d84ee8437418e6d55612eb5455e293e7c2d5e5d65346fdcf9c036c55",
+      "statusScenario": "structural-catalog-metadata",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-duplicate-xref.pdf",
+      "bytes": 93370,
+      "sha256": "5bbcd5d579f1780279acf05a840899565110f72ea862137b5fcb9174e335f38b",
+      "statusScenario": "structural-duplicate-xref",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-field-parent.pdf",
+      "bytes": 93359,
+      "sha256": "7064235f0c00f6206dd9acd97eba9441edb0a59f067b45ce85677a47bd4eb9a4",
+      "statusScenario": "structural-field-parent",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-field-appearance.pdf",
+      "bytes": 93355,
+      "sha256": "ca201743a01e78037af2acc2f21f7c56dd47514b42eeb50d01451954a50c88e8",
+      "statusScenario": "structural-field-appearance",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-field-bad-page.pdf",
+      "bytes": 93345,
+      "sha256": "e368e9ee80e1b92bb804600e4a3f9f8378b1759ac8d70d9c7d1b41064cca1563",
+      "statusScenario": "structural-field-bad-page",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-field-direct-value.pdf",
+      "bytes": 93344,
+      "sha256": "80318252128d0f1430a3b6b1fd742ebc53eecb66f369bbf3dfe850c1b86a5aa7",
+      "statusScenario": "structural-field-direct-value",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-form-extra-key.pdf",
+      "bytes": 93367,
+      "sha256": "b7376f2398481187c4b0c2247577aa0e926bf8ec8729b7e4c825d1c7e40c3835",
+      "statusScenario": "structural-form-extra-key",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-reordered-fields.pdf",
+      "bytes": 93345,
+      "sha256": "e499e58ed7d568babdb83fd4726cdd2e0ceee30a3d7e03abb420132cccd159e6",
+      "statusScenario": "structural-reordered-fields",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-direct-field.pdf",
+      "bytes": 93353,
+      "sha256": "d2e8463a42515e3935cdf5076bad7a822503d0a5b82be8e898d9042da688b143",
+      "statusScenario": "structural-direct-field",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-wrong-filter.pdf",
+      "bytes": 93342,
+      "sha256": "02ae813e479ebc6ed0da676c054f0c3790605b3f96bf016eaadc6f713a5b280b",
+      "statusScenario": "structural-wrong-filter",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-changed-trailer.pdf",
+      "bytes": 93365,
+      "sha256": "fde83182505003b72af6ffe3e8a4a8a947dda2640086296a693f78c66cacc6b6",
+      "statusScenario": "structural-changed-trailer",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-unindexed-bytes.pdf",
+      "bytes": 93380,
+      "sha256": "28fb9c116b98ec7c525e415159c8241e59b1bf0b3c7d8e0aabd97e660c6d07b2",
+      "statusScenario": "structural-unindexed-bytes",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-positive-field-string.pdf",
+      "bytes": 93355,
+      "sha256": "ad6e5569c234197114616827af4b8b4350d3012929b723eb2b1a06c049c0b546",
+      "statusScenario": "structural-positive-field-string",
+      "expected": "pass",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-positive-comment.pdf",
+      "bytes": 93382,
+      "sha256": "fa3bdf1bf82193f168cb8c4a238e58a36df365d590c54693f6a6292488fdb9b4",
+      "statusScenario": "structural-positive-comment",
+      "expected": "pass",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "structural-nonzero-token-padding.pdf",
+      "bytes": 93345,
+      "sha256": "ca1e49b302facf779dd76f18b103049926035bafbe5d25c1ce2a8d212396b538",
+      "statusScenario": "structural-nonzero-token-padding",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "path-signer-leaf.cert.pem",
+      "bytes": 1176,
+      "sha256": "f9bf96171163a0b8cc6f54b76293ec8ca699520f3f2d8cfd85a95e31c7b06fa3"
+    },
+    {
+      "path": "path-signer.cms.der",
+      "bytes": 4866,
+      "sha256": "a36c95679f55b4f0727d3815f16a0694ac890483d54b88bc3b6f98a933fc3e06"
+    },
+    {
+      "path": "path-signer-expired-at-archive.pdf",
+      "bytes": 93341,
+      "sha256": "fbc7afefd8d3dee7ce9edf8671065a476574e245d73969308c9f30c4a80b6b69",
+      "statusScenario": "path-signer-expired-at-archive",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-12T17:44:18.000Z",
+      "cmsPath": "path-signer.cms.der",
+      "certPath": "path-signer-leaf.cert.pem",
+      "errorMessage": "Cryptographic trust evidence is invalid"
+    },
+    {
+      "path": "path-signature-tsa.cms.der",
+      "bytes": 4866,
+      "sha256": "965a8980e0ae62f9bc901cb642882997a83b9c3925fed8f0c3be15bd26b0c957"
+    },
+    {
+      "path": "path-signature-tsa-expired-at-archive.pdf",
+      "bytes": 93341,
+      "sha256": "7884bd91f9130e8c826eb90cabe07b9332c6f5913563617023b1b719c275cf18",
+      "statusScenario": "path-signature-tsa-expired-at-archive",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-12T17:44:18.000Z",
+      "cmsPath": "path-signature-tsa.cms.der",
+      "certPath": "signer.cert.pem",
+      "errorMessage": "Certificate path invalid at required time"
+    },
+    {
+      "path": "path-control.cms.der",
+      "bytes": 4870,
+      "sha256": "ff072f62c309821b50e865599845e372a02f09edb604c9c94d2f8816b39028a3"
+    },
+    {
+      "path": "path-control-expired-at-archive.pdf",
+      "bytes": 93345,
+      "sha256": "e9ffc4fe0ccd357f8c6474edb1ab0dd14968a39aa561f148655dc0089b1e965c",
+      "statusScenario": "path-control-expired-at-archive",
+      "expected": "pass",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-12T17:44:18.000Z",
+      "cmsPath": "path-control.cms.der",
+      "certPath": "signer.cert.pem"
+    },
+    {
+      "path": "path-ambiguous-signature-tsa.cms.der",
+      "bytes": 5388,
+      "sha256": "d09edff9d02c1ec3a20a9a16ca581083d8e0baf65161d501dda485ab6f0499a0"
+    },
+    {
+      "path": "path-ambiguous-signature-tsa-expired-at-archive.pdf",
+      "bytes": 93345,
+      "sha256": "c8173d4635468914e2a1533e6518c1cef248c41d2aff3e26208fcfe5e108013b",
+      "statusScenario": "path-ambiguous-signature-tsa-expired-at-archive",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-12T17:44:18.000Z",
+      "cmsPath": "path-ambiguous-signature-tsa.cms.der",
+      "certPath": "signer.cert.pem",
+      "errorMessage": "Timestamp signer is ambiguous"
+    },
+    {
+      "path": "path-invalid-signature-tsa-version.cms.der",
+      "bytes": 4870,
+      "sha256": "6c278b3bf12c6e312fb3c9d892e50a06b02d794009cb9a892deb62172c0bf109"
+    },
+    {
+      "path": "path-invalid-signature-tsa-version-expired-at-archive.pdf",
+      "bytes": 93345,
+      "sha256": "f8ffa7e0af34868c5667fe941fc2c2b71dd626581fff6e93e706b030f2eda1ba",
+      "statusScenario": "path-invalid-signature-tsa-version-expired-at-archive",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-12T17:44:18.000Z",
+      "cmsPath": "path-invalid-signature-tsa-version.cms.der",
+      "certPath": "signer.cert.pem",
+      "errorMessage": "Signature timestamp exceeds archive time"
+    },
+    {
+      "path": "current-archive-plus-two-days.crl.der",
+      "bytes": 392,
+      "sha256": "9f32c017981d8ff076c6b1eff3b676208b78e1e3ab949bbea4eb363b55280cbc"
+    }
+  ]
+}
