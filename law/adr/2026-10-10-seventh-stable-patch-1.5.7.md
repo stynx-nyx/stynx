@@ -134,8 +134,8 @@ Ordinary hard gates retain their own results.
    cleanup stay unchanged; the only added mount is that initialization file.
    This is local disposable fixture provisioning, not a production migration
    or a workflow change. Inspector may rebind only the corresponding
-   obsolete fixture hash and identity expectations while retaining assertions
-   for every other frozen surface and the restricted role properties.
+   obsolete identity expectations and add provisioning assertions, retaining
+   every other frozen surface and verifying the restricted role properties.
    Engineer scope extends only to this Compose file and initialization SQL;
    both changes land before the marker under the existing two changesets.
 
