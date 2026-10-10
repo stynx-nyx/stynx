@@ -285,6 +285,28 @@ may be absent when absent in the source; do not invent it or reject solely for
 that absence. Where present it must match actual source platform context.
 Supplied item keys and omitted-key legacy items follow the one-to-one rules above.
 
+One supported duplicate writer has deliberately partial attempt context. Its
+source attempt stores exactly `{ originalQueueItemId: canonicalQueueItemId }`,
+including a same-ID submission under a later batch. Bind that attempt's tenant,
+device/batch/submitted queue identity, status, error, key and payload hash exactly;
+bind the referenced canonical receipt's tenant/key/hash/queue identity as well.
+The archived item and its inner receipt entry must still agree exactly. Their
+host context follows the actual duplicate writer: the original canonical host
+context at response creation, with `originalQueueItemId` overlaid only when the
+canonical and submitted queue IDs differ. For equal IDs the attempt marker is
+not copied into the ACK; an empty original host context leaves ACK context absent.
+
+This single writer shape may therefore differ from the attempt's singleton
+context. Accept original host fields not retained in that attempt only when the
+independent captured-ACK proof binds the exact archived context, response bytes
+and source/receipt identities. The differing-ID overlay must equal the bound
+canonical queue ID. Do not reconstruct unavailable earlier host context, require
+an equal-ID overlay the writer did not produce, or compare historical status,
+error or host context with the canonical receipt's mutable present outcome.
+This exception does not admit arbitrary context subsets: attempts outside this
+exact duplicate shape retain exact source-context matching, and missing or
+contradictory identity, snapshot outcome or independent proof refuses verification.
+
 Header names must be valid HTTP tokens and case-insensitively unique. Values
 must be accepted by the actual HTTP adapter's header-value validation; reject
 CR/LF/NUL, invalid control/unrepresentable values and forbidden replay headers.

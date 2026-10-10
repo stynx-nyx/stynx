@@ -398,6 +398,19 @@ multiplicity or rewrite historical fingerprints. Completed ACK shape, original
 org-unit/agent, optional actual platform context and valid HTTP header bindings
 follow the exact storage/import contract before independent verification.
 
+Admit only the exact supported duplicate attempt/ACK asymmetry: the attempt
+stores the singleton canonical `originalQueueItemId` even for a same-ID later
+batch, while the ACK carries original canonical host context plus that marker
+only when canonical and submitted IDs differ. Bind stable attempt identity,
+status/error/key/hash and canonical receipt tenant/key/hash/queue identity;
+archived item and inner receipt contexts agree exactly. Original host fields
+not retained by the attempt require independently captured-ACK proof of that
+exact context and response/source/receipt binding. Equal-ID empty host context
+may remain absent. Do not fabricate earlier context or compare historical
+outcomes with mutable present canonical outcomes. This is one named writer
+shape, not a general subset-context allowance; all other attempt contexts retain
+exact matching and contradictory or unproven archives refuse verification.
+
 Export `parseOfflineImportManifest(text: string): OfflineImportManifest` for
 strict duplicate-aware raw JSON admission before the same closed/legal/static
 manifest validation. Duplicate decoded property names at every depth, including
