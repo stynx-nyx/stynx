@@ -2,22 +2,22 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import * as ts from 'typescript';
+import { parseNestControllerDeclarations } from './lib/nest-route-declarations.mjs';
 
 const repoRoot = process.cwd();
 const args = new Set(process.argv.slice(2));
 const strict = args.has('--strict');
 const writeOpenApi = args.has('--write-openapi');
 const config = readConfig().apiCoverage ?? {};
-const openapiPath = resolve(repoRoot, config.openapiPath ?? 'docs/framework/contracts/openapi.json');
+const openapiPath = resolve(
+  repoRoot,
+  config.openapiPath ?? 'docs/framework/contracts/openapi.json',
+);
 const sourceRoots = config.sourceRoots ?? ['reference/api/src', 'packages'];
 const routePrefix = config.routePrefix ?? '';
 const sourceRootPaths = sourceRoots.map((root) => resolve(repoRoot, root));
 const returnTypeIndex = buildReturnTypeIndex(sourceRootPaths);
-const implementedOperations = discoverNestOperations(
-  sourceRootPaths,
-  routePrefix,
-  returnTypeIndex,
-);
+const implementedOperations = discoverNestOperations(sourceRootPaths, routePrefix, returnTypeIndex);
 const schemaRegistry = buildSchemaRegistry(
   sourceRootPaths,
   implementedOperations
@@ -86,35 +86,73 @@ function discoverNestOperations(roots, prefix, returnTypes) {
   const operations = [];
   for (const file of roots.flatMap(walk).filter((path) => path.endsWith('.controller.ts'))) {
     const text = readFileSync(file, 'utf8');
-    const controller = text.match(/@Controller\(([^)]*)\)/u)?.[1] ?? "''";
-    const base = literal(controller);
-    const className = text.match(/export\s+class\s+([A-Za-z_$][\w$]*)/u)?.[1] ?? 'Controller';
-    const serviceProperties = constructorProperties(text);
-    for (const match of text.matchAll(/@(Get|Post|Put|Patch|Delete)\(([^)]*)\)/gu)) {
-      const routePath = normalizePath(`${prefix}/${base}/${literal(match[2])}`);
-      const fragment = methodFragment(text, match.index);
-      const bodyType = bodyTypeName(fragment);
-      const queryNames = namedQueryParameters(fragment);
-      const handler = handlerName(text.slice(match.index + match[0].length));
-      operations.push({
-        method: httpMethod(match[1]),
-        path: openApiPath(routePath),
-        routePath,
-        bodyType,
-        responseType: responseTypeName(fragment, methodSource(text, match.index), serviceProperties, returnTypes),
-        hasQueryObject: /@Query\(\)/u.test(fragment),
-        isPublic: isPublicOperation(text, match.index, routePath),
-        queryNames,
-        handler,
-        source: relative(repoRoot, file),
-        tag: className.replace(/Controller$/u, '') || className,
-      });
+    for (const controller of parseNestControllerDeclarations(text, { file })) {
+      const serviceProperties = constructorProperties(controller.source);
+      for (const member of controller.methods) {
+        const fragment = member.signature;
+        const bodyParameters = member.parameters.filter((parameter) =>
+          parameter.decorators.some((decorator) => decorator.name === 'Body'),
+        );
+        if (
+          bodyParameters.length > 1 ||
+          bodyParameters.some((parameter) =>
+            parameter.decorators.some(
+              (decorator) => decorator.name === 'Body' && decorator.selector.kind !== 'whole',
+            ),
+          )
+        ) {
+          throw new Error(
+            `${relative(repoRoot, file)}:${member.position.line}: unsupported partial or multiple body contract`,
+          );
+        }
+        const bodyType = bodyParameters[0]?.type ?? null;
+        const queries = member.parameters.flatMap((parameter) =>
+          parameter.decorators.filter((decorator) => decorator.name === 'Query'),
+        );
+        const queryNames = queries
+          .filter((decorator) => decorator.selector.kind === 'property')
+          .map((decorator) => decorator.selector.name)
+          .sort((left, right) => left.localeCompare(right));
+        const attached = [...controller.decorators, ...member.decorators];
+        for (const base of controller.paths) {
+          for (const registration of member.registrations) {
+            if (registration.method === 'ALL' || registration.method === 'SEARCH') {
+              throw new Error(
+                `${relative(repoRoot, file)}:${member.position.line}: unresolved ${registration.method} method population for OpenAPI`,
+              );
+            }
+            const routePath = normalizePath(`${prefix}/${base}/${registration.path}`);
+            operations.push({
+              method: registration.method.toLowerCase(),
+              path: openApiPath(routePath),
+              routePath,
+              bodyType,
+              responseType:
+                member.returnType ??
+                responseTypeName(fragment, member.source, serviceProperties, returnTypes),
+              hasQueryObject: queries.some((decorator) => decorator.selector.kind === 'whole'),
+              isPublic: attached.some((decorator) =>
+                ['Public', 'PublicTenantRoute'].includes(decorator.name),
+              ),
+              queryNames,
+              handler: member.name,
+              controller: controller.name,
+              source: relative(repoRoot, file),
+              tag: controller.name.replace(/Controller$/u, '') || controller.name,
+              declarationId: `${relative(repoRoot, file)}:${controller.name}.${member.name}:${registration.method}:${routePath}`,
+              controllerOptions: controller.options,
+            });
+          }
+        }
+      }
     }
   }
-  return operations.sort((left, right) =>
-    left.path.localeCompare(right.path)
-    || left.method.localeCompare(right.method)
-    || left.source.localeCompare(right.source),
+
+  return operations.sort(
+    (left, right) =>
+      left.path.localeCompare(right.path) ||
+      left.method.localeCompare(right.method) ||
+      left.source.localeCompare(right.source),
   );
 }
 
@@ -123,20 +161,14 @@ function walk(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     if (
-      entry.isDirectory()
-      && !['node_modules', 'dist', 'coverage', 'test', 'tests', 'fixtures', '__fixtures__'].includes(entry.name)
+      entry.isDirectory() &&
+      !['node_modules', 'dist', 'coverage', 'test', 'tests', 'fixtures', '__fixtures__'].includes(
+        entry.name,
+      )
     )
       return walk(path);
     return entry.isFile() ? [path] : [];
   });
-}
-
-function literal(value = '') {
-  return value
-    .trim()
-    .replace(/^['"`]|['"`]$/gu, '')
-    .replace(/^\//u, '')
-    .replace(/\/$/u, '');
 }
 
 function normalizePath(path) {
@@ -212,28 +244,6 @@ function compareParameterNames(expected, actual) {
   return mismatches;
 }
 
-function httpMethod(decoratorName) {
-  return decoratorName.toLowerCase();
-}
-
-function handlerName(textAfterDecorator) {
-  return textAfterDecorator.match(/^\s*(?:@[^\n]+\n\s*)*([A-Za-z_$][\w$]*)\s*\(/u)?.[1] ?? 'handler';
-}
-
-function methodFragment(text, decoratorIndex) {
-  const source = methodSource(text, decoratorIndex);
-  const openBrace = methodBodyStart(source);
-  return openBrace === -1 ? source : source.slice(0, openBrace);
-}
-
-function methodSource(text, decoratorIndex) {
-  const rest = text.slice(decoratorIndex);
-  const openBrace = methodBodyStart(rest);
-  if (openBrace === -1) return rest;
-  const closeBrace = blockEnd(rest, openBrace);
-  return closeBrace === -1 ? rest : rest.slice(0, closeBrace + 1);
-}
-
 function methodBodyStart(text) {
   let parenDepth = 0;
   let braceDepth = 0;
@@ -264,35 +274,6 @@ function methodBodyStart(text) {
   return -1;
 }
 
-function blockEnd(text, openBrace) {
-  let depth = 0;
-  let quote = null;
-  for (let index = openBrace; index < text.length; index += 1) {
-    const char = text[index];
-    const previous = text[index - 1];
-    if (quote) {
-      if (char === quote && previous !== '\\') quote = null;
-      continue;
-    }
-    if (char === '"' || char === "'" || char === '`') {
-      quote = char;
-      continue;
-    }
-    if (char === '{') depth += 1;
-    else if (char === '}') {
-      depth -= 1;
-      if (depth === 0) return index;
-    }
-  }
-  return -1;
-}
-
-function bodyTypeName(fragment) {
-  const match = fragment.match(/@Body\([^)]*\)\s+[A-Za-z_$][\w$]*\??:\s*/u);
-  if (!match || match.index === undefined) return null;
-  return readTypeExpression(fragment.slice(match.index + match[0].length));
-}
-
 function responseTypeName(fragment, source, serviceProperties, returnTypes) {
   const explicit = explicitReturnType(fragment);
   if (explicit) return explicit;
@@ -318,7 +299,9 @@ function constructorProperties(text) {
   const match = text.match(/constructor\s*\(([\s\S]*?)\)\s*\{/u);
   if (!match) return {};
   const properties = {};
-  for (const property of match[1].matchAll(/private\s+readonly\s+([A-Za-z_$][\w$]*)\s*:\s*([A-Za-z_$][\w$]*)/gu)) {
+  for (const property of match[1].matchAll(
+    /private\s+readonly\s+([A-Za-z_$][\w$]*)\s*:\s*([A-Za-z_$][\w$]*)/gu,
+  )) {
     properties[property[1]] = property[2];
   }
   return properties;
@@ -328,9 +311,16 @@ function buildReturnTypeIndex(roots) {
   const index = {};
   const sourceFiles = roots
     .flatMap(walk)
-    .filter((path) => path.endsWith('.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.test.ts'));
+    .filter(
+      (path) => path.endsWith('.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.test.ts'),
+    );
   for (const file of sourceFiles) {
-    const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
+    const source = ts.createSourceFile(
+      file,
+      readFileSync(file, 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+    );
     source.forEachChild((node) => {
       if (!ts.isClassDeclaration(node) || !node.name?.text) return;
       for (const member of node.members) {
@@ -367,18 +357,6 @@ function readTypeExpression(text) {
   return text.trim();
 }
 
-function namedQueryParameters(fragment) {
-  return [...fragment.matchAll(/@Query\(\s*['"`]([^'"`]+)['"`]\s*\)/gu)]
-    .map((match) => match[1])
-    .sort((left, right) => left.localeCompare(right));
-}
-
-function isPublicOperation(text, decoratorIndex, routePath) {
-  if (routePath === '/' || routePath.startsWith('/health') || routePath.startsWith('/ready')) return true;
-  const decoratorWindow = text.slice(Math.max(0, decoratorIndex - 500), decoratorIndex);
-  return /@(?:Public|PublicTenantRoute)\s*\(/u.test(decoratorWindow);
-}
-
 function writeOpenApiContract(file, operations) {
   const paths = {};
   for (const operation of operations) {
@@ -391,7 +369,9 @@ function writeOpenApiContract(file, operations) {
       operationId: operationId(operation),
       tags: [operation.tag],
       ...(parameters.length > 0 ? { parameters } : {}),
-      ...(operation.bodyType ? { requestBody: requestBody(operation.bodyType, schemaRegistry) } : {}),
+      ...(operation.bodyType
+        ? { requestBody: requestBody(operation.bodyType, schemaRegistry) }
+        : {}),
       ...(!operation.bodyType && ['post', 'put', 'patch'].includes(operation.method)
         ? { 'x-stynx-no-request-body': true }
         : {}),
@@ -406,16 +386,24 @@ function writeOpenApiContract(file, operations) {
   }
 
   mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, `${JSON.stringify({
-    openapi: '3.1.0',
-    info: {
-      title: 'STYNX API',
-      version: '0.2.0',
-      description: 'Generated route and contract inventory for STYNX reference and package controllers.',
-    },
-    components: openApiComponents(schemaRegistry),
-    paths: sortObject(paths),
-  }, null, 2)}\n`);
+  writeFileSync(
+    file,
+    `${JSON.stringify(
+      {
+        openapi: '3.1.0',
+        info: {
+          title: 'STYNX API',
+          version: '0.2.0',
+          description:
+            'Generated route and contract inventory for STYNX reference and package controllers.',
+        },
+        components: openApiComponents(schemaRegistry),
+        paths: sortObject(paths),
+      },
+      null,
+      2,
+    )}\n`,
+  );
 }
 
 function pathParameters(path) {
@@ -568,10 +556,17 @@ function openApiComponents(registry) {
 function buildSchemaRegistry(roots, seedTypeNames) {
   const sourceFiles = roots
     .flatMap(walk)
-    .filter((path) => path.endsWith('.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.test.ts'));
+    .filter(
+      (path) => path.endsWith('.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.test.ts'),
+    );
   const declarations = new Map();
   for (const file of sourceFiles) {
-    const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
+    const source = ts.createSourceFile(
+      file,
+      readFileSync(file, 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+    );
     source.forEachChild((node) => {
       if ((ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.text) {
         if (!declarations.has(node.name.text)) {
@@ -640,12 +635,15 @@ function objectSchemaFromMembers(members, state) {
     type: 'object',
     additionalProperties: false,
     properties: sortObject(properties),
-    ...(required.length > 0 ? { required: required.sort((left, right) => left.localeCompare(right)) } : {}),
+    ...(required.length > 0
+      ? { required: required.sort((left, right) => left.localeCompare(right)) }
+      : {}),
   };
 }
 
 function propertyName(name) {
-  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) return name.text;
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name))
+    return name.text;
   return null;
 }
 
@@ -729,7 +727,9 @@ function unionSchema(types, state) {
     .filter((schema) => Object.prototype.hasOwnProperty.call(schema, 'const'))
     .map((schema) => schema.const);
   if (enumValues.length === literalSchemas.length && enumValues.length > 0) {
-    const valueTypes = [...new Set(enumValues.map((value) => (value === null ? 'null' : typeof value)))];
+    const valueTypes = [
+      ...new Set(enumValues.map((value) => (value === null ? 'null' : typeof value))),
+    ];
     return {
       ...(valueTypes.length === 1 ? { type: valueTypes[0] } : {}),
       enum: enumValues,
@@ -757,13 +757,15 @@ function exampleForSchema(schema, registry, seen = new Set()) {
     const name = schema.$ref.match(/^#\/components\/schemas\/(.+)$/u)?.[1];
     if (!name || seen.has(name)) return {};
     if (name === 'JsonValue') return { example: true };
-    if (name === 'JsonObject' || name === 'FlowJsonObject') return { id: '00000000-0000-4000-8000-000000000000' };
+    if (name === 'JsonObject' || name === 'FlowJsonObject')
+      return { id: '00000000-0000-4000-8000-000000000000' };
     seen.add(name);
     return exampleForSchema(registry.schemas[name] ?? {}, registry, seen);
   }
   if (schema.const !== undefined) return schema.const;
   if (Array.isArray(schema.enum) && schema.enum.length > 0) return schema.enum[0];
-  if (Array.isArray(schema.anyOf) && schema.anyOf.length > 0) return exampleForSchema(schema.anyOf[0], registry, seen);
+  if (Array.isArray(schema.anyOf) && schema.anyOf.length > 0)
+    return exampleForSchema(schema.anyOf[0], registry, seen);
   if (Array.isArray(schema.allOf) && schema.allOf.length > 0) {
     return Object.assign({}, ...schema.allOf.map((item) => exampleForSchema(item, registry, seen)));
   }
@@ -783,7 +785,9 @@ function exampleForSchema(schema, registry, seen = new Set()) {
 }
 
 function isUnknownBodyType(typeName) {
-  return /^(?:unknown|any|Record\s*<\s*string\s*,\s*unknown\s*>|Record\s*<\s*string\s*,\s*any\s*>)$/u.test(typeName);
+  return /^(?:unknown|any|Record\s*<\s*string\s*,\s*unknown\s*>|Record\s*<\s*string\s*,\s*any\s*>)$/u.test(
+    typeName,
+  );
 }
 
 function schemaNameForBodyType(typeName) {
@@ -797,7 +801,9 @@ function operationId(operation) {
     .filter(Boolean)
     .map((segment) => {
       const parameter = segment.match(/^(?::([^/{}:]+)|\{([^/{}:]+)\})$/u);
-      return parameter ? `by-${parameter[1] ?? parameter[2]}` : segment.replace(/[^A-Za-z0-9]+/gu, '-');
+      return parameter
+        ? `by-${parameter[1] ?? parameter[2]}`
+        : segment.replace(/[^A-Za-z0-9]+/gu, '-');
     })
     .join('-');
   return [operation.tag, operation.method, pathId, operation.handler]
@@ -808,5 +814,7 @@ function operationId(operation) {
 }
 
 function sortObject(value) {
-  return Object.fromEntries(Object.entries(value).sort(([left], [right]) => left.localeCompare(right)));
+  return Object.fromEntries(
+    Object.entries(value).sort(([left], [right]) => left.localeCompare(right)),
+  );
 }

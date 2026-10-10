@@ -4,13 +4,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const httpDecorators = new Map([
-  ['Get', 'GET'],
-  ['Post', 'POST'],
-  ['Put', 'PUT'],
-  ['Patch', 'PATCH'],
-  ['Delete', 'DELETE'],
-]);
+import { parseNestControllerDeclarations } from './lib/nest-route-declarations.mjs';
 
 const defaultScanRoots = ['packages', 'reference/api/src', 'domain/demo-bookmark/api/src'];
 const ignoredDirs = new Set(['.git', '.turbo', 'coverage', 'dist', 'node_modules']);
@@ -21,7 +15,11 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 if (isMain()) {
   try {
     const args = parseArgs(process.argv.slice(2));
-    const routes = collectRoutes({ repoRoot, packageFilter: args.package, controllerFilter: args.controller });
+    const routes = collectRoutes({
+      repoRoot,
+      packageFilter: args.package,
+      controllerFilter: args.controller,
+    });
     if (args.output === 'report') {
       process.stdout.write(formatReport(routes));
     } else {
@@ -59,87 +57,41 @@ export function collectRoutes(options = {}) {
 
 export function parseControllerFile(file, packageInfo = null, root = repoRoot) {
   const source = readFileSync(file, 'utf8');
-  const lines = source.split(/\r?\n/);
-  const controllerDecorators = [];
   const routes = [];
-  let pendingDecorators = [];
-  let currentClass = null;
-  let braceDepth = 0;
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
-    const trimmed = line.trim();
-
-    if (!currentClass && trimmed.startsWith('@')) {
-      const { decorator, endIndex } = readDecorator(lines, index);
-      controllerDecorators.push(decorator);
-      index = endIndex;
-      continue;
-    }
-
-    const classMatch = trimmed.match(/^(?:export\s+)?class\s+([A-Za-z_$][\w$]*)\b/);
-    if (!currentClass && classMatch) {
-      const controllerPath = firstDecoratorArg(controllerDecorators, 'Controller');
-      if (controllerPath === null) {
-        controllerDecorators.length = 0;
-        continue;
-      }
-      currentClass = {
-        name: classMatch[1],
-        controllerPath: controllerPath ?? '',
-        decorators: [...controllerDecorators],
+  for (const declaration of parseNestControllerDeclarations(source, { file })) {
+    const asText = (decorator) =>
+      `@${decorator.name ?? decorator.localName}(${decorator.arguments.join(', ')})`;
+    for (const controllerPath of declaration.paths) {
+      const controller = {
+        name: declaration.name,
+        controllerPath,
+        decorators: declaration.decorators.map(asText),
       };
-      controllerDecorators.length = 0;
-      braceDepth += countBraces(line);
-      continue;
-    }
-
-    if (!currentClass) {
-      if (trimmed && !trimmed.startsWith('@') && !trimmed.startsWith('import ')) {
-        controllerDecorators.length = 0;
+      for (const member of declaration.methods) {
+        for (const registration of member.registrations) {
+          const route = buildRoute({
+            file,
+            method: registration.method,
+            routePath: registration.path,
+            methodName: member.name,
+            controller,
+            methodDecorators: member.decorators.map(asText),
+            packageInfo: packageInfo ?? resolvePackageInfo(file, root),
+            root,
+          });
+          routes.push({
+            ...route,
+            declarationId: `${route.file}:${declaration.name}.${member.name}:${registration.method}:${route.path}`,
+            controllerOptions: declaration.options,
+            inheritance: declaration.extends,
+            classDecorators: declaration.decorators,
+            methodDecorators: member.decorators,
+            position: member.position,
+          });
+        }
       }
-      continue;
-    }
-
-    if (trimmed.startsWith('@')) {
-      const { decorator, endIndex } = readDecorator(lines, index);
-      pendingDecorators.push(decorator);
-      for (let decoratorIndex = index; decoratorIndex <= endIndex; decoratorIndex += 1) {
-        braceDepth += countBraces(lines[decoratorIndex]);
-      }
-      index = endIndex;
-      continue;
-    }
-
-    const methodName = methodNameFromLine(trimmed);
-    if (methodName && pendingDecorators.length > 0) {
-      for (const [decoratorName, method] of httpDecorators.entries()) {
-        const routePath = firstDecoratorArg(pendingDecorators, decoratorName);
-        if (routePath === null) continue;
-        routes.push(buildRoute({
-          file,
-          method,
-          routePath: routePath ?? '',
-          methodName,
-          controller: currentClass,
-          methodDecorators: pendingDecorators,
-          packageInfo: packageInfo ?? resolvePackageInfo(file, root),
-          root,
-        }));
-      }
-      pendingDecorators = [];
-    } else if (trimmed && !trimmed.startsWith('//')) {
-      pendingDecorators = [];
-    }
-
-    braceDepth += countBraces(line);
-    if (braceDepth <= 0) {
-      currentClass = null;
-      pendingDecorators = [];
-      braceDepth = 0;
     }
   }
-
   return routes;
 }
 
@@ -179,7 +131,9 @@ export function formatReport(routes) {
     'routes-by-package:',
   ];
 
-  for (const [packageName, count] of [...byPackage.entries()].sort(([left], [right]) => left.localeCompare(right))) {
+  for (const [packageName, count] of [...byPackage.entries()].sort(([left], [right]) =>
+    left.localeCompare(right),
+  )) {
     lines.push(`${packageName}: ${count}`);
   }
 
@@ -263,7 +217,11 @@ function resolvePackageInfo(file, root) {
     return packageInfoFromDir(packageDir, `@stynx-nyx/${parts[1]}`, `packages/${parts[1]}`);
   }
   if (parts[0] === 'reference' && parts[1] === 'api') {
-    return packageInfoFromDir(join(root, 'reference', 'api'), '@stynx-nyx/reference-api', 'reference/api');
+    return packageInfoFromDir(
+      join(root, 'reference', 'api'),
+      '@stynx-nyx/reference-api',
+      'reference/api',
+    );
   }
   if (parts[0] === 'domain' && parts[1] === 'demo-bookmark' && parts[2] === 'api') {
     return packageInfoFromDir(
@@ -272,7 +230,11 @@ function resolvePackageInfo(file, root) {
       'domain/demo-bookmark/api',
     );
   }
-  return { name: parts[0] ?? basename(dirname(file)), shortName: parts[0] ?? basename(dirname(file)), dir: parts[0] ?? '.' };
+  return {
+    name: parts[0] ?? basename(dirname(file)),
+    shortName: parts[0] ?? basename(dirname(file)),
+    dir: parts[0] ?? '.',
+  };
 }
 
 function packageInfoFromDir(packageDir, fallbackName, shortName) {
@@ -284,32 +246,6 @@ function packageInfoFromDir(packageDir, fallbackName, shortName) {
   } catch {
     return { name: fallbackName, shortName, dir: shortName };
   }
-}
-
-function readDecorator(lines, startIndex) {
-  let text = lines[startIndex].trim();
-  let depth = parenthesisDelta(text);
-  let endIndex = startIndex;
-  while (depth > 0 && endIndex + 1 < lines.length) {
-    endIndex += 1;
-    text += ` ${lines[endIndex].trim()}`;
-    depth += parenthesisDelta(lines[endIndex]);
-  }
-  return { decorator: text, endIndex };
-}
-
-function methodNameFromLine(trimmed) {
-  if (!trimmed || trimmed.startsWith('@') || trimmed.startsWith('//')) return null;
-  const match = trimmed.match(/^(?:public\s+|protected\s+|private\s+)?(?:async\s+)?([A-Za-z_$][\w$]*)\s*\(/);
-  return match?.[1] ?? null;
-}
-
-function firstDecoratorArg(decorators, name) {
-  const decorator = decorators.find((candidate) => decoratorName(candidate) === name);
-  if (!decorator) return null;
-  const args = decoratorArgs(decorator);
-  if (args.trim() === '') return undefined;
-  return firstStringLiteral(args) ?? undefined;
 }
 
 function decoratorName(decorator) {
@@ -332,7 +268,16 @@ function unescapeLiteral(value) {
   return value.replace(/\\(['"`\\])/g, '$1');
 }
 
-function buildRoute({ file, method, routePath, methodName, controller, methodDecorators, packageInfo, root }) {
+function buildRoute({
+  file,
+  method,
+  routePath,
+  methodName,
+  controller,
+  methodDecorators,
+  packageInfo,
+  root,
+}) {
   const decorators = [...controller.decorators, ...methodDecorators];
   return {
     package: packageInfo.name,
@@ -385,18 +330,6 @@ function joinRoutePath(basePath, routePath) {
   return `/${parts.join('/')}`.replace(/\/+/g, '/');
 }
 
-function countBraces(line) {
-  const withoutStrings = line
-    .replace(/(['"`])(?:\\.|(?!\1).)*\1/g, '')
-    .replace(/\/\/.*$/, '');
-  return (withoutStrings.match(/{/g)?.length ?? 0) - (withoutStrings.match(/}/g)?.length ?? 0);
-}
-
-function parenthesisDelta(line) {
-  const withoutStrings = line.replace(/(['"`])(?:\\.|(?!\1).)*\1/g, '');
-  return (withoutStrings.match(/\(/g)?.length ?? 0) - (withoutStrings.match(/\)/g)?.length ?? 0);
-}
-
 function csvEscape(value) {
   const text = String(value ?? '');
   if (!/[",\n\r]/.test(text)) return text;
@@ -408,18 +341,22 @@ function normalizeFilter(value) {
 }
 
 function matchesPackageFilter(packageInfo, filter) {
-  return packageInfo.name.toLowerCase() === filter
-    || packageInfo.shortName.toLowerCase() === filter
-    || packageInfo.dir.toLowerCase() === filter
-    || packageInfo.name.toLowerCase().endsWith(`/${filter}`)
-    || packageInfo.name.toLowerCase().endsWith(`-${filter}`);
+  return (
+    packageInfo.name.toLowerCase() === filter ||
+    packageInfo.shortName.toLowerCase() === filter ||
+    packageInfo.dir.toLowerCase() === filter ||
+    packageInfo.name.toLowerCase().endsWith(`/${filter}`) ||
+    packageInfo.name.toLowerCase().endsWith(`-${filter}`)
+  );
 }
 
 function compareRoutes(left, right) {
-  return left.package.localeCompare(right.package)
-    || left.controller.localeCompare(right.controller)
-    || left.path.localeCompare(right.path)
-    || left.method.localeCompare(right.method);
+  return (
+    left.package.localeCompare(right.package) ||
+    left.controller.localeCompare(right.controller) ||
+    left.path.localeCompare(right.path) ||
+    left.method.localeCompare(right.method)
+  );
 }
 
 function isMain() {
