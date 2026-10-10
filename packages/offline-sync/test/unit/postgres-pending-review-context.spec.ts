@@ -1,3 +1,4 @@
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
 import { describe, expect, it, vi } from 'vitest';
 import type { Database } from '@stynx-nyx/data';
 import { OfflineSyncError, OfflineSyncUpgradeRequiredError } from '../../src/errors';
@@ -32,7 +33,7 @@ import type {
 const scope = { tenantId: '00000000-0000-4000-8000-000000000001', actorId: 'actor-a' };
 const now = '2026-09-28T12:00:00.000Z';
 const conflictId = '30000000-0000-4000-8000-000000000001';
-const hash = `sha256:${'a'.repeat(64)}`;
+const hash = canonicalOfflineSyncPayloadHash({ value: 1 });
 const conflict: SyncConflict = {
   conflictId,
   tenantId: scope.tenantId,
