@@ -401,8 +401,13 @@ async function verifyPathAt(
     seen.add(identity);
     return true;
   });
+  const directlyTrusted = anchors.find((anchor) =>
+    certificateBytes(anchor).equals(certificateBytes(leaf)),
+  );
   const engine = new pkijs.CertificateChainValidationEngine({
-    trustedCerts: anchors,
+    // PKI.js otherwise substitutes the last anchor when the leaf is itself trusted.
+    // Keep normal path/signature/time validation, bound to the exact trusted DER.
+    trustedCerts: directlyTrusted ? [directlyTrusted] : anchors,
     certs: [...candidates, leaf],
     checkDate: at,
   });
