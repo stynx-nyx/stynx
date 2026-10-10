@@ -95,10 +95,10 @@ interceptor before locale resolution to make admitted tenant preferences availab
 
 ## Configuration
 
-| Option          | Type     | Default         | Description                                                                |
-| --------------- | -------- | --------------- | -------------------------------------------------------------------------- |
-| `workspaceRoot` | `string` | `process.cwd()` | Root containing `packages/*/i18n/*.json` and `packages-web/*/i18n/*.json`. |
-| `defaultLocale` | `string` | `'pt-BR'`       | Ensures this locale exists in the aggregated catalog alongside `en-US`.    |
+| Option          | Type     | Default         | Description                                                                                                                                     |
+| --------------- | -------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspaceRoot` | `string` | `process.cwd()` | Consumer workspace root. Loads JSON catalogs from each child package’s `i18n` directory under the optional `packages` and `packages-web` roots. |
+| `defaultLocale` | `string` | `'pt-BR'`       | Ensures this locale exists in the aggregated catalog alongside `en-US`.                                                                         |
 
 Resolution preserves an active request locale, then a supported Accept-Language
 entry, then the admitted tenant's stored locale, then `pt-BR` when available or
