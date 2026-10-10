@@ -1,5 +1,4 @@
-import type { StorageVerifierTransaction } from '@stynx-nyx/data';
-import type { OfflineStorageOptions } from './storage';
+import type { StorageBindingOptions } from '@stynx-nyx/data';
 import type {
   OfflineImportArchive,
   OfflineImportBatchesKey,
@@ -33,7 +32,7 @@ export interface OfflineArchiveVerificationPort {
   ): Promise<OfflineArchiveVerification>;
 }
 export interface OfflineImportOptions {
-  readonly storage?: OfflineStorageOptions;
+  readonly storage?: StorageBindingOptions;
   readonly verifyArchive?: OfflineArchiveVerificationPort;
 }
 export interface OfflineImportReceipt {
@@ -68,5 +67,3 @@ export class OfflineImportError extends Error {
     this.name = 'OfflineImportError';
   }
 }
-/** Structural caller-owned transaction. No connection/transaction lifecycle is delegated. */
-export type OfflineImportTransaction = StorageVerifierTransaction;
