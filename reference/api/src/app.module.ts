@@ -172,7 +172,7 @@ async function runReferenceApiMigrations(
 }
 
 @UseGuards(StynxAuthGuard)
-class GuardedPreferencesController extends PreferencesController {}
+export class GuardedPreferencesController extends PreferencesController {}
 
 @Module({
   imports: [
