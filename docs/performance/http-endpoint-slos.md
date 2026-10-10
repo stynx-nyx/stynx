@@ -69,6 +69,25 @@ supported resolution or fail closed. Do not infer public status from a preceding
 In particular `/_probes/readonly-write` is protected despite preceding public
 probe methods.
 
+Keep two distinct projections. The shared AST result contains class records,
+own method declarations, inheritance edges and source origins. The declaration
+projection contains each own decorated handler once: 223 at this checkpoint,
+including the seven base `PreferencesController` declarations.
+`GuardedPreferencesController` declares zero own handlers; it must not add seven
+synthetic source declarations. The mounted projection expands its seven inherited
+handlers for that actual subclass and composition, retaining the base origin plus
+the mounted class identity. A second composition may mount the same origin again
+without changing the source declaration count. Never flatten these identities or
+inflate declaration CSV counts with mounted copies. Future source methods change
+the declaration population normally; 223 is a checkpoint, not a cap.
+
+Preserve the existing API-coverage source-root configuration unless a separately
+reviewed change expands it. Its current 215 declarations exclude the eight domain
+declarations. Full performance discovery includes all 223, so the domain routes
+need a declared supported OpenAPI/runtime composition and measurements, or remain
+an explicit blocking inventory gap. Do not silently alter the global API root
+configuration or drop domain routes to make the counts agree.
+
 The shared internal implementation belongs at
 `scripts/lib/nest-route-declarations.mjs`; the list-routes CSV shape, filters and
 deterministic ordering remain compatible. API coverage retains existing
