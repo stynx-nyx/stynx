@@ -533,6 +533,19 @@
       "description": "ADR-OUTBOX-0004 D4: explicit consumer mode refuses before SQL; platform mode checks audit.fn_row_change safely before marker/domain mutation. Missing dependency is typed, never an unchecked regprocedure cast error."
     },
     {
+      "errorCode": "OFFLINE_SYNC_ACTIVE_RESERVATION",
+      "statusCode": 409,
+      "retriable": false,
+      "exception": "@stynx-nyx/offline-sync OfflineSyncError",
+      "runtimeBody": {
+        "statusCode": 409,
+        "errorCode": "OFFLINE_SYNC_ACTIVE_RESERVATION",
+        "message": "An active numbering reservation already exists for this device and shift.",
+        "retryable": false
+      },
+      "description": "ADR-MOBILE-OFFLINE-0004 D4: a distinct active reservation conflicts within trusted tenant/device/normalized-shift scope. CTG9 checks all origins; E6 checks active CTG9 rows. Exact keyed replay is answered first. Refusal leaves allocation counters and rows unchanged; existing reservations require lifecycle action or actual expiry."
+    },
+    {
       "errorCode": "OFFLINE_SYNC_INTEGRITY_REJECTION_NOT_FOUND",
       "statusCode": 404,
       "retriable": false,

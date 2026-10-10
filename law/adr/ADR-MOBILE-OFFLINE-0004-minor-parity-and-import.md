@@ -46,6 +46,14 @@ retain the existing later-batch/same-device/same-key/same-hash rule and effect
 preconditions. Initial materialization is not permission to reapply an already
 applied item. Exact closed-batch response bytes and headers remain authoritative.
 
+An initially pending item may use the existing later-batch admission rule: the
+same trusted tenant/device, identical key/hash and a different durable batch ID.
+No correction-origin discriminator is required. Preserve the original item,
+receipt and batch binding and serialize on the receipt so the original open
+batch and a later contender cannot both commit an effect. This does not relax
+the correction transition's unapplied/no-other-open-conflict predicates or any
+integrity/numbering admission check. A closed batch replay still applies nothing.
+
 ### D2 — Pre-apply detection and stable item context
 
 Add an optional `preApplyDetector` port. Its `detect(trx,item,context)` returns
@@ -168,6 +176,43 @@ shift identities. It never silently cancels, merges, deletes or renumbers them.
 Resolve such data through authorized lifecycle operations before enabling the
 new constraint. The default E6 behavior and string-valued E6 output stay intact;
 CTG9 has explicit widened types rather than an unsafe cast of null into E6.
+
+The exact widened input is
+`CTG9ReserveNumberingInput extends Omit<ReserveNumberingInput, 'shiftId'>`
+with required `shiftId: string | null`.
+`CTG9NumberingReservation` omits both `status` and `shiftId` from the E6 result
+and supplies the durable status union and required nullable shift. Add service
+methods `reserveDurableNumbering(input): Promise<CTG9NumberingReservation>`,
+`replayDurableNumberingReservation(input): Promise<CTG9NumberingReservation | null>`
+and `cancelDurableNumberingReservation(id,input): Promise<CTG9NumberingReservation>`.
+Their durable-store ports take trusted scope first; reserve additionally takes
+the injected current instant/default expiry, and cancel takes the current
+instant. Custom-store ports are additive optional seams and fail configuration
+when an unsupported operation is requested. CTG9 controller paths use these
+durable methods; the E6 methods and their string-only types remain unchanged.
+
+Forward migration `0006` makes `shift_id` nullable and adds a non-null closed
+`reservation_origin` discriminator (`e6` or `ctg9`), default `e6` for existing
+rows. New durable reservations write `ctg9`; E6 writes `e6`. A database guard
+serializes the tenant/device/normalized-shift scope and samples live expiry
+after acquiring its lock. For active admission or a transition back into active
+scope, a CTG9 row conflicts with any active row of either origin; an E6 row
+conflicts with active CTG9 rows. Pure E6 multiple-reservation behavior remains.
+Guard insertion and relevant updates, including extension of validity; owner
+transfers cannot bypass verification. Do not use a time-dependent partial unique
+index as a substitute for live, serialized expiry checks. A refusal rolls back
+allocation and every new row.
+
+Durable same-key replay may return a historical `e6`-origin string row, since
+historical CTG9 and E6 rows are not distinguishable by that new discriminator.
+Answer exact replay before policy/expiry/active checks. Sentinel and null are
+equivalent only in the active-scope comparator/lock key: never normalize stored
+values or fingerprints. Null has its own explicit new fingerprint; reusing a
+sentinel-bound key with null is conflicting reuse. Legacy E6 mapping refuses
+null or `blocked` results before mutation rather than widening its output or
+casting it. The active-admission refusal is `OfflineSyncError`, code
+`OFFLINE_SYNC_ACTIVE_RESERVATION`, status 409, `retryable: false`, message
+"An active numbering reservation already exists for this device and shift."
 
 ### D5 — Tenant range administration and reconciliation
 

@@ -41,6 +41,9 @@ E6 and CTG9 remain separate. In CTG9, default initial materialization is still
 `received`; select `initialQueueStatus: 'pending'` only when the host needs that
 vocabulary. The same batch still applies its items; there is no new worker.
 Existing closed batches keep exact response bytes and fingerprints.
+An initially pending item may be admitted by a later keyed batch from the same
+device with the same hash under the existing receipt-lock safeguards. This
+never permits a second committed effect or bypasses correction preconditions.
 Apply offline migration `0005_initial_queue_status.sql`: the first-created mode
 is persisted per batch. Resume and lease takeover use that original mode even
 after module configuration changes; old batches default to `received` without
@@ -69,10 +72,21 @@ durable stores must implement the optional read port before callers use it;
 unsupported stores fail configuration instead of fabricating a record.
 
 Handle nullable CTG9 shifts and `OFFLINE_SYNC_ACTIVE_RESERVATION` (409).
+Use `CTG9ReserveNumberingInput` and the explicit `reserveDurableNumbering`,
+`replayDurableNumberingReservation` and `cancelDurableNumberingReservation`
+service/store seams; keep E6's string-only methods separate. Custom durable
+stores must implement these optional ports before use.
 Single-active admission per tenant/device/shift is mandatory; null and the old
 no-shift sentinel occupy the same no-shift scope. Replay the original operation
 before requesting another allocation. Resolve preexisting active duplicates
 through authorized lifecycle operations; never delete history or reissue numbers.
+Apply forward `0006` before using nullable shifts and active admission. Existing
+reservation origins default to `e6`, while new durable rows use `ctg9`.
+CTG9 admission checks all active origins; E6 cannot allocate alongside an active
+CTG9 row, while pure E6 multiple reservations retain their legacy behavior.
+Do not normalize historical shifts or fingerprints. Durable exact replay can
+return a historical string row; reusing its sentinel-bound key with null is
+conflicting reuse, not a new spelling of replay.
 Use tenant-scoped range administration, keep allocated bounds immutable and
 treat consumer attributes as opaque bounded JSON. Reconciliation distinguishes
 assigned numbers from actual applied effects.

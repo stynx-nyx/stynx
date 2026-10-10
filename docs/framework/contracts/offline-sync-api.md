@@ -35,6 +35,9 @@ it is not a claim that a consumer database or provider has already passed.
   legacy sentinel share admission scope, while historical stored values and
   fingerprints remain. Same-key replay takes precedence and consumes no numbers;
   another active request returns `OFFLINE_SYNC_ACTIVE_RESERVATION` (409).
+  Forward `0006` separates new `ctg9` reservation origins from default `e6`
+  history. CTG9 admission checks every active origin; E6 admission checks active
+  CTG9 rows, preserving pure E6 multiple reservations without bypassing CTG9.
 - Typed range create/get/list/cancel operations preserve trusted scope,
   tenant-leading uniqueness and row-lock allocation. Ranges may carry the same
   bounded opaque consumer attributes as item context. Consumers cannot write
@@ -172,8 +175,40 @@ and FORCE RLS is a supported consumer operation. No DDL changes: the table is th
 | Attributes    | STYNX stores no range attribute (for example a usage mode). A consumer keeps them in its own table keyed by tenant and range identifier.                                                                                                                                                                                                                                                                               |
 | No shift      | `OFFLINE_SYNC_NO_SHIFT` (`'stynx:no-shift'`) is the documented `shiftId` for a reservation without a shift. It is an ordinary value to the store, to `numbering_reservations.shift_id` (still `NOT NULL`) and to the reservation idempotency fingerprint; the host maps it back on output. Every other `stynx:`-prefixed `shiftId` is reserved and rejected with 400 `OFFLINE_SYNC_INVALID_INPUT`.                     |
 
-Planned for a later minor and not delivered: nullable `shift_id`, a range administration API, a
-consumer-attributes column and a single-active-reservation rule per device and shift.
+The 1.5.x line deferred nullable `shift_id`, range administration, consumer
+attributes and single-active admission; the 1.6.0 upgrade contract above
+supersedes that deferral.
+
+### CTG9 1.6 durable reservation seam
+
+`CTG9ReserveNumberingInput` is
+`Omit<ReserveNumberingInput, 'shiftId'> & { readonly shiftId: string | null }`.
+`CTG9NumberingReservation` keeps all other reservation fields and widens only
+the required shift and durable status. Service methods are
+`reserveDurableNumbering(input)`, `replayDurableNumberingReservation(input)`
+and `cancelDurableNumberingReservation(id,input)`, returning the durable
+reservation (or null for absent replay). Their optional durable-store ports
+take trusted scope plus the same inputs, with current instant/default expiry
+for reserve and current instant for cancel. Missing custom-store support
+refuses configuration. CTG9 controller paths use these methods; E6's
+`reserveNumbering`/`cancelNumberingReservation` retain string-only results.
+
+Forward migration `0006` admits null shifts and adds
+`reservation_origin: 'e6' | 'ctg9'`, non-null default `e6`. New durable rows
+are `ctg9`. A database guard locks tenant/device/normalized-shift scope before
+sampling expiry and checking active `reserved`/`blocked` rows. CTG9 conflicts
+with all active origins; E6 conflicts with active CTG9. Guard relevant updates
+as well as inserts. Refusal changes no range counter or reservation. Upgrade
+collision scanning reports existing duplicates without cancelling or deleting
+them; resolve these through authorized lifecycle actions first.
+
+Same-key replay precedes new admission and may return a historical `e6`-origin
+string row through the durable seam. Keep exact historical fingerprints.
+Sentinel/null normalization applies only to the scope lock/comparator, never
+stored values or fingerprints: a sentinel-bound key replayed with null conflicts.
+E6 mapping rejects null/`blocked` before mutation rather than casting the result.
+`OFFLINE_SYNC_ACTIVE_RESERVATION` is a nonretryable 409 with message "An active
+numbering reservation already exists for this device and shift."
 
 ## CTG9 1.5 public services and ports
 
