@@ -57,7 +57,9 @@ export class SessionService implements OnModuleInit {
 
   onModuleInit(): void {
     if (!this.store.createWithPolicy) {
-      throw new Error('Custom stores must support tenant switching and session policy with atomic SessionStore.createWithPolicy, even when single-session mode is off; see the @stynx-nyx/sessions README section "STYNX 1.5.0 configuration and migration".');
+      throw new Error(
+        'Custom stores must support tenant switching and session policy with atomic SessionStore.createWithPolicy, even when single-session mode is off; see the @stynx-nyx/sessions README section "STYNX 1.5.0 configuration and migration".',
+      );
     }
     if (this.options.strongFactor && this.options.strongFactor.acceptedValues.length === 0) {
       throw new Error('Strong-factor policy requires an accepted value');
@@ -72,12 +74,19 @@ export class SessionService implements OnModuleInit {
     metadata: SessionCreateMetadata = {},
   ): Promise<SessionBundle> {
     const now = this.now();
-    const prior = metadata.priorSessionId ? await this.store.getSession(metadata.priorSessionId) : null;
+    const prior = metadata.priorSessionId
+      ? await this.store.getSession(metadata.priorSessionId)
+      : null;
     if (metadata.priorSessionId && (!prior || prior.userId !== userId)) {
-      throw new SessionExchangeError('SESSION_OWNER_MISMATCH', 'Prior session does not belong to actor');
+      throw new SessionExchangeError(
+        'SESSION_OWNER_MISMATCH',
+        'Prior session does not belong to actor',
+      );
     }
     if (prior) {
-      try { this.assertActive(prior, now); } catch {
+      try {
+        this.assertActive(prior, now);
+      } catch {
         throw new SessionExchangeError('SESSION_NOT_ACTIVE', 'Prior session is not active');
       }
     }
@@ -86,11 +95,14 @@ export class SessionService implements OnModuleInit {
       const { claimName, acceptedValues } = this.options.strongFactor;
       const raw = metadata.verifiedFactorClaims?.[claimName];
       const values = typeof raw === 'string' ? raw.split(/[,\s]+/).filter(Boolean) : raw;
-      if (!Array.isArray(values) || !values.every((value) => typeof value === 'string')
-        || !values.some((value) => {
+      if (
+        !Array.isArray(values) ||
+        !values.every((value) => typeof value === 'string') ||
+        !values.some((value) => {
           const normalized = value.trim().toLowerCase();
           return normalized.length > 0 && acceptedValues.includes(normalized);
-        })) {
+        })
+      ) {
         throw new StrongFactorRequiredError();
       }
       factorVerifiedAt = now.toISOString();
@@ -125,13 +137,16 @@ export class SessionService implements OnModuleInit {
     if ((mode !== 'off' || metadata.priorSessionId) && !this.store.createWithPolicy) {
       throw new Error('Atomic session transition unavailable');
     }
-    const revoked = mode === 'off' && !metadata.priorSessionId
-      ? (await this.store.createSession(record), [])
-      : (await this.store.createWithPolicy!(record, {
-        mode,
-        now: now.toISOString(),
-        ...(metadata.priorSessionId ? { priorSessionId: metadata.priorSessionId } : {}),
-      })).revoked;
+    const revoked =
+      mode === 'off' && !metadata.priorSessionId
+        ? (await this.store.createSession(record), [])
+        : (
+            await this.store.createWithPolicy!(record, {
+              mode,
+              now: now.toISOString(),
+              ...(metadata.priorSessionId ? { priorSessionId: metadata.priorSessionId } : {}),
+            })
+          ).revoked;
     for (const scope of new Set(revoked.map((old) => `${old.userId}:${old.tenantId}`))) {
       await this.store.publishInvalidation(scope);
     }
@@ -148,7 +163,9 @@ export class SessionService implements OnModuleInit {
     });
 
     const bundle = await this.bundle(record, refreshToken, now);
-    return revoked.length ? { ...bundle, revokedSessionIds: revoked.map((old) => old.sid) } : bundle;
+    return revoked.length
+      ? { ...bundle, revokedSessionIds: revoked.map((old) => old.sid) }
+      : bundle;
   }
 
   async refresh(refreshToken: string): Promise<SessionBundle> {
@@ -190,37 +207,43 @@ export class SessionService implements OnModuleInit {
   }
 
   async revoke(sid: string): Promise<boolean> {
-    const revoked = await this.revokeInternal(sid, 'revoked', (record) => `${record.userId}:${record.tenantId}`);
+    const revoked = await this.revokeInternal(
+      sid,
+      'revoked',
+      (record) => `${record.userId}:${record.tenantId}`,
+    );
     return revoked !== null;
   }
 
   async revokeAllForUser(userId: string): Promise<number> {
     const sids = await this.store.listSessionIdsByUser(userId);
-    const revoked = await Promise.all(
-      sids.map((sid) => this.revokeRecord(sid, 'revoked')),
-    );
+    const revoked = await Promise.all(sids.map((sid) => this.revokeRecord(sid, 'revoked')));
     const revokedSessions = revoked.filter((entry): entry is RevokedSession => entry !== null);
     const tenantMessages = new Set(
       revokedSessions.map(({ record }) => `${record.userId}:${record.tenantId}`),
     );
-    await Promise.all([...tenantMessages].map((message) => this.store.publishInvalidation(message)));
     await Promise.all(
-      revokedSessions.map(({ record, revokedAt }) => this.appendMirror(record, 'revoked', revokedAt)),
+      [...tenantMessages].map((message) => this.store.publishInvalidation(message)),
+    );
+    await Promise.all(
+      revokedSessions.map(({ record, revokedAt }) =>
+        this.appendMirror(record, 'revoked', revokedAt),
+      ),
     );
     return revokedSessions.length;
   }
 
   async revokeAllForTenant(tenantId: string): Promise<number> {
     const sids = await this.store.listSessionIdsByTenant(tenantId);
-    const revoked = await Promise.all(
-      sids.map((sid) => this.revokeRecord(sid, 'revoked')),
-    );
+    const revoked = await Promise.all(sids.map((sid) => this.revokeRecord(sid, 'revoked')));
     const revokedSessions = revoked.filter((entry): entry is RevokedSession => entry !== null);
     if (revokedSessions.length > 0) {
       await this.store.publishInvalidation(`*:${tenantId}`);
     }
     await Promise.all(
-      revokedSessions.map(({ record, revokedAt }) => this.appendMirror(record, 'revoked', revokedAt)),
+      revokedSessions.map(({ record, revokedAt }) =>
+        this.appendMirror(record, 'revoked', revokedAt),
+      ),
     );
     return revokedSessions.length;
   }
@@ -243,6 +266,59 @@ export class SessionService implements OnModuleInit {
     }
   }
 
+  async getActive(sid: string): Promise<SessionRecord | null> {
+    const session = await this.store.getSession(sid);
+    if (session === null) return null;
+    const invalid = (): never => {
+      throw new Error('SESSION_RECORD_INVALID');
+    };
+    if (typeof session !== 'object' || Array.isArray(session)) invalid();
+    if (
+      session.sid !== sid ||
+      ![
+        session.userId,
+        session.tenantId,
+        session.cognitoSub,
+        session.refreshFamilyId,
+        session.refreshTokenHash,
+      ].every((value) => typeof value === 'string' && value.length > 0)
+    )
+      invalid();
+    if (!['active', 'revoked', 'reuse_detected'].includes(session.status)) invalid();
+    const instant = (value: unknown): number => {
+      if (typeof value !== 'string') return invalid();
+      const timestamp = Date.parse(value);
+      if (!Number.isFinite(timestamp)) return invalid();
+      return timestamp;
+    };
+    const createdAt = instant(session.createdAt);
+    const updatedAt = instant(session.updatedAt);
+    const lastTouchedAt = instant(session.lastTouchedAt);
+    const expiresAt = instant(session.expiresAt);
+    const idleExpiresAt = instant(session.idleExpiresAt);
+    if (
+      createdAt > lastTouchedAt ||
+      lastTouchedAt > updatedAt ||
+      createdAt > idleExpiresAt ||
+      idleExpiresAt > expiresAt ||
+      lastTouchedAt > expiresAt
+    )
+      invalid();
+    if (session.revokedAt !== undefined && instant(session.revokedAt) < createdAt) invalid();
+    if (session.strongFactorVerifiedAt !== undefined) instant(session.strongFactorVerifiedAt);
+    const now = this.now();
+    const nowMillis = now instanceof Date ? now.getTime() : Number.NaN;
+    if (!Number.isFinite(nowMillis)) {
+      throw new Error('SESSION_CLOCK_INVALID');
+    }
+    if (session.status !== 'active') return null;
+    if (expiresAt <= nowMillis || idleExpiresAt <= nowMillis) {
+      await this.revokeInternal(sid, 'revoked', undefined);
+      return null;
+    }
+    return session;
+  }
+
   async touch(sid: string): Promise<SessionRecord | null> {
     const session = await this.get(sid);
     if (!session) {
@@ -260,10 +336,7 @@ export class SessionService implements OnModuleInit {
   async exchange(options: SessionExchangeOptions): Promise<SessionExchangeResult> {
     const current = await this.store.getSession(options.sessionId);
     if (!current) {
-      throw new SessionExchangeError(
-        'SESSION_NOT_FOUND',
-        `Session ${options.sessionId} not found`,
-      );
+      throw new SessionExchangeError('SESSION_NOT_FOUND', `Session ${options.sessionId} not found`);
     }
     if (current.userId !== options.actorUserId) {
       throw new SessionExchangeError(
@@ -318,8 +391,8 @@ export class SessionService implements OnModuleInit {
     }
     const nowMs = now.getTime();
     if (
-      new Date(record.expiresAt).getTime() <= nowMs
-      || new Date(record.idleExpiresAt).getTime() <= nowMs
+      new Date(record.expiresAt).getTime() <= nowMs ||
+      new Date(record.idleExpiresAt).getTime() <= nowMs
     ) {
       throw new SessionExpiredError(record.sid);
     }
@@ -363,7 +436,11 @@ export class SessionService implements OnModuleInit {
     return { record, revokedAt };
   }
 
-  private async appendMirror(record: SessionRecord, status: SessionStatus, createdAt: string): Promise<void> {
+  private async appendMirror(
+    record: SessionRecord,
+    status: SessionStatus,
+    createdAt: string,
+  ): Promise<void> {
     await this.mirror.append({
       sid: record.sid,
       tenantId: record.tenantId,
