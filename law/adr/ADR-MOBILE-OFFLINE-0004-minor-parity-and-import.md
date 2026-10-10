@@ -203,6 +203,34 @@ transfers cannot bypass verification. Do not use a time-dependent partial unique
 index as a substitute for live, serialized expiry checks. A refusal rolls back
 allocation and every new row.
 
+An advisory lock alone cannot refresh a repeatable-read snapshot. The forward
+guard also writes `offline.numbering_reservation_scopes` before its collision
+query: primary key `(tenant_id,device_id,shift_scope)`, with a UUID `generation`
+changed by UPSERT on each active contender. `shift_scope` is the JSON-array text
+of the normalized nullable shift, so null and strings have unambiguous identities.
+The scope table has tenant RLS and FORCE RLS, app `SELECT/INSERT/UPDATE` without
+`DELETE`, and reader `SELECT`. It is a concurrency fence, not reservation or
+effect history. Retain it in the closed manifest and verifier obligations.
+
+The written fence prevents a repeatable-read contender from admitting a row
+using a snapshot older than the preceding writer; PostgreSQL may refuse it with
+`40001`. Under READ COMMITTED, the subsequent collision query observes the
+committed contender. Recheck the proposed row's expiry after the lock/fence
+wait: a reservation that expired while waiting is not an active collision.
+The durable helper explicitly requests READ COMMITTED with `requireActor: true`
+and `retry: false`; an incompatible nested repeatable-read transaction is
+refused, not silently downgraded. A serialization refusal requires rollback of
+the enclosing operation; there is no hidden admission retry or broader
+serializability guarantee for arbitrary consumer transactions.
+
+The migration/guard SQLSTATEs are `STY44` for active collision, `STY45` for the
+upgrade's preexisting-active-duplicate refusal and `STY46` for an attempted
+change of reservation tenant/device/shift/origin. These scope/origin fields are
+immutable on UPDATE. Runtime maps `STY44` to the typed active-reservation 409;
+the other two are integrity/maintenance refusals, not fabricated application
+outcomes. Failed migration leaves prior schema/data intact when executed
+atomically by the installation owner with full row visibility.
+
 Durable same-key replay may return a historical `e6`-origin string row, since
 historical CTG9 and E6 rows are not distinguishable by that new discriminator.
 Answer exact replay before policy/expiry/active checks. Sentinel and null are

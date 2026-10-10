@@ -87,6 +87,15 @@ CTG9 row, while pure E6 multiple reservations retain their legacy behavior.
 Do not normalize historical shifts or fingerprints. Durable exact replay can
 return a historical string row; reusing its sentinel-bound key with null is
 conflicting reuse, not a new spelling of replay.
+Migration `0006` also installs the FORCE-RLS scope-fence table and trigger.
+Keep these objects and their least grants in a consumer storage installation;
+an advisory lock alone cannot prevent stale-snapshot admission. The durable
+helper requires READ COMMITTED with a trusted actor and no automatic retry;
+it refuses an incompatible nested repeatable-read boundary. Roll back the
+enclosing operation on `40001`. Expiry is sampled again after waiting.
+`STY44` is the active-collision 409 mapping, `STY45` reports upgrade collisions,
+and `STY46` protects immutable reservation scope/origin. Resolve reported
+upgrade collisions through lifecycle operations, never by deleting evidence.
 Use tenant-scoped range administration, keep allocated bounds immutable and
 treat consumer attributes as opaque bounded JSON. Reconciliation distinguishes
 assigned numbers from actual applied effects.

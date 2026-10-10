@@ -202,6 +202,24 @@ as well as inserts. Refusal changes no range counter or reservation. Upgrade
 collision scanning reports existing duplicates without cancelling or deleting
 them; resolve these through authorized lifecycle actions first.
 
+The guard also UPSERTs a written fence in
+`offline.numbering_reservation_scopes` before selecting collisions. Its primary
+key is `(tenant_id,device_id,shift_scope)`; `shift_scope` is JSON-array text of
+the normalized null/string and each write changes UUID `generation`. The table
+has tenant FORCE RLS; app has SELECT/INSERT/UPDATE, no DELETE, and reader has
+SELECT. Advisory serialization alone is insufficient under an old
+repeatable-read snapshot: the fence makes a conflicting writer fail `40001`
+instead of admitting stale state. READ COMMITTED observes the preceding
+committed writer. The proposed expiry is checked again after the wait.
+
+The durable helper requests READ COMMITTED, `requireActor: true`, `retry: false`;
+an incompatible nested repeatable-read transaction refuses before admission.
+Roll back the enclosing operation after a serialization refusal. This is not a
+promise to retry arbitrary caller transactions automatically. `STY44` maps to
+the active-reservation 409. `STY45` refuses an upgrade with existing active
+duplicates; `STY46` refuses UPDATE of tenant/device/shift/origin. The latter
+two remain maintenance/integrity errors, without invented HTTP outcomes.
+
 Same-key replay precedes new admission and may return a historical `e6`-origin
 string row through the durable seam. Keep exact historical fingerprints.
 Sentinel/null normalization applies only to the scope lock/comparator, never

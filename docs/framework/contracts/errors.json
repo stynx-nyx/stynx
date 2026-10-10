@@ -577,6 +577,24 @@
       "message": "outbox_retirement_immutable",
       "object": "outbox.reject_retirement_mutation",
       "description": "BEFORE UPDATE OR DELETE rejects retirement-history mutation. This database integrity refusal is not a successful retirement and is not remapped into an invented HTTP delivery result."
+    },
+    {
+      "sqlstate": "STY44",
+      "message": "An active numbering reservation already exists for this device and shift.",
+      "object": "offline.guard_active_numbering_reservation",
+      "description": "Forward 0006 mixed-origin active-scope collision. The durable runtime maps this to OFFLINE_SYNC_ACTIVE_RESERVATION (409); failed allocation is rolled back."
+    },
+    {
+      "sqlstate": "STY45",
+      "message": "Active numbering reservation collisions require lifecycle resolution before upgrade.",
+      "object": "offline migration 0006 upgrade collision scan",
+      "description": "Owner/full-visibility atomic upgrade refuses existing active duplicate scopes and reports their identities. Resolve through authorized lifecycle operations; no silent cancellation, deletion or renumbering and no invented HTTP outcome."
+    },
+    {
+      "sqlstate": "STY46",
+      "message": "Numbering reservation scope and origin are immutable.",
+      "object": "offline.guard_active_numbering_reservation",
+      "description": "UPDATE cannot change reservation tenant, device, shift or origin. Integrity refusal preserves the stored identity; it is not mapped to an invented successful application result."
     }
   ],
   "extension_pattern": "Adopter modules add per-module errors.json files (e.g. `domain/demo-bookmark/api/docs/errors.json`) that enumerate domain-specific errorCodes following the `<DOMAIN>:<CATEGORY>:<DETAIL>` shape. These extend (do not replace) the baseline above.",

@@ -153,6 +153,17 @@ Mandatory checks include:
 - Offline canonical stored hashes, non-overlapping/non-reissued numbering,
   reservation scope/status consistency and replay evidence availability.
 
+The offline closed manifest includes the forward `0006` scope fence,
+`offline.numbering_reservation_scopes`, its tenant-leading composite key,
+generation UUID, FORCE RLS/policy and app SELECT/INSERT/UPDATE without DELETE
+(reader SELECT), together with `offline.guard_active_numbering_reservation`
+and its enabled trigger. Verify scope/origin immutability and mixed-origin
+admission. The guard writes the normalized null/string scope fence before its
+collision query and rechecks expiry after waiting. This prevents admission
+through a stale repeatable-read snapshot; the contender may receive `40001`.
+An advisory-lock declaration without this written fence is not equivalent.
+Fence rows are concurrency state, not invented effect/history evidence.
+
 `supported` is true only when every mandatory check passes. Each failure names
 its object/check, expected and observed condition and tenant when applicable;
 secrets and payloads are not echoed. Permission errors are not silently skipped.
