@@ -56,7 +56,8 @@ value throws `AppRoleConfigurationError` with `property: 'appRoleName'`.
 `Database.appRoleName` exposes the resolved name read-only. The name is
 compared with `current_user` by exact string equality and is never
 concatenated into SQL. No other package adds a role-name option; the outbox
-reads `Database.appRoleName`. Without the option, behaviour is that of 1.5.5.
+reads `Database.appRoleName`. Without the option, the role name remains
+`stynx_app`; the new startup checks still apply.
 
 **Sites.** `Database.tx` with `requireActor`, `OutboxService.appendInTransaction`
 / `appendManyInTransaction` and every `OutboxEventStreamSource` port (`now`,
