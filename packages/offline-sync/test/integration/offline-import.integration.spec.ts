@@ -28,6 +28,9 @@ import {
   type OfflineStorageFixture,
 } from '../support/offline-storage-fixture';
 
+// A real auth.users principal for the signed HTTP replay compositions.
+const httpActor = '0198d132-0000-7000-8000-000000000010';
+
 const relations = [
   'numbering_ranges',
   'numbering_reservations',
@@ -416,7 +419,7 @@ it('replays verified imported response bytes through the real Nest HTTP adapter 
   const value = await fixture();
   let runtime: Awaited<ReturnType<typeof importedRuntime>> | undefined;
   try {
-    const capture = archivedFixture(value.tenants[0]);
+    const capture = archivedFixture(value.tenants[0], httpActor);
     await writeBoundary(value);
     await importOfflineState(value.admin, capture.manifest, {
       storage: value.options,
@@ -425,8 +428,20 @@ it('replays verified imported response bytes through the real Nest HTTP adapter 
     await value.admin.query('commit');
     const before = await snapshot(value);
     runtime = await importedRuntime(value, capture.actor);
+    await request(runtime.app.getHttpServer()).post(capture.path).send(capture.input).expect(401);
+    await request(runtime.app.getHttpServer())
+      .post(capture.path)
+      .set('Authorization', 'Bearer ' + runtime.unprivilegedToken)
+      .set('Idempotency-Key', capture.header)
+      .send(capture.input)
+      .expect(403);
+    expect(runtime.apply).not.toHaveBeenCalled();
+    expect(runtime.hash).not.toHaveBeenCalled();
+    expect(runtime.append).not.toHaveBeenCalled();
+    expect(await snapshot(value)).toEqual(before);
     const response = await request(runtime.app.getHttpServer())
       .post(capture.path)
+      .set('Authorization', 'Bearer ' + runtime.accessToken)
       .set('Idempotency-Key', capture.header)
       .send(capture.input)
       .buffer(true)
@@ -642,7 +657,7 @@ it.each([1, 2] as const)(
     const value = await fixture();
     let runtime: Awaited<ReturnType<typeof importedRuntime>> | undefined;
     try {
-      const capture = legacyArchivedFixture(value.tenants[0], count);
+      const capture = legacyArchivedFixture(value.tenants[0], count, httpActor);
       await writeBoundary(value);
       await importOfflineState(value.admin, capture.manifest, {
         storage: value.options,
@@ -664,6 +679,7 @@ it.each([1, 2] as const)(
       runtime = await importedRuntime(value, capture.actor);
       const response = await request(runtime.app.getHttpServer())
         .post(capture.path)
+        .set('Authorization', 'Bearer ' + runtime.accessToken)
         .set('Idempotency-Key', capture.header)
         .send(capture.input);
       expect(response.status, response.text).toBe(201);
@@ -692,7 +708,7 @@ it.each([
     const value = await fixture();
     let runtime: Awaited<ReturnType<typeof importedRuntime>> | undefined;
     try {
-      const capture = duplicateArchivedFixture(value.tenants[0], sameQueue!, host!);
+      const capture = duplicateArchivedFixture(value.tenants[0], sameQueue!, host!, httpActor);
       await writeBoundary(value);
       await importOfflineState(value.admin, capture.manifest, {
         storage: value.options,
@@ -706,6 +722,7 @@ it.each([
       runtime = await importedRuntime(value, capture.actor);
       const response = await request(runtime.app.getHttpServer())
         .post(capture.path)
+        .set('Authorization', 'Bearer ' + runtime.accessToken)
         .set('Idempotency-Key', capture.header)
         .send(capture.input);
       expect(response.status, response.text).toBe(201);
@@ -968,7 +985,7 @@ it('returns the exact archived bytes with the documented default media type when
   const value = await fixture();
   let runtime: Awaited<ReturnType<typeof importedRuntime>> | undefined;
   try {
-    const capture = archivedFixture(value.tenants[0]);
+    const capture = archivedFixture(value.tenants[0], httpActor);
     delete (capture.headers as Record<string, string>)['content-type'];
     const changed = recaptureArchive(capture);
     await writeBoundary(value);
@@ -980,6 +997,7 @@ it('returns the exact archived bytes with the documented default media type when
     runtime = await importedRuntime(value, capture.actor);
     const response = await request(runtime.app.getHttpServer())
       .post(capture.path)
+      .set('Authorization', 'Bearer ' + runtime.accessToken)
       .set('Idempotency-Key', capture.header)
       .send(capture.input);
     expect(response.status, response.text).toBe(201);

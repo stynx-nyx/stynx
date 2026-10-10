@@ -21,8 +21,7 @@ function historicJson(value: unknown): string {
     .join(',')}}`;
 }
 const sha = (text: string) => createHash('sha256').update(text).digest('hex');
-export function archivedFixture(tenant: string) {
-  const actor = 'authenticated-import-replay-actor';
+export function archivedFixture(tenant: string, actor = 'authenticated-import-replay-actor') {
   const header = 'original-transport-header';
   const path = '/offline-sync/sync-batches';
   const payload = { proof: true };
@@ -199,8 +198,8 @@ export function recaptureArchive(capture: ReturnType<typeof archivedFixture>) {
   };
 }
 
-export function legacyArchivedFixture(tenant: string, count: 1 | 2) {
-  const capture = archivedFixture(tenant);
+export function legacyArchivedFixture(tenant: string, count: 1 | 2, actor?: string) {
+  const capture = archivedFixture(tenant, actor);
   const prototype = capture.input.items[0]!;
   capture.input.items = Array.from({ length: count }, (_, index) => {
     const payloadJson = index === 0 ? prototype.payloadJson : { proof: true, ordinal: index + 1 };
@@ -292,8 +291,9 @@ export function duplicateArchivedFixture(
   tenant: string,
   sameQueueId: boolean,
   hostContext: boolean,
+  actor?: string,
 ) {
-  const capture = archivedFixture(tenant);
+  const capture = archivedFixture(tenant, actor);
   capture.input.batchSequence = 2;
   capture.ack.receipt.batchSequence = 2;
   const target = sameQueueId ? 'queue' : 'duplicate-queue';
