@@ -3567,7 +3567,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 37,
-      "assertion_digest_sha256": "dfae0cdb7cd1a5ee511303899bccd97da26c3e73f26b18393c8aeb4606d3b993"
+      "assertion_digest_sha256": "26f7795f634bfd4701975b721a9ef3b7dca872715b9ff33ba499b11a67ac7bcd"
     },
     {
       "path": "reference/api/test/integration/reference-api.unit-coverage.spec.ts",
@@ -4608,8 +4608,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 853,
-      "assertion_digest_sha256": "0e87c3bb6649a35ee29e23f942d57cebedaa77ef350fa5b5297722f3c7c78472"
+      "assertion_count": 875,
+      "assertion_digest_sha256": "5f797d6bd2954736d46ef734772c88627f617e4d96b07f2f4ec576392b05038a"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
