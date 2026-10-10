@@ -4945,7 +4945,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 51,
-      "assertion_digest_sha256": "16427a8dfababbf9f5979a48f14fe19acdedb5d5dd158550dbb0a00411aa9707"
+      "assertion_digest_sha256": "bcfc7f835101ea735d621b27df256cee5e3fa37a17c2f46a2b0210aa45de1a2d"
     },
     {
       "path": "packages/core/test/unit/clock.spec.ts",
