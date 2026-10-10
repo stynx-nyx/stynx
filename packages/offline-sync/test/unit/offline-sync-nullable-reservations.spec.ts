@@ -47,8 +47,8 @@ function fixture() {
 
 describe('UPS-OFS-09 nullable durable reservation admission', () => {
   it('normalizes only the active scope and preserves exact nullable/string legacy projection boundaries', () => {
-    expect(reservationShiftScope(null)).toBeNull();
-    expect(reservationShiftScope(OFFLINE_SYNC_NO_SHIFT)).toBeNull();
+    expect(reservationShiftScope(null)).toBe(null);
+    expect(reservationShiftScope(OFFLINE_SYNC_NO_SHIFT)).toBe(null);
     expect(reservationShiftScope('real-shift')).toBe('real-shift');
     const original = { shiftId: 'real-shift', status: 'reserved' } as CTG9NumberingReservation;
     expect(legacyReservation(original)).toEqual(original);
@@ -288,8 +288,8 @@ describe('UPS-OFS-09 nullable durable reservation admission', () => {
     ).toEqual(value);
     expect(
       await f.service.replayDurableNumberingReservation(body({ idempotencyKey: 'absent' })),
-    ).toBeNull();
-    expect(await f.service.replayDurableNumberingReservation(body())).toBeNull();
+    ).toBe(null);
+    expect(await f.service.replayDurableNumberingReservation(body())).toBe(null);
     expect(reserve).not.toHaveBeenCalled();
     expect(f.policy).toHaveBeenCalledOnce();
     await expect(

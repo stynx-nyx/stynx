@@ -70,7 +70,7 @@ describe('PostgreSQL durable reservation refusal boundary', () => {
       rows: sql.includes('select id from offline.numbering_reservations') ? [{ id: 'owner' }] : [],
     }));
     const { value, tx } = database(query);
-    expect(await pgReplayDurableReservation(value, scope, input)).toBeNull();
+    expect(await pgReplayDurableReservation(value, scope, input)).toBe(null);
     expect(tx).not.toHaveBeenCalled();
     await expect(pgReserveDurableNumbering(value, scope, input, now, until)).rejects.toMatchObject({
       code: 'OFFLINE_SYNC_ACTIVE_RESERVATION',
