@@ -5,6 +5,10 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Complete STYNX 1.6.0 minor campaign with upstream and consumer evidence](2026-10-10-minor-release-1.6.0.md)
+- [ADR-OUTBOX-0004 — Terminal delivery retirement and closed consumer storage bindings](ADR-OUTBOX-0004-retirement-and-closed-storage.md) — supersedes only OUTBOX-0003 D5 and specifies D2/D3 deliverables.
+- [ADR-MOBILE-OFFLINE-0004 — Durable parity and verified import](ADR-MOBILE-OFFLINE-0004-minor-parity-and-import.md) — resolves the accepted minor-release scope while preserving E6 and historical evidence.
+
 - [Release the migration-bearing fixed group as stable patch 1.5.7](2026-10-10-seventh-stable-patch-1.5.7.md)
 
 - [Adopt DEVAI 2.3.2 and preserve observation history](2026-10-10-devai-2.3.2-adoption.md)

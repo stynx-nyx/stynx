@@ -148,7 +148,7 @@ actor. Migration 0021 already grants `stynx_app` `SELECT` on `outbox.events`,
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `listEvents({ deliveryStatus?, entity?, entityPrefix?, limit?, cursor? })` | `{ items, nextCursor }`. Items are the tenant's events (`id`, `entity`, `entityId`, `idempotencyKey`, `metadata`, `createdAt`) with `delivery` (`status`, `attempts`, `lastError`, `nextAttemptAt`, `leaseUntil`, `updatedAt`) or `delivery: null` for an event without a delivery row. Order is `createdAt desc, id desc`; `cursor` is the previous page's `nextCursor` and selects rows strictly before `(createdAt, id)`. `deliveryStatus` is one state or a non-empty list (an event without delivery never matches). `entity` is exact; `entityPrefix` is a literal case-sensitive prefix (no `LIKE` pattern). `limit` is 1–500, default 50. Invalid filters throw `RangeError`. |
 | `getEventDelivery(eventId)`                                                | The event with its delivery, or `null` for a malformed id, a missing event, another tenant's event, or an event without a delivery row.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `getAggregateDelivery(entity, entityId, { limit? })`                       | `null` when the aggregate has no delivery row in the tenant; otherwise `head` (the oldest non-`ACKED` delivery, i.e. the one later events of the aggregate wait for, or `null`), `counts` per delivery status (all five states, zero-filled) and up to `limit` (1–1000, default 100) deliveries ordered `createdAt, id`.                                                                                                                                                                                                                                                                                                                                                              |
+| `getAggregateDelivery(entity, entityId, { limit? })`                       | `null` when the aggregate has no delivery row in the tenant; otherwise `head` (the oldest delivery neither `ACKED` nor `RETIRED`, i.e. the one later events of the aggregate wait for, or `null`), `counts` per delivery status (all six states, zero-filled) and up to `limit` (1–1000, default 100) deliveries ordered `createdAt, id`.                                                                                                                                                                                                                                                                                                                                             |
 | `listEventAttempts(eventId, { includeBytes? })`                            | `outbox.event_attempts` rows ordered by `attemptOrdinal`: `provider`, `protocol`, `requestSha256`, `responseSha256`, `responseStatus`, `requestHeaders` (redacted/digested as captured), `evidenceState`, `result` (`CLAIMED`, `SENT`, `ERROR`, `LEGACY_HISTORY_UNAVAILABLE`), `error`, `leasedAt`, `completedAt`, `legacyMessageId`. `requestBytes`/`responseBytes` are selected only with `includeBytes: true`. Malformed, missing or foreign events return `[]`.                                                                                                                                                                                                                   |
 | `getQueueHealth({ entity?, entityPrefix? })`                               | `{ tenantId, total, byStatus, oldestUnackedCreatedAt }` over the tenant's delivery rows only, so an event without a delivery row is never counted.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `retryEvent(eventId, { immediate? })`                                      | Operator retry; see below. Returns the updated event delivery.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -172,7 +172,7 @@ selects due rows with `FOR UPDATE OF d SKIP LOCKED`, so it skips a row the retry
 holds; a retry that reaches the row while a claim transaction is uncommitted
 waits on its row lock and then sees the committed `SENT`, which it refuses, as
 it refuses a claim that committed first. A retried event still waits for any
-older non-`ACKED` event of its aggregate (ADR-OUTBOX-0002).
+older nonterminal event of its aggregate (`ACKED` and `RETIRED` are terminal) (ADR-OUTBOX-0002).
 
 These ports have no package-level permission check: tenant isolation is
 enforced, but any actor in the tenant context can call them. The caller must
@@ -185,6 +185,50 @@ they come from a single snapshot even inside a caller's READ COMMITTED
 transaction. Separate port calls (for example `listEvents` pages and
 `getQueueHealth`) are independent statements and may observe concurrent
 dispatch or ACK changes between them.
+
+### Terminal operator retirement (1.6.0)
+
+[ADR-OUTBOX-0004](../../../law/adr/ADR-OUTBOX-0004-retirement-and-closed-storage.md)
+supersedes only the earlier no-retirement decision. `retireEvent(eventId,
+{ idempotencyKey, reason })` returns an immutable `OutboxEventRetirement` with
+`id`, `tenantId`, `eventId`, operation key, trusted `actorId`, exact `reason`,
+`previousStatus` and `retiredAt: Date`. The app transaction requires a trusted
+actor; identity override input is not accepted. The consumer checks operator
+permission. Key length is 1–255 UTF-8 bytes; a nonblank reason is at most 2048
+UTF-8 bytes. The [input/JSON receipt schema](../../../law/schemas/outbox-retirement.schema.json)
+records this boundary.
+
+The tenant delivery row is locked before transition and receipt insertion.
+Exactly repeated event/key/actor/reason returns the stored receipt once;
+conflicting key reuse or another retirement operation refuses with
+`OutboxRetirementConflictError` (409, `OUTBOX_RETIREMENT_CONFLICT`). Its typed
+reason is `active-lease`, `already-acked`, `operation-conflict` or `already-retired`.
+Invalid input raises `OutboxRetirementInputError` (400, `OUTBOX_RETIREMENT_INVALID`).
+Missing/other-tenant deliveries keep existing not-found privacy.
+
+`ACKED` or an unexpired lease refuses with no change. Otherwise `PENDING`,
+`ERROR`, `SENT_UNRESOLVED` and expired-lease `SENT` may become `RETIRED`.
+Retirement creates no send/attempt and proves no external success. It releases
+later events of the aggregate, is never claimed or automatically recovered,
+and `retryEvent` refuses with its existing `OutboxEventNotFailedError`.
+Late ACK/send/failure evidence remains in the genuine ledgers without reviving
+or retrying the retired projection. The immutable event and SSE cursor remain.
+
+`getEventRetirement(eventId)` is a tenant/actor-scoped read returning the receipt
+or null for malformed, missing, other-tenant or never-retired events.
+`delivery.retirement` exposes it additively; historical/nonretired rows do not
+fabricate provenance. Status filters and zero-filled counts include `RETIRED`;
+health total continues to count all rows, while outstanding age and aggregate
+head exclude both terminal statuses. Retired totals are not successful ACKs or
+pending backlog. Existing destination/entity filters apply unchanged.
+
+Apply forward migration 0026 before the new code. The tenant-leading
+`outbox.event_retirements` ledger has unique tenant/key and tenant/event bindings,
+FORCE RLS and immutable history (SQLSTATE `STY43` on UPDATE/DELETE); application
+privileges are SELECT/INSERT only. Historical migrations and evidence are intact.
+The output union widens in minor 1.6.0, so exhaustive consumers must handle the
+new member. See the [consumer storage contract](consumer-storage.md) for exact
+renderer/verifier ports and nondefault role binding.
 
 ### Destinations and filtered dispatch (UPS-OBX-07, #316)
 
@@ -227,18 +271,19 @@ must be a non-empty string.
   `ackEvent` and `ackTenantEvent` raise `OutboxNotFoundError` for it.
 - The per-aggregate order of ADR-OUTBOX-0002 is unchanged: a later event waits
   for every older event of the same `(tenant, entity, entityId)` that **has a
-  delivery row** and is not `ACKED`. An event without a delivery row never
+  delivery row** and is neither `ACKED` nor `RETIRED`. An event without a delivery row never
   blocks a later event of its aggregate.
 - The declaration applies at append time only. It does not create, remove or
   change delivery rows of events already in the log, and an idempotent replay
   returns the logged event without adding a delivery. A delivery created before
   an `entity` was removed from the declaration stays in the queue, is still
-  dispatched and still blocks its aggregate until it is `ACKED`; this package
-  has no terminal state for such a row (tracked as UPS-OBX-11, #320).
+  dispatched and still blocks its aggregate until it is `ACKED` or explicitly
+  `RETIRED` through the actor-attributed operator port of 1.6.0 (UPS-OBX-11,
+  #320). Removing configuration alone never retires a row.
   `cutoverLegacyMessages()` is not affected: every migrated legacy message
   keeps its delivery projection.
 - Tenancy is unchanged. The append ports still require the caller's
-  `stynx_app` transaction, and the declaration only decides whether the second
+  configured live application-role transaction (default `stynx_app`), and the declaration only decides whether the second
   insert, into the FORCE RLS table `outbox.event_delivery`, happens.
 
 **Dispatch filter.** `dispatchEventsDue(limit?, filter?)` and
@@ -361,7 +406,7 @@ The claim
 transaction selects deliveries that are (`PENDING` or `ERROR` with
 `coalesce(next_attempt_at, created_at) <= clock_timestamp()`) or (`SENT` with an
 expired `lease_until`), excluding migrated rows while the legacy marker is not
-`NEW` and any event with an older non-`ACKED` event of the same
+`NEW` and any event with an older nonterminal event of the same
 `(tenant, entity, entityId)`; it orders by `created_at, id`, takes `limit` rows
 `FOR UPDATE OF d SKIP LOCKED`, sets `SENT`, `attempts + 1`,
 `lease_until = now + eventLeaseMs` (default 300 000 ms) and clears
