@@ -681,7 +681,7 @@ function buildSchemaRegistry(roots, seedTypeNames) {
 
   const state = {
     declarations,
-    schemas: {},
+    schemas: Object.create(null),
     building: new Set(),
   };
   for (const name of seedTypeNames.map(schemaNameForBodyType).filter(Boolean)) {
@@ -694,6 +694,8 @@ function schemaForTypeName(name, state) {
   if (state.schemas[name]) return state.schemas[name];
   const declaration = state.declarations.get(name);
   if (!declaration) return { $ref: '#/components/schemas/UnknownJson' };
+  if (declaration.node.typeParameters?.length)
+    throw new Error(`Unsupported generic schema declaration ${name}`);
   if (state.building.has(name)) return { $ref: `#/components/schemas/${name}` };
 
   state.building.add(name);
@@ -721,13 +723,107 @@ function schemaForTypeExpression(typeText, state) {
 }
 
 function interfaceSchema(node, state) {
-  return objectSchemaFromMembers(node.members, state);
+  const bases = (node.heritageClauses ?? []).flatMap((clause) =>
+    clause.types.map((base) => objectShape(schemaForTypeExpression(base.getText(), state), state)),
+  );
+  return mergeObjectShapes([...bases, objectSchemaFromMembers(node.members, state)]);
+}
+
+function objectShape(schema, state, seen = new Set()) {
+  if (schema.$ref) {
+    const name = schema.$ref.match(/^#\/components\/schemas\/(.+)$/u)?.[1];
+    if (!name || seen.has(name))
+      throw new Error(`Unresolved or recursive inherited object schema ${schema.$ref}`);
+    const next = new Set(seen).add(name);
+    const resolved =
+      state.schemas[name] ?? (state.declarations.has(name) ? schemaForTypeName(name, state) : null);
+    if (!resolved) throw new Error(`Unresolved inherited object schema ${name}`);
+    return objectShape(resolved, state, next);
+  }
+  if (schema.allOf)
+    return mergeObjectShapes(schema.allOf.map((item) => objectShape(item, state, seen)));
+  if (schema.type !== 'object')
+    throw new Error('Unsupported non-object inherited or utility schema');
+  return schema;
+}
+
+function mergeObjectShapes(shapes) {
+  const indexConstraints = shapes
+    .map((shape) => shape.additionalProperties)
+    .filter(
+      (constraint) =>
+        constraint !== false &&
+        constraint !== undefined &&
+        constraint !== true &&
+        stableJson(constraint) !== stableJson({ $ref: '#/components/schemas/JsonValue' }),
+    );
+  const indexTypes = indexConstraints.map(primitiveIndexType);
+  if (
+    shapes.length > 1 &&
+    indexConstraints.length &&
+    (indexTypes.some((type) => !type) || new Set(indexTypes).size !== 1)
+  )
+    throw new Error('Unsupported open-object inherited or intersection schema constraints');
+  const properties = Object.create(null);
+  const required = new Set();
+  let additionalProperties = false;
+  for (const shape of shapes) {
+    for (const [name, schema] of Object.entries(shape.properties ?? {})) {
+      properties[name] =
+        Object.hasOwn(properties, name) && stableJson(properties[name]) !== stableJson(schema)
+          ? { allOf: [properties[name], schema] }
+          : schema;
+    }
+    for (const name of shape.required ?? []) required.add(name);
+    if (shape.additionalProperties !== false && shape.additionalProperties !== undefined)
+      additionalProperties = shape.additionalProperties;
+  }
+  if (shapes.length > 1 && indexConstraints.length) {
+    for (const schema of Object.values(properties)) {
+      if (!schemaFitsPrimitiveIndex(schema, indexTypes[0]))
+        throw new Error('Unsupported declared property and open index intersection schema');
+    }
+    // A named property's schema replaces additionalProperties in JSON Schema. Admission
+    // above proves it already implies every index constraint, so none is lost here.
+    additionalProperties = indexConstraints[0];
+  }
+  return {
+    type: 'object',
+    additionalProperties,
+    properties: sortObject(properties),
+    ...(required.size ? { required: [...required].sort() } : {}),
+  };
+}
+
+function primitiveIndexType(schema) {
+  if (schema.anyOf?.length === 1 && Object.keys(schema).length === 1)
+    return primitiveIndexType(schema.anyOf[0]);
+  return Object.keys(schema).length === 1 &&
+    ['string', 'number', 'boolean', 'null'].includes(schema.type)
+    ? schema.type
+    : null;
+}
+
+function schemaFitsPrimitiveIndex(schema, type) {
+  if (schema.type === type) return true;
+  if (schema.anyOf) return schema.anyOf.every((item) => schemaFitsPrimitiveIndex(item, type));
+  if (schema.allOf) return schema.allOf.some((item) => schemaFitsPrimitiveIndex(item, type));
+  return false;
+}
+
+function utilityKeys(node) {
+  if (ts.isParenthesizedTypeNode(node)) return utilityKeys(node.type);
+  if (ts.isUnionTypeNode(node)) return node.types.flatMap(utilityKeys);
+  if (ts.isLiteralTypeNode(node) && ts.isStringLiteral(node.literal)) return [node.literal.text];
+  throw new Error('Unsupported computed object utility key schema');
 }
 
 function objectSchemaFromMembers(members, state) {
-  const properties = {};
+  const properties = Object.create(null);
   const required = [];
   for (const member of members) {
+    if (ts.isIndexSignatureDeclaration(member))
+      throw new Error('Unsupported object index signature schema');
     if (!ts.isPropertySignature(member) || !member.name) continue;
     const name = propertyName(member.name);
     if (!name) continue;
@@ -754,6 +850,21 @@ function schemaForTypeNode(node, state) {
   if (!node) return { $ref: '#/components/schemas/UnknownJson' };
 
   if (ts.isParenthesizedTypeNode(node)) return schemaForTypeNode(node.type, state);
+  if (ts.isTypeOperatorNode(node) && node.operator === ts.SyntaxKind.ReadonlyKeyword)
+    return schemaForTypeNode(node.type, state);
+  if (ts.isTypeOperatorNode(node) && node.operator === ts.SyntaxKind.KeyOfKeyword)
+    return { type: 'string', enum: finiteKeys(node, state) };
+  if (ts.isMappedTypeNode(node)) return mappedTypeSchema(node, state);
+  if (ts.isIndexedAccessTypeNode(node)) {
+    const object = objectShape(schemaForTypeNode(node.objectType, state), state);
+    const keys = finiteKeys(node.indexType, state);
+    const selected = keys.map((key) => {
+      if (!Object.hasOwn(object.properties ?? {}, key))
+        throw new Error(`Unresolved indexed schema property ${key}`);
+      return object.properties[key];
+    });
+    return selected.length === 1 ? selected[0] : { anyOf: selected };
+  }
   if (ts.isArrayTypeNode(node)) {
     return { type: 'array', items: schemaForTypeNode(node.elementType, state) };
   }
@@ -784,7 +895,8 @@ function schemaForTypeNode(node, state) {
 
 function typeReferenceSchema(node, state) {
   const name = node.typeName.getText();
-  if (['Readonly', 'Required'].includes(name) && node.typeArguments?.[0]) {
+  if (state.typeBindings?.has(name)) return state.typeBindings.get(name);
+  if (name === 'Readonly' && node.typeArguments?.[0]) {
     return schemaForTypeNode(node.typeArguments[0], state);
   }
   if (name === 'Promise' && node.typeArguments?.[0]) {
@@ -793,21 +905,52 @@ function typeReferenceSchema(node, state) {
   if (name === 'JsonObject' || name === 'JsonValue') {
     return { $ref: `#/components/schemas/${name}` };
   }
-  if (name === 'Partial' && node.typeArguments?.[0]) {
-    const schema = schemaForTypeNode(node.typeArguments[0], state);
-    if (schema.$ref) return schema;
-    const { required, ...rest } = schema;
-    return rest;
+  if (['Partial', 'Required', 'Pick', 'Omit'].includes(name)) {
+    const arguments_ = node.typeArguments ?? [];
+    if (arguments_.length !== (['Pick', 'Omit'].includes(name) ? 2 : 1))
+      throw new Error(`Unsupported ${name} schema arguments`);
+    const schema = objectShape(schemaForTypeNode(arguments_[0], state), state);
+    const properties = { ...schema.properties };
+    if (name === 'Pick' || name === 'Omit') {
+      const keys = new Set(utilityKeys(arguments_[1]));
+      if (name === 'Pick' && [...keys].some((key) => !Object.hasOwn(properties, key)))
+        throw new Error('Unresolved Pick schema property');
+      for (const key of Object.keys(properties))
+        if (keys.has(key) !== (name === 'Pick')) delete properties[key];
+    }
+    const required =
+      name === 'Required'
+        ? Object.keys(properties).sort()
+        : name === 'Partial'
+          ? []
+          : (schema.required ?? []).filter((key) => Object.hasOwn(properties, key));
+    const { required: _required, ...rest } = schema;
+    return {
+      ...rest,
+      properties: sortObject(properties),
+      ...(required.length ? { required } : {}),
+    };
   }
-  if (name === 'Array' && node.typeArguments?.[0]) {
+  if (['Array', 'ReadonlyArray'].includes(name) && node.typeArguments?.[0]) {
     return { type: 'array', items: schemaForTypeNode(node.typeArguments[0], state) };
   }
   if (name === 'Record') {
+    if (node.typeArguments?.length !== 2) throw new Error('Unsupported Record schema arguments');
+    let keyType = node.typeArguments[0];
+    while (ts.isParenthesizedTypeNode(keyType)) keyType = keyType.type;
+    const value = schemaForTypeNode(node.typeArguments[1], state);
+    if (keyType.kind !== ts.SyntaxKind.StringKeyword) {
+      const keys = finiteKeys(keyType, state);
+      return {
+        type: 'object',
+        additionalProperties: false,
+        properties: sortObject(Object.fromEntries(keys.map((key) => [key, value]))),
+        ...(keys.length ? { required: [...keys].sort() } : {}),
+      };
+    }
     return {
       type: 'object',
-      additionalProperties: node.typeArguments?.[1]
-        ? schemaForTypeNode(node.typeArguments[1], state)
-        : true,
+      additionalProperties: value,
     };
   }
   if (name === 'Date') {
@@ -817,6 +960,8 @@ function typeReferenceSchema(node, state) {
     return { type: 'string', format: 'binary' };
   }
   if (state.declarations.has(name)) {
+    if (node.typeArguments?.length || state.declarations.get(name).node.typeParameters?.length)
+      throw new Error(`Unsupported generic schema instantiation ${name}`);
     schemaForTypeName(name, state);
     return { $ref: `#/components/schemas/${name}` };
   }
@@ -842,7 +987,79 @@ function unionSchema(types, state) {
 }
 
 function intersectionSchema(types, state) {
-  return { allOf: types.map((type) => schemaForTypeNode(type, state)) };
+  const schemas = types.map((type) => schemaForTypeNode(type, state));
+  if (schemas.every((schema) => isObjectSchema(schema, state)))
+    try {
+      return mergeObjectShapes(schemas.map((schema) => objectShape(schema, state)));
+    } catch (error) {
+      throw new Error(
+        `Unsupported intersection schema: ${types.map((type) => type.getText()).join(' & ')}`,
+        { cause: error },
+      );
+    }
+  return { allOf: schemas };
+}
+
+function isObjectSchema(schema, state, seen = new Set()) {
+  if (schema.type === 'object') return true;
+  if (schema.allOf) return schema.allOf.every((item) => isObjectSchema(item, state, seen));
+  if (!schema.$ref) return false;
+  const name = schema.$ref.match(/^#\/components\/schemas\/(.+)$/u)?.[1];
+  if (!name || seen.has(name) || !Object.hasOwn(state.schemas, name)) return false;
+  return isObjectSchema(state.schemas[name], state, new Set(seen).add(name));
+}
+
+function finiteKeys(node, state) {
+  if (ts.isTypeOperatorNode(node) && node.operator === ts.SyntaxKind.KeyOfKeyword) {
+    const shape = objectShape(schemaForTypeNode(node.type, state), state);
+    if (shape.additionalProperties !== false) throw new Error('Unsupported unbounded keyof schema');
+    return Object.keys(shape.properties ?? {});
+  }
+  let schema = schemaForTypeNode(node, state);
+  const seen = new Set();
+  while (schema.$ref) {
+    const name = schema.$ref.match(/^#\/components\/schemas\/(.+)$/u)?.[1];
+    if (!name || seen.has(name) || !Object.hasOwn(state.schemas, name))
+      throw new Error('Unresolved finite schema keys');
+    seen.add(name);
+    schema = state.schemas[name];
+  }
+  const keys = Object.hasOwn(schema, 'const') ? [schema.const] : schema.enum;
+  if (!Array.isArray(keys) || !keys.every((key) => typeof key === 'string'))
+    throw new Error('Unsupported non-finite mapped or indexed schema keys');
+  return [...new Set(keys)];
+}
+
+function mappedTypeSchema(node, state) {
+  if (node.nameType || !node.type || !node.typeParameter.constraint)
+    throw new Error('Unsupported mapped schema shape');
+  const constraint = node.typeParameter.constraint;
+  const keys = finiteKeys(constraint, state);
+  const inherited =
+    ts.isTypeOperatorNode(constraint) && constraint.operator === ts.SyntaxKind.KeyOfKeyword
+      ? objectShape(schemaForTypeNode(constraint.type, state), state)
+      : null;
+  const properties = Object.create(null);
+  const required = [];
+  for (const key of keys) {
+    const bindings = new Map(state.typeBindings ?? []);
+    bindings.set(node.typeParameter.name.text, { type: 'string', const: key });
+    properties[key] = schemaForTypeNode(node.type, { ...state, typeBindings: bindings });
+    const optional = node.questionToken && node.questionToken.kind !== ts.SyntaxKind.MinusToken;
+    if (
+      !optional &&
+      (node.questionToken?.kind === ts.SyntaxKind.MinusToken ||
+        !inherited ||
+        (inherited.required ?? []).includes(key))
+    )
+      required.push(key);
+  }
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties: sortObject(properties),
+    ...(required.length ? { required: required.sort() } : {}),
+  };
 }
 
 function literalSchema(literal) {

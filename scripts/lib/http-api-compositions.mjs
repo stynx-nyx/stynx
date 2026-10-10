@@ -272,7 +272,7 @@ function validate(value, schema, root, at) {
   if (schema.$ref) {
     if (
       !/^#\/\$defs\/[A-Za-z][A-Za-z0-9]*$/u.test(schema.$ref) ||
-      !root.$defs?.[schema.$ref.replace('#/$defs/', '')] ||
+      !Object.hasOwn(root.$defs ?? {}, schema.$ref.replace('#/$defs/', '')) ||
       Object.keys(schema).some((key) => !['$ref', 'title', 'description'].includes(key))
     )
       throw new Error(`Unsupported API registry schema reference at ${at}`);
@@ -309,7 +309,7 @@ function validate(value, schema, root, at) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) refuse();
     for (const field of schema.required ?? []) if (!Object.hasOwn(value, field)) refuse();
     for (const [field, item] of Object.entries(value)) {
-      if (!schema.properties?.[field]) {
+      if (!Object.hasOwn(schema.properties ?? {}, field)) {
         if (schema.additionalProperties === false) refuse();
       } else validate(item, schema.properties[field], root, `${at}.${field}`);
     }
