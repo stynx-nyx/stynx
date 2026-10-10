@@ -19,6 +19,7 @@ import {
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import test from 'node:test';
+import { parse as parseYaml } from 'yaml';
 
 import {
   collectPublicPackages,
@@ -3091,6 +3092,35 @@ test('scenario=all hardening reaches every k6 scenario with authenticated fail-c
   );
   assert.doesNotMatch(hardening, /STYNX_K6_SCENARIO_PAUSE_MS/u);
   assert.match(hardening, /No current k6 summary files were produced/u);
+});
+
+test('hardening preserves the accepted ADR presign gate and upload scenario thresholds', () => {
+  const decision = repositorySource('law/adr/2026-09-12-k6-baseline-comparison.md');
+  const acceptedGate = decision.match(
+    /3\. \*\*The scenarios' own thresholds remain the hard line\.\*\* `p\(99\)<(\d+)`/u,
+  );
+  assert.equal(acceptedGate?.[1], '50', 'ADR-HARDENING-0001 decision 3 remains the authority');
+  const hardening = parseYaml(repositorySource('.github/workflows/hardening.yml'));
+  const environments = [hardening.env];
+  const commands = [];
+  for (const job of Object.values(hardening.jobs)) {
+    environments.push(job.env);
+    for (const step of job.steps ?? []) {
+      environments.push(step.env);
+      if (typeof step.run === 'string') commands.push(step.run);
+    }
+  }
+  const overrides = environments
+    .filter((environment) => environment && 'STYNX_K6_STORAGE_PRESIGN_P99_MS' in environment)
+    .map((environment) => String(environment.STYNX_K6_STORAGE_PRESIGN_P99_MS));
+  assert.deepEqual(overrides, [acceptedGate[1]]);
+  assert.doesNotMatch(commands.join('\n'), /STYNX_K6_STORAGE_PRESIGN_P99_MS\s*=/u);
+  const upload = repositorySource('test/perf/k6/upload.js');
+  const defaultGate = upload.match(/Number\(__ENV\.STYNX_K6_STORAGE_PRESIGN_P99_MS \|\| (\d+)\)/u);
+  assert.equal(defaultGate?.[1], acceptedGate[1]);
+  assert.match(upload, /storage_presign_duration_ms:\s*\[`p\(99\)<\$\{storagePresignP99Ms\}`\]/u);
+  assert.match(upload, /http_req_duration:\s*\['p\(95\)<1000'\]/u);
+  assert.match(upload, /http_req_failed:\s*\['rate<0\.02'\]/u);
 });
 
 test('live branch and release-tag protection drift are both fail-closed', () => {
