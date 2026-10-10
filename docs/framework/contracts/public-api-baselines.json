@@ -2632,7 +2632,7 @@
         "tenancy/src/tenancy.module.d.ts": "3dc040d19dbc00de388e7611b6fd1c59f0f3f7f2ad8f0c13f5de99dd52b05f5a",
         "tenancy/src/tenancy.platform-admin.guard.d.ts": "0c72cf770364094bd0f2f16266dd5f8d44ac8364e275d38ddebdce127bc95323",
         "tenancy/src/tenancy.service.d.ts": "7eb2dcb3553011f7ebb0bfb8a60002d58a3314d4dc9877329f0d4f847b4b4666",
-        "tenancy/src/tenant-context.interceptor.d.ts": "f7c03b5b8957fa9a022d9e7482731284f9dd0db94ffff3beeb6bda1f72386d93",
+        "tenancy/src/tenant-context.interceptor.d.ts": "505785e260efe4b588a1babfdee4648043c5e081619cc2211d46a711a0aea989",
         "tenancy/src/tenant-system-operation.sink.d.ts": "4c90b15336c42716dd86153097bf931fb7cde3293879a6f8d5ab562b979711cd",
         "tenancy/src/tokens.d.ts": "d107a3767a9e4e1120a752f82bad19c48cacb4ab19e678ee7dc2964a0abd8e26",
         "tenancy/src/types.d.ts": "6b9e16a7f37f862bcfcde5251248fe3445d63ee2cc9dc1bfc91a65e5facfaef6",
