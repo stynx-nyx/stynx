@@ -11,11 +11,19 @@ it is not a claim that a consumer database or provider has already passed.
   `received` remains the default. The same-batch apply protocol stays intact.
   It adds no worker or read-triggered effect. Existing batches retain their
   fingerprints and exact response bytes, including under a changed module option.
+  Forward migration `0005_initial_queue_status.sql` captures the first-created
+  mode in `sync_batches.initial_queue_status`; resumed batches use that stored
+  mode. Historical batches default to `received`, without rewriting item states.
 - `preApplyDetector.detect(trx,item,context)` runs on the same strict item
   transaction before numbering, application or final event writes. The applier
   receives stable `receiptId`, `concurrencySuspected` and `concurrentPairs`.
-  Host policy determines whether suspicion forbids effects; conflict evidence
-  commits atomically. Existing post-apply detection remains effective.
+  Trusted `OfflineSyncPolicy.concurrencyApplication?: 'apply' | 'defer'`
+  defaults to `defer` for effective pre-apply suspicion. Validate pairs before
+  verified handoff exemptions; the applier receives the effective result.
+  `defer` commits conflict evidence without consumption, application, event or
+  `appliedAt`; `apply` preserves evidence and all other admission checks.
+  Without this detector, behavior is unchanged. Existing post-apply detection
+  and its concurrency window remain effective.
 - `payloadHashPort.hash(item,context)` independently computes the payload digest.
   The default hashes canonical JSON of `payloadJson`; key order is immaterial,
   array/value order is not. A pure producer helper uses the same format.
@@ -415,6 +423,44 @@ overrides them, and even then the D1 preconditions keep an applied original out 
 non-canonical hash with an existing original takes the same path (D4 item 4). Where the key has no
 queue row, no conflict is written; the attempt alone carries the received hash.
 
+### Canonical payload and rejection reads in 1.6.0
+
+`canonicalOfflineSyncPayload(payloadJson)` returns canonical JSON text;
+`canonicalOfflineSyncPayloadHash(payloadJson)` hashes precisely its UTF-8 bytes
+and returns `sha256:` plus 64 lowercase hexadecimal characters. The root is a
+plain object, including a null-prototype object. Object keys sort recursively
+by UTF-16 code-unit order, strings and finite numbers use JSON encoding
+(`-0` becomes `0`), and arrays keep their original order. Keys and strings must
+contain valid Unicode. Cycles, accessors, symbol properties/values, non-finite
+numbers, sparse arrays, extra array properties, non-enumerable object fields,
+class instances and unsupported JSON values are refused. No custom `toJSON`
+or coercion supplies hidden content. This is separate from the unchanged
+historical batch fingerprint encoder described in V-15.
+
+The service exposes:
+
+```ts
+getSyncIntegrityRejection(identity: {
+  deviceId: string;
+  deviceBatchId: string;
+  queueItemId: string;
+}): Promise<SyncIntegrityRejection>;
+```
+
+`SyncIntegrityRejection` returns that attempt address plus trusted `tenantId`,
+`idempotencyKey`, raw `receivedPayloadHash`, actual `rejectedAt` and
+`errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY'`. Optional `storedPayloadHash` and
+`originalQueueItemId` come only from stored original-item evidence. A new-key
+rejection is readable even without a canonical queue item; the getter does not
+invent a canonical hash, UUID, timestamp or context. It reads the existing
+attempt evidence and performs no effects. Missing/other-tenant attempts produce
+`OFFLINE_SYNC_INTEGRITY_REJECTION_NOT_FOUND` (404), message "Integrity rejection
+was not found." The optional durable-store method takes trusted scope plus the
+same identity and returns null when absent. Both shipped stores implement it;
+an unsupported custom store raises
+`OfflineSyncConfigurationError('getSyncIntegrityRejection')`. No new HTTP route
+or evidence table is implied.
+
 ### Migration 0004
 
 `migrations/0004_pending_state_and_conflict_actions.sql` is forward-only and applied after 0003 with
@@ -479,9 +525,11 @@ no longer selects a cancelled range.
 
 **Applier receipt identifier (UPS-OFS-09, part).** `OfflineSyncItemContext.receiptId` (optional in
 the type, always set by the shipped stores for keyed items) is the item receipt key above. It equals
-`SyncItemReceiptRecord.receiptId` and is stable across replay. The detection order is unchanged:
-concurrency detection runs after `apply` in the same item transaction. Passing the suspicion result
-to the applier is not implemented.
+`SyncItemReceiptRecord.receiptId` and is stable across replay. The existing
+`concurrencyDetector` still runs after `apply` in the same item transaction.
+The additive 1.6.0 `preApplyDetector` runs before effects and supplies the
+effective suspicion and pairs to the applier as specified above; it does not
+replace that post-apply detector.
 
 **Batch cardinality message.** The 400 message reports the effective limit: "items must contain
 between 1 and N queue items." With no limit (`maxBatchItems: null` or absent under a policy
@@ -508,7 +556,7 @@ documented here rather than implied.
 | V-12 | Cancel accepts only `reserved`; in CTG9 mode a repeated cancel returns the cancelled row unchanged and rewinds the range only for an unused tail. Block and close accept `reserved`/`expired`; repeating the same target status returns the row unchanged. Settle also accepts `consumed`. Unused (`available`) numbers become `blocked`/`expired`.                                                                                                                                                                                                                                                                | `unit/offline-sync-lists-reserve.spec.ts` "V-12 …"; `unit/ctg9-parity.spec.ts` "UPS-OFS-01 makes configured-policy lifecycle transitions idempotent", "UPS-OFS-01 releases only an unused tail …"; `unit/in-memory-offline-sync.store.spec.ts` "cancels a CTG9 reservation idempotently …"                                                                                                                                                                                         | No events are emitted, so "no new event" holds trivially.                                                                                                                                                                |
 | V-13 | Claims outside the interval return 400 before any write. Claims are recorded only while the reservation is `reserved`. Consumption has one entry per number. `missingOnServer` lists claims not `applied`; `unexpectedOnServer` lists `applied` numbers that were not claimed.                                                                                                                                                                                                                                                                                                                                     | `unit/offline-sync-lists-reserve.spec.ts` "V-13 …"; `unit/postgres-durable-coverage.spec.ts` "reconciles claims and reports missing …", "rejects out-of-range claims …"; `unit/ctg9-parity.spec.ts` "UPS-OFS-01 reconciles after close …"                                                                                                                                                                                                                                          | Reconciliation updates only `audit_actor_id`/`updated_at`; no separate reconciliation record is kept.                                                                                                                    |
 | V-14 | The service emits exactly one `eventPort.appendInTransaction(trx, {entity: entityType, entityId: serverEntityId, idempotencyKey: <receipt key>, payload: payloadJson})` per applied item, inside that item's transaction. It emits nothing for rejections, conflict openings, reservations or resolutions, so the consumer's own envelopes are the only public trail.                                                                                                                                                                                                                                              | `unit/offline-sync-lists-reserve.spec.ts` "V-14 …"; `unit/ctg9-parity.spec.ts` "UPS-OFS-03 applies items serially and passes the identical transaction …"                                                                                                                                                                                                                                                                                                                          | —                                                                                                                                                                                                                        |
-| V-15 | `stableStringify` sorts object keys recursively and serializes `undefined` as `null` rather than omitting it. `batchContextFingerprint` hashes it for batch identity only. `payloadHash` is client-declared and checked only for format; STYNX does not recompute it.                                                                                                                                                                                                                                                                                                                                              | `unit/offline-sync-lists-reserve.spec.ts` "V-15 …"; `unit/coverage-boundaries.spec.ts` "separates transport users and absent optional item fields …"                                                                                                                                                                                                                                                                                                                               | There is no port for a consumer canonical hash, and the `undefined` handling differs from JSON omission.                                                                                                                 |
+| V-15 | `stableStringify` sorts object keys recursively and serializes `undefined` as `null` rather than omitting it. `batchContextFingerprint` continues to use it for batch identity only. The 1.6.0 CTG9 payload check uses the separate canonical helper or configured `payloadHashPort` described above, independently checking the submitted digest before effects.                                                                                                                                                                                                                                                  | `unit/offline-sync-lists-reserve.spec.ts` "V-15 …"; `unit/coverage-boundaries.spec.ts` "separates transport users and absent optional item fields …"                                                                                                                                                                                                                                                                                                                               | Historical batch hashes retain their original bytes; this row's older assertions do not alone certify the new payload port.                                                                                              |
 
 Server-side device attestation is deferred to Phase 5. This API authenticates the actor and scopes
 database access, but it cannot independently prove the client's posture claim.

@@ -36,6 +36,11 @@ The selected mode is bound to durable batch context so a resumed batch cannot
 silently change its initial-state semantics. Existing batches without this field
 keep their original context/fingerprint and received semantics; their closed
 responses are never re-fingerprinted or invalidated by the new module option.
+Forward migration `0005_initial_queue_status.sql` persists the selected mode on
+`offline.sync_batches.initial_queue_status`, non-null with default `received`
+and a closed `received`/`pending` constraint. Capture it only on first batch
+creation; the stored mode governs resume, lease takeover and contested creation,
+even under a different module option. Do not change existing item/receipt states.
 Correction-origin pending items
 retain the existing later-batch/same-device/same-key/same-hash rule and effect
 preconditions. Initial materialization is not permission to reapply an already
@@ -65,6 +70,18 @@ sees the effective suspicion and real pair evidence, and existing atomicity,
 final event and read-only sealing rules remain. The choice is host policy,
 not a request-body flag. Failure rolls back the whole item boundary.
 
+The exact trusted policy field is
+`OfflineSyncPolicy.concurrencyApplication?: 'apply' | 'defer'`, default `defer`
+for effective pre-apply suspicion. Pair identities and their relationship to the
+current item are validated before consulting `handoffPort.permits`; verified
+handoff exemptions are reflected in the effective pairs and suspicion supplied
+to the applier. `apply` waives no tenant, hash, numbering or other admission
+requirement and retains genuine conflict evidence. `defer` records no
+`appliedAt`; correction retry remains subject to the existing unapplied-conflict
+predicates. Without a pre-apply detector, this field changes no legacy behavior.
+It does not disable or reorder the existing post-apply detector/window. Invalid
+policy values are refused rather than interpreted as permission to apply.
+
 Expose additive typed context signals in receipts/listings/conflict evidence
 only when the corresponding path produced them. Continue the existing reserved
 `stynx` versioned context and 4096-byte opaque consumer-attributes bound; do not
@@ -81,6 +98,17 @@ and publishes the same pure helper for producers. The format remains exactly
 change the digest; array order and value changes do. Non-JSON values and
 ambiguous serialization are refused, rather than dropped or stringified away.
 
+Publish `canonicalOfflineSyncPayload(payloadJson)` for the canonical text and
+`canonicalOfflineSyncPayloadHash(payloadJson)` for its UTF-8 SHA-256 digest.
+The root is a plain JSON object (ordinary or null prototype). Recursively sort
+object keys by UTF-16 code-unit order; use JSON string/finite-number encoding,
+including `-0` as `0`, and preserve array order. Strings and keys require valid
+Unicode. Admit only JSON values: reject cycles, accessors, symbols, non-finite
+numbers, sparse arrays, extra array properties, non-enumerable object fields,
+non-plain objects and unsupported values instead of invoking coercion or `toJSON`.
+These payload rules are distinct from the historical batch fingerprint encoder;
+do not change that encoder or rewrite its stored hashes.
+
 An explicitly configured port may implement a documented consumer canonical
 payload format. It receives trusted context, not authority to waive verification.
 STYNX independently validates the returned digest and compares it to the
@@ -96,6 +124,23 @@ New-key mismatch consumes no key, number or effect. Closed-batch replay remains
 byte-exact and does not rerun the hash port. Declare this new content-integrity
 check in the 1.6.0 upgrade guide; a valid-looking arbitrary digest is no longer
 enough to apply a CTG9 payload. E6 remains unchanged.
+
+Expose `getSyncIntegrityRejection(identity: SyncIntegrityRejectionIdentity)` on
+the service, returning `Promise<SyncIntegrityRejection>`. The identity is the
+existing attempt address `{ deviceId, deviceBatchId, queueItemId }`, scoped by
+the trusted current tenant, not a fabricated UUID or canonical queue identity.
+The record includes that address, `tenantId`, `idempotencyKey`, the submitted
+`receivedPayloadHash` verbatim, actual `rejectedAt` and fixed
+`errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY'`. `storedPayloadHash` and
+`originalQueueItemId` appear only when the original stored evidence supplies
+them. A new-key rejection remains readable without a canonical queue row or
+invented canonical hash. Preserve the original attempt instant on repeated reads.
+No read applies effects or creates evidence. Missing/other-tenant attempts return
+service error `OFFLINE_SYNC_INTEGRITY_REJECTION_NOT_FOUND` (404); the store port
+returns null. Both shipped stores implement the additive optional durable-store
+port; a custom store without it refuses with
+`OfflineSyncConfigurationError('getSyncIntegrityRejection')`. This introduces
+no HTTP route or separate evidence table.
 
 ### D4 — Nullable shifts and mandatory single active durable reservation
 

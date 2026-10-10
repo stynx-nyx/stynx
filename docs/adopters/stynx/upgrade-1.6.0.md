@@ -41,13 +41,32 @@ E6 and CTG9 remain separate. In CTG9, default initial materialization is still
 `received`; select `initialQueueStatus: 'pending'` only when the host needs that
 vocabulary. The same batch still applies its items; there is no new worker.
 Existing closed batches keep exact response bytes and fingerprints.
+Apply offline migration `0005_initial_queue_status.sql`: the first-created mode
+is persisted per batch. Resume and lease takeover use that original mode even
+after module configuration changes; old batches default to `received` without
+rewriting their hashes or item states.
 
 Generate payload hashes using the canonical helper or a documented consumer
-`payloadHashPort`. A well-formed but incorrect hash now rejects before effects;
+`payloadHashPort`. The producer helpers are `canonicalOfflineSyncPayload` and
+`canonicalOfflineSyncPayloadHash`. Object keys sort recursively by UTF-16 order,
+finite numbers use JSON encoding (`-0` becomes `0`), arrays keep their order,
+and all strings/keys require valid Unicode. Supply plain JSON objects only;
+cycles, accessors, symbols, non-finite numbers, sparse/extended arrays and other
+ambiguous values refuse. A well-formed but incorrect hash now rejects before effects;
 do not reuse arbitrary placeholder hashes. The default hashes canonical JSON of
 `payloadJson`. Pre-apply detection, when configured, runs on the item transaction
 before numbering/domain/event effects and supplies stable receipt/suspicion/pair
-context to the applier. The host decides policy; a request cannot waive it.
+context to the applier. Trusted `concurrencyApplication: 'apply' | 'defer'`
+defaults to `defer` for effective pre-apply suspicion. A request cannot waive
+it; existing post-apply detection stays effective.
+
+Use `getSyncIntegrityRejection({ deviceId, deviceBatchId, queueItemId })` to
+read raw rejection provenance even when no canonical queue item exists.
+The getter preserves the received hash and actual rejection instant; optional
+original hash/identity appear only when stored evidence supplies them. Missing
+attempts return `OFFLINE_SYNC_INTEGRITY_REJECTION_NOT_FOUND` (404). Custom
+durable stores must implement the optional read port before callers use it;
+unsupported stores fail configuration instead of fabricating a record.
 
 Handle nullable CTG9 shifts and `OFFLINE_SYNC_ACTIVE_RESERVATION` (409).
 Single-active admission per tenant/device/shift is mandatory; null and the old
