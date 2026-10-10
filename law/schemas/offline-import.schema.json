@@ -771,8 +771,16 @@
         "declared_keys": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/text"
-          }
+            "anyOf": [
+              {
+                "$ref": "#/$defs/text"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": "Original ordered declarations: explicit string keys or null for omitted legacy item keys. Repeated nulls are valid distinct item declarations; duplicate nonnull keys are refused by semantic validation."
         },
         "status": {
           "enum": ["open", "closed", "legacy_closed_unverified"]

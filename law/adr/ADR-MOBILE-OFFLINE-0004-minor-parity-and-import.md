@@ -388,6 +388,16 @@ COMMITTED transaction, with full visibility and fixed-order ACCESS EXCLUSIVE
 locks. The public `verifyOfflineStorage` remains read-only. No application-role
 or arbitrary-SQL import seam is admitted.
 
+Preserve historical batch `declared_keys` as ordered `(string | null)[]`:
+repeated null declarations are valid separate legacy items; duplicate nonnull
+keys refuse. For verified archive matching, bind each null to a distinct actual
+source queue/attempt/receipt and persisted legacy-derived key while the original
+ACK item's supplied key remains absent. Nonnull supplied keys match exact
+source declarations and receipt identities. Never fabricate keys, collapse null
+multiplicity or rewrite historical fingerprints. Completed ACK shape, original
+org-unit/agent, optional actual platform context and valid HTTP header bindings
+follow the exact storage/import contract before independent verification.
+
 Export `parseOfflineImportManifest(text: string): OfflineImportManifest` for
 strict duplicate-aware raw JSON admission before the same closed/legal/static
 manifest validation. Duplicate decoded property names at every depth, including

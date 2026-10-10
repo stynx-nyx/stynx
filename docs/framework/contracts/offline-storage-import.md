@@ -162,6 +162,29 @@ fence fact. Generation UUIDs identify the new maintenance fence operation, not
 an imported business event. Retain valid existing fence rows. Their catalog and
 mixed-origin behavior remain part of verification.
 
+### Historical nullable item declarations
+
+`OfflineImportBatchesRow.declared_keys` is `readonly (string | null)[]`, matching
+the actual durable batch's original ordered input declarations. Null represents
+an omitted original item `idempotencyKey`, not a missing source record. Preserve
+array order and repeated null entries exactly. Semantic validation rejects
+repeated nonnull keys; it must not reject repeated nulls or collapse the array
+into a set. Do not replace a null declaration with a derived receipt key or
+rewrite the historical context/transport fingerprint.
+
+For archive identity, each null occurrence must match one distinct source
+queue/attempt/receipt identity within the same tenant/device/batch, with its
+actual persisted `stynx:legacy:v1:*` derived key and no supplied `idempotencyKey`
+on the original ACK item. Preserve that absence. Require one-to-one item/key
+coverage and the original declaration multiplicity; a null is never an item
+identity, a wildcard or permission to reuse another item's evidence. Source
+records and independent proof must establish the binding; array position alone
+or a guessed/currently recomputed legacy resolver value is insufficient. Distinct
+legacy items require distinct actual derived keys. A nonnull declaration instead
+requires the ACK item's supplied key to match that exact declaration and stored
+item/receipt key. Missing, extra, ambiguous, aliased or mismatched items refuse;
+never fabricate a caller key to admit genuine history.
+
 ## Exclusive owner transaction and atomic replay
 
 The consumer stops source/target ordinary writers and supplies one writable
@@ -248,6 +271,27 @@ one archive may address a batch; it must match that batch's source response fact
 and transported identity. Do not filter forbidden headers away to make evidence
 pass. Validate the existing replayable-header rules, JSON ACK envelope/status,
 tenant/batch/receipt identity and request/transport binding independently.
+
+The supported archived response is a completed CTG9 ACK: HTTP 201, matching
+batch ID and receipt device/batch/sequence, `receipt.status: 'closed'`,
+`receipt.responseStatus: 201`, `receipt.responseBodyBytes: null` and an object of
+string response headers. Null inner body is the genuine first-writer shape;
+the outer archived bytes remain the actual complete response, not a recursively
+embedded copy. Require nonnegative safe accepted/duplicate counts, duplicates
+not greater than accepted, exact item/receipt count and unique queue identities,
+and exact conflict-item coverage. Each item binds source tenant/device/org-unit/
+agent, payload hash and actual outcome/context/receipt evidence. Optional `stynx`
+may be absent when absent in the source; do not invent it or reject solely for
+that absence. Where present it must match actual source platform context.
+Supplied item keys and omitted-key legacy items follow the one-to-one rules above.
+
+Header names must be valid HTTP tokens and case-insensitively unique. Values
+must be accepted by the actual HTTP adapter's header-value validation; reject
+CR/LF/NUL, invalid control/unrepresentable values and forbidden replay headers.
+Do not filter or coerce invalid headers into a passing archive. Inner receipt
+header bindings must agree with the corresponding archived replay headers;
+current replay/correlation markers keep their existing separately applied rules.
+These are source/shape checks before independent proof, not substitutes for it.
 
 `OfflineArchiveVerificationPort` receives the frozen archive plus context
 `{ source, manifestSha256, mappingSha256, batch, transportKeys }`; it may read
