@@ -138,7 +138,15 @@ export class StynxAuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing STYNX bearer token');
     }
     const token = authorization.slice('Bearer '.length).trim();
-    const claims = await this.validator.validate(token);
+    let claims: Awaited<ReturnType<StynxJwtValidator['validate']>>;
+    try {
+      claims = await this.validator.validate(token);
+    } catch (error) {
+      if (error instanceof InvalidCredentialError) {
+        throw new UnauthorizedException('Invalid STYNX bearer token');
+      }
+      throw error;
+    }
     const sessionService = this.moduleRef.get(SessionService, { strict: false });
     if (sessionService) {
       const session = await sessionService.getActive(claims.sid);

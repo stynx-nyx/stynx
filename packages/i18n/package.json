@@ -30,8 +30,11 @@
     "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "dependencies": {
+    "@stynx-nyx/auth": "workspace:*",
+    "@stynx-nyx/contracts": "workspace:*",
     "@stynx-nyx/core": "workspace:*",
     "@stynx-nyx/data": "workspace:*",
+    "@stynx-nyx/idempotency": "workspace:*",
     "intl-messageformat": "^11.2.8",
     "zod": "^4.3.6"
   },

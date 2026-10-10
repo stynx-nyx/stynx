@@ -29,21 +29,20 @@ import { StynxI18nModule } from '@stynx-nyx/i18n';
 
 StynxI18nModule.forRoot({
   defaultLocale: 'pt-BR',
-  fallbackChain: ['pt-BR', 'en'],
-  catalogSource: { kind: 'package', path: './catalogs' },
+  workspaceRoot: process.cwd(),
 });
 ```
 
 ```ts
-import { TranslationService } from '@stynx-nyx/i18n';
+import { LocaleService } from '@stynx-nyx/i18n';
 
 @Injectable()
 export class NotificationService {
-  constructor(private readonly t: TranslationService) {}
+  constructor(private readonly locale: LocaleService) {}
 
   async notify(userId: string, count: number) {
     // ICU plural: "{count, plural, one {# message} other {# messages}}"
-    const text = await this.t.translate('inbox.summary', { count });
+    const text = this.locale.t('inbox.summary', { count });
     // ... send
   }
 }
@@ -53,43 +52,57 @@ export class NotificationService {
 
 ### Modules
 
-| Export            | Signature                             | Description                                                                    |
-| ----------------- | ------------------------------------- | ------------------------------------------------------------------------------ |
-| `StynxI18nModule` | `.forRoot(options: StynxI18nOptions)` | Registers catalog service, locale resolver, error translator, admin endpoints. |
+| Export            | Signature                                    | Description                                                                              |
+| ----------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `StynxI18nModule` | `.forRoot(options?: StynxI18nModuleOptions)` | Registers catalog service, locale resolver, error translator, protected admin endpoints. |
 
 ### Services / Injectables
 
-| Export                                  | Description                                                                                  |
-| --------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `TranslationService` (`CatalogService`) | `translate(key, params?)` — look up + ICU-format a message in the request's locale.          |
-| `LocaleService`                         | Resolve / read the active locale.                                                            |
-| `LocaleInterceptor`                     | Resolves the request's locale and writes it to `RequestContext`.                             |
-| `ErrorTranslatorService`                | Translates a `StynxError`'s `messageKey` into the caller's locale for the response envelope. |
-| `I18nAdminService`                      | Catalog management (used by the admin controller).                                           |
+| Export                   | Description                                                                                                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CatalogService`         | `translate(key, locale, vars?, tenantId?)` — synchronously look up and ICU-format a message.                                                                                                                             |
+| `LocaleService`          | Resolve / read the active locale.                                                                                                                                                                                        |
+| `LocaleInterceptor`      | Resolves the request's locale and writes it to `RequestContext`.                                                                                                                                                         |
+| `ErrorTranslatorService` | Translates a `StynxError`'s `messageKey` into the caller's locale for the response envelope.                                                                                                                             |
+| `I18nAdminService`       | `listTenantOverrides` / `updateTenantOverrides` use admitted tenant/actor context and restricted reader/app transactions. Existing `listOverrides` / `updateOverrides` require an already active internal SystemContext. |
 
 ### Endpoints (1 controller)
 
-| Method | Path    | Auth                  | Description                              |
-| ------ | ------- | --------------------- | ---------------------------------------- |
-| `GET`  | `/i18n` | bearer + `i18n:read`  | Fetch the catalog (or a locale's slice). |
-| `PUT`  | `/i18n` | bearer + `i18n:write` | Update catalog entries (admin).          |
+| Method | Path                       | Auth                  | Description                                                       |
+| ------ | -------------------------- | --------------------- | ----------------------------------------------------------------- |
+| `GET`  | `/_tenancy/i18n/overrides` | bearer + `i18n:read`  | Read the admitted tenant's override entries.                      |
+| `PUT`  | `/_tenancy/i18n/overrides` | bearer + `i18n:write` | Merge `{ locale, catalog }` into the admitted tenant's overrides. |
+
+Install the normal STYNX authentication and actor-context pipeline and grant the
+explicit permissions through tenant role bindings. Administration uses the
+verified request tenant and audit actor. Supplied tenant mismatches are refused
+before cache access or SQL. Tenant SQL uses independent transactions and refuses
+an existing held transaction; cache updates become visible after actual commit.
+Internal administration requires the caller to establish SystemContext first
+outside HTTP processing and to supply a compatible active tenant frame, if any.
+Public bootstrap locale resolution uses header/catalog/default fallback without
+tenant-specific SQL or cached overrides until the canonical tenancy proof port
+reports verified or protected admission for the actual request and matching actor.
+A nominal public tenant context does not qualify. Mount the canonical tenancy
+interceptor before locale resolution to make admitted tenant preferences available.
 
 ### Types / Interfaces
 
-| Export             | Description                                                |
-| ------------------ | ---------------------------------------------------------- |
-| `StynxI18nOptions` | `forRoot()` options.                                       |
-| `CatalogSource`    | `{ kind: 'package' \| 'http' \| 'inline'; ... }`.          |
-| `LocaleResolution` | How the locale was determined (header / actor / fallback). |
+| Export                      | Description                                            |
+| --------------------------- | ------------------------------------------------------ |
+| `StynxI18nModuleOptions`    | Workspace and locale options for `forRoot()`.          |
+| `TenantOverrideUpdateInput` | `{ locale: string; catalog: Record<string, string> }`. |
 
 ## Configuration
 
-| Option          | Type                                 | Default               | Description                                                  |
-| --------------- | ------------------------------------ | --------------------- | ------------------------------------------------------------ |
-| `defaultLocale` | `string`                             | `'en'`                | Used when no locale resolves.                                |
-| `fallbackChain` | `string[]`                           | `[defaultLocale]`     | Resolution order when a key is missing in the active locale. |
-| `catalogSource` | `CatalogSource`                      | inline empty          | Where catalogs load from.                                    |
-| `localeSources` | `('header' \| 'actor' \| 'query')[]` | `['header', 'actor']` | Where the active locale comes from, in priority order.       |
+| Option          | Type     | Default         | Description                                                                |
+| --------------- | -------- | --------------- | -------------------------------------------------------------------------- |
+| `workspaceRoot` | `string` | `process.cwd()` | Root containing `packages/*/i18n/*.json` and `packages-web/*/i18n/*.json`. |
+| `defaultLocale` | `string` | `'pt-BR'`       | Ensures this locale exists in the aggregated catalog alongside `en-US`.    |
+
+Resolution preserves an active request locale, then a supported Accept-Language
+entry, then the admitted tenant's stored locale, then `pt-BR` when available or
+the first supported locale. Translation falls back to `en-US`, then the key.
 
 ## Examples
 
@@ -107,12 +120,12 @@ throw new StynxError('Order not found', {
 ### Example 2 — ICU plural
 
 ```json
-// catalogs/pt-BR.json
+// packages/my-feature/i18n/pt-BR.json
 { "inbox.summary": "{count, plural, one {# mensagem} other {# mensagens}}" }
 ```
 
 ```ts
-await this.t.translate('inbox.summary', { count: 3 });
+this.locale.t('inbox.summary', { count: 3 }, 'pt-BR');
 // → "3 mensagens"
 ```
 
@@ -120,8 +133,8 @@ await this.t.translate('inbox.summary', { count: 3 });
 
 ```ts
 StynxI18nModule.forRoot({
-  catalogSource: { kind: 'package', path: './catalogs' },
-  fallbackChain: ['pt-BR', 'en'],
+  workspaceRoot: process.cwd(),
+  defaultLocale: 'pt-BR',
 });
 ```
 
@@ -149,8 +162,11 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 ### Runtime dependencies
 
+- `@stynx-nyx/auth`: `workspace:*`
+- `@stynx-nyx/contracts`: `workspace:*`
 - `@stynx-nyx/core`: `workspace:*`
 - `@stynx-nyx/data`: `workspace:*`
+- `@stynx-nyx/idempotency`: `workspace:*`
 - `intl-messageformat`: `^11.2.8`
 - `zod`: `^4.3.6`
 

@@ -1389,12 +1389,21 @@ importers:
       '@nestjs/core':
         specifier: ^11.1.19
         version: 11.2.3(@nestjs/common@11.2.3(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.2.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@stynx-nyx/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@stynx-nyx/core':
         specifier: workspace:*
         version: link:../core
       '@stynx-nyx/data':
         specifier: workspace:*
         version: link:../data
+      '@stynx-nyx/idempotency':
+        specifier: workspace:*
+        version: link:../idempotency
       intl-messageformat:
         specifier: ^11.2.8
         version: 11.2.14
