@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "meta": {
-    "last_updated": "2026-10-10T22:55:10.651Z",
+    "last_updated": "2026-10-10T23:31:06.441Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -64,7 +64,8 @@
       "STYNX 1.6.0 Architect corpus correction binds all 16 tracked reference API .e2e.ts system suites and 13 .wiring-spec.ts package-local suites admitted by ADR-TEST-TAXONOMY-2026-06-11 D2/D4 and their actual runner configurations. Adds the exact trace-discovery regression and endpoint-distribution sensors, refreshes strengthened strict k6 assertions, and retains every previous binding/relationship. Functional readonly rollback and statistical reconstruction do not establish complete nominal HTTP performance or candidate custody.",
       "STYNX 1.6.0 Architect rebind preserves every prior executable relationship and binds protected i18n tenant administration, independent transaction/cache publication, actual HTTP provenance/error isolation, standalone constructor compatibility, the conditional quota ledger and published DEVAI 2.4.0 adoption assertions. No qualifying HTTP performance or overall audit PASS is established by these bindings.",
       "STYNX 1.6.0 Architect binds strict performance-document mirroring and all baseline archive/JSON, identity/transport and collector regression projections. Existing corpus relationships, gate mappings and assertion sites remain unchanged. Controlled transport fixtures do not establish authenticated live acquisition, exact historical attempt provenance, complete endpoint performance or overall audit PASS.",
-      "STYNX 1.6.0 Architect rebinds six existing tenancy/offline-import/reference-SSE assertion projections after independently verified restricted-reader admission, held-connection refusal and real authenticated HTTP fixtures. Every existing corpus/invariant relationship and gate obligation is retained. Installed i18n eight-tarball functional acceptance remains separately candidate-bound; these bindings do not confer HTTP performance, provider, publication or overall audit PASS."
+      "STYNX 1.6.0 Architect rebinds six existing tenancy/offline-import/reference-SSE assertion projections after independently verified restricted-reader admission, held-connection refusal and real authenticated HTTP fixtures. Every existing corpus/invariant relationship and gate obligation is retained. Installed i18n eight-tarball functional acceptance remains separately candidate-bound; these bindings do not confer HTTP performance, provider, publication or overall audit PASS.",
+      "STYNX 1.6.0 Architect binding preserves all existing invariant relationships and assertion sites after preflight test hygiene, and adds the private reference bootstrap orchestration/Helmet/CORS/startup regressions. Explicit unit ports do not qualify the full AppModule, real provider effects, source/build custody or HTTP performance; unchanged projection bindings remain byte-identical."
     ]
   },
   "invariants": [
@@ -3137,7 +3138,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 101,
-      "assertion_digest_sha256": "31039f320366d3b8ec659ad1cf6aad138c5fba3dfd671116467322ac382e3558"
+      "assertion_digest_sha256": "07875b1ef7e075c75d32462762b8e9f0767b86c8c0f948d2aa8cf5d75455e1b2"
     },
     {
       "path": "packages/i18n/test/integration/i18n.module.spec.ts",
@@ -5323,7 +5324,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 87,
-      "assertion_digest_sha256": "a3225f1672dc9397ba569f9c8e589c842149543039f426eaa5029616b099ff95"
+      "assertion_digest_sha256": "3fd89e722465f628f0a23992065a8963e7e42735afb68b868374a68206cae4fb"
     },
     {
       "path": "packages/offline-sync/test/unit/ctg9-parity.spec.ts",
@@ -6481,7 +6482,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 3,
-      "assertion_digest_sha256": "15bae48695e39c3bc9cc2f02a5329e82be63c64327d72d6625441df9b064b29f"
+      "assertion_digest_sha256": "45b75f00272095110bf961ce918668721c94d8509c791040b6c9d06847f174cd"
     },
     {
       "path": "packages/i18n/test/unit/tenant-boundary.spec.ts",
@@ -6497,7 +6498,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 88,
-      "assertion_digest_sha256": "dc1e6074441da7e223843560e693ddad75ec866ceeaa2bc10f4d8dd8be2e51b1"
+      "assertion_digest_sha256": "9e7105bfba4aebbacb4babddef17e7d6482fcfe6ab36574a5ebae431d18d746a"
     },
     {
       "path": "test/scripts/docs-content-sync.test.mjs",
@@ -6529,7 +6530,15 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 41,
-      "assertion_digest_sha256": "82401cf03f3fdf7e3e63977f586e6507a877debdf4ac188dd4bdf677a13037ea"
+      "assertion_digest_sha256": "3e4c61ee3340d24bd970a216d12acacf3d9b93740f18ec39593f7ed2b022ae24"
+    },
+    {
+      "path": "test/scripts/reference-bootstrap.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 74,
+      "assertion_digest_sha256": "7ef55e08d2e4739916b3f01f39bb5e8693e8ceba07efe025f495cfa332000654"
     }
   ],
   "suites": {
