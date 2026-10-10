@@ -15,3 +15,5 @@ export { OFFLINE_SYNC_CONSUMER_ATTRIBUTES_MAX_BYTES } from './stynx-context';
 export * from './stynx-offline-sync.context';
 export * from './tokens';
 export * from './types';
+
+export { canonicalOfflineSyncPayload, canonicalOfflineSyncPayloadHash } from './payload-integrity';

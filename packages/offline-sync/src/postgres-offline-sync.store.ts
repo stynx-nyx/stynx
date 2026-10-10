@@ -9,6 +9,13 @@ import {
   OfflineSyncUpgradeRequiredError,
 } from './errors';
 import { rangeUnavailableReason, reservationFingerprint } from './listing';
+import { activeReservationError, legacyReservation } from './reservation-admission';
+import {
+  lockReservationScope,
+  pgReserveDurableNumbering,
+  pgReplayDurableReservation,
+  pgCancelDurableReservation,
+} from './postgres-reservations';
 import {
   pgListBatches,
   pgListConflictActions,
@@ -25,6 +32,7 @@ import {
 import {
   pgGetBatch,
   pgGetItem,
+  pgGetIntegrityRejection,
   pgTransition,
   pgConsumption,
   pgReconcile,
@@ -45,6 +53,7 @@ import type {
   TrustedOfflineSyncScope,
   OfflineSyncDurableStore,
   CTG9NumberingReservation,
+  CTG9ReserveNumberingInput,
   ReconcileNumberingInput,
   ReconcileNumberingResult,
   SettleNumberingInput,
@@ -55,6 +64,8 @@ import type {
   SubmitSyncBatchOptions,
   SyncBatchReceipt,
   SyncItemReceipt,
+  SyncIntegrityRejection,
+  SyncIntegrityRejectionIdentity,
   OfflineSyncConflictResolver,
   ListSyncBatchReceiptsInput,
   ListSyncConflictActionsInput,
@@ -90,12 +101,12 @@ interface NumberingReservationRow {
   series: string;
   agent_id: string;
   device_id: string;
-  shift_id: string;
+  shift_id: string | null;
   start_number: string | number;
   end_number: string | number;
   next_number: string | number;
   valid_until: string | Date;
-  status: NumberingReservation['status'];
+  status: CTG9NumberingReservation['status'];
 }
 
 interface QueueItemRow {
@@ -199,6 +210,13 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
   ): Promise<SyncBatchReceipt | null> {
     return pgGetBatch(this.database, scope, deviceId, deviceBatchId);
   }
+  getSyncIntegrityRejection(
+    scope: TrustedOfflineSyncScope,
+    identity: SyncIntegrityRejectionIdentity,
+  ): Promise<SyncIntegrityRejection | null> {
+    return pgGetIntegrityRejection(this.database, scope, identity);
+  }
+
   getSyncItemReceipt(scope: TrustedOfflineSyncScope, key: string): Promise<SyncItemReceipt | null> {
     return pgGetItem(this.database, scope, key);
   }
@@ -454,6 +472,7 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
         const prior = await this.keyedReservation(trx, scope, key, fingerprint!);
         if (prior) return prior;
       }
+      await lockReservationScope(trx, scope, input);
       const result = await trx.query<NumberingRangeRow>(
         `select id, tenant_id, org_unit_id, entity_type, series, start_number,
                 end_number, next_number, status,
@@ -565,6 +584,31 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
     });
   }
 
+  reserveDurableNumbering(
+    scope: TrustedOfflineSyncScope,
+    input: CTG9ReserveNumberingInput,
+    now: string,
+    defaultValidUntil: string,
+  ): Promise<CTG9NumberingReservation> {
+    return pgReserveDurableNumbering(this.database, scope, input, now, defaultValidUntil);
+  }
+
+  replayDurableNumberingReservation(
+    scope: TrustedOfflineSyncScope,
+    input: CTG9ReserveNumberingInput,
+  ): Promise<CTG9NumberingReservation | null> {
+    return pgReplayDurableReservation(this.database, scope, input);
+  }
+
+  cancelDurableNumberingReservation(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: CancelNumberingReservationInput,
+    now: string,
+  ): Promise<CTG9NumberingReservation> {
+    return pgCancelDurableReservation(this.database, scope, id, input, now);
+  }
+
   private async keyedReservation(
     trx: Transaction,
     scope: TrustedOfflineSyncScope,
@@ -611,6 +655,7 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
           `Numbering reservation ${reservationId} was not found.`,
         );
       }
+      this.mapReservation(row);
       if (ctg9 && row.status === 'cancelled') return this.mapReservation(row);
       if (row.status !== 'reserved') {
         throw new OfflineSyncError(
@@ -847,6 +892,7 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
     try {
       return await this.database.tx(fn);
     } catch (error) {
+      if ((error as { code?: string }).code === 'STY44') throw activeReservationError();
       if (['42703', '42P01'].includes((error as { code?: string }).code ?? ''))
         throw new OfflineSyncUpgradeRequiredError();
       throw error;
@@ -885,7 +931,7 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
   }
 
   private mapReservation(row: NumberingReservationRow): NumberingReservation {
-    return {
+    return legacyReservation({
       reservationId: row.id,
       rangeId: row.range_id,
       tenantId: row.tenant_id,
@@ -900,7 +946,7 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
       nextNumber: Number(row.next_number),
       validUntil: new Date(row.valid_until).toISOString(),
       status: row.status,
-    };
+    });
   }
 
   private mapQueueItem(row: QueueItemRow): StoredSyncQueueItem {

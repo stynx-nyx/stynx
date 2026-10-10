@@ -1,4 +1,4 @@
-/** `pending` is entered only by `retry_after_correction` in CTG9 mode (ADR-MOBILE-OFFLINE-0003 D1). */
+/** CTG9 pending supports correction retries and opt-in initial materialization (ADR-MOBILE-OFFLINE-0004 D1). */
 export type OfflineSyncQueueStatus = 'received' | 'applied' | 'conflict' | 'rejected' | 'pending';
 
 /** Opaque consumer attributes (ADR-MOBILE-OFFLINE-0003 D3.3): a size-bounded JSON object stored and returned verbatim. */
@@ -30,6 +30,8 @@ export interface OfflineSyncStynxContext {
   readonly relatedQueueItemId?: string;
   readonly retryable?: boolean;
   readonly consumerAttributes?: OfflineSyncConsumerAttributes;
+  readonly concurrencySuspected?: boolean;
+  readonly concurrentPairs?: readonly OfflineSyncConcurrentPair[];
 }
 
 export type OfflineSyncConflictResolutionStrategy =
@@ -221,9 +223,13 @@ export interface StynxOfflineSyncModuleOptions {
   readonly mountControllers?: boolean;
   readonly now?: () => string;
   readonly reservationTtlMs?: number;
+  /** Initial CTG9 keyed-item state, captured once per durable batch. */
+  readonly initialQueueStatus?: 'received' | 'pending';
   readonly policyResolver?: OfflineSyncPolicyResolver;
   readonly agentResolver?: OfflineSyncAgentResolver;
   readonly itemApplier?: OfflineSyncItemApplier;
+  readonly payloadHashPort?: OfflineSyncPayloadHashPort;
+  readonly preApplyDetector?: OfflineSyncConcurrencyDetector;
   readonly eventPort?: OfflineSyncEventPort;
   readonly concurrencyDetector?: OfflineSyncConcurrencyDetector;
   readonly handoffPort?: OfflineSyncHandoffPort;
@@ -242,6 +248,8 @@ export interface OfflineSyncPolicy {
   reservationTtlMs?: number;
   concurrencyWindowMinutes?: number | null;
   maxBatchItems?: number | null;
+  /** Trusted host decision for effective pre-apply suspicion; defaults to defer. */
+  concurrencyApplication?: 'apply' | 'defer';
 }
 export interface OfflineSyncPolicyResolver {
   resolve(input: {
@@ -277,6 +285,8 @@ export interface OfflineSyncItemContext extends TrustedOfflineSyncScope {
   readonly now: string;
   /** Stable item receipt identifier: the tenant-scoped storage key of the item receipt (UPS-OFS-09). */
   readonly receiptId?: string;
+  readonly concurrencySuspected?: boolean;
+  readonly concurrentPairs?: readonly OfflineSyncConcurrentPair[];
 }
 export interface OfflineSyncApplyResult {
   readonly serverEntityId: string;
@@ -289,6 +299,10 @@ export interface OfflineSyncEvent {
   readonly idempotencyKey: string;
   readonly payload: unknown;
   readonly metadata?: Record<string, unknown> | null;
+}
+export interface OfflineSyncPayloadHashPort {
+  /** Compute from documented effect-bearing bytes independently of the submitted digest. */
+  hash(item: CTG9SyncBatchItemInput, context: OfflineSyncItemContext): Promise<string>;
 }
 export interface OfflineSyncItemApplier {
   apply(
@@ -348,7 +362,11 @@ export interface OfflineSyncConflictResolver {
   ): Promise<readonly OfflineSyncConflictResolutionStrategy[]>;
 }
 export type NumberingReservationStatus = NumberingReservation['status'] | 'blocked';
-export interface CTG9NumberingReservation extends Omit<NumberingReservation, 'status'> {
+export interface CTG9ReserveNumberingInput extends Omit<ReserveNumberingInput, 'shiftId'> {
+  readonly shiftId: string | null;
+}
+export interface CTG9NumberingReservation extends Omit<NumberingReservation, 'status' | 'shiftId'> {
+  readonly shiftId: string | null;
   readonly status: NumberingReservationStatus;
 }
 export interface NumberingConsumptionEntry {
@@ -417,7 +435,44 @@ export interface DurableBatchExecutionOptions extends SubmitSyncBatchOptions {
   readonly ports: StynxOfflineSyncModuleOptions;
   readonly transport: SubmitSyncBatchOptions;
 }
+/** Stable address of a rejection attempt, even when no canonical queue item exists. */
+export interface SyncIntegrityRejectionIdentity {
+  readonly deviceId: string;
+  readonly deviceBatchId: string;
+  readonly queueItemId: string;
+}
+export interface SyncIntegrityRejection extends SyncIntegrityRejectionIdentity {
+  readonly tenantId: string;
+  readonly idempotencyKey: string;
+  readonly receivedPayloadHash: string;
+  readonly storedPayloadHash?: string;
+  readonly originalQueueItemId?: string;
+  readonly rejectedAt: string;
+  readonly errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY';
+}
+
 export interface OfflineSyncDurableStore extends OfflineSyncStore {
+  reserveDurableNumbering?(
+    scope: TrustedOfflineSyncScope,
+    input: CTG9ReserveNumberingInput,
+    now: string,
+    defaultValidUntil: string,
+  ): Promise<CTG9NumberingReservation>;
+  replayDurableNumberingReservation?(
+    scope: TrustedOfflineSyncScope,
+    input: CTG9ReserveNumberingInput,
+  ): Promise<CTG9NumberingReservation | null>;
+  cancelDurableNumberingReservation?(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: CancelNumberingReservationInput,
+    now: string,
+  ): Promise<CTG9NumberingReservation>;
+  getSyncIntegrityRejection?(
+    scope: TrustedOfflineSyncScope,
+    identity: SyncIntegrityRejectionIdentity,
+  ): Promise<SyncIntegrityRejection | null>;
+
   blockNumberingReservation(
     scope: TrustedOfflineSyncScope,
     id: string,
