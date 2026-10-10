@@ -379,7 +379,11 @@ describe('I18nController API error matrix', () => {
                 code: 'INDEPENDENT_TRANSACTION_CONNECTION',
               });
               const before = fixture.settingsQueries.length;
-              await expect(catalog.primeTenantOverrides(TENANT_ID)).resolves.toBeUndefined();
+              await expect(
+                catalog
+                  .primeTenantOverrides(TENANT_ID)
+                  .then(() => catalog.translate('title', 'pt-BR', {}, TENANT_ID)),
+              ).resolves.toBe('Titulo atualizado');
               expect(catalog.translate('title', 'pt-BR', {}, TENANT_ID)).toBe('Titulo atualizado');
               expect(fixture.settingsQueries).toHaveLength(before);
             },

@@ -76,17 +76,15 @@ describe('UPS-OFS-05/-09/-10/-11/-12 PostgreSQL reservation idempotency, listing
       } as StynxOfflineSyncModuleOptions,
     );
   const run = <T>(tenantId: string, fn: () => Promise<T>): Promise<T> =>
-    moduleRef
-      .get(RequestContextMutator)
-      .runWithRequestContext(
-        {
-          requestId: `ofs-317-${Math.random()}`,
-          tenantId,
-          actorId: `actor-${tenantId.slice(-2)}`,
-          startedAt: new Date(now),
-        },
-        fn,
-      );
+    moduleRef.get(RequestContextMutator).runWithRequestContext(
+      {
+        requestId: `ofs-317-${Math.random()}`,
+        tenantId,
+        actorId: `actor-${tenantId.slice(-2)}`,
+        startedAt: new Date(now),
+      },
+      fn,
+    );
   const transport = (key: string) => ({
     transportIdempotencyKey: key,
     method: 'POST' as const,

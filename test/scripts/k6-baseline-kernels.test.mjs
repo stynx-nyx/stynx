@@ -460,7 +460,7 @@ test('strict JSON admits ordinary root values and all standard string escapes wi
     'false',
     '[]',
     '{}',
-    '"\\b\\f\\n\\r\\t\\\\\\/\\\""',
+    '"\\b\\f\\n\\r\\t\\\\\\/\\""',
     '{"toString":3,"valueOf":4}',
     '-0',
     '0.125',

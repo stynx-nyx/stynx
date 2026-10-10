@@ -543,6 +543,7 @@ test('arrays reject hidden iterators, sparse entries, extra properties and alter
     const iterator = input();
     iterator[key][Symbol.iterator] = function* () {
       calls++;
+      yield* [];
     };
     assert.throws(() => reconstructWeightedSlidingQuota(iterator), /quota/iu);
     const sparse = input();

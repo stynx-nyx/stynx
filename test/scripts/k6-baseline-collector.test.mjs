@@ -259,7 +259,9 @@ test('actual collector acquires complete two-page populations and exact legacy b
   }
   assert.deepEqual(
     result.receipt.responses,
-    result.responses.map(({ bytes: _bytes, ...record }) => record),
+    result.responses.map((response) =>
+      Object.fromEntries(Object.entries(response).filter(([key]) => key !== 'bytes')),
+    ),
   );
   for (const key of [
     'firstSeedAllowed',
