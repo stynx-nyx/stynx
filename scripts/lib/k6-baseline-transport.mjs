@@ -134,9 +134,18 @@ export function createGithubBaselineTransport(token, fetchImpl = globalThis.fetc
     const contentType = response.headers.get('content-type');
     if (contentType === null || !/^application\/(?:vnd\.github\+)?json(?:;|$)/iu.test(contentType))
       reject(response, 'GitHub API response is not JSON');
-    const bytes = await readBody(response, MAX_JSON_BYTES, (abort) => finish(response, abort));
+    const bytes = await readBody(response, MAX_JSON_BYTES, (abort) => {
+      if (abort) finish(response, true);
+    });
+    let value;
+    try {
+      value = parseBaselineJson(bytes);
+    } catch {
+      reject(response, 'GitHub API JSON is invalid or ambiguous');
+    }
+    finish(response, false);
     return Object.freeze({
-      value: parseBaselineJson(bytes),
+      value,
       bytes,
       sha256: sha256(bytes),
       endpoint,
