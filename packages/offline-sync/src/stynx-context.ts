@@ -63,7 +63,10 @@ export function recordedAttempts(stored: Record<string, unknown> | null | undefi
 
 /** SQL expression merging `$context` (host keys) and `$stynx` (platform members) into `column` without dropping existing keys. */
 export function mergeStynxSql(column: string, contextParam: string, stynxParam: string): string {
-  return `coalesce(${column},'{}'::jsonb) || coalesce(${contextParam}::jsonb,'{}'::jsonb) || jsonb_build_object('${stynxKey}',coalesce(${column}->'${stynxKey}','{}'::jsonb) || ${stynxParam}::jsonb)`;
+  return `coalesce(${column},'{}'::jsonb) || coalesce(${contextParam}::jsonb,'{}'::jsonb) ||
+    case when ${column} ? '${stynxKey}' or coalesce(${stynxParam}::jsonb,'{}'::jsonb) <> '{}'::jsonb
+      then jsonb_build_object('${stynxKey}',jsonb_build_object('version',1) || coalesce(${column}->'${stynxKey}','{}'::jsonb) || coalesce(${stynxParam}::jsonb,'{}'::jsonb))
+      else '{}'::jsonb end`;
 }
 
 /** D2 item 3: an open resolver result is returned without resolution, resolver and instant. */
