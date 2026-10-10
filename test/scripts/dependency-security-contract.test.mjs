@@ -538,3 +538,35 @@ for (const restriction of ['private', 'no-store', 'no-cache', 'vary-star']) {
     );
   });
 }
+
+for (const mismatch of ['url', 'host', 'vary', 'method']) {
+  test(`matching ETag 304 cannot reuse the old body across a different ${mismatch}`, () => {
+    const { value, request } = policy('public, max-age=60', {
+      headers: { etag: '"original"', vary: 'accept-language' },
+    });
+    const changed = { ...request, headers: { ...request.headers } };
+    if (mismatch === 'url') changed.url = 'https://cache.invalid/other';
+    if (mismatch === 'host') changed.headers.host = 'other.invalid';
+    if (mismatch === 'vary') changed.headers['accept-language'] = 'it';
+    if (mismatch === 'method') changed.method = 'POST';
+    const result = value.revalidatedPolicy(changed, {
+      status: 304,
+      headers: { etag: '"original"' },
+    });
+    assert.equal(result.matches, false);
+    assert.equal(result.modified, true);
+    assert.notEqual(result.policy, value);
+  });
+}
+
+test('same-resource HEAD with matching ETag may validate the existing GET representation', () => {
+  const { value, request } = policy('public, max-age=60', {
+    headers: { etag: '"original"', vary: 'accept-language', 'content-length': '17' },
+  });
+  const head = { ...request, method: 'HEAD' };
+  assert.equal(value.revalidationHeaders(head)['if-none-match'], '"original"');
+  const result = value.revalidatedPolicy(head, { status: 304, headers: { etag: '"original"' } });
+  assert.equal(result.matches, true);
+  assert.equal(result.modified, false);
+  assert.equal(result.policy.responseHeaders()['content-length'], '17');
+});
