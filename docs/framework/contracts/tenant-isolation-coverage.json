@@ -20,7 +20,8 @@
       "file": "test/db/offline-sync-pending-migration.spec.ts",
       "patterns": [
         "sync_conflict_actions",
-        "app_update: false, app_delete: false",
+        "app_update: false",
+        "app_delete: false",
         "policies: ['offline_tenant_isolation']",
         "code: '42501'"
       ]
