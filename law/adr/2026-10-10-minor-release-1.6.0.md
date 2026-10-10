@@ -78,6 +78,28 @@ fallback. Definitive null means nominal optional authentication or protected
 broader credential catch or new backend-to-sessions dependency. The existing
 membership-denial 403 contract remains mandatory.
 
+## Audit integration clarification — protected i18n administration
+
+The full audit mandate includes correcting the actual i18n administration
+boundary under `INV-RBAC-001` and the existing least-privilege/RLS contract.
+Accept the [i18n 1.6 administration contract](../../docs/framework/contracts/i18n-administration-1.6.md):
+preserve the actual override URLs, require verified authentication and explicit
+`i18n:read`/`i18n:write` permissions, and execute normal request reads/writes with
+tenant/actor-bound reader/app transactions. Locale interception on public
+bootstrap routes retains non-tenant fallback without tenant SQL or cache access
+when verified tenant/actor context is absent. Internal administration retains an
+explicit system-only port; no request method may create its own owner authority.
+
+Preserve exported APIs and legitimate internal callers through an explicit
+already-active SystemContext, with additive methods only where necessary to
+separate that capability from normal requests. Declare the actual auth and
+idempotency runtime dependencies, fixed-group minor changeset and generated
+package documentation. Independent Inspector evidence and later Architect API
+and assertion bindings remain required. No new public controller option is
+required unless a supported composition demonstrates that need; a mount opt-out,
+if added, defaults to mounting the protected controller. This clarification
+authorizes implementation and independent verification, not advance acceptance.
+
 ## Completion evidence
 
 Each issue closes only against its actual acceptance evidence, with upstream

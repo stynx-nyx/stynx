@@ -139,6 +139,50 @@ cases with their own expected effect count and full HTTP samples. Preserve real
 success/envelope/status semantics, business-agent versus audit-actor identities,
 second-tenant negative witnesses and restricted SQL actor/RLS observations.
 
+## Conditional weighted-window arithmetic
+
+The actual Redis store samples application `Date.now()` before asynchronous
+`evalSha`. Lua removes scores `<= now - W`, admits equality at capacity, and
+does not add a refused charge. It does not filter already-recorded scores greater
+than the current request's timestamp. Concurrent or delayed evaluations can
+therefore arrive out of timestamp order. For example, with W=100 ms, a charge
+sampled at 0 ms but evaluated after a charge sampled at 200 ms can leave both counted;
+an exact timestamp-window sweep alone would report at most one.
+
+Arithmetic must declare its assumptions rather than certify those assumptions.
+For a conservative bound, require an independently verified common,
+nondecreasing timebase and finite upper bound L from source timestamp sampling
+to backend evaluation, including queuing, clock uncertainty and incidental
+traffic. For evaluation time e, its sampled `now >= e-L`. Every retained prior
+charge then has source timestamp in `(e-(W+L), e]`. A sweep over each charge's
+inclusive source-timestamp bounds with width W+L gives a conservative upper
+bound; expire half-open eligibility intervals before equal-time additions.
+Keep the actual policy window W and uncertainty margin L distinct: the widened
+proof envelope does not change the backend policy. Bind bounds for setup,
+target and cleanup, actual effective buckets, costs and fresh initial state.
+HTTP dispatch bounds alone are not exact source timestamps; independently
+establish valid enclosing bounds and evaluation/clock assumptions.
+
+The store's member spelling combines the sampled timestamp with a per-instance
+sequence. It is not globally unique across instances; collisions can overwrite
+the recorded event/weight while incrementing the total twice, leaving residual
+charge after expiry. The arithmetic model also requires actual globally unique
+backend members per charge across all setup, target and incidental writers.
+Independently prove single-writer/member uniqueness, including sequence lifetime
+and clock behavior, or refuse this model. Unique producer charge IDs do not prove
+unique Redis members. No automatic assertion of this assumption or real store
+repair is authorized by the arithmetic helper contract.
+
+Unbounded delay, clock reversal, incomplete events, unverified timing assumptions
+or an incompatible limiter model leaves admission unresolved. A pure helper may
+report conditional maximum charge, margin and its stated assumptions; it cannot
+report complete admission, authenticated bucket identity or a standalone
+capacity/admission PASS. The separate presign fixed-window limiter is not the
+weighted Redis model and needs its own actual-policy proof. Prove the declared
+whole workload against all effective limiters before qualification; a later
+timing/capacity failure remains failed evidence, not permission to lower a load,
+discard events or enlarge a bound retrospectively to conceal a failed run.
+
 ## Calibration, custody and acceptance
 
 Capture diagnostic actual API/DB/Redis/provider request rates and latencies,

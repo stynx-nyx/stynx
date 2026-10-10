@@ -159,6 +159,72 @@ four existing k6 scenarios' failure budgets, checks, response classification,
 loads or thresholds. This is an explicit measured negative witness, not an
 exclusion, changed public status or advance runtime PASS.
 
+## Runtime custody and conditional quota reconstruction
+
+The complete producer uses a fresh owned worker with its trusted preloader
+installed before any owned application import. Bind the actual Node24 executable
+and use its supported synchronous
+[`node:module.registerHooks`](https://nodejs.org/download/release/v24.20.0/docs/api/module.html#moduleregisterhooksoptions)
+resolve/load interfaces rather than assuming a private CommonJS compile hook
+also covers every evaluated module. Refuse ambient preloads, transforms,
+compile-cache shortcuts and preexisting owned cache entries. Capture the actual
+resolved module closure and evaluated bytes, not merely a caller's source path
+and class name.
+
+Produce an independent fresh, nonincremental build receipt binding exact source,
+lockfile, manifests, compiler/options/configuration and toolchain inputs to
+emitted JavaScript and source maps. Include every actually resolved workspace
+output and runtime dependency; reference compilation can emit package source
+under its own output root while package exports resolve another output root.
+Refuse stale/unknown outputs, unbuilt TypeScript, path escapes, unsupported
+transforms and missing closure members. Maps and input hashes alone do not prove
+which bytes or class object were evaluated.
+
+For these supported roots, use verified explicit module exports for mounted
+constructors and inherited handler origins. Capture actual constructor and
+prototype property identities before Nest application creation; bind the source
+export declaration and fresh emitted export/class relation, then reconcile those
+same objects with actual Nest registration before/after initialization and
+measurement. Exporting a composition-owned private reference wrapper is an
+acceptable additive private-app change. Class-name matching, copied
+`Function.toString()` or a source-map claim is insufficient. Unresolved private,
+anonymous, replaced or decorated constructor/handler provenance is refused;
+general instrumentation of emitted application code is not authorized by this
+decision. Known framework registration observers must be narrowly bound and
+independently tested; they do not authorize arbitrary module-cache replacement.
+
+Reuse the real owned bootstrap configuration for all six supported roots,
+including normal authentication/permission guards, pipeline, real Helmet,
+CORS and body parsers. A reviewed additive observer receipt at the actual
+middleware factory-to-registration boundary may record the consumed options and
+returned callback identity. Match that actual identity and order to the Express
+stack, with exact dependency bytes/configuration and before/after consistency.
+Do not recognize security middleware by function text alone or replace it with
+a no-op. Unknown middleware, selector overlap, route reachability, implicit HEAD
+or OPTIONS remains explicit until independently closed. A verified build alone
+cannot promote an incomplete registration census to complete evidence.
+
+The i18n root must implement the accepted
+[protected tenant administration contract](../../docs/framework/contracts/i18n-administration-1.6.md).
+Privacy remains unresolved: its current unguarded controller, self-elevating
+owner service and default no-op Cognito adapter cannot qualify a protected real
+provider root. This decision invents neither privileged privacy scope nor
+provider approval. Bind the actual authorized privilege/provider contract and
+independent evidence before qualifying that root; it remains in the population.
+
+The Redis weighted limiter removes scores at or below `now - W`, refuses only
+when `current + cost > limit`, and does not charge refused attempts. Its source
+samples `Date.now()` before asynchronous backend evaluation, so evaluation order
+need not match timestamp order. A pure `(end-W, end]` arithmetic sweep is not
+unconditional proof of actual store capacity. Follow the conditional lag/timebase
+contract in the [supplemental workload](../../docs/performance/supplemental-endpoint-workload.md#conditional-weighted-window-arithmetic).
+Require independent actual backend member uniqueness as well: the store's
+timestamp/per-instance sequence can collide across writers and leave residual
+total charge after expiry. Producer charge IDs do not prove that property.
+The arithmetic kernel supplies no admission verdict, verified assumptions,
+bucket authentication or complete producer evidence. No new task/sensor schema
+field, load change, exclusion or threshold change follows from these contracts.
+
 ## Completion boundary
 
 Acceptance requires the reconciled closed roster, supported mounted compositions,
