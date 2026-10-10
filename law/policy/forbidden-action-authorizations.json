@@ -1405,6 +1405,12 @@
       "commit": "1a9fdf0f686703a7f5199bf2588b601c5038cf57",
       "authorized_by": "Owner",
       "reason": "Explicit Owner authorization on 2026-10-10 ('Authorize this exact CI receipt') for the DEVAI 2.3.2 registered upgrade regenerating .github/workflows/devai-main-observation.yml under ADR-DEVAI-ADOPTION-0017 decision 3: aligned action pins, per-commit concurrency without cancelling running observations, and a frozen dependency install with lifecycle scripts disabled. This receipt covers only that exact commit and CI action. Push, certification and publication remain held."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "a2c3739088c2e991a9810502695ebc0b77ee842c",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization on 2026-10-10 to proceed until complete 1.5.7 final publication, binding the previously approved DEVAI 2.3.2 registered upgrade CI action to its exact landed commit after the PR #370 rebase merge. The Architect verified that the landed workflow/configuration delta is byte-identical to original commit 1a9fdf0f686703a7f5199bf2588b601c5038cf57. Under ADR-DEVAI-ADOPTION-0017 decision 3, this covers only .github/workflows/devai-main-observation.yml action pins, per-commit concurrency without cancelling running observations, and frozen dependency installation with lifecycle scripts disabled. The original receipt remains preserved; this receipt covers only the exact landed commit and CI action."
     }
   ]
 }
