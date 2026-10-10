@@ -14,6 +14,7 @@ import { OutboxEventStreamSource } from '../../src/event-stream-source';
 import { packedStorageCli } from '../support/packed-storage-cli';
 import {
   createPostgresTestDatabase,
+  withPostgresCredentials,
   type PostgresTestDatabase,
 } from '../../../data/test/support/postgres';
 
@@ -817,14 +818,13 @@ describe('independently rendered consumer outbox storage (PostgreSQL)', () => {
       await fixture.admin.query(
         `alter role ${fixture.admin.escapeIdentifier(fixture.options.ownerRole!)} password ${fixture.admin.escapeLiteral(ownerPassword)}`,
       );
-      const ownerUrl = new URL(
+      const databaseUrl = withPostgresCredentials(
         fixture.postgres.appConnectionString(
           'packed-owner-secret-marker',
           fixture.options.ownerRole!,
         ),
+        { user: fixture.options.ownerRole!, password: ownerPassword },
       );
-      ownerUrl.password = ownerPassword;
-      const databaseUrl = ownerUrl.toString();
       const env = { ...process.env, STYNX_PACKED_STORAGE_URL: databaseUrl };
       const options = [
         '--owner-role',
@@ -882,7 +882,8 @@ describe('independently rendered consumer outbox storage (PostgreSQL)', () => {
         expect(result.stdout + result.stderr).not.toContain(databaseUrl);
         expect(result.stdout + result.stderr).not.toContain('packed-owner-secret-marker');
         expect(result.stdout + result.stderr).not.toContain('offline-secret-marker');
-        expect(result.stdout + result.stderr).not.toContain(new URL(databaseUrl).password);
+        expect(result.stdout + result.stderr).not.toContain(ownerPassword);
+        expect(result.stdout + result.stderr).not.toContain(encodeURIComponent(ownerPassword));
       }
       const unavailable = cli.run(['--database-url-env', 'STYNX_PACKED_STORAGE_URL', ...options], {
         ...env,

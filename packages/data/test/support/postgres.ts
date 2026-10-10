@@ -94,6 +94,14 @@ function connectionString(
 
 /** Rewrites a test connection string so the pool logs in as `role` (default `stynx_app`). */
 export function asAppRole(connectionString: string, role = TEST_APP_ROLE): string {
+  return withPostgresCredentials(connectionString, { user: role, password: roleLoginPassword() });
+}
+
+/** Rebinds explicit fixture credentials without changing the PostgreSQL endpoint. */
+export function withPostgresCredentials(
+  connectionString: string,
+  login: { readonly user: string; readonly password: string },
+): string {
   // WHATWG URL rejects PostgreSQL's empty-host Unix socket authority. Keep
   // that authority (and IPv6 hosts) intact instead of inventing a TCP host.
   const parts = /^(postgres(?:ql)?:\/\/)([^/?#]*)([^?#]*)(?:\?([^#]*))?(#.*)?$/u.exec(
@@ -108,14 +116,13 @@ export function asAppRole(connectionString: string, role = TEST_APP_ROLE): strin
   parameters.delete('user');
   parameters.delete('password');
   const remainingQuery = parameters.toString();
-  return `${scheme}${encodeURIComponent(role)}:${encodeURIComponent(roleLoginPassword())}@${host}${pathname}${remainingQuery ? `?${remainingQuery}` : ''}${fragment}`;
+  return `${scheme}${encodeURIComponent(login.user)}:${encodeURIComponent(login.password)}@${host}${pathname}${remainingQuery ? `?${remainingQuery}` : ''}${fragment}`;
 }
 
 /** Bootstrap only cluster roles; leave the fresh database migration ledger untouched. */
 async function bootstrapRoles(client: Client): Promise<void> {
   await client.query('begin');
   try {
-    await client.query(`select pg_advisory_xact_lock(hashtext('stynx_test_role_login'))`);
     // Execute the real immutable migration on this fixture database: its
     // current_database() grants must never target the admin database. These
     // grants are needed even when the cluster already has the shared roles.
@@ -137,16 +144,27 @@ async function bootstrapRoles(client: Client): Promise<void> {
  * cluster does not have yet (fresh cluster before `0001_roles.sql`) is skipped.
  */
 async function ensureRoleLogin(client: Client, role: string): Promise<void> {
+  await withRoleCatalogLock(client, () => setRoleLogin(client, role));
+}
+
+/** Caller holds the common admin-database lock over this shared catalog mutation. */
+async function setRoleLogin(client: Client, role: string): Promise<void> {
   const exists = await client.query('select 1 from pg_roles where rolname = $1', [role]);
   if (exists.rowCount === 0) return;
-  // Suites run in parallel against one cluster; serialize the shared catalog row.
+  await client.query(
+    `alter role ${client.escapeIdentifier(role)} with login password ${client.escapeLiteral(roleLoginPassword())}`,
+  );
+}
+
+async function withRoleCatalogLock<T>(client: Client, operation: () => Promise<T>): Promise<T> {
+  // Advisory locks are database-scoped. Every caller must use the common
+  // postgres admin database, even while bootstrap SQL runs on its own DB.
   await client.query('begin');
   try {
     await client.query(`select pg_advisory_xact_lock(hashtext('stynx_test_role_login'))`);
-    await client.query(
-      `alter role ${client.escapeIdentifier(role)} with login password ${client.escapeLiteral(roleLoginPassword())}`,
-    );
+    const result = await operation();
     await client.query('commit');
+    return result;
   } catch (error) {
     await client.query('rollback').catch(() => undefined);
     throw error;
@@ -199,10 +217,10 @@ export async function createPostgresTestDatabase(
     } else {
       await client.query(`create database "${database}"`);
     }
-  });
-  await withClient(adminConfig(database), async (client) => {
-    await bootstrapRoles(client);
-    await ensureRoleLogin(client, TEST_APP_ROLE);
+    await withRoleCatalogLock(client, async () => {
+      await withClient(adminConfig(database), bootstrapRoles);
+      await setRoleLogin(client, TEST_APP_ROLE);
+    });
   });
 
   return {

@@ -14,7 +14,10 @@ import {
   rehashManifest,
 } from '../support/offline-import-fixtures';
 import { renderOfflineStorage, verifyOfflineStorage } from '../../src/storage';
-import { createPostgresTestDatabase } from '../../../data/test/support/postgres';
+import {
+  createPostgresTestDatabase,
+  withPostgresCredentials,
+} from '../../../data/test/support/postgres';
 
 import { fixture, dispose, verify, baseline } from '../support/offline-storage-fixture';
 import { packedStorageCli } from '../support/packed-storage-cli';
@@ -756,10 +759,14 @@ it('the actual packed offline CLI renders offline and verifies readonly owner st
     await value.admin.query(
       `alter role ${value.admin.escapeIdentifier(value.options.ownerRole!)} login password ${value.admin.escapeLiteral(secret)}`,
     );
-    const ownerUrl = new URL(value.postgres.connectionString('packed-offline-owner'));
-    ownerUrl.username = value.options.ownerRole!;
-    ownerUrl.password = secret;
-    const environment = { ...process.env, PRIVATE_OWNER_URL: ownerUrl.toString() };
+    const ownerUrl = withPostgresCredentials(
+      value.postgres.connectionString('packed-offline-owner'),
+      {
+        user: value.options.ownerRole!,
+        password: secret,
+      },
+    );
+    const environment = { ...process.env, PRIVATE_OWNER_URL: ownerUrl };
     const imported = spawnSync(
       process.execPath,
       [
@@ -817,7 +824,8 @@ it('the actual packed offline CLI renders offline and verifies readonly owner st
     });
     for (const result of [imported, rendered, accepted, refused, invalid]) {
       expect(result.stdout + result.stderr).not.toContain(secret);
-      expect(result.stdout + result.stderr).not.toContain(ownerUrl.toString());
+      expect(result.stdout + result.stderr).not.toContain(encodeURIComponent(secret));
+      expect(result.stdout + result.stderr).not.toContain(ownerUrl);
     }
   } finally {
     packed?.dispose();

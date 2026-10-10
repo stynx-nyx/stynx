@@ -1,8 +1,25 @@
 import { Client } from 'pg';
-import { asAppRole } from '../support/postgres';
+import { asAppRole, withPostgresCredentials } from '../support/postgres';
 
 describe('PostgreSQL fixture direct-role connection identity', () => {
   afterEach(() => vi.unstubAllEnvs());
+
+  it.each([
+    ['postgresql://owner@/fixture?host=%2Ftmp&user=old&password=old', '/tmp'],
+    ['postgresql://owner@[::1]:5544/fixture?user=old&password=old', '::1'],
+  ])('binds an explicit password independently of ambient fixture credentials: %s', (uri, host) => {
+    vi.stubEnv('STYNX_TEST_PG_PASSWORD', 'different-ambient-password');
+    const password = 'owner-secret:@/% é';
+    const client = new Client({
+      connectionString: withPostgresCredentials(uri, { user: 'owner_é', password }),
+    });
+    expect(Reflect.get(client, 'connectionParameters')).toMatchObject({
+      host,
+      database: 'fixture',
+      user: 'owner_é',
+      password,
+    });
+  });
 
   it('preserves the Unix socket endpoint and application settings while changing the login', () => {
     vi.stubEnv('STYNX_TEST_PG_PASSWORD', 'fixture-password');
