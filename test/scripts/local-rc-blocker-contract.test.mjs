@@ -47,17 +47,18 @@ const expectedNotificationsMutate = [
 
 function normalizeRootManifestRcVersion(source) {
   const version = JSON.parse(source).version;
-  assert.match(version, /^(?:1\.5\.0(?:-rc\.[1-9]\d*)?|1\.5\.[1-5])$/u);
+  assert.match(version, /^(?:1\.5\.0(?:-rc\.[1-9]\d*)?|1\.5\.[1-6])$/u);
   const versionLine = `  "version": "${version}",`;
   assert.equal(source.split(versionLine).length, 2);
   return source.replace(versionLine, '  "version": "1.5.0-rc.1",');
 }
 
-test('frozen root manifest normalization accepts 1.5.5 and historical stable and 1.5.0 candidates', () => {
+test('frozen root manifest normalization accepts 1.5.6 and historical stable and 1.5.0 candidates', () => {
   const source = readFileSync(join(repoRoot, 'package.json'), 'utf8');
   const current = JSON.parse(source).version;
   const line = `  "version": "${current}",`;
   for (const version of [
+    '1.5.6',
     '1.5.5',
     '1.5.4',
     '1.5.3',
@@ -75,10 +76,11 @@ test('frozen root manifest normalization accepts 1.5.5 and historical stable and
   for (const version of [
     '0.5.2',
     '1.4.0',
-    '1.5.6',
+    '1.5.7',
     '1.6.0',
     '2.5.2',
     '1.5.5-rc.1',
+    '1.5.6-rc.1',
     '1.5.0-beta.1',
     '1.5.0-rc.0',
   ]) {
@@ -4341,7 +4343,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'b4f24cf245b5e3d3be707f0c09e337948bdea49a91df019952193e6d43153152',
+    'package.json': 'ed373a2c1f379eaf186bd2a888faf6dfc0706f0d9584724bfefa056fc50cfe0b',
     'reference/api/package.json':
       'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
     'reference/web/package.json':
@@ -4516,7 +4518,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'b4f24cf245b5e3d3be707f0c09e337948bdea49a91df019952193e6d43153152',
+    'package.json': 'ed373a2c1f379eaf186bd2a888faf6dfc0706f0d9584724bfefa056fc50cfe0b',
     'reference/api/package.json':
       'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
     'reference/web/package.json':
@@ -4580,7 +4582,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
     'reference/web/playwright.config.mjs':
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
-    'package.json': 'b4f24cf245b5e3d3be707f0c09e337948bdea49a91df019952193e6d43153152',
+    'package.json': 'ed373a2c1f379eaf186bd2a888faf6dfc0706f0d9584724bfefa056fc50cfe0b',
     'reference/api/package.json':
       'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
     'reference/web/package.json':
