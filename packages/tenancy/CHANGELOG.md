@@ -1,5 +1,15 @@
 # @stynx-nyx/tenancy
 
+## 1.5.7
+
+### Patch Changes
+
+- Updated dependencies [64e3d08]
+  - @stynx-nyx/data@1.5.7
+  - @stynx-nyx/idempotency@1.5.7
+  - @stynx-nyx/contracts@1.5.7
+  - @stynx-nyx/core@1.5.7
+
 ## 1.5.6
 
 ### Patch Changes
