@@ -80,7 +80,7 @@ class PublicLocaleController {
   @Permission('i18n:read')
   systemReset() {
     return this.database.withSystemContext('HTTP reset cannot borrow owner', async () =>
-      this.moduleRef.get(RequestContextMutator).runWithRequestContext(
+      this.moduleRef.get(RequestContextMutator, { strict: false }).runWithRequestContext(
         {
           requestId: 'installed-reset',
           startedAt: new Date(),
