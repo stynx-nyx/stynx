@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-ade84ed78fdac46f",
+  "sensor": {
+    "name": "inventory-regeneration",
+    "kind": "inventory_regeneration"
+  },
+  "timestamp": "2026-10-10T21:51:01.206Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense run inventory_regeneration",
+  "command_hash": "1e21b0a3659eee9987e46daa21c7081523fb042f9b5200a474b6ac47a3dc7a97",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "READINGS_REBUILD_ERROR",
+      "message": "regenerate .devai/state/sensors/inventory_coverage/coverage-matrix.json failed: inventory_coverage read error (COVERAGE_SCHEMA_INVALID)"
+    }
+  ],
+  "metrics": {
+    "kinds_touched": 0,
+    "kinds_rebuilt": 0,
+    "kinds_up_to_date": 0,
+    "error_count": 1,
+    "required_kinds": 7,
+    "missing_required_kinds": 7,
+    "obsolete_bodies_removed": 0,
+    "integration_head": "b54b61f046fdba5c923cf0bf1024a18a6c10479e",
+    "integration_tree": "fc211049f49eb7d68250724417b95d78a130a805"
+  }
+}
