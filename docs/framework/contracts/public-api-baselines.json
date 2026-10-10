@@ -1685,7 +1685,7 @@
         "offline-sync/src/ctg9-offline-sync.controller.d.ts": "560650cb89e5572f1ea963dbfb5c55c1400dff314c846a39025228b9101e4e85",
         "offline-sync/src/errors.d.ts": "de04287a705d9168e6f5d96fbbf4ba5a7bffb808e9797288533657902fbb0f35",
         "offline-sync/src/import-archive.d.ts": "9d470bece0689164186bffc895a925b8940891fb62d068f75b30f3aafb43a2ac",
-        "offline-sync/src/import-contract.d.ts": "62eefa4e85654b1855c63e756ac2c74cb45a38c212f16cd7478439a7e4d867f6",
+        "offline-sync/src/import-contract.d.ts": "bd350120ba0ee9b3deb1c7f82d5baeb93dd6a7d18d0bead726db84d2fbb3571d",
         "offline-sync/src/import-preflight.d.ts": "8c37b871fc3786c5b50f51a82a9ab76a9dba3dd98381af071feb05bac7e931c2",
         "offline-sync/src/import-receipt.d.ts": "0e6fd91d9f50727d1bba5d3913a9de9af5edd9e2a7d4d3b276a341e25ac6a4f0",
         "offline-sync/src/import-schema.generated.d.ts": "c4635b1e9a6ea1fe1e47f1be1d8d4956161664cd8fe05753d6514dc2679bf2e8",
