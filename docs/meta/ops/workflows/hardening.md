@@ -23,3 +23,10 @@ Secret `DEVAI_REPO_TOKEN`.
 ## Notes
 
 Not a pull-request gate.
+
+The upload scenario sets `STYNX_K6_STORAGE_PRESIGN_P99_MS=50`, retaining
+the existing accepted limit `storage_presign_duration_ms` p99 < 50 ms and
+the scenario default. See [ADR-PERF-0001](../../../../law/adr/2026-10-10-http-performance-evidence.md).
+A historical run configured with 500 ms does not prove the 50 ms limit.
+This component threshold remains part of the existing scenario gates; it
+does not establish complete protected-endpoint p50/p95 coverage.
