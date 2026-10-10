@@ -111,6 +111,40 @@ public marker/schema. The protected auth guard maps only typed invalid
 credentials to 401 and preserves infrastructure failures. These are corrections
 of demonstrated privilege/cache leaks, not relaxed assertions or new exclusions.
 
+## Audit integration clarification — tenant privacy rights and global internal jobs
+
+The Owner selected “Tenant-scoped HTTP; global internal jobs” for the demonstrated
+privacy privilege and cross-tenant defects. Accept the
+[privacy 1.6 administration contract](../../docs/framework/contracts/privacy-administration-1.6.md).
+The existing three HTTP routes retain their methods, operation IDs, synchronous
+results and actual POST 201/GET 200 status. Require verified authentication,
+exact protected/verified tenant-command proof and the existing delegated
+`privacy:subject-rights` permission for export/erasure and retention application;
+retention dry-run reporting requires `privacy:read`. Tenant effects use scoped
+reader/app independent transactions and tenant/subject predicates, never owner.
+`dryRun=false` retains tenant row application with `partitions: []`; it does not
+become a report-only refusal or a global partition action.
+
+Global table groups, shared identity disable and whole-partition retention belong
+to explicit caller-established SystemContext internal operations outside HTTP
+origin. Existing global service ports remain, but cannot self-create authority.
+Validate subject membership and closed inputs, reject conflicting grouped rule
+metadata, and exclude unscoped global groups from tenant work. Preserve RLS,
+actor/subject distinction, nested/held connection refusal and genuine failure
+outcomes. The contract also corrects reversible `hash_with_salt` encoding with
+keyed HMAC-SHA256 pseudonymization and spreadsheet formula exposure in CSV while
+preserving lossless JSON. No anonymity, distributed atomicity or unperformed
+provider effect is claimed.
+
+This prospectively restricts ADR-SESSIONS-0003's HTTP exposure: the unchanged
+90-day owner-only partition sweep remains an explicit internal operator job,
+unscheduled and dry-run by default. Update its runbook accordingly; tenant HTTP
+report/apply never calls or discloses global partition maintenance. Independent
+Inspector evidence, intended API/OpenAPI/trace bindings and actual supported
+provider acceptance remain mandatory. This selection supplies the privacy scope;
+it does not approve production provider inputs or promote performance/release
+readiness.
+
 ## Completion evidence
 
 Each issue closes only against its actual acceptance evidence, with upstream
