@@ -84,9 +84,9 @@ const packageRoster = JSON.parse(
 // The registry census is validated against the current unified candidate
 // (registryVersionPolicyConstants.candidate), not the historical 1.2.0
 // rebaseline target that unified-rebaseline.mjs still describes.
-const currentCandidate = '1.5.6';
+const currentCandidate = '1.5.7';
 const previousCandidate = '1.5.0-rc.2';
-const preflightLatest = '1.5.5';
+const preflightLatest = '1.5.6';
 
 const campaignPolicy = {
   policy_id: 'stynx.package-roster',
@@ -2401,20 +2401,20 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 test('Architect anomaly policy is required at its exact approved digest', () => {
   // The next unified candidate must be explicitly bound in the Architect
   // policy; 1.2.0 remains historical rebaseline data.
-  assert.equal(currentCandidate, '1.5.6');
+  assert.equal(currentCandidate, '1.5.7');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
   assert.equal(anomalyPolicy.owner_decision.date, '2026-10-10');
   assert.equal(
     anomalyPolicy.owner_decision.repository_baseline,
-    'f3edd68f7c5c78c9e614b3b70629b5ec76959049',
+    '6dabf052b2948fe0c2688cdb23c9d390c16af5ed',
   );
   assert.equal(
     anomalyPolicy.owner_decision.repository_tree,
-    '3e338000650a34ff4bb767e393a69c257c48a6be',
+    '9102e545c8c09b2ea4cf694cef1abea221a686e9',
   );
   assert.deepEqual(anomalyPolicy.owner_decision.supersedes, {
-    date: '2026-10-08',
-    next_unified_version: '1.5.5',
+    date: '2026-10-10',
+    next_unified_version: '1.5.6',
   });
   for (const phrase of [
     '44',
@@ -3332,7 +3332,7 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   );
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
-  assert.equal(preflightLatest, '1.5.5');
+  assert.equal(preflightLatest, '1.5.6');
   assert.deepEqual(
     validatePreflightDistTags({
       preflightLatest,
@@ -3475,7 +3475,7 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
       (error) => error?.code === code,
     );
   }
-  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 6n]);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 7n]);
   assert.throws(
     () => parseStableVersionTag(`v${previousCandidate}`),
     /malformed stable release tag/u,
