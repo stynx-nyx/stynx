@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { dirname, join, relative, resolve } from 'node:path';
 import * as ts from 'typescript';
 import { parseNestControllerDeclarations } from './lib/nest-route-declarations.mjs';
+import { bindHttpApiCompositions, operationId } from './lib/http-api-compositions.mjs';
 
 const repoRoot = process.cwd();
 const args = new Set(process.argv.slice(2));
@@ -17,19 +18,39 @@ const sourceRoots = config.sourceRoots ?? ['reference/api/src', 'packages'];
 const routePrefix = config.routePrefix ?? '';
 const sourceRootPaths = sourceRoots.map((root) => resolve(repoRoot, root));
 const returnTypeIndex = buildReturnTypeIndex(sourceRootPaths);
-const implementedOperations = discoverNestOperations(sourceRootPaths, routePrefix, returnTypeIndex);
+const composition = bindHttpApiCompositions(
+  repoRoot,
+  discoverNestOperations(sourceRootPaths, routePrefix, returnTypeIndex),
+);
+const implementedOperations = composition.operations;
 const schemaRegistry = buildSchemaRegistry(
   sourceRootPaths,
   implementedOperations
     .flatMap((operation) => [operation.bodyType, operation.responseType])
     .filter(Boolean),
 );
+// Resolve the entire declaration population before projecting any document.
+// A secondary composition may introduce types absent from the primary contract.
+for (const operation of implementedOperations) {
+  if (operation.bodyType) requestBodySchema(operation.bodyType, schemaRegistry);
+  if (operation.responseType) responseBodySchema(operation.responseType, schemaRegistry);
+}
 
 if (writeOpenApi) {
-  writeOpenApiContract(openapiPath, implementedOperations);
+  writeOpenApiContract(openapiPath, composition.primary, true);
   const legacyOpenApiPath = resolve(repoRoot, 'docs/framework/api/openapi.json');
   if (legacyOpenApiPath !== openapiPath) {
-    writeOpenApiContract(legacyOpenApiPath, implementedOperations);
+    writeOpenApiContract(legacyOpenApiPath, composition.primary, true);
+  }
+  for (const selected of composition.compositions) {
+    writeOpenApiContract(
+      resolve(repoRoot, selected.artifactPath),
+      implementedOperations.filter(
+        (operation) => !operation.compositionId || operation.compositionId === selected.id,
+      ),
+      false,
+      selected.id,
+    );
   }
 }
 
@@ -46,6 +67,17 @@ const missingInOpenApi = [...implementedByCanonical.entries()]
   .flatMap(([canonical, routes]) => routes.map((route) => diagnostic(route, canonical)))
   .sort((a, b) => a.path.localeCompare(b.path));
 const parameterNameMismatches = compareParameterNames(openapiByCanonical, implementedByCanonical);
+const operationDrift = compareOperations(openapiPath, composition.primary, true);
+const compositionDrift = composition.compositions.flatMap((selected) =>
+  compareOperations(
+    resolve(repoRoot, selected.artifactPath),
+    implementedOperations.filter(
+      (operation) => !operation.compositionId || operation.compositionId === selected.id,
+    ),
+    false,
+    selected.id,
+  ).map((failure) => ({ compositionId: selected.id, ...failure })),
+);
 
 const summary = {
   schemaVersion: '1',
@@ -56,6 +88,8 @@ const summary = {
   parameterNameMismatches,
   missingInCode,
   missingInOpenApi,
+  operationDrift,
+  compositionDrift,
 };
 
 if (args.has('--json')) console.log(JSON.stringify(summary, null, 2));
@@ -65,7 +99,11 @@ else
   );
 if (
   strict &&
-  (missingInCode.length > 0 || missingInOpenApi.length > 0 || parameterNameMismatches.length > 0)
+  (missingInCode.length > 0 ||
+    missingInOpenApi.length > 0 ||
+    parameterNameMismatches.length > 0 ||
+    operationDrift.length > 0 ||
+    compositionDrift.length > 0)
 ) {
   throw new Error(`API coverage drift detected:\n${JSON.stringify(summary, null, 2)}`);
 }
@@ -357,31 +395,95 @@ function readTypeExpression(text) {
   return text.trim();
 }
 
-function writeOpenApiContract(file, operations) {
+function operationContract(operation) {
+  const parameters = [...pathParameters(operation.path), ...queryParameters(operation.queryNames)];
+  return {
+    operationId: operationId(operation),
+    tags: [operation.tag],
+    ...(parameters.length > 0 ? { parameters } : {}),
+    ...(operation.bodyType ? { requestBody: requestBody(operation.bodyType, schemaRegistry) } : {}),
+    ...(!operation.bodyType && ['post', 'put', 'patch'].includes(operation.method)
+      ? { 'x-stynx-no-request-body': true }
+      : {}),
+    ...(operation.hasQueryObject ? { 'x-stynx-query-object': true } : {}),
+    security: operation.isPublic ? [] : [{ bearerAuth: [], tenantHeader: [] }],
+    'x-stynx-source': operation.source,
+    'x-stynx-controller': operation.controller,
+    'x-stynx-handler': operation.handler,
+    ...(operation.compositionId ? { 'x-stynx-composition': operation.compositionId } : {}),
+    ...(operation.routePath !== operation.path ? { 'x-stynx-route': operation.routePath } : {}),
+    responses: operationResponses(operation, schemaRegistry),
+  };
+}
+
+function operationWithVariants(operation, variants) {
+  const method = operationContract(operation);
+  const group = composition.groups.get(`${operation.method.toUpperCase()} ${operation.path}`);
+  if (variants && group.length > 1)
+    method['x-stynx-operation-variants'] = group.map(operationContract);
+  return method;
+}
+
+function compareOperations(file, operations, variants, compositionId) {
+  const contract = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
+  const paths = contract.paths ?? {};
+  const expected = new Map(
+    operations.map((operation) => [
+      `${operation.method.toUpperCase()} ${operation.path}`,
+      operation,
+    ]),
+  );
+  const failures = [];
+  if (contract.openapi !== '3.1.0' || contract['x-stynx-composition'] !== compositionId)
+    failures.push({ reason: 'document-identity-mismatch' });
+  if (stableJson(contract.components) !== stableJson(openApiComponents(schemaRegistry)))
+    failures.push({ reason: 'schema-components-mismatch' });
+  for (const [path, item] of Object.entries(paths)) {
+    for (const [method, actual] of Object.entries(item)) {
+      if (!['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'].includes(method))
+        continue;
+      const key = `${method.toUpperCase()} ${path}`;
+      const operation = expected.get(key);
+      if (!operation) failures.push({ method: method.toUpperCase(), path, reason: 'not-declared' });
+      else {
+        if (stableJson(actual) !== stableJson(operationWithVariants(operation, variants)))
+          failures.push({
+            method: method.toUpperCase(),
+            path,
+            reason: 'operation-contract-mismatch',
+          });
+        expected.delete(key);
+      }
+    }
+  }
+  for (const operation of expected.values())
+    failures.push({
+      method: operation.method.toUpperCase(),
+      path: operation.path,
+      reason: 'missing-operation',
+    });
+  return failures;
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+  if (value !== null && typeof value === 'object')
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
+      .join(',')}}`;
+  return JSON.stringify(value);
+}
+
+function writeOpenApiContract(file, operations, variants, compositionId) {
   const paths = {};
   for (const operation of operations) {
     const pathItem = paths[operation.path] ?? {};
-    const parameters = [
-      ...pathParameters(operation.path),
-      ...queryParameters(operation.queryNames),
-    ];
-    const method = {
-      operationId: operationId(operation),
-      tags: [operation.tag],
-      ...(parameters.length > 0 ? { parameters } : {}),
-      ...(operation.bodyType
-        ? { requestBody: requestBody(operation.bodyType, schemaRegistry) }
-        : {}),
-      ...(!operation.bodyType && ['post', 'put', 'patch'].includes(operation.method)
-        ? { 'x-stynx-no-request-body': true }
-        : {}),
-      ...(operation.hasQueryObject ? { 'x-stynx-query-object': true } : {}),
-      security: operation.isPublic ? [] : [{ bearerAuth: [], tenantHeader: [] }],
-      'x-stynx-source': operation.source,
-      ...(operation.routePath !== operation.path ? { 'x-stynx-route': operation.routePath } : {}),
-      responses: operationResponses(operation, schemaRegistry),
-    };
-    pathItem[operation.method] = method;
+    if (pathItem[operation.method])
+      throw new Error(
+        `API composition collision while writing ${file}: ${operation.method} ${operation.path}`,
+      );
+    pathItem[operation.method] = operationWithVariants(operation, variants);
     paths[operation.path] = sortObject(pathItem);
   }
 
@@ -398,6 +500,7 @@ function writeOpenApiContract(file, operations) {
             'Generated route and contract inventory for STYNX reference and package controllers.',
         },
         components: openApiComponents(schemaRegistry),
+        ...(compositionId ? { 'x-stynx-composition': compositionId } : {}),
         paths: sortObject(paths),
       },
       null,
@@ -793,24 +896,6 @@ function isUnknownBodyType(typeName) {
 function schemaNameForBodyType(typeName) {
   if (!typeName || isUnknownBodyType(typeName)) return null;
   return typeName.match(/^[A-Za-z_$][\w$]*/u)?.[0] ?? null;
-}
-
-function operationId(operation) {
-  const pathId = operation.path
-    .split('/')
-    .filter(Boolean)
-    .map((segment) => {
-      const parameter = segment.match(/^(?::([^/{}:]+)|\{([^/{}:]+)\})$/u);
-      return parameter
-        ? `by-${parameter[1] ?? parameter[2]}`
-        : segment.replace(/[^A-Za-z0-9]+/gu, '-');
-    })
-    .join('-');
-  return [operation.tag, operation.method, pathId, operation.handler]
-    .filter(Boolean)
-    .join('-')
-    .replace(/-+/gu, '-')
-    .replace(/^-|-$/gu, '');
 }
 
 function sortObject(value) {

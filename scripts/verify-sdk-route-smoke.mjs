@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import * as ts from 'typescript';
+import { pascalCase, operationMethodName } from './lib/sdk-operation-identities.mjs';
 
 const repoRoot = process.cwd();
 const openApiPath = resolve(repoRoot, 'docs/framework/contracts/openapi.json');
@@ -11,7 +13,9 @@ if (!existsSync(openApiPath)) {
 }
 
 if (!existsSync(servicesDir)) {
-  throw new Error('Generated SDK services missing. Run pnpm --filter @stynx-nyx/sdk codegen first.');
+  throw new Error(
+    'Generated SDK services missing. Run pnpm --filter @stynx-nyx/sdk codegen first.',
+  );
 }
 
 const contract = JSON.parse(readFileSync(openApiPath, 'utf8'));
@@ -20,18 +24,87 @@ let operationCount = 0;
 
 for (const [path, item] of Object.entries(contract.paths ?? {})) {
   for (const [method, operation] of Object.entries(item ?? {})) {
-    if (!/^(get|post|put|patch|delete)$/u.test(method)) continue;
-    operationCount += 1;
-    const serviceName = `${pascalCase(operation.tags?.[0] ?? 'Default')}Service`;
-    const servicePath = join(servicesDir, `${serviceName}.ts`);
-    if (!existsSync(servicePath)) {
-      failures.push(`${method.toUpperCase()} ${path}: generated service ${serviceName} is missing`);
-      continue;
-    }
-    const serviceText = readFileSync(servicePath, 'utf8');
-    const methodName = operationMethodName(operation.operationId);
-    if (!new RegExp(`\\b${methodName}\\s*\\(`, 'u').test(serviceText)) {
-      failures.push(`${method.toUpperCase()} ${path}: generated SDK method ${serviceName}.${methodName} is missing`);
+    if (!/^(get|post|put|patch|delete|head|options|trace)$/u.test(method)) continue;
+    const variants = operation['x-stynx-operation-variants'] ?? [];
+    for (const selected of [
+      operation,
+      ...variants.filter(
+        (variant) => variant['x-stynx-composition'] !== operation['x-stynx-composition'],
+      ),
+    ]) {
+      operationCount += 1;
+      const serviceName = `${pascalCase(selected.tags?.[0] ?? 'Default')}Service`;
+      const alternate = selected !== operation;
+      const compositionId = selected['x-stynx-composition'];
+      if (
+        alternate &&
+        (typeof compositionId !== 'string' || !/^[a-z][a-z0-9-]*$/u.test(compositionId))
+      ) {
+        failures.push(`${method.toUpperCase()} ${path}: invalid alternate composition identity`);
+        continue;
+      }
+      const servicePath = alternate
+        ? join(servicesDir, '..', 'compositions', compositionId, 'services', `${serviceName}.ts`)
+        : join(servicesDir, `${serviceName}.ts`);
+      if (!existsSync(servicePath)) {
+        failures.push(
+          `${method.toUpperCase()} ${path}: generated service ${serviceName} is missing`,
+        );
+        continue;
+      }
+      const serviceText = readFileSync(servicePath, 'utf8');
+      const methodName = operationMethodName(selected.operationId);
+      const source = ts.createSourceFile(
+        servicePath,
+        serviceText,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TS,
+      );
+      const handlers = source.statements
+        .filter(ts.isClassDeclaration)
+        .filter((node) => node.name?.text === serviceName)
+        .flatMap((node) =>
+          node.members
+            .filter(ts.isMethodDeclaration)
+            .filter((member) => member.name.getText(source) === methodName),
+        );
+      if (handlers.length !== 1) {
+        failures.push(
+          `${method.toUpperCase()} ${path}: generated SDK method ${serviceName}.${methodName} is missing`,
+        );
+        continue;
+      }
+      const requests = [];
+      const visit = (node) => {
+        if (
+          ts.isCallExpression(node) &&
+          node.expression.getText(source) === 'this.httpRequest.request' &&
+          node.arguments.length === 1 &&
+          ts.isObjectLiteralExpression(node.arguments[0])
+        ) {
+          requests.push(
+            Object.fromEntries(
+              node.arguments[0].properties
+                .filter(ts.isPropertyAssignment)
+                .map((property) => [
+                  property.name.getText(source),
+                  ts.isStringLiteral(property.initializer) ? property.initializer.text : null,
+                ]),
+            ),
+          );
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(handlers[0]);
+      if (
+        requests.length !== 1 ||
+        requests[0].method !== method.toUpperCase() ||
+        requests[0].url !== path
+      )
+        failures.push(
+          `${method.toUpperCase()} ${path}: generated SDK method ${serviceName}.${methodName} targets a different HTTP operation`,
+        );
     }
   }
 }
@@ -45,35 +118,3 @@ if (failures.length > 0) {
 }
 
 console.log(`[sdk-route-smoke] OK: ${operationCount} generated SDK operations matched`);
-
-function pascalCase(value) {
-  const normalized = normalizeLeadingAcronymDigit(value);
-  if (normalized.toLowerCase() === 'i18n') return 'I18N';
-  return normalized
-    .replace(/[^A-Za-z0-9]+/gu, ' ')
-    .trim()
-    .split(/\s+/u)
-    .filter(Boolean)
-    .map((part) => `${part[0]?.toUpperCase() ?? ''}${part.slice(1)}`)
-    .join('');
-}
-
-function operationMethodName(operationId) {
-  const normalized = normalizeLeadingAcronymDigit(operationId).replace(/i18n/giu, 'i18N');
-  const parts = normalized
-    .split(/[^A-Za-z0-9]+/u)
-    .filter(Boolean);
-  return parts
-    .map((part, index) =>
-      index === 0
-        ? `${part[0]?.toLowerCase() ?? ''}${part.slice(1)}`
-        : `${part[0]?.toUpperCase() ?? ''}${part.slice(1)}`,
-    )
-    .join('');
-}
-
-function normalizeLeadingAcronymDigit(value) {
-  return String(value).replace(/^([A-Z])([A-Z]+)(\d)/u, (_, first, rest, digit) =>
-    `${first}${rest.toLowerCase()}${digit}`,
-  );
-}
