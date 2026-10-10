@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
   "meta": {
-    "last_updated": "2026-10-10T18:37:30.240Z",
+    "last_updated": "2026-10-10T20:26:45.372Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -59,7 +59,8 @@
       "STYNX 1.5.0 CTG-0008 delivery-review Architect rebind pins staged rename cleanup, integer and route negatives, and inert annotation comparison without weakening existing sensors.",
       "STYNX 1.5.0 CTG-0008 final hardening Architect rebind pins negative PostgreSQL reserved and restricted SQL identifier vectors before implementation.",
       "STYNX 1.5.0 CTG-0005 envelope Architect rebind pins canonical HTTP rejections, rollback, bootstrap grammar, legacy data bodies, and defensive no-SQL checks.",
-      "STYNX 1.5.0 CTG-0005 envelope sensor triage rebinding separates internal exception metadata from the HTTP envelope and pins the complete actor-provenance 403 body."
+      "STYNX 1.5.0 CTG-0005 envelope sensor triage rebinding separates internal exception metadata from the HTTP envelope and pins the complete actor-provenance 403 body.",
+      "STYNX 1.6.0 Architect checkpoint rebinds real-auth integration and PostgreSQL fixture projections, complete API discovery and packed SDK compatibility sensors, and the registration-only runtime census refusal matrix. Runtime source/build custody and complete endpoint performance remain unverified; these bindings do not establish nominal HTTP PASS."
     ]
   },
   "invariants": [
@@ -490,6 +491,24 @@
             "The tracked script participates in the canonical contract verification surface."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/verify-api-coverage.test.mjs",
+          "names": ["INV-COVERAGE-001"],
+          "assertions": [
+            "API discovery preserves method-aware complete alternatives, request schemas, inherited/mapped type contracts and primitive indexed object constraints; unknown and conflicting shapes refuse."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/sdk-composition-consumer.test.mjs",
+          "names": ["INV-COVERAGE-001"],
+          "assertions": [
+            "The real packed SDK preserves all immutable primary operations and exposes four independent CTG9 operations through its public namespace with installed declaration checks."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["product/use-cases/**", "product/use-cases/**"]
@@ -526,6 +545,15 @@
             "The tracked script participates in the canonical perf verification surface."
           ],
           "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-runtime-census.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Actual Nest/Express registrations reconcile metadata, inheritance, URI selectors and same-pattern HEAD fallback; unknown middleware, routing drift and unsupported selectors refuse while incomplete custody remains explicit."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["reference/api/src/sample", "packages/ratelimit/src", "packages/backend/src"]
@@ -2584,7 +2612,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 13,
-      "assertion_digest_sha256": "2c39c783a53b46cbc15ac4f60051d40f267d2f86ae03972a2cc9c20b0ea20752"
+      "assertion_digest_sha256": "b9db3a85e7f02f3ad71bb28a94a1d35a64c75ed1ec204495df117c7dfd0848a5"
     },
     {
       "path": "packages/flow/test/integration/answers.api-matrix.spec.ts",
@@ -2599,7 +2627,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 37,
-      "assertion_digest_sha256": "0a50a62da3d613d9248f61385a5316aec698ce86d86a82ebdc2bcf23ddab5224"
+      "assertion_digest_sha256": "67e769dd9e4a0395cac5f6a0ac9e1d46ea498be575613b924551d77aab7d723b"
     },
     {
       "path": "packages/flow/test/integration/edges.api-matrix.spec.ts",
@@ -2614,7 +2642,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 47,
-      "assertion_digest_sha256": "c5431ea5b335a1d0d247df41fc7ff6ff781d8fb247e87404b8d044266c481f57"
+      "assertion_digest_sha256": "9d0df119a9a949c63cadfeaf91446cc3b13650635a7a6b890b9dd262207ab4d8"
     },
     {
       "path": "packages/flow/test/integration/effects.api-matrix.spec.ts",
@@ -2629,7 +2657,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 23,
-      "assertion_digest_sha256": "86b0d800734f71e12c95f8937b6421d15736f040e2040402d056d3daa66ecd03"
+      "assertion_digest_sha256": "237c12d702d863da250e80a85376ef8a162863dcb1487701c5f9bc84ab814907"
     },
     {
       "path": "packages/flow/test/integration/events.api-matrix.spec.ts",
@@ -2644,7 +2672,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 13,
-      "assertion_digest_sha256": "82bd69010b3d034ce6b78cf54c220ce1bd6c28c3f459534d5bcfe648f7fe0976"
+      "assertion_digest_sha256": "0891f909c45227a12635c36e5758b82f0fb7080c2a07aa80d65538c96b4a9069"
     },
     {
       "path": "packages/flow/test/integration/flow.database.spec.ts",
@@ -2667,7 +2695,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 29,
-      "assertion_digest_sha256": "7d6356f91eb88c5b78623dbcc27d0bb5e33dba63cca3c89d3af6d95a87329fa6"
+      "assertion_digest_sha256": "deb5aefbe3cf865dcaeaacbda84a1e5977aece802ed04d144e1497489742e2c7"
     },
     {
       "path": "packages/flow/test/integration/signal.api-matrix.spec.ts",
@@ -2682,7 +2710,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 25,
-      "assertion_digest_sha256": "12e261696102170a1c798e51cf6f8e48008c112e383aec19a6749844a561a768"
+      "assertion_digest_sha256": "29c2e1c9d6ee71d60972437cc5fc0d1a56c833249bfd1538a8aeef09b640347a"
     },
     {
       "path": "packages/flow/test/unit/branch-helpers.spec.ts",
@@ -3938,8 +3966,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 9,
-      "assertion_digest_sha256": "2c72ff56d34367870a20560cd068882e296830776dc25ca61f5d8573ec610417"
+      "assertion_count": 31,
+      "assertion_digest_sha256": "3dab0237fc2096902d02739e4acbd3e151ca869a0f1f6a3d7f5c9e104dd4065d"
     },
     {
       "path": "scripts/perf-smoke.spec.mjs",
@@ -4640,8 +4668,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 332,
-      "assertion_digest_sha256": "880902be13cafaa47ce8fd47ff6a95fd38c487dd7362683708d79e9ad3790ba5"
+      "assertion_count": 339,
+      "assertion_digest_sha256": "055d8d4f0b024d3436d41112479a2164efa5d0343225d178057c284460a651f2"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -5497,7 +5525,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 13,
-      "assertion_digest_sha256": "006ed5e7b7fed534f10a917a09355ad324d41def01abab6698728b6fdf347281"
+      "assertion_digest_sha256": "258ecb16944b39676d6e46bdfcd4540bfd01ede91059aa67e79829bd4b2c6572"
     },
     {
       "path": "packages/data/test/unit/app-role-property-check.spec.ts",
@@ -5537,7 +5565,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 23,
-      "assertion_digest_sha256": "c48d15885abd40be05a0f5eebb5e6903d7ac891154c68db2273837690c27133b"
+      "assertion_digest_sha256": "1e4e422ba6b0f776644b470c3f358874a5c60b8b414a3b25daaa4a49fa8ed681"
     },
     {
       "path": "packages/outbox/test/unit/outbox-app-role.spec.ts",
@@ -5600,8 +5628,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 61,
-      "assertion_digest_sha256": "ae59525c249121471db63b4d425e8e68838e8145e7a20764e1e41154d2d009ba"
+      "assertion_count": 62,
+      "assertion_digest_sha256": "f5a5797a87e6722f88236f1f200e46e42e5a0eb017cb537af3420aa39c5ded58"
     },
     {
       "path": "packages/offline-sync/test/integration/offline-sync-initial-mode.integration.spec.ts",
@@ -5728,8 +5756,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 69,
-      "assertion_digest_sha256": "a62141c0fbc06e51c5fe006878ae0c21cf37bd823a30417bfd45900282856c3d"
+      "assertion_count": 70,
+      "assertion_digest_sha256": "0eedd3a2a6c521c41f3eebc7cadf94ef51331a8df4324ba349461411e69e1a06"
     },
     {
       "path": "packages/outbox/test/integration/event-retirement.integration.spec.ts",
@@ -5890,6 +5918,46 @@
       "lifecycle": "supported",
       "assertion_count": 24,
       "assertion_digest_sha256": "284dd044eb087fe3c65b2be8a2c6e369ac30e9335a99066ef6b1a0757eeda74b"
+    },
+    {
+      "path": "packages/data/test/integration/postgres-fixture.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "866e6ce03029df24a07ea3cca0d667a1ce9ef7dc3ea7a588237e3b15a6226dd3"
+    },
+    {
+      "path": "packages/data/test/unit/postgres-fixture.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "e611169a0761c819dbe93d832df2b2e58f57edcb5dc2c40cf43aba483163d295"
+    },
+    {
+      "path": "test/scripts/http-runtime-census.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-PERF-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 112,
+      "assertion_digest_sha256": "3f4ca2921626e8885e2e080cff663457f563b67d9f1bd8d9c3c37c1d871c0de5"
+    },
+    {
+      "path": "test/scripts/sdk-composition-consumer.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
+      "lifecycle": "supported",
+      "assertion_count": 17,
+      "assertion_digest_sha256": "3bfe499cd26c09da7ba1401d9811cb5a0dcfadcf0bf34020efb2ff3e1e2d836b"
+    },
+    {
+      "path": "test/scripts/verify-api-coverage.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 155,
+      "assertion_digest_sha256": "dacf7a8bda59002f41a5cd0c38098af19837825630410cb2e97ddb81894acd46"
     }
   ],
   "suites": {

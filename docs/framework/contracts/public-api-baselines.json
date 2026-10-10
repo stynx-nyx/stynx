@@ -2280,7 +2280,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-sdk-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-sdk.d.ts": "924f61198f2c75da5a2fbc75097db1fd47afb7fb307b4b21fbc2a076bccf30b7"
+        "types/stynx-nyx-sdk.d.ts": "adfb3cf990dd6786d5fe22bb5bb017c37c1e98df32dd023bec8768912c0fdf80"
       }
     },
     "@stynx-nyx/sessions": {
