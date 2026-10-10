@@ -305,6 +305,114 @@ test('strict comparison cannot inherit permissive environment threshold override
   assert.deepEqual(Object.keys(report).sort(), ['degradations', 'observations']);
 });
 
+test('strict required populations reject method overrides that could hide a real degradation', () => {
+  const metric = 'storage_presign_duration_ms';
+  const valid = strictInput([metric]);
+  valid.current.metrics[metric].values = { 'p(95)': 100, 'p(99)': 200 };
+  assert.equal(compareRequiredMetricTails(valid).degradations.length, 1);
+  let methodCalls = 0;
+  for (const method of ['includes', 'map', 'filter']) {
+    const candidate = structuredClone(valid);
+    candidate.requiredMetrics[method] = () => {
+      methodCalls += 1;
+      return false;
+    };
+    assert.throws(() => compareRequiredMetricTails(candidate), /requiredMetrics/u);
+  }
+  assert.equal(methodCalls, 0);
+});
+
+test('stateful required-metric iterators cannot hide absent actual tails during admission', () => {
+  let iterations = 0;
+  const candidate = {
+    current: {},
+    baseline: {},
+    reference: {},
+    requiredMetrics: ['storage_presign_duration_ms'],
+  };
+  candidate.requiredMetrics[Symbol.iterator] = function* () {
+    iterations += 1;
+    if (iterations < 3) yield 'storage_presign_duration_ms';
+  };
+  assert.throws(() => compareRequiredMetricTails(candidate), /requiredMetrics/u);
+  assert.equal(iterations, 0);
+});
+
+test('required populations must be dense own data without proxies, getters or alternate prototypes', () => {
+  let trapCalls = 0;
+  const accessor = strictInput(['storage_presign_duration_ms']);
+  Object.defineProperty(accessor.requiredMetrics, '0', {
+    get() {
+      trapCalls += 1;
+      return 'storage_presign_duration_ms';
+    },
+  });
+  assert.throws(() => compareRequiredMetricTails(accessor), /requiredMetrics/u);
+  const proxied = strictInput();
+  proxied.requiredMetrics = new Proxy(proxied.requiredMetrics, {
+    get() {
+      trapCalls += 1;
+      throw new Error('must not execute');
+    },
+  });
+  assert.throws(() => compareRequiredMetricTails(proxied), /requiredMetrics/u);
+  for (const prototype of [null, {}, Object.create(Array.prototype)]) {
+    const candidate = strictInput();
+    Object.setPrototypeOf(candidate.requiredMetrics, prototype);
+    assert.throws(() => compareRequiredMetricTails(candidate), /requiredMetrics/u);
+  }
+  const sparse = strictInput();
+  delete sparse.requiredMetrics[1];
+  assert.throws(() => compareRequiredMetricTails(sparse), /requiredMetrics/u);
+  assert.equal(trapCalls, 0);
+  const frozen = strictInput();
+  Object.freeze(frozen.requiredMetrics);
+  assert.equal(compareRequiredMetricTails(frozen).observations.length, trackedMetrics.length);
+});
+
+test('strict options and observed tail paths reject accessors and proxies without executing them', () => {
+  let trapCalls = 0;
+  const metric = 'storage_presign_duration_ms';
+  const accessed = strictInput([metric]);
+  Object.defineProperty(accessed, 'current', {
+    get() {
+      trapCalls += 1;
+      throw new Error('must not execute');
+    },
+  });
+  assert.throws(() => compareRequiredMetricTails(accessed), /options/u);
+  const options = new Proxy(strictInput(), {
+    ownKeys() {
+      trapCalls += 1;
+      throw new Error('must not execute');
+    },
+  });
+  assert.throws(() => compareRequiredMetricTails(options), /options/u);
+  for (const name of ['current', 'baseline', 'reference']) {
+    const candidate = strictInput([metric]);
+    const target =
+      name === 'reference'
+        ? candidate[name].metrics[metric]
+        : candidate[name].metrics[metric].values;
+    Object.defineProperty(target, 'p(95)', {
+      get() {
+        trapCalls += 1;
+        throw new Error('must not execute');
+      },
+    });
+    assert.throws(() => compareRequiredMetricTails(candidate), /usable own data/u);
+    const proxied = strictInput([metric]);
+    proxied[name] = new Proxy(proxied[name], {
+      getOwnPropertyDescriptor() {
+        trapCalls += 1;
+        throw new Error('must not execute');
+      },
+    });
+    assert.throws(() => compareRequiredMetricTails(proxied), /usable own data/u);
+  }
+  assert.equal(trapCalls, 0);
+});
+
 test('a tail-only spike with an unchanged p95 is not a degradation', () => {
   const current = summary({
     ...steady,

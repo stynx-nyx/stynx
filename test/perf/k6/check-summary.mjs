@@ -13,6 +13,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isProxy } from 'node:util/types';
 
 export const trackedMetrics = Object.freeze([
   'auth_verify_duration_ms',
@@ -88,32 +89,55 @@ export function compareRequiredMetricTails(options) {
   if (
     !options ||
     typeof options !== 'object' ||
+    isProxy(options) ||
     Array.isArray(options) ||
-    Reflect.ownKeys(options).some((key) => !allowed.has(key))
+    ![Object.prototype, null].includes(Object.getPrototypeOf(options)) ||
+    Reflect.ownKeys(options).some(
+      (key) =>
+        !allowed.has(key) || !Object.hasOwn(Object.getOwnPropertyDescriptor(options, key), 'value'),
+    )
   )
     throw new Error('Strict k6 comparison requires only declared comparison options');
   const { current, baseline, reference, requiredMetrics } = options;
   if (
     !Array.isArray(requiredMetrics) ||
+    isProxy(requiredMetrics) ||
+    Object.getPrototypeOf(requiredMetrics) !== Array.prototype ||
     requiredMetrics.length === 0 ||
-    new Set(requiredMetrics).size !== requiredMetrics.length ||
-    [...requiredMetrics].some((metric) => !trackedMetrics.includes(metric))
+    Reflect.ownKeys(requiredMetrics).length !== requiredMetrics.length + 1
   )
+    throw new Error('Strict k6 comparison requires unique known nonempty requiredMetrics');
+  const required = [];
+  for (let index = 0; index < requiredMetrics.length; index += 1) {
+    const descriptor = Object.getOwnPropertyDescriptor(requiredMetrics, String(index));
+    if (
+      !descriptor ||
+      !Object.hasOwn(descriptor, 'value') ||
+      !trackedMetrics.includes(descriptor.value)
+    )
+      throw new Error('Strict k6 comparison requires unique known nonempty requiredMetrics');
+    required.push(descriptor.value);
+  }
+  const requiredSet = new Set(required);
+  if (requiredSet.size !== required.length)
     throw new Error('Strict k6 comparison requires unique known nonempty requiredMetrics');
   const selected = {
     current: { metrics: {} },
     baseline: { metrics: {} },
     reference: { metrics: {} },
   };
-  for (const metric of requiredMetrics) {
+  for (const metric of required) {
     const tails = {};
     for (const [name, input] of Object.entries({ current, baseline, reference })) {
       tails[name] = {};
       for (const statistic of comparedStatistics) {
-        const value =
+        const label = `${name} ${metric} ${statistic}`;
+        const path =
           name === 'reference'
-            ? input?.metrics?.[metric]?.[statistic]
-            : input?.metrics?.[metric]?.values?.[statistic];
+            ? ['metrics', metric, statistic]
+            : ['metrics', metric, 'values', statistic];
+        let value = input;
+        for (const key of path) value = strictDataProperty(value, key, label);
         if (typeof value !== 'number' || !Number.isFinite(value) || value < 0)
           throw new Error(`Strict k6 comparison requires usable ${name} ${metric} ${statistic}`);
         tails[name][statistic] = value;
@@ -133,11 +157,26 @@ export function compareRequiredMetricTails(options) {
     minAbsoluteIncreaseMs: 1,
   });
   return {
-    observations: requiredMetrics.map((metric) =>
+    observations: required.map((metric) =>
       report.observations.find((entry) => entry.metric === metric),
     ),
-    degradations: report.degradations.filter((entry) => requiredMetrics.includes(entry.metric)),
+    degradations: report.degradations.filter((entry) => requiredSet.has(entry.metric)),
   };
+}
+
+function strictDataProperty(object, key, label) {
+  if (object === null || object === undefined) return undefined;
+  if (
+    typeof object !== 'object' ||
+    isProxy(object) ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(object))
+  )
+    throw new Error(`Strict k6 comparison requires usable own data ${label}`);
+  const descriptor = Object.getOwnPropertyDescriptor(object, key);
+  if (!descriptor) return undefined;
+  if (!Object.hasOwn(descriptor, 'value'))
+    throw new Error(`Strict k6 comparison requires usable own data ${label}`);
+  return descriptor.value;
 }
 
 export function loadReference(path) {
