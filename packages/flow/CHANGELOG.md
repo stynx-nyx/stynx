@@ -1,5 +1,15 @@
 # @stynx-nyx/flow Changelog
 
+## 1.5.6
+
+### Patch Changes
+
+- @stynx-nyx/auth@1.5.6
+- @stynx-nyx/backend@1.5.6
+- @stynx-nyx/core@1.5.6
+- @stynx-nyx/data@1.5.6
+- @stynx-nyx/idempotency@1.5.6
+
 ## 1.5.5
 
 ### Patch Changes
