@@ -110,7 +110,12 @@ describe('outbox attempt guard migration 0025', () => {
     try {
       const files = await migrationFiles();
       expect(files).toContain(GUARD_MIGRATION);
-      expect(files.indexOf(GUARD_MIGRATION)).toBe(files.length - 1);
+      expect(files.indexOf(GUARD_MIGRATION)).toBeGreaterThan(
+        files.indexOf('0024_auth_sessions_partition_retention.sql'),
+      );
+      expect(files.indexOf(GUARD_MIGRATION)).toBeLessThan(
+        files.indexOf('0026_outbox_event_retirement.sql'),
+      );
       const migration = await readFile(resolve(MIGRATIONS, GUARD_MIGRATION), 'utf8');
       expect(migration).toMatch(
         /CREATE OR REPLACE FUNCTION outbox\.guard_app_attempt_completion\(\)/u,
