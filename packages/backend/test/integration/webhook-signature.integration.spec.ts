@@ -11,7 +11,7 @@ import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import request from 'supertest';
 import { z } from 'zod';
 import { StynxWebhookSignatureModule, WebhookSignatureGuard } from '../../src';
-import { asAppRole, createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 
 // UPS-HOOK-02: two separate Nest processes must share this atomic reservation.
 class SharedReplayStore {
@@ -152,15 +152,19 @@ async function createApp(
     options?: Record<string, unknown>;
     database?: unknown;
     databaseUrl?: string;
+    appDatabaseUrl?: string;
   } = {},
 ): Promise<INestApplication> {
+  if (config.databaseUrl && !config.appDatabaseUrl) {
+    throw new Error('PostgreSQL fixture requires a restricted app connection');
+  }
   const module = await Test.createTestingModule({
     imports: [
       StynxCoreModule.forRoot({ appName: 'webhook-test', schema: z.object({}) }),
       ...(config.databaseUrl ? [StynxDataModule.forRoot({
         connections: {
           owner: { connectionString: config.databaseUrl },
-          app: { connectionString: asAppRole(config.databaseUrl) },
+          app: { connectionString: config.appDatabaseUrl },
           reader: { connectionString: config.databaseUrl },
         },
         migrations: { enabled: true },
@@ -404,8 +408,10 @@ describe('UPS-HOOK-02 webhook guard HTTP contract', () => {
       const app = await createApp(new SharedReplayStore(), {
         tenancy: true,
         databaseUrl: postgres.connectionString('webhook-rls-owner'),
+        appDatabaseUrl: postgres.appConnectionString('webhook-rls-app'),
       });
       apps.push(app);
+      await postgres.ensureRoleLogin('stynx_app');
       const database = app.get(Database);
       await database.withSystemContext('seed webhook RLS proof', async () => database.tx(async (trx) => {
         await trx.query(`
