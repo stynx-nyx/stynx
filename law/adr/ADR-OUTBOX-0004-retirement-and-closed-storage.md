@@ -151,6 +151,32 @@ It neither repairs data nor grants privileges. Consumer-owned mode continues
 to make no claim about the consumer's audit-chain linearization; custom legacy
 cutover remains unsupported under this record.
 
+Role verification includes every parent capability reachable through PostgreSQL
+`MEMBER`, including roles reachable by `SET ROLE` despite `NOINHERIT`. Applicable
+parent/PUBLIC policies and effective privileges cannot bypass the configured
+app/reader boundary; neither role may obtain `WITH GRANT OPTION`. The owner
+must have full row visibility (`row_security_active` false) before stored-row
+checks. Declared foreign keys must have enabled enforcement triggers, and an
+orphan scan must independently confirm their stored-row invariants. A validated
+constraint definition alone is insufficient. The ownership singleton, legacy
+mapping/generation, migrated delivery and ACK tenant identities must agree.
+
+For D3's transferred cursor invariant in ADR-OUTBOX-0003, clock-at-least-max is
+necessary but not sufficient when a transferred row ties the next append instant.
+Stored event timestamps must be finite and have millisecond precision. Each
+tenant clock must cover its greatest event instant and remain in the runtime's
+unsigned 48-bit millisecond range. Let `t_next` be the greater of that clock and
+the live wall clock floored to milliseconds, and `n_next` the next available
+global sequence value, accounting for `is_called` without advancing it. The
+runtime `outbox.event_uuid(t_next, n_next)` must sort strictly after every stored
+event ID whose timestamp equals `t_next`; the sequence must not be exhausted.
+This check concerns the public `(createdAt, id)` order, not a requirement to
+rewrite historical IDs as UUIDv7. An arbitrary historical UUID is admissible
+when `t_next` is later than its timestamp. A future-dated imported row at the
+prospective instant remains unsupported until its tied ID ordering is safe or
+the actual wall clock advances beyond it. Verification never rewrites a fact,
+advances a sequence or fabricates a later clock to obtain a pass.
+
 `OutboxModuleOptions.storageMode?: 'platform' | 'consumer-owned'` defaults to
 `platform`. Explicit consumer-owned mode refuses `cutoverLegacyMessages()`
 before any transaction/SQL with `OutboxConsumerStorageCutoverUnsupportedError`,

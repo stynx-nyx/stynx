@@ -138,8 +138,14 @@ Mandatory checks include:
 - Exact configured app identity, neither superuser nor `BYPASSRLS`, no ownership
   or inherited membership of a protected owner, and no mutation grant on immutable
   history. Reader access is read-only; default roles receive the same checks.
+- All parent capabilities reachable through `MEMBER`, including `SET ROLE`
+  paths with `NOINHERIT`; applicable parent/PUBLIC policies and effective ACLs
+  cannot broaden the contract. App and reader cannot hold grant options.
 - Enabled and forced RLS, tenant-leading keys/FKs, original tenant identity,
   dedup uniqueness, counter/cursor monotonicity and other stored-row invariants.
+- Enabled internal FK enforcement triggers and independent stored orphan scans;
+  the ownership singleton, legacy map/generation, migrated delivery and ACK
+  tenant identities must agree.
 - Owner visibility with `row_security_active` false on every protected relation;
   a matching owner name alone does not prove that all rows were inspected.
 - Retirement terminal/provenance consistency; acknowledged or retired rows are
@@ -164,6 +170,26 @@ to the existing column `notNull` property. It omits only the owner's implicit
 `MAINTAIN` catalog grant; it does not discard an app grant or inherited privilege.
 On PostgreSQL 17 and later, effective app `MAINTAIN` privilege is checked as a
 hazard alongside the other forbidden privileges.
+
+## Transferred event cursor safety
+
+A tenant clock at least as large as its greatest stored event timestamp is
+necessary but does not by itself guarantee the next append sorts after an
+imported event. Stored timestamps must be finite milliseconds; clocks must lie
+between `0` and `281474976710655` milliseconds. Verification computes the
+prospective append instant as `max(last_ms, floor(live_wall_clock_ms))` and the
+next global sequence value from `last_value` and `is_called`, without calling
+`nextval`. The sequence must have an available signed-bigint value. At that
+prospective instant, the runtime-generated UUID must sort strictly after every
+stored event ID with the same timestamp.
+
+Imported historical IDs need not be UUIDv7. If the prospective instant is later
+than a row's timestamp, its arbitrary UUID does not obstruct cursor ordering.
+If an imported future timestamp ties that instant, its ID must be below the
+prospective runtime UUID. An unsafe tie fails verification; actual wall-clock
+advance beyond that timestamp can later make it admissible. The verifier never
+changes timestamps, clocks, IDs or sequence state. A pass describes the observed
+database state, not a permission to import later rows without rechecking.
 
 ## Upgrade and import boundaries
 
