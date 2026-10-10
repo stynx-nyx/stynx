@@ -413,6 +413,49 @@ test('strict options and observed tail paths reject accessors and proxies withou
   assert.equal(trapCalls, 0);
 });
 
+test('all four comparison inputs must be own properties rather than inherited valid summaries', () => {
+  const values = strictInput(['storage_presign_duration_ms']);
+  const originals = Object.fromEntries(
+    Object.keys(values).map((key) => [key, Object.getOwnPropertyDescriptor(Object.prototype, key)]),
+  );
+  try {
+    for (const [key, value] of Object.entries(values))
+      Object.defineProperty(Object.prototype, key, { value, writable: true, configurable: true });
+    assert.throws(() => compareRequiredMetricTails({}), /own data.*options/u);
+    for (const missing of Object.keys(values)) {
+      const candidate = { ...values };
+      delete candidate[missing];
+      assert.throws(() => compareRequiredMetricTails(candidate), /own data.*options/u);
+    }
+  } finally {
+    for (const [key, descriptor] of Object.entries(originals)) {
+      if (descriptor) Object.defineProperty(Object.prototype, key, descriptor);
+      else delete Object.prototype[key];
+    }
+  }
+});
+
+test('missing own options never invoke an inherited getter while checking the closed envelope', () => {
+  const original = Object.getOwnPropertyDescriptor(Object.prototype, 'current');
+  let getterCalls = 0;
+  try {
+    Object.defineProperty(Object.prototype, 'current', {
+      configurable: true,
+      get() {
+        getterCalls += 1;
+        throw new Error('inherited getter must not execute');
+      },
+    });
+    const candidate = strictInput(['storage_presign_duration_ms']);
+    delete candidate.current;
+    assert.throws(() => compareRequiredMetricTails(candidate), /own data.*options/u);
+    assert.equal(getterCalls, 0);
+  } finally {
+    if (original) Object.defineProperty(Object.prototype, 'current', original);
+    else delete Object.prototype.current;
+  }
+});
+
 test('a tail-only spike with an unchanged p95 is not a degradation', () => {
   const current = summary({
     ...steady,

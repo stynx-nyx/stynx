@@ -92,13 +92,19 @@ export function compareRequiredMetricTails(options) {
     isProxy(options) ||
     Array.isArray(options) ||
     ![Object.prototype, null].includes(Object.getPrototypeOf(options)) ||
+    Reflect.ownKeys(options).length !== allowed.size ||
+    [...allowed].some((key) => !Object.hasOwn(options, key)) ||
     Reflect.ownKeys(options).some(
       (key) =>
         !allowed.has(key) || !Object.hasOwn(Object.getOwnPropertyDescriptor(options, key), 'value'),
     )
   )
-    throw new Error('Strict k6 comparison requires only declared comparison options');
-  const { current, baseline, reference, requiredMetrics } = options;
+    throw new Error(
+      'Strict k6 comparison requires usable own data for all declared comparison options',
+    );
+  const { current, baseline, reference, requiredMetrics } = Object.fromEntries(
+    [...allowed].map((key) => [key, strictDataProperty(options, key, `options ${key}`)]),
+  );
   if (
     !Array.isArray(requiredMetrics) ||
     isProxy(requiredMetrics) ||
