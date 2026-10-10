@@ -275,7 +275,17 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
           `select allowed_actions from offline.sync_conflict_evidence where tenant_id=$1::uuid and conflict_id=$2::uuid limit 1`,
           [scope.tenantId, id],
         );
-        if (evidence.rows[0] && !evidence.rows[0].allowed_actions.includes(input.resolution))
+        const context = {
+          ...scope,
+          agentId: row.agent_id,
+          orgUnitId: row.org_unit_id,
+          deviceId: row.device_id,
+          batchId: row.device_batch_id,
+          now,
+        };
+        const allowed =
+          (await port.allowedActions?.(trx, id, context)) ?? evidence.rows[0]?.allowed_actions;
+        if (allowed !== undefined && !allowed.includes(input.resolution))
           throw new OfflineSyncError(
             'OFFLINE_SYNC_CONFLICT_RESOLUTION',
             409,
@@ -285,14 +295,7 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
           trx,
           id,
           input.resolution,
-          {
-            ...scope,
-            agentId: row.agent_id,
-            orgUnitId: row.org_unit_id,
-            deviceId: row.device_id,
-            batchId: row.device_batch_id,
-            now,
-          },
+          context,
         );
         if (resolved.status !== 'resolved' && resolved.status !== 'open')
           throw new OfflineSyncError(
