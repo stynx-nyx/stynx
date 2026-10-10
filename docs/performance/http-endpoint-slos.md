@@ -336,6 +336,21 @@ proof cannot earn PASS.
 
 ## Additional workload review boundary
 
+The accepted
+[supplemental endpoint workload](supplemental-endpoint-workload.md) schedules
+exactly 600 target requests at 2/s for 300 seconds, with 2 preallocated/10 maximum
+VUs, for each additional required operation and separately required semantic
+case. One owned composition and one measured case execute at a time by default.
+Setup/authentication/follow-up/cleanup traffic is separately budgeted and never
+fills the target samples. This profile is a new architecture choice, not a
+production demand forecast, calibration result or advance performance PASS.
+Actual weighted rolling-window quotas, tenant/client allocation, session expiry,
+real fixture transitions and DB/provider/host capacity must satisfy the linked
+contract before an immutable qualification manifest is bound. Bind the exact
+percentile algorithm before any qualifying run. Larger populations or concurrency
+need prospective review/binding; no retrospective adjustment may tune away an
+observed SLO failure. All existing four profiles and strict SLOs remain intact.
+
 INV-PERF-001 declares p50/p95 limits under nominal load; it does not prescribe a
 numeric HTTP sample minimum, rate, duration or VU count. The cold-unit proxy's
 five samples are unrelated. An added endpoint workload must therefore bind a

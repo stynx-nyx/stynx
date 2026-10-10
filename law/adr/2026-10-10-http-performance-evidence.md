@@ -106,6 +106,19 @@ not yet been reconciled into complete performance evidence.
    independently reviews custody and complete populations. Preserve old
    observations, signer trust, normal hooks and all release controls. This
    document alone does not close an issue or a machine cell.
+9. **Supplemental per-operation qualification.** Accept the
+   [supplemental workload contract](../../docs/performance/supplemental-endpoint-workload.md):
+   each additional required operation/semantic case schedules exactly 600 target
+   requests at 2/s for 300 seconds with 2 preallocated/10 maximum VUs. Default
+   execution is one owned composition and one measured operation/case at a time.
+   This new sampling design is not a production forecast, existing invariant
+   sample floor or advance PASS. Before qualification, bind the percentile
+   algorithm, legitimate rolling-window quota allocation, real fixture/resource
+   capacity and immutable manifest following non-promoting calibration.
+   Prospectively review and bind any larger population or concurrency amendment;
+   never tune away an observed SLO failure. Preserve every existing profile,
+   threshold, control and strict per-endpoint SLO. Missing admission, fixtures,
+   source/build custody or required provider inputs remain blocking.
 
 ## Characterized expected-refusal operation
 
