@@ -854,7 +854,8 @@
         "initial_queue_status": {
           "enum": ["received", "pending"]
         }
-      }
+      },
+      "description": "Closed source facts. Internal response_body_is_archived is excluded and cannot be supplied; the owner importer derives it exclusively from independent archive verification."
     },
     "batchesKey": {
       "type": "object",

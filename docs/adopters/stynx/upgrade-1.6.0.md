@@ -133,6 +133,11 @@ maintenance locks. Exact source replay returns the original receipt; changed
 content under the same source identity refuses. Only independently verified
 archives enable exact raw-byte closed replay. Keep unverified original bytes
 in the owner-only receipt and the batch `legacy_closed_unverified`.
+Migration 0008 also adds the internal archive-wire marker/default and history
+guard. Ordinary batches default false and retain existing replay serialization.
+Do not provide this marker in source manifests or set it from application code;
+only independently verified owner import derives true. Live verification checks
+matching immutable archive custody before raw-byte replay is supported.
 
 The [offline API](../../framework/contracts/offline-sync-api.md) and accepted
 ADR-MOBILE-OFFLINE-0004 define atomicity, key/hash identity, numbering and replay.

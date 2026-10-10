@@ -142,7 +142,11 @@ configured tenant table; there is no tenant remap or tenant-creation port.
 
 Rows use exactly the named migration columns, including nullable historical
 provenance and 0005–0007 additions. The bytea column `response_body_bytes` is
-represented only by `response_body_base64`. No relation name, arbitrary column,
+represented only by `response_body_base64`. The internal 0008
+`response_body_is_archived` column is deliberately absent from the source DTO;
+`additionalProperties: false` refuses any caller-supplied value. The importer
+derives it only from actual independent archive verification and compares the
+derived internal value separately from source row fields. No relation name, arbitrary column,
 SQL expression, generated identity, default timestamp or extra row kind is
 accepted. Context/payload/evidence/attributes are JSON data only, never executable
 mapping instructions. Validate each field against its specific storage and API
@@ -182,7 +186,18 @@ facts. Live source leases cannot grant a new actor authority during transfer;
 resolve incompatible lifecycle state at the source before collecting a new
 snapshot. No imported applied fact is downgraded or number reissued.
 
-Forward migration `0008` adds `offline.sync_import_receipts` only after 0007.
+Forward migration `0008`, applied after 0007, adds
+`offline.sync_import_receipts` and
+`offline.sync_batches.response_body_is_archived boolean NOT NULL DEFAULT false`,
+plus the archive-history guard. Existing/ordinary new batches default false;
+this additive marker does not reinterpret their stored JSON response or change
+ordinary replay. Only the owner import path may set true, exclusively for a
+verified archive. Application-role INSERT/UPDATE must not establish true: the
+guard checks actual configured relation-owner identity, never a caller-controlled
+GUC/flag claiming maintenance authority. Once true, prevent removal/downgrade,
+deletion or changes to batch identity, closed status, response bytes/status/
+headers. Preserve unrelated ordinary-batch behavior. The closed catalog covers
+the column/default and enabled archive guard as well as the ledger.
 Its immutable logical source identity is `(source_system, source_snapshot_id)`.
 The physical primary lookup key may be the SHA-256 digest of canonical JSON
 `[source.system, source.snapshotId]`, so bounded long identities do not exceed
@@ -237,8 +252,17 @@ is not proof. Without the port or without actual independent proof, verdict is
 unverified and the batch stays `legacy_closed_unverified`; raw source facts remain
 in the immutable receipt. The consumer owns the trust/provenance of this verifier.
 
-Only a verified archive can enable closed replay. Preserve response bytes and
-headers immutably and replay them through a confined raw-byte response seam:
+Only a verified archive can enable closed replay. The importer sets
+`response_body_is_archived = true` atomically with its independently verified
+archive and immutable receipt. Unverified imports remain false and
+`legacy_closed_unverified`. The application role does not read the import ledger
+to choose transport behavior. The service/controller raw-byte seam branches only
+on the stored true marker, never source input, presence of response bytes or an
+in-memory caller claim. False retains the existing ordinary closed-response
+JSON/controller serialization and envelope behavior unchanged.
+
+Preserve true-marked response bytes and headers immutably and replay them
+through that confined raw-byte response seam:
 the transport's stored status/headers and original body bytes are sent directly,
 without JSON parse/stringify or framework serialization changing whitespace,
 key order or encoding. Existing current-request replay markers and correlation
@@ -260,7 +284,10 @@ context dependencies. An SQL-reference inventory alone cannot prove these.
 Read-only verification checks all tenants, original identity relationships,
 FK orphan absence, counter/no-reissue and range overlap, mixed-origin active
 admission, provenance/receipt integrity, durable batch/transport/attempt links,
-and verified versus unverified archived replay consistency. Missing or unreadable
+and verified versus unverified archived replay consistency. Every true archive
+marker must have matching immutable verified import custody, batch identity and
+body/status/header digests. An orphan or mismatching marker fails supported
+status; a boolean alone is not archive evidence. Missing or unreadable
 checks fail supported status. The exclusive importer uses shared internal
 inspection in its writable boundary, never a weakened public verifier.
 

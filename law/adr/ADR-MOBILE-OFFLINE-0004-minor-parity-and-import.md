@@ -410,6 +410,17 @@ route/status/envelope and replay-marker assertions. An unverified archive remain
 `legacy_closed_unverified` and retains its original source bytes in the receipt.
 The consumer remains responsible for source collection/mapping and archive trust.
 
+The unpublished forward 0008 also adds internal
+`sync_batches.response_body_is_archived boolean NOT NULL DEFAULT false` and
+its immutable archive-history guard. The source DTO excludes this field;
+only actual owner import verification derives true, with immutable receipt
+custody. Ordinary existing/new batches remain false and keep their replay
+serialization/envelope behavior. The raw-byte transport path selects only true
+stored markers without app-role reads of the owner ledger. Guard actual owner
+admission of true, immutable archive batch identity/closed status/body/status/
+headers/flag and deletion. Verify each true marker against its independent
+verified receipt and digests; a caller flag or orphan boolean is not evidence.
+
 ## Migration and compatibility
 
 Use forward offline migrations after `0004`; preserve `0001`–`0004`, legacy
