@@ -1,6 +1,6 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { RequestContextMutator } from '@stynx-nyx/core';
+import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import {
   STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL,
   STYNX_VERIFIED_TENANT_ID,
@@ -43,7 +43,7 @@ async function setup(allowed = true) {
     withSystemContext: vi.fn(async (_reason: string, callback: () => Promise<unknown>) =>
       callback(),
     ),
-    tx: vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
+    txIndependent: vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
       callback({ query }),
     ),
   };
@@ -77,7 +77,8 @@ async function setup(allowed = true) {
       ),
     );
   };
-  return { module, port, run, query };
+  const requestContext = module.get(RequestContext, { strict: false });
+  return { module, port, run, query, database, mutator, requestContext };
 }
 
 describe('resolved tenant command context port', () => {
@@ -199,7 +200,10 @@ describe('resolved tenant command context port', () => {
 
       expect(port.get(request)).toBe(undefined);
       await expect(run(request, 'optional')).resolves.toBe('handled');
-      expect(query).toHaveBeenCalledWith(expect.stringContaining('auth.memberships'), [ACTOR, TENANT]);
+      expect(query).toHaveBeenCalledWith(expect.stringContaining('auth.memberships'), [
+        ACTOR,
+        TENANT,
+      ]);
       expect(port.get(request)).toEqual({ tenantId: TENANT, actorId: ACTOR, mode: 'verified' });
     } finally {
       await module.close();
@@ -217,6 +221,106 @@ describe('resolved tenant command context port', () => {
       Reflect.set(request, STYNX_VERIFIED_TENANT_ID, TENANT);
       await expect(run(request, 'protected')).rejects.toThrow();
       expect(port.get(request)).toBe(undefined);
+    } finally {
+      await module.close();
+    }
+  });
+
+  it('scopes restricted membership SQL without publishing a command proof and restores its caller frame', async () => {
+    const { module, port, run, query, database, mutator, requestContext } = await setup();
+    const request: Record<string | symbol, unknown> = {
+      headers: { 'x-tenant-id': TENANT },
+      originalUrl: '/records',
+      principal: { id: ACTOR },
+    };
+    Reflect.set(request, STYNX_VERIFIED_TENANT_ID, TENANT);
+    const frames: unknown[] = [];
+    query.mockImplementation(async () => {
+      frames.push(requestContext.snapshot());
+      expect(port.get(request)).toBe(undefined);
+      return { rows: [{ allowed: true }] };
+    });
+    const outer = {
+      requestId: 'outer',
+      startedAt: new Date(),
+      tenantId: OTHER_TENANT,
+      actorId: OTHER_ACTOR,
+    };
+    try {
+      await mutator.runWithRequestContext(outer, async () => {
+        await expect(run(request, 'protected')).resolves.toBe('handled');
+        expect(requestContext.snapshot()).toEqual(outer);
+      });
+      expect(frames).toEqual([expect.objectContaining({ tenantId: TENANT, actorId: ACTOR })]);
+      expect(database.txIndependent).toHaveBeenCalledWith(expect.any(Function), {
+        role: 'reader',
+        readonly: true,
+        replica: false,
+      });
+      expect(database.withSystemContext).not.toHaveBeenCalled();
+      expect(port.get(request)).toEqual({ tenantId: TENANT, actorId: ACTOR, mode: 'protected' });
+    } finally {
+      await module.close();
+    }
+  });
+
+  it('checks public tenant activity as the configured nominal actor and optional membership as the verified actor', async () => {
+    const { module, port, run, query, database, requestContext } = await setup();
+    const request: Record<string | symbol, unknown> = {
+      headers: { host: 'portal.test' },
+      originalUrl: '/portal/records',
+      principal: { id: ACTOR },
+      stynxClaims: { sub: ACTOR, tenantId: TENANT },
+    };
+    Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
+    const frames: unknown[] = [];
+    query.mockImplementation(async () => {
+      frames.push(requestContext.snapshot());
+      expect(port.get(request)).toBe(undefined);
+      return { rows: [{ allowed: true }] };
+    });
+    try {
+      await expect(run(request, 'optional')).resolves.toBe('handled');
+      expect(frames).toEqual([
+        expect.objectContaining({ tenantId: TENANT, actorId: NOMINAL }),
+        expect.objectContaining({ tenantId: TENANT, actorId: ACTOR }),
+      ]);
+      expect(database.txIndependent).toHaveBeenCalledTimes(2);
+      expect(database.txIndependent).toHaveBeenCalledWith(expect.any(Function), {
+        role: 'reader',
+        readonly: true,
+        replica: false,
+      });
+      expect(database.withSystemContext).not.toHaveBeenCalled();
+      expect(port.get(request)).toEqual({ tenantId: TENANT, actorId: ACTOR, mode: 'verified' });
+    } finally {
+      await module.close();
+    }
+  });
+
+  it('propagates admission infrastructure failure without proof or leaking its temporary SQL frame', async () => {
+    const { module, port, run, query, mutator, requestContext } = await setup();
+    const request: Record<string | symbol, unknown> = {
+      headers: { 'x-tenant-id': TENANT },
+      originalUrl: '/records',
+      principal: { id: ACTOR },
+    };
+    Reflect.set(request, STYNX_VERIFIED_TENANT_ID, TENANT);
+    const failure = new Error('external SQL connection refused');
+    query.mockRejectedValueOnce(failure);
+    const outer = {
+      requestId: 'outer-failure',
+      startedAt: new Date(),
+      tenantId: OTHER_TENANT,
+      actorId: OTHER_ACTOR,
+    };
+    try {
+      await mutator.runWithRequestContext(outer, async () => {
+        await expect(run(request, 'protected')).rejects.toBe(failure);
+        expect(requestContext.snapshot()).toEqual(outer);
+        expect(port.get(request)).toBe(undefined);
+      });
+      expect(Object.hasOwn(request, 'tenantId')).toBe(false);
     } finally {
       await module.close();
     }

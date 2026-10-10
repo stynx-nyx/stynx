@@ -8,15 +8,23 @@ describe('public tenant route tooling contract', () => {
     try {
       const source = join(workspace, 'packages', 'portal', 'src');
       mkdirSync(source, { recursive: true });
-      writeFileSync(join(workspace, 'packages', 'portal', 'package.json'), '{"name":"@fixture/portal"}\n');
-      writeFileSync(join(source, 'portal.controller.ts'), `
+      writeFileSync(
+        join(workspace, 'packages', 'portal', 'package.json'),
+        '{"name":"@fixture/portal"}\n',
+      );
+      writeFileSync(
+        join(source, 'portal.controller.ts'),
+        `
+        import { Controller, Get } from '@nestjs/common';
+        import { PublicTenantRoute } from '@stynx-nyx/auth';
         @Controller('/portal')
         export class PortalController {
           @PublicTenantRoute({ optionalAuth: true })
           @Get('/status')
           status() { return {}; }
         }
-      `);
+      `,
+      );
 
       const routeTool = await import('../../../../scripts/list-routes.mjs');
       const [route] = routeTool.collectRoutes({ repoRoot: workspace });

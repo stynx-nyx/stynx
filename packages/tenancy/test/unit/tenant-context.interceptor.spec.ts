@@ -21,16 +21,24 @@ describe('TenantContextInterceptor', () => {
     return `Bearer header.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.sig`;
   }
 
-  function createInterceptor(options: {
-    allowed?: boolean;
-    cached?: boolean | undefined;
-    allowSubdomain?: boolean;
-    publicTenant?: { resolveHost: (context: { host?: string; path: string }) => string | undefined; actorId: string };
-  } = {}) {
+  function createInterceptor(
+    options: {
+      allowed?: boolean;
+      cached?: boolean | undefined;
+      allowSubdomain?: boolean;
+      publicTenant?: {
+        resolveHost: (context: { host?: string; path: string }) => string | undefined;
+        actorId: string;
+      };
+    } = {},
+  ) {
     const txQuery = vi.fn().mockResolvedValue({ rows: [{ allowed: options.allowed ?? true }] });
     const database = {
       withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
-      tx: vi.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) => fn({ query: txQuery })),
+      tx: vi.fn(),
+      txIndependent: vi.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) =>
+        fn({ query: txQuery }),
+      ),
     };
     const moduleRef = {
       get: vi.fn((token: unknown) => {
@@ -42,6 +50,7 @@ describe('TenantContextInterceptor', () => {
     } as unknown as ModuleRef;
     const requestContext = {
       snapshot: vi.fn(() => ({ requestId: 'req-1', startedAt: new Date() })),
+      hasActiveContext: vi.fn(() => false),
     } as unknown as RequestContext;
     const requestContextMutator = {
       runWithRequestContext: vi.fn((_next, fn: () => unknown) => fn()),
@@ -92,11 +101,14 @@ describe('TenantContextInterceptor', () => {
     const received: unknown[] = [];
 
     const subscription = interceptor
-      .intercept(createExecutionContext({
-        headers: { 'x-tenant-id': TENANT_ID },
-        originalUrl: '/records',
-        principal: { id: ACTOR_ID },
-      }), next)
+      .intercept(
+        createExecutionContext({
+          headers: { 'x-tenant-id': TENANT_ID },
+          originalUrl: '/records',
+          principal: { id: ACTOR_ID },
+        }),
+        next,
+      )
       .subscribe({ next: (value) => received.push(value) });
     await new Promise((resolve) => setImmediate(resolve));
     subscription.unsubscribe();
@@ -120,7 +132,9 @@ describe('TenantContextInterceptor', () => {
       })),
     };
 
-    interceptor.intercept(createExecutionContext({ headers: {}, originalUrl: '/readyz' }), next).subscribe();
+    interceptor
+      .intercept(createExecutionContext({ headers: {}, originalUrl: '/readyz' }), next)
+      .subscribe();
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(requestContextMutator.runWithRequestContext).toHaveBeenCalledWith(
@@ -143,11 +157,14 @@ describe('TenantContextInterceptor', () => {
 
     const received = await new Promise<unknown>((resolve) => {
       interceptor
-        .intercept(createExecutionContext({
-          headers: { 'x-tenant-id': TENANT_ID },
-          originalUrl: '/records',
-          principal: { id: ACTOR_ID },
-        }), next)
+        .intercept(
+          createExecutionContext({
+            headers: { 'x-tenant-id': TENANT_ID },
+            originalUrl: '/records',
+            principal: { id: ACTOR_ID },
+          }),
+          next,
+        )
         .subscribe({ error: resolve });
     });
 
@@ -173,14 +190,17 @@ describe('TenantContextInterceptor', () => {
   it('rejects missing tenant context and mismatched header/claim pairs', async () => {
     const { interceptor } = createInterceptor();
 
-    await expect((interceptor as never).resolveAndValidate({ headers: {}, originalUrl: '/records' })).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      (interceptor as never).resolveAndValidate({ headers: {}, originalUrl: '/records' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
     await expect(
       (interceptor as never).resolveAndValidate({
         headers: { 'x-tenant-id': '018f53e4-28a1-7cd8-a0ff-5b22c3a07111' },
         originalUrl: '/records',
-        stynxClaims: { sub: '018f53e4-28a1-7cd8-a0ff-5b22c3a07112', tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07113' },
+        stynxClaims: {
+          sub: '018f53e4-28a1-7cd8-a0ff-5b22c3a07112',
+          tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07113',
+        },
       }),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
@@ -233,7 +253,10 @@ describe('TenantContextInterceptor', () => {
       (interceptor as never).resolveAndValidate({
         headers: { host: '018f53e4-28a1-7cd8-a0ff-5b22c3a07111.example.test' },
         originalUrl: '/records',
-        stynxClaims: { sub: '018f53e4-28a1-7cd8-a0ff-5b22c3a07112', tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07111' },
+        stynxClaims: {
+          sub: '018f53e4-28a1-7cd8-a0ff-5b22c3a07112',
+          tenantId: '018f53e4-28a1-7cd8-a0ff-5b22c3a07111',
+        },
       }),
     ).resolves.toEqual({ tenantId: TENANT_ID, checkedActorId: ACTOR_ID });
 
@@ -241,8 +264,10 @@ describe('TenantContextInterceptor', () => {
     expect(txQuery).not.toHaveBeenCalledTimes(1);
   });
 
-  it('trims tenant sources, validates membership through owner readonly tx, and caches the decision', async () => {
-    const { interceptor, txQuery, database, membershipCache } = createInterceptor({ allowed: true });
+  it('trims tenant sources, validates membership through an independent scoped reader readonly tx, and caches the decision', async () => {
+    const { interceptor, txQuery, database, membershipCache } = createInterceptor({
+      allowed: true,
+    });
 
     await expect(
       (interceptor as never).resolveAndValidate({
@@ -252,12 +277,17 @@ describe('TenantContextInterceptor', () => {
       }),
     ).resolves.toEqual({ tenantId: TENANT_ID, checkedActorId: ACTOR_ID });
 
-    expect(database.withSystemContext).toHaveBeenCalledWith('tenant membership validation', expect.any(Function));
-    expect(database.tx).toHaveBeenCalledWith(expect.any(Function), { role: 'owner', readonly: true });
-    expect(txQuery).toHaveBeenCalledWith(expect.stringContaining('from auth.memberships membership'), [
-      '018f53e4-28a1-7cd8-a0ff-5b22c3a07112',
-      '018f53e4-28a1-7cd8-a0ff-5b22c3a07111',
-    ]);
+    expect(database.withSystemContext).not.toHaveBeenCalled();
+    expect(database.tx).not.toHaveBeenCalled();
+    expect(database.txIndependent).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'reader',
+      readonly: true,
+      replica: false,
+    });
+    expect(txQuery).toHaveBeenCalledWith(
+      expect.stringContaining('from auth.memberships membership'),
+      ['018f53e4-28a1-7cd8-a0ff-5b22c3a07112', '018f53e4-28a1-7cd8-a0ff-5b22c3a07111'],
+    );
     expect(membershipCache.set).toHaveBeenCalledWith(
       '018f53e4-28a1-7cd8-a0ff-5b22c3a07112',
       '018f53e4-28a1-7cd8-a0ff-5b22c3a07111',
@@ -294,10 +324,10 @@ describe('TenantContextInterceptor', () => {
       }),
     ).resolves.toEqual({ tenantId: TENANT_ID, checkedActorId: ACTOR_ID });
 
-    expect(txQuery).toHaveBeenCalledWith(expect.stringContaining('from auth.memberships membership'), [
-      ACTOR_ID,
-      TENANT_ID,
-    ]);
+    expect(txQuery).toHaveBeenCalledWith(
+      expect.stringContaining('from auth.memberships membership'),
+      [ACTOR_ID, TENANT_ID],
+    );
   });
 
   it('falls back from host to hostname when resolving subdomain tenants', async () => {
@@ -360,8 +390,12 @@ describe('TenantContextInterceptor', () => {
     const moduleRef = { get: vi.fn(() => undefined) } as unknown as ModuleRef;
     const interceptor = new TenantContextInterceptor(
       moduleRef,
-      { snapshot: vi.fn(() => ({ requestId: 'req-1', startedAt: new Date() })) } as unknown as RequestContext,
-      { runWithRequestContext: vi.fn((_next, fn: () => unknown) => fn()) } as unknown as RequestContextMutator,
+      {
+        snapshot: vi.fn(() => ({ requestId: 'req-1', startedAt: new Date() })),
+      } as unknown as RequestContext,
+      {
+        runWithRequestContext: vi.fn((_next, fn: () => unknown) => fn()),
+      } as unknown as RequestContextMutator,
       { get: vi.fn(), set: vi.fn() } as unknown as MembershipAccessCache,
       {
         headerName: 'X-Tenant-Id',
