@@ -533,6 +533,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
 
     app = moduleRef.createNestApplication();
     await app.init();
+    await postgres.ensureRoleLogin('stynx_app');
     await app.listen(0, '127.0.0.1');
     expect(app.getHttpServer().listening).toBe(true);
 
