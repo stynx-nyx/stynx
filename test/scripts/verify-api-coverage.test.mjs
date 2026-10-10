@@ -831,3 +831,320 @@ export class IdentityController { @Get('${path}') read() { return {}; } }
     }
   });
 }
+
+test('CTG9 reservation body preserves inherited required fields while widening only shiftId', () =>
+  withRegisteredFixture((fixture) => {
+    const result = invokeCoverage(fixture, undefined, true);
+    assert.equal(result.status, 0, result.stderr);
+    const contract = readFixtureJson(fixture);
+    const legacy = contract.components.schemas.ReserveNumberingInput;
+    const durable = contract.components.schemas.CTG9ReserveNumberingInput;
+    assert.equal(durable.additionalProperties, false);
+    assert.deepEqual(Object.keys(durable.properties).sort(), Object.keys(legacy.properties).sort());
+    assert.deepEqual(durable.required.slice().sort(), [
+      'deviceId',
+      'entityType',
+      'orgUnitId',
+      'requestedSize',
+      'shiftId',
+    ]);
+    for (const property of Object.keys(legacy.properties).filter((name) => name !== 'shiftId'))
+      assert.deepEqual(durable.properties[property], legacy.properties[property]);
+    assert.deepEqual(durable.properties.shiftId, {
+      anyOf: [{ type: 'string' }, { type: 'null', const: null }],
+    });
+    assert.deepEqual(legacy.properties.shiftId, { type: 'string' });
+  }));
+
+function withBodyContract(declarations, run) {
+  const fixture = mkdtempSync(join(tmpdir(), 'stynx-api-dto-heritage-'));
+  try {
+    writeFixtureFile(fixture, 'package.json', { type: 'module' });
+    writeFixtureFile(
+      fixture,
+      'packages/fixture/src/body.controller.ts',
+      `
+import { Body, Controller, Post } from '@nestjs/common';
+${declarations}
+@Controller('/body-contract')
+export class BodyContractController { @Post() create(@Body() input: Mutation) { return input; } }
+`,
+    );
+    const result = invokeCoverage(fixture);
+    return run(result, fixture);
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+for (const [label, declarations, names, required] of [
+  [
+    'plain interface inheritance',
+    'interface Mutation extends Base { enabled: boolean; }',
+    ['name', 'count', 'enabled'],
+    ['name', 'enabled'],
+  ],
+  ['Pick selection', "type Mutation = Pick<Base, 'name'>;", ['name'], ['name']],
+  ['Omit selection', "type Mutation = Omit<Base, 'name'>;", ['count'], []],
+  ['Partial reference', 'type Mutation = Partial<Base>;', ['name', 'count'], []],
+  [
+    'Required partial reference',
+    'type Mutation = Required<Partial<Base>>;',
+    ['name', 'count'],
+    ['name', 'count'],
+  ],
+]) {
+  test(`actual API body schema preserves ${label} field and required semantics`, () =>
+    withBodyContract(
+      `interface Base { name: string; count?: number; }\n${declarations}`,
+      (result, fixture) => {
+        assert.equal(result.status, 0, result.stderr);
+        const schema = readFixtureJson(fixture).components.schemas.Mutation;
+        assert.equal(schema.type, 'object');
+        assert.equal(schema.additionalProperties, false);
+        assert.deepEqual(Object.keys(schema.properties).sort(), names.slice().sort());
+        assert.deepEqual((schema.required ?? []).slice().sort(), required.slice().sort());
+        if (names.includes('name')) assert.deepEqual(schema.properties.name, { type: 'string' });
+        if (names.includes('count')) assert.deepEqual(schema.properties.count, { type: 'number' });
+      },
+    ));
+}
+
+for (const [label, declarations] of [
+  ['missing inherited base', 'interface Mutation extends MissingBase { name: string; }'],
+  [
+    'unsupported non-JSON inheritance',
+    'interface Mutation extends Map<string, { name: string }> {}',
+  ],
+]) {
+  test(`actual API body schema refuses ${label} rather than emitting an incomplete closed object`, () =>
+    withBodyContract(declarations, (result, fixture) => {
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /inherit|base|unsupported|unresolved|schema/iu);
+      assert.equal(existsSync(join(fixture, contractPath)), false);
+    }));
+}
+
+function resolveLocalSchema(schema, schemas) {
+  const visited = new Set();
+  while (schema.$ref) {
+    assert.match(schema.$ref, /^#\/components\/schemas\//u);
+    assert.equal(visited.has(schema.$ref), false, 'fixture field schema must resolve');
+    visited.add(schema.$ref);
+    schema = schemas[schema.$ref.split('/').at(-1)];
+    assert.ok(schema, 'referenced field schema missing');
+  }
+  return schema;
+}
+
+function nullableObject(schema, schemas) {
+  schema = resolveLocalSchema(schema, schemas);
+  const alternatives = schema.anyOf ?? [schema];
+  assert.ok(alternatives.some((candidate) => candidate.type === 'null'));
+  const object = alternatives
+    .map((candidate) => resolveLocalSchema(candidate, schemas))
+    .find((candidate) => candidate.type === 'object');
+  assert.ok(object, 'nullable category must retain its concrete object fields');
+  assert.equal(object.additionalProperties, false);
+  assert.deepEqual(object.required ?? [], []);
+  return object;
+}
+
+function assertNullableScalar(schema, schemas, type) {
+  schema = resolveLocalSchema(schema, schemas);
+  assert.ok(schema.anyOf.some((candidate) => candidate.type === 'null'));
+  assert.ok(schema.anyOf.some((candidate) => candidate.type === type));
+}
+
+test('actual PreferencePatch body retains finite categories nullable reset values and typed nested fields', () =>
+  withRegisteredFixture((fixture) => {
+    const result = invokeCoverage(fixture, undefined, true);
+    assert.equal(result.status, 0, result.stderr);
+    const schemas = readFixtureJson(fixture).components.schemas;
+    const patch = resolveLocalSchema(schemas.PreferencePatch, schemas);
+    assert.equal(patch.type, 'object');
+    assert.equal(patch.additionalProperties, false, 'unknown categories must be refused');
+    assert.deepEqual(patch.required ?? [], []);
+    assert.deepEqual(Object.keys(patch.properties).sort(), [
+      'accessibility',
+      'locale',
+      'notificationDelivery',
+      'theme',
+    ]);
+    const locale = nullableObject(patch.properties.locale, schemas);
+    assert.deepEqual(Object.keys(locale.properties).sort(), ['locale', 'timezone']);
+    assertNullableScalar(locale.properties.locale, schemas, 'string');
+    assertNullableScalar(locale.properties.timezone, schemas, 'string');
+    const notifications = nullableObject(patch.properties.notificationDelivery, schemas);
+    assert.deepEqual(Object.keys(notifications.properties).sort(), ['email', 'inApp', 'push']);
+    for (const schema of Object.values(notifications.properties))
+      assertNullableScalar(schema, schemas, 'boolean');
+    const accessibility = nullableObject(patch.properties.accessibility, schemas);
+    assert.deepEqual(Object.keys(accessibility.properties).sort(), [
+      'largeText',
+      'reduceMotion',
+      'screenReaderOptimized',
+    ]);
+    for (const schema of Object.values(accessibility.properties))
+      assertNullableScalar(schema, schemas, 'boolean');
+    const theme = nullableObject(patch.properties.theme, schemas);
+    const color = resolveLocalSchema(theme.properties.colorScheme, schemas);
+    assert.ok(color.anyOf.some((candidate) => candidate.type === 'null'));
+    const choices = color.anyOf
+      .filter((candidate) => candidate.type !== 'null')
+      .flatMap((candidate) => candidate.enum ?? [candidate.const]);
+    assert.deepEqual(choices.sort(), ['dark', 'light', 'system']);
+  }));
+
+test('finite mapped indexed and keyof body types preserve each selected nested field', () =>
+  withBodyContract(
+    `
+type Category = 'locale' | 'delivery';
+interface Values { locale: { language: string; zone: string }; delivery: { enabled: boolean } }
+type Mutation = { [K in Category]?: { [P in keyof Values[K]]?: Values[K][P] | null } | null };
+`,
+    (result, fixture) => {
+      assert.equal(result.status, 0, result.stderr);
+      const schemas = readFixtureJson(fixture).components.schemas;
+      const mutation = resolveLocalSchema(schemas.Mutation, schemas);
+      assert.equal(mutation.additionalProperties, false);
+      assert.deepEqual(mutation.required ?? [], []);
+      assert.deepEqual(Object.keys(mutation.properties).sort(), ['delivery', 'locale']);
+      const locale = nullableObject(mutation.properties.locale, schemas);
+      assert.deepEqual(Object.keys(locale.properties).sort(), ['language', 'zone']);
+      for (const field of Object.values(locale.properties))
+        assertNullableScalar(field, schemas, 'string');
+      const delivery = nullableObject(mutation.properties.delivery, schemas);
+      assert.deepEqual(Object.keys(delivery.properties), ['enabled']);
+      assertNullableScalar(delivery.properties.enabled, schemas, 'boolean');
+    },
+  ));
+
+test('chained object aliases in intersections retain a valid joined closed body', () =>
+  withBodyContract(
+    'interface Base { name: string; } type First = Base; type Second = First; type Mutation = Second & { count: number };',
+    (result, fixture) => {
+      assert.equal(result.status, 0, result.stderr);
+      const schema = readFixtureJson(fixture).components.schemas.Mutation;
+      assert.equal(schema.type, 'object');
+      assert.equal(schema.additionalProperties, false);
+      assert.deepEqual(schema.properties, { count: { type: 'number' }, name: { type: 'string' } });
+      assert.deepEqual(schema.required.slice().sort(), ['count', 'name']);
+    },
+  ));
+
+for (const [label, declaration] of [
+  [
+    'two conflicting open index constraints',
+    'type Mutation = Record<string, string> & Record<string, number>;',
+  ],
+  [
+    'an open index constraint incompatible with a declared property',
+    'type Mutation = Record<string, string> & { count: number };',
+  ],
+  [
+    'generic inherited substitution that is unsupported',
+    'interface Box<T> { value: T; } interface Mutation extends Box<string> {}',
+  ],
+]) {
+  test(`API body composition refuses ${label} instead of silently dropping a constraint`, () =>
+    withBodyContract(declaration, (result, fixture) => {
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /intersection|index|inherit|generic|unsupported|schema/iu);
+      assert.equal(existsSync(join(fixture, contractPath)), false);
+    }));
+}
+
+test('body schema retains legal Object prototype field names as own typed properties', () =>
+  withBodyContract(
+    'interface Base { toString: string; __proto__: number; constructor: boolean } interface Mutation extends Base { enabled: boolean }',
+    (result, fixture) => {
+      assert.equal(result.status, 0, result.stderr);
+      const schema = readFixtureJson(fixture).components.schemas.Mutation;
+      assert.deepEqual(Object.keys(schema.properties).sort(), [
+        '__proto__',
+        'constructor',
+        'enabled',
+        'toString',
+      ]);
+      for (const [name, type] of [
+        ['toString', 'string'],
+        ['__proto__', 'number'],
+        ['constructor', 'boolean'],
+        ['enabled', 'boolean'],
+      ]) {
+        assert.equal(Object.hasOwn(schema.properties, name), true);
+        assert.deepEqual(schema.properties[name], { type });
+      }
+      assert.deepEqual(schema.required.slice().sort(), [
+        '__proto__',
+        'constructor',
+        'enabled',
+        'toString',
+      ]);
+    },
+  ));
+
+test('unconstrained JSON index composition preserves health-style declared fields and open JSON values', () =>
+  withBodyContract(
+    'type Mutation = { count: number; label?: string } & Record<string, unknown>;',
+    (result, fixture) => {
+      assert.equal(result.status, 0, result.stderr);
+      const schema = readFixtureJson(fixture).components.schemas.Mutation;
+      assert.equal(schema.type, 'object');
+      assert.deepEqual(schema.properties, { count: { type: 'number' }, label: { type: 'string' } });
+      assert.deepEqual(schema.required, ['count']);
+      assert.ok(
+        schema.additionalProperties === true ||
+          schema.additionalProperties.$ref === '#/components/schemas/JsonValue',
+        'the unconstrained JSON index must remain open without erasing named field types',
+      );
+    },
+  ));
+
+test('JWKS-style compatible string index composition retains named key constraints', () =>
+  withBodyContract(
+    "type Mutation = { keys: Array<Record<string, string | undefined> & { kid: string; use: 'sig'; alg: 'RS256' }> };",
+    (result, fixture) => {
+      assert.equal(result.status, 0, result.stderr);
+      const schema = readFixtureJson(fixture).components.schemas.Mutation;
+      assert.equal(schema.properties.keys.type, 'array');
+      const key = schema.properties.keys.items;
+      assert.equal(key.type, 'object');
+      assert.deepEqual(key.properties.kid, { type: 'string' });
+      assert.deepEqual(key.properties.use, { type: 'string', const: 'sig' });
+      assert.deepEqual(key.properties.alg, { type: 'string', const: 'RS256' });
+      assert.deepEqual(key.required.slice().sort(), ['alg', 'kid', 'use']);
+      const allowedExtras = key.additionalProperties;
+      assert.ok(
+        allowedExtras.type === 'string' ||
+          (allowedExtras.anyOf?.length === 1 && allowedExtras.anyOf[0].type === 'string'),
+        'extra JWK members must remain string-constrained',
+      );
+    },
+  ));
+
+test('composition schema refuses an inherited Object prototype name as a missing local definition', () =>
+  withRegisteredFixture((fixture) => {
+    const schema = readFixtureJson(fixture, compositionSchemaPath);
+    schema.properties.compatibilityBaseline = { $ref: '#/$defs/toString' };
+    writeFixtureFile(fixture, compositionSchemaPath, schema);
+    assertRefusesBeforeOutput(fixture, /reference|ref/iu);
+  }));
+
+test('finite Record body keys remain required closed string properties', () =>
+  withBodyContract("type Mutation = Record<'id' | 'name', string>;", (result, fixture) => {
+    assert.equal(result.status, 0, result.stderr);
+    const schema = readFixtureJson(fixture).components.schemas.Mutation;
+    assert.equal(schema.type, 'object');
+    assert.equal(schema.additionalProperties, false);
+    assert.deepEqual(schema.properties, { id: { type: 'string' }, name: { type: 'string' } });
+    assert.deepEqual(schema.required.slice().sort(), ['id', 'name']);
+  }));
+
+test('unbounded numeric Record body keys refuse instead of widening to arbitrary string keys', () =>
+  withBodyContract('type Mutation = Record<number, string>;', (result, fixture) => {
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Record|key|unsupported|schema/iu);
+    assert.equal(existsSync(join(fixture, contractPath)), false);
+  }));
