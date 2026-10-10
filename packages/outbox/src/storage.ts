@@ -45,15 +45,15 @@ function bindSql(sql: string, binding: StorageRoleBinding): string {
   const roles = roleMap(binding);
   return sql
     .replace(
-      /REFERENCES tenancy\.tenants\(id\)/gu,
-      `REFERENCES ${quoteStorageIdentifier(binding.tenantTable.schema)}.${quoteStorageIdentifier(binding.tenantTable.table)}(${quoteStorageIdentifier(binding.tenantTable.column)})`,
-    )
-    .replace(
       /'(stynx_owner|stynx_app|stynx_reader)'|\b(stynx_owner|stynx_app|stynx_reader)\b/gu,
       (_whole, literal: string | undefined, identifier: string | undefined) => {
         const value = roles[literal ?? identifier!]!;
         return literal ? `'${value.replaceAll("'", "''")}'` : quoteStorageIdentifier(value);
       },
+    )
+    .replace(
+      /REFERENCES tenancy\.tenants\(id\)/gu,
+      `REFERENCES ${quoteStorageIdentifier(binding.tenantTable.schema)}.${quoteStorageIdentifier(binding.tenantTable.table)}(${quoteStorageIdentifier(binding.tenantTable.column)})`,
     );
 }
 function policyName(name: string, roles: readonly string[], binding: StorageRoleBinding): string {
@@ -118,16 +118,17 @@ function bindCatalog(binding: StorageRoleBinding): StorageCatalogEntry[] {
         entry.name.slice(0, dot + 1) +
         policyName(entry.name.slice(dot + 1), entry.value.roles as string[], binding);
     }
+    const bound = replace(entry) as StorageCatalogEntry;
     if (
       entry.kind === 'constraint' &&
       entry.value.referencedSchema === 'tenancy' &&
       entry.value.referencedTable === 'tenants'
     ) {
-      entry.value.referencedSchema = binding.tenantTable.schema;
-      entry.value.referencedTable = binding.tenantTable.table;
-      entry.value.referencedColumns = [binding.tenantTable.column];
+      bound.value.referencedSchema = binding.tenantTable.schema;
+      bound.value.referencedTable = binding.tenantTable.table;
+      bound.value.referencedColumns = [binding.tenantTable.column];
     }
-    return [replace(entry) as StorageCatalogEntry];
+    return [bound];
   });
 }
 
