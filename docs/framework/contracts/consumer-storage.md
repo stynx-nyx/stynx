@@ -53,6 +53,14 @@ binding. Every identifier is nonempty, at most 63 UTF-8 bytes, validated and
 quoted independently; no arbitrary SQL or dotted identifier fragment is accepted.
 Schema `outbox`/`offline` is fixed by the runtime SQL.
 
+The data package also exports `StorageBindingOptions`,
+`resolveStorageRoleBinding(options?)`, `quoteStorageIdentifier(identifier)` and
+`collectStorageCatalog(trx, schema)`, with the `StorageCatalogEntry` type. The
+resolver applies these defaults and rejects unknown options, malformed identifiers,
+duplicate role identities and `PUBLIC` as a role. The catalog collector returns
+sorted `{ kind, name, value }` entries from catalog queries; collecting entries
+alone is not verification or a supported-storage verdict.
+
 `renderOutboxStorage(options?)` returns `OutboxStorageArtifact` with
 `contractVersion`, `packageVersion`, resolved `binding`, `objectsSql`,
 `roleBindingsSql` and `manifest`. The objects artifact contains only outbox
@@ -75,6 +83,44 @@ opens a second connection, starts/commits the caller's transaction, executes DDL
 grants a privilege or repairs a row. A command-line wrapper returns nonzero when
 `supported` is false. Unavailable/unknown checks cannot count as passes.
 
+## Outbox storage command
+
+The outbox package ships the `stynx-outbox-storage` executable. Rendering needs
+neither a database URL nor a connection and writes the complete artifact as JSON
+to standard output:
+
+```sh
+stynx-outbox-storage --render \
+  --owner-role consumer_owner --app-role role_app_backend \
+  --reader-role consumer_reader \
+  --tenant-schema auth --tenant-table tenants --tenant-column id
+```
+
+Omit role and tenant flags to use the defaults above. `--no-reader` selects
+`readerRole: null` and cannot be combined with `--reader-role`. When overriding
+the tenant table, supply all three separate flags: `--tenant-schema`,
+`--tenant-table` and `--tenant-column`. Unknown flags, positional arguments and
+invalid bindings are refused. The command emits SQL in the JSON artifact; it
+does not apply that SQL.
+
+Without `--render`, the command verifies the live database using the same binding
+flags. `--database-url-env NAME` selects the environment variable containing the
+owner connection URL; its default is `STYNX_STORAGE_DATABASE_URL`. Pass the
+variable name, never a URL on the command line:
+
+```sh
+stynx-outbox-storage --database-url-env CONSUMER_STORAGE_OWNER_URL \
+  --owner-role consumer_owner --app-role role_app_backend --no-reader \
+  --tenant-schema auth --tenant-table tenants --tenant-column id
+```
+
+The command connects, begins a read-only transaction, prints the verification
+report as JSON and rolls the transaction back before disconnecting. Exit status
+is zero only for a supported report; failed/unknown checks or configuration and
+connection refusals return nonzero. Refusals do not echo the connection URL or
+secret values. This CLI owns its connection and transaction; the library verifier
+continues to use only the caller-supplied transaction.
+
 ## Closed manifest and checks
 
 The generated manifest is versioned and shipped in the package. It enumerates
@@ -94,6 +140,8 @@ Mandatory checks include:
   history. Reader access is read-only; default roles receive the same checks.
 - Enabled and forced RLS, tenant-leading keys/FKs, original tenant identity,
   dedup uniqueness, counter/cursor monotonicity and other stored-row invariants.
+- Owner visibility with `row_security_active` false on every protected relation;
+  a matching owner name alone does not prove that all rows were inspected.
 - Retirement terminal/provenance consistency; acknowledged or retired rows are
   not outstanding, and genuine historical evidence is not reconstructed.
 - Offline canonical stored hashes, non-overlapping/non-reissued numbering,
@@ -105,6 +153,17 @@ secrets and payloads are not echoed. Permission errors are not silently skipped.
 Source/canonical manifest regeneration and real PostgreSQL catalog equivalence
 are separate repository gates; a self-consistent handwritten manifest is not
 enough. Test platform-default and independently rendered consumer installations.
+
+`pnpm check:outbox-storage` checks generated artifact freshness and closure of
+runtime storage references. It is a mandatory `ci:stynx` gate before
+`check:trace`; live catalog equivalence and consumer-installation tests remain
+required independently.
+
+Catalog comparison normalizes PostgreSQL 18's separate NOT NULL constraint rows
+to the existing column `notNull` property. It omits only the owner's implicit
+`MAINTAIN` catalog grant; it does not discard an app grant or inherited privilege.
+On PostgreSQL 17 and later, effective app `MAINTAIN` privilege is checked as a
+hazard alongside the other forbidden privileges.
 
 ## Upgrade and import boundaries
 
