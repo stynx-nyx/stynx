@@ -305,6 +305,56 @@ The existing runner's nonempty-file check and zero exit alone are insufficient.
 Do not fabricate counters, infer latency from a build/unit duration, or accept a
 cached report as a new measurement.
 
+## Required read-only refusal witness
+
+The closed roster includes `GET /_probes/readonly-write` as the exact
+`expected-refusal` operation defined in
+[ADR-PERF-0001](../../law/adr/2026-10-10-http-performance-evidence.md#characterized-expected-refusal-operation).
+The authorized request must produce HTTP 500, `code: READONLY_VIOLATION` and
+message `Read-only transaction cannot execute a write statement` through the
+actual application/database path. Preserve its characterized envelope and
+source-produced context. No generic 500, other error, 2xx, rate-limit response
+or fabricated refusal qualifies. Existing unauthenticated, permission and
+rate-limit rejection tests remain separate required behavioral witnesses.
+
+Bind real-database full-visibility before/after snapshots and exact target
+queries for both missing and existing `tenancy.tenant_settings` target rows;
+prove the attempted insert/update did not change business state or `updated_at`.
+Use isolated owned fixture state without competing writers and independently
+check the refusal/rollback boundary. Error response assertions alone and an
+RLS-filtered empty result are insufficient. Declare incidental audit/rate-limit
+telemetry separately and keep the real guards active.
+
+Measure this operation's own full HTTP distribution, strict read p50 < 200 ms
+and p95 < 800 ms, sample counts, complete arrival execution and exact failure
+counts. Retain it in the required manifest and report. Any expected-status
+classification is confined to this exact added operation and cannot modify the
+existing four scenarios' response checks, failure budgets, thresholds or loads.
+An unexpected response still contributes a failure and cannot disappear from
+latency or population accounting. A matching fast error without the database
+proof cannot earn PASS.
+
+## Additional workload review boundary
+
+INV-PERF-001 declares p50/p95 limits under nominal load; it does not prescribe a
+numeric HTTP sample minimum, rate, duration or VU count. The cold-unit proxy's
+five samples are unrelated. An added endpoint workload must therefore bind a
+reviewed sample and capacity model before measurement: exact per-operation
+arrival rate/duration/count, percentile calculation and minimum population,
+fixture capacity, resource/wave concurrency, session/permission/rate-limit
+budgets and setup/cleanup isolation. Review the actual transitive operation
+costs and representative data; a numeric envelope copied from another endpoint
+alone does not establish nominal load.
+
+Neither a few smoke requests nor a shared aggregate rate divided implicitly
+across the roster establishes each endpoint's required workload. Capacity
+calibration is diagnostic and non-promoting; bind the resulting reviewed
+manifest before a complete run. No rate, sample floor, duration, population or
+rounding may be reduced after a failed run to obtain PASS. Additional workload
+choices leave all four accepted scenario profiles and their gates unchanged.
+Until the exact additional envelope and fixture/resource capacity are reviewed
+and bound, the complete performance proof remains incomplete.
+
 ## Baseline custody
 
 Preserve [ADR-HARDENING-0001](../../law/adr/2026-09-12-k6-baseline-comparison.md)

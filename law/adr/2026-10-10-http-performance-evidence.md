@@ -107,6 +107,45 @@ not yet been reconciled into complete performance evidence.
    observations, signer trust, normal hooks and all release controls. This
    document alone does not close an issue or a machine cell.
 
+## Characterized expected-refusal operation
+
+`GET /_probes/readonly-write` remains a required protected operation. Its
+existing API-matrix and error-matrix E2E characterizations require HTTP **500**,
+`code: READONLY_VIOLATION` and message exactly
+`Read-only transaction cannot execute a write statement`. The handler attempts
+an insert/update of `tenancy.tenant_settings` through a reader/read-only
+transaction. Its successful functional outcome is that exact refusal, with
+independent real-database proof that the attempted business write did not occur.
+The existing response assertions alone do not establish that database proof.
+
+Bind this one operation as `expected-refusal`, separately from ordinary successful
+business operations. Execute the real authenticated, permitted handler with its
+normal guards, rate limiting, interceptors and database path. Preserve its
+characterized error envelope, including any source-produced context; do not
+invent a `statusCode` field or accept arbitrary context as proof of refusal.
+A 2xx response, generic 500, wrong code/message, 401/403/429, timeout or transport
+error fails the operation. No general 5xx allowance follows from this binding.
+
+Before and after the isolated workload, obtain full-visibility read-only database
+evidence for the attempted target and affected business state, including target
+row existence and original values/`updated_at`; bind the queries, snapshot
+identities and digests to the owned fixture and candidate. Cover both absent-row
+insert and present-row update witnesses. No other writer may make that proof
+ambiguous. Independently verify rollback/no mutation; an error string, empty
+application-role/RLS view or restored state after a hidden mutation is
+insufficient. Normal separately declared audit/rate-limit telemetry is not the
+forbidden business mutation and must not be silently disabled.
+
+Record every request's full HTTP duration and its exact outcome, with this
+operation's own p50/p95, scheduled/completed/sample/failure counts and raw digest
+binding. Retain the stricter read limits p50 < 200 ms and p95 < 800 ms for this
+read-only refusal path. Include it in complete endpoint population and workload
+accounting. A confined expected-status declaration may recognize only this
+characterized response for its added workload; it must not change any of the
+four existing k6 scenarios' failure budgets, checks, response classification,
+loads or thresholds. This is an explicit measured negative witness, not an
+exclusion, changed public status or advance runtime PASS.
+
 ## Completion boundary
 
 Acceptance requires the reconciled closed roster, supported mounted compositions,
