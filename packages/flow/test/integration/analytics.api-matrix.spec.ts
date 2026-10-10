@@ -1,31 +1,11 @@
 import { generateKeyPairSync } from 'node:crypto';
-import { Global, Module } from '@nestjs/common';
-import {
-  PermissionCache,
-  PermissionCacheMetrics,
-  PermissionGuard,
-  PermissionQueryService,
-  resolveAuthOptions,
-  STYNX_AUTH_OPTIONS,
-  STYNX_PERMISSION_CACHE_BACKEND,
-  StynxAuthGuard,
-  StynxJwtValidator,
-} from '@stynx-nyx/auth';
 import { generateRequestId, StynxCoreModule } from '@stynx-nyx/core';
-import {
-  SessionJwtSigningService,
-  SessionService,
-  type StynxSessionSigningKeySet,
-} from '@stynx-nyx/sessions';
+import { SessionService, type StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
+import { FlowRuntimeAuthModule } from '../support/runtime-auth';
 import request from 'supertest';
 import { z } from 'zod';
 import { StynxFlowModule } from '../../src/flow.module';
-import {
-  createStynxFixtures,
-  createTestApp,
-  mintTestSession,
-  type TestAppContext,
-} from '@stynx-nyx/testing';
+import { createStynxFixtures, createTestApp, type TestAppContext } from '@stynx-nyx/testing';
 
 const TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ADMIN_USER_ID = '0197481e-7294-7c53-8b03-5c36d7c2831a';
@@ -40,57 +20,6 @@ const NODE_ID = '0197481e-7294-7c53-8b03-5c36d7c28612';
 const RUN_ID = '0197481e-7294-7c53-8b03-5c36d7c28613';
 const NODE_RUN_ID = '0197481e-7294-7c53-8b03-5c36d7c28614';
 const TASK_ID = '0197481e-7294-7c53-8b03-5c36d7c28615';
-
-let activeJwks: unknown = { keys: [] };
-
-@Global()
-@Module({
-  providers: [
-    {
-      provide: STYNX_AUTH_OPTIONS,
-      useValue: resolveAuthOptions({
-        stynx: {
-          issuer: 'https://stynx.testing.local',
-        },
-      }),
-    },
-    {
-      provide: STYNX_PERMISSION_CACHE_BACKEND,
-      useValue: null,
-    },
-    {
-      provide: SessionJwtSigningService,
-      useValue: {
-        getJwks: async () => activeJwks,
-      },
-    },
-    {
-      provide: SessionService,
-      useValue: {
-        get: async () => ({ status: 'active' }),
-      },
-    },
-    StynxJwtValidator,
-    PermissionCacheMetrics,
-    PermissionQueryService,
-    PermissionCache,
-    StynxAuthGuard,
-    PermissionGuard,
-  ],
-  exports: [
-    STYNX_AUTH_OPTIONS,
-    STYNX_PERMISSION_CACHE_BACKEND,
-    SessionJwtSigningService,
-    SessionService,
-    StynxJwtValidator,
-    PermissionCacheMetrics,
-    PermissionQueryService,
-    PermissionCache,
-    StynxAuthGuard,
-    PermissionGuard,
-  ],
-})
-class FlowApiMatrixAuthModule {}
 
 function buildKeySet(): StynxSessionSigningKeySet {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
@@ -330,20 +259,6 @@ describe('FlowAnalyticsController API error matrix', () => {
 
   beforeAll(async () => {
     const keySet = buildKeySet();
-    const adminSession = await mintTestSession({
-      keySet,
-      userId: ADMIN_USER_ID,
-      tenantId: TENANT_ID,
-    });
-    const viewerSession = await mintTestSession({
-      keySet,
-      userId: VIEWER_USER_ID,
-      tenantId: TENANT_ID,
-    });
-    activeJwks = adminSession.jwks;
-    adminAuthorization = `Bearer ${adminSession.token}`;
-    viewerAuthorization = `Bearer ${viewerSession.token}`;
-
     testApp = await createTestApp({
       localstack: { enabled: false },
       overrides: {
@@ -352,13 +267,18 @@ describe('FlowAnalyticsController API error matrix', () => {
             appName: 'flow-api-matrix',
             schema: z.object({}),
           }),
-          FlowApiMatrixAuthModule,
+          FlowRuntimeAuthModule.forRoot(keySet),
           StynxFlowModule,
         ],
       },
     });
 
     await seedPermissionsAndOpenTask(testApp);
+    const sessions = testApp.moduleRef.get(SessionService);
+    const adminSession = await sessions.create(ADMIN_USER_ID, TENANT_ID, ADMIN_USER_ID);
+    const viewerSession = await sessions.create(VIEWER_USER_ID, TENANT_ID, VIEWER_USER_ID);
+    adminAuthorization = `Bearer ${adminSession.accessToken}`;
+    viewerAuthorization = `Bearer ${viewerSession.accessToken}`;
   }, 60_000);
 
   afterAll(async () => {
