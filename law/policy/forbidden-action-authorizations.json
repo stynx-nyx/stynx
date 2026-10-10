@@ -1399,6 +1399,12 @@
       "commit": "a4b73779fa8637dd5cd3dd63e46c5c9c6579e7b8",
       "authorized_by": "Owner",
       "reason": "Owner post-merge authorization (2026-10-09) for the SC-20261009T155331-001 observation evidence of the published 1.5.5 candidate (ADR-DEVAI-ADOPTION-0014 decision 5) as it landed on main through the PR #358 rebase merge, which rewrote the pre-merge receipted commit. This receipt covers only that exact commit."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "1a9fdf0f686703a7f5199bf2588b601c5038cf57",
+      "authorized_by": "Owner",
+      "reason": "Explicit Owner authorization on 2026-10-10 ('Authorize this exact CI receipt') for the DEVAI 2.3.2 registered upgrade regenerating .github/workflows/devai-main-observation.yml under ADR-DEVAI-ADOPTION-0017 decision 3: aligned action pins, per-commit concurrency without cancelling running observations, and a frozen dependency install with lifecycle scripts disabled. This receipt covers only that exact commit and CI action. Push, certification and publication remain held."
     }
   ]
 }
