@@ -12,6 +12,7 @@ function recordingDatabase(query: OutboxSqlExecutor['query'], trxRole = 'owner')
   const txOptions: unknown[] = [];
   const systemReasons: string[] = [];
   const database = {
+    appRoleName: 'stynx_app',
     currentTenantId: () => tenant,
     withSystemContext: vi.fn(async (reason: string, fn: () => Promise<unknown>) => { systemReasons.push(reason); return fn(); }),
     withRequestContext: vi.fn(async (_scope: unknown, fn: () => Promise<unknown>) => fn()),

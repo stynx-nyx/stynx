@@ -33,6 +33,12 @@ async function bootstrapSchema(client: Client): Promise<void> {
   `);
   await client.query(`select audit.enable_for('demo.items'::regclass)`);
   await client.query(`select audit.enable_for('archive.demo_items'::regclass)`);
+  // The app pool logs in as stynx_app (ADR-OUTBOX-0003 D1): bind the demo
+  // tables the way a platform migration would.
+  await client.query('grant usage on schema archive to stynx_app, stynx_reader');
+  await client.query('grant select, insert, update, delete on demo.items, archive.demo_items to stynx_app');
+  await client.query('grant select on demo.items, archive.demo_items to stynx_reader');
+  await client.query('grant usage, select on sequence archive.demo_items_archive_id_seq to stynx_app');
 }
 
 async function seedTenant(client: Client, tenantId: string): Promise<void> {
@@ -59,7 +65,7 @@ describe('StynxAuditModule integration', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: database.connectionString('@stynx-nyx/audit:owner') },
-            app: { connectionString: database.connectionString('@stynx-nyx/audit:app') },
+            app: { connectionString: database.appConnectionString('@stynx-nyx/audit:app') },
             reader: { connectionString: database.connectionString('@stynx-nyx/audit:reader') },
           },
           migrations: { enabled: true },

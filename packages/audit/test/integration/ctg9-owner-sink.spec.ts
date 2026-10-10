@@ -20,7 +20,7 @@ describe('CTG9 owner AuditSqlSink tenant chain (PostgreSQL)', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-audit-owner') },
-            app: { connectionString: postgres.connectionString('ctg9-audit-app') },
+            app: { connectionString: postgres.appConnectionString('ctg9-audit-app') },
             reader: { connectionString: postgres.connectionString('ctg9-audit-reader') },
           },
           migrations: { enabled: true },

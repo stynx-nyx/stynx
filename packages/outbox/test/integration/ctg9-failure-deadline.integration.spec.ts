@@ -31,7 +31,7 @@ describe('CTG9 legacy failure persistence deadline (PostgreSQL)', () => {
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-deadline-owner') },
             app: {
-              connectionString: asRole(postgres.connectionString('ctg9-deadline-app'), 'stynx_app'),
+              connectionString: postgres.appConnectionString('ctg9-deadline-app'),
             },
             reader: {
               connectionString: asRole(

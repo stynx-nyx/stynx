@@ -53,7 +53,7 @@ describe('UPS-OBX-09 V-01/V-04/V-05 behavior (PostgreSQL/FORCE RLS)', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('outbox-v-owner') },
-            app: { connectionString: asRole(postgres.connectionString('outbox-v-app'), 'stynx_app') },
+            app: { connectionString: postgres.appConnectionString('outbox-v-app') },
             reader: { connectionString: asRole(postgres.connectionString('outbox-v-reader'), 'stynx_reader') },
           },
           migrations: { enabled: true },

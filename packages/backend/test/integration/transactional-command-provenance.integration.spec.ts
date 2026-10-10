@@ -102,7 +102,7 @@ function modules(postgres: PostgresTestDatabase, order: 'correct' | 'command-bef
   const core = StynxCoreModule.forRoot({ appName: `command-provenance-${order}`, schema: z.object({}) });
   const data = StynxDataModule.forRoot({ connections: {
     owner: { connectionString: postgres.connectionString('provenance-owner') },
-    app: { connectionString: asRole(postgres.connectionString('provenance-app'), 'stynx_app') },
+    app: { connectionString: postgres.appConnectionString('provenance-app') },
     reader: { connectionString: asRole(postgres.connectionString('provenance-reader'), 'stynx_reader') },
   }, migrations: { enabled: true } });
   const auth = StynxAuthModule.forRoot({ tokenVerifier });

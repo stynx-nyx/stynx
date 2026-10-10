@@ -3,6 +3,7 @@ import { StynxDataModule } from '@stynx-nyx/data';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
+  asAppRole,
   createPostgresTestDatabase,
   type PostgresTestDatabase,
 } from '../../../data/test/support/postgres';
@@ -28,7 +29,7 @@ async function createMigratedModule(connectionString: string): Promise<TestingMo
       StynxDataModule.forRoot({
         connections: {
           owner: { connectionString },
-          app: { connectionString },
+          app: { connectionString: asAppRole(connectionString) },
           reader: { connectionString },
         },
         migrations: { enabled: true },

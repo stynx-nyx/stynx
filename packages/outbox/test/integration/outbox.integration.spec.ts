@@ -34,7 +34,7 @@ describe('transactional outbox integration', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('stynx-outbox-owner') },
-            app: { connectionString: postgres.connectionString('stynx-outbox-app') },
+            app: { connectionString: postgres.appConnectionString('stynx-outbox-app') },
             reader: { connectionString: postgres.connectionString('stynx-outbox-reader') },
           },
           migrations: { enabled: true },

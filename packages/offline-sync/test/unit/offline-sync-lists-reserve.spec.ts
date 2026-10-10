@@ -181,7 +181,8 @@ describe('UPS-OFS-11 tenant-scoped listings (in-memory)', () => {
     const second = await service.listSyncItemReceipts({ limit: 2, cursor: first.nextCursor! });
     expect(second.items.map(receipt => receipt.queueItemId)).toEqual(['a-2', 'a-1']);
     expect(second.nextCursor).toBe(null);
-    expect(second.items[0]).toEqual({ receiptId: 'a-2', queueItemId: 'a-2', status: 'applied', deviceId: 'device-a', deviceBatchId: 'b-1', payloadHash: hash, receivedAt: '2026-09-28T12:00:00.000Z' });
+    expect(second.items[0]).toEqual({ receiptId: 'a-2', queueItemId: 'a-2', status: 'applied', deviceId: 'device-a', deviceBatchId: 'b-1', payloadHash: hash, receivedAt: '2026-09-28T12:00:00.000Z',
+      stynx: { version: 1, receiptId: 'a-2', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-a-2', attempts: 1 } });
     expect((await service.listSyncItemReceipts({ deviceId: 'device-b' })).items.map(receipt => receipt.queueItemId)).toEqual(['b-1']);
     expect((await service.listSyncItemReceipts({ deviceBatchId: 'b-1' })).items).toHaveLength(2);
     const legacy = (await service.listSyncItemReceipts({ status: 'received' })).items;
@@ -256,8 +257,12 @@ describe('UPS-OFS-11 tenant-scoped listings (in-memory)', () => {
     await invalid(service.listSyncConflicts({ queueItemId: '' }), 'queueItemId is required.');
     await invalid(service.listSyncConflicts({ deviceId: ' ' }), 'deviceId is required.');
     await invalid(service.listSyncBatchReceipts({ status: 'pending' as never }), 'status is invalid.');
-    await invalid(service.listSyncItemReceipts({ status: 'pending' as never }), 'status is invalid.');
-    await invalid(service.listSyncQueueItems({ status: 'pending' as never }), 'status is invalid.');
+    await invalid(service.listSyncItemReceipts({ status: 'done' as never }), 'status is invalid.');
+    await invalid(service.listSyncQueueItems({ status: 'done' as never }), 'status is invalid.');
+    // `pending` is a queue status since ADR-MOBILE-OFFLINE-0003 D1.
+    await expect(service.listSyncItemReceipts({ status: 'pending' })).resolves.toEqual({ items: [], nextCursor: null });
+    await expect(service.listSyncQueueItems({ status: 'pending' })).resolves.toEqual({ items: [], nextCursor: null });
+    await invalid(service.listSyncConflictActions({ conflictId: '' }), 'conflictId is required.');
     await invalid(service.listSyncConflicts({ status: 'closed' as never }), 'status is invalid.');
   });
 
@@ -312,7 +317,8 @@ describe('UPS-OFS-10 non-canonical payload hash is a per-item integrity rejectio
     // With an existing original the item is still rejected the same way; the original is untouched.
     const again = await service.submitSyncBatch(batch('device-a', 'nc-3', [{ ...item('nc-3-a', 'nc-1-a'), payloadHash: 'x' }]), transportOf('nc-3'));
     expect(again.receipt.items).toEqual([{ queueItemId: 'nc-3-a', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' }]);
-    expect(await service.getSyncItemReceipt('nc-1-a')).toEqual({ queueItemId: 'nc-2-a', status: 'applied' });
+    expect(await service.getSyncItemReceipt('nc-1-a')).toEqual({ queueItemId: 'nc-2-a', status: 'applied',
+      stynx: { version: 1, receiptId: 'nc-1-a', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-nc-2-a', attempts: 1 } });
     expect(applier.apply).toHaveBeenCalledTimes(2);
   });
 
@@ -430,7 +436,8 @@ describe('UPS-OFS-14 contract sensors (in-memory)', () => {
     expect(resequenced.code).toBe('OFFLINE_SYNC_BATCH_CONFLICT');
     const mismatch = await service.submitSyncBatch(batch('device-a', 'v03-2', [{ ...item('v03-2-1', 'v03-1-1'), payloadHash: `sha256:${'f'.repeat(64)}` }]), transportOf('v03-2'));
     expect(mismatch.receipt.items).toEqual([{ queueItemId: 'v03-2-1', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' }]);
-    expect(await service.getSyncItemReceipt('v03-1-1')).toEqual({ queueItemId: 'v03-1-1', status: 'applied' });
+    expect(await service.getSyncItemReceipt('v03-1-1')).toEqual({ queueItemId: 'v03-1-1', status: 'applied',
+      stynx: { version: 1, receiptId: 'v03-1-1', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-v03-1-1', attempts: 1 } });
   });
 
   it('V-04 each item has its own outcome: a 4xx error is rejected with its code, a numbering outcome maps to rejected or conflict with context, and any other error leaves the item received and the batch open', async () => {
@@ -460,7 +467,8 @@ describe('UPS-OFS-14 contract sensors (in-memory)', () => {
     expect(result.conflicts).toEqual(['v04-expired']);
     // The outcome is written per item: the receipt lookup reflects each separately.
     expect(await service.getSyncItemReceipt('v04-4xx')).toMatchObject({ status: 'rejected', errorCode: 'DOMAIN_REFUSED' });
-    expect(await service.getSyncItemReceipt('v04-ok')).toEqual({ queueItemId: 'v04-ok', status: 'applied' });
+    expect(await service.getSyncItemReceipt('v04-ok')).toEqual({ queueItemId: 'v04-ok', status: 'applied',
+      stynx: { version: 1, receiptId: 'v04-ok', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-v04-ok', attempts: 1 } });
     expect(await service.getSyncItemReceipt('v04-boom')).toMatchObject({ status: 'received' });
   });
 
@@ -482,7 +490,8 @@ describe('UPS-OFS-14 contract sensors (in-memory)', () => {
     ]);
     expect(mixed.receipt.status).toBe('closed');
     expect(applier.apply).toHaveBeenCalledTimes(2);
-    expect(await service.getSyncItemReceipt('v05-k1')).toEqual({ queueItemId: 'v05-q1', status: 'applied' });
+    expect(await service.getSyncItemReceipt('v05-k1')).toEqual({ queueItemId: 'v05-q1', status: 'applied',
+      stynx: { version: 1, receiptId: 'v05-k1', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-v05-q1', attempts: 1 } });
     await expect(service.getSyncItemReceipt('v05-k9')).rejects.toMatchObject({ code: 'OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND' });
   });
 
@@ -528,16 +537,19 @@ describe('UPS-OFS-14 contract sensors (in-memory)', () => {
     const conflictId = (opened.receipt.items[0]!.context as { conflictId: string }).conflictId;
     const [conflict] = (await service.listSyncConflicts({ queueItemId: 'v08-1' })).items;
     expect(conflict).toMatchObject({ conflictId, status: 'open', conflictType: 'domain', deviceId: 'device-a' });
-    resolve.mockImplementation(async (_trx: unknown, id: string, action: string) => ({ ...conflict, conflictId: id, status: action === 'retry_after_correction' ? 'open' : 'resolved' }));
+    // A resolver status other than `open` or `resolved` is refused (ADR-MOBILE-OFFLINE-0003 D2.2).
+    resolve.mockImplementation(async (_trx: unknown, id: string, action: string) => ({ ...conflict, conflictId: id, status: action === 'retry_after_correction' ? 'closed' : 'resolved' }));
     await expect(service.resolveConflict(conflictId, { resolution: 'accept_server' })).rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_RESOLUTION', response: { statusCode: 409 } });
     expect(resolve).not.toHaveBeenCalled();
     await expect(service.resolveConflict(conflictId, { resolution: 'retry_after_correction' })).rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_RESOLUTION' });
     expect((await service.listSyncConflicts({ queueItemId: 'v08-1' })).items[0]!.status).toBe('open');
+    expect((await service.listSyncConflictActions({ conflictId })).items).toEqual([]);
     const resolved = await service.resolveConflict(conflictId, { resolution: 'reject' });
     expect(resolved).toMatchObject({ conflictId, status: 'resolved', resolution: 'reject', resolvedBy: 'actor-a', resolvedAt: '2026-09-28T12:00:00.000Z' });
     expect(resolve).toHaveBeenCalledTimes(2);
     expect(resolve.mock.calls[1]).toEqual([expect.any(Object), conflictId, 'reject', expect.objectContaining({ tenantId: tenantA, actorId: 'actor-a', agentId: 'actor-a', orgUnitId: 'org-a', deviceId: 'device-a' })]);
     expect((await service.listSyncConflicts({ status: 'resolved' })).items).toMatchObject([{ conflictId, resolution: 'reject', resolvedBy: 'actor-a' }]);
+    expect((await service.listSyncConflictActions({ conflictId })).items).toMatchObject([{ conflictId, action: 'reject', resultingStatus: 'resolved', actorId: 'actor-a', createdAt: '2026-09-28T12:00:00.000Z' }]);
     await expect(service.resolveConflict(conflictId, { resolution: 'reject' })).rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_STATE' });
   });
 

@@ -81,7 +81,7 @@ describe('UPS-OBX-07 destinations: an event without a destination never becomes 
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('outbox-dest-owner') },
-            app: { connectionString: asRole(postgres.connectionString('outbox-dest-app'), 'stynx_app') },
+            app: { connectionString: postgres.appConnectionString('outbox-dest-app') },
             reader: { connectionString: asRole(postgres.connectionString('outbox-dest-reader'), 'stynx_reader') },
           },
           migrations: { enabled: true },

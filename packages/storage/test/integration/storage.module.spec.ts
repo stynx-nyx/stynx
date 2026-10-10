@@ -147,7 +147,7 @@ describe('StynxStorageModule integration', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: testDatabase.connectionString('@stynx-nyx/storage:owner') },
-            app: { connectionString: testDatabase.connectionString('@stynx-nyx/storage:app') },
+            app: { connectionString: testDatabase.appConnectionString('@stynx-nyx/storage:app') },
             reader: { connectionString: testDatabase.connectionString('@stynx-nyx/storage:reader') },
           },
           migrations: { enabled: true },

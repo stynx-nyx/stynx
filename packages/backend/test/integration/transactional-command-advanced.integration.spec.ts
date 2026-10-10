@@ -215,10 +215,7 @@ describe('transactional command fingerprint and app-role isolation over real Nes
           connections: {
             owner: { connectionString: postgres.connectionString('advanced-command-owner') },
             app: {
-              connectionString: asRole(
-                postgres.connectionString('advanced-command-app'),
-                'stynx_app',
-              ),
+              connectionString: postgres.appConnectionString('advanced-command-app'),
             },
             reader: {
               connectionString: asRole(
@@ -468,16 +465,20 @@ describe('transactional command fingerprint and app-role isolation over real Nes
     }).compile();
     const wrongRoleApp = testing.createNestApplication();
     try {
-      await wrongRoleApp.init();
-      const response = await request(wrongRoleApp.getHttpServer())
-        .post('/advanced-wrong-role')
-        .set('authorization', 'Bearer tenant-a')
-        .set('idempotency-key', 'wrong-pool-role')
-        .send({ value: 1 });
-      expect(response.status).toBe(500);
-      expect(response.body).toEqual({ code: 'TRANSACTION_IDENTITY_MISMATCH',
-        message: 'Transaction identity does not match the trusted request context',
-        context: { reason: 'live app identity mismatch' } });
+      // ADR-OUTBOX-0003 D1 item 7: a pool whose current_user is not the configured
+      // application role is refused at startup, before any request can reach the
+      // live-identity check that used to answer 500 TRANSACTION_IDENTITY_MISMATCH.
+      let refusal: unknown;
+      try {
+        await wrongRoleApp.init();
+      } catch (error) {
+        refusal = error;
+      }
+      expect(refusal).toMatchObject({
+        code: 'APP_ROLE_CONFIGURATION',
+        message: 'Application SQL role check failed: current_user',
+        context: { property: 'current_user', role: 'stynx_app', actual: 'stynx_reader' },
+      });
       expect(wrongRoleHandler).not.toHaveBeenCalled();
       const admin = await postgres!.connectAsAdmin();
       try {

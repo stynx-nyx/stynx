@@ -164,7 +164,7 @@ describe('StynxSessionsModule integration', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: database.connectionString('@stynx-nyx/sessions:owner') },
-            app: { connectionString: database.connectionString('@stynx-nyx/sessions:app') },
+            app: { connectionString: database.appConnectionString('@stynx-nyx/sessions:app') },
             reader: { connectionString: database.connectionString('@stynx-nyx/sessions:reader') },
           },
           migrations: { enabled: true },

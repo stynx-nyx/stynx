@@ -111,7 +111,11 @@ describe('createTestApp', () => {
       },
     });
 
-    expect(connect).toHaveBeenCalledTimes(1);
+    // One admin client binds the stynx_app login before the module boots
+    // (ADR-OUTBOX-0003 D1), one applies the migration and seed steps.
+    expect(connect).toHaveBeenCalledTimes(2);
+    expect(query).toHaveBeenCalledWith(expect.stringMatching(/create role stynx_app login noinherit nobypassrls/u));
+    expect(query).toHaveBeenCalledWith(expect.stringMatching(/^alter role stynx_app with login password/u));
     expect(query).toHaveBeenCalledWith('select 1');
     expect(query).toHaveBeenCalledWith('select 2');
     expect(query).toHaveBeenCalledWith('select 3');

@@ -23,7 +23,7 @@ describe('CTG9 shared audit chain on live PostgreSQL', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('ctg9-chain-owner') },
-            app: { connectionString: postgres.connectionString('ctg9-chain-app') },
+            app: { connectionString: postgres.appConnectionString('ctg9-chain-app') },
             reader: { connectionString: postgres.connectionString('ctg9-chain-reader') },
           },
           migrations: { enabled: true },

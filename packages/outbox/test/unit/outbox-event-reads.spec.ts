@@ -25,6 +25,7 @@ function harness(route: (sql: string, params: readonly unknown[] | undefined) =>
     return { rows: route(sql, params) ?? [] };
   }) as OutboxSqlExecutor['query'];
   const database = {
+    appRoleName: 'stynx_app',
     currentTenantId: () => tenantId ?? undefined,
     withSystemContext: vi.fn(),
     tx: vi.fn(async (fn: (trx: never) => Promise<unknown>, txOptions: unknown) => {

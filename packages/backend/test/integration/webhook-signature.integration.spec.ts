@@ -11,7 +11,7 @@ import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import request from 'supertest';
 import { z } from 'zod';
 import { StynxWebhookSignatureModule, WebhookSignatureGuard } from '../../src';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import { asAppRole, createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
 
 // UPS-HOOK-02: two separate Nest processes must share this atomic reservation.
 class SharedReplayStore {
@@ -160,7 +160,7 @@ async function createApp(
       ...(config.databaseUrl ? [StynxDataModule.forRoot({
         connections: {
           owner: { connectionString: config.databaseUrl },
-          app: { connectionString: config.databaseUrl },
+          app: { connectionString: asAppRole(config.databaseUrl) },
           reader: { connectionString: config.databaseUrl },
         },
         migrations: { enabled: true },

@@ -97,7 +97,7 @@ async function buildApp(postgres: PostgresTestDatabase, order: 'core-first' | 't
       StynxDataModule.forRoot({
         connections: {
           owner: { connectionString: postgres.connectionString(`order-${order}-owner`) },
-          app: { connectionString: postgres.connectionString(`order-${order}-app`) },
+          app: { connectionString: postgres.appConnectionString(`order-${order}-app`) },
           reader: { connectionString: postgres.connectionString(`order-${order}-reader`) },
         },
         migrations: { enabled: true },

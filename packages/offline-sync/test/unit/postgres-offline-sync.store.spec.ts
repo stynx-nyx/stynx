@@ -412,7 +412,8 @@ describe('PostgresOfflineSyncStore', () => {
   });
 
   it('fails closed when a conflict port cannot find or resolve its target', async () => {
-    const resolve = vi.fn(async () => ({ ...conflictRow, status: 'open' as const }));
+    // ADR-MOBILE-OFFLINE-0003 D2.2: `open` is now an accepted result; any other status is refused.
+    const resolve = vi.fn(async () => ({ ...conflictRow, status: 'closed' as never }));
     await expect(harness(vi.fn(async () => ({ rows: [] }))).store.resolveWithPort(
       scope, conflictRow.id, { resolution: 'manual-review' }, now, { resolve } as never,
     )).rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_NOT_FOUND' });

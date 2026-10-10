@@ -37,7 +37,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: pg.connectionString('ctg9-owner') },
-            app: { connectionString: asRole(pg.connectionString('ctg9-app'), 'stynx_app'), max: 2 },
+            app: { connectionString: pg.appConnectionString('ctg9-app'), max: 2 },
             reader: {
               connectionString: asRole(pg.connectionString('ctg9-reader'), 'stynx_reader'),
             },
@@ -91,6 +91,10 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       const next = (await readdir(migrationDir)).filter((name) => /^0002_.*\.sql$/.test(name));
       expect(next).toHaveLength(1);
       await admin.query(await readFile(resolve(migrationDir, next[0]!), 'utf8'));
+      // Conflict resolution through the host resolver needs the 0004 action history (ADR-MOBILE-OFFLINE-0003 D2);
+      // the 0001→0002 assertions below are unchanged by the later forward-only migrations.
+      for (const name of ['0003_reservation_idempotency.sql', '0004_pending_state_and_conflict_actions.sql'])
+        await admin.query(await readFile(resolve(migrationDir, name), 'utf8'));
       await admin.query(`create table offline.ctg9_item_effect_probe (
         tenant_id uuid not null,
         queue_item_id text not null,
@@ -123,7 +127,7 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
           StynxDataModule.forRoot({
             connections: {
               owner: { connectionString: clean.connectionString('ctg9-clean-owner') },
-              app: { connectionString: clean.connectionString('ctg9-clean-app') },
+              app: { connectionString: clean.appConnectionString('ctg9-clean-app') },
               reader: { connectionString: clean.connectionString('ctg9-clean-reader') },
             },
             migrations: { enabled: true },
@@ -1868,7 +1872,7 @@ describe('OFS 0001-only upgrade guard', () => {
           StynxDataModule.forRoot({
             connections: {
               owner: { connectionString: old.connectionString('old-owner') },
-              app: { connectionString: asRole(old.connectionString('old-app'), 'stynx_app') },
+              app: { connectionString: old.appConnectionString('old-app') },
               reader: {
                 connectionString: asRole(old.connectionString('old-reader'), 'stynx_reader'),
               },

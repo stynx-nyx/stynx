@@ -22,6 +22,7 @@ const eventRow = { ...event, id: '22222222-2222-4222-8222-222222222222', tenantI
 function databaseFor(query: OutboxSqlExecutor['query'], tenantId: string | null = tenant) {
   const trx = { role: 'app', query };
   return {
+    appRoleName: 'stynx_app',
     currentTenantId: () => tenantId,
     withSystemContext: async (_reason: string, fn: () => Promise<unknown>) => fn(),
     tx: async (fn: (transaction: never) => Promise<unknown>) => fn(trx as never),

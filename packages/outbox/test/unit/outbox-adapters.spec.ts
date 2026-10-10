@@ -106,6 +106,7 @@ describe('outbox adapter edge behavior', () => {
       const trx = executor(query);
       return {
         hasHeldConnection: () => held,
+        appRoleName: 'stynx_app',
         currentTenantId: () => '11111111-1111-1111-1111-111111111111',
         withRequestContext: async (_scope: unknown, fn: () => Promise<unknown>) => fn(),
         tx: async (fn: (tx: OutboxSqlExecutor) => Promise<unknown>) => fn(trx),
@@ -140,6 +141,7 @@ describe('outbox adapter edge behavior', () => {
   it('rejects event-stream reads executed with an untrusted application role', async () => {
     const db = {
       hasHeldConnection: () => false,
+      appRoleName: 'stynx_app',
       withRequestContext: async (_scope: unknown, fn: () => Promise<unknown>) => fn(),
       tx: async (fn: (tx: OutboxSqlExecutor) => Promise<unknown>) => fn(executor(async () => ({ rows: [{ recovery: false, role: 'owner', sql_role: 'stynx_owner' }] }))),
     };
@@ -162,6 +164,7 @@ describe('outbox adapter edge behavior', () => {
     });
     const database = {
       hasHeldConnection: () => false,
+      appRoleName: 'stynx_app',
       withRequestContext: async (_scope: unknown, fn: () => Promise<unknown>) => fn(),
       txIndependent: async (fn: (tx: OutboxSqlExecutor) => Promise<unknown>) => fn(executor(query)),
     };
@@ -192,6 +195,7 @@ describe('outbox adapter edge behavior', () => {
     });
     const database = {
       hasHeldConnection: () => false,
+      appRoleName: 'stynx_app',
       withRequestContext: async (_scope: unknown, fn: () => Promise<unknown>) => fn(),
       txIndependent: async (fn: (tx: OutboxSqlExecutor) => Promise<unknown>) => fn(executor(query)),
     };
@@ -218,6 +222,7 @@ describe('outbox adapter edge behavior', () => {
     });
     const database = {
       hasHeldConnection: () => false,
+      appRoleName: 'stynx_app',
       withRequestContext: async (_scope: unknown, fn: () => Promise<unknown>) => fn(),
       txIndependent: async (fn: (tx: OutboxSqlExecutor) => Promise<unknown>) => fn(executor(query)),
     };
@@ -243,6 +248,7 @@ describe('outbox adapter edge behavior', () => {
     });
     const database = {
       hasHeldConnection: () => false,
+      appRoleName: 'stynx_app',
       withRequestContext: async (_scope: unknown, fn: () => Promise<unknown>) => fn(),
       txIndependent: async (fn: (tx: OutboxSqlExecutor) => Promise<unknown>) => fn(executor(query)),
     };
