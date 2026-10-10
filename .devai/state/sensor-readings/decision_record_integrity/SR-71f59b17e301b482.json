@@ -1,0 +1,925 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-71f59b17e301b482",
+  "sensor": {
+    "name": "decision_record_integrity",
+    "kind": "decision_record_integrity"
+  },
+  "timestamp": "2026-10-10T05:07:20.016Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense run decision_record_integrity",
+  "command_hash": "c8a38781adc2fbd3fb7b0405a198b1dff15504f29dfa641215bd660246d17cc4",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/2026-05-19-test-gate-tiers.md: frontmatter is required",
+      "file": "law/adr/2026-05-19-test-gate-tiers.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/2026-05-21-mutation-thresholds-tiered.md: frontmatter is required",
+      "file": "law/adr/2026-05-21-mutation-thresholds-tiered.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-06-11-test-taxonomy.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-06-11-test-taxonomy.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-06-11-test-taxonomy.md declares (missing id).",
+      "file": "law/adr/2026-06-11-test-taxonomy.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/2026-08-16-trusted-local-rc-evidence.md: frontmatter is required",
+      "file": "law/adr/2026-08-16-trusted-local-rc-evidence.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/2026-08-24-ci-economy.md: frontmatter is required",
+      "file": "law/adr/2026-08-24-ci-economy.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md: frontmatter is required",
+      "file": "law/adr/2026-08-24-stynx-1.1.1-campaign-controls.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-04-devai-1.4.5-adoption-migration.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-04-devai-1.4.5-adoption-migration.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-04-devai-1.4.5-adoption-migration.md declares (missing id).",
+      "file": "law/adr/2026-09-04-devai-1.4.5-adoption-migration.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-04-devai-1.4.5-adoption-migration.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-12-k6-baseline-comparison.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-12-k6-baseline-comparison.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-12-k6-baseline-comparison.md declares (missing id).",
+      "file": "law/adr/2026-09-12-k6-baseline-comparison.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-12-k6-baseline-comparison.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-15-devai-1.5.0-adoption.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-15-devai-1.5.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-15-devai-1.5.0-adoption.md declares (missing id).",
+      "file": "law/adr/2026-09-15-devai-1.5.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-15-devai-1.5.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-26-devai-1.5.6-adoption.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-26-devai-1.5.6-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-26-devai-1.5.6-adoption.md declares (missing id).",
+      "file": "law/adr/2026-09-26-devai-1.5.6-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-26-devai-1.5.6-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-26-devai-1.6.0-adoption.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-26-devai-1.6.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-26-devai-1.6.0-adoption.md declares (missing id).",
+      "file": "law/adr/2026-09-26-devai-1.6.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-26-devai-1.6.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-27-local-rc-signer-recovery.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-27-local-rc-signer-recovery.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-27-local-rc-signer-recovery.md declares (missing id).",
+      "file": "law/adr/2026-09-27-local-rc-signer-recovery.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-27-local-rc-signer-recovery.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-27-main-review-policy.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-27-main-review-policy.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-27-main-review-policy.md declares (missing id).",
+      "file": "law/adr/2026-09-27-main-review-policy.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-27-main-review-policy.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-27-verified-local-rc-cutover.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-27-verified-local-rc-cutover.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-27-verified-local-rc-cutover.md declares (missing id).",
+      "file": "law/adr/2026-09-27-verified-local-rc-cutover.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-27-verified-local-rc-cutover.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-28-final-candidate-ci-repair.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-28-final-candidate-ci-repair.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-28-final-candidate-ci-repair.md declares (missing id).",
+      "file": "law/adr/2026-09-28-final-candidate-ci-repair.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-28-final-candidate-ci-repair.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-29-local-rc-toolchain-refresh.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-29-local-rc-toolchain-refresh.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-29-local-rc-toolchain-refresh.md declares (missing id).",
+      "file": "law/adr/2026-09-29-local-rc-toolchain-refresh.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-29-local-rc-toolchain-refresh.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-29-postrelease-pki-fixture-scan.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-29-postrelease-pki-fixture-scan.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-29-postrelease-pki-fixture-scan.md declares (missing id).",
+      "file": "law/adr/2026-09-29-postrelease-pki-fixture-scan.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-29-postrelease-pki-fixture-scan.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-09-29-second-stable-patch-rebaseline.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-09-29-second-stable-patch-rebaseline.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-09-29-second-stable-patch-rebaseline.md declares (missing id).",
+      "file": "law/adr/2026-09-29-second-stable-patch-rebaseline.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-09-29-second-stable-patch-rebaseline.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-04-devai-1.9.0-adoption.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-04-devai-1.9.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-04-devai-1.9.0-adoption.md declares (missing id).",
+      "file": "law/adr/2026-10-04-devai-1.9.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-04-devai-1.9.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-04-third-stable-patch-1.5.3.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-04-third-stable-patch-1.5.3.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-04-third-stable-patch-1.5.3.md declares (missing id).",
+      "file": "law/adr/2026-10-04-third-stable-patch-1.5.3.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-04-third-stable-patch-1.5.3.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-04-workspace-audit-exception.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-04-workspace-audit-exception.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-04-workspace-audit-exception.md declares (missing id).",
+      "file": "law/adr/2026-10-04-workspace-audit-exception.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-04-workspace-audit-exception.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-06-fourth-stable-patch-1.5.4.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-06-fourth-stable-patch-1.5.4.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-06-fourth-stable-patch-1.5.4.md declares (missing id).",
+      "file": "law/adr/2026-10-06-fourth-stable-patch-1.5.4.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-06-fourth-stable-patch-1.5.4.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-08-compose-bake-entitlements.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-08-compose-bake-entitlements.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-08-compose-bake-entitlements.md declares (missing id).",
+      "file": "law/adr/2026-10-08-compose-bake-entitlements.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-08-compose-bake-entitlements.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-08-devai-2.3.0-adoption.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-08-devai-2.3.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-08-devai-2.3.0-adoption.md declares (missing id).",
+      "file": "law/adr/2026-10-08-devai-2.3.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-08-devai-2.3.0-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-08-devai-scorecard-enablement.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-08-devai-scorecard-enablement.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-08-devai-scorecard-enablement.md declares (missing id).",
+      "file": "law/adr/2026-10-08-devai-scorecard-enablement.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-08-devai-scorecard-enablement.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-08-fifth-stable-patch-1.5.5.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-08-fifth-stable-patch-1.5.5.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-08-fifth-stable-patch-1.5.5.md declares (missing id).",
+      "file": "law/adr/2026-10-08-fifth-stable-patch-1.5.5.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-08-fifth-stable-patch-1.5.5.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-09-sixth-stable-patch-1.5.6.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-09-sixth-stable-patch-1.5.6.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-09-sixth-stable-patch-1.5.6.md declares (missing id).",
+      "file": "law/adr/2026-10-09-sixth-stable-patch-1.5.6.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-09-sixth-stable-patch-1.5.6.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/2026-10-10-devai-2.3.2-adoption.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/2026-10-10-devai-2.3.2-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/2026-10-10-devai-2.3.2-adoption.md declares (missing id).",
+      "file": "law/adr/2026-10-10-devai-2.3.2-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/2026-10-10-devai-2.3.2-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-001-soft-delete.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-001-soft-delete.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-001-soft-delete.md declares (missing id).",
+      "file": "law/adr/ADR-001-soft-delete.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-001-soft-delete.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-002-perms-caching.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-002-perms-caching.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-002-perms-caching.md declares (missing id).",
+      "file": "law/adr/ADR-002-perms-caching.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-002-perms-caching.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-003-rbac-matrix-role.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-003-rbac-matrix-role.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-003-rbac-matrix-role.md declares (missing id).",
+      "file": "law/adr/ADR-003-rbac-matrix-role.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-003-rbac-matrix-role.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/ADR-DEVAI-ADOPTION-0001.md: frontmatter is required",
+      "file": "law/adr/ADR-DEVAI-ADOPTION-0001.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-FE-AUDIT-CONTRACT-0004-audit-read-contract.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-FE-AUDIT-CONTRACT-0004-audit-read-contract.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-FE-AUDIT-CONTRACT-0004-audit-read-contract.md declares (missing id).",
+      "file": "law/adr/ADR-FE-AUDIT-CONTRACT-0004-audit-read-contract.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-FE-AUDIT-CONTRACT-0004-audit-read-contract.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-FE-CONTRACTS-0001-frontend-completeness-contract-pins.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-FE-CONTRACTS-0001-frontend-completeness-contract-pins.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-FE-CONTRACTS-0001-frontend-completeness-contract-pins.md declares (missing id).",
+      "file": "law/adr/ADR-FE-CONTRACTS-0001-frontend-completeness-contract-pins.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-FE-CONTRACTS-0001-frontend-completeness-contract-pins.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-FE-FLOW-PUBLISH-0003-draft-publish-contract.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-FE-FLOW-PUBLISH-0003-draft-publish-contract.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-FE-FLOW-PUBLISH-0003-draft-publish-contract.md declares (missing id).",
+      "file": "law/adr/ADR-FE-FLOW-PUBLISH-0003-draft-publish-contract.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-FE-FLOW-PUBLISH-0003-draft-publish-contract.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-FE-ICU-i18n-0002-package-catalogs-and-icu.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-FE-ICU-i18n-0002-package-catalogs-and-icu.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-FE-ICU-i18n-0002-package-catalogs-and-icu.md declares (missing id).",
+      "file": "law/adr/ADR-FE-ICU-i18n-0002-package-catalogs-and-icu.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-FE-ICU-i18n-0002-package-catalogs-and-icu.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-FE-PACKAGING-0001-ng-packagr-adoption.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-FE-PACKAGING-0001-ng-packagr-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-FE-PACKAGING-0001-ng-packagr-adoption.md declares (missing id).",
+      "file": "law/adr/ADR-FE-PACKAGING-0001-ng-packagr-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-FE-PACKAGING-0001-ng-packagr-adoption.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-JOBS-0001-postgres-scheduler-worker.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-JOBS-0001-postgres-scheduler-worker.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-JOBS-0001-postgres-scheduler-worker.md declares (missing id).",
+      "file": "law/adr/ADR-JOBS-0001-postgres-scheduler-worker.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-JOBS-0001-postgres-scheduler-worker.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-JOBS-0002-actor-tenant-local-clock.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-JOBS-0002-actor-tenant-local-clock.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-JOBS-0002-actor-tenant-local-clock.md declares (missing id).",
+      "file": "law/adr/ADR-JOBS-0002-actor-tenant-local-clock.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-JOBS-0002-actor-tenant-local-clock.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/ADR-MOBILE-OFFLINE-0001-teat-promotion.md: frontmatter is required",
+      "file": "law/adr/ADR-MOBILE-OFFLINE-0001-teat-promotion.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md declares (missing id).",
+      "file": "law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-MOBILE-OFFLINE-0003-queue-states-and-consumer-storage.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-MOBILE-OFFLINE-0003-queue-states-and-consumer-storage.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-MOBILE-OFFLINE-0003-queue-states-and-consumer-storage.md declares (missing id).",
+      "file": "law/adr/ADR-MOBILE-OFFLINE-0003-queue-states-and-consumer-storage.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-MOBILE-OFFLINE-0003-queue-states-and-consumer-storage.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-NOTIFICATIONS-0001-delivery-capability.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-NOTIFICATIONS-0001-delivery-capability.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-NOTIFICATIONS-0001-delivery-capability.md declares (missing id).",
+      "file": "law/adr/ADR-NOTIFICATIONS-0001-delivery-capability.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-NOTIFICATIONS-0001-delivery-capability.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-OUTBOX-0001-transactional-outbox-promotion.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-OUTBOX-0001-transactional-outbox-promotion.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-OUTBOX-0001-transactional-outbox-promotion.md declares (missing id).",
+      "file": "law/adr/ADR-OUTBOX-0001-transactional-outbox-promotion.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-OUTBOX-0001-transactional-outbox-promotion.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-OUTBOX-0002-event-log-and-delivery.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-OUTBOX-0002-event-log-and-delivery.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-OUTBOX-0002-event-log-and-delivery.md declares (missing id).",
+      "file": "law/adr/ADR-OUTBOX-0002-event-log-and-delivery.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-OUTBOX-0002-event-log-and-delivery.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-OUTBOX-0003-configurable-role-and-consumer-storage.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-OUTBOX-0003-configurable-role-and-consumer-storage.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-OUTBOX-0003-configurable-role-and-consumer-storage.md declares (missing id).",
+      "file": "law/adr/ADR-OUTBOX-0003-configurable-role-and-consumer-storage.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-OUTBOX-0003-configurable-role-and-consumer-storage.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/ADR-PDF-A-BOUNDARY.md: frontmatter is required",
+      "file": "law/adr/ADR-PDF-A-BOUNDARY.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/ADR-PDF-A-CONFORMANCE.md: frontmatter is required",
+      "file": "law/adr/ADR-PDF-A-CONFORMANCE.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/ADR-PDF-A-VALIDATOR-CONTRACT.md: frontmatter is required",
+      "file": "law/adr/ADR-PDF-A-VALIDATOR-CONTRACT.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-PREFERENCES-0001-tenant-subject-preferences.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-PREFERENCES-0001-tenant-subject-preferences.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-PREFERENCES-0001-tenant-subject-preferences.md declares (missing id).",
+      "file": "law/adr/ADR-PREFERENCES-0001-tenant-subject-preferences.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-PREFERENCES-0001-tenant-subject-preferences.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-SESSIONS-0001-provider-neutral-session-control.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-SESSIONS-0001-provider-neutral-session-control.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-SESSIONS-0001-provider-neutral-session-control.md declares (missing id).",
+      "file": "law/adr/ADR-SESSIONS-0001-provider-neutral-session-control.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-SESSIONS-0001-provider-neutral-session-control.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-SESSIONS-0002-monthly-partition-maintenance.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-SESSIONS-0002-monthly-partition-maintenance.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-SESSIONS-0002-monthly-partition-maintenance.md declares (missing id).",
+      "file": "law/adr/ADR-SESSIONS-0002-monthly-partition-maintenance.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-SESSIONS-0002-monthly-partition-maintenance.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-SESSIONS-0003-partition-retention.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-SESSIONS-0003-partition-retention.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-SESSIONS-0003-partition-retention.md declares (missing id).",
+      "file": "law/adr/ADR-SESSIONS-0003-partition-retention.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-SESSIONS-0003-partition-retention.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-SIGNATURE-0001-trust-evidence.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-SIGNATURE-0001-trust-evidence.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-SIGNATURE-0001-trust-evidence.md declares (missing id).",
+      "file": "law/adr/ADR-SIGNATURE-0001-trust-evidence.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-SIGNATURE-0001-trust-evidence.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md declares (missing id).",
+      "file": "law/adr/ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-VERSION-LINE-0001.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-VERSION-LINE-0001.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-VERSION-LINE-0001.md declares (missing id).",
+      "file": "law/adr/ADR-VERSION-LINE-0001.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-VERSION-LINE-0001.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_SCHEMA_INVALID",
+      "message": "law/adr/ADR-WORKLIST-0001-flow-boundary-distribution-sla.md does not satisfy decision-record.schema.json.",
+      "file": "law/adr/ADR-WORKLIST-0001-flow-boundary-distribution-sla.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_FILENAME_MISMATCH",
+      "message": "law/adr/ADR-WORKLIST-0001-flow-boundary-distribution-sla.md declares (missing id).",
+      "file": "law/adr/ADR-WORKLIST-0001-flow-boundary-distribution-sla.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_ID_DUPLICATE",
+      "message": " is declared by more than one record.",
+      "file": "law/adr/ADR-WORKLIST-0001-flow-boundary-distribution-sla.md"
+    },
+    {
+      "severity": "error",
+      "code": "DECISION_FRONTMATTER_INVALID",
+      "message": "law/adr/ADR-XMLDSIG-CONTRACT.md: frontmatter is required",
+      "file": "law/adr/ADR-XMLDSIG-CONTRACT.md"
+    }
+  ],
+  "metrics": {
+    "finding_count": 151
+  }
+}

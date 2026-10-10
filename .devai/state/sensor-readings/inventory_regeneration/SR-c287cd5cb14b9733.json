@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-c287cd5cb14b9733",
+  "sensor": {
+    "name": "inventory-regeneration",
+    "kind": "inventory_regeneration"
+  },
+  "timestamp": "2026-10-10T05:05:50.883Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense run inventory_regeneration",
+  "command_hash": "1e21b0a3659eee9987e46daa21c7081523fb042f9b5200a474b6ac47a3dc7a97",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "READINGS_REBUILD_ERROR",
+      "message": "regenerate .devai/state/sensors/inventory_api/api-map.json failed: body embeds the absolute checkout location, so it describes no commit"
+    },
+    {
+      "severity": "error",
+      "code": "READINGS_REBUILD_ERROR",
+      "message": "regenerate .devai/state/sensors/inventory_routes/routes-<framework>.json failed: body embeds the absolute checkout location, so it describes no commit"
+    },
+    {
+      "severity": "error",
+      "code": "READINGS_REBUILD_ERROR",
+      "message": "regenerate .devai/state/sensors/inventory_data_model/data-model.json failed: body embeds the absolute checkout location, so it describes no commit"
+    },
+    {
+      "severity": "error",
+      "code": "READINGS_REBUILD_ERROR",
+      "message": "regenerate .devai/state/sensors/inventory_rbac/rbac.json failed: its input inventory_data_model was not produced"
+    },
+    {
+      "severity": "error",
+      "code": "READINGS_REBUILD_ERROR",
+      "message": "regenerate .devai/state/sensors/inventory_data_handling/data-model-pii.json failed: its input inventory_data_model was not produced"
+    }
+  ],
+  "metrics": {
+    "kinds_touched": 0,
+    "kinds_rebuilt": 0,
+    "kinds_up_to_date": 0,
+    "error_count": 7,
+    "required_kinds": 7,
+    "missing_required_kinds": 7,
+    "obsolete_bodies_removed": 0,
+    "integration_head": "6dabf052b2948fe0c2688cdb23c9d390c16af5ed",
+    "integration_tree": "9102e545c8c09b2ea4cf694cef1abea221a686e9"
+  }
+}

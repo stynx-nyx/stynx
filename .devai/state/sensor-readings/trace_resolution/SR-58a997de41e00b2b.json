@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-58a997de41e00b2b",
+  "sensor": {
+    "name": "trace-resolve",
+    "kind": "trace_resolution"
+  },
+  "timestamp": "2026-10-10T05:06:39.180Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense trace-resolve --trace /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/law/trace.json --invariants-dir /Volumes/Thiamat II/stech/stynx/.devai/worktrees/stynx-release-observation/law/invariants",
+  "command_hash": "a5400499a6f263b968eeeb8dd1228d38bd5eaaea21a19883ec3a58c7021abc0f",
+  "findings": [],
+  "metrics": {
+    "unresolved_trace_entries": 0,
+    "missing_test_paths": 0,
+    "untraced_invariants": 0,
+    "invariants_total": 15,
+    "traced_invariants": 15,
+    "attestation_only_invariants": 0
+  }
+}
