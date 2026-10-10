@@ -2,16 +2,16 @@
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.registry-version-anomalies",
   "canonical_line": "1.x",
-  "next_unified_version": "1.5.6",
-  "preflight_latest_version": "1.5.5",
+  "next_unified_version": "1.5.7",
+  "preflight_latest_version": "1.5.6",
   "owner_decision": {
     "date": "2026-10-10",
-    "repository_baseline": "f3edd68f7c5c78c9e614b3b70629b5ec76959049",
-    "repository_tree": "3e338000650a34ff4bb767e393a69c257c48a6be",
-    "statement": "The Owner decided on 2026-10-09 to release 1.5.6 and reaffirmed on 2026-10-10 that the no-migration 1.5.6 and migration-bearing 1.5.7 slices remain separate. Stable 1.5.5 is published for all 44 fixed-group packages: authenticated registry census on 2026-10-09 observed latest 1.5.5 and rc 1.5.0-rc.2 after the v1.5.5 publication from main 1a03a9156b6e6429fb2a84964b95e514a2da2cb8 with scorecard observation SC-20261009T155331-001. Four changesets pending on origin/main (the @stynx-nyx/angular openStatus option, @stynx-nyx/outbox named destinations, @stynx-nyx/signature trust-profile sets and the @stynx-nyx/offline-sync 1.5.6 slice; DETRAN requests UPS-NGSSE-13, UPS-OBX-11, UPS-SIG-07 and UPS-OFS-10/11/12/14 under ADR-DEVAI-ADOPTION-0016) advance the fixed group from 1.5.5 to 1.5.6 under scripts/version-packages.mjs. DEVAI 2.3.2 adoption is completed before the rebuilt 1.5.6 marker; it is root-only tooling and adds no fifth changeset. Certification and publication remain held. Publish only with the latest dist-tag and an action-specific exact-main-SHA Owner receipt; preflight latest must remain 1.5.5 and rc must remain 1.5.0-rc.2 until publication. This decision does not authorize angular-profile 2.0.0 remediation.",
+    "repository_baseline": "6dabf052b2948fe0c2688cdb23c9d390c16af5ed",
+    "repository_tree": "9102e545c8c09b2ea4cf694cef1abea221a686e9",
+    "statement": "The Owner retained the no-migration 1.5.6 and migration-bearing 1.5.7 split on 2026-10-10 and subsequently directed proceeding until complete 1.5.7 final publication, superseding the earlier holds. Stable 1.5.6 is independently verified for all 44 fixed-group packages from main 6dabf052b2948fe0c2688cdb23c9d390c16af5ed, tree 9102e545c8c09b2ea4cf694cef1abea221a686e9, publication run 38028077567 and annotated unified v1.5.6 tag ed3dbc41d0b3a89b18f8f642efc5ddd77597a0df. Fresh authenticated census at 2026-10-10T05:58:39.542Z observed all 44 latest tags at 1.5.6, rc 1.5.0-rc.2 unchanged, 1.5.7 absent for all packages, matching published 1.5.6 integrities and the unchanged angular-profile 2.0.0 integrity; report SHA-256 9d35cc4c4a8719a5773ed72b8c3fff2b9072990567317de00889f39716fb2822. Exactly the outbox-configurable-app-role and offline-sync-1-5-7-pending-review-context changesets advance the fixed group to 1.5.7 under ADR-DEVAI-ADOPTION-0018 for UPS-OBX-10 and UPS-OFS-06/07/08. The 1.5.6 observation SC-20261010T050509-001 is RED and non-promoting; its real readings, proof chain and evidence remain preserved. Publish only with latest and an action-specific exact-main-SHA Owner receipt under the existing mandate, after ordinary gates and a fresh exact-main census. Preflight latest must remain 1.5.6 and rc must remain 1.5.0-rc.2 until publication. Stop at the first failed, partial or ambiguous publication; recovery requires fresh Owner authorization. This decision does not authorize angular-profile 2.0.0 remediation.",
     "supersedes": {
-      "date": "2026-10-08",
-      "next_unified_version": "1.5.5"
+      "date": "2026-10-10",
+      "next_unified_version": "1.5.6"
     }
   },
   "anomalies": [
@@ -27,12 +27,12 @@
         "observed_at": "2026-08-24T02:04:20.663Z"
       },
       "rationale": "The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.",
-      "allowed_candidate": "1.5.6",
+      "allowed_candidate": "1.5.7",
       "allowed_effects": ["registry-monotonicity-exception"],
       "permitted_remediation": ["retain-as-noncanonical-history"],
       "deletion_requires": "new-owner-authorization-naming-version-id-and-recovery-evidence",
       "deprecation_requires": "new-owner-authorization-naming-package-version-action-and-message",
-      "closure_condition": "Unified stable 1.5.6 is verified for all 44 publishable packages, latest resolves to 1.5.6, rc remains at 1.5.0-rc.2, and angular-profile 2.0.0 remains immutable non-canonical history.",
+      "closure_condition": "Unified stable 1.5.7 is verified for all 44 publishable packages, latest resolves to 1.5.7, rc remains at 1.5.0-rc.2, and angular-profile 2.0.0 remains immutable non-canonical history.",
       "applies_to_other_packages": false,
       "applies_to_other_versions": false
     }
