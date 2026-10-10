@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
+import { PDFArray, PDFDict, PDFDocument, PDFName, PDFRawStream, decodePDFRawStream } from 'pdf-lib';
 import { createCmsTrustVerifier } from '../../src/cms-trust-verifier';
 import type { SignatureTrustProfile } from '../../src/types';
 import { ltaDigest } from '../support/lta-fixture';
@@ -168,6 +169,12 @@ const statusScenarios = provenance.files.filter(
   cmsPath?: string;
   certPath?: string;
   errorMessage?: string;
+  boundary?: {
+    kind: 'crl' | 'ocsp';
+    field: 'producedAt' | 'thisUpdate' | 'nextUpdate';
+    differenceMs: number;
+    statusPath: string;
+  };
 }[];
 it.each(statusScenarios)(
   'authenticates the full changed DSS before enforcing historical status scenario $path',
@@ -189,6 +196,42 @@ it.each(statusScenarios)(
     ).toBe(true);
     expect(file.authenticatedArchiveSignature).toBe(true);
     const at = new Date(file.archiveAt);
+    if (file.boundary) {
+      const tst = new pkijs.TSTInfo({
+        schema: asn1js.fromBER(archive.encapContentInfo.eContent!.getValue()).result,
+      });
+      expect(tst.genTime.getTime()).toBe(at.getTime());
+      const statusBytes = bytes(file.boundary.statusPath);
+      const document = await PDFDocument.load(pdf, { updateMetadata: false });
+      const dss = document.catalog.lookup(PDFName.of('DSS'), PDFDict);
+      const statusStreams = dss.lookup(
+        PDFName.of(file.boundary.kind === 'crl' ? 'CRLs' : 'OCSPs'),
+        PDFArray,
+      );
+      expect(
+        Buffer.from(decodePDFRawStream(statusStreams.lookup(0, PDFRawStream)).decode()),
+      ).toEqual(statusBytes);
+      let statusAt: Date;
+      if (file.boundary.kind === 'crl') {
+        const crl = new pkijs.CertificateRevocationList({
+          schema: asn1js.fromBER(statusBytes).result,
+        });
+        statusAt =
+          file.boundary.field === 'thisUpdate' ? crl.thisUpdate.value : crl.nextUpdate!.value;
+      } else {
+        const response = new pkijs.OCSPResponse({ schema: asn1js.fromBER(statusBytes).result });
+        const basic = new pkijs.BasicOCSPResponse({
+          schema: asn1js.fromBER(response.responseBytes!.response.getValue()).result,
+        });
+        statusAt =
+          file.boundary.field === 'producedAt'
+            ? basic.tbsResponseData.producedAt
+            : basic.tbsResponseData.responses[0]![file.boundary.field]!;
+      }
+      expect(statusAt.getTime() % 1000).toBe(0);
+      expect(statusAt.getTime() - tst.genTime.getTime()).toBe(file.boundary.differenceMs);
+      expect(Math.abs(file.boundary.differenceMs)).toBe(1);
+    }
     const current = { ...input(file.path), profile: { ...profile, revocation: file.mode } };
     if (file.cmsPath) {
       current.cmsSignature = bytes(file.cmsPath);

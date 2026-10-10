@@ -1,7 +1,7 @@
 {
   "classification": "FRESH INSPECTOR SYNTHETIC TEST ONLY; no provider or production policy claim",
   "archiveAt": "2026-10-10T17:44:18.000Z",
-  "generatorSha256": "3d92b15330e71caf995e381070d60b01ca2c6dbf5471f0483db078020c62d6ed",
+  "generatorSha256": "88b071f827f153ca868bc3b0cb35a5ce2eda72f70580b8dd99d2dcb3959e79df",
   "seedBuilderSha256": "b096212ac18fabe8426d6270a7e2c3a1e29beeaa17b93ae0a9138edc25be2812",
   "files": [
     {
@@ -428,6 +428,116 @@
       "mode": "ocsp",
       "authenticatedArchiveSignature": true,
       "archiveAt": "2026-10-10T17:44:18.000Z"
+    },
+    {
+      "path": "boundary-crl-thisUpdate-one-ms.der",
+      "bytes": 385,
+      "sha256": "cc46c67980b826d3c24ad1096c5ce20d7dcae42b5483a1043fe102ccf096799e"
+    },
+    {
+      "path": "boundary-crl-thisUpdate-one-ms.pdf",
+      "bytes": 93343,
+      "sha256": "0723cfabd5682e0f4b92d86e8c217b4c8ac4520c668506a33252989ef49f65df",
+      "statusScenario": "boundary-crl-thisUpdate-one-ms",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.999Z",
+      "boundary": {
+        "kind": "crl",
+        "field": "thisUpdate",
+        "differenceMs": 1,
+        "statusPath": "boundary-crl-thisUpdate-one-ms.der"
+      },
+      "errorMessage": "Covered CRL update exceeds archive time"
+    },
+    {
+      "path": "boundary-crl-nextUpdate-one-ms.der",
+      "bytes": 385,
+      "sha256": "b979f381dd4d1e779631c973639e9844a6705c035d137903adacfc3a80631122"
+    },
+    {
+      "path": "boundary-crl-nextUpdate-one-ms.pdf",
+      "bytes": 93343,
+      "sha256": "dc7a31b6aef6c359b6578cdff8bcbd71733f521acd7b18443a1593978c547214",
+      "statusScenario": "boundary-crl-nextUpdate-one-ms",
+      "expected": "refuse",
+      "mode": "crl",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:19.001Z",
+      "boundary": {
+        "kind": "crl",
+        "field": "nextUpdate",
+        "differenceMs": -1,
+        "statusPath": "boundary-crl-nextUpdate-one-ms.der"
+      },
+      "errorMessage": "Revocation evidence not current"
+    },
+    {
+      "path": "boundary-ocsp-producedAt-one-ms.der",
+      "bytes": 1317,
+      "sha256": "defb4776c6f71e18b10d27f92a520a10e938ca3dcbb1926b44e9b567b2e12f3e"
+    },
+    {
+      "path": "boundary-ocsp-producedAt-one-ms.pdf",
+      "bytes": 93343,
+      "sha256": "2430454754f8a56c4d4164133696faf443609e84d3589177a3807a4ed7232201",
+      "statusScenario": "boundary-ocsp-producedAt-one-ms",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.999Z",
+      "boundary": {
+        "kind": "ocsp",
+        "field": "producedAt",
+        "differenceMs": 1,
+        "statusPath": "boundary-ocsp-producedAt-one-ms.der"
+      },
+      "errorMessage": "Covered OCSP was produced after archive time"
+    },
+    {
+      "path": "boundary-ocsp-thisUpdate-one-ms.der",
+      "bytes": 1317,
+      "sha256": "d4a7d4721445acbe6264530717991179ea47f59f21e5a27d8c73a9bb2ef17d83"
+    },
+    {
+      "path": "boundary-ocsp-thisUpdate-one-ms.pdf",
+      "bytes": 93343,
+      "sha256": "11d4a81e2d82573a96fcd3bb9514c256f265de38784ed019b566ae4a690324e4",
+      "statusScenario": "boundary-ocsp-thisUpdate-one-ms",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:18.999Z",
+      "boundary": {
+        "kind": "ocsp",
+        "field": "thisUpdate",
+        "differenceMs": 1,
+        "statusPath": "boundary-ocsp-thisUpdate-one-ms.der"
+      },
+      "errorMessage": "Covered OCSP update exceeds archive time"
+    },
+    {
+      "path": "boundary-ocsp-nextUpdate-one-ms.der",
+      "bytes": 1317,
+      "sha256": "5d160c563aed2779f0148c9e72b62294e7f1c9f90bbd495e2e9d48b504d99f73"
+    },
+    {
+      "path": "boundary-ocsp-nextUpdate-one-ms.pdf",
+      "bytes": 93343,
+      "sha256": "721a76fc2c7a16e754b970cd4439e79e9b85447001d7848aafcb9b36bb1593cc",
+      "statusScenario": "boundary-ocsp-nextUpdate-one-ms",
+      "expected": "refuse",
+      "mode": "ocsp",
+      "authenticatedArchiveSignature": true,
+      "archiveAt": "2026-10-10T17:44:19.001Z",
+      "boundary": {
+        "kind": "ocsp",
+        "field": "nextUpdate",
+        "differenceMs": -1,
+        "statusPath": "boundary-ocsp-nextUpdate-one-ms.der"
+      },
+      "errorMessage": "Revocation evidence not current"
     },
     {
       "path": "historical-ocsp-responder-by-key.pdf",

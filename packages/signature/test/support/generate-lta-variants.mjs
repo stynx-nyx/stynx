@@ -803,6 +803,36 @@ await statusPdf('historical-ocsp-equality', {
   mode: 'ocsp',
   expected: 'pass',
 });
+// RFC5280 status instants remain whole-second values. RFC3161 genTime carries
+// the exact millisecond offset, with the original signature timestamp preceding it.
+for (const [kind, field, differenceMs, errorMessage] of [
+  ['crl', 'thisUpdate', 1, 'Covered CRL update exceeds archive time'],
+  ['crl', 'nextUpdate', -1, 'Revocation evidence not current'],
+  ['ocsp', 'producedAt', 1, 'Covered OCSP was produced after archive time'],
+  ['ocsp', 'thisUpdate', 1, 'Covered OCSP update exceeds archive time'],
+  ['ocsp', 'nextUpdate', -1, 'Revocation evidence not current'],
+]) {
+  const statusAt = new Date(archiveAt.getTime() + 1000);
+  const timestampAt = new Date(statusAt.getTime() - differenceMs);
+  const evidence =
+    kind === 'crl'
+      ? await statusCrl((crl) => {
+          crl[field] = time(statusAt);
+        })
+      : await statusOcsp(async (basic) => {
+          if (field === 'producedAt') basic.tbsResponseData.producedAt = statusAt;
+          else basic.tbsResponseData.responses[0][field] = statusAt;
+        });
+  const statusPath = `boundary-${kind}-${field}-one-ms.der`;
+  save(statusPath, evidence);
+  await statusPdf(`boundary-${kind}-${field}-one-ms`, {
+    ...(kind === 'crl' ? { crls: [evidence] } : { ocsps: [evidence] }),
+    mode: kind,
+    timestampAt,
+  });
+  records.at(-1).boundary = { kind, field, differenceMs, statusPath };
+  records.at(-1).errorMessage = errorMessage;
+}
 await statusPdf('historical-ocsp-responder-by-key', {
   ocsps: [
     await statusOcsp(async (basic) => {
