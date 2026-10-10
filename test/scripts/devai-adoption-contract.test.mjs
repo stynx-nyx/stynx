@@ -29,7 +29,7 @@ function taskClosure(descriptor, roots) {
   return closure;
 }
 
-test('DEVAI 2.3.0 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', () => {
+test('DEVAI 2.3.2 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', () => {
   const expectedConstitutionDigest =
     'd7f8791f1d00a7247bced66bdcdf8b1af431bb57e49d03b6ddd7024cb52f957d';
   const identity = readJson('law/policy/devai-package-identity.json');
@@ -43,29 +43,29 @@ test('DEVAI 2.3.0 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', (
   assert.deepEqual(identity, {
     schemaVersion: '1.0.0',
     policy_id: 'stynx.devai-package-identity',
-    policy_version: '1.3.0',
+    policy_version: '1.4.0',
     authority: 'Architect',
     description: identity.description,
     registry: 'https://npm.pkg.github.com',
     package: '@aarusso-nyx/devai',
-    version: '2.3.0',
+    version: '2.3.2',
     tarball:
-      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/2.3.0/9fdfa0ed437bda8d6834b06aa0cf3241677575a5',
+      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/2.3.2/57d145a81f2eae2af30c2e78626ab1f6426c8be8',
     integrity:
-      'sha512-qtQLjq9kPVT4aPKq7xxGU6O2v4ipz3Y3JLKKxKNELTmiBxO77g4BQuzyE23UuVtPBXW6alvr96yxxys4LPmZPQ==',
-    shasum: '9fdfa0ed437bda8d6834b06aa0cf3241677575a5',
-    sha256: '51481cf21cbe08760e17acd637fed3eb0375f56e06888dc20505b77317a46eae',
-    source_commit: 'bf9a26164934b9c1279205138480c7b68e1c26d7',
-    source_tree: '883bb9804bcf911e180a296f98288453f976caa1',
-    signed_tag_object: 'fedd2a99d118431341fc9530c04f6f27784f2862',
+      'sha512-WxjOpsUfvWAQFMHNltq18U352Nsa57OKY/TgHHuKycY6SxWNqpBeagKOLDSzWjc0fjRgAuApG9XAjL3UQcBCyg==',
+    shasum: '57d145a81f2eae2af30c2e78626ab1f6426c8be8',
+    sha256: 'df04bfae94257ecc406ca9da0d8b4a83fd1016885bd93144f4b82e9684ec4645',
+    source_commit: '915db68119461af83e03e28febf28a139a5a5de9',
+    source_tree: '8e0954e7908219fd345681dde18a2566472c4a61',
+    signed_tag_object: 'e2eeff23933658d711f1195a9c6804c43a666128',
   });
-  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '2.3.0');
-  assert.equal(installedManifest.version, '2.3.0');
+  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '2.3.2');
+  assert.equal(installedManifest.version, '2.3.2');
   assert.deepEqual(project.constitution, {
     version: '1.0.2',
     sha256: expectedConstitutionDigest,
   });
-  assert.equal(project.devai_version, '2.3.0');
+  assert.equal(project.devai_version, '2.3.2');
   assert.equal(
     createHash('sha256').update(pinnedConstitution).digest('hex'),
     expectedConstitutionDigest,
@@ -77,7 +77,7 @@ test('DEVAI 2.3.0 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', (
   assert.deepEqual(profile, adoption.release_verification);
 });
 
-test('DEVAI 2.3.0 ownership-matrix bind keeps the attested RC gate and GitHub host identity', () => {
+test('DEVAI 2.3.2 ownership-matrix bind keeps the attested RC gate and GitHub host identity', () => {
   const project = readJson('.devai/config/project.json');
   const adoption = readJson('law/policy/devai-adoption.json');
   const binding = readJson('.devai/config/adopter-policy-binding.json');
@@ -96,11 +96,11 @@ test('DEVAI 2.3.0 ownership-matrix bind keeps the attested RC gate and GitHub ho
     adapter_config: '.devai/config/github-actions-host-adapter.json',
   });
   assert.deepEqual(authority.host_enforcement, {
-    adapter: { adapter_id: 'github-actions-main-observation', adapter_version: '2.3.0' },
+    adapter: { adapter_id: 'github-actions-main-observation', adapter_version: '2.3.2' },
     mode: 'host-integrated',
   });
-  assert.equal(authority.framework_package.version, '2.3.0');
-  assert.equal(githubAdapter.package_binding.version, '2.3.0');
+  assert.equal(authority.framework_package.version, '2.3.2');
+  assert.equal(githubAdapter.package_binding.version, '2.3.2');
   // Since DEVAI 2.1.0 the tracked post-merge file is a path-free declaration;
   // the checkout-bound attestation lives in <git-dir>/devai of the bound checkout.
   assert.deepEqual(postMergeAdapter, {
