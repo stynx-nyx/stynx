@@ -494,7 +494,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
     localstackEndpoint = `http://${localstack.getHost()}:${localstack.getMappedPort(4566)}`;
 
     process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api:owner');
-    process.env.STYNX_APP_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api:app');
+    process.env.STYNX_APP_DATABASE_URL = postgres.appConnectionString('@stynx-nyx/reference-api:app');
     process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api:reader');
     process.env.STYNX_REDIS_URL = redisUrl;
     process.env.STYNX_STORAGE_ENDPOINT = localstackEndpoint;

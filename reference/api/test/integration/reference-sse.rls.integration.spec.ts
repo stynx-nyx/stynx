@@ -172,6 +172,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
         ('a-recent', $1, date_trunc('milliseconds', clock_timestamp() - interval '1 minute'), 'record.changed', jsonb_build_object('tenant', 'A', 'value', 'recent')),
         ('b-private', $2, clock_timestamp() - interval '1 minute', 'record.changed', jsonb_build_object('tenant', 'B', 'value', 'private'))`, [tenantA, tenantB]);
     } finally { await admin.end(); }
+    await postgres.ensureRoleLogin('stynx_app');
 
     scheduler = new Scheduler();
     const contextRunner: EventStreamContextRunner = {
@@ -184,7 +185,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('reference-sse-owner') },
-            app: { connectionString: postgres.connectionString('reference-sse-app') },
+            app: { connectionString: postgres.appConnectionString('reference-sse-app') },
             reader: { connectionString: postgres.connectionString('reference-sse-reader') },
           },
           migrations: { enabled: false },
