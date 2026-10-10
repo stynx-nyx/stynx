@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Release the migration-bearing fixed group as stable patch 1.5.7](2026-10-10-seventh-stable-patch-1.5.7.md)
+
 - [Adopt DEVAI 2.3.2 and preserve observation history](2026-10-10-devai-2.3.2-adoption.md)
 - [Release the fixed group as stable patch 1.5.6](2026-10-09-sixth-stable-patch-1.5.6.md)
 - [Release the fixed group as stable patch 1.5.5](2026-10-08-fifth-stable-patch-1.5.5.md)
