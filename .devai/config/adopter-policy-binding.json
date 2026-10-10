@@ -1,16 +1,17 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.5.0",
+  "policy_version": "1.6.0",
   "source_path": "law/policy/devai-adoption.json",
-  "source_digest_sha256": "1cd49a1792d5f927d996915876ac1091ba393c862035b399c31f4680b3b660e6",
+  "source_digest_sha256": "fd35700f1eb6b5908bd978dc039cbea8620fe71c9fc3939d1c597a5c7ecbea01",
   "materialized": {
-    ".devai/config/project.json": "f96d61352254818609269904c553c90ea58946b4bcc6bb1f0955301d051e6623",
+    ".devai/config/project.json": "12c6bd752c48792a0d44ddc9fe4bb022d0d3c1b8b46467aeae019536600cb771",
     ".devai/config/domains.json": "74cd7cb8a0ab2588422f197ba574323018cb24135b6944eaa987aebbe036f29e",
     ".devai/config/thresholds.json": "4662c41fbbce00db9e887be3f44f7f799e9bee587cb74dccb86e68eca3e4e9f4",
     ".devai/config/scorecard-na.json": "1c771ff287822cb00becba04817b3e35e4472074f1ee2cdccd29b2469fbea7de",
     ".devai/config/glob-guards.json": "759bf9dd020fff02a75cdc184780c04e4883bde6a82e16290ce7f0b8ab70d4bd",
-    ".devai/config/release-verification.json": "2e7b9bb872ecbea45027cefbb183fd08764bb863073da5c40b2e15aa08b2a0aa"
+    ".devai/config/release-verification.json": "2e7b9bb872ecbea45027cefbb183fd08764bb863073da5c40b2e15aa08b2a0aa",
+    ".devai/config/sensor-inputs.json": "5920f4b695d2bd4cc7de372986ae0cc65fa557a86827bd9b0091e1c3845bbb66"
   },
   "retired_keys": []
 }

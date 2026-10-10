@@ -9,28 +9,52 @@
       "testGlobs": [
         "packages/*/test",
         "packages-web/*/test",
-        "test"
+        "reference/*/test",
+        "domain/*/api/test",
+        "domain/*/web/test",
+        "test",
+        "tools",
+        "infra",
+        "scripts"
       ]
     },
     "test_performance_coverage": {
       "testGlobs": [
         "packages/*/test",
         "packages-web/*/test",
-        "test"
+        "reference/*/test",
+        "domain/*/api/test",
+        "domain/*/web/test",
+        "test",
+        "tools",
+        "infra",
+        "scripts"
       ]
     },
     "test_robustness_coverage": {
       "testGlobs": [
         "packages/*/test",
         "packages-web/*/test",
-        "test"
+        "reference/*/test",
+        "domain/*/api/test",
+        "domain/*/web/test",
+        "test",
+        "tools",
+        "infra",
+        "scripts"
       ]
     },
     "test_idiomaticity": {
       "testGlobs": [
         "packages/*/test",
         "packages-web/*/test",
-        "test"
+        "reference/*/test",
+        "domain/*/api/test",
+        "domain/*/web/test",
+        "test",
+        "tools",
+        "infra",
+        "scripts"
       ]
     },
     "type_check": {
@@ -80,6 +104,16 @@
       "lookbackDays": 30,
       "minimumSample": 20,
       "excludedJobs": []
+    },
+    "inventory_routes": {
+      "framework": "angular",
+      "scanDirs": [
+        "reference/web/src",
+        "packages-web/angular-flow/src",
+        "packages-web/angular-iam/src",
+        "packages-web/angular-profile/src",
+        "packages-web/angular-audit/src"
+      ]
     }
   },
   "surfaces": {
