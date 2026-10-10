@@ -44,12 +44,15 @@ const config: KnipConfig = {
       ],
     },
     'test/*': {
-      // The CLI consumer copies this fixture into a temporary external project at runtime.
+      // Package consumers copy these executable fixtures into external projects at runtime.
       entry: [
         'validate.js',
         'vitest.config.ts',
         'support/*.ts',
         'cli-generator/consumer-runtime.ts',
+        'i18n-installed/run-integration.mjs',
+        'i18n-installed/consumer-runtime.ts',
+        'i18n-installed/consumer-imports.mjs',
       ],
       project: ['**/*.{ts,js,mjs,cjs}'],
     },
