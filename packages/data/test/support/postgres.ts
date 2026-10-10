@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { userInfo } from 'node:os';
+import { resolve } from 'node:path';
 import { Client, type ClientConfig } from 'pg';
 
 function localSocketDir(): string {
@@ -92,10 +94,41 @@ function connectionString(
 
 /** Rewrites a test connection string so the pool logs in as `role` (default `stynx_app`). */
 export function asAppRole(connectionString: string, role = TEST_APP_ROLE): string {
-  const url = new URL(connectionString);
-  url.username = role;
-  url.password = roleLoginPassword();
-  return url.toString();
+  // WHATWG URL rejects PostgreSQL's empty-host Unix socket authority. Keep
+  // that authority (and IPv6 hosts) intact instead of inventing a TCP host.
+  const parts = /^(postgres(?:ql)?:\/\/)([^/?#]*)([^?#]*)(?:\?([^#]*))?(#.*)?$/u.exec(
+    connectionString,
+  );
+  if (!parts) throw new TypeError('Expected PostgreSQL connection URI');
+  const [, scheme, authority = '', pathname = '', query, fragment = ''] = parts;
+  const host = authority.slice(authority.lastIndexOf('@') + 1);
+  const parameters = new URLSearchParams(query);
+  // pg gives these parameters precedence over URI credentials. Overriding
+  // the login must not accidentally retain a privileged query-string user.
+  parameters.delete('user');
+  parameters.delete('password');
+  const remainingQuery = parameters.toString();
+  return `${scheme}${encodeURIComponent(role)}:${encodeURIComponent(roleLoginPassword())}@${host}${pathname}${remainingQuery ? `?${remainingQuery}` : ''}${fragment}`;
+}
+
+/** Bootstrap only cluster roles; leave the fresh database migration ledger untouched. */
+async function bootstrapRoles(client: Client): Promise<void> {
+  await client.query('begin');
+  try {
+    await client.query(`select pg_advisory_xact_lock(hashtext('stynx_test_role_login'))`);
+    // Execute the real immutable migration on this fixture database: its
+    // current_database() grants must never target the admin database. These
+    // grants are needed even when the cluster already has the shared roles.
+    const sql = await readFile(
+      resolve(__dirname, '../../migrations/platform/0001_roles.sql'),
+      'utf8',
+    );
+    await client.query(sql);
+    await client.query('commit');
+  } catch (error) {
+    await client.query('rollback').catch(() => undefined);
+    throw error;
+  }
 }
 
 /**
@@ -166,6 +199,9 @@ export async function createPostgresTestDatabase(
     } else {
       await client.query(`create database "${database}"`);
     }
+  });
+  await withClient(adminConfig(database), async (client) => {
+    await bootstrapRoles(client);
     await ensureRoleLogin(client, TEST_APP_ROLE);
   });
 
@@ -175,7 +211,10 @@ export async function createPostgresTestDatabase(
       return connectionString(database, applicationName);
     },
     appConnectionString(applicationName: string, role = TEST_APP_ROLE): string {
-      return connectionString(database, applicationName, { user: role, password: roleLoginPassword() });
+      return connectionString(database, applicationName, {
+        user: role,
+        password: roleLoginPassword(),
+      });
     },
     async ensureRoleLogin(role: string): Promise<void> {
       await withClient(adminConfig(), (client) => ensureRoleLogin(client, role));

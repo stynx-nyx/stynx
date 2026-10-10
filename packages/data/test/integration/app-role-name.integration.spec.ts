@@ -105,6 +105,11 @@ describe('StynxDataModule configurable application role (PostgreSQL)', () => {
   beforeAll(async () => {
     postgres = await createPostgresTestDatabase('stynx_data_app_role');
     admin = await postgres.connectAsAdmin();
+    const bootstrap = await compile({
+      app: postgres.appConnectionString('app-role-bootstrap'),
+      migrations: { enabled: true },
+    });
+    await bootstrap.init();
     await admin.query(
       `insert into tenancy.tenants (id, slug, name) values ($1::uuid, 'app-role', 'App role')
        on conflict do nothing`,
