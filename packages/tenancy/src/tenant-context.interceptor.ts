@@ -20,7 +20,7 @@ import {
   STYNX_VERIFIED_TENANT_ID,
   type PublicTenantRouteOptions,
 } from '@stynx-nyx/contracts';
-import { Database, type Transaction } from '@stynx-nyx/data';
+import { Database, IndependentTransactionConnectionError, type Transaction } from '@stynx-nyx/data';
 import { Observable, type Subscription } from 'rxjs';
 import { MembershipAccessCache } from './membership-cache';
 import { recordResolvedTenantCommandContext } from './command-context.port';
@@ -291,6 +291,9 @@ export class TenantContextInterceptor implements NestInterceptor {
   }
 
   private async hasActiveMembership(userId: string, tenantId: string): Promise<boolean> {
+    if (this.requireDatabase().hasHeldConnection()) {
+      throw new IndependentTransactionConnectionError();
+    }
     const cached = this.membershipCache.get(userId, tenantId);
     if (cached !== undefined) {
       return cached;
