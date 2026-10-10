@@ -21,6 +21,8 @@ schema, executes hidden subprocesses or repairs storage.
 The separately exported owner maintenance operation is:
 
 ```ts
+parseOfflineImportManifest(text: string): OfflineImportManifest;
+
 importOfflineState(
   trx: StorageVerifierTransaction,
   manifest: OfflineImportManifest,
@@ -40,6 +42,27 @@ it does not begin, commit or partially commit that transaction. A successful
 result becomes durable only with the caller's commit. No request controller,
 application store method, arbitrary SQL callback, applier, event dispatcher or
 provider is part of this port. Unknown options refuse.
+
+`parseOfflineImportManifest` is the exported raw-text admission seam. It accepts
+strict JSON text, rejects malformed syntax and duplicate decoded property names
+at every object depth (including escape-equivalent names such as `"a"` and
+`"\u0061"`), then runs the same legal-JSON, closed schema and static manifest
+validation used by object import. Static validation includes available envelope/
+mapping/body/header digests and mapping coverage; database ownership, live
+invariants and independent archive verification remain import-time checks.
+It returns a typed manifest only after these checks, with no database or other
+side effects. Parsing/duplicate/closed-input refusal is `OfflineImportError`
+with reason `invalid-manifest`. No arbitrary parsing callback or permissive
+JSON extension is admitted, and plain `JSON.parse` without duplicate detection
+is not an equivalent implementation.
+
+`importOfflineState` still validates typed-object inputs independently; the type
+annotation is not an admission receipt. An already parsed object cannot reveal
+duplicate keys discarded by an earlier parser. Consumers admitting raw source
+manifest text must use `parseOfflineImportManifest` before object import, and
+must not claim raw duplicate rejection from object validation alone. Revalidate
+at import even for parser-produced objects so later mutation cannot bypass the
+closed manifest/digest checks.
 
 ## Closed envelope and digest identity
 
@@ -73,8 +96,9 @@ it is computed. There is no self-reference or excluded nested evidence.
 All JSON data is plain legal JSON: valid Unicode strings and keys, finite
 numbers, ordinary/null-prototype objects, and dense ordinary arrays. Reject
 cycles, accessors, symbols, unsupported objects, non-enumerable/extra properties,
-ambiguous numbers and coercion/toJSON behavior before hashing or SQL. Parse raw
-JSON without silently accepting duplicate object keys. Exact byte bounds and
+ambiguous numbers and coercion/toJSON behavior before hashing or SQL. Admit raw JSON through
+`parseOfflineImportManifest`, which detects duplicate decoded object keys before
+any parser can discard them. Exact byte bounds and
 row constraints remain mandatory runtime validation; schema validation alone
 cannot prove them or cross-record invariants.
 

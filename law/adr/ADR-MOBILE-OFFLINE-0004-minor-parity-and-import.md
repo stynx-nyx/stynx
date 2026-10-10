@@ -388,6 +388,14 @@ COMMITTED transaction, with full visibility and fixed-order ACCESS EXCLUSIVE
 locks. The public `verifyOfflineStorage` remains read-only. No application-role
 or arbitrary-SQL import seam is admitted.
 
+Export `parseOfflineImportManifest(text: string): OfflineImportManifest` for
+strict duplicate-aware raw JSON admission before the same closed/legal/static
+manifest validation. Duplicate decoded property names at every depth, including
+escaped aliases, refuse with `OfflineImportError` / `invalid-manifest`.
+Object import revalidates all legal/static input but cannot recover duplicates
+already discarded by an upstream parser. No arbitrary parse callback or silent
+plain-JSON.parse equivalence is accepted; database/archive checks remain at import.
+
 Render and verify all 0001–0007 objects, the derived scope fence and forward
 0008 owner-only `offline.sync_import_receipts`. Preserve the original complete
 manifest and unverified archive facts; source identity/digest replay is atomic,

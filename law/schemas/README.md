@@ -13,3 +13,8 @@ exact primary-key mappings and archived-response envelope for owner-only import.
 The import contract additionally requires byte bounds, legal-JSON/canonical
 digest validation, lossless timestamp/bigint handling and cross-record invariants;
 schema validity alone is not an import or archive-verification pass.
+
+Raw offline import text enters through exported `parseOfflineImportManifest`,
+which detects duplicate decoded object names before closed validation. A schema
+validator applied to an already parsed object cannot recover discarded keys;
+object import still validates independently and performs the live checks.
