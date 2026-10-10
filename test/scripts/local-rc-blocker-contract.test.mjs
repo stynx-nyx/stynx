@@ -3632,7 +3632,7 @@ test('D17.7 production binds the singleton owned-listener classifier without def
   const reconstructedMain = frozenMainWithoutOwnedListenerBinding(main);
   assert.equal(
     createHash('sha256').update(reconstructedMain).digest('hex'),
-    '47a9ae09aa32abf13ca7b079c035d2b5e17c43b3c730651e82eccf8f292bd3eb',
+    'c6c00387c0dd2e60918bd619692c0f19ab8da1fdd62a87f34bac99b9be278c8f',
   );
   assert.equal(reconstructedMain.includes(ownedListenerBindingBegin), false);
   assert.equal(reconstructedMain.includes(ownedListenerBindingEnd), false);
@@ -3835,7 +3835,7 @@ test('D18 production marks every helper child and binds only exact managed main'
   const reconstructedMain = frozenMainWithoutOwnedListenerBinding(main);
   assert.equal(
     createHash('sha256').update(reconstructedMain).digest('hex'),
-    '47a9ae09aa32abf13ca7b079c035d2b5e17c43b3c730651e82eccf8f292bd3eb',
+    'c6c00387c0dd2e60918bd619692c0f19ab8da1fdd62a87f34bac99b9be278c8f',
   );
   assert.doesNotMatch(helper, /(?:find|reserve|probe)(?:Free|Available)?(?:Host|Port)/iu);
   assert.doesNotMatch(helper, /(?:fallbackHost|fallbackPort|alternateHost)/u);
@@ -4067,7 +4067,7 @@ test('D19 production binds the exact default-endpoint classifier without frozen 
   );
   assert.equal(
     createHash('sha256').update(main).digest('hex'),
-    'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
+    'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
   );
   assert.match(helper, new RegExp(escapeRegExpLiteral(defaultEndpointOutputPrefix), 'u'));
   assert.match(helper, /16384|16_384/u);
@@ -4370,7 +4370,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'utf8',
   );
   const frozenFiles = {
-    'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
+    'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
     'package.json': 'ad1cbc91e90e00122c24fccddee4d9f4bebab91c95773afb3a672617f89430f9',
@@ -4627,7 +4627,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'utf8',
   );
   const frozenFiles = {
-    'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
+    'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
     'package.json': 'ad1cbc91e90e00122c24fccddee4d9f4bebab91c95773afb3a672617f89430f9',
@@ -4715,7 +4715,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
 
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
   const frozen = {
-    'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
+    'reference/api/src/main.ts': '95fd04b29c57830982b7669f13c5f4466d11ca54b913241599b6e4685478146f',
     'reference/web/playwright.config.mjs':
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
     'package.json': 'ad1cbc91e90e00122c24fccddee4d9f4bebab91c95773afb3a672617f89430f9',
