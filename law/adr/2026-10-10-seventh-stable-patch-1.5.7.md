@@ -92,6 +92,35 @@ Ordinary hard gates retain their own results.
    legacy platform-context absence when no value was produced. Keep the
    two-store and real PostgreSQL regressions, including restricted
    application fixtures. Do not weaken specifications or tests.
+
+   For the helper-owned reference-web E2E stack only, this decision supersedes
+   D22 of `2026-08-24-stynx-1.1.1-campaign-controls.md` where it freezes the
+   application database URL to the shared privileged PostgreSQL identity and
+   excludes the role provisioning required by ADR-OUTBOX-0003 D1.7. After
+   owned Compose startup succeeds and before spawning the reference-api
+   child, `reference/web/scripts/serve-reference-api-stack.mjs` may execute
+   one confined SQL provisioning step through that exact owned Compose file
+   and its `postgres` service. It establishes `stynx_app` as a direct test
+   login with `NOINHERIT`, `NOSUPERUSER` and `NOBYPASSRLS`, using a fixed
+   fixture password, without owner membership or ownership. Only
+   `STYNX_APP_DATABASE_URL` receives that restricted login; a privileged
+   session assuming the role is not a substitute. Provisioning failure
+   refuses child startup and enters the existing confined cleanup path.
+
+   Every other D22 guarantee stays in force: atomic dynamic host-port
+   publication, exact owned mapping discovery and validation, endpoint
+   propagation to all three URLs, no inherited-port fallback, unchanged
+   owner/reader URL identities, PostgreSQL service and healthcheck, Redis
+   behavior, startup protocol, output suppression, timeouts, watchdog and
+   exactly-once confined cleanup. No broader Docker discovery, protected
+   resource mutation, retry or credential output is permitted. The Inspector
+   replaces only the obsolete shared-identity oracle with assertions for
+   the restricted app login and provisioning failure confinement, retaining
+   every endpoint, inherited-port, output and cleanup assertion. Engineer
+   scope is the helper; Inspector scope is its existing blocker contract.
+   This harness conformance correction changes no published package,
+   dependency, workflow or changeset and lands before the version marker.
+
 4. Ship only the forward migrations already reviewed:
    `packages/data/migrations/platform/0025_outbox_attempt_guard_role_independent.sql`
    and
