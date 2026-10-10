@@ -1,38 +1,36 @@
-import { Test } from '@nestjs/testing';
-import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { RequestContext } from '@stynx-nyx/core';
 import { I18nAdminService } from '../../src/i18n-admin.service';
-import { I18nController } from '../../src/i18n.controller';
+import { AuthenticatedI18nApp, TENANT_ID } from '../support/authenticated-app';
 
 describe('I18nController E2E', () => {
-  let app: INestApplication;
-  const adminService = {
-    listOverrides: vi.fn(() => [{ locale: 'pt-BR', key: 'hello', value: 'Ola' }]),
-    updateOverrides: vi.fn((tenantId: string, input: unknown) => ({ tenantId, input })),
-  };
-
+  let fixture: AuthenticatedI18nApp;
+  let adminService: I18nAdminService;
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      controllers: [I18nController],
-      providers: [
-        { provide: I18nAdminService, useValue: adminService },
-        { provide: RequestContext, useValue: { tenantId: 'tenant-1' } },
-      ],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    await app.init();
-  });
-
+    fixture = new AuthenticatedI18nApp();
+    await fixture.initialize();
+    adminService = fixture.moduleRef.get(I18nAdminService);
+    vi.spyOn(adminService, 'listTenantOverrides');
+    const admin = await fixture.adminClient();
+    try {
+      await admin.query(
+        'update tenancy.tenant_settings set settings=$2::jsonb where tenant_id=$1',
+        [TENANT_ID, JSON.stringify({ 'i18n.override.pt-BR.hello': 'Ola' })],
+      );
+    } finally {
+      await admin.end();
+    }
+  }, 60000);
   afterAll(async () => {
-    await app.close();
+    await fixture?.teardown();
   });
 
   it('routes tenant override reads through the HTTP controller', async () => {
-    const response = await request(app.getHttpServer()).get('/_tenancy/i18n/overrides').expect(200);
-
-    expect(response.body).toEqual([{ locale: 'pt-BR', key: 'hello', value: 'Ola' }]);
-    expect(adminService.listOverrides).toHaveBeenCalledWith('tenant-1');
+    const response = await request(fixture.app.getHttpServer())
+      .get('/_tenancy/i18n/overrides')
+      .set('x-tenant-id', TENANT_ID)
+      .set('authorization', `Bearer ${fixture.token()}`)
+      .expect(200);
+    expect(response.body).toEqual({ 'i18n.override.pt-BR.hello': 'Ola' });
+    expect(adminService.listTenantOverrides).toHaveBeenCalledWith(TENANT_ID);
   });
 });

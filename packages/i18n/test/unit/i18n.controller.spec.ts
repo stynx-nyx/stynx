@@ -15,18 +15,20 @@ describe('I18nController API contract', () => {
   it('uses request tenant context for list and update operations', async () => {
     const moduleRef = { get: vi.fn(() => ({ tenantId: 'tenant-1' })) };
     const adminService = {
-      listOverrides: vi.fn(async () => [{ key: 'records.title' }]),
-      updateOverrides: vi.fn(async () => ({ updated: 1 })),
+      listTenantOverrides: vi.fn(async () => [{ key: 'records.title' }]),
+      updateTenantOverrides: vi.fn(async () => ({ updated: 1 })),
     } as unknown as I18nAdminService;
     const controller = new I18nController(moduleRef as never, adminService);
 
     await expect(controller.listOverrides()).resolves.toEqual([{ key: 'records.title' }]);
-    await expect(controller.updateOverrides({ overrides: { 'records.title': 'Records' } })).resolves.toEqual({
+    await expect(
+      controller.updateOverrides({ overrides: { 'records.title': 'Records' } }),
+    ).resolves.toEqual({
       updated: 1,
     });
 
-    expect(adminService.listOverrides).toHaveBeenCalledWith('tenant-1');
-    expect(adminService.updateOverrides).toHaveBeenCalledWith('tenant-1', {
+    expect(adminService.listTenantOverrides).toHaveBeenCalledWith('tenant-1');
+    expect(adminService.updateTenantOverrides).toHaveBeenCalledWith('tenant-1', {
       overrides: { 'records.title': 'Records' },
     });
   });
@@ -34,16 +36,19 @@ describe('I18nController API contract', () => {
   it('uses an empty tenant id when request context has no tenant', async () => {
     const moduleRef = { get: vi.fn(() => ({})) };
     const adminService = {
-      listOverrides: vi.fn(async () => ({})),
-      updateOverrides: vi.fn(async () => ({})),
+      listTenantOverrides: vi.fn(async () => ({})),
+      updateTenantOverrides: vi.fn(async () => ({})),
     } as unknown as I18nAdminService;
     const controller = new I18nController(moduleRef as never, adminService);
 
     await expect(controller.listOverrides()).resolves.toEqual({});
     await expect(controller.updateOverrides({ locale: 'pt-BR', catalog: {} })).resolves.toEqual({});
 
-    expect(adminService.listOverrides).toHaveBeenCalledWith('');
-    expect(adminService.updateOverrides).toHaveBeenCalledWith('', { locale: 'pt-BR', catalog: {} });
+    expect(adminService.listTenantOverrides).toHaveBeenCalledWith('');
+    expect(adminService.updateTenantOverrides).toHaveBeenCalledWith('', {
+      locale: 'pt-BR',
+      catalog: {},
+    });
   });
 
   it('keeps override writes outside the idempotency interceptor', () => {

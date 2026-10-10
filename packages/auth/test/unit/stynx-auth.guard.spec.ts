@@ -1,4 +1,4 @@
-import type { ExecutionContext } from '@nestjs/common';
+import { UnauthorizedException, type ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import * as contracts from '@stynx-nyx/contracts';
@@ -384,5 +384,31 @@ describe('StynxAuthGuard', () => {
       'X-Stynx-Auth-Verify-Ms',
       expect.stringMatching(/^\d+\.\d{3}$/u),
     );
+  });
+  it('maps typed protected credential refusals to 401 before session or permission lookup', async () => {
+    const f = createGuard();
+    f.validator.validate.mockRejectedValueOnce(
+      new InvalidCredentialError('invalid protected signature'),
+    );
+    const result = f.guard.canActivate(
+      createExecutionContext({ headers: { authorization: 'Bearer forged' } }),
+    );
+    await expect(result).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(result).rejects.toMatchObject({ status: 401 });
+    expect(f.sessionService.getActive).not.toHaveBeenCalled();
+    expect(f.permissionCache.getForSession).not.toHaveBeenCalled();
+  });
+
+  it('propagates protected authentication infrastructure failures without relabeling them as credentials', async () => {
+    const f = createGuard();
+    const infrastructure = new Error('JWKS service unavailable');
+    f.validator.validate.mockRejectedValueOnce(infrastructure);
+    await expect(
+      f.guard.canActivate(
+        createExecutionContext({ headers: { authorization: 'Bearer valid-looking' } }),
+      ),
+    ).rejects.toBe(infrastructure);
+    expect(f.sessionService.getActive).not.toHaveBeenCalled();
+    expect(f.permissionCache.getForSession).not.toHaveBeenCalled();
   });
 });
