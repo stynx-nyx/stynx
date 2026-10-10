@@ -1879,7 +1879,7 @@
     {
       "type": "library",
       "name": "commander",
-      "version": "14.0.3",
+      "version": "15.0.0",
       "scope": "required",
       "licenses": [
         {
@@ -1888,7 +1888,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/commander@14.0.3"
+      "purl": "pkg:npm/commander@15.0.0"
     },
     {
       "type": "library",
