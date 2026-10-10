@@ -2,6 +2,44 @@ import { StynxError } from '@stynx-nyx/core';
 
 export class StynxOutboxError extends StynxError {}
 
+export type OutboxConsumerStorageCutoverUnsupportedReason =
+  'consumer-owned-storage' | 'audit-chain-unavailable';
+export class OutboxConsumerStorageCutoverUnsupportedError extends StynxOutboxError {
+  readonly reason: OutboxConsumerStorageCutoverUnsupportedReason;
+  constructor(reason: OutboxConsumerStorageCutoverUnsupportedReason) {
+    super('Legacy cutover requires the platform audit-chain contract', {
+      code: 'OUTBOX_CONSUMER_STORAGE_CUTOVER_UNSUPPORTED',
+      status: 409,
+      context: { reason },
+    });
+    this.reason = reason;
+  }
+}
+
+export class OutboxRetirementInputError extends StynxOutboxError {
+  constructor() {
+    super('Outbox retirement requires a valid event, operation key and reason', {
+      code: 'OUTBOX_RETIREMENT_INVALID',
+      status: 400,
+    });
+  }
+}
+
+export type OutboxRetirementConflictReason =
+  'active-lease' | 'already-acked' | 'operation-conflict' | 'already-retired';
+
+export class OutboxRetirementConflictError extends StynxOutboxError {
+  readonly reason: OutboxRetirementConflictReason;
+  constructor(reason: OutboxRetirementConflictReason) {
+    super('Outbox retirement conflicts with the existing delivery or operation', {
+      code: 'OUTBOX_RETIREMENT_CONFLICT',
+      status: 409,
+      context: { reason },
+    });
+    this.reason = reason;
+  }
+}
+
 export class OutboxNotFoundError extends StynxOutboxError {
   constructor(context: Record<string, unknown>) {
     super('Outbox message not found', {

@@ -15,3 +15,4 @@ export * from './metrics';
 export * from './outbox.module';
 export * from './outbox.service';
 export * from './types';
+export * from './storage';

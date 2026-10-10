@@ -191,6 +191,8 @@ export interface OutboxMetricsSink {
 }
 
 export interface OutboxModuleOptions {
+  /** Consumer-owned storage cannot run the platform audit-chain legacy cutover. */
+  storageMode?: 'platform' | 'consumer-owned';
   /** Qualified table name for messages. Defaults to `outbox.messages`. */
   table?: string;
   /** Qualified table name for acknowledgements. Defaults to `outbox.acknowledgements`. */
@@ -228,7 +230,26 @@ export interface OutboxModuleOptions {
 }
 
 /** Event-mode delivery projection states (`outbox.event_delivery.status`). */
-export type OutboxEventDeliveryStatus = 'PENDING' | 'SENT' | 'SENT_UNRESOLVED' | 'ERROR' | 'ACKED';
+export type OutboxEventDeliveryStatus =
+  'PENDING' | 'SENT' | 'SENT_UNRESOLVED' | 'ERROR' | 'ACKED' | 'RETIRED';
+
+/** Operator disposition; actor and tenant are taken from the trusted transaction. */
+export interface OutboxEventRetirementInput {
+  idempotencyKey: string;
+  reason: string;
+}
+
+/** Immutable receipt; retirement does not assert successful external delivery. */
+export interface OutboxEventRetirement {
+  id: string;
+  tenantId: string;
+  eventId: string;
+  idempotencyKey: string;
+  actorId: string;
+  reason: string;
+  previousStatus: Exclude<OutboxEventDeliveryStatus, 'ACKED' | 'RETIRED'>;
+  retiredAt: Date;
+}
 
 /** Delivery projection of one event; `nextAttemptAt` is the next eligibility. */
 export interface OutboxEventDeliveryState {
@@ -238,6 +259,7 @@ export interface OutboxEventDeliveryState {
   nextAttemptAt: Date | null;
   leaseUntil: Date | null;
   updatedAt: Date;
+  retirement?: OutboxEventRetirement;
 }
 
 /** Immutable event-log identity returned by the tenant read ports (payload omitted). */
@@ -292,7 +314,7 @@ export type OutboxDeliveryStatusCounts = Record<OutboxEventDeliveryStatus, numbe
 export interface OutboxAggregateDelivery {
   entity: string;
   entityId: string;
-  /** Oldest non-`ACKED` delivery: the one that blocks later events of the aggregate; `null` when all are `ACKED`. */
+  /** Oldest outstanding delivery; ACKED and RETIRED do not block later events. */
   head: OutboxEventDelivery | null;
   /** Counts over every delivery of the aggregate. */
   counts: OutboxDeliveryStatusCounts;
@@ -329,7 +351,7 @@ export interface OutboxQueueHealth {
   tenantId: string;
   total: number;
   byStatus: OutboxDeliveryStatusCounts;
-  /** `createdAt` of the oldest non-`ACKED` delivery, or `null`. */
+  /** `createdAt` of the oldest outstanding delivery, excluding ACKED and RETIRED. */
   oldestUnackedCreatedAt: Date | null;
 }
 
