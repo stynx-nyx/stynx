@@ -159,7 +159,12 @@ resolve incompatible lifecycle state at the source before collecting a new
 snapshot. No imported applied fact is downgraded or number reissued.
 
 Forward migration `0008` adds `offline.sync_import_receipts` only after 0007.
-Its immutable source identity is `(source_system, source_snapshot_id)`, binding
+Its immutable logical source identity is `(source_system, source_snapshot_id)`.
+The physical primary lookup key may be the SHA-256 digest of canonical JSON
+`[source.system, source.snapshotId]`, so bounded long identities do not exceed
+PostgreSQL index-tuple limits. Retain both original strings immutably and compare
+them exactly on every lookup as well as all digests; a digest collision refuses,
+never aliases another source or returns its receipt. The receipt binds
 source digest, manifest digest, mapping digest, full original validated manifest,
 actual importer/instant, result counts and each archive's verification verdict.
 The configured owner alone can insert/read this maintenance ledger; app, reader,
