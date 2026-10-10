@@ -1,3 +1,12 @@
+import {
+  cloneRange,
+  rangeCreation,
+  rangeIdentity,
+  rangeList,
+  rangeCancellation,
+  rangeConflict,
+  rangeNotFound,
+} from './range-administration';
 import { createHash, randomUUID } from 'node:crypto';
 import { HttpException, UnprocessableEntityException } from '@nestjs/common';
 import {
@@ -24,6 +33,10 @@ import {
 } from './reservation-admission';
 import { boundedConsumerAttributes, stynxContextOf, withoutResolution } from './stynx-context';
 import type {
+  CreateNumberingRangeInput,
+  CancelNumberingRangeInput,
+  ListNumberingRangesInput,
+  NumberingRangePage,
   CancelNumberingReservationInput,
   NumberingRange,
   NumberingReservation,
@@ -71,6 +84,10 @@ import type {
 
 /** Deterministic process-local store for tests and sandbox wiring. */
 export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
+  private readonly rangeCreationReceipts = new Map<
+    string,
+    { fingerprint: string; receipt: NumberingRange }
+  >();
   private readonly ranges = new Map<string, NumberingRange>();
   private readonly reservations = new Map<string, CTG9NumberingReservation>();
   private readonly reservationOrigins = new Map<string, 'e6' | 'ctg9'>();
@@ -154,7 +171,110 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   }
 
   seedNumberingRange(range: NumberingRange): void {
-    this.ranges.set(this.key(range.tenantId, range.id), { ...range });
+    this.ranges.set(this.key(range.tenantId, range.id), cloneRange(range));
+  }
+
+  async createNumberingRange(
+    scope: TrustedOfflineSyncScope,
+    original: CreateNumberingRangeInput,
+    now: string,
+  ): Promise<NumberingRange> {
+    const { input, fingerprint } = rangeCreation(scope, original);
+    const key =
+      input.idempotencyKey === undefined
+        ? undefined
+        : this.key(scope.tenantId, input.idempotencyKey);
+    const prior = key === undefined ? undefined : this.rangeCreationReceipts.get(key);
+    if (prior) {
+      if (prior.fingerprint !== fingerprint) throw rangeConflict('key');
+      return cloneRange(prior.receipt);
+    }
+    if (
+      [...this.ranges.values()].some(
+        (range) =>
+          range.tenantId === scope.tenantId &&
+          range.orgUnitId === input.orgUnitId &&
+          range.entityType === input.entityType &&
+          range.series === input.series,
+      )
+    )
+      throw rangeConflict('scope');
+    const at = new Date(now);
+    if (!Number.isFinite(at.getTime())) throw new OfflineSyncConfigurationError('rangeTimestamp');
+    const range: NumberingRange = {
+      id: randomUUID(),
+      tenantId: scope.tenantId,
+      orgUnitId: input.orgUnitId,
+      entityType: input.entityType,
+      series: input.series,
+      startNumber: input.startNumber,
+      endNumber: input.endNumber,
+      nextNumber: input.startNumber,
+      status: 'active',
+      createdBy: scope.actorId,
+      createdAt: at.toISOString(),
+      ...(input.consumerAttributes === undefined
+        ? {}
+        : { consumerAttributes: input.consumerAttributes }),
+    };
+    this.ranges.set(this.key(scope.tenantId, range.id), cloneRange(range));
+    if (key !== undefined)
+      this.rangeCreationReceipts.set(key, { fingerprint, receipt: cloneRange(range) });
+    return cloneRange(range);
+  }
+
+  async getNumberingRange(
+    scope: TrustedOfflineSyncScope,
+    original: string,
+  ): Promise<NumberingRange | null> {
+    const range = this.ranges.get(this.key(scope.tenantId, rangeIdentity(original)));
+    return range ? cloneRange(range) : null;
+  }
+
+  async listNumberingRanges(
+    scope: TrustedOfflineSyncScope,
+    original: ListNumberingRangesInput,
+  ): Promise<NumberingRangePage> {
+    const input = rangeList(original);
+    const rows = [...this.ranges.values()]
+      .filter(
+        (range) =>
+          range.tenantId === scope.tenantId &&
+          (input.orgUnitId === undefined || input.orgUnitId === range.orgUnitId) &&
+          (input.entityType === undefined || input.entityType === range.entityType) &&
+          (input.series === undefined || input.series === range.series) &&
+          (input.status === undefined || input.status === range.status) &&
+          (input.cursor === undefined || range.id > input.cursor),
+      )
+      .sort((left, right) => left.id.localeCompare(right.id, 'en'));
+    const items = rows.slice(0, input.limit).map(cloneRange);
+    return { items, nextCursor: rows.length > input.limit ? items[items.length - 1]!.id : null };
+  }
+
+  async cancelNumberingRange(
+    scope: TrustedOfflineSyncScope,
+    original: string,
+    originalInput: CancelNumberingRangeInput,
+    now: string,
+  ): Promise<NumberingRange> {
+    const id = rangeIdentity(original);
+    const input = rangeCancellation(originalInput);
+    const range = this.ranges.get(this.key(scope.tenantId, id));
+    if (!range) throw rangeNotFound();
+    if (range.status === 'cancelled') return cloneRange(range);
+    if (range.status !== 'active') throw rangeConflict('state');
+    const at = new Date(now);
+    if (!Number.isFinite(at.getTime())) throw new OfflineSyncConfigurationError('rangeTimestamp');
+    const cancelled: NumberingRange = {
+      ...range,
+      status: 'cancelled',
+      cancelledBy: scope.actorId,
+      cancelledAt: at.toISOString(),
+      updatedAt: at.toISOString(),
+      ...(input.reason === undefined ? {} : { cancellationReason: input.reason }),
+    };
+    this.ranges.set(this.key(scope.tenantId, id), cancelled);
+    return cloneRange(cancelled);
   }
 
   async reserveNumbering(

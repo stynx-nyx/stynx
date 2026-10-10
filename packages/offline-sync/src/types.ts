@@ -62,7 +62,36 @@ export interface NumberingRange {
   readonly endNumber: number;
   readonly nextNumber: number;
   readonly status: 'active' | 'exhausted' | 'cancelled';
+  readonly consumerAttributes?: OfflineSyncConsumerAttributes;
+  readonly createdBy?: string;
+  readonly createdAt?: string;
+  readonly updatedAt?: string;
+  readonly cancelledBy?: string;
+  readonly cancellationReason?: string;
+  readonly cancelledAt?: string;
 }
+
+export interface CreateNumberingRangeInput {
+  readonly orgUnitId: string;
+  readonly entityType: string;
+  readonly series: string;
+  readonly startNumber: number;
+  readonly endNumber: number;
+  readonly idempotencyKey?: string;
+  readonly consumerAttributes?: OfflineSyncConsumerAttributes;
+}
+export interface CancelNumberingRangeInput {
+  readonly reason?: string;
+}
+export interface ListNumberingRangesInput {
+  readonly orgUnitId?: string;
+  readonly entityType?: string;
+  readonly series?: string;
+  readonly status?: NumberingRange['status'];
+  readonly limit?: number;
+  readonly cursor?: string;
+}
+export type NumberingRangePage = OfflineSyncPage<NumberingRange>;
 
 export interface NumberingReservation {
   readonly reservationId: string;
@@ -452,6 +481,22 @@ export interface SyncIntegrityRejection extends SyncIntegrityRejectionIdentity {
 }
 
 export interface OfflineSyncDurableStore extends OfflineSyncStore {
+  createNumberingRange?(
+    scope: TrustedOfflineSyncScope,
+    input: CreateNumberingRangeInput,
+    now: string,
+  ): Promise<NumberingRange>;
+  getNumberingRange?(scope: TrustedOfflineSyncScope, id: string): Promise<NumberingRange | null>;
+  listNumberingRanges?(
+    scope: TrustedOfflineSyncScope,
+    input: ListNumberingRangesInput,
+  ): Promise<NumberingRangePage>;
+  cancelNumberingRange?(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: CancelNumberingRangeInput,
+    now: string,
+  ): Promise<NumberingRange>;
   reserveDurableNumbering?(
     scope: TrustedOfflineSyncScope,
     input: CTG9ReserveNumberingInput,

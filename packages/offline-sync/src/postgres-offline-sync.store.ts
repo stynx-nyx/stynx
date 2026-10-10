@@ -1,3 +1,9 @@
+import {
+  pgCreateNumberingRange,
+  pgGetNumberingRange,
+  pgListNumberingRanges,
+  pgCancelNumberingRange,
+} from './postgres-ranges';
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -39,6 +45,10 @@ import {
   pgSubmit,
 } from './postgres-durable';
 import type {
+  CreateNumberingRangeInput,
+  CancelNumberingRangeInput,
+  ListNumberingRangesInput,
+  NumberingRangePage,
   CancelNumberingReservationInput,
   NumberingRange,
   NumberingReservation,
@@ -582,6 +592,31 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
         throw new OfflineSyncUpgradeRequiredError('0003');
       throw error;
     });
+  }
+
+  createNumberingRange(
+    scope: TrustedOfflineSyncScope,
+    input: CreateNumberingRangeInput,
+    now: string,
+  ): Promise<NumberingRange> {
+    return pgCreateNumberingRange(this.database, scope, input, now);
+  }
+  getNumberingRange(scope: TrustedOfflineSyncScope, id: string): Promise<NumberingRange | null> {
+    return pgGetNumberingRange(this.database, scope, id);
+  }
+  listNumberingRanges(
+    scope: TrustedOfflineSyncScope,
+    input: ListNumberingRangesInput,
+  ): Promise<NumberingRangePage> {
+    return pgListNumberingRanges(this.database, scope, input);
+  }
+  cancelNumberingRange(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: CancelNumberingRangeInput,
+    now: string,
+  ): Promise<NumberingRange> {
+    return pgCancelNumberingRange(this.database, scope, id, input, now);
   }
 
   reserveDurableNumbering(

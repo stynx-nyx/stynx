@@ -6,6 +6,11 @@ import {
   STYNX_OFFLINE_SYNC_STORE,
 } from './tokens';
 import type {
+  NumberingRange,
+  CreateNumberingRangeInput,
+  CancelNumberingRangeInput,
+  ListNumberingRangesInput,
+  NumberingRangePage,
   CancelNumberingReservationInput,
   NumberingReservation,
   OfflineSyncContextPort,
@@ -48,6 +53,13 @@ import type {
 } from './types';
 import { canonicalPayloadHash, listDefaultLimit, listMaxLimit } from './listing';
 import { OFFLINE_SYNC_NO_SHIFT } from './numbering';
+import {
+  rangeCreation,
+  rangeIdentity,
+  rangeList,
+  rangeCancellation,
+  rangeNotFound,
+} from './range-administration';
 
 const queueStatuses = ['received', 'applied', 'conflict', 'rejected', 'pending'];
 
@@ -59,6 +71,48 @@ export class OfflineSyncService {
     @Inject(STYNX_OFFLINE_SYNC_OPTIONS)
     private readonly options: StynxOfflineSyncModuleOptions,
   ) {}
+
+  async createNumberingRange(input: CreateNumberingRangeInput): Promise<NumberingRange> {
+    const scope = this.context.current();
+    const request = rangeCreation(scope, input).input;
+    const operation = this.durable.createNumberingRange;
+    if (typeof operation !== 'function')
+      throw new OfflineSyncConfigurationError('createNumberingRange');
+    return operation.call(this.store, scope, request, this.now());
+  }
+
+  async getNumberingRange(id: string): Promise<NumberingRange> {
+    const scope = this.context.current();
+    const key = rangeIdentity(id);
+    const operation = this.durable.getNumberingRange;
+    if (typeof operation !== 'function')
+      throw new OfflineSyncConfigurationError('getNumberingRange');
+    const range = await operation.call(this.store, scope, key);
+    if (!range) throw rangeNotFound();
+    return range;
+  }
+
+  async listNumberingRanges(input: ListNumberingRangesInput = {}): Promise<NumberingRangePage> {
+    const scope = this.context.current();
+    const request = rangeList(input);
+    const operation = this.durable.listNumberingRanges;
+    if (typeof operation !== 'function')
+      throw new OfflineSyncConfigurationError('listNumberingRanges');
+    return operation.call(this.store, scope, request);
+  }
+
+  async cancelNumberingRange(
+    id: string,
+    input: CancelNumberingRangeInput = {},
+  ): Promise<NumberingRange> {
+    const scope = this.context.current();
+    const key = rangeIdentity(id);
+    const request = rangeCancellation(input);
+    const operation = this.durable.cancelNumberingRange;
+    if (typeof operation !== 'function')
+      throw new OfflineSyncConfigurationError('cancelNumberingRange');
+    return operation.call(this.store, scope, key, request, this.now());
+  }
 
   async reserveNumbering(input: ReserveNumberingInput): Promise<NumberingReservation> {
     this.assertText(input.orgUnitId, 'orgUnitId');
