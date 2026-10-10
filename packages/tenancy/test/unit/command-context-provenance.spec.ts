@@ -40,6 +40,7 @@ function context(
 async function setup(allowed = true) {
   const query = vi.fn(async () => ({ rows: [{ allowed }] }));
   const database = {
+    hasHeldConnection: vi.fn(() => false),
     withSystemContext: vi.fn(async (_reason: string, callback: () => Promise<unknown>) =>
       callback(),
     ),

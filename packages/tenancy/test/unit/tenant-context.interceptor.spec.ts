@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
+import { IndependentTransactionConnectionError } from '@stynx-nyx/data';
 import { TenantContextInterceptor } from '../../src/tenant-context.interceptor';
 import { MembershipAccessCache } from '../../src/membership-cache';
 
@@ -34,6 +35,7 @@ describe('TenantContextInterceptor', () => {
   ) {
     const txQuery = vi.fn().mockResolvedValue({ rows: [{ allowed: options.allowed ?? true }] });
     const database = {
+      hasHeldConnection: vi.fn(() => false),
       withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
       tx: vi.fn(),
       txIndependent: vi.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) =>
@@ -413,5 +415,23 @@ describe('TenantContextInterceptor', () => {
         principal: { id: '018f53e4-28a1-7cd8-a0ff-5b22c3a07112' },
       }),
     ).rejects.toThrow('Database provider is unavailable to TenantContextInterceptor');
+  });
+
+  it('refuses cached membership admission while a connection is held without publishing downstream context', async () => {
+    const { interceptor, database, txQuery, membershipCache, requestContextMutator } =
+      createInterceptor({ cached: true });
+    database.hasHeldConnection.mockReturnValue(true);
+    await expect(
+      (interceptor as never).resolveAndValidate({
+        headers: { 'x-tenant-id': TENANT_ID },
+        originalUrl: '/records',
+        principal: { id: ACTOR_ID },
+      }),
+    ).rejects.toBeInstanceOf(IndependentTransactionConnectionError);
+    expect(txQuery).not.toHaveBeenCalled();
+    expect(database.txIndependent).not.toHaveBeenCalled();
+    expect(database.withSystemContext).not.toHaveBeenCalled();
+    expect(membershipCache.set).not.toHaveBeenCalled();
+    expect(requestContextMutator.runWithRequestContext).not.toHaveBeenCalled();
   });
 });

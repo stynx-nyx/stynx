@@ -37,6 +37,7 @@ function setup(options: Setup = {}) {
     ],
   }));
   const database = {
+    hasHeldConnection: vi.fn(() => false),
     withSystemContext: vi.fn(async (_reason: string, fn: () => Promise<unknown>) => fn()),
     tx: vi.fn(),
     txIndependent: vi.fn(async (fn: (trx: { query: typeof txQuery }) => Promise<unknown>) =>

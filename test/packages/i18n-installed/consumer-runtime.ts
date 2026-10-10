@@ -322,13 +322,13 @@ async function main() {
           STYNX_RESOLVED_TENANT_COMMAND_CONTEXT,
           { strict: false },
         );
-        const runAdmission = async () => {
+        const runAdmission = async (tenant = B) => {
           const req = {
             headers: { 'x-tenant-id': B },
             originalUrl: '/records',
             principal: { id: ACTOR_ID },
           };
-          Reflect.set(req, STYNX_VERIFIED_TENANT_ID, B);
+          Reflect.set(req, STYNX_VERIFIED_TENANT_ID, tenant);
           const context = {
             switchToHttp: () => ({ getRequest: () => req }),
             getHandler: () => () => undefined,
@@ -354,7 +354,9 @@ async function main() {
           const before = fixture.moduleRef.get(RequestContext).snapshot();
           await fixture.database.tx(async () => {
             await runAdmission();
-            await internal(A, ACTOR_ID, runAdmission);
+            await internal(A, ACTOR_ID, () => runAdmission());
+            await runAdmission(A);
+            await internal(A, ACTOR_ID, () => runAdmission(A));
           });
           assert.deepEqual(fixture.moduleRef.get(RequestContext).snapshot(), before);
         });
@@ -443,8 +445,16 @@ async function main() {
           }),
         );
         assert.equal(fixture.observations.length, before);
-        await http.get('/_i18n-public/system').set(headers()).expect(500);
-        await http.get('/_i18n-public/system-reset').set(headers()).expect(500);
+        const system = await http.get('/_i18n-public/system').set(headers()).expect(403);
+        assert.equal(
+          system.body.message,
+          'I18n internal administration is unavailable to HTTP requests',
+        );
+        const reset = await http.get('/_i18n-public/system-reset').set(headers()).expect(403);
+        assert.equal(
+          reset.body.message,
+          'I18n internal administration is unavailable to HTTP requests',
+        );
       },
     );
     await witness('genuine-owned-PostgreSQL-infrastructure-fault-is-not-invalid-auth', async () => {
