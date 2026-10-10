@@ -148,6 +148,63 @@ one archive shape. Everything outside that shape stays fail closed.
    evidence. Until it is recorded, D1 code may merge but the fixed group is
    not published with it.
 
+### D1.10 — Historical evidence interval and exact additive names
+
+The Owner's 2026-10-10 full 1.6.0 campaign authorizes implementation of the
+accepted minimal D1 shape and D2 profile set. This clarification makes D1.4
+executable without weakening legacy verification. It is specification, not
+implementation acceptance or production-provider approval; D1.9 still requires
+the independent security review before publication.
+
+For the signer and signature-TSA paths under LTA, carried DSS revocation evidence
+must be applicable at the verified `archiveAt`: finite positive
+`thisUpdate <= archiveAt <= nextUpdate`, with `nextUpdate` required. OCSP also
+requires finite positive `producedAt <= archiveAt`. Equality at either boundary
+is accepted; any production/update instant after the archive is refused, with
+no future-clock-skew allowance extending that upper boundary. Certificate paths,
+authenticated responder/issuer/serial/status and revocation-mode requirements
+still apply. Only the DSS bytes covered by the archive timestamp supply these
+historical status facts; online retrieval cannot rescue missing historical DSS.
+
+This interval is specific to LTA's historical covered evidence. Do not reuse the
+legacy `thisUpdate >= selectedEvidenceTime` / OCSP `producedAt >=
+selectedEvidenceTime` conditions for it: together with the no-post-archive rule
+they would incorrectly require equality. Preserve those existing non-LTA lower
+bounds and every legacy result. Archive-TSA certificate/path/status validation
+remains at actual verification now with the existing current freshness rule;
+this historical interval never extends the archive TSA's validity or accepts a
+stale current status. Missing, malformed, unknown, revoked or inapplicable status
+still yields the existing typed refusal, never partial positive proof.
+
+The public additive verifier option is
+`archiveTsaTrustAnchorsPem?: readonly string[]`. LTA requires a nonempty explicit
+archive list intersected with the requested profile's anchors; no fallback to
+signer or signature-TSA anchors. Verified LTA proof fields are
+`archiveAt?: Date` and `lta?: true`, with `padesProfile: 'PAdES-B-LTA'` and
+`certificateValidatedAt` equal to that actual verified archive instant. These
+fields are absent on unchanged non-LTA proofs and never present as an unverified
+claim. Preserve all document/CMS/certificate/profile/manifest proof bindings.
+
+For production capabilities, capture the actual requested profile's immutable
+full semantics before calling `readinessChallenge`; labels alone do not bind
+anchors, required PAdES/LTA/TSA level, signature level, revocation/time rules or
+qualification policy. Require returned id/revision equality, then verify the
+returned artifact under that captured requested profile, not the challenge's
+supplied profile object. A weaker same-label profile cannot promote readiness.
+LTA capability requires a genuine B-LTA proof with the matching archive fields;
+configured anchors or a B-LT-only challenge are insufficient. Keep per-profile
+isolation and no cross-profile readiness reuse.
+
+The historical applicability distinction follows the meanings of OCSP update
+and production times in [RFC 6960 sections 2.4 and 4.2.2.1](https://www.rfc-editor.org/rfc/rfc6960.html#section-2.4)
+and CRL update times in [RFC 5280 sections 5.1.2.4–5](https://www.rfc-editor.org/rfc/rfc5280.html#section-5.1.2.4).
+The exact inclusive boundary and stricter minimal LTA lifetime are STYNX's
+accepted contract, not a claim to implement every standard LTA validation model.
+Inspector evidence must separate signing, signature-TSA, carried status and
+archive instants; cover both equalities, one-millisecond outside each boundary,
+missing nextUpdate, post-archive OCSP production, stale current archive-TSA
+status and same-label weaker-profile challenge refusal. Preserve legacy tests.
+
 ### D2 — Several trust profiles in one mounted module (UPS-SIG-07, option A)
 
 **Amends** ADR-SIGNATURE-0001 decision 4 (health composition and boot guard),

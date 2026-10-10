@@ -141,6 +141,13 @@ ADR-MOBILE-OFFLINE-0004 define atomicity, key/hash identity, numbering and repla
 
 The minimal LTA and profile-set boundary remains
 [ADR-SIGNATURE-0002](../../../law/adr/ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md).
+Configure explicit `archiveTsaTrustAnchorsPem` and a genuine B-LTA readiness
+artifact for each required production profile; general or signature-TSA anchors
+are not an archive fallback. Handle additive verified `archiveAt` and `lta: true`
+proof fields. Historical covered DSS status must span the archive instant and
+must not be produced after it; current archive-TSA status must remain fresh now.
+Readiness verifies the requested full profile semantics, not just matching labels.
+Do not promote a B-LT challenge or an anchor configuration into LTA readiness.
 Actual provider compatibility must be independently demonstrated by the consuming
 application; local test PKI or mocked provider responses are not that approval.
 
