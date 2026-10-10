@@ -44,14 +44,10 @@ export async function preflightOfflineImport(
     select incoming.* from jsonb_populate_recordset(null::offline.sync_import_receipts,$${values.length}::jsonb) incoming)`);
   const tables = [...Object.values(IMPORT_RELATIONS), scopes, 'sync_import_receipts'];
   const overlay: StorageVerifierTransaction = {
-    async query<T extends Record<string, unknown>>(
-      sql: string,
-      parameters: unknown[] = [],
-    ): Promise<{ rows: T[] }> {
-      let body = sql.replace(
-        /\$(\d+)/gu,
-        (_whole, index: string) => `$${Number(index) + values.length}`,
-      );
+    async query<T extends Record<string, unknown>>(sql: string): Promise<{ rows: T[] }> {
+      // Both reviewed callers emit parameter-free invariant/FK queries. Bind
+      // only the overlay values; do not implement an unused SQL rewrite dialect.
+      let body = sql;
       for (const table of tables)
         body = body.replace(
           new RegExp(`(?:"offline"|\\boffline)\\.(?:"${table}"|${table}\\b)`, 'gu'),
@@ -60,7 +56,7 @@ export async function preflightOfflineImport(
       const combined = /^\s*with\s+/iu.test(body)
         ? `with ${ctes.join(',')}, ${body.replace(/^\s*with\s+/iu, '')}`
         : `with ${ctes.join(',')} ${body}`;
-      return trx.query<T>(combined, [...values, ...parameters]);
+      return trx.query<T>(combined, values);
     },
   };
   const findings = await inspectOfflineRows(overlay);

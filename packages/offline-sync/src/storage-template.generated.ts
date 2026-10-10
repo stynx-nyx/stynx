@@ -37,7 +37,7 @@ export const OFFLINE_STORAGE_TEMPLATE = {
     },
     {
       path: 'scripts/offline-storage-generate.mjs',
-      sha256: '7ede11bdeb1ab05d93c63f5ebaa14cfe26f9505f434d840955eea60750dda233',
+      sha256: 'a7ebbd8108d246e09d136ac7f55f8cbf5e43ebcce174ed8f72a395ba42219a95',
     },
     {
       path: 'tools/migration-linter/src/sql.ts',

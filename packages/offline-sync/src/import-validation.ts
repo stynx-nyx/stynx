@@ -114,7 +114,7 @@ interface Schema {
   anyOf?: readonly Schema[];
   properties?: Readonly<Record<string, Schema>>;
   required?: readonly string[];
-  additionalProperties?: boolean | Schema;
+  additionalProperties?: false | Schema;
   items?: Schema;
   minLength?: number;
   maxLength?: number;
@@ -174,9 +174,7 @@ function conforms(value: unknown, rule: Schema): boolean {
         ? conforms(item, rule.properties[key]!)
         : rule.additionalProperties === false
           ? false
-          : typeof rule.additionalProperties === 'object'
-            ? conforms(item, rule.additionalProperties)
-            : true,
+          : conforms(item, rule.additionalProperties!),
     );
   }
   return true;
@@ -229,8 +227,6 @@ function validateRow(record: OfflineImportRecord): void {
   const byteBounds = { ...scopeBounds, ...perKind[record.kind] };
   for (const [column, value] of Object.entries(row)) {
     if (typeof value === 'string') {
-      // PostgreSQL text cannot preserve NUL, including unbounded historical context text.
-      if (value.includes('\0')) importRefuse(`${record.kind}.${column}`);
       if (byteBounds[column] !== undefined)
         boundedImportText(
           value,
@@ -278,11 +274,6 @@ function validateRow(record: OfflineImportRecord): void {
       Buffer.byteLength(canonicalImportJson(r.consumer_attributes)) > 4096
     )
       importRefuse('ranges.consumer_attributes');
-    if (
-      (r.creation_key === null) !== (r.creation_fingerprint === null) ||
-      (r.creation_key === null) !== (r.creation_receipt === null)
-    )
-      importRefuse('ranges.creation-evidence');
   }
   if (record.kind === 'reservations') {
     const r = record.row;

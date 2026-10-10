@@ -75,6 +75,22 @@ bindings.unshift(
   ...tables.map((table) => `ALTER TABLE ${table} OWNER TO stynx_owner;`),
   ...functions.map((fn) => `ALTER FUNCTION ${fn}() OWNER TO stynx_owner;`),
 );
+// The renderer binds identifier tokens only. Future migration grammar must be
+// reviewed here rather than silently introducing string-literal substitution
+// or a policy whose role list could disappear when the optional reader is off.
+for (const sql of [...objects, ...bindings]) {
+  if (/'(?:stynx_owner|stynx_app|stynx_reader)'/u.test(sql))
+    throw new Error('Unsupported quoted offline role token');
+  if (/^CREATE POLICY /u.test(sql)) {
+    const clause = sql.match(/\bTO ([\s\S]*?) (?:USING|WITH CHECK)/u)?.[1];
+    const roles = clause?.split(',').map((role) => role.trim());
+    if (
+      !roles?.includes('stynx_app') ||
+      roles.some((role) => !['stynx_app', 'stynx_reader'].includes(role))
+    )
+      throw new Error('Unsupported offline policy role binding');
+  }
+}
 const metadata = JSON.parse(
   readFileSync(resolve(root, 'packages/offline-sync/package.json'), 'utf8'),
 );

@@ -7,6 +7,17 @@ import { format } from 'prettier';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = readFileSync(resolve(root, 'law/schemas/offline-import.schema.json'), 'utf8');
 const schema = JSON.parse(source);
+function validateClosedObjects(node) {
+  if (node === null || typeof node !== 'object') return;
+  if (
+    node.type === 'object' &&
+    node.additionalProperties !== false &&
+    (node.additionalProperties === null || typeof node.additionalProperties !== 'object')
+  )
+    throw new Error('Import object rules require false or a schema for additionalProperties');
+  Object.values(node).forEach(validateClosedObjects);
+}
+validateClosedObjects(schema);
 const names = Object.fromEntries(
   Object.keys(schema.$defs).map((key) => [
     key,

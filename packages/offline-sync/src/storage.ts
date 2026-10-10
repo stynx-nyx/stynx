@@ -45,12 +45,8 @@ function roleMap(binding: StorageRoleBinding): Record<string, string> {
 function bindSql(sql: string, binding: StorageRoleBinding): string {
   const roles = roleMap(binding);
   return sql
-    .replace(
-      /'(stynx_owner|stynx_app|stynx_reader)'|\b(stynx_owner|stynx_app|stynx_reader)\b/gu,
-      (_whole, literal: string | undefined, identifier: string | undefined) => {
-        const value = roles[literal ?? identifier!]!;
-        return literal ? `'${value.replaceAll("'", "''")}'` : quoteStorageIdentifier(value);
-      },
+    .replace(/\b(stynx_owner|stynx_app|stynx_reader)\b/gu, (identifier) =>
+      quoteStorageIdentifier(roles[identifier]!),
     )
     .replace(
       /REFERENCES tenancy\.tenants\(id\)/gu,
@@ -76,7 +72,7 @@ function bindStatement(statement: string, binding: StorageRoleBinding): string |
   }
   const policy = sql.match(/^CREATE POLICY (\w+) ON (offline\.\w+)/u);
   if (policy) {
-    const clause = sql.match(/\bTO ([\s\S]*?) (?:USING|WITH CHECK)/u)?.[1] ?? '';
+    const clause = sql.match(/\bTO ([\s\S]*?) (?:USING|WITH CHECK)/u)![1]!;
     const roles = DEFAULT_ROLES.filter((role) =>
       clause.split(',').some((value) => value.trim() === role),
     );
@@ -116,7 +112,6 @@ function bindCatalog(binding: StorageRoleBinding): StorageCatalogEntry[] {
         entry.value.roles = (entry.value.roles as string[]).filter(
           (role) => role !== 'stynx_reader',
         );
-        if ((entry.value.roles as string[]).length === 0) return [];
       }
     }
     if (entry.kind === 'policy') {
