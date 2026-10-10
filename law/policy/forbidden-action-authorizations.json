@@ -1429,6 +1429,12 @@
       "commit": "0346c3439b60085ea6895a7a4bd7ed28683a5453",
       "authorized_by": "Owner",
       "reason": "Owner authorization on 2026-10-10 to proceed until complete 1.5.7 final publication includes the required persistence of actual published-candidate observation evidence under ADR-DEVAI-ADOPTION-0014 decision 6 and ADR-DEVAI-ADOPTION-0018 decision 9. This agent-bound exact source commit was authored by DEVAI Inspector after recordings and independent authorized Auditor observation at published 1.5.7 main 2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e. It contains exactly ten generated-evidence paths: nine raw observation/reading artifacts and the 80-record proof chain preserving its 75-record historical prefix. Scorecard SC-20261010T081604-001 records 24 PASS, 4 FAIL, 9 REVIEW, 6 UNKNOWN and 2 N/A cells, overall FAIL/RED and readiness_promoting=false. No specification, threshold, product code or test is weakened, and no missing measurements are fabricated. This receipt covers only that exact generated-evidence commit; a rewritten landed commit requires its own exact receipt. The Owner supplied the end-to-end action mandate, not this computed SHA."
+    },
+    {
+      "forbidden_id": "FORBID-MUTATE-INVARIANTS",
+      "commit": "e70414e46aa4502753a77ebd633b1eb2120b6d65",
+      "authorized_by": "Owner",
+      "reason": "Owner authorization on 2026-10-10 to proceed until complete 1.5.7 final publication includes required persistence of actual published-candidate observation evidence under ADR-DEVAI-ADOPTION-0014 decision 6 and ADR-DEVAI-ADOPTION-0018 decision 9. This agent-bound receipt maps source Inspector commit 0346c3439b60085ea6895a7a4bd7ed28683a5453 to exact landed Inspector commit e70414e46aa4502753a77ebd633b1eb2120b6d65 after PR #377's normal rebase merge; both full trees are byte-identical at 52040583d19c9eb83ee005c18e31225db0bab53c, with the same ten generated-evidence paths. They observe published 1.5.7 main 2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e: SC-20261010T081604-001 and EV-8e62770ffdb6fc4e, nine raw artifacts and the 80-record proof chain preserving its 75-record historical prefix. The actual scorecard remains RED/FAIL with 24 PASS, 4 FAIL, 9 REVIEW, 6 UNKNOWN and 2 N/A cells and readiness_promoting=false. The source receipt and all historical evidence remain preserved; no specification, threshold, product code or test is weakened. This receipt covers only the exact landed generated-evidence commit. The Owner supplied the end-to-end action mandate, not this computed SHA."
     }
   ]
 }
