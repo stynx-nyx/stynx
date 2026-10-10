@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { fixtureDigest } from '../support/offline-import-fixtures';
 import type { Database } from '@stynx-nyx/data';
 import {
   pgCreateNumberingRange,
@@ -87,7 +88,7 @@ describe('PostgreSQL range administration database refusal and read boundaries',
   it('reads only through caller transaction with bound tenant/filter/cursor and fail-closed actor admission', async () => {
     const query = vi.fn(async () => ({ rows: [] }));
     const { database: db, tx } = database(query);
-    expect(await pgGetNumberingRange(db, scope, id)).toBeNull();
+    expect(await pgGetNumberingRange(db, scope, id)).toBe(null);
     expect(
       await pgListNumberingRanges(db, scope, {
         orgUnitId: 'org-a',
@@ -147,4 +148,53 @@ describe('PostgreSQL range administration database refusal and read boundaries',
     });
     expect(query).toHaveBeenCalledOnce();
   });
+});
+
+it('refuses a keyed creation receipt with a valid captured instant but forged initial snapshot without performing another write', async () => {
+  const input = rangeInput('invalid-imported-snapshot', { idempotencyKey: 'original-key' });
+  const request = {
+    tenantId: scope.tenantId,
+    orgUnitId: input.orgUnitId,
+    entityType: input.entityType,
+    series: input.series,
+    startNumber: input.startNumber,
+    endNumber: input.endNumber,
+  };
+  const receipt = {
+    id,
+    ...request,
+    nextNumber: 11,
+    status: 'active',
+    createdAt: RANGE_AT,
+    createdBy: 'original-actor',
+  };
+  const captured = {
+    id,
+    tenant_id: scope.tenantId,
+    org_unit_id: input.orgUnitId,
+    entity_type: input.entityType,
+    series: input.series,
+    start_number: input.startNumber,
+    end_number: input.endNumber,
+    next_number: 20,
+    status: 'active',
+    consumer_attributes: null,
+    created_by: 'original-actor',
+    created_at: RANGE_AT,
+    created_us: String(BigInt(Date.parse(RANGE_AT)) * 1000n),
+    creation_key: 'original-key',
+    creation_fingerprint: fixtureDigest(request),
+    creation_receipt: receipt,
+  };
+  const query = vi.fn(async (sql: string) => ({
+    rows: sql.includes('from offline.numbering_ranges') ? [captured] : [],
+  }));
+  const { database: db } = database(query);
+  await expect(
+    pgCreateNumberingRange(db, scope, input, 'invalid-new-clock-not-needed-on-replay'),
+  ).rejects.toMatchObject({
+    code: 'OFFLINE_SYNC_CONFIGURATION_ERROR',
+    message: expect.stringContaining('rangeCreationReceipt'),
+  });
+  expect(query.mock.calls.every(([sql]) => /^\s*select\b/iu.test(sql))).toBe(true);
 });

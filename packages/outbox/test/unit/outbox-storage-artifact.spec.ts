@@ -55,3 +55,21 @@ describe('outbox standalone storage artifact', () => {
     expect(() => renderOutboxStorage(options)).toThrow();
   });
 });
+
+it('keeps default-role words in tenant identifiers independent of custom role substitution', () => {
+  const artifact = renderOutboxStorage({
+    ownerRole: 'consumer_owner',
+    appRole: 'consumer_app',
+    readerRole: null,
+    tenantTable: { schema: 'stynx_app', table: 'stynx_reader', column: 'stynx_owner' },
+  });
+  expect(artifact.objectsSql).toContain('REFERENCES "stynx_app"."stynx_reader"("stynx_owner")');
+  const foreignKeys = artifact.manifest.catalog.filter(
+    (entry) => entry.kind === 'constraint' && entry.value.referencedSchema === 'stynx_app',
+  );
+  expect(foreignKeys.length).toBeGreaterThan(0);
+  for (const entry of foreignKeys) {
+    expect(entry.value.referencedTable).toBe('stynx_reader');
+    expect(entry.value.referencedColumns).toEqual(['stynx_owner']);
+  }
+});
