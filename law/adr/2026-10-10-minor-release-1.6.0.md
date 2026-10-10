@@ -100,6 +100,17 @@ required unless a supported composition demonstrates that need; a mount opt-out,
 if added, defaults to mounting the protected controller. This clarification
 authorizes implementation and independent verification, not advance acceptance.
 
+Independent negative witnesses require the concrete repair to use existing
+independent transactions, refusing held/hidden connections and publishing cache
+only after actual commit. A private HTTP-origin scope consumes the existing
+resolved tenant-command proof port: only exact-context `protected`/`verified`
+proof permits tenant SQL/cache, and nominal public-tenant actors retain fallback.
+CLS reset or nested SystemContext cannot turn HTTP into internal owner authority.
+Trusted internal callers retain the existing context boundary without a new
+public marker/schema. The protected auth guard maps only typed invalid
+credentials to 401 and preserves infrastructure failures. These are corrections
+of demonstrated privilege/cache leaks, not relaxed assertions or new exclusions.
+
 ## Completion evidence
 
 Each issue closes only against its actual acceptance evidence, with upstream
