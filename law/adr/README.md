@@ -5,6 +5,7 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-PERF-0001 — Complete endpoint latency evidence alongside existing performance gates](2026-10-10-http-performance-evidence.md)
 - [ADR-SECURITY-FORK-0001 — Maintained braces and HTTP cache security forks](2026-10-10-maintained-braces-security-fork.md)
 
 - [Complete STYNX 1.6.0 minor campaign with upstream and consumer evidence](2026-10-10-minor-release-1.6.0.md)
