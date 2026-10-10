@@ -41,6 +41,92 @@ After deploying migration 0022, wire the trusted request context and actor,
 then switch each request-path caller to the new ports. Internal schedulers can
 continue on the existing owner methods.
 
+### Configurable application SQL role (UPS-OBX-10, #320; ADR-OUTBOX-0003 D1)
+
+The 1.5.7 patch makes the application SQL role configuration instead of the
+literal `stynx_app`. Every guarantee above stays; only the name becomes an
+option, and a new fail-closed startup check applies to every installation.
+
+**Option.** `StynxDataModuleOptions.appRoleName` (`@stynx-nyx/data`, default
+`'stynx_app'`) is the role the app pool must present as `current_user`. It is
+validated when `StynxDataModule.forRoot` builds the module as a non-empty
+PostgreSQL identifier of at most 63 bytes (`resolveAppRoleName`,
+`DEFAULT_APP_ROLE_NAME`, `APP_ROLE_NAME_MAX_BYTES` are exported); an invalid
+value throws `AppRoleConfigurationError` with `property: 'appRoleName'`.
+`Database.appRoleName` exposes the resolved name read-only. The name is
+compared with `current_user` by exact string equality and is never
+concatenated into SQL. No other package adds a role-name option; the outbox
+reads `Database.appRoleName`. Without the option, behaviour is that of 1.5.5.
+
+**Sites.** `Database.tx` with `requireActor`, `OutboxService.appendInTransaction`
+/ `appendManyInTransaction` and every `OutboxEventStreamSource` port (`now`,
+`findById`, `listSince`) compare `current_user` with the resolved name. The
+other checks at those sites are unchanged and independent of the name:
+`trx.role` and `app.role` equal `app`, `app.tenant_id` present and equal to
+`Database.currentTenantId()`, `read committed`, writable transaction, primary
+(not in recovery), actor present under `requireActor`, FORCE RLS.
+
+**Typed refusal.** The existing errors keep their codes, statuses and messages
+and gain an additive typed reason:
+
+| Error                                                                | Typed member                        | Values                                                                                     |
+| -------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| `TransactionIdentityMismatchError` (`TRANSACTION_IDENTITY_MISMATCH`) | `mismatch`, also `context.mismatch` | `transaction_role`, `isolation`, `sql_role`, `app_role`, `tenant`, `actor`                 |
+| `OutboxEventTransactionError` (`OUTBOX_EVENT_TRANSACTION`)           | `reason`, also `context.reason`     | `transaction_role`, `tenant`, `app_role`, `sql_role`, `isolation`, `read_only`, `recovery` |
+
+`sql_role` means `current_user` is not the configured role; a connection under
+the owner role, another role, or `SET ROLE` to another role inside the
+transaction is refused with it. The members are checked in the order listed
+and the first failure is reported.
+
+**Migration 0025 (`0025_outbox_attempt_guard_role_independent.sql`).** The
+body of `outbox.guard_app_attempt_completion()` is replaced with
+`CREATE OR REPLACE FUNCTION`; the trigger, its table and its timing stay and
+migration 0022 is not edited. The 0022 checks (one completion from `CLAIMED`
+to `SENT` or `ERROR` with `completed_at`; identity, ordinal and legacy
+evidence immutable; completed evidence immutable) now apply to **every role
+except the owner of `outbox.event_attempts`**, resolved from
+`pg_class.relowner` for `TG_RELID` and compared by role identity, not
+membership. The refusal keeps SQLSTATE `42501` and its message names no role.
+On a platform installation the owner is `stynx_owner`, so the owner path is
+unchanged and `stynx_app` is guarded exactly as before; a superuser that is
+not the table owner is guarded as well. Grants and policies of the historical
+migrations still name `stynx_app`; a different role matches no outbox policy
+and is denied every row under FORCE RLS until the role-binding artifact of
+ADR-OUTBOX-0003 D2 binds it. D1 alone makes `requireActor` name-independent.
+
+**Startup check (D1 item 7).** Before the application pool serves its first
+app-role transaction the data module verifies on an application connection
+that `current_user` equals the configured name, that the role is not a
+superuser (`rolsuper`) and has no `BYPASSRLS` (`rolbypassrls`), and, when
+`session_user` differs from `current_user` (a login role behind `SET ROLE` or
+`options=-c role=…`), that `session_user` satisfies both attribute checks. The
+check is primed when the pools are created and latched so it runs once; a
+failure is `AppRoleConfigurationError` (`APP_ROLE_CONFIGURATION`, HTTP 500)
+whose `property` and `context.property` name the failed property
+(`current_user`, `rolsuper`, `rolbypassrls`, `session_user.rolsuper`,
+`session_user.rolbypassrls`) and whose context never echoes connection
+secrets; it prevents startup. If the database is unreachable at bootstrap the
+check is not skipped: it runs on the first app-role acquisition, which fails
+typed until it has passed. The check applies to the default `stynx_app` too.
+
+The outbox module additionally verifies in `OutboxService.onModuleInit`, on
+the owner connection, that the application role neither owns nor is a member
+of the owner of any relation in the D2 closed object list
+(`OUTBOX_APP_ROLE_CHECKED_RELATIONS`: the eight event-mode relations, the
+sequence `outbox.event_order_seq` and the legacy `messages` and
+`acknowledgements` tables); a failure is `OutboxAppRoleOwnershipError`
+(`OUTBOX_APP_ROLE_OWNERSHIP`) with `context.property` `owns`, `member` or
+`exists` (the role does not exist), the relation and its owner, and prevents
+startup. Relations that do not exist yet are not checked.
+
+**Consequence for consumers.** An application pool that connects as a
+superuser, as a `BYPASSRLS` role, through a privileged login role behind
+`SET ROLE`, or as a role that owns outbox relations no longer boots. Connect
+the app pool as the configured role itself or through a login role that is
+neither superuser nor `BYPASSRLS`; test harnesses that used the maintenance
+login as the app pool must do the same.
+
 ### Tenant event reads and operator retry (UPS-OBX-04…05, #316)
 
 The 1.5.x patch adds read ports and an operator retry to `OutboxService`. All
