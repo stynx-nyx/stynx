@@ -31,7 +31,7 @@ describe('PostgresOfflineSyncStore', () => {
         StynxDataModule.forRoot({
           connections: {
             owner: { connectionString: postgres.connectionString('offline-sync-owner') },
-            app: { connectionString: postgres.connectionString('offline-sync-app') },
+            app: { connectionString: postgres.appConnectionString('offline-sync-app') },
             reader: { connectionString: postgres.connectionString('offline-sync-reader') },
           },
           migrations: { enabled: true },
