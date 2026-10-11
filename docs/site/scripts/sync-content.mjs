@@ -272,11 +272,11 @@ function rewriteGeneratedDocLinks(content) {
       (_match, filename, hash = '') => `](/docs/framework/arch/${filename}${hash})`,
     )
     .replace(
-      /\]\(\.\.\/\.\.\/framework\/contracts\/README\.md((?:#[^)]+)?)\)/gu,
+      /\]\((?:\.\.\/){2,3}framework\/contracts\/README\.md((?:#[^)]+)?)\)/gu,
       '](/docs/framework/contracts$1)',
     )
     .replace(
-      /\]\(\.\.\/\.\.\/framework\/contracts\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      /\]\((?:\.\.\/){2,3}framework\/contracts\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
       (_match, filename, hash = '') => `](/docs/framework/contracts/${filename}${hash})`,
     )
     .replace(
