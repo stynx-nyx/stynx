@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "meta": {
-    "last_updated": "2026-10-10T23:45:03.312Z",
+    "last_updated": "2026-10-11T00:27:18.042Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -66,7 +66,8 @@
       "STYNX 1.6.0 Architect binds strict performance-document mirroring and all baseline archive/JSON, identity/transport and collector regression projections. Existing corpus relationships, gate mappings and assertion sites remain unchanged. Controlled transport fixtures do not establish authenticated live acquisition, exact historical attempt provenance, complete endpoint performance or overall audit PASS.",
       "STYNX 1.6.0 Architect rebinds six existing tenancy/offline-import/reference-SSE assertion projections after independently verified restricted-reader admission, held-connection refusal and real authenticated HTTP fixtures. Every existing corpus/invariant relationship and gate obligation is retained. Installed i18n eight-tarball functional acceptance remains separately candidate-bound; these bindings do not confer HTTP performance, provider, publication or overall audit PASS.",
       "STYNX 1.6.0 Architect binding preserves all existing invariant relationships and assertion sites after preflight test hygiene, and adds the private reference bootstrap orchestration/Helmet/CORS/startup regressions. Explicit unit ports do not qualify the full AppModule, real provider effects, source/build custody or HTTP performance; unchanged projection bindings remain byte-identical.",
-      "STYNX 1.6.0 Architect binds the real fresh-Node synchronous module-loader custody refusal sensors while retaining every existing test projection and invariant relationship. These bounded module observations do not establish supervisor freshness, complete source/build or object provenance, actual middleware custody, six-root HTTP performance, provider acceptance or release readiness."
+      "STYNX 1.6.0 Architect binds the real fresh-Node synchronous module-loader custody refusal sensors while retaining every existing test projection and invariant relationship. These bounded module observations do not establish supervisor freshness, complete source/build or object provenance, actual middleware custody, six-root HTTP performance, provider acceptance or release readiness.",
+      "STYNX 1.6.0 Architect rebind pins tenant-scoped privacy HTTP, independent transaction and global internal-job assertions, plus authenticated reference fixture negatives. All prior executable relationships and gate invariants remain bound; these projections do not establish coverage, provider qualification, HTTP performance or release readiness."
     ]
   },
   "invariants": [
@@ -3460,8 +3461,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 24,
-      "assertion_digest_sha256": "554e28f43f3903ed0fde03b6ab3af3d641227edcf8962f6ae4335fec612681b5"
+      "assertion_count": 134,
+      "assertion_digest_sha256": "67a4e8cef8e43901b1cdd53f1cad87b85d857aaa60efba06269bab0ca49fa948"
     },
     {
       "path": "packages/privacy/test/unit/privacy-runtime.spec.ts",
@@ -3469,7 +3470,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 55,
-      "assertion_digest_sha256": "717bd9d3917a3607fae47d8d3d3304ddc01c523bcfe700512fa3fd997bddb630"
+      "assertion_digest_sha256": "9e2850c8ef0ab1ab561e30f7ba9b9fd3e556f605159e435b13376089cbbbea97"
     },
     {
       "path": "packages/privacy/test/unit/privacy.controller.spec.ts",
@@ -3477,15 +3478,15 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 10,
-      "assertion_digest_sha256": "a350e6aa87e4e48c0bdf412bf96c1993ca3a1501db24ec12e39d9e73180b14e6"
+      "assertion_digest_sha256": "100d97953dcd6a4b3952c78944c009d72a2d4646d62d6c4905dce73530191e0a"
     },
     {
       "path": "packages/privacy/test/unit/privacy.service.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 48,
-      "assertion_digest_sha256": "e335e33bf3f82768b28ba81410fd8e148e6e18f84cd6d3136c5916fd91f51b75"
+      "assertion_count": 71,
+      "assertion_digest_sha256": "29cd6c622d0e77c9210c31ff07baf99ed998548f4a9b8fa122ce6285dfd5d8a7"
     },
     {
       "path": "packages/ratelimit/test/integration/rate-limit.integration.spec.ts",
@@ -3916,8 +3917,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 48,
-      "assertion_digest_sha256": "bc680be456ff8802d66ce4e5ceef0eccf13c533dfe3e7fe91dc40a250df10cd1"
+      "assertion_count": 52,
+      "assertion_digest_sha256": "3cc17dd861742d6fe7895c911144438e0afd3473feb0ca87fb39ce0b41b87f5b"
     },
     {
       "path": "reference/api/test/integration/sample.schema.spec.ts",
@@ -6326,8 +6327,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 3,
-      "assertion_digest_sha256": "0da88d0ba7486b031b5ec5d9cf746bd6ca469983a83d846c5ec43b8769ec53aa"
+      "assertion_count": 6,
+      "assertion_digest_sha256": "a40dcc385cd885f643c209b74494a5cb0f59d78cbe6ca4e219fbbf5f1a1cbc67"
     },
     {
       "path": "packages/sessions/test/wiring/sessions-jwks.wiring-spec.ts",
@@ -6420,8 +6421,8 @@
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 35,
-      "assertion_digest_sha256": "0a2a91e4daaa4111b4446589f1cd3a666176f82a466dff1f3c066e3015c17638"
+      "assertion_count": 41,
+      "assertion_digest_sha256": "795d3613257797c9b317ee2abb713e4d3908bf9efd3b59252b31bd8a2aa4e30a"
     },
     {
       "path": "reference/api/test/e2e/flows/rate-limit.e2e.ts",
