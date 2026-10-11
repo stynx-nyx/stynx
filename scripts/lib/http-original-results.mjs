@@ -121,7 +121,8 @@ function add(state, value, budget) {
 function values(state, durationMs) {
   if (!state.count) refuse(`empty metric ${state.name}`);
   if (state.type === 'counter') return { count: state.sum, rate: (state.sum * 1000) / durationMs };
-  if (state.type === 'gauge') return { value: state.last, min: state.minimum, max: state.maximum };
+  if (state.type === 'gauge')
+    return { value: state.last, min: state.minimum, max: Math.max(0, state.maximum) };
   if (state.type === 'rate')
     return {
       rate: state.nonzero / state.count,
@@ -308,7 +309,7 @@ export async function reconcileHttpOriginalResults(root, options) {
       strings(data.tags);
       if (Object.hasOwn(data, 'metadata')) strings(data.metadata);
       if (
-        (state.type === 'rate' && value !== 0 && value !== 1) ||
+        (['checks', 'http_req_failed'].includes(name) && value !== 0 && value !== 1) ||
         ((Object.hasOwn(required.components, name) || name === 'http_req_duration') && value < 0)
       )
         refuse('native value domain');
