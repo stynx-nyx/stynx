@@ -1,3 +1,4 @@
+import { Test } from '@nestjs/testing';
 import {
   initializePrivacyTestContext,
   closePrivacyTestContext,
@@ -7,6 +8,9 @@ import {
 import { PiiMapService } from '../../src/pii-map.service';
 import { UnconfiguredPrivacyCognitoAdmin } from '../../src/unconfigured-identity';
 import { PrivacyService } from '../../src/privacy.service';
+import { StynxPrivacyModule } from '../../src/privacy.module';
+import { PrivacyConfigurationError } from '../../src/errors';
+import { STYNX_PRIVACY_COGNITO_ADMIN } from '../../src/tokens';
 import type { PrivacyCognitoAdmin, PrivacyObjectStore, PrivacyRule } from '../../src/types';
 import type { Mock } from 'vitest';
 
@@ -825,6 +829,36 @@ describe('PrivacyService — empty-side guard on exportData (kills ConditionalEx
 
 describe('Explicit internal privacy administration capability', () => {
   const subjectUserId = '01990000-0000-7000-8000-000000000001';
+  it('injects a fail-closed default identity adapter when none is configured', async () => {
+    const registration = StynxPrivacyModule.forRoot({
+      environment: 'test',
+      region: 'us-east-1',
+      erasureSalt: 'unit',
+    });
+    // Exercise the actual fallback registration and Nest injection in isolation;
+    // unrelated controller/database lifecycle is outside this unit boundary.
+    const identityProvider = registration.providers?.find(
+      (provider) =>
+        typeof provider === 'object' &&
+        'provide' in provider &&
+        provider.provide === STYNX_PRIVACY_COGNITO_ADMIN,
+    );
+    if (!identityProvider) throw new Error('Privacy identity provider registration is missing');
+    const moduleRef = await Test.createTestingModule({ providers: [identityProvider] }).compile();
+    try {
+      const identity = moduleRef.get<PrivacyCognitoAdmin>(STYNX_PRIVACY_COGNITO_ADMIN);
+      expect(identity).toBeInstanceOf(UnconfiguredPrivacyCognitoAdmin);
+      const refusal = identity.disableUser(subjectUserId);
+      await expect(refusal).rejects.toBeInstanceOf(PrivacyConfigurationError);
+      await expect(refusal).rejects.toMatchObject({
+        code: 'PRIVACY_CONFIGURATION_ERROR',
+        status: 500,
+        message: 'Global erasure requires a configured identity adapter',
+      });
+    } finally {
+      await moduleRef.close();
+    }
+  });
   it('refuses a global call without caller-established SystemContext before SQL or providers', async () => {
     const query = vi.fn();
     const fixture = createService([], query);
