@@ -292,6 +292,135 @@ export async function runHttpRuntimeWorker() {
         fail('Private worker control bytes changed');
     }
 
+    function assertResolutionAnchors() {
+      const rules = [
+        [
+          'reference/api/package.json',
+          'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
+          'be70d59c463cb56e9f08c3f549c874015a5a58f3',
+          1899,
+          'scripts/lib/http-module-custody.mjs',
+          'createRequire(' +
+            "new URL('../../reference/api/package.json', import.meta.url))('reflect-metadata')",
+          ['reflect-metadata'],
+        ],
+        [
+          'packages/flow/package.json',
+          '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
+          'db4b602b7b72ecc2c1ac4ba549b2f28793c74da5',
+          1827,
+          'scripts/lib/http-runtime-census.mjs',
+          'createRequire(' + "new URL('../../packages/flow/package.json', import.meta.url))",
+          [
+            '@nestjs/core',
+            '@nestjs/core/router/router-explorer',
+            '@nestjs/core/adapters/http-adapter',
+            '@nestjs/common',
+            '@nestjs/common/constants',
+            '@stynx-nyx/auth',
+            '@nestjs/platform-express',
+          ],
+        ],
+      ];
+      const exact = (value, keys) =>
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        Object.keys(value).sort().join(',') === [...keys].sort().join(',');
+      const physicalKeys = [
+        'path',
+        'url',
+        'sha256',
+        'byteLength',
+        'permissions',
+        'device',
+        'inode',
+        'blob',
+        'mode',
+      ];
+      if (!Array.isArray(job.resolutionAnchors) || job.resolutionAnchors.length !== rules.length)
+        fail('Private resolution anchor population differs');
+      for (const [
+        index,
+        [path, sha256, blob, byteLength, callerPath, literal, requests],
+      ] of rules.entries()) {
+        const anchor = job.resolutionAnchors[index];
+        if (
+          !exact(anchor, [
+            'classification',
+            'candidateCommit',
+            'tree',
+            'nonce',
+            'manifest',
+            'caller',
+            'requests',
+            'conditions',
+          ]) ||
+          anchor.classification !== 'NON_EVALUATED_RESOLUTION_ANCHOR' ||
+          anchor.candidateCommit !== job.candidateCommit ||
+          anchor.tree !== job.tree ||
+          anchor.nonce !== job.nonce ||
+          !isDeepStrictEqual(anchor.requests, requests) ||
+          !isDeepStrictEqual(anchor.conditions, [
+            'require',
+            'node',
+            'node-addons',
+            'module-sync',
+          ]) ||
+          !exact(anchor.manifest, physicalKeys) ||
+          !exact(anchor.caller, [...physicalKeys, 'callsite']) ||
+          anchor.manifest.path !== path ||
+          anchor.manifest.sha256 !== sha256 ||
+          anchor.manifest.blob !== blob ||
+          anchor.manifest.byteLength !== byteLength ||
+          anchor.caller.path !== callerPath
+        )
+          fail('Private resolution anchor relation differs');
+        for (const row of [anchor.manifest, anchor.caller]) {
+          const actualPath = resolve(job.checkoutRoot, row.path),
+            stat = lstatSync(actualPath);
+          const contents = readFileSync(actualPath);
+          if (
+            !stat.isFile() ||
+            realpathSync(actualPath) !== actualPath ||
+            row.url !== pathToFileURL(actualPath).href ||
+            stat.dev !== row.device ||
+            stat.ino !== row.inode ||
+            (stat.mode & 0o7777) !== row.permissions ||
+            contents.length !== row.byteLength ||
+            digest(contents) !== row.sha256 ||
+            row.mode !== '100644' ||
+            createHash('sha1')
+              .update(`blob ${contents.length}\0`)
+              .update(contents)
+              .digest('hex') !== row.blob
+          )
+            fail('Private resolution anchor physical identity changed');
+        }
+        const control = job.controls.find((row) => row.path === callerPath);
+        const text = readFileSync(resolve(job.checkoutRoot, callerPath), 'utf8'),
+          start = text.indexOf(literal);
+        if (
+          !control ||
+          anchor.caller.sha256 !== control.sha256 ||
+          anchor.caller.blob !== control.blob ||
+          anchor.caller.byteLength !== control.byteLength ||
+          anchor.caller.permissions !== control.permissions ||
+          start < 0 ||
+          text.indexOf(literal, start + 1) !== -1 ||
+          !isDeepStrictEqual(anchor.caller.callsite, {
+            kind: 'DECLARED_REVIEWED_CALLSITE',
+            start,
+            end: start + literal.length,
+            literal,
+          }) ||
+          job.receipt.files.some((row) => row.url === anchor.manifest.url)
+        )
+          fail('Private resolution anchor caller provenance differs');
+      }
+    }
+    assertResolutionAnchors();
+
     function installSupervisedCustody() {
       const receipt = job.receipt;
       const startupObservation = {
@@ -881,6 +1010,24 @@ export async function runHttpRuntimeWorker() {
       const hooks = originalRegisterHooks({
         resolve(specifier, context, nextResolve) {
           const sequence = ++eventSequence;
+          const anchor = job.resolutionAnchors.find(
+            (row) => row.manifest.url === context.parentURL,
+          );
+          if (anchor) {
+            try {
+              assertResolutionAnchors();
+              if (
+                !anchor.requests.includes(specifier) ||
+                !isDeepStrictEqual([...context.conditions], anchor.conditions) ||
+                (anchor.manifest.path === 'packages/flow/package.json' &&
+                  !evaluated.has(anchor.caller.url))
+              )
+                refuse('Resolution anchor request or predecessor differs');
+            } catch (error) {
+              refusal ??= 'Resolution anchor custody failed';
+              throw error;
+            }
+          }
           let result;
           try {
             result = nextResolve(specifier, context);
@@ -984,6 +1131,11 @@ export async function runHttpRuntimeWorker() {
         if (closed) fail('HTTP module observation ended before measurement completion');
         if (refusal) fail(refusal);
         assertGuard();
+        try {
+          assertResolutionAnchors();
+        } catch {
+          refuse('Resolution anchor final identity differs');
+        }
         if (evaluated.size === 0) fail('HTTP worker evaluated no bound modules');
         if (optionalPlan) {
           try {
@@ -1044,6 +1196,7 @@ export async function runHttpRuntimeWorker() {
               conditions: [...entry.conditions],
             })),
             evaluations: evaluations.map((entry) => ({ ...entry })),
+            resolutionAnchors: structuredClone(job.resolutionAnchors),
             optionalResolutionProbes: structuredClone(optionalResolutionProbes),
             supervisedStartup: {
               ...startupObservation,
@@ -1075,12 +1228,14 @@ export async function runHttpRuntimeWorker() {
     }
 
     custody = installSupervisedCustody();
-    await send('start', { mode: job.mode });
+    await send('start', { mode: job.mode, resolutionAnchors: job.resolutionAnchors });
     // These local startup checks cannot establish freshness alone. Only the
     // supervisor's live handle, exact spawn/ChildProcess and pinned pre-custody
     // graph can corroborate this fixed worker. No caller receives a capability.
     // No application/dependency static import precedes custody installation.
+    assertResolutionAnchors();
     createRequire(new URL('../../reference/api/package.json', import.meta.url))('reflect-metadata');
+    assertResolutionAnchors();
     await import('./http-runtime-census.mjs');
     const { observeReferenceBootstrapModule } = await import('./http-runtime-bindings.mjs');
     const observation = await observeReferenceBootstrapModule(job);

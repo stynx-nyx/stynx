@@ -421,7 +421,124 @@ function validObservation(value, cwd) {
   return true;
 }
 
-function validBindings(value) {
+function validResolutionAnchors(anchors, binding, context, members) {
+  const rules = [
+    [
+      'reference/api/package.json',
+      'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
+      'be70d59c463cb56e9f08c3f549c874015a5a58f3',
+      1899,
+      'scripts/lib/http-module-custody.mjs',
+      "createRequire(new URL('../../reference/api/package.json', import.meta.url))('reflect-metadata')",
+      ['reflect-metadata'],
+    ],
+    [
+      'packages/flow/package.json',
+      '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
+      'db4b602b7b72ecc2c1ac4ba549b2f28793c74da5',
+      1827,
+      'scripts/lib/http-runtime-census.mjs',
+      "createRequire(new URL('../../packages/flow/package.json', import.meta.url))",
+      [
+        '@nestjs/core',
+        '@nestjs/core/router/router-explorer',
+        '@nestjs/core/adapters/http-adapter',
+        '@nestjs/common',
+        '@nestjs/common/constants',
+        '@stynx-nyx/auth',
+        '@nestjs/platform-express',
+      ],
+    ],
+  ];
+  const physicalKeys = [
+    'path',
+    'url',
+    'sha256',
+    'byteLength',
+    'permissions',
+    'device',
+    'inode',
+    'blob',
+    'mode',
+  ];
+  if (!Array.isArray(anchors) || anchors.length !== rules.length) return false;
+  for (const [
+    index,
+    [path, sha256, blob, byteLength, callerPath, literal, requests],
+  ] of rules.entries()) {
+    const anchor = anchors[index];
+    if (
+      !exact(anchor, [
+        'classification',
+        'candidateCommit',
+        'tree',
+        'nonce',
+        'manifest',
+        'caller',
+        'requests',
+        'conditions',
+      ]) ||
+      anchor.classification !== 'NON_EVALUATED_RESOLUTION_ANCHOR' ||
+      anchor.candidateCommit !== context.candidateCommit ||
+      anchor.tree !== binding.tree ||
+      anchor.nonce !== context.nonce ||
+      !isDeepStrictEqual(anchor.requests, requests) ||
+      !isDeepStrictEqual(anchor.conditions, ['require', 'node', 'node-addons', 'module-sync']) ||
+      !exact(anchor.manifest, physicalKeys) ||
+      !exact(anchor.caller, [...physicalKeys, 'callsite']) ||
+      anchor.manifest.path !== path ||
+      anchor.manifest.sha256 !== sha256 ||
+      anchor.manifest.blob !== blob ||
+      anchor.manifest.byteLength !== byteLength ||
+      anchor.manifest.permissions !== 0o644 ||
+      anchor.caller.path !== callerPath
+    )
+      return false;
+    for (const row of [anchor.manifest, anchor.caller])
+      if (
+        row.url !== pathToFileURL(join(binding.cwd, row.path)).href ||
+        !fileURL(row.url) ||
+        !hashValue(row.sha256) ||
+        !natural(row.byteLength) ||
+        !permissions(row.permissions) ||
+        !natural(row.device) ||
+        !natural(row.inode) ||
+        !commitValue(row.blob) ||
+        row.mode !== '100644'
+      )
+        return false;
+    const member = members.get(anchor.caller.url);
+    const callsite = anchor.caller.callsite;
+    if (
+      members.has(anchor.manifest.url) ||
+      !member ||
+      member.moduleKind !== 'module' ||
+      member.sha256 !== anchor.caller.sha256 ||
+      member.byteLength !== anchor.caller.byteLength ||
+      !exact(callsite, ['kind', 'start', 'end', 'literal']) ||
+      callsite.kind !== 'DECLARED_REVIEWED_CALLSITE' ||
+      callsite.literal !== literal ||
+      !natural(callsite.start) ||
+      callsite.end !== callsite.start + literal.length ||
+      callsite.end > anchor.caller.byteLength
+    )
+      return false;
+    if (callerPath === 'scripts/lib/http-module-custody.mjs') {
+      const control = binding.trustedBootstrap.find((row) => row.path === callerPath);
+      if (
+        !control ||
+        control.sha256 !== anchor.caller.sha256 ||
+        control.blob !== anchor.caller.blob ||
+        control.byteLength !== anchor.caller.byteLength ||
+        control.permissions !== anchor.caller.permissions
+      )
+        return false;
+    }
+  }
+  return true;
+}
+
+function validBindings(value, context) {
   if (
     !exact(value, [
       'tree',
@@ -432,6 +549,7 @@ function validBindings(value) {
       'cwd',
       'environment',
       'roster',
+      'resolutionAnchors',
       'observation',
       'trustedBootstrap',
       'optionalProbes',
@@ -494,6 +612,7 @@ function validBindings(value) {
     )
       return false;
   }
+  if (!validResolutionAnchors(value.resolutionAnchors, value, context, members)) return false;
   const required = [
     'scripts/lib/http-runtime-census.mjs',
     'scripts/lib/http-runtime-bindings.mjs',
@@ -530,6 +649,7 @@ function validModules(value, expected) {
       'nodeSha256',
       'resolutions',
       'evaluations',
+      'resolutionAnchors',
       'optionalResolutionProbes',
       'supervisedStartup',
     ]) ||
@@ -540,6 +660,7 @@ function validModules(value, expected) {
     value.nodeSha256 !== binding.nodeSha256 ||
     !Array.isArray(value.resolutions) ||
     !Array.isArray(value.evaluations) ||
+    !isDeepStrictEqual(value.resolutionAnchors, binding.resolutionAnchors) ||
     !Array.isArray(value.optionalResolutionProbes) ||
     value.optionalResolutionProbes.length > 2 ||
     !exact(value.supervisedStartup, startupKeys) ||
@@ -576,10 +697,34 @@ function validModules(value, expected) {
     }
     return true;
   };
-  const parent = (url) =>
-    url === null ||
-    (fileURL(url) && members.has(url)) ||
-    (typeof url === 'string' && url.startsWith('node:') && isBuiltin(url));
+  const parent = (row) => {
+    const url = row.parentURL;
+    if (
+      url === null ||
+      (fileURL(url) && members.has(url)) ||
+      (typeof url === 'string' && url.startsWith('node:') && isBuiltin(url))
+    )
+      return true;
+    const anchor = binding.resolutionAnchors.find((entry) => entry.manifest.url === url);
+    return (
+      !!anchor &&
+      anchor.requests.includes(row.specifier) &&
+      isDeepStrictEqual(row.conditions, anchor.conditions) &&
+      (anchor.manifest.path === 'reference/api/package.json' ||
+        value.evaluations.some(
+          (entry) =>
+            entry !== null &&
+            typeof entry === 'object' &&
+            !Array.isArray(entry) &&
+            entry.canonicalURL === anchor.caller.url &&
+            entry.sha256 === anchor.caller.sha256 &&
+            entry.byteLength === anchor.caller.byteLength &&
+            entry.moduleKind === 'module' &&
+            positive(entry.sequence) &&
+            entry.sequence < row.sequence,
+        ))
+    );
+  };
   if (
     !sequencePopulation(value.resolutions, (row) => {
       const keys = ['sequence', 'specifier', 'parentURL', 'conditions', 'url', 'builtin'];
@@ -587,7 +732,7 @@ function validModules(value, expected) {
       if (
         !exact(row, keys) ||
         typeof row.specifier !== 'string' ||
-        !parent(row.parentURL) ||
+        !parent(row) ||
         !uniqueStrings(row.conditions, true)
       )
         return false;
@@ -724,7 +869,7 @@ export function createHttpRuntimeProtocol(context) {
     !Number.isSafeInteger(context.pid) ||
     context.pid <= 0 ||
     context.mode !== 'bootstrap-module-only' ||
-    !validBindings(context.bindings)
+    !validBindings(context.bindings, context)
   )
     invalid();
   // Plain comparison expectations do not prove custody. Only the actual private
@@ -791,8 +936,9 @@ export function createHttpRuntimeProtocol(context) {
         !frame.result ||
         typeof frame.result !== 'object' ||
         Array.isArray(frame.result) ||
-        Object.keys(frame.result).join(',') !== 'mode' ||
-        frame.result.mode !== expected.mode
+        !exact(frame.result, ['mode', 'resolutionAnchors']) ||
+        frame.result.mode !== expected.mode ||
+        !isDeepStrictEqual(frame.result.resolutionAnchors, expected.bindings.resolutionAnchors)
       )
         return reject();
       started = true;

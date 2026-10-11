@@ -1621,6 +1621,104 @@ function runtimeGlobalSearchPaths(state, job, environment) {
   ];
 }
 
+// Resolution origins are tracked manifests, not evaluated modules. Only the
+// two reviewed createRequire expressions in this fixed mode authorize them.
+function runtimeResolutionAnchors(state, controls, nonce) {
+  const rules = [
+    [
+      'reference/api/package.json',
+      'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
+      'be70d59c463cb56e9f08c3f549c874015a5a58f3',
+      1899,
+      'scripts/lib/http-module-custody.mjs',
+      "createRequire(new URL('../../reference/api/package.json', import.meta.url))('reflect-metadata')",
+      ['reflect-metadata'],
+    ],
+    [
+      'packages/flow/package.json',
+      '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
+      'db4b602b7b72ecc2c1ac4ba549b2f28793c74da5',
+      1827,
+      'scripts/lib/http-runtime-census.mjs',
+      "createRequire(new URL('../../packages/flow/package.json', import.meta.url))",
+      [
+        '@nestjs/core',
+        '@nestjs/core/router/router-explorer',
+        '@nestjs/core/adapters/http-adapter',
+        '@nestjs/common',
+        '@nestjs/common/constants',
+        '@stynx-nyx/auth',
+        '@nestjs/platform-express',
+      ],
+    ],
+  ];
+  const physical = (path) => {
+    const tracked = state.inputs.files.find((row) => row.path === path);
+    const actualPath = resolve(state.checkout, path),
+      stat = lstatSync(actualPath);
+    const bytes = readFileSync(actualPath);
+    if (
+      !tracked ||
+      tracked.mode !== '100644' ||
+      !stat.isFile() ||
+      realpathSync(actualPath) !== actualPath ||
+      digest(bytes) !== tracked.sha256 ||
+      createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex') !==
+        tracked.blob
+    )
+      refuse('Runtime resolution anchor source identity differs');
+    return {
+      path,
+      url: pathToFileURL(actualPath).href,
+      sha256: digest(bytes),
+      byteLength: bytes.length,
+      permissions: stat.mode & 0o7777,
+      device: stat.dev,
+      inode: stat.ino,
+      blob: tracked.blob,
+      mode: tracked.mode,
+    };
+  };
+  return rules.map(([path, sha256, blob, byteLength, callerPath, literal, requests]) => {
+    const manifest = physical(path),
+      caller = physical(callerPath);
+    const control = controls.find((row) => row.path === callerPath);
+    const text = readFileSync(resolve(state.checkout, callerPath), 'utf8');
+    const start = text.indexOf(literal);
+    if (
+      manifest.sha256 !== sha256 ||
+      manifest.blob !== blob ||
+      manifest.byteLength !== byteLength ||
+      !control ||
+      caller.sha256 !== control.sha256 ||
+      caller.blob !== control.blob ||
+      caller.byteLength !== control.byteLength ||
+      caller.permissions !== control.permissions ||
+      start < 0 ||
+      text.indexOf(literal, start + 1) !== -1
+    )
+      refuse('Runtime resolution anchor reviewed relation differs');
+    return {
+      classification: 'NON_EVALUATED_RESOLUTION_ANCHOR',
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      nonce,
+      manifest,
+      caller: {
+        ...caller,
+        callsite: {
+          kind: 'DECLARED_REVIEWED_CALLSITE',
+          start,
+          end: start + literal.length,
+          literal,
+        },
+      },
+      requests,
+      conditions: ['require', 'node', 'node-addons', 'module-sync'],
+    };
+  });
+}
+
 // Pure protocol expectations are derived here only after the private live-handle
 // checks. They describe actual job/launch facts, never grant custody to JSON.
 function runtimeProtocolBindings(state, job, descriptorBody, launchEnvironment) {
@@ -1870,6 +1968,7 @@ function runtimeProtocolBindings(state, job, descriptorBody, launchEnvironment) 
         .map((name) => [name, digest(launchEnvironment[name])]),
     ),
     roster,
+    resolutionAnchors: structuredClone(job.resolutionAnchors),
     observation,
     trustedBootstrap: job.controls.filter((row) =>
       ['scripts/lib/http-runtime-worker.mjs', 'scripts/lib/http-module-custody.mjs'].includes(
@@ -1947,6 +2046,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
         Object.entries(environment).map(([name, value]) => [name, digest(value)]),
       ),
       controls,
+      resolutionAnchors: runtimeResolutionAnchors(state, controls, nonce),
       receipt,
       bootstrap: referenceBootstrapBinding(state),
     };
@@ -2038,6 +2138,8 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
       !isDeepStrictEqual(protocolBindings, runtimeProtocolBindings(state, job, body, environment))
     )
       refuse('Runtime protocol parent bindings changed before admission');
+    if (!isDeepStrictEqual(job.resolutionAnchors, runtimeResolutionAnchors(state, controls, nonce)))
+      refuse('Runtime resolution anchors changed before final admission');
     // The parser has first closed these rows against the private roster. Recheck
     // their actual raw-path relationship without discarding valid native aliases.
     for (const row of [
