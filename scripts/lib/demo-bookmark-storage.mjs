@@ -192,7 +192,7 @@ export async function verifyDemoBookmarkStorage(queryable) {
   );
   const relations =
     await queryable.query(`select c.relname,c.relkind,pg_catalog.pg_get_userbyid(c.relowner) as owner,
-    c.relrowsecurity,c.relforcerowsecurity,c.relispartition
+    c.relrowsecurity,c.relforcerowsecurity,c.relispartition,c.relpersistence
     from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
     where n.nspname='demo' and c.relkind not in ('i','I') order by c.relname`);
   check(
@@ -206,9 +206,40 @@ export async function verifyDemoBookmarkStorage(queryable) {
         relrowsecurity: true,
         relforcerowsecurity: true,
         relispartition: false,
+        relpersistence: 'p',
       })),
     ),
     relations.rows,
+  );
+  const inheritance = await queryable.query(
+    `select inhrelid::regclass::text as child,
+    inhparent::regclass::text as parent from pg_catalog.pg_inherits
+    where inhrelid in (select c.oid from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='demo' and c.relname=any($1::text[]))
+       or inhparent in (select c.oid from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='demo' and c.relname=any($1::text[]))`,
+    [tables],
+  );
+  check('no-table-inheritance', inheritance.rows.length === 0, inheritance.rows);
+  const pii = await queryable.query(
+    `select table_schema,table_name,column_name,category,strategy,
+    legal_basis,retention,notes from core.pii_map where table_schema='demo'
+    and table_name=any($1::text[]) order by table_name,column_name`,
+    [tables],
+  );
+  check(
+    'canonical-pii-registration',
+    isDeepStrictEqual(pii.rows, [
+      {
+        table_schema: 'demo',
+        table_name: tables[0],
+        column_name: 'notes',
+        category: 'incidental_pii',
+        strategy: 'nullify',
+        legal_basis: 'legitimate_interest',
+        retention: 'P1Y',
+        notes: 'User-authored bookmark notes; may incidentally contain PII.',
+      },
+    ]),
+    pii.rows,
   );
   for (const [index, table] of tables.entries()) {
     const relation = `demo.${table}`;
@@ -270,6 +301,9 @@ export async function verifyDemoBookmarkStorage(queryable) {
       array(select option from unnest(i.indoption) option) as options,
       array(select op.opcdefault from unnest(i.indclass) with ordinality key(oid,position)
         join pg_catalog.pg_opclass op on op.oid=key.oid order by key.position) as default_opclasses,
+      array(select collation.oid=a.attcollation from unnest(i.indcollation) with ordinality collation(oid,position)
+        join pg_catalog.pg_attribute a on a.attrelid=i.indrelid and a.attnum=i.indkey[collation.position::integer-1]
+        order by collation.position) as key_collations_match,
       pg_catalog.pg_get_expr(i.indpred,i.indrelid) as predicate,
       array(select a.attname from unnest(i.indkey) with ordinality key(attnum,position)
         join pg_catalog.pg_attribute a on a.attrelid=i.indrelid and a.attnum=key.attnum order by key.position) as columns
@@ -299,6 +333,8 @@ export async function verifyDemoBookmarkStorage(queryable) {
             row.options.every((option) => option === 0) &&
             row.default_opclasses.length === row.indnkeyatts &&
             row.default_opclasses.every((value) => value === true) &&
+            row.key_collations_match.length === row.indnkeyatts &&
+            row.key_collations_match.every((value) => value === true) &&
             row.amname === 'btree' &&
             row.indnkeyatts === row.indnatts,
         ),
@@ -426,6 +462,8 @@ export async function installDemoBookmarkStorage(queryable) {
         'supported-postgresql',
         'fixed-roles',
         'restricted-role-membership',
+        'no-table-inheritance',
+        'canonical-pii-registration',
       ]);
       for (const table of tables)
         for (const suffix of [
@@ -447,6 +485,7 @@ export async function installDemoBookmarkStorage(queryable) {
         relrowsecurity: false,
         relforcerowsecurity: false,
         relispartition: false,
+        relpersistence: 'p',
       }));
       const historicalSchema = [
         {
