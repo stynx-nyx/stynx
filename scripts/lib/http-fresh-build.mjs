@@ -1546,6 +1546,10 @@ async function prepareHttpBuildAt(options, sandbox, protectedBuild) {
     const handle = Object.freeze(Object.create(null));
     handles.set(handle, state);
     recheck(state);
+    if (protectedBuild) {
+      await exportProtectedBuildSupport(state);
+      recheck(state);
+    }
     return handle;
   } catch (error) {
     // Failed preparation grants no reusable handle. Preserve the complete
@@ -1567,8 +1571,113 @@ async function prepareHttpBuildAt(options, sandbox, protectedBuild) {
       ),
       { mode: 0o600 },
     );
+    if (protectedBuild && !protectedBuild.supportArchive) {
+      try {
+        await exportProtectedBuildSupport(state);
+      } catch (supportError) {
+        // The original failure and every received source/archive prefix remain
+        // retained. An export failure never authorizes deletion or continuation.
+        error.buildSupportExportCode = String(supportError.code ?? 'HTTP_BUILD_SUPPORT_FAILED');
+      }
+    }
     error.diagnosticDirectory = sandbox;
     throw error;
+  }
+}
+
+async function exportProtectedBuildSupport(state) {
+  const protectedBuild = state.protectedBuild;
+  if (!protectedBuild || protectedBuild.supportArchive)
+    refuse('Protected build support requires one actual fresh allocation');
+  recheckOriginalBuildAllocation(protectedBuild);
+  // This exact source-owned module is additionally bound in the original
+  // supervisor control roster before any workload. Public diagnostics never
+  // import it, accept a destination, or receive a protected allocation.
+  const {
+    createHttpBuildSupportArchive,
+    exportHttpBuildSupportArchive,
+    snapshotHttpBuildSupportArchive,
+  } = await import('./http-build-support.mjs');
+  const metadata = {
+    schemaVersion: '1.0.0',
+    scope: 'actual-private-build-support-projection',
+    candidateCommit: state.candidateCommit,
+    rootId: state.rootId,
+    platform: state.platform,
+    arch: state.arch,
+    commands: state.commands,
+    sourceOriginVerified: false,
+    runtimeCustodyComplete: false,
+    cleanupComplete: false,
+    readinessPromoting: false,
+  };
+  const copiedInterpreter = state.toolchain?.find((row) => row.path === 'toolchain/bin/node');
+  const processInterpreterPath = realpathSync(process.execPath);
+  const processInterpreter = copiedInterpreter
+    ? {
+        path: processInterpreterPath,
+        canonical: processInterpreterPath,
+        sha256: copiedInterpreter.sha256,
+        byteLength: copiedInterpreter.byteLength,
+        permissions: lstatSync(processInterpreterPath).mode & 0o7777,
+      }
+    : null;
+  if (processInterpreter)
+    metadata.interpreter = {
+      version: process.versions.node,
+      platform: process.platform,
+      arch: process.arch,
+      processBody: processInterpreter,
+      privateCopy: copiedInterpreter,
+      // The structural exporter independently reads both bodies and refuses a
+      // mismatch; this projection alone cannot prove the live native image.
+      nativeOriginVerified: false,
+    };
+  for (const key of [
+    'inputs',
+    'dependencies',
+    'graph',
+    'toolchain',
+    'compilers',
+    'history',
+    'resolutions',
+    'launcherClosure',
+    'compilerPackage',
+    'packageArchives',
+    'buildObservation',
+    'environment',
+  ])
+    if (state[key] !== undefined) metadata[key] = state[key];
+  const metadataBytes = Buffer.from(serializeHttpRuntimePlainJson(metadata));
+  if (metadataBytes.length > 64 * 1024 * 1024)
+    refuse('Build support projection exceeds the ordinary retained member bound');
+  writeFileSync(resolve(state.sandbox, 'build-support-projection.json'), metadataBytes, {
+    flag: 'wx',
+    mode: 0o600,
+    flush: true,
+  });
+  const external = new Map();
+  for (const row of [
+    ...(state.systemTools?.values() ?? []),
+    ...(state.gitHelpers ?? []),
+    ...(state.launcherClosure?.helpers ?? []),
+  ]) {
+    const previous = external.get(row.path);
+    if (previous && !isDeepStrictEqual(previous, row))
+      refuse('Actual build external executable/helper identity is ambiguous');
+    external.set(row.path, row);
+  }
+  if (processInterpreter) external.set(processInterpreter.path, processInterpreter);
+  protectedBuild.supportArchive = createHttpBuildSupportArchive(protectedBuild.allocation.rawRoot);
+  try {
+    protectedBuild.supportExport = exportHttpBuildSupportArchive(
+      protectedBuild.supportArchive,
+      state.sandbox,
+      [...external.values()],
+    );
+    recheckOriginalBuildAllocation(protectedBuild);
+  } finally {
+    protectedBuild.supportSnapshot = snapshotHttpBuildSupportArchive(protectedBuild.supportArchive);
   }
 }
 
@@ -3269,6 +3378,7 @@ const originalSupervisorControlClosure = new Map([
   ['scripts/lib/http-original-results.mjs', null],
   ['scripts/lib/http-original-artifacts.mjs', null],
   ['scripts/lib/http-original-official-k6.mjs', null],
+  ['scripts/lib/http-build-support.mjs', null],
   ['scripts/lib/http-qualification-manifest.mjs', null],
   ['scripts/lib/http-qualification-artifacts.mjs', null],
   ['scripts/lib/http-qualification-store.mjs', null],
@@ -3583,6 +3693,8 @@ async function runActualOriginalScenario(handle, request) {
   )
     refuse('Original runner requires an idle private protected reference build');
   recheck(state);
+  if (state.protectedBuild.supportExport?.completeSourcePopulation !== true)
+    refuse('Original effects require complete private build-support byte export');
   const roster = snapshotFreshHttpOriginalScenarioRoster(handle);
   const selected = roster.profiles.find(
     (row) => row.scenarioId === selector.scenarioId && row.profileId === selector.profileId,
@@ -4605,7 +4717,10 @@ async function runActualOriginalScenario(handle, request) {
         write('archive-index.json', {
           artifacts: attempt.artifacts,
           archiveDirectory: snapshotHttpQualificationStore(attempt.store).root,
-          rawBuildSupportCopied: false,
+          rawBuildSupportCopied:
+            state.protectedBuild.supportExport?.completeSourcePopulation === true,
+          buildSupportArchive: state.protectedBuild.supportSnapshot,
+          buildSupportOriginVerified: false,
           actualBuildRootRetained: state.sandbox,
           cleanup: attempt.cleanupHistory,
           failure: failure ? String(failure.code ?? 'HTTP_ORIGINAL_OPERATION_FAILED') : null,
