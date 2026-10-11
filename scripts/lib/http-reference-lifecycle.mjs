@@ -30,6 +30,7 @@ import {
 import {
   observeReferenceRegistryObjects,
   observeReferenceRegistry,
+  referenceRegistryControllerBindings,
 } from './http-reference-registry.mjs';
 
 import {
@@ -285,6 +286,14 @@ function publicOperation(state, name, args) {
 }
 
 function closeApplication(state, fallback) {
+  if (state.job.mode === 'http-original-scenario') {
+    // One budget starts immediately before the first actual close attempt. A
+    // failed wait never grants another budget or borrows measurement time.
+    state.shutdownDeadline ??= monotonicNow() + 30_000_000_000n;
+    state.monotonicDeadline = state.shutdownDeadline;
+    if (remainingTime(state) <= 0) refuse(state, 'SHUTDOWN_DEADLINE');
+  }
+  // The guard retains and returns the same pending close Promise on fallback.
   return closeReferenceNestApplication(state.nestGuard, fallback);
 }
 
@@ -1022,9 +1031,50 @@ async function prepareOriginalScenario(state, target, responses) {
     const constructor = sourceConstructor(state, source, name);
     const handler = Object.getOwnPropertyDescriptor(constructor.prototype, methodName)?.value;
     const matches = state.routes.filter((row) => row.method === method && row.path === path);
+    let mountedConstructor = constructor;
+    if (path === '/profile') {
+      mountedConstructor = sourceConstructor(
+        state,
+        'reference/api/src/app.module.ts',
+        'GuardedPreferencesController',
+      );
+      const bindings = referenceRegistryControllerBindings(state.registry);
+      const mounted = bindings.filter(
+        (row) =>
+          row.source === 'reference/api/src/app.module.ts' &&
+          row.className === 'GuardedPreferencesController' &&
+          row.controller === mountedConstructor,
+      );
+      const declaring = bindings.filter(
+        (row) => row.source === source && row.className === name && row.controller === constructor,
+      );
+      const registered = observeReferenceRegistry(state.registry).controllers.filter(
+        (row) =>
+          row.source === 'reference/api/src/app.module.ts' &&
+          row.className === 'GuardedPreferencesController' &&
+          row.methods.filter(
+            (entry) =>
+              entry.name === methodName &&
+              entry.declaringSource === source &&
+              entry.declaringClass === name,
+          ).length === 1,
+      );
+      if (
+        mounted.length !== 1 ||
+        declaring.length !== 1 ||
+        registered.length !== 1 ||
+        Object.getPrototypeOf(mountedConstructor) !== constructor ||
+        Object.getPrototypeOf(mountedConstructor.prototype) !== constructor.prototype ||
+        Object.hasOwn(mountedConstructor.prototype, methodName) ||
+        (matches.length === 1 && Object.hasOwn(matches[0].wrapper.instance, methodName))
+      )
+        refuse(state, 'ORIGINAL_PROFILE_INHERITANCE');
+    }
     if (
       matches.length !== 1 ||
-      Object.getPrototypeOf(matches[0].wrapper.instance) !== constructor.prototype ||
+      typeof handler !== 'function' ||
+      matches[0].wrapper.metatype !== mountedConstructor ||
+      Object.getPrototypeOf(matches[0].wrapper.instance) !== mountedConstructor.prototype ||
       matches[0].definition.targetCallback !== handler ||
       matches[0].definition.methodName !== methodName
     )
@@ -1871,8 +1921,7 @@ async function executeReferenceLifecycle(
       // Reuse an in-flight public close promise; never race it with raw close.
       // The raw descriptor/receiver is failure-only fallback before any attempt.
       try {
-        if (original) setLifecycleDeadline(state, Math.max(5000, Math.ceil(remainingTime(state))));
-        else state.deadline = Math.max(state.deadline, Date.now() + 5000);
+        if (!original) state.deadline = Math.max(state.deadline, Date.now() + 5000);
         await bounded(state, closeApplication(state, true), 'FAILED_CLOSE');
         state.appClosed = true;
         for (const app of state.retainedApps)
