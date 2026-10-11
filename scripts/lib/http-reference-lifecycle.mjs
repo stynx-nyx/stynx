@@ -1,8 +1,18 @@
 import { httpComposition, isHttpComposition } from './http-composition-roster.mjs';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import {
+  readFileSync,
+  constants,
+  openSync,
+  closeSync,
+  writeSync,
+  fsyncSync,
+  fstatSync,
+  lstatSync,
+  realpathSync,
+} from 'node:fs';
+import { dirname, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import http from 'node:http';
 import { isDeepStrictEqual, types } from 'node:util';
@@ -44,6 +54,16 @@ const json = (value) => serializeHttpRuntimePlainJson(value);
 const sha = (value) => digest(json(value));
 const deadlineMs = 30_000;
 const requestLimit = 64 * 1024;
+const monotonicNow = process.hrtime.bigint.bind(process.hrtime);
+const remainingTime = (state) =>
+  state.job.mode === 'http-original-scenario'
+    ? Number(state.monotonicDeadline - monotonicNow()) / 1_000_000
+    : state.deadline - Date.now();
+function setLifecycleDeadline(state, milliseconds) {
+  state.deadline = Date.now() + milliseconds;
+  if (state.job.mode === 'http-original-scenario')
+    state.monotonicDeadline = monotonicNow() + BigInt(milliseconds) * 1_000_000n;
+}
 
 function refuse(state, reason) {
   state.failure ??= reason;
@@ -66,6 +86,11 @@ function data(object, key) {
 
 function check(state) {
   if (state.failure || state.closed) refuse(state, state.failure ?? 'CLOSED');
+  if (
+    state.job.mode === 'http-original-scenario' &&
+    (!process.connected || process.ppid !== state.job.parentPid)
+  )
+    refuse(state, 'ORIGINAL_PARENT_DISCONNECTED');
   const environment = Object.fromEntries(
     Object.keys(process.env)
       .filter((key) => key !== 'STYNX_HTTP_JOB_SHA256')
@@ -77,7 +102,7 @@ function check(state) {
     if (!isDeepStrictEqual(Object.getOwnPropertyDescriptor(row.object, row.key), row.installed))
       refuse(state, 'DESCRIPTOR_DRIFT');
   checkOptions(state);
-  if (Date.now() >= state.deadline) refuse(state, 'DEADLINE');
+  if (remainingTime(state) <= 0) refuse(state, 'DEADLINE');
 }
 
 function patch(state, object, key, make) {
@@ -635,7 +660,7 @@ function install(state) {
 }
 
 async function bounded(state, operation, stage) {
-  const remaining = state.deadline - Date.now();
+  const remaining = remainingTime(state);
   if (remaining <= 0) refuse(state, 'DEADLINE');
   let timer;
   try {
@@ -707,6 +732,393 @@ function request(state, target, path) {
   });
 }
 
+// Fixed preparation requests through the actual owned listener and transport.
+// Credentials exist only transiently here; observations retain fingerprints,
+// never bearer/refresh tokens or arbitrary response bodies.
+function openOriginalPreparationJournal(state) {
+  const directory = dirname(state.job.descriptorPath);
+  const expected = resolve(directory, `${state.job.nonce}.original-body.json`);
+  const stat = lstatSync(directory, { bigint: true });
+  if (
+    state.job.observationArtifactPath !== expected ||
+    realpathSync(directory) !== directory ||
+    !stat.isDirectory() ||
+    (stat.mode & 0o7777n) !== 0o700n ||
+    typeof process.getuid !== 'function' ||
+    stat.uid !== BigInt(process.getuid()) ||
+    !Number.isInteger(constants.O_NOFOLLOW)
+  )
+    refuse(state, 'ORIGINAL_JOURNAL_DIRECTORY');
+  const path = `${expected}.preparation.jsonl`;
+  const parts = directory.split(sep).filter(Boolean);
+  if (parts.length > 64) refuse(state, 'ORIGINAL_JOURNAL_DIRECTORY_BOUND');
+  const chain = [];
+  let parent = sep;
+  for (const part of [null, ...parts]) {
+    if (part !== null) parent = resolve(parent, part);
+    const identity = lstatSync(parent, { bigint: true });
+    if (!identity.isDirectory() || realpathSync(parent) !== parent)
+      refuse(state, 'ORIGINAL_JOURNAL_DIRECTORY');
+    chain.push({ path: parent, identity });
+  }
+  const descriptor = openSync(
+    path,
+    constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW,
+    0o600,
+  );
+  state.preparationJournal = {
+    descriptor,
+    path,
+    directory,
+    directoryStat: stat,
+    chain,
+    length: 0,
+    sequence: 0,
+  };
+  state.preparationJournal.hash = createHash('sha256');
+  state.preparationJournal.identity = fstatSync(descriptor, { bigint: true });
+  appendOriginalPreparationJournal(state, {
+    event: 'preparation-open',
+    candidateCommit: state.job.candidateCommit,
+    tree: state.job.tree,
+    nonce: state.job.nonce,
+    originalScenario: state.job.originalScenario,
+  });
+  let parentDescriptor;
+  try {
+    parentDescriptor = openSync(directory, constants.O_RDONLY | constants.O_NOFOLLOW);
+    const opened = fstatSync(parentDescriptor, { bigint: true });
+    if (!['dev', 'ino', 'mode', 'uid', 'gid'].every((key) => opened[key] === stat[key]))
+      refuse(state, 'ORIGINAL_JOURNAL_DIRECTORY');
+    fsyncSync(parentDescriptor);
+    checkOriginalPreparationJournal(state);
+  } finally {
+    if (parentDescriptor !== undefined) closeSync(parentDescriptor);
+  }
+}
+function checkOriginalPreparationJournal(state) {
+  const journal = state.preparationJournal;
+  const current = fstatSync(journal.descriptor, { bigint: true });
+  const path = lstatSync(journal.path, { bigint: true });
+  const directory = lstatSync(journal.directory, { bigint: true });
+  for (const entry of journal.chain) {
+    const identity = lstatSync(entry.path, { bigint: true });
+    if (
+      !identity.isDirectory() ||
+      !['dev', 'ino', 'mode', 'uid', 'gid'].every((key) => identity[key] === entry.identity[key]) ||
+      realpathSync(entry.path) !== entry.path
+    )
+      refuse(state, 'ORIGINAL_JOURNAL_DIRECTORY_CHAIN');
+  }
+  if (
+    !current.isFile() ||
+    current.nlink !== 1n ||
+    (current.mode & 0o7777n) !== 0o600n ||
+    current.size !== BigInt(journal.length) ||
+    realpathSync(journal.path) !== journal.path ||
+    !['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeNs', 'ctimeNs'].every(
+      (key) => current[key] === journal.identity[key] && current[key] === path[key],
+    ) ||
+    !['dev', 'ino', 'mode', 'uid', 'gid'].every(
+      (key) => directory[key] === journal.directoryStat[key],
+    ) ||
+    realpathSync(journal.directory) !== journal.directory
+  )
+    refuse(state, 'ORIGINAL_JOURNAL_IDENTITY');
+}
+function appendOriginalPreparationJournal(state, event) {
+  const journal = state.preparationJournal;
+  checkOriginalPreparationJournal(state);
+  const bytes = Buffer.from(`${json({ sequence: journal.sequence + 1, ...event })}\n`);
+  if (bytes.length > 4096 || journal.length + bytes.length > 64 * 1024)
+    refuse(state, 'ORIGINAL_JOURNAL_BOUND');
+  let written = 0;
+  while (written < bytes.length) {
+    const count = writeSync(journal.descriptor, bytes, written, bytes.length - written);
+    if (!count) refuse(state, 'ORIGINAL_JOURNAL_WRITE');
+    written += count;
+  }
+  journal.length += written;
+  journal.sequence += 1;
+  journal.hash.update(bytes);
+  journal.identity = fstatSync(journal.descriptor, { bigint: true });
+  checkOriginalPreparationJournal(state);
+  fsyncSync(journal.descriptor);
+  checkOriginalPreparationJournal(state);
+}
+function closeOriginalPreparationJournal(state) {
+  const journal = state.preparationJournal;
+  if (!journal || journal.closed) return;
+  let failure;
+  try {
+    checkOriginalPreparationJournal(state);
+  } catch (error) {
+    failure = error;
+  }
+  // Even failed/partial appends must receive a real durability attempt. Never
+  // adopt changed bytes or reset the sticky refusal after that attempt.
+  try {
+    fsyncSync(journal.descriptor);
+  } catch (error) {
+    failure ??= error;
+  }
+  try {
+    checkOriginalPreparationJournal(state);
+  } catch (error) {
+    failure ??= error;
+  }
+  try {
+    closeSync(journal.descriptor);
+    journal.closed = true;
+  } catch (error) {
+    failure ??= error;
+  }
+  if (failure) throw failure;
+}
+async function originalRequest(state, target, method, path, status, body, token) {
+  check(state);
+  appendOriginalPreparationJournal(state, { event: 'request-begin', method, path });
+  const payload = body === undefined ? undefined : Buffer.from(json(body));
+  const raw = await bounded(
+    state,
+    new Promise((accept, reject) => {
+      let timer;
+      const req = http.request(
+        {
+          host: target.host,
+          port: target.port,
+          method,
+          path,
+          agent: false,
+          headers: {
+            ...(payload
+              ? { 'content-type': 'application/json', 'content-length': String(payload.length) }
+              : {}),
+            ...(token
+              ? {
+                  authorization: `Bearer ${token}`,
+                  'x-tenant-id': '01978f4a-32bf-7c27-a131-fd73a9e001a1',
+                }
+              : {}),
+          },
+        },
+        (response) => {
+          const chunks = [];
+          let length = 0;
+          response.on('data', (chunk) => {
+            length += chunk.length;
+            if (length > requestLimit) {
+              state.failure ??= 'ORIGINAL_RESPONSE_BOUND';
+              req.destroy(new Error('Original preparation response bound'));
+              response.destroy();
+            } else chunks.push(chunk);
+          });
+          response.once('error', reject);
+          response.once('aborted', () =>
+            reject(new Error('Original preparation response aborted')),
+          );
+          response.once('end', () => {
+            try {
+              check(state);
+              const bytes = Buffer.concat(chunks, length);
+              appendOriginalPreparationJournal(state, {
+                event: 'response-end',
+                method,
+                path,
+                status: response.statusCode,
+                complete: response.complete,
+                byteLength: bytes.length,
+                bodySha256: digest(bytes),
+                headersSha256: sha(response.headers),
+              });
+              if (!response.complete || response.statusCode !== status)
+                refuse(state, 'ORIGINAL_RESPONSE_STATUS');
+              const headers = response.headers;
+              if (
+                headers['x-content-type-options'] !== 'nosniff' ||
+                headers['x-frame-options'] !== 'DENY' ||
+                headers['referrer-policy'] !== 'no-referrer'
+              )
+                refuse(state, 'ORIGINAL_SECURITY_HEADERS');
+              accept({
+                bytes,
+                evidence: {
+                  method,
+                  path,
+                  status: response.statusCode,
+                  byteLength: bytes.length,
+                  bodySha256: digest(bytes),
+                  headersSha256: sha(headers),
+                  securityHeadersObserved: true,
+                  principalInjected: false,
+                  actualBearerUsed: !!token,
+                },
+              });
+            } catch (error) {
+              reject(error);
+            }
+          });
+        },
+      );
+      req.once('error', reject);
+      req.once('close', () => clearTimeout(timer));
+      timer = setTimeout(
+        () => req.destroy(new Error('Original preparation request deadline')),
+        5000,
+      );
+      req.end(payload);
+    }),
+    'ORIGINAL_REQUEST',
+  );
+  let parsed;
+  try {
+    parsed = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(raw.bytes));
+  } catch {
+    refuse(state, 'ORIGINAL_RESPONSE_JSON');
+  }
+  finalObjects(state);
+  return { parsed, evidence: raw.evidence };
+}
+
+async function prepareOriginalScenario(state, target, responses) {
+  openOriginalPreparationJournal(state);
+  for (const [source, name, methodName, method, path] of [
+    [
+      'packages/health/src/health.controller.ts',
+      'StynxHealthController',
+      'liveness',
+      'GET',
+      '/healthz',
+    ],
+    [
+      'packages/health/src/health.controller.ts',
+      'StynxHealthController',
+      'readiness',
+      'GET',
+      '/readyz',
+    ],
+    [
+      'reference/api/src/sample/reference-dev-auth.controller.ts',
+      'ReferenceDevAuthController',
+      'login',
+      'POST',
+      '/_reference/dev-login',
+    ],
+    [
+      'reference/api/src/sample/reference-dev-auth.controller.ts',
+      'ReferenceDevAuthController',
+      'authVerify',
+      'GET',
+      '/_reference/auth-verify',
+    ],
+    [
+      'packages/preferences/src/preferences.controller.ts',
+      'PreferencesController',
+      'profile',
+      'GET',
+      '/profile',
+    ],
+  ]) {
+    const constructor = sourceConstructor(state, source, name);
+    const handler = Object.getOwnPropertyDescriptor(constructor.prototype, methodName)?.value;
+    const matches = state.routes.filter((row) => row.method === method && row.path === path);
+    if (
+      matches.length !== 1 ||
+      Object.getPrototypeOf(matches[0].wrapper.instance) !== constructor.prototype ||
+      matches[0].definition.targetCallback !== handler ||
+      matches[0].definition.methodName !== methodName
+    )
+      refuse(state, 'ORIGINAL_PREPARATION_ROUTE_IDENTITY');
+  }
+  const get = async (path, status, token) => {
+    const response = await originalRequest(state, target, 'GET', path, status, undefined, token);
+    responses.push(response.evidence);
+    return response.parsed;
+  };
+  const health = await get('/healthz', 200);
+  if (health?.status !== 'ok') refuse(state, 'ORIGINAL_HEALTH');
+  const readiness = await get('/readyz', 200);
+  if (readiness?.status !== 'ok') refuse(state, 'ORIGINAL_READINESS');
+  await get('/profile', 401);
+  const tenantId = '01978f4a-32bf-7c27-a131-fd73a9e001a1';
+  const email = 'admin@sample-demo.test';
+  const login = await originalRequest(state, target, 'POST', '/_reference/dev-login', 201, {
+    tenantId,
+    email,
+  });
+  responses.push(login.evidence);
+  const session = login.parsed;
+  if (
+    session?.tenantId !== tenantId ||
+    session.email !== email ||
+    typeof session.sid !== 'string' ||
+    typeof session.accessToken !== 'string' ||
+    session.accessToken.length > 16 * 1024 ||
+    typeof session.refreshToken !== 'string' ||
+    !session.refreshToken ||
+    !Array.isArray(session.permissions)
+  )
+    refuse(state, 'ORIGINAL_SESSION');
+  let claims;
+  try {
+    const parts = session.accessToken.split('.');
+    if (parts.length !== 3 || !parts.every((part) => /^[A-Za-z0-9_-]+$/u.test(part)))
+      refuse(state, 'ORIGINAL_SESSION_FORMAT');
+    claims = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+  } catch {
+    refuse(state, 'ORIGINAL_SESSION_FORMAT');
+  }
+  // Parsing is structural only. The following normal validator and protected
+  // controller requests establish actual application acceptance of this token.
+  if (claims?.sid !== session.sid || claims.tenantId !== tenantId || typeof claims.sub !== 'string')
+    refuse(state, 'ORIGINAL_SESSION_CLAIMS');
+  const verified = await get('/_reference/auth-verify', 200, session.accessToken);
+  if (verified?.status !== 'ok') refuse(state, 'ORIGINAL_TOKEN_VALIDATION');
+  const profile = await get('/profile', 200, session.accessToken);
+  if (profile?.subjectId !== claims.sub) refuse(state, 'ORIGINAL_PROTECTED_SUBJECT');
+  appendOriginalPreparationJournal(state, {
+    event: 'preparation-validated',
+    trafficCount: responses.length,
+    sqlEffectCount: null,
+    objectEffectCount: null,
+    parentBusinessEffectVerificationRequired: true,
+  });
+  return {
+    scope: 'actual-original-scenario-preparation',
+    scenarioId: state.job.originalScenario.scenarioId,
+    profileId: state.job.originalScenario.profileId,
+    traffic: responses,
+    actualControllerAndHandlerBound: true,
+    responseJournal: {
+      path: state.preparationJournal.path,
+      sha256: state.preparationJournal.hash.copy().digest('hex'),
+      byteLength: state.preparationJournal.length,
+      permissions: 0o600,
+      actualParentArtifactCorroborationRequired: true,
+      retainedInPlace: true,
+    },
+    session: {
+      actualDevLogin: true,
+      actualJwtValidatorAccepted: true,
+      actualProtectedRouteAccepted: true,
+      tenantId,
+      subjectId: claims.sub,
+      sessionIdSha256: digest(session.sid),
+      accessTokenSha256: digest(session.accessToken),
+      refreshTokenRawRetained: false,
+      accessTokenRawRetained: false,
+      noForgedPrincipal: true,
+      databaseActiveSessionAndPermissionBinding: 'APPLICATION_GUARD_PATH_ONLY',
+    },
+    sqlEffectCount: null,
+    objectEffectCount: null,
+    businessEffectVerification: 'UNVERIFIED_REQUIRES_PARENT_FULL_VISIBILITY_RECONCILIATION',
+    runtimeAdmission: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  };
+}
+
 function capturePrivacyOptions(state) {
   if (state.job.compositionId !== 'privacy') return;
   const serviceConstructor = sourceConstructor(
@@ -744,13 +1156,20 @@ function capturePrivacyOptions(state) {
 }
 
 function captureObjectStoreClients(state) {
-  if (state.job.compositionId !== 'privacy') return;
+  const privacyComposition = state.job.compositionId === 'privacy';
+  const originalUpload =
+    state.job.mode === 'http-original-scenario' &&
+    state.job.originalScenario?.scenarioId === 'upload';
+  if (!privacyComposition && !originalUpload) return;
   const fixture = state.job.referenceFixture.objectStore;
   if (
     !fixture ||
     fixture.endpoint !== process.env.STYNX_STORAGE_ENDPOINT ||
     fixture.storageBucket !== process.env.STYNX_STORAGE_BUCKET ||
-    fixture.privacyBucket !== process.env.STYNX_PRIVACY_BUCKET
+    (privacyComposition && fixture.privacyBucket !== process.env.STYNX_PRIVACY_BUCKET) ||
+    (originalUpload &&
+      (state.job.compositionId !== 'reference' ||
+        process.env.STYNX_STORAGE_FORCE_PATH_STYLE !== 'true'))
   )
     refuse(state, 'SDK_FIXTURE');
   const storageConstructor = sourceConstructor(
@@ -758,20 +1177,19 @@ function captureObjectStoreClients(state) {
     'packages/storage/src/s3.service.ts',
     'S3Service',
   );
-  const objectStoreConstructor = sourceConstructor(
-    state,
-    'packages/storage/src/object-store.service.ts',
-    'StynxObjectStore',
-  );
+  const objectStoreConstructor = privacyComposition
+    ? sourceConstructor(state, 'packages/storage/src/object-store.service.ts', 'StynxObjectStore')
+    : null;
   const storage = publicOperation(state, 'get', [storageConstructor]);
   const privacy = state.privacyOptions?.store;
-  const objectStore = data(privacy, 'objectStore');
+  const objectStore = privacyComposition ? data(privacy, 'objectStore') : null;
   if (
     Object.getPrototypeOf(storage) !== storageConstructor.prototype ||
-    !objectStore ||
-    Object.getPrototypeOf(objectStore) !== objectStoreConstructor.prototype ||
+    (privacyComposition &&
+      (!objectStore || Object.getPrototypeOf(objectStore) !== objectStoreConstructor.prototype)) ||
     data(storage, 'bucketName') !== fixture.storageBucket ||
-    data(data(objectStore, 'options'), 'bucketName') !== fixture.privacyBucket
+    (privacyComposition &&
+      data(data(objectStore, 'options'), 'bucketName') !== fixture.privacyBucket)
   )
     refuse(state, 'SDK_PROVIDER');
   const storageUnit = state.job.referenceRegistry.units.find(
@@ -809,14 +1227,18 @@ function captureObjectStoreClients(state) {
       client: data(storage, 'client'),
       bucket: fixture.storageBucket,
     },
-    {
-      kind: 'privacy',
-      provider: objectStore,
-      providerConstructor: objectStoreConstructor,
-      property: 'client',
-      client: data(objectStore, 'client'),
-      bucket: fixture.privacyBucket,
-    },
+    ...(privacyComposition
+      ? [
+          {
+            kind: 'privacy',
+            provider: objectStore,
+            providerConstructor: objectStoreConstructor,
+            property: 'client',
+            client: data(objectStore, 'client'),
+            bucket: fixture.privacyBucket,
+          },
+        ]
+      : []),
   ];
   for (const row of state.objectStoreClients) {
     row.destroy = data(row.client, 'destroy');
@@ -1003,18 +1425,43 @@ export async function observeOwnedHttpQualification(
   return executeReferenceLifecycle(job, networkHandle, channelHandle, nestPreparation, true);
 }
 
+/** Disjoint original scenario mode, with the unchanged profile and real auth. */
+export async function observeOwnedHttpOriginalScenario(
+  job,
+  networkHandle,
+  channelHandle,
+  nestPreparation,
+) {
+  if (arguments.length !== 4 || job?.mode !== 'http-original-scenario') refuse({}, 'JOB');
+  return executeReferenceLifecycle(job, networkHandle, channelHandle, nestPreparation, false, true);
+}
+
 async function executeReferenceLifecycle(
   job,
   networkHandle,
   channelHandle,
   nestPreparation,
   qualification,
+  original = false,
 ) {
+  const persistent = qualification || original;
   const qualificationWire = qualification
     ? await import('./http-qualification-protocol.mjs')
-    : null;
+    : original
+      ? await import('./http-original-protocol.mjs')
+      : null;
   const recipes = qualification ? await import('./http-qualification-liveness.mjs') : null;
-  const exchangeApi = qualification ? await import('./http-qualification-exchange.mjs') : null;
+  const exchangeApi = qualification
+    ? await import('./http-qualification-exchange.mjs')
+    : original
+      ? await import('./http-original-exchange.mjs')
+      : null;
+  const originalProfile = original
+    ? (await import('./http-original-scenarios.mjs')).httpOriginalScenarioProfile({
+        scenarioId: job.originalScenario?.scenarioId,
+        profileId: job.originalScenario?.profileId,
+      })
+    : null;
   const state = {
     job,
     networkHandle,
@@ -1028,6 +1475,7 @@ async function executeReferenceLifecycle(
     routes: [],
     initial: [],
     deadline: Date.now() + deadlineMs,
+    ...(original ? { monotonicDeadline: monotonicNow() + BigInt(deadlineMs) * 1_000_000n } : {}),
     phases: [],
     failure: undefined,
     closed: false,
@@ -1037,9 +1485,15 @@ async function executeReferenceLifecycle(
     appClosed: false,
   };
   if (
-    arguments.length !== 5 ||
+    arguments.length !== (original ? 6 : 5) ||
     active ||
-    job?.mode !== (qualification ? 'http-endpoint-qualification' : 'reference-owned-loopback') ||
+    job?.mode !==
+      (qualification
+        ? 'http-endpoint-qualification'
+        : original
+          ? 'http-original-scenario'
+          : 'reference-owned-loopback') ||
+    (original && job.compositionId !== 'reference') ||
     !isHttpComposition(job.compositionId) ||
     job.referenceRegistry?.candidateCommit !== job.candidateCommit ||
     job.referenceRegistry?.tree !== job.tree ||
@@ -1047,6 +1501,12 @@ async function executeReferenceLifecycle(
     job.referenceFixture?.identity?.tree !== job.tree ||
     job.referenceFixture?.identity?.nonce !== job.nonce ||
     !job.referenceFixture.environment ||
+    (original &&
+      originalProfile.scenarioId === 'upload' &&
+      (!job.referenceFixture.objectStore ||
+        job.referenceFixture.objectStore.endpoint !== process.env.STYNX_STORAGE_ENDPOINT ||
+        job.referenceFixture.objectStore.storageBucket !== process.env.STYNX_STORAGE_BUCKET ||
+        process.env.STYNX_STORAGE_FORCE_PATH_STYLE !== 'true')) ||
     process.versions.node !== '24.20.0'
   )
     refuse(state, 'JOB');
@@ -1057,16 +1517,23 @@ async function executeReferenceLifecycle(
   // data and this observation still cannot authenticate the live parent fixture.
   observeOwnedReferenceNetwork(networkHandle);
   if (qualification) qualificationWire.assertHttpQualificationChannel(channelHandle, job);
+  else if (original) qualificationWire.assertHttpOriginalChannel(channelHandle, job);
   else assertReferenceLifecycleChannel(channelHandle, job);
   const declaration = qualification
     ? recipes.readWorkerLivenessQualificationDeclaration(job)
     : null;
-  const exchange = qualification ? exchangeApi.openHttpQualificationParentExchange(job) : null;
+  const exchange = qualification
+    ? exchangeApi.openHttpQualificationParentExchange(job)
+    : original
+      ? exchangeApi.openHttpOriginalParentExchange(job)
+      : null;
   active = state;
   const phase = async (body) => {
-    if (qualification) {
+    if (persistent) {
       const { phase: name, ...payload } = body;
-      await qualificationWire.emitHttpQualificationPhase(state.channelHandle, name, payload);
+      if (original)
+        await qualificationWire.emitHttpOriginalPhase(state.channelHandle, name, payload);
+      else await qualificationWire.emitHttpQualificationPhase(state.channelHandle, name, payload);
     } else await emitReferenceLifecyclePhase(state.channelHandle, body);
     state.phases.push(body);
   };
@@ -1166,7 +1633,7 @@ async function executeReferenceLifecycle(
       layerCount: initial.layers.length,
       controllerCount: initial.registry.controllers.length,
       routeCount: state.routes.length,
-      ...(qualification ? { runtimeObjectSnapshotSha256: sha(initial) } : {}),
+      ...(persistent ? { runtimeObjectSnapshotSha256: sha(initial) } : {}),
     });
     await bounded(state, publicOperation(state, 'listen', [0, '127.0.0.1']), 'LISTEN');
     const target = bindOwnedReferenceListener(
@@ -1250,6 +1717,37 @@ async function executeReferenceLifecycle(
       await phase({ phase: 'measurement-complete', ...measurement });
       finalObjects(state);
       state.deadline = Date.now() + 30_000;
+    } else if (original) {
+      setLifecycleDeadline(state, 180_000);
+      preparation = await prepareOriginalScenario(state, target, responses);
+      await phase({
+        phase: 'preparation-complete',
+        profileSha256: job.originalScenario.profileSha256,
+        evidenceSha256: sha(preparation),
+        trafficCount: responses.length,
+        sqlEffectCount: null,
+        objectEffectCount: null,
+      });
+      const begin = exchangeApi.waitHttpOriginalParentCommand(exchange, 'begin-measurement');
+      void begin.catch(() => {});
+      await phase({
+        phase: 'ready',
+        host: target.host,
+        port: target.port,
+        profileSha256: job.originalScenario.profileSha256,
+        manifestSha256: job.originalScenario.manifestSha256,
+        preparationEvidenceSha256: sha(preparation),
+        sessionEvidenceSha256: sha(preparation.session),
+      });
+      const beginBody = await bounded(state, begin, 'ORIGINAL_PARENT_BEGIN');
+      setLifecycleDeadline(state, (originalProfile.nominalProfile.durationSeconds + 60) * 1000);
+      const finish = exchangeApi.waitHttpOriginalParentCommand(exchange, 'finish-measurement');
+      void finish.catch(() => {});
+      await phase({ phase: 'measurement-start', ...beginBody });
+      measurement = await bounded(state, finish, 'ORIGINAL_PARENT_MEASUREMENT');
+      await phase({ phase: 'measurement-complete', ...measurement });
+      finalObjects(state);
+      setLifecycleDeadline(state, 30_000);
     } else {
       for (const path of ['/healthz', '/profile']) {
         responses.push(await bounded(state, request(state, target, path), 'REQUEST'));
@@ -1262,20 +1760,26 @@ async function executeReferenceLifecycle(
     state.closedApps.add(state.app);
     // A destroy request is not a socket close. Give owned asynchronous close
     // events a bounded opportunity, retaining all guards throughout the wait.
-    const drainDeadline = Math.min(state.deadline, Date.now() + 1000);
+    const drainDeadline = original
+      ? monotonicNow() + 1_000_000_000n
+      : Math.min(state.deadline, Date.now() + 1000);
     let final;
     do {
       final = finalObjects(state);
       if (final.network.openSocketCount === 0 && final.network.listenerClosed) break;
       await new Promise((accept) => setTimeout(accept, 5));
-    } while (Date.now() < drainDeadline);
+    } while (
+      original
+        ? remainingTime(state) > 0 && monotonicNow() < drainDeadline
+        : Date.now() < drainDeadline
+    );
     if (final.network.openSocketCount !== 0 || !final.network.listenerClosed)
       refuse(state, 'CLEANUP_INCOMPLETE');
     await phase({
       phase: 'close',
       actualAppCloseResolved: true,
       ownedSocketCloseEventsComplete: true,
-      ...(qualification
+      ...(persistent
         ? {
             listenerClosed: final.network.listenerClosed,
             openSocketCount: final.network.openSocketCount,
@@ -1286,7 +1790,7 @@ async function executeReferenceLifecycle(
           }
         : {}),
     });
-    if (qualification) state.deadline = Date.now() + 30_000;
+    if (persistent) setLifecycleDeadline(state, 30_000);
     result = {
       schemaVersion: 1,
       scope: job.mode,
@@ -1297,7 +1801,7 @@ async function executeReferenceLifecycle(
       registry: final.registry,
       network: final.network,
       responses,
-      ...(qualification ? { preparation, measurement, initialObjectSnapshot: initial } : {}),
+      ...(persistent ? { preparation, measurement, initialObjectSnapshot: initial } : {}),
       privacyOptions: state.privacyOptions
         ? {
             actualSharedOptionsIdentityObserved: true,
@@ -1349,7 +1853,9 @@ async function executeReferenceLifecycle(
         'generated-session-public-fingerprint',
         'authenticated-tenant-and-sql-isolation',
         'five-other-compositions',
-        '600-request-performance-profile',
+        ...(original
+          ? ['original-native-execution-and-business-effects-proof']
+          : ['600-request-performance-profile']),
       ],
       runtimeCustodyComplete: false,
       performanceQualified: false,
@@ -1365,7 +1871,8 @@ async function executeReferenceLifecycle(
       // Reuse an in-flight public close promise; never race it with raw close.
       // The raw descriptor/receiver is failure-only fallback before any attempt.
       try {
-        state.deadline = Math.max(state.deadline, Date.now() + 5000);
+        if (original) setLifecycleDeadline(state, Math.max(5000, Math.ceil(remainingTime(state))));
+        else state.deadline = Math.max(state.deadline, Date.now() + 5000);
         await bounded(state, closeApplication(state, true), 'FAILED_CLOSE');
         state.appClosed = true;
         for (const app of state.retainedApps)
@@ -1379,6 +1886,14 @@ async function executeReferenceLifecycle(
     // Restore observer descriptors after the bounded shutdown attempt on every
     // path. The separately owned network guard remains installed. Unknown app
     // cleanup is a sticky refusal and prevents reuse of this worker scope.
+    if (original) {
+      try {
+        closeOriginalPreparationJournal(state);
+      } catch {
+        state.cleanupIncomplete = true;
+        state.failure ??= 'ORIGINAL_JOURNAL_CLOSE';
+      }
+    }
     if (
       (!state.appClosed && state.adapter) ||
       state.retainedApps.some((app) => !state.closedApps.has(app))
@@ -1386,15 +1901,20 @@ async function executeReferenceLifecycle(
       state.cleanupIncomplete = true;
     restore(state);
     if (exchange) {
-      const exchangeClosure = exchangeApi.closeHttpQualificationParentExchange(exchange);
-      if (!exchangeClosure.complete) state.failure ??= 'QUALIFICATION_EXCHANGE_INCOMPLETE';
+      const exchangeClosure = original
+        ? exchangeApi.closeHttpOriginalParentExchange(exchange)
+        : exchangeApi.closeHttpQualificationParentExchange(exchange);
+      if (!exchangeClosure.complete)
+        state.failure ??= original
+          ? 'ORIGINAL_EXCHANGE_INCOMPLETE'
+          : 'QUALIFICATION_EXCHANGE_INCOMPLETE';
     }
     if (state.cleanupIncomplete) active = state;
   }
   if (state.failure || state.cleanupIncomplete)
     refuse(state, state.failure ?? 'CLEANUP_INCOMPLETE');
   await phase(
-    qualification
+    persistent
       ? {
           phase: 'final',
           runtimeEvidenceSha256: sha(result),

@@ -2,6 +2,12 @@ import { isHttpComposition } from './http-composition-roster.mjs';
 import { createHash } from 'node:crypto';
 import {
   lstatSync,
+  constants,
+  openSync,
+  closeSync,
+  fstatSync,
+  fsyncSync,
+  writeSync,
   readFileSync,
   readlinkSync,
   realpathSync,
@@ -10,13 +16,24 @@ import {
 } from 'node:fs';
 import { Module, createRequire, isBuiltin, registerHooks } from 'node:module';
 import * as moduleNamespace from 'node:module';
-import { basename, dirname, extname, isAbsolute, join, normalize, parse, resolve } from 'node:path';
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  normalize,
+  parse,
+  resolve,
+  sep,
+} from 'node:path';
 import { isDeepStrictEqual, types } from 'node:util';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const copyBytes = Buffer.from.bind(Buffer);
+const monotonicNow = process.hrtime.bigint.bind(process.hrtime);
 const kinds = new Set(['module', 'commonjs', 'json']);
 
 /**
@@ -199,6 +216,198 @@ export function installHttpModuleCustody(receipt) {
   });
 }
 
+// Failure-only private retention. The handle snapshot comes from the actual
+// original network scope; this writer grants neither cleanup nor execution credit.
+function retainOriginalNetworkFailure(job, snapshot, serialize) {
+  const fail = () => {
+    throw new Error('Original network failure retention refused');
+  };
+  const deadline = monotonicNow() + 30_000_000_000n;
+  const directory = dirname(job.descriptorPath);
+  const expected = resolve(directory, `${job.nonce}.original-body.json`);
+  if (
+    job.mode !== 'http-original-scenario' ||
+    job.observationArtifactPath !== expected ||
+    typeof process.getuid !== 'function' ||
+    !Number.isInteger(constants.O_NOFOLLOW)
+  )
+    fail();
+  const parts = directory.split(sep).filter(Boolean);
+  if (parts.length > 64) fail();
+  const chain = [];
+  let parent = sep;
+  for (const part of [null, ...parts]) {
+    if (part !== null) parent = resolve(parent, part);
+    const identity = lstatSync(parent, { bigint: true });
+    if (!identity.isDirectory() || realpathSync(parent) !== parent) fail();
+    chain.push({ path: parent, identity });
+  }
+  const parentIdentity = chain.at(-1).identity;
+  if ((parentIdentity.mode & 0o7777n) !== 0o700n || parentIdentity.uid !== BigInt(process.getuid()))
+    fail();
+  const checkChain = () => {
+    for (const entry of chain) {
+      const current = lstatSync(entry.path, { bigint: true });
+      if (
+        !current.isDirectory() ||
+        realpathSync(entry.path) !== entry.path ||
+        !['dev', 'ino', 'mode', 'uid', 'gid'].every((key) => current[key] === entry.identity[key])
+      )
+        fail();
+    }
+  };
+  // Bound each trusted source-produced row before descriptor-copy/stringification.
+  // No whole effects-array serialization or inherited hook is used.
+  const encode = (value) => {
+    let nodes = 0;
+    let maximumBytes = 0;
+    const visit = (item, depth) => {
+      maximumBytes += 32;
+      if (++nodes > 1024 || depth > 8 || monotonicNow() > deadline) fail();
+      if (typeof item === 'string') maximumBytes += item.length * 6;
+      if (maximumBytes > 64 * 1024) fail();
+      if (item === null || typeof item === 'boolean') return;
+      if (typeof item === 'number' && Number.isFinite(item)) return;
+      if (typeof item === 'string' && item.length <= 4096) return;
+      if (
+        !item ||
+        typeof item !== 'object' ||
+        types.isProxy(item) ||
+        ![Object.prototype, Array.prototype].includes(Object.getPrototypeOf(item))
+      )
+        fail();
+      for (const key of Reflect.ownKeys(item)) {
+        if (Array.isArray(item) && key === 'length') continue;
+        const descriptor = Object.getOwnPropertyDescriptor(item, key);
+        if (
+          typeof key !== 'string' ||
+          key.length > 256 ||
+          !descriptor.enumerable ||
+          !Object.hasOwn(descriptor, 'value')
+        )
+          fail();
+        maximumBytes += key.length * 6 + 4;
+        if (maximumBytes > 64 * 1024) fail();
+        visit(descriptor.value, depth + 1);
+      }
+    };
+    visit(value, 0);
+    const bytes = Buffer.from(serialize(value));
+    if (bytes.length > 64 * 1024) fail();
+    return bytes;
+  };
+  if (
+    !snapshot ||
+    !Array.isArray(snapshot.effects) ||
+    snapshot.effects.length > 100_000 ||
+    snapshot.capturedEffects !== snapshot.effects.length ||
+    snapshot.scope !== 'original-owned-network-failure-diagnostic' ||
+    snapshot.cleanupComplete !== false ||
+    snapshot.runtimeCustodyComplete !== false ||
+    snapshot.performanceQualified !== false ||
+    snapshot.readinessPromoting !== false
+  )
+    fail();
+  const { effects, ...metadata } = snapshot;
+  const header = encode({
+    schemaVersion: 1,
+    candidateCommit: job.candidateCommit,
+    tree: job.tree,
+    nonce: job.nonce,
+    workerPid: process.pid,
+    originalScenario: job.originalScenario,
+    networkFailure: metadata,
+    parentArtifactCorroborationRequired: true,
+    cleanupComplete: false,
+    runtimeCustodyComplete: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  });
+  const path = `${expected}.network-failure.json`;
+  checkChain();
+  const descriptor = openSync(
+    path,
+    constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW,
+    0o600,
+  );
+  let identity;
+  let length = 0;
+  let failure;
+  const check = () => {
+    checkChain();
+    const current = fstatSync(descriptor, { bigint: true });
+    const named = lstatSync(path, { bigint: true });
+    if (
+      !current.isFile() ||
+      current.nlink !== 1n ||
+      (current.mode & 0o7777n) !== 0o600n ||
+      current.size !== BigInt(length) ||
+      realpathSync(path) !== path ||
+      !['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeNs', 'ctimeNs'].every(
+        (key) => current[key] === identity[key] && current[key] === named[key],
+      )
+    )
+      fail();
+  };
+  const write = (bytes) => {
+    if (monotonicNow() > deadline) fail();
+    check();
+    if (length + bytes.length > 64 * 1024 * 1024) fail();
+    let offset = 0;
+    while (offset < bytes.length) {
+      const count = writeSync(descriptor, bytes, offset, bytes.length - offset);
+      if (!count) fail();
+      offset += count;
+      length += count;
+      identity = fstatSync(descriptor, { bigint: true });
+      check();
+    }
+  };
+  try {
+    identity = fstatSync(descriptor, { bigint: true });
+    write(header.subarray(0, header.length - 1));
+    write(Buffer.from(',"effects":['));
+    for (let index = 0; index < effects.length; index++) {
+      if (index) write(Buffer.from(','));
+      write(encode(effects[index]));
+    }
+    write(Buffer.from(']}\n'));
+    check();
+  } catch (error) {
+    failure = error;
+  } finally {
+    // Preserve partial bytes and attempt their durability even after refusal.
+    try {
+      fsyncSync(descriptor);
+      check();
+    } catch (error) {
+      failure ??= error;
+    }
+    try {
+      closeSync(descriptor);
+    } catch (error) {
+      failure ??= error;
+    }
+    let directoryDescriptor;
+    try {
+      checkChain();
+      directoryDescriptor = openSync(directory, constants.O_RDONLY | constants.O_NOFOLLOW);
+      const current = fstatSync(directoryDescriptor, { bigint: true });
+      if (
+        !['dev', 'ino', 'mode', 'uid', 'gid'].every((key) => current[key] === parentIdentity[key])
+      )
+        fail();
+      fsyncSync(directoryDescriptor);
+      checkChain();
+    } catch (error) {
+      failure ??= error;
+    } finally {
+      if (directoryDescriptor !== undefined) closeSync(directoryDescriptor);
+    }
+  }
+  if (failure) throw failure;
+}
+
 let fixedWorkerStarted = false;
 
 /**
@@ -218,6 +427,8 @@ export async function runHttpRuntimeWorker() {
   let terminalSent = false;
   let network;
   let closeNetwork;
+  let snapshotNetworkFailure;
+  let serializeFailure;
 
   function send(kind, result) {
     if (!process.send || terminalSent) fail('Worker has no private channel or already terminated');
@@ -254,6 +465,7 @@ export async function runHttpRuntimeWorker() {
         'bootstrap-module-only',
         'reference-owned-loopback',
         'http-endpoint-qualification',
+        'http-original-scenario',
       ].includes(job.mode) ||
       !isHttpComposition(job.compositionId) ||
       !/^[a-f0-9]{40}$/u.test(job.candidateCommit) ||
@@ -288,7 +500,13 @@ export async function runHttpRuntimeWorker() {
       'scripts/lib/http-runtime-census.mjs',
       'scripts/lib/http-runtime-worker.mjs',
     ];
-    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
+    if (
+      [
+        'reference-owned-loopback',
+        'http-endpoint-qualification',
+        'http-original-scenario',
+      ].includes(job.mode)
+    ) {
       controlPaths.push(
         'scripts/lib/http-reference-loopback-protocol.mjs',
         'scripts/lib/http-reference-network.mjs',
@@ -303,6 +521,12 @@ export async function runHttpRuntimeWorker() {
           'scripts/lib/http-qualification-liveness.mjs',
           'scripts/lib/http-qualification-exchange.mjs',
           'scripts/lib/k6-baseline-json.mjs',
+        );
+      if (job.mode === 'http-original-scenario')
+        controlPaths.push(
+          'scripts/lib/http-original-protocol.mjs',
+          'scripts/lib/http-original-scenarios.mjs',
+          'scripts/lib/http-original-exchange.mjs',
         );
       controlPaths.sort();
       const keys = [
@@ -329,12 +553,13 @@ export async function runHttpRuntimeWorker() {
         'observationArtifactPath',
       ];
       if (job.mode === 'http-endpoint-qualification') keys.push('qualification');
+      if (job.mode === 'http-original-scenario') keys.push('originalScenario');
       if (
         !isDeepStrictEqual(Object.keys(job).sort(), keys.sort()) ||
         job.observationArtifactPath !==
           resolve(
             dirname(descriptor),
-            `${job.nonce}.${job.mode === 'http-endpoint-qualification' ? 'qualification' : 'reference'}-body.json`,
+            `${job.nonce}.${job.mode === 'http-endpoint-qualification' ? 'qualification' : job.mode === 'http-original-scenario' ? 'original' : 'reference'}-body.json`,
           ) ||
         job.referenceFixture?.identity?.candidateCommit !== job.candidateCommit ||
         job.referenceFixture?.identity?.tree !== job.tree ||
@@ -393,7 +618,13 @@ export async function runHttpRuntimeWorker() {
           ],
         ],
       ];
-      if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode))
+      if (
+        [
+          'reference-owned-loopback',
+          'http-endpoint-qualification',
+          'http-original-scenario',
+        ].includes(job.mode)
+      )
         rules.push([
           'packages/flow/package.json',
           '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
@@ -428,7 +659,11 @@ export async function runHttpRuntimeWorker() {
       if (!Array.isArray(job.resolutionAnchors) || job.resolutionAnchors.length !== rules.length)
         fail('Private resolution anchor population differs');
       if (
-        ['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode) &&
+        [
+          'reference-owned-loopback',
+          'http-endpoint-qualification',
+          'http-original-scenario',
+        ].includes(job.mode) &&
         !isDeepStrictEqual(job.resolutionAnchors[1].manifest, job.resolutionAnchors[2].manifest)
       )
         fail('Shared physical flow anchor differs between caller relations');
@@ -1324,13 +1559,23 @@ export async function runHttpRuntimeWorker() {
     let channel;
     let finishChannel;
     let serializeRuntime;
-    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
+    if (
+      [
+        'reference-owned-loopback',
+        'http-endpoint-qualification',
+        'http-original-scenario',
+      ].includes(job.mode)
+    ) {
       ({ serializeHttpRuntimePlainJson: serializeRuntime } =
         await import('./http-runtime-protocol.mjs'));
       if (job.mode === 'http-endpoint-qualification') {
         const wire = await import('./http-qualification-protocol.mjs');
         channel = await wire.openHttpQualificationChannel(job);
         finishChannel = wire.finishHttpQualificationChannel;
+      } else if (job.mode === 'http-original-scenario') {
+        const wire = await import('./http-original-protocol.mjs');
+        channel = await wire.openHttpOriginalChannel(job);
+        finishChannel = wire.finishHttpOriginalChannel;
       } else {
         const wire = await import('./http-reference-loopback-protocol.mjs');
         channel = await wire.openReferenceLifecycleChannel(job);
@@ -1347,7 +1592,14 @@ export async function runHttpRuntimeWorker() {
     let nestPreparation;
     let nestPreparationObservation;
     const assertNestPreparationLoadOrder = (requireCensus) => {
-      if (!['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) return;
+      if (
+        ![
+          'reference-owned-loopback',
+          'http-endpoint-qualification',
+          'http-original-scenario',
+        ].includes(job.mode)
+      )
+        return;
       const rows = custody.snapshot().evaluations;
       const first = (url) =>
         rows.filter((row) => row.canonicalURL === url).sort((a, b) => a.sequence - b.sequence)[0];
@@ -1373,7 +1625,13 @@ export async function runHttpRuntimeWorker() {
       // Load rows establish ordering, not completion callbacks. Original require
       // return and retained identical loaded cache objects supply completion.
     };
-    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
+    if (
+      [
+        'reference-owned-loopback',
+        'http-endpoint-qualification',
+        'http-original-scenario',
+      ].includes(job.mode)
+    ) {
       const guard = await import('./http-reference-nest-guard.mjs');
       nestPreparation = guard.prepareReferenceNestGuard();
       nestPreparationObservation = guard.observeReferenceNestPreparation(nestPreparation);
@@ -1385,21 +1643,42 @@ export async function runHttpRuntimeWorker() {
     const observation = await observeReferenceBootstrapModule(job);
     let referenceObservation;
     let networkClosure;
-    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
+    if (
+      [
+        'reference-owned-loopback',
+        'http-endpoint-qualification',
+        'http-original-scenario',
+      ].includes(job.mode)
+    ) {
       const transport = await import('./http-reference-network.mjs');
       closeNetwork = transport.closeOwnedReferenceNetworkScope;
-      network = transport.installOwnedReferenceNetworkScope({
+      const binding = {
         postgresPort: job.referenceFixture.postgres.port,
         redisPort: job.referenceFixture.redis.port,
         ...(job.referenceFixture.objectStore
           ? { objectStorePort: job.referenceFixture.objectStore.port }
           : {}),
-      });
+      };
+      if (job.mode === 'http-original-scenario') {
+        snapshotNetworkFailure = transport.snapshotOwnedOriginalReferenceNetworkFailure;
+        serializeFailure = serializeRuntime;
+        network = transport.installOwnedOriginalReferenceNetworkScope(binding, {
+          scenarioId: job.originalScenario.scenarioId,
+          profileId: job.originalScenario.profileId,
+        });
+      } else network = transport.installOwnedReferenceNetworkScope(binding);
       const lifecycle = await import('./http-reference-lifecycle.mjs');
       referenceObservation =
         job.mode === 'http-endpoint-qualification'
           ? await lifecycle.observeOwnedHttpQualification(job, network, channel, nestPreparation)
-          : await lifecycle.observeOwnedReferenceLoopback(job, network, channel, nestPreparation);
+          : job.mode === 'http-original-scenario'
+            ? await lifecycle.observeOwnedHttpOriginalScenario(
+                job,
+                network,
+                channel,
+                nestPreparation,
+              )
+            : await lifecycle.observeOwnedReferenceLoopback(job, network, channel, nestPreparation);
       networkClosure = closeNetwork(network);
       network = undefined;
     }
@@ -1422,7 +1701,13 @@ export async function runHttpRuntimeWorker() {
         'scripts/lib/http-module-custody.mjs',
       ].includes(row.path),
     );
-    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
+    if (
+      [
+        'reference-owned-loopback',
+        'http-endpoint-qualification',
+        'http-original-scenario',
+      ].includes(job.mode)
+    ) {
       for (const path of controlPaths) {
         if (
           [
@@ -1446,7 +1731,9 @@ export async function runHttpRuntimeWorker() {
           workerPid: process.pid,
           referenceObservation,
           networkClosure,
-          ...(job.mode === 'http-endpoint-qualification' ? { modules, trustedBootstrap } : {}),
+          ...(['http-endpoint-qualification', 'http-original-scenario'].includes(job.mode)
+            ? { modules, trustedBootstrap }
+            : {}),
           parentCorroborationRequired: true,
           complete: false,
           runtimeCustodyComplete: false,
@@ -1456,7 +1743,7 @@ export async function runHttpRuntimeWorker() {
       );
       if (contents.length > 64 * 1024 * 1024) fail('Factory observation exceeds supported bound');
       writeFileSync(job.observationArtifactPath, contents, { mode: 0o600, flag: 'wx' });
-      if (job.mode === 'http-endpoint-qualification')
+      if (['http-endpoint-qualification', 'http-original-scenario'].includes(job.mode))
         await finishChannel(channel, digest(contents));
       else
         await finishChannel(channel, {
@@ -1493,6 +1780,13 @@ export async function runHttpRuntimeWorker() {
       if (network) closeNetwork(network);
     } catch {
       /* Incomplete owned network cleanup remains a failed child. */
+    }
+    try {
+      if (network && snapshotNetworkFailure)
+        retainOriginalNetworkFailure(job, snapshotNetworkFailure(network), serializeFailure);
+    } catch {
+      // A missing snapshot or failed/partial durable write cannot restore admission.
+      // Existing private bytes remain in place for the parent to archive.
     }
     try {
       custody?.close();
