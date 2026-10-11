@@ -207,7 +207,7 @@ function snapshotStack(state) {
         refuse(state, 'ROUTE_REGISTRATION');
       reached.add(origin);
     } else if (
-      !['request-logging', 'cls'].includes(origin.kind) ||
+      !['request-logging', 'cls', 'privacy-http-context'].includes(origin.kind) ||
       enabled[0] !== '_all' ||
       inner.method !== undefined
     )
@@ -472,8 +472,22 @@ function install(state) {
         if (clsRequire('nestjs-cls/package.json').version !== '6.3.0')
           refuse(state, 'DEPENDENCY_VERSION');
         const cls = clsRequire('nestjs-cls').ClsMiddleware;
+        const privacy =
+          state.job.compositionId === 'privacy'
+            ? sourceConstructor(
+                state,
+                'packages/privacy/src/privacy-context.ts',
+                'PrivacyHttpContextMiddleware',
+              )
+            : undefined;
         const kind =
-          constructor === logging ? 'request-logging' : constructor === cls ? 'cls' : undefined;
+          constructor === logging
+            ? 'request-logging'
+            : constructor === cls
+              ? 'cls'
+              : privacy && constructor === privacy
+                ? 'privacy-http-context'
+                : undefined;
         if (!kind || typeof data(instance, 'use') !== 'function')
           refuse(state, 'UNKNOWN_MIDDLEWARE_INSTANCE');
         let observed = state.middlewareInstances.find((row) => row.instance === instance);
@@ -484,6 +498,7 @@ function install(state) {
             instance,
             prototype,
             constructor,
+            prototypeUseDescriptor: Object.getOwnPropertyDescriptor(prototype, 'use'),
             use,
             own,
             kind,
@@ -691,6 +706,42 @@ function request(state, target, path) {
   });
 }
 
+function capturePrivacyOptions(state) {
+  if (state.job.compositionId !== 'privacy') return;
+  const serviceConstructor = sourceConstructor(
+    state,
+    'packages/privacy/src/privacy.service.ts',
+    'PrivacyService',
+  );
+  const storeConstructor = sourceConstructor(
+    state,
+    'packages/privacy/src/privacy-object-store.service.ts',
+    'PrivacyObjectStoreService',
+  );
+  const service = publicOperation(state, 'get', [serviceConstructor]);
+  const store = publicOperation(state, 'get', [storeConstructor]);
+  const options = data(service, 'options');
+  if (
+    !options ||
+    types.isProxy(options) ||
+    Object.getPrototypeOf(options) !== Object.prototype ||
+    data(store, 'options') !== options ||
+    typeof data(options, 'erasureSalt') !== 'string' ||
+    !/^[a-f0-9]{64}$/u.test(data(options, 'erasureSalt')) ||
+    data(options, 'endpoint') !== process.env.STYNX_STORAGE_ENDPOINT ||
+    data(options, 'bucketName') !== process.env.STYNX_PRIVACY_BUCKET
+  ) {
+    refuse(state, 'PRIVACY_OPTIONS_IDENTITY');
+  }
+  optionSnapshot(state, options);
+  state.privacyOptions = {
+    service,
+    store,
+    options,
+    saltSha256: digest(data(options, 'erasureSalt')),
+  };
+}
+
 function finalObjects(state) {
   check(state);
   checkOptions(state);
@@ -701,10 +752,29 @@ function finalObjects(state) {
     if (
       Object.getPrototypeOf(row.instance) !== row.prototype ||
       Object.getOwnPropertyDescriptor(row.prototype, 'constructor')?.value !== row.constructor ||
+      !isDeepStrictEqual(
+        Object.getOwnPropertyDescriptor(row.prototype, 'use'),
+        row.prototypeUseDescriptor,
+      ) ||
       data(row.instance, 'options') !== row.options ||
       data(row.options, 'setup') !== row.installedSetup
     )
       refuse(state, 'MIDDLEWARE_INSTANCE_DRIFT');
+  if (state.privacyOptions) {
+    const row = state.privacyOptions;
+    if (
+      state.job.compositionId !== 'privacy' ||
+      data(row.service, 'options') !== row.options ||
+      data(row.store, 'options') !== row.options ||
+      digest(data(row.options, 'erasureSalt')) !== row.saltSha256
+    )
+      refuse(state, 'PRIVACY_OPTIONS_DRIFT');
+  }
+  if (
+    state.job.compositionId !== 'privacy' &&
+    state.middlewareInstances.some((row) => row.kind === 'privacy-http-context')
+  )
+    refuse(state, 'PRIVACY_MIDDLEWARE_ROOT');
   observeReferenceNestGuard(state.nestGuard);
   for (const route of state.routes) {
     const module = publicOperation(state, 'get', [state.ModulesContainer]).get(route.moduleKey);
@@ -903,6 +973,7 @@ export async function observeOwnedReferenceLoopback(
       appRetainedBeforeFactoryReturn: true,
     });
     await bounded(state, publicOperation(state, 'init', []), 'INIT');
+    capturePrivacyOptions(state);
     state.registry = observeReferenceRegistryObjects(
       job,
       publicOperation(state, 'get', [state.ModulesContainer]),
@@ -958,6 +1029,14 @@ export async function observeOwnedReferenceLoopback(
       registry: final.registry,
       network: final.network,
       responses,
+      privacyOptions: state.privacyOptions
+        ? {
+            actualSharedOptionsIdentityObserved: true,
+            saltByteLength: 32,
+            saltSha256: state.privacyOptions.saltSha256,
+            saltRawRetainedInReport: false,
+          }
+        : null,
       middlewareInstances: state.middlewareInstances.map((row, index) => ({
         instanceId: index + 1,
         kind: row.kind,
