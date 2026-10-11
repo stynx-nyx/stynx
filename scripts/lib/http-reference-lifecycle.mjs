@@ -742,9 +742,49 @@ function capturePrivacyOptions(state) {
   };
 }
 
+function captureOfflineInstallation(state) {
+  if (!['offlineE6', 'offlineCTG9'].includes(state.job.compositionId)) return;
+  const constructor = sourceConstructor(
+    state,
+    'reference/api/src/performance/offline-storage.ts',
+    'OfflinePerformanceStorageInstaller',
+  );
+  const instance = publicOperation(state, 'get', [constructor]);
+  const snapshot = data(instance, 'snapshot');
+  if (Object.getPrototypeOf(instance) !== constructor.prototype || typeof snapshot !== 'function')
+    refuse(state, 'OFFLINE_INSTALLER_IDENTITY');
+  const observation = Reflect.apply(snapshot, instance, []);
+  if (
+    observation?.scope !== 'fresh-offline-performance-installation' ||
+    observation.verification?.supported !== true ||
+    !Array.isArray(observation.sourceMigrations) ||
+    observation.sourceMigrations.length !== 8 ||
+    !Array.isArray(observation.verification.checks) ||
+    !observation.verification.checks.length ||
+    observation.verification.checks.some((row) => row.status !== 'pass')
+  )
+    refuse(state, 'OFFLINE_INSTALLER_OBSERVATION');
+  state.offlineInstallation = {
+    constructor,
+    instance,
+    snapshot,
+    observation,
+    sha256: sha(observation),
+  };
+}
+
 function finalObjects(state) {
   check(state);
   checkOptions(state);
+  if (state.offlineInstallation) {
+    const row = state.offlineInstallation;
+    if (
+      Object.getPrototypeOf(row.instance) !== row.constructor.prototype ||
+      data(row.instance, 'snapshot') !== row.snapshot ||
+      sha(Reflect.apply(row.snapshot, row.instance, [])) !== row.sha256
+    )
+      refuse(state, 'OFFLINE_INSTALLER_DRIFT');
+  }
   for (const row of state.instancePatches)
     if (!isDeepStrictEqual(Object.getOwnPropertyDescriptor(row.instance, 'use'), row.installed))
       refuse(state, 'MIDDLEWARE_DESCRIPTOR_DRIFT');
@@ -974,6 +1014,7 @@ export async function observeOwnedReferenceLoopback(
     });
     await bounded(state, publicOperation(state, 'init', []), 'INIT');
     capturePrivacyOptions(state);
+    captureOfflineInstallation(state);
     state.registry = observeReferenceRegistryObjects(
       job,
       publicOperation(state, 'get', [state.ModulesContainer]),
@@ -1037,6 +1078,7 @@ export async function observeOwnedReferenceLoopback(
             saltRawRetainedInReport: false,
           }
         : null,
+      offlineInstallation: state.offlineInstallation?.observation ?? null,
       middlewareInstances: state.middlewareInstances.map((row, index) => ({
         instanceId: index + 1,
         kind: row.kind,
