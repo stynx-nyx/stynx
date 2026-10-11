@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
 import { validateSqlWithParser } from './parser.js';
+import { containsDestructiveSql } from './destructive.js';
 import {
   collectLeadingComments,
   extractParenthesized,
@@ -451,7 +452,7 @@ export async function lintSqlTarget(target: string, options: LintOptions = {}): 
         }
       }
 
-      if (/\b(DROP\s+TABLE|TRUNCATE\b|ALTER\s+TABLE[\s\S]*DROP\s+COLUMN)\b/i.test(statement.text) && !destructiveApproved(statement.text)) {
+      if (containsDestructiveSql(statement.text) && !destructiveApproved(statement.text)) {
         createIssue(
           result.issues,
           file.relativeFile,
