@@ -16,6 +16,10 @@ const sources = Object.freeze([
 ]);
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const tables = ['demo__bookmark_bookmark', 'demo__bookmark_bookmark_tag'];
+const setRoleTargetsSql = `select actor.rolname::text as actor, target.rolname::text as target
+  from pg_catalog.pg_roles actor cross join pg_catalog.pg_roles target
+  where actor.rolname in ('stynx_app','stynx_reader') and actor.oid<>target.oid
+    and pg_catalog.pg_has_role(actor.oid,target.oid,'SET')`;
 const historicalModelDifferences = Object.freeze([
   'Drizzle tenant/user foreign keys are absent from historical SQL and the blueprint.',
   'The blueprint URL uniqueness description omits the installed deleted_at IS NULL predicate.',
@@ -189,6 +193,15 @@ export async function verifyDemoBookmarkStorage(queryable) {
       },
     ]),
     schema.rows,
+  );
+  const setRoleSchema = await queryable.query(`with targets as (${setRoleTargetsSql})
+    select actor,target,pg_catalog.has_schema_privilege(target,'demo','CREATE') as can_create,
+      pg_catalog.has_schema_privilege(target,'demo','USAGE WITH GRANT OPTION,CREATE WITH GRANT OPTION') as grantable
+    from targets order by actor,target`);
+  check(
+    'set-role-schema-grants',
+    setRoleSchema.rows.every((row) => !row.can_create && !row.grantable),
+    setRoleSchema.rows,
   );
   const relations =
     await queryable.query(`select c.relname,c.relkind,pg_catalog.pg_get_userbyid(c.relowner) as owner,
@@ -429,6 +442,48 @@ export async function verifyDemoBookmarkStorage(queryable) {
         ),
       columnGrants.rows,
     );
+    const setRoleTableGrants = await queryable.query(
+      `with targets as (${setRoleTargetsSql})
+      select actor,target,privilege,
+        pg_catalog.has_table_privilege(target,$1,privilege) as allowed,
+        pg_catalog.has_table_privilege(target,$1,privilege || ' WITH GRANT OPTION') as grantable
+      from targets cross join unnest($2::text[]) privilege order by actor,target,privilege`,
+      [relation, privileges],
+    );
+    check(
+      `${table}:set-role-table-grants`,
+      setRoleTableGrants.rows.every(
+        (row) =>
+          !row.grantable &&
+          (!row.allowed ||
+            (row.actor === 'stynx_app'
+              ? ['SELECT', 'INSERT', 'UPDATE', 'DELETE'].includes(row.privilege)
+              : row.privilege === 'SELECT')),
+      ),
+      setRoleTableGrants.rows,
+    );
+    const setRoleColumnGrants = await queryable.query(
+      `with targets as (${setRoleTargetsSql})
+      select actor,target,a.attname,privilege,
+        pg_catalog.has_column_privilege(target,a.attrelid,a.attnum,privilege) as allowed,
+        pg_catalog.has_column_privilege(target,a.attrelid,a.attnum,privilege || ' WITH GRANT OPTION') as grantable
+      from targets cross join pg_catalog.pg_attribute a cross join unnest($2::text[]) privilege
+      where a.attrelid=$1::regclass and a.attnum>0 and not a.attisdropped
+      order by actor,target,a.attnum,privilege`,
+      [relation, ['SELECT', 'INSERT', 'UPDATE', 'REFERENCES']],
+    );
+    check(
+      `${table}:set-role-column-grants`,
+      setRoleColumnGrants.rows.every(
+        (row) =>
+          !row.grantable &&
+          (!row.allowed ||
+            (row.actor === 'stynx_app'
+              ? ['SELECT', 'INSERT', 'UPDATE'].includes(row.privilege)
+              : row.privilege === 'SELECT')),
+      ),
+      setRoleColumnGrants.rows,
+    );
     const triggers = await queryable.query(
       'select tgname from pg_catalog.pg_trigger where tgrelid=$1::regclass and not tgisinternal',
       [relation],
@@ -476,6 +531,7 @@ export async function installDemoBookmarkStorage(queryable) {
         'restricted-role-membership',
         'no-table-inheritance',
         'canonical-pii-registration',
+        'set-role-schema-grants',
       ]);
       for (const table of tables)
         for (const suffix of [
@@ -483,6 +539,8 @@ export async function installDemoBookmarkStorage(queryable) {
           'constraints',
           'indexes',
           'no-unrecognized-execution-hooks',
+          'set-role-table-grants',
+          'set-role-column-grants',
         ])
           shapeIds.add(`${table}:${suffix}`);
       const shapeChecks = before.checks.filter((row) => shapeIds.has(row.id));
