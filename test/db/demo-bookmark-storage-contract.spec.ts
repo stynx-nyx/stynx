@@ -544,4 +544,64 @@ describe('closed demo bookmark storage contract', () => {
       }
     });
   });
+
+  it('refuses non-inherited maintenance membership that an actual reader can SET ROLE into', async () => {
+    await withFixture(async ({ admin, owner, connect }) => {
+      await install(owner);
+      await add(owner, tenantA, 'https://example.test/set-role-a');
+      await add(owner, tenantB, 'https://example.test/set-role-b');
+      const before = await snapshot(owner);
+      const role = `demo_fixture_${randomUUID().replaceAll('-', '')}`;
+      await admin.query(`create role ${role} nologin`);
+      try {
+        await owner.query(`grant usage on schema demo to ${role}`);
+        await owner.query(`grant truncate on ${bookmark},${tag} to ${role}`);
+        await admin.query(`grant ${role} to stynx_reader with inherit false, set true`);
+        const verification = await readOnlyVerification(owner);
+        const reader = await connect('stynx_reader');
+        await reader.query('begin');
+        try {
+          await reader.query("select set_config('app.tenant_id',$1,true)", [tenantA]);
+          expect(
+            (await reader.query(`select count(*)::integer as count from ${bookmark}`)).rows,
+          ).toEqual([{ count: 1 }]);
+          await reader.query(`set role ${role}`);
+          const effective = await reader.query(
+            `select current_user,session_user,has_table_privilege(current_user,'${bookmark}','TRUNCATE') as can_truncate`,
+          );
+          expect(effective.rows).toEqual([
+            { current_user: role, session_user: 'stynx_reader', can_truncate: true },
+          ]);
+          await reader.query(`truncate ${bookmark},${tag}`);
+          await reader.query('reset role');
+          for (const tenant of [tenantA, tenantB]) {
+            await reader.query("select set_config('app.tenant_id',$1,true)", [tenant]);
+            expect(
+              (await reader.query(`select count(*)::integer as count from ${bookmark}`)).rows,
+            ).toEqual([{ count: 0 }]);
+          }
+          process.stdout.write(
+            JSON.stringify({
+              scope: 'actual-reader-set-role-maintenance-path',
+              verifierSupported: verification.supported,
+              actualDirectLogin: 'stynx_reader',
+              actualSetRoleMaintenance: true,
+              bothTenantRowsAbsentWithinTransaction: true,
+              effectsWillRollback: true,
+            }) + '\n',
+          );
+        } finally {
+          await reader.query('rollback');
+        }
+        expect(await snapshot(owner)).toEqual(before);
+        expect(verification.supported).toBe(false);
+        await expect(install(owner)).rejects.toThrow('unrecognized existing shape');
+      } finally {
+        await admin.query(`revoke ${role} from stynx_reader`);
+        await owner.query(`revoke all on ${bookmark},${tag} from ${role}`);
+        await owner.query(`revoke all on schema demo from ${role}`);
+        await admin.query(`drop role ${role}`);
+      }
+    });
+  });
 });
