@@ -297,6 +297,17 @@ export function createNativeCoverage({ packageDir, modules, includes, excludes }
     emitDeclarationOnly: false,
   };
   const coverage = makeProgram(coverageOptions);
+  const conversionMap = (binding) => {
+    const map = parseNativeMap(readFileSync(binding.map), binding.source, binding.output);
+    if (!Object.hasOwn(map, 'sourcesContent')) {
+      const bytes = readFileSync(binding.source);
+      const content = bytes.toString('utf8');
+      if (!bytes.equals(binding.sourceBytes) || !Buffer.from(content, 'utf8').equals(bytes))
+        fail('native conversion source content changed after admission');
+      map.sourcesContent = [content];
+    }
+    return map;
+  };
   const transformed = new Map();
   for (const binding of bindings) {
     const outputs = emit(coverage, binding.source, [binding.output, binding.map]);
@@ -401,18 +412,30 @@ export function createNativeCoverage({ packageDir, modules, includes, excludes }
     coverageOptions,
     diagnostics,
     inputs: [...snapshots].map(([path, entry]) => ({ path, ...entry })),
-    bindings: bindings.map(
-      ({ source, output, map, sourceBytes, outputBytes, mapBytes, coverage: proof }) => ({
+    bindings: bindings.map((binding) => {
+      const { source, output, map, sourceBytes, outputBytes, mapBytes, coverage: proof } = binding;
+      const original = JSON.parse(mapBytes.toString('utf8'));
+      const derived = conversionMap(binding);
+      const materialized = !Object.hasOwn(original, 'sourcesContent');
+      const projection = structuredClone(derived);
+      if (materialized) delete projection.sourcesContent;
+      if (JSON.stringify(projection) !== JSON.stringify(original))
+        fail('native conversion map changed an existing map field');
+      return {
         source,
         output,
         map,
         sourceSha256: hash(sourceBytes),
         nativeCodeSha256: hash(outputBytes),
         nativeMapSha256: hash(mapBytes),
+        nativeOriginalMapText: mapBytes.toString('utf8'),
+        nativeConversionMapText: JSON.stringify(derived),
+        nativeConversionMapSha256: hash(JSON.stringify(derived)),
+        nativeSourceContentMaterialized: materialized,
         nativeCodeUnits: outputBytes.toString('utf8').length,
         ...proof,
-      }),
-    ),
+      };
+    }),
   };
   verify();
   const nativeTransform = (id) => {
@@ -421,7 +444,7 @@ export function createNativeCoverage({ packageDir, modules, includes, excludes }
     if (!binding) return null;
     verify();
     const code = readFileSync(binding.output, 'utf8');
-    const map = parseNativeMap(readFileSync(binding.map), binding.source, binding.output);
+    const map = conversionMap(binding);
     return { code, map: structuredClone(map) };
   };
   return {
