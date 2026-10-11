@@ -75,7 +75,11 @@ export function createProtocolFixture(repository, root) {
       '{"version":3,"file":"bootstrap.js","sources":["../../../src/bootstrap.ts"],"mappings":"AAAA"}',
     ),
   );
-  const controls = ['scripts/lib/http-runtime-worker.mjs', 'scripts/lib/http-module-custody.mjs'];
+  const controls = [
+    'scripts/lib/http-composition-roster.mjs',
+    'scripts/lib/http-runtime-worker.mjs',
+    'scripts/lib/http-module-custody.mjs',
+  ];
   const required = [
     'scripts/lib/http-runtime-census.mjs',
     'scripts/lib/http-runtime-bindings.mjs',

@@ -758,3 +758,152 @@ test('invalid JSON and non-array selector JSON refuse without coercion', (t) => 
   assert.throws(() => f.reconcile('{invalid'), SyntaxError);
   refusal(() => f.reconcile('{"name":"@stynx-nyx/auth"}'), /not an array/u);
 });
+
+function sourceOnlyTooling(f) {
+  f.write(
+    'pnpm-workspace.yaml',
+    "packages:\n  - 'packages/*'\n  - 'reference/api'\n  - 'tools/*'\n",
+  );
+  for (const short of ['eslint-config', 'tsconfig']) {
+    f.json(`tools/${short}/package.json`, {
+      name: `@stynx-internal/${short}`,
+      private: true,
+      scripts: { test: 'node --test test/tooling.spec.mjs' },
+    });
+  }
+  f.update('reference/api/package.json', (value) => {
+    value.devDependencies = {
+      '@stynx-internal/eslint-config': 'workspace:*',
+      '@stynx-internal/tsconfig': 'workspace:*',
+    };
+  });
+}
+
+test('actual pnpm includes both exact source-only tools without inventing compiler outputs', (t) => {
+  const f = fixture(t);
+  sourceOnlyTooling(f);
+  const actual = actualSelector(f.root);
+  const graph = f.reconcile(actual);
+  assert.deepEqual(graph.selectedTooling.map((row) => row.root).sort(), [
+    'tools/eslint-config',
+    'tools/tsconfig',
+  ]);
+  for (const member of graph.selectedTooling) {
+    assert.equal(member.classification, 'source-only-workspace-tooling');
+    assert.deepEqual(member.dependencyNames, []);
+    assert.equal(
+      member.manifestSha256,
+      hash(readFileSync(join(f.root, member.root, 'package.json'))),
+    );
+    assert.equal(Object.hasOwn(member, 'compilerConfig'), false);
+    assert.equal(Object.hasOwn(member, 'buildScript'), false);
+    assert.equal(graph.topologicalScriptOrder.includes(member.name), false);
+    assert.equal(
+      graph.selected.some((row) => row.name === member.name),
+      false,
+    );
+    const missing = JSON.parse(actual).filter((row) => row.name !== member.name);
+    refusal(() => f.reconcile(JSON.stringify(missing)), /omits/u);
+  }
+  assert.equal(graph.readinessPromoting, false);
+});
+
+test('actual candidate closure declares exactly 22 compiler members and two source-only tools', () => {
+  const graph = reconcileHttpWorkspaceSelector(repo, actualSelector(repo));
+  assert.equal(graph.selected.length, 22);
+  assert.deepEqual(graph.selectedTooling.map((row) => row.root).sort(), [
+    'tools/eslint-config',
+    'tools/tsconfig',
+  ]);
+  assert.equal(graph.selected.length + graph.selectedTooling.length, 24);
+  for (const name of [
+    '@stynx-nyx/offline-sync',
+    '@stynx-nyx/i18n',
+    '@stynx-nyx/privacy',
+    '@stynx-domain/demo-bookmark-api',
+  ])
+    assert.equal(
+      graph.selected.some((row) => row.name === name),
+      true,
+    );
+});
+
+for (const short of ['eslint-config', 'tsconfig']) {
+  for (const [label, mutate] of [
+    [
+      'public manifest',
+      (value) => {
+        value.private = false;
+      },
+    ],
+    [
+      'missing private identity',
+      (value) => {
+        delete value.private;
+      },
+    ],
+    [
+      'prebuild command',
+      (value) => {
+        value.scripts.prebuild = 'node injected.mjs';
+      },
+    ],
+    [
+      'postbuild command',
+      (value) => {
+        value.scripts.postbuild = 'node injected.mjs';
+      },
+    ],
+    [
+      'prepare command',
+      (value) => {
+        value.scripts.prepare = 'node injected.mjs';
+      },
+    ],
+    [
+      'arbitrary script',
+      (value) => {
+        value.scripts.injected = 'node injected.mjs';
+      },
+    ],
+    [
+      'local runtime edge',
+      (value) => {
+        value.dependencies = { '@stynx-nyx/contracts': 'workspace:*' };
+      },
+    ],
+    [
+      'local development edge',
+      (value) => {
+        value.devDependencies = { '@stynx-nyx/testing': 'workspace:*' };
+      },
+    ],
+    [
+      'local peer edge',
+      (value) => {
+        value.peerDependencies = { '@stynx-nyx/contracts': 'workspace:*' };
+      },
+    ],
+    [
+      'local optional edge',
+      (value) => {
+        value.optionalDependencies = { '@stynx-nyx/testing': 'workspace:*' };
+      },
+    ],
+  ]) {
+    test(`source-only ${short} refuses ${label}`, (t) => {
+      const f = fixture(t);
+      sourceOnlyTooling(f);
+      f.update(`tools/${short}/package.json`, mutate);
+      refusal(() => f.graph(), /source-only tooling/u);
+    });
+  }
+  test(`source-only ${short} cannot relocate its fixed package identity`, (t) => {
+    const f = fixture(t);
+    sourceOnlyTooling(f);
+    const manifest = f.read(`tools/${short}/package.json`);
+    rmSync(join(f.root, 'tools', short), { recursive: true });
+    f.json(`tools/relocated-${short}/package.json`, manifest);
+    refusal(() => f.graph(), /source-only tooling/u);
+  });
+}

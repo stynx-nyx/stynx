@@ -32,6 +32,7 @@ function fixture(root, name) {
   const checkoutRoot = join(root, name);
   mkdirSync(join(checkoutRoot, 'scripts/lib'), { recursive: true });
   const controlFiles = [
+    'http-composition-roster.mjs',
     'http-runtime-worker.mjs',
     'http-module-custody.mjs',
     'http-runtime-bindings.mjs',
@@ -259,6 +260,22 @@ test('actual worker startup enforces descriptor, process and control custody', a
       });
     },
   );
+  for (const compositionId of ['offlineE6', 'offlineCTG9', 'i18n', 'privacy', 'domain'])
+    await t.test(
+      `selected ${compositionId} startup reaches bounded dependency refusal without a factory`,
+      async () => {
+        const f = fixture(root, `selected-${compositionId}`);
+        f.job.compositionId = compositionId;
+        const result = await execute(f);
+        assert.equal(result.frames.length, 1);
+        assert.equal(result.frames[0].kind, 'start');
+        assert.equal(result.frames[0].pid, result.pid);
+        assert.equal(result.frames[0].candidateCommit, candidateCommit);
+        assert.equal(result.frames[0].nonce, f.job.nonce);
+        assert.equal(result.frames[0].result.mode, 'bootstrap-module-only');
+        assert.deepEqual(result.frames[0].result.resolutionAnchors, f.job.resolutionAnchors);
+      },
+    );
   const cases = [
     [
       'no private IPC channel',
@@ -363,6 +380,49 @@ test('actual worker startup enforces descriptor, process and control custody', a
       },
     ],
     [
+      'missing closed roster control',
+      (f) => {
+        f.job.controls = f.job.controls.filter(
+          (row) => !row.path.endsWith('/http-composition-roster.mjs'),
+        );
+      },
+    ],
+    [
+      'extra closed roster control',
+      (f) => {
+        f.job.controls.push(structuredClone(f.job.controls[0]));
+      },
+    ],
+    [
+      'pre-hook roster bytes drift',
+      (f) => {
+        const file = join(f.checkoutRoot, 'scripts/lib/http-composition-roster.mjs');
+        writeFileSync(
+          file,
+          `${readFileSync(file, 'utf8')}\n// changed before actual worker import\n`,
+        );
+      },
+    ],
+    [
+      'pre-hook roster declared digest drift',
+      (f) => {
+        f.job.controls.find((row) => row.path.endsWith('/http-composition-roster.mjs')).sha256 =
+          '0'.repeat(64);
+      },
+    ],
+    [
+      'prototype composition',
+      (f) => {
+        f.job.compositionId = '__proto__';
+      },
+    ],
+    [
+      'wrong-case composition',
+      (f) => {
+        f.job.compositionId = 'offlinee6';
+      },
+    ],
+    [
       'control bytes drift',
       (f) => {
         writeFileSync(
@@ -384,7 +444,8 @@ test('actual worker startup enforces descriptor, process and control custody', a
           join(f.checkoutRoot, 'scripts/lib/http-runtime-bindings.mjs'),
           join(f.checkoutRoot, 'linked.mjs'),
         );
-        f.job.controls[2].path = 'linked.mjs';
+        f.job.controls.find((row) => row.path === 'scripts/lib/http-runtime-bindings.mjs').path =
+          'linked.mjs';
       },
     ],
     [
