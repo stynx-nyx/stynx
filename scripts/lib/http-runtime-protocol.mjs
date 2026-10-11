@@ -505,8 +505,15 @@ function validBindings(value) {
   )
     return false;
   const seen = new Set();
+  let optionalOrigin;
   for (const probe of value.optionalProbes) {
-    if (!validProbeExpectation(probe, members) || seen.has(probe.ruleId)) return false;
+    if (
+      !validProbeExpectation(probe, members) ||
+      seen.has(probe.ruleId) ||
+      (optionalOrigin && !isDeepStrictEqual(probe.provenance, optionalOrigin))
+    )
+      return false;
+    optionalOrigin ??= probe.provenance;
     seen.add(probe.ruleId);
   }
   return true;

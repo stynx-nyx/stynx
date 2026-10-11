@@ -997,6 +997,8 @@ export async function runHttpRuntimeWorker() {
                 if (rule.wholePackageAbsenceEligible && rule.occurrences !== 1)
                   refuse('Completed optional probe phase has an incomplete population');
               } else {
+                if (rule.occurrences !== 0)
+                  refuse('Unobserved optional probe phase has a negative occurrence');
                 for (const file of [
                   optionalPlan.parent,
                   optionalPlan.helper,
