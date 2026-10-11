@@ -581,8 +581,9 @@ describe('closed demo bookmark storage contract', () => {
       const role = `demo_fixture_${randomUUID().replaceAll('-', '')}`;
       await admin.query(`create role ${role} nologin`);
       try {
-        await owner.query(`grant truncate on ${bookmark} to ${role}`);
         await admin.query(`grant ${role} to stynx_reader with inherit true`);
+        expect((await readOnlyVerification(owner)).supported).toBe(true);
+        await owner.query(`grant truncate on ${bookmark} to ${role}`);
         const before = await snapshot(owner);
         const result = await readOnlyVerification(owner);
         expect(result.supported).toBe(false);
