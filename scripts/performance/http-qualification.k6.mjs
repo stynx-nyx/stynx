@@ -84,6 +84,8 @@ for (let sequence = 0; sequence < 600; sequence++) {
         typeof target.headers[key] !== 'string' ||
         /[\r\n]/.test(target.headers[key]),
     ) ||
+    new Set(Object.keys(target.headers).map((key) => key.toLowerCase())).size !==
+      Object.keys(target.headers).length ||
     Object.keys(target.headers).some((key) =>
       ['host', 'connection', 'proxy-authorization', 'proxy-connection'].includes(key.toLowerCase()),
     ) ||
@@ -146,6 +148,7 @@ export default function () {
     allocationRequestSha256: requestSha256,
   };
   started.add(1);
+  const targetStartedAtUnixMs = Date.now();
   let response;
   try {
     response = http.request(target.method, url, target.body, {
@@ -161,7 +164,10 @@ export default function () {
     emit({
       ...identity,
       transport: 'native-request-threw',
+      targetStartedAtUnixMs,
+      targetCompletedAtUnixMs: Date.now(),
       durationMs: null,
+      fullHttpMs: null,
       timings: null,
       actualRequestSha256: null,
       request: null,
@@ -178,7 +184,10 @@ export default function () {
   emit({
     ...identity,
     transport: response.status === 0 ? 'native-transport-failure' : 'http-response',
+    targetStartedAtUnixMs,
+    targetCompletedAtUnixMs: Date.now(),
     durationMs: response.timings.duration,
+    fullHttpMs: response.timings.blocked + response.timings.duration,
     timings: response.timings,
     actualRequestSha256: response.request
       ? digest(
