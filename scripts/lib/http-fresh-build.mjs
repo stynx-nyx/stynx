@@ -47,6 +47,7 @@ import {
   closeOwnedReferenceFixture,
 } from './http-reference-fixture.mjs';
 import { deriveReferenceRegistryPlan } from './http-reference-registry.mjs';
+import { loadHttpQualificationCase } from './http-qualification-manifest.mjs';
 import {
   createOwnedHttpWorker,
   launchOwnedHttpWorker,
@@ -1492,6 +1493,33 @@ export function snapshotFreshHttpBuild(handle) {
     buildObservation: state.buildObservation,
     readinessPromoting: false,
     runtimeCustodyComplete: false,
+  });
+}
+
+/** Declaration selection from the actual retained private build. This does not
+ * allocate a fixture, admit a runtime, or accept caller-authored manifest data.
+ */
+export function snapshotFreshHttpQualificationCase(handle, caseId) {
+  if (arguments.length !== 2) refuse('Qualification selection accepts one handle and case ID');
+  const state = stateFor(handle);
+  recheck(state);
+  const declaration = loadHttpQualificationCase(state.checkout, caseId);
+  if (declaration.binding.case.compositionId !== state.rootId)
+    refuse('Qualification case belongs to a different actual composition');
+  for (const row of declaration.files) {
+    const tracked = state.inputs.files.find((file) => file.path === row.path);
+    if (!tracked || tracked.sha256 !== row.sha256 || tracked.byteLength !== row.byteLength)
+      refuse('Qualification member is outside the retained tracked build roster');
+  }
+  recheck(state);
+  return structuredClone({
+    ...declaration,
+    candidateCommit: state.candidateCommit,
+    tree: state.inputs.tree,
+    actualPrivateBuildSelection: true,
+    runtimeAdmission: false,
+    performanceQualified: false,
+    readinessPromoting: false,
   });
 }
 
