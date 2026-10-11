@@ -6,7 +6,11 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { after, test } from 'node:test';
-import { createHttpRuntimeProtocol } from '../../scripts/lib/http-runtime-protocol.mjs';
+import {
+  createHttpRuntimeProtocol,
+  serializeHttpRuntimePlainJson,
+} from '../../scripts/lib/http-runtime-protocol.mjs';
+import { createProtocolFixture, moduleFacts } from './support/http-runtime-protocol-fixture.mjs';
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const root = realpathSync(mkdtempSync(join(tmpdir(), 'stynx IPC component espaço 日本語 ')));
@@ -16,12 +20,8 @@ const frameLimit = 32 * 1024 * 1024;
 const captureLimit = 64 * 1024 * 1024;
 const results = [];
 let ordinal = 0;
-const context = () => ({
-  nonce: randomUUID(),
-  candidateCommit: 'a'.repeat(40),
-  pid: process.pid,
-  mode: 'bootstrap-module-only',
-});
+const fixture = createProtocolFixture(repository, join(root, 'parser-only copied facts'));
+const context = fixture.context;
 const frame = (expected, kind, result) => ({
   schemaVersion: 1,
   kind,
@@ -33,13 +33,9 @@ const frame = (expected, kind, result) => ({
 const start = (expected) => frame(expected, 'start', { mode: expected.mode });
 const terminal = (expected) =>
   frame(expected, 'terminal', {
-    observation: {
-      scope: expected.mode,
-      factoryInvoked: false,
-      actualNamedExportObserved: true,
-    },
-    modules: { complete: false, readinessPromoting: false, resolutions: [], evaluations: [] },
-    trustedBootstrap: [],
+    observation: structuredClone(expected.bindings.observation),
+    modules: moduleFacts(expected),
+    trustedBootstrap: structuredClone(expected.bindings.trustedBootstrap),
     readinessPromoting: false,
     runtimeCustodyComplete: false,
   });
@@ -478,7 +474,9 @@ test('direct non-JSON caller objects refuse without executing user behavior', as
     [
       'sparse array',
       (v) => {
-        v.result.modules.evaluations.length = 1;
+        const index = v.result.modules.evaluations.length;
+        v.result.modules.evaluations.length = index + 1;
+        assert.equal(Object.hasOwn(v.result.modules.evaluations, index), false);
       },
     ],
     [
@@ -564,11 +562,19 @@ test('clean exit is mandatory and finalization cannot be repeated or repaired', 
 
 function sizedTerminal(expected, size) {
   const value = terminal(expected);
-  value.result.observation.blockedOn = [''];
-  const remaining = size - Buffer.byteLength(JSON.stringify(value));
-  value.result.observation.blockedOn[0] =
-    'é'.repeat(Math.floor(remaining / 2)) + (remaining % 2 ? 'x' : '');
-  assert.equal(Buffer.byteLength(JSON.stringify(value)), size);
+  const row = {
+    sequence: 100,
+    specifier: '',
+    parentURL: null,
+    conditions: ['node'],
+    url: 'node:path',
+    builtin: true,
+  };
+  value.result.modules.resolutions.push(row);
+  const remaining = size - Buffer.byteLength(serializeHttpRuntimePlainJson(value));
+  assert.ok(remaining >= 0);
+  row.specifier = 'é'.repeat(Math.floor(remaining / 2)) + (remaining % 2 ? 'x' : '');
+  assert.equal(Buffer.byteLength(serializeHttpRuntimePlainJson(value)), size);
   return value;
 }
 
@@ -641,6 +647,7 @@ const { expected, scenario } = options;
 const frame = (kind,result) => ({schemaVersion:1,kind,nonce:expected.nonce,candidateCommit:expected.candidateCommit,pid:process.pid,result});
 const first = frame('start',{mode:expected.mode});
 const last = frame('terminal',options.result);
+for (const probe of last.result.modules.optionalResolutionProbes) probe.identity.pid=process.pid;
 let frames = [first,last];
 if (scenario === 'falsy-first') frames = [first,frame('terminal',false),last];
 if (scenario === 'wrong-nonce') frames = [{...first,nonce:'wrong'},first,last];
@@ -761,7 +768,18 @@ test('artifact capture uses the actual bounded compact serializer', async (t) =>
         last = terminal(expected);
       let nested = { value: 'ação 日本語' };
       for (let depth = 0; depth < 500; depth++) nested = { next: nested };
-      last.result.modules.evaluations.push(nested);
+      const serialized = serializeHttpRuntimePlainJson(nested);
+      assert.deepEqual(JSON.parse(serialized), nested);
+      assert.equal(serialized.includes('\n'), false);
+      assert.equal(JSON.stringify(JSON.parse(serialized)), serialized);
+      assert.ok(Buffer.byteLength(serialized) > serialized.length);
+      assert.ok(Buffer.byteLength(serialized) < 8192);
+      const bad = terminal(expected);
+      bad.result.modules.evaluations.push(nested);
+      const refused = createHttpRuntimeProtocol(expected);
+      assert.equal(refused.receive(start(expected)), true);
+      assert.equal(refused.receive(bad), false);
+      requireRefusal(refused);
       assert.equal(p.receive(first), true);
       assert.equal(p.receive(last), true);
       assert.deepEqual(p.finish(cleanExit), last.result);
@@ -771,7 +789,12 @@ test('artifact capture uses the actual bounded compact serializer', async (t) =>
       assert.equal(artifact.byteLength, Buffer.byteLength(artifact.body));
       assert.equal(artifact.body.includes('\n'), false);
       assert.equal(JSON.stringify(JSON.parse(artifact.body)), artifact.body);
-      assert.ok(artifact.byteLength < Buffer.byteLength(JSON.stringify([first, last])) + 4096);
+      assert.ok(
+        artifact.byteLength <
+          Buffer.byteLength(serializeHttpRuntimePlainJson([first, last])) +
+            Buffer.byteLength(serializeHttpRuntimePlainJson(expected)) +
+            4096,
+      );
       const parsed = JSON.parse(artifact.body);
       assert.deepEqual(parsed.frames, [first, last]);
       assert.equal(parsed.supervisorFailure, null);
@@ -808,10 +831,12 @@ test('artifact capture uses the actual bounded compact serializer', async (t) =>
         const calibration = createHttpRuntimeProtocol(expected);
         calibration.receive(first);
         calibration.receive(last);
-        calibration.receive(sizedTerminal(expected, 1024));
+        const calibrationSize =
+          Buffer.byteLength(serializeHttpRuntimePlainJson(terminal(expected))) + 512;
+        calibration.receive(sizedTerminal(expected, calibrationSize));
         const measured = calibration.captureArtifact('HTTP_RUNTIME_WORKER_INVALID');
         assert.equal(measured.overflowed, false);
-        const thirdSize = 1024 + captureLimit + overflow - measured.byteLength;
+        const thirdSize = calibrationSize + captureLimit + overflow - measured.byteLength;
         assert.ok(thirdSize <= frameLimit);
         const third = sizedTerminal(expected, thirdSize);
         assert.equal(p.receive(first), true);
@@ -848,6 +873,11 @@ test('artifact capture uses the actual bounded compact serializer', async (t) =>
           );
           assert.ok(artifact.byteLength < 4096);
           assert.equal(parsed.captureOmittedReason, 'ARTIFACT_BYTE_LIMIT');
+          assert.equal(parsed.expectedBindingsOmittedReason, 'ARTIFACT_BYTE_LIMIT');
+          assert.equal(
+            parsed.expected.bindingsSha256,
+            hash(serializeHttpRuntimePlainJson(expected.bindings)),
+          );
           assert.equal(parsed.captureComplete, false);
           assert.equal(parsed.refused, true);
           assert.equal(parsed.supervisorFailure, 'HTTP_RUNTIME_CAPTURE_INVALID');
@@ -1002,8 +1032,12 @@ test('inherited object and array serializers never execute across admission and 
           const first = start(expected);
           const last = terminal(expected);
           const row = JSON.parse('{"__proto__":{"label":"ação 日本語"},"values":[1,null,"é"]}');
-          last.result.modules.resolutions.push(row);
-          last.result.modules.evaluations.push({ nested: [row, ['preserved']] });
+          const nested = { nested: [row, ['preserved']] };
+          const bad = terminal(expected);
+          bad.result.modules.resolutions.push(row);
+          bad.result.modules.evaluations.push(nested);
+          const refused = createHttpRuntimeProtocol(expected);
+          let serialized, parsed;
           let calls = 0;
           const hook =
             kind === 'getter'
@@ -1023,6 +1057,11 @@ test('inherited object and array serializers never execute across admission and 
           const beforeDescriptor = Object.getOwnPropertyDescriptor(prototype, 'toJSON');
           try {
             Object.defineProperty(prototype, 'toJSON', { configurable: true, ...hook });
+            serialized = serializeHttpRuntimePlainJson(nested);
+            parsed = JSON.parse(serialized);
+            assert.equal(refused.receive(start(expected)), true);
+            assert.equal(refused.receive(bad), false);
+            requireRefusal(refused);
             firstAccepted = p.receive(first);
             lastAccepted = p.receive(last);
             artifact = p.captureArtifact(null);
@@ -1033,18 +1072,340 @@ test('inherited object and array serializers never execute across admission and 
           }
           save(`${id}-hook-witness`, { calls, firstAccepted, lastAccepted, artifact });
           assert.equal(calls, 0);
+          assert.deepEqual(parsed, nested);
+          assert.deepEqual(JSON.parse(serialized), nested);
           assert.equal(firstAccepted, true);
           assert.equal(lastAccepted, true);
           assert.equal(artifact.overflowed, false);
           assert.equal(artifact.byteLength, Buffer.byteLength(artifact.body));
           assert.deepEqual(JSON.parse(artifact.body).frames, [first, last]);
           assert.deepEqual(completed, last.result);
-          assert.equal(Object.hasOwn(completed.modules.resolutions[0], '__proto__'), true);
-          assert.deepEqual(completed.modules.resolutions[0].__proto__, { label: 'ação 日本語' });
-          assert.equal(Object.getPrototypeOf(completed.modules.resolutions[0]), Object.prototype);
+          assert.equal(Object.hasOwn(parsed.nested[0], '__proto__'), true);
+          assert.deepEqual(parsed.nested[0].__proto__, { label: 'ação 日本語' });
+          assert.equal(Object.getPrototypeOf(parsed.nested[0]), Object.prototype);
           assert.equal(Object.getOwnPropertyDescriptor(prototype, 'toJSON'), beforeDescriptor);
         },
       );
     }
   }
+});
+
+// The phase below is parser-only copied-file data. Fixed producer completion and
+// live parent custody are required separately; no evaluation row grants them.
+test('exact fixed-parent phase binds every eligible negative to earlier canonical evaluations', async (t) => {
+  await componentCase(
+    t,
+    'two absent rules with exact earlier parent/helper facts',
+    (p, expected) => {
+      const value = terminal(expected);
+      value.result.modules = moduleFacts(expected, true);
+      assert.equal(value.result.modules.optionalResolutionProbes.length, 2);
+      assert.equal(p.receive(start(expected)), true);
+      assert.equal(p.receive(value), true);
+      assert.deepEqual(p.finish(cleanExit), value.result);
+      assert.equal(p.snapshot().processCustodyQualified, false);
+    },
+  );
+  const mutations = [
+    [
+      'one required negative missing',
+      (m) => {
+        m.optionalResolutionProbes.pop();
+      },
+    ],
+    [
+      'both required negatives missing',
+      (m) => {
+        m.optionalResolutionProbes.length = 0;
+      },
+    ],
+    [
+      'duplicate rule with unique sequence',
+      (m) => {
+        const row = structuredClone(m.optionalResolutionProbes[0]);
+        row.sequence = 20;
+        m.optionalResolutionProbes.push(row);
+      },
+    ],
+    [
+      'parent evaluation missing',
+      (m, e) => {
+        m.evaluations = m.evaluations.filter(
+          (row) => row.canonicalURL !== e.bindings.optionalProbes[0].provenance.parent.url,
+        );
+      },
+    ],
+    [
+      'helper evaluation missing',
+      (m, e) => {
+        m.evaluations = m.evaluations.filter(
+          (row) => row.canonicalURL !== e.bindings.optionalProbes[0].provenance.helper.url,
+        );
+      },
+    ],
+    [
+      'parent evaluation occurs after negatives',
+      (m) => {
+        m.evaluations[3].sequence = 20;
+        m.evaluations[4].sequence = 21;
+      },
+    ],
+    [
+      'helper evaluation occurs after negatives',
+      (m) => {
+        m.evaluations[4].sequence = 20;
+      },
+    ],
+    [
+      'unobserved phase cannot claim a negative',
+      (m) => {
+        m.evaluations.splice(3);
+      },
+    ],
+    [
+      'success cannot replace eligible absent negative',
+      (m) => {
+        const row = m.optionalResolutionProbes.pop();
+        m.resolutions.push({
+          sequence: 20,
+          specifier: row.specifier,
+          parentURL: row.parentURL,
+          conditions: row.conditions,
+          url: 'node:path',
+          builtin: true,
+        });
+      },
+    ],
+    [
+      'simultaneous ordinary success and negative',
+      (m) => {
+        const row = m.optionalResolutionProbes[0];
+        m.resolutions.push({
+          sequence: 20,
+          specifier: row.specifier,
+          parentURL: row.parentURL,
+          conditions: row.conditions,
+          url: 'node:path',
+          builtin: true,
+        });
+      },
+    ],
+    [
+      'negative occurrence two',
+      (m) => {
+        m.optionalResolutionProbes[0].occurrence = 2;
+      },
+    ],
+    [
+      'negative wrong native error',
+      (m) => {
+        m.optionalResolutionProbes[0].nativeCode = 'ERR_PACKAGE_PATH_NOT_EXPORTED';
+      },
+    ],
+    [
+      'negative wrong candidate identity',
+      (m) => {
+        m.optionalResolutionProbes[0].identity.candidateCommit = 'b'.repeat(40);
+      },
+    ],
+    [
+      'negative wrong PID identity',
+      (m) => {
+        m.optionalResolutionProbes[0].identity.pid++;
+      },
+    ],
+    [
+      'negative changed scope population',
+      (m) => {
+        m.optionalResolutionProbes[0].search.scopes.pop();
+      },
+    ],
+    [
+      'negative changed absence digest',
+      (m) => {
+        m.optionalResolutionProbes[0].beforeAndEdgeAbsenceId = '0'.repeat(64);
+      },
+    ],
+    [
+      'negative changed declaration span',
+      (m) => {
+        m.optionalResolutionProbes[0].declaredCallsite.end++;
+      },
+    ],
+    [
+      'negative changed source digest',
+      (m) => {
+        m.optionalResolutionProbes[0].provenance.parent.sha256 = '0'.repeat(64);
+      },
+    ],
+    [
+      'evaluation changed source length',
+      (m) => {
+        m.evaluations[3].byteLength++;
+      },
+    ],
+    [
+      'evaluation changed source hash',
+      (m) => {
+        m.evaluations[3].sha256 = '0'.repeat(64);
+      },
+    ],
+    [
+      'evaluation changed module kind',
+      (m) => {
+        m.evaluations[3].moduleKind = 'module';
+      },
+    ],
+    [
+      'evaluation canonical URL outside roster',
+      (m) => {
+        m.evaluations[3].canonicalURL += 'outside';
+      },
+    ],
+    [
+      'cross-ledger duplicate sequence',
+      (m) => {
+        m.optionalResolutionProbes[0].sequence = m.evaluations[4].sequence;
+      },
+    ],
+    [
+      'nonmonotonic negative ledger',
+      (m) => {
+        m.optionalResolutionProbes.reverse();
+      },
+    ],
+    [
+      'closed observation additional field',
+      (m, e, v) => {
+        v.result.observation.unverifiedExtra = true;
+      },
+    ],
+    [
+      'closed module additional field',
+      (m) => {
+        m.unverifiedExtra = true;
+      },
+    ],
+    [
+      'closed startup additional field',
+      (m) => {
+        m.supervisedStartup.unverifiedExtra = true;
+      },
+    ],
+    [
+      'unadmitted startup hook count',
+      (m) => {
+        m.supervisedStartup.ownHookRegistrations = 2;
+      },
+    ],
+    [
+      'changed trusted control row',
+      (m, e, v) => {
+        v.result.trustedBootstrap[0].sha256 = '0'.repeat(64);
+      },
+    ],
+  ];
+  for (const [name, mutate] of mutations)
+    await componentCase(t, name, (p, expected) => {
+      const value = terminal(expected);
+      value.result.modules = moduleFacts(expected, true);
+      mutate(value.result.modules, expected, value);
+      assert.equal(p.receive(start(expected)), true);
+      assert.equal(p.receive(value), false);
+      assert.equal(p.receive(terminal(expected)), false);
+      requireRefusal(p);
+    });
+  await componentCase(t, 'unobserved fixed parent has zero negatives', (p, expected) => {
+    const value = terminal(expected);
+    assert.equal(value.result.modules.optionalResolutionProbes.length, 0);
+    assert.equal(p.receive(start(expected)), true);
+    assert.equal(p.receive(value), true);
+    assert.deepEqual(p.finish(cleanExit), value.result);
+  });
+  await t.test('ineligible absent-rule bindings require no invented negative', () => {
+    const expected = context();
+    const value = terminal(expected);
+    value.result.modules = moduleFacts(expected, true);
+    expected.bindings.optionalProbes = [];
+    value.result.modules.optionalResolutionProbes = [];
+    const member = value.result.modules.evaluations[3];
+    value.result.modules.resolutions.push({
+      sequence: 20,
+      specifier: '@nestjs/core/nest-application.js',
+      parentURL: null,
+      conditions: ['require', 'node'],
+      url: member.url,
+      canonicalURL: member.canonicalURL,
+      builtin: false,
+    });
+    const p = createHttpRuntimeProtocol(expected);
+    assert.equal(p.receive(start(expected)), true);
+    assert.equal(p.receive(value), true);
+    assert.deepEqual(p.finish(cleanExit), value.result);
+    // The actual copied core module bytes are installed; this does not assert an
+    // installed optional peer or derive eligibility from a fabricated row.
+    assert.equal(value.result.modules.optionalResolutionProbes.length, 0);
+  });
+  for (const field of [
+    'bindings',
+    'roster',
+    'observation',
+    'trustedBootstrap',
+    'requiredEvaluationURLs',
+  ])
+    await t.test(`mandatory context ${field} missing`, () => {
+      const expected = context();
+      if (field === 'bindings') delete expected.bindings;
+      else delete expected.bindings[field];
+      assert.throws(() => createHttpRuntimeProtocol(expected), invalid);
+    });
+});
+
+test('phase expectations cannot combine equal source bytes at different actual copied origins', () => {
+  const second = createProtocolFixture(repository, join(root, 'second copied Nest origin'));
+  const expected = context();
+  expected.bindings.optionalProbes[1] = structuredClone(second.template.optionalProbes[1]);
+  const originRows = second.template.roster.filter((row) =>
+    Object.values(second.template.optionalProbes[0].provenance).some(
+      (file) => file.url === row.url,
+    ),
+  );
+  expected.bindings.roster.push(...structuredClone(originRows));
+  assert.equal(
+    expected.bindings.optionalProbes[0].provenance.parent.sha256,
+    expected.bindings.optionalProbes[1].provenance.parent.sha256,
+  );
+  assert.notEqual(
+    expected.bindings.optionalProbes[0].provenance.parent.url,
+    expected.bindings.optionalProbes[1].provenance.parent.url,
+  );
+  assert.throws(() => createHttpRuntimeProtocol(expected), invalid);
+});
+
+test('validated actual serializer refuses caller code and illegal JSON before serialization', () => {
+  let calls = 0;
+  const accessor = {};
+  Object.defineProperty(accessor, 'value', {
+    enumerable: true,
+    get() {
+      calls++;
+      return 'untrusted';
+    },
+  });
+  const proxy = new Proxy(
+    {},
+    {
+      ownKeys() {
+        calls++;
+        return [];
+      },
+    },
+  );
+  const sparse = [];
+  sparse.length = 1;
+  for (const value of [undefined, Infinity, () => {}, new Date(), accessor, proxy, sparse])
+    assert.throws(() => serializeHttpRuntimePlainJson(value), invalid);
+  assert.equal(calls, 0);
+  assert.throws(() => serializeHttpRuntimePlainJson(), invalid);
+  assert.throws(() => serializeHttpRuntimePlainJson({}, {}), invalid);
 });
