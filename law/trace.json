@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.8",
+  "version": "1.3.9",
   "meta": {
-    "last_updated": "2026-10-11T01:11:44.199Z",
+    "last_updated": "2026-10-11T02:22:09.202Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -69,7 +69,8 @@
       "STYNX 1.6.0 Architect binds the real fresh-Node synchronous module-loader custody refusal sensors while retaining every existing test projection and invariant relationship. These bounded module observations do not establish supervisor freshness, complete source/build or object provenance, actual middleware custody, six-root HTTP performance, provider acceptance or release readiness.",
       "STYNX 1.6.0 Architect rebind pins tenant-scoped privacy HTTP, independent transaction and global internal-job assertions, plus authenticated reference fixture negatives. All prior executable relationships and gate invariants remain bound; these projections do not establish coverage, provider qualification, HTTP performance or release readiness.",
       "STYNX 1.6.0 Architect binds the installed source-population matcher, additive local S3 provider and real compiler-plan refusal sensors, and rebinds two exact existing coverage-path assertions while retaining all registry 1.6 policy literals and prior assertion counts. The six-file privacy tier preserves every original behavioral case; local emulator and compiler-helper evidence do not establish production provider, full coverage, source/build freshness, performance, overall audit or release PASS.",
-      "STYNX 1.6.0 Architect binds actual pinned-pnpm workspace selection and immutable Git/private dependency byte-roster refusal sensors, and refreshes the existing privacy tier population projection to four ordinary, two integration and six coverage files. Every previous relationship, assertion count and gate obligation is retained; these helpers do not establish fresh build ownership, complete runtime custody, HTTP performance, overall audit or release PASS."
+      "STYNX 1.6.0 Architect binds actual pinned-pnpm workspace selection and immutable Git/private dependency byte-roster refusal sensors, and refreshes the existing privacy tier population projection to four ordinary, two integration and six coverage files. Every previous relationship, assertion count and gate obligation is retained; these helpers do not establish fresh build ownership, complete runtime custody, HTTP performance, overall audit or release PASS.",
+      "Architect binding adds the actual fresh-build owner acceptance assertions, preserving all existing bindings and thresholds. These helper custody regressions do not certify application module/object custody, complete HTTP middleware, route reachability or performance readiness."
     ]
   },
   "invariants": [
@@ -761,6 +762,15 @@
             "Actual immutable Git objects and private offline pnpm installation bind tracked bytes, modes, candidate identity, physical vendor files and workspace links; tampering, replacement refs, unmerged or linked inputs and forged snapshots refuse. Byte-roster custody does not establish successful compilation, fresh build ownership or performance readiness."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-fresh-build.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Real credential-free supported-host builds bind the pinned public toolchain, actual lifecycle observations, initial full compiler reconciliation and immutable physical outputs. Source, dependency, output, map, mode, roster and helper drift refuse and remain refused after restoration; unreviewed helpers, hooks and configuration refuse before candidate execution. Fresh build custody does not establish module/object custody, HTTP reachability, middleware completeness or performance readiness."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["reference/api/src/sample", "packages/ratelimit/src", "packages/backend/src"]
@@ -1001,6 +1011,15 @@
           "names": ["INV-CORE-001"],
           "assertions": [
             "Actual immutable Git objects and private offline pnpm installation bind tracked bytes, modes, candidate identity, physical vendor files and workspace links; tampering, replacement refs, unmerged or linked inputs and forged snapshots refuse. Byte-roster custody does not establish successful compilation, fresh build ownership or performance readiness."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-fresh-build.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Real credential-free supported-host builds bind the pinned public toolchain, actual lifecycle observations, initial full compiler reconciliation and immutable physical outputs. Source, dependency, output, map, mode, roster and helper drift refuse and remain refused after restoration; unreviewed helpers, hooks and configuration refuse before candidate execution. Fresh build custody does not establish module/object custody, HTTP reachability, middleware completeness or performance readiness."
           ],
           "mode": "gray_box"
         }
@@ -6681,6 +6700,14 @@
       "lifecycle": "supported",
       "assertion_count": 44,
       "assertion_digest_sha256": "1c40b05111411c69cbbf8845ed8659f36f03477acb47003d3ee7e0a185a8cde4"
+    },
+    {
+      "path": "test/scripts/http-fresh-build.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 44,
+      "assertion_digest_sha256": "f9b4ac1290d47058623a6e408a35f3153bae3cd145995a0918ec8be48ebe1bd4"
     }
   ],
   "suites": {
