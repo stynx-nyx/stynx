@@ -8,6 +8,7 @@ import { types } from 'node:util';
 const operations = new WeakMap();
 const nativeSpawn = spawn;
 const nativeGroupProbe = process.kill;
+const nativePromiseThen = Promise.prototype.then;
 const bufferLimit = 64 * 1024 * 1024;
 const cleanupWaitMs = 5000;
 const observerNames = ['stdout', 'stderr', 'message', 'error', 'exit', 'close'];
@@ -102,7 +103,7 @@ function delivered(state, kind, payload) {
     if (returned !== undefined) {
       // Observers are synchronous parsers/subscribers, not an asynchronous
       // ownership continuation. Never let their result settle a native fact.
-      if (types.isPromise(returned)) returned.catch(() => {});
+      if (types.isPromise(returned)) nativePromiseThen.call(returned, undefined, () => {});
       state.subscriberFailureCount++;
       journal(state, 'SUBSCRIBER_RESULT', { eventKind: kind });
     }
