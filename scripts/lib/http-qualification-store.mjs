@@ -125,6 +125,7 @@ function checkFileIdentity(path, identity, settled = false) {
     fields.some((key) => current[key] !== identity[key])
   )
     refuse('Previously published archive member identity changed');
+  return current;
 }
 
 function finishPublication(state, publication, snapshot) {
@@ -160,11 +161,15 @@ function finishPublication(state, publication, snapshot) {
   }
   checkSavedDirectories(state);
   const acquired = readHttpQualificationArtifact(state.root, publication.path);
-  checkFileIdentity(publication.path, publication.identity, publication.settled);
+  const finalIdentity = checkFileIdentity(
+    publication.path,
+    publication.identity,
+    publication.settled,
+  );
   checkSavedDirectories(state);
   if (!acquired.bytes.equals(snapshot) || acquired.row.sha256 !== publication.sha256)
     refuse('Published archive snapshot differs from retained exact bytes');
-  publication.identity = lstatSync(publication.path, { bigint: true });
+  publication.identity = finalIdentity;
   publication.settled = true;
   publication.snapshot = undefined;
   return acquired.row;
