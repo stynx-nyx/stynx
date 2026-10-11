@@ -164,53 +164,55 @@ export default function () {
     void error; // Retain the supported k6 0.49 Babel catch syntax without logging private errors.
     // No invented duration or substitute/retry on an unmeasured native throw.
     completed.add(1, { case_id: input.caseId, target_sequence: String(sequence) });
-    emit({
-      ...identity,
-      transport: 'native-request-threw',
-      targetStartedAtUnixMs,
-      targetCompletedAtUnixMs: Date.now(),
-      durationMs: null,
-      fullHttpMs: null,
-      timings: null,
-      actualRequestSha256: null,
-      request: null,
-      status: null,
-      bodySha256: null,
-      bodyBase64: null,
-      headersSha256: null,
-      headers: null,
-      errorCode: null,
-    });
+    emit(
+      Object.assign({}, identity, {
+        transport: 'native-request-threw',
+        targetStartedAtUnixMs,
+        targetCompletedAtUnixMs: Date.now(),
+        durationMs: null,
+        fullHttpMs: null,
+        timings: null,
+        actualRequestSha256: null,
+        request: null,
+        status: null,
+        bodySha256: null,
+        bodyBase64: null,
+        headersSha256: null,
+        headers: null,
+        errorCode: null,
+      }),
+    );
     return;
   }
   completed.add(1, { case_id: input.caseId, target_sequence: String(sequence) });
-  emit({
-    ...identity,
-    transport: response.status === 0 ? 'native-transport-failure' : 'http-response',
-    targetStartedAtUnixMs,
-    targetCompletedAtUnixMs: Date.now(),
-    durationMs: response.timings.duration,
-    fullHttpMs: response.timings.blocked + response.timings.duration,
-    timings: response.timings,
-    actualRequestSha256: response.request
-      ? digest(
-          JSON.stringify([
-            response.request.method,
-            response.request.url,
-            headerIdentity(response.request.headers),
-            response.request.body,
-          ]),
-        )
-      : null,
-    request: response.request ? response.request : null,
-    status: response.status,
-    bodySha256: response.body === null ? null : digest(response.body),
-    // Private raw custody only. Publication must use the reviewed normalization.
-    bodyBase64: response.body === null ? null : encoding.b64encode(response.body, 'std'),
-    headers: response.headers,
-    headersSha256: response.headers
-      ? digest(JSON.stringify(headerIdentity(response.headers)))
-      : null,
-    errorCode: typeof response.error_code === 'number' ? response.error_code : null,
-  });
+  emit(
+    Object.assign({}, identity, {
+      transport: response.status === 0 ? 'native-transport-failure' : 'http-response',
+      targetStartedAtUnixMs,
+      targetCompletedAtUnixMs: Date.now(),
+      durationMs: response.timings.duration,
+      fullHttpMs: response.timings.blocked + response.timings.duration,
+      timings: response.timings,
+      actualRequestSha256: response.request
+        ? digest(
+            JSON.stringify([
+              response.request.method,
+              response.request.url,
+              headerIdentity(response.request.headers),
+              response.request.body,
+            ]),
+          )
+        : null,
+      request: response.request ? response.request : null,
+      status: response.status,
+      bodySha256: response.body === null ? null : digest(response.body),
+      // Private raw custody only. Publication must use the reviewed normalization.
+      bodyBase64: response.body === null ? null : encoding.b64encode(response.body, 'std'),
+      headers: response.headers,
+      headersSha256: response.headers
+        ? digest(JSON.stringify(headerIdentity(response.headers)))
+        : null,
+      errorCode: typeof response.error_code === 'number' ? response.error_code : null,
+    }),
+  );
 }
