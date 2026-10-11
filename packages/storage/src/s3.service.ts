@@ -13,6 +13,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject, Injectable } from '@nestjs/common';
+import type { OnApplicationShutdown } from '@nestjs/common';
 import { StorageValidationError } from './errors';
 import { STYNX_STORAGE_OPTIONS } from './tokens';
 import type {
@@ -23,12 +24,13 @@ import type {
 } from './types';
 
 @Injectable()
-export class S3Service {
+export class S3Service implements OnApplicationShutdown {
   private readonly client: S3Client;
   private readonly bucketName: string;
   private readonly uploadExpiresInSeconds: number;
   private readonly downloadExpiresInSeconds: number;
   private readonly presignCounts = new Map<string, { count: number; windowStart: number }>();
+  private destroyed = false;
 
   constructor(
     @Inject(STYNX_STORAGE_OPTIONS)
@@ -37,10 +39,13 @@ export class S3Service {
     this.bucketName = options.bucketName ?? `stynx-docs-${options.environment}-${options.region}`;
     const expected = `stynx-docs-${options.environment}-${options.region}`;
     if (this.bucketName !== expected) {
-      throw new StorageValidationError('Bucket name does not match the required environment pattern', {
-        bucketName: this.bucketName,
-        expected,
-      });
+      throw new StorageValidationError(
+        'Bucket name does not match the required environment pattern',
+        {
+          bucketName: this.bucketName,
+          expected,
+        },
+      );
     }
 
     this.client = new S3Client({
@@ -52,6 +57,12 @@ export class S3Service {
     });
     this.uploadExpiresInSeconds = options.uploadExpiresInSeconds ?? 300;
     this.downloadExpiresInSeconds = options.downloadExpiresInSeconds ?? 300;
+  }
+
+  onApplicationShutdown(): void {
+    if (this.destroyed) return;
+    this.client.destroy();
+    this.destroyed = true;
   }
 
   bucket(): string {
@@ -139,11 +150,7 @@ export class S3Service {
     );
   }
 
-  async applyObjectLock(
-    key: string,
-    versionId: string,
-    config: S3ObjectLockConfig,
-  ): Promise<void> {
+  async applyObjectLock(key: string, versionId: string, config: S3ObjectLockConfig): Promise<void> {
     const retention: ObjectLockRetention = {
       Mode: config.mode,
       RetainUntilDate: new Date(Date.now() + config.retainDays * 24 * 60 * 60 * 1000),
@@ -168,7 +175,9 @@ export class S3Service {
     );
     return {
       ...(response.ContentType ? { contentType: response.ContentType } : {}),
-      ...(typeof response.ContentLength === 'number' ? { contentLength: response.ContentLength } : {}),
+      ...(typeof response.ContentLength === 'number'
+        ? { contentLength: response.ContentLength }
+        : {}),
       ...(response.Metadata ? { metadata: response.Metadata } : {}),
       ...(response.VersionId ? { versionId: response.VersionId } : {}),
     };
@@ -191,14 +200,18 @@ export class S3Service {
       }),
     );
     const objects = [
-      ...(listed.Versions ?? []).filter((entry) => entry.Key === key).map((entry) => ({
-        Key: key,
-        ...(entry.VersionId ? { VersionId: entry.VersionId } : {}),
-      })),
-      ...(listed.DeleteMarkers ?? []).filter((entry) => entry.Key === key).map((entry) => ({
-        Key: key,
-        ...(entry.VersionId ? { VersionId: entry.VersionId } : {}),
-      })),
+      ...(listed.Versions ?? [])
+        .filter((entry) => entry.Key === key)
+        .map((entry) => ({
+          Key: key,
+          ...(entry.VersionId ? { VersionId: entry.VersionId } : {}),
+        })),
+      ...(listed.DeleteMarkers ?? [])
+        .filter((entry) => entry.Key === key)
+        .map((entry) => ({
+          Key: key,
+          ...(entry.VersionId ? { VersionId: entry.VersionId } : {}),
+        })),
     ];
 
     if (objects.length === 0) {

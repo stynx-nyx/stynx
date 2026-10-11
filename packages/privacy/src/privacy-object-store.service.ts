@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
+import type { OnApplicationShutdown } from '@nestjs/common';
 import { StynxObjectStore } from '@stynx-nyx/storage';
 import { STYNX_PRIVACY_OPTIONS } from './tokens';
 import type { PrivacyObjectStore, StynxPrivacyModuleOptions } from './types';
 
 @Injectable()
-export class PrivacyObjectStoreService implements PrivacyObjectStore {
+export class PrivacyObjectStoreService implements PrivacyObjectStore, OnApplicationShutdown {
   private readonly objectStore: StynxObjectStore;
 
   constructor(
@@ -30,5 +31,9 @@ export class PrivacyObjectStoreService implements PrivacyObjectStore {
 
   async presignDownload(input: { key: string; expiresInSeconds: number }): Promise<string> {
     return this.objectStore.presignDownload(input);
+  }
+
+  onApplicationShutdown(): void {
+    this.objectStore.destroy();
   }
 }

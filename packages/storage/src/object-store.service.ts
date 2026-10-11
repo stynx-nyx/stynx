@@ -22,6 +22,7 @@ export interface PresignObjectDownloadInput {
 
 export class StynxObjectStore {
   private readonly client: S3Client;
+  private destroyed = false;
 
   constructor(private readonly options: ObjectStoreOptions) {
     this.client = new S3Client({
@@ -34,6 +35,7 @@ export class StynxObjectStore {
   }
 
   async putObject(input: PutObjectInput): Promise<void> {
+    this.assertActive();
     await this.client.send(
       new PutObjectCommand({
         Bucket: this.options.bucketName,
@@ -46,6 +48,7 @@ export class StynxObjectStore {
   }
 
   async presignDownload(input: PresignObjectDownloadInput): Promise<string> {
+    this.assertActive();
     return getSignedUrl(
       this.client,
       new GetObjectCommand({
@@ -54,5 +57,15 @@ export class StynxObjectStore {
       }),
       { expiresIn: input.expiresInSeconds },
     );
+  }
+
+  destroy(): void {
+    if (this.destroyed) return;
+    this.client.destroy();
+    this.destroyed = true;
+  }
+
+  private assertActive(): void {
+    if (this.destroyed) throw new Error('Object store has been destroyed');
   }
 }
