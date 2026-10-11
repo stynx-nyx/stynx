@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
 import {
   closeSync,
+  chmodSync,
   constants,
+  copyFileSync,
   fstatSync,
   fsyncSync,
   lstatSync,
@@ -71,6 +73,28 @@ const sourceFiles = Object.freeze({
   'lib/executor/constant_arrival_rate.go':
     '1ca1f44d6a4297be73a9ea9c641695b6b488040505b0f3654604c87ef513fb25',
 });
+const schedulerPath = 'lib/executor/constant_arrival_rate.go';
+const schedulerOriginal = Object.freeze({
+  path: schedulerPath,
+  mode: '100644',
+  gitBlob: '7b576e3a96f36a27c98b2930defe0ea86897692a',
+  bytes: 12739,
+  sha256: sourceFiles[schedulerPath],
+});
+const schedulerPatched = Object.freeze({
+  path: schedulerPath,
+  mode: '100644',
+  gitBlob: '737b7a144f13911763531aaee258217d0339bd54',
+  bytes: 12813,
+  sha256: '1a330754ac1cb274655da1b2962385759bfa9f1dcd2fc17aca4519ea1e929e54',
+});
+const patchPin = Object.freeze({
+  bytes: 328,
+  sha256: 'a6880fbffb99f0997cbe2b6b738ab89226ab5b590bb283af79124f151f5d920b',
+});
+const finiteSourceManifestSha256 =
+  'fe74dec40e08086dfe1cc168a0390b6dd6c274773786ac7ebbb85d1aec4057b3';
+const patchPath = fileURLToPath(new URL('../native/k6-finite-arrival.patch', import.meta.url));
 const repoRoot = realpathSync(fileURLToPath(new URL('../..', import.meta.url)));
 const textDecoder = new TextDecoder('utf-8', { fatal: true });
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -117,7 +141,7 @@ function sameFile(a, b) {
 
 // Stream from an O_NOFOLLOW descriptor with a fixed initial size; EOF and
 // identity rechecks reject growth/replacement without unbounded allocation.
-function fileIdentity(path, maximumBytes) {
+function fileIdentity(path, maximumBytes, capture = false) {
   const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
   try {
     const before = fstatSync(fd, { bigint: true });
@@ -127,12 +151,14 @@ function fileIdentity(path, maximumBytes) {
     const hash = createHash('sha256');
     const blob = createHash('sha1').update(`blob ${bytes}\0`);
     const buffer = Buffer.alloc(64 * 1024);
+    const body = capture ? Buffer.alloc(bytes) : null;
     let offset = 0;
     while (offset < bytes) {
       const count = readSync(fd, buffer, 0, Math.min(buffer.length, bytes - offset), offset);
       if (!count) refuse('file truncated while reading');
       hash.update(buffer.subarray(0, count));
       blob.update(buffer.subarray(0, count));
+      if (body) buffer.copy(body, offset, 0, count);
       offset += count;
     }
     if (readSync(fd, buffer, 0, 1, bytes) !== 0) refuse('file grew while reading');
@@ -145,6 +171,7 @@ function fileIdentity(path, maximumBytes) {
       gitBlob: blob.digest('hex'),
       bytes,
       sha256: hash.digest('hex'),
+      ...(capture ? { body } : {}),
     };
   } finally {
     closeSync(fd);
@@ -168,8 +195,7 @@ function receipt(kind, extra) {
   };
 }
 
-/** Read-only verification of complete unmodified upstream source and vendor. */
-export function verifyFiniteK6Source(sourceRoot) {
+function inspectSource(sourceRoot, variant = 'upstream') {
   realDirectory(sourceRoot);
   const rows = [];
   let entries = 0;
@@ -207,27 +233,134 @@ export function verifyFiniteK6Source(sourceRoot) {
   const vendor = rows.filter((row) => row.path.startsWith('vendor/'));
   const sourceManifestSha256 = sha256(manifestBytes(rows));
   const vendorManifestSha256 = sha256(manifestBytes(vendor));
+  let upstreamRows = rows;
+  if (variant === 'finite') {
+    const scheduler = rows.find((row) => row.path === schedulerPath);
+    if (JSON.stringify(scheduler) !== JSON.stringify(schedulerPatched))
+      refuse('finite scheduler file differs');
+    if (sourceManifestSha256 !== finiteSourceManifestSha256)
+      refuse('complete finite source manifest differs');
+    // Restore exactly the single known file in the observed manifest. Matching
+    // the complete original digest proves no test seam or other file entered it.
+    upstreamRows = rows.map((row) => (row.path === schedulerPath ? schedulerOriginal : row));
+  }
+  const upstreamManifestSha256 = sha256(manifestBytes(upstreamRows));
   if (
     rows.length !== finiteK6Origins.sourceFiles ||
-    totalBytes !== finiteK6Origins.sourceBytes ||
-    sourceManifestSha256 !== finiteK6Origins.sourceManifestSha256 ||
+    upstreamRows.reduce((bytes, row) => bytes + row.bytes, 0) !== finiteK6Origins.sourceBytes ||
+    upstreamManifestSha256 !== finiteK6Origins.sourceManifestSha256 ||
     vendor.length !== finiteK6Origins.vendorFiles ||
     vendor.reduce((bytes, row) => bytes + row.bytes, 0) !== finiteK6Origins.vendorBytes ||
     vendorManifestSha256 !== finiteK6Origins.vendorManifestSha256
   )
     refuse('complete source/vendor manifest differs');
   for (const [path, expected] of Object.entries(sourceFiles))
-    if (rows.find((row) => row.path === path)?.sha256 !== expected)
+    if (upstreamRows.find((row) => row.path === path)?.sha256 !== expected)
       refuse(`bound source differs: ${path}`);
-  return receipt('upstream-source-verification', {
+  return {
+    rows,
+    evidence: receipt(`${variant}-source-verification`, {
+      sourceFrozen: false,
+      atomicSnapshotClaimed: false,
+      sourceFiles: rows.length,
+      sourceBytes: totalBytes,
+      sourceManifestSha256,
+      upstreamManifestSha256,
+      vendorManifestSha256,
+      productionInstrumentationPresent: false,
+      changedSourceFiles: variant === 'finite' ? [schedulerPath] : [],
+      boundFiles: rows.filter((row) => Object.hasOwn(sourceFiles, row.path)),
+    }),
+  };
+}
+
+/** Read-only verification of complete unmodified upstream source and vendor. */
+export function verifyFiniteK6Source(sourceRoot) {
+  return inspectSource(sourceRoot).evidence;
+}
+
+/** Read-only verification of the complete source with only the exact guard. */
+export function verifyFiniteK6ProductionSource(sourceRoot) {
+  return inspectSource(sourceRoot, 'finite').evidence;
+}
+
+function fixedPatch() {
+  const patch = fileIdentity(patchPath, patchPin.bytes, true);
+  if (patch.bytes !== patchPin.bytes || patch.sha256 !== patchPin.sha256)
+    refuse('tracked patch identity differs');
+  const lines = patch.body.toString('utf8').split('\n');
+  if (
+    lines[0] !== `--- a/${schedulerPath}` ||
+    lines[1] !== `+++ b/${schedulerPath}` ||
+    lines[2] !== '@@ -328 +328,5 @@' ||
+    lines.pop() !== '' ||
+    lines.slice(3).some((line) => ![' ', '+', '-'].includes(line[0]))
+  )
+    refuse('unexpected single-file patch structure');
+  const hunk = lines.slice(3);
+  const before = hunk.filter((line) => [' ', '-'].includes(line[0])).map((line) => line.slice(1));
+  const after = hunk.filter((line) => [' ', '+'].includes(line[0])).map((line) => line.slice(1));
+  if (before.length !== 1 || after.length !== 5) refuse('patch hunk population differs');
+  return { body: patch.body, before: `${before.join('\n')}\n`, after: `${after.join('\n')}\n` };
+}
+
+/** Stage a separate private production source copy; never alter the original
+ * upstream tree or import Inspector instrumentation/test support. Does not build.
+ */
+export function stageFiniteK6Source(sourceRoot, outputRoot, platform) {
+  selectedArchives(platform);
+  const upstream = inspectSource(sourceRoot);
+  const patch = fixedPatch();
+  externalPath(outputRoot);
+  realDirectory(dirname(outputRoot));
+  if (outputRoot === sourceRoot || outputRoot.startsWith(`${sourceRoot}${sep}`))
+    refuse('output cannot be inside upstream source');
+  mkdirSync(outputRoot, { mode: 0o700 });
+  const productionRoot = join(outputRoot, 'source');
+  mkdirSync(productionRoot, { mode: 0o700 });
+  for (const row of upstream.rows) {
+    const destination = join(productionRoot, row.path);
+    mkdirSync(dirname(destination), { recursive: true, mode: 0o700 });
+    copyFileSync(join(sourceRoot, row.path), destination, constants.COPYFILE_EXCL);
+    chmodSync(destination, row.mode === '100755' ? 0o755 : 0o644);
+  }
+  // All copied bytes are verified before actuation; no Git metadata, extra
+  // source, test support or generated file is allowed by this complete manifest.
+  inspectSource(productionRoot);
+  const target = join(productionRoot, schedulerPath);
+  const original = fileIdentity(target, schedulerOriginal.bytes, true);
+  if (original.sha256 !== schedulerOriginal.sha256) refuse('patch input differs');
+  const text = original.body.toString('utf8');
+  if (text.split(patch.before).length !== 2) refuse('patch context is not unique');
+  const changed = Buffer.from(text.replace(patch.before, patch.after));
+  if (changed.length !== schedulerPatched.bytes || sha256(changed) !== schedulerPatched.sha256)
+    refuse('patch result differs');
+  const temporary = `${target}.finite-part`;
+  writeFileSync(temporary, changed, { flag: 'wx', mode: 0o644 });
+  renameSync(temporary, target);
+  const staged = inspectSource(productionRoot, 'finite');
+  // Check the caller's source again; it remains unpatched and independently usable.
+  inspectSource(sourceRoot);
+  writeFileSync(join(outputRoot, 'finite-arrival.patch'), patch.body, { flag: 'wx', mode: 0o600 });
+  writeFileSync(join(outputRoot, 'source-manifest.json'), manifestBytes(staged.rows), {
+    flag: 'wx',
+    mode: 0o600,
+  });
+  const result = receipt('finite-production-source-staging', {
+    platform,
+    productionDirectoryName: 'source',
+    patch: patchPin,
+    source: staged.evidence,
     sourceFrozen: false,
     atomicSnapshotClaimed: false,
-    sourceFiles: rows.length,
-    sourceBytes: totalBytes,
-    sourceManifestSha256,
-    vendorManifestSha256,
-    boundFiles: rows.filter((row) => Object.hasOwn(sourceFiles, row.path)),
+    productionInstrumentationPresent: false,
+    officialHistoricalProfilesModified: false,
   });
+  writeFileSync(join(outputRoot, 'staging.json'), `${JSON.stringify(result, null, 2)}\n`, {
+    flag: 'wx',
+    mode: 0o600,
+  });
+  return result;
 }
 
 /** Verify origin archives without unpacking or executing compiler/source. */
@@ -339,8 +472,8 @@ export function finiteK6BuildPlan(platform) {
     buildIdentifier: 'stynx-k6-0.49.0-finite-arrival-v1',
     upstreamVersionIsAncestryOnly: true,
     versionOutputDoesNotEstablishIdentity: true,
-    sourcePatchSha256: null,
-    patchedSourceManifestSha256: null,
+    sourcePatchSha256: patchPin.sha256,
+    patchedSourceManifestSha256: finiteSourceManifestSha256,
     executableSha256: null,
     installedToolchainManifestSha256: null,
     nativeProfileIdentity: null,
@@ -375,8 +508,7 @@ export function finiteK6BuildPlan(platform) {
     diagnosticOnly: platform === 'darwin-arm64-diagnostic',
     officialHistoricalProfilesModified: false,
     pending: [
-      'independent native scheduler test setup and red/green evidence',
-      'finite source patch, complete diff and independent source review',
+      'independent native scheduler green evidence and source review',
       'verified extraction and complete installed Go toolchain identity',
       'exact native Linux arm64 DEVAI profile and supported interface',
       'actual build identities and reproducibility observation',
@@ -386,12 +518,22 @@ export function finiteK6BuildPlan(platform) {
 }
 
 export function parseFiniteK6Arguments(args) {
-  if (args.length !== 4 || args[2] !== '--platform')
-    refuse('expected acquire|verify-archives|verify-source <absolute-path> --platform <platform>');
-  const [mode, path, , platform] = args;
-  if (!['acquire', 'verify-archives', 'verify-source'].includes(mode)) refuse('unknown mode');
+  const stage = args[0] === 'stage-source';
+  if (args.length !== (stage ? 5 : 4) || args[stage ? 3 : 2] !== '--platform')
+    refuse('expected mode <absolute-path> [new-output-for-stage-source] --platform <platform>');
+  const mode = args[0];
+  const path = args[1];
+  const output = stage ? args[2] : undefined;
+  const platform = args[stage ? 4 : 3];
+  if (
+    !['acquire', 'verify-archives', 'verify-source', 'verify-production', 'stage-source'].includes(
+      mode,
+    )
+  )
+    refuse('unknown mode');
   selectedArchives(platform);
   externalPath(path);
   if (!basename(path)) refuse('missing directory name');
-  return { mode, path, platform };
+  if (stage) externalPath(output);
+  return { mode, path, output, platform };
 }

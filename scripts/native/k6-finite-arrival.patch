@@ -1,0 +1,9 @@
+--- a/lib/executor/constant_arrival_rate.go
++++ b/lib/executor/constant_arrival_rate.go
+@@ -328 +328,5 @@
+-		t := notScaledTickerPeriod*time.Duration(gi) - time.Since(startTime)
++		dueOffset := notScaledTickerPeriod * time.Duration(gi)
++		if dueOffset >= duration {
++			return nil
++		}
++		t := dueOffset - time.Since(startTime)
