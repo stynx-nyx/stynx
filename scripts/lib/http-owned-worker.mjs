@@ -216,6 +216,10 @@ function launchOwned(handle, request, ipc) {
         !row.value.includes('\0'),
     ) ||
     !dataObject(request.environment) ||
+    (!ipc &&
+      ['NODE_CHANNEL_FD', 'NODE_CHANNEL_SERIALIZATION_MODE'].some((key) =>
+        Object.hasOwn(request.environment, key),
+      )) ||
     Object.entries(request.environment).some(
       ([key, value]) =>
         !key ||
