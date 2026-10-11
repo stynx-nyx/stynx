@@ -122,7 +122,7 @@ function writeFailureEvidence(state, name, bytes) {
       0o600,
     );
     const opened = fstatSync(descriptor);
-    writtenIdentity = opened;
+    writtenIdentity = fstatSync(descriptor, { bigint: true });
     if (
       !opened.isFile() ||
       opened.nlink !== 1 ||
@@ -198,7 +198,7 @@ function writeFailureEvidence(state, name, bytes) {
   const actual = evidence.read(evidence.directory, path);
   if (!isDeepStrictEqual(actual.row, row)) refuse('FAILURE_EVIDENCE_IDENTITY');
   const identity = lstatSync(path, { bigint: true });
-  if (identity.dev !== BigInt(writtenIdentity.dev) || identity.ino !== BigInt(writtenIdentity.ino))
+  if (identity.dev !== writtenIdentity.dev || identity.ino !== writtenIdentity.ino)
     refuse('FAILURE_EVIDENCE_IDENTITY');
   const again = evidence.read(evidence.directory, path);
   const after = lstatSync(path, { bigint: true });
