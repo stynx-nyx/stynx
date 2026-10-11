@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -13,8 +14,8 @@ import {
 } from '../../scripts/lib/demo-bookmark-storage.mjs';
 
 const require = createRequire(resolve(__dirname, '../../packages/data/package.json'));
-const { Client } = require('pg') as typeof import('pg');
-type PgClient = InstanceType<typeof Client>;
+type PgClient = Awaited<ReturnType<PostgresTestDatabase['connectAsAdmin']>>;
+const { Client } = require('pg') as { Client: new (connectionString: string) => PgClient };
 const repoRoot = resolve(__dirname, '../..');
 const bookmark = 'demo.demo__bookmark_bookmark';
 const tag = 'demo.demo__bookmark_bookmark_tag';
