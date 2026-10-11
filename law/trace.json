@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.12",
+  "version": "1.3.13",
   "meta": {
-    "last_updated": "2026-10-11T11:48:53.923Z",
+    "last_updated": "2026-10-11T12:27:58.952Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -73,7 +73,8 @@
       "Architect binding adds the actual fresh-build owner acceptance assertions, preserving all existing bindings and thresholds. These helper custody regressions do not certify application module/object custody, complete HTTP middleware, route reachability or performance readiness.",
       "STYNX 1.6.0 Architect rebinds the additive default privacy identity-port configuration refusal assertions (71 to 74), preserving every previous corpus entry, assertion and invariant/gate relationship. This diagnostic binding does not establish full coverage, provider compatibility, HTTP performance or release readiness.",
       "STYNX 1.6.0 Architect binds the actual HTTP worker startup and production parent IPC protocol/capture regressions, preserving every existing corpus projection, invariant relationship and gate obligation. These bounded identity, lifecycle, hostile-frame and serialization checks do not establish AppModule/object custody, complete middleware/routes, nominal HTTP performance, full audit or release readiness.",
-      "STYNX 1.6.0 Architect combined-candidate rebind preserves all 629 executable test bindings, 15 invariants and 13 gate mappings while refreshing the independently accepted published DEVAI 2.5.0 adoption and closed HTTP protocol assertion projections. All 106 original HTTP cases and 183 original assertion obligations remain mapped; 40 added cases strengthen the boundary. This binding does not establish native HTTP custody, endpoint performance, provider, publication or overall audit PASS."
+      "STYNX 1.6.0 Architect combined-candidate rebind preserves all 629 executable test bindings, 15 invariants and 13 gate mappings while refreshing the independently accepted published DEVAI 2.5.0 adoption and closed HTTP protocol assertion projections. All 106 original HTTP cases and 183 original assertion obligations remain mapped; 40 added cases strengthen the boundary. This binding does not establish native HTTP custody, endpoint performance, provider, publication or overall audit PASS.",
+      "STYNX 1.6.0 Architect rebind preserves all 629 executable test bindings and every prior invariant/gate relationship while binding the exact local S3 expiration-error assertion and four additive nested-runbook route/anchor assertions. Generated documentation and emulator fixtures do not establish production provider, HTTP custody, performance, overall audit or release readiness."
     ]
   },
   "invariants": [
@@ -6657,8 +6658,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
       "lifecycle": "supported",
-      "assertion_count": 13,
-      "assertion_digest_sha256": "8e34c49b4fef222ee9a3639e5347dd68c7ae9bd5b10cbb22b1e63fc040ad9de0"
+      "assertion_count": 17,
+      "assertion_digest_sha256": "a6d351ce1ab7227ba0ffa3c8e3cb2b5091648a096c93c678a1ee47c81e9995e1"
     },
     {
       "path": "test/scripts/k6-baseline-kernels.test.mjs",
@@ -6706,7 +6707,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 25,
-      "assertion_digest_sha256": "c89fbc9322d5f44eb510dec1f22a933149c9b5c1202f2029608b3ae5eba6d657"
+      "assertion_digest_sha256": "17e54f7fa3d4e99be537fdad84aeaeea7c8528e241f091ab9f202b6784318bac"
     },
     {
       "path": "test/scripts/coverage-population.test.mjs",
