@@ -8,7 +8,6 @@ import dnsPromises from 'node:dns/promises';
 import { createRequire, syncBuiltinESMExports } from 'node:module';
 import { isDeepStrictEqual, types } from 'node:util';
 import { EventEmitter } from 'node:events';
-import { httpOriginalScenarioProfile } from './http-original-scenarios.mjs';
 
 // Component observations never authenticate the supervisor's live build or
 // resources. The fixed worker/parent must bind this exact closure separately.
@@ -348,11 +347,17 @@ export function installOwnedReferenceNetworkScope(binding) {
 
 /** Separate source-owned storage capacity; this does not admit a workload. */
 export function installOwnedOriginalReferenceNetworkScope(binding, selector) {
-  if (arguments.length !== 2) throw new Error('Invalid fixed original network binding');
-  const profile = httpOriginalScenarioProfile(selector);
+  if (
+    arguments.length !== 2 ||
+    !plain(selector) ||
+    Object.keys(selector).sort().join(',') !== 'profileId,scenarioId' ||
+    !['auth', 'crud', 'upload', 'cascade-delete'].includes(selector.scenarioId) ||
+    !['local', 'hardening'].includes(selector.profileId)
+  )
+    throw new Error('Invalid fixed original network binding');
   return installFixedReferenceNetworkScope(binding, {
-    scenarioId: profile.scenarioId,
-    profileId: profile.profileId,
+    scenarioId: selector.scenarioId,
+    profileId: selector.profileId,
     maximumRetainedEffects: 100_000,
   });
 }
