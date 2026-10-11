@@ -4237,15 +4237,27 @@ export async function runFreshHttpQualificationBatch() {
           attemptId,
           state: 'RUNNING',
         });
+        const retainedAttempt = {
+          attemptId,
+          case: {
+            caseId: caseRow.caseId,
+            caseSha256: caseRow.caseSha256,
+            compositionId: caseRow.compositionId,
+          },
+          state: 'RUNNING',
+          archiveSha256: null,
+          acceptance: null,
+        };
+        // Retain the attempt before effects, including an archive refusal that
+        // never reaches CASE_SEALED. A failed publication cannot erase its ID.
+        attempts.push(retainedAttempt);
         const archive = await runParentQualificationAttempt(
           activeHandle,
           context,
           caseRow,
           attemptId,
         );
-        attempts.push({
-          attemptId,
-          case: archive.case,
+        Object.assign(retainedAttempt, {
           state: archive.state,
           archiveSha256: archive.archiveSha256,
           acceptance: archive.acceptance,
@@ -4326,6 +4338,9 @@ export async function runFreshHttpQualificationBatch() {
       trustedRestartCreditAvailable: false,
       readinessPromoting: false,
     });
+    for (const attempt of attempts)
+      if (attempt.state === 'RUNNING')
+        attempt.state = cleanupUnknown ? 'CLEANUP_UNKNOWN' : 'BLOCKED';
     journal('STOP', { state: cleanupUnknown ? 'CLEANUP_UNKNOWN' : 'BLOCKED' });
     const finalIndex = index('BLOCKED', 'BLOCKED');
     return {
