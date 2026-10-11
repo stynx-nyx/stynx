@@ -347,6 +347,8 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
     const restores: Array<() => void> = [];
     const socketClosures: Array<Promise<unknown>> = [];
     const actualSockets: Socket[] = [];
+    const actualAgents: Agent[] = [];
+    let actualRequestSocket: Socket | undefined;
     try {
       app = await NestFactory.create(DrainModule, { logger: false });
       const privacy =
@@ -371,22 +373,30 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
         };
         expect(typeof handler.httpHandlerConfigs).toBe('function');
         const agent = handler.httpHandlerConfigs().httpAgent;
-        const sockets = [...Object.values(agent.sockets), ...Object.values(agent.freeSockets)]
-          .flat()
-          .filter((socket): socket is Socket => socket !== undefined);
-        expect(sockets.length).toBeGreaterThan(0);
-        for (const socket of sockets) {
-          expect(socket).toBeInstanceOf(Socket);
-          expect(socket.destroyed).toBe(false);
-          actualSockets.push(socket);
-          socketClosures.push(
-            once(socket, 'close').then(() => {
-              events.push(`${name}-socket-closed`);
-            }),
-          );
-        }
+        actualAgents.push(agent);
+        const retainPool = () => {
+          const sockets = [...Object.values(agent.sockets), ...Object.values(agent.freeSockets)]
+            .flat()
+            .filter((socket): socket is Socket => socket !== undefined);
+          for (const socket of sockets) {
+            expect(socket).toBeInstanceOf(Socket);
+            if (actualSockets.includes(socket)) continue;
+            expect(socket.closed).toBe(false);
+            actualSockets.push(socket);
+            socketClosures.push(
+              once(socket, 'close').then(() => {
+                events.push(`${name}-socket-closed`);
+              }),
+            );
+          }
+          return sockets.length;
+        };
+        expect(retainPool()).toBeGreaterThan(0);
         const original = client.destroy;
         const destroy = vi.spyOn(client, 'destroy').mockImplementation(function (this: S3Client) {
+          // Reconcile every actual live socket at the disposal boundary,
+          // including any allocated by the draining request after warm-up.
+          retainPool();
           events.push(`${name}-destroy`);
           return original.call(this);
         });
@@ -423,6 +433,15 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
               resolve({ status: incoming.statusCode, body });
             });
           });
+          request.once('socket', (socket) => {
+            actualRequestSocket = socket;
+            expect(socket).toBeInstanceOf(Socket);
+            socketClosures.push(
+              once(socket, 'close').then(() => {
+                events.push('http-request-socket-closed');
+              }),
+            );
+          });
           request.once('error', reject);
         },
       );
@@ -455,6 +474,13 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
       for (const destroy of [...destroySpies, ...handlerSpies, ...agentSpies])
         expect(destroy).toHaveBeenCalledTimes(1);
       for (const socket of actualSockets) expect(socket.destroyed).toBe(true);
+      expect(actualRequestSocket).toBeInstanceOf(Socket);
+      expect(actualRequestSocket?.destroyed).toBe(true);
+      for (const agent of actualAgents) {
+        expect(Object.values(agent.sockets).flat()).toHaveLength(0);
+        expect(Object.values(agent.freeSockets).flat()).toHaveLength(0);
+        expect(Object.values(agent.requests).flat()).toHaveLength(0);
+      }
       expect(ownedPrivacyClient(privacy)).toBe(privacyClient);
       expect(Reflect.get(storage, 'client')).toBe(storageClient);
       await expect(
@@ -471,6 +497,8 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
           scope: 'actual-owned-local-S3-Nest-drain-and-disposal',
           events,
           actualSocketCount: actualSockets.length,
+          requestSocketClosed: actualRequestSocket?.destroyed === true,
+          finalOwnedAgentPoolsEmpty: true,
           actualListener: address,
           bothActualClientsDestroyed: true,
           localProviderOnly: true,
