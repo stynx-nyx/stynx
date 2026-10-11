@@ -31,7 +31,13 @@ const fixedRefusal = 'HTTP runtime bootstrap worker refused\n';
 function fixture(root, name) {
   const checkoutRoot = join(root, name);
   mkdirSync(join(checkoutRoot, 'scripts/lib'), { recursive: true });
-  for (const file of ['http-runtime-worker.mjs', 'http-module-custody.mjs'])
+  const controlFiles = [
+    'http-runtime-worker.mjs',
+    'http-module-custody.mjs',
+    'http-runtime-bindings.mjs',
+    'http-runtime-census.mjs',
+  ];
+  for (const file of controlFiles)
     copyFileSync(join(repository, 'scripts/lib', file), join(checkoutRoot, 'scripts/lib', file));
   const member = join(checkoutRoot, 'member.mjs');
   writeFileSync(member, 'export const diagnosticOnly = true;\n');
@@ -50,11 +56,7 @@ function fixture(root, name) {
   });
   assert.equal(probe.status, 0);
   const environment = JSON.parse(probe.stdout);
-  const controlPaths = [
-    'scripts/lib/http-runtime-worker.mjs',
-    'scripts/lib/http-module-custody.mjs',
-    'member.mjs',
-  ];
+  const controlPaths = controlFiles.map((file) => `scripts/lib/${file}`);
   const controls = controlPaths.map((path) => {
     const actual = join(checkoutRoot, path);
     const bytes = readFileSync(actual);
@@ -63,6 +65,7 @@ function fixture(root, name) {
       permissions: lstatSync(actual).mode & 0o7777,
       sha256: hash(bytes),
       byteLength: bytes.length,
+      blob: createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex'),
     };
   });
   const job = {
@@ -83,6 +86,7 @@ function fixture(root, name) {
       Object.entries(environment).map(([name, value]) => [name, hash(value)]),
     ),
     controls,
+    resolutionAnchors: [],
     receipt: {
       schemaVersion: 1,
       nodeVersion: process.versions.node,
@@ -96,6 +100,71 @@ function fixture(root, name) {
       ],
     },
   };
+  // Two source-bound resolution bases, never evaluated receipt modules. These
+  // copies support only standalone startup/refusal witnesses, not a live handle.
+  const anchorRules = [
+    [
+      'reference/api/package.json',
+      'scripts/lib/http-module-custody.mjs',
+      "createRequire(new URL('../../reference/api/package.json', import.meta.url))('reflect-metadata')",
+      ['reflect-metadata'],
+    ],
+    [
+      'packages/flow/package.json',
+      'scripts/lib/http-runtime-census.mjs',
+      "createRequire(new URL('../../packages/flow/package.json', import.meta.url))",
+      [
+        '@nestjs/core',
+        '@nestjs/core/router/router-explorer',
+        '@nestjs/core/adapters/http-adapter',
+        '@nestjs/common',
+        '@nestjs/common/constants',
+        '@stynx-nyx/auth',
+        '@nestjs/platform-express',
+      ],
+    ],
+  ];
+  const physical = (relative) => {
+    const actual = join(checkoutRoot, relative),
+      bytes = readFileSync(actual),
+      stat = lstatSync(actual);
+    return {
+      path: relative,
+      url: pathToFileURL(actual).href,
+      sha256: hash(bytes),
+      byteLength: bytes.length,
+      permissions: stat.mode & 0o7777,
+      device: stat.dev,
+      inode: stat.ino,
+      blob: createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex'),
+      mode: '100644',
+    };
+  };
+  for (const [manifest, caller, literal, requests] of anchorRules) {
+    mkdirSync(dirname(join(checkoutRoot, manifest)), { recursive: true });
+    copyFileSync(join(repository, manifest), join(checkoutRoot, manifest));
+    const source = readFileSync(join(checkoutRoot, caller), 'utf8'),
+      start = source.indexOf(literal);
+    assert.equal(start >= 0 && source.indexOf(literal, start + 1) === -1, true);
+    job.resolutionAnchors.push({
+      classification: 'NON_EVALUATED_RESOLUTION_ANCHOR',
+      candidateCommit,
+      tree: job.tree,
+      nonce: job.nonce,
+      manifest: physical(manifest),
+      caller: {
+        ...physical(caller),
+        callsite: {
+          kind: 'DECLARED_REVIEWED_CALLSITE',
+          start,
+          end: start + literal.length,
+          literal,
+        },
+      },
+      requests,
+      conditions: ['require', 'node', 'node-addons', 'module-sync'],
+    });
+  }
   return {
     checkoutRoot,
     descriptorPath,
@@ -186,7 +255,7 @@ test('actual worker startup enforces descriptor, process and control custody', a
         nonce: f.job.nonce,
         candidateCommit,
         pid: result.pid,
-        result: { mode: 'bootstrap-module-only' },
+        result: { mode: 'bootstrap-module-only', resolutionAnchors: f.job.resolutionAnchors },
       });
     },
   );
@@ -296,20 +365,73 @@ test('actual worker startup enforces descriptor, process and control custody', a
     [
       'control bytes drift',
       (f) => {
-        writeFileSync(join(f.checkoutRoot, 'member.mjs'), 'export const changed = true;\n');
+        writeFileSync(
+          join(f.checkoutRoot, 'scripts/lib/http-runtime-bindings.mjs'),
+          'export const changed = true;\n',
+        );
       },
     ],
     [
       'control permissions drift',
       (f) => {
-        chmodSync(join(f.checkoutRoot, 'member.mjs'), 0o700);
+        chmodSync(join(f.checkoutRoot, 'scripts/lib/http-runtime-bindings.mjs'), 0o700);
       },
     ],
     [
       'linked control path',
       (f) => {
-        symlinkSync(join(f.checkoutRoot, 'member.mjs'), join(f.checkoutRoot, 'linked.mjs'));
+        symlinkSync(
+          join(f.checkoutRoot, 'scripts/lib/http-runtime-bindings.mjs'),
+          join(f.checkoutRoot, 'linked.mjs'),
+        );
         f.job.controls[2].path = 'linked.mjs';
+      },
+    ],
+    [
+      'missing resolution anchor pair',
+      (f) => {
+        delete f.job.resolutionAnchors;
+      },
+    ],
+    [
+      'incomplete resolution anchor population',
+      (f) => {
+        f.job.resolutionAnchors.pop();
+      },
+    ],
+    [
+      'resolution anchor manifest bytes drift',
+      (f) => {
+        writeFileSync(join(f.checkoutRoot, 'reference/api/package.json'), '{}\n');
+      },
+    ],
+    [
+      'resolution anchor caller span drift',
+      (f) => {
+        f.job.resolutionAnchors[0].caller.callsite.start++;
+      },
+    ],
+    [
+      'resolution anchor request drift',
+      (f) => {
+        f.job.resolutionAnchors[0].requests = ['unreviewed'];
+      },
+    ],
+    [
+      'resolution anchor condition drift',
+      (f) => {
+        f.job.resolutionAnchors[0].conditions = ['import'];
+      },
+    ],
+    [
+      'resolution anchor claims evaluated manifest',
+      (f) => {
+        const anchor = f.job.resolutionAnchors[0];
+        f.job.receipt.files.push({
+          url: anchor.manifest.url,
+          sha256: anchor.manifest.sha256,
+          moduleKind: 'json',
+        });
       },
     ],
     [

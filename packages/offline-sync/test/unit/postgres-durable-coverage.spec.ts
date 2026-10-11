@@ -31,7 +31,7 @@ const reservation = {
   start_number: '100',
   end_number: '101',
   next_number: '100',
-  valid_until: new Date('2026-09-30T00:00:00Z'),
+  valid_until: '2026-09-30T00:00:00Z',
   status: 'reserved' as const,
   expired: false,
 };
@@ -394,12 +394,12 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
               number: '100',
               status: 'applied',
               server_entity_id: 'server-100',
-              finalized_at: '2026-09-28T00:00:00Z',
+              finalized_at: '2026-09-28T00:00:00.000000Z',
             },
           ],
         },
       );
-      await expect(pgConsumption(database, scope, reservation.id)).resolves.toMatchObject({
+      await expect(pgConsumption(database, scope, reservation.id, now)).resolves.toMatchObject({
         status,
         consumption: [
           {
@@ -436,12 +436,10 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     });
     await expect(
       pgConsumption(
-        databaseWith(
-          { rows: [{ ...reservation, status: 'reserved', expired: true }] },
-          { rows: [] },
-        ).database,
+        databaseWith({ rows: [{ ...reservation, status: 'reserved' }] }, { rows: [] }).database,
         scope,
         reservation.id,
+        reservation.valid_until,
       ),
     ).resolves.toMatchObject({
       consumption: [
@@ -476,7 +474,12 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
       {
         rows: [
           { number: '100', status: 'claimed-locally', server_entity_id: null, finalized_at: null },
-          { number: '101', status: 'applied', server_entity_id: 'server-101', finalized_at: now },
+          {
+            number: '101',
+            status: 'applied',
+            server_entity_id: 'server-101',
+            finalized_at: '2026-09-28T00:00:00.000000Z',
+          },
         ],
       },
     );
