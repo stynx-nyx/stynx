@@ -168,7 +168,11 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
     ).rejects.toMatchObject({ name: 'NoSuchBucket', $metadata: { httpStatusCode: 404 } });
     await expect(
       store.presignDownload({ key: keyA, expiresInSeconds: 604_801 }),
-    ).rejects.toBeDefined();
+    ).rejects.toMatchObject({
+      name: 'Error',
+      message:
+        'Signature version 4 presigned URLs must have an expiration date less than one week in the future',
+    });
     const roster = await admin!.send(new ListObjectsV2Command({ Bucket: bucketName }));
     expect(roster.Contents?.map((object) => object.Key).sort()).toEqual([keyA, keyB].sort());
   });

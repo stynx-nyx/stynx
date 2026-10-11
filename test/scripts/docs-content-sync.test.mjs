@@ -141,3 +141,53 @@ test('content sync preserves an unresolved anchor so strict checking can refuse 
     owned.cleanup();
   }
 });
+
+test('nested runbook contract links retain exact routes and anchors under strict checking', async () => {
+  const owned = fixture();
+  try {
+    const runbook = join(owned.root, 'docs/meta/ops/runbooks/fixture.md');
+    const contract = join(owned.root, 'docs/framework/contracts/session.md');
+    mkdirSync(dirname(runbook), { recursive: true });
+    mkdirSync(dirname(contract), { recursive: true });
+    writeFileSync(join(dirname(contract), 'README.md'), '# Contracts\n\n## Authority\n');
+    writeFileSync(contract, '# Session\n\n## Active sessions\n');
+    writeFileSync(
+      runbook,
+      '# Fixture runbook\n\n[Index](../../../framework/contracts/README.md)\n\n[Index authority](../../../framework/contracts/README.md#authority)\n\n[Session](../../../framework/contracts/session.md)\n\n[Active sessions](../../../framework/contracts/session.md#active-sessions)\n',
+    );
+    function checkRunbookLinks() {
+      const content = readFileSync(join(owned.output, 'ops/runbooks/fixture.md'), 'utf8');
+      const collectedLinks = {
+        '/docs/ops/runbooks/fixture': {
+          links: [...content.matchAll(/\[[^\]]+\]\(([^)]+)\)/gu)].map((match) => match[1]),
+          anchors: ['fixture-runbook'],
+        },
+        '/docs/framework/contracts': { links: [], anchors: ['contracts', 'authority'] },
+      };
+      if (existsSync(join(owned.output, 'framework/contracts/session.md'))) {
+        collectedLinks['/docs/framework/contracts/session'] = {
+          links: [],
+          anchors: ['session', 'active-sessions'],
+        };
+      }
+      return handleBrokenLinks({
+        collectedLinks,
+        routes: Object.keys(collectedLinks).map((path) => ({ path, exact: true })),
+        onBrokenLinks: 'throw',
+        onBrokenAnchors: 'throw',
+      });
+    }
+    owned.run();
+    assert.equal(
+      readFileSync(join(owned.output, 'ops/runbooks/fixture.md'), 'utf8'),
+      '# Fixture runbook\n\n[Index](/docs/framework/contracts)\n\n[Index authority](/docs/framework/contracts#authority)\n\n[Session](/docs/framework/contracts/session)\n\n[Active sessions](/docs/framework/contracts/session#active-sessions)\n',
+    );
+    await assert.doesNotReject(checkRunbookLinks());
+    rmSync(contract);
+    owned.run();
+    assert.equal(existsSync(join(owned.output, 'framework/contracts/session.md')), false);
+    await assert.rejects(checkRunbookLinks(), /Docusaurus found broken links/u);
+  } finally {
+    owned.cleanup();
+  }
+});
