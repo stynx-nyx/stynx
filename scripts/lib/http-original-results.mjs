@@ -198,6 +198,42 @@ export async function reconcileHttpOriginalResults(root, options) {
     'baseline',
     'reference',
   ]);
+  return reconcileOriginalResults(root, options, false);
+}
+
+/** Numeric bootstrap reconstruction only. No predecessor, seed designation,
+ * native lifetime or host capability is inferred from these structural inputs.
+ */
+export async function reconcileHttpOriginalBootstrapResults(root, options) {
+  if (arguments.length !== 2 || typeof root !== 'string') refuse('closed arguments');
+  closed(options, ['scenarioId', 'profileId', 'summaryPath', 'metricStreamPath', 'reference']);
+  if (options.profileId !== 'local') refuse('bootstrap requires the unchanged local profile');
+  return reconcileOriginalResults(root, options, true);
+}
+
+function referenceFloors(reference, required) {
+  const own = (value, key) => {
+    if (!plain(value)) refuse('bootstrap reference own-data object');
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor?.enumerable || !Object.hasOwn(descriptor, 'value'))
+      refuse('bootstrap reference own-data field');
+    return descriptor.value;
+  };
+  const metrics = own(reference, 'metrics');
+  return Object.keys(required.components).map((metric) => {
+    const tails = own(metrics, metric);
+    const values = Object.fromEntries(
+      ['p(95)', 'p(99)'].map((statistic) => {
+        const value = finite(own(tails, statistic));
+        if (value < 0) refuse('bootstrap reference floor domain');
+        return [statistic, value];
+      }),
+    );
+    return { metric, values };
+  });
+}
+
+async function reconcileOriginalResults(root, options, bootstrap) {
   const { scenarioId, profileId, summaryPath, metricStreamPath, baseline, reference } = options;
   if (
     typeof scenarioId !== 'string' ||
@@ -408,12 +444,20 @@ export async function reconcileHttpOriginalResults(root, options) {
     if (native.ok !== ok) refuse('native threshold/reconstructed outcome disagreement');
     return { metric, statistic, expression, value, maximum, ok };
   });
-  const comparison = compareRequiredMetricTails({
-    current: summary,
-    baseline,
-    reference,
-    requiredMetrics: Object.keys(required.components),
-  });
+  // A bootstrap has no predecessor. The committed floors are required data,
+  // never a fabricated prior run or a new regression-to-reference threshold.
+  const comparison = bootstrap
+    ? {
+        verdict: 'NOT_EVALUABLE',
+        reason: 'PROSPECTIVE_LOCAL_BOOTSTRAP_HAS_NO_PREDECESSOR',
+        referenceFloors: referenceFloors(reference, required),
+      }
+    : compareRequiredMetricTails({
+        current: summary,
+        baseline,
+        reference,
+        requiredMetrics: Object.keys(required.components),
+      });
   const completed = natural(reconstructed.iterations?.values?.count);
   const dropped =
     reconstructed.dropped_iterations === undefined
@@ -427,11 +471,14 @@ export async function reconcileHttpOriginalResults(root, options) {
     failures.push('reported-run-duration-below-original-window');
   if (hardGates.some((row) => !row.ok) || nativeThresholds.some((row) => !row.ok))
     failures.push('native-threshold-failure');
-  if (comparison.degradations.length) failures.push('required-component-tail-regression');
+  if (!bootstrap && comparison.degradations.length)
+    failures.push('required-component-tail-regression');
   if ([...checks.values()].some((row) => row.fails > 0)) failures.push('native-check-failure');
   return {
     schemaVersion: '1.0.0',
-    kind: 'http-original-native-results-component',
+    kind: bootstrap
+      ? 'http-original-local-bootstrap-native-results-component'
+      : 'http-original-native-results-component',
     scenarioId,
     profileId,
     scenarioName: required.name,
@@ -466,7 +513,7 @@ export async function reconcileHttpOriginalResults(root, options) {
       wholeSchedulerWindowVerdict: 'UNVERIFIED_REPORTED_TEST_DURATION_IS_NOT_SCHEDULER_CUSTODY',
       runtimeErrorVerdict: 'UNVERIFIED_REQUIRES_OWNED_PROCESS_LOG_AND_EXIT',
     },
-    verdict: failures.length ? 'FAIL' : 'UNVERIFIED',
+    verdict: failures.length ? 'FAIL' : bootstrap ? 'UNKNOWN' : 'UNVERIFIED',
     streamReconstructionComplete: true,
     nativeSummaryReconciled: true,
     fullExecutionComplete: false,
