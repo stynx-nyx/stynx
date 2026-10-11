@@ -4949,7 +4949,10 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
     'test/unit/privacy.service.spec.ts',
     'test/wiring/privacy-http.wiring-spec.ts',
   ].sort();
-  const expectedIntegration = ['test/integration/privacy.module.spec.ts'];
+  const expectedIntegration = [
+    'test/integration/privacy.module.spec.ts',
+    'test/integration/privacy-object-store.provider.spec.ts',
+  ].sort();
   const expectedAll = [...expectedOrdinary, ...expectedIntegration].sort();
   const ordinary = resolvedPrivacyPopulation('vitest.config.ts');
   const integration = resolvedPrivacyPopulation('vitest.int.config.ts');
@@ -4957,9 +4960,9 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
 
   assert.equal(ordinary.length, 4);
   assert.deepEqual(ordinary, expectedOrdinary);
-  assert.equal(integration.length, 1);
+  assert.equal(integration.length, 2);
   assert.deepEqual(integration, expectedIntegration);
-  assert.equal(coverage.length, 5);
+  assert.equal(coverage.length, 6);
   assert.deepEqual(coverage, expectedAll);
   assert.deepEqual(
     ordinary.filter((path) => integration.includes(path)),
