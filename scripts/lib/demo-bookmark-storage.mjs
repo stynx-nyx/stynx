@@ -11,7 +11,7 @@ const sources = Object.freeze([
   }),
   Object.freeze({
     path: 'domain/demo-bookmark/db/0002_tenant_rls.sql',
-    sha256: 'bce1429c11f69bfd07a9f5f6d436e0474e35c6eb227d835cf7bdc883b47ccab8',
+    sha256: '4d9f356d3d406c14a89b2935535da6a300c794533a9ad68726f4d6f176afaf34',
   }),
 ]);
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -224,6 +224,11 @@ export async function verifyDemoBookmarkStorage(queryable) {
     ),
     relations.rows,
   );
+  const routines = await queryable.query(`select p.oid::regprocedure::text as routine,
+    p.prokind,p.prosecdef,pg_catalog.pg_get_userbyid(p.proowner) as owner
+    from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='demo' order by p.oid`);
+  check('closed-routine-population', routines.rows.length === 0, routines.rows);
   const inheritance = await queryable.query(
     `select inhrelid::regclass::text as child,
     inhparent::regclass::text as parent from pg_catalog.pg_inherits
@@ -529,6 +534,7 @@ export async function installDemoBookmarkStorage(queryable) {
         'supported-postgresql',
         'fixed-roles',
         'restricted-role-membership',
+        'closed-routine-population',
         'no-table-inheritance',
         'canonical-pii-registration',
         'set-role-schema-grants',
