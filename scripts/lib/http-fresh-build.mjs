@@ -1464,8 +1464,9 @@ export async function prepareFreshHttpBuild(request) {
     recheck(state);
     return handle;
   } catch (error) {
-    // Failed local preparation owns no reusable handle. Keep only sanitized
-    // diagnostics outside the checkout; never clean a caller's source tree.
+    // Failed preparation grants no reusable handle. Preserve the complete
+    // private sandbox: metadata and command-close receipts cannot prove full
+    // raw custody or descendant absence, and must not authorize pruning it.
     failedBuilds.set(error, state);
     writeFileSync(
       resolve(sandbox, 'failure.json'),
@@ -1482,9 +1483,6 @@ export async function prepareFreshHttpBuild(request) {
       ),
       { mode: 0o600 },
     );
-    await rm(state.checkout, { recursive: true, force: true });
-    await rm(resolve(sandbox, 'store'), { recursive: true, force: true });
-    await rm(resolve(sandbox, 'toolchain'), { recursive: true, force: true });
     error.diagnosticDirectory = sandbox;
     throw error;
   }
@@ -3901,10 +3899,11 @@ async function cleanupQualificationAttempt(state) {
       failures.push(error.code ?? 'HTTP_QUALIFICATION_CLEANUP_UNKNOWN');
     }
   }
-  let fixtureCleanup = null;
+  let fixtureCleanup = state.qualificationFixtureCleanup ?? null;
   if (state.referenceFixture) {
     try {
       fixtureCleanup = await closeOwnedReferenceFixture(state.referenceFixture.handle);
+      state.qualificationFixtureCleanup = fixtureCleanup;
       if (fixtureCleanup?.complete === true) state.referenceFixture = undefined;
       else failures.push('HTTP_QUALIFICATION_FIXTURE_CLEANUP_UNKNOWN');
     } catch (error) {
@@ -3929,6 +3928,102 @@ async function cleanupQualificationAttempt(state) {
   };
 }
 
+function retainActualCleanupObservation(state, cleanup) {
+  const attempt = state.qualificationAttempt ?? state.batchBuildRetention;
+  const prefix = state.qualificationAttempt
+    ? `attempts/${attempt.attemptId}`
+    : `roots/${state.rootId}`;
+  const observations = (attempt.cleanupObservations ??= []);
+  const semanticSha256 = digest(serializeHttpRuntimePlainJson(cleanup));
+  if (observations.at(-1)?.semanticSha256 !== semanticSha256) {
+    const prior = observations.at(-1);
+    const workerCapture =
+      !prior && attempt.workerCleanupPath
+        ? readHttpQualificationArtifact(state.sandbox, attempt.workerCleanupPath)
+        : null;
+    const bytes = Buffer.from(
+      serializeHttpRuntimePlainJson({
+        schemaVersion: 1,
+        scope: 'actual-parent-owned-cleanup-observation',
+        sequence: observations.length,
+        previousObservationSha256: prior ? digest(prior.bytes) : null,
+        cleanup,
+        priorWorkerCapture: workerCapture
+          ? { ...workerCapture.row, bytesBase64: workerCapture.bytes.toString('base64') }
+          : null,
+        readinessPromoting: false,
+      }),
+    );
+    observations.push({ semanticSha256, bytes, ownedResources: cleanup.ownedResources });
+  }
+  // Retain every UNKNOWN body. Later actual absence appends a linked successor;
+  // it never rewrites the archive's earlier cleanup observation or grants credit.
+  for (const [sequence, observation] of observations.entries())
+    observation.row = publishHttpQualificationBytes(
+      attempt.store,
+      `${prefix}/cleanup/${String(sequence).padStart(10, '0')}.json`,
+      observation.bytes,
+    );
+  return observations.at(-1);
+}
+
+function retainActualBuildSupport(state) {
+  const attempt = state.qualificationAttempt;
+  const commandArtifacts = [];
+  for (const [index, command] of state.commands.entries()) {
+    for (const stream of ['stdout', 'stderr']) {
+      const expected = command[stream];
+      const acquired = readHttpQualificationArtifact(
+        state.sandbox,
+        resolve(state.sandbox, expected.path),
+      );
+      if (
+        acquired.row.sha256 !== expected.sha256 ||
+        acquired.row.byteLength !== expected.byteLength
+      )
+        refuse('Actual build command support differs from its retained producer identity');
+      const row = publishHttpQualificationBytes(
+        attempt.store,
+        `attempts/${attempt.attemptId}/build-support/commands/${index}-${stream}`,
+        acquired.bytes,
+      );
+      commandArtifacts.push({ commandIndex: index, stream, ...row });
+    }
+  }
+  let snapshot = null;
+  const snapshotPath = attempt.paths.get('build-custody');
+  if (snapshotPath) {
+    const acquired = readHttpQualificationArtifact(state.sandbox, snapshotPath);
+    snapshot = publishHttpQualificationBytes(
+      attempt.store,
+      `attempts/${attempt.attemptId}/build-support/snapshot.json`,
+      acquired.bytes,
+    );
+  }
+  const row = publishHttpQualificationBytes(
+    attempt.store,
+    `attempts/${attempt.attemptId}/build-support/index.json`,
+    Buffer.from(
+      serializeHttpRuntimePlainJson({
+        schemaVersion: 1,
+        scope: 'actual-parent-owned-build-support',
+        candidateCommit: state.candidateCommit,
+        tree: state.inputs.tree,
+        snapshot,
+        commandArtifacts,
+        remainingRawSupport: 'retained-private-sandbox-not-copied',
+        retainedSandbox: state.sandbox,
+        fullRawClosureCopied: false,
+        readinessPromoting: false,
+      }),
+    ),
+  );
+  // Installed dependencies, toolchain and all raw compiler/source bodies remain
+  // available in this private sandbox. No metadata hash authorizes its deletion.
+  attempt.supportClosureComplete = false;
+  return row;
+}
+
 /** Archive evidence from the actual private parent, including refused handles.
  * There are no caller rows, destinations, cleanup claims or acceptance fields.
  * Successful durable publication alone clears the private deletion interlock.
@@ -3938,26 +4033,15 @@ export async function archiveFreshHttpQualificationAttempt(handle) {
   const state = handles.get(handle);
   const attempt = state?.qualificationAttempt;
   if (!state || !attempt) refuse('No actual parent-owned attempt exists');
-  if (attempt.sealed) return structuredClone(attempt.archive);
   if (state.runtimeActive || state.fixturePreparing || state.fixtureChecking)
     refuse('Attempt archival cannot race an active operation');
-  if (attempt.archiving) refuse('Attempt archival is already active');
+  if (attempt.archiving || state.cleanupPending)
+    refuse('Attempt archival or cleanup is already active');
   attempt.archiving = true;
   try {
     const cleanup = await cleanupQualificationAttempt(state);
-    // Preserve exact earlier worker cleanup bytes alongside the parent's final
-    // actual resource reaping; no stale body's claim overrides live ownership.
-    if (!attempt.paths.has('cleanup')) {
-      const workerCapture = attempt.workerCleanupPath
-        ? readHttpQualificationArtifact(state.sandbox, attempt.workerCleanupPath)
-        : null;
-      retainQualificationJson(state, 'cleanup', {
-        ...cleanup,
-        priorWorkerCapture: workerCapture
-          ? { ...workerCapture.row, bytesBase64: workerCapture.bytes.toString('base64') }
-          : null,
-      });
-    }
+    retainActualCleanupObservation(state, cleanup);
+    const buildSupport = retainActualBuildSupport(state);
     if (!attempt.paths.has('parent-report'))
       retainQualificationJson(state, 'parent-report', {
         candidateCommit: state.candidateCommit,
@@ -3970,6 +4054,14 @@ export async function archiveFreshHttpQualificationAttempt(handle) {
     const artifacts = [];
     const sourcePaths = new Set();
     for (const role of attempt.roles) {
+      if (role === 'cleanup') {
+        artifacts.push({ role, ...attempt.cleanupObservations[0].row });
+        continue;
+      }
+      if (role === 'build-custody') {
+        artifacts.push({ role, ...buildSupport });
+        continue;
+      }
       const path = attempt.paths.get(role);
       if (!path) continue;
       if (sourcePaths.has(path)) refuse('Attempt artifact paths are duplicated');
@@ -3990,7 +4082,7 @@ export async function archiveFreshHttpQualificationAttempt(handle) {
       artifacts.push({ role, ...row });
     }
     const terminal =
-      cleanup.ownedResources !== 'ABSENT'
+      attempt.cleanupObservations[0].ownedResources !== 'ABSENT'
         ? 'CLEANUP_UNKNOWN'
         : attempt.failure
           ? 'FAILED'
@@ -4006,7 +4098,7 @@ export async function archiveFreshHttpQualificationAttempt(handle) {
       case: attempt.case,
       state: terminal,
       artifacts,
-      cleanupState: cleanup.ownedResources,
+      cleanupState: attempt.cleanupObservations[0].ownedResources,
       acceptance: null,
       readinessPromoting: false,
     };
@@ -4015,7 +4107,11 @@ export async function archiveFreshHttpQualificationAttempt(handle) {
       `attempts/${attempt.attemptId}/archive.json`,
       Buffer.from(serializeHttpRuntimePlainJson(archive)),
     );
-    attempt.archive = { ...archive, archiveSha256: row.sha256 };
+    attempt.archive = {
+      ...archive,
+      archiveSha256: row.sha256,
+      latestActualCleanupArtifact: attempt.cleanupObservations.at(-1).row,
+    };
     attempt.sealed = true;
     return structuredClone(attempt.archive);
   } finally {
@@ -4221,6 +4317,9 @@ export async function runFreshHttpQualificationBatch() {
         candidateCommit,
         rootId: compositionId,
       });
+      // Build-level custody exists before roster selection or case allocation.
+      // A later pre-case refusal must not prune uncopied build diagnostics.
+      handles.get(activeHandle).batchBuildRetention = { store, batchId, binding };
       const retained = snapshotFreshHttpQualificationRoster(activeHandle);
       if (
         retained.candidateCommit !== candidateCommit ||
@@ -4335,6 +4434,8 @@ export async function runFreshHttpQualificationBatch() {
       unfilled: error.unfilled ?? [],
       admittedRosterAvailable: Boolean(roster),
       buildStarted,
+      retainedBuildSandbox: failedBuild?.sandbox ?? handles.get(activeHandle)?.sandbox ?? null,
+      rawBuildSupportFullyCopied: false,
       trustedRestartCreditAvailable: false,
       readinessPromoting: false,
     });
@@ -4363,7 +4464,12 @@ export async function runFreshHttpQualificationBatch() {
 export async function closeFreshHttpBuild(handle) {
   const state = handles.get(handle);
   if (!state) refuse('Unknown fresh build handle');
-  if (state.runtimeActive || state.fixturePreparing || state.fixtureChecking)
+  if (
+    state.runtimeActive ||
+    state.fixturePreparing ||
+    state.fixtureChecking ||
+    state.qualificationAttempt?.archiving
+  )
     refuse('Cannot close a build while its runtime or fixture operation is active');
   if (state.cleanupComplete) return;
   if (state.cleanupPending) return state.cleanupPending;
@@ -4373,9 +4479,15 @@ export async function closeFreshHttpBuild(handle) {
     // This check precedes every fixture/sandbox deletion and is resumable even
     // for a closed/refused build. Unknown child/group state preserves evidence.
     const cleanup = await cleanupQualificationAttempt(state);
+    if (state.qualificationAttempt || state.batchBuildRetention)
+      retainActualCleanupObservation(state, cleanup);
     if (cleanup.ownedResources !== 'ABSENT') refuse('Actual owned build cleanup remains unknown');
     if (state.qualificationAttempt && !state.qualificationAttempt.sealed)
       refuse('Actual attempt archive remains unsealed; owned cleanup ran but sandbox is retained');
+    if (state.qualificationAttempt && state.qualificationAttempt.supportClosureComplete !== true)
+      refuse('Complete raw build support was not copied; the actual private sandbox is retained');
+    if (state.batchBuildRetention)
+      refuse('Batch build raw custody remains in the retained private sandbox');
     await rm(state.sandbox, { recursive: true, force: true });
     state.cleanupComplete = true;
   })();
