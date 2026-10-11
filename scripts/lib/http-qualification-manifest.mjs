@@ -107,6 +107,7 @@ function readHttpQualificationManifest(checkoutRoot) {
   const fixtures = unique(manifest.fixtureContracts, 'id', 'fixture contract');
   const cases = unique(manifest.cases, 'caseId', 'case identity');
   const parsed = new Map();
+  const openApiDocuments = new Map();
   for (const operation of all) {
     demand(
       digest(operation.declarationId).slice(0, 16) === operation.originId,
@@ -137,7 +138,12 @@ function readHttpQualificationManifest(checkoutRoot) {
       'Manifest handler bytes differ',
     );
     for (const reference of operation.openapiOperations) {
-      let value = parseBaselineJson(read(reference.artifact, reference.artifactSha256));
+      // Reacquire and verify actual bytes for every reference as before.
+      // Re-parsing the same immutable digest adds no custody observation.
+      const artifactBytes = read(reference.artifact, reference.artifactSha256);
+      if (!openApiDocuments.has(reference.artifact))
+        openApiDocuments.set(reference.artifact, parseBaselineJson(artifactBytes));
+      let value = openApiDocuments.get(reference.artifact);
       demand(reference.operationPointer.startsWith('/'), 'Invalid OpenAPI pointer');
       for (const key of reference.operationPointer
         .slice(1)
