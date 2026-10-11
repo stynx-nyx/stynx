@@ -206,6 +206,9 @@ export function createVitestConfig({
           excludes: sourceExcludes,
         });
   const swcPlugin = swc.vite({
+    swcrc: false,
+    configFile: false,
+    inputSourceMap: false,
     jsc: {
       parser: { syntax: 'typescript', decorators: true },
       transform: { legacyDecorator: true, decoratorMetadata: true },
