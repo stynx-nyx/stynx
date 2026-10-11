@@ -53,6 +53,8 @@ import { createHttpQualificationProtocol } from './http-qualification-protocol.m
 import { decodeHttpQualificationTargetCapture } from './http-qualification-raw.mjs';
 import { decodeHttpQualificationNativeMetrics } from './http-qualification-metrics.mjs';
 import { readHttpQualificationArtifact } from './http-qualification-artifacts.mjs';
+import { assertHttpQualificationWorkerBody } from './http-qualification-worker-body.mjs';
+import { captureHttpQualificationGeneratorLogs } from './http-qualification-log-capture.mjs';
 import {
   assertLivenessQualificationDeclaration,
   createLivenessQualificationAllocation,
@@ -3091,6 +3093,8 @@ const qualificationSupervisorControlClosure = new Map([
   ['scripts/lib/http-qualification-raw.mjs', null],
   ['scripts/lib/http-qualification-metrics.mjs', null],
   ['scripts/lib/http-qualification-artifacts.mjs', null],
+  ['scripts/lib/http-qualification-worker-body.mjs', null],
+  ['scripts/lib/http-qualification-log-capture.mjs', null],
   ['scripts/lib/http-qualification-liveness.mjs', null],
   ['scripts/lib/k6-baseline-json.mjs', null],
   ['scripts/performance/http-qualification.k6.mjs', null],
@@ -3174,6 +3178,8 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
   let logBytes = 0,
     failure,
     operationError,
+    finalizationError,
+    result,
     timer,
     watcher;
   const reject = () => {
@@ -3245,7 +3251,7 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
     const decoded = decodeHttpQualificationTargetCapture(rawCapture.bytes, allocation);
     const counters = decodeHttpQualificationNativeMetrics(metricCapture.bytes, allocation.caseId);
     const outcomes = inspectLivenessQualificationOutcomes(declaration, decoded);
-    return {
+    result = {
       generatorOperationId: allocation.generatorOperationId,
       ownedNativeOperationId: observed.operationId,
       launch: {
@@ -3270,7 +3276,6 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
     };
   } catch (error) {
     operationError = error;
-    throw error;
   } finally {
     clearTimeout(timer);
     watcher?.close();
@@ -3281,26 +3286,24 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
       cleanupError = error;
       state.refusal ??= 'HTTP_QUALIFICATION_GENERATOR_CLEANUP_INCOMPLETE';
     } finally {
-      // Cleanup refusal must never bypass either bounded failure log. Attempt
-      // both independently, durably, and retain any write failure as refusal.
-      for (const [name, chunks] of [
-        ['stdout', stdout],
-        ['stderr', stderr],
-      ]) {
-        try {
-          writeFileSync(`${prefix}.${name}.log`, Buffer.concat(chunks), {
-            mode: 0o600,
-            flag: 'wx',
-            flush: true,
-          });
-        } catch (error) {
-          captureError ??= error;
-          state.refusal ??= 'HTTP_QUALIFICATION_GENERATOR_CAPTURE_INCOMPLETE';
-        }
+      // Always capture both real bounded streams, including when reap refuses.
+      try {
+        captureHttpQualificationGeneratorLogs(
+          directory,
+          allocation.generatorOperationId,
+          stdout,
+          stderr,
+        );
+      } catch (error) {
+        captureError = error;
+        state.refusal ??= 'HTTP_QUALIFICATION_GENERATOR_CAPTURE_INCOMPLETE';
       }
     }
-    if (!operationError && (captureError || cleanupError)) throw captureError ?? cleanupError;
+    finalizationError = captureError ?? cleanupError;
   }
+  if (operationError) throw operationError;
+  if (finalizationError) throw finalizationError;
+  return result;
 }
 
 /** Persistent owned worker + native generator operation. Only exact caseId is
@@ -3619,40 +3622,14 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
       nonce: fixture.nonce,
       pid: worker.pid,
     });
-    if (
-      !isDeepStrictEqual(Object.keys(raw).sort(), [
-        'candidateCommit',
-        'complete',
-        'modules',
-        'networkClosure',
-        'nonce',
-        'parentCorroborationRequired',
-        'performanceQualified',
-        'readinessPromoting',
-        'referenceObservation',
-        'runtimeCustodyComplete',
-        'schemaVersion',
-        'scope',
-        'tree',
-        'trustedBootstrap',
-        'workerPid',
-      ]) ||
-      raw.schemaVersion !== 1 ||
-      raw.parentCorroborationRequired !== true ||
-      raw.complete !== false ||
-      raw.runtimeCustodyComplete !== false ||
-      raw.performanceQualified !== false ||
-      raw.readinessPromoting !== false ||
-      !isDeepStrictEqual(raw.trustedBootstrap, bindings.trustedBootstrap) ||
-      raw.scope !== job.mode ||
-      raw.candidateCommit !== state.candidateCommit ||
-      raw.tree !== state.inputs.tree ||
-      raw.workerPid !== worker.pid ||
-      raw.nonce !== fixture.nonce ||
-      !validator.accepts(raw.modules) ||
-      raw.referenceObservation?.scope !== job.mode ||
-      raw.referenceObservation?.performanceQualified !== false
-    )
+    assertHttpQualificationWorkerBody(raw, {
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      workerPid: worker.pid,
+      nonce: fixture.nonce,
+      trustedBootstrap: bindings.trustedBootstrap,
+    });
+    if (!validator.accepts(raw.modules))
       refuse('Actual qualification body or module custody differs');
     const observed = raw.referenceObservation;
     const preparation = observed.preparation;
