@@ -19,6 +19,7 @@ import { tmpdir } from 'node:os';
 import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML from 'yaml';
+import { createHttpRuntimeProtocol } from './http-runtime-protocol.mjs';
 import {
   assertHttpBuildRosterUnchanged,
   snapshotHttpDependencyBytes,
@@ -126,6 +127,25 @@ function childEnvironment(state, build = false) {
     npm_config_update_notifier: 'false',
     npm_config_ignore_pnpmfile: 'true',
   };
+}
+
+function runtimeEnvironment(state) {
+  const environment = childEnvironment(state);
+  if (state.platform === 'darwin') {
+    // CoreFoundation otherwise inserts this key after spawn. Preserve the
+    // actual nonsecret host encoding explicitly, including its current UID,
+    // rather than ignoring an unexpected key in the worker's exact check.
+    const encoding = process.env.__CF_USER_TEXT_ENCODING;
+    const uid = `0x${process.getuid().toString(16).toUpperCase()}`;
+    if (
+      typeof encoding !== 'string' ||
+      !/^0x[0-9A-F]+:0x[0-9A-F]+:0x[0-9A-F]+$/iu.test(encoding) ||
+      encoding.split(':')[0].toUpperCase() !== uid.toUpperCase()
+    )
+      refuse('Runtime host text encoding is absent or unbound');
+    environment.__CF_USER_TEXT_ENCODING = encoding;
+  }
+  return environment;
 }
 
 async function run(state, label, executable, args, { cwd = state.checkout, credential } = {}) {
@@ -1533,6 +1553,20 @@ function runtimeControls(state) {
   });
 }
 
+function supervisorProtocolControl(state) {
+  const path = 'scripts/lib/http-runtime-protocol.mjs';
+  const sha256 = 'a873fe3dffb385c88393c735679a6372e6070471c2a560631beeffaaa835c0c4';
+  const tracked = state.inputs.files.find((row) => row.path === path);
+  const fresh = byteRow(state.checkout, resolve(state.checkout, path));
+  const supervisorRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+  const actual = byteRow(supervisorRoot, resolve(supervisorRoot, path));
+  if (!tracked || tracked.sha256 !== sha256 || fresh.sha256 !== sha256 || actual.sha256 !== sha256)
+    refuse('Supervisor protocol component differs from its closed reviewed source');
+  compareRows([tracked], [fresh]);
+  compareRows([fresh], [actual]);
+  return { ...fresh, blob: tracked.blob, classification: 'supervisor-source' };
+}
+
 function referenceBootstrapBinding(state) {
   const sourcePath = 'reference/api/src/bootstrap.ts';
   const outputPath = 'reference/api/dist/reference/api/src/bootstrap.js';
@@ -1584,6 +1618,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
     recheck(state);
     if (state.rootId !== 'reference') refuse('Unsupported runtime composition');
     const controls = runtimeControls(state);
+    const supervisorControls = [supervisorProtocolControl(state)];
     const receipt = workerModuleReceiptFromFreshBuild(handle);
     const urls = new Set(receipt.files.map((row) => row.url));
     for (const row of controls) {
@@ -1597,7 +1632,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
         classification: 'observer-source',
       });
     }
-    const environment = childEnvironment(state);
+    const environment = runtimeEnvironment(state);
     const nonce = randomUUID();
     const directory = resolve(state.sandbox, 'runtime-jobs');
     mkdirSync(directory, { recursive: true, mode: 0o700 });
@@ -1632,8 +1667,6 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
     const stderr = [];
     let logLength = 0;
     let failure;
-    let started = false;
-    let terminalSeen = false;
     let terminal;
     const startedAt = new Date().toISOString();
     child = spawn(state.node, [entry, descriptorPath], {
@@ -1642,6 +1675,16 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
       serialization: 'json',
+    });
+    if (!child.pid) {
+      await new Promise((accept) => child.once('error', accept));
+      refuse('Runtime worker process could not start');
+    }
+    const protocol = createHttpRuntimeProtocol({
+      nonce,
+      candidateCommit: state.candidateCommit,
+      pid: child.pid,
+      mode: job.mode,
     });
     const reject = () => {
       failure ??= 'HTTP_RUNTIME_WORKER_INVALID';
@@ -1655,53 +1698,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
     child.stdout.on('data', (chunk) => collect(stdout, chunk));
     child.stderr.on('data', (chunk) => collect(stderr, chunk));
     child.on('message', (frame) => {
-      if (
-        !frame ||
-        Object.keys(frame).sort().join(',') !==
-          'candidateCommit,kind,nonce,pid,result,schemaVersion' ||
-        frame.schemaVersion !== 1 ||
-        frame.nonce !== nonce ||
-        frame.candidateCommit !== state.candidateCommit ||
-        frame.pid !== child.pid ||
-        Buffer.byteLength(JSON.stringify(frame)) > 32 * 1024 * 1024
-      )
-        return reject();
-      if (frame.kind === 'start') {
-        if (
-          started ||
-          terminalSeen ||
-          !frame.result ||
-          typeof frame.result !== 'object' ||
-          Array.isArray(frame.result) ||
-          Object.keys(frame.result).join(',') !== 'mode' ||
-          frame.result.mode !== job.mode
-        )
-          return reject();
-        started = true;
-      } else if (frame.kind === 'terminal') {
-        if (terminalSeen) return reject();
-        terminalSeen = true;
-        if (
-          !started ||
-          !frame.result ||
-          typeof frame.result !== 'object' ||
-          Array.isArray(frame.result) ||
-          Object.keys(frame.result).sort().join(',') !==
-            'modules,observation,readinessPromoting,runtimeCustodyComplete,trustedBootstrap' ||
-          frame.result.runtimeCustodyComplete !== false ||
-          frame.result.readinessPromoting !== false ||
-          frame.result.observation?.scope !== job.mode ||
-          frame.result.observation?.factoryInvoked !== false ||
-          frame.result.observation?.actualNamedExportObserved !== true ||
-          frame.result.modules?.complete !== false ||
-          frame.result.modules?.readinessPromoting !== false ||
-          !Array.isArray(frame.result.modules.resolutions) ||
-          !Array.isArray(frame.result.modules.evaluations) ||
-          !Array.isArray(frame.result.trustedBootstrap)
-        )
-          return reject();
-        terminal = frame.result;
-      } else reject();
+      if (!protocol.receive(frame)) reject();
     });
     deadline = setTimeout(reject, 180000);
     const exited = await new Promise((accept) => {
@@ -1718,23 +1715,21 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
       writeFileSync(path, Buffer.concat(chunks), { mode: 0o600, flag: 'wx' });
       artifacts.push(byteRow(state.sandbox, path));
     }
-    if (
-      failure ||
-      exited.code !== 0 ||
-      exited.signal !== null ||
-      !started ||
-      !terminal ||
-      terminal.runtimeCustodyComplete !== false ||
-      terminal.readinessPromoting !== false ||
-      terminal.observation?.scope !== job.mode ||
-      terminal.observation?.factoryInvoked !== false ||
-      terminal.observation?.actualNamedExportObserved !== true ||
-      terminal.modules?.complete !== false ||
-      terminal.modules?.readinessPromoting !== false
-    )
+    try {
+      terminal = protocol.finish(exited);
+    } catch {
+      failure ??= 'HTTP_RUNTIME_WORKER_INVALID';
+    }
+    const parsedFramesPath = resolve(directory, `${nonce}.parsed-ipc.json`);
+    const capture = protocol.captureArtifact(failure ?? null);
+    if (capture.overflowed) failure ??= 'HTTP_RUNTIME_CAPTURE_INVALID';
+    writeFileSync(parsedFramesPath, capture.body, { mode: 0o600, flag: 'wx' });
+    artifacts.push(byteRow(state.sandbox, parsedFramesPath));
+    if (failure)
       refuse('Runtime bootstrap observation did not complete its closed diagnostic protocol');
     recheck(state);
     compareRows(controls, runtimeControls(state));
+    compareRows(supervisorControls, [supervisorProtocolControl(state)]);
     compareRows(
       [byteRow(state.sandbox, descriptorPath)],
       [
@@ -1765,6 +1760,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
       },
       environment: job.environment,
       controls,
+      supervisorControls,
       descriptor: byteRow(state.sandbox, descriptorPath),
       artifacts,
       result: terminal,
