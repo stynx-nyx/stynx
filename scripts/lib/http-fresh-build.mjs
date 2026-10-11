@@ -1529,11 +1529,11 @@ export function workerModuleReceiptFromFreshBuild(handle) {
 const runtimeControlClosure = new Map([
   [
     'scripts/lib/http-runtime-worker.mjs',
-    '765cef732599229b8b9aa95a9faa4534c89b81b367aa52e44219286a5c6092c9',
+    '64be2695835677d86a8f0cf825e150feba706ad7c0871f8da94106d55e8717cd',
   ],
   [
     'scripts/lib/http-module-custody.mjs',
-    'ed2db24cbf2b24dcfec82a311aa046e86b2109bab855c75e582f13de9a8358f0',
+    '6abe148084d29d68d3b778e9fa0b99b526c4bfc34c0414de7cd8aff644f935fa',
   ],
   [
     'scripts/lib/http-runtime-census.mjs',
@@ -1558,7 +1558,7 @@ function runtimeControls(state) {
 
 function supervisorProtocolControl(state) {
   const path = 'scripts/lib/http-runtime-protocol.mjs';
-  const sha256 = 'a873fe3dffb385c88393c735679a6372e6070471c2a560631beeffaaa835c0c4';
+  const sha256 = '64e5c70ca8088fb63cdf5e0beed426c2ff42fd5d79235ba4ec97378ba7561416';
   const tracked = state.inputs.files.find((row) => row.path === path);
   const fresh = byteRow(state.checkout, resolve(state.checkout, path));
   const supervisorRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
