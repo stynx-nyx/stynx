@@ -18,6 +18,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual, types } from 'node:util';
+import { httpOriginalScenarioProfile } from './http-original-scenarios.mjs';
+import { loadHttpOriginalQuotaRecipe } from './http-original-quotas.mjs';
 
 // First finite local recipe. These identities grant no build/process custody.
 // The supervisor must bind an actually created opaque handle to its live build.
@@ -1110,7 +1112,19 @@ export async function createOwnedPrivacyReferenceFixture(identity) {
   return createFixedReferenceFixture(identity, true);
 }
 
-async function createFixedReferenceFixture(identity, privacy) {
+/** Fixed original profiles reuse owned resources and existing Compose quotas. */
+export async function createOwnedOriginalReferenceFixture(identity, selector) {
+  if (arguments.length !== 2) refuse('REQUEST');
+  const profile = httpOriginalScenarioProfile(selector);
+  const root = realpathSync(fileURLToPath(new URL('../../', import.meta.url)));
+  const quotaRecipe = loadHttpOriginalQuotaRecipe(root);
+  return createFixedReferenceFixture(identity, profile.scenarioId === 'upload', {
+    profile,
+    quotaRecipe,
+  });
+}
+
+async function createFixedReferenceFixture(identity, privacy, originalScenario = null) {
   if (
     !identity ||
     types.isProxy(identity) ||
@@ -1147,6 +1161,7 @@ async function createFixedReferenceFixture(identity, privacy) {
       setupDeadline: Date.now() + 120_000,
       ready: false,
       closed: false,
+      originalScenario,
     };
     const instance = randomUUID();
     Object.assign(state, {
@@ -1442,6 +1457,7 @@ export async function ownedReferenceFixtureEnvironment(handle) {
     STYNX_REFERENCE_WEB_ORIGINS: 'http://127.0.0.1:3100',
     STYNX_STORAGE_REGION: 'us-east-1',
     STYNX_STORAGE_BUCKET: state.object?.storageBucket ?? 'stynx-docs-http-fixture-us-east-1',
+    ...(state.originalScenario?.quotaRecipe.environment ?? {}),
     ...(state.object
       ? {
           STYNX_STORAGE_ENDPOINT: state.object.endpoint,
@@ -1472,6 +1488,7 @@ export async function observeOwnedReferenceFixture(handle) {
     scope: 'reference-owned-resources',
     identity: state.identity,
     instance: state.instance,
+    ...(state.originalScenario ? { originalScenario: state.originalScenario } : {}),
     referenceAgentBinding: {
       purpose: 'stynx-http-reference-offline-agent',
       schemaVersion: 1,
