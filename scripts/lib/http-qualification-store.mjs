@@ -154,11 +154,18 @@ function finishPublication(state, publication, snapshot) {
     closeSync(fd);
   }
   checkSavedDirectories(state);
-  syncDirectory(state.root, state.identity);
-  for (const [path, identity] of state.directories) {
+  // Repeat durability barriers for this member's complete saved ancestor chain.
+  // All saved identities are still rechecked; unrelated durable directories do
+  // not need another fsync for every new member in the full manifest population.
+  let directory = dirname(publication.path);
+  while (directory !== state.root) {
     checkSavedDirectories(state);
-    syncDirectory(path, identity);
+    const identity = state.directories.get(directory);
+    if (!identity) refuse('Published member lost its saved directory chain', true);
+    syncDirectory(directory, identity);
+    directory = dirname(directory);
   }
+  syncDirectory(state.root, state.identity);
   checkSavedDirectories(state);
   const acquired = readHttpQualificationArtifact(state.root, publication.path);
   const finalIdentity = checkFileIdentity(
