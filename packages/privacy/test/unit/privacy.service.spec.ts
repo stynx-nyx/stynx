@@ -1,22 +1,31 @@
-import { ModuleRef } from '@nestjs/core';
+import {
+  initializePrivacyTestContext,
+  closePrivacyTestContext,
+  privacyUnitModuleRef,
+  runPrivacyInternal,
+} from '../support/privacy-test-context';
 import { PiiMapService } from '../../src/pii-map.service';
+import { UnconfiguredPrivacyCognitoAdmin } from '../../src/unconfigured-identity';
 import { PrivacyService } from '../../src/privacy.service';
 import type { PrivacyCognitoAdmin, PrivacyObjectStore, PrivacyRule } from '../../src/types';
 import type { Mock } from 'vitest';
 
+beforeAll(initializePrivacyTestContext);
+afterAll(closePrivacyTestContext);
+
 function createService(
   rules: PrivacyRule[],
   query: Mock,
-  options: { exportTtlSeconds?: number } = { exportTtlSeconds: 60 },
+  options: { exportTtlSeconds?: number; erasureSalt?: string } = { exportTtlSeconds: 60 },
+  identity?: PrivacyCognitoAdmin,
 ) {
   const trx = { query };
   const database = {
     withSystemContext: vi.fn((_reason: string, fn: () => unknown) => fn()),
-    tx: vi.fn((fn: (input: typeof trx) => unknown) => fn(trx)),
+    hasHeldConnection: vi.fn(() => false),
+    txIndependent: vi.fn((fn: (input: typeof trx) => unknown) => fn(trx)),
   };
-  const moduleRef = {
-    get: vi.fn(() => database),
-  } as unknown as ModuleRef;
+  const moduleRef = privacyUnitModuleRef(database);
   const piiMapService = {
     load: vi.fn(async () => rules),
   } as unknown as PiiMapService;
@@ -28,7 +37,7 @@ function createService(
     disableUser: vi.fn(async () => undefined),
   };
   return {
-    service: new PrivacyService(moduleRef, piiMapService, objectStore, cognitoAdmin, {
+    service: new PrivacyService(moduleRef, piiMapService, objectStore, identity ?? cognitoAdmin, {
       environment: 'test',
       region: 'us-east-1',
       erasureSalt: 'unit',
@@ -46,7 +55,7 @@ describe('PrivacyService branch coverage', () => {
   it('rejects export requests without a selector', async () => {
     const { service } = createService([], vi.fn());
 
-    await expect(service.exportData({ format: 'json' })).rejects.toThrow(
+    await expect(runPrivacyInternal(() => service.exportData({ format: 'json' }))).rejects.toThrow(
       'Export requires subjectUserId or tenantId',
     );
   });
@@ -68,10 +77,12 @@ describe('PrivacyService branch coverage', () => {
     );
 
     await expect(
-      service.exportData({
-        tenantId: '01990000-0000-7000-8000-000000000002',
-        format: 'csv',
-      }),
+      runPrivacyInternal(() =>
+        service.exportData({
+          tenantId: '01990000-0000-7000-8000-000000000002',
+          format: 'csv',
+        }),
+      ),
     ).resolves.toMatchObject({
       downloadUrl: 'memory://export',
       expiresInSeconds: 60,
@@ -110,17 +121,20 @@ describe('PrivacyService branch coverage', () => {
           columnName: 'display_name',
           strategy: 'tombstone',
           subjectColumn: 'subject_user_id',
+          tenantColumn: 'tenant_id',
         },
       ],
       query,
     );
 
     await expect(
-      service.exportData({
-        subjectUserId,
-        tenantId: '01990000-0000-7000-8000-000000000002',
-        format: 'json',
-      }),
+      runPrivacyInternal(() =>
+        service.exportData({
+          subjectUserId,
+          tenantId: '01990000-0000-7000-8000-000000000002',
+          format: 'json',
+        }),
+      ),
     ).resolves.toMatchObject({
       downloadUrl: 'memory://export',
       tables: [{ table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 1 }],
@@ -156,10 +170,12 @@ describe('PrivacyService branch coverage', () => {
     );
 
     await expect(
-      service.exportData({
-        tenantId: '01990000-0000-7000-8000-000000000002',
-        format: 'json',
-      }),
+      runPrivacyInternal(() =>
+        service.exportData({
+          tenantId: '01990000-0000-7000-8000-000000000002',
+          format: 'json',
+        }),
+      ),
     ).resolves.toMatchObject({
       expiresInSeconds: 7 * 24 * 60 * 60,
       tables: [{ table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 0 }],
@@ -182,10 +198,12 @@ describe('PrivacyService branch coverage', () => {
     );
 
     await expect(
-      service.exportData({
-        subjectUserId,
-        format: 'json',
-      }),
+      runPrivacyInternal(() =>
+        service.exportData({
+          subjectUserId,
+          format: 'json',
+        }),
+      ),
     ).resolves.toMatchObject({ tables: [] });
     expect(query).not.toHaveBeenCalledTimes(1);
   });
@@ -203,7 +221,7 @@ describe('PrivacyService branch coverage', () => {
       vi.fn(),
     );
 
-    await expect(service.eraseSubject({ subjectUserId })).rejects.toThrow(
+    await expect(runPrivacyInternal(() => service.eraseSubject({ subjectUserId }))).rejects.toThrow(
       'PII rule is missing subjectColumn metadata',
     );
   });
@@ -252,7 +270,9 @@ describe('PrivacyService branch coverage', () => {
       query,
     );
 
-    await expect(service.eraseSubject({ subjectUserId })).resolves.toMatchObject({
+    await expect(
+      runPrivacyInternal(() => service.eraseSubject({ subjectUserId })),
+    ).resolves.toMatchObject({
       subjectUserId,
       actions: expect.arrayContaining([
         expect.objectContaining({
@@ -303,7 +323,9 @@ describe('PrivacyService branch coverage', () => {
       query,
     );
 
-    await expect(service.eraseSubject({ subjectUserId })).resolves.toMatchObject({
+    await expect(
+      runPrivacyInternal(() => service.eraseSubject({ subjectUserId })),
+    ).resolves.toMatchObject({
       actions: [
         expect.objectContaining({ column: 'email', liveAffected: 0, archiveAffected: 0 }),
         expect.objectContaining({ column: 'blob_key', liveAffected: 0, archiveAffected: 0 }),
@@ -352,7 +374,7 @@ describe('PrivacyService branch coverage', () => {
       query,
     );
 
-    await expect(service.applyRetention(false)).resolves.toEqual({
+    await expect(runPrivacyInternal(() => service.applyRetention(false))).resolves.toEqual({
       dryRun: false,
       actions: [
         {
@@ -418,7 +440,7 @@ describe('PrivacyService branch coverage', () => {
       dryQuery,
     );
 
-    await expect(dryRun.service.applyRetention()).resolves.toMatchObject({
+    await expect(runPrivacyInternal(() => dryRun.service.applyRetention())).resolves.toMatchObject({
       dryRun: true,
       actions: [expect.objectContaining({ target: 'archive', affectedRows: 1 })],
       partitions: [
@@ -457,7 +479,9 @@ describe('PrivacyService branch coverage', () => {
       ],
       vi.fn(),
     );
-    await expect(unsafe.service.applyRetention()).rejects.toThrow('Unsafe SQL identifier');
+    await expect(runPrivacyInternal(() => unsafe.service.applyRetention())).rejects.toThrow(
+      'Unsafe SQL identifier',
+    );
   });
 
   it('treats empty retention count results as zero and defaults target to both', async () => {
@@ -479,7 +503,7 @@ describe('PrivacyService branch coverage', () => {
       query,
     );
 
-    await expect(service.applyRetention(false)).resolves.toEqual({
+    await expect(runPrivacyInternal(() => service.applyRetention(false))).resolves.toEqual({
       dryRun: false,
       actions: [],
       partitions: [],
@@ -531,7 +555,7 @@ describe('PrivacyService — exportData CSV escaping (kills csvEscape mutants at
 
   async function exportAndExtractCsv(
     rows: Record<string, unknown>[],
-  ): Promise<{ csv: string; columns: string[] }> {
+  ): Promise<{ csv: string; columns: string[]; jsonRows: Record<string, unknown>[] }> {
     const query = vi
       .fn()
       .mockResolvedValueOnce({ rows: rows.map((r) => ({ row_json: r })) }) // live
@@ -554,7 +578,7 @@ describe('PrivacyService — exportData CSV escaping (kills csvEscape mutants at
     objectStore.putObject = vi.fn(async ({ body }) => {
       capturedBuffer = body as Buffer;
     });
-    await service.exportData({ subjectUserId });
+    await runPrivacyInternal(() => service.exportData({ subjectUserId }));
     // Decode zip → tables/<safeName>.csv contents.
     const JSZipModule = await import('jszip');
     const JSZip = JSZipModule.default ?? JSZipModule;
@@ -563,8 +587,36 @@ describe('PrivacyService — exportData CSV escaping (kills csvEscape mutants at
     if (!csvEntry) throw new Error('CSV missing from zip');
     const csv = await zip.file(csvEntry)!.async('string');
     const [header] = csv.split('\n');
-    return { csv, columns: header!.split(',') };
+    const jsonEntry = Object.keys(zip.files).find(
+      (k) => k.startsWith('tables/') && k.endsWith('.json'),
+    )!;
+    return {
+      csv,
+      columns: header!.split(','),
+      jsonRows: JSON.parse(await zip.file(jsonEntry)!.async('string')),
+    };
   }
+
+  it.each([
+    ['=1+1', "'=1+1"],
+    ['+cmd', "'+cmd"],
+    ['-cmd', "'-cmd"],
+    ['@cmd', "'@cmd"],
+    ['\tcmd', "'\tcmd"],
+    ['\rcmd', '"\'\rcmd"'],
+    [' \u0085=1', "' \u0085=1"],
+    ['\u009f@cmd', "'\u009f@cmd"],
+  ])(
+    'neutralizes spreadsheet string/header %j while keeping JSON lossless and numbers numeric',
+    async (raw, safe) => {
+      const rows = [{ '=column': raw, amount: -42 }];
+      const { csv, columns, jsonRows } = await exportAndExtractCsv(rows);
+      expect(columns).toEqual(["'=column", 'amount']);
+      expect(csv).toContain(safe);
+      expect(csv).toContain(',-42');
+      expect(jsonRows).toEqual(rows);
+    },
+  );
 
   it('passes plain strings through verbatim (no quoting)', async () => {
     const { csv } = await exportAndExtractCsv([{ name: 'ana', city: 'sao paulo' }]);
@@ -635,7 +687,7 @@ describe('PrivacyService — manifest null coalescing (kills LogicalOperator sur
     objectStore.putObject = vi.fn(async ({ body }) => {
       capturedBuffer = body as Buffer;
     });
-    await service.exportData({ format: 'json', ...input });
+    await runPrivacyInternal(() => service.exportData({ format: 'json', ...input }));
     const JSZipModule = await import('jszip');
     const JSZip = JSZipModule.default ?? JSZipModule;
     const zip = await new JSZip().loadAsync(capturedBuffer!);
@@ -675,7 +727,7 @@ describe('PrivacyService — expiresAt arithmetic (kills ArithmeticOperator surv
     const { service, objectStore } = createService([], query, { exportTtlSeconds: ttl });
 
     const before = Date.now();
-    await service.exportData({ subjectUserId });
+    await runPrivacyInternal(() => service.exportData({ subjectUserId }));
     const after = Date.now();
     const expectedMin = before + ttl * 1000;
     const expectedMax = after + ttl * 1000;
@@ -692,7 +744,7 @@ describe('PrivacyService — expiresAt arithmetic (kills ArithmeticOperator surv
     const { service, objectStore } = createService([], query, {});
 
     const before = Date.now();
-    const result = await service.exportData({ subjectUserId });
+    const result = await runPrivacyInternal(() => service.exportData({ subjectUserId }));
     const after = Date.now();
     expect(result.expiresInSeconds).toBe(sevenDaysSeconds);
 
@@ -723,7 +775,7 @@ describe('PrivacyService — empty-side guard on exportData (kills ConditionalEx
       ],
       query,
     );
-    const result = await service.exportData({ subjectUserId });
+    const result = await runPrivacyInternal(() => service.exportData({ subjectUserId }));
     expect(result.tables).toEqual([
       { table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 0 },
     ]);
@@ -746,7 +798,7 @@ describe('PrivacyService — empty-side guard on exportData (kills ConditionalEx
       ],
       query,
     );
-    const result = await service.exportData({ subjectUserId });
+    const result = await runPrivacyInternal(() => service.exportData({ subjectUserId }));
     expect(result.tables).toEqual([
       { table: 'privacy_fixture.subjects', liveRows: 0, archiveRows: 1 },
     ]);
@@ -766,7 +818,102 @@ describe('PrivacyService — empty-side guard on exportData (kills ConditionalEx
       ],
       query,
     );
-    const result = await service.exportData({ subjectUserId });
+    const result = await runPrivacyInternal(() => service.exportData({ subjectUserId }));
     expect(result.tables).toEqual([]);
+  });
+});
+
+describe('Explicit internal privacy administration capability', () => {
+  const subjectUserId = '01990000-0000-7000-8000-000000000001';
+  it('refuses a global call without caller-established SystemContext before SQL or providers', async () => {
+    const query = vi.fn();
+    const fixture = createService([], query);
+    for (const operation of [
+      () => fixture.service.exportData({ subjectUserId, format: 'json' }),
+      () => fixture.service.eraseSubject({ subjectUserId }),
+      () => fixture.service.applyRetention(),
+    ])
+      await expect(operation()).rejects.toMatchObject({ code: 'SYSTEM_CONTEXT_REQUIRED' });
+    expect(query).not.toHaveBeenCalled();
+    expect(fixture.database.txIndependent).not.toHaveBeenCalled();
+    expect(fixture.database.withSystemContext).not.toHaveBeenCalled();
+    expect(fixture.objectStore.putObject).not.toHaveBeenCalled();
+    expect(fixture.cognitoAdmin.disableUser).not.toHaveBeenCalled();
+  });
+  it.each([new UnconfiguredPrivacyCognitoAdmin(), {}, { disableUser: null }])(
+    'refuses an unconfigured/noncallable global identity adapter before destructive work: %s',
+    async (identity) => {
+      const query = vi.fn();
+      const fixture = createService([], query, {}, identity as PrivacyCognitoAdmin);
+      await expect(
+        runPrivacyInternal(() => fixture.service.eraseSubject({ subjectUserId })),
+      ).rejects.toThrow('Global erasure requires a configured identity adapter');
+      expect(query).not.toHaveBeenCalled();
+      expect(fixture.database.txIndependent).not.toHaveBeenCalled();
+    },
+  );
+  it('refuses a held connection before global provider work even with an explicit SystemContext', async () => {
+    const query = vi.fn();
+    const fixture = createService([], query);
+    fixture.database.hasHeldConnection.mockReturnValue(true);
+    await expect(
+      runPrivacyInternal(() => fixture.service.eraseSubject({ subjectUserId })),
+    ).rejects.toMatchObject({ code: 'INDEPENDENT_TRANSACTION_CONNECTION' });
+    expect(query).not.toHaveBeenCalled();
+    expect(fixture.cognitoAdmin.disableUser).not.toHaveBeenCalled();
+  });
+  it('requires a nonblank HMAC secret before any erasure SQL', async () => {
+    const query = vi.fn();
+    const fixture = createService(
+      [
+        {
+          tableSchema: 'app',
+          tableName: 'subjects',
+          columnName: 'phone',
+          subjectColumn: 'id',
+          strategy: 'hash_with_salt',
+        },
+      ],
+      query,
+      { erasureSalt: '  ' },
+    );
+    await expect(
+      runPrivacyInternal(() => fixture.service.eraseSubject({ subjectUserId })),
+    ).rejects.toThrow('Erasure hashing requires a nonempty salt');
+    expect(query).not.toHaveBeenCalled();
+  });
+  it('propagates identity provider failure after committed SQL without claiming atomic provider rollback', async () => {
+    const query = vi.fn(async () => ({ rows: [], rowCount: 1 }));
+    const identity = {
+      disableUser: vi.fn(async () => {
+        throw new Error('real external boundary refusal');
+      }),
+    };
+    const fixture = createService(
+      [
+        {
+          tableSchema: 'app',
+          tableName: 'subjects',
+          columnName: 'email',
+          subjectColumn: 'id',
+          strategy: 'nullify',
+        },
+      ],
+      query,
+      {},
+      identity,
+    );
+    await expect(
+      runPrivacyInternal(() => fixture.service.eraseSubject({ subjectUserId })),
+    ).rejects.toThrow('real external boundary refusal');
+    expect(query).toHaveBeenCalledTimes(4);
+    expect(identity.disableUser).toHaveBeenCalledWith(subjectUserId);
+    expect(fixture.database.txIndependent).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'owner',
+      readonly: false,
+      replica: false,
+      retry: false,
+    });
+    expect(fixture.database.withSystemContext).not.toHaveBeenCalled();
   });
 });
