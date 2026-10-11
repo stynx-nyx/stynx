@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.6.1",
+  "policy_version": "1.6.2",
   "source_path": "law/policy/devai-adoption.json",
-  "source_digest_sha256": "4b476198e00b70ee4dec4c57b2d5f8ff229896fcf60c2cb766e8324b3743368a",
+  "source_digest_sha256": "fde2b641e1eb589ed73d1a79716b0d9dc828f03bb04560dfaee29e3027dd4a88",
   "materialized": {
     ".devai/config/project.json": "a7e796867bed2609b86fa8a228810ebff6d16bb0c4992b0f6783fe06f91ba7e3",
     ".devai/config/domains.json": "74cd7cb8a0ab2588422f197ba574323018cb24135b6944eaa987aebbe036f29e",
@@ -16,8 +16,8 @@
   "retired_keys": [],
   "authority_extension": {
     "extension_id": "stynx.client-path-authority",
-    "extension_version": "1.6.1",
-    "digest_sha256": "b44dda929765539c6a5494b9bfff5f05b2b52a2899bfa17497cb299b9f5275d3",
-    "rule_count": 51
+    "extension_version": "1.6.2",
+    "digest_sha256": "71250d8d742f93a81afee5ad931b5bb7f68497d6025d0a645b283932f06c8901",
+    "rule_count": 68
   }
 }

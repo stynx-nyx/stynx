@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.6.1",
+  "policy_version": "1.6.2",
   "project": {
     "project_type": "platform-package",
     "repo": {
@@ -217,7 +217,7 @@
   },
   "authority": {
     "extension_id": "stynx.client-path-authority",
-    "roots": ["domain", "reference", "test"],
+    "roots": ["domain", "reference", "test", "tools"],
     "classes": {
       "test": {
         "selectors": [

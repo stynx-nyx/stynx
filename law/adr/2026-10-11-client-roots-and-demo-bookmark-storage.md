@@ -19,8 +19,8 @@ exact published DEVAI 2.5.0 package adopted in
 weaken authority, tests, release gates or workload requirements and no advance
 storage, runtime, provider or performance PASS.
 
-Adopter policy 1.6.1 explicitly declares the single-segment roots `domain`,
-`reference` and `test`. No other root is inferred or granted. The root remainder
+Adopter policy 1.6.2 explicitly declares the single-segment roots `domain`,
+`reference`, `test` and `tools`. No other root is inferred or granted. The root remainder
 is Engineer, including implementation documentation. Inspector selectors retain
 the published test defaults, add the executable `.e2e` and `.wiring-spec`
 suffixes, and explicitly cover every existing central test subtree: `db`,
@@ -42,6 +42,16 @@ complete changed target roster and a subsequent Doctor result. Preserve all
 existing sensor inputs, thresholds, N/A declarations, observations and proof-chain
 bytes. If a generated workflow changes, the ordinary exact-commit CI receipt
 requirement applies.
+
+The explicit `tools` root includes the migration-linter implementation as Engineer
+and its colocated tests as Inspector. Its catalog privilege inquiry classifier
+must distinguish literal privilege-name data from executable destructive SQL.
+The forward migration's `pg_catalog.has_table_privilege` inquiry mentioning
+TRUNCATE exposed an actual LINT005 false positive. Repair the producer with
+independent regressions retaining real destructive DDL and dynamic EXECUTE
+negative witnesses; no invented destructive-approval marker or renamed SQL
+string replaces that correction. This finite root addition grants no other
+missing repository roots.
 
 ## Forward storage contract
 
