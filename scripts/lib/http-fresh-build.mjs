@@ -9,15 +9,18 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  readlinkSync,
   realpathSync,
+  statSync,
   writeFileSync,
   watch,
 } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
+import { basename, dirname, extname, isAbsolute, parse, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 import YAML from 'yaml';
 import { createHttpRuntimeProtocol } from './http-runtime-protocol.mjs';
 import {
@@ -1594,6 +1597,294 @@ function referenceBootstrapBinding(state) {
   return structuredClone({ source, emitted, map: mapRow });
 }
 
+// Finite POSIX Node24.20 startup rule, corroborated independently against the
+// actual child's public resolve.paths. Never borrow supervisor ambient globals.
+function runtimeGlobalSearchPaths(state, job, environment) {
+  if (
+    !['darwin', 'linux'].includes(job.platform) ||
+    job.platform !== process.platform ||
+    job.receipt.nodeVersion !== '24.20.0' ||
+    state.node !== job.nodePath ||
+    realpathSync(state.node) !== state.node ||
+    digest(readFileSync(state.node)) !== job.nodeSha256 ||
+    typeof environment.HOME !== 'string' ||
+    !environment.HOME ||
+    !isAbsolute(environment.HOME) ||
+    (environment.NODE_PATH !== undefined && environment.NODE_PATH !== '') ||
+    environment.NODE_OPTIONS
+  )
+    refuse('Runtime protocol has unsupported native global search startup');
+  return [
+    resolve(environment.HOME, '.node_modules'),
+    resolve(environment.HOME, '.node_libraries'),
+    resolve(job.nodePath, '..', '..', 'lib', 'node'),
+  ];
+}
+
+// Pure protocol expectations are derived here only after the private live-handle
+// checks. They describe actual job/launch facts, never grant custody to JSON.
+function runtimeProtocolBindings(state, job, descriptorBody, launchEnvironment) {
+  const rows = new Map();
+  const add = (row) => {
+    const url = pathToFileURL(resolve(state.checkout, row.path)).href;
+    const previous = rows.get(url);
+    if (previous && (previous.sha256 !== row.sha256 || previous.byteLength !== row.byteLength))
+      refuse('Runtime protocol source population is ambiguous');
+    rows.set(url, row);
+  };
+  for (const row of state.dependencies.files) if (row.kind === 'file') add(row);
+  for (const compiler of state.compilers) for (const row of compiler.outputs.outputs) add(row);
+  for (const row of job.controls) add(row);
+  const roster = job.receipt.files.map((member) => {
+    const row = rows.get(member.url);
+    if (
+      !row ||
+      row.sha256 !== member.sha256 ||
+      !Number.isSafeInteger(row.byteLength) ||
+      row.byteLength < 0
+    )
+      refuse('Runtime protocol member has no private fresh byte binding');
+    return {
+      url: member.url,
+      sha256: member.sha256,
+      moduleKind: member.moduleKind,
+      byteLength: row.byteLength,
+    };
+  });
+  const provenance = (path, sha256, kind) => {
+    const bytes = readFileSync(path),
+      stat = lstatSync(path),
+      url = pathToFileURL(path).href;
+    const member = roster.find((entry) => entry.url === url);
+    if (
+      !stat.isFile() ||
+      realpathSync(path) !== path ||
+      digest(bytes) !== sha256 ||
+      !member ||
+      member.sha256 !== sha256 ||
+      member.moduleKind !== kind ||
+      member.byteLength !== bytes.length
+    )
+      refuse('Runtime protocol provenance differs from the private fresh member');
+    return {
+      path,
+      url,
+      sha256,
+      permissions: stat.mode & 0o7777,
+      byteLength: bytes.length,
+      device: stat.dev,
+      inode: stat.ino,
+    };
+  };
+  const parentHash = '86968141beeaa93daea62a4ec4e1f36bd31f88eb5f0b3a0d2b2d28aefe5406c2';
+  const matches = roster.filter((member) => member.sha256 === parentHash);
+  if (matches.length !== 1) refuse('Runtime protocol Nest parent origin is ambiguous');
+  const parentPath = fileURLToPath(matches[0].url),
+    packageRoot = dirname(parentPath);
+  if (
+    realpathSync(
+      createRequire(resolve(state.checkout, 'packages/flow/package.json')).resolve(
+        '@nestjs/core/nest-application.js',
+      ),
+    ) !== parentPath ||
+    basename(parentPath) !== 'nest-application.js' ||
+    basename(packageRoot) !== 'core' ||
+    basename(dirname(packageRoot)) !== '@nestjs'
+  )
+    refuse('Runtime protocol Nest origin is not the actual owned installation');
+  const parent = provenance(parentPath, parentHash, 'commonjs');
+  const helper = provenance(
+    resolve(packageRoot, 'helpers/optional-require.js'),
+    'c8a109dab1b2461e866fe04b8be5988ccc199a2239c730abc05fc28c0f85d7f2',
+    'commonjs',
+  );
+  const manifest = provenance(
+    resolve(packageRoot, 'package.json'),
+    '8335e997f7dbe8e797298caa94291dead8503bbf34e546d591581109284ca429',
+    'json',
+  );
+  const declared = JSON.parse(readFileSync(manifest.path, 'utf8'));
+  if (declared.name !== '@nestjs/core' || declared.version !== '11.2.3')
+    refuse('Runtime protocol Nest declaration differs');
+  const localPaths = [];
+  for (let path = packageRoot; ; path = dirname(path)) {
+    if (basename(path) !== 'node_modules') localPaths.push(resolve(path, 'node_modules'));
+    if (dirname(path) === path) break;
+  }
+  const globalFallbackPaths = runtimeGlobalSearchPaths(state, job, launchEnvironment);
+  const scopes = [...localPaths, ...globalFallbackPaths];
+  if (new Set(scopes).size !== scopes.length)
+    refuse('Runtime protocol search population is ambiguous');
+  const absentPackage = (scope, packageName) => {
+    const packageRoot = resolve(scope, packageName),
+      root = parse(packageRoot).root;
+    const components = packageRoot.slice(root.length).split(sep),
+      chain = [];
+    let path = root;
+    for (let i = -1; i < components.length; i++) {
+      if (i >= 0) path = resolve(path, components[i]);
+      let stat;
+      try {
+        stat = lstatSync(path);
+      } catch (error) {
+        if (error.code !== 'ENOENT' || chain.length === 0)
+          refuse('Runtime protocol absence is not genuine ENOENT');
+        return {
+          scope,
+          packageRoot,
+          outcome: 'ENOENT',
+          firstMissingPath: path,
+          missingComponentChain: components.slice(i),
+          nearestExistingAncestor: chain.at(-1),
+          chain,
+        };
+      }
+      // A present/partial/dangling root is ineligible, not a negative witness.
+      if (path === packageRoot) return null;
+      const link = stat.isSymbolicLink();
+      if (!link && !stat.isDirectory())
+        refuse('Runtime protocol absence ancestor is not a directory');
+      let canonicalPath,
+        linkTarget = null;
+      try {
+        canonicalPath = realpathSync(path);
+        if (link) {
+          linkTarget = readlinkSync(path);
+          if (!statSync(path).isDirectory())
+            refuse('Runtime protocol absence link is not a directory');
+        }
+      } catch {
+        refuse('Runtime protocol absence ancestor is unresolved');
+      }
+      chain.push({
+        path,
+        canonicalPath,
+        kind: link ? 'symbolic-link' : 'directory',
+        permissions: stat.mode & 0o7777,
+        device: stat.dev,
+        inode: stat.ino,
+        linkTarget,
+      });
+    }
+    refuse('Runtime protocol absence was not established');
+  };
+  const parentText = readFileSync(parent.path, 'utf8');
+  const optionalProbes = [];
+  for (const rule of [
+    {
+      ruleId: 'NEST1123_OPTIONAL_WEBSOCKETS',
+      specifier: '@nestjs/websockets/socket-module',
+      packageName: '@nestjs/websockets',
+      start: 1159,
+      end: 1208,
+      binding: 'SocketModule',
+    },
+    {
+      ruleId: 'NEST1123_OPTIONAL_MICROSERVICES',
+      specifier: '@nestjs/microservices/microservices-module',
+      packageName: '@nestjs/microservices',
+      start: 1329,
+      end: 1388,
+      binding: 'MicroservicesModule',
+    },
+  ]) {
+    const callback = `() => require('${rule.specifier}')`;
+    const statement = `const { ${rule.binding} } = (0, optional_require_1.optionalRequire)('${rule.specifier}', ${callback});`;
+    if (
+      parentText.slice(rule.start, rule.end) !== callback ||
+      parentText.split(callback).length !== 2 ||
+      parentText.split(statement).length !== 2 ||
+      declared.peerDependenciesMeta?.[rule.packageName]?.optional !== true ||
+      declared.peerDependencies?.[rule.packageName] !== '^11.0.0'
+    )
+      refuse('Runtime protocol optional declaration differs');
+    const absence = scopes.map((scope) => absentPackage(scope, rule.packageName));
+    if (absence.some((entry) => entry === null)) continue;
+    optionalProbes.push({
+      ruleId: rule.ruleId,
+      declaredCallsite: {
+        kind: 'DECLARED_UNIQUE_LITERAL_CALLBACK',
+        start: rule.start,
+        end: rule.end,
+        callbackSha256: digest(callback),
+        statementSha256: digest(statement),
+      },
+      provenance: { parent, helper, manifest },
+      search: { scopes, localPaths, globalFallbackPaths },
+      absence,
+    });
+  }
+  const ts = createRequire(resolve(state.checkout, 'package.json'))('typescript');
+  const declaration = (row, kind) => {
+    const bytes = readFileSync(resolve(state.checkout, row.path));
+    if (digest(bytes) !== row.sha256) refuse('Runtime protocol bootstrap bytes changed');
+    const source = ts.createSourceFile(
+      row.path,
+      bytes.toString('utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+      kind,
+    );
+    const named = source.statements.filter(
+      (node) => ts.isFunctionDeclaration(node) && node.name?.text === 'createReferenceApplication',
+    );
+    if (source.parseDiagnostics.length || named.length !== 1)
+      refuse('Runtime protocol bootstrap declaration is ambiguous');
+    return { start: named[0].getStart(source), end: named[0].end };
+  };
+  const moduleURL = pathToFileURL(resolve(state.checkout, job.bootstrap.emitted.path)).href;
+  const observation = {
+    schemaVersion: 1,
+    scope: job.mode,
+    compositionId: 'reference',
+    bootstrap: structuredClone(job.bootstrap),
+    namedExport: 'createReferenceApplication',
+    evaluatedModuleURL: moduleURL,
+    actualNamedExportObserved: true,
+    sourceDeclaration: declaration(job.bootstrap.source, ts.ScriptKind.TS),
+    emittedDeclaration: declaration(job.bootstrap.emitted, ts.ScriptKind.JS),
+    factoryInvoked: false,
+    constructorProvenance: 'UNVERIFIED',
+    sourceMapFunctionCorrespondence: 'UNVERIFIED',
+    applicationRoot: 'UNVERIFIED',
+    middleware: 'UNVERIFIED',
+    reachability: 'UNVERIFIED',
+    blockedOn: [
+      'privately-owned-admitted-runtime-fixture',
+      'complete-constructor-registry',
+      'complete-middleware-observation',
+    ],
+    runtimeCustodyComplete: false,
+    readinessPromoting: false,
+  };
+  return {
+    tree: state.inputs.tree,
+    parentPid: process.pid,
+    descriptorSha256: digest(descriptorBody),
+    nodePath: job.nodePath,
+    nodeSha256: job.nodeSha256,
+    cwd: state.checkout,
+    environment: Object.fromEntries(
+      Object.keys(launchEnvironment)
+        .sort()
+        .map((name) => [name, digest(launchEnvironment[name])]),
+    ),
+    roster,
+    observation,
+    trustedBootstrap: job.controls.filter((row) =>
+      ['scripts/lib/http-runtime-worker.mjs', 'scripts/lib/http-module-custody.mjs'].includes(
+        row.path,
+      ),
+    ),
+    optionalProbes,
+    requiredEvaluationURLs: [
+      'scripts/lib/http-runtime-census.mjs',
+      'scripts/lib/http-runtime-bindings.mjs',
+      job.bootstrap.emitted.path,
+    ].map((path) => pathToFileURL(resolve(state.checkout, path)).href),
+  };
+}
+
 /**
  * Launch the only currently supported, secret-free runtime diagnostic.
  * It observes the real bootstrap module export without invoking AppModule.
@@ -1663,6 +1954,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
     if (body.length > 64 * 1024 * 1024) refuse('Runtime job exceeds supported bound');
     writeFileSync(descriptorPath, body, { mode: 0o600, flag: 'wx' });
     environment.STYNX_HTTP_JOB_SHA256 = digest(body);
+    const protocolBindings = runtimeProtocolBindings(state, job, body, environment);
     const stdout = [];
     const stderr = [];
     let logLength = 0;
@@ -1685,6 +1977,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
       candidateCommit: state.candidateCommit,
       pid: child.pid,
       mode: job.mode,
+      bindings: protocolBindings,
     });
     const reject = () => {
       failure ??= 'HTTP_RUNTIME_WORKER_INVALID';
@@ -1741,6 +2034,25 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
         },
       ],
     );
+    if (
+      !isDeepStrictEqual(protocolBindings, runtimeProtocolBindings(state, job, body, environment))
+    )
+      refuse('Runtime protocol parent bindings changed before admission');
+    // The parser has first closed these rows against the private roster. Recheck
+    // their actual raw-path relationship without discarding valid native aliases.
+    for (const row of [
+      ...terminal.modules.resolutions.filter((entry) => entry.builtin === false),
+      ...terminal.modules.evaluations,
+    ]) {
+      let canonicalURL;
+      try {
+        canonicalURL = pathToFileURL(realpathSync(fileURLToPath(row.url))).href;
+      } catch {
+        refuse('Runtime protocol raw module path is unresolved');
+      }
+      if (canonicalURL !== row.canonicalURL)
+        refuse('Runtime protocol raw module path differs from its private canonical member');
+    }
     const report = {
       schemaVersion: 1,
       candidateCommit: state.candidateCommit,

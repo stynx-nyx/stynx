@@ -249,6 +249,7 @@ export async function runHttpRuntimeWorker() {
       job.descriptorPath !== descriptor ||
       process.cwd() !== job.checkoutRoot ||
       realpathSync(process.cwd()) !== job.checkoutRoot ||
+      process.execPath !== job.nodePath ||
       realpathSync(process.execPath) !== job.nodePath ||
       digest(readFileSync(process.execPath)) !== job.nodeSha256 ||
       process.versions.node !== '24.20.0' ||
