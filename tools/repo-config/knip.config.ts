@@ -33,6 +33,12 @@ const config: KnipConfig = {
     'reference/*': {
       entry: [
         'src/main.ts',
+        // The owned HTTP worker resolves these composition factories from its closed roster.
+        'src/performance/domain.ts',
+        'src/performance/i18n.ts',
+        'src/performance/offline-ctg9.ts',
+        'src/performance/offline-e6.ts',
+        'src/performance/privacy.ts',
         'scripts/**/*.{mjs,cjs,js,sh}',
         'playwright.config.mjs',
         'vitest.config.ts',
@@ -49,6 +55,8 @@ const config: KnipConfig = {
         'validate.js',
         'vitest.config.ts',
         'support/*.ts',
+        // The live-channel regression spawns this executable through a URL at runtime.
+        'support/http-reference-channel-child.mjs',
         'cli-generator/consumer-runtime.ts',
         'i18n-installed/run-integration.mjs',
         'i18n-installed/consumer-runtime.ts',
