@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { types } from 'node:util';
+import { isDeepStrictEqual, types } from 'node:util';
 import { isHttpComposition } from './http-composition-roster.mjs';
 import { serializeHttpRuntimePlainJson } from './http-runtime-protocol.mjs';
 
@@ -354,9 +354,10 @@ export function createHttpQualificationProtocol(expected) {
           time - times.get('measurement-start') > seconds(330))
       )
         refuse();
-      if (frame.phase === 'close' && time - times.get('measurement-complete') > seconds(30))
-        refuse();
-      if (['final', 'terminal'].includes(frame.phase) && time - times.get('close') > seconds(30))
+      if (
+        ['close', 'final', 'terminal'].includes(frame.phase) &&
+        time - times.get('measurement-complete') > seconds(30)
+      )
         refuse();
       admitted.push(frame);
       return true;
@@ -416,4 +417,168 @@ export function createHttpQualificationProtocol(expected) {
       }
     },
   });
+}
+
+const channels = new WeakMap();
+let activeChannel;
+const nativeMonotonic = process.hrtime.bigint;
+const nativeHrtime = process.hrtime;
+function channelFor(handle) {
+  const state = channels.get(handle);
+  if (
+    !state ||
+    state !== activeChannel ||
+    state.failed ||
+    state.closed ||
+    state.sending ||
+    process.hrtime !== nativeHrtime ||
+    process.hrtime.bigint !== nativeMonotonic ||
+    process.send !== state.send ||
+    !process.connected ||
+    !isDeepStrictEqual(Object.getOwnPropertyDescriptor(process, 'send'), state.sendDescriptor)
+  )
+    refuse();
+  return state;
+}
+async function sendLive(state, phase, body) {
+  channelFor(state.handle);
+  const frame = copy({
+    schemaVersion: 1,
+    mode,
+    sequence: state.frames.length + 1,
+    phase,
+    candidateCommit: state.context.candidateCommit,
+    tree: state.context.tree,
+    nonce: state.context.nonce,
+    operationId: state.context.operationId,
+    workerPid: process.pid,
+    compositionId: state.context.compositionId,
+    caseId: state.context.caseId,
+    elapsedNs: phase === 'start' ? '0' : (nativeMonotonic() - state.startedAt).toString(),
+    body,
+  });
+  if (!state.protocol.receive(frame)) {
+    state.failed = true;
+    refuse();
+  }
+  state.sending = true;
+  try {
+    await new Promise((resolve, reject) => {
+      Reflect.apply(state.send, process, [frame, (error) => (error ? reject(error) : resolve())]);
+    });
+    if (
+      !process.connected ||
+      process.send !== state.send ||
+      !isDeepStrictEqual(Object.getOwnPropertyDescriptor(process, 'send'), state.sendDescriptor) ||
+      process.hrtime !== nativeHrtime ||
+      process.hrtime.bigint !== nativeMonotonic
+    )
+      refuse();
+    state.frames.push(frame);
+  } catch (error) {
+    state.failed = true;
+    throw error;
+  } finally {
+    state.sending = false;
+  }
+}
+
+/** Actual IPC channel; immutable job/manifest/build custody remains the parent's obligation. */
+export async function openHttpQualificationChannel(job) {
+  if (
+    arguments.length !== 1 ||
+    activeChannel ||
+    job?.mode !== mode ||
+    typeof process.send !== 'function' ||
+    !process.connected ||
+    !exact(job.qualification, ['operationId', 'caseId', 'caseSha256', 'manifestSha256']) ||
+    !job.referenceFixture ||
+    !Array.isArray(job.controls)
+  )
+    refuse();
+  const context = {
+    candidateCommit: job.candidateCommit,
+    tree: job.tree,
+    nonce: job.nonce,
+    operationId: job.qualification.operationId,
+    workerPid: process.pid,
+    compositionId: job.compositionId,
+    caseId: job.qualification.caseId,
+    caseSha256: job.qualification.caseSha256,
+    manifestSha256: job.qualification.manifestSha256,
+    fixtureSha256: digest(job.referenceFixture),
+    controlClosureSha256: digest(job.controls),
+  };
+  if (
+    !validContext(context) ||
+    job.referenceFixture.identity?.candidateCommit !== context.candidateCommit ||
+    job.referenceFixture.identity?.tree !== context.tree ||
+    job.referenceFixture.identity?.nonce !== context.nonce
+  )
+    refuse();
+  const handle = Object.freeze(Object.create(null));
+  const state = {
+    handle,
+    context: copy(context),
+    protocol: createHttpQualificationProtocol(context),
+    send: process.send,
+    sendDescriptor: Object.getOwnPropertyDescriptor(process, 'send'),
+    startedAt: nativeMonotonic(),
+    frames: [],
+    failed: false,
+    closed: false,
+    sending: false,
+  };
+  channels.set(handle, state);
+  activeChannel = state;
+  await sendLive(state, 'start', {
+    fixtureSha256: context.fixtureSha256,
+    controlClosureSha256: context.controlClosureSha256,
+    caseSha256: context.caseSha256,
+    manifestSha256: context.manifestSha256,
+    parentCorroborationRequired: true,
+  });
+  return handle;
+}
+
+/** Fixed worker emits each phase immediately after the real owned operation. */
+export async function emitHttpQualificationPhase(handle, phase, body) {
+  const state = channelFor(handle);
+  if (arguments.length !== 3 || !phases.includes(phase) || ['start', 'terminal'].includes(phase)) {
+    state.failed = true;
+    refuse();
+  }
+  await sendLive(state, phase, body);
+}
+
+/** Terminal names actual private result bytes; it grants no standalone qualification. */
+export async function finishHttpQualificationChannel(handle, resultArtifactSha256) {
+  const state = channelFor(handle);
+  if (
+    arguments.length !== 2 ||
+    !hash(resultArtifactSha256) ||
+    state.frames.length !== phases.length - 1
+  ) {
+    state.failed = true;
+    refuse();
+  }
+  await sendLive(state, 'terminal', {
+    phaseCount: state.frames.length,
+    phaseSha256: digest(state.frames),
+    resultArtifactSha256,
+    parentCorroborationRequired: true,
+    runtimeCustodyComplete: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  });
+  state.closed = true;
+  activeChannel = undefined;
+  return {
+    closed: true,
+    frameCount: state.frames.length,
+    parentCorroborationRequired: true,
+    runtimeCustodyComplete: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  };
 }
