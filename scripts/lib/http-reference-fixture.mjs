@@ -1534,7 +1534,10 @@ async function createFixedReferenceFixture(identity, privacy, originalScenario =
         },
         credentials: {
           accessKeyId: `stynx${randomBytes(8).toString('hex')}`,
-          secretAccessKey: randomBytes(32).toString('hex'),
+          // The S3-only emulator has no IAM-issued key. Its signature verifier
+          // requires the documented test secret for this synthetic access key.
+          // Keep presigned signature and expiry validation enabled.
+          secretAccessKey: 'test',
         },
         storageBucket: 'stynx-docs-http-fixture-us-east-1',
         privacyBucket: `stynx-privacy-${instance}`,
