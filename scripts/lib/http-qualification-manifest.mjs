@@ -46,11 +46,7 @@ function unique(rows, key, label) {
   return map;
 }
 
-/** Read-only declaration component. It cannot allocate, execute, calibrate,
- * admit a task or turn supplied paths into a live fresh-build capability.
- */
-export function loadHttpQualificationCase(checkoutRoot, caseId) {
-  demand(arguments.length === 2, 'Manifest component requires exactly a root and case ID');
+function assertCheckoutRoot(checkoutRoot) {
   demand(
     typeof checkoutRoot === 'string' &&
       isAbsolute(checkoutRoot) &&
@@ -58,7 +54,11 @@ export function loadHttpQualificationCase(checkoutRoot, caseId) {
       lstatSync(checkoutRoot).isDirectory(),
     'Manifest checkout is not an actual canonical directory',
   );
-  demand(typeof caseId === 'string' && caseId.length > 0, 'Missing exact manifest case ID');
+}
+
+// Both projections consume this same complete schema/source/cross-product check.
+// No caller-authored roster or independently permissive parser is accepted.
+function readHttpQualificationManifest(checkoutRoot) {
   const files = new Map();
   const read = (path, expected) => {
     demand(
@@ -203,6 +203,22 @@ export function loadHttpQualificationCase(checkoutRoot, caseId) {
     }
   }
   demand(expanded.size === cases.size, 'Manifest contains an unexpanded case');
+  return {
+    manifest,
+    cases,
+    expanded,
+    files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path)),
+  };
+}
+
+/** Read-only declaration component. It cannot allocate, execute, calibrate,
+ * admit a task or turn supplied paths into a live fresh-build capability.
+ */
+export function loadHttpQualificationCase(checkoutRoot, caseId) {
+  demand(arguments.length === 2, 'Manifest component requires exactly a root and case ID');
+  assertCheckoutRoot(checkoutRoot);
+  demand(typeof caseId === 'string' && caseId.length > 0, 'Missing exact manifest case ID');
+  const { cases, expanded, files } = readHttpQualificationManifest(checkoutRoot);
   demand(expanded.has(caseId), 'Case is absent from the exact manifest');
   return structuredClone({
     schemaVersion: 1,
@@ -211,8 +227,41 @@ export function loadHttpQualificationCase(checkoutRoot, caseId) {
     schemaSha256,
     caseSha256: cases.get(caseId).caseSha256,
     binding: expanded.get(caseId),
-    files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path)),
+    files,
     requiredCases: expanded.size,
+    runtimeAdmission: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  });
+}
+
+/** Complete source-bound roster in declared composition order, then each
+ * composition's manifest case order. Selection never removes a required case.
+ * This projection supplies no runtime, fixture, resume or admission authority.
+ */
+export function loadHttpQualificationRoster(checkoutRoot) {
+  demand(arguments.length === 1, 'Manifest roster requires exactly one checkout root');
+  assertCheckoutRoot(checkoutRoot);
+  const { manifest, cases, expanded, files } = readHttpQualificationManifest(checkoutRoot);
+  const compositionOrder = manifest.compositions.map((row) => row.id);
+  const orderedCases = compositionOrder.flatMap((compositionId) =>
+    manifest.cases.filter((row) => row.compositionId === compositionId),
+  );
+  demand(orderedCases.length === cases.size, 'Manifest order lost a required case');
+  demand(
+    new Set(orderedCases.map((row) => row.caseId)).size === expanded.size,
+    'Manifest order duplicated a required case',
+  );
+  return structuredClone({
+    schemaVersion: 1,
+    scope: 'source-bound-http-qualification-roster-component',
+    manifestSha256,
+    schemaSha256,
+    compositionOrder,
+    cases: orderedCases,
+    files,
+    requiredCases: expanded.size,
+    qualificationProfile: manifest.qualificationProfile,
     runtimeAdmission: false,
     performanceQualified: false,
     readinessPromoting: false,

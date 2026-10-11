@@ -48,7 +48,10 @@ import {
   closeOwnedReferenceFixture,
 } from './http-reference-fixture.mjs';
 import { deriveReferenceRegistryPlan } from './http-reference-registry.mjs';
-import { loadHttpQualificationCase } from './http-qualification-manifest.mjs';
+import {
+  loadHttpQualificationCase,
+  loadHttpQualificationRoster,
+} from './http-qualification-manifest.mjs';
 import { createHttpQualificationProtocol } from './http-qualification-protocol.mjs';
 import { decodeHttpQualificationTargetCapture } from './http-qualification-raw.mjs';
 import { decodeHttpQualificationNativeMetrics } from './http-qualification-metrics.mjs';
@@ -1529,6 +1532,34 @@ export function snapshotFreshHttpQualificationCase(handle, caseId) {
     ...declaration,
     candidateCommit: state.candidateCommit,
     tree: state.inputs.tree,
+    actualPrivateBuildSelection: true,
+    runtimeAdmission: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  });
+}
+
+/** Select the complete declaration roster only through the retained actual
+ * build. Cross-composition rows remain declarations, never mounted evidence.
+ */
+export function snapshotFreshHttpQualificationRoster(handle) {
+  if (arguments.length !== 1) refuse('Qualification roster accepts one actual build handle');
+  const state = stateFor(handle);
+  recheck(state);
+  const roster = loadHttpQualificationRoster(state.checkout);
+  if (!roster.compositionOrder.includes(state.rootId))
+    refuse('Qualification roster omits the actual build composition');
+  for (const row of roster.files) {
+    const tracked = state.inputs.files.find((file) => file.path === row.path);
+    if (!tracked || tracked.sha256 !== row.sha256 || tracked.byteLength !== row.byteLength)
+      refuse('Qualification roster member is outside the retained tracked build roster');
+  }
+  recheck(state);
+  return structuredClone({
+    ...roster,
+    candidateCommit: state.candidateCommit,
+    tree: state.inputs.tree,
+    buildCompositionId: state.rootId,
     actualPrivateBuildSelection: true,
     runtimeAdmission: false,
     performanceQualified: false,
