@@ -18,8 +18,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual, types } from 'node:util';
-import { httpOriginalScenarioProfile } from './http-original-scenarios.mjs';
-import { loadHttpOriginalQuotaRecipe } from './http-original-quotas.mjs';
 
 // First finite local recipe. These identities grant no build/process custody.
 // The supervisor must bind an actually created opaque handle to its live build.
@@ -1115,7 +1113,9 @@ export async function createOwnedPrivacyReferenceFixture(identity) {
 /** Fixed original profiles reuse owned resources and existing Compose quotas. */
 export async function createOwnedOriginalReferenceFixture(identity, selector) {
   if (arguments.length !== 2) refuse('REQUEST');
+  const { httpOriginalScenarioProfile } = await import('./http-original-scenarios.mjs');
   const profile = httpOriginalScenarioProfile(selector);
+  const { loadHttpOriginalQuotaRecipe } = await import('./http-original-quotas.mjs');
   const root = realpathSync(fileURLToPath(new URL('../../', import.meta.url)));
   const quotaRecipe = loadHttpOriginalQuotaRecipe(root);
   return createFixedReferenceFixture(identity, profile.scenarioId === 'upload', {
