@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
@@ -49,7 +49,7 @@ function taskClosure(descriptor, roots) {
   return closure;
 }
 
-test('DEVAI 2.4.0 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', () => {
+test('DEVAI 2.5.0 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', () => {
   const expectedConstitutionDigest =
     'd7f8791f1d00a7247bced66bdcdf8b1af431bb57e49d03b6ddd7024cb52f957d';
   const identity = readJson('law/policy/devai-package-identity.json');
@@ -63,29 +63,29 @@ test('DEVAI 2.4.0 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', (
   assert.deepEqual(identity, {
     schemaVersion: '1.0.0',
     policy_id: 'stynx.devai-package-identity',
-    policy_version: '1.5.0',
+    policy_version: '1.6.0',
     authority: 'Architect',
     description: identity.description,
     registry: 'https://npm.pkg.github.com',
     package: '@aarusso-nyx/devai',
-    version: '2.4.0',
+    version: '2.5.0',
     tarball:
-      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/2.4.0/d650e1cf753720569ec826d8e2b93ead23671140',
+      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/2.5.0/feacfade655851c282506b49d5c21114774657e4',
     integrity:
-      'sha512-WgiBcsUeSECohocQTnFmsycJRtyjHCHVF0KQ0//sHHb1zT7bHgMW248VmcRQNoaSRpXSOo2BRqIpOtnj2HsgWg==',
-    shasum: 'd650e1cf753720569ec826d8e2b93ead23671140',
-    sha256: '2965fbb35957aa33378315d558bd1c7034a8e53e1b8a147e2c417a1dbf19c2c5',
-    source_commit: '9fda759a131c7b7ff43635ad6fa5e4e878f5f836',
-    source_tree: '5de4bab35aafdaec115ac03cc54a05630204b677',
-    signed_tag_object: '1769ab9866dd0077586467fdd4bedec00897d53e',
+      'sha512-H6QsDt9/YmHWEjIGwe/42W3ZF+JSvVS9rwZajH9bqTU2Wxju9hwqjUu/7fBgx6TWlQNhRPjATO+w6abelInpfQ==',
+    shasum: 'feacfade655851c282506b49d5c21114774657e4',
+    sha256: '39f396dec46b27f4497d748e701f57cfcab7c2b9925a7726b20d470162b332b4',
+    source_commit: '8ccca89f4d17d314ec2391cdf60ec8f944140ca4',
+    source_tree: '5baf403f44e8788d8e6976aa2453d0a4b14e9ef6',
+    signed_tag_object: '15b0e5897815d171a6b70903d40419019ccaebc6',
   });
-  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '2.4.0');
-  assert.equal(installedManifest.version, '2.4.0');
+  assert.equal(manifest.devDependencies['@aarusso-nyx/devai'], '2.5.0');
+  assert.equal(installedManifest.version, '2.5.0');
   assert.deepEqual(project.constitution, {
     version: '1.0.2',
     sha256: expectedConstitutionDigest,
   });
-  assert.equal(project.devai_version, '2.4.0');
+  assert.equal(project.devai_version, '2.5.0');
   assert.equal(
     createHash('sha256').update(pinnedConstitution).digest('hex'),
     expectedConstitutionDigest,
@@ -97,7 +97,7 @@ test('DEVAI 2.4.0 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', (
   assert.deepEqual(profile, adoption.release_verification);
 });
 
-test('DEVAI 2.4.0 ownership-matrix bind keeps the attested RC gate and GitHub host identity', () => {
+test('DEVAI 2.5.0 ownership-matrix bind keeps the attested RC gate and GitHub host identity', () => {
   const project = readJson('.devai/config/project.json');
   const adoption = readJson('law/policy/devai-adoption.json');
   const binding = readJson('.devai/config/adopter-policy-binding.json');
@@ -116,11 +116,11 @@ test('DEVAI 2.4.0 ownership-matrix bind keeps the attested RC gate and GitHub ho
     adapter_config: '.devai/config/github-actions-host-adapter.json',
   });
   assert.deepEqual(authority.host_enforcement, {
-    adapter: { adapter_id: 'github-actions-main-observation', adapter_version: '2.4.0' },
+    adapter: { adapter_id: 'github-actions-main-observation', adapter_version: '2.5.0' },
     mode: 'host-integrated',
   });
-  assert.equal(authority.framework_package.version, '2.4.0');
-  assert.equal(githubAdapter.package_binding.version, '2.4.0');
+  assert.equal(authority.framework_package.version, '2.5.0');
+  assert.equal(githubAdapter.package_binding.version, '2.5.0');
   // Since DEVAI 2.1.0 the tracked post-merge file is a path-free declaration;
   // the checkout-bound attestation lives in <git-dir>/devai of the bound checkout.
   assert.deepEqual(postMergeAdapter, {
@@ -144,7 +144,7 @@ test('DEVAI 2.4.0 ownership-matrix bind keeps the attested RC gate and GitHub ho
   );
 });
 
-test('registered 2.4.0 upgrade binds the complete policy projection and every generated digest', () => {
+test('registered 2.5.0 upgrade binds the complete policy projection and every generated digest', () => {
   const adoption = readJson('law/policy/devai-adoption.json');
   const binding = readJson('.devai/config/adopter-policy-binding.json');
   const receipt = readJson('.devai/config/upgrade-receipt.json');
@@ -168,13 +168,14 @@ test('registered 2.4.0 upgrade binds the complete policy projection and every ge
     assert.equal(digestFile(path), digest, `policy binding changed: ${path}`);
   }
   assert.equal(receipt.schemaVersion, '1.0.0');
-  assert.equal(receipt.from, '2.3.2');
-  assert.equal(receipt.to, '2.4.0');
+  assert.equal(receipt.from, '2.4.0');
+  assert.equal(receipt.to, '2.5.0');
   assert.equal(Number.isFinite(Date.parse(receipt.upgraded_at)), true);
   assert.deepEqual(receipt.constitution, { from: '1.0.2', to: '1.0.2' });
   assert.deepEqual(receipt.migrations, [
-    'MIG-2.4.0-sensor-inputs-projection',
-    'MIG-2.4.0-declared-sensor-task-template',
+    'MIG-2.5.0-audit-interface-projections',
+    'MIG-2.5.0-complete-test-result-population',
+    'MIG-2.5.0-trusted-verifier-2-4',
   ]);
   assert.deepEqual(receipt.retired_keys, []);
   assert.deepEqual(receipt.obligations, []);
@@ -183,9 +184,9 @@ test('registered 2.4.0 upgrade binds the complete policy projection and every ge
     '.devai/config/authority-policy.json',
     '.devai/config/github-actions-host-adapter.json',
     '.devai/config/project.json',
-    '.devai/config/sensor-inputs.json',
     '.devai/config/subprocess-effects.json',
     '.devai/constitution.md',
+    '.github/workflows/devai-local-rc-verify.yml',
   ]);
   for (const entry of receipt.changed_files) {
     assert.equal(entry.operation, 'update');
@@ -221,8 +222,8 @@ test('supported sensor projection retains reviewed populations and the unmeasure
     assert.deepEqual(inputs[kind].testGlobs, testRoots, `${kind} must search all owned roots`);
   }
   assert.deepEqual(inputs.type_check, { argv: ['pnpm', 'typecheck'] });
-  // The protected 1.9.0 verifier does not admit sensorKinds; adding a task reference
-  // here would not make the legacy type-check command a verified measurement.
+  // This adoption intentionally keeps the reviewed legacy command unmeasured.
+  // Supported task syntax alone cannot provide a verified execution receipt.
   for (const task of descriptor.tasks) {
     assert.equal(Object.hasOwn(task, 'sensorKinds'), false);
   }
@@ -267,7 +268,7 @@ test('installed DEVAI CLI reads the exact binding as current without rewriting a
   assert.equal(paths.includes('.devai/config/upgrade-receipt.json'), true);
   assert.equal(paths.includes('record/proofs/chain.json'), true);
   const before = new Map(paths.map((path) => [path, digestFile(path)]));
-  assert.match(installedCli(['--version']), /^devai\/2\.4\.0\s/u);
+  assert.match(installedCli(['--version']), /^devai\/2\.5\.0\s/u);
   const planned = JSON.parse(
     installedCli([
       'init',
@@ -282,8 +283,8 @@ test('installed DEVAI CLI reads the exact binding as current without rewriting a
   );
   assert.equal(planned.ok, true);
   const { plan } = planned.result.value;
-  assert.equal(plan.from, '2.4.0');
-  assert.equal(plan.to, '2.4.0');
+  assert.equal(plan.from, '2.5.0');
+  assert.equal(plan.to, '2.5.0');
   assert.equal(plan.status, 'no-op');
   assert.equal(plan.receipt, 'current');
   assert.deepEqual(plan.changed_files, []);
@@ -304,6 +305,12 @@ test('installed DEVAI CLI reads the exact binding as current without rewriting a
   assert.equal(doctor.ok, true);
   assert.equal(doctor.result.value.ok, true);
   const checks = new Map(doctor.result.value.checks.map((check) => [check.name, check]));
+  assert.equal(checks.size, 15);
+  assert.equal(doctor.result.value.checks.length, checks.size);
+  assert.equal(
+    doctor.result.value.checks.every(({ ok }) => ok === true),
+    true,
+  );
   for (const name of [
     'policy-materialization-current',
     'evidence-chain-valid',
@@ -315,8 +322,15 @@ test('installed DEVAI CLI reads the exact binding as current without rewriting a
     assert.equal(checks.get(name)?.ok, true, `installed Doctor refuses ${name}`);
   }
   assert.deepEqual(checks.get('policy-materialization-current').info.mismatches, []);
-  assert.equal(checks.get('devai-version-match').info.running, '2.4.0');
-  assert.equal(checks.get('devai-version-match').info.pinned, '2.4.0');
+  assert.equal(checks.get('devai-version-match').info.running, '2.5.0');
+  assert.equal(checks.get('devai-version-match').info.pinned, '2.5.0');
+  assert.equal(checks.get('authority-enforcement').info.selected_adapter_policy_bound, true);
+  assert.equal(checks.get('authority-enforcement').info.github_actions_enforced, true);
+  assert.equal(checks.get('authority-enforcement').info.arbitrary_host_tools_enforced, false);
+  assert.match(
+    checks.get('trusted-local-rc-boundary').info.attestation_boundary,
+    /trusted signer identity and byte integrity/u,
+  );
   for (const [path, digest] of before) {
     assert.equal(digestFile(path), digest, `read-only CLI changed ${path}`);
   }
@@ -417,10 +431,38 @@ test('trusted local RC ledger gate pins the DEVAI-designated verifier and admitt
   const project = readJson('.devai/config/project.json');
   const localRcScript = readFileSync(join(repoRoot, 'scripts/devai-local-rc.mjs'), 'utf8');
 
-  assert.equal(verifierPolicy.package.version, '1.9.0');
+  assert.equal(verifierPolicy.package.version, '2.4.0');
+  assert.deepEqual(verifierPolicy.package, {
+    name: '@aarusso-nyx/devai',
+    version: '2.4.0',
+    registry: 'https://npm.pkg.github.com',
+    tarball:
+      'https://npm.pkg.github.com/download/@aarusso-nyx/devai/2.4.0/d650e1cf753720569ec826d8e2b93ead23671140',
+    shasum_sha1: 'd650e1cf753720569ec826d8e2b93ead23671140',
+    integrity_sri:
+      'sha512-WgiBcsUeSECohocQTnFmsycJRtyjHCHVF0KQ0//sHHb1zT7bHgMW248VmcRQNoaSRpXSOo2BRqIpOtnj2HsgWg==',
+    release_source: {
+      repository: 'aarusso-nyx/devai',
+      commit: '9fda759a131c7b7ff43635ad6fa5e4e878f5f836',
+      tree: '5de4bab35aafdaec115ac03cc54a05630204b677',
+    },
+  });
+  assert.deepEqual(verifierPolicy.authentication, {
+    secret: 'PACKAGES_READ_TOKEN',
+    scope: 'materialization-step-only',
+    github_token_fallback: false,
+  });
+  assert.deepEqual(verifierPolicy.workflow_permissions, {
+    contents: 'read',
+    packages: 'read',
+    checks: 'write',
+  });
+  assert.equal(verifierPolicy.materialization.package_lifecycle_scripts, false);
+  assert.equal(verifierPolicy.materialization.candidate_product_execution, false);
+  assert.equal(verifierPolicy.verifier.payload_file_count, 26);
   assert.equal(
     verifierPolicy.verifier.provenance_sha256,
-    '302161f378e54d0a2b14b743a68577f4bfc43a147a1f17568941e08e14e767a0',
+    'fc79da07d4d4dfa466548337a4944ae1b7e0bfdcf2f1c334b341bb1ad477cd4d',
   );
   for (const pinned of [
     verifierPolicy.package.tarball,
@@ -499,4 +541,20 @@ test('trusted local RC ledger gate pins the DEVAI-designated verifier and admitt
     failure_mode: 'fail-closed',
     local_only_nodes: ['test:mutation'],
   });
+});
+
+test('minimal 2.5 adoption does not opt in empty trust declarations or an unmanaged toolchain', () => {
+  const adoption = readJson('law/policy/devai-adoption.json');
+  const binding = readJson('.devai/config/adopter-policy-binding.json');
+  for (const key of ['invariant_producers', 'reviewed_workflow_steps']) {
+    assert.equal(Object.hasOwn(adoption, key), false);
+  }
+  for (const path of [
+    '.devai/config/invariant-producers.json',
+    '.devai/config/reviewed-workflow-steps.json',
+  ]) {
+    assert.equal(Object.hasOwn(binding.materialized, path), false);
+    assert.equal(existsSync(join(repoRoot, path)), false);
+  }
+  assert.equal(existsSync(join(repoRoot, '.devai/config/toolchain.json')), false);
 });
