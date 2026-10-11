@@ -30,7 +30,11 @@ const frame = (expected, kind, result) => ({
   pid: expected.pid,
   result,
 });
-const start = (expected) => frame(expected, 'start', { mode: expected.mode });
+const start = (expected) =>
+  frame(expected, 'start', {
+    mode: expected.mode,
+    resolutionAnchors: structuredClone(expected.bindings.resolutionAnchors),
+  });
 const terminal = (expected) =>
   frame(expected, 'terminal', {
     observation: structuredClone(expected.bindings.observation),
@@ -645,7 +649,7 @@ const transportChild = `
 const options = JSON.parse(process.argv[1]);
 const { expected, scenario } = options;
 const frame = (kind,result) => ({schemaVersion:1,kind,nonce:expected.nonce,candidateCommit:expected.candidateCommit,pid:process.pid,result});
-const first = frame('start',{mode:expected.mode});
+const first = frame('start',{mode:expected.mode,resolutionAnchors:expected.bindings.resolutionAnchors});
 const last = frame('terminal',options.result);
 for (const probe of last.result.modules.optionalResolutionProbes) probe.identity.pid=process.pid;
 let frames = [first,last];

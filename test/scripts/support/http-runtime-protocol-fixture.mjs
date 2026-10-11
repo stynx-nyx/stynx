@@ -83,6 +83,59 @@ export function createProtocolFixture(repository, root) {
   ];
   for (const file of [...controls, ...required.filter((f) => f !== bootstrapEmitted)])
     put(file, readFileSync(join(repository, file)));
+  for (const file of ['reference/api/package.json', 'packages/flow/package.json'])
+    put(file, readFileSync(join(repository, file)));
+  const anchorFacts = [
+    [
+      'reference/api/package.json',
+      'scripts/lib/http-module-custody.mjs',
+      "createRequire(new URL('../../reference/api/package.json', import.meta.url))('reflect-metadata')",
+      ['reflect-metadata'],
+    ],
+    [
+      'packages/flow/package.json',
+      'scripts/lib/http-runtime-census.mjs',
+      "createRequire(new URL('../../packages/flow/package.json', import.meta.url))",
+      [
+        '@nestjs/core',
+        '@nestjs/core/router/router-explorer',
+        '@nestjs/core/adapters/http-adapter',
+        '@nestjs/common',
+        '@nestjs/common/constants',
+        '@stynx-nyx/auth',
+        '@nestjs/platform-express',
+      ],
+    ],
+  ].map(([manifestPath, callerPath, literal, requests]) => {
+    const physical = (relative) => {
+      const file = join(root, relative),
+        stat = lstatSync(file);
+      return {
+        ...byteRow(relative, true),
+        url: pathToFileURL(file).href,
+        device: stat.dev,
+        inode: stat.ino,
+      };
+    };
+    const callerText = readFileSync(join(root, callerPath), 'utf8');
+    assert.equal(callerText.split(literal).length, 2);
+    const start = callerText.indexOf(literal);
+    return {
+      classification: 'NON_EVALUATED_RESOLUTION_ANCHOR',
+      manifest: physical(manifestPath),
+      caller: {
+        ...physical(callerPath),
+        callsite: {
+          kind: 'DECLARED_REVIEWED_CALLSITE',
+          start,
+          end: start + literal.length,
+          literal,
+        },
+      },
+      requests,
+      conditions: ['require', 'node', 'node-addons', 'module-sync'],
+    };
+  });
   const installed = createRequire(join(repository, 'packages/flow/package.json')).resolve(
     '@nestjs/core/nest-application.js',
   );
@@ -255,13 +308,18 @@ export function createProtocolFixture(repository, root) {
     optionalProbes,
     requiredEvaluationURLs: required.map((file) => pathToFileURL(join(root, file)).href),
   };
-  const context = () => ({
-    nonce: randomUUID(),
-    candidateCommit: 'a'.repeat(40),
-    pid: process.pid,
-    mode: 'bootstrap-module-only',
-    bindings: structuredClone(template),
-  });
+  const context = () => {
+    const nonce = randomUUID(),
+      candidateCommit = 'a'.repeat(40),
+      bindings = structuredClone(template);
+    bindings.resolutionAnchors = structuredClone(anchorFacts).map((entry) => ({
+      ...entry,
+      candidateCommit,
+      tree: bindings.tree,
+      nonce,
+    }));
+    return { nonce, candidateCommit, pid: process.pid, mode: 'bootstrap-module-only', bindings };
+  };
   return { context, rules, template, hash };
 }
 
@@ -331,6 +389,7 @@ export function moduleFacts(expected, phase = false) {
     nodeSha256: binding.nodeSha256,
     resolutions: [],
     evaluations,
+    resolutionAnchors: structuredClone(binding.resolutionAnchors),
     optionalResolutionProbes,
     supervisedStartup: {
       candidateCommit: expected.candidateCommit,
