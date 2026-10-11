@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
-import { lstatSync, readFileSync, realpathSync } from 'node:fs';
+import { lstatSync, realpathSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { isAbsolute, resolve } from 'node:path';
 import ts from 'typescript';
 import { parseBaselineJson } from './k6-baseline-json.mjs';
+import { readHttpQualificationDeclaration } from './http-qualification-artifacts.mjs';
 
 // Exact Architect declaration, not a runtime admission receipt. The private
 // fresh-build parent separately checks its tracked roster and all live floors.
@@ -73,7 +74,7 @@ function readHttpQualificationManifest(checkoutRoot) {
       lstatSync(physical).isFile() && realpathSync(physical) === physical,
       'Manifest member is not an unlinked owned regular file',
     );
-    const bytes = readFileSync(physical);
+    const { bytes } = readHttpQualificationDeclaration(checkoutRoot, physical);
     const sha256 = digest(bytes);
     demand(expected === undefined || sha256 === expected, `Manifest member differs: ${path}`);
     const previous = files.get(path);

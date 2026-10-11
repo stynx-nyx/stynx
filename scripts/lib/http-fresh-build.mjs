@@ -55,7 +55,15 @@ import {
 import { createHttpQualificationProtocol } from './http-qualification-protocol.mjs';
 import { decodeHttpQualificationTargetCapture } from './http-qualification-raw.mjs';
 import { decodeHttpQualificationNativeMetrics } from './http-qualification-metrics.mjs';
-import { readHttpQualificationArtifact } from './http-qualification-artifacts.mjs';
+import {
+  readHttpQualificationArtifact,
+  readHttpQualificationDeclaration,
+} from './http-qualification-artifacts.mjs';
+import {
+  createHttpQualificationStore,
+  publishHttpQualificationBytes,
+  snapshotHttpQualificationStore,
+} from './http-qualification-store.mjs';
 import { assertHttpQualificationWorkerBody } from './http-qualification-worker-body.mjs';
 import { captureHttpQualificationGeneratorLogs } from './http-qualification-log-capture.mjs';
 import {
@@ -75,6 +83,7 @@ import {
 } from './http-owned-worker.mjs';
 
 const handles = new WeakMap();
+const failedBuilds = new WeakMap();
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 // Published pnpm9.15.0 archive identity, verified against the registry and the
 // Corepack locator. The cache's self-authored metadata is not sufficient proof.
@@ -1457,6 +1466,7 @@ export async function prepareFreshHttpBuild(request) {
   } catch (error) {
     // Failed local preparation owns no reusable handle. Keep only sanitized
     // diagnostics outside the checkout; never clean a caller's source tree.
+    failedBuilds.set(error, state);
     writeFileSync(
       resolve(sandbox, 'failure.json'),
       JSON.stringify(
@@ -3177,8 +3187,11 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
   const configPath = `${prefix}.config.json`;
   const inputBytes = Buffer.from(serializeHttpRuntimePlainJson(allocation));
   writeFileSync(inputPath, inputBytes, { mode: 0o600, flag: 'wx' });
+  retainQualificationArtifact(state, 'allocation', inputPath);
   writeFileSync(configPath, '{}\n', { mode: 0o600, flag: 'wx' });
   for (const path of [rawPath, metricsPath]) writeFileSync(path, '', { mode: 0o600, flag: 'wx' });
+  retainQualificationArtifact(state, 'target-raw', rawPath);
+  retainQualificationArtifact(state, 'native-metrics', metricsPath);
   const scriptPath = resolve(state.checkout, 'scripts/performance/http-qualification.k6.mjs');
   const script = byteRow(state.checkout, scriptPath);
   const environment = {
@@ -3318,6 +3331,12 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
       state.refusal ??= 'HTTP_QUALIFICATION_GENERATOR_CLEANUP_INCOMPLETE';
     } finally {
       // Always capture both real bounded streams, including when reap refuses.
+      for (const stream of ['stdout', 'stderr'])
+        retainQualificationArtifact(
+          state,
+          `generator-${stream}`,
+          resolve(directory, `${allocation.generatorOperationId}.${stream}.log`),
+        );
       try {
         captureHttpQualificationGeneratorLogs(
           directory,
@@ -3508,6 +3527,8 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
     };
     descriptorBytes = Buffer.from(serializeHttpRuntimePlainJson(job));
     writeFileSync(descriptorPath, descriptorBytes, { mode: 0o600, flag: 'wx' });
+    retainQualificationArtifact(state, 'descriptor', descriptorPath);
+    retainQualificationArtifact(state, 'worker-body', job.observationArtifactPath);
     environment.STYNX_HTTP_JOB_SHA256 = digest(descriptorBytes);
     bindings = runtimeProtocolBindings(state, job, descriptorBytes, environment);
     const worker = launchOwnedHttpWorker(workerHandle, {
@@ -3768,6 +3789,7 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
     if (reportBytes.length > 64 * 1024 * 1024)
       refuse('Qualification report exceeds retained private bound');
     writeFileSync(reportPath, reportBytes, { mode: 0o600, flag: 'wx' });
+    retainQualificationArtifact(state, 'parent-report', reportPath);
     return structuredClone({ ...report, reportArtifact: byteRow(state.sandbox, reportPath) });
   } catch (error) {
     failure ??= 'HTTP_QUALIFICATION_OPERATION_INVALID';
@@ -3826,6 +3848,13 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
       ]) {
         try {
           writeFileSync(resolve(directory, name), value, { mode: 0o600, flag: 'wx' });
+          const role = {
+            'stdout.log': 'worker-stdout',
+            'stderr.log': 'worker-stderr',
+            'ipc.json': 'worker-ipc',
+            'cleanup.json': 'cleanup',
+          }[name];
+          if (role) retainQualificationArtifact(state, role, resolve(directory, name));
         } catch {
           state.refusal ??= 'HTTP_QUALIFICATION_CAPTURE_INCOMPLETE';
         }
@@ -3833,6 +3862,466 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
     }
     state.runtimeActive = false;
     if (!failure && state.refusal) refuse('Qualification cleanup/capture remains incomplete');
+  }
+}
+
+function retainQualificationArtifact(state, role, path) {
+  const attempt = state.qualificationAttempt;
+  if (!attempt || attempt.sealed) return;
+  owned(state.sandbox, path);
+  const prior = attempt.paths.get(role);
+  if (prior && prior !== path) refuse('Actual attempt role has contradictory artifact paths');
+  attempt.paths.set(role, path);
+}
+
+function retainQualificationJson(state, role, value) {
+  const attempt = state.qualificationAttempt;
+  const path = resolve(attempt.directory, `${role}.json`);
+  const bytes = Buffer.from(serializeHttpRuntimePlainJson(value));
+  if (bytes.length > 64 * 1024 * 1024) refuse('Actual attempt diagnostic exceeds private bound');
+  writeFileSync(path, bytes, { mode: 0o600, flag: 'wx', flush: true });
+  retainQualificationArtifact(state, role, path);
+}
+
+async function cleanupQualificationAttempt(state) {
+  const failures = [];
+  for (const cleanup of [reapQualificationGenerator, reapReferenceWorker]) {
+    try {
+      await cleanup(state);
+    } catch (error) {
+      failures.push(error.code ?? 'HTTP_QUALIFICATION_CLEANUP_UNKNOWN');
+    }
+  }
+  let fixtureCleanup = null;
+  if (state.referenceFixture) {
+    try {
+      fixtureCleanup = await closeOwnedReferenceFixture(state.referenceFixture.handle);
+      if (fixtureCleanup?.complete === true) state.referenceFixture = undefined;
+      else failures.push('HTTP_QUALIFICATION_FIXTURE_CLEANUP_UNKNOWN');
+    } catch (error) {
+      failures.push(error.code ?? 'HTTP_QUALIFICATION_FIXTURE_CLEANUP_UNKNOWN');
+    }
+  }
+  const absent =
+    failures.length === 0 &&
+    !state.referenceRuntimeWorker &&
+    !state.qualificationGeneratorWorker &&
+    !state.referenceFixture &&
+    !state.runtimeActive &&
+    !state.fixturePreparing &&
+    !state.fixtureChecking;
+  return {
+    worker: state.referenceRuntimeWorkerCleanup ?? null,
+    generator: state.qualificationGeneratorCleanup ?? null,
+    fixture: fixtureCleanup,
+    failures,
+    ownedResources: absent ? 'ABSENT' : 'UNKNOWN',
+    readinessPromoting: false,
+  };
+}
+
+/** Archive evidence from the actual private parent, including refused handles.
+ * There are no caller rows, destinations, cleanup claims or acceptance fields.
+ * Successful durable publication alone clears the private deletion interlock.
+ */
+export async function archiveFreshHttpQualificationAttempt(handle) {
+  if (arguments.length !== 1) refuse('Attempt archival accepts one actual private build handle');
+  const state = handles.get(handle);
+  const attempt = state?.qualificationAttempt;
+  if (!state || !attempt) refuse('No actual parent-owned attempt exists');
+  if (attempt.sealed) return structuredClone(attempt.archive);
+  if (state.runtimeActive || state.fixturePreparing || state.fixtureChecking)
+    refuse('Attempt archival cannot race an active operation');
+  if (attempt.archiving) refuse('Attempt archival is already active');
+  attempt.archiving = true;
+  try {
+    const cleanup = await cleanupQualificationAttempt(state);
+    // Distinct actual final cleanup body avoids replacing a worker's earlier body.
+    if (!attempt.paths.has('cleanup')) retainQualificationJson(state, 'cleanup', cleanup);
+    if (!attempt.paths.has('parent-report'))
+      retainQualificationJson(state, 'parent-report', {
+        candidateCommit: state.candidateCommit,
+        tree: state.inputs.tree,
+        case: attempt.case,
+        refusal: attempt.failure ?? state.refusal ?? null,
+        fullAcceptanceAvailable: false,
+        readinessPromoting: false,
+      });
+    const artifacts = [];
+    const sourcePaths = new Set();
+    for (const role of attempt.roles) {
+      const path = attempt.paths.get(role);
+      if (!path) continue;
+      if (sourcePaths.has(path)) refuse('Attempt artifact paths are duplicated');
+      sourcePaths.add(path);
+      // A missing body on an interrupted path is absent evidence, not an empty file.
+      try {
+        lstatSync(path);
+      } catch (error) {
+        if (error.code === 'ENOENT') continue;
+        throw error;
+      }
+      const acquired = readHttpQualificationArtifact(state.sandbox, path);
+      const row = publishHttpQualificationBytes(
+        attempt.store,
+        `attempts/${attempt.attemptId}/artifacts/${role}`,
+        acquired.bytes,
+      );
+      artifacts.push({ role, ...row });
+    }
+    const terminal =
+      cleanup.ownedResources !== 'ABSENT'
+        ? 'CLEANUP_UNKNOWN'
+        : attempt.failure
+          ? 'FAILED'
+          : 'BLOCKED';
+    // No full trusted case verifier is installed. Component flags cannot mint
+    // QUALIFIED, even if the measured worker happened to return successfully.
+    const archive = {
+      schemaVersion: '1.0.0',
+      kind: 'http-qualification-attempt-archive',
+      batchId: attempt.batchId,
+      attemptId: attempt.attemptId,
+      binding: attempt.binding,
+      case: attempt.case,
+      state: terminal,
+      artifacts,
+      cleanupState: cleanup.ownedResources,
+      acceptance: null,
+      readinessPromoting: false,
+    };
+    const row = publishHttpQualificationBytes(
+      attempt.store,
+      `attempts/${attempt.attemptId}/archive.json`,
+      Buffer.from(serializeHttpRuntimePlainJson(archive)),
+    );
+    attempt.archive = { ...archive, archiveSha256: row.sha256 };
+    attempt.sealed = true;
+    return structuredClone(attempt.archive);
+  } finally {
+    attempt.archiving = false;
+  }
+}
+
+async function runParentQualificationAttempt(handle, context, caseRow, attemptId) {
+  const state = stateFor(handle);
+  if (state.qualificationAttempt && !state.qualificationAttempt.sealed)
+    refuse('Prior actual attempt remains unsealed');
+  // Set the interlock BEFORE directory/fixture/runtime effects. Only the parent
+  // archive operation above can clear it; no caller acknowledgment exists.
+  state.qualificationAttempt = {
+    ...context,
+    attemptId,
+    case: {
+      caseId: caseRow.caseId,
+      caseSha256: caseRow.caseSha256,
+      compositionId: caseRow.compositionId,
+    },
+    directory: resolve(state.sandbox, 'qualification-attempts', attemptId),
+    paths: new Map(),
+    sealed: false,
+  };
+  try {
+    mkdirSync(state.qualificationAttempt.directory, { recursive: true, mode: 0o700 });
+    retainQualificationJson(state, 'build-custody', snapshotFreshHttpBuild(handle));
+    // All admission/control checks precede the fresh fixture's first effect.
+    const declaration = snapshotFreshHttpQualificationCase(handle, caseRow.caseId);
+    assertLivenessQualificationDeclaration(declaration);
+    qualificationExecutable(state);
+    qualificationControls(state);
+    qualificationSupervisorControls(state);
+    retainQualificationJson(state, 'fixture', await prepareFreshHttpReferenceFixture(handle));
+    await qualifyFreshHttpEndpoint(handle, { caseId: caseRow.caseId });
+  } catch (error) {
+    state.qualificationAttempt.failure = error.code ?? 'HTTP_QUALIFICATION_ATTEMPT_FAILED';
+  }
+  return archiveFreshHttpQualificationAttempt(handle);
+}
+
+/** Fixed production batch entry. No caller roster, receipt, environment, output
+ * directory, saved PID or resume ledger is accepted as authority.
+ */
+export async function runFreshHttpQualificationBatch() {
+  if (arguments.length !== 0) refuse('HTTP batch entry accepts no caller configuration');
+  const sourceRepository = realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '../..'));
+  const git = (...args) =>
+    execFileSync('/usr/bin/git', ['--no-pager', '-C', sourceRepository, ...args], {
+      encoding: 'utf8',
+      maxBuffer: 8 * 1024 * 1024,
+      env: {
+        PATH: '/usr/bin:/bin',
+        HOME: '/var/empty',
+        LANG: 'C',
+        LC_ALL: 'C',
+        GIT_CONFIG_NOSYSTEM: '1',
+        GIT_CONFIG_GLOBAL: '/dev/null',
+        GIT_NO_REPLACE_OBJECTS: '1',
+        GIT_TERMINAL_PROMPT: '0',
+      },
+    }).trim();
+  const candidateCommit = git('rev-parse', '--verify', 'HEAD');
+  const tree = git('rev-parse', '--verify', 'HEAD^{tree}');
+  if (!/^[a-f0-9]{40}$/u.test(candidateCommit) || !/^[a-f0-9]{40}$/u.test(tree))
+    refuse('Actual batch candidate identity is invalid');
+  if (git('status', '--porcelain', '--untracked-files=no'))
+    refuse('Batch candidate has tracked checkout changes');
+  const acquireDeclaration = (path, expected) => {
+    const acquired = readHttpQualificationDeclaration(
+      sourceRepository,
+      resolve(sourceRepository, path),
+    );
+    if (expected && acquired.row.sha256 !== expected) refuse(`Batch declaration differs: ${path}`);
+    return acquired;
+  };
+  const policyBytes = acquireDeclaration(
+    'law/policy/http-qualification-batch.json',
+    'fbdce4f9f1ff3e206158f7a2d2c8ce9059ccfb95262fe54c26839ea8f11e0c65',
+  );
+  const policy = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(policyBytes.bytes));
+  const manifest = acquireDeclaration(policy.manifest.path, policy.manifest.sha256);
+  const schema = acquireDeclaration(policy.evidenceSchema.path, policy.evidenceSchema.sha256);
+  // Observe the complete tracked producer subtree, not a caller-selected subset.
+  // This binds bytes; it does not imply independent admission of those bytes.
+  const producerRows = git('ls-files', '-z', '--', 'scripts')
+    .split('\0')
+    .filter(Boolean)
+    .map((path) => {
+      const bytes = execFileSync(
+        '/usr/bin/git',
+        ['--no-pager', '-C', sourceRepository, 'show', `${candidateCommit}:${path}`],
+        {
+          maxBuffer: 1024 * 1024,
+          env: {
+            PATH: '/usr/bin:/bin',
+            HOME: '/var/empty',
+            GIT_CONFIG_NOSYSTEM: '1',
+            GIT_CONFIG_GLOBAL: '/dev/null',
+            GIT_NO_REPLACE_OBJECTS: '1',
+          },
+        },
+      );
+      return { path, sha256: digest(bytes), byteLength: bytes.length };
+    });
+  if (
+    git('rev-parse', '--verify', 'HEAD') !== candidateCommit ||
+    git('status', '--porcelain', '--untracked-files=no')
+  )
+    refuse('Batch candidate changed while binding producer bytes');
+  const binding = {
+    candidateCommit,
+    tree,
+    manifestSha256: manifest.row.sha256,
+    batchPolicySha256: policyBytes.row.sha256,
+    evidenceSchemaSha256: schema.row.sha256,
+    producerClosureSha256: digest(serializeHttpRuntimePlainJson(producerRows)),
+  };
+  const store = createHttpQualificationStore();
+  const batchId = randomUUID();
+  let sequence = 0,
+    journalHeadSha256 = null;
+  const publishJson = (path, value) =>
+    publishHttpQualificationBytes(store, path, Buffer.from(serializeHttpRuntimePlainJson(value)));
+  const journal = (event, selectors = {}) => {
+    const body = {
+      schemaVersion: '1.0.0',
+      kind: 'http-qualification-journal-event',
+      batchId,
+      sequence,
+      previousSha256: journalHeadSha256,
+      bindingSha256: digest(serializeHttpRuntimePlainJson(binding)),
+      event,
+      compositionId: null,
+      caseId: null,
+      attemptId: null,
+      archiveSha256: null,
+      state: null,
+      ...selectors,
+      timestampUtc: new Date().toISOString(),
+      readinessPromoting: false,
+    };
+    const row = publishJson(`journal/${String(sequence).padStart(10, '0')}.json`, body);
+    journalHeadSha256 = row.sha256;
+    sequence++;
+  };
+  // The first durable event precedes any fresh build or fixture operation.
+  journal('BEGIN', { state: 'RUNNING' });
+  publishHttpQualificationBytes(store, 'declarations/manifest.json', manifest.bytes);
+  publishHttpQualificationBytes(store, 'declarations/batch-policy.json', policyBytes.bytes);
+  publishHttpQualificationBytes(store, 'declarations/evidence-schema.json', schema.bytes);
+  publishJson('producer-closure.json', producerRows);
+  let roster;
+  const attempts = [];
+  const originalProfiles = policy.originalProfiles.scenarios.map((scenario) => ({
+    scenario,
+    state: 'PENDING',
+    evidenceSha256: null,
+  }));
+  const index = (phase, verdict) => {
+    if (!roster) return null; // Never fabricate a planned population after validation refuses.
+    return publishJson('index.json', {
+      schemaVersion: '1.0.0',
+      kind: 'http-qualification-batch-index',
+      batchId,
+      binding,
+      phase,
+      plannedCases: roster.cases.map(({ caseId, caseSha256, compositionId }) => ({
+        caseId,
+        caseSha256,
+        compositionId,
+      })),
+      attempts,
+      originalProfiles,
+      journalHeadSha256,
+      overallVerdict: verdict,
+      complete: false,
+      readinessPromoting: false,
+    });
+  };
+  let activeHandle;
+  let buildStarted = false;
+  try {
+    roster = loadHttpQualificationRoster(sourceRepository);
+    // Closed source admission is checked before even the composition build. The
+    // build's own retained roster/control checks repeat after acquisition.
+    const unfilled = Object.entries(qualificationAdmission)
+      .filter(([, value]) => typeof value !== 'string' || !/^[a-f0-9]{64}$/u.test(value))
+      .map(([name]) => name);
+    if (unfilled.length) {
+      const error = new Error('HTTP qualification admission floors remain unfilled');
+      error.code = 'HTTP_QUALIFICATION_ADMISSION_UNBOUND';
+      error.unfilled = unfilled;
+      throw error;
+    }
+    const context = { store, batchId, binding, roles: policy.archives.roles };
+    for (const compositionId of roster.compositionOrder) {
+      journal('ROOT_BEGIN', { compositionId, state: 'RUNNING' });
+      buildStarted = true;
+      activeHandle = await prepareFreshHttpBuild({
+        sourceRepository,
+        candidateCommit,
+        rootId: compositionId,
+      });
+      const retained = snapshotFreshHttpQualificationRoster(activeHandle);
+      if (
+        retained.candidateCommit !== candidateCommit ||
+        retained.tree !== tree ||
+        !isDeepStrictEqual(retained.cases, roster.cases) ||
+        !isDeepStrictEqual(retained.files, roster.files)
+      )
+        refuse('Actual private build roster differs from complete batch selection');
+      for (const caseRow of roster.cases.filter((row) => row.compositionId === compositionId)) {
+        const attemptId = randomUUID();
+        journal('CASE_BEGIN', {
+          compositionId,
+          caseId: caseRow.caseId,
+          attemptId,
+          state: 'RUNNING',
+        });
+        const archive = await runParentQualificationAttempt(
+          activeHandle,
+          context,
+          caseRow,
+          attemptId,
+        );
+        attempts.push({
+          attemptId,
+          case: archive.case,
+          state: archive.state,
+          archiveSha256: archive.archiveSha256,
+          acceptance: archive.acceptance,
+        });
+        journal('CASE_SEALED', {
+          compositionId,
+          caseId: caseRow.caseId,
+          attemptId,
+          archiveSha256: archive.archiveSha256,
+          state: archive.state,
+        });
+        // No component-only result or historical success can bypass this stop.
+        if (archive.state !== 'QUALIFIED') {
+          const error = new Error('Actual case lacks full independently admitted acceptance');
+          error.code = archive.state;
+          throw error;
+        }
+      }
+      await closeFreshHttpBuild(activeHandle);
+      activeHandle = undefined;
+      const cleanup = publishJson(`roots/${compositionId}/cleanup.json`, {
+        compositionId,
+        ownedResources: 'ABSENT',
+        readinessPromoting: false,
+      });
+      journal('ROOT_CLOSED', { compositionId, archiveSha256: cleanup.sha256, state: 'QUALIFIED' });
+    }
+    // The four original workloads require their separate fresh owned launcher;
+    // the ambient helper's exit code cannot supply any of these gate results.
+    for (const profile of originalProfiles) profile.state = 'BLOCKED';
+    const error = new Error(
+      'Original fresh owned-stack profile launcher is not independently admitted',
+    );
+    error.code = 'HTTP_ORIGINAL_PROFILE_LAUNCHER_UNBOUND';
+    throw error;
+  } catch (error) {
+    let cleanupUnknown = false;
+    const failedBuild = failedBuilds.get(error);
+    if (failedBuild) {
+      // Only this producer's privately retained failed state supplies paths.
+      // Public error.diagnosticDirectory is never a file-selection capability.
+      const bodies = [resolve(failedBuild.sandbox, 'failure.json')];
+      for (const command of failedBuild.commands)
+        for (const stream of ['stdout', 'stderr'])
+          bodies.push(resolve(failedBuild.sandbox, command[stream].path));
+      for (const path of bodies) {
+        const acquired = readHttpQualificationArtifact(failedBuild.sandbox, path);
+        publishHttpQualificationBytes(store, `failed-build/${acquired.row.path}`, acquired.bytes);
+      }
+      // Old build-command close receipts alone do not prove descendant absence.
+      cleanupUnknown = true;
+    }
+    if (activeHandle) {
+      try {
+        await closeFreshHttpBuild(activeHandle);
+      } catch (cleanupError) {
+        const state = handles.get(activeHandle);
+        // A sealed archive failure retains sandbox bytes even after actual
+        // resources are absent; this is distinct from unknown process cleanup.
+        cleanupUnknown = Boolean(
+          state?.referenceRuntimeWorker ||
+          state?.qualificationGeneratorWorker ||
+          state?.referenceFixture,
+        );
+        publishJson('cleanup-refusal.json', {
+          code: cleanupError.code ?? 'HTTP_CLEANUP_REFUSED',
+          sandboxRetained: true,
+          ownedResources: cleanupUnknown ? 'UNKNOWN' : 'ABSENT',
+          readinessPromoting: false,
+        });
+      }
+    }
+    const diagnostic = publishJson('failure.json', {
+      code: error.code ?? 'HTTP_QUALIFICATION_BATCH_FAILED',
+      unfilled: error.unfilled ?? [],
+      admittedRosterAvailable: Boolean(roster),
+      buildStarted,
+      trustedRestartCreditAvailable: false,
+      readinessPromoting: false,
+    });
+    journal('STOP', { state: cleanupUnknown ? 'CLEANUP_UNKNOWN' : 'BLOCKED' });
+    const finalIndex = index('BLOCKED', 'BLOCKED');
+    return {
+      schemaVersion: 1,
+      scope: 'private-serial-http-qualification-batch',
+      batchId,
+      binding,
+      archiveDirectory: snapshotHttpQualificationStore(store).root,
+      diagnosticSha256: diagnostic.sha256,
+      indexSha256: finalIndex?.sha256 ?? null,
+      admittedRosterAvailable: Boolean(roster),
+      attemptedCases: attempts.length,
+      overallVerdict: 'BLOCKED',
+      complete: false,
+      readinessPromoting: false,
+    };
   }
 }
 
@@ -3848,14 +4337,10 @@ export async function closeFreshHttpBuild(handle) {
   const pending = (async () => {
     // This check precedes every fixture/sandbox deletion and is resumable even
     // for a closed/refused build. Unknown child/group state preserves evidence.
-    await reapQualificationGenerator(state);
-    await reapReferenceWorker(state);
-    if (state.referenceFixture) {
-      const fixtureCleanup = await closeOwnedReferenceFixture(state.referenceFixture.handle);
-      if (fixtureCleanup?.complete !== true)
-        refuse('Owned reference fixture cleanup remains incomplete');
-      state.referenceFixture = undefined;
-    }
+    const cleanup = await cleanupQualificationAttempt(state);
+    if (cleanup.ownedResources !== 'ABSENT') refuse('Actual owned build cleanup remains unknown');
+    if (state.qualificationAttempt && !state.qualificationAttempt.sealed)
+      refuse('Actual attempt archive remains unsealed; owned cleanup ran but sandbox is retained');
     await rm(state.sandbox, { recursive: true, force: true });
     state.cleanupComplete = true;
   })();
