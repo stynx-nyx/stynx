@@ -11,7 +11,7 @@ const sources = Object.freeze([
   }),
   Object.freeze({
     path: 'domain/demo-bookmark/db/0002_tenant_rls.sql',
-    sha256: '5072e0695a78548de39fe0ce111eb40ab284d37bdb0a9ef3083fa1d429ee7bc0',
+    sha256: 'bce1429c11f69bfd07a9f5f6d436e0474e35c6eb227d835cf7bdc883b47ccab8',
   }),
 ]);
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
