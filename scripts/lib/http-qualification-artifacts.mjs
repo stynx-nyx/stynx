@@ -10,7 +10,11 @@ import {
 } from 'node:fs';
 import { isAbsolute, relative, sep } from 'node:path';
 
-const maximumBytes = 64 * 1024 * 1024;
+const privateArtifact = Object.freeze({ maximumBytes: 64 * 1024 * 1024, permissions: [0o600n] });
+const declarationArtifact = Object.freeze({
+  maximumBytes: 1024 * 1024,
+  permissions: [0o644n, 0o444n],
+});
 const identityFields = ['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeNs', 'ctimeNs'];
 
 function refuse() {
@@ -29,8 +33,20 @@ function sameIdentity(left, right) {
 // Open without following the final symlink or blocking on a substituted FIFO;
 // allocate only after inspecting the actual descriptor, and reject any drift.
 export function readHttpQualificationArtifact(root, path) {
+  if (arguments.length !== 2) refuse();
+  return acquire(root, path, privateArtifact);
+}
+
+/** Fixed read-only law/source declaration profile. This does not admit a
+ * manifest or allow public permissions on private measurement artifacts.
+ */
+export function readHttpQualificationDeclaration(root, path) {
+  if (arguments.length !== 2) refuse();
+  return acquire(root, path, declarationArtifact);
+}
+
+function acquire(root, path, profile) {
   if (
-    arguments.length !== 2 ||
     typeof root !== 'string' ||
     typeof path !== 'string' ||
     !isAbsolute(root) ||
@@ -52,11 +68,11 @@ export function readHttpQualificationArtifact(root, path) {
       !opened.isFile() ||
       !sameIdentity(initial, opened) ||
       opened.nlink !== 1n ||
-      (opened.mode & 0o7777n) !== 0o600n ||
+      !profile.permissions.includes(opened.mode & 0o7777n) ||
       typeof process.getuid !== 'function' ||
       opened.uid !== BigInt(process.getuid()) ||
       opened.size < 0n ||
-      opened.size > BigInt(maximumBytes)
+      opened.size > BigInt(profile.maximumBytes)
     )
       refuse();
     const bytes = Buffer.alloc(Number(opened.size));
