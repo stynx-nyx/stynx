@@ -185,6 +185,7 @@ function createBuildFixture() {
         'turbo.json',
         'docs/framework/api/openapi.json',
         'packages',
+        'domain/demo-bookmark/api',
         'reference/api',
         'reference/web/package.json',
         'reference/web/playwright.config.mjs',
@@ -4975,7 +4976,72 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
   const coverageConfig = readFileSync(join(privacyRoot, 'vitest.coverage.config.ts'), 'utf8');
   const withoutPopulation = (source) =>
     source.replace(/^\s*include: \[[^\n]+\],$/mu, '  include: [D13_POPULATION],');
-  assert.equal(withoutPopulation(coverageConfig), withoutPopulation(ordinaryConfig));
+  // The coverage tier uses the reviewed native source/output correspondence and
+  // an ESM-safe directory binding. Require both exact additions before comparing
+  // every other shared option byte for byte.
+  const nativeModules = [
+    'errors',
+    'pii-map.service',
+    'privacy-context',
+    'privacy-object-store.service',
+    'privacy-retention.guard',
+    'privacy.controller',
+    'privacy.service',
+    'ropa',
+    'unconfigured-identity',
+  ].map((name) => ({ source: `src/${name}.ts`, output: `dist/privacy/src/${name}.js` }));
+  const ts = createRequire(import.meta.url)('typescript');
+  const parsedCoverage = ts.createSourceFile(
+    'vitest.coverage.config.ts',
+    coverageConfig,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  assert.equal(parsedCoverage.parseDiagnostics.length, 0);
+  const declarations = [];
+  const visit = (node) => {
+    if (
+      ts.isPropertyAssignment(node) &&
+      node.name.getText(parsedCoverage) === 'nativeCoverageModules'
+    )
+      declarations.push(node);
+    ts.forEachChild(node, visit);
+  };
+  visit(parsedCoverage);
+  assert.equal(declarations.length, 1);
+  const nativeProperty = declarations[0];
+  assert.equal(ts.isArrayLiteralExpression(nativeProperty.initializer), true);
+  const actualModules = nativeProperty.initializer.elements.map((element) => {
+    assert.equal(ts.isObjectLiteralExpression(element), true);
+    assert.deepEqual(
+      element.properties.map((property) => property.name.getText(parsedCoverage)),
+      ['source', 'output'],
+    );
+    return Object.fromEntries(
+      element.properties.map((property) => {
+        assert.equal(ts.isPropertyAssignment(property), true);
+        assert.equal(ts.isStringLiteral(property.initializer), true);
+        return [property.name.getText(parsedCoverage), property.initializer.text];
+      }),
+    );
+  });
+  assert.deepEqual(actualModules, nativeModules);
+  for (const { source } of actualModules)
+    assert.equal(lstatSync(join(privacyRoot, source)).isFile(), true);
+  assert.equal(coverageConfig[nativeProperty.end], ',');
+  const coverageWithoutNative =
+    coverageConfig.slice(0, nativeProperty.getFullStart()) +
+    coverageConfig.slice(nativeProperty.end + 1);
+  const sharedCoverageConfig = coverageWithoutNative
+    .replace(
+      "import { dirname, resolve } from 'node:path';",
+      "import { resolve } from 'node:path';",
+    )
+    .replace("import { fileURLToPath } from 'node:url';\n", '')
+    .replace('const packageDir = dirname(fileURLToPath(import.meta.url));\n\n', '')
+    .replace('packageDir: packageDir,', 'packageDir: __dirname,')
+    .replaceAll('resolve(packageDir,', 'resolve(__dirname,');
+  assert.equal(withoutPopulation(sharedCoverageConfig), withoutPopulation(ordinaryConfig));
   assert.match(ordinaryConfig, /test\/unit\/\*\*\/\*\.spec\.ts/u);
   assert.doesNotMatch(ordinaryConfig, /test\/integration/u);
   assert.match(integrationConfig, /include: \['test\/integration\/\*\*\/\*\.spec\.ts'\]/u);
@@ -5002,9 +5068,83 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
   );
 });
 
+function finalizeBuildFixture(fixture, primaryFailure) {
+  const fixtureRoot = assertSafeFixtureRoot(fixture.root);
+  const failures = primaryFailure === undefined ? [] : [primaryFailure];
+  const check = (action) => {
+    try {
+      action();
+    } catch (error) {
+      failures.push(error);
+    }
+  };
+  check(() => {
+    assert.ok(fixture.subprocessCwds.length >= 10);
+  });
+  check(() => {
+    assert.equal(
+      fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
+      true,
+    );
+  });
+  check(() => {
+    assert.equal(
+      fixture.destructiveTargets.every((target) =>
+        target === fixtureRoot
+          ? true
+          : relative(fixtureRoot, target) !== '' &&
+            !relative(fixtureRoot, target).startsWith('..') &&
+            !isAbsolute(relative(fixtureRoot, target)),
+      ),
+      true,
+    );
+  });
+  check(() => {
+    assert.equal(fixture.subprocessCwds.includes(repoRoot), false);
+  });
+  check(() => {
+    assert.equal(fixture.destructiveTargets.includes(repositoryPreferencesDist), false);
+  });
+  check(() => {
+    assert.equal(fixture.destructiveTargets.includes(join(repoRoot, 'reference/api/dist')), false);
+  });
+  check(() => removeFixture(fixture));
+  check(() => assert.equal(existsSync(fixtureRoot), false));
+  if (failures.length)
+    throw new AggregateError(
+      failures,
+      'Build fixture failed; original failure and every finalization refusal retained',
+      { cause: failures[0] },
+    );
+}
+
+test('failed build fixture preserves its primary failure and removes its exact owned directory despite census refusal', () => {
+  const fixture = {
+    root: mkdtempSync(join(tmpdir(), 'stynx-d10-fixture-')),
+    destructiveTargets: [],
+    subprocessCwds: [],
+  };
+  const primary = new Error('original build failure witness');
+  writeFileSync(join(fixture.root, 'retained-until-finalization'), 'owned disposable bytes');
+  assert.throws(
+    () => finalizeBuildFixture(fixture, primary),
+    (error) => {
+      assert.equal(error instanceof AggregateError, true);
+      assert.equal(error.cause, primary);
+      assert.equal(error.errors[0], primary);
+      assert.equal(error.errors.length, 2);
+      assert.match(error.errors[1].message, /subprocessCwds.length >= 10/u);
+      return true;
+    },
+  );
+  assert.equal(existsSync(fixture.root), false);
+  assert.deepEqual(fixture.destructiveTargets, [fixture.root]);
+});
+
 test('clean preferences build emits both exact exports and reference-api fails closed without declarations', () => {
   const fixture = createBuildFixture();
   const fixtureRoot = assertSafeFixtureRoot(fixture.root);
+  let primaryFailure;
   try {
     const trackedReferenceApiDist = run('git', [
       'ls-files',
@@ -5136,6 +5276,14 @@ test('clean preferences build emits both exact exports and reference-api fails c
         root: dirname(path),
         manifest: JSON.parse(readFileSync(path, 'utf8')),
       }));
+    for (const root of ['domain/demo-bookmark/api', 'tools/eslint-config', 'tools/tsconfig']) {
+      const path = join(fixtureRoot, root, 'package.json');
+      manifestEntries.push({
+        path,
+        root: dirname(path),
+        manifest: JSON.parse(readFileSync(path, 'utf8')),
+      });
+    }
     manifestEntries.push({
       path: join(fixtureApiRoot, 'package.json'),
       root: fixtureApiRoot,
@@ -5151,10 +5299,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
         ...(manifest.optionalDependencies ?? {}),
         ...(manifest.peerDependencies ?? {}),
         ...(manifest.devDependencies ?? {}),
-      }).filter(
-        ([dependency, version]) =>
-          dependency.startsWith('@stynx-nyx/') && String(version).startsWith('workspace:'),
-      );
+      }).filter(([dependency, version]) => String(version).startsWith('workspace:'));
     const visitRuntimeDependency = (name) => {
       assert.equal(visiting.has(name), false, `runtime workspace dependency cycle at ${name}`);
       if (closure.has(name)) return;
@@ -5169,6 +5314,12 @@ test('clean preferences build emits both exact exports and reference-api fails c
     };
     visitRuntimeDependency('@stynx-nyx/reference-api');
     const derivedTaskIds = [...closure.keys()].map((name) => `${name}#build`).sort();
+    assert.equal(closure.size, 24);
+    const sourceOnlyTools = new Set(['@stynx-internal/eslint-config', '@stynx-internal/tsconfig']);
+    for (const name of sourceOnlyTools) {
+      assert.equal(closure.get(name).manifest.private, true);
+      assert.equal(closure.get(name).manifest.scripts.build, undefined);
+    }
 
     const installed = spawnInFixture(
       fixture,
@@ -5257,11 +5408,34 @@ test('clean preferences build emits both exact exports and reference-api fails c
     assert.ok(bootstrapEnteredIndex >= 0);
     assert.ok(runtimeImportIndex > bootstrapEnteredIndex);
     const runtimeTargets = new Map();
+    const domainModuleImport = /from '(@stynx-domain\/[^']+)'/u.exec(
+      readFileSync(join(fixtureApiRoot, 'src/performance/domain.module.ts'), 'utf8'),
+    )[1];
+    assert.equal(
+      domainModuleImport,
+      '@stynx-domain/demo-bookmark-api/dist/domain/demo-bookmark/api/src/demo-bookmark/demo-bookmark.module.js',
+    );
     for (const [name, entry] of closure) {
+      if (sourceOnlyTools.has(name)) continue;
       let runtimeTarget;
       if (name === '@stynx-nyx/reference-api') {
         assert.equal(entry.manifest.scripts.start, 'node dist/reference/api/src/main.js');
         runtimeTarget = entry.manifest.scripts.start.slice('node '.length);
+      } else if (name === '@stynx-domain/demo-bookmark-api') {
+        assert.equal(entry.manifest.private, true);
+        const tsconfig = JSON.parse(readFileSync(join(entry.root, 'tsconfig.json'), 'utf8'));
+        runtimeTarget = domainModuleImport.slice(`${name}/`.length);
+        assert.equal(
+          join(entry.root, runtimeTarget),
+          join(
+            entry.root,
+            tsconfig.compilerOptions.outDir,
+            relative(
+              resolve(entry.root, tsconfig.compilerOptions.rootDir),
+              join(entry.root, 'src/demo-bookmark/demo-bookmark.module.ts'),
+            ).replace(/\.ts$/u, '.js'),
+          ),
+        );
       } else {
         assert.equal(typeof entry.manifest.main, 'string');
         const rootExport = entry.manifest.exports?.['.'];
@@ -5289,9 +5463,15 @@ test('clean preferences build emits both exact exports and reference-api fails c
     }
     const resolvedPackages = new Set(['@stynx-nyx/reference-api']);
     for (const [importerName, entry] of closure) {
+      if (sourceOnlyTools.has(importerName)) continue;
       const importerRequire = createRequire(runtimeTargets.get(importerName));
       for (const [dependencyName] of workspaceDependencies(entry.manifest)) {
-        const resolvedRuntime = importerRequire.resolve(dependencyName);
+        if (sourceOnlyTools.has(dependencyName)) continue;
+        const resolvedRuntime = importerRequire.resolve(
+          dependencyName === '@stynx-domain/demo-bookmark-api'
+            ? domainModuleImport
+            : dependencyName,
+        );
         assert.equal(
           realpathSync(resolvedRuntime),
           realpathSync(runtimeTargets.get(dependencyName)),
@@ -5303,7 +5483,10 @@ test('clean preferences build emits both exact exports and reference-api fails c
         resolvedPackages.add(dependencyName);
       }
     }
-    assert.deepEqual([...resolvedPackages].sort(), [...closure.keys()].sort());
+    assert.deepEqual(
+      [...resolvedPackages].sort(),
+      [...closure.keys()].filter((name) => !sourceOnlyTools.has(name)).sort(),
+    );
     const compiledAppModule = join(fixtureReferenceApiDist, 'reference/api/src/app.module.js');
     assert.equal(
       assertInsideFixture(fixtureRoot, compiledAppModule, 'compiled AppModule'),
@@ -5490,27 +5673,10 @@ if (!terminal) {
     assert.ifError(rejected.error);
     assert.notEqual(rejected.status, 0);
     assert.match(rejected.stderr, /declaration output is unavailable/u);
+  } catch (error) {
+    primaryFailure = error;
   } finally {
-    assert.ok(fixture.subprocessCwds.length >= 10);
-    assert.equal(
-      fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
-      true,
-    );
-    assert.equal(
-      fixture.destructiveTargets.every((target) =>
-        target === fixtureRoot
-          ? true
-          : relative(fixtureRoot, target) !== '' &&
-            !relative(fixtureRoot, target).startsWith('..') &&
-            !isAbsolute(relative(fixtureRoot, target)),
-      ),
-      true,
-    );
-    assert.equal(fixture.subprocessCwds.includes(repoRoot), false);
-    assert.equal(fixture.destructiveTargets.includes(repositoryPreferencesDist), false);
-    assert.equal(fixture.destructiveTargets.includes(join(repoRoot, 'reference/api/dist')), false);
-    removeFixture(fixture);
-    assert.equal(existsSync(fixtureRoot), false);
+    finalizeBuildFixture(fixture, primaryFailure);
   }
 });
 
