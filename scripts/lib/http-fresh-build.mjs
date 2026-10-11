@@ -4284,16 +4284,17 @@ async function runActualOriginalScenario(handle, request) {
     cleanupDeadline = originalClock() + 30_000_000_000n;
     command('finish-measurement', measurement);
     await phase('close', cleanupDeadline);
-    const finalDeadline = originalClock() + 30_000_000_000n;
-    await phase('terminal', finalDeadline);
-    workerExit = await until(waitOwnedHttpWorkerClose(workerHandle), finalDeadline);
+    await phase('terminal', cleanupDeadline);
+    workerExit = await until(waitOwnedHttpWorkerClose(workerHandle), cleanupDeadline);
     const wire = protocol.finish({
       workerPid: worker.pid,
       code: workerExit.code,
       signal: workerExit.signal,
       operationId,
     });
-    await until(reapReferenceWorker(state), finalDeadline);
+    if (originalClock() >= cleanupDeadline)
+      refuse('Original shared shutdown deadline expired before worker reap');
+    await until(reapReferenceWorker(state), cleanupDeadline);
     const captureBody = readHttpQualificationArtifact(directory, job.observationArtifactPath);
     if (captureBody.row.sha256 !== received.get('terminal').resultArtifactSha256)
       refuse('Original terminal names different actual body bytes');
@@ -4405,7 +4406,7 @@ async function runActualOriginalScenario(handle, request) {
       !isDeepStrictEqual(roster, snapshotFreshHttpOriginalScenarioRoster(handle)) ||
       !isDeepStrictEqual(
         fixtureObserved,
-        await until(observeOwnedReferenceFixture(fixtureHandle), fixtureDeadline),
+        await until(observeOwnedReferenceFixture(fixtureHandle), cleanupDeadline),
       )
     )
       refuse('Original final descriptor, source or fixture drift');
@@ -4474,7 +4475,9 @@ async function runActualOriginalScenario(handle, request) {
       if (result.status === 'rejected') fail(result.reason);
     if (!state.qualificationGeneratorWorker && !state.referenceRuntimeWorker && fixtureHandle) {
       try {
-        const cleanup = await until(closeOwnedReferenceFixture(fixtureHandle), fixtureDeadline);
+        if (originalClock() >= cleanupDeadline)
+          refuse('Original shared shutdown deadline expired before fixture close');
+        const cleanup = await until(closeOwnedReferenceFixture(fixtureHandle), cleanupDeadline);
         attempt.fixtureCleanup = cleanup;
         if (cleanup?.complete === true) state.referenceFixture = undefined;
         else fail(new Error('Original owned fixture cleanup remains unknown'));
