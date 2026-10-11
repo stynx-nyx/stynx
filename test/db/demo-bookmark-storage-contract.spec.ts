@@ -68,6 +68,13 @@ async function install(owner: PgClient) {
     await owner.query('commit');
     return result;
   } catch (error) {
+    if (error && typeof error === 'object' && 'verification' in error)
+      process.stdout.write(
+        JSON.stringify({
+          scope: 'actual-demo-installer-refusal',
+          verification: error.verification,
+        }) + '\n',
+      );
     await owner.query('rollback');
     throw error;
   }
