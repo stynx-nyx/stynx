@@ -7,6 +7,7 @@ const REPOSITORY = '/repos/stynx-nyx/stynx';
 const WORKFLOW = 266480675;
 const MAX_JSON_BYTES = 4 * 1024 * 1024;
 const MAX_ARCHIVE_BYTES = 32 * 1024 * 1024;
+const MAX_LOG_BYTES = 64 * 1024 * 1024;
 const typedArrayLength = Object.getOwnPropertyDescriptor(
   Object.getPrototypeOf(Uint8Array.prototype),
   'length',
@@ -26,7 +27,9 @@ function page(value) {
 function cancelBody(response) {
   try {
     response.body?.cancel().catch(() => {});
-  } catch {}
+  } catch {
+    // Refusal remains sticky if an already unavailable body cannot cancel.
+  }
 }
 async function readBody(response, maximum, finish) {
   let reader;
@@ -66,7 +69,9 @@ async function readBody(response, maximum, finish) {
     if (reader) {
       try {
         reader.cancel().catch(() => {});
-      } catch {}
+      } catch {
+        // The request is already aborted and cannot supply accepted bytes.
+      }
     } else cancelBody(response);
     refuse('invalid, incomplete or oversized response body');
   } finally {
@@ -127,8 +132,7 @@ export function createGithubBaselineTransport(token, fetchImpl = globalThis.fetc
     cancelBody(response);
     refuse(message);
   }
-  async function json(path) {
-    const endpoint = `https://api.github.com${REPOSITORY}/actions/${path}`;
+  async function jsonAt(endpoint) {
     const response = await request(endpoint, authenticatedHeaders);
     if (response.status !== 200) reject(response, `GitHub API status ${response.status}`);
     const contentType = response.headers.get('content-type');
@@ -152,7 +156,56 @@ export function createGithubBaselineTransport(token, fetchImpl = globalThis.fetc
       status: response.status,
     });
   }
+  const json = (path) => jsonAt(`https://api.github.com${REPOSITORY}/actions/${path}`);
+  async function jobLog(jobId) {
+    const endpoint = `https://api.github.com${REPOSITORY}/actions/jobs/${id(jobId)}/logs`;
+    const response = await request(endpoint, authenticatedHeaders);
+    if (response.status !== 302) reject(response, `GitHub job log status ${response.status}`);
+    let signed;
+    try {
+      signed = new URL(response.headers.get('location'));
+    } catch {
+      reject(response, 'missing signed log redirect');
+    }
+    if (
+      signed.protocol !== 'https:' ||
+      signed.username ||
+      signed.password ||
+      signed.hash ||
+      (signed.port && signed.port !== '443') ||
+      !['.blob.core.windows.net', '.githubusercontent.com'].some((suffix) =>
+        signed.hostname.endsWith(suffix),
+      )
+    )
+      reject(response, 'unsafe signed log redirect');
+    finish(response, true);
+    cancelBody(response);
+    // Signed delivery is a separate origin and never receives the API token.
+    const delivered = await request(signed.href, { 'Accept-Encoding': 'identity' });
+    if (delivered.status !== 200) reject(delivered, `Signed log status ${delivered.status}`);
+    const bytes = await readBody(delivered, MAX_LOG_BYTES, (abort) => finish(delivered, abort));
+    return Object.freeze({
+      bytes,
+      size: bytes.length,
+      sha256: sha256(bytes),
+      apiEndpoint: endpoint,
+      signedHost: signed.hostname,
+      originVerified: false,
+    });
+  }
   return Object.freeze({
+    repository: () => jsonAt(`https://api.github.com${REPOSITORY}`),
+    attemptJobs: (runId, attempt, number) =>
+      json(`runs/${id(runId)}/attempts/${id(attempt)}/jobs?per_page=100&page=${page(number)}`),
+    job: (jobId) => json(`jobs/${id(jobId)}`),
+    jobLog,
+    sourceWorkflow: (commit) => {
+      if (typeof commit !== 'string' || !/^[a-f0-9]{40}$/u.test(commit))
+        refuse('invalid source commit');
+      return jsonAt(
+        `https://api.github.com${REPOSITORY}/contents/.github/workflows/hardening.yml?ref=${commit}`,
+      );
+    },
     workflow: () => json(`workflows/${WORKFLOW}`),
     run: (runId) => json(`runs/${id(runId)}`),
     attempt: (runId, attempt) => json(`runs/${id(runId)}/attempts/${id(attempt)}`),
