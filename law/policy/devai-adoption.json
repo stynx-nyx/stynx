@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.6.0",
+  "policy_version": "1.6.1",
   "project": {
     "project_type": "platform-package",
     "repo": {
@@ -213,6 +213,35 @@
       "database": true,
       "rbac": true,
       "actions": false
+    }
+  },
+  "authority": {
+    "extension_id": "stynx.client-path-authority",
+    "roots": ["domain", "reference", "test"],
+    "classes": {
+      "test": {
+        "selectors": [
+          "**/*.spec.*",
+          "**/*.test.*",
+          "**/test/**",
+          "**/tests/**",
+          "**/*.e2e.*",
+          "**/*.wiring-spec.*",
+          "db/**",
+          "packages/**",
+          "perf/**",
+          "scripts/**",
+          "support/**"
+        ]
+      },
+      "architecture": {
+        "selectors": [
+          "**/schema.ts",
+          "demo-bookmark/db/migration.sql",
+          "demo-bookmark/db/[0-9][0-9][0-9][0-9]_*.sql",
+          "**/postgres/*.sql"
+        ]
+      }
     }
   }
 }
