@@ -1,3 +1,4 @@
+import { instantMicroseconds } from './instant-microseconds';
 import { createHash } from 'node:crypto';
 import { OfflineImportError } from './import-contract';
 import { canonicalOfflineSyncPayload } from './payload-integrity';
@@ -65,46 +66,9 @@ export function boundedImportText(
 }
 /** Lossless microsecond validation. Never constructs a Date from a source instant. */
 export function importInstantMicroseconds(value: string): bigint {
-  const match =
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|([+-])(\d{2}):(\d{2}))$/u.exec(
-      value,
-    );
-  if (!match) importRefuse('instant');
-  const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number) as [
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-  ];
-  const zoneHours = Number(match[10] ?? 0),
-    zoneMinutes = Number(match[11] ?? 0);
-  if (
-    year < 1 ||
-    month < 1 ||
-    month > 12 ||
-    day < 1 ||
-    day > 31 ||
-    hour > 23 ||
-    minute > 59 ||
-    second > 59 ||
-    zoneHours > 15 ||
-    zoneMinutes > 59
-  )
-    importRefuse('instant');
-  const calendar = new Date(0);
-  calendar.setUTCFullYear(year, month - 1, day);
-  calendar.setUTCHours(hour, minute, second, 0);
-  if (
-    calendar.getUTCFullYear() !== year ||
-    calendar.getUTCMonth() !== month - 1 ||
-    calendar.getUTCDate() !== day
-  )
-    importRefuse('instant');
-  const offset = (zoneHours * 60 + zoneMinutes) * 60_000 * (match[9] === '-' ? -1 : 1);
-  return BigInt(calendar.getTime() - offset) * 1000n + BigInt((match[7] ?? '').padEnd(6, '0'));
+  return instantMicroseconds(value, () => importRefuse('instant'));
 }
+
 interface Schema {
   $ref?: string;
   const?: unknown;
@@ -123,7 +87,9 @@ interface Schema {
   pattern?: string;
   format?: string;
 }
-const schema = OFFLINE_IMPORT_SCHEMA as unknown as Schema & { $defs: Record<string, Schema> };
+const schema = OFFLINE_IMPORT_SCHEMA as unknown as Schema & {
+  $defs: Record<string, Schema>;
+};
 function conforms(value: unknown, rule: Schema): boolean {
   if (rule.$ref) return conforms(value, schema.$defs[rule.$ref.split('/').at(-1)!]!);
   if (rule.oneOf) return rule.oneOf.filter((item) => conforms(value, item)).length === 1;

@@ -1,3 +1,5 @@
+import { pgSortInstant } from './listing';
+import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection';
 import { createHash, randomUUID } from 'node:crypto';
 import { HttpException, UnprocessableEntityException } from '@nestjs/common';
 import { Database, IndependentTransactionConnectionError, type Transaction } from '@stynx-nyx/data';
@@ -208,7 +210,11 @@ async function bindTransportKey(
     [scope.tenantId, compositeKey, input.deviceId, input.deviceBatchId, fingerprint],
   );
   const bound = (
-    await trx.query<{ device_id: string; device_batch_id: string; transport_fingerprint: string }>(
+    await trx.query<{
+      device_id: string;
+      device_batch_id: string;
+      transport_fingerprint: string;
+    }>(
       `select device_id,device_batch_id,transport_fingerprint from offline.sync_batch_transport_keys
       where tenant_id=$1::uuid and transport_key=$2`,
       [scope.tenantId, compositeKey],
@@ -257,7 +263,11 @@ async function integrityRejection(
   input: CTG9SubmitSyncBatchInput,
   item: CTG9SyncBatchItemInput,
   key: string,
-  original: { id: string; payload_hash: string; local_entity_id: string } | null,
+  original: {
+    id: string;
+    payload_hash: string;
+    local_entity_id: string;
+  } | null,
   options: DurableBatchExecutionOptions,
   now: string,
 ): Promise<void> {
@@ -469,9 +479,20 @@ export async function pgConsumption(
   database: Database,
   scope: TrustedOfflineSyncScope,
   id: string,
+  now?: string,
 ): Promise<NumberingConsumptionResult> {
+  const observedAt = consumptionReadInstant(now);
   return txDurable(database, async (trx) => {
-    const r = (await trx.query<ReservationRow>(reservationSelect, [scope.tenantId, id])).rows[0];
+    const r = (
+      await trx.query<
+        Pick<ReservationRow, 'start_number' | 'end_number' | 'status'> & {
+          valid_until: string;
+        }
+      >(
+        `select start_number,end_number,${pgSortInstant('valid_until')} as valid_until,status from offline.numbering_reservations where tenant_id=$1::uuid and id=$2::uuid`,
+        [scope.tenantId, id],
+      )
+    ).rows[0];
     if (!r)
       throw new OfflineSyncError(
         'OFFLINE_SYNC_RESERVATION_NOT_FOUND',
@@ -491,27 +512,22 @@ export async function pgConsumption(
     const consumption: NumberingConsumptionEntry[] = [];
     for (let number = Number(r.start_number); number <= Number(r.end_number); number += 1) {
       const entry = overrides.get(number);
-      const fallback: NumberingConsumptionEntry['status'] =
-        r.status === 'blocked'
-          ? 'blocked'
-          : r.status === 'expired' ||
-              r.expired ||
-              r.status === 'cancelled' ||
-              r.status === 'consumed'
-            ? 'expired'
-            : 'available';
-      const status =
-        entry?.status === 'available' && fallback !== 'available'
-          ? fallback
-          : (entry?.status ?? fallback);
       consumption.push({
         number,
-        status,
+        status: entry?.status ?? 'available',
         serverEntityId: entry?.server_entity_id ?? null,
         finalizedAt: entry?.finalized_at ? new Date(entry.finalized_at).toISOString() : null,
       });
     }
-    return { reservationId: id, status: r.status, consumption };
+    return {
+      reservationId: id,
+      status: r.status,
+      consumption: projectNumberingConsumption(
+        { status: r.status, validUntil: r.valid_until },
+        consumption,
+        observedAt,
+      ),
+    };
   });
 }
 export async function pgReconcile(
@@ -521,7 +537,7 @@ export async function pgReconcile(
   input: ReconcileNumberingInput,
   now: string,
 ): Promise<ReconcileNumberingResult> {
-  const initial = await pgConsumption(database, scope, id);
+  const initial = await pgConsumption(database, scope, id, now);
   const claims = new Set(input.claimedNumbers ?? []);
   if ([...claims].some((n) => !initial.consumption.some((e) => e.number === n)))
     throw new OfflineSyncError('OFFLINE_SYNC_INVALID_INPUT', 400, 'Claim is outside reservation.');
@@ -554,7 +570,7 @@ export async function pgReconcile(
       [scope.tenantId, id, scope.actorId, now],
     );
   });
-  const result = await pgConsumption(database, scope, id);
+  const result = await pgConsumption(database, scope, id, now);
   return {
     ...result,
     missingOnServer: result.consumption
@@ -1003,7 +1019,11 @@ export async function pgSubmit(
           // an original, D3 item 6 adds the integrity conflict row that references it (D4 item 4).
           const original =
             (
-              await trx.query<{ id: string; payload_hash: string; local_entity_id: string }>(
+              await trx.query<{
+                id: string;
+                payload_hash: string;
+                local_entity_id: string;
+              }>(
                 `select id,payload_hash,local_entity_id from offline.sync_queue_items where tenant_id=$1::uuid and idempotency_key=$2`,
                 [scope.tenantId, key],
               )
@@ -1351,7 +1371,11 @@ export async function pgSubmit(
               let reservationId: string | null = null;
               if (item.reservedNumber != null) {
                 const covering = (
-                  await trx.query<{ id: string; status: string; valid_until: Date | string }>(
+                  await trx.query<{
+                    id: string;
+                    status: string;
+                    valid_until: Date | string;
+                  }>(
                     `select r.id,r.status,r.valid_until from offline.numbering_reservations r
                where tenant_id=$1::uuid and device_id=$2 and org_unit_id=$3 and entity_type=$4
                  and start_number<=$5 and end_number>=$5

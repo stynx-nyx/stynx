@@ -189,8 +189,9 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
   getNumberingConsumption(
     scope: TrustedOfflineSyncScope,
     id: string,
+    now?: string,
   ): Promise<NumberingConsumptionResult> {
-    return pgConsumption(this.database, scope, id);
+    return pgConsumption(this.database, scope, id, now);
   }
   submitDurableSyncBatch(
     scope: TrustedOfflineSyncScope,

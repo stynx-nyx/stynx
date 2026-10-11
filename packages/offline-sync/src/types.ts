@@ -550,6 +550,7 @@ export interface OfflineSyncDurableStore extends OfflineSyncStore {
   getNumberingConsumption(
     scope: TrustedOfflineSyncScope,
     id: string,
+    now?: string,
   ): Promise<NumberingConsumptionResult>;
   submitDurableSyncBatch(
     scope: TrustedOfflineSyncScope,

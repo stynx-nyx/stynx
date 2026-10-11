@@ -1,3 +1,4 @@
+import { consumptionReadInstant } from './consumption-projection';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OfflineSyncConfigurationError, OfflineSyncError } from './errors';
 import {
@@ -316,7 +317,10 @@ export class OfflineSyncService {
     return this.durable.settleNumberingReservation(this.context.current(), id, input, this.now());
   }
   async getNumberingConsumption(id: string): Promise<NumberingConsumptionResult> {
-    return this.durable.getNumberingConsumption(this.context.current(), id);
+    const now = this.now();
+    if (typeof now !== 'string') this.invalid('Invalid consumption read instant.');
+    consumptionReadInstant(now);
+    return this.durable.getNumberingConsumption(this.context.current(), id, now);
   }
   async getSyncBatchReceipt(deviceId: string, deviceBatchId: string): Promise<SyncBatchReceipt> {
     const receipt = await this.durable.getSyncBatchReceipt(

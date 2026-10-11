@@ -1,3 +1,4 @@
+import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection';
 import {
   cloneRange,
   rangeCreation,
@@ -131,7 +132,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   private readonly conflictCreatedAt = new Map<string, string>();
   private readonly conflictAllowedActions = new Map<string, readonly string[]>();
   private readonly conflictStynx = new Map<string, OfflineSyncStynxContext>();
-  private readonly conflictActions: { record: SyncConflictActionRecord; sequence: string }[] = [];
+  private readonly conflictActions: {
+    record: SyncConflictActionRecord;
+    sequence: string;
+  }[] = [];
   private readonly integrityConflicts = new Map<string, string>();
   private readonly integrityRejections = new Map<string, SyncIntegrityRejection>();
   /** Batches of one tenant run one at a time, standing in for the PostgreSQL receipt row lock (D1 item 4). */
@@ -918,8 +922,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     scope: TrustedOfflineSyncScope,
     id: string,
     input: ReconcileNumberingInput,
-    _now: string,
+    now: string,
   ): Promise<ReconcileNumberingResult> {
+    const observedAt = consumptionReadInstant(now);
     const key = this.key(scope.tenantId, id);
     const reservation = this.reservations.get(key);
     const entries = this.consumption.get(key);
@@ -941,7 +946,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     for (const [number, entry] of entries)
       if (claims.has(number) && entry.status === 'available')
         entries.set(number, { ...entry, status: 'claimed-locally' });
-    const consumption = [...entries.values()];
+    const consumption = projectNumberingConsumption(reservation, [...entries.values()], observedAt);
     return {
       reservationId: id,
       status: reservation.status,
@@ -958,7 +963,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   async getNumberingConsumption(
     scope: TrustedOfflineSyncScope,
     id: string,
+    now?: string,
   ): Promise<NumberingConsumptionResult> {
+    const observedAt = consumptionReadInstant(now);
     const key = this.key(scope.tenantId, id);
     const reservation = this.reservations.get(key);
     if (!reservation)
@@ -970,7 +977,11 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     return {
       reservationId: id,
       status: reservation.status,
-      consumption: [...this.consumption.get(key)!.values()],
+      consumption: projectNumberingConsumption(
+        reservation,
+        [...this.consumption.get(key)!.values()],
+        observedAt,
+      ),
     };
   }
 
