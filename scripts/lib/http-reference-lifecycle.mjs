@@ -988,8 +988,7 @@ export async function observeOwnedReferenceLoopback(
   channelHandle,
   nestPreparation,
 ) {
-  if (arguments.length !== 4 || job?.mode !== 'reference-owned-loopback')
-    throw new Error('Fixed loopback lifecycle requires its original exact mode');
+  if (arguments.length !== 4 || job?.mode !== 'reference-owned-loopback') refuse({}, 'JOB');
   return executeReferenceLifecycle(job, networkHandle, channelHandle, nestPreparation, false);
 }
 
@@ -1000,8 +999,7 @@ export async function observeOwnedHttpQualification(
   channelHandle,
   nestPreparation,
 ) {
-  if (arguments.length !== 4 || job?.mode !== 'http-endpoint-qualification')
-    throw new Error('Fixed qualification lifecycle requires its exact mode');
+  if (arguments.length !== 4 || job?.mode !== 'http-endpoint-qualification') refuse({}, 'JOB');
   return executeReferenceLifecycle(job, networkHandle, channelHandle, nestPreparation, true);
 }
 
