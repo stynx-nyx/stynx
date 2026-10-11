@@ -14,6 +14,7 @@ import {
 } from './http-reference-loopback-protocol.mjs';
 import {
   bindOwnedReferenceListener,
+  bindOwnedReferenceObjectStoreClient,
   observeOwnedReferenceNetwork,
 } from './http-reference-network.mjs';
 import {
@@ -742,6 +743,102 @@ function capturePrivacyOptions(state) {
   };
 }
 
+function captureObjectStoreClients(state) {
+  if (state.job.compositionId !== 'privacy') return;
+  const fixture = state.job.referenceFixture.objectStore;
+  if (
+    !fixture ||
+    fixture.endpoint !== process.env.STYNX_STORAGE_ENDPOINT ||
+    fixture.storageBucket !== process.env.STYNX_STORAGE_BUCKET ||
+    fixture.privacyBucket !== process.env.STYNX_PRIVACY_BUCKET
+  )
+    refuse(state, 'SDK_FIXTURE');
+  const storageConstructor = sourceConstructor(
+    state,
+    'packages/storage/src/s3.service.ts',
+    'S3Service',
+  );
+  const objectStoreConstructor = sourceConstructor(
+    state,
+    'packages/storage/src/object-store.service.ts',
+    'StynxObjectStore',
+  );
+  const storage = publicOperation(state, 'get', [storageConstructor]);
+  const privacy = state.privacyOptions?.store;
+  const objectStore = data(privacy, 'objectStore');
+  if (
+    Object.getPrototypeOf(storage) !== storageConstructor.prototype ||
+    !objectStore ||
+    Object.getPrototypeOf(objectStore) !== objectStoreConstructor.prototype ||
+    data(storage, 'bucketName') !== fixture.storageBucket ||
+    data(data(objectStore, 'options'), 'bucketName') !== fixture.privacyBucket
+  )
+    refuse(state, 'SDK_PROVIDER');
+  const storageUnit = state.job.referenceRegistry.units.find(
+    (row) => row.source.path === 'packages/storage/src/s3.service.ts',
+  );
+  const storageRequire = createRequire(resolve(state.job.checkoutRoot, storageUnit.emitted.path));
+  const awsPath = storageRequire.resolve('@aws-sdk/client-s3');
+  const awsRequire = createRequire(awsPath);
+  const origins = [];
+  const actualExport = (path, name) => {
+    const cached = state.require.cache[path];
+    const value = cached?.loaded && Object.getOwnPropertyDescriptor(cached.exports, name)?.value;
+    if (typeof value !== 'function' || cached.filename !== path) refuse(state, 'SDK_EXPORT_ORIGIN');
+    origins.push({
+      exportName: name,
+      sourcePathSha256: digest(path),
+      sourceSha256: digest(readFileSync(path)),
+    });
+    return value;
+  };
+  const clientConstructor = actualExport(awsPath, 'S3Client');
+  const handlerConstructor = actualExport(
+    awsRequire.resolve('@smithy/node-http-handler'),
+    'NodeHttpHandler',
+  );
+  const protocolPath = awsRequire.resolve('@smithy/core/protocols');
+  const requestConstructor = actualExport(protocolPath, 'HttpRequest');
+  const buildQueryString = actualExport(protocolPath, 'buildQueryString');
+  state.objectStoreClients = [
+    {
+      kind: 'storage',
+      provider: storage,
+      providerConstructor: storageConstructor,
+      property: 'client',
+      client: data(storage, 'client'),
+      bucket: fixture.storageBucket,
+    },
+    {
+      kind: 'privacy',
+      provider: objectStore,
+      providerConstructor: objectStoreConstructor,
+      property: 'client',
+      client: data(objectStore, 'client'),
+      bucket: fixture.privacyBucket,
+    },
+  ];
+  for (const row of state.objectStoreClients) {
+    row.destroy = data(row.client, 'destroy');
+    if (
+      typeof row.destroy !== 'function' ||
+      Object.getPrototypeOf(row.client) !== clientConstructor.prototype
+    )
+      refuse(state, 'SDK_CLIENT');
+    row.observation = bindOwnedReferenceObjectStoreClient(state.networkHandle, {
+      kind: row.kind,
+      client: row.client,
+      bucket: row.bucket,
+      clientConstructor,
+      handlerConstructor,
+      requestConstructor,
+      buildQueryString,
+      sourceOrigins: origins,
+    });
+    row.destroy = data(row.client, 'destroy');
+  }
+}
+
 function captureOfflineInstallation(state) {
   if (!['offlineE6', 'offlineCTG9'].includes(state.job.compositionId)) return;
   const constructor = sourceConstructor(
@@ -784,6 +881,14 @@ function finalObjects(state) {
       sha(Reflect.apply(row.snapshot, row.instance, [])) !== row.sha256
     )
       refuse(state, 'OFFLINE_INSTALLER_DRIFT');
+  }
+  for (const row of state.objectStoreClients ?? []) {
+    if (
+      Object.getPrototypeOf(row.provider) !== row.providerConstructor.prototype ||
+      data(row.provider, row.property) !== row.client ||
+      data(row.client, 'destroy') !== row.destroy
+    )
+      refuse(state, 'SDK_PROVIDER_DRIFT');
   }
   for (const row of state.instancePatches)
     if (!isDeepStrictEqual(Object.getOwnPropertyDescriptor(row.instance, 'use'), row.installed))
@@ -1014,6 +1119,7 @@ export async function observeOwnedReferenceLoopback(
     });
     await bounded(state, publicOperation(state, 'init', []), 'INIT');
     capturePrivacyOptions(state);
+    captureObjectStoreClients(state);
     captureOfflineInstallation(state);
     state.registry = observeReferenceRegistryObjects(
       job,
@@ -1078,6 +1184,7 @@ export async function observeOwnedReferenceLoopback(
             saltRawRetainedInReport: false,
           }
         : null,
+      objectStoreClients: state.objectStoreClients?.map((row) => row.observation) ?? null,
       offlineInstallation: state.offlineInstallation?.observation ?? null,
       middlewareInstances: state.middlewareInstances.map((row, index) => ({
         instanceId: index + 1,

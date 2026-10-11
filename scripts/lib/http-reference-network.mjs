@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import net, * as netNamespace from 'node:net';
 import tls, * as tlsNamespace from 'node:tls';
 import http, * as httpNamespace from 'node:http';
@@ -42,6 +43,20 @@ function plain(value) {
   });
 }
 
+// Node24.20's actual Agent.createSocket creates this null-prototype data object.
+// It is accepted only under the source-bound Smithy/Agent lowering ticket.
+function nativeAgentOptions(value) {
+  return (
+    !!value &&
+    !types.isProxy(value) &&
+    Object.getPrototypeOf(value) === null &&
+    Reflect.ownKeys(value).every((key) => {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      return typeof key === 'string' && descriptor.enumerable && Object.hasOwn(descriptor, 'value');
+    })
+  );
+}
+
 function refuse(state, reason, boundary = 'scope') {
   state.failure ??= reason;
   if (state.effects.length < 10_000)
@@ -80,7 +95,9 @@ function destination(state, host, value, boundary) {
         ? 'owned-redis'
         : number === state.listener?.port
           ? 'owned-listener'
-          : undefined;
+          : number === state.objectStorePort && state.sdkContext.getStore()?.networkAdmitted
+            ? 'owned-object-store'
+            : undefined;
   if (!kind) refuse(state, 'DESTINATION', boundary);
   return { host, port: number, kind };
 }
@@ -92,7 +109,12 @@ function connectArguments(state, args, boundary, lowering) {
   if (lowering && args.length === 1 && Array.isArray(args[0]) && !types.isProxy(args[0]))
     args = args[0];
   let host, value;
-  if (args.length >= 1 && args.length <= 2 && plain(args[0])) {
+  if (
+    args.length >= 1 &&
+    args.length <= 2 &&
+    (plain(args[0]) ||
+      (lowering && state.sdkContext.getStore()?.networkAdmitted && nativeAgentOptions(args[0])))
+  ) {
     const options = args[0];
     if (args.length === 2 && typeof args[1] !== 'function') refuse(state, 'OVERLOAD', boundary);
     const allowed = new Set([
@@ -241,6 +263,35 @@ function httpArguments(state, args, boundary) {
   )
     refuse(state, 'OVERLOAD', boundary);
   const options = args[0];
+  const ticket = state.sdkContext.getStore();
+  if (ticket?.kind === 'smithy-http-request') {
+    const row = ticket.row;
+    const request = ticket.request;
+    const config = row.handler.config;
+    const query = request.query ? row.buildQueryString(request.query) : '';
+    if (
+      ticket.used ||
+      Object.keys(options).sort().join(',') !== 'agent,auth,headers,host,method,path,port' ||
+      options.headers !== request.headers ||
+      options.host !== request.hostname ||
+      options.method !== request.method ||
+      options.port !== request.port ||
+      options.auth !== undefined ||
+      options.path !== request.path + (query ? `?${query}` : '') ||
+      !config ||
+      options.agent !== config.httpAgent ||
+      !(options.agent instanceof http.Agent) ||
+      Object.getPrototypeOf(options.agent) !== http.Agent.prototype ||
+      config.httpsAgent !== undefined ||
+      request.headers.expect !== undefined ||
+      request.headers.Expect !== undefined
+    )
+      refuse(state, 'SDK_HTTP_IDENTITY', boundary);
+    bindSdkAgent(state, row, options.agent);
+    ticket.used = true;
+    ticket.networkAdmitted = true;
+    return destination(state, options.host, options.port, boundary);
+  }
   const allowed = new Set(['host', 'port', 'method', 'path', 'agent']);
   if (
     Object.keys(options).some((key) => !allowed.has(key)) ||
@@ -255,6 +306,23 @@ function httpArguments(state, args, boundary) {
 }
 
 function verifyDescriptors(state) {
+  for (const row of state.sdkPatches) {
+    if (
+      !isDeepStrictEqual(Object.getOwnPropertyDescriptor(row.object, row.key), row.installed) ||
+      !isDeepStrictEqual(Object.getOwnPropertyDescriptor(row.owner, row.key), row.ownerDescriptor)
+    )
+      refuse(state, 'SDK_DESCRIPTOR_DRIFT');
+  }
+  for (const row of state.sdkClients) {
+    if (
+      row.client.config !== row.config ||
+      row.config.requestHandler !== row.handler ||
+      Object.getPrototypeOf(row.client) !== row.clientConstructor.prototype ||
+      Object.getPrototypeOf(row.handler) !== row.handlerConstructor.prototype ||
+      (row.agent && row.handler.config?.httpAgent !== row.agent)
+    )
+      refuse(state, 'SDK_CLIENT_DRIFT');
+  }
   if (state.listenGuard) {
     for (const constructor of [http.Server, https.Server])
       if (constructor.prototype.listen !== state.listenGuard) refuse(state, 'LISTEN_ALIAS');
@@ -278,7 +346,12 @@ export function installOwnedReferenceNetworkScope(binding) {
     process.versions.node !== '24.20.0' ||
     active ||
     !plain(binding) ||
-    Object.keys(binding).sort().join(',') !== 'postgresPort,redisPort' ||
+    !['postgresPort,redisPort', 'objectStorePort,postgresPort,redisPort'].includes(
+      Object.keys(binding).sort().join(','),
+    ) ||
+    (Object.hasOwn(binding, 'objectStorePort') &&
+      (port(binding.objectStorePort) !== binding.objectStorePort ||
+        [binding.postgresPort, binding.redisPort].includes(binding.objectStorePort))) ||
     port(binding.postgresPort) !== binding.postgresPort ||
     port(binding.redisPort) !== binding.redisPort ||
     binding.postgresPort === binding.redisPort
@@ -287,6 +360,10 @@ export function installOwnedReferenceNetworkScope(binding) {
   const state = {
     postgresPort: binding.postgresPort,
     redisPort: binding.redisPort,
+    objectStorePort: binding.objectStorePort,
+    sdkContext: new AsyncLocalStorage(),
+    sdkClients: [],
+    sdkPatches: [],
     descriptors: [],
     effects: [],
     sequence: 0,
@@ -615,6 +692,273 @@ export function installOwnedReferenceNetworkScope(binding) {
   }
 }
 
+function sdkPatch(state, object, key, make) {
+  if (!object || types.isProxy(object)) refuse(state, 'SDK_OBJECT');
+  const original = Object.getOwnPropertyDescriptor(object, key);
+  let owner = object;
+  while (owner && !Object.hasOwn(owner, key)) owner = Object.getPrototypeOf(owner);
+  const ownerDescriptor = owner && Object.getOwnPropertyDescriptor(owner, key);
+  if (
+    original ||
+    !ownerDescriptor ||
+    !Object.hasOwn(ownerDescriptor, 'value') ||
+    typeof ownerDescriptor.value !== 'function' ||
+    !Object.isExtensible(object)
+  )
+    refuse(state, 'SDK_METHOD');
+  const installed = {
+    value: make(ownerDescriptor.value),
+    configurable: true,
+    enumerable: false,
+    writable: true,
+  };
+  Object.defineProperty(object, key, installed);
+  state.sdkPatches.push({ object, key, original, owner, ownerDescriptor, installed });
+}
+
+function bindSdkAgent(state, row, agent) {
+  if (row.agent) {
+    if (row.agent !== agent) refuse(state, 'SDK_AGENT_DRIFT');
+    return;
+  }
+  if (
+    types.isProxy(agent) ||
+    agent.keepAlive !== true ||
+    agent.maxSockets !== 50 ||
+    Object.values(agent.sockets).flat().length ||
+    Object.values(agent.freeSockets).flat().length ||
+    Object.values(agent.requests).flat().length
+  )
+    refuse(state, 'SDK_AGENT_INITIAL_STATE');
+  row.agent = agent;
+  sdkPatch(
+    state,
+    agent,
+    'createConnection',
+    (original) =>
+      function (...args) {
+        verifyDescriptors(state);
+        const sdk = state.sdkContext.getStore();
+        if (
+          this !== agent ||
+          sdk?.row !== row ||
+          !sdk.used ||
+          !sdk.networkAdmitted ||
+          args.length < 1 ||
+          args.length > 2 ||
+          !nativeAgentOptions(args[0]) ||
+          (args.length === 2 && typeof args[1] !== 'function') ||
+          state.lowering?.kind === 'net-connect'
+        )
+          refuse(state, 'SDK_AGENT_CALL');
+        const target = connectArguments(state, args, 'sdk.Agent.createConnection', {
+          host: '127.0.0.1',
+          port: state.objectStorePort,
+          kind: 'owned-object-store',
+        });
+        const previous = state.lowering;
+        const ticket = {
+          kind: 'net-connect',
+          form: 'object',
+          target,
+          options: args[0],
+          callback: typeof args[1] === 'function' ? args[1] : null,
+          optionsDescriptors: Object.getOwnPropertyDescriptors(args[0]),
+          used: false,
+        };
+        state.lowering = ticket;
+        try {
+          admitted(state, 'sdk.Agent.createConnection', target);
+          const result = Reflect.apply(original, this, args);
+          if (!ticket.used || result !== ticket.socket || !(result instanceof net.Socket))
+            refuse(state, 'SDK_AGENT_RETURN');
+          return result;
+        } finally {
+          state.lowering = previous;
+        }
+      },
+  );
+}
+
+/** Actual source-bound provider instances only; the fixed lifecycle owns this call. */
+export function bindOwnedReferenceObjectStoreClient(handle, binding) {
+  if (arguments.length !== 2) throw new Error('Invalid actual SDK client binding');
+  const state = stateFor(handle);
+  verifyDescriptors(state);
+  if (
+    !plain(binding) ||
+    Object.keys(binding).sort().join(',') !==
+      'bucket,buildQueryString,client,clientConstructor,handlerConstructor,kind,requestConstructor,sourceOrigins' ||
+    !state.objectStorePort ||
+    !['storage', 'privacy'].includes(binding.kind) ||
+    typeof binding.bucket !== 'string' ||
+    !/^[a-z0-9][a-z0-9-]+$/u.test(binding.bucket) ||
+    typeof binding.clientConstructor !== 'function' ||
+    typeof binding.handlerConstructor !== 'function' ||
+    typeof binding.requestConstructor !== 'function' ||
+    typeof binding.buildQueryString !== 'function' ||
+    state.sdkClients.some((row) => row.kind === binding.kind || row.client === binding.client)
+  )
+    refuse(state, 'SDK_BINDING');
+  const client = binding.client;
+  const config = client?.config;
+  const handler = config?.requestHandler;
+  if (
+    types.isProxy(client) ||
+    types.isProxy(handler) ||
+    !config ||
+    Object.getPrototypeOf(client) !== binding.clientConstructor.prototype ||
+    Object.getPrototypeOf(handler) !== binding.handlerConstructor.prototype ||
+    handler.config ||
+    !handler.configProvider ||
+    typeof handler.configProvider.then !== 'function'
+  )
+    refuse(state, 'SDK_CONSTRUCTOR');
+  const row = {
+    ...binding,
+    config,
+    handler,
+    sendCalls: 0,
+    handlerCalls: 0,
+    settledHandlerCalls: 0,
+    destroyCalls: 0,
+    handlerDestroyCalls: 0,
+    destroyed: false,
+    handlerDestroyed: false,
+    destroying: false,
+  };
+  state.sdkClients.push(row);
+  sdkPatch(
+    state,
+    client,
+    'destroy',
+    (original) =>
+      function (...args) {
+        verifyDescriptors(state);
+        if (
+          this !== client ||
+          args.length ||
+          row.destroying ||
+          row.handlerCalls !== row.settledHandlerCalls
+        )
+          refuse(state, 'SDK_DESTROY_CALL');
+        row.destroyCalls++;
+        row.destroying = true;
+        try {
+          const result = Reflect.apply(original, this, args);
+          if (result !== undefined || !row.handlerDestroyed) refuse(state, 'SDK_DESTROY_RETURN');
+          row.destroyed = true;
+          return result;
+        } finally {
+          row.destroying = false;
+        }
+      },
+  );
+  sdkPatch(
+    state,
+    handler,
+    'destroy',
+    (original) =>
+      function (...args) {
+        verifyDescriptors(state);
+        if (this !== handler || args.length || !row.destroying)
+          refuse(state, 'SDK_HANDLER_DESTROY_CALL');
+        row.handlerDestroyCalls++;
+        const result = Reflect.apply(original, this, args);
+        if (result !== undefined) refuse(state, 'SDK_HANDLER_DESTROY_RETURN');
+        row.handlerDestroyed = true;
+        return result;
+      },
+  );
+  sdkPatch(
+    state,
+    client,
+    'send',
+    (original) =>
+      function (...args) {
+        verifyDescriptors(state);
+        if (
+          this !== client ||
+          row.destroyed ||
+          args.length < 1 ||
+          args.length > 2 ||
+          !args[0] ||
+          types.isProxy(args[0]) ||
+          (args.length === 2 && (!plain(args[1]) || Object.keys(args[1]).length !== 0))
+        )
+          refuse(state, 'SDK_SEND');
+        row.sendCalls++;
+        return state.sdkContext.run({ kind: 'aws-client-send', row }, () =>
+          Reflect.apply(original, this, args),
+        );
+      },
+  );
+  sdkPatch(
+    state,
+    handler,
+    'handle',
+    (original) =>
+      function (...args) {
+        verifyDescriptors(state);
+        const parent = state.sdkContext.getStore();
+        const request = args[0];
+        if (
+          this !== handler ||
+          row.destroyed ||
+          parent?.kind !== 'aws-client-send' ||
+          parent.row !== row ||
+          args.length < 1 ||
+          args.length > 2 ||
+          !request ||
+          types.isProxy(request) ||
+          Object.getPrototypeOf(request) !== binding.requestConstructor.prototype ||
+          request.protocol !== 'http:' ||
+          request.hostname !== '127.0.0.1' ||
+          request.port !== state.objectStorePort ||
+          !['GET', 'PUT', 'HEAD', 'DELETE'].includes(request.method) ||
+          typeof request.path !== 'string' ||
+          !(request.path === `/${row.bucket}` || request.path.startsWith(`/${row.bucket}/`)) ||
+          request.username != null ||
+          request.password != null ||
+          request.fragment ||
+          !plain(request.headers) ||
+          typeof request.headers.authorization !== 'string' ||
+          !request.headers.authorization.startsWith('AWS4-HMAC-SHA256 ') ||
+          (request.query !== undefined && !plain(request.query))
+        )
+          refuse(state, 'SDK_HANDLER_REQUEST');
+        row.handlerCalls++;
+        const ticket = {
+          kind: 'smithy-http-request',
+          row,
+          request,
+          used: false,
+          networkAdmitted: false,
+        };
+        const result = state.sdkContext.run(ticket, () => Reflect.apply(original, this, args));
+        if (!result || typeof result.then !== 'function') refuse(state, 'SDK_HANDLER_RETURN');
+        result.then(
+          () => {
+            row.settledHandlerCalls++;
+            if (!ticket.used) state.failure ??= 'SDK_HTTP_MISSING';
+          },
+          () => {
+            row.settledHandlerCalls++;
+          },
+        );
+        return result;
+      },
+  );
+  return {
+    kind: row.kind,
+    actualClientRetained: true,
+    actualHandlerRetained: true,
+    sourceOrigins: structuredClone(binding.sourceOrigins),
+    parentCorroborationRequired: true,
+    readinessPromoting: false,
+  };
+}
+
 /** Only the actual server observed at guarded listen can add a request target. */
 export function bindOwnedReferenceListener(handle, server) {
   if (arguments.length !== 2) throw new Error('Invalid owned listener binding');
@@ -634,7 +978,7 @@ export function bindOwnedReferenceListener(handle, server) {
     address.address !== '127.0.0.1' ||
     address.family !== 'IPv4' ||
     port(address.port) !== address.port ||
-    [state.postgresPort, state.redisPort].includes(address.port)
+    [state.postgresPort, state.redisPort, state.objectStorePort].includes(address.port)
   )
     refuse(state, 'LISTENER_ADDRESS');
   const target = { host: address.address, port: address.port, kind: 'owned-listener' };
@@ -653,6 +997,22 @@ export function observeOwnedReferenceNetwork(handle) {
     scope: 'reference-owned-loopback-transport-component',
     effects: state.effects,
     listener: state.listener ?? null,
+    actualSdkClients: state.sdkClients.map((row) => ({
+      kind: row.kind,
+      sendCalls: row.sendCalls,
+      handlerCalls: row.handlerCalls,
+      settledHandlerCalls: row.settledHandlerCalls,
+      nativeAgentObserved: !!row.agent,
+      activeHandlerCalls: row.handlerCalls - row.settledHandlerCalls,
+      actualClientDestroyCalls: row.destroyCalls,
+      actualHandlerDestroyCalls: row.handlerDestroyCalls,
+      actualClientDestroyReturned: row.destroyed,
+      actualHandlerDestroyReturned: row.handlerDestroyed,
+      agentOpenSocketCount: row.agent ? Object.values(row.agent.sockets).flat().length : 0,
+      agentFreeSocketCount: row.agent ? Object.values(row.agent.freeSockets).flat().length : 0,
+      agentQueuedRequestCount: row.agent ? Object.values(row.agent.requests).flat().length : 0,
+      sourceOrigins: row.sourceOrigins,
+    })),
     retainedSocketCount: state.sockets.size,
     openSocketCount: [...state.sockets.values()].filter((row) => !row.closed).length,
     destroyRequestedSocketCount: [...state.sockets.values()].filter((row) => row.socket.destroyed)
@@ -684,6 +1044,17 @@ export function closeOwnedReferenceNetworkScope(handle) {
   try {
     verifyDescriptors(state);
     if (
+      state.sdkClients.some(
+        (row) =>
+          !row.destroyed ||
+          !row.handlerDestroyed ||
+          row.destroying ||
+          row.handlerCalls !== row.settledHandlerCalls ||
+          (row.agent &&
+            [row.agent.sockets, row.agent.freeSockets, row.agent.requests].some(
+              (table) => Object.values(table).flat().length !== 0,
+            )),
+      ) ||
       state.listenAdmission !== undefined ||
       (state.listenTicket &&
         (state.listenTicket.callbackCount !== 1 ||
@@ -696,6 +1067,15 @@ export function closeOwnedReferenceNetworkScope(handle) {
     state.failure ??= 'FINAL_CHECK';
   }
   state.closed = true;
+  for (const row of state.sdkPatches.slice().reverse()) {
+    if (!isDeepStrictEqual(Object.getOwnPropertyDescriptor(row.object, row.key), row.installed)) {
+      state.failure ??= 'SDK_RESTORATION_DRIFT';
+      continue;
+    }
+    if (row.original) Object.defineProperty(row.object, row.key, row.original);
+    else delete row.object[row.key];
+  }
+  state.sdkContext.disable();
   for (const row of state.descriptors.slice().reverse()) {
     if (!isDeepStrictEqual(Object.getOwnPropertyDescriptor(row.object, row.key), row.installed)) {
       state.failure ??= 'DESCRIPTOR_DRIFT';

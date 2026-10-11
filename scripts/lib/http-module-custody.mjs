@@ -1370,6 +1370,9 @@ export async function runHttpRuntimeWorker() {
       network = transport.installOwnedReferenceNetworkScope({
         postgresPort: job.referenceFixture.postgres.port,
         redisPort: job.referenceFixture.redis.port,
+        ...(job.referenceFixture.objectStore
+          ? { objectStorePort: job.referenceFixture.objectStore.port }
+          : {}),
       });
       const { observeOwnedReferenceLoopback } = await import('./http-reference-lifecycle.mjs');
       referenceObservation = await observeOwnedReferenceLoopback(
