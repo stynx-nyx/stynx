@@ -157,7 +157,7 @@ export function openHttpOriginalParentExchange(job) {
         job.originalScenario.operationId,
       );
       state.received.push(frame);
-      state.waiting?.accept(frame.body);
+      state.waiting?.accept(structuredClone(frame.body));
       state.waiting = null;
     } catch {
       state.failure = true;
