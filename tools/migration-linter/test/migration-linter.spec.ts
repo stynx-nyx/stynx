@@ -259,6 +259,22 @@ const inquiryCases = [
     'ALTER TABLE demo.bookmark DROP/**/COLUMN title;',
     true,
   ],
+  ['line-comment-separated drop is destructive', 'DROP-- comment\nTABLE demo.bookmark;', true],
+  [
+    'qualified dot survives nested comments',
+    "SELECT evil. /* outer /* inner */ outer */ pg_catalog.has_table_privilege('app', 'demo.bookmark', 'TRUNCATE');",
+    true,
+  ],
+  [
+    'qualified dot survives line comments',
+    "SELECT evil. -- comment\n pg_catalog.has_table_privilege('app', 'demo.bookmark', 'TRUNCATE');",
+    true,
+  ],
+  [
+    'DO body comment-separated drop is destructive',
+    'DO $$ BEGIN DROP/**/TABLE demo.bookmark; END $$;',
+    true,
+  ],
 ] as const;
 
 for (const [name, sql, destructive] of inquiryCases) {
