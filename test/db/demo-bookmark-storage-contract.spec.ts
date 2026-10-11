@@ -221,6 +221,31 @@ describe('closed demo bookmark storage contract', () => {
     });
   });
 
+  it('caller rollback restores populated historical storage and its original RLS flags', async () => {
+    await withFixture(async ({ owner }) => {
+      await owner.query(
+        await readFile(resolve(repoRoot, 'domain/demo-bookmark/db/migration.sql'), 'utf8'),
+      );
+      await add(owner, tenantA, 'https://example.test/historical-rollback');
+      await add(owner, tenantB, 'https://example.test/historical-rollback', randomUUID(), true);
+      const before = await snapshot(owner);
+      await owner.query('begin');
+      expect((await installDemoBookmarkStorage(owner)).previousState).toBe('historical');
+      await owner.query('rollback');
+      expect(await snapshot(owner)).toEqual(before);
+      expect(
+        (
+          await owner.query(
+            'select relrowsecurity,relforcerowsecurity from pg_class where oid=$1::regclass',
+            [bookmark],
+          )
+        ).rows,
+      ).toEqual([{ relrowsecurity: false, relforcerowsecurity: false }]);
+      expect((await install(owner)).previousState).toBe('historical');
+      expect(await snapshot(owner)).toEqual(before);
+    });
+  });
+
   it('refuses an actual restricted installer before mutation', async () => {
     await withFixture(async ({ owner, connect }) => {
       const app = await connect('stynx_app');
@@ -245,6 +270,13 @@ describe('closed demo bookmark storage contract', () => {
       for (const identity of identities) {
         const app = await connect('stynx_app');
         const reader = await connect('stynx_reader');
+        await expect(
+          app.query(`insert into ${bookmark}(tenant_id,owner_id,url) values($1,$2,$3)`, [
+            identity.tenant,
+            actor,
+            'https://example.test/missing-context',
+          ]),
+        ).rejects.toMatchObject({ code: '42501' });
         for (const client of [app, reader]) {
           expect((await client.query(`select id from ${bookmark}`)).rows).toEqual([]);
           expect((await client.query(`select bookmark_id from ${tag}`)).rows).toEqual([]);
@@ -484,6 +516,31 @@ describe('closed demo bookmark storage contract', () => {
       'PII registration extra protected column',
       "insert into core.pii_map(table_schema,table_name,column_name,strategy) values('demo','demo__bookmark_bookmark','title','nullify')",
       'canonical-pii-registration',
+    ],
+    [
+      'unknown CHECK constraint',
+      `alter table ${bookmark} add constraint unexpected check (length(title)>0)`,
+      'demo__bookmark_bookmark:constraints',
+    ],
+    [
+      'unexpected NOT NULL column',
+      `alter table ${bookmark} alter column title set not null`,
+      'demo__bookmark_bookmark:columns',
+    ],
+    [
+      'required NOT NULL removed',
+      `alter table ${bookmark} alter column owner_id drop not null`,
+      'demo__bookmark_bookmark:columns',
+    ],
+    [
+      'changed column default',
+      `alter table ${bookmark} alter column title set default 'invented'`,
+      'demo__bookmark_bookmark:columns',
+    ],
+    [
+      'unknown actual trigger',
+      `create function demo.unrecognized_trigger() returns trigger language plpgsql as $$ begin return NEW; end $$; create trigger unexpected before insert on ${bookmark} for each row execute function demo.unrecognized_trigger()`,
+      'demo__bookmark_bookmark:no-unrecognized-execution-hooks',
     ],
   ] as const;
 
