@@ -1471,6 +1471,12 @@
       "commit": "cd0542143ad21e59551cbf3936d99c48647b2e78",
       "authorized_by": "Owner",
       "reason": "Records the Owner's reaffirmed full STYNX 1.6.0 implementation, protected-integration and publication mandate under ADR-0019 decision 6 and ADR-DEVAI-ADOPTION-0020 for this exact registered DEVAI 2.5.0 upgrade commit. The generated .github/workflows/devai-local-rc-verify.yml advances only the trusted verifier identity from published @aarusso-nyx/devai@1.9.0 to independently verified published 2.4.0, including exact registry package/SRI/source/provenance substitutions; its SHA-256 is 30bb7935a0ad1ad7303217f77ac64e9c0c4c6ae3f70860d7c21f3a14e35964dc. Independent Auditor source review accepted the exact seven identity substitution classes; existing signer trust, inert candidate boundary, exact-tree transport, checks, permissions and all gates remain unchanged. The agent computed and reviewed this commit SHA; the Owner supplied the bounded action mandate, not its literal SHA. This receipt covers only the exact generated CI action; a rewritten landed commit requires its own exact receipt. Protected verifier-provenance control verification/update and normal remote integration remain separate prerequisites; this receipt supplies no gate waiver or completed STYNX audit/publication claim."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "953bddbdfaa3523be4e0e82cfe26e1917473768f",
+      "authorized_by": "Owner",
+      "reason": "Records the narrowly reviewed non-actuating lexical match in this exact Engineer commit under the Owner full STYNX 1.6.0 implementation, independent verification, protected-integration and publication mandate (ADR-0019 decision 6). The two added files scripts/lib/http-build-roster.mjs and scripts/lib/http-workspace-graph.mjs derive and validate read-only build-input/dependency rosters; the only matched rm -rf text is the closed Map allowlist of existing package-local disposable-dist build scripts followed by tsc -p tsconfig.json or tsc -p tsconfig.build.json. This commit adds no shell invocation, cleanup or deletion operation for those strings. This receipt covers only that exact textual allowlist match and grants no deletion of uncommitted or unrelated work, arbitrary cleanup, weakened gate or additional remote action. The agent computed and reviewed the exact known commit; the Owner supplied the bounded action mandate, not its literal SHA."
     }
   ]
 }
