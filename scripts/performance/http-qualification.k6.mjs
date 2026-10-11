@@ -108,6 +108,8 @@ export const options = {
       gracefulStop: '30s',
     },
   },
+  // Supplemental-only: no reused Go HTTP/1 connection can trigger an automatic retry.
+  noConnectionReuse: true,
   maxRedirects: 0,
   discardResponseBodies: false,
 };
@@ -147,7 +149,7 @@ export default function () {
     expectedOutcomeId: target.expectedOutcomeId,
     allocationRequestSha256: requestSha256,
   };
-  started.add(1);
+  started.add(1, { case_id: input.caseId, target_sequence: String(sequence) });
   const targetStartedAtUnixMs = Date.now();
   let response;
   try {
@@ -160,7 +162,7 @@ export default function () {
     });
   } catch {
     // No invented duration or substitute/retry on an unmeasured native throw.
-    completed.add(1);
+    completed.add(1, { case_id: input.caseId, target_sequence: String(sequence) });
     emit({
       ...identity,
       transport: 'native-request-threw',
@@ -180,7 +182,7 @@ export default function () {
     });
     return;
   }
-  completed.add(1);
+  completed.add(1, { case_id: input.caseId, target_sequence: String(sequence) });
   emit({
     ...identity,
     transport: response.status === 0 ? 'native-transport-failure' : 'http-response',
