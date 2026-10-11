@@ -17,10 +17,12 @@ import test from 'node:test';
 import {
   loadHttpQualificationCase,
   loadHttpQualificationRoster,
+  loadHttpOriginalScenarioRoster,
 } from '../../scripts/lib/http-qualification-manifest.mjs';
 import {
   snapshotFreshHttpQualificationCase,
   snapshotFreshHttpQualificationRoster,
+  snapshotFreshHttpOriginalScenarioRoster,
 } from '../../scripts/lib/http-fresh-build.mjs';
 import { sha256 } from './support/http-qualification-fixture.mjs';
 
@@ -407,4 +409,87 @@ test('complete copied rosters, roots and forged handles cannot access the privat
   assert.equal(invoked, 0);
   for (const key of ['runtimeAdmission', 'performanceQualified', 'readinessPromoting'])
     assert.equal(roster[key], false);
+});
+
+test('original scenario roster reconstructs all eight declared official profiles and complete actual script support', (t) => {
+  const { root, members } = declarationFixture(t);
+  const scenarios = ['auth', 'crud', 'upload', 'cascade-delete'];
+  const support = [
+    'test/perf/k6/lib/config.js',
+    'test/perf/k6/lib/stynx.js',
+    'test/perf/k6/check-summary.mjs',
+    'test/perf/k6/baseline-reference.json',
+  ];
+  const paths = [...scenarios.map((id) => `test/perf/k6/${id}.js`), ...support];
+  for (const path of paths) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), readFileSync(join(repository, path)), { mode: 0o644 });
+  }
+  const result = loadHttpOriginalScenarioRoster(root);
+  assert.equal(result.scope, 'source-bound-http-original-scenario-roster-component');
+  assert.equal(result.profiles.length, 8);
+  assert.equal(result.files.length, members.size + paths.length);
+  assert.equal(new Set(result.files.map((row) => row.path)).size, result.files.length);
+  assert.equal(new Set(result.profiles.map((row) => row.profileSha256)).size, 8);
+  assert.deepEqual(
+    result.profiles.map((row) => `${row.scenarioId}/${row.profileId}`),
+    scenarios.flatMap((id) => [`${id}/local`, `${id}/hardening`]),
+  );
+  for (const profile of result.profiles) {
+    assert.deepEqual(
+      profile.binding.nominalProfile,
+      manifest.existingProfiles[profile.scenarioId][profile.profileId],
+    );
+    assert.equal(profile.binding.generator, 'official-k6-0.49.0');
+    assert.equal(profile.binding.derivativeSelectionAllowed, false);
+    assert.equal(profile.binding.script.path, `test/perf/k6/${profile.scenarioId}.js`);
+    assert.equal(
+      profile.binding.script.sha256,
+      sha256(readFileSync(join(root, profile.binding.script.path))),
+    );
+    assert.deepEqual(
+      profile.binding.supportFiles.map((row) => row.path),
+      support,
+    );
+    for (const row of profile.binding.supportFiles)
+      assert.equal(row.sha256, sha256(readFileSync(join(root, row.path))));
+  }
+  for (const key of ['runtimeAdmission', 'performanceQualified', 'readinessPromoting'])
+    assert.equal(result[key], false);
+  assert.throws(() => loadHttpOriginalScenarioRoster(root, { scenarios: ['auth'] }), invalid);
+  const openapi = [...manifest.operations, ...manifest.publicExclusions].flatMap(
+    (row) => row.openapiOperations,
+  )[0].artifact;
+  writeFileSync(join(root, openapi), '{}');
+  assert.throws(() => loadHttpOriginalScenarioRoster(root), invalid);
+});
+
+test('original roster private-build selection refuses caller snapshots, proxies and extra arguments without evaluating them', () => {
+  let calls = 0;
+  const proxy = new Proxy(
+    {},
+    {
+      get() {
+        calls++;
+        throw new Error('caller authority');
+      },
+      ownKeys() {
+        calls++;
+        throw new Error('caller authority');
+      },
+    },
+  );
+  for (const handle of [
+    proxy,
+    {},
+    Object.freeze(Object.create(null)),
+    { actualPrivateBuildSelection: true, candidateCommit: manifest.sourceCheckpoint.commit },
+  ])
+    assert.throws(() => snapshotFreshHttpOriginalScenarioRoster(handle), {
+      code: 'HTTP_FRESH_BUILD_INVALID',
+    });
+  assert.throws(() => snapshotFreshHttpOriginalScenarioRoster(proxy, { runtimeAdmission: true }), {
+    code: 'HTTP_FRESH_BUILD_INVALID',
+  });
+  assert.equal(calls, 0);
 });
