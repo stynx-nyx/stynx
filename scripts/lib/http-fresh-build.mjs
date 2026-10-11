@@ -52,6 +52,7 @@ import { loadHttpQualificationCase } from './http-qualification-manifest.mjs';
 import { createHttpQualificationProtocol } from './http-qualification-protocol.mjs';
 import { decodeHttpQualificationTargetCapture } from './http-qualification-raw.mjs';
 import { decodeHttpQualificationNativeMetrics } from './http-qualification-metrics.mjs';
+import { readHttpQualificationArtifact } from './http-qualification-artifacts.mjs';
 import {
   assertLivenessQualificationDeclaration,
   createLivenessQualificationAllocation,
@@ -3089,6 +3090,7 @@ const qualificationSupervisorControlClosure = new Map([
   ['scripts/lib/http-qualification-protocol.mjs', null],
   ['scripts/lib/http-qualification-raw.mjs', null],
   ['scripts/lib/http-qualification-metrics.mjs', null],
+  ['scripts/lib/http-qualification-artifacts.mjs', null],
   ['scripts/lib/http-qualification-liveness.mjs', null],
   ['scripts/lib/k6-baseline-json.mjs', null],
   ['scripts/performance/http-qualification.k6.mjs', null],
@@ -3171,6 +3173,7 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
     stderr = [];
   let logBytes = 0,
     failure,
+    operationError,
     timer,
     watcher;
   const reject = () => {
@@ -3218,11 +3221,6 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
     watcher = undefined;
     const observed = snapshotOwnedHttpWorker(handle);
     const cleanup = await reapQualificationGenerator(state);
-    for (const [name, chunks] of [
-      ['stdout', stdout],
-      ['stderr', stderr],
-    ])
-      writeFileSync(`${prefix}.${name}.log`, Buffer.concat(chunks), { mode: 0o600, flag: 'wx' });
     if (
       failure ||
       exit.code !== 0 ||
@@ -3235,22 +3233,17 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
       refuse('Actual native generator failed or lacks owned close/group absence');
     compareRows([native.row], [byteRow(state.sandbox, native.executable)]);
     compareRows([script], [byteRow(state.checkout, scriptPath)]);
-    if (!readFileSync(inputPath).equals(inputBytes) || readFileSync(configPath, 'utf8') !== '{}\n')
-      refuse('Actual sealed generator allocation/config changed');
-    const raw = byteRow(state.sandbox, rawPath),
-      metrics = byteRow(state.sandbox, metricsPath);
     if (
-      raw.permissions !== 0o600 ||
-      metrics.permissions !== 0o600 ||
-      realpathSync(rawPath) !== rawPath ||
-      realpathSync(metricsPath) !== metricsPath
+      !readHttpQualificationArtifact(state.sandbox, inputPath).bytes.equals(inputBytes) ||
+      readHttpQualificationArtifact(state.sandbox, configPath).bytes.toString('utf8') !== '{}\n'
     )
-      refuse('Private actual generator artifacts changed ownership shape');
-    const decoded = decodeHttpQualificationTargetCapture(readFileSync(rawPath), allocation);
-    const counters = decodeHttpQualificationNativeMetrics(
-      readFileSync(metricsPath),
-      allocation.caseId,
-    );
+      refuse('Actual sealed generator allocation/config changed');
+    const rawCapture = readHttpQualificationArtifact(state.sandbox, rawPath);
+    const metricCapture = readHttpQualificationArtifact(state.sandbox, metricsPath);
+    const raw = rawCapture.row,
+      metrics = metricCapture.row;
+    const decoded = decodeHttpQualificationTargetCapture(rawCapture.bytes, allocation);
+    const counters = decodeHttpQualificationNativeMetrics(metricCapture.bytes, allocation.caseId);
     const outcomes = inspectLivenessQualificationOutcomes(declaration, decoded);
     return {
       generatorOperationId: allocation.generatorOperationId,
@@ -3275,10 +3268,38 @@ async function runOwnedQualificationGenerator(state, declaration, allocation, di
       performanceQualified: false,
       readinessPromoting: false,
     };
+  } catch (error) {
+    operationError = error;
+    throw error;
   } finally {
     clearTimeout(timer);
     watcher?.close();
-    await reapQualificationGenerator(state);
+    let cleanupError, captureError;
+    try {
+      await reapQualificationGenerator(state);
+    } catch (error) {
+      cleanupError = error;
+      state.refusal ??= 'HTTP_QUALIFICATION_GENERATOR_CLEANUP_INCOMPLETE';
+    } finally {
+      // Cleanup refusal must never bypass either bounded failure log. Attempt
+      // both independently, durably, and retain any write failure as refusal.
+      for (const [name, chunks] of [
+        ['stdout', stdout],
+        ['stderr', stderr],
+      ]) {
+        try {
+          writeFileSync(`${prefix}.${name}.log`, Buffer.concat(chunks), {
+            mode: 0o600,
+            flag: 'wx',
+            flush: true,
+          });
+        } catch (error) {
+          captureError ??= error;
+          state.refusal ??= 'HTTP_QUALIFICATION_GENERATOR_CAPTURE_INCOMPLETE';
+        }
+      }
+    }
+    if (!operationError && (captureError || cleanupError)) throw captureError ?? cleanupError;
   }
 }
 
@@ -3578,14 +3599,18 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
     const workerCleanup = await reapReferenceWorker(state);
     if (workerCleanup.groupOutcome !== 'ABSENT')
       refuse('Qualification worker group remains present');
-    const observedArtifact = byteRow(state.sandbox, job.observationArtifactPath);
+    const observedCapture = readHttpQualificationArtifact(
+      state.sandbox,
+      job.observationArtifactPath,
+    );
+    const observedArtifact = observedCapture.row;
     if (
       observedArtifact.sha256 !== received.get('terminal').resultArtifactSha256 ||
       observedArtifact.permissions !== 0o600 ||
       realpathSync(job.observationArtifactPath) !== job.observationArtifactPath
     )
       refuse('Qualification worker result bytes differ');
-    const raw = JSON.parse(readFileSync(job.observationArtifactPath, 'utf8'));
+    const raw = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(observedCapture.bytes));
     serializeHttpRuntimePlainJson(raw);
     const validator = createHttpModuleSnapshotValidator({
       bindings,
@@ -3595,6 +3620,30 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
       pid: worker.pid,
     });
     if (
+      !isDeepStrictEqual(Object.keys(raw).sort(), [
+        'candidateCommit',
+        'complete',
+        'modules',
+        'networkClosure',
+        'nonce',
+        'parentCorroborationRequired',
+        'performanceQualified',
+        'readinessPromoting',
+        'referenceObservation',
+        'runtimeCustodyComplete',
+        'schemaVersion',
+        'scope',
+        'tree',
+        'trustedBootstrap',
+        'workerPid',
+      ]) ||
+      raw.schemaVersion !== 1 ||
+      raw.parentCorroborationRequired !== true ||
+      raw.complete !== false ||
+      raw.runtimeCustodyComplete !== false ||
+      raw.performanceQualified !== false ||
+      raw.readinessPromoting !== false ||
+      !isDeepStrictEqual(raw.trustedBootstrap, bindings.trustedBootstrap) ||
       raw.scope !== job.mode ||
       raw.candidateCommit !== state.candidateCommit ||
       raw.tree !== state.inputs.tree ||
@@ -3653,8 +3702,10 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
     compareRows(
       [generator.raw, generator.metrics],
       [
-        byteRow(state.sandbox, resolve(state.sandbox, generator.raw.path)),
-        byteRow(state.sandbox, resolve(state.sandbox, generator.metrics.path)),
+        readHttpQualificationArtifact(state.sandbox, resolve(state.sandbox, generator.raw.path))
+          .row,
+        readHttpQualificationArtifact(state.sandbox, resolve(state.sandbox, generator.metrics.path))
+          .row,
       ],
     );
     assertReferenceNestPreparationOrder(
