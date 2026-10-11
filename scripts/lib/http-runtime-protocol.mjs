@@ -427,9 +427,9 @@ function validResolutionAnchors(anchors, binding, context, members) {
   const rules = [
     [
       'reference/api/package.json',
-      'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
-      'be70d59c463cb56e9f08c3f549c874015a5a58f3',
-      1899,
+      '0c836a5aec63a8195a92fd052d507bce7982f13708a9476aea481a61b21dfa6d',
+      'd18e60e92216a32f0569d709116dc95d5c2d0b0b',
+      2078,
       'scripts/lib/http-module-custody.mjs',
       "createRequire(new URL('../../reference/api/package.json', import.meta.url))('reflect-metadata')",
       ['reflect-metadata'],
