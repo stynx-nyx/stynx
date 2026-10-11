@@ -7,7 +7,7 @@ const privilegeList =
  * Other literals (including dynamic EXECUTE SQL) remain visible to LINT005.
  * Dollar-quoted DO bodies are code; other dollar strings remain opaque.
  */
-function catalogInquiryProjection(text: string): string {
+function catalogInquiryProjection(text: string, normalizeComments = false): string {
   const output = text.split('');
   let cursor = 0;
   let previousWord = '';
@@ -18,11 +18,15 @@ function catalogInquiryProjection(text: string): string {
       continue;
     }
     if (rest.startsWith('--')) {
+      const start = cursor;
       const end = text.indexOf('\n', cursor);
       cursor = end < 0 ? text.length : end + 1;
+      if (normalizeComments)
+        for (let index = start; index < cursor; index += 1) output[index] = ' ';
       continue;
     }
     if (rest.startsWith('/*')) {
+      const start = cursor;
       let depth = 1;
       cursor += 2;
       while (cursor < text.length && depth > 0) {
@@ -35,6 +39,8 @@ function catalogInquiryProjection(text: string): string {
         } else cursor += 1;
       }
       if (depth !== 0) return text;
+      if (normalizeComments)
+        for (let index = start; index < cursor; index += 1) output[index] = ' ';
       continue;
     }
     const quote = text[cursor];
@@ -65,7 +71,7 @@ function catalogInquiryProjection(text: string): string {
       const end = text.indexOf(dollar, bodyStart);
       if (end < 0) return text;
       if (previousWord === 'DO') {
-        const body = catalogInquiryProjection(text.slice(bodyStart, end));
+        const body = catalogInquiryProjection(text.slice(bodyStart, end), normalizeComments);
         for (let index = 0; index < body.length; index += 1)
           output[bodyStart + index] = body.charAt(index);
       }
@@ -74,7 +80,11 @@ function catalogInquiryProjection(text: string): string {
       continue;
     }
     const call = rest.match(/^pg_catalog\s*\.\s*has_table_privilege\s*\(/i);
-    if (call && (cursor === 0 || !/[\w$.]/.test(text.charAt(cursor - 1)))) {
+    if (
+      call &&
+      previousWord !== '.' &&
+      (cursor === 0 || !/[\w$.\u0080-\uffff]/.test(text.charAt(cursor - 1)))
+    ) {
       const opening = cursor + call[0].lastIndexOf('(');
       const body = extractParenthesized(text, opening);
       if (body !== null) {
@@ -97,12 +107,12 @@ function catalogInquiryProjection(text: string): string {
         }
       }
     }
-    const word = rest.match(/^[A-Za-z_][A-Za-z0-9_$]*/)?.[0];
+    const word = rest.match(/^[A-Za-z_\u0080-\uffff][A-Za-z0-9_$\u0080-\uffff]*/)?.[0];
     if (word) {
       previousWord = word.toUpperCase();
       cursor += word.length;
     } else {
-      previousWord = '';
+      previousWord = text[cursor] === '.' ? '.' : '';
       cursor += 1;
     }
   }
@@ -110,7 +120,11 @@ function catalogInquiryProjection(text: string): string {
 }
 
 export function containsDestructiveSql(text: string): boolean {
-  return /\b(DROP\s+TABLE|TRUNCATE\b|ALTER\s+TABLE[\s\S]*DROP\s+COLUMN)\b/i.test(
-    catalogInquiryProjection(text),
+  const destructive = /\b(DROP\s+TABLE|TRUNCATE\b|ALTER\s+TABLE[\s\S]*DROP\s+COLUMN)\b/i;
+  // Retain the original conservative literal/dynamic-SQL check, and additionally
+  // recognize real SQL keyword separation by nested comments or line comments.
+  return (
+    destructive.test(catalogInquiryProjection(text)) ||
+    destructive.test(catalogInquiryProjection(text, true))
   );
 }
