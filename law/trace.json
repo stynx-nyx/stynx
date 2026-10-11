@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.7",
+  "version": "1.3.8",
   "meta": {
-    "last_updated": "2026-10-11T00:42:51.998Z",
+    "last_updated": "2026-10-11T01:11:44.199Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -68,7 +68,8 @@
       "STYNX 1.6.0 Architect binding preserves all existing invariant relationships and assertion sites after preflight test hygiene, and adds the private reference bootstrap orchestration/Helmet/CORS/startup regressions. Explicit unit ports do not qualify the full AppModule, real provider effects, source/build custody or HTTP performance; unchanged projection bindings remain byte-identical.",
       "STYNX 1.6.0 Architect binds the real fresh-Node synchronous module-loader custody refusal sensors while retaining every existing test projection and invariant relationship. These bounded module observations do not establish supervisor freshness, complete source/build or object provenance, actual middleware custody, six-root HTTP performance, provider acceptance or release readiness.",
       "STYNX 1.6.0 Architect rebind pins tenant-scoped privacy HTTP, independent transaction and global internal-job assertions, plus authenticated reference fixture negatives. All prior executable relationships and gate invariants remain bound; these projections do not establish coverage, provider qualification, HTTP performance or release readiness.",
-      "STYNX 1.6.0 Architect binds the installed source-population matcher, additive local S3 provider and real compiler-plan refusal sensors, and rebinds two exact existing coverage-path assertions while retaining all registry 1.6 policy literals and prior assertion counts. The six-file privacy tier preserves every original behavioral case; local emulator and compiler-helper evidence do not establish production provider, full coverage, source/build freshness, performance, overall audit or release PASS."
+      "STYNX 1.6.0 Architect binds the installed source-population matcher, additive local S3 provider and real compiler-plan refusal sensors, and rebinds two exact existing coverage-path assertions while retaining all registry 1.6 policy literals and prior assertion counts. The six-file privacy tier preserves every original behavioral case; local emulator and compiler-helper evidence do not establish production provider, full coverage, source/build freshness, performance, overall audit or release PASS.",
+      "STYNX 1.6.0 Architect binds actual pinned-pnpm workspace selection and immutable Git/private dependency byte-roster refusal sensors, and refreshes the existing privacy tier population projection to four ordinary, two integration and six coverage files. Every previous relationship, assertion count and gate obligation is retained; these helpers do not establish fresh build ownership, complete runtime custody, HTTP performance, overall audit or release PASS."
     ]
   },
   "invariants": [
@@ -742,6 +743,24 @@
             "Real pinned TypeScript fixtures derive effective imported-source/output/map closure and reject stale, linked, malformed or unsupported inputs; diagnostic compiler reconciliation only, with no freshness, compiler-origin, complete runtime or performance readiness claim."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-workspace-graph.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Actual pinned pnpm selection agrees with all four workspace dependency kinds and uncapped transitive roots; malformed, aliased, linked, cyclic, missing or mismatched manifests and selectors refuse. Manifest and selector reconciliation does not establish installation, build freshness, runtime custody or performance readiness."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-build-roster.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Actual immutable Git objects and private offline pnpm installation bind tracked bytes, modes, candidate identity, physical vendor files and workspace links; tampering, replacement refs, unmerged or linked inputs and forged snapshots refuse. Byte-roster custody does not establish successful compilation, fresh build ownership or performance readiness."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["reference/api/src/sample", "packages/ratelimit/src", "packages/backend/src"]
@@ -964,6 +983,24 @@
           "names": ["INV-CORE-001"],
           "assertions": [
             "Real compiler fixture closure preserves included and imported sibling modules and declaration-map relations under exact toolchain and source bytes; helper verification cannot replace the fresh build supervisor or production readiness gates."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-workspace-graph.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Actual pinned pnpm selection agrees with all four workspace dependency kinds and uncapped transitive roots; malformed, aliased, linked, cyclic, missing or mismatched manifests and selectors refuse. Manifest and selector reconciliation does not establish installation, build freshness, runtime custody or performance readiness."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-build-roster.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Actual immutable Git objects and private offline pnpm installation bind tracked bytes, modes, candidate identity, physical vendor files and workspace links; tampering, replacement refs, unmerged or linked inputs and forged snapshots refuse. Byte-roster custody does not establish successful compilation, fresh build ownership or performance readiness."
           ],
           "mode": "gray_box"
         }
@@ -4957,7 +4994,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 875,
-      "assertion_digest_sha256": "5f797d6bd2954736d46ef734772c88627f617e4d96b07f2f4ec576392b05038a"
+      "assertion_digest_sha256": "d45f13af0196c4d1b1e178ad5c0830972321e86c30d4042355c786df04c871af"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -6628,6 +6665,22 @@
       "lifecycle": "supported",
       "assertion_count": 38,
       "assertion_digest_sha256": "9454d8bfee14ceaf0666d7e43bec58164b8ff454d3a633a214cbb5e0ad9d6942"
+    },
+    {
+      "path": "test/scripts/http-build-roster.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 29,
+      "assertion_digest_sha256": "5bb74ef5665450aceb696bd4281c018be82a3bc5b52cc2a4b4c3c90fd4dec4c1"
+    },
+    {
+      "path": "test/scripts/http-workspace-graph.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 44,
+      "assertion_digest_sha256": "1c40b05111411c69cbbf8845ed8659f36f03477acb47003d3ee7e0a185a8cde4"
     }
   ],
   "suites": {
