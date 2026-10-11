@@ -301,9 +301,9 @@ export async function verifyDemoBookmarkStorage(queryable) {
       array(select option from unnest(i.indoption) option) as options,
       array(select op.opcdefault from unnest(i.indclass) with ordinality key(oid,position)
         join pg_catalog.pg_opclass op on op.oid=key.oid order by key.position) as default_opclasses,
-      array(select collation.oid=a.attcollation from unnest(i.indcollation) with ordinality collation(oid,position)
-        join pg_catalog.pg_attribute a on a.attrelid=i.indrelid and a.attnum=i.indkey[collation.position::integer-1]
-        order by collation.position) as key_collations_match,
+      array(select key_collation.oid=a.attcollation from unnest(i.indcollation) with ordinality key_collation(oid,position)
+        join pg_catalog.pg_attribute a on a.attrelid=i.indrelid and a.attnum=i.indkey[key_collation.position::integer-1]
+        order by key_collation.position) as key_collations_match,
       pg_catalog.pg_get_expr(i.indpred,i.indrelid) as predicate,
       array(select a.attname from unnest(i.indkey) with ordinality key(attnum,position)
         join pg_catalog.pg_attribute a on a.attrelid=i.indrelid and a.attnum=key.attnum order by key.position) as columns
