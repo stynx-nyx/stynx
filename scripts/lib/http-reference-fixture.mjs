@@ -2,9 +2,6 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import {
   closeSync,
-  constants,
-  fstatSync,
-  fsyncSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -13,7 +10,6 @@ import {
   realpathSync,
   rmSync,
   writeFileSync,
-  writeSync,
 } from 'node:fs';
 import { createServer } from 'node:net';
 import { Agent, get } from 'node:http';
@@ -48,188 +44,35 @@ function directoryChain(path) {
   }
 }
 
-// Failed creation returns no live handle. Keep its private raw evidence outside
-// the disposable resource directory, before successful teardown can remove it.
-// These records report acquisition/cleanup facts and never admit a workload.
-function failureEvidenceRoot(state) {
-  const evidence = state.failureEvidence;
-  const current = lstatSync(evidence.directory);
-  if (
-    !current.isDirectory() ||
-    current.isSymbolicLink() ||
-    current.dev !== evidence.device ||
-    current.ino !== evidence.inode ||
-    current.uid !== process.getuid() ||
-    (current.mode & 0o7777) !== 0o700 ||
-    realpathSync(evidence.directory) !== evidence.directory ||
-    !isDeepStrictEqual(directoryChain(evidence.directory), evidence.chain)
-  )
-    refuse('FAILURE_EVIDENCE_IDENTITY');
-  return evidence;
-}
-
-const evidenceIdentityKeys = [
-  'dev',
-  'ino',
-  'mode',
-  'uid',
-  'gid',
-  'nlink',
-  'size',
-  'mtimeNs',
-  'ctimeNs',
-];
-function verifyFailureEvidence(state) {
-  const evidence = failureEvidenceRoot(state);
-  for (const row of evidence.files) {
-    const path = join(evidence.directory, row.path);
-    const before = lstatSync(path, { bigint: true });
-    const identity = evidence.members.get(row.path);
-    if (!identity || evidenceIdentityKeys.some((key) => before[key] !== identity[key]))
-      refuse('FAILURE_EVIDENCE_IDENTITY');
-    const acquired = evidence.read(evidence.directory, path);
-    const after = lstatSync(path, { bigint: true });
-    if (
-      evidenceIdentityKeys.some((key) => after[key] !== identity[key]) ||
-      !isDeepStrictEqual(acquired.row, row)
-    )
-      refuse('FAILURE_EVIDENCE_IDENTITY');
-  }
-  failureEvidenceRoot(state);
-}
-
+// Loaded only when actual fixture creation has failed; no success-path import.
 function writeFailureEvidence(state, name, bytes) {
-  const evidence = failureEvidenceRoot(state);
-  if (!Buffer.isBuffer(bytes) || bytes.length > 64 * 1024 * 1024) refuse('FAILURE_EVIDENCE_BOUND');
-  const path = join(evidence.directory, name);
-  let descriptor;
-  let writtenIdentity;
-  const ancestors = [];
-  try {
-    for (const row of evidence.chain) {
-      const fd = openSync(row.path, constants.O_RDONLY | constants.O_NOFOLLOW);
-      ancestors.push(fd);
-      const stat = fstatSync(fd);
-      if (
-        !stat.isDirectory() ||
-        ['dev', 'ino', 'mode', 'uid', 'gid'].some((key) => stat[key] !== row[key])
-      )
-        refuse('FAILURE_EVIDENCE_IDENTITY');
-    }
-    descriptor = openSync(
-      path,
-      constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW,
-      0o600,
-    );
-    const opened = fstatSync(descriptor);
-    writtenIdentity = fstatSync(descriptor, { bigint: true });
-    if (
-      !opened.isFile() ||
-      opened.nlink !== 1 ||
-      opened.uid !== process.getuid() ||
-      (opened.mode & 0o7777) !== 0o600
-    )
-      refuse('FAILURE_EVIDENCE_IDENTITY');
-    let offset = 0;
-    while (offset < bytes.length) {
-      const count = writeSync(descriptor, bytes, offset, bytes.length - offset);
-      if (count <= 0) refuse('FAILURE_EVIDENCE_WRITE');
-      offset += count;
-    }
-    fsyncSync(descriptor);
-    const final = fstatSync(descriptor);
-    const current = lstatSync(path);
-    if (
-      final.dev !== opened.dev ||
-      final.ino !== opened.ino ||
-      final.size !== bytes.length ||
-      current.dev !== opened.dev ||
-      current.ino !== opened.ino ||
-      current.nlink !== 1 ||
-      current.uid !== process.getuid() ||
-      current.size !== bytes.length ||
-      (current.mode & 0o7777) !== 0o600 ||
-      realpathSync(path) !== path
-    )
-      refuse('FAILURE_EVIDENCE_IDENTITY');
-    failureEvidenceRoot(state);
-    for (let index = 0; index < ancestors.length; index++) {
-      const stat = fstatSync(ancestors[index]);
-      if (
-        ['dev', 'ino', 'mode', 'uid', 'gid'].some((key) => stat[key] !== evidence.chain[index][key])
-      )
-        refuse('FAILURE_EVIDENCE_IDENTITY');
-    }
-  } finally {
-    if (descriptor !== undefined) closeSync(descriptor);
-    for (const fd of ancestors.reverse()) closeSync(fd);
-  }
-  failureEvidenceRoot(state);
-  let directoryDescriptor;
-  try {
-    directoryDescriptor = openSync(evidence.directory, constants.O_RDONLY | constants.O_NOFOLLOW);
-    const directory = fstatSync(directoryDescriptor);
-    if (
-      directory.dev !== evidence.device ||
-      directory.ino !== evidence.inode ||
-      !directory.isDirectory()
-    )
-      refuse('FAILURE_EVIDENCE_IDENTITY');
-    fsyncSync(directoryDescriptor);
-  } finally {
-    if (directoryDescriptor !== undefined) closeSync(directoryDescriptor);
-  }
-  let parentDescriptor;
-  try {
-    const parent = evidence.chain[1];
-    parentDescriptor = openSync(parent.path, constants.O_RDONLY | constants.O_NOFOLLOW);
-    const stat = fstatSync(parentDescriptor);
-    if (
-      !stat.isDirectory() ||
-      ['dev', 'ino', 'mode', 'uid', 'gid'].some((key) => stat[key] !== parent[key])
-    )
-      refuse('FAILURE_EVIDENCE_IDENTITY');
-    fsyncSync(parentDescriptor);
-    failureEvidenceRoot(state);
-  } finally {
-    if (parentDescriptor !== undefined) closeSync(parentDescriptor);
-  }
-  const row = { path: name, sha256: digest(bytes), byteLength: bytes.length, permissions: 0o600 };
-  const actual = evidence.read(evidence.directory, path);
-  if (!isDeepStrictEqual(actual.row, row)) refuse('FAILURE_EVIDENCE_IDENTITY');
-  const identity = lstatSync(path, { bigint: true });
-  if (identity.dev !== writtenIdentity.dev || identity.ino !== writtenIdentity.ino)
-    refuse('FAILURE_EVIDENCE_IDENTITY');
-  const again = evidence.read(evidence.directory, path);
-  const after = lstatSync(path, { bigint: true });
-  if (
-    !isDeepStrictEqual(again.row, row) ||
-    evidenceIdentityKeys.some((key) => after[key] !== identity[key])
-  )
-    refuse('FAILURE_EVIDENCE_IDENTITY');
-  evidence.members.set(name, identity);
-  evidence.files.push(row);
-  verifyFailureEvidence(state);
-  return row;
+  return state.failureEvidence.api.writeFixtureFailureArchive(
+    state.failureEvidence.handle,
+    name,
+    bytes,
+  );
+}
+function verifyFailureEvidence(state) {
+  state.failureEvidence.api.verifyFixtureFailureArchive(state.failureEvidence.handle);
+}
+function failureArchiveSnapshot(state) {
+  if (!state.failureEvidence) return state.failureArchiveCreationFailure ?? null;
+  return state.failureEvidence.api.snapshotFixtureFailureArchive(state.failureEvidence.handle);
 }
 
 async function retainCreationFailure(state) {
   if (state.failureEvidence?.captured) return;
+  if (state.failureArchiveCreationFailure) refuse('FAILURE_EVIDENCE_STICKY');
   if (!state.failureEvidence) {
-    const directory = realpathSync(mkdtempSync(join(tmpdir(), 'stynx fixture failure ')));
-    const root = lstatSync(directory);
-    state.failureEvidence = {
-      directory,
-      device: root.dev,
-      inode: root.ino,
-      chain: directoryChain(directory),
-      members: new Map(),
-      files: [],
-      captured: false,
-    };
+    const api = await import('./http-fixture-failure-archive.mjs');
+    try {
+      state.failureEvidence = { api, handle: api.createFixtureFailureArchive(), captured: false };
+    } catch (error) {
+      state.failureArchiveCreationFailure = error.failureArchive ?? null;
+      throw error;
+    }
   }
   const { readHttpQualificationArtifact } = await import('./http-qualification-artifacts.mjs');
-  state.failureEvidence.read = readHttpQualificationArtifact;
   const log = join(state.directory, 'postgres.log');
   let postgresLog = null;
   const resourceChain = directoryChain(state.directory);
@@ -269,6 +112,7 @@ async function retainCreationFailure(state) {
 
 function creationFailureSnapshot(state) {
   const evidence = state.failureEvidence;
+  const archive = failureArchiveSnapshot(state);
   let retainedResourceDirectory = null;
   let resourceDirectoryOutcome = state.resourceDirectoryRemoved === true ? 'ABSENT' : 'UNKNOWN';
   if (resourceDirectoryOutcome !== 'ABSENT') {
@@ -289,8 +133,11 @@ function creationFailureSnapshot(state) {
     }
   }
   return {
-    directory: evidence?.directory ?? null,
-    files: structuredClone(evidence?.files ?? []),
+    directory: archive?.directory ?? null,
+    files: structuredClone(archive?.files ?? []),
+    archiveDirectoryOutcome: archive?.directoryOutcome ?? 'UNKNOWN',
+    archivePartialFiles: structuredClone(archive?.partialFiles ?? []),
+    archiveFailureCode: archive?.failureCode ?? null,
     captured: evidence?.captured ?? false,
     retainedResourceDirectory,
     resourceDirectoryOutcome,
@@ -1393,7 +1240,7 @@ async function cleanup(state) {
             scope: 'owned-reference-fixture-creation-failure-cleanup',
             identity: state.identity ?? null,
             instance: state.instance ?? null,
-            capture: state.failureEvidence.files.find((row) => row.path === 'capture.json'),
+            capture: failureArchiveSnapshot(state).files.find((row) => row.path === 'capture.json'),
             cleanup: state.cleanup,
             readinessPromoting: false,
           }),
