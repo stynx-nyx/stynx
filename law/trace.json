@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.11",
+  "version": "1.3.12",
   "meta": {
-    "last_updated": "2026-10-11T03:23:14.342Z",
+    "last_updated": "2026-10-11T11:48:53.923Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -72,7 +72,8 @@
       "STYNX 1.6.0 Architect binds actual pinned-pnpm workspace selection and immutable Git/private dependency byte-roster refusal sensors, and refreshes the existing privacy tier population projection to four ordinary, two integration and six coverage files. Every previous relationship, assertion count and gate obligation is retained; these helpers do not establish fresh build ownership, complete runtime custody, HTTP performance, overall audit or release PASS.",
       "Architect binding adds the actual fresh-build owner acceptance assertions, preserving all existing bindings and thresholds. These helper custody regressions do not certify application module/object custody, complete HTTP middleware, route reachability or performance readiness.",
       "STYNX 1.6.0 Architect rebinds the additive default privacy identity-port configuration refusal assertions (71 to 74), preserving every previous corpus entry, assertion and invariant/gate relationship. This diagnostic binding does not establish full coverage, provider compatibility, HTTP performance or release readiness.",
-      "STYNX 1.6.0 Architect binds the actual HTTP worker startup and production parent IPC protocol/capture regressions, preserving every existing corpus projection, invariant relationship and gate obligation. These bounded identity, lifecycle, hostile-frame and serialization checks do not establish AppModule/object custody, complete middleware/routes, nominal HTTP performance, full audit or release readiness."
+      "STYNX 1.6.0 Architect binds the actual HTTP worker startup and production parent IPC protocol/capture regressions, preserving every existing corpus projection, invariant relationship and gate obligation. These bounded identity, lifecycle, hostile-frame and serialization checks do not establish AppModule/object custody, complete middleware/routes, nominal HTTP performance, full audit or release readiness.",
+      "STYNX 1.6.0 Architect combined-candidate rebind preserves all 629 executable test bindings, 15 invariants and 13 gate mappings while refreshing the independently accepted published DEVAI 2.5.0 adoption and closed HTTP protocol assertion projections. All 106 original HTTP cases and 183 original assertion obligations remain mapped; 40 added cases strengthen the boundary. This binding does not establish native HTTP custody, endpoint performance, provider, publication or overall audit PASS."
     ]
   },
   "invariants": [
@@ -5042,8 +5043,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 116,
-      "assertion_digest_sha256": "8be8f0d0e258e791f4c6ad6b6917ac81c1770fd45a8376fae6dfacb6d21efd5b"
+      "assertion_count": 133,
+      "assertion_digest_sha256": "1bd8140cc6aded0a7de50b783e1da256633411f8212be9cff500fe1f46e3cd11"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
@@ -6752,8 +6753,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 183,
-      "assertion_digest_sha256": "6521402d68af43e50dc0b3de5b407c824d72472067c73cafd4f97eab3fa60f56"
+      "assertion_count": 222,
+      "assertion_digest_sha256": "fd33ca145d0a453d0b44959a6094f6beed05df4d09679e8074c5efdc151a8d14"
     },
     {
       "path": "test/scripts/http-runtime-worker.test.mjs",
