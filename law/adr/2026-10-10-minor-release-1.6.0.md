@@ -145,6 +145,23 @@ provider acceptance remain mandatory. This selection supplies the privacy scope;
 it does not approve production provider inputs or promote performance/release
 readiness.
 
+## Privacy test-tier extension
+
+Prospectively extend D13 of the historical STYNX 1.1.1 campaign controls; its
+original five-file decision and observations remain unchanged. The ordinary
+privacy tier retains the exact three unit files and one wiring file. The
+serialized integration tier now includes both `privacy.module.spec.ts` and the
+additive `privacy-object-store.provider.spec.ts`. Their disjoint union and the
+dedicated coverage tier must resolve all six files from the actual configuration.
+Preserve the original 94 behavioral cases and every assertion; the four actual
+local-provider cases add evidence rather than replacing an existing boundary.
+
+Do not change timeouts, source declarations, thresholds, unrelated concurrency,
+mutation population or ordinary gates. The live population regression must bind
+the sixth file explicitly. Real AWS SDK/LocalStack adapter observations qualify
+only the declared local fixture and do not establish production-provider approval,
+object deletion/lifecycle, full coverage, latency or release readiness.
+
 ## Completion evidence
 
 Each issue closes only against its actual acceptance evidence, with upstream

@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:39a3e82f-83fb-48b5-816f-238fa446ced2",
+  "serialNumber": "urn:uuid:1671db04-7df7-4d9f-88b3-e49153f58b30",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "39a3e82f83fb38b5216f238fa446ced22c5fece1d30e14d3dc3e0c4b04a044cb"
+        "value": "1671db047df7ad9f18b3e49153f58b30c396214970dae5c88d9634b273f69119"
       },
       {
         "name": "stynx:package-manager",

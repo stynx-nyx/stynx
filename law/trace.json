@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "meta": {
-    "last_updated": "2026-10-11T00:27:18.042Z",
+    "last_updated": "2026-10-11T00:42:51.998Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -67,7 +67,8 @@
       "STYNX 1.6.0 Architect rebinds six existing tenancy/offline-import/reference-SSE assertion projections after independently verified restricted-reader admission, held-connection refusal and real authenticated HTTP fixtures. Every existing corpus/invariant relationship and gate obligation is retained. Installed i18n eight-tarball functional acceptance remains separately candidate-bound; these bindings do not confer HTTP performance, provider, publication or overall audit PASS.",
       "STYNX 1.6.0 Architect binding preserves all existing invariant relationships and assertion sites after preflight test hygiene, and adds the private reference bootstrap orchestration/Helmet/CORS/startup regressions. Explicit unit ports do not qualify the full AppModule, real provider effects, source/build custody or HTTP performance; unchanged projection bindings remain byte-identical.",
       "STYNX 1.6.0 Architect binds the real fresh-Node synchronous module-loader custody refusal sensors while retaining every existing test projection and invariant relationship. These bounded module observations do not establish supervisor freshness, complete source/build or object provenance, actual middleware custody, six-root HTTP performance, provider acceptance or release readiness.",
-      "STYNX 1.6.0 Architect rebind pins tenant-scoped privacy HTTP, independent transaction and global internal-job assertions, plus authenticated reference fixture negatives. All prior executable relationships and gate invariants remain bound; these projections do not establish coverage, provider qualification, HTTP performance or release readiness."
+      "STYNX 1.6.0 Architect rebind pins tenant-scoped privacy HTTP, independent transaction and global internal-job assertions, plus authenticated reference fixture negatives. All prior executable relationships and gate invariants remain bound; these projections do not establish coverage, provider qualification, HTTP performance or release readiness.",
+      "STYNX 1.6.0 Architect binds the installed source-population matcher, additive local S3 provider and real compiler-plan refusal sensors, and rebinds two exact existing coverage-path assertions while retaining all registry 1.6 policy literals and prior assertion counts. The six-file privacy tier preserves every original behavioral case; local emulator and compiler-helper evidence do not establish production provider, full coverage, source/build freshness, performance, overall audit or release PASS."
     ]
   },
   "invariants": [
@@ -302,6 +303,15 @@
           "names": ["e2e privacy"],
           "assertions": [
             "Actual reference flows export live/archive subject data, reject missing selectors, preserve tenant RLS, dry-run retention and audit subject erasure."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/privacy/test/integration/privacy-object-store.provider.spec.ts",
+          "names": ["INV-PRIVACY-001"],
+          "assertions": [
+            "Actual compiled privacy/storage adapters and real AWS SDK against local LocalStack verify exact ZIP bytes, content type/Expires metadata, separate tenant object keys, signed-object tamper refusal, presign expiry and genuine provider failure propagation; local emulator scope only, not production qualification or deletion/lifecycle proof."
           ],
           "mode": "gray_box"
         }
@@ -597,6 +607,15 @@
             "Actual content-sync subprocess and installed strict Docusaurus checker preserve performance-document bytes and anchors, remove stale mirrors, and refuse missing documents or unresolved anchors."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/coverage-population.test.mjs",
+          "names": ["INV-COVERAGE-001"],
+          "assertions": [
+            "Actual installed Vitest matcher cases preserve declared positive/negative source populations, anchored package boundaries and executable-entrypoint refusals without reducing any coverage threshold or claiming full coverage."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["product/use-cases/**", "product/use-cases/**"]
@@ -712,6 +731,15 @@
           "names": ["INV-PERF-001"],
           "assertions": [
             "Fresh pinned Node workers observe actual ESM, CommonJS and JSON resolution/evaluation bytes, reject unbound or changed modules and invalid receipts, and retain sticky refusal and detached snapshots without claiming complete runtime custody."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-compiler-plan.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Real pinned TypeScript fixtures derive effective imported-source/output/map closure and reject stale, linked, malformed or unsupported inputs; diagnostic compiler reconciliation only, with no freshness, compiler-origin, complete runtime or performance readiness claim."
           ],
           "mode": "gray_box"
         }
@@ -927,6 +955,15 @@
           "names": ["INV-CORE-001"],
           "assertions": [
             "Fresh pinned Node workers observe actual ESM, CommonJS and JSON resolution/evaluation bytes, reject unbound or changed modules and invalid receipts, and retain sticky refusal and detached snapshots without claiming complete runtime custody."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-compiler-plan.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Real compiler fixture closure preserves included and imported sibling modules and declaration-map relations under exact toolchain and source bytes; helper verification cannot replace the fresh build supervisor or production readiness gates."
           ],
           "mode": "gray_box"
         }
@@ -4952,7 +4989,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 339,
-      "assertion_digest_sha256": "d2427a1f5b857a850edb74a974662c81a953566672dd5dfc10104997e7ef6c59"
+      "assertion_digest_sha256": "24de3c053406ebd21ba887281ab05cc9bc8b6dc1173c1939739dc14661d8ff6f"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -6567,6 +6604,30 @@
       "lifecycle": "supported",
       "assertion_count": 69,
       "assertion_digest_sha256": "f43ce129e5d53fed44017f868b240c317d6484f08162fbe91eabe2e8dd53e0ae"
+    },
+    {
+      "path": "packages/privacy/test/integration/privacy-object-store.provider.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 25,
+      "assertion_digest_sha256": "c89fbc9322d5f44eb510dec1f22a933149c9b5c1202f2029608b3ae5eba6d657"
+    },
+    {
+      "path": "test/scripts/coverage-population.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 40,
+      "assertion_digest_sha256": "630fc2029a52b6bdc687565f283625abbf97600f1db4724e76a371a2fd809569"
+    },
+    {
+      "path": "test/scripts/http-compiler-plan.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 38,
+      "assertion_digest_sha256": "9454d8bfee14ceaf0666d7e43bec58164b8ff454d3a633a214cbb5e0ad9d6942"
     }
   ],
   "suites": {

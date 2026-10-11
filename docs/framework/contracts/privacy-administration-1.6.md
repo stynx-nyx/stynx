@@ -148,6 +148,13 @@ sanitization or silently mutate JSON to match CSV presentation.
 
 ## Independent acceptance
 
+The ordinary tier retains three unit files and one wiring file. Serialized
+integration resolves `privacy.module.spec.ts` and the additive
+`privacy-object-store.provider.spec.ts`; dedicated coverage resolves their complete
+six-file union. Retain all original 94 behavioral cases and every assertion,
+adding the four local-provider cases. This extends the historical D13 population
+prospectively without changing thresholds, timeouts or unrelated concurrency.
+
 Inspector retains every existing behavioral assertion. Existing global-owner
 assertions move to explicit internal caller scaffolding; intended changed HTTP
 security assertions become stronger, not deleted. Cover real authenticated and
