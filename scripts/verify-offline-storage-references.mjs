@@ -19,7 +19,11 @@ const failures = [];
 // These reviewed templates consume only the schema/catalog maps checked below.
 // A new or changed SQL producer requires explicit review and regression coverage.
 const DYNAMIC_SQL = {
-  'postgres-durable.ts': ['e59f5c6a2ab2a3204c19ebdcdf5b05d63427e66f6f13ffd515994692a826027e'],
+  'postgres-durable.ts': [
+    'e59f5c6a2ab2a3204c19ebdcdf5b05d63427e66f6f13ffd515994692a826027e',
+    'afa13b8fd72b178903b21fd41ca1fd1cd85ada238c536ae1ef59db9d5a96bb04',
+    'cded115a4da52d5033779b381728c44fd05086e5f531ad8c2d29ae8494712988',
+  ],
   'postgres-listing.ts': [
     '69a3e3ce3adc4c42c8eff3ace250d94274caa667c292b9c114b9dba5faeb3609',
     'd32e73cedfa940a5bbea43d32fd2187bd6339dc3708d5706dc3f500aa6a40b7f',
@@ -59,10 +63,10 @@ const DYNAMIC_PRODUCER_SOURCES = {
   'import-state.ts': '6f4f9cc023374aa51216fc515574a307d188d905157d781327965f00b6588763',
   'storage-invariants.ts': '015287ef7ec6651d417840069bee9ad88cc80e8b9f8a0c302a0c69662d680e61',
   'storage.ts': 'b452fa9bbc9c58c72eda7eac206f19b32a670fb3bf39e82847124af77d82cd8a',
-  'postgres-durable.ts': '7ac792f95ae817e49f2c9ac8d7382154d60bfdad0f0e2c39cae55cb9f379a9b7',
+  'postgres-durable.ts': '662baced1d1a58129c4cbe0f390d21d86eaba2bfc2f2d48c97dd0ca1cc0eb56c',
   'postgres-listing.ts': '642ea1b2aefdc19f361d2eeb4c75ac40723418e662b7ca2ff14334db3c87d646',
   'postgres-offline-sync.store.ts':
-    'a3b672f8d690090785b5e8d37a7d4ce4883faf8546765b380e6d8bfaf0b2b71f',
+    'e550ba9959054aa434168e8c0a9dbb4e74806bc005c05686adcec26f37f0a0f6',
 };
 
 const require = createRequire(resolve(root, 'node_modules/.pnpm/node_modules/_.js'));
