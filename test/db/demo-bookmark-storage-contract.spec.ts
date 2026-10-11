@@ -744,4 +744,146 @@ describe('closed demo bookmark storage contract', () => {
       }
     });
   });
+
+  it('refuses PUBLIC executable owner routines after witnessing and rolling back actual cross-tenant effects', async () => {
+    await withFixture(async ({ owner, connect }) => {
+      await install(owner);
+      await add(owner, tenantA, 'https://example.test/routine-a');
+      await add(owner, tenantB, 'https://example.test/routine-b');
+      const before = await snapshot(owner);
+      await owner.query(`create function demo.unrecognized_owner_effect() returns text
+        language plpgsql security definer set search_path=pg_catalog as $$
+        begin truncate demo.demo__bookmark_bookmark,demo.demo__bookmark_bookmark_tag;
+        return current_user; end $$`);
+      const verification = await readOnlyVerification(owner);
+      expect(verification.supported).toBe(false);
+      expect(verification.checks).toContainEqual(
+        expect.objectContaining({ id: 'closed-routine-population', status: 'fail' }),
+      );
+      const reader = await connect('stynx_reader');
+      await reader.query('begin');
+      try {
+        expect(
+          (
+            await reader.query(
+              "select has_function_privilege(current_user,'demo.unrecognized_owner_effect()','EXECUTE') as executable",
+            )
+          ).rows,
+        ).toEqual([{ executable: true }]);
+        expect(
+          (await reader.query('select demo.unrecognized_owner_effect() as effective_role')).rows,
+        ).toEqual([{ effective_role: 'stynx_owner' }]);
+        for (const tenant of [tenantA, tenantB]) {
+          await reader.query("select set_config('app.tenant_id',$1,true)", [tenant]);
+          expect(
+            (await reader.query(`select count(*)::integer as count from ${bookmark}`)).rows,
+          ).toEqual([{ count: 0 }]);
+          expect(
+            (await reader.query(`select count(*)::integer as count from ${tag}`)).rows,
+          ).toEqual([{ count: 0 }]);
+        }
+        process.stdout.write(
+          JSON.stringify({
+            scope: 'actual-public-security-definer-owner-effect',
+            actualDirectLogin: 'stynx_reader',
+            actualRoutineRole: 'stynx_owner',
+            verifierSupported: verification.supported,
+            bothTenantRowsAbsentWithinTransaction: true,
+            effectsWillRollback: true,
+          }) + '\n',
+        );
+      } finally {
+        await reader.query('rollback');
+      }
+      expect(await snapshot(owner)).toEqual(before);
+      await expect(install(owner)).rejects.toThrow('unrecognized existing shape');
+      expect(await snapshot(owner)).toEqual(before);
+      await owner.query('drop function demo.unrecognized_owner_effect()');
+      expect((await readOnlyVerification(owner)).supported).toBe(true);
+      // Unknown routines remain outside the exact zero-routine contract even
+      // after removing SECURITY DEFINER and all PUBLIC execution privilege.
+      await owner.query(
+        "create function demo.unrecognized_invoker() returns integer language sql security invoker as 'select 1'",
+      );
+      await owner.query('revoke all on function demo.unrecognized_invoker() from public');
+      expect((await readOnlyVerification(owner)).supported).toBe(false);
+      await expect(install(owner)).rejects.toThrow('unrecognized existing shape');
+      expect(await snapshot(owner)).toEqual(before);
+      await owner.query('drop function demo.unrecognized_invoker()');
+      expect((await readOnlyVerification(owner)).supported).toBe(true);
+    });
+  });
+
+  it('historical installer and standalone SQL refuse unknown routines before mutation and preserve exact rows', async () => {
+    await withFixture(async ({ owner }) => {
+      await owner.query(
+        await readFile(resolve(repoRoot, 'domain/demo-bookmark/db/migration.sql'), 'utf8'),
+      );
+      await add(owner, tenantA, 'https://example.test/historical-routine');
+      await add(owner, tenantB, 'https://example.test/historical-routine', randomUUID(), true);
+      await owner.query(
+        "create function demo.unrecognized_invoker() returns integer language sql as 'select 1'",
+      );
+      const before = await snapshot(owner);
+      await expect(install(owner)).rejects.toThrow('unrecognized existing shape');
+      expect(await snapshot(owner)).toEqual(before);
+      const forward = await readFile(
+        resolve(repoRoot, 'domain/demo-bookmark/db/0002_tenant_rls.sql'),
+        'utf8',
+      );
+      try {
+        await expect(owner.query(forward)).rejects.toMatchObject({
+          code: 'P0001',
+          message: 'demo_bookmark_unrecognized_routine',
+        });
+      } finally {
+        await owner.query('rollback');
+      }
+      expect(await snapshot(owner)).toEqual(before);
+      expect(
+        (
+          await owner.query(
+            'select relrowsecurity,relforcerowsecurity from pg_class where oid=any($1::regclass[]) order by relname',
+            [[bookmark, tag]],
+          )
+        ).rows,
+      ).toEqual([
+        { relrowsecurity: false, relforcerowsecurity: false },
+        { relrowsecurity: false, relforcerowsecurity: false },
+      ]);
+      expect(
+        (
+          await owner.query(
+            'select count(*)::integer as count from pg_policy where polrelid=any($1::regclass[])',
+            [[bookmark, tag]],
+          )
+        ).rows,
+      ).toEqual([{ count: 0 }]);
+      expect(
+        (
+          await owner.query(
+            "select has_schema_privilege('stynx_app','demo','USAGE') as app_usage,has_schema_privilege('stynx_reader','demo','USAGE') as reader_usage",
+          )
+        ).rows,
+      ).toEqual([{ app_usage: false, reader_usage: false }]);
+      expect(
+        (
+          await owner.query(
+            "select count(*)::integer as count from core.pii_map where table_schema='demo'",
+          )
+        ).rows,
+      ).toEqual([{ count: 0 }]);
+      expect(
+        (
+          await owner.query(
+            "select count(*)::integer as count from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='demo'",
+          )
+        ).rows,
+      ).toEqual([{ count: 1 }]);
+      await owner.query('drop function demo.unrecognized_invoker()');
+      expect((await install(owner)).previousState).toBe('historical');
+      expect((await readOnlyVerification(owner)).supported).toBe(true);
+      expect(await snapshot(owner)).toEqual(before);
+    });
+  });
 });
