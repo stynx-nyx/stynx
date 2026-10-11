@@ -6,6 +6,7 @@ import { resolve, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { getCoverageThreshold } from './test-thresholds.mjs';
+import { createNativeCoverage } from './native-coverage.mjs';
 
 // unplugin-swc exports its plugin factories as `{ vite, esbuild, ... }` on the
 // default export. Vite's config loader sometimes double-wraps the default, so
@@ -121,6 +122,7 @@ export function createVitestConfig({
   include = ['test/**/*.spec.ts', 'test/**/*.test.ts'],
   collectCoverageFrom = ['src/**/*.ts'],
   coverageExclude = [],
+  nativeCoverageModules,
   coverageDir = 'coverage-vitest',
   coverageThreshold,
   alias = {},
@@ -182,6 +184,37 @@ export function createVitestConfig({
     return `${coverageRoot}/${pattern}`;
   };
 
+  const sourceExcludes = [
+    'src/generated/**',
+    'src/main.ts',
+    'src/**/*.module.ts',
+    'src/**/constants.ts',
+    'src/**/tokens.ts',
+    'src/**/types.ts',
+    'src/**/*.d.ts',
+    ...barrelExcludes,
+    ...declaredCoverageExcludes,
+    ...coverageExclude,
+  ];
+  const nativeCoverage =
+    nativeCoverageModules === undefined
+      ? null
+      : createNativeCoverage({
+          packageDir,
+          modules: nativeCoverageModules,
+          includes: coverageIncludes,
+          excludes: sourceExcludes,
+        });
+  const swcPlugin = swc.vite({
+    jsc: {
+      parser: { syntax: 'typescript', decorators: true },
+      transform: { legacyDecorator: true, decoratorMetadata: true },
+      target: 'es2022',
+      keepClassNames: true,
+    },
+    module: { type: 'es6' },
+  });
+
   const drizzleAlias = patchDrizzle
     ? { 'drizzle-orm/entity': resolve(repoRoot, 'tools/repo-config/drizzle-entity-shim.mjs') }
     : {};
@@ -192,17 +225,10 @@ export function createVitestConfig({
       alias: { ...drizzleAlias, ...alias },
     },
     plugins: [
+      ...(nativeCoverage ? [nativeCoverage.plugin] : []),
       workspaceFallbackResolve,
       drizzleIsPatch,
-      swc.vite({
-        jsc: {
-          parser: { syntax: 'typescript', decorators: true },
-          transform: { legacyDecorator: true, decoratorMetadata: true },
-          target: 'es2022',
-          keepClassNames: true,
-        },
-        module: { type: 'es6' },
-      }),
+      nativeCoverage ? nativeCoverage.wrapSwc(swcPlugin) : swcPlugin,
     ],
     test: {
       globals,
@@ -243,12 +269,32 @@ export function createVitestConfig({
         : {}),
       reporters: ['default'],
       coverage: {
-        provider: 'v8',
+        provider: nativeCoverage ? 'custom' : 'v8',
+        ...(nativeCoverage
+          ? {
+              customProviderModule: resolve(__dirname, 'native-v8-provider.mjs'),
+              nativeCoverage: {
+                modules: structuredClone(nativeCoverageModules),
+                includes: [...coverageIncludes],
+                excludes: [...sourceExcludes],
+                mode: process.env.STYNX_AGGREGATE_COVERAGE === '1' ? 'aggregate' : 'standalone',
+              },
+            }
+          : {}),
         reportsDirectory: resolve(packageDir, coverageDir),
         reporter: ['text', 'json', 'lcov'],
         // Vitest treats negated include globs as OR alternatives. Translate
         // the already-declared subtraction into exclude to preserve its scope.
-        include: coverageIncludes.map(bindCoveragePattern),
+        include: nativeCoverage
+          ? nativeCoverage.include.map((path) =>
+              [...path.split(sep).join('/')]
+                .map((character) =>
+                  '*?[]{}()!+@\\'.includes(character) ? `\\${character}` : character,
+                )
+                .join(''),
+            )
+          : coverageIncludes.map(bindCoveragePattern),
+        ...(nativeCoverage ? { excludeAfterRemap: true } : {}),
         exclude: [
           // Vitest 4 matches `coverage.include` anywhere in the absolute
           // path and guards external files with a bare `startsWith(root)`,
@@ -257,18 +303,7 @@ export function createVitestConfig({
           // leak into this package's population when its sources load
           // through a workspace alias. Pin the population to this package.
           `${coverageRoot}-*/**`,
-          ...[
-            'src/generated/**',
-            'src/main.ts',
-            'src/**/*.module.ts',
-            'src/**/constants.ts',
-            'src/**/tokens.ts',
-            'src/**/types.ts',
-            'src/**/*.d.ts',
-            ...barrelExcludes,
-            ...declaredCoverageExcludes,
-            ...coverageExclude,
-          ].map(bindCoveragePattern),
+          ...sourceExcludes.map(bindCoveragePattern),
         ],
         thresholds: {
           ...thresholdValues,
