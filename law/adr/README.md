@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Adopt published DEVAI 2.5.0 and its supported audit interfaces](2026-10-11-devai-2.5.0-adoption.md)
+
 - [Adopt published DEVAI 2.4.0 and project supported sensor inputs](2026-10-10-devai-2.4.0-adoption.md)
 
 - [ADR-PERF-0001 — Complete endpoint latency evidence alongside existing performance gates](2026-10-10-http-performance-evidence.md)

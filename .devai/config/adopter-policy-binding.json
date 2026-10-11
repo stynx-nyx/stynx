@@ -5,7 +5,7 @@
   "source_path": "law/policy/devai-adoption.json",
   "source_digest_sha256": "fd35700f1eb6b5908bd978dc039cbea8620fe71c9fc3939d1c597a5c7ecbea01",
   "materialized": {
-    ".devai/config/project.json": "12c6bd752c48792a0d44ddc9fe4bb022d0d3c1b8b46467aeae019536600cb771",
+    ".devai/config/project.json": "a7e796867bed2609b86fa8a228810ebff6d16bb0c4992b0f6783fe06f91ba7e3",
     ".devai/config/domains.json": "74cd7cb8a0ab2588422f197ba574323018cb24135b6944eaa987aebbe036f29e",
     ".devai/config/thresholds.json": "4662c41fbbce00db9e887be3f44f7f799e9bee587cb74dccb86e68eca3e4e9f4",
     ".devai/config/scorecard-na.json": "1c771ff287822cb00becba04817b3e35e4472074f1ee2cdccd29b2469fbea7de",
