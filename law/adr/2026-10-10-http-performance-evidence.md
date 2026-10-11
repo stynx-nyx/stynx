@@ -9,6 +9,16 @@ tags: [performance, slo, evidence, devai, release]
 
 # ADR-PERF-0001 — Complete endpoint latency evidence
 
+The prospective Architect-owned
+[per-case manifest](../policy/http-qualification-manifest.json),
+[closed schema](../schemas/http-qualification-manifest.schema.json) and
+[binding contract](../../docs/performance/http-qualification-manifest.md)
+materialize the accepted supplemental profile. Their source-derived roster is
+provisional until complete actual runtime reconciliation and admission. Every
+listed composition/operation/semantic case retains its own 600 targets; source
+counts never cap runtime additions. This binding grants no performance verdict
+and changes none of the four existing profiles or thresholds.
+
 ## Authority and current evidence
 
 The Owner's complete 1.6.0 audit-remediation mandate, recorded in
