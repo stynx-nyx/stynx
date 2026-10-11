@@ -1533,7 +1533,7 @@ const runtimeControlClosure = new Map([
   ],
   [
     'scripts/lib/http-module-custody.mjs',
-    '6abe148084d29d68d3b778e9fa0b99b526c4bfc34c0414de7cd8aff644f935fa',
+    '2ca9a044eb2395e2daca2191d6c44387362e55580481de761d05a3e57c0b8948',
   ],
   [
     'scripts/lib/http-runtime-census.mjs',
@@ -1558,7 +1558,7 @@ function runtimeControls(state) {
 
 function supervisorProtocolControl(state) {
   const path = 'scripts/lib/http-runtime-protocol.mjs';
-  const sha256 = '64e5c70ca8088fb63cdf5e0beed426c2ff42fd5d79235ba4ec97378ba7561416';
+  const sha256 = '27d4ebf8a62a6faa0181f647f790bfe224c8b8a8309184b7658b4d79149e57d3';
   const tracked = state.inputs.files.find((row) => row.path === path);
   const fresh = byteRow(state.checkout, resolve(state.checkout, path));
   const supervisorRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
