@@ -632,7 +632,7 @@
       "const": "stynx.http-qualification-manifest"
     },
     "policyVersion": {
-      "const": "1.0.0"
+      "const": "1.0.1"
     },
     "provisionalPopulation": {
       "const": {
@@ -885,6 +885,7 @@
           "expression": "nativeResponse.timings.blocked + nativeResponse.timings.duration",
           "nativeFieldsRetained": [
             "blocked",
+            "looking_up",
             "connecting",
             "tls_handshaking",
             "sending",
