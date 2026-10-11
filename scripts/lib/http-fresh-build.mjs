@@ -3377,6 +3377,13 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
   )
     refuse('Actual build already owns a runtime operation');
   const declaration = snapshotFreshHttpQualificationCase(handle, options.caseId);
+  if (
+    !state.qualificationAttempt ||
+    state.qualificationAttempt.sealed ||
+    state.qualificationAttempt.case.caseId !== options.caseId ||
+    state.qualificationAttempt.case.caseSha256 !== declaration.caseSha256
+  )
+    refuse('Qualification requires its actual private journaled attempt before effects');
   assertLivenessQualificationDeclaration(declaration); // Every unimplemented recipe refuses before effects.
   requireReferenceFactoryAdmission(state);
   const controls = qualificationControls(state);
@@ -3854,7 +3861,9 @@ export async function qualifyFreshHttpEndpoint(handle, request) {
             'ipc.json': 'worker-ipc',
             'cleanup.json': 'cleanup',
           }[name];
-          if (role) retainQualificationArtifact(state, role, resolve(directory, name));
+          if (role === 'cleanup' && state.qualificationAttempt)
+            state.qualificationAttempt.workerCleanupPath = resolve(directory, name);
+          else if (role) retainQualificationArtifact(state, role, resolve(directory, name));
         } catch {
           state.refusal ??= 'HTTP_QUALIFICATION_CAPTURE_INCOMPLETE';
         }
@@ -3936,8 +3945,19 @@ export async function archiveFreshHttpQualificationAttempt(handle) {
   attempt.archiving = true;
   try {
     const cleanup = await cleanupQualificationAttempt(state);
-    // Distinct actual final cleanup body avoids replacing a worker's earlier body.
-    if (!attempt.paths.has('cleanup')) retainQualificationJson(state, 'cleanup', cleanup);
+    // Preserve exact earlier worker cleanup bytes alongside the parent's final
+    // actual resource reaping; no stale body's claim overrides live ownership.
+    if (!attempt.paths.has('cleanup')) {
+      const workerCapture = attempt.workerCleanupPath
+        ? readHttpQualificationArtifact(state.sandbox, attempt.workerCleanupPath)
+        : null;
+      retainQualificationJson(state, 'cleanup', {
+        ...cleanup,
+        priorWorkerCapture: workerCapture
+          ? { ...workerCapture.row, bytesBase64: workerCapture.bytes.toString('base64') }
+          : null,
+      });
+    }
     if (!attempt.paths.has('parent-report'))
       retainQualificationJson(state, 'parent-report', {
         candidateCommit: state.candidateCommit,
