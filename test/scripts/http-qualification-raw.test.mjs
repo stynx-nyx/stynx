@@ -141,10 +141,24 @@ for (const [name, mutate] of [
   test(`raw reconstruction refuses ${name}`, () => {
     const { records, allocation } = targetCaptureFixture();
     mutate(records);
-    assert.throws(
-      () => decodeHttpQualificationTargetCapture(captureBytes(records), allocation),
-      /capture reconstruction refused/u,
-    );
+    const category = {
+      'wrong candidate': 'TARGET_IDENTITY',
+      'duplicate sequence': 'TARGET_IDENTITY',
+      'wrong allocation digest': 'TARGET_ALLOCATION',
+      'wrong native request digest': 'NATIVE_RESPONSE',
+      'missing duration field': 'NATIVE_RESPONSE',
+      'double-counted connecting time': 'NATIVE_RESPONSE',
+      'forged response body': 'RESPONSE_BODY_DIGEST',
+      'noncanonical base64': 'RESPONSE_BODY_DIGEST',
+      'forged response headers': 'RESPONSE_HEADERS_DIGEST',
+      'out-of-range status': 'NATIVE_RESPONSE',
+      'unknown field': 'TARGET_IDENTITY',
+      'missing outcome': 'POPULATION',
+      'extra outcome': 'POPULATION',
+    }[name];
+    assert.throws(() => decodeHttpQualificationTargetCapture(captureBytes(records), allocation), {
+      code: `HTTP_QUALIFICATION_RAW_${category}`,
+    });
   });
 
 test('raw reconstruction refuses ambiguous JSON, truncated output and malformed UTF-8', () => {
@@ -189,3 +203,74 @@ test('raw reconstruction refuses unsafe buffers and allocation accessors without
   );
   assert.equal(calls, 0);
 });
+
+test('raw reconstruction retains native status-zero transport failures alongside response samples', () => {
+  const { records, allocation } = targetCaptureFixture();
+  records[400].transport = 'native-transport-failure';
+  records[400].status = 0;
+  records[400].errorCode = 1050;
+  const result = decodeHttpQualificationTargetCapture(captureBytes(records), allocation);
+  assert.equal(result.transportFailures, 1);
+  assert.equal(result.targetCount, 600);
+  assert.equal(result.missingDurations, 0);
+  assert.deepEqual(result.targets[400], records[400]);
+  assert.equal(result.performanceQualified, false);
+});
+
+for (const [name, mutate] of [
+  [
+    'external base URL',
+    (allocation) => {
+      allocation.baseUrl = 'https://example.invalid';
+    },
+  ],
+  [
+    'zero listener port',
+    (allocation) => {
+      allocation.baseUrl = 'http://127.0.0.1:0';
+    },
+  ],
+  [
+    'caller extra capability',
+    (allocation) => {
+      allocation.receipt = { admitted: true };
+    },
+  ],
+  [
+    'sparse population',
+    (allocation) => {
+      delete allocation.targets[5];
+    },
+  ],
+  [
+    'duplicate header spelling',
+    (allocation) => {
+      allocation.targets[5].headers.authorization = 'changed';
+    },
+  ],
+  [
+    'extra target field',
+    (allocation) => {
+      allocation.targets[5].retry = true;
+    },
+  ],
+  [
+    'fragment target',
+    (allocation) => {
+      allocation.targets[5].path += '#ignored';
+    },
+  ],
+  [
+    'network-path target',
+    (allocation) => {
+      allocation.targets[5].path = '//example.invalid';
+    },
+  ],
+])
+  test(`raw allocation refuses ${name} before interpreting records`, () => {
+    const { records, allocation } = targetCaptureFixture();
+    mutate(allocation);
+    assert.throws(() => decodeHttpQualificationTargetCapture(captureBytes(records), allocation), {
+      code: 'HTTP_QUALIFICATION_RAW_ALLOCATION',
+    });
+  });
