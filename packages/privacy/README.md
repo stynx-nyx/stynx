@@ -144,6 +144,7 @@ _None._
 
 ### Development-only dependencies
 
+- `@aws-sdk/client-s3`: `^3.1068.0`
 - `@nestjs/platform-express`: `^11.1.26`
 - `@nestjs/testing`: `^11.1.26`
 - `@stynx-nyx/sessions`: `workspace:*`
@@ -152,6 +153,7 @@ _None._
 - `@types/node`: `24.13.4`
 - `@types/supertest`: `^7.2.0`
 - `supertest`: `^7.2.2`
+- `testcontainers`: `^12.0.2`
 - `ts-node`: `^10.9.2`
 - `typescript`: `^6.0.3`
 
