@@ -114,7 +114,7 @@ const expectedIndexes = [
 ];
 const tenantPredicate = "tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid";
 const tagPredicate = `EXISTS (SELECT 1 FROM demo.demo__bookmark_bookmark parent
-  WHERE parent.id = bookmark_id AND parent.tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid)`;
+  WHERE parent.id = demo__bookmark_bookmark_tag.bookmark_id AND parent.tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid)`;
 
 /** Read-only catalog verification. Direct-login tenant negatives remain a
  * separate required observation; a catalog report cannot replace them.
@@ -283,14 +283,26 @@ export async function verifyDemoBookmarkStorage(queryable) {
       convalidated,condeferrable,condeferred,connoinherit from pg_catalog.pg_constraint where conrelid=$1::regclass`,
       [relation],
     );
+    const expectedTableConstraints = [
+      ...(index === 0 ? expectedConstraints : expectedTagConstraints),
+      ...(serverVersion >= 180000
+        ? columns[index]
+            .filter(([, , notNull]) => notNull)
+            .map(([name]) => ['n', expression(`NOT NULL ${name}`)])
+        : []),
+    ].sort();
     check(
       `${table}:constraints`,
       isDeepStrictEqual(
         constraints.rows.map((row) => [row.contype, expression(row.definition)]).sort(),
-        index === 0 ? expectedConstraints : expectedTagConstraints,
+        expectedTableConstraints,
       ) &&
         constraints.rows.every(
-          (row) => row.convalidated && !row.condeferrable && !row.condeferred && !row.connoinherit,
+          (row) =>
+            row.convalidated &&
+            !row.condeferrable &&
+            !row.condeferred &&
+            row.connoinherit === (row.contype === 'p' || row.contype === 'f'),
         ),
       constraints.rows,
     );
@@ -305,7 +317,7 @@ export async function verifyDemoBookmarkStorage(queryable) {
         join pg_catalog.pg_attribute a on a.attrelid=i.indrelid and a.attnum=i.indkey[key_collation.position::integer-1]
         order by key_collation.position) as key_collations_match,
       pg_catalog.pg_get_expr(i.indpred,i.indrelid) as predicate,
-      array(select a.attname from unnest(i.indkey) with ordinality key(attnum,position)
+      array(select a.attname::text from unnest(i.indkey) with ordinality key(attnum,position)
         join pg_catalog.pg_attribute a on a.attrelid=i.indrelid and a.attnum=key.attnum order by key.position) as columns
       from pg_catalog.pg_index i join pg_catalog.pg_class c on c.oid=i.indexrelid
       join pg_catalog.pg_am am on am.oid=c.relam where i.indrelid=$1::regclass order by c.relname`,
@@ -342,7 +354,7 @@ export async function verifyDemoBookmarkStorage(queryable) {
     );
     const policies = await queryable.query(
       `select polname,polcmd,polpermissive,cardinality(polroles) as role_count,
-      array(select r.rolname from unnest(p.polroles) role(oid) join pg_catalog.pg_roles r on r.oid=role.oid order by r.rolname) as roles,
+      array(select r.rolname::text from unnest(p.polroles) role(oid) join pg_catalog.pg_roles r on r.oid=role.oid order by r.rolname) as roles,
       pg_catalog.pg_get_expr(polqual,polrelid) as using_expression,
       pg_catalog.pg_get_expr(polwithcheck,polrelid) as check_expression
       from pg_catalog.pg_policy p where polrelid=$1::regclass order by polname`,
