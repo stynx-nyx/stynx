@@ -103,6 +103,7 @@ function writeFailureEvidence(state, name, bytes) {
   if (!Buffer.isBuffer(bytes) || bytes.length > 64 * 1024 * 1024) refuse('FAILURE_EVIDENCE_BOUND');
   const path = join(evidence.directory, name);
   let descriptor;
+  let writtenIdentity;
   const ancestors = [];
   try {
     for (const row of evidence.chain) {
@@ -121,6 +122,7 @@ function writeFailureEvidence(state, name, bytes) {
       0o600,
     );
     const opened = fstatSync(descriptor);
+    writtenIdentity = opened;
     if (
       !opened.isFile() ||
       opened.nlink !== 1 ||
@@ -196,6 +198,8 @@ function writeFailureEvidence(state, name, bytes) {
   const actual = evidence.read(evidence.directory, path);
   if (!isDeepStrictEqual(actual.row, row)) refuse('FAILURE_EVIDENCE_IDENTITY');
   const identity = lstatSync(path, { bigint: true });
+  if (identity.dev !== BigInt(writtenIdentity.dev) || identity.ino !== BigInt(writtenIdentity.ino))
+    refuse('FAILURE_EVIDENCE_IDENTITY');
   const again = evidence.read(evidence.directory, path);
   const after = lstatSync(path, { bigint: true });
   if (
