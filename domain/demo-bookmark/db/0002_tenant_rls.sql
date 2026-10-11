@@ -33,6 +33,15 @@ BEGIN
     RAISE EXCEPTION 'demo_bookmark_unsafe_application_membership';
   END IF;
   IF EXISTS (
+    SELECT 1 FROM pg_catalog.pg_proc AS routine
+      JOIN pg_catalog.pg_namespace AS namespace ON namespace.oid = routine.pronamespace
+     WHERE namespace.nspname = 'demo'
+  ) THEN
+    -- Neither historical nor forward demo storage declares callable routines.
+    -- Default PUBLIC EXECUTE must not expose an unknown owner-effect path.
+    RAISE EXCEPTION 'demo_bookmark_unrecognized_routine';
+  END IF;
+  IF EXISTS (
     SELECT 1 FROM pg_catalog.pg_policy AS policy
       JOIN pg_catalog.pg_class AS relation ON relation.oid = policy.polrelid
       JOIN pg_catalog.pg_namespace AS namespace ON namespace.oid = relation.relnamespace
