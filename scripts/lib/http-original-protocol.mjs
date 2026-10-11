@@ -182,8 +182,11 @@ export function createHttpOriginalProtocol(expected) {
           ]) ||
           body.profileSha256 !== context.profileSha256 ||
           !hash(body.evidenceSha256) ||
-          !['trafficCount', 'sqlEffectCount', 'objectEffectCount'].every((key) =>
-            natural(body[key]),
+          !natural(body.trafficCount) ||
+          // Null retains UNVERIFIED effects; it never represents zero effects.
+          // Transport invocations cannot prove committed business mutations.
+          !['sqlEffectCount', 'objectEffectCount'].every(
+            (key) => body[key] === null || natural(body[key]),
           )
         )
           return false;
