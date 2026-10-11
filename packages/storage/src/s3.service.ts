@@ -75,6 +75,7 @@ export class S3Service implements OnApplicationShutdown {
     checksumSha256: string;
     expiresInSeconds?: number;
   }) {
+    this.assertActive();
     const expiresInSeconds = input.expiresInSeconds ?? this.uploadExpiresInSeconds;
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
@@ -101,6 +102,7 @@ export class S3Service implements OnApplicationShutdown {
   }
 
   async presignDownload(input: { key: string; filename: string; expiresInSeconds?: number }) {
+    this.assertActive();
     const expiresInSeconds = input.expiresInSeconds ?? this.downloadExpiresInSeconds;
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
@@ -116,6 +118,7 @@ export class S3Service implements OnApplicationShutdown {
     tenantId: string;
     expiresInSeconds?: number;
   }): Promise<string> {
+    this.assertActive();
     this.checkPresignRateLimit(input.tenantId);
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
@@ -127,6 +130,7 @@ export class S3Service implements OnApplicationShutdown {
   }
 
   async configureLifecycle(rules: S3LifecycleRule[]): Promise<void> {
+    this.assertActive();
     const awsRules: LifecycleRule[] = rules.map((rule) => ({
       ID: rule.name,
       Status: 'Enabled',
@@ -151,6 +155,7 @@ export class S3Service implements OnApplicationShutdown {
   }
 
   async applyObjectLock(key: string, versionId: string, config: S3ObjectLockConfig): Promise<void> {
+    this.assertActive();
     const retention: ObjectLockRetention = {
       Mode: config.mode,
       RetainUntilDate: new Date(Date.now() + config.retainDays * 24 * 60 * 60 * 1000),
@@ -167,6 +172,7 @@ export class S3Service implements OnApplicationShutdown {
   }
 
   async headObject(key: string): Promise<HeadedObject> {
+    this.assertActive();
     const response = await this.client.send(
       new HeadObjectCommand({
         Bucket: this.bucketName,
@@ -184,6 +190,7 @@ export class S3Service implements OnApplicationShutdown {
   }
 
   async deleteObject(key: string): Promise<void> {
+    this.assertActive();
     await this.client.send(
       new DeleteObjectCommand({
         Bucket: this.bucketName,
@@ -193,12 +200,14 @@ export class S3Service implements OnApplicationShutdown {
   }
 
   async deleteAllVersions(key: string): Promise<void> {
+    this.assertActive();
     const listed = await this.client.send(
       new ListObjectVersionsCommand({
         Bucket: this.bucketName,
         Prefix: key,
       }),
     );
+    this.assertActive();
     const objects = [
       ...(listed.Versions ?? [])
         .filter((entry) => entry.Key === key)
@@ -225,6 +234,10 @@ export class S3Service implements OnApplicationShutdown {
         Delete: { Objects: objects },
       }),
     );
+  }
+
+  private assertActive(): void {
+    if (this.destroyed) throw new Error('Storage service has been destroyed');
   }
 
   private checkPresignRateLimit(tenantId: string): void {
