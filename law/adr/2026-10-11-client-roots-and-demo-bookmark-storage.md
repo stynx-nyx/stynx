@@ -97,12 +97,10 @@ silently reconciled.
 The actual blueprint is `product/drafts/blueprints/demo-bookmark.json`; the old
 migration comment names a nonexistent earlier location. The blueprint declares
 only tag-to-bookmark cascade. Existing Drizzle declarations additionally name
-tenant/user FKs absent from both blueprint and historical SQL. Historical tag
-storage is TEXT, whereas blueprint/Drizzle name varchar(64). The blueprint's
-unique URL index description also omits the historical SQL's active-row
+tenant/user FKs absent from both blueprint and historical SQL. Historical SQL, blueprint and Drizzle agree on tag varchar(64). The
+blueprint's unique URL index description omits the historical SQL's active-row
 predicate. This amendment preserves the installed storage shape and records
-these discrepancies rather than claiming model equivalence, narrowing existing
-stored tags, adding production constraints or editing the Owner blueprint.
+these discrepancies rather than claiming model equivalence, adding production constraints or editing the Owner blueprint.
 Any later model reconciliation needs its own explicit consistency decision and
 populated upgrade evidence. The read-only verifier must report these existing
 differences truthfully.
