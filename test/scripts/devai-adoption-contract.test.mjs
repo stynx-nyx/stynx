@@ -97,7 +97,7 @@ test('DEVAI 2.5.0 identity, Constitution 1.0.2, and profile 1.4.0 stay exact', (
   assert.deepEqual(profile, adoption.release_verification);
 });
 
-test('DEVAI 2.5.0 ownership-matrix bind keeps the attested RC gate and GitHub host identity', () => {
+test('DEVAI 2.5.0 ownership-matrix bind keeps the attested RC gate and both host identities', () => {
   const project = readJson('.devai/config/project.json');
   const adoption = readJson('law/policy/devai-adoption.json');
   const binding = readJson('.devai/config/adopter-policy-binding.json');
@@ -110,13 +110,30 @@ test('DEVAI 2.5.0 ownership-matrix bind keeps the attested RC gate and GitHub ho
   assert.equal(project.ci_economy.attested_rc.required_check, 'verified-local-rc');
   assert.equal(binding.policy_version, adoption.policy_version);
   assert.deepEqual(binding.retired_keys, []);
-  assert.equal(Object.hasOwn(binding, 'authority_extension'), false);
+  assert.deepEqual(binding.authority_extension, {
+    extension_id: 'stynx.client-path-authority',
+    extension_version: '1.6.2',
+    digest_sha256: '71250d8d742f93a81afee5ad931b5bb7f68497d6025d0a645b283932f06c8901',
+    rule_count: 68,
+  });
+  assert.deepEqual(adoption.authority.roots, ['domain', 'reference', 'test', 'tools']);
+  const clientRules = authority.rules.filter(({ rule_id }) => rule_id.startsWith('adopter-path-'));
+  assert.equal(clientRules.length, 68);
+  assert.equal(
+    clientRules.every(({ origin }) => origin === 'additive-extension'),
+    true,
+  );
+  assert.deepEqual(authority.additive_extensions.at(-1), {
+    extension_id: binding.authority_extension.extension_id,
+    extension_version: binding.authority_extension.extension_version,
+    digest_sha256: binding.authority_extension.digest_sha256,
+  });
   assert.deepEqual(project.authority_enforcement, {
     mode: 'host-integrated',
-    adapter_config: '.devai/config/github-actions-host-adapter.json',
+    adapter_config: '.devai/config/post-merge-host-adapter.json',
   });
   assert.deepEqual(authority.host_enforcement, {
-    adapter: { adapter_id: 'github-actions-main-observation', adapter_version: '2.5.0' },
+    adapter: { adapter_id: 'post-merge-host-adapter', adapter_version: '2.5.0' },
     mode: 'host-integrated',
   });
   assert.equal(authority.framework_package.version, '2.5.0');
@@ -152,7 +169,7 @@ test('registered 2.5.0 upgrade binds the complete policy projection and every ge
 
   assert.deepEqual(sensors, adoption.sensor_inputs);
   assert.equal(binding.policy_id, adoption.policy_id);
-  assert.equal(binding.policy_version, '1.6.0');
+  assert.equal(binding.policy_version, '1.6.2');
   assert.equal(binding.source_path, 'law/policy/devai-adoption.json');
   assert.equal(binding.source_digest_sha256, digestFile(binding.source_path));
   assert.deepEqual(Object.keys(binding.materialized).sort(), [
@@ -188,9 +205,40 @@ test('registered 2.5.0 upgrade binds the complete policy projection and every ge
     '.devai/constitution.md',
     '.github/workflows/devai-local-rc-verify.yml',
   ]);
+  // The upgrade receipt is immutable history. Subsequent registered host/policy
+  // bindings have their own exact bytes; they cannot rewrite upgrade history.
+  assert.equal(
+    digestFile('.devai/config/upgrade-receipt.json'),
+    'ba94641c2870f6353bd08ba220cd58f2f230c82f99dc68adbf36abdb8142be14',
+  );
+  const rebound = {
+    '.devai/config/project.json':
+      '25002fc1e03d60103d9972e4fd7064f5d861a6af6c49c08ea90d5fb029d4ae5e',
+    '.devai/config/authority-policy.json':
+      '1c065a4bcdf550170c4dced93a6e9da77fab387cd181279b2d3648499c988fb0',
+    '.devai/config/adopter-policy-binding.json':
+      'd48fca1ca99819c259fd574d5f042d9e9bb948bdc3baf04252a3d9193dd2ec84',
+  };
   for (const entry of receipt.changed_files) {
     assert.equal(entry.operation, 'update');
-    assert.equal(digestFile(entry.path), entry.sha256, `upgrade output changed: ${entry.path}`);
+    const historical = spawnSync(
+      'git',
+      ['show', `cd0542143ad21e59551cbf3936d99c48647b2e78:${entry.path}`],
+      { cwd: repoRoot, maxBuffer: 16 * 1024 * 1024 },
+    );
+    assert.equal(historical.error, undefined);
+    assert.equal(historical.signal, null);
+    assert.equal(historical.status, 0, historical.stderr.toString());
+    assert.equal(
+      createHash('sha256').update(historical.stdout).digest('hex'),
+      entry.sha256,
+      `historical upgrade output changed: ${entry.path}`,
+    );
+    assert.equal(
+      digestFile(entry.path),
+      rebound[entry.path] ?? entry.sha256,
+      `current registered binding changed: ${entry.path}`,
+    );
   }
   assert.deepEqual(receipt.postchecks, [
     { name: 'policy-materialization-current', ok: true },
@@ -325,7 +373,61 @@ test('installed DEVAI CLI reads the exact binding as current without rewriting a
   assert.equal(checks.get('devai-version-match').info.running, '2.5.0');
   assert.equal(checks.get('devai-version-match').info.pinned, '2.5.0');
   assert.equal(checks.get('authority-enforcement').info.selected_adapter_policy_bound, true);
+  assert.equal(checks.get('authority-enforcement').info.local_post_merge_enforced, true);
   assert.equal(checks.get('authority-enforcement').info.github_actions_enforced, true);
+  for (const [field, facts] of [
+    [
+      'local_post_merge_facts',
+      [
+        'hook_present',
+        'key_present',
+        'attestation_present',
+        'declaration_present',
+        'policy_present',
+        'declaration_current',
+        'hook_local_binary',
+        'local_binary_present',
+        'local_binary_version',
+        'key_private',
+        'signature_valid',
+        'repository_bound',
+        'hook_bound',
+        'key_bound',
+        'policy_bound',
+        'constitution_bound',
+        'package_bound',
+        'installed_head_bound',
+      ],
+    ],
+    [
+      'github_actions_facts',
+      [
+        'workflow_present',
+        'config_present',
+        'workflow_syntax_valid',
+        'workflow_bound',
+        'repository_bound',
+        'main_bound',
+        'exact_sha_bound',
+        'package_auth_secret_bound',
+        'package_auth_fail_closed',
+        'package_auth_no_repository_token_fallback',
+        'oidc_enabled',
+        'provenance_capability_bound',
+        'private_user_artifact_digest_bound',
+        'attestation_fail_closed_when_required',
+        'immutable_artifact_digest_bound',
+        'explicit_unavailable_receipt_bound',
+        'audit_ref_only',
+        'publication_consent_bound',
+        'package_bound',
+      ],
+    ],
+  ]) {
+    const actual = checks.get('authority-enforcement').info[field];
+    assert.deepEqual(Object.keys(actual).sort(), [...facts].sort());
+    for (const fact of facts) assert.equal(actual[fact], true, `${field}.${fact}`);
+  }
   assert.equal(checks.get('authority-enforcement').info.arbitrary_host_tools_enforced, false);
   assert.match(
     checks.get('trusted-local-rc-boundary').info.attestation_boundary,
