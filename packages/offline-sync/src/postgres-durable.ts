@@ -503,9 +503,9 @@ export async function pgConsumption(
       number: string;
       status: NumberingConsumptionEntry['status'];
       server_entity_id: string | null;
-      finalized_at: Date | string | null;
+      finalized_at: string | null;
     }>(
-      `select number,status,server_entity_id,finalized_at from offline.numbering_consumption where tenant_id=$1::uuid and reservation_id=$2::uuid`,
+      `select number,status,server_entity_id,${pgSortInstant('finalized_at')} as finalized_at from offline.numbering_consumption where tenant_id=$1::uuid and reservation_id=$2::uuid`,
       [scope.tenantId, id],
     );
     const overrides = new Map(rows.rows.map((e) => [Number(e.number), e]));
@@ -516,7 +516,8 @@ export async function pgConsumption(
         number,
         status: entry?.status ?? 'available',
         serverEntityId: entry?.server_entity_id ?? null,
-        finalizedAt: entry?.finalized_at ? new Date(entry.finalized_at).toISOString() : null,
+        // Preserve the established millisecond spelling while retaining nonzero microseconds.
+        finalizedAt: entry?.finalized_at?.replace(/0{1,3}Z$/u, 'Z') ?? null,
       });
     }
     return {
