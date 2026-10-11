@@ -41,6 +41,7 @@ import {
 
 import {
   createOwnedReferenceFixture,
+  createOwnedPrivacyReferenceFixture,
   ownedReferenceFixtureEnvironment,
   observeOwnedReferenceFixture,
   closeOwnedReferenceFixture,
@@ -2047,6 +2048,11 @@ const referenceFactoryAdmission = Object.freeze({
   registryInspector: null,
   scopedLifecycleInspector: null,
 });
+const privacyObjectStoreAdmission = Object.freeze({
+  officialObjectStoreImageOrigin: null,
+  supervisorObjectStoreSdk: null,
+  applicationObjectStoreTransport: null,
+});
 const referenceFixtureSourceSha256 =
   'e713ef211e22459b8e866b80ce1ee3bef71da0f2dafdd2d18a1d4ab186c4cdf6';
 
@@ -2055,6 +2061,10 @@ function requireReferenceFactoryAdmission(state) {
   for (const [name, sha256] of Object.entries(referenceFactoryAdmission))
     if (typeof sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(sha256))
       refuse(`Real reference admission is not independently bound: ${name}`);
+  if (state.rootId === 'privacy')
+    for (const [name, sha256] of Object.entries(privacyObjectStoreAdmission))
+      if (typeof sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(sha256))
+        refuse(`Privacy object-store admission is not independently bound: ${name}`);
   const path = 'scripts/lib/http-reference-fixture.mjs';
   const supervisorRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
   for (const root of [state.checkout, supervisorRoot])
@@ -2089,7 +2099,9 @@ export async function prepareFreshHttpReferenceFixture(handle) {
       compilers: state.compilers,
     });
     // Allocation cannot occur above the independent source admission floor.
-    fixture = await createOwnedReferenceFixture({
+    const createFixture =
+      state.rootId === 'privacy' ? createOwnedPrivacyReferenceFixture : createOwnedReferenceFixture;
+    fixture = await createFixture({
       candidateCommit: state.candidateCommit,
       tree: state.inputs.tree,
       nonce,

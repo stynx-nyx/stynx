@@ -12,6 +12,8 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { createServer } from 'node:net';
+import { Agent, get } from 'node:http';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -53,6 +55,11 @@ const daemonIdentity = Object.freeze({
 });
 const redisImage = 'redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf';
 const redisImageId = 'sha256:9a56851f1a97e0586f85f8d7f7652e65cb589b2409d965c5d6e275dfc2551907';
+// Registry index, arm64 manifest and config correspondence were acquired
+// independently of Docker's mutable tag. Layer/native admission remains held.
+const objectImage =
+  'localstack/localstack@sha256:b279c01f4cfb8f985a482e4014cabc1e2697b9d7a6c8c8db2e40f4d9f93687c7';
+const objectImageId = 'sha256:5966ecddea63d941db8f5119aeb685b560368be970f225f3ce8f331d1373c835';
 const rolesSqlPath = fileURLToPath(
   new URL('../../packages/data/migrations/platform/0001_roles.sql', import.meta.url),
 );
@@ -367,6 +374,409 @@ async function inspectRedis(state, running) {
   }
 }
 
+function environmentMap(values) {
+  if (!Array.isArray(values) || values.some((value) => typeof value !== 'string'))
+    refuse('OBJECT_ENVIRONMENT');
+  const result = {};
+  for (const value of values) {
+    const separator = value.indexOf('=');
+    if (separator < 1 || Object.hasOwn(result, value.slice(0, separator)))
+      refuse('OBJECT_ENVIRONMENT');
+    result[value.slice(0, separator)] = value.slice(separator + 1);
+  }
+  return result;
+}
+
+async function verifyObjectImage(state) {
+  const rows = JSON.parse(await docker(state, ['image', 'inspect', objectImage]));
+  const row = rows[0];
+  if (
+    rows.length !== 1 ||
+    row.Id !== objectImageId ||
+    row.Os !== 'linux' ||
+    row.Architecture !== 'arm64' ||
+    !row.RepoDigests?.includes(objectImage) ||
+    !isDeepStrictEqual(row.Config.Entrypoint, ['docker-entrypoint.sh']) ||
+    (row.Config.Cmd ?? null) !== null ||
+    (row.Config.User ?? '') !== '' ||
+    row.Config.WorkingDir !== '/opt/code/localstack/' ||
+    !isDeepStrictEqual(row.Config.Volumes, { '/var/lib/localstack': {} })
+  )
+    refuse('OBJECT_IMAGE_IDENTITY');
+  const labels = row.Config.Labels ?? {};
+  if (
+    !labels ||
+    typeof labels !== 'object' ||
+    Array.isArray(labels) ||
+    Object.values(labels).some((value) => typeof value !== 'string')
+  )
+    refuse('OBJECT_IMAGE_LABELS');
+  const actual = {
+    labels: { ...labels, ...state.object.labels },
+    environment: { ...environmentMap(row.Config.Env), ...state.object.environment },
+    layers: row.RootFS?.Layers,
+  };
+  if (
+    !Array.isArray(actual.layers) ||
+    actual.layers.some((value) => !/^sha256:[a-f0-9]{64}$/u.test(value))
+  )
+    refuse('OBJECT_IMAGE_LAYERS');
+  if (state.object.image && !isDeepStrictEqual(state.object.image, actual))
+    refuse('OBJECT_IMAGE_CHANGED');
+  state.object.image = actual;
+}
+
+async function inspectObjectContainer(state, running) {
+  const object = state.object;
+  const rows = JSON.parse(await docker(state, ['container', 'inspect', object.id]));
+  const row = rows[0];
+  if (
+    rows.length !== 1 ||
+    row.Id !== object.id ||
+    row.Name !== `/stynx-http-s3-${state.instance}` ||
+    row.Image !== objectImageId ||
+    row.Config.Image !== objectImage ||
+    !isDeepStrictEqual(row.Config.Entrypoint, ['docker-entrypoint.sh']) ||
+    (row.Config.Cmd ?? null) !== null ||
+    !isDeepStrictEqual(row.Config.Labels, object.image.labels) ||
+    !isDeepStrictEqual(environmentMap(row.Config.Env), object.image.environment) ||
+    row.Config.User !== '' ||
+    row.HostConfig.NetworkMode !== 'bridge' ||
+    row.HostConfig.Privileged !== false ||
+    row.HostConfig.ReadonlyRootfs !== false ||
+    !isDeepStrictEqual(row.HostConfig.CapDrop, ['ALL']) ||
+    !isDeepStrictEqual(row.HostConfig.SecurityOpt, ['no-new-privileges']) ||
+    !isDeepStrictEqual(row.HostConfig.Tmpfs, object.tmpfs) ||
+    row.State.Running !== running ||
+    !Array.isArray(row.Mounts) ||
+    row.Mounts.some(
+      (mount) =>
+        mount.Type !== 'tmpfs' ||
+        mount.RW !== true ||
+        !Object.hasOwn(object.tmpfs, mount.Destination),
+    ) ||
+    row.Mounts.length > 2 ||
+    !isDeepStrictEqual(Object.keys(row.HostConfig.PortBindings), ['4566/tcp'])
+  )
+    refuse('OBJECT_CONTAINER_IDENTITY');
+  const bindings = row.HostConfig.PortBindings['4566/tcp'];
+  if (bindings.length !== 1 || bindings[0].HostIp !== '127.0.0.1')
+    refuse('OBJECT_CONTAINER_BINDING');
+  if (running) {
+    const ports = row.NetworkSettings.Ports?.['4566/tcp'];
+    if (
+      !Array.isArray(ports) ||
+      ports.length !== 1 ||
+      ports[0].HostIp !== '127.0.0.1' ||
+      !/^[1-9][0-9]*$/u.test(ports[0].HostPort) ||
+      Number(ports[0].HostPort) > 65535 ||
+      [state.pgPort, state.redisPort].includes(Number(ports[0].HostPort)) ||
+      (object.port !== undefined && object.port !== Number(ports[0].HostPort))
+    )
+      refuse('OBJECT_PORT');
+    object.port = Number(ports[0].HostPort);
+    object.endpoint = `http://127.0.0.1:${object.port}`;
+    const network = row.NetworkSettings.Networks?.bridge;
+    if (
+      !network ||
+      !/^[a-f0-9]{64}$/u.test(network.NetworkID) ||
+      !/^[a-f0-9]{64}$/u.test(network.EndpointID)
+    )
+      refuse('OBJECT_NETWORK');
+    const runtime = {
+      startedAt: row.State.StartedAt,
+      networkId: network.NetworkID,
+      endpointId: network.EndpointID,
+      address: network.IPAddress,
+    };
+    if (object.runtime && !isDeepStrictEqual(object.runtime, runtime)) refuse('OBJECT_RESTART');
+    object.runtime = runtime;
+  }
+}
+
+// This fixed supervisor-side SDK is only fixture administration. It cannot
+// stand in for the separately observed fresh application's AWS transport.
+function objectDriver(state) {
+  const storageRequire = createRequire(
+    new URL('../../packages/storage/package.json', import.meta.url),
+  );
+  const privacyRequire = createRequire(
+    new URL('../../packages/privacy/package.json', import.meta.url),
+  );
+  const sdk = storageRequire('@aws-sdk/client-s3');
+  const presigner = storageRequire('@aws-sdk/s3-request-presigner');
+  const Zip = privacyRequire('jszip');
+  const files = new Map();
+  const visit = (module) => {
+    if (!module || files.has(module.filename)) return;
+    const path = realpathSync(module.filename);
+    const bytes = readFileSync(path);
+    files.set(module.filename, { module, path, sha256: digest(bytes), bytes: bytes.length });
+    for (const child of module.children) visit(child);
+  };
+  for (const [loader, name] of [
+    [storageRequire, '@aws-sdk/client-s3'],
+    [storageRequire, '@aws-sdk/s3-request-presigner'],
+    [privacyRequire, 'jszip'],
+  ])
+    visit(loader.cache[loader.resolve(name)]);
+  const agent = new Agent({ keepAlive: false, maxSockets: 2 });
+  const sockets = new Map();
+  const originalCreateConnection = agent.createConnection;
+  agent.createConnection = function (...args) {
+    const options = args[0];
+    if (
+      options.host !== '127.0.0.1' ||
+      Number(options.port) !== state.object.port ||
+      options.path ||
+      options.lookup ||
+      options.localAddress ||
+      options.socketPath
+    )
+      refuse('OBJECT_ADMIN_TRANSPORT');
+    const socket = Reflect.apply(originalCreateConnection, this, args);
+    const row = { closed: false };
+    sockets.set(socket, row);
+    socket.once('close', () => {
+      row.closed = true;
+    });
+    return socket;
+  };
+  const client = new sdk.S3Client({
+    region: 'us-east-1',
+    endpoint: state.object.endpoint,
+    forcePathStyle: true,
+    credentials: state.object.credentials,
+    maxAttempts: 1,
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
+    requestHandler: { httpAgent: agent, connectionTimeout: 5_000, requestTimeout: 5_000 },
+  });
+  state.object.driver = {
+    sdk,
+    presigner,
+    Zip,
+    files,
+    agent,
+    sockets,
+    client,
+    destroy: client.destroy,
+    createConnection: agent.createConnection,
+    destroyed: false,
+  };
+}
+
+function verifyObjectDriver(state) {
+  const driver = state.object.driver;
+  if (
+    !driver ||
+    driver.destroyed ||
+    driver.client.destroy !== driver.destroy ||
+    driver.agent.createConnection !== driver.createConnection ||
+    Object.getPrototypeOf(driver.agent) !== Agent.prototype
+  )
+    refuse('OBJECT_DRIVER');
+  for (const row of driver.files.values()) {
+    const bytes = readFileSync(row.path);
+    if (
+      realpathSync(row.module.filename) !== row.path ||
+      bytes.length !== row.bytes ||
+      digest(bytes) !== row.sha256
+    )
+      refuse('OBJECT_DRIVER_SOURCE_CHANGED');
+  }
+}
+
+function objectDownload(state, signed) {
+  const url = new URL(signed);
+  if (url.origin !== state.object.endpoint || url.username || url.password || url.hash)
+    refuse('OBJECT_DOWNLOAD_DESTINATION');
+  return new Promise((accept, reject) => {
+    const request = get(
+      {
+        host: '127.0.0.1',
+        port: state.object.port,
+        method: 'GET',
+        path: url.pathname + url.search,
+        agent: false,
+      },
+      (response) => {
+        const chunks = [];
+        let length = 0;
+        response.on('data', (bytes) => {
+          length += bytes.length;
+          if (length > 1_000_000)
+            request.destroy(new Error('Object fixture response exceeded its finite bound'));
+          else chunks.push(bytes);
+        });
+        response.once('error', reject);
+        response.once('end', () =>
+          accept({
+            status: response.statusCode,
+            contentType: response.headers['content-type'],
+            bytes: Buffer.concat(chunks),
+          }),
+        );
+      },
+    );
+    const row = { closed: false };
+    state.object.downloads.add(row);
+    row.request = request;
+    request.once('socket', (socket) => {
+      const socketRow = { closed: false };
+      state.object.driver.sockets.set(socket, socketRow);
+      socket.once('close', () => {
+        socketRow.closed = true;
+      });
+    });
+    request.once('close', () => {
+      row.closed = true;
+    });
+    request.setTimeout(5_000, () =>
+      request.destroy(new Error('Object fixture download deadline exceeded')),
+    );
+    request.once('error', reject);
+  });
+}
+
+async function createObjectFixture(state) {
+  const object = state.object;
+  await verifyObjectImage(state);
+  object.planned = true;
+  object.id = await docker(state, [
+    'container',
+    'create',
+    '--pull=never',
+    '--name',
+    `stynx-http-s3-${state.instance}`,
+    ...Object.entries(object.labels).flatMap(([name, value]) => ['--label', `${name}=${value}`]),
+    ...Object.entries(object.environment).flatMap(([name, value]) => ['--env', `${name}=${value}`]),
+    '--publish',
+    '127.0.0.1::4566',
+    '--network',
+    'bridge',
+    '--cap-drop',
+    'ALL',
+    '--security-opt',
+    'no-new-privileges',
+    ...Object.entries(object.tmpfs).flatMap(([path, value]) => ['--tmpfs', `${path}:${value}`]),
+    objectImage,
+  ]);
+  if (!/^[a-f0-9]{64}$/u.test(object.id)) refuse('OBJECT_CONTAINER_ID');
+  await inspectObjectContainer(state, false);
+  await docker(state, ['container', 'start', object.id]);
+  await inspectObjectContainer(state, true);
+  objectDriver(state);
+  const { sdk, presigner, Zip, client } = object.driver;
+  for (const bucket of [object.storageBucket, object.privacyBucket]) {
+    let created = false;
+    for (let attempt = 0; attempt < 60 && Date.now() < state.setupDeadline; attempt++) {
+      try {
+        await client.send(new sdk.CreateBucketCommand({ Bucket: bucket }));
+        created = true;
+        break;
+      } catch (error) {
+        if (error.name !== 'Error' && !['ECONNREFUSED', 'ECONNRESET'].includes(error.code))
+          throw error;
+        await new Promise((accept) => setTimeout(accept, 100));
+      }
+    }
+    if (!created) refuse('OBJECT_START');
+  }
+  object.witnesses = [];
+  for (const tenantId of [
+    '0197481e-6f84-77e4-8d6d-41f0b6fca9c1',
+    '0197481e-6f84-77e4-8d6d-41f0b6fca9c2',
+  ]) {
+    const key = `exports/${tenantId}/${randomUUID()}.zip`;
+    const manifest = { tenantId, format: 'json', fixture: state.identity.nonce };
+    const subjects = [{ tenantId, name: 'João 日本語' }];
+    const bytes = await new Zip()
+      .file('manifest.json', JSON.stringify(manifest))
+      .file('privacy.subjects.json', JSON.stringify(subjects))
+      .generateAsync({ type: 'nodebuffer' });
+    const expires = new Date(Math.floor(Date.now() / 1000) * 1000 + 3_600_000);
+    await client.send(
+      new sdk.PutObjectCommand({
+        Bucket: object.privacyBucket,
+        Key: key,
+        Body: bytes,
+        ContentType: 'application/zip',
+        Expires: expires,
+      }),
+    );
+    const head = await client.send(
+      new sdk.HeadObjectCommand({ Bucket: object.privacyBucket, Key: key }),
+    );
+    const signed = await presigner.getSignedUrl(
+      client,
+      new sdk.GetObjectCommand({ Bucket: object.privacyBucket, Key: key }),
+      { expiresIn: 30 },
+    );
+    const url = new URL(signed);
+    const downloaded = await objectDownload(state, signed);
+    if (
+      url.origin !== object.endpoint ||
+      decodeURIComponent(url.pathname) !== `/${object.privacyBucket}/${key}` ||
+      url.searchParams.get('X-Amz-Expires') !== '30' ||
+      head.ContentLength !== bytes.length ||
+      head.ContentType !== 'application/zip' ||
+      head.Expires?.getTime() !== expires.getTime() ||
+      downloaded.status !== 200 ||
+      downloaded.contentType !== 'application/zip' ||
+      !downloaded.bytes.equals(bytes)
+    )
+      refuse('OBJECT_WITNESS');
+    const zip = await Zip.loadAsync(downloaded.bytes);
+    if (
+      !isDeepStrictEqual(Object.keys(zip.files).sort(), [
+        'manifest.json',
+        'privacy.subjects.json',
+      ]) ||
+      !isDeepStrictEqual(JSON.parse(await zip.file('manifest.json').async('string')), manifest) ||
+      !isDeepStrictEqual(
+        JSON.parse(await zip.file('privacy.subjects.json').async('string')),
+        subjects,
+      )
+    )
+      refuse('OBJECT_ZIP_WITNESS');
+    object.witnesses.push({
+      tenantId,
+      key,
+      sha256: digest(bytes),
+      bytes: bytes.length,
+      contentType: 'application/zip',
+      expiresAt: expires.toISOString(),
+      signedSeconds: 30,
+      status: downloaded.status,
+    });
+  }
+  const tampered = new URL(
+    await presigner.getSignedUrl(
+      client,
+      new sdk.GetObjectCommand({ Bucket: object.privacyBucket, Key: object.witnesses[0].key }),
+      { expiresIn: 30 },
+    ),
+  );
+  tampered.pathname = `/${object.privacyBucket}/${object.witnesses[1].key}`;
+  const refused = await objectDownload(state, tampered.href);
+  if (refused.status !== 403 || !refused.bytes.toString().includes('SignatureDoesNotMatch'))
+    refuse('OBJECT_SIGNATURE_WITNESS');
+  const expiring = await presigner.getSignedUrl(
+    client,
+    new sdk.GetObjectCommand({ Bucket: object.privacyBucket, Key: object.witnesses[0].key }),
+    { expiresIn: 3 },
+  );
+  if ((await objectDownload(state, expiring)).status !== 200) refuse('OBJECT_EXPIRY_START');
+  await new Promise((accept) => setTimeout(accept, 4_100));
+  const expired = await objectDownload(state, expiring);
+  if (expired.status !== 403 || !/expired/iu.test(expired.bytes.toString()))
+    refuse('OBJECT_EXPIRY_WITNESS');
+  object.signatureTamperRefused = true;
+  object.expiryRefused = true;
+  verifyObjectDriver(state);
+}
+
 async function verifyRedisConfiguration(state) {
   const file = lstatSync(state.redisConfig);
   if (
@@ -480,6 +890,31 @@ async function verifyResources(state) {
   await verifyImage(state);
   await inspectRedis(state, true);
   await verifyRedisConfiguration(state);
+  if (state.object) {
+    await verifyObjectImage(state);
+    await inspectObjectContainer(state, true);
+    verifyObjectDriver(state);
+    const { sdk, client } = state.object.driver;
+    for (const bucket of [state.object.storageBucket, state.object.privacyBucket])
+      await client.send(new sdk.HeadBucketCommand({ Bucket: bucket }));
+    for (const witness of state.object.witnesses) {
+      const head = await client.send(
+        new sdk.HeadObjectCommand({ Bucket: state.object.privacyBucket, Key: witness.key }),
+      );
+      if (
+        head.ContentLength !== witness.bytes ||
+        head.ContentType !== witness.contentType ||
+        head.Expires?.toISOString() !== witness.expiresAt
+      )
+        refuse('OBJECT_WITNESS_CHANGED');
+      const response = await client.send(
+        new sdk.GetObjectCommand({ Bucket: state.object.privacyBucket, Key: witness.key }),
+      );
+      const bytes = Buffer.from(await response.Body.transformToByteArray());
+      if (bytes.length !== witness.bytes || digest(bytes) !== witness.sha256)
+        refuse('OBJECT_WITNESS_BYTES_CHANGED');
+    }
+  }
   if (
     !isDeepStrictEqual(await redisIdentity(state), state.redisIdentity) ||
     !isDeepStrictEqual(await postgresIdentity(state), state.postgresIdentity) ||
@@ -497,6 +932,33 @@ async function cleanup(state) {
   state.closed = true;
   state.cleanupDeadline = Date.now() + 30_000;
   const failures = [];
+  if (state.object?.driver) {
+    try {
+      const driver = state.object.driver;
+      if (!driver.destroyed) {
+        verifyObjectDriver(state);
+        Reflect.apply(driver.destroy, driver.client, []);
+        driver.destroyed = true;
+      }
+      for (const row of state.object.downloads) if (!row.closed) row.request.destroy();
+      while (
+        Date.now() < state.cleanupDeadline &&
+        ([...driver.sockets.values()].some((row) => !row.closed) ||
+          [...state.object.downloads].some((row) => !row.closed))
+      )
+        await new Promise((accept) => setTimeout(accept, 10));
+      if (
+        [...driver.sockets.values()].some((row) => !row.closed) ||
+        [...state.object.downloads].some((row) => !row.closed) ||
+        Object.values(driver.agent.sockets).some((rows) => rows.length) ||
+        Object.values(driver.agent.freeSockets).some((rows) => rows.length) ||
+        Object.values(driver.agent.requests).some((rows) => rows.length)
+      )
+        refuse('OBJECT_ADMIN_DRAIN');
+    } catch {
+      failures.push('OBJECT_ADMIN_CLEANUP');
+    }
+  }
   for (const record of [...state.pendingCommands]) {
     try {
       if (!(await stopOwnedGroup(record, state.cleanupDeadline))) failures.push('COMMAND_REAP');
@@ -560,6 +1022,50 @@ async function cleanup(state) {
       failures.push('REDIS_CLEANUP');
     }
   }
+  if (state.object?.planned) {
+    try {
+      await verifyDaemon(state);
+      const filter = `label=stynx.http.object-owner=${state.instance}`;
+      const ids = await docker(state, [
+        'container',
+        'ls',
+        '--all',
+        '--quiet',
+        '--no-trunc',
+        '--filter',
+        filter,
+      ]);
+      const actual = ids ? ids.split('\n') : [];
+      if (
+        actual.length > 1 ||
+        actual.some((id) => !/^[a-f0-9]{64}$/u.test(id)) ||
+        (state.object.id && !actual.includes(state.object.id))
+      )
+        refuse('OBJECT_CLEANUP_POPULATION');
+      if (actual.length === 1) {
+        state.object.id = actual[0];
+        const rows = JSON.parse(await docker(state, ['container', 'inspect', state.object.id]));
+        if (rows.length !== 1 || typeof rows[0].State.Running !== 'boolean')
+          refuse('OBJECT_CLEANUP_IDENTITY');
+        await inspectObjectContainer(state, rows[0].State.Running);
+        await docker(state, ['container', 'rm', '--force', state.object.id]);
+      }
+      if (
+        (await docker(state, [
+          'container',
+          'ls',
+          '--all',
+          '--quiet',
+          '--no-trunc',
+          '--filter',
+          filter,
+        ])) !== ''
+      )
+        refuse('OBJECT_CLEANUP_REMAINS');
+    } catch {
+      failures.push('OBJECT_CONTAINER_CLEANUP');
+    }
+  }
   try {
     const root = lstatSync(state.directory);
     if (
@@ -587,14 +1093,25 @@ async function cleanup(state) {
   incompleteCleanups.delete(state);
   state.passwords = {};
   state.redisPassword = '';
+  if (state.object) state.object.credentials = undefined;
   state.environment = undefined;
   return structuredClone(state.cleanup);
 }
 
 /** Fixed internal resource producer; its handle alone does not admit a worker. */
 export async function createOwnedReferenceFixture(identity) {
+  if (arguments.length !== 1) refuse('REQUEST');
+  return createFixedReferenceFixture(identity, false);
+}
+
+/** The privacy root selects this closed recipe; callers cannot supply S3 targets. */
+export async function createOwnedPrivacyReferenceFixture(identity) {
+  if (arguments.length !== 1) refuse('REQUEST');
+  return createFixedReferenceFixture(identity, true);
+}
+
+async function createFixedReferenceFixture(identity, privacy) {
   if (
-    arguments.length !== 1 ||
     !identity ||
     types.isProxy(identity) ||
     Object.getPrototypeOf(identity) !== Object.prototype ||
@@ -654,6 +1171,32 @@ export async function createOwnedReferenceFixture(identity) {
         'stynx.http.tree': identity.tree,
       },
     });
+    if (privacy)
+      state.object = {
+        labels: {
+          'stynx.http.object-owner': instance,
+          'stynx.http.job': identity.nonce,
+          'stynx.http.candidate': identity.candidateCommit,
+          'stynx.http.tree': identity.tree,
+        },
+        environment: {
+          SERVICES: 's3',
+          AWS_DEFAULT_REGION: 'us-east-1',
+          S3_SKIP_SIGNATURE_VALIDATION: '0',
+          DISABLE_EVENTS: '1',
+        },
+        tmpfs: {
+          '/var/lib/localstack': 'rw,nosuid,nodev,mode=0700',
+          '/tmp': 'rw,nosuid,nodev,mode=1777',
+        },
+        credentials: {
+          accessKeyId: `stynx${randomBytes(8).toString('hex')}`,
+          secretAccessKey: randomBytes(32).toString('hex'),
+        },
+        storageBucket: `stynx-storage-${instance}`,
+        privacyBucket: `stynx-privacy-${instance}`,
+        downloads: new Set(),
+      };
     const handle = Object.freeze(Object.create(null));
     handles.set(handle, state);
     for (const name of ['socket', 'docker-config'])
@@ -822,6 +1365,7 @@ export async function createOwnedReferenceFixture(identity) {
     }
     if (!redisObserved) refuse('REDIS_START');
     state.redisIdentity = redisObserved;
+    if (state.object) await createObjectFixture(state);
     state.ready = true;
     await verifyResources(state);
     return handle;
@@ -894,11 +1438,19 @@ export async function ownedReferenceFixtureEnvironment(handle) {
     STYNX_COGNITO_JWKS_URI: 'https://cognito-http-fixture.invalid/.well-known/jwks.json',
     STYNX_REFERENCE_WEB_ORIGINS: 'http://127.0.0.1:3100',
     STYNX_STORAGE_REGION: 'us-east-1',
-    STYNX_STORAGE_BUCKET: `stynx-http-fixture-${state.instance}`,
+    STYNX_STORAGE_BUCKET: state.object?.storageBucket ?? `stynx-http-fixture-${state.instance}`,
+    ...(state.object
+      ? {
+          STYNX_STORAGE_ENDPOINT: state.object.endpoint,
+          STYNX_STORAGE_FORCE_PATH_STYLE: 'true',
+          STYNX_PRIVACY_BUCKET: state.object.privacyBucket,
+        }
+      : {}),
     STYNX_KMS_ALIAS: 'alias/stynx-http-fixture',
     AWS_REGION: 'us-east-1',
-    AWS_ACCESS_KEY_ID: 'stynx-http-fixture',
-    AWS_SECRET_ACCESS_KEY: randomBytes(32).toString('hex'),
+    AWS_ACCESS_KEY_ID: state.object?.credentials.accessKeyId ?? 'stynx-http-fixture',
+    AWS_SECRET_ACCESS_KEY:
+      state.object?.credentials.secretAccessKey ?? randomBytes(32).toString('hex'),
     AWS_EC2_METADATA_DISABLED: 'true',
     AWS_SDK_LOAD_CONFIG: '0',
     AWS_CONFIG_FILE: join(state.directory, 'aws-config'),
@@ -938,6 +1490,33 @@ export async function observeOwnedReferenceFixture(handle) {
       port: state.redisPort,
       ...state.redisIdentity,
     },
+    ...(state.object
+      ? {
+          objectStore: {
+            kind: 'owned-local-s3-compatible-fixture',
+            containerId: state.object.id,
+            image: objectImage,
+            imageId: objectImageId,
+            labels: state.object.labels,
+            port: state.object.port,
+            endpoint: state.object.endpoint,
+            storageBucket: state.object.storageBucket,
+            privacyBucket: state.object.privacyBucket,
+            runtime: state.object.runtime,
+            witnesses: state.object.witnesses,
+            signatureTamperRefused: state.object.signatureTamperRefused,
+            expiryRefused: state.object.expiryRefused,
+            supervisorSdkSourceClosure: [...state.object.driver.files.values()].map((row) => ({
+              sourcePathSha256: digest(row.path),
+              sha256: row.sha256,
+              bytes: row.bytes,
+            })),
+            applicationSdkTransport: 'SEPARATE_INDEPENDENT_OBSERVATION_REQUIRED',
+            supervisorSdkNativeAdmission: 'PENDING_INDEPENDENT_INSPECTOR',
+            approvedExternalProvider: false,
+          },
+        }
+      : {}),
     environment: state.environment
       ? Object.fromEntries(
           Object.entries(state.environment).map(([name, value]) => [name, digest(value)]),
