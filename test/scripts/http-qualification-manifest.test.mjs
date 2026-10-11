@@ -60,13 +60,11 @@ function declarationFixture(t) {
     writeFileSync(join(root, path), bytes);
   }
   const snapshot = () =>
-    [...members.keys()]
-      .sort()
-      .map((path) => ({
-        path,
-        sha256: sha256(readFileSync(join(root, path))),
-        size: lstatSync(join(root, path)).size,
-      }));
+    [...members.keys()].sort().map((path) => ({
+      path,
+      sha256: sha256(readFileSync(join(root, path))),
+      size: lstatSync(join(root, path)).size,
+    }));
   return { root, members, snapshot };
 }
 
@@ -95,9 +93,12 @@ test('exact pinned historical declaration reconstructs all 1167 cases without wr
   assert.equal(loadHttpQualificationCase(root, firstCase).binding.case.scheduledTargets, 600);
 });
 
-test('declaration loader refuses changed candidate source rather than adopting mutable source bytes', () => {
+test('declaration loader refuses changed candidate source rather than adopting mutable source bytes', (t) => {
+  const { root } = declarationFixture(t);
+  const path = join(root, 'reference/api/src/performance/offline-e6.module.ts');
+  writeFileSync(path, Buffer.concat([readFileSync(path), Buffer.from('\n// changed candidate\n')]));
   assert.throws(
-    () => loadHttpQualificationCase(repository, firstCase),
+    () => loadHttpQualificationCase(root, firstCase),
     (error) => {
       assert.equal(error.code, invalid.code);
       assert.match(
