@@ -22,7 +22,11 @@ import { basename, dirname, extname, isAbsolute, parse, relative, resolve, sep }
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import YAML from 'yaml';
-import { createHttpRuntimeProtocol } from './http-runtime-protocol.mjs';
+import {
+  createHttpRuntimeProtocol,
+  serializeHttpRuntimePlainJson,
+} from './http-runtime-protocol.mjs';
+import { createReferenceRuntimeProtocol } from './http-reference-loopback-protocol.mjs';
 import {
   assertHttpBuildRosterUnchanged,
   snapshotHttpDependencyBytes,
@@ -33,6 +37,23 @@ import {
   deriveHttpWorkspaceGraph,
   reconcileHttpWorkspaceSelector,
 } from './http-workspace-graph.mjs';
+
+import {
+  createOwnedReferenceFixture,
+  ownedReferenceFixtureEnvironment,
+  observeOwnedReferenceFixture,
+  closeOwnedReferenceFixture,
+} from './http-reference-fixture.mjs';
+import { deriveReferenceRegistryPlan } from './http-reference-registry.mjs';
+import {
+  createOwnedHttpWorker,
+  launchOwnedHttpWorker,
+  observeOwnedHttpWorker,
+  snapshotOwnedHttpWorker,
+  waitOwnedHttpWorkerClose,
+  terminateOwnedHttpWorker,
+  reapOwnedHttpWorker,
+} from './http-owned-worker.mjs';
 
 const handles = new WeakMap();
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -1622,8 +1643,10 @@ function runtimeGlobalSearchPaths(state, job, environment) {
 }
 
 // Resolution origins are tracked manifests, not evaluated modules. Only the
-// two reviewed createRequire expressions in this fixed mode authorize them.
-function runtimeResolutionAnchors(state, controls, nonce) {
+// reviewed mode-specific createRequire caller relations authorize them.
+function runtimeResolutionAnchors(state, controls, nonce, mode) {
+  if (!['bootstrap-module-only', 'reference-owned-loopback'].includes(mode))
+    refuse('Unsupported runtime resolution anchor mode');
   const rules = [
     [
       'reference/api/package.json',
@@ -1652,6 +1675,22 @@ function runtimeResolutionAnchors(state, controls, nonce) {
       ],
     ],
   ];
+  if (mode === 'reference-owned-loopback')
+    rules.push([
+      'packages/flow/package.json',
+      '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
+      'db4b602b7b72ecc2c1ac4ba549b2f28793c74da5',
+      1827,
+      'scripts/lib/http-reference-nest-guard.mjs',
+      "createRequire(new URL('../../packages/flow/package.json', import.meta.url))",
+      [
+        '@nestjs/core/nest-factory',
+        '@nestjs/core/nest-application',
+        '@nestjs/platform-express/adapters/express-adapter',
+        '@nestjs/core/package.json',
+        '@nestjs/platform-express/package.json',
+      ],
+    ]);
   const physical = (path) => {
     const tracked = state.inputs.files.find((row) => row.path === path);
     const actualPath = resolve(state.checkout, path),
@@ -1679,7 +1718,7 @@ function runtimeResolutionAnchors(state, controls, nonce) {
       mode: tracked.mode,
     };
   };
-  return rules.map(([path, sha256, blob, byteLength, callerPath, literal, requests]) => {
+  const anchors = rules.map(([path, sha256, blob, byteLength, callerPath, literal, requests]) => {
     const manifest = physical(path),
       caller = physical(callerPath);
     const control = controls.find((row) => row.path === callerPath);
@@ -1717,6 +1756,12 @@ function runtimeResolutionAnchors(state, controls, nonce) {
       conditions: ['require', 'node', 'node-addons', 'module-sync'],
     };
   });
+  if (
+    mode === 'reference-owned-loopback' &&
+    !isDeepStrictEqual(anchors[1].manifest, anchors[2].manifest)
+  )
+    refuse('Shared physical flow resolution anchor differs between caller relations');
+  return anchors;
 }
 
 // Pure protocol expectations are derived here only after the private live-handle
@@ -1933,7 +1978,9 @@ function runtimeProtocolBindings(state, job, descriptorBody, launchEnvironment) 
   const moduleURL = pathToFileURL(resolve(state.checkout, job.bootstrap.emitted.path)).href;
   const observation = {
     schemaVersion: 1,
-    scope: job.mode,
+    // This is the initial, actually observed factory-export witness before the
+    // real factory is invoked, also in the disjoint owned-loopback worker.
+    scope: 'bootstrap-module-only',
     compositionId: 'reference',
     bootstrap: structuredClone(job.bootstrap),
     namedExport: 'createReferenceApplication',
@@ -1984,6 +2031,180 @@ function runtimeProtocolBindings(state, job, descriptorBody, launchEnvironment) 
   };
 }
 
+// This is a source-bound admission floor, never caller data or a Boolean waiver.
+// Pending independent bindings refuse before any resource is created. Rebinding
+// requires acceptance of the exact controller/native/image/observer bytes.
+const referenceFactoryAdmission = Object.freeze({
+  nativeDependencyClosure: null,
+  officialRedisImageOrigin: null,
+  controllerInspector: null,
+  transportInspector: null,
+  registryInspector: null,
+  scopedLifecycleInspector: null,
+});
+const referenceFixtureSourceSha256 =
+  'e713ef211e22459b8e866b80ce1ee3bef71da0f2dafdd2d18a1d4ab186c4cdf6';
+
+function requireReferenceFactoryAdmission(state) {
+  if (state.rootId !== 'reference') refuse('Unsupported real reference composition');
+  for (const [name, sha256] of Object.entries(referenceFactoryAdmission))
+    if (typeof sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(sha256))
+      refuse(`Real reference admission is not independently bound: ${name}`);
+  const path = 'scripts/lib/http-reference-fixture.mjs';
+  const supervisorRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+  for (const root of [state.checkout, supervisorRoot])
+    if (byteRow(root, resolve(root, path)).sha256 !== referenceFixtureSourceSha256)
+      refuse('Owned reference controller differs from its accepted exact source');
+  // The full connected control graph must be accepted before the earlier
+  // prepare step can allocate any resource, not merely before child spawn.
+  referenceRuntimeControls(state);
+  referenceSupervisorControls(state);
+}
+
+/** Fixed real fixture producer tied only to the actual live private build. */
+export async function prepareFreshHttpReferenceFixture(handle) {
+  if (arguments.length !== 1) refuse('Reference fixture accepts one actual private build handle');
+  const state = stateFor(handle);
+  if (
+    state.runtimeActive ||
+    state.fixturePreparing ||
+    state.fixtureChecking ||
+    state.referenceFixture
+  )
+    refuse('A reference fixture or runtime already owns this build');
+  state.fixturePreparing = true;
+  let fixture;
+  try {
+    recheck(state);
+    requireReferenceFactoryAdmission(state);
+    const nonce = randomUUID();
+    const registry = deriveReferenceRegistryPlan({
+      checkoutRoot: state.checkout,
+      inputs: state.inputs,
+      compilers: state.compilers,
+    });
+    // Allocation cannot occur above the independent source admission floor.
+    fixture = await createOwnedReferenceFixture({
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      nonce,
+    });
+    state.referenceFixture = {
+      handle: fixture,
+      nonce,
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      ready: false,
+    };
+    const environment = await ownedReferenceFixtureEnvironment(fixture);
+    const observed = await observeOwnedReferenceFixture(fixture);
+    if (
+      observed.identity.candidateCommit !== state.candidateCommit ||
+      observed.identity.tree !== state.inputs.tree ||
+      observed.identity.nonce !== nonce
+    )
+      refuse('Actual fixture identity differs from the live build');
+    const binding = {
+      handle: fixture,
+      nonce,
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      observed,
+      environment,
+      registry,
+      environmentDigests: Object.fromEntries(
+        Object.entries(environment).map(([name, value]) => [name, digest(value)]),
+      ),
+      sourceSha256: referenceFixtureSourceSha256,
+      admission: referenceFactoryAdmission,
+      ready: true,
+    };
+    state.referenceFixture = binding;
+    recheck(state);
+    return structuredClone({
+      schemaVersion: 1,
+      scope: 'reference-private-build-fixture-binding',
+      candidateCommit: binding.candidateCommit,
+      tree: binding.tree,
+      nonce,
+      resources: binding.observed,
+      environment: binding.environmentDigests,
+      controllerSourceSha256: binding.sourceSha256,
+      fixtureStoredInActualParentBuild: true,
+      parentCorroborationRequired: true,
+      workerLaunched: false,
+      runtimeCustodyComplete: false,
+      performanceQualified: false,
+      readinessPromoting: false,
+    });
+  } catch (error) {
+    if (fixture) {
+      await closeOwnedReferenceFixture(fixture);
+      state.referenceFixture = undefined;
+    }
+    throw error;
+  } finally {
+    state.fixturePreparing = false;
+  }
+}
+
+/** Re-observe the same retained resource handles; a receipt cannot replace them. */
+export async function observeFreshHttpReferenceFixture(handle) {
+  if (arguments.length !== 1) refuse('Reference fixture observation accepts one private handle');
+  const state = stateFor(handle);
+  const binding = state.referenceFixture;
+  if (
+    !binding ||
+    !binding.ready ||
+    state.fixturePreparing ||
+    state.fixtureChecking ||
+    state.runtimeActive ||
+    binding.candidateCommit !== state.candidateCommit ||
+    binding.tree !== state.inputs.tree ||
+    binding.sourceSha256 !== referenceFixtureSourceSha256 ||
+    binding.admission !== referenceFactoryAdmission
+  )
+    refuse('Reference fixture is absent, stale, or not privately owned');
+  state.fixtureChecking = true;
+  try {
+    recheck(state);
+    requireReferenceFactoryAdmission(state);
+    const observed = await observeOwnedReferenceFixture(binding.handle);
+    const environment = await ownedReferenceFixtureEnvironment(binding.handle);
+    if (
+      !isDeepStrictEqual(observed, binding.observed) ||
+      !isDeepStrictEqual(environment, binding.environment) ||
+      !isDeepStrictEqual(
+        binding.registry,
+        deriveReferenceRegistryPlan({
+          checkoutRoot: state.checkout,
+          inputs: state.inputs,
+          compilers: state.compilers,
+        }),
+      )
+    )
+      refuse('Reference fixture or source/compiler/environment binding changed');
+    return structuredClone({
+      schemaVersion: 1,
+      scope: 'reference-private-build-fixture-binding',
+      candidateCommit: binding.candidateCommit,
+      tree: binding.tree,
+      nonce: binding.nonce,
+      resources: observed,
+      environment: binding.environmentDigests,
+      controllerSourceSha256: binding.sourceSha256,
+      fixtureStoredInActualParentBuild: true,
+      parentCorroborationRequired: true,
+      workerLaunched: false,
+      runtimeCustodyComplete: false,
+      performanceQualified: false,
+      readinessPromoting: false,
+    });
+  } finally {
+    state.fixtureChecking = false;
+  }
+}
+
 /**
  * Launch the only currently supported, secret-free runtime diagnostic.
  * It observes the real bootstrap module export without invoking AppModule.
@@ -1992,7 +2213,8 @@ function runtimeProtocolBindings(state, job, descriptorBody, launchEnvironment) 
 export async function observeFreshHttpReferenceBootstrap(handle) {
   if (arguments.length !== 1) refuse('Runtime diagnostic accepts exactly one private handle');
   const state = stateFor(handle);
-  if (state.runtimeActive) refuse('A runtime observation already owns this build');
+  if (state.runtimeActive || state.fixturePreparing || state.fixtureChecking)
+    refuse('A runtime or fixture operation already owns this build');
   state.runtimeActive = true;
   let child;
   let deadline;
@@ -2046,7 +2268,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
         Object.entries(environment).map(([name, value]) => [name, digest(value)]),
       ),
       controls,
-      resolutionAnchors: runtimeResolutionAnchors(state, controls, nonce),
+      resolutionAnchors: runtimeResolutionAnchors(state, controls, nonce, 'bootstrap-module-only'),
       receipt,
       bootstrap: referenceBootstrapBinding(state),
     };
@@ -2138,7 +2360,12 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
       !isDeepStrictEqual(protocolBindings, runtimeProtocolBindings(state, job, body, environment))
     )
       refuse('Runtime protocol parent bindings changed before admission');
-    if (!isDeepStrictEqual(job.resolutionAnchors, runtimeResolutionAnchors(state, controls, nonce)))
+    if (
+      !isDeepStrictEqual(
+        job.resolutionAnchors,
+        runtimeResolutionAnchors(state, controls, nonce, 'bootstrap-module-only'),
+      )
+    )
       refuse('Runtime resolution anchors changed before final admission');
     // The parser has first closed these rows against the private roster. Recheck
     // their actual raw-path relationship without discarding valid native aliases.
@@ -2198,12 +2425,610 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
   }
 }
 
+// Successor controls are deliberately unbound until the complete connected
+// worker/parent source has independent acceptance. Old module-only pins above
+// remain historical; neither caller data nor a partial component receipt can
+// enable this disjoint resource-consuming mode.
+const referenceRuntimeControlClosure = new Map([
+  ['scripts/lib/http-runtime-worker.mjs', null],
+  ['scripts/lib/http-module-custody.mjs', null],
+  ['scripts/lib/http-runtime-census.mjs', null],
+  ['scripts/lib/http-runtime-bindings.mjs', null],
+  ['scripts/lib/http-runtime-protocol.mjs', null],
+  ['scripts/lib/http-reference-loopback-protocol.mjs', null],
+  ['scripts/lib/http-reference-network.mjs', null],
+  ['scripts/lib/http-reference-registry.mjs', null],
+  ['scripts/lib/http-reference-lifecycle.mjs', null],
+  ['scripts/lib/http-reference-nest-guard.mjs', null],
+]);
+
+// Parent-only helper: never pretend it was evaluated in the child. Its exact
+// bytes still require an independent control pin before resource allocation.
+const referenceSupervisorControlClosure = new Map([['scripts/lib/http-owned-worker.mjs', null]]);
+
+function referenceNestPreparationBindings(state) {
+  const originURL = pathToFileURL(
+    resolve(state.checkout, 'scripts/lib/http-reference-nest-guard.mjs'),
+  ).href;
+  const anchorPath = resolve(state.checkout, 'packages/flow/package.json');
+  const require = createRequire(pathToFileURL(anchorPath));
+  const definitions = [
+    ['@nestjs/core/nest-factory', 'NestFactory'],
+    ['@nestjs/core/nest-application', 'NestApplication'],
+    ['@nestjs/platform-express/adapters/express-adapter', 'ExpressAdapter'],
+  ];
+  const paths = definitions.map(([specifier]) => require.resolve(specifier));
+  const manifests = ['@nestjs/core/package.json', '@nestjs/platform-express/package.json'].map(
+    (specifier) => require.resolve(specifier),
+  );
+  for (const path of [...paths, ...manifests, anchorPath])
+    if (realpathSync(path) !== path || !lstatSync(path).isFile())
+      refuse('Parent Nest preparation path differs from its bound physical source');
+  return {
+    originURL,
+    resolutionOriginURL: pathToFileURL(anchorPath).href,
+    provenance: 'FIRST_ORIGINAL_REQUIRE_COMPLETION',
+    cacheAbsentBeforeRequire: true,
+    files: [...paths, ...manifests, anchorPath].map((path) => ({
+      url: pathToFileURL(path).href,
+      sha256: digest(readFileSync(path)),
+    })),
+    modules: definitions.map(([, exportName], index) => ({
+      url: pathToFileURL(paths[index]).href,
+      exportName,
+      loaded: true,
+    })),
+    complete: false,
+    readinessPromoting: false,
+  };
+}
+
+function assertReferenceNestPreparationOrder(modules, preparation, checkout) {
+  const first = (url) =>
+    modules.evaluations
+      .filter((row) => row.canonicalURL === url)
+      .sort((a, b) => a.sequence - b.sequence)[0];
+  const guard = first(
+    pathToFileURL(resolve(checkout, 'scripts/lib/http-reference-nest-guard.mjs')).href,
+  );
+  const census = first(
+    pathToFileURL(resolve(checkout, 'scripts/lib/http-runtime-census.mjs')).href,
+  );
+  if (!guard || !census) refuse('Parent Nest preparation controls lack actual load evidence');
+  for (const module of preparation.modules) {
+    const row = first(module.url);
+    const file = preparation.files.find((entry) => entry.url === module.url);
+    if (
+      !row ||
+      row.sha256 !== file?.sha256 ||
+      row.sequence <= guard.sequence ||
+      row.sequence >= census.sequence
+    )
+      refuse('Parent Nest preparation source/load order differs');
+  }
+}
+
+function currentReferenceWorkerCleanup(state, handle) {
+  if (!handle) return undefined;
+  const operationId = snapshotOwnedHttpWorker(handle).operationId;
+  const receipt = state.referenceRuntimeWorkerCleanup;
+  return receipt?.complete === true &&
+    receipt.operationId === operationId &&
+    operationId === state.referenceRuntimeWorkerOperationId
+    ? receipt
+    : undefined;
+}
+
+function referenceRuntimeControls(state) {
+  return referenceControlRows(state, referenceRuntimeControlClosure);
+}
+
+function referenceSupervisorControls(state) {
+  return referenceControlRows(state, referenceSupervisorControlClosure);
+}
+
+function referenceControlRows(state, closure) {
+  const supervisorRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+  return [...closure].map(([path, sha256]) => {
+    if (typeof sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(sha256))
+      refuse('Connected reference runtime control has no independent source binding');
+    const tracked = state.inputs.files.find((row) => row.path === path);
+    const fresh = byteRow(state.checkout, resolve(state.checkout, path));
+    const actual = byteRow(supervisorRoot, resolve(supervisorRoot, path));
+    if (
+      !tracked ||
+      tracked.sha256 !== sha256 ||
+      fresh.sha256 !== sha256 ||
+      actual.sha256 !== sha256
+    )
+      refuse('Connected reference runtime control differs from accepted bytes');
+    compareRows([tracked], [fresh]);
+    compareRows([fresh], [actual]);
+    return { ...fresh, blob: tracked.blob, classification: 'observer-source' };
+  });
+}
+
+async function reapReferenceWorker(state) {
+  const handle = state.referenceRuntimeWorker;
+  if (!handle) return state.referenceRuntimeWorkerCleanup;
+  let receipt;
+  try {
+    receipt = await reapOwnedHttpWorker(handle);
+  } catch (error) {
+    state.cleanupComplete = false;
+    throw error;
+  }
+  if (
+    receipt.complete !== true ||
+    receipt.operationId !== snapshotOwnedHttpWorker(handle).operationId ||
+    receipt.operationId !== state.referenceRuntimeWorkerOperationId
+  ) {
+    state.cleanupComplete = false;
+    refuse('Owned reference child cleanup remains incomplete');
+  }
+  state.referenceRuntimeWorkerCleanup = receipt;
+  state.referenceRuntimeWorker = undefined;
+  return receipt;
+}
+
+/**
+ * Fixed owned-resource reference factory diagnostic. No caller target, receipt,
+ * factory, environment or process handle is accepted. This remains below the
+ * six-composition HTTP/performance acceptance profile.
+ */
+export async function observeFreshHttpReferenceLoopback(handle) {
+  if (arguments.length !== 1) refuse('Owned reference runtime accepts one private build handle');
+  const state = stateFor(handle);
+  const fixture = state.referenceFixture;
+  if (
+    state.runtimeActive ||
+    state.referenceRuntimeWorker ||
+    state.fixturePreparing ||
+    state.fixtureChecking ||
+    !fixture?.ready ||
+    fixture.candidateCommit !== state.candidateCommit ||
+    fixture.tree !== state.inputs.tree ||
+    fixture.admission !== referenceFactoryAdmission ||
+    fixture.sourceSha256 !== referenceFixtureSourceSha256
+  )
+    refuse('Owned reference fixture is absent, stale, or already in use');
+  state.runtimeActive = true;
+  let deadline, protocol, directory, nonce, descriptorPath, body, workerHandle, workerSnapshot;
+  let failure, exited, fixtureCleanup, workerGroupAbsent;
+  const terminate = () => {
+    if (workerHandle) terminateOwnedHttpWorker(workerHandle);
+  };
+  const artifacts = [];
+  try {
+    recheck(state);
+    requireReferenceFactoryAdmission(state);
+    const controls = referenceRuntimeControls(state);
+    const supervisorControls = referenceSupervisorControls(state);
+    const nestPreparationBindings = referenceNestPreparationBindings(state);
+    const observedFixture = await observeOwnedReferenceFixture(fixture.handle);
+    const fixtureEnvironment = await ownedReferenceFixtureEnvironment(fixture.handle);
+    const registry = deriveReferenceRegistryPlan({
+      checkoutRoot: state.checkout,
+      inputs: state.inputs,
+      compilers: state.compilers,
+    });
+    if (
+      !isDeepStrictEqual(observedFixture, fixture.observed) ||
+      !isDeepStrictEqual(fixtureEnvironment, fixture.environment) ||
+      !isDeepStrictEqual(registry, fixture.registry)
+    )
+      refuse('Owned reference fixture or compiler registry changed before launch');
+    const receipt = workerModuleReceiptFromFreshBuild(handle);
+    const urls = new Set(receipt.files.map((row) => row.url));
+    for (const row of controls) {
+      const url = pathToFileURL(resolve(state.checkout, row.path)).href;
+      if (urls.has(url)) refuse('Connected reference observer collides with a build module');
+      urls.add(url);
+      receipt.files.push({
+        url,
+        sha256: row.sha256,
+        moduleKind: 'module',
+        classification: 'observer-source',
+      });
+    }
+    const environment = runtimeEnvironment(state);
+    for (const [name, value] of Object.entries(fixtureEnvironment)) {
+      if (Object.hasOwn(environment, name) && environment[name] !== value)
+        refuse('Owned fixture environment collides with the reviewed runtime environment');
+      environment[name] = value;
+    }
+    nonce = fixture.nonce;
+    directory = resolve(state.sandbox, 'runtime-jobs');
+    mkdirSync(directory, { recursive: true, mode: 0o700 });
+    descriptorPath = resolve(directory, `${nonce}.json`);
+    const observationArtifactPath = resolve(directory, `${nonce}.reference-body.json`);
+    const entry = resolve(state.checkout, 'scripts/lib/http-runtime-worker.mjs');
+    const job = {
+      schemaVersion: 1,
+      mode: 'reference-owned-loopback',
+      compositionId: 'reference',
+      nonce,
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      parentPid: process.pid,
+      checkoutRoot: state.checkout,
+      descriptorPath,
+      nodePath: realpathSync(state.node),
+      nodeSha256: digest(readFileSync(state.node)),
+      platform: state.platform,
+      arch: state.arch,
+      environment: Object.fromEntries(
+        Object.entries(environment).map(([name, value]) => [name, digest(value)]),
+      ),
+      controls,
+      resolutionAnchors: runtimeResolutionAnchors(
+        state,
+        controls,
+        nonce,
+        'reference-owned-loopback',
+      ),
+      receipt,
+      bootstrap: referenceBootstrapBinding(state),
+      referenceFixture: observedFixture,
+      referenceRegistry: registry,
+      observationArtifactPath,
+    };
+    body = Buffer.from(serializeHttpRuntimePlainJson(job));
+    if (body.length > 64 * 1024 * 1024) refuse('Owned reference job exceeds its bound');
+    writeFileSync(descriptorPath, body, { mode: 0o600, flag: 'wx' });
+    environment.STYNX_HTTP_JOB_SHA256 = digest(body);
+    const bindings = runtimeProtocolBindings(state, job, body, environment);
+    const stdout = [],
+      stderr = [];
+    let logLength = 0;
+    const startedAt = new Date().toISOString();
+    // Store the opaque operation before native spawn; all child/events/cleanup
+    // remain owned by the same production component used in Inspector cases.
+    workerHandle = createOwnedHttpWorker();
+    // Rotate current evidence before acquisition. Completed receipts remain
+    // historical; their ABSENT meaning cannot qualify this new operation.
+    if (state.referenceRuntimeWorkerCleanup) {
+      state.referenceRuntimeWorkerCleanupHistory ??= [];
+      state.referenceRuntimeWorkerCleanupHistory.push(state.referenceRuntimeWorkerCleanup);
+    }
+    state.referenceRuntimeWorkerCleanup = undefined;
+    state.referenceRuntimeWorkerOperationId = snapshotOwnedHttpWorker(workerHandle).operationId;
+    state.referenceRuntimeWorker = workerHandle;
+    state.cleanupComplete = false;
+    workerSnapshot = launchOwnedHttpWorker(workerHandle, {
+      executable: state.node,
+      argv: [entry, descriptorPath],
+      cwd: state.checkout,
+      environment,
+    });
+    const closePromise = waitOwnedHttpWorkerClose(workerHandle);
+    if (!workerSnapshot.pid) {
+      await closePromise;
+      refuse('Owned reference worker could not start');
+    }
+    protocol = createReferenceRuntimeProtocol({
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      nonce,
+      workerPid: workerSnapshot.pid,
+      fixtureSha256: digest(serializeHttpRuntimePlainJson(observedFixture)),
+      controlClosureSha256: digest(serializeHttpRuntimePlainJson(controls)),
+      moduleContext: {
+        mode: 'reference-owned-loopback',
+        candidateCommit: state.candidateCommit,
+        nonce,
+        pid: workerSnapshot.pid,
+        bindings,
+      },
+      observationArtifactPath,
+    });
+    const reject = () => {
+      failure ??= 'HTTP_REFERENCE_WORKER_INVALID';
+      terminate();
+    };
+    const collect = (chunks, chunk) => {
+      logLength += chunk.length;
+      if (logLength > 64 * 1024 * 1024) reject();
+      else chunks.push(chunk);
+    };
+    observeOwnedHttpWorker(workerHandle, {
+      stdout: (chunk) => collect(stdout, chunk),
+      stderr: (chunk) => collect(stderr, chunk),
+      message(frame) {
+        if (!protocol.receive(frame)) reject();
+      },
+      error() {
+        failure ??= 'HTTP_REFERENCE_WORKER_SPAWN';
+        terminate();
+      },
+    });
+    deadline = setTimeout(reject, 180_000);
+    exited = await closePromise;
+    workerSnapshot = snapshotOwnedHttpWorker(workerHandle);
+    if (workerSnapshot.subscriberFailureCount || workerSnapshot.bufferingFailure)
+      failure ??= 'HTTP_REFERENCE_WORKER_OBSERVER';
+    clearTimeout(deadline);
+    for (const [name, chunks] of [
+      ['stdout', stdout],
+      ['stderr', stderr],
+    ]) {
+      const path = resolve(directory, `${nonce}.${name}.log`);
+      writeFileSync(path, Buffer.concat(chunks), { mode: 0o600, flag: 'wx' });
+      artifacts.push(byteRow(state.sandbox, path));
+    }
+    const capturePath = resolve(directory, `${nonce}.parsed-ipc.json`);
+    const capture = protocol.captureArtifact();
+    if (capture.overflowed || !capture.captureComplete)
+      failure ??= 'HTTP_REFERENCE_CAPTURE_INVALID';
+    writeFileSync(capturePath, serializeHttpRuntimePlainJson(capture), {
+      mode: 0o600,
+      flag: 'wx',
+    });
+    artifacts.push(byteRow(state.sandbox, capturePath));
+    if (failure) refuse('Owned reference worker did not complete its closed live protocol');
+    const wire = protocol.finish(exited);
+    const workerCleanup = await reapReferenceWorker(state);
+    workerGroupAbsent = workerCleanup.groupOutcome === 'ABSENT';
+    if (!workerGroupAbsent) refuse('Owned reference worker group remains present or unobservable');
+    const artifact = wire.terminal.observationArtifact;
+    const actualArtifact = byteRow(state.sandbox, observationArtifactPath);
+    if (
+      actualArtifact.sha256 !== artifact.sha256 ||
+      actualArtifact.byteLength !== artifact.byteLength ||
+      actualArtifact.permissions !== artifact.permissions ||
+      actualArtifact.byteLength > 64 * 1024 * 1024 ||
+      realpathSync(observationArtifactPath) !== observationArtifactPath
+    )
+      refuse('Owned reference body differs from its actual private artifact');
+    const raw = JSON.parse(readFileSync(observationArtifactPath, 'utf8'));
+    serializeHttpRuntimePlainJson(raw); // validated plain-data boundary, no source evaluation
+    if (
+      !isDeepStrictEqual(
+        Object.keys(raw).sort(),
+        [
+          'schemaVersion',
+          'scope',
+          'candidateCommit',
+          'tree',
+          'nonce',
+          'workerPid',
+          'referenceObservation',
+          'networkClosure',
+          'parentCorroborationRequired',
+          'complete',
+          'runtimeCustodyComplete',
+          'performanceQualified',
+          'readinessPromoting',
+        ].sort(),
+      ) ||
+      raw.schemaVersion !== 1 ||
+      raw.scope !== job.mode ||
+      raw.candidateCommit !== state.candidateCommit ||
+      raw.tree !== state.inputs.tree ||
+      raw.nonce !== nonce ||
+      raw.workerPid !== workerSnapshot.pid ||
+      raw.parentCorroborationRequired !== true ||
+      raw.complete !== false ||
+      raw.runtimeCustodyComplete !== false ||
+      raw.performanceQualified !== false ||
+      raw.readinessPromoting !== false ||
+      !isDeepStrictEqual(raw.networkClosure, {
+        closed: true,
+        parentCorroborationRequired: true,
+        readinessPromoting: false,
+      }) ||
+      !isDeepStrictEqual(raw.referenceObservation?.phases, wire.phases) ||
+      !isDeepStrictEqual(raw.referenceObservation?.bootstrap, bindings.observation) ||
+      raw.referenceObservation?.scope !== job.mode ||
+      raw.referenceObservation?.complete !== false ||
+      raw.referenceObservation?.runtimeCustodyComplete !== false ||
+      raw.referenceObservation?.performanceQualified !== false ||
+      raw.referenceObservation?.readinessPromoting !== false
+    )
+      refuse('Owned reference body contradicts the admitted live phase projection');
+    if (
+      !isDeepStrictEqual(
+        raw.referenceObservation?.nestAppLink?.preparation,
+        nestPreparationBindings,
+      )
+    )
+      refuse('Parent Nest preparation source/cache projection differs from bound files');
+    assertReferenceNestPreparationOrder(
+      wire.terminal.modules,
+      nestPreparationBindings,
+      state.checkout,
+    );
+    const finalPhase = wire.phases.at(-1);
+    const observed = raw.referenceObservation;
+    if (
+      digest(serializeHttpRuntimePlainJson(observed.registry)) !== finalPhase.registrySha256 ||
+      digest(
+        serializeHttpRuntimePlainJson({
+          layers: observed.layers,
+          instances: observed.middlewareInstances,
+          callbacks: observed.callbacks,
+        }),
+      ) !== finalPhase.middlewareSha256 ||
+      digest(serializeHttpRuntimePlainJson(observed.network)) !== finalPhase.networkSha256
+    )
+      refuse('Owned reference component bytes differ from their final phase digests');
+    recheck(state);
+    compareRows(controls, referenceRuntimeControls(state));
+    compareRows(supervisorControls, referenceSupervisorControls(state));
+    if (!isDeepStrictEqual(nestPreparationBindings, referenceNestPreparationBindings(state)))
+      refuse('Parent Nest preparation source identities changed during observation');
+    if (
+      !isDeepStrictEqual(bindings, runtimeProtocolBindings(state, job, body, environment)) ||
+      !isDeepStrictEqual(
+        job.resolutionAnchors,
+        runtimeResolutionAnchors(state, controls, nonce, 'reference-owned-loopback'),
+      ) ||
+      !isDeepStrictEqual(await observeOwnedReferenceFixture(fixture.handle), observedFixture) ||
+      !isDeepStrictEqual(
+        await ownedReferenceFixtureEnvironment(fixture.handle),
+        fixtureEnvironment,
+      ) ||
+      !isDeepStrictEqual(
+        deriveReferenceRegistryPlan({
+          checkoutRoot: state.checkout,
+          inputs: state.inputs,
+          compilers: state.compilers,
+        }),
+        registry,
+      )
+    )
+      refuse('Actual owned reference parent bindings changed during the worker');
+    compareRows(
+      [byteRow(state.sandbox, descriptorPath)],
+      [
+        {
+          path: owned(state.sandbox, descriptorPath),
+          sha256: digest(body),
+          byteLength: body.length,
+          permissions: 0o600,
+        },
+      ],
+    );
+    for (const row of [
+      ...wire.terminal.modules.resolutions.filter((entry) => entry.builtin === false),
+      ...wire.terminal.modules.evaluations,
+    ])
+      if (pathToFileURL(realpathSync(fileURLToPath(row.url))).href !== row.canonicalURL)
+        refuse('Owned reference module raw path differs from its canonical custody member');
+    fixtureCleanup = await closeOwnedReferenceFixture(fixture.handle);
+    if (fixtureCleanup?.complete !== true) refuse('Owned reference fixture cleanup is incomplete');
+    state.referenceFixture = undefined;
+    artifacts.push(actualArtifact);
+    const report = {
+      schemaVersion: 1,
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      scope: job.mode,
+      compositionId: 'reference',
+      nonce,
+      child: {
+        pid: workerSnapshot.pid,
+        nodePath: job.nodePath,
+        nodeSha256: job.nodeSha256,
+        argv: [entry, descriptorPath],
+        cwd: state.checkout,
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        ...exited,
+        groupAbsenceObserved: workerGroupAbsent,
+      },
+      environment: job.environment,
+      controls,
+      supervisorControls,
+      workerCleanup,
+      descriptor: byteRow(state.sandbox, descriptorPath),
+      artifacts,
+      resourcesBeforeLaunch: observedFixture,
+      fixtureCleanup,
+      result: wire,
+      rawSensorBodyAdmission: 'DIGEST_BOUND_DIAGNOSTIC_NOT_QUALIFIED',
+      runtimeSecretsConsumed: true,
+      parentCorroborationRequired: true,
+      processSandbox: false,
+      complete: false,
+      runtimeCustodyComplete: false,
+      performanceQualified: false,
+      readinessPromoting: false,
+    };
+    const reportPath = resolve(directory, `${nonce}.reference-observation.json`);
+    writeFileSync(reportPath, serializeHttpRuntimePlainJson(report), { mode: 0o600, flag: 'wx' });
+    return structuredClone({ ...report, reportArtifact: byteRow(state.sandbox, reportPath) });
+  } catch (error) {
+    failure ??= 'HTTP_REFERENCE_WORKER_INVALID';
+    state.refusal = failure;
+    throw error;
+  } finally {
+    clearTimeout(deadline);
+    try {
+      await reapReferenceWorker(state);
+    } catch {
+      state.refusal ??= 'HTTP_REFERENCE_CHILD_CLEANUP_INCOMPLETE';
+    }
+    // The retained actual resource handle stays in state on failed cleanup so
+    // closeFreshHttpBuild can retry the controller's own resumable teardown.
+    if (!state.referenceRuntimeWorker && state.referenceFixture === fixture) {
+      try {
+        fixtureCleanup = await closeOwnedReferenceFixture(fixture.handle);
+        if (fixtureCleanup?.complete === true) state.referenceFixture = undefined;
+        else state.refusal ??= 'HTTP_REFERENCE_FIXTURE_CLEANUP_INCOMPLETE';
+      } catch {
+        state.refusal ??= 'HTTP_REFERENCE_FIXTURE_CLEANUP_INCOMPLETE';
+      }
+    }
+    state.runtimeActive = false;
+    if (directory && nonce && protocol) {
+      try {
+        const path = resolve(directory, `${nonce}.final-ipc.json`);
+        writeFileSync(path, serializeHttpRuntimePlainJson(protocol.captureArtifact()), {
+          mode: 0o600,
+          flag: 'wx',
+        });
+        const cleanupPath = resolve(directory, `${nonce}.reference-cleanup.json`);
+        writeFileSync(
+          cleanupPath,
+          serializeHttpRuntimePlainJson({
+            schemaVersion: 1,
+            scope: 'reference-owned-loopback-cleanup',
+            nonce,
+            childPid: workerHandle ? snapshotOwnedHttpWorker(workerHandle).pid : null,
+            exit: exited ?? null,
+            childCloseObserved: workerHandle
+              ? snapshotOwnedHttpWorker(workerHandle).closeObserved
+              : false,
+            groupAbsenceObserved:
+              currentReferenceWorkerCleanup(state, workerHandle)?.groupOutcome === 'ABSENT',
+            workerCleanup: currentReferenceWorkerCleanup(state, workerHandle) ?? null,
+            historicalWorkerCleanup: state.referenceRuntimeWorkerCleanupHistory ?? [],
+            workerObligation: workerHandle ? snapshotOwnedHttpWorker(workerHandle) : null,
+            fixtureCleanup: fixtureCleanup ?? null,
+            refusal: state.refusal ?? null,
+            complete: false,
+            runtimeCustodyComplete: false,
+            performanceQualified: false,
+            readinessPromoting: false,
+          }),
+          { mode: 0o600, flag: 'wx' },
+        );
+      } catch {
+        state.refusal ??= 'HTTP_REFERENCE_CAPTURE_INCOMPLETE';
+      }
+    }
+    if (!failure && state.refusal)
+      refuse('Owned reference final capture or cleanup could not be independently retained');
+  }
+}
+
 export async function closeFreshHttpBuild(handle) {
   const state = handles.get(handle);
   if (!state) refuse('Unknown fresh build handle');
-  if (state.runtimeActive) refuse('Cannot close a build while its runtime worker is active');
+  if (state.runtimeActive || state.fixturePreparing || state.fixtureChecking)
+    refuse('Cannot close a build while its runtime or fixture operation is active');
   if (state.cleanupComplete) return;
+  if (state.cleanupPending) return state.cleanupPending;
   state.closed = true;
-  await rm(state.sandbox, { recursive: true, force: true });
-  state.cleanupComplete = true;
+  state.cleanupComplete = false;
+  const pending = (async () => {
+    // This check precedes every fixture/sandbox deletion and is resumable even
+    // for a closed/refused build. Unknown child/group state preserves evidence.
+    await reapReferenceWorker(state);
+    if (state.referenceFixture) {
+      const fixtureCleanup = await closeOwnedReferenceFixture(state.referenceFixture.handle);
+      if (fixtureCleanup?.complete !== true)
+        refuse('Owned reference fixture cleanup remains incomplete');
+      state.referenceFixture = undefined;
+    }
+    await rm(state.sandbox, { recursive: true, force: true });
+    state.cleanupComplete = true;
+  })();
+  state.cleanupPending = pending;
+  try {
+    await pending;
+  } finally {
+    if (state.cleanupPending === pending) state.cleanupPending = undefined;
+  }
 }

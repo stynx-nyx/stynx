@@ -1,5 +1,12 @@
 import { createHash } from 'node:crypto';
-import { lstatSync, readFileSync, readlinkSync, realpathSync, statSync } from 'node:fs';
+import {
+  lstatSync,
+  readFileSync,
+  readlinkSync,
+  realpathSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { Module, createRequire, isBuiltin, registerHooks } from 'node:module';
 import * as moduleNamespace from 'node:module';
 import { basename, dirname, extname, isAbsolute, join, normalize, parse, resolve } from 'node:path';
@@ -208,6 +215,8 @@ export async function runHttpRuntimeWorker() {
   let custody;
   let job;
   let terminalSent = false;
+  let network;
+  let closeNetwork;
 
   function send(kind, result) {
     if (!process.send || terminalSent) fail('Worker has no private channel or already terminated');
@@ -240,7 +249,7 @@ export async function runHttpRuntimeWorker() {
     job = JSON.parse(bytes.toString('utf8'));
     if (
       job.schemaVersion !== 1 ||
-      job.mode !== 'bootstrap-module-only' ||
+      !['bootstrap-module-only', 'reference-owned-loopback'].includes(job.mode) ||
       job.compositionId !== 'reference' ||
       !/^[a-f0-9]{40}$/u.test(job.candidateCommit) ||
       !/^[a-f0-9]{40}$/u.test(job.tree) ||
@@ -273,6 +282,51 @@ export async function runHttpRuntimeWorker() {
       'scripts/lib/http-runtime-census.mjs',
       'scripts/lib/http-runtime-worker.mjs',
     ];
+    if (job.mode === 'reference-owned-loopback') {
+      controlPaths.push(
+        'scripts/lib/http-reference-loopback-protocol.mjs',
+        'scripts/lib/http-reference-network.mjs',
+        'scripts/lib/http-reference-registry.mjs',
+        'scripts/lib/http-reference-lifecycle.mjs',
+        'scripts/lib/http-reference-nest-guard.mjs',
+        'scripts/lib/http-runtime-protocol.mjs',
+      );
+      controlPaths.sort();
+      const keys = [
+        'schemaVersion',
+        'mode',
+        'compositionId',
+        'nonce',
+        'candidateCommit',
+        'tree',
+        'parentPid',
+        'checkoutRoot',
+        'descriptorPath',
+        'nodePath',
+        'nodeSha256',
+        'platform',
+        'arch',
+        'environment',
+        'controls',
+        'resolutionAnchors',
+        'receipt',
+        'bootstrap',
+        'referenceFixture',
+        'referenceRegistry',
+        'observationArtifactPath',
+      ];
+      if (
+        !isDeepStrictEqual(Object.keys(job).sort(), keys.sort()) ||
+        job.observationArtifactPath !==
+          resolve(dirname(descriptor), `${job.nonce}.reference-body.json`) ||
+        job.referenceFixture?.identity?.candidateCommit !== job.candidateCommit ||
+        job.referenceFixture?.identity?.tree !== job.tree ||
+        job.referenceFixture?.identity?.nonce !== job.nonce ||
+        job.referenceRegistry?.candidateCommit !== job.candidateCommit ||
+        job.referenceRegistry?.tree !== job.tree
+      )
+        fail('Private factory worker descriptor differs');
+    }
     if (
       !Array.isArray(job.controls) ||
       !isDeepStrictEqual(job.controls.map((row) => row.path).sort(), controlPaths)
@@ -322,6 +376,22 @@ export async function runHttpRuntimeWorker() {
           ],
         ],
       ];
+      if (job.mode === 'reference-owned-loopback')
+        rules.push([
+          'packages/flow/package.json',
+          '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
+          'db4b602b7b72ecc2c1ac4ba549b2f28793c74da5',
+          1827,
+          'scripts/lib/http-reference-nest-guard.mjs',
+          'createRequire(' + "new URL('../../packages/flow/package.json', import.meta.url))",
+          [
+            '@nestjs/core/nest-factory',
+            '@nestjs/core/nest-application',
+            '@nestjs/platform-express/adapters/express-adapter',
+            '@nestjs/core/package.json',
+            '@nestjs/platform-express/package.json',
+          ],
+        ]);
       const exact = (value, keys) =>
         value &&
         typeof value === 'object' &&
@@ -340,6 +410,11 @@ export async function runHttpRuntimeWorker() {
       ];
       if (!Array.isArray(job.resolutionAnchors) || job.resolutionAnchors.length !== rules.length)
         fail('Private resolution anchor population differs');
+      if (
+        job.mode === 'reference-owned-loopback' &&
+        !isDeepStrictEqual(job.resolutionAnchors[1].manifest, job.resolutionAnchors[2].manifest)
+      )
+        fail('Shared physical flow anchor differs between caller relations');
       for (const [
         index,
         [path, sha256, blob, byteLength, callerPath, literal, requests],
@@ -1010,19 +1085,20 @@ export async function runHttpRuntimeWorker() {
       const hooks = originalRegisterHooks({
         resolve(specifier, context, nextResolve) {
           const sequence = ++eventSequence;
-          const anchor = job.resolutionAnchors.find(
+          const anchors = job.resolutionAnchors.filter(
             (row) => row.manifest.url === context.parentURL,
           );
-          if (anchor) {
+          if (anchors.length) {
             try {
               assertResolutionAnchors();
-              if (
-                !anchor.requests.includes(specifier) ||
-                !isDeepStrictEqual([...context.conditions], anchor.conditions) ||
-                (anchor.manifest.path === 'packages/flow/package.json' &&
-                  !evaluated.has(anchor.caller.url))
-              )
-                refuse('Resolution anchor request or predecessor differs');
+              const eligible = anchors.filter(
+                (anchor) =>
+                  anchor.requests.includes(specifier) &&
+                  isDeepStrictEqual([...context.conditions], anchor.conditions) &&
+                  (anchor.manifest.path === 'reference/api/package.json' ||
+                    evaluated.has(anchor.caller.url)),
+              );
+              if (eligible.length !== 1) refuse('Resolution anchor request or predecessor differs');
             } catch (error) {
               refusal ??= 'Resolution anchor custody failed';
               throw error;
@@ -1228,7 +1304,16 @@ export async function runHttpRuntimeWorker() {
     }
 
     custody = installSupervisedCustody();
-    await send('start', { mode: job.mode, resolutionAnchors: job.resolutionAnchors });
+    let channel;
+    let finishChannel;
+    let serializeRuntime;
+    if (job.mode === 'reference-owned-loopback') {
+      const wire = await import('./http-reference-loopback-protocol.mjs');
+      ({ serializeHttpRuntimePlainJson: serializeRuntime } =
+        await import('./http-runtime-protocol.mjs'));
+      channel = await wire.openReferenceLifecycleChannel(job);
+      finishChannel = wire.finishReferenceLifecycleChannel;
+    } else await send('start', { mode: job.mode, resolutionAnchors: job.resolutionAnchors });
     // These local startup checks cannot establish freshness alone. Only the
     // supervisor's live handle, exact spawn/ChildProcess and pinned pre-custody
     // graph can corroborate this fixed worker. No caller receives a capability.
@@ -1236,10 +1321,66 @@ export async function runHttpRuntimeWorker() {
     assertResolutionAnchors();
     createRequire(new URL('../../reference/api/package.json', import.meta.url))('reflect-metadata');
     assertResolutionAnchors();
+    let nestPreparation;
+    let nestPreparationObservation;
+    const assertNestPreparationLoadOrder = (requireCensus) => {
+      if (job.mode !== 'reference-owned-loopback') return;
+      const rows = custody.snapshot().evaluations;
+      const first = (url) =>
+        rows.filter((row) => row.canonicalURL === url).sort((a, b) => a.sequence - b.sequence)[0];
+      const guard = first(
+        pathToFileURL(resolve(job.checkoutRoot, 'scripts/lib/http-reference-nest-guard.mjs')).href,
+      );
+      const census = first(
+        pathToFileURL(resolve(job.checkoutRoot, 'scripts/lib/http-runtime-census.mjs')).href,
+      );
+      if (!guard || (requireCensus ? !census : !!census))
+        fail('Nest preparation load phase differs');
+      for (const module of nestPreparationObservation.modules) {
+        const row = first(module.url);
+        const file = nestPreparationObservation.files.find((entry) => entry.url === module.url);
+        if (
+          !row ||
+          row.sha256 !== file?.sha256 ||
+          row.sequence <= guard.sequence ||
+          (requireCensus && row.sequence >= census.sequence)
+        )
+          fail('Nest preparation load order differs');
+      }
+      // Load rows establish ordering, not completion callbacks. Original require
+      // return and retained identical loaded cache objects supply completion.
+    };
+    if (job.mode === 'reference-owned-loopback') {
+      const guard = await import('./http-reference-nest-guard.mjs');
+      nestPreparation = guard.prepareReferenceNestGuard();
+      nestPreparationObservation = guard.observeReferenceNestPreparation(nestPreparation);
+      assertNestPreparationLoadOrder(false);
+    }
     await import('./http-runtime-census.mjs');
+    assertNestPreparationLoadOrder(true);
     const { observeReferenceBootstrapModule } = await import('./http-runtime-bindings.mjs');
     const observation = await observeReferenceBootstrapModule(job);
+    let referenceObservation;
+    let networkClosure;
+    if (job.mode === 'reference-owned-loopback') {
+      const transport = await import('./http-reference-network.mjs');
+      closeNetwork = transport.closeOwnedReferenceNetworkScope;
+      network = transport.installOwnedReferenceNetworkScope({
+        postgresPort: job.referenceFixture.postgres.port,
+        redisPort: job.referenceFixture.redis.port,
+      });
+      const { observeOwnedReferenceLoopback } = await import('./http-reference-lifecycle.mjs');
+      referenceObservation = await observeOwnedReferenceLoopback(
+        job,
+        network,
+        channel,
+        nestPreparation,
+      );
+      networkClosure = closeNetwork(network);
+      network = undefined;
+    }
     custody.assertValid();
+    assertNestPreparationLoadOrder(true);
     const modules = custody.snapshot();
     for (const path of [
       'scripts/lib/http-runtime-census.mjs',
@@ -1250,17 +1391,61 @@ export async function runHttpRuntimeWorker() {
       if (!modules.evaluations.some((row) => row.canonicalURL === url))
         fail('Required runtime module evaluation missing');
     }
-    await send('terminal', {
-      observation,
-      modules,
-      trustedBootstrap: job.controls.filter((row) =>
-        ['scripts/lib/http-runtime-worker.mjs', 'scripts/lib/http-module-custody.mjs'].includes(
-          row.path,
-        ),
+    const trustedBootstrap = job.controls.filter((row) =>
+      ['scripts/lib/http-runtime-worker.mjs', 'scripts/lib/http-module-custody.mjs'].includes(
+        row.path,
       ),
-      readinessPromoting: false,
-      runtimeCustodyComplete: false,
-    });
+    );
+    if (job.mode === 'reference-owned-loopback') {
+      for (const path of controlPaths) {
+        if (
+          ['scripts/lib/http-runtime-worker.mjs', 'scripts/lib/http-module-custody.mjs'].includes(
+            path,
+          )
+        )
+          continue;
+        const url = pathToFileURL(resolve(job.checkoutRoot, path)).href;
+        if (!modules.evaluations.some((row) => row.canonicalURL === url))
+          fail('Required factory control evaluation missing');
+      }
+      const contents = Buffer.from(
+        serializeRuntime({
+          schemaVersion: 1,
+          scope: job.mode,
+          candidateCommit: job.candidateCommit,
+          tree: job.tree,
+          nonce: job.nonce,
+          workerPid: process.pid,
+          referenceObservation,
+          networkClosure,
+          parentCorroborationRequired: true,
+          complete: false,
+          runtimeCustodyComplete: false,
+          performanceQualified: false,
+          readinessPromoting: false,
+        }),
+      );
+      if (contents.length > 64 * 1024 * 1024) fail('Factory observation exceeds supported bound');
+      writeFileSync(job.observationArtifactPath, contents, { mode: 0o600, flag: 'wx' });
+      await finishChannel(channel, {
+        modules,
+        trustedBootstrap,
+        observationArtifact: {
+          path: job.observationArtifactPath,
+          sha256: digest(contents),
+          byteLength: contents.length,
+          permissions: 0o600,
+        },
+      });
+      terminalSent = true;
+    } else
+      await send('terminal', {
+        observation,
+        modules,
+        trustedBootstrap,
+        readinessPromoting: false,
+        runtimeCustodyComplete: false,
+      });
     custody.assertValid();
     if (!isDeepStrictEqual(custody.snapshot(), modules))
       fail('Runtime module population changed during terminal delivery');
@@ -1272,6 +1457,11 @@ export async function runHttpRuntimeWorker() {
     // The parent receives only a fixed diagnostic, never arbitrary raw errors.
     process.stderr.write('HTTP runtime bootstrap worker refused\n');
     process.exitCode = 1;
+    try {
+      if (network) closeNetwork(network);
+    } catch {
+      /* Incomplete owned network cleanup remains a failed child. */
+    }
     try {
       custody?.close();
     } catch {

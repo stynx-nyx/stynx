@@ -450,6 +450,22 @@ function validResolutionAnchors(anchors, binding, context, members) {
       ],
     ],
   ];
+  if (context.mode === 'reference-owned-loopback')
+    rules.push([
+      'packages/flow/package.json',
+      '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
+      'db4b602b7b72ecc2c1ac4ba549b2f28793c74da5',
+      1827,
+      'scripts/lib/http-reference-nest-guard.mjs',
+      "createRequire(new URL('../../packages/flow/package.json', import.meta.url))",
+      [
+        '@nestjs/core/nest-factory',
+        '@nestjs/core/nest-application',
+        '@nestjs/platform-express/adapters/express-adapter',
+        '@nestjs/core/package.json',
+        '@nestjs/platform-express/package.json',
+      ],
+    ]);
   const physicalKeys = [
     'path',
     'url',
@@ -462,6 +478,11 @@ function validResolutionAnchors(anchors, binding, context, members) {
     'mode',
   ];
   if (!Array.isArray(anchors) || anchors.length !== rules.length) return false;
+  if (
+    context.mode === 'reference-owned-loopback' &&
+    !isDeepStrictEqual(anchors[1].manifest, anchors[2].manifest)
+  )
+    return false;
   for (const [
     index,
     [path, sha256, blob, byteLength, callerPath, literal, requests],
@@ -705,25 +726,26 @@ function validModules(value, expected) {
       (typeof url === 'string' && url.startsWith('node:') && isBuiltin(url))
     )
       return true;
-    const anchor = binding.resolutionAnchors.find((entry) => entry.manifest.url === url);
-    return (
-      !!anchor &&
-      anchor.requests.includes(row.specifier) &&
-      isDeepStrictEqual(row.conditions, anchor.conditions) &&
-      (anchor.manifest.path === 'reference/api/package.json' ||
-        value.evaluations.some(
-          (entry) =>
-            entry !== null &&
-            typeof entry === 'object' &&
-            !Array.isArray(entry) &&
-            entry.canonicalURL === anchor.caller.url &&
-            entry.sha256 === anchor.caller.sha256 &&
-            entry.byteLength === anchor.caller.byteLength &&
-            entry.moduleKind === 'module' &&
-            positive(entry.sequence) &&
-            entry.sequence < row.sequence,
-        ))
+    const eligible = binding.resolutionAnchors.filter(
+      (anchor) =>
+        anchor.manifest.url === url &&
+        anchor.requests.includes(row.specifier) &&
+        isDeepStrictEqual(row.conditions, anchor.conditions) &&
+        (anchor.manifest.path === 'reference/api/package.json' ||
+          value.evaluations.some(
+            (entry) =>
+              entry !== null &&
+              typeof entry === 'object' &&
+              !Array.isArray(entry) &&
+              entry.canonicalURL === anchor.caller.url &&
+              entry.sha256 === anchor.caller.sha256 &&
+              entry.byteLength === anchor.caller.byteLength &&
+              entry.moduleKind === 'module' &&
+              positive(entry.sequence) &&
+              entry.sequence < row.sequence,
+          )),
     );
+    return eligible.length === 1;
   };
   if (
     !sequencePopulation(value.resolutions, (row) => {
@@ -849,6 +871,31 @@ function validModules(value, expected) {
       !value.evaluations.some((entry) => entry.canonicalURL === admitted.provenance.parent.url) ||
       seenRules.has(admitted.ruleId),
   );
+}
+
+/**
+ * Shared strict module-snapshot validator. It grants no mode/startup authority;
+ * the supervisor must derive these facts from its actual private child handle.
+ */
+export function createHttpModuleSnapshotValidator(context) {
+  if (
+    arguments.length !== 1 ||
+    !safePlainJson(context) ||
+    !exact(context, ['bindings', 'candidateCommit', 'mode', 'nonce', 'pid']) ||
+    context.mode !== 'reference-owned-loopback' ||
+    !commitValue(context.candidateCommit) ||
+    typeof context.nonce !== 'string' ||
+    !/^[a-f0-9-]{36}$/u.test(context.nonce) ||
+    !positive(context.pid) ||
+    !validBindings(context.bindings, context)
+  )
+    invalid();
+  const expected = JSON.parse(serializeHttpRuntimePlainJson(context));
+  return Object.freeze({
+    accepts(value) {
+      return arguments.length === 1 && safePlainJson(value) && validModules(value, expected);
+    },
+  });
 }
 
 /**
