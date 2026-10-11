@@ -1500,9 +1500,298 @@ export function workerModuleReceiptFromFreshBuild(handle) {
   }
 }
 
+// Deliberately closed control-source population. These are source observers,
+// never compiler output. Independent acceptance must review these exact bytes
+// before a candidate using this diagnostic is admitted to a release task.
+const runtimeControlClosure = new Map([
+  [
+    'scripts/lib/http-runtime-worker.mjs',
+    '765cef732599229b8b9aa95a9faa4534c89b81b367aa52e44219286a5c6092c9',
+  ],
+  [
+    'scripts/lib/http-module-custody.mjs',
+    'ed2db24cbf2b24dcfec82a311aa046e86b2109bab855c75e582f13de9a8358f0',
+  ],
+  [
+    'scripts/lib/http-runtime-census.mjs',
+    '19b1823a2ac6953ed4bb73584e12d2414f88f27b59416b6b63fbf0502418c0d7',
+  ],
+  [
+    'scripts/lib/http-runtime-bindings.mjs',
+    '414634bc35fd61cef89bca9cf960643e559b1a1eb329e0216e8eb614d8c1e253',
+  ],
+]);
+
+function runtimeControls(state) {
+  return [...runtimeControlClosure].map(([path, sha256]) => {
+    const tracked = state.inputs.files.find((row) => row.path === path);
+    const row = byteRow(state.checkout, resolve(state.checkout, path));
+    if (!tracked || tracked.sha256 !== sha256 || row.sha256 !== sha256)
+      refuse('Runtime observer is missing, changed, or outside the closed source population');
+    compareRows([tracked], [row]);
+    return { ...row, blob: tracked.blob, classification: 'observer-source' };
+  });
+}
+
+function referenceBootstrapBinding(state) {
+  const sourcePath = 'reference/api/src/bootstrap.ts';
+  const outputPath = 'reference/api/dist/reference/api/src/bootstrap.js';
+  const compiler = state.compilers.find((entry) => entry.plan.packageRoot === 'reference/api');
+  const planned = compiler?.plan.expectedOutputs.find((row) => row.path === outputPath);
+  const map = compiler?.outputs.mapLinks.find((row) => row.emittedPath === outputPath);
+  if (
+    !planned ||
+    planned.source !== sourcePath ||
+    map?.sources.length !== 1 ||
+    map.sources[0].path !== sourcePath
+  )
+    refuse('Reference bootstrap is not bound to the private compiler plan');
+  const source = state.inputs.files.find((row) => row.path === sourcePath);
+  const emitted = compiler.byteRows.find((row) => row.path === outputPath);
+  const mapRow = compiler.byteRows.find((row) => row.path === `${outputPath}.map`);
+  if (
+    !source ||
+    !emitted ||
+    !mapRow ||
+    mapRow.sha256 !== map.sha256 ||
+    source.sha256 !== map.sources[0].sha256
+  )
+    refuse('Reference bootstrap source/output/map relation is incomplete');
+  return structuredClone({ source, emitted, map: mapRow });
+}
+
+/**
+ * Launch the only currently supported, secret-free runtime diagnostic.
+ * It observes the real bootstrap module export without invoking AppModule.
+ * There is no caller configuration, target URL, factory, receipt or fixture.
+ */
+export async function observeFreshHttpReferenceBootstrap(handle) {
+  if (arguments.length !== 1) refuse('Runtime diagnostic accepts exactly one private handle');
+  const state = stateFor(handle);
+  if (state.runtimeActive) refuse('A runtime observation already owns this build');
+  state.runtimeActive = true;
+  let child;
+  let deadline;
+  const terminate = () => {
+    if (!child?.pid) return;
+    try {
+      process.kill(-child.pid, 'SIGKILL');
+    } catch {
+      /* owned group exited */
+    }
+  };
+  try {
+    recheck(state);
+    if (state.rootId !== 'reference') refuse('Unsupported runtime composition');
+    const controls = runtimeControls(state);
+    const receipt = workerModuleReceiptFromFreshBuild(handle);
+    const urls = new Set(receipt.files.map((row) => row.url));
+    for (const row of controls) {
+      const url = pathToFileURL(resolve(state.checkout, row.path)).href;
+      if (urls.has(url)) refuse('Runtime source observer collides with a build module');
+      urls.add(url);
+      receipt.files.push({
+        url,
+        sha256: row.sha256,
+        moduleKind: 'module',
+        classification: 'observer-source',
+      });
+    }
+    const environment = childEnvironment(state);
+    const nonce = randomUUID();
+    const directory = resolve(state.sandbox, 'runtime-jobs');
+    mkdirSync(directory, { recursive: true, mode: 0o700 });
+    const descriptorPath = resolve(directory, `${nonce}.json`);
+    const entry = resolve(state.checkout, 'scripts/lib/http-runtime-worker.mjs');
+    const job = {
+      schemaVersion: 1,
+      mode: 'bootstrap-module-only',
+      compositionId: 'reference',
+      nonce,
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      parentPid: process.pid,
+      checkoutRoot: state.checkout,
+      descriptorPath,
+      nodePath: realpathSync(state.node),
+      nodeSha256: digest(readFileSync(state.node)),
+      platform: state.platform,
+      arch: state.arch,
+      environment: Object.fromEntries(
+        Object.entries(environment).map(([name, value]) => [name, digest(value)]),
+      ),
+      controls,
+      receipt,
+      bootstrap: referenceBootstrapBinding(state),
+    };
+    const body = Buffer.from(JSON.stringify(job));
+    if (body.length > 64 * 1024 * 1024) refuse('Runtime job exceeds supported bound');
+    writeFileSync(descriptorPath, body, { mode: 0o600, flag: 'wx' });
+    environment.STYNX_HTTP_JOB_SHA256 = digest(body);
+    const stdout = [];
+    const stderr = [];
+    let logLength = 0;
+    let failure;
+    let started = false;
+    let terminalSeen = false;
+    let terminal;
+    const startedAt = new Date().toISOString();
+    child = spawn(state.node, [entry, descriptorPath], {
+      cwd: state.checkout,
+      env: environment,
+      detached: true,
+      stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+      serialization: 'json',
+    });
+    const reject = () => {
+      failure ??= 'HTTP_RUNTIME_WORKER_INVALID';
+      terminate();
+    };
+    const collect = (chunks, chunk) => {
+      logLength += chunk.length;
+      if (logLength > 64 * 1024 * 1024) reject();
+      else chunks.push(chunk);
+    };
+    child.stdout.on('data', (chunk) => collect(stdout, chunk));
+    child.stderr.on('data', (chunk) => collect(stderr, chunk));
+    child.on('message', (frame) => {
+      if (
+        !frame ||
+        Object.keys(frame).sort().join(',') !==
+          'candidateCommit,kind,nonce,pid,result,schemaVersion' ||
+        frame.schemaVersion !== 1 ||
+        frame.nonce !== nonce ||
+        frame.candidateCommit !== state.candidateCommit ||
+        frame.pid !== child.pid ||
+        Buffer.byteLength(JSON.stringify(frame)) > 32 * 1024 * 1024
+      )
+        return reject();
+      if (frame.kind === 'start') {
+        if (
+          started ||
+          terminalSeen ||
+          !frame.result ||
+          typeof frame.result !== 'object' ||
+          Array.isArray(frame.result) ||
+          Object.keys(frame.result).join(',') !== 'mode' ||
+          frame.result.mode !== job.mode
+        )
+          return reject();
+        started = true;
+      } else if (frame.kind === 'terminal') {
+        if (terminalSeen) return reject();
+        terminalSeen = true;
+        if (
+          !started ||
+          !frame.result ||
+          typeof frame.result !== 'object' ||
+          Array.isArray(frame.result) ||
+          Object.keys(frame.result).sort().join(',') !==
+            'modules,observation,readinessPromoting,runtimeCustodyComplete,trustedBootstrap' ||
+          frame.result.runtimeCustodyComplete !== false ||
+          frame.result.readinessPromoting !== false ||
+          frame.result.observation?.scope !== job.mode ||
+          frame.result.observation?.factoryInvoked !== false ||
+          frame.result.observation?.actualNamedExportObserved !== true ||
+          frame.result.modules?.complete !== false ||
+          frame.result.modules?.readinessPromoting !== false ||
+          !Array.isArray(frame.result.modules.resolutions) ||
+          !Array.isArray(frame.result.modules.evaluations) ||
+          !Array.isArray(frame.result.trustedBootstrap)
+        )
+          return reject();
+        terminal = frame.result;
+      } else reject();
+    });
+    deadline = setTimeout(reject, 180000);
+    const exited = await new Promise((accept) => {
+      child.once('error', reject);
+      child.once('close', (code, signal) => accept({ code, signal }));
+    });
+    clearTimeout(deadline);
+    const artifacts = [];
+    for (const [name, chunks] of [
+      ['stdout', stdout],
+      ['stderr', stderr],
+    ]) {
+      const path = resolve(directory, `${nonce}.${name}.log`);
+      writeFileSync(path, Buffer.concat(chunks), { mode: 0o600, flag: 'wx' });
+      artifacts.push(byteRow(state.sandbox, path));
+    }
+    if (
+      failure ||
+      exited.code !== 0 ||
+      exited.signal !== null ||
+      !started ||
+      !terminal ||
+      terminal.runtimeCustodyComplete !== false ||
+      terminal.readinessPromoting !== false ||
+      terminal.observation?.scope !== job.mode ||
+      terminal.observation?.factoryInvoked !== false ||
+      terminal.observation?.actualNamedExportObserved !== true ||
+      terminal.modules?.complete !== false ||
+      terminal.modules?.readinessPromoting !== false
+    )
+      refuse('Runtime bootstrap observation did not complete its closed diagnostic protocol');
+    recheck(state);
+    compareRows(controls, runtimeControls(state));
+    compareRows(
+      [byteRow(state.sandbox, descriptorPath)],
+      [
+        {
+          path: owned(state.sandbox, descriptorPath),
+          sha256: digest(body),
+          byteLength: body.length,
+          permissions: 0o600,
+        },
+      ],
+    );
+    const report = {
+      schemaVersion: 1,
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      scope: job.mode,
+      compositionId: 'reference',
+      nonce,
+      child: {
+        pid: child.pid,
+        nodePath: job.nodePath,
+        nodeSha256: job.nodeSha256,
+        argv: [entry, descriptorPath],
+        cwd: state.checkout,
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        ...exited,
+      },
+      environment: job.environment,
+      controls,
+      descriptor: byteRow(state.sandbox, descriptorPath),
+      artifacts,
+      result: terminal,
+      runtimeCustodyComplete: false,
+      readinessPromoting: false,
+      runtimeSecretsConsumed: false,
+      fixtureAdmission: 'NOT_IMPLEMENTED',
+      processSandbox: false,
+      observerIndependentAcceptance: 'REQUIRED',
+    };
+    const reportPath = resolve(directory, `${nonce}.observation.json`);
+    writeFileSync(reportPath, JSON.stringify(report, null, 2), { mode: 0o600, flag: 'wx' });
+    return structuredClone({ ...report, reportArtifact: byteRow(state.sandbox, reportPath) });
+  } catch (error) {
+    terminate();
+    state.refusal = String(error.code ?? 'HTTP_RUNTIME_WORKER_INVALID');
+    throw error;
+  } finally {
+    clearTimeout(deadline);
+    state.runtimeActive = false;
+  }
+}
+
 export async function closeFreshHttpBuild(handle) {
   const state = handles.get(handle);
   if (!state) refuse('Unknown fresh build handle');
+  if (state.runtimeActive) refuse('Cannot close a build while its runtime worker is active');
   if (state.cleanupComplete) return;
   state.closed = true;
   await rm(state.sandbox, { recursive: true, force: true });
