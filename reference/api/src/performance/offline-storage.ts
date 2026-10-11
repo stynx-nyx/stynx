@@ -70,7 +70,7 @@ export class OfflinePerformanceStorageInstaller implements OnApplicationBootstra
     const verification = await this.database.withSystemContext(
       'Install the canonical offline contract in a fresh owned performance database',
       async () => {
-        await this.database.tx(
+        await this.database.txIndependent(
           async (trx) => {
             const admission = await trx.query<{ actor: string; schema_exists: boolean }>(
               `select current_user::text as actor, to_regnamespace('offline') is not null as schema_exists`,
@@ -94,7 +94,7 @@ export class OfflinePerformanceStorageInstaller implements OnApplicationBootstra
           },
           { role: 'owner', retry: false },
         );
-        return this.database.tx((trx) => verifyOfflineStorage(trx, binding), {
+        return this.database.txIndependent((trx) => verifyOfflineStorage(trx, binding), {
           role: 'owner',
           readonly: true,
           retry: false,

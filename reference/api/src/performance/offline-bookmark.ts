@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { HttpException } from '@nestjs/common';
+import { maxLength } from 'class-validator';
 import { AuditSqlSink } from '@stynx-nyx/audit';
 import { Transaction } from '@stynx-nyx/data';
 import {
@@ -54,10 +55,10 @@ function payload(item: CTG9SyncBatchItemInput): { value: BookmarkPayload; canoni
     value.operation !== 'create' ||
     typeof value.url !== 'string' ||
     value.url.length < 1 ||
-    value.url.length > 2048 ||
+    !maxLength(value.url, 2048) ||
     (value.title !== undefined &&
       value.title !== null &&
-      (typeof value.title !== 'string' || value.title.length > 256)) ||
+      (typeof value.title !== 'string' || !maxLength(value.title, 256))) ||
     (value.notes !== undefined && value.notes !== null && typeof value.notes !== 'string')
   )
     reject(

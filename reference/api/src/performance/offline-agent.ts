@@ -157,7 +157,7 @@ export class OfflineReferenceAgentBindings {
     await this.database.withSystemContext(
       'Prepare authenticated synthetic reference business-agent binding',
       () =>
-        this.database.tx(
+        this.database.txIndependent(
           async (trx) => {
             const role = await trx.query<{ role: string }>('select current_user::text as role');
             if (role.rows.length !== 1 || role.rows[0]!.role !== 'stynx_owner') refuse();
