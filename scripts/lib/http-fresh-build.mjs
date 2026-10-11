@@ -1216,20 +1216,91 @@ async function verifyResolutions(state) {
       });
       continue;
     }
+    let specifier = member.name;
+    let resolutionRoot = member.root;
+    let declaredImport;
+    if (member.name === '@stynx-domain/demo-bookmark-api') {
+      const root = 'domain/demo-bookmark/api';
+      const sourcePath = 'reference/api/src/performance/domain.module.ts';
+      const target = `${root}/dist/domain/demo-bookmark/api/src/demo-bookmark/demo-bookmark.module.js`;
+      specifier = `${member.name}/dist/domain/demo-bookmark/api/src/demo-bookmark/demo-bookmark.module.js`;
+      const manifestPath = `${root}/package.json`;
+      const source = byteRow(state.checkout, resolve(state.checkout, sourcePath));
+      const manifestRow = byteRow(state.checkout, resolve(state.checkout, manifestPath));
+      for (const row of [source, manifestRow]) {
+        const tracked = state.inputs.files.find((entry) => entry.path === row.path);
+        if (!tracked || tracked.sha256 !== row.sha256 || tracked.byteLength !== row.byteLength)
+          refuse('Private domain resolution declaration differs from tracked inputs');
+      }
+      const manifestBytes = readFileSync(resolve(state.checkout, manifestPath));
+      const sourceBytes = readFileSync(resolve(state.checkout, sourcePath));
+      if (digest(manifestBytes) !== manifestRow.sha256 || digest(sourceBytes) !== source.sha256)
+        refuse('Private domain resolution bytes changed during acquisition');
+      const manifest = JSON.parse(manifestBytes.toString('utf8'));
+      if (
+        member.root !== root ||
+        manifest.name !== member.name ||
+        manifest.private !== true ||
+        !outputRows.has(target)
+      )
+        refuse('Private domain resolution contract differs');
+      const ts = createRequire(resolve(state.checkout, 'package.json'))('typescript');
+      const parsed = ts.createSourceFile(
+        sourcePath,
+        sourceBytes.toString('utf8'),
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TS,
+      );
+      const imports = parsed.statements.filter(
+        (node) =>
+          ts.isImportDeclaration(node) &&
+          ts.isStringLiteral(node.moduleSpecifier) &&
+          node.moduleSpecifier.text === specifier,
+      );
+      const clause = imports[0]?.importClause;
+      const bindings = clause?.namedBindings;
+      if (
+        parsed.parseDiagnostics.length ||
+        imports.length !== 1 ||
+        clause.isTypeOnly ||
+        clause.name ||
+        !bindings ||
+        !ts.isNamedImports(bindings) ||
+        bindings.elements.length !== 1 ||
+        bindings.elements[0].isTypeOnly ||
+        bindings.elements[0].propertyName ||
+        bindings.elements[0].name.text !== 'DemoBookmarkModule'
+      )
+        refuse('Private domain actual import is not the reviewed runtime binding');
+      resolutionRoot = 'reference/api';
+      declaredImport = {
+        kind: 'TRACKED_PRIVATE_DEEP_IMPORT',
+        source,
+        manifest: manifestRow,
+        specifier,
+        binding: 'DemoBookmarkModule',
+        target,
+        bareRootEntryVerified: false,
+      };
+    }
     const text = await run(
       state,
       `resolution-${state.resolutions.length}`,
       state.node,
-      ['--input-type=module', '--eval', code, member.name],
-      { cwd: resolve(state.checkout, member.root) },
+      ['--input-type=module', '--eval', code, specifier],
+      { cwd: resolve(state.checkout, resolutionRoot) },
     );
     const result = JSON.parse(text);
     const row = { name: member.name, root: member.root };
+    if (declaredImport) row.declaredImport = declaredImport;
     for (const kind of ['require', 'import']) {
       const path = realpathSync(kind === 'import' ? new URL(result[kind]) : result[kind]);
       const name = owned(state.checkout, path);
       if (!name.startsWith(`${member.root}/dist/`) || !outputRows.has(name))
         refuse('Actual package resolution bypasses its verified fresh output');
+      if (declaredImport && name !== declaredImport.target)
+        refuse('Private domain actual resolution differs from its declared target');
       row[kind] = { path: name, sha256: outputRows.get(name).sha256 };
     }
     state.resolutions.push(row);
