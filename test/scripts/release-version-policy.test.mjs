@@ -2886,7 +2886,7 @@ test('coverage is executable and reports four metrics for every one of the 44 pa
       writeFileSync(join(packageDir, 'src', 'index.ts'), source);
       const config = createVitestConfig({ packageDir, packageName: `fixture-${name}` });
       assert.equal(
-        config.test.coverage.exclude.includes('src/index.ts'),
+        config.test.coverage.exclude.includes(join(packageDir, 'src/index.ts')),
         excluded,
         `${name}: executable, empty, or unparseable entrypoints must remain coverage-bearing`,
       );
@@ -2992,7 +2992,9 @@ test('D24.32 exact type-only coverage candidates fail closed and four configs bi
     packageDir: join(repoRoot, 'packages/mobile-runtime'),
     packageName: '@stynx-nyx/mobile-runtime',
   });
-  assert.deepEqual(sentinel.test.coverage.include, ['src/**/*.ts']);
+  assert.deepEqual(sentinel.test.coverage.include, [
+    join(repoRoot, 'packages/mobile-runtime/src/**/*.ts'),
+  ]);
   assert.deepEqual(
     {
       statements: sentinel.test.coverage.thresholds.statements,
