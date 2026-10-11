@@ -825,6 +825,12 @@ describe('closed demo bookmark storage contract', () => {
         "create function demo.unrecognized_invoker() returns integer language sql as 'select 1'",
       );
       const before = await snapshot(owner);
+      const piiBefore = (
+        await owner.query(
+          "select to_jsonb(p) as row from core.pii_map p where table_schema='demo' order by table_name,column_name",
+        )
+      ).rows;
+      expect(piiBefore).toHaveLength(1);
       await expect(install(owner)).rejects.toThrow('unrecognized existing shape');
       expect(await snapshot(owner)).toEqual(before);
       const forward = await readFile(
@@ -872,7 +878,14 @@ describe('closed demo bookmark storage contract', () => {
             "select count(*)::integer as count from core.pii_map where table_schema='demo'",
           )
         ).rows,
-      ).toEqual([{ count: 0 }]);
+      ).toEqual([{ count: 1 }]);
+      expect(
+        (
+          await owner.query(
+            "select to_jsonb(p) as row from core.pii_map p where table_schema='demo' order by table_name,column_name",
+          )
+        ).rows,
+      ).toEqual(piiBefore);
       expect(
         (
           await owner.query(
