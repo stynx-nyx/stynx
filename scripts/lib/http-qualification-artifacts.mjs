@@ -22,6 +22,8 @@ const openApiArtifact = Object.freeze({
 const openApiPaths = Object.freeze([
   'docs/framework/contracts/openapi.json',
   'docs/framework/api/openapi.json',
+  'docs/framework/contracts/openapi-compositions/offline-ctg9.json',
+  'docs/framework/contracts/openapi-compositions/offline-e6.json',
 ]);
 const identityFields = ['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeNs', 'ctimeNs'];
 
@@ -53,7 +55,7 @@ export function readHttpQualificationDeclaration(root, path) {
   return acquire(root, path, declarationArtifact);
 }
 
-/** The two generated OpenAPI bodies exceed the ordinary declaration bound.
+/** The fixed generated OpenAPI bodies exceed the ordinary declaration bound.
  * This fixed path profile does not broaden source or private evidence readers.
  */
 export function readHttpQualificationOpenApi(root, path) {

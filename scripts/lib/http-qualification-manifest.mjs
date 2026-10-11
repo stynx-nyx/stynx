@@ -80,6 +80,8 @@ function readHttpQualificationManifest(checkoutRoot) {
     const readDeclaration = [
       'docs/framework/contracts/openapi.json',
       'docs/framework/api/openapi.json',
+      'docs/framework/contracts/openapi-compositions/offline-ctg9.json',
+      'docs/framework/contracts/openapi-compositions/offline-e6.json',
     ].includes(path)
       ? readHttpQualificationOpenApi
       : readHttpQualificationDeclaration;
