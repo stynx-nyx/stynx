@@ -164,3 +164,37 @@ test('native launch refuses forged handles and arity without adopting caller pro
   });
   assert.equal(snapshotOwnedHttpWorker(handle).launchAttempted, false);
 });
+
+for (const [key, value] of [
+  ['NODE_CHANNEL_FD', '3'],
+  ['NODE_CHANNEL_FD', ''],
+  ['NODE_CHANNEL_SERIALIZATION_MODE', 'json'],
+  ['NODE_CHANNEL_SERIALIZATION_MODE', ''],
+]) {
+  test(`native launch rejects reserved own environment ${key}=${JSON.stringify(value)} before any launch attempt`, async (t) => {
+    const handle = createOwnedHttpWorker();
+    t.after(async () => {
+      await reapOwnedHttpWorker(handle);
+    });
+    const launch = request('/bin/sh', ['-c', 'printf reserved-environment-must-not-launch']);
+    launch.environment[key] = value;
+    assert.throws(() => launchOwnedHttpNativeGenerator(handle, launch), {
+      code: 'HTTP_OWNED_WORKER_INVALID',
+    });
+    const before = snapshotOwnedHttpWorker(handle);
+    assert.equal(before.launchAttempted, false);
+    assert.equal(before.pid, null);
+    assert.equal(before.spawnObserved, false);
+    assert.equal(
+      before.events.some((event) => event.kind === 'SPAWN'),
+      false,
+    );
+    const reaped = await reapOwnedHttpWorker(handle);
+    assert.equal(reaped.absenceBasis, 'NO_LAUNCH_ATTEMPT');
+    // Refusal precedes selection of either native or IPC launch mode.
+    assert.equal(Object.hasOwn(reaped, 'privateIpc'), false);
+    assert.equal(Object.hasOwn(reaped, 'nativeGenerator'), false);
+    assert.equal(reaped.runtimeCustodyComplete, false);
+    assert.equal(reaped.performanceQualified, false);
+  });
+}
