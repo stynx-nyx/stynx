@@ -1216,13 +1216,15 @@ function recheck(state) {
     for (const row of state.buildObservation.processes)
       compareRows([row.file], [byteRow(state.sandbox, resolve(state.sandbox, row.file.path))]);
     for (const entry of state.compilers) {
-      const outputs = reconcileHttpCompilerOutputs({
-        checkoutRoot: state.checkout,
-        plan: entry.plan,
-      });
+      // The handle privately owns the initial full compiler reconciliation.
+      // All compiler/config/source/dependency/toolchain bytes were rechecked
+      // above. Re-read every physical output instead of rebuilding TS Programs;
+      // exact map/output bytes preserve the already verified relations.
       compareRows(
         entry.byteRows,
-        outputs.outputs.map((row) => byteRow(state.checkout, resolve(state.checkout, row.path))),
+        physicalFiles(state.checkout, resolve(state.checkout, entry.plan.outputRoot)).sort((a, b) =>
+          a.path.localeCompare(b.path),
+        ),
       );
     }
   } catch (error) {
@@ -1234,6 +1236,8 @@ function recheck(state) {
 /** Own the actual isolated install/build. No caller command or receipt is accepted. */
 export async function prepareFreshHttpBuild(request) {
   const options = parseRequest(request);
+  if (process.platform !== 'darwin' || process.arch !== 'arm64')
+    refuse('Unreviewed build launcher platform');
   const sandbox = realpathSync(mkdtempSync(resolve(tmpdir(), 'stynx HTTP fraîs ')));
   const state = {
     ...options,
@@ -1349,18 +1353,36 @@ export async function prepareFreshHttpBuild(request) {
     );
     assertHttpBuildRosterUnchanged(state.dependencies, snapshotHttpDependencyBytes(state.checkout));
     state.compilers = state.graph.selected.map((member) => {
+      const before = physicalFiles(
+        state.checkout,
+        resolve(state.checkout, member.root, 'dist'),
+      ).sort((a, b) => a.path.localeCompare(b.path));
       const plan = deriveHttpCompilerPlan({
         checkoutRoot: state.checkout,
         packageRoot: member.root,
         configPath: member.compilerConfig,
       });
       const outputs = reconcileHttpCompilerOutputs({ checkoutRoot: state.checkout, plan });
+      const after = physicalFiles(state.checkout, resolve(state.checkout, plan.outputRoot)).sort(
+        (a, b) => a.path.localeCompare(b.path),
+      );
+      compareRows(before, after);
+      if (
+        outputs.outputs.length !== after.length ||
+        outputs.outputs.some((row, index) =>
+          ['path', 'sha256', 'byteLength'].some((key) => row[key] !== after[index][key]),
+        )
+      )
+        refuse('Compiler reconciliation differs from the physical output snapshot');
+      for (const link of outputs.mapLinks) {
+        const row = after.find((entry) => entry.path === link.path);
+        if (!row || row.sha256 !== link.sha256)
+          refuse('Compiler map relation differs from its physical output');
+      }
       return {
         plan,
         outputs,
-        byteRows: outputs.outputs.map((row) =>
-          byteRow(state.checkout, resolve(state.checkout, row.path)),
-        ),
+        byteRows: Object.freeze(after.map((row) => Object.freeze({ ...row }))),
       };
     });
     await verifyResolutions(state);
