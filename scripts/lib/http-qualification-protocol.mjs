@@ -354,10 +354,9 @@ export function createHttpQualificationProtocol(expected) {
           time - times.get('measurement-start') > seconds(330))
       )
         refuse();
-      if (
-        ['close', 'final', 'terminal'].includes(frame.phase) &&
-        time - times.get('measurement-complete') > seconds(30)
-      )
+      if (frame.phase === 'close' && time - times.get('measurement-complete') > seconds(30))
+        refuse();
+      if (['final', 'terminal'].includes(frame.phase) && time - times.get('close') > seconds(30))
         refuse();
       admitted.push(frame);
       return true;
