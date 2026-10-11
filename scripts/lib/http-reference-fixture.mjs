@@ -68,6 +68,36 @@ function failureEvidenceRoot(state) {
   return evidence;
 }
 
+const evidenceIdentityKeys = [
+  'dev',
+  'ino',
+  'mode',
+  'uid',
+  'gid',
+  'nlink',
+  'size',
+  'mtimeNs',
+  'ctimeNs',
+];
+function verifyFailureEvidence(state) {
+  const evidence = failureEvidenceRoot(state);
+  for (const row of evidence.files) {
+    const path = join(evidence.directory, row.path);
+    const before = lstatSync(path, { bigint: true });
+    const identity = evidence.members.get(row.path);
+    if (!identity || evidenceIdentityKeys.some((key) => before[key] !== identity[key]))
+      refuse('FAILURE_EVIDENCE_IDENTITY');
+    const acquired = evidence.read(evidence.directory, path);
+    const after = lstatSync(path, { bigint: true });
+    if (
+      evidenceIdentityKeys.some((key) => after[key] !== identity[key]) ||
+      !isDeepStrictEqual(acquired.row, row)
+    )
+      refuse('FAILURE_EVIDENCE_IDENTITY');
+  }
+  failureEvidenceRoot(state);
+}
+
 function writeFailureEvidence(state, name, bytes) {
   const evidence = failureEvidenceRoot(state);
   if (!Buffer.isBuffer(bytes) || bytes.length > 64 * 1024 * 1024) refuse('FAILURE_EVIDENCE_BOUND');
@@ -163,7 +193,19 @@ function writeFailureEvidence(state, name, bytes) {
     if (parentDescriptor !== undefined) closeSync(parentDescriptor);
   }
   const row = { path: name, sha256: digest(bytes), byteLength: bytes.length, permissions: 0o600 };
+  const actual = evidence.read(evidence.directory, path);
+  if (!isDeepStrictEqual(actual.row, row)) refuse('FAILURE_EVIDENCE_IDENTITY');
+  const identity = lstatSync(path, { bigint: true });
+  const again = evidence.read(evidence.directory, path);
+  const after = lstatSync(path, { bigint: true });
+  if (
+    !isDeepStrictEqual(again.row, row) ||
+    evidenceIdentityKeys.some((key) => after[key] !== identity[key])
+  )
+    refuse('FAILURE_EVIDENCE_IDENTITY');
+  evidence.members.set(name, identity);
   evidence.files.push(row);
+  verifyFailureEvidence(state);
   return row;
 }
 
@@ -177,11 +219,13 @@ async function retainCreationFailure(state) {
       device: root.dev,
       inode: root.ino,
       chain: directoryChain(directory),
+      members: new Map(),
       files: [],
       captured: false,
     };
   }
   const { readHttpQualificationArtifact } = await import('./http-qualification-artifacts.mjs');
+  state.failureEvidence.read = readHttpQualificationArtifact;
   const log = join(state.directory, 'postgres.log');
   let postgresLog = null;
   const resourceChain = directoryChain(state.directory);
@@ -221,11 +265,32 @@ async function retainCreationFailure(state) {
 
 function creationFailureSnapshot(state) {
   const evidence = state.failureEvidence;
+  let retainedResourceDirectory = null;
+  let resourceDirectoryOutcome = state.resourceDirectoryRemoved === true ? 'ABSENT' : 'UNKNOWN';
+  if (resourceDirectoryOutcome !== 'ABSENT') {
+    try {
+      const current = lstatSync(state.directory);
+      if (
+        current.isDirectory() &&
+        !current.isSymbolicLink() &&
+        current.dev === state.rootDevice &&
+        current.ino === state.rootInode &&
+        realpathSync(state.directory) === state.directory
+      ) {
+        retainedResourceDirectory = state.directory;
+        resourceDirectoryOutcome = 'RETAINED';
+      }
+    } catch {
+      // Partial deletion/identity drift is UNKNOWN, never asserted retained.
+    }
+  }
   return {
     directory: evidence?.directory ?? null,
     files: structuredClone(evidence?.files ?? []),
     captured: evidence?.captured ?? false,
-    retainedResourceDirectory: state.cleanup?.complete === true ? null : state.directory,
+    retainedResourceDirectory,
+    resourceDirectoryOutcome,
+    cleanupRecordComplete: evidence?.cleanupRecordComplete === true,
     readinessPromoting: false,
   };
 }
@@ -1304,7 +1369,11 @@ async function cleanup(state) {
         failures.push('FAILURE_EVIDENCE_CAPTURE');
       }
     }
-    if (failures.length === 0) rmSync(state.directory, { recursive: true, force: false });
+    if (failures.length === 0) {
+      if (state.creationFailureCode) verifyFailureEvidence(state);
+      rmSync(state.directory, { recursive: true, force: false });
+      state.resourceDirectoryRemoved = true;
+    }
   } catch {
     failures.push('DIRECTORY_CLEANUP');
   }
@@ -1326,6 +1395,8 @@ async function cleanup(state) {
           }),
         ),
       );
+      verifyFailureEvidence(state);
+      state.failureEvidence.cleanupRecordComplete = true;
     } catch {
       failures.push('FAILURE_EVIDENCE_CLEANUP_RECORD');
       state.cleanup.complete = false;
