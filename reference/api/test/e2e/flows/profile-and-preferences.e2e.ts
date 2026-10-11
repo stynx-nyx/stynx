@@ -1,3 +1,4 @@
+import { PermissionCache, StynxJwtValidator } from '@stynx-nyx/auth';
 import { generateRequestId } from '@stynx-nyx/core';
 import { LocaleService } from '@stynx-nyx/i18n';
 import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
@@ -9,6 +10,7 @@ import {
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
 } from '../fixtures/app';
+import { tenants } from '../fixtures/seed';
 
 const demoTenantA = '01978f4a-32bf-7c27-a131-fd73a9e001a1';
 const demoTenantB = '01978f4a-32bf-7c27-a131-fd73a9e001a2';
@@ -43,10 +45,12 @@ function referenceRequest(context: ReferenceApiE2eContext) {
 }
 
 function i18nRequest(context: ReferenceApiE2eContext, token: string, tenantId: string) {
-  const authenticated = (method: 'get' | 'put') =>
-    referenceRequest(context)[method]('/_tenancy/i18n/overrides')
+  const authenticated = (method: 'get' | 'put') => {
+    const agent = referenceRequest(context);
+    return agent[method]('/_tenancy/i18n/overrides')
       .set('authorization', `Bearer ${token}`)
       .set('x-tenant-id', tenantId);
+  };
 
   return {
     get: () => authenticated('get'),
@@ -140,7 +144,43 @@ async function login(
     .post('/_reference/dev-login')
     .send({ email, tenantSlug })
     .expect(201);
-  return response.body as DevLoginResponse;
+  const login = response.body as DevLoginResponse;
+  // This profile fixture explicitly appoints its two demo actors as i18n
+  // administrators; normal dev-login permissions remain the product's decision.
+  const user = await readUserByEmail(context, email);
+  await context.database.withSystemContext('profile fixture i18n grants', () =>
+    context.database.tx(
+      async (trx) => {
+        for (const permission of ['i18n:read', 'i18n:write']) {
+          await trx.query(
+            'insert into auth.perms(key, description) values ($1, $1) on conflict(key) do nothing',
+            [permission],
+          );
+          await trx.query(
+            `insert into auth.direct_perms(membership_id, perm_id, effect)
+           select membership.id, perm.id, 'allow'
+           from auth.memberships membership cross join auth.perms perm
+           where membership.user_id = $1::uuid and membership.tenant_id = $2::uuid
+             and perm.key = $3
+             and not exists (
+               select 1 from auth.direct_perms existing
+               where existing.membership_id = membership.id
+                 and existing.perm_id = perm.id and existing.effect = 'allow'
+             )`,
+            [user.id, login.tenantId, permission],
+          );
+        }
+      },
+      { role: 'owner', readonly: false },
+    ),
+  );
+  const cache = context.app.get(PermissionCache);
+  await cache.publishInvalidation(`${user.id}:${login.tenantId}`);
+  // Pub/sub delivery is asynchronous; invalidate this actual issued session
+  // through the completed public operation before its first authorized call.
+  const claims = await context.app.get(StynxJwtValidator).validate(login.accessToken);
+  await cache.invalidateSid(claims.sid);
+  return login;
 }
 
 describe('@stynx-nyx/reference-api e2e profile and preferences', () => {
@@ -393,6 +433,22 @@ describe('@stynx-nyx/reference-api e2e profile and preferences', () => {
         ),
       { tenantA: demoTenantA, tenantB: demoTenantB },
     );
+  });
+
+  it('refuses i18n administration for an authenticated actor without its explicit grants', async () => {
+    await i18nRequest(context, context.tokens.viewerA, tenants.tenantA)
+      .get()
+      .expect(403)
+      .expect(({ body }) => {
+        expect(body.message).toBe('Missing permission i18n:read');
+      });
+    await i18nRequest(context, context.tokens.viewerA, tenants.tenantA)
+      .put()
+      .send({ locale: 'pt-BR', catalog: { 'profile.preference.locale': 'unauthorized' } })
+      .expect(403)
+      .expect(({ body }) => {
+        expect(body.message).toBe('Missing permission i18n:write');
+      });
   });
 
   it('uses the stored locale preference when resolving localized profile copy', async () => {

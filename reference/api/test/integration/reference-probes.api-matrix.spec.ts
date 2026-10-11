@@ -24,10 +24,22 @@ import {
 } from '@stynx-nyx/auth';
 import { StynxPlatformPipelineModule } from '@stynx-nyx/backend';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
-import { SessionJwtSigningService, SessionService, type StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
-import { mintTestSession } from '@stynx-nyx/testing';
+import {
+  InMemorySessionStore,
+  resolveSessionsOptions,
+  SessionJwtSigningService,
+  SessionMirrorWriter,
+  SessionService,
+  STYNX_SESSIONS_OPTIONS,
+  STYNX_SESSION_MIRROR,
+  STYNX_SESSION_STORE,
+  type StynxSessionSigningKeySet,
+} from '@stynx-nyx/sessions';
 import request from 'supertest';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../packages/data/test/support/postgres';
+import {
+  createPostgresTestDatabase,
+  type PostgresTestDatabase,
+} from '../../../../packages/data/test/support/postgres';
 import { ReferenceProbesController } from '../../src/sample/reference-probes.controller';
 
 const tenantA = '01978f4a-32bf-7c27-a131-fd73a9e001a1';
@@ -38,7 +50,7 @@ const adminAMembership = '01978f4a-32bf-7c27-a131-fd73a9e003a1';
 const readerAMembership = '01978f4a-32bf-7c27-a131-fd73a9e003a2';
 const noPermAMembership = '01978f4a-32bf-7c27-a131-fd73a9e003a4';
 
-let activeJwks: unknown = { keys: [] };
+const keySet = buildKeySet();
 
 @Global()
 @Module({
@@ -56,17 +68,17 @@ let activeJwks: unknown = { keys: [] };
       useValue: null,
     },
     {
-      provide: SessionJwtSigningService,
-      useValue: {
-        getJwks: async () => activeJwks,
-      },
+      provide: STYNX_SESSIONS_OPTIONS,
+      useValue: resolveSessionsOptions({
+        issuer: 'https://reference-api.test',
+        redis: { url: 'redis://unused.test:6379' },
+        jwt: { keySet },
+      }),
     },
-    {
-      provide: SessionService,
-      useValue: {
-        get: async () => ({ status: 'active' }),
-      },
-    },
+    { provide: STYNX_SESSION_STORE, useValue: new InMemorySessionStore() },
+    { provide: STYNX_SESSION_MIRROR, useClass: SessionMirrorWriter },
+    SessionJwtSigningService,
+    SessionService,
     StynxJwtValidator,
     PermissionCacheMetrics,
     PermissionQueryService,
@@ -95,9 +107,10 @@ class MemoryRateLimitStore implements RateLimitStore {
   async consume(context: RateLimitDecisionContext): Promise<RateLimitDecision> {
     const nowMs = Date.now();
     const current = this.buckets.get(context.bucketKey);
-    const active = current && current.resetAtEpochMs > nowMs
-      ? current
-      : { resetAtEpochMs: nowMs + context.ttlMs, used: 0 };
+    const active =
+      current && current.resetAtEpochMs > nowMs
+        ? current
+        : { resetAtEpochMs: nowMs + context.ttlMs, used: 0 };
     const nextUsed = active.used + context.cost;
     if (nextUsed > context.limit) {
       this.buckets.set(context.bucketKey, active);
@@ -218,7 +231,16 @@ async function seedProbeState(database: PostgresTestDatabase): Promise<void> {
           ($2::uuid, $4::uuid, $6::uuid, null, 0, true, $7::timestamptz),
           ($3::uuid, $4::uuid, $8::uuid, null, 0, true, $7::timestamptz)
       `,
-      [adminAMembership, readerAMembership, noPermAMembership, tenantA, adminAUser, readerAUser, stamp, noPermAUser],
+      [
+        adminAMembership,
+        readerAMembership,
+        noPermAMembership,
+        tenantA,
+        adminAUser,
+        readerAUser,
+        stamp,
+        noPermAUser,
+      ],
     );
     await client.query(
       `
@@ -251,14 +273,11 @@ describe('ReferenceProbesController API error matrix', () => {
   let readerAToken = '';
   let noPermAToken = '';
   let idempotencyCounter = 0;
-  const keySet = buildKeySet();
   const rateLimitStore = new MemoryRateLimitStore();
   const idempotencyBackend = new MemoryIdempotencyBackend();
 
   function authGet(token: string, path: string) {
-    return request(app.getHttpServer())
-      .get(path)
-      .set('authorization', `Bearer ${token}`);
+    return request(app.getHttpServer()).get(path).set('authorization', `Bearer ${token}`);
   }
 
   function nextIdempotencyKey(prefix: string): string {
@@ -267,18 +286,14 @@ describe('ReferenceProbesController API error matrix', () => {
   }
 
   async function createDirectToken(userId: string): Promise<string> {
-    const session = await mintTestSession({
-      userId,
-      tenantId: tenantA,
-      issuer: 'https://reference-api.test',
-      keySet,
-    });
-    activeJwks = session.jwks;
-    return session.token;
+    const session = await app.get(SessionService).create(userId, tenantA, userId);
+    return session.accessToken;
   }
 
   async function withSuppressedReadonlyLog(fn: () => Promise<void>): Promise<void> {
-    const expectedErrorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const expectedErrorLog = vi
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
     try {
       await fn();
     } finally {
@@ -312,14 +327,24 @@ describe('ReferenceProbesController API error matrix', () => {
 
   beforeAll(async () => {
     postgres = await createPostgresTestDatabase('reference_api_probes');
+    await postgres.ensureRoleLogin('stynx_reader');
 
     const moduleRef = await Test.createTestingModule({
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: postgres.connectionString('@stynx-nyx/reference-api-probes:owner') },
-            app: { connectionString: postgres.appConnectionString('@stynx-nyx/reference-api-probes:app') },
-            reader: { connectionString: postgres.connectionString('@stynx-nyx/reference-api-probes:reader') },
+            owner: {
+              connectionString: postgres.connectionString('@stynx-nyx/reference-api-probes:owner'),
+            },
+            app: {
+              connectionString: postgres.appConnectionString('@stynx-nyx/reference-api-probes:app'),
+            },
+            reader: {
+              connectionString: postgres.appConnectionString(
+                '@stynx-nyx/reference-api-probes:reader',
+                'stynx_reader',
+              ),
+            },
           },
           migrations: { enabled: true },
         }),
@@ -478,6 +503,17 @@ describe('ReferenceProbesController API error matrix', () => {
         .expect(401)
         .expect(({ body }) => {
           expect(body.message).toBe('Missing STYNX bearer token');
+        });
+    });
+
+    it('returns 401 after revoking an actual signed session', async () => {
+      const sessions = app.get(SessionService);
+      const issued = await sessions.create(readerAUser, tenantA, readerAUser);
+      expect(await sessions.revoke(issued.sid)).toBe(true);
+      await authGet(issued.accessToken, '/_probes/readonly-write')
+        .expect(401)
+        .expect(({ body }) => {
+          expect(body.message).toBe('STYNX session is no longer active');
         });
     });
 

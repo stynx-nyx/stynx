@@ -87,6 +87,7 @@ export class RealAuthenticationFixture {
     this.database = await createPostgresTestDatabase('stynx_authz_app_guard', {
       useTemplate: false,
     });
+    await this.database.ensureRoleLogin('stynx_reader');
     const module = await Test.createTestingModule({ imports: [this.dataModule(true)] }).compile();
     try {
       await module.init();
