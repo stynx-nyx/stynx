@@ -160,7 +160,8 @@ export default function () {
       responseType: 'binary',
       tags: { case_id: input.caseId, target_sequence: String(sequence) },
     });
-  } catch {
+  } catch (error) {
+    void error; // Retain the supported k6 0.49 Babel catch syntax without logging private errors.
     // No invented duration or substitute/retry on an unmeasured native throw.
     completed.add(1, { case_id: input.caseId, target_sequence: String(sequence) });
     emit({
@@ -201,7 +202,7 @@ export default function () {
           ]),
         )
       : null,
-    request: response.request ?? null,
+    request: response.request ? response.request : null,
     status: response.status,
     bodySha256: response.body === null ? null : digest(response.body),
     // Private raw custody only. Publication must use the reviewed normalization.
