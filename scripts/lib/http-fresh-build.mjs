@@ -3,11 +3,15 @@ import { execFileSync, spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import {
   chmodSync,
+  closeSync,
+  constants,
   copyFileSync,
   existsSync,
+  fstatSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  openSync,
   readFileSync,
   readdirSync,
   readlinkSync,
@@ -1316,6 +1320,7 @@ function stateFor(handle) {
 
 function recheck(state) {
   try {
+    if (state.protectedBuild) recheckOriginalBuildAllocation(state.protectedBuild);
     for (const row of state.systemTools.values()) checkExecutableIdentity(row);
     const located = execFileSync('/usr/bin/xcrun', ['--find', 'git'], {
       env: childEnvironment(state),
@@ -1383,6 +1388,12 @@ export async function prepareFreshHttpBuild(request) {
   if (process.platform !== 'darwin' || process.arch !== 'arm64')
     refuse('Unreviewed build launcher platform');
   const sandbox = realpathSync(mkdtempSync(resolve(tmpdir(), 'stynx HTTP fraîs ')));
+  return prepareHttpBuildAt(options, sandbox);
+}
+
+// Called only after the source-owned entry receives an actual package-issued
+// build allocation. Public prepare never accepts an allocation or a path.
+async function prepareHttpBuildAt(options, sandbox, protectedBuild) {
   const state = {
     ...options,
     sandbox,
@@ -1393,6 +1404,7 @@ export async function prepareFreshHttpBuild(request) {
     platform: process.platform,
     arch: process.arch,
     cleanupComplete: false,
+    ...(protectedBuild ? { protectedBuild } : {}),
   };
   for (const name of ['home', 'tmp', 'config', 'logs', 'store', 'template'])
     mkdirSync(resolve(sandbox, name));
@@ -1829,9 +1841,12 @@ function runtimeGlobalSearchPaths(state, job, environment) {
 // reviewed mode-specific createRequire caller relations authorize them.
 function runtimeResolutionAnchors(state, controls, nonce, mode) {
   if (
-    !['bootstrap-module-only', 'reference-owned-loopback', 'http-endpoint-qualification'].includes(
-      mode,
-    )
+    ![
+      'bootstrap-module-only',
+      'reference-owned-loopback',
+      'http-endpoint-qualification',
+      'http-original-scenario',
+    ].includes(mode)
   )
     refuse('Unsupported runtime resolution anchor mode');
   const rules = [
@@ -1862,7 +1877,11 @@ function runtimeResolutionAnchors(state, controls, nonce, mode) {
       ],
     ],
   ];
-  if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(mode))
+  if (
+    ['reference-owned-loopback', 'http-endpoint-qualification', 'http-original-scenario'].includes(
+      mode,
+    )
+  )
     rules.push([
       'packages/flow/package.json',
       '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
@@ -1944,7 +1963,9 @@ function runtimeResolutionAnchors(state, controls, nonce, mode) {
     };
   });
   if (
-    ['reference-owned-loopback', 'http-endpoint-qualification'].includes(mode) &&
+    ['reference-owned-loopback', 'http-endpoint-qualification', 'http-original-scenario'].includes(
+      mode,
+    ) &&
     !isDeepStrictEqual(anchors[1].manifest, anchors[2].manifest)
   )
     refuse('Shared physical flow resolution anchor differs between caller relations');
@@ -3217,6 +3238,1410 @@ const qualificationAdmission = Object.freeze({
   calibration: null,
   effectiveQuotaAndEffectVerification: null,
 });
+// Original profiles remain disjoint from the finite arrival-rate derivative.
+// These are prospective independent bindings, never candidate self-attestation.
+const originalAdmission = Object.freeze({
+  officialGeneratorOrigin: null,
+  generatorExecutableSha256: null,
+  actualGoBuildInfo: null,
+  matchingGoSource: null,
+  generatorNativeClosure: null,
+  wholeLifeNativeAccounting: null,
+  actualApplicationAndEffectVerification: null,
+  originalWireCalibration: null,
+  protectedPackageVerifier: null,
+});
+const originalRuntimeControlClosure = new Map([
+  ...referenceRuntimeControlClosure,
+  ['scripts/lib/http-original-protocol.mjs', null],
+  ['scripts/lib/http-original-scenarios.mjs', null],
+  ['scripts/lib/http-original-exchange.mjs', null],
+  ['scripts/lib/http-original-lifecycle-controls.mjs', null],
+]);
+const originalSupervisorControlClosure = new Map([
+  ...referenceSupervisorControlClosure,
+  ['scripts/lib/http-reference-fixture.mjs', null],
+  ['scripts/lib/http-fixture-failure-archive.mjs', null],
+  ['scripts/lib/http-original-quotas.mjs', null],
+  ['scripts/lib/http-original-scenarios.mjs', null],
+  ['scripts/lib/http-original-protocol.mjs', null],
+  ['scripts/lib/http-original-stream.mjs', null],
+  ['scripts/lib/http-original-results.mjs', null],
+  ['scripts/lib/http-original-artifacts.mjs', null],
+  ['scripts/lib/http-original-official-k6.mjs', null],
+  ['scripts/lib/http-qualification-manifest.mjs', null],
+  ['scripts/lib/http-qualification-artifacts.mjs', null],
+  ['scripts/lib/http-qualification-store.mjs', null],
+  ['scripts/lib/http-qualification-log-capture.mjs', null],
+  ['scripts/lib/k6-baseline-json.mjs', null],
+  ['test/perf/k6/check-summary.mjs', null],
+]);
+const originalClock = process.hrtime.bigint.bind(process.hrtime);
+const originalUuid = (value) =>
+  typeof value === 'string' &&
+  /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/u.test(value);
+
+function originalClosed(value, keys) {
+  const copy = JSON.parse(serializeHttpRuntimePlainJson(value));
+  if (
+    !copy ||
+    Array.isArray(copy) ||
+    !isDeepStrictEqual(Object.keys(copy).sort(), [...keys].sort())
+  )
+    refuse('Original parent projection has undeclared own-data fields');
+  return copy;
+}
+function requireOriginalAdmission() {
+  const missing = Object.entries(originalAdmission)
+    .filter(([, value]) => typeof value !== 'string' || !/^[a-f0-9]{64}$/u.test(value))
+    .map(([name]) => name);
+  if (missing.length) {
+    const error = new Error('Original HTTP native/application/host admission remains incomplete');
+    error.code = 'HTTP_ORIGINAL_ADMISSION_UNBOUND';
+    error.unfilled = missing;
+    throw error;
+  }
+}
+function originalDirectory(path, root, empty = false) {
+  if (typeof path !== 'string' || !isAbsolute(path) || path === root)
+    refuse('Invalid original allocation');
+  owned(root, path);
+  const stat = lstatSync(path, { bigint: true });
+  if (
+    !stat.isDirectory() ||
+    realpathSync(path) !== path ||
+    typeof process.getuid !== 'function' ||
+    stat.uid !== BigInt(process.getuid()) ||
+    (stat.mode & 0o7777n) !== 0o700n ||
+    (empty && readdirSync(path).length)
+  )
+    refuse('Original allocation is not an empty owned private directory');
+  return stat;
+}
+function originalNativeAccounting(projection, attempt, generator, metrics) {
+  const row = originalClosed(projection, [
+    'schemaVersion',
+    'attemptId',
+    'caseId',
+    'generatorIncarnationDigest',
+    'started',
+    'completed',
+    'dropped',
+    'interrupted',
+    'observationDigest',
+  ]);
+  if (
+    row.schemaVersion !== '1.0.0' ||
+    row.attemptId !== attempt.attemptId ||
+    row.caseId !== attempt.caseId ||
+    !['generatorIncarnationDigest', 'observationDigest'].every((key) =>
+      /^[a-f0-9]{64}$/u.test(row[key]),
+    ) ||
+    !['started', 'completed', 'dropped', 'interrupted'].every(
+      (key) => Number.isSafeInteger(row[key]) && row[key] >= 0,
+    ) ||
+    row.started !== row.completed + row.interrupted ||
+    row.completed !== metrics.accounting.completedIterations ||
+    (metrics.accounting.droppedIterations !== null &&
+      row.dropped !== metrics.accounting.droppedIterations) ||
+    generator.code !== 0 ||
+    generator.signal !== null
+  )
+    refuse('Native accounting contradicts the actual attempt, exit or complete metric stream');
+  return row;
+}
+
+function retainOriginalBuildAllocation(protectedBuild) {
+  const rows = [];
+  protectedBuild.directoryDescriptors = rows;
+  for (const root of [protectedBuild.allocation.root, protectedBuild.allocation.rawRoot]) {
+    let path = root;
+    for (let depth = 0; ; depth++) {
+      if (depth === 64 || realpathSync(path) !== path)
+        refuse('Protected build ancestor is not canonical');
+      const identity = lstatSync(path, { bigint: true });
+      if (!identity.isDirectory()) refuse('Protected build ancestor is not a directory');
+      const descriptor = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+      rows.push({ path, descriptor, identity });
+      if (dirname(path) === path) break;
+      path = dirname(path);
+    }
+  }
+  recheckOriginalBuildAllocation(protectedBuild);
+}
+function recheckOriginalBuildAllocation(protectedBuild) {
+  if (protectedBuild.closed || !protectedBuild.directoryDescriptors?.length)
+    refuse('Protected build allocation has no actual retained directory custody');
+  for (const row of protectedBuild.directoryDescriptors) {
+    if (realpathSync(row.path) !== row.path) refuse('Protected build ancestor resolution changed');
+    for (const identity of [
+      lstatSync(row.path, { bigint: true }),
+      fstatSync(row.descriptor, { bigint: true }),
+    ])
+      if (
+        !identity.isDirectory() ||
+        ['dev', 'ino', 'mode', 'uid', 'gid'].some((key) => identity[key] !== row.identity[key])
+      )
+        refuse('Protected build full ancestor identity changed');
+  }
+}
+async function prepareOriginalProtectedBuild(api, session, workspace, options) {
+  if (process.platform !== 'darwin' || process.arch !== 'arm64')
+    refuse('Unreviewed protected original platform');
+  const build = await api.allocateHttpQualificationBuild(session, { compositionId: 'reference' });
+  const allocation = originalClosed(await api.httpQualificationBuildWorkspace(session, build), [
+    'schemaVersion',
+    'buildId',
+    'compositionId',
+    'root',
+    'rawRoot',
+  ]);
+  if (
+    allocation.schemaVersion !== '1.0.0' ||
+    !originalUuid(allocation.buildId) ||
+    allocation.compositionId !== 'reference'
+  )
+    refuse('Protected build allocation differs from the actual selected composition');
+  originalDirectory(allocation.root, workspace.buildRoot, true);
+  originalDirectory(allocation.rawRoot, workspace.rawRoot, true);
+  const protectedBuild = { api, session, workspace, build, allocation, closed: false };
+  try {
+    retainOriginalBuildAllocation(protectedBuild);
+    return await prepareHttpBuildAt(parseRequest(options), allocation.root, protectedBuild);
+  } catch (error) {
+    // Actual build acquisition failures retain their raw root and any known FDs;
+    // releasing a directory descriptor never deletes/adopts the staged bytes.
+    for (const row of protectedBuild.directoryDescriptors ?? []) {
+      try {
+        closeSync(row.descriptor);
+      } catch {
+        /* Retained failure remains nonqualified. */
+      }
+    }
+    protectedBuild.closed = true;
+    throw error;
+  }
+}
+
+/** Source-owned original-profile phase, not a replacement for the full mandatory
+ * supplemental census. The package determines bootstrap/comparison standing.
+ * No caller allocation, baseline, selector list or process handle is accepted.
+ */
+export async function runFreshHttpProtectedOriginalProfiles() {
+  if (arguments.length !== 0) refuse('Protected original entry accepts no caller configuration');
+  const api = await import('@aarusso-nyx/devai/http-qualification');
+  const session = await api.connectHttpQualificationSession();
+  let handle, failure, phaseResult;
+  let finished = false;
+  const outcomes = [];
+  try {
+    const workspace = originalClosed(await api.httpQualificationWorkspace(session), [
+      'schemaVersion',
+      'batchId',
+      'invocationId',
+      'buildRoot',
+      'rawRoot',
+    ]);
+    if (
+      workspace.schemaVersion !== '1.0.0' ||
+      !originalUuid(workspace.batchId) ||
+      !originalUuid(workspace.invocationId) ||
+      workspace.buildRoot === workspace.rawRoot
+    )
+      refuse('Protected session workspace identity differs');
+    for (const root of [workspace.buildRoot, workspace.rawRoot])
+      originalDirectory(root, dirname(root));
+    requireOriginalAdmission(); // No fresh build effects while any required producer is missing.
+    const sourceRepository = realpathSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), '../..'),
+    );
+    const git = (...args) =>
+      execFileSync('/usr/bin/git', ['--no-pager', '-C', sourceRepository, ...args], {
+        encoding: 'utf8',
+        maxBuffer: 8 * 1024 * 1024,
+        env: {
+          PATH: '/usr/bin:/bin',
+          HOME: '/var/empty',
+          LANG: 'C',
+          LC_ALL: 'C',
+          GIT_CONFIG_NOSYSTEM: '1',
+          GIT_CONFIG_GLOBAL: '/dev/null',
+          GIT_NO_REPLACE_OBJECTS: '1',
+          GIT_NO_LAZY_FETCH: '1',
+          GIT_TERMINAL_PROMPT: '0',
+        },
+      }).trim();
+    const candidateCommit = git('rev-parse', '--verify', 'HEAD');
+    if (
+      !/^[a-f0-9]{40}$/u.test(candidateCommit) ||
+      git('status', '--porcelain', '--untracked-files=no')
+    )
+      refuse('Protected original candidate has no clean exact commit');
+    handle = await prepareOriginalProtectedBuild(api, session, workspace, {
+      sourceRepository,
+      candidateCommit,
+      rootId: 'reference',
+    });
+    for (const profileId of ['local', 'hardening']) {
+      for (const scenarioId of ['auth', 'crud', 'upload', 'cascade-delete'])
+        outcomes.push(await runFreshHttpOriginalScenario(handle, { scenarioId, profileId }));
+      if (outcomes[0].baselineMode === 'local-bootstrap') {
+        // The protected host accepts only the designated four-local population;
+        // its finish remains UNKNOWN and cannot satisfy the qualification task.
+        await api.finishHttpQualificationSession(session);
+        finished = true;
+        phaseResult = {
+          schemaVersion: '1.0.0',
+          scope: 'protected-original-local-bootstrap-phase',
+          outcomes,
+          comparison: 'NOT_EVALUABLE',
+          verdict: 'UNKNOWN',
+          complete: false,
+          runtimeCustodyComplete: false,
+          performanceQualified: false,
+          readinessPromoting: false,
+        };
+        break;
+      }
+    }
+    // This component does not finish the mandatory package session: that requires
+    // the full source-policy supplemental census and full raw build export too.
+    phaseResult ??= {
+      schemaVersion: '1.0.0',
+      scope: 'protected-original-comparison-phase',
+      outcomes,
+      mandatorySupplementalCensus: 'REQUIRED_SEPARATELY_IN_SAME_PROTECTED_BATCH',
+      complete: false,
+      runtimeCustodyComplete: false,
+      performanceQualified: false,
+      readinessPromoting: false,
+    };
+  } catch (error) {
+    failure = error;
+  } finally {
+    try {
+      if (!finished) await api.pauseHttpQualificationSession(session);
+    } catch (error) {
+      failure ??= error;
+    } finally {
+      const state = handle ? handles.get(handle) : null;
+      if (state) {
+        // Full graph bodies remain in the known host allocation. No metadata,
+        // terminal IPC or successful child close authorizes sandbox deletion.
+        state.protectedBuild.closed = true;
+        for (const row of state.protectedBuild.directoryDescriptors) {
+          try {
+            closeSync(row.descriptor);
+          } catch (error) {
+            state.refusal ??= error.code ?? 'HTTP_PROTECTED_BUILD_FD_CLOSE_FAILED';
+            failure ??= error;
+          }
+        }
+      }
+    }
+  }
+  if (failure) throw failure;
+  return phaseResult;
+}
+
+/** Exact fixed original profiles. Only a private host-bound fresh build can
+ * reach effects; selector JSON, a path or a baseline document cannot replace it.
+ */
+export async function runFreshHttpOriginalScenario(handle, request) {
+  if (arguments.length !== 2)
+    refuse('Original runner requires an actual build and closed selector');
+  const state = stateFor(handle);
+  if (state.originalSelectionPending) refuse('An original selection is already pending');
+  state.originalSelectionPending = true;
+  try {
+    return await runActualOriginalScenario(handle, request);
+  } finally {
+    state.originalSelectionPending = false;
+  }
+}
+
+async function runActualOriginalScenario(handle, request) {
+  if (arguments.length !== 2)
+    refuse('Original runner requires an actual build and closed selector');
+  const selector = originalClosed(request, ['scenarioId', 'profileId']);
+  if (
+    !['auth', 'crud', 'upload', 'cascade-delete'].includes(selector.scenarioId) ||
+    !['local', 'hardening'].includes(selector.profileId)
+  )
+    refuse('Unsupported original profile');
+  const state = stateFor(handle);
+  if (
+    state.rootId !== 'reference' ||
+    !state.protectedBuild ||
+    state.runtimeActive ||
+    state.referenceRuntimeWorker ||
+    state.qualificationGeneratorWorker ||
+    state.referenceFixture ||
+    state.fixturePreparing ||
+    state.fixtureChecking ||
+    (state.originalAttempt && !state.originalAttempt.sealed)
+  )
+    refuse('Original runner requires an idle private protected reference build');
+  recheck(state);
+  const roster = snapshotFreshHttpOriginalScenarioRoster(handle);
+  const selected = roster.profiles.find(
+    (row) => row.scenarioId === selector.scenarioId && row.profileId === selector.profileId,
+  );
+  if (!selected) refuse('Original profile is outside the actual manifest');
+  requireOriginalAdmission();
+  requireReferenceFactoryAdmission(state);
+  if (selector.scenarioId === 'upload') {
+    for (const value of Object.values(privacyObjectStoreAdmission))
+      if (typeof value !== 'string' || !/^[a-f0-9]{64}$/u.test(value))
+        refuse('Original upload application/object-store admission remains incomplete');
+  }
+  const controls = referenceControlRows(state, originalRuntimeControlClosure);
+  const supervisorControls = referenceControlRows(state, originalSupervisorControlClosure);
+  // Original-only imports happen after their actual source/control admission.
+  const { httpOriginalScenarioProfile } = await import('./http-original-scenarios.mjs');
+  const { loadHttpOriginalQuotaRecipe } = await import('./http-original-quotas.mjs');
+  const { createHttpOriginalProtocol } = await import('./http-original-protocol.mjs');
+  const { acquireHttpOriginalOfficialK6, observeHttpOriginalOfficialK6 } =
+    await import('./http-original-official-k6.mjs');
+  const { archiveHttpOriginalArtifact, readHttpOriginalExecutable } =
+    await import('./http-original-artifacts.mjs');
+  const { reconcileHttpOriginalResults, reconcileHttpOriginalBootstrapResults } =
+    await import('./http-original-results.mjs');
+  const { createOwnedOriginalReferenceFixture } = await import('./http-reference-fixture.mjs');
+  const { launchOwnedHttpNativeGenerator } = await import('./http-owned-worker.mjs');
+  const profile = httpOriginalScenarioProfile(selector);
+  const nominal = profile.nominalProfile;
+  if (
+    !isDeepStrictEqual(selected.binding.nominalProfile, nominal) ||
+    selected.binding.generator !== 'official-k6-0.49.0' ||
+    selected.binding.derivativeSelectionAllowed !== false
+  )
+    refuse('Original fixed profile differs from its exact candidate manifest');
+  const quota = loadHttpOriginalQuotaRecipe(state.checkout);
+  const sourceQuota = loadHttpOriginalQuotaRecipe(
+    realpathSync(resolve(dirname(fileURLToPath(import.meta.url)), '../..')),
+  );
+  const quotaInput = state.inputs.files.find((row) => row.path === quota.source.path);
+  if (
+    !quotaInput ||
+    quotaInput.sha256 !== quota.source.sha256 ||
+    !isDeepStrictEqual(quota, sourceQuota)
+  )
+    refuse('Original fixture would consume a different tracked quota recipe');
+  const protectedBuild = state.protectedBuild;
+  const { api, session } = protectedBuild;
+  state.originalOfficialK6 ??= await acquireHttpOriginalOfficialK6();
+  const official = observeHttpOriginalOfficialK6(state.originalOfficialK6);
+  if (official.pins.executableSha256 !== originalAdmission.generatorExecutableSha256)
+    refuse('Actual official native bytes differ from independently admitted executable');
+  if (!state.originalOfficialK6Staged) {
+    const directory = resolve(protectedBuild.allocation.rawRoot, 'official-k6');
+    mkdirSync(directory, { mode: 0o700 });
+    const copied = [];
+    for (const row of [...official.files, official.acquisitionReceipt]) {
+      if (
+        ![
+          'k6',
+          'k6-v0.49.0-checksums.txt',
+          'k6-v0.49.0-macos-arm64.zip',
+          'acquisition.json',
+        ].includes(row.path)
+      )
+        refuse('Official acquisition includes an unsupported fixed member');
+      const path = resolve(directory, row.path);
+      copyFileSync(resolve(official.directory, row.path), path, constants.COPYFILE_EXCL);
+      const actual =
+        row.path === 'k6'
+          ? readHttpOriginalExecutable(directory, path)
+          : readHttpQualificationArtifact(directory, path);
+      if (actual.row.sha256 !== row.sha256 || actual.row.byteLength !== row.byteLength)
+        refuse('Staged official acquisition bytes differ from actual acquired bytes');
+      copied.push(actual.row);
+    }
+    if (!isDeepStrictEqual(official, observeHttpOriginalOfficialK6(state.originalOfficialK6)))
+      refuse('Official acquisition changed while retaining complete raw bodies');
+    state.originalOfficialK6Staged = { directory, executable: resolve(directory, 'k6'), copied };
+  }
+  const stagedOfficial = state.originalOfficialK6Staged;
+  if (
+    readHttpOriginalExecutable(stagedOfficial.directory, stagedOfficial.executable).row.sha256 !==
+    official.pins.executableSha256
+  )
+    refuse('Actual staged official executable changed');
+  // The protected host independently checks active native/source/task admission
+  // before granting this baseline capability. Its copied projection is data only.
+  const baselineHandle = await api.acquireOriginalBaseline(session, selector);
+  const baseline = await api.inspectOriginalBaseline(session, baselineHandle);
+  const bootstrap = baseline.mode === 'local-bootstrap';
+  const baselineKeys = bootstrap
+    ? [
+        'schemaVersion',
+        'mode',
+        'scenarioId',
+        'profileId',
+        'designationId',
+        'reference',
+        'comparison',
+      ]
+    : ['schemaVersion', 'mode', 'scenarioId', 'profileId', 'baseline', 'reference', 'provenance'];
+  const projection = originalClosed(baseline, baselineKeys);
+  if (
+    projection.schemaVersion !== '1.0.0' ||
+    projection.scenarioId !== selector.scenarioId ||
+    projection.profileId !== selector.profileId ||
+    (bootstrap
+      ? selector.profileId !== 'local' ||
+        projection.comparison !== 'NOT_EVALUABLE' ||
+        !originalUuid(projection.designationId)
+      : projection.mode !== 'comparison')
+  )
+    refuse('Protected baseline projection differs from this exact original profile');
+  const { parseBaselineJson } = await import('./k6-baseline-json.mjs');
+  const referenceSource = selected.binding.supportFiles.find(
+    (row) => row.path === 'test/perf/k6/baseline-reference.json',
+  );
+  const referenceCapture = readHttpQualificationDeclaration(
+    state.checkout,
+    resolve(state.checkout, referenceSource.path),
+  );
+  if (referenceCapture.row.sha256 !== referenceSource.sha256)
+    refuse('Actual reference floor source changed');
+  const referenceDocument = parseBaselineJson(referenceCapture.bytes);
+  const referenceProjection = {
+    metrics: Object.fromEntries(
+      profile.requiredMetrics.map((metric) => [
+        metric,
+        Object.fromEntries(
+          ['p(95)', 'p(99)'].map((statistic) => {
+            const value = referenceDocument.metrics?.[metric]?.[statistic];
+            if (typeof value !== 'number' || !Number.isFinite(value) || value < 0)
+              refuse('Actual committed reference floor is unusable');
+            return [statistic, value];
+          }),
+        ),
+      ]),
+    ),
+  };
+  if (!isDeepStrictEqual(projection.reference, referenceProjection))
+    refuse('Protected reference projection differs from the actual committed floor');
+  if (!bootstrap) {
+    const provenance = originalClosed(projection.provenance, [
+      'receiptDigest',
+      'artifactDigest',
+      'runId',
+      'attemptId',
+      'createdAt',
+      'completedAt',
+      'cutoff',
+      'selector',
+      'lineageDigest',
+    ]);
+    const identifier = (value) => originalUuid(value) || (Number.isSafeInteger(value) && value > 0);
+    if (
+      !['receiptDigest', 'artifactDigest', 'lineageDigest'].every((key) =>
+        /^[a-f0-9]{64}$/u.test(provenance[key]),
+      ) ||
+      !identifier(provenance.runId) ||
+      !identifier(provenance.attemptId) ||
+      !['createdAt', 'completedAt', 'cutoff'].every(
+        (key) =>
+          typeof provenance[key] === 'string' && Number.isFinite(Date.parse(provenance[key])),
+      ) ||
+      Date.parse(provenance.createdAt) > Date.parse(provenance.completedAt) ||
+      Date.parse(provenance.completedAt) >= Date.parse(provenance.cutoff) ||
+      !(selector.profileId === 'hardening'
+        ? provenance.selector === 'latest-prior-successful-main'
+        : ['designated-local-seed', 'latest-prior-complete-local-comparison'].includes(
+            provenance.selector,
+          ))
+    )
+      refuse('Protected predecessor projection has incompatible lineage or chronology');
+  }
+  if (protectedBuild.baselineMode !== undefined && protectedBuild.baselineMode !== projection.mode)
+    refuse('One protected original phase cannot mix bootstrap and comparison purposes');
+  protectedBuild.baselineMode ??= projection.mode;
+  if (bootstrap) {
+    if (
+      protectedBuild.designationId !== undefined &&
+      protectedBuild.designationId !== projection.designationId
+    )
+      refuse('The four local bootstrap cells require one designated identity');
+    protectedBuild.designationId ??= projection.designationId;
+  }
+  const caseId = `original:${selector.scenarioId}:${selector.profileId}`;
+  const attemptHandle = await api.beginHttpQualificationAttempt(session, { caseId });
+  const attempt = {
+    handle: attemptHandle,
+    caseId,
+    sealed: false,
+    failure: null,
+    artifacts: [],
+    cleanupHistory: [],
+    complete: false,
+    runtimeCustodyComplete: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  };
+  // Retain this obligation immediately after actual BEGIN, before workspace or
+  // fixture effects. No exception can turn an unsealed attempt into an idle build.
+  state.originalAttempts ??= [];
+  state.originalAttempts.push(attempt);
+  state.originalAttempt = attempt;
+  state.cleanupComplete = false;
+  let workerHandle, generatorHandle, protocol, bindings, job, directory;
+  let fixtureHandle,
+    fixtureObserved,
+    fixtureEnvironment,
+    workerExit,
+    generatorExit,
+    results,
+    measurement;
+  let accounting, failure, cleanupDeadline;
+  const startedAt = originalClock();
+  const fixtureDeadline =
+    startedAt + BigInt(profile.fixtureInclusiveDeadlineSeconds) * 1_000_000_000n;
+  const received = new Map(),
+    waiters = new Map();
+  const phaseTimes = new Map();
+  const logs = {
+    worker: {
+      stdout: [],
+      stderr: [],
+      bytes: 0,
+      observedBytes: 0,
+      overflowBytes: 0,
+      captured: false,
+    },
+    generator: {
+      stdout: [],
+      stderr: [],
+      bytes: 0,
+      observedBytes: 0,
+      overflowBytes: 0,
+      captured: false,
+    },
+  };
+  const fail = (error) => {
+    failure ??= error instanceof Error ? error : new Error('Actual original operation refused');
+    for (const waiter of waiters.values()) waiter.reject(failure);
+    waiters.clear();
+  };
+  const until = async (promise, deadline) => {
+    let timer;
+    try {
+      const remaining = Math.min(Number(deadline - originalClock()) / 1_000_000, 2_147_483_647);
+      if (remaining <= 0) {
+        promise.catch(() => {});
+        refuse('Original monotonic deadline expired');
+      }
+      return await Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error('Original monotonic deadline expired')),
+            remaining,
+          );
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  const phase = (name, deadline) => {
+    if (failure) return Promise.reject(failure);
+    const pending = received.has(name)
+      ? Promise.resolve(structuredClone(received.get(name)))
+      : new Promise((accept, reject) => waiters.set(name, { accept, reject }));
+    return until(pending, deadline);
+  };
+  const capture = (who, stream, chunk) => {
+    const log = logs[who];
+    log.observedBytes += chunk.length;
+    if (log.bytes + chunk.length > 64 * 1024 * 1024) {
+      const retained = Math.max(0, 64 * 1024 * 1024 - log.bytes);
+      if (retained) {
+        log[stream].push(chunk.subarray(0, retained));
+        log.bytes += retained;
+      }
+      log.overflowBytes += chunk.length - retained;
+      fail(new Error('Original private process log bound exceeded'));
+      if (who === 'generator' && generatorHandle) terminateOwnedHttpWorker(generatorHandle);
+      if (who === 'worker' && workerHandle) terminateOwnedHttpWorker(workerHandle);
+      return;
+    }
+    log.bytes += chunk.length;
+    log[stream].push(chunk);
+  };
+  const write = (name, value) => {
+    const bytes = Buffer.from(serializeHttpRuntimePlainJson(value));
+    if (bytes.length > 64 * 1024 * 1024)
+      refuse('Original private diagnostic exceeds its byte limit');
+    const path = resolve(directory, name);
+    writeFileSync(path, bytes, { mode: 0o600, flag: 'wx', flush: true });
+    return path;
+  };
+  const captureLogs = (who, ownedHandle) => {
+    if (logs[who].captured) return logs[who].rows;
+    const captured = captureHttpQualificationGeneratorLogs(
+      directory,
+      snapshotOwnedHttpWorker(ownedHandle).operationId,
+      logs[who].stdout,
+      logs[who].stderr,
+    );
+    logs[who].captured = true;
+    logs[who].rows = captured.captured.map(
+      (row) => readHttpQualificationArtifact(directory, row.path).row,
+    );
+    return logs[who].rows;
+  };
+  const command = (name, body) =>
+    sendOwnedHttpWorker(workerHandle, {
+      schemaVersion: 1,
+      mode: job.mode,
+      operationId: job.originalScenario.operationId,
+      nonce: job.nonce,
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      workerPid: snapshotOwnedHttpWorker(workerHandle).pid,
+      ...selector,
+      command: name,
+      body,
+    });
+  state.runtimeActive = true;
+  const totalTimer = setTimeout(
+    () => {
+      fail(new Error('Original fixture-inclusive monotonic deadline expired'));
+      if (generatorHandle) terminateOwnedHttpWorker(generatorHandle);
+      if (workerHandle) terminateOwnedHttpWorker(workerHandle);
+    },
+    Math.max(1, Number(fixtureDeadline - originalClock()) / 1_000_000),
+  );
+  let workerTimer;
+  try {
+    const workspace = originalClosed(
+      await api.httpQualificationAttemptWorkspace(session, attemptHandle),
+      ['schemaVersion', 'attemptId', 'caseId', 'nonce', 'rawRoot'],
+    );
+    if (
+      workspace.schemaVersion !== '1.0.0' ||
+      workspace.caseId !== caseId ||
+      !originalUuid(workspace.attemptId) ||
+      !originalUuid(workspace.nonce)
+    )
+      refuse('Protected attempt allocation differs from actual BEGIN');
+    Object.assign(attempt, workspace);
+    directory = workspace.rawRoot;
+    originalDirectory(directory, protectedBuild.workspace.rawRoot, true);
+    attempt.store = createHttpQualificationStore();
+    write('build-custody.json', snapshotFreshHttpBuild(handle));
+    write('profile.json', { roster, selected, profile, quota, controls, supervisorControls });
+    write('baseline-projection.json', projection);
+    write('official-acquisition.json', { ...official, staged: stagedOfficial });
+    recheck(state);
+    if (originalClock() >= fixtureDeadline) refuse('Original fixture allocation deadline expired');
+    state.fixturePreparing = true;
+    const acquisition = createOwnedOriginalReferenceFixture(
+      {
+        candidateCommit: state.candidateCommit,
+        tree: state.inputs.tree,
+        nonce: workspace.nonce,
+      },
+      selector,
+    )
+      .then((actual) => {
+        fixtureHandle = actual;
+        state.referenceFixture = { handle: actual, nonce: workspace.nonce, ready: false };
+        return actual;
+      })
+      .finally(() => {
+        state.fixturePreparing = false;
+        state.originalFixtureAcquisitionDone = true;
+      });
+    // Retain the actual acquisition even if the finite wait expires first.
+    state.originalFixtureAcquisitionDone = false;
+    state.originalFixtureAcquisition = acquisition;
+    await until(acquisition, fixtureDeadline);
+    if (failure) throw failure;
+    fixtureObserved = await until(observeOwnedReferenceFixture(fixtureHandle), fixtureDeadline);
+    fixtureEnvironment = await until(
+      ownedReferenceFixtureEnvironment(fixtureHandle),
+      fixtureDeadline,
+    );
+    if (!isDeepStrictEqual(fixtureObserved.originalScenario, { profile, quotaRecipe: quota }))
+      refuse('Actual owned original fixture profile/quota differs');
+    state.referenceFixture.ready = true;
+    write('fixture.json', fixtureObserved);
+    const registry = deriveReferenceRegistryPlan({
+      checkoutRoot: state.checkout,
+      inputs: state.inputs,
+      compilers: state.compilers,
+    });
+    const receipt = workerModuleReceiptFromFreshBuild(handle);
+    const urls = new Set(receipt.files.map((row) => row.url));
+    for (const row of controls) {
+      const url = pathToFileURL(resolve(state.checkout, row.path)).href;
+      if (urls.has(url)) refuse('Original control collides with actual application module');
+      urls.add(url);
+      receipt.files.push({
+        url,
+        sha256: row.sha256,
+        moduleKind: 'module',
+        classification: 'observer-source',
+      });
+    }
+    const environment = runtimeEnvironment(state);
+    for (const [key, value] of Object.entries(fixtureEnvironment)) {
+      if (Object.hasOwn(environment, key) && environment[key] !== value)
+        refuse('Original environment collision');
+      environment[key] = value;
+    }
+    workerHandle = createOwnedHttpWorker();
+    state.referenceRuntimeWorker = workerHandle;
+    state.referenceRuntimeWorkerOperationId = snapshotOwnedHttpWorker(workerHandle).operationId;
+    state.referenceRuntimeWorkerCleanup = undefined;
+    const operationId = state.referenceRuntimeWorkerOperationId;
+    const descriptorPath = resolve(directory, `${workspace.nonce}.json`);
+    job = {
+      schemaVersion: 1,
+      mode: 'http-original-scenario',
+      compositionId: 'reference',
+      nonce: workspace.nonce,
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      parentPid: process.pid,
+      checkoutRoot: state.checkout,
+      descriptorPath,
+      nodePath: realpathSync(state.node),
+      nodeSha256: digest(readFileSync(state.node)),
+      platform: state.platform,
+      arch: state.arch,
+      environment: Object.fromEntries(
+        Object.entries(environment).map(([key, value]) => [key, digest(value)]),
+      ),
+      controls,
+      resolutionAnchors: runtimeResolutionAnchors(
+        state,
+        controls,
+        workspace.nonce,
+        'http-original-scenario',
+      ),
+      receipt,
+      bootstrap: referenceBootstrapBinding(state),
+      referenceFixture: fixtureObserved,
+      referenceRegistry: registry,
+      observationArtifactPath: resolve(directory, `${workspace.nonce}.original-body.json`),
+      originalScenario: {
+        operationId,
+        ...selector,
+        profileSha256: selected.profileSha256,
+        manifestSha256: roster.manifestSha256,
+      },
+    };
+    const descriptorBytes = Buffer.from(serializeHttpRuntimePlainJson(job));
+    writeFileSync(descriptorPath, descriptorBytes, { mode: 0o600, flag: 'wx', flush: true });
+    environment.STYNX_HTTP_JOB_SHA256 = digest(descriptorBytes);
+    bindings = runtimeProtocolBindings(state, job, descriptorBytes, environment);
+    const workerStartedAt = originalClock();
+    const workerDeadline = workerStartedAt + BigInt(profile.workerDeadlineSeconds) * 1_000_000_000n;
+    if (failure || originalClock() >= fixtureDeadline)
+      throw failure ?? new Error('Original launch deadline expired');
+    workerTimer = setTimeout(() => {
+      fail(new Error('Original worker total monotonic deadline expired'));
+      if (generatorHandle) terminateOwnedHttpWorker(generatorHandle);
+      if (workerHandle) terminateOwnedHttpWorker(workerHandle);
+    }, profile.workerDeadlineSeconds * 1000);
+    const worker = launchOwnedHttpWorker(workerHandle, {
+      executable: state.node,
+      argv: [resolve(state.checkout, 'scripts/lib/http-runtime-worker.mjs'), descriptorPath],
+      cwd: state.checkout,
+      environment,
+    });
+    if (!worker.pid) refuse('Actual original worker failed to start');
+    protocol = createHttpOriginalProtocol({
+      candidateCommit: state.candidateCommit,
+      tree: state.inputs.tree,
+      nonce: workspace.nonce,
+      operationId,
+      workerPid: worker.pid,
+      compositionId: 'reference',
+      ...selector,
+      profileSha256: selected.profileSha256,
+      manifestSha256: roster.manifestSha256,
+      fixtureSha256: digest(serializeHttpRuntimePlainJson(fixtureObserved)),
+      controlClosureSha256: digest(serializeHttpRuntimePlainJson(controls)),
+    });
+    observeOwnedHttpWorker(workerHandle, {
+      stdout(chunk) {
+        capture('worker', 'stdout', chunk);
+      },
+      stderr(chunk) {
+        capture('worker', 'stderr', chunk);
+      },
+      message(frame) {
+        if (!protocol.receive(frame)) {
+          fail(new Error('Original worker frame refused'));
+          return;
+        }
+        received.set(frame.phase, structuredClone(frame.body));
+        phaseTimes.set(frame.phase, originalClock());
+        const waiter = waiters.get(frame.phase);
+        if (waiter) {
+          waiters.delete(frame.phase);
+          waiter.accept(structuredClone(frame.body));
+        }
+      },
+      error() {
+        fail(new Error('Original actual worker process error'));
+      },
+      close() {
+        if (!received.has('terminal')) fail(new Error('Original worker closed before terminal'));
+      },
+    });
+    await phase('listen', workerStartedAt + 30_000_000_000n);
+    const ready = await phase('ready', phaseTimes.get('listen') + 180_000_000_000n);
+    generatorHandle = createOwnedHttpWorker();
+    state.qualificationGeneratorWorker = generatorHandle;
+    const generatorOperationId = snapshotOwnedHttpWorker(generatorHandle).operationId;
+    state.qualificationGeneratorOperationId = generatorOperationId;
+    state.qualificationGeneratorCleanup = undefined;
+    const paths = {
+      config: resolve(directory, 'empty-k6-config.json'),
+      metrics: resolve(directory, 'metrics.json.gz'),
+      summary: resolve(directory, 'summary.json'),
+      dashboard: resolve(directory, 'summary.html'),
+    };
+    writeFileSync(paths.config, '{}', { mode: 0o600, flag: 'wx', flush: true });
+    for (const path of [paths.metrics, paths.summary, paths.dashboard])
+      writeFileSync(path, '', { mode: 0o600, flag: 'wx', flush: true });
+    const generatorEnvironment = {
+      PATH: childEnvironment(state).PATH,
+      HOME: childEnvironment(state).HOME,
+      TMPDIR: childEnvironment(state).TMPDIR,
+      LANG: 'C',
+      LC_ALL: 'C',
+      TZ: 'UTC',
+      STYNX_K6_BASE_URL: `http://${ready.host}:${ready.port}`,
+      ...(selector.scenarioId === 'upload'
+        ? { STYNX_K6_S3_PUBLIC_BASE_URL: fixtureEnvironment.STYNX_STORAGE_ENDPOINT }
+        : {}),
+      STYNX_K6_TENANT_ID: '01978f4a-32bf-7c27-a131-fd73a9e001a1',
+      STYNX_K6_EMAIL: 'admin@sample-demo.test',
+      STYNX_K6_RATE: String(nominal.rate),
+      STYNX_K6_DURATION: `${nominal.durationSeconds / 60}m`,
+      STYNX_K6_PREALLOCATED_VUS: String(nominal.preAllocatedVUs),
+      STYNX_K6_MAX_VUS: String(nominal.maxVUs),
+      STYNX_K6_STORAGE_PRESIGN_P99_MS: '50',
+      K6_SUMMARY_PATH: paths.summary,
+      K6_SUMMARY_TREND_STATS: 'avg,min,med,max,p(90),p(95),p(99)',
+      K6_WEB_DASHBOARD: 'true',
+      K6_WEB_DASHBOARD_EXPORT: paths.dashboard,
+      K6_WEB_DASHBOARD_PORT: '-1',
+      K6_NO_USAGE_REPORT: 'true',
+    };
+    const argv = [
+      '--address=',
+      '--config',
+      paths.config,
+      'run',
+      '--out',
+      `json=${paths.metrics}`,
+      resolve(state.checkout, selected.binding.script.path),
+    ];
+    const inputs = {
+      executable: stagedOfficial.executable,
+      executableSha256: official.pins.executableSha256,
+      argv,
+      cwd: state.checkout,
+      environment: generatorEnvironment,
+      source: selected.binding,
+      configSha256: digest(Buffer.from('{}')),
+      outputs: paths,
+      generatorOperationId,
+    };
+    const generatorInputsSha256 = digest(serializeHttpRuntimePlainJson(inputs));
+    write('generator-inputs.json', {
+      ...inputs,
+      environment: Object.fromEntries(
+        Object.entries(generatorEnvironment).map(([key, value]) => [key, digest(value)]),
+      ),
+    });
+    command('begin-measurement', {
+      generatorOperationId,
+      generatorExecutableSha256: official.pins.executableSha256,
+      generatorInputsSha256,
+      durationSeconds: nominal.durationSeconds,
+      ratePerSecond: nominal.rate,
+      preAllocatedVUs: nominal.preAllocatedVUs,
+      maxVUs: nominal.maxVUs,
+    });
+    await phase('measurement-start', originalClock() + 30_000_000_000n);
+    if (!isDeepStrictEqual(official, observeHttpOriginalOfficialK6(state.originalOfficialK6)))
+      refuse('Official executable acquisition changed before actual native launch');
+    recheck(state);
+    if (
+      readHttpOriginalExecutable(stagedOfficial.directory, stagedOfficial.executable).row.sha256 !==
+      official.pins.executableSha256
+    )
+      refuse('Staged native executable changed immediately before launch');
+    if (failure) throw failure;
+    const nativeStartedAt = originalClock();
+    launchOwnedHttpNativeGenerator(generatorHandle, {
+      executable: stagedOfficial.executable,
+      argv,
+      cwd: state.checkout,
+      environment: generatorEnvironment,
+    });
+    observeOwnedHttpWorker(generatorHandle, {
+      stdout(chunk) {
+        capture('generator', 'stdout', chunk);
+      },
+      stderr(chunk) {
+        capture('generator', 'stderr', chunk);
+      },
+      error() {
+        fail(new Error('Original native process error'));
+      },
+      exit() {},
+      close() {},
+    });
+    generatorExit = await until(
+      waitOwnedHttpWorkerClose(generatorHandle),
+      nativeStartedAt + BigInt(nominal.durationSeconds + 60) * 1_000_000_000n,
+    );
+    await until(reapQualificationGenerator(state), workerDeadline);
+    if (failure) throw failure;
+    if (generatorExit.code !== 0 || generatorExit.signal !== null)
+      refuse('Original official native execution failed');
+    const resultOptions = {
+      ...selector,
+      summaryPath: paths.summary,
+      metricStreamPath: paths.metrics,
+      reference: projection.reference,
+    };
+    const nativeDeadline = nativeStartedAt + BigInt(nominal.durationSeconds + 60) * 1_000_000_000n;
+    results = await until(
+      bootstrap
+        ? reconcileHttpOriginalBootstrapResults(directory, resultOptions)
+        : reconcileHttpOriginalResults(directory, {
+            ...resultOptions,
+            baseline: projection.baseline,
+          }),
+      nativeDeadline,
+    );
+    const accountingHandle = await until(
+      api.acquireHttpQualificationNativeAccounting(session, attemptHandle),
+      nativeDeadline,
+    );
+    accounting = originalNativeAccounting(
+      await until(
+        api.inspectHttpQualificationNativeAccounting(session, accountingHandle),
+        nativeDeadline,
+      ),
+      attempt,
+      generatorExit,
+      results,
+    );
+    write('native-accounting.json', accounting);
+    write('native-results.json', results);
+    if (results.failures.length || accounting.dropped > 0 || accounting.interrupted > 0)
+      refuse('Original full native thresholds/checks/population or accounting failed');
+    const raw = [
+      archiveHttpOriginalArtifact(
+        attempt.store,
+        directory,
+        paths.metrics,
+        'native/metrics',
+        'metrics',
+      ),
+      archiveHttpOriginalArtifact(
+        attempt.store,
+        directory,
+        paths.summary,
+        'native/summary',
+        'summary',
+      ),
+      archiveHttpOriginalArtifact(
+        attempt.store,
+        directory,
+        paths.dashboard,
+        'native/dashboard',
+        'dashboard',
+      ),
+    ];
+    if (raw[2].byteLength === 0) refuse('Original native dashboard export is absent or empty');
+    measurement = {
+      generatorOperationId,
+      rawArtifactsSha256: digest(serializeHttpRuntimePlainJson(raw)),
+      nativeSummarySha256: results.artifacts.summary.sha256,
+      nativeMetricsSha256: results.artifacts.metricStream.sha256,
+      completedIterations: accounting.completed,
+      droppedIterations: accounting.dropped,
+      interruptedIterations: accounting.interrupted,
+      outcome: 'COMPLETED',
+    };
+    if (failure || originalClock() >= nativeDeadline)
+      throw failure ?? new Error('Original native measurement deadline expired');
+    cleanupDeadline = originalClock() + 30_000_000_000n;
+    command('finish-measurement', measurement);
+    await phase('close', cleanupDeadline);
+    const finalDeadline = originalClock() + 30_000_000_000n;
+    await phase('terminal', finalDeadline);
+    workerExit = await until(waitOwnedHttpWorkerClose(workerHandle), finalDeadline);
+    const wire = protocol.finish({
+      workerPid: worker.pid,
+      code: workerExit.code,
+      signal: workerExit.signal,
+      operationId,
+    });
+    await until(reapReferenceWorker(state), finalDeadline);
+    const captureBody = readHttpQualificationArtifact(directory, job.observationArtifactPath);
+    if (captureBody.row.sha256 !== received.get('terminal').resultArtifactSha256)
+      refuse('Original terminal names different actual body bytes');
+    const body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(captureBody.bytes));
+    if (serializeHttpRuntimePlainJson(body) !== captureBody.bytes.toString('utf8'))
+      refuse('Original result body is not its exact unambiguous serialized value');
+    const validator = createHttpModuleSnapshotValidator({
+      bindings,
+      candidateCommit: state.candidateCommit,
+      mode: job.mode,
+      nonce: job.nonce,
+      pid: worker.pid,
+    });
+    const expectedBodyKeys = [
+      'schemaVersion',
+      'scope',
+      'candidateCommit',
+      'tree',
+      'nonce',
+      'workerPid',
+      'referenceObservation',
+      'networkClosure',
+      'modules',
+      'trustedBootstrap',
+      'parentCorroborationRequired',
+      'complete',
+      'runtimeCustodyComplete',
+      'performanceQualified',
+      'readinessPromoting',
+    ];
+    originalClosed(body, expectedBodyKeys);
+    if (
+      body.schemaVersion !== 1 ||
+      body.scope !== job.mode ||
+      body.candidateCommit !== state.candidateCommit ||
+      body.tree !== state.inputs.tree ||
+      body.nonce !== job.nonce ||
+      body.workerPid !== worker.pid ||
+      body.parentCorroborationRequired !== true ||
+      body.complete !== false ||
+      body.runtimeCustodyComplete !== false ||
+      body.performanceQualified !== false ||
+      body.readinessPromoting !== false ||
+      !isDeepStrictEqual(body.trustedBootstrap, bindings.trustedBootstrap) ||
+      !validator.accepts(body.modules)
+    )
+      refuse('Actual original body/module/bootstrap custody differs');
+    const observed = body.referenceObservation;
+    const phases = protocol
+      .captured()
+      .frames.filter((frame) => !['start', 'terminal'].includes(frame.phase))
+      .map((frame) => ({ phase: frame.phase, ...frame.body }));
+    const final = received.get('final');
+    const journal = readHttpQualificationArtifact(
+      directory,
+      `${job.observationArtifactPath}.preparation.jsonl`,
+    );
+    if (
+      observed.scope !== job.mode ||
+      !isDeepStrictEqual(observed.phases, phases) ||
+      !isDeepStrictEqual(observed.bootstrap, bindings.observation) ||
+      !isDeepStrictEqual(observed.measurement, measurement) ||
+      !isDeepStrictEqual(received.get('measurement-complete'), measurement) ||
+      digest(serializeHttpRuntimePlainJson(observed.preparation)) !==
+        received.get('preparation-complete').evidenceSha256 ||
+      digest(serializeHttpRuntimePlainJson(observed.preparation.session)) !==
+        received.get('ready').sessionEvidenceSha256 ||
+      observed.preparation.responseJournal.path !==
+        `${job.observationArtifactPath}.preparation.jsonl` ||
+      observed.preparation.responseJournal.sha256 !== journal.row.sha256 ||
+      observed.preparation.responseJournal.byteLength !== journal.row.byteLength ||
+      digest(serializeHttpRuntimePlainJson(observed.initialObjectSnapshot)) !==
+        received.get('init').runtimeObjectSnapshotSha256 ||
+      digest(
+        serializeHttpRuntimePlainJson({ ...observed, phases: observed.phases.slice(0, -1) }),
+      ) !== final.runtimeEvidenceSha256 ||
+      digest(serializeHttpRuntimePlainJson(controls)) !== final.sourceEvidenceSha256 ||
+      digest(
+        serializeHttpRuntimePlainJson({
+          scope: 'worker-network-subset',
+          network: observed.network,
+          actualParentFixtureFinalVerification: 'REQUIRED',
+        }),
+      ) !== final.fixtureFinalEvidenceSha256 ||
+      !isDeepStrictEqual(body.networkClosure, {
+        closed: true,
+        parentCorroborationRequired: true,
+        readinessPromoting: false,
+      }) ||
+      !isDeepStrictEqual(observed.nestAppLink?.preparation, referenceNestPreparationBindings(state))
+    )
+      refuse('Original actual body contradicts its full phase/journal/source capture');
+    assertReferenceNestPreparationOrder(
+      body.modules,
+      referenceNestPreparationBindings(state),
+      state.checkout,
+    );
+    for (const row of [
+      ...body.modules.resolutions.filter((entry) => entry.builtin === false),
+      ...body.modules.evaluations,
+    ])
+      if (pathToFileURL(realpathSync(fileURLToPath(row.url))).href !== row.canonicalURL)
+        refuse('Original module canonical source path changed');
+    recheck(state);
+    compareRows(controls, referenceControlRows(state, originalRuntimeControlClosure));
+    compareRows(supervisorControls, referenceControlRows(state, originalSupervisorControlClosure));
+    if (
+      !readFileSync(descriptorPath).equals(descriptorBytes) ||
+      !isDeepStrictEqual(roster, snapshotFreshHttpOriginalScenarioRoster(handle)) ||
+      !isDeepStrictEqual(
+        fixtureObserved,
+        await until(observeOwnedReferenceFixture(fixtureHandle), fixtureDeadline),
+      )
+    )
+      refuse('Original final descriptor, source or fixture drift');
+    attempt.result = {
+      wire,
+      results,
+      accounting,
+      baselineMode: projection.mode,
+      runtimeCustodyComplete: false,
+      performanceQualified: false,
+      readinessPromoting: false,
+    };
+  } catch (error) {
+    fail(error);
+    if (
+      workerHandle &&
+      protocol &&
+      received.has('measurement-start') &&
+      !received.has('measurement-complete')
+    ) {
+      try {
+        cleanupDeadline ??= originalClock() + 30_000_000_000n;
+        if (originalClock() >= cleanupDeadline)
+          refuse('Original shutdown deadline already expired');
+        await until(reapQualificationGenerator(state), cleanupDeadline);
+        const rawLogs = captureLogs('generator', generatorHandle);
+        if (originalClock() >= cleanupDeadline)
+          refuse('Original shutdown deadline expired before failed finish');
+        command('finish-measurement', {
+          generatorOperationId: state.qualificationGeneratorOperationId,
+          rawArtifactsSha256: digest(
+            serializeHttpRuntimePlainJson({
+              rawLogs,
+              actualGenerator: snapshotOwnedHttpWorker(generatorHandle),
+              partialFailedRun: true,
+            }),
+          ),
+          nativeSummarySha256: null,
+          nativeMetricsSha256: null,
+          completedIterations: null,
+          droppedIterations: null,
+          interruptedIterations: null,
+          outcome: 'FAILED',
+        });
+        await until(waitOwnedHttpWorkerClose(workerHandle), cleanupDeadline);
+      } catch {
+        /* Cleanup retains actual channel/native failure below. */
+      }
+    }
+  } finally {
+    // One shutdown budget starts at the first actual shutdown request and is
+    // reused on every fallback. Unknown children always prevent fixture close.
+    cleanupDeadline ??= originalClock() + 30_000_000_000n;
+    const cleanups = [];
+    for (const cleanup of [reapQualificationGenerator, reapReferenceWorker]) {
+      if (cleanup === reapQualificationGenerator && !state.qualificationGeneratorWorker) continue;
+      if (cleanup === reapReferenceWorker && !state.referenceRuntimeWorker) continue;
+      if (originalClock() >= cleanupDeadline) {
+        fail(new Error('Original shared shutdown deadline exhausted'));
+        break;
+      }
+      const pending = cleanup(state);
+      cleanups.push(until(pending, cleanupDeadline));
+    }
+    for (const result of await Promise.allSettled(cleanups))
+      if (result.status === 'rejected') fail(result.reason);
+    if (!state.qualificationGeneratorWorker && !state.referenceRuntimeWorker && fixtureHandle) {
+      try {
+        const cleanup = await until(closeOwnedReferenceFixture(fixtureHandle), fixtureDeadline);
+        attempt.fixtureCleanup = cleanup;
+        if (cleanup?.complete === true) state.referenceFixture = undefined;
+        else fail(new Error('Original owned fixture cleanup remains unknown'));
+      } catch (error) {
+        fail(error);
+      }
+    }
+    attempt.cleanupHistory.push({
+      worker: state.referenceRuntimeWorkerCleanup ?? null,
+      generator: state.qualificationGeneratorCleanup ?? null,
+      fixture: attempt.fixtureCleanup ?? null,
+      fixtureAcquisitionPending: state.fixturePreparing,
+      ownedResources:
+        !state.fixturePreparing &&
+        !state.referenceRuntimeWorker &&
+        !state.qualificationGeneratorWorker &&
+        !state.referenceFixture
+          ? 'ABSENT'
+          : 'UNKNOWN',
+    });
+    if (directory) {
+      // Independent captures are attempted even after another member fails.
+      for (const [who, ownedHandle] of [
+        ['worker', workerHandle],
+        ['generator', generatorHandle],
+      ]) {
+        if (!ownedHandle) continue;
+        try {
+          captureLogs(who, ownedHandle);
+        } catch (error) {
+          fail(error);
+        }
+      }
+      for (const [name, value] of [
+        ['ipc.json', protocol?.captured() ?? null],
+        ['cleanup.json', attempt.cleanupHistory],
+        [
+          'outcome.json',
+          {
+            worker: workerHandle ? snapshotOwnedHttpWorker(workerHandle) : null,
+            generator: generatorHandle ? snapshotOwnedHttpWorker(generatorHandle) : null,
+            workerExit: workerExit ?? null,
+            generatorExit: generatorExit ?? null,
+            failure: failure ? String(failure.code ?? 'HTTP_ORIGINAL_OPERATION_FAILED') : null,
+            logPopulation: {
+              worker: {
+                observedBytes: logs.worker.observedBytes,
+                retainedBytes: logs.worker.bytes,
+                overflowBytes: logs.worker.overflowBytes,
+              },
+              generator: {
+                observedBytes: logs.generator.observedBytes,
+                retainedBytes: logs.generator.bytes,
+                overflowBytes: logs.generator.overflowBytes,
+              },
+            },
+            fixtureAcquisitionPending: state.fixturePreparing,
+            complete: false,
+            runtimeCustodyComplete: false,
+            performanceQualified: false,
+            readinessPromoting: false,
+          },
+        ],
+      ]) {
+        try {
+          write(name, value);
+        } catch (error) {
+          fail(error);
+        }
+      }
+      const fixedFiles = [
+        ['metrics.json.gz', 'metrics'],
+        ['summary.json', 'summary'],
+        ['summary.html', 'dashboard'],
+        ['empty-k6-config.json', 'journal'],
+        ['build-custody.json', 'journal'],
+        ['profile.json', 'journal'],
+        ['baseline-projection.json', 'journal'],
+        ['official-acquisition.json', 'journal'],
+        ['generator-inputs.json', 'journal'],
+        ['native-accounting.json', 'journal'],
+        ['native-results.json', 'journal'],
+        ['ipc.json', 'journal'],
+        ['cleanup.json', 'journal'],
+        ['outcome.json', 'journal'],
+      ];
+      if (job)
+        fixedFiles.push(
+          [`${job.nonce}.json`, 'journal'],
+          [`${job.nonce}.original-body.json`, 'body'],
+          [`${job.nonce}.original-body.json.preparation.jsonl`, 'preparation'],
+          [`${job.nonce}.original-body.json.network-failure.json`, 'body'],
+        );
+      for (const ownedHandle of [workerHandle, generatorHandle])
+        if (ownedHandle)
+          for (const stream of ['stdout', 'stderr'])
+            fixedFiles.push([
+              `${snapshotOwnedHttpWorker(ownedHandle).operationId}.${stream}.log`,
+              'log',
+            ]);
+      for (const [name, role] of fixedFiles) {
+        try {
+          const path = resolve(directory, name);
+          attempt.artifacts.push({
+            name,
+            ...archiveHttpOriginalArtifact(
+              attempt.store,
+              directory,
+              path,
+              `raw/${name.replaceAll('.', '-').replaceAll('_', '-')}`,
+              role,
+            ),
+          });
+        } catch (error) {
+          // ENOENT is distinct diagnostic absence, never artifact completion.
+          attempt.artifacts.push({
+            name,
+            outcome: error.code === 'ENOENT' ? 'ABSENT' : 'UNREADABLE_OR_CHANGED',
+            failure: String(error.code ?? 'HTTP_ORIGINAL_ARTIFACT_INVALID'),
+          });
+          if (error.code !== 'ENOENT') fail(error);
+        }
+      }
+      try {
+        write('archive-index.json', {
+          artifacts: attempt.artifacts,
+          archiveDirectory: snapshotHttpQualificationStore(attempt.store).root,
+          rawBuildSupportCopied: false,
+          actualBuildRootRetained: state.sandbox,
+          cleanup: attempt.cleanupHistory,
+          failure: failure ? String(failure.code ?? 'HTTP_ORIGINAL_OPERATION_FAILED') : null,
+          complete: false,
+          runtimeCustodyComplete: false,
+          performanceQualified: false,
+          readinessPromoting: false,
+        });
+      } catch (error) {
+        fail(error);
+      }
+    }
+    clearTimeout(totalTimer);
+    clearTimeout(workerTimer);
+    state.runtimeActive = false;
+    attempt.failure = failure ? String(failure.code ?? 'HTTP_ORIGINAL_OPERATION_FAILED') : null;
+    try {
+      // The host rereads a fixed full roster, including raw/native/build/cleanup.
+      // This records nonqualified attempts too, then rejects without replacement.
+      await api.sealHttpQualificationAttempt(session, attemptHandle);
+      attempt.sealed = true;
+    } catch (error) {
+      fail(error);
+    }
+  }
+  if (failure) throw failure;
+  return structuredClone({
+    ...attempt.result,
+    attemptId: attempt.attemptId,
+    caseId,
+    rawRoot: directory,
+    hostSealCompleted: attempt.sealed,
+    complete: false,
+    runtimeCustodyComplete: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  });
+}
+
 const qualificationRuntimeControlClosure = new Map([
   ...referenceRuntimeControlClosure,
   ['scripts/lib/http-qualification-protocol.mjs', null],
@@ -4563,11 +5988,14 @@ export async function runFreshHttpQualificationBatch() {
 export async function closeFreshHttpBuild(handle) {
   const state = handles.get(handle);
   if (!state) refuse('Unknown fresh build handle');
+  if (state.protectedBuild)
+    refuse('Protected build cleanup and raw retention remain with its actual owning host');
   if (
     state.runtimeActive ||
     state.fixturePreparing ||
     state.fixtureChecking ||
-    state.qualificationAttempt?.archiving
+    state.qualificationAttempt?.archiving ||
+    state.originalSelectionPending
   )
     refuse('Cannot close a build while its runtime or fixture operation is active');
   if (state.cleanupComplete) return;
@@ -4587,6 +6015,8 @@ export async function closeFreshHttpBuild(handle) {
       refuse('Complete raw build support was not copied; the actual private sandbox is retained');
     if (state.batchBuildRetention)
       refuse('Batch build raw custody remains in the retained private sandbox');
+    if (state.protectedBuild || state.originalAttempt)
+      refuse('Protected original raw/build custody remains in its retained host allocation');
     await rm(state.sandbox, { recursive: true, force: true });
     state.cleanupComplete = true;
   })();
