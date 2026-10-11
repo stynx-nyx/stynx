@@ -116,7 +116,10 @@ not yet been reconciled into complete performance evidence.
    artifact provenance before comparison; the helper's missing-metric skip or
    no-baseline branch cannot confer complete PASS. Keep the existing first-seed
    rule only for proven absence of a prior successful main run; a lost/expired
-   artifact is not permission to seed.
+   artifact is not permission to seed. The narrowly approved prospective local
+   lineage exception in [ADR-PERF-0002](2026-10-11-local-http-baseline-bootstrap.md)
+   requires a non-promoting complete bootstrap and a separately created complete
+   passing comparison; it changes no hardening selector or existing gate.
    Fix discovery to the current workflow run's original `created_at`, including
    reruns. Select the latest prior-created successful main run by creation time
    and run ID, with completion proved strictly before that cutoff, independently

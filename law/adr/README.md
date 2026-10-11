@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Prospective local HTTP baseline bootstrap and mandatory comparison](2026-10-11-local-http-baseline-bootstrap.md)
+
 - [Bind explicit client roots and isolate demo bookmark storage](2026-10-11-client-roots-and-demo-bookmark-storage.md)
 - [Adopt published DEVAI 2.5.0 and its supported audit interfaces](2026-10-11-devai-2.5.0-adoption.md)
 

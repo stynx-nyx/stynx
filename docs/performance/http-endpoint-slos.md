@@ -390,6 +390,15 @@ artifacts fail closed. First seed remains allowed only when actual discovery
 proves there was no prior successful main run. The helper's no-baseline and
 unusable-metric skips do not establish complete PASS.
 
+The prospective local-only exception in
+[ADR-PERF-0002](../../law/adr/2026-10-11-local-http-baseline-bootstrap.md)
+requires one predesignated complete non-promoting bootstrap, independent
+acceptance and immutable public retention, then a separately created complete
+passing comparison against that exact seed and the unchanged reference floors.
+It does not convert known main history into first-seed absence or change the
+existing hardening selector. No actuation precedes the reviewed policy/schema,
+selector and independent refusal tests required by that decision.
+
 Use the current workflow run's original `created_at` as the fixed discovery
 cutoff, including current reruns. From authenticated complete main-run discovery,
 select the latest prior-created successful run by creation time and run ID whose
