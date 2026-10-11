@@ -1,17 +1,22 @@
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { types } from 'node:util';
 import { compareRequiredMetricTails } from '../../test/perf/k6/check-summary.mjs';
 import { parseBaselineJson } from './k6-baseline-json.mjs';
-import {
-  readHttpQualificationArtifact,
-  readHttpQualificationDeclaration,
-} from './http-qualification-artifacts.mjs';
+import { readHttpQualificationArtifact } from './http-qualification-artifacts.mjs';
+import { httpOriginalScenarioProfile } from './http-original-scenarios.mjs';
 import { readHttpOriginalMetricStream } from './http-original-stream.mjs';
 
 // Reconstruction only. Neither structural selector data, valid gzip, a native
 // threshold nor a supplied baseline is process/origin/profile admission.
-const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+// Exact unchanged run-scenarios.mjs K6_SUMMARY_TREND_STATS projection. The
+// parent binds that runner/helper and actual manifest to its candidate; this
+// component never reads a different checkout's law to select a profile.
+const trendStatistics = Object.freeze(['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)']);
+const statisticRosters = Object.freeze({
+  counter: ['count', 'rate'],
+  gauge: ['value', 'min', 'max'],
+  rate: ['rate', 'passes', 'fails'],
+  trend: trendStatistics,
+});
 const requirements = Object.freeze({
   auth: {
     name: 'auth_flow',
@@ -205,19 +210,22 @@ export async function reconcileHttpOriginalResults(root, options) {
   )
     refuse('fixed scenario/profile/artifact paths');
   const required = requirements[scenarioId];
-  const policyArtifact = readHttpQualificationDeclaration(
-    repositoryRoot,
-    resolve(repositoryRoot, 'law/policy/http-qualification-manifest.json'),
-  );
-  const policy = parseBaselineJson(policyArtifact.bytes);
-  const profile = policy.existingProfiles?.[scenarioId]?.[profileId];
-  closed(profile, ['rate', 'durationSeconds', 'preAllocatedVUs', 'maxVUs']);
-  for (const value of Object.values(profile)) if (!natural(value)) refuse('positive profile');
+  const profile = httpOriginalScenarioProfile({ scenarioId, profileId }).nominalProfile;
   const expectedMinimum = profile.rate * profile.durationSeconds;
   natural(expectedMinimum);
   const summaryArtifact = readHttpQualificationArtifact(root, summaryPath);
   const summary = parseBaselineJson(summaryArtifact.bytes);
-  if (!plain(summary) || !plain(summary.metrics) || !plain(summary.state))
+  if (
+    !plain(summary) ||
+    !plain(summary.metrics) ||
+    !plain(summary.state) ||
+    !plain(summary.options) ||
+    !Array.isArray(summary.options.summaryTrendStats) ||
+    summary.options.summaryTrendStats.length !== trendStatistics.length ||
+    trendStatistics.some(
+      (statistic, index) => summary.options.summaryTrendStats[index] !== statistic,
+    )
+  )
     refuse('native summary shape');
   const durationMs = finite(summary.state.testRunDurationMs);
   if (durationMs <= 0 || durationMs > (profile.durationSeconds + 300) * 1000)
@@ -346,6 +354,7 @@ export async function reconcileHttpOriginalResults(root, options) {
       !plain(metric.values)
     )
       refuse(`missing/mismatched summary metric ${name}`);
+    closed(metric.values, statisticRosters[state.type]);
     const actual = values(state, durationMs);
     for (const [statistic, value] of Object.entries(metric.values)) {
       if (!Object.hasOwn(actual, statistic)) refuse(`unsupported native statistic ${statistic}`);
@@ -427,7 +436,11 @@ export async function reconcileHttpOriginalResults(root, options) {
     profileId,
     scenarioName: required.name,
     declaredProfile: profile,
-    profileDeclaration: policyArtifact.row,
+    profileDeclaration: {
+      sourcePath: 'scripts/lib/http-original-scenarios.mjs',
+      fixedSourceOwnedTuple: true,
+      actualCandidateManifestVerified: false,
+    },
     artifacts: { summary: summaryArtifact.row, metricStream: streamArtifact },
     native: {
       metrics: reconstructed,
