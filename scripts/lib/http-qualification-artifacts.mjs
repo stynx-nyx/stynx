@@ -15,6 +15,14 @@ const declarationArtifact = Object.freeze({
   maximumBytes: 1024 * 1024,
   permissions: [0o644n, 0o444n],
 });
+const openApiArtifact = Object.freeze({
+  maximumBytes: 2 * 1024 * 1024,
+  permissions: [0o644n, 0o444n],
+});
+const openApiPaths = Object.freeze([
+  'docs/framework/contracts/openapi.json',
+  'docs/framework/api/openapi.json',
+]);
 const identityFields = ['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeNs', 'ctimeNs'];
 
 function refuse() {
@@ -43,6 +51,22 @@ export function readHttpQualificationArtifact(root, path) {
 export function readHttpQualificationDeclaration(root, path) {
   if (arguments.length !== 2) refuse();
   return acquire(root, path, declarationArtifact);
+}
+
+/** The two generated OpenAPI bodies exceed the ordinary declaration bound.
+ * This fixed path profile does not broaden source or private evidence readers.
+ */
+export function readHttpQualificationOpenApi(root, path) {
+  if (
+    arguments.length !== 2 ||
+    typeof root !== 'string' ||
+    typeof path !== 'string' ||
+    !isAbsolute(root) ||
+    !isAbsolute(path) ||
+    !openApiPaths.includes(relative(root, path).split(sep).join('/'))
+  )
+    refuse();
+  return acquire(root, path, openApiArtifact);
 }
 
 function acquire(root, path, profile) {

@@ -51,6 +51,7 @@ import { deriveReferenceRegistryPlan } from './http-reference-registry.mjs';
 import {
   loadHttpQualificationCase,
   loadHttpQualificationRoster,
+  loadHttpOriginalScenarioRoster,
 } from './http-qualification-manifest.mjs';
 import { createHttpQualificationProtocol } from './http-qualification-protocol.mjs';
 import { decodeHttpQualificationTargetCapture } from './http-qualification-raw.mjs';
@@ -1561,6 +1562,33 @@ export function snapshotFreshHttpQualificationRoster(handle) {
     const tracked = state.inputs.files.find((file) => file.path === row.path);
     if (!tracked || tracked.sha256 !== row.sha256 || tracked.byteLength !== row.byteLength)
       refuse('Qualification roster member is outside the retained tracked build roster');
+  }
+  recheck(state);
+  return structuredClone({
+    ...roster,
+    candidateCommit: state.candidateCommit,
+    tree: state.inputs.tree,
+    buildCompositionId: state.rootId,
+    actualPrivateBuildSelection: true,
+    runtimeAdmission: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  });
+}
+
+/** Original workloads belong to the real reference composition. A serialized
+ * roster, path or external receipt cannot replace the retained build handle.
+ */
+export function snapshotFreshHttpOriginalScenarioRoster(handle) {
+  if (arguments.length !== 1) refuse('Original scenario roster accepts one actual build handle');
+  const state = stateFor(handle);
+  if (state.rootId !== 'reference') refuse('Original scenarios require the reference composition');
+  recheck(state);
+  const roster = loadHttpOriginalScenarioRoster(state.checkout);
+  for (const row of roster.files) {
+    const tracked = state.inputs.files.find((file) => file.path === row.path);
+    if (!tracked || tracked.sha256 !== row.sha256 || tracked.byteLength !== row.byteLength)
+      refuse('Original scenario member is outside the retained tracked build roster');
   }
   recheck(state);
   return structuredClone({

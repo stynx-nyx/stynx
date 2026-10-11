@@ -4,7 +4,10 @@ import { createRequire } from 'node:module';
 import { isAbsolute, resolve } from 'node:path';
 import ts from 'typescript';
 import { parseBaselineJson } from './k6-baseline-json.mjs';
-import { readHttpQualificationDeclaration } from './http-qualification-artifacts.mjs';
+import {
+  readHttpQualificationDeclaration,
+  readHttpQualificationOpenApi,
+} from './http-qualification-artifacts.mjs';
 
 // Exact Architect declaration, not a runtime admission receipt. The private
 // fresh-build parent separately checks its tracked roster and all live floors.
@@ -74,7 +77,13 @@ function readHttpQualificationManifest(checkoutRoot) {
       lstatSync(physical).isFile() && realpathSync(physical) === physical,
       'Manifest member is not an unlinked owned regular file',
     );
-    const { bytes } = readHttpQualificationDeclaration(checkoutRoot, physical);
+    const readDeclaration = [
+      'docs/framework/contracts/openapi.json',
+      'docs/framework/api/openapi.json',
+    ].includes(path)
+      ? readHttpQualificationOpenApi
+      : readHttpQualificationDeclaration;
+    const { bytes } = readDeclaration(checkoutRoot, physical);
     const sha256 = digest(bytes);
     demand(expected === undefined || sha256 === expected, `Manifest member differs: ${path}`);
     const previous = files.get(path);
@@ -263,6 +272,62 @@ export function loadHttpQualificationRoster(checkoutRoot) {
     files,
     requiredCases: expanded.size,
     qualificationProfile: manifest.qualificationProfile,
+    runtimeAdmission: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  });
+}
+
+/** The eight unchanged original workload/profile cells, derived through the
+ * same complete manifest validation as the supplemental roster. This read-only
+ * projection cannot select a binary, admit a task, acquire a fixture or launch.
+ */
+export function loadHttpOriginalScenarioRoster(checkoutRoot) {
+  demand(arguments.length === 1, 'Original scenario roster requires exactly one checkout root');
+  assertCheckoutRoot(checkoutRoot);
+  const { manifest, files } = readHttpQualificationManifest(checkoutRoot);
+  const scenarios = ['auth', 'crud', 'upload', 'cascade-delete'];
+  const supportPaths = [
+    'test/perf/k6/lib/config.js',
+    'test/perf/k6/lib/stynx.js',
+    'test/perf/k6/check-summary.mjs',
+    'test/perf/k6/baseline-reference.json',
+  ];
+  const sourcePaths = [...scenarios.map((id) => `test/perf/k6/${id}.js`), ...supportPaths];
+  const captures = new Map(
+    sourcePaths.map((path) => [
+      path,
+      readHttpQualificationDeclaration(checkoutRoot, resolve(checkoutRoot, path)).row,
+    ]),
+  );
+  const profiles = scenarios.flatMap((scenarioId) =>
+    ['local', 'hardening'].map((profileId) => {
+      const binding = {
+        scenarioId,
+        profileId,
+        nominalProfile: manifest.existingProfiles[scenarioId][profileId],
+        generator: 'official-k6-0.49.0',
+        derivativeSelectionAllowed: false,
+        script: captures.get(`test/perf/k6/${scenarioId}.js`),
+        supportFiles: supportPaths.map((path) => captures.get(path)),
+      };
+      return { scenarioId, profileId, profileSha256: digest(canonical(binding)), binding };
+    }),
+  );
+  for (const [path, row] of captures) {
+    const current = readHttpQualificationDeclaration(checkoutRoot, resolve(checkoutRoot, path)).row;
+    demand(
+      canonical(current) === canonical(row),
+      'Original scenario source changed during collection',
+    );
+  }
+  return structuredClone({
+    schemaVersion: 1,
+    scope: 'source-bound-http-original-scenario-roster-component',
+    manifestSha256,
+    schemaSha256,
+    profiles,
+    files: [...files, ...captures.values()].sort((a, b) => a.path.localeCompare(b.path)),
     runtimeAdmission: false,
     performanceQualified: false,
     readinessPromoting: false,
