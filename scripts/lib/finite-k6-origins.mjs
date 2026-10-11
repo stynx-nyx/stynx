@@ -9,8 +9,8 @@ import {
   lstatSync,
   mkdirSync,
   openSync,
+  opendirSync,
   readSync,
-  readdirSync,
   realpathSync,
   renameSync,
   unlinkSync,
@@ -97,6 +97,15 @@ const finiteSourceManifestSha256 =
 const patchPath = fileURLToPath(new URL('../native/k6-finite-arrival.patch', import.meta.url));
 const repoRoot = realpathSync(fileURLToPath(new URL('../..', import.meta.url)));
 const textDecoder = new TextDecoder('utf-8', { fatal: true });
+const nativeFetch = globalThis.fetch;
+const responseBody = Object.getOwnPropertyDescriptor(Response.prototype, 'body').get;
+const responseStatus = Object.getOwnPropertyDescriptor(Response.prototype, 'status').get;
+const responseHeaders = Object.getOwnPropertyDescriptor(Response.prototype, 'headers').get;
+const headersGet = Headers.prototype.get;
+const streamGetReader = ReadableStream.prototype.getReader;
+const streamCancel = ReadableStream.prototype.cancel;
+const readerRead = ReadableStreamDefaultReader.prototype.read;
+const readerCancel = ReadableStreamDefaultReader.prototype.cancel;
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const manifestBytes = (rows) => Buffer.from(`${JSON.stringify(rows)}\n`);
 const notPromoting = Object.freeze({
@@ -200,30 +209,40 @@ function inspectSource(sourceRoot, variant = 'upstream') {
   const rows = [];
   let entries = 0;
   let totalBytes = 0;
-  function visit(directory, prefix = '') {
+  function visit(directory, prefix = '', depth = 0) {
+    if (depth > 32) refuse('source directory depth exceeds bound');
     const before = lstatSync(directory, { bigint: true });
     if (!before.isDirectory()) refuse('source directory replaced');
-    for (const rawName of readdirSync(directory, { encoding: 'buffer' }).sort(Buffer.compare)) {
-      const name = textDecoder.decode(rawName);
-      if (!name || ['.', '..'].includes(name) || /[\\\0]/u.test(name))
-        refuse('invalid source entry name');
-      if (++entries > 10000) refuse('source entry count exceeds bound');
-      const path = join(directory, name);
-      const relative = prefix ? `${prefix}/${name}` : name;
-      const stat = lstatSync(path);
-      if (!prefix && name === '.git') {
-        if (!stat.isDirectory()) refuse('unexpected Git metadata kind');
-        continue;
+    // Bounded native prefetch and at most33 open directory handles. Never
+    // materialize/sort an arbitrary directory before enforcing the global cap.
+    const handle = opendirSync(directory, { encoding: 'buffer', bufferSize: 32 });
+    try {
+      for (;;) {
+        const entry = handle.readSync();
+        if (!entry) break;
+        if (++entries > 10000) refuse('source entry count exceeds bound');
+        const name = textDecoder.decode(entry.name);
+        if (!name || ['.', '..'].includes(name) || /[\\\0]/u.test(name))
+          refuse('invalid source entry name');
+        const path = join(directory, name);
+        const relative = prefix ? `${prefix}/${name}` : name;
+        const stat = lstatSync(path);
+        if (!prefix && name === '.git') {
+          if (!stat.isDirectory()) refuse('unexpected Git metadata kind');
+          continue;
+        }
+        if (stat.isDirectory()) visit(path, relative, depth + 1);
+        else {
+          if (!stat.isFile()) refuse('source contains a symlink or unsupported entry');
+          const row = { path: relative, ...fileIdentity(path, 16 * 1024 * 1024) };
+          totalBytes += row.bytes;
+          if (rows.length >= 4096 || totalBytes > 64 * 1024 * 1024)
+            refuse('source population exceeds bounds');
+          rows.push(row);
+        }
       }
-      if (stat.isDirectory()) visit(path, relative);
-      else {
-        if (!stat.isFile()) refuse('source contains a symlink or unsupported entry');
-        const row = { path: relative, ...fileIdentity(path, 16 * 1024 * 1024) };
-        totalBytes += row.bytes;
-        if (rows.length >= 4096 || totalBytes > 64 * 1024 * 1024)
-          refuse('source population exceeds bounds');
-        rows.push(row);
-      }
+    } finally {
+      handle.closeSync();
     }
     if (!sameFile(before, lstatSync(directory, { bigint: true })))
       refuse('source directory changed while scanning');
@@ -390,35 +409,57 @@ function redirectAllowed(url, origin) {
   );
 }
 
-async function downloadArchive(root, pin) {
-  const temporary = join(root, `${pin.name}.part`);
-  const fd = openSync(temporary, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY, 0o600);
+async function cancelBody(body, reader) {
+  if (!body) return;
+  let timer;
+  try {
+    await Promise.race([
+      Reflect.apply(reader ? readerCancel : streamCancel, reader ?? body, []),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('Archive body cancellation deadline exceeded')),
+          5000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Source-used stream boundary, not origin authority. The pin is selected only
+ * from the internal immutable roster. A real local HTTP Response can exercise
+ * stream/refusal/cancellation behavior without injecting a production URL/fetch.
+ * The fixed-origin caller owns the90s fetch deadline; this helper never admits
+ * origin trust, transport custody, native readiness or qualification.
+ */
+export async function consumeFiniteK6ArchiveResponse(response, archiveName, temporary) {
+  let body;
+  let fd;
+  let reader;
+  let failure;
+  let pin;
   const hash = createHash('sha256');
   let bytes = 0;
-  let reader;
-  let complete = false;
   try {
-    const signal = AbortSignal.timeout(90000);
-    let url = pin.url;
-    let response;
-    for (let redirects = 0; redirects <= 3; redirects++) {
-      if (!redirectAllowed(url, pin))
-        refuse('archive redirected outside its fixed official origin');
-      response = await fetch(url, { redirect: 'manual', signal });
-      if (![301, 302, 303, 307, 308].includes(response.status)) break;
-      const location = response.headers.get('location');
-      await response.body?.cancel();
-      if (!location || redirects === 3) refuse('archive redirect bound exceeded');
-      url = new URL(location, url).href;
-    }
-    if (response.status !== 200 || !response.body) refuse('archive HTTP response differs');
-    const contentLength = response.headers.get('content-length');
+    body = Reflect.apply(responseBody, response, []);
+    pin = Object.values(archives).find((candidate) => candidate.name === archiveName);
+    if (!pin) refuse('unknown internally pinned archive');
+    externalPath(temporary);
+    realDirectory(dirname(temporary));
+    if (basename(temporary) !== `${pin.name}.part`) refuse('archive sink name differs');
+    if (Reflect.apply(responseStatus, response, []) !== 200 || !body)
+      refuse('archive HTTP response differs');
+    const headers = Reflect.apply(responseHeaders, response, []);
+    const contentLength = Reflect.apply(headersGet, headers, ['content-length']);
     if (contentLength !== null && contentLength !== String(pin.bytes))
       refuse('archive declared byte count differs');
-    if (response.headers.get('content-encoding')) refuse('encoded archive response refused');
-    reader = response.body.getReader();
+    if (Reflect.apply(headersGet, headers, ['content-encoding']))
+      refuse('encoded archive response refused');
+    fd = openSync(temporary, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY, 0o600);
+    reader = Reflect.apply(streamGetReader, body, []);
     for (;;) {
-      const chunk = await reader.read();
+      const chunk = await Reflect.apply(readerRead, reader, []);
       if (chunk.done) break;
       if (bytes + chunk.value.byteLength > pin.bytes) refuse('archive stream exceeds bound');
       hash.update(chunk.value);
@@ -433,14 +474,56 @@ async function downloadArchive(root, pin) {
     if (bytes !== pin.bytes || hash.digest('hex') !== pin.sha256)
       refuse('archive digest/byte count differs');
     fsyncSync(fd);
-    complete = true;
+  } catch (error) {
+    failure = error;
   } finally {
     try {
-      if (reader) await reader.cancel();
+      // Includes status/header refusals that happen before acquiring a reader.
+      await cancelBody(body, reader);
+    } catch (error) {
+      failure = new AggregateError(
+        failure ? [failure, error] : [error],
+        'Finite k6 archive response cancellation failed; archive remains refused',
+      );
     } finally {
-      closeSync(fd);
-      if (!complete) unlinkSync(temporary);
+      if (fd !== undefined) {
+        closeSync(fd);
+        if (failure) unlinkSync(temporary);
+      }
     }
+  }
+  if (failure) throw failure;
+  return { archiveName: pin.name, bytes, sha256: pin.sha256, originAdmitted: false };
+}
+
+async function downloadArchive(root, pin) {
+  const temporary = join(root, `${pin.name}.part`);
+  let response;
+  let consumed = false;
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(), 90000);
+  try {
+    let url = pin.url;
+    for (let redirects = 0; redirects <= 3; redirects++) {
+      if (!redirectAllowed(url, pin))
+        refuse('archive redirected outside its fixed official origin');
+      response = await nativeFetch(url, { redirect: 'manual', signal: controller.signal });
+      const status = Reflect.apply(responseStatus, response, []);
+      if (![301, 302, 303, 307, 308].includes(status)) break;
+      const location = Reflect.apply(headersGet, Reflect.apply(responseHeaders, response, []), [
+        'location',
+      ]);
+      await cancelBody(Reflect.apply(responseBody, response, []));
+      if (!location || redirects === 3) refuse('archive redirect bound exceeded');
+      url = new URL(location, url).href;
+    }
+    // Even early final-response refusals enter the source-used cancellation
+    // boundary; failed/ambiguous cancellation never promotes an archive.
+    await consumeFiniteK6ArchiveResponse(response, pin.name, temporary);
+    consumed = true;
+  } finally {
+    clearTimeout(deadline);
+    if (!consumed) controller.abort();
   }
   renameSync(temporary, join(root, pin.name));
 }
