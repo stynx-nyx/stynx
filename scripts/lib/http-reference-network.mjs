@@ -8,6 +8,7 @@ import dnsPromises from 'node:dns/promises';
 import { createRequire, syncBuiltinESMExports } from 'node:module';
 import { isDeepStrictEqual, types } from 'node:util';
 import { EventEmitter } from 'node:events';
+import { httpOriginalScenarioProfile } from './http-original-scenarios.mjs';
 
 // Component observations never authenticate the supervisor's live build or
 // resources. The fixed worker/parent must bind this exact closure separately.
@@ -59,7 +60,7 @@ function nativeAgentOptions(value) {
 
 function refuse(state, reason, boundary = 'scope') {
   state.failure ??= reason;
-  if (state.effects.length < 10_000)
+  if (state.effects.length < state.effectLimit)
     state.effects.push({ sequence: ++state.sequence, boundary, decision: 'REFUSED', reason });
   const error = new Error('Owned reference transport boundary refused');
   error.code = `HTTP_REFERENCE_NETWORK_${reason}`;
@@ -76,7 +77,7 @@ function stateFor(handle) {
 function admitted(state, boundary, destination) {
   if (state.closed) refuse(state, 'CLOSED', boundary);
   if (state.failure) refuse(state, state.failure, boundary);
-  if (state.effects.length >= 10_000) refuse(state, 'EFFECT_BOUND', boundary);
+  if (state.effects.length >= state.effectLimit) refuse(state, 'EFFECT_BOUND', boundary);
   state.effects.push({ sequence: ++state.sequence, boundary, decision: 'FORWARDED', destination });
 }
 
@@ -341,8 +342,23 @@ function verifyDescriptors(state) {
 
 /** Internal fixed-worker component; scalar endpoints grant no resource custody. */
 export function installOwnedReferenceNetworkScope(binding) {
+  if (arguments.length !== 1) throw new Error('Invalid fixed reference network binding');
+  return installFixedReferenceNetworkScope(binding, null);
+}
+
+/** Separate source-owned storage capacity; this does not admit a workload. */
+export function installOwnedOriginalReferenceNetworkScope(binding, selector) {
+  if (arguments.length !== 2) throw new Error('Invalid fixed original network binding');
+  const profile = httpOriginalScenarioProfile(selector);
+  return installFixedReferenceNetworkScope(binding, {
+    scenarioId: profile.scenarioId,
+    profileId: profile.profileId,
+    maximumRetainedEffects: 100_000,
+  });
+}
+
+function installFixedReferenceNetworkScope(binding, originalScenarioCapacity) {
   if (
-    arguments.length !== 1 ||
     process.versions.node !== '24.20.0' ||
     active ||
     !plain(binding) ||
@@ -358,6 +374,8 @@ export function installOwnedReferenceNetworkScope(binding) {
   )
     throw new Error('Invalid fixed reference network binding');
   const state = {
+    originalScenarioCapacity,
+    effectLimit: originalScenarioCapacity?.maximumRetainedEffects ?? 10_000,
     postgresPort: binding.postgresPort,
     redisPort: binding.redisPort,
     objectStorePort: binding.objectStorePort,
@@ -414,7 +432,7 @@ export function installOwnedReferenceNetworkScope(binding) {
   const asyncListenFailure = (ticket, reason) => {
     state.failure ??= reason;
     ticket.callbackOutcome = 'REFUSED';
-    if (state.effects.length < 10_000)
+    if (state.effects.length < state.effectLimit)
       state.effects.push({
         sequence: ++state.sequence,
         boundary: 'dns.lookup.numeric-listen-lowering',
@@ -995,6 +1013,9 @@ export function observeOwnedReferenceNetwork(handle) {
   return structuredClone({
     schemaVersion: 1,
     scope: 'reference-owned-loopback-transport-component',
+    ...(state.originalScenarioCapacity
+      ? { originalScenarioCapacity: state.originalScenarioCapacity }
+      : {}),
     effects: state.effects,
     listener: state.listener ?? null,
     actualSdkClients: state.sdkClients.map((row) => ({
@@ -1030,6 +1051,30 @@ export function observeOwnedReferenceNetwork(handle) {
     parentCorroborationRequired: true,
     actualTransportSourceAdmission: 'PENDING_INDEPENDENT_INSPECTOR',
     capturedNativeUndiciTransportCompleteness: 'UNVERIFIED',
+    runtimeCustodyComplete: false,
+    performanceQualified: false,
+    readinessPromoting: false,
+  });
+}
+
+/** Retain already captured failure rows without reopening a refused capability.
+ * The fixed original worker must durably retain these bytes before it exits.
+ * This is neither a cleanup receipt nor complete transport/execution evidence.
+ */
+export function snapshotOwnedOriginalReferenceNetworkFailure(handle) {
+  if (arguments.length !== 1) throw new Error('Invalid original network failure snapshot');
+  const state = scopes.get(handle);
+  if (!state?.originalScenarioCapacity || !state.failure)
+    throw new Error('No actual original network failure is retained');
+  return structuredClone({
+    schemaVersion: 1,
+    scope: 'original-owned-network-failure-diagnostic',
+    originalScenarioCapacity: state.originalScenarioCapacity,
+    failure: state.failure,
+    capturedEffects: state.effects.length,
+    effects: state.effects,
+    scopeClosed: state.closed,
+    cleanupComplete: false,
     runtimeCustodyComplete: false,
     performanceQualified: false,
     readinessPromoting: false,
