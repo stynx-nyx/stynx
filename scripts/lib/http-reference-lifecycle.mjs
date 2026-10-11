@@ -58,12 +58,16 @@ const requestLimit = 64 * 1024;
 const monotonicNow = process.hrtime.bigint.bind(process.hrtime);
 const remainingTime = (state) =>
   state.job.mode === 'http-original-scenario'
-    ? Number(state.monotonicDeadline - monotonicNow()) / 1_000_000
+    ? state.originalShutdownActive
+      ? state.originalControls.originalShutdownRemainingMilliseconds(state.shutdownBudget)
+      : Number(state.monotonicDeadline - monotonicNow()) / 1_000_000
     : state.deadline - Date.now();
 function setLifecycleDeadline(state, milliseconds) {
   state.deadline = Date.now() + milliseconds;
-  if (state.job.mode === 'http-original-scenario')
+  if (state.job.mode === 'http-original-scenario') {
+    state.originalShutdownActive = false;
     state.monotonicDeadline = monotonicNow() + BigInt(milliseconds) * 1_000_000n;
+  }
 }
 
 function refuse(state, reason) {
@@ -289,11 +293,16 @@ function closeApplication(state, fallback) {
   if (state.job.mode === 'http-original-scenario') {
     // One budget starts immediately before the first actual close attempt. A
     // failed wait never grants another budget or borrows measurement time.
-    state.shutdownDeadline ??= monotonicNow() + 30_000_000_000n;
-    state.monotonicDeadline = state.shutdownDeadline;
+    state.shutdownBudget ??= state.originalControls.createOriginalShutdownBudget();
+    state.originalShutdownActive = true;
     if (remainingTime(state) <= 0) refuse(state, 'SHUTDOWN_DEADLINE');
+    const retained = state.originalControls.originalShutdownClosePromise(state.shutdownBudget);
+    if (retained) return retained;
+    const promise = closeReferenceNestApplication(state.nestGuard, fallback);
+    state.originalControls.retainOriginalShutdownClosePromise(state.shutdownBudget, promise);
+    return promise;
   }
-  // The guard retains and returns the same pending close Promise on fallback.
+  // Legacy modes keep the guard's existing pending close and deadline behavior.
   return closeReferenceNestApplication(state.nestGuard, fallback);
 }
 
@@ -1059,16 +1068,16 @@ async function prepareOriginalScenario(state, target, responses) {
               entry.declaringClass === name,
           ).length === 1,
       );
-      if (
-        mounted.length !== 1 ||
-        declaring.length !== 1 ||
-        registered.length !== 1 ||
-        Object.getPrototypeOf(mountedConstructor) !== constructor ||
-        Object.getPrototypeOf(mountedConstructor.prototype) !== constructor.prototype ||
-        Object.hasOwn(mountedConstructor.prototype, methodName) ||
-        (matches.length === 1 && Object.hasOwn(matches[0].wrapper.instance, methodName))
-      )
+      if (mounted.length !== 1 || declaring.length !== 1 || registered.length !== 1)
         refuse(state, 'ORIGINAL_PROFILE_INHERITANCE');
+      if (matches.length === 1)
+        state.originalControls.assertOriginalProfileInheritance({
+          mountedConstructor,
+          declaringConstructor: constructor,
+          instance: matches[0].wrapper.instance,
+          mountedMetatype: matches[0].wrapper.metatype,
+          targetCallback: matches[0].definition.targetCallback,
+        });
     }
     if (
       matches.length !== 1 ||
@@ -1506,6 +1515,7 @@ async function executeReferenceLifecycle(
     : original
       ? await import('./http-original-exchange.mjs')
       : null;
+  const originalControls = original ? await import('./http-original-lifecycle-controls.mjs') : null;
   const originalProfile = original
     ? (await import('./http-original-scenarios.mjs')).httpOriginalScenarioProfile({
         scenarioId: job.originalScenario?.scenarioId,
@@ -1517,6 +1527,7 @@ async function executeReferenceLifecycle(
     networkHandle,
     channelHandle,
     nestPreparation,
+    originalControls,
     patches: [],
     instancePatches: [],
     middlewareInstances: [],

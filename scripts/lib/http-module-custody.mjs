@@ -527,6 +527,7 @@ export async function runHttpRuntimeWorker() {
           'scripts/lib/http-original-protocol.mjs',
           'scripts/lib/http-original-scenarios.mjs',
           'scripts/lib/http-original-exchange.mjs',
+          'scripts/lib/http-original-lifecycle-controls.mjs',
         );
       controlPaths.sort();
       const keys = [
