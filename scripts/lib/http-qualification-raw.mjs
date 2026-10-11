@@ -230,7 +230,8 @@ export function decodeHttpQualificationTargetCapture(input, allocation) {
   for (const [line, value] of lines.entries()) {
     let record;
     try {
-      record = parseBaselineJson(Buffer.from(value, 'utf8'));
+      // Normalize only after strict duplicate-key/UTF-8 parsing succeeds.
+      record = JSON.parse(JSON.stringify(parseBaselineJson(Buffer.from(value, 'utf8'))));
     } catch {
       fail(`JSON_LINE_${line + 1}`);
     }
