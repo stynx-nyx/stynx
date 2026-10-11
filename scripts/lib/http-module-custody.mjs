@@ -250,7 +250,11 @@ export async function runHttpRuntimeWorker() {
     job = JSON.parse(bytes.toString('utf8'));
     if (
       job.schemaVersion !== 1 ||
-      !['bootstrap-module-only', 'reference-owned-loopback'].includes(job.mode) ||
+      ![
+        'bootstrap-module-only',
+        'reference-owned-loopback',
+        'http-endpoint-qualification',
+      ].includes(job.mode) ||
       !isHttpComposition(job.compositionId) ||
       !/^[a-f0-9]{40}$/u.test(job.candidateCommit) ||
       !/^[a-f0-9]{40}$/u.test(job.tree) ||
@@ -284,7 +288,7 @@ export async function runHttpRuntimeWorker() {
       'scripts/lib/http-runtime-census.mjs',
       'scripts/lib/http-runtime-worker.mjs',
     ];
-    if (job.mode === 'reference-owned-loopback') {
+    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
       controlPaths.push(
         'scripts/lib/http-reference-loopback-protocol.mjs',
         'scripts/lib/http-reference-network.mjs',
@@ -293,6 +297,13 @@ export async function runHttpRuntimeWorker() {
         'scripts/lib/http-reference-nest-guard.mjs',
         'scripts/lib/http-runtime-protocol.mjs',
       );
+      if (job.mode === 'http-endpoint-qualification')
+        controlPaths.push(
+          'scripts/lib/http-qualification-protocol.mjs',
+          'scripts/lib/http-qualification-liveness.mjs',
+          'scripts/lib/http-qualification-exchange.mjs',
+          'scripts/lib/k6-baseline-json.mjs',
+        );
       controlPaths.sort();
       const keys = [
         'schemaVersion',
@@ -317,10 +328,14 @@ export async function runHttpRuntimeWorker() {
         'referenceRegistry',
         'observationArtifactPath',
       ];
+      if (job.mode === 'http-endpoint-qualification') keys.push('qualification');
       if (
         !isDeepStrictEqual(Object.keys(job).sort(), keys.sort()) ||
         job.observationArtifactPath !==
-          resolve(dirname(descriptor), `${job.nonce}.reference-body.json`) ||
+          resolve(
+            dirname(descriptor),
+            `${job.nonce}.${job.mode === 'http-endpoint-qualification' ? 'qualification' : 'reference'}-body.json`,
+          ) ||
         job.referenceFixture?.identity?.candidateCommit !== job.candidateCommit ||
         job.referenceFixture?.identity?.tree !== job.tree ||
         job.referenceFixture?.identity?.nonce !== job.nonce ||
@@ -378,7 +393,7 @@ export async function runHttpRuntimeWorker() {
           ],
         ],
       ];
-      if (job.mode === 'reference-owned-loopback')
+      if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode))
         rules.push([
           'packages/flow/package.json',
           '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
@@ -413,7 +428,7 @@ export async function runHttpRuntimeWorker() {
       if (!Array.isArray(job.resolutionAnchors) || job.resolutionAnchors.length !== rules.length)
         fail('Private resolution anchor population differs');
       if (
-        job.mode === 'reference-owned-loopback' &&
+        ['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode) &&
         !isDeepStrictEqual(job.resolutionAnchors[1].manifest, job.resolutionAnchors[2].manifest)
       )
         fail('Shared physical flow anchor differs between caller relations');
@@ -1309,12 +1324,18 @@ export async function runHttpRuntimeWorker() {
     let channel;
     let finishChannel;
     let serializeRuntime;
-    if (job.mode === 'reference-owned-loopback') {
-      const wire = await import('./http-reference-loopback-protocol.mjs');
+    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
       ({ serializeHttpRuntimePlainJson: serializeRuntime } =
         await import('./http-runtime-protocol.mjs'));
-      channel = await wire.openReferenceLifecycleChannel(job);
-      finishChannel = wire.finishReferenceLifecycleChannel;
+      if (job.mode === 'http-endpoint-qualification') {
+        const wire = await import('./http-qualification-protocol.mjs');
+        channel = await wire.openHttpQualificationChannel(job);
+        finishChannel = wire.finishHttpQualificationChannel;
+      } else {
+        const wire = await import('./http-reference-loopback-protocol.mjs');
+        channel = await wire.openReferenceLifecycleChannel(job);
+        finishChannel = wire.finishReferenceLifecycleChannel;
+      }
     } else await send('start', { mode: job.mode, resolutionAnchors: job.resolutionAnchors });
     // These local startup checks cannot establish freshness alone. Only the
     // supervisor's live handle, exact spawn/ChildProcess and pinned pre-custody
@@ -1326,7 +1347,7 @@ export async function runHttpRuntimeWorker() {
     let nestPreparation;
     let nestPreparationObservation;
     const assertNestPreparationLoadOrder = (requireCensus) => {
-      if (job.mode !== 'reference-owned-loopback') return;
+      if (!['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) return;
       const rows = custody.snapshot().evaluations;
       const first = (url) =>
         rows.filter((row) => row.canonicalURL === url).sort((a, b) => a.sequence - b.sequence)[0];
@@ -1352,7 +1373,7 @@ export async function runHttpRuntimeWorker() {
       // Load rows establish ordering, not completion callbacks. Original require
       // return and retained identical loaded cache objects supply completion.
     };
-    if (job.mode === 'reference-owned-loopback') {
+    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
       const guard = await import('./http-reference-nest-guard.mjs');
       nestPreparation = guard.prepareReferenceNestGuard();
       nestPreparationObservation = guard.observeReferenceNestPreparation(nestPreparation);
@@ -1364,7 +1385,7 @@ export async function runHttpRuntimeWorker() {
     const observation = await observeReferenceBootstrapModule(job);
     let referenceObservation;
     let networkClosure;
-    if (job.mode === 'reference-owned-loopback') {
+    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
       const transport = await import('./http-reference-network.mjs');
       closeNetwork = transport.closeOwnedReferenceNetworkScope;
       network = transport.installOwnedReferenceNetworkScope({
@@ -1374,13 +1395,11 @@ export async function runHttpRuntimeWorker() {
           ? { objectStorePort: job.referenceFixture.objectStore.port }
           : {}),
       });
-      const { observeOwnedReferenceLoopback } = await import('./http-reference-lifecycle.mjs');
-      referenceObservation = await observeOwnedReferenceLoopback(
-        job,
-        network,
-        channel,
-        nestPreparation,
-      );
+      const lifecycle = await import('./http-reference-lifecycle.mjs');
+      referenceObservation =
+        job.mode === 'http-endpoint-qualification'
+          ? await lifecycle.observeOwnedHttpQualification(job, network, channel, nestPreparation)
+          : await lifecycle.observeOwnedReferenceLoopback(job, network, channel, nestPreparation);
       networkClosure = closeNetwork(network);
       network = undefined;
     }
@@ -1403,7 +1422,7 @@ export async function runHttpRuntimeWorker() {
         'scripts/lib/http-module-custody.mjs',
       ].includes(row.path),
     );
-    if (job.mode === 'reference-owned-loopback') {
+    if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(job.mode)) {
       for (const path of controlPaths) {
         if (
           [
@@ -1427,6 +1446,7 @@ export async function runHttpRuntimeWorker() {
           workerPid: process.pid,
           referenceObservation,
           networkClosure,
+          ...(job.mode === 'http-endpoint-qualification' ? { modules, trustedBootstrap } : {}),
           parentCorroborationRequired: true,
           complete: false,
           runtimeCustodyComplete: false,
@@ -1436,16 +1456,19 @@ export async function runHttpRuntimeWorker() {
       );
       if (contents.length > 64 * 1024 * 1024) fail('Factory observation exceeds supported bound');
       writeFileSync(job.observationArtifactPath, contents, { mode: 0o600, flag: 'wx' });
-      await finishChannel(channel, {
-        modules,
-        trustedBootstrap,
-        observationArtifact: {
-          path: job.observationArtifactPath,
-          sha256: digest(contents),
-          byteLength: contents.length,
-          permissions: 0o600,
-        },
-      });
+      if (job.mode === 'http-endpoint-qualification')
+        await finishChannel(channel, digest(contents));
+      else
+        await finishChannel(channel, {
+          modules,
+          trustedBootstrap,
+          observationArtifact: {
+            path: job.observationArtifactPath,
+            sha256: digest(contents),
+            byteLength: contents.length,
+            permissions: 0o600,
+          },
+        });
       terminalSent = true;
     } else
       await send('terminal', {

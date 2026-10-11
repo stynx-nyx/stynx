@@ -452,7 +452,7 @@ function validResolutionAnchors(anchors, binding, context, members) {
       ],
     ],
   ];
-  if (context.mode === 'reference-owned-loopback')
+  if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(context.mode))
     rules.push([
       'packages/flow/package.json',
       '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
@@ -481,7 +481,7 @@ function validResolutionAnchors(anchors, binding, context, members) {
   ];
   if (!Array.isArray(anchors) || anchors.length !== rules.length) return false;
   if (
-    context.mode === 'reference-owned-loopback' &&
+    ['reference-owned-loopback', 'http-endpoint-qualification'].includes(context.mode) &&
     !isDeepStrictEqual(anchors[1].manifest, anchors[2].manifest)
   )
     return false;
@@ -885,7 +885,7 @@ export function createHttpModuleSnapshotValidator(context) {
     arguments.length !== 1 ||
     !safePlainJson(context) ||
     !exact(context, ['bindings', 'candidateCommit', 'mode', 'nonce', 'pid']) ||
-    context.mode !== 'reference-owned-loopback' ||
+    !['reference-owned-loopback', 'http-endpoint-qualification'].includes(context.mode) ||
     !commitValue(context.candidateCommit) ||
     typeof context.nonce !== 'string' ||
     !/^[a-f0-9-]{36}$/u.test(context.nonce) ||

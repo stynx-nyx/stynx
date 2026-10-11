@@ -988,6 +988,35 @@ export async function observeOwnedReferenceLoopback(
   channelHandle,
   nestPreparation,
 ) {
+  if (arguments.length !== 4 || job?.mode !== 'reference-owned-loopback')
+    throw new Error('Fixed loopback lifecycle requires its original exact mode');
+  return executeReferenceLifecycle(job, networkHandle, channelHandle, nestPreparation, false);
+}
+
+/** Disjoint persistent mode, only entered by the fixed supervised worker. */
+export async function observeOwnedHttpQualification(
+  job,
+  networkHandle,
+  channelHandle,
+  nestPreparation,
+) {
+  if (arguments.length !== 4 || job?.mode !== 'http-endpoint-qualification')
+    throw new Error('Fixed qualification lifecycle requires its exact mode');
+  return executeReferenceLifecycle(job, networkHandle, channelHandle, nestPreparation, true);
+}
+
+async function executeReferenceLifecycle(
+  job,
+  networkHandle,
+  channelHandle,
+  nestPreparation,
+  qualification,
+) {
+  const qualificationWire = qualification
+    ? await import('./http-qualification-protocol.mjs')
+    : null;
+  const recipes = qualification ? await import('./http-qualification-liveness.mjs') : null;
+  const exchangeApi = qualification ? await import('./http-qualification-exchange.mjs') : null;
   const state = {
     job,
     networkHandle,
@@ -1010,9 +1039,9 @@ export async function observeOwnedReferenceLoopback(
     appClosed: false,
   };
   if (
-    arguments.length !== 4 ||
+    arguments.length !== 5 ||
     active ||
-    job?.mode !== 'reference-owned-loopback' ||
+    job?.mode !== (qualification ? 'http-endpoint-qualification' : 'reference-owned-loopback') ||
     !isHttpComposition(job.compositionId) ||
     job.referenceRegistry?.candidateCommit !== job.candidateCommit ||
     job.referenceRegistry?.tree !== job.tree ||
@@ -1029,10 +1058,18 @@ export async function observeOwnedReferenceLoopback(
   // The opaque network handle must name an actually installed guard. Scalar job
   // data and this observation still cannot authenticate the live parent fixture.
   observeOwnedReferenceNetwork(networkHandle);
-  assertReferenceLifecycleChannel(channelHandle, job);
+  if (qualification) qualificationWire.assertHttpQualificationChannel(channelHandle, job);
+  else assertReferenceLifecycleChannel(channelHandle, job);
+  const declaration = qualification
+    ? recipes.readWorkerLivenessQualificationDeclaration(job)
+    : null;
+  const exchange = qualification ? exchangeApi.openHttpQualificationParentExchange(job) : null;
   active = state;
   const phase = async (body) => {
-    await emitReferenceLifecyclePhase(state.channelHandle, body);
+    if (qualification) {
+      const { phase: name, ...payload } = body;
+      await qualificationWire.emitHttpQualificationPhase(state.channelHandle, name, payload);
+    } else await emitReferenceLifecyclePhase(state.channelHandle, body);
     state.phases.push(body);
   };
   let result;
@@ -1131,6 +1168,7 @@ export async function observeOwnedReferenceLoopback(
       layerCount: initial.layers.length,
       controllerCount: initial.registry.controllers.length,
       routeCount: state.routes.length,
+      ...(qualification ? { runtimeObjectSnapshotSha256: sha(initial) } : {}),
     });
     await bounded(state, publicOperation(state, 'listen', [0, '127.0.0.1']), 'LISTEN');
     const target = bindOwnedReferenceListener(
@@ -1139,13 +1177,87 @@ export async function observeOwnedReferenceLoopback(
     );
     await phase({ phase: 'listen', host: target.host, port: target.port });
     const responses = [];
-    for (const path of ['/healthz', '/profile']) {
-      responses.push(await bounded(state, request(state, target, path), 'REQUEST'));
+    let preparation;
+    let measurement;
+    if (qualification) {
+      state.deadline = Date.now() + 180_000;
+      const constructor = sourceConstructor(
+        state,
+        declaration.binding.operation.file,
+        'StynxHealthController',
+      );
+      const handler = Object.getOwnPropertyDescriptor(constructor.prototype, 'liveness')?.value;
+      const matches = state.routes.filter((row) => row.method === 'GET' && row.path === '/healthz');
+      if (
+        matches.length !== 1 ||
+        Object.getPrototypeOf(matches[0].wrapper.instance) !== constructor.prototype ||
+        matches[0].definition.targetCallback !== handler ||
+        matches[0].definition.methodName !== 'liveness'
+      )
+        refuse(state, 'QUALIFICATION_ROUTE_IDENTITY');
+      // Exact actual metadata: no health handler/class rate-limit or audit
+      // annotation may be silently replaced with a guessed quota/effect model.
+      const rateLimitKey = state.require('@stynx-nyx/ratelimit').STYNX_RATE_LIMIT_ROUTE;
+      const auditKey = state.require('@stynx-nyx/backend').STYNX_AUDIT_METADATA;
+      if (
+        typeof rateLimitKey !== 'symbol' ||
+        typeof auditKey !== 'symbol' ||
+        [constructor, handler].some(
+          (value) =>
+            Reflect.getMetadata(rateLimitKey, value) !== undefined ||
+            Reflect.getMetadata(auditKey, value) !== undefined,
+        )
+      )
+        refuse(state, 'QUALIFICATION_METADATA');
+      preparation = {
+        caseSha256: declaration.caseSha256,
+        recipeId: declaration.binding.operation.fixtureRecipeId,
+        actualControllerAndHandlerBound: true,
+        route: { method: matches[0].method, path: matches[0].path },
+        setupTrafficCount: 0,
+        sqlEffectCount: 0,
+        objectEffectCount: 0,
+        session: { requiredByActualHandler: false, credentialsCreated: false },
+        effectiveRateLimitMetadata: null,
+        effectiveAuditMetadata: null,
+        businessEffectVerification: 'PENDING_PARENT_FULL_VISIBILITY_RECONCILIATION',
+      };
       await phase({
-        phase: path === '/healthz' ? 'healthz' : 'profile',
-        ...responses.at(-1),
+        phase: 'preparation-complete',
+        caseSha256: declaration.caseSha256,
+        evidenceSha256: sha(preparation),
+        trafficCount: 0,
+        sqlEffectCount: 0,
+        objectEffectCount: 0,
       });
+      const begin = exchangeApi.waitHttpQualificationParentCommand(exchange, 'begin-measurement');
+      // Phase emission is asynchronous; retain early exchange rejection until
+      // the original promise is awaited without creating an unhandled rejection.
+      void begin.catch(() => {});
+      await phase({
+        phase: 'ready',
+        host: target.host,
+        port: target.port,
+        caseSha256: declaration.caseSha256,
+        manifestSha256: declaration.manifestSha256,
+        preparationEvidenceSha256: sha(preparation),
+        sessionEvidenceSha256: sha(preparation.session),
+      });
+      const beginBody = await bounded(state, begin, 'PARENT_BEGIN');
+      state.deadline = Date.now() + 330_000;
+      const finish = exchangeApi.waitHttpQualificationParentCommand(exchange, 'finish-measurement');
+      void finish.catch(() => {});
+      await phase({ phase: 'measurement-start', ...beginBody });
+      measurement = await bounded(state, finish, 'PARENT_MEASUREMENT');
+      await phase({ phase: 'measurement-complete', ...measurement });
       finalObjects(state);
+      state.deadline = Date.now() + 30_000;
+    } else {
+      for (const path of ['/healthz', '/profile']) {
+        responses.push(await bounded(state, request(state, target, path), 'REQUEST'));
+        await phase({ phase: path === '/healthz' ? 'healthz' : 'profile', ...responses.at(-1) });
+        finalObjects(state);
+      }
     }
     await bounded(state, closeApplication(state, false), 'CLOSE');
     state.appClosed = true;
@@ -1165,10 +1277,21 @@ export async function observeOwnedReferenceLoopback(
       phase: 'close',
       actualAppCloseResolved: true,
       ownedSocketCloseEventsComplete: true,
+      ...(qualification
+        ? {
+            listenerClosed: final.network.listenerClosed,
+            openSocketCount: final.network.openSocketCount,
+            clientDisposalEvidenceSha256: sha({
+              network: final.network,
+              providers: state.objectStoreClients?.map((row) => row.observation) ?? [],
+            }),
+          }
+        : {}),
     });
+    if (qualification) state.deadline = Date.now() + 30_000;
     result = {
       schemaVersion: 1,
-      scope: 'reference-owned-loopback',
+      scope: job.mode,
       compositionId: job.compositionId,
       bootstrap,
       phases: state.phases,
@@ -1176,6 +1299,7 @@ export async function observeOwnedReferenceLoopback(
       registry: final.registry,
       network: final.network,
       responses,
+      ...(qualification ? { preparation, measurement, initialObjectSnapshot: initial } : {}),
       privacyOptions: state.privacyOptions
         ? {
             actualSharedOptionsIdentityObserved: true,
@@ -1263,20 +1387,38 @@ export async function observeOwnedReferenceLoopback(
     )
       state.cleanupIncomplete = true;
     restore(state);
+    if (exchange) {
+      const exchangeClosure = exchangeApi.closeHttpQualificationParentExchange(exchange);
+      if (!exchangeClosure.complete) state.failure ??= 'QUALIFICATION_EXCHANGE_INCOMPLETE';
+    }
     if (state.cleanupIncomplete) active = state;
   }
   if (state.failure || state.cleanupIncomplete)
     refuse(state, state.failure ?? 'CLEANUP_INCOMPLETE');
-  await phase({
-    phase: 'final',
-    descriptorsRestored: true,
-    registrySha256: sha(result.registry),
-    middlewareSha256: sha({
-      layers: result.layers,
-      instances: result.middlewareInstances,
-      callbacks: result.callbacks,
-    }),
-    networkSha256: sha(result.network),
-  });
+  await phase(
+    qualification
+      ? {
+          phase: 'final',
+          runtimeEvidenceSha256: sha(result),
+          sourceEvidenceSha256: sha(job.controls),
+          fixtureFinalEvidenceSha256: sha({
+            scope: 'worker-network-subset',
+            network: result.network,
+            actualParentFixtureFinalVerification: 'REQUIRED',
+          }),
+          parentFixtureCleanupRequired: true,
+        }
+      : {
+          phase: 'final',
+          descriptorsRestored: true,
+          registrySha256: sha(result.registry),
+          middlewareSha256: sha({
+            layers: result.layers,
+            instances: result.middlewareInstances,
+            callbacks: result.callbacks,
+          }),
+          networkSha256: sha(result.network),
+        },
+  );
   return result;
 }

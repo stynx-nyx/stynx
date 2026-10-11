@@ -540,6 +540,24 @@ export async function openHttpQualificationChannel(job) {
   return handle;
 }
 
+/** Internal actual worker binding, never a serialized caller capability. */
+export function assertHttpQualificationChannel(handle, job) {
+  const state = channelFor(handle);
+  if (
+    arguments.length !== 2 ||
+    job.mode !== mode ||
+    state.context.operationId !== job.qualification.operationId ||
+    state.context.caseId !== job.qualification.caseId ||
+    state.context.caseSha256 !== job.qualification.caseSha256 ||
+    state.context.manifestSha256 !== job.qualification.manifestSha256 ||
+    state.context.candidateCommit !== job.candidateCommit ||
+    state.context.tree !== job.tree ||
+    state.context.nonce !== job.nonce ||
+    state.context.compositionId !== job.compositionId
+  )
+    refuse();
+}
+
 /** Fixed worker emits each phase immediately after the real owned operation. */
 export async function emitHttpQualificationPhase(handle, phase, body) {
   const state = channelFor(handle);
