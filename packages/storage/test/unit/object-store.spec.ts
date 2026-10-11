@@ -79,3 +79,62 @@ describe('StynxObjectStore', () => {
     expect(callArgs[2]).toEqual({ expiresIn: 600 });
   });
 });
+
+describe('StynxObjectStore owned client disposal', () => {
+  function owned(store: StynxObjectStore): S3Client {
+    const client = Reflect.get(store, 'client') as S3Client;
+    expect(client).toBeInstanceOf(S3Client);
+    return client;
+  }
+
+  it('destroys its original client once and refuses both operations after successful disposal', async () => {
+    const store = new StynxObjectStore({ bucketName: 'b', region: 'us-east-1' });
+    const client = owned(store);
+    const destroy = vi.spyOn(client, 'destroy');
+    const send = vi.spyOn(client, 'send');
+    const signedBefore = vi.mocked(getSignedUrl).mock.calls.length;
+    try {
+      store.destroy();
+      store.destroy();
+      expect(Reflect.get(store, 'client')).toBe(client);
+      expect(destroy).toHaveBeenCalledTimes(1);
+      await expect(
+        store.putObject({ key: 'k', body: Buffer.from('x'), contentType: 'text/plain' }),
+      ).rejects.toThrow('Object store has been destroyed');
+      await expect(store.presignDownload({ key: 'k', expiresInSeconds: 30 })).rejects.toThrow(
+        'Object store has been destroyed',
+      );
+      expect(send).not.toHaveBeenCalled();
+      expect(vi.mocked(getSignedUrl).mock.calls.length).toBe(signedBefore);
+    } finally {
+      destroy.mockRestore();
+      send.mockRestore();
+      store.destroy();
+    }
+  });
+
+  it('propagates thrown SDK destruction, remains usable and retries the same client', async () => {
+    const store = new StynxObjectStore({ bucketName: 'b', region: 'us-east-1' });
+    const client = owned(store);
+    const fault = new Error('SDK disposal fault witness');
+    const destroy = vi.spyOn(client, 'destroy').mockImplementationOnce(() => {
+      throw fault;
+    });
+    try {
+      expect(() => store.destroy()).toThrow(fault);
+      expect(Reflect.get(store, 'client')).toBe(client);
+      await expect(store.presignDownload({ key: 'k', expiresInSeconds: 30 })).resolves.toBe(
+        'https://signed.example/object',
+      );
+      store.destroy();
+      store.destroy();
+      expect(destroy).toHaveBeenCalledTimes(2);
+      await expect(store.presignDownload({ key: 'k', expiresInSeconds: 30 })).rejects.toThrow(
+        'Object store has been destroyed',
+      );
+    } finally {
+      destroy.mockRestore();
+      store.destroy();
+    }
+  });
+});

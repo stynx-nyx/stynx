@@ -1,3 +1,11 @@
+import 'reflect-metadata';
+import { once } from 'node:events';
+import { get } from 'node:http';
+import type { Agent, Server } from 'node:http';
+import { Socket } from 'node:net';
+import { Controller, Get, Inject, Injectable, Module } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
 import {
@@ -11,7 +19,43 @@ import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainer
 
 // Exercise the public compiled package graph and the real AWS SDK, without source aliases.
 const require = createRequire(import.meta.url);
-const { PrivacyObjectStoreService } = require('@stynx-nyx/privacy') as typeof import('../../src');
+const { PrivacyObjectStoreService, STYNX_PRIVACY_OPTIONS } =
+  require('@stynx-nyx/privacy') as typeof import('../../src');
+const { S3Service, STYNX_STORAGE_OPTIONS, StynxObjectStore } =
+  require('@stynx-nyx/storage') as typeof import('@stynx-nyx/storage');
+
+// The adapter is loaded through the actual compiled CommonJS package graph.
+// Resolve its SDK constructor from that same boundary; Vitest's ESM SDK import
+// is a distinct module instance and does not identify the producer's client.
+const { S3Client: OwnedS3Client } = createRequire(require.resolve('@stynx-nyx/storage'))(
+  '@aws-sdk/client-s3',
+) as typeof import('@aws-sdk/client-s3');
+
+function ownedPrivacyClient(value: InstanceType<typeof PrivacyObjectStoreService>): S3Client {
+  const objectStore = Reflect.get(value, 'objectStore');
+  expect(objectStore).toBeInstanceOf(StynxObjectStore);
+  const client = Reflect.get(objectStore, 'client') as S3Client;
+  expect(client).toBeInstanceOf(OwnedS3Client);
+  expect(Object.getPrototypeOf(client).constructor).toBe(OwnedS3Client);
+  return client;
+}
+
+async function bounded<T>(promise: Promise<T>, phase: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`Owned lifecycle witness timed out: ${phase}`)),
+          10_000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 // LocalStack is the repository's declared local S3 fixture, not production qualification.
 describe('PrivacyObjectStoreService supported local S3 provider', () => {
@@ -78,6 +122,7 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
 
   afterAll(async () => {
     try {
+      store?.onApplicationShutdown();
       admin?.destroy();
       await container?.stop();
     } finally {
@@ -159,13 +204,17 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
       endpoint,
       forcePathStyle: true,
     });
-    await expect(
-      missingBucket.putObject({
-        key: keyA,
-        body: bytesA,
-        contentType: 'application/zip',
-      }),
-    ).rejects.toMatchObject({ name: 'NoSuchBucket', $metadata: { httpStatusCode: 404 } });
+    try {
+      await expect(
+        missingBucket.putObject({
+          key: keyA,
+          body: bytesA,
+          contentType: 'application/zip',
+        }),
+      ).rejects.toMatchObject({ name: 'NoSuchBucket', $metadata: { httpStatusCode: 404 } });
+    } finally {
+      missingBucket.onApplicationShutdown();
+    }
     await expect(
       store.presignDownload({ key: keyA, expiresInSeconds: 604_801 }),
     ).rejects.toMatchObject({
@@ -175,5 +224,267 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
     });
     const roster = await admin!.send(new ListObjectsV2Command({ Bucket: bucketName }));
     expect(roster.Contents?.map((object) => object.Key).sort()).toEqual([keyA, keyB].sort());
+  });
+
+  it('retries a failed actual-client destroy and refuses uploads and signing after successful shutdown', async () => {
+    const value = new PrivacyObjectStoreService({
+      environment: 'test',
+      region,
+      bucketName,
+      endpoint,
+      forcePathStyle: true,
+    });
+    const client = ownedPrivacyClient(value);
+    const failure = new Error('SDK destroy failure witness');
+    const destroy = vi.spyOn(client, 'destroy').mockImplementationOnce(() => {
+      throw failure;
+    });
+    const retryKey = `exports/${tenantA}/retry-${randomUUID()}.zip`;
+    try {
+      expect(() => value.onApplicationShutdown()).toThrow(failure);
+      expect(ownedPrivacyClient(value)).toBe(client);
+      await value.putObject({ key: retryKey, body: bytesA, contentType: 'application/zip' });
+      const url = await value.presignDownload({ key: retryKey, expiresInSeconds: 30 });
+      expect(Buffer.from(await (await fetch(url)).arrayBuffer())).toEqual(bytesA);
+      value.onApplicationShutdown();
+      value.onApplicationShutdown();
+      expect(destroy).toHaveBeenCalledTimes(2);
+      await expect(
+        value.putObject({ key: retryKey, body: bytesB, contentType: 'application/zip' }),
+      ).rejects.toThrow('Object store has been destroyed');
+      await expect(value.presignDownload({ key: retryKey, expiresInSeconds: 30 })).rejects.toThrow(
+        'Object store has been destroyed',
+      );
+      expect(Buffer.from(await (await fetch(url)).arrayBuffer())).toEqual(bytesA);
+    } finally {
+      destroy.mockRestore();
+      value.onApplicationShutdown();
+    }
+  });
+
+  it('real Nest shutdown drains an active HTTP request before both owned clients destroy their actual socket pools', async () => {
+    const events: string[] = [];
+    let entered!: () => void, resume!: () => void, beforeShutdown!: () => void;
+    const requestEntered = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const requestResumed = new Promise<void>((resolve) => {
+      resume = resolve;
+    });
+    const shuttingDown = new Promise<void>((resolve) => {
+      beforeShutdown = resolve;
+    });
+    const drainKey = `exports/${tenantA}/drain-${randomUUID()}.zip`;
+    const docsBucket = 'stynx-docs-test-us-east-1';
+    await admin!.send(new CreateBucketCommand({ Bucket: docsBucket }));
+    await admin!.send(
+      new (await import('@aws-sdk/client-s3')).PutObjectCommand({
+        Bucket: docsBucket,
+        Key: drainKey,
+        Body: bytesA,
+        ContentType: 'application/zip',
+      }),
+    );
+
+    @Controller()
+    class DrainController {
+      constructor(
+        @Inject(PrivacyObjectStoreService)
+        readonly privacy: InstanceType<typeof PrivacyObjectStoreService>,
+      ) {}
+      @Get('drain')
+      async drain() {
+        events.push('request-entered');
+        entered();
+        await requestResumed;
+        await this.privacy.putObject({
+          key: drainKey,
+          body: bytesA,
+          contentType: 'application/zip',
+        });
+        events.push('actual-upload-complete');
+        return { written: true };
+      }
+    }
+    @Injectable()
+    class ShutdownObserver {
+      onModuleDestroy() {
+        events.push('module-destroy');
+      }
+      beforeApplicationShutdown() {
+        events.push('before-application-shutdown');
+        beforeShutdown();
+      }
+    }
+    @Module({
+      controllers: [DrainController],
+      providers: [
+        PrivacyObjectStoreService,
+        {
+          provide: STYNX_PRIVACY_OPTIONS,
+          useValue: { environment: 'test', region, bucketName, endpoint, forcePathStyle: true },
+        },
+        S3Service,
+        {
+          provide: STYNX_STORAGE_OPTIONS,
+          useValue: {
+            environment: 'test',
+            region,
+            kmsAlias: 'docs',
+            collections: {},
+            endpoint,
+            forcePathStyle: true,
+          },
+        },
+        ShutdownObserver,
+      ],
+    })
+    class DrainModule {}
+
+    let app: INestApplication | undefined;
+    let closing: Promise<void> | undefined;
+    let request: ReturnType<typeof get> | undefined;
+    const restores: Array<() => void> = [];
+    const socketClosures: Array<Promise<unknown>> = [];
+    const actualSockets: Socket[] = [];
+    try {
+      app = await NestFactory.create(DrainModule, { logger: false });
+      const privacy =
+        app.get<InstanceType<typeof PrivacyObjectStoreService>>(PrivacyObjectStoreService);
+      const storage = app.get<InstanceType<typeof S3Service>>(S3Service);
+      const privacyClient = ownedPrivacyClient(privacy);
+      const storageClient = Reflect.get(storage, 'client') as S3Client;
+      expect(storageClient).toBeInstanceOf(OwnedS3Client);
+      expect(Object.getPrototypeOf(storageClient).constructor).toBe(OwnedS3Client);
+      expect(storageClient).not.toBe(privacyClient);
+      await privacy.putObject({ key: drainKey, body: bytesA, contentType: 'application/zip' });
+      await storage.headObject(drainKey);
+      const destroySpies = [];
+      const handlerSpies = [];
+      const agentSpies = [];
+      for (const [name, client] of [
+        ['privacy', privacyClient],
+        ['storage', storageClient],
+      ] as const) {
+        const handler = client.config.requestHandler as typeof client.config.requestHandler & {
+          httpHandlerConfigs(): { httpAgent: Agent };
+        };
+        expect(typeof handler.httpHandlerConfigs).toBe('function');
+        const agent = handler.httpHandlerConfigs().httpAgent;
+        const sockets = [...Object.values(agent.sockets), ...Object.values(agent.freeSockets)]
+          .flat()
+          .filter((socket): socket is Socket => socket !== undefined);
+        expect(sockets.length).toBeGreaterThan(0);
+        for (const socket of sockets) {
+          expect(socket).toBeInstanceOf(Socket);
+          expect(socket.destroyed).toBe(false);
+          actualSockets.push(socket);
+          socketClosures.push(
+            once(socket, 'close').then(() => {
+              events.push(`${name}-socket-closed`);
+            }),
+          );
+        }
+        const original = client.destroy;
+        const destroy = vi.spyOn(client, 'destroy').mockImplementation(function (this: S3Client) {
+          events.push(`${name}-destroy`);
+          return original.call(this);
+        });
+        const handlerDestroy = vi.spyOn(handler, 'destroy');
+        const agentDestroy = vi.spyOn(agent, 'destroy');
+        destroySpies.push(destroy);
+        handlerSpies.push(handlerDestroy);
+        agentSpies.push(agentDestroy);
+        restores.push(() => {
+          destroy.mockRestore();
+          handlerDestroy.mockRestore();
+          agentDestroy.mockRestore();
+        });
+      }
+      const server = app.getHttpServer<Server>();
+      server.once('close', () => {
+        events.push('http-server-closed');
+      });
+      await app.listen(0, '127.0.0.1');
+      const address = server.address();
+      expect(address && typeof address === 'object' && address.address).toBe('127.0.0.1');
+      if (!address || typeof address === 'string') throw new Error('Owned listener did not bind');
+      const response = new Promise<{ status: number | undefined; body: string }>(
+        (resolve, reject) => {
+          request = get(`http://127.0.0.1:${address.port}/drain`, { agent: false }, (incoming) => {
+            let body = '';
+            incoming.setEncoding('utf8');
+            incoming.on('data', (chunk: string) => {
+              body += chunk;
+            });
+            incoming.once('error', reject);
+            incoming.once('end', () => {
+              events.push('http-response-ended');
+              resolve({ status: incoming.statusCode, body });
+            });
+          });
+          request.once('error', reject);
+        },
+      );
+      void response.catch(() => undefined);
+      await bounded(requestEntered, 'request entry');
+      let closeSettled = false;
+      closing = app.close().then(() => {
+        closeSettled = true;
+        events.push('app-close-settled');
+      });
+      await bounded(shuttingDown, 'before shutdown');
+      expect(events).toContain('module-destroy');
+      expect(closeSettled).toBe(false);
+      for (const destroy of destroySpies) expect(destroy).not.toHaveBeenCalled();
+      resume();
+      expect(await bounded(response, 'HTTP response drain')).toEqual({
+        status: 200,
+        body: '{"written":true}',
+      });
+      await bounded(closing, 'application close');
+      await bounded(Promise.all(socketClosures), 'actual socket closes');
+      expect(server.listening).toBe(false);
+      expect(events.indexOf('actual-upload-complete')).toBeLessThan(
+        events.indexOf('http-server-closed'),
+      );
+      for (const name of ['privacy', 'storage'])
+        expect(events.indexOf('http-server-closed')).toBeLessThan(
+          events.indexOf(`${name}-destroy`),
+        );
+      for (const destroy of [...destroySpies, ...handlerSpies, ...agentSpies])
+        expect(destroy).toHaveBeenCalledTimes(1);
+      for (const socket of actualSockets) expect(socket.destroyed).toBe(true);
+      expect(ownedPrivacyClient(privacy)).toBe(privacyClient);
+      expect(Reflect.get(storage, 'client')).toBe(storageClient);
+      await expect(
+        privacy.putObject({ key: drainKey, body: bytesB, contentType: 'application/zip' }),
+      ).rejects.toThrow('Object store has been destroyed');
+      await expect(storage.headObject(drainKey)).rejects.toThrow(
+        'Storage service has been destroyed',
+      );
+      privacy.onApplicationShutdown();
+      storage.onApplicationShutdown();
+      for (const destroy of destroySpies) expect(destroy).toHaveBeenCalledTimes(1);
+      console.info(
+        JSON.stringify({
+          scope: 'actual-owned-local-S3-Nest-drain-and-disposal',
+          events,
+          actualSocketCount: actualSockets.length,
+          actualListener: address,
+          bothActualClientsDestroyed: true,
+          localProviderOnly: true,
+          runtimeCustodyComplete: false,
+          performanceQualified: false,
+          readinessPromoting: false,
+        }),
+      );
+    } finally {
+      resume();
+      request?.destroy();
+      if (app) await bounded(closing ?? app.close(), 'finally application close');
+      await bounded(Promise.all(socketClosures), 'actual socket closes');
+      for (const restore of restores) restore();
+    }
   });
 });
