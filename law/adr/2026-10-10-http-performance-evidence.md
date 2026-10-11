@@ -19,6 +19,15 @@ listed composition/operation/semantic case retains its own 600 targets; source
 counts never cap runtime additions. This binding grants no performance verdict
 and changes none of the four existing profiles or thresholds.
 
+The prospective [serial batch policy](../policy/http-qualification-batch.json),
+[closed record schema](../schemas/http-qualification-batch-evidence.schema.json)
+and [coordination contract](../../docs/performance/http-qualification-batch.md)
+bind complete order, actual owned archival before sandbox deletion and trusted
+resume verification. A journal is not execution authority; component-only results
+remain blocked. Preserve each original scenario's genuinely fresh owned stack,
+exact tooling, authenticated baseline and every existing gate. This binding adds
+no product choice, backend mandate, population reduction or advance admission.
+
 ## Authority and current evidence
 
 The Owner's complete 1.6.0 audit-remediation mandate, recorded in

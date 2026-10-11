@@ -25,3 +25,9 @@ published operation-ID compatibility registry in
 membership, immutable 1.5.7 provenance, uniqueness, complete variant coverage and
 source/mounted/OpenAPI agreement are additional semantic obligations. This
 registry is not evidence that a runtime composition was mounted or measured.
+
+`http-qualification-batch.schema.json` binds the prospective serial coordination
+policy. `http-qualification-batch-evidence.schema.json` closes journal, attempt
+archive and derived batch-index records. Actual trusted origin, complete artifact
+closure, legal transitions, per-case acceptance and resume credit are additional
+semantic obligations; schema validity and journal self-hashes confer no authority.

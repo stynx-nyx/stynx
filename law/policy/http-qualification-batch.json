@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "1.0.0",
+  "policyId": "stynx.http-qualification-batch",
+  "policyVersion": "1.0.0",
+  "authority": "Architect",
+  "scope": "prospective-source-bound-coordination-only",
+  "authoritySources": [
+    "law/adr/2026-10-10-http-performance-evidence.md",
+    "docs/performance/http-qualification-manifest.md",
+    "docs/performance/http-qualification-batch.md"
+  ],
+  "manifest": {
+    "path": "law/policy/http-qualification-manifest.json",
+    "sha256": "8227b805976e5a99d2f39a4b8f2d1012bbf66f75f8b7a9231b0718fbede11891"
+  },
+  "evidenceSchema": {
+    "path": "law/schemas/http-qualification-batch-evidence.schema.json",
+    "sha256": "7fb1961b9201d0f0f37d7b5631ca31f33aa939a1397fbc65743a38dc4955f7eb"
+  },
+  "entryCommand": ["node", "scripts/run-http-performance.mjs", "--scenario", "all"],
+  "order": {
+    "composition": "manifest.compositions-array-order",
+    "cases": "manifest.cases-array-order-filtered-by-composition",
+    "concurrentCompositions": 1,
+    "concurrentCases": 1,
+    "runtimeCountCap": false
+  },
+  "attempts": {
+    "freshFixturePerCase": true,
+    "reuseBuild": "same-live-root-handle-after-full-recheck",
+    "stopOnFirstNonqualified": true,
+    "automaticRetries": 0,
+    "replacementRequests": 0,
+    "partialWindowStitching": false,
+    "bestRunSelection": false,
+    "retainEveryAttempt": true
+  },
+  "archives": {
+    "roles": [
+      "parent-report",
+      "worker-body",
+      "worker-ipc",
+      "target-raw",
+      "native-metrics",
+      "generator-stdout",
+      "generator-stderr",
+      "worker-stdout",
+      "worker-stderr",
+      "descriptor",
+      "allocation",
+      "fixture",
+      "cleanup",
+      "build-custody",
+      "native-custody",
+      "task-admission",
+      "acceptance"
+    ],
+    "directoryPermissions": 448,
+    "filePermissions": 384,
+    "maximumArtifactBytes": 67108864,
+    "publishIndexAfterCompleteClosure": true,
+    "archiveBeforeSandboxDeletion": true,
+    "failedArchiveBlocksDeletion": true,
+    "publicRawSecretExport": false
+  },
+  "resume": {
+    "inProcess": "private-live-capabilities-after-operation-cleanup",
+    "restart": "new-build-and-trusted-origin-full-closure-reverification",
+    "selfHashedJournalGrantsCredit": false,
+    "callerReceiptsGrantAuthority": false,
+    "deserializeHandles": false,
+    "adoptPidFromJournal": false,
+    "unknownCleanupBlocksActuation": true,
+    "crossCandidateReuseException": false,
+    "existingFreshnessRulesRequired": true
+  },
+  "originalProfiles": {
+    "scenarios": ["auth", "crud", "upload", "cascade-delete"],
+    "freshOwnedStackPerScenario": true,
+    "exactToolsAndContainerDigests": true,
+    "closedEnvironment": true,
+    "authenticatedBaselineRequired": true,
+    "ambientRunnerExitConfersPass": false,
+    "unchangedWorkloadsThresholdsAndComparison": true,
+    "coldUnitProxyRemainsSeparate": true
+  },
+  "aggregation": {
+    "exactAdmittedRosterBijection": true,
+    "perCaseManifestProfileRequired": true,
+    "noPooling": true,
+    "trustedAcceptanceRequired": true,
+    "componentOnlyConfersQualification": false,
+    "allExistingGatesRequired": true,
+    "readinessPromoting": false
+  },
+  "admission": {
+    "mode": "declaration-only",
+    "sourceAndSchemaValidityConfersExecution": false,
+    "publishedTaskAdmissionRequired": true,
+    "allExistingFloorsRequired": true,
+    "unsupportedPhaseRefusesBeforeEffects": true,
+    "nativeBackendMandatedByThisPolicy": false
+  }
+}
