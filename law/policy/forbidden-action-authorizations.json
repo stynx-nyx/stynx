@@ -1465,6 +1465,12 @@
       "commit": "d3a9e9da28e5fc44d003a9d8a2f4d243f0b77ac0",
       "authorized_by": "Owner",
       "reason": "Records the Owner full STYNX 1.6.0 storage verification and protected-integration mandate under ADR-0019 decision 6 for only the disposable database cleanup introduced in scripts/outbox-storage-catalog-generate.mjs by this exact commit. The generator creates its own stynx_storage_generation_<random UUID hex> database, builds the canonical platform catalog there, then closes its client and drops that same generated database in finally. This receipt covers that owned development-generation cleanup only, not a production database or arbitrary DROP action. The agent computed and reviewed the exact commit; the Owner supplied the bounded action mandate, not its literal SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "cd0542143ad21e59551cbf3936d99c48647b2e78",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner's reaffirmed full STYNX 1.6.0 implementation, protected-integration and publication mandate under ADR-0019 decision 6 and ADR-DEVAI-ADOPTION-0020 for this exact registered DEVAI 2.5.0 upgrade commit. The generated .github/workflows/devai-local-rc-verify.yml advances only the trusted verifier identity from published @aarusso-nyx/devai@1.9.0 to independently verified published 2.4.0, including exact registry package/SRI/source/provenance substitutions; its SHA-256 is 30bb7935a0ad1ad7303217f77ac64e9c0c4c6ae3f70860d7c21f3a14e35964dc. Independent Auditor source review accepted the exact seven identity substitution classes; existing signer trust, inert candidate boundary, exact-tree transport, checks, permissions and all gates remain unchanged. The agent computed and reviewed this commit SHA; the Owner supplied the bounded action mandate, not its literal SHA. This receipt covers only the exact generated CI action; a rewritten landed commit requires its own exact receipt. Protected verifier-provenance control verification/update and normal remote integration remain separate prerequisites; this receipt supplies no gate waiver or completed STYNX audit/publication claim."
     }
   ]
 }
