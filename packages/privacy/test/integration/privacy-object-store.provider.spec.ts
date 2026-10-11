@@ -381,6 +381,7 @@ describe('PrivacyObjectStoreService supported local S3 provider', () => {
           for (const socket of sockets) {
             expect(socket).toBeInstanceOf(Socket);
             if (actualSockets.includes(socket)) continue;
+            expect(socket.destroyed).toBe(false);
             expect(socket.closed).toBe(false);
             actualSockets.push(socket);
             socketClosures.push(
