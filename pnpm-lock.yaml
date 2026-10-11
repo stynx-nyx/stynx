@@ -1874,6 +1874,12 @@ importers:
       '@nestjs/testing':
         specifier: ^11.1.26
         version: 11.2.3(@nestjs/common@11.2.3(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@nestjs/platform-express@11.2.3)
+      '@stynx-nyx/sessions':
+        specifier: workspace:*
+        version: link:../sessions
+      '@stynx-nyx/tenancy':
+        specifier: workspace:*
+        version: link:../tenancy
       '@stynx-nyx/testing':
         specifier: workspace:*
         version: link:../testing

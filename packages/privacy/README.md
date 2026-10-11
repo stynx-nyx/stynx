@@ -146,6 +146,8 @@ _None._
 
 - `@nestjs/platform-express`: `^11.1.26`
 - `@nestjs/testing`: `^11.1.26`
+- `@stynx-nyx/sessions`: `workspace:*`
+- `@stynx-nyx/tenancy`: `workspace:*`
 - `@stynx-nyx/testing`: `workspace:*`
 - `@types/node`: `24.13.4`
 - `@types/supertest`: `^7.2.0`
