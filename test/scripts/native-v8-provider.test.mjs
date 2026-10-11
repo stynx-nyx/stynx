@@ -16,6 +16,7 @@ function fixture(mode, setupBody) {
     mkdirSync(join(root, 'test/unit'), { recursive: true });
     writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@stynx-nyx/privacy' }));
     writeFileSync(join(root, 'src/index.ts'), "export { choose } from './service.js';\n");
+    writeFileSync(join(root, 'host.js'), 'export const hostValue = 3;\n');
     writeFileSync(
       join(root, 'src/service.ts'),
       'export function choose(enabled:boolean):number { return enabled ? 1 : 0; }\n',
@@ -110,6 +111,15 @@ const results=[];assert.equal(ctx.config.coverage.provider,'v8');
 // Installed super.initialize serializes its engine name back into the public config.
 // Each isolated provider unit admission replays the same declared custom entry policy.
 const fresh=()=>{ctx.config.coverage.provider='custom';const provider=new Provider();provider.initialize(ctx);return provider;};
+// A real successful initialization and owned source conversion precede every
+// negative witness: a generic setup failure cannot satisfy this matrix.
+const preflight=fresh();
+const sourcePositive=await preflight.transformFile(source,ctx.projects[0],'ssr');
+assert.equal(typeof sourcePositive.code,'string');
+assert.ok(sourcePositive.code.includes('__vite_ssr_exportName__("choose"'));
+assert.equal(Object.getPrototypeOf(sourcePositive.map),Object.prototype);
+assert.deepEqual(sourcePositive.map.sourcesContent,[readFileSync(source,'utf8')]);
+assert.equal(typeof sourcePositive.map.mappings,'string');
 const check=async(name,operation)=>{await operation();results.push(name);};
 await check('real public context, mode and fresh native map',async()=>{const p=fresh();assert.equal(ctx.projects.length,1);assert.equal(p.resolveOptions().thresholds.branches,process.env.STYNX_AGGREGATE_COVERAGE==='1'?0:100);const first=await p.transformFile(native,ctx.projects[0],'ssr');assert.equal(first.code,readFileSync(native,'utf8'));assert.deepEqual(first.map.sourcesContent,[readFileSync(source,'utf8')]);first.map.sourcesContent[0]='mutated';assert.deepEqual((await p.transformFile(native,ctx.projects[0],'ssr')).map.sourcesContent,[readFileSync(source,'utf8')]);});
 await check('wrong environment refuses and remains sticky',async()=>{const p=fresh();let failure;try{await p.transformFile(native,ctx.projects[0],'client');}catch(error){failure=error;}assert.match(failure.message,/unsupported native project or transform environment/);await assert.rejects(()=>p.generateCoverage({allTestsRun:true}),error=>error===failure);});
@@ -124,8 +134,37 @@ await check('swallowed native conversion error still refuses generation after by
 await check('native policy extra key refuses',async()=>{const policy=ctx.config.coverage.nativeCoverage;policy.extra=true;try{ctx.config.coverage.provider='custom';assert.throws(()=>new Provider().initialize(ctx),/unsupported policy keys/);}finally{delete policy.extra;}});
 await check('native policy getter refuses without executing it',async()=>{const coverage=ctx.config.coverage,before=Object.getOwnPropertyDescriptor(coverage,'nativeCoverage');let called=0;Object.defineProperty(coverage,'nativeCoverage',{configurable:true,enumerable:true,get(){called++;return before.value;}});try{ctx.config.coverage.provider='custom';assert.throws(()=>new Provider().initialize(ctx),/own data property/);assert.equal(called,0);}finally{Object.defineProperty(coverage,'nativeCoverage',before);}});
 await check('different module registration refuses',async()=>{const coverage=ctx.config.coverage,before=coverage.customProviderModule;try{coverage.customProviderModule+='-diagnostic';assert.throws(()=>new Provider().initialize(ctx),/unsupported native provider registration/);}finally{coverage.customProviderModule=before;}});
+const additionalChecks=[];
+{
+  const p=fresh(),base=Object.getPrototypeOf(Provider.prototype),host=root+'/host.js';
+  const expected=await base.transformFile.call(p,host,ctx.projects[0],'ssr');
+  const delegated=await p.transformFile(host,ctx.projects[0],'ssr');
+  assert.deepEqual(delegated,expected);
+  const missing=root+'/missing-host.js';let expectedError,actualError;
+  try{await base.transformFile.call(p,missing,ctx.projects[0],'ssr');}catch(error){expectedError=error;}
+  try{await p.transformFile(missing,ctx.projects[0],'ssr');}catch(error){actualError=error;}
+  assert.ok(expectedError,'actual installed public base rejects the missing host');
+  assert.equal(actualError.message,expectedError.message);
+  assert.equal((await p.transformFile(source,ctx.projects[0],'ssr')).code,sourcePositive.code);
+  additionalChecks.push('nonowned actual public delegation/rejection is unchanged and nonsticky');
+}
+{
+  const p=fresh(),before=readFileSync(source);let failure;
+  try{writeFileSync(source,Buffer.concat([before,Buffer.from('\\n')]));try{await p.transformFile(source,ctx.projects[0],'ssr');}catch(error){failure=error;}}
+  finally{writeFileSync(source,before);}
+  assert.match(failure.message,/input changed after admission/);
+  await assert.rejects(()=>p.generateCoverage({allTestsRun:true}),error=>error===failure);
+  additionalChecks.push('swallowed owned source error remains sticky after restoration');
+}
+{
+  const p=fresh();let failure;
+  try{await p.transformFile(source+'?alias=owned',ctx.projects[0],'ssr');}catch(error){failure=error;}
+  assert.match(failure.message,/unsupported owned module ID/);
+  await assert.rejects(()=>p.generateCoverage({allTestsRun:true}),error=>error===failure);
+  additionalChecks.push('owned preclassification alias refusal remains sticky');
+}
 await check('actual candidate advance refuses',async()=>{const p=fresh();execFileSync('git',['-c','user.name=Inspector Fixture','-c','user.email=fixture@invalid.test','commit','--allow-empty','-qm','test: advance fixture candidate'],{cwd:root,stdio:['ignore','pipe','pipe']});await assert.rejects(()=>p.generateCoverage({allTestsRun:true}),/candidate changed after admission/);});
-writeFileSync(root+'/result.json',JSON.stringify({checks:results,mode:process.env.STYNX_AGGREGATE_COVERAGE==='1'?'aggregate':'standalone',publicContext:true,productionQualification:false}));
+writeFileSync(root+'/result.json',JSON.stringify({checks:results,additionalChecks,sourcePositive:true,mode:process.env.STYNX_AGGREGATE_COVERAGE==='1'?'aggregate':'standalone',publicContext:true,productionQualification:false}));
 throw new Error('INSPECTOR_PUBLIC_PROVIDER_REGRESSIONS_COMPLETE_NO_TESTS');
 `;
 for (const mode of ['standalone', 'aggregate'])
@@ -137,6 +176,9 @@ for (const mode of ['standalone', 'aggregate'])
     assert.equal(receipt.productionQualification, false);
     assert.equal(receipt.checks.length, 16);
     assert.equal(new Set(receipt.checks).size, 16);
+    assert.equal(receipt.sourcePositive, true);
+    assert.equal(receipt.additionalChecks.length, 3);
+    assert.equal(new Set(receipt.additionalChecks).size, 3);
   });
 test('genuine omitted source branch retains zero and fails unchanged standalone100 through actual engine', () => {
   const { child, coverage, source } = fixture('standalone');

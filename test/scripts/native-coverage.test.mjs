@@ -13,16 +13,19 @@ import {
 } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import { createNativeCoverage } from '../../tools/repo-config/native-coverage.mjs';
 const require = createRequire(import.meta.url);
 const compiler = require.resolve('typescript/lib/tsc.js');
+const engineRequire = createRequire(require.resolve('vitest/package.json'));
+const { moduleRunnerTransform } = await import(pathToFileURL(engineRequire.resolve('vite')));
+const remappingUmd = engineRequire('@jridgewell/remapping');
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const sourceText =
   "import { double } from './math.js';\nexport function choose(enabled: boolean): string {\n  return enabled ? `olá 日本語 ${double(2)}` : 'off';\n}\n";
-function fixture(run, { inlineSources = false } = {}) {
+async function fixture(run, { inlineSources = false } = {}) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'stynx native spaces 日本語-')));
   try {
     mkdirSync(join(root, 'src'));
@@ -76,7 +79,7 @@ function fixture(run, { inlineSources = false } = {}) {
       includes: ['src/**/*.ts'],
       excludes: [],
     };
-    return run({
+    return await run({
       root,
       git,
       options,
@@ -327,21 +330,32 @@ test('duplicate bindings, undeclared census members, escaping and symlink paths 
 test('isolated installed compiler/package/lib snapshots reject real dependency byte tampering', async () => {
   const owner = realpathSync(mkdtempSync(join(tmpdir(), 'stynx compiler dependency 日本語-')));
   try {
-    mkdirSync(join(owner, 'tools'), { recursive: true });
+    mkdirSync(join(owner, 'tools/repo-config'), { recursive: true });
     mkdirSync(join(owner, 'node_modules'), { recursive: true });
     cpSync(
       require.resolve('typescript/package.json').replace(/\/package\.json$/u, ''),
       join(owner, 'node_modules/typescript'),
       { recursive: true },
     );
-    const helperPath = join(owner, 'tools/native-coverage.mjs');
+    const codecManifest = require.resolve('@jridgewell/sourcemap-codec/package.json');
+    cpSync(dirname(codecManifest), join(owner, 'node_modules/@jridgewell/sourcemap-codec'), {
+      recursive: true,
+    });
+    for (const name of [
+      'package.json',
+      'pnpm-lock.yaml',
+      'tools/repo-config/native-source-map.mjs',
+    ]) {
+      writeFileSync(join(owner, name), readFileSync(new URL(`../../${name}`, import.meta.url)));
+    }
+    const helperPath = join(owner, 'tools/repo-config/native-coverage.mjs');
     const helperBytes = readFileSync(
       new URL('../../tools/repo-config/native-coverage.mjs', import.meta.url),
     );
     writeFileSync(helperPath, helperBytes);
     assert.deepEqual(readFileSync(helperPath), helperBytes);
     const { createNativeCoverage: isolated } = await import(pathToFileURL(helperPath).href);
-    fixture(({ options }) => {
+    await fixture(({ options }) => {
       const helper = isolated(options);
       assert.equal(helper.evidence.compiler.version, '6.0.3');
       const library = helper.evidence.inputs.find((row) =>
@@ -363,8 +377,259 @@ test('isolated installed compiler/package/lib snapshots reject real dependency b
         writeFileSync(path, original);
         helper.verify();
       }
+      for (const path of [
+        join(owner, 'tools/repo-config/native-source-map.mjs'),
+        join(owner, 'package.json'),
+        join(owner, 'pnpm-lock.yaml'),
+        join(owner, 'node_modules/@jridgewell/sourcemap-codec/package.json'),
+        createRequire(helperPath).resolve('@jridgewell/sourcemap-codec'),
+      ]) {
+        const original = readFileSync(path);
+        writeFileSync(path, Buffer.concat([original, Buffer.from('\n')]));
+        assert.throws(() => helper.verify(), /input changed after admission/u);
+        writeFileSync(path, original);
+        helper.verify();
+      }
     });
   } finally {
     rmSync(owner, { recursive: true, force: true });
   }
 });
+
+async function actualSource(helper, root) {
+  const id = join(root, 'src/service.ts');
+  const emitted = helper.plugin.transform(sourceText, id);
+  const actual = await moduleRunnerTransform(emitted.code, emitted.map, id, sourceText);
+  assert.equal(actual.ssr, true);
+  return { id, actual };
+}
+
+test('real bundled, UMD, ordinary, hostile-class and null-prototype maps have identical own-data repair', () =>
+  fixture(async ({ root, admit }) => {
+    const initial = admit(),
+      { id, actual } = await actualSource(initial, root);
+    assert.notEqual(Object.getPrototypeOf(actual.map), Object.prototype);
+    const descriptors = Object.getOwnPropertyDescriptors(actual.map);
+    const umdMap = remappingUmd(
+      { version: 3, names: [], sources: [], sourcesContent: [], mappings: '' },
+      () => {
+        throw Error('empty witness must not load');
+      },
+      { excludeContent: false, decodedMappings: false },
+    );
+    let calls = 0;
+    class HostileMap {
+      get constructorName() {
+        calls++;
+        throw Error('inherited getter');
+      }
+      get sourceRoot() {
+        calls++;
+        throw Error('inherited source root');
+      }
+      toString() {
+        calls++;
+        throw Error('inherited toString');
+      }
+      toJSON() {
+        calls++;
+        throw Error('inherited toJSON');
+      }
+    }
+    for (const key of ['constructor', Symbol.toStringTag]) {
+      Object.defineProperty(HostileMap.prototype, key, {
+        configurable: true,
+        get() {
+          calls++;
+          throw Error('opaque prototype must remain unread');
+        },
+      });
+    }
+    const prototypes = [
+      Object.getPrototypeOf(actual.map),
+      Object.getPrototypeOf(umdMap),
+      Object.prototype,
+      HostileMap.prototype,
+      null,
+    ];
+    const results = [];
+    for (const prototype of prototypes) {
+      const helper = admit();
+      const map = Object.defineProperties(Object.create(prototype), structuredClone(descriptors));
+      const input = { ...actual, map };
+      const before = Object.getOwnPropertyDescriptors(map);
+      const output = helper.repairSourceTransform(id, input);
+      assert.equal(output.code, actual.code);
+      assert.equal(Object.getPrototypeOf(output.map), Object.prototype);
+      assert.notEqual(output, input);
+      assert.notEqual(output.map, map);
+      assert.deepEqual(Object.getOwnPropertyDescriptors(map), before);
+      assert.equal(Object.getPrototypeOf(map), prototype);
+      assert.equal(helper.evidence.sourceTransforms[0].prototypeTreatment, 'IGNORED_OWN_DATA_ONLY');
+      results.push(output.map.mappings);
+      helper.verify();
+    }
+    assert.equal(new Set(results).size, 1);
+    assert.equal(calls, 0);
+  }));
+
+test('inherited required fields and hostile own descriptors refuse without invoking code', () =>
+  fixture(async ({ root, admit }) => {
+    const { id, actual } = await actualSource(admit(), root);
+    let calls = 0;
+    const mutations = [
+      (map) => {
+        const version = map.version;
+        delete map.version;
+        Object.setPrototypeOf(map, { version });
+      },
+      (map) =>
+        Object.defineProperty(map, 'sourceRoot', {
+          enumerable: true,
+          configurable: true,
+          get() {
+            calls++;
+            return '';
+          },
+        }),
+      (map) => {
+        map[Symbol('unknown')] = true;
+      },
+      (map) => {
+        map.sources.extra = true;
+      },
+      (map) => {
+        Object.defineProperty(map.sources, 0, {
+          enumerable: true,
+          get() {
+            calls++;
+            return id;
+          },
+        });
+      },
+    ];
+    for (const mutate of mutations) {
+      const helper = admit(),
+        map = structuredClone(actual.map);
+      mutate(map);
+      assert.throws(
+        () => helper.repairSourceTransform(id, { ...actual, map }),
+        /fields|descriptors|array|grammar/u,
+      );
+      assert.throws(() => helper.verify(), /fields|descriptors|array|grammar/u);
+    }
+    assert.equal(calls, 0);
+  }));
+
+test('actual result, map and nested-array proxies refuse without triggering reflection traps', () =>
+  fixture(async ({ root, admit }) => {
+    const { id, actual } = await actualSource(admit(), root);
+    let calls = 0;
+    const proxy = (value) =>
+      new Proxy(value, {
+        get() {
+          calls++;
+          throw Error('get trap');
+        },
+        ownKeys() {
+          calls++;
+          throw Error('ownKeys trap');
+        },
+        getPrototypeOf() {
+          calls++;
+          throw Error('prototype trap');
+        },
+      });
+    for (const kind of ['result', 'map', 'array']) {
+      const helper = admit(),
+        input = { ...actual, map: structuredClone(actual.map) };
+      if (kind === 'map') input.map = proxy(input.map);
+      if (kind === 'array') input.map.sources = proxy(input.map.sources);
+      assert.throws(
+        () => helper.repairSourceTransform(id, kind === 'result' ? proxy(input) : input),
+        /ordinary|retained|array/u,
+      );
+      assert.throws(() => helper.verify(), /ordinary|retained|array/u);
+    }
+    assert.equal(calls, 0);
+  }));
+
+test('source repair preserves descriptor flags and returns fresh arrays on repeated invocation', () =>
+  fixture(async ({ root, admit }) => {
+    const helper = admit(),
+      { id, actual } = await actualSource(helper, root);
+    const map = Object.defineProperties({}, Object.getOwnPropertyDescriptors(actual.map));
+    Object.defineProperty(map, 'sourceRoot', {
+      value: undefined,
+      enumerable: true,
+      configurable: false,
+      writable: false,
+    });
+    Object.defineProperty(map, 'mappings', {
+      value: map.mappings,
+      enumerable: true,
+      configurable: false,
+      writable: false,
+    });
+    Object.defineProperty(map.sources, 0, {
+      value: map.sources[0],
+      enumerable: true,
+      configurable: false,
+      writable: false,
+    });
+    const input = { ...actual, map };
+    Object.defineProperty(input, 'map', {
+      value: map,
+      enumerable: true,
+      configurable: false,
+      writable: false,
+    });
+    const before = Object.getOwnPropertyDescriptors(input),
+      first = helper.repairSourceTransform(id, input);
+    assert.deepEqual(Object.getOwnPropertyDescriptors(input), before);
+    for (const key of ['sourceRoot', 'mappings']) {
+      const descriptor = Object.getOwnPropertyDescriptor(first.map, key);
+      assert.equal(descriptor.writable, false);
+      assert.equal(descriptor.configurable, false);
+    }
+    assert.equal(Object.getOwnPropertyDescriptor(first, 'map').writable, false);
+    assert.deepEqual(
+      Object.getOwnPropertyDescriptor(first.map.sources, 0),
+      Object.getOwnPropertyDescriptor(map.sources, 0),
+    );
+    first.map.names.push('consumer mutation');
+    const second = helper.repairSourceTransform(id, input);
+    assert.deepEqual(second.map.names, map.names);
+    assert.notEqual(first.map.sources, second.map.sources);
+    assert.notEqual(first.map.sourcesContent, second.map.sourcesContent);
+    assert.deepEqual(Object.getOwnPropertyDescriptors(input), before);
+  }));
+
+test('malformed owned source maps remain sticky after restoration and external IDs cannot enter repair', () =>
+  fixture(async ({ root, admit }) => {
+    const { id, actual } = await actualSource(admit(), root);
+    const helper = admit(),
+      bad = { ...actual, map: structuredClone(actual.map) };
+    bad.map.sourcesContent[0] += '\n';
+    let failure;
+    try {
+      helper.repairSourceTransform(id, bad);
+    } catch (error) {
+      failure = error;
+    }
+    assert.match(failure.message, /identity/u);
+    assert.throws(
+      () => helper.repairSourceTransform(id, actual),
+      (error) => error === failure,
+    );
+    assert.throws(
+      () => helper.verify(),
+      (error) => error === failure,
+    );
+    const outside = admit();
+    assert.throws(
+      () => outside.repairSourceTransform(join(root, 'outside.ts'), actual),
+      /outside the admitted census/u,
+    );
+    assert.equal(outside.evidence.sourceTransforms[0].status, 'REFUSED');
+  }));
