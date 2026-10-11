@@ -90,8 +90,13 @@ CREATE POLICY demo_bookmark_tenant_isolation ON demo.demo__bookmark_bookmark_tag
 DO $$
 DECLARE
   relation regclass;
+  reachable record;
   maintenance_privilege text := CASE
     WHEN current_setting('server_version_num')::integer >= 170000 THEN ',MAINTAIN'
+    ELSE ''
+  END;
+  maintenance_grant_privilege text := CASE
+    WHEN current_setting('server_version_num')::integer >= 170000 THEN ',MAINTAIN WITH GRANT OPTION'
     ELSE ''
   END;
 BEGIN
@@ -112,6 +117,40 @@ BEGIN
        OR pg_catalog.has_any_column_privilege('public', relation, 'SELECT,INSERT,UPDATE,REFERENCES') THEN
       RAISE EXCEPTION 'demo_bookmark_unsafe_table_privilege: %', relation;
     END IF;
+  END LOOP;
+  -- PostgreSQL 16+ SET reachability is independent of current INHERIT/USAGE.
+  -- A NOINHERIT login can otherwise SET ROLE into an ordinary privileged group.
+  -- Benign memberships remain permitted; inspect their effective capabilities.
+  FOR reachable IN
+    SELECT actor.rolname AS actor_name, target.oid AS target_oid,
+      target.rolname AS target_name
+      FROM pg_catalog.pg_roles AS actor
+      CROSS JOIN pg_catalog.pg_roles AS target
+     WHERE actor.rolname IN ('stynx_app', 'stynx_reader')
+       AND pg_catalog.pg_has_role(actor.oid, target.oid, 'SET')
+  LOOP
+    IF pg_catalog.has_schema_privilege(reachable.target_oid, 'demo', 'CREATE,USAGE WITH GRANT OPTION,CREATE WITH GRANT OPTION') THEN
+      RAISE EXCEPTION 'demo_bookmark_unsafe_assumable_schema_privilege: % -> %', reachable.actor_name, reachable.target_name;
+    END IF;
+    FOREACH relation IN ARRAY ARRAY[
+      'demo.demo__bookmark_bookmark'::regclass,
+      'demo.demo__bookmark_bookmark_tag'::regclass
+    ] LOOP
+      IF pg_catalog.has_table_privilege(reachable.target_oid, relation, 'TRUNCATE,REFERENCES,TRIGGER' || maintenance_privilege)
+         OR pg_catalog.has_any_column_privilege(reachable.target_oid, relation, 'REFERENCES')
+         OR (reachable.actor_name = 'stynx_reader' AND (
+           pg_catalog.has_table_privilege(reachable.target_oid, relation, 'INSERT,UPDATE,DELETE')
+           OR pg_catalog.has_any_column_privilege(reachable.target_oid, relation, 'INSERT,UPDATE')
+         )) THEN
+        RAISE EXCEPTION 'demo_bookmark_unsafe_assumable_table_privilege: % -> %: %', reachable.actor_name, reachable.target_name, relation;
+      END IF;
+      IF pg_catalog.has_table_privilege(reachable.target_oid, relation, 'SELECT WITH GRANT OPTION,INSERT WITH GRANT OPTION,UPDATE WITH GRANT OPTION,DELETE WITH GRANT OPTION,TRUNCATE WITH GRANT OPTION,REFERENCES WITH GRANT OPTION,TRIGGER WITH GRANT OPTION' || maintenance_grant_privilege) THEN
+        RAISE EXCEPTION 'demo_bookmark_unsafe_assumable_table_grant_option: % -> %: %', reachable.actor_name, reachable.target_name, relation;
+      END IF;
+      IF pg_catalog.has_any_column_privilege(reachable.target_oid, relation, 'SELECT WITH GRANT OPTION,INSERT WITH GRANT OPTION,UPDATE WITH GRANT OPTION,REFERENCES WITH GRANT OPTION') THEN
+        RAISE EXCEPTION 'demo_bookmark_unsafe_assumable_column_grant_option: % -> %: %', reachable.actor_name, reachable.target_name, relation;
+      END IF;
+    END LOOP;
   END LOOP;
 END $$;
 
