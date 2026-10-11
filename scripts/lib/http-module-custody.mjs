@@ -990,9 +990,13 @@ export async function runHttpRuntimeWorker() {
             for (const rule of optionalPlan.rules) {
               if (rule.occurrences > 1)
                 refuse('Optional probe occurrence exceeds its finite bound');
-              // No row is manufactured for an unobserved probe. The plan still stays bound.
-              if (evaluated.has(optionalPlan.parent.url)) checkOptionalPlan(rule, true);
-              else {
+              // Only the actual completed fixed parent phase requires all its
+              // eligible top-level probes. Unobserved/installed cases add no row.
+              if (evaluated.has(optionalPlan.parent.url)) {
+                checkOptionalPlan(rule, true);
+                if (rule.wholePackageAbsenceEligible && rule.occurrences !== 1)
+                  refuse('Completed optional probe phase has an incomplete population');
+              } else {
                 for (const file of [
                   optionalPlan.parent,
                   optionalPlan.helper,

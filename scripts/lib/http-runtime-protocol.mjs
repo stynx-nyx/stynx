@@ -66,6 +66,16 @@ function stringifyPlainJson(value) {
   return JSON.stringify(copy(value));
 }
 
+/**
+ * Script-internal serializer seam. Validate without invoking accessors, proxies
+ * or inherited toJSON hooks before using the actual protocol serializer.
+ * This data operation supplies no process custody or protocol admission.
+ */
+export function serializeHttpRuntimePlainJson(value) {
+  if (arguments.length !== 1 || !safePlainJson(value)) invalid();
+  return stringifyPlainJson(value);
+}
+
 function ownFields(value, names) {
   return (
     value !== null &&
@@ -634,6 +644,11 @@ function validModules(value, expected) {
         row.occurrence !== 1 ||
         row.specifier !== rule.specifier ||
         row.parentURL !== admitted.provenance.parent.url ||
+        ![admitted.provenance.parent.url, admitted.provenance.helper.url].every((url) =>
+          value.evaluations.some(
+            (entry) => entry.canonicalURL === url && entry.sequence < row.sequence,
+          ),
+        ) ||
         !isDeepStrictEqual(row.conditions, ['require', 'node', 'node-addons', 'module-sync']) ||
         row.nativeCode !== 'MODULE_NOT_FOUND' ||
         row.pointInTimeOnly !== true ||
@@ -658,7 +673,8 @@ function validModules(value, expected) {
         !isDeepStrictEqual(row.provenance, admitted.provenance) ||
         !isDeepStrictEqual(row.search, admitted.search) ||
         !isDeepStrictEqual(row.absence, admitted.absence) ||
-        row.beforeAndEdgeAbsenceId !== sha256(stringifyPlainJson(orderedAbsence(row.absence))) ||
+        row.beforeAndEdgeAbsenceId !==
+          sha256(serializeHttpRuntimePlainJson(orderedAbsence(row.absence))) ||
         value.resolutions.some(
           (entry) => entry.specifier === row.specifier && entry.parentURL === row.parentURL,
         )
@@ -672,7 +688,15 @@ function validModules(value, expected) {
     })
   )
     return false;
-  return true;
+  // This fixed worker sends a terminal only after assertValid checks the actual
+  // observed cached parent is loaded:true. Its bound source invokes both exact
+  // callbacks unconditionally at top level. This is not a generic claim that a
+  // load-hook row alone means module execution completed.
+  return binding.optionalProbes.every(
+    (admitted) =>
+      !value.evaluations.some((entry) => entry.canonicalURL === admitted.provenance.parent.url) ||
+      seenRules.has(admitted.ruleId),
+  );
 }
 
 /**
@@ -698,7 +722,7 @@ export function createHttpRuntimeProtocol(context) {
     invalid();
   // Plain comparison expectations do not prove custody. Only the actual private
   // supervisor can derive/corroborate them; no legacy context enables this path.
-  const expected = JSON.parse(stringifyPlainJson(context));
+  const expected = JSON.parse(serializeHttpRuntimePlainJson(context));
   let started = false;
   let terminalSeen = false;
   let terminal;
@@ -721,7 +745,7 @@ export function createHttpRuntimeProtocol(context) {
         captureComplete = false;
         return reject();
       }
-      serialized = stringifyPlainJson(value);
+      serialized = serializeHttpRuntimePlainJson(value);
       if (typeof serialized !== 'string') {
         captureComplete = false;
         return reject();
@@ -841,20 +865,20 @@ export function createHttpRuntimeProtocol(context) {
     )
       invalid();
     const capture = { ...snapshot(), supervisorFailure };
-    let body = stringifyPlainJson(capture);
+    let body = serializeHttpRuntimePlainJson(capture);
     let overflowed = false;
     if (Buffer.byteLength(body) > captureLimit) {
       overflowed = true;
       refused = true;
       captureComplete = false;
-      body = stringifyPlainJson({
+      body = serializeHttpRuntimePlainJson({
         schemaVersion: 1,
         expected: {
           nonce: expected.nonce,
           candidateCommit: expected.candidateCommit,
           pid: expected.pid,
           mode: expected.mode,
-          bindingsSha256: sha256(stringifyPlainJson(expected.bindings)),
+          bindingsSha256: sha256(serializeHttpRuntimePlainJson(expected.bindings)),
         },
         expectedBindingsOmittedReason: 'ARTIFACT_BYTE_LIMIT',
         representation: capture.representation,
