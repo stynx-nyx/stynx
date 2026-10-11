@@ -65,6 +65,7 @@ function projection(state) {
   return {
     schemaVersion: 1,
     scope: 'owned-http-worker-component',
+    ...(state.nativeGenerator ? { nativeGenerator: true, privateIpc: false } : {}),
     operationId: state.operationId,
     status: state.status,
     pid: state.pid,
@@ -176,9 +177,21 @@ export function createOwnedHttpWorker() {
 
 /** No caller process/native functions/options may be adopted. */
 export function launchOwnedHttpWorker(handle, request) {
+  if (arguments.length !== 2) fail();
+  return launchOwned(handle, request, true);
+}
+
+/** Native generators do not inherit Node IPC descriptors or Node channel env.
+ * This acquires process custody only; it does not admit executable/workload data.
+ */
+export function launchOwnedHttpNativeGenerator(handle, request) {
+  if (arguments.length !== 2) fail();
+  return launchOwned(handle, request, false);
+}
+
+function launchOwned(handle, request, ipc) {
   const state = stateFor(handle);
   if (
-    arguments.length !== 2 ||
     state.launchAttempted ||
     state.receipt ||
     !dataObject(request) ||
@@ -214,6 +227,8 @@ export function launchOwnedHttpWorker(handle, request) {
   )
     fail();
   const launch = immutable(request);
+  state.nativeGenerator = !ipc;
+  state.privateIpc = ipc;
   state.launchAttempted = true;
   state.status = 'LAUNCH_ATTEMPTED';
   state.launchIdentitySha256 = createHash('sha256').update(JSON.stringify(launch)).digest('hex');
@@ -225,8 +240,8 @@ export function launchOwnedHttpWorker(handle, request) {
       env: launch.environment,
       detached: true,
       shell: false,
-      stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-      serialization: 'json',
+      stdio: ipc ? ['ignore', 'pipe', 'pipe', 'ipc'] : ['ignore', 'pipe', 'pipe'],
+      ...(ipc ? { serialization: 'json' } : {}),
     });
     // Retain before parser/callback setup or any other fallible operation.
     state.child = child;
@@ -327,7 +342,14 @@ export function waitOwnedHttpWorkerClose(handle) {
 export function sendOwnedHttpWorker(handle, frame) {
   if (arguments.length !== 2 || !dataObject(frame)) fail();
   const state = stateFor(handle);
-  if (!state.child || state.closeObserved || state.receipt || !state.child.connected) fail();
+  if (
+    !state.privateIpc ||
+    !state.child ||
+    state.closeObserved ||
+    state.receipt ||
+    !state.child.connected
+  )
+    fail();
   const pending = [frame];
   let population = 0;
   while (pending.length) {
