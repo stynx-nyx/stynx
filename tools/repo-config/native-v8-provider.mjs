@@ -210,7 +210,10 @@ export class NativeV8CoverageProvider extends V8CoverageProvider {
         refuse('unsupported privacy configuration identity or test population');
       this.#root = root;
       const require = createRequire(import.meta.url);
-      const viteRoot = dirname(require.resolve('vite/package.json'));
+      const viteManifest = createRequire(require.resolve('vitest/package.json')).resolve(
+        'vite/package.json',
+      );
+      const viteRoot = dirname(viteManifest);
       const aliases = dataArray(ctx.vite.config.resolve.alias);
       const expectedAliases = ['core', 'data', 'testing', 'privacy', 'idempotency'].map((name) => ({
         find: `@stynx-nyx/${name}`,
@@ -305,6 +308,9 @@ export class NativeV8CoverageProvider extends V8CoverageProvider {
       )
         refuse('installed runtime and provider versions differ');
       this.#inputs = [
+        viteManifest,
+        resolve(viteRoot, 'dist/node/index.js'),
+        resolve(viteRoot, 'dist/node/chunks/config.js'),
         runtimePath,
         providerPath,
         packagePath,
@@ -327,19 +333,35 @@ export class NativeV8CoverageProvider extends V8CoverageProvider {
   }
 
   async transformFile(url, project, environment) {
-    return this.#guard(() => {
-      if (!this.#admission) refuse('provider was not initialized');
-      const native = this.#admission.nativeTransform(url);
-      if (!native) return super.transformFile(url, project, environment);
-      if (
-        environment !== 'ssr' ||
-        project !== this.#project ||
-        realpathSync(project.config.root) !== this.#root
-      )
-        refuse('unsupported native project or transform environment');
-      this.#verify();
-      return native;
-    });
+    let nonownedDelegation = false;
+    try {
+      return await this.#guard(async () => {
+        if (!this.#admission) refuse('provider was not initialized');
+        const native = this.#admission.nativeTransform(url);
+        const source = this.#admission.isSourceTransform(url);
+        if (!native && !source) {
+          nonownedDelegation = true;
+          return super.transformFile(url, project, environment);
+        }
+        if (
+          environment !== 'ssr' ||
+          project !== this.#project ||
+          realpathSync(project.config.root) !== this.#root
+        )
+          refuse('unsupported native project or transform environment');
+        this.#verify();
+        if (native) return native;
+        const actual = await super.transformFile(url, project, environment);
+        this.#verify();
+        const repaired = this.#admission.repairSourceTransform(url, actual);
+        this.#verify();
+        return repaired;
+      });
+    } catch (error) {
+      if (nonownedDelegation) throw error;
+      this.#failure ??= error;
+      throw this.#failure;
+    }
   }
 
   async generateCoverage(...args) {

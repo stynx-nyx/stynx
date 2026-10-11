@@ -5,6 +5,8 @@ import { globSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { basename, dirname, isAbsolute, matchesGlob, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
+import { isDeepStrictEqual, types } from 'node:util';
+import { repairSourceMap } from './native-source-map.mjs';
 
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const fail = (message) => {
@@ -136,6 +138,10 @@ export function createNativeCoverage({ packageDir, modules, includes, excludes }
   const observations = new Map();
   const directoryReads = new Map();
   const diagnostics = [];
+  const sourceTransforms = [];
+  const sourceResults = new Map();
+  const prototypeIdentities = new WeakMap();
+  let sourceFailure;
   const remember = (path) => {
     const absolute = resolve(path);
     const bytes = readFileSync(absolute);
@@ -186,7 +192,17 @@ export function createNativeCoverage({ packageDir, modules, includes, excludes }
   const census = sourceCensus(root, includes, excludes);
   if (JSON.stringify(sources) !== JSON.stringify(census))
     fail('bindings do not equal the original eligible source census');
-  const compiler = createRequire(import.meta.url).resolve('typescript');
+  const toolingRequire = createRequire(import.meta.url);
+  for (const path of [
+    fileURLToPath(import.meta.url),
+    fileURLToPath(new URL('./native-source-map.mjs', import.meta.url)),
+    fileURLToPath(new URL('../../package.json', import.meta.url)),
+    fileURLToPath(new URL('../../pnpm-lock.yaml', import.meta.url)),
+    toolingRequire.resolve('@jridgewell/sourcemap-codec'),
+    toolingRequire.resolve('@jridgewell/sourcemap-codec/package.json'),
+  ])
+    remember(path);
+  const compiler = toolingRequire.resolve('typescript');
   remember(compiler);
   remember(resolve(dirname(compiler), '../package.json'));
   const configPath = regularPath(root, 'tsconfig.json');
@@ -323,7 +339,7 @@ export function createNativeCoverage({ packageDir, modules, includes, excludes }
       fail('coverage map is not bound to exact original source');
     parseNativeMap(Buffer.from(originalMapText), binding.source, binding.output);
     const map = { ...originalMap, sourceRoot: '', sources: [binding.source] };
-    transformed.set(binding.source, { code, map });
+    transformed.set(binding.source, { code, map, originalMapText });
     binding.coverage = {
       codeSha256: hash(code),
       originalMapSha256: hash(originalMapText),
@@ -331,6 +347,7 @@ export function createNativeCoverage({ packageDir, modules, includes, excludes }
     };
   }
   const verify = () => {
+    if (sourceFailure) throw sourceFailure;
     for (const [path, entry] of snapshots) {
       if (realpathSync(path) !== entry.physical || hash(readFileSync(path)) !== entry.sha256)
         fail(`input changed after admission: ${path}`);
@@ -411,6 +428,7 @@ export function createNativeCoverage({ packageDir, modules, includes, excludes }
     productionOptions: parsed.options,
     coverageOptions,
     diagnostics,
+    sourceTransforms,
     inputs: [...snapshots].map(([path, entry]) => ({ path, ...entry })),
     bindings: bindings.map((binding) => {
       const { source, output, map, sourceBytes, outputBytes, mapBytes, coverage: proof } = binding;
@@ -447,11 +465,168 @@ export function createNativeCoverage({ packageDir, modules, includes, excludes }
     const map = conversionMap(binding);
     return { code, map: structuredClone(map) };
   };
+  const isSourceTransform = (id) => classify(id) && transformed.has(id);
+  const snapshot = (value, seen = new Map(), depth = 0) => {
+    if (value === undefined) return { type: 'undefined' };
+    if (typeof value === 'number' && (!Number.isFinite(value) || Object.is(value, -0)))
+      return { type: 'number', value: Object.is(value, -0) ? '-0' : String(value) };
+    if (value === null || ['string', 'boolean', 'number'].includes(typeof value)) return value;
+    if (typeof value !== 'object') return { type: typeof value };
+    if (types.isProxy(value)) return { type: 'refused-proxy' };
+    if (seen.has(value)) return { reference: seen.get(value) };
+    if (depth > 16) return { type: 'refused-depth' };
+    const reference = seen.size;
+    seen.set(value, reference);
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    return {
+      reference,
+      array: Array.isArray(value),
+      fields: Reflect.ownKeys(descriptors).map((key) => {
+        const descriptor = descriptors[key];
+        return {
+          key: typeof key === 'string' ? key : { type: 'symbol' },
+          enumerable: descriptor.enumerable,
+          configurable: descriptor.configurable,
+          ...('value' in descriptor
+            ? { writable: descriptor.writable, value: snapshot(descriptor.value, seen, depth + 1) }
+            : { accessor: true, get: typeof descriptor.get, set: typeof descriptor.set }),
+        };
+      }),
+    };
+  };
+  const repairSourceTransform = (id, actual) => {
+    if (sourceFailure) throw sourceFailure;
+    const observation = { id, status: 'PENDING' };
+    sourceTransforms.push(observation);
+    try {
+      observation.capture = { status: 'PENDING' };
+      observation.actual = snapshot(actual);
+      observation.capture.status = 'COMPLETE';
+      if (!isSourceTransform(id)) fail('source transform is outside the admitted census');
+      verify();
+      const binding = bindings.find((entry) => entry.source === id);
+      const compiler = transformed.get(id);
+      observation.source = binding.sourceBytes.toString('utf8');
+      observation.compiler = snapshot(compiler);
+      if (types.isProxy(actual) || !actual || Object.getPrototypeOf(actual) !== Object.prototype)
+        fail('public source transform must be an ordinary result');
+      const descriptors = Object.getOwnPropertyDescriptors(actual);
+      const allowed = ['code', 'map', 'ssr', 'deps', 'dynamicDeps', '_vitest_tmp'];
+      if (
+        Reflect.ownKeys(actual).some((key) => typeof key !== 'string' || !allowed.includes(key)) ||
+        !Object.hasOwn(descriptors, 'code') ||
+        !Object.hasOwn(descriptors, 'map') ||
+        Object.values(descriptors).some((entry) => !('value' in entry) || !entry.enumerable)
+      )
+        fail('unsupported public source transform fields or descriptors');
+      if (Object.hasOwn(actual, 'ssr') && actual.ssr !== true)
+        fail('public source transform is not SSR');
+      if (
+        Object.hasOwn(actual, '_vitest_tmp') &&
+        actual._vitest_tmp !== undefined &&
+        typeof actual._vitest_tmp !== 'string'
+      )
+        fail('unsupported public source transform cache metadata');
+      for (const key of ['deps', 'dynamicDeps']) {
+        if (!Object.hasOwn(actual, key)) continue;
+        const values = actual[key];
+        if (
+          types.isProxy(values) ||
+          !Array.isArray(values) ||
+          Object.getPrototypeOf(values) !== Array.prototype
+        )
+          fail('public source dependency metadata must be a dense array');
+        const entries = Object.getOwnPropertyDescriptors(values);
+        if (
+          Reflect.ownKeys(entries).length !== values.length + 1 ||
+          Array.from({ length: values.length }, (_, index) => entries[index]).some(
+            (entry) =>
+              !entry || !('value' in entry) || !entry.enumerable || typeof entry.value !== 'string',
+          )
+        )
+          fail('unsupported public source dependency metadata');
+      }
+      const originalMap = descriptors.map.value;
+      if (types.isProxy(originalMap) || !originalMap || typeof originalMap !== 'object')
+        fail('public source map must be a retained map record');
+      const originalPrototype = Object.getPrototypeOf(originalMap);
+      if (originalPrototype !== null && !prototypeIdentities.has(originalPrototype))
+        prototypeIdentities.set(originalPrototype, sourceTransforms.length);
+      observation.prototypeTreatment = 'IGNORED_OWN_DATA_ONLY';
+      observation.incomingPrototype = {
+        category:
+          originalPrototype === null
+            ? 'NULL'
+            : originalPrototype === Object.prototype
+              ? 'ORDINARY'
+              : 'OPAQUE',
+        identity: originalPrototype === null ? null : prototypeIdentities.get(originalPrototype),
+      };
+      const mapDescriptors = Object.getOwnPropertyDescriptors(originalMap);
+      const plainMap = Object.defineProperties({}, mapDescriptors);
+      const result = repairSourceMap({
+        sourceName: id,
+        source: observation.source,
+        compiler: { code: compiler.code, map: compiler.map },
+        actual: { code: actual.code, map: plainMap },
+      });
+      const source = plainMap.sources[0],
+        sourceRoot = Object.hasOwn(plainMap, 'sourceRoot') ? (plainMap.sourceRoot ?? '') : '';
+      if (
+        /[?#\u0000]/u.test(source) ||
+        /[?#\u0000]/u.test(sourceRoot) ||
+        /^[A-Za-z][A-Za-z0-9+.-]*:/u.test(source) ||
+        /^[A-Za-z][A-Za-z0-9+.-]*:/u.test(sourceRoot) ||
+        resolve(dirname(id), sourceRoot, source) !== id ||
+        realpathSync(resolve(dirname(id), sourceRoot, source)) !== id
+      )
+        fail('public source map does not resolve to the admitted source');
+      const prior = sourceResults.get(id);
+      if (prior && !isDeepStrictEqual(prior, observation.actual))
+        fail('public source transform changed within the admitted collection');
+      sourceResults.set(id, observation.actual);
+      const derivedMap = result.map;
+      if (
+        Object.getPrototypeOf(originalMap) !== originalPrototype ||
+        !isDeepStrictEqual(Object.getOwnPropertyDescriptors(originalMap), mapDescriptors)
+      )
+        fail('public source map changed during repair');
+      observation.derived = snapshot(derivedMap);
+      observation.ledger = result.ledger;
+      observation.oldSegmentCount = result.oldSegmentCount;
+      observation.newSegmentCount = result.newSegmentCount;
+      observation.originalMap = snapshot(actual.map);
+      observation.actualResultSha256 = hash(JSON.stringify(observation.actual));
+      observation.originalMapSha256 = hash(JSON.stringify(observation.originalMap));
+      observation.sourceSha256 = hash(binding.sourceBytes);
+      observation.compilerCodeSha256 = hash(compiler.code);
+      observation.derivedMapSha256 = hash(JSON.stringify(observation.derived));
+      observation.status = 'ACCEPTED';
+      verify();
+      return Object.defineProperties(
+        {},
+        { ...descriptors, map: { ...descriptors.map, value: derivedMap } },
+      );
+    } catch (error) {
+      sourceFailure ??= error;
+      observation.status = 'REFUSED';
+      if (observation.capture?.status !== 'COMPLETE')
+        observation.capture = {
+          status: 'REFUSED',
+          name: sourceFailure.name,
+          message: sourceFailure.message,
+        };
+      observation.refusal = { name: sourceFailure.name, message: sourceFailure.message };
+      throw sourceFailure;
+    }
+  };
   return {
     plugin,
     wrapSwc,
     verify,
     nativeTransform,
+    isSourceTransform,
+    repairSourceTransform,
     evidence,
     include: bindings.flatMap(({ source, output }) => [source, output]),
   };
