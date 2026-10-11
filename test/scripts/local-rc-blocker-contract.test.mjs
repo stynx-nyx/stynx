@@ -4375,7 +4375,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
     'package.json': '57c2f65fd12d4a40e24a31139d547837c481f7a6a5bceaeac8c03d66abd55911',
     'reference/api/package.json':
-      '0c836a5aec63a8195a92fd052d507bce7982f13708a9476aea481a61b21dfa6d',
+      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -4632,7 +4632,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
     'package.json': '57c2f65fd12d4a40e24a31139d547837c481f7a6a5bceaeac8c03d66abd55911',
     'reference/api/package.json':
-      '0c836a5aec63a8195a92fd052d507bce7982f13708a9476aea481a61b21dfa6d',
+      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -4720,7 +4720,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
     'package.json': '57c2f65fd12d4a40e24a31139d547837c481f7a6a5bceaeac8c03d66abd55911',
     'reference/api/package.json':
-      '0c836a5aec63a8195a92fd052d507bce7982f13708a9476aea481a61b21dfa6d',
+      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
