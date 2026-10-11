@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.10",
+  "version": "1.3.11",
   "meta": {
-    "last_updated": "2026-10-11T02:58:59.033Z",
+    "last_updated": "2026-10-11T03:23:14.342Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -71,7 +71,8 @@
       "STYNX 1.6.0 Architect binds the installed source-population matcher, additive local S3 provider and real compiler-plan refusal sensors, and rebinds two exact existing coverage-path assertions while retaining all registry 1.6 policy literals and prior assertion counts. The six-file privacy tier preserves every original behavioral case; local emulator and compiler-helper evidence do not establish production provider, full coverage, source/build freshness, performance, overall audit or release PASS.",
       "STYNX 1.6.0 Architect binds actual pinned-pnpm workspace selection and immutable Git/private dependency byte-roster refusal sensors, and refreshes the existing privacy tier population projection to four ordinary, two integration and six coverage files. Every previous relationship, assertion count and gate obligation is retained; these helpers do not establish fresh build ownership, complete runtime custody, HTTP performance, overall audit or release PASS.",
       "Architect binding adds the actual fresh-build owner acceptance assertions, preserving all existing bindings and thresholds. These helper custody regressions do not certify application module/object custody, complete HTTP middleware, route reachability or performance readiness.",
-      "STYNX 1.6.0 Architect rebinds the additive default privacy identity-port configuration refusal assertions (71 to 74), preserving every previous corpus entry, assertion and invariant/gate relationship. This diagnostic binding does not establish full coverage, provider compatibility, HTTP performance or release readiness."
+      "STYNX 1.6.0 Architect rebinds the additive default privacy identity-port configuration refusal assertions (71 to 74), preserving every previous corpus entry, assertion and invariant/gate relationship. This diagnostic binding does not establish full coverage, provider compatibility, HTTP performance or release readiness.",
+      "STYNX 1.6.0 Architect binds the actual HTTP worker startup and production parent IPC protocol/capture regressions, preserving every existing corpus projection, invariant relationship and gate obligation. These bounded identity, lifecycle, hostile-frame and serialization checks do not establish AppModule/object custody, complete middleware/routes, nominal HTTP performance, full audit or release readiness."
     ]
   },
   "invariants": [
@@ -772,6 +773,24 @@
             "Real credential-free supported-host builds bind the pinned public toolchain, actual lifecycle observations, initial full compiler reconciliation and immutable physical outputs. Source, dependency, output, map, mode, roster and helper drift refuse and remain refused after restoration; unreviewed helpers, hooks and configuration refuse before candidate execution. Fresh build custody does not establish module/object custody, HTTP reachability, middleware completeness or performance readiness."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-runtime-protocol.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Actual production-used parent protocol validates closed candidate/process identities, ordering, irreversible refusal, clean terminal/exit, bounded parsed-frame capture and serializer closure. Real hostile-child transport and inherited-hook/deep-input negatives retain nonqualifying flags; parsed frames are not raw Node IPC wire bytes."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-runtime-worker.test.mjs",
+          "names": ["INV-PERF-001"],
+          "assertions": [
+            "Actual worker subprocess startup verifies descriptor, process/environment, source/map and control-module custody; forged handles, extra arguments and invalid startup inputs refuse before trusted bootstrap. Startup fixtures do not establish actual application/middleware/HTTP or performance readiness."
+          ],
+          "mode": "gray_box"
         }
       ],
       "code_areas": ["reference/api/src/sample", "packages/ratelimit/src", "packages/backend/src"]
@@ -1021,6 +1040,24 @@
           "names": ["INV-CORE-001"],
           "assertions": [
             "Real credential-free supported-host builds bind the pinned public toolchain, actual lifecycle observations, initial full compiler reconciliation and immutable physical outputs. Source, dependency, output, map, mode, roster and helper drift refuse and remain refused after restoration; unreviewed helpers, hooks and configuration refuse before candidate execution. Fresh build custody does not establish module/object custody, HTTP reachability, middleware completeness or performance readiness."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-runtime-protocol.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Actual production-used parent protocol validates closed candidate/process identities, ordering, irreversible refusal, clean terminal/exit, bounded parsed-frame capture and serializer closure. Real hostile-child transport and inherited-hook/deep-input negatives retain nonqualifying flags; parsed frames are not raw Node IPC wire bytes."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/http-runtime-worker.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "Actual worker subprocess startup verifies descriptor, process/environment, source/map and control-module custody; forged handles, extra arguments and invalid startup inputs refuse before trusted bootstrap. Startup fixtures do not establish actual application/middleware/HTTP or performance readiness."
           ],
           "mode": "gray_box"
         }
@@ -6709,6 +6746,22 @@
       "lifecycle": "supported",
       "assertion_count": 44,
       "assertion_digest_sha256": "f9b4ac1290d47058623a6e408a35f3153bae3cd145995a0918ec8be48ebe1bd4"
+    },
+    {
+      "path": "test/scripts/http-runtime-protocol.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 183,
+      "assertion_digest_sha256": "6521402d68af43e50dc0b3de5b407c824d72472067c73cafd4f97eab3fa60f56"
+    },
+    {
+      "path": "test/scripts/http-runtime-worker.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 13,
+      "assertion_digest_sha256": "f519d204336e7bf18331803700086b5f6b02ca1a81d924ba65c95741c9a1ee5d"
     }
   ],
   "suites": {
