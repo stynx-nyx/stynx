@@ -1,3 +1,4 @@
+import { httpComposition, isHttpComposition } from './http-composition-roster.mjs';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
@@ -797,7 +798,7 @@ export async function observeOwnedReferenceLoopback(
     arguments.length !== 4 ||
     active ||
     job?.mode !== 'reference-owned-loopback' ||
-    job.compositionId !== 'reference' ||
+    !isHttpComposition(job.compositionId) ||
     job.referenceRegistry?.candidateCommit !== job.candidateCommit ||
     job.referenceRegistry?.tree !== job.tree ||
     job.referenceFixture?.identity?.candidateCommit !== job.candidateCommit ||
@@ -832,7 +833,7 @@ export async function observeOwnedReferenceLoopback(
     const factoryDescriptors = Object.getOwnPropertyDescriptors(factory);
     const appModule = resolve(
       job.checkoutRoot,
-      'reference/api/dist/reference/api/src/app.module.js',
+      httpComposition(job.compositionId).emittedRootModule,
     );
     const securityModule = resolve(
       job.checkoutRoot,
@@ -950,7 +951,7 @@ export async function observeOwnedReferenceLoopback(
     result = {
       schemaVersion: 1,
       scope: 'reference-owned-loopback',
-      compositionId: 'reference',
+      compositionId: job.compositionId,
       bootstrap,
       phases: state.phases,
       layers: final.layers,

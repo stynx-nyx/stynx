@@ -1,3 +1,4 @@
+import { httpComposition, isHttpComposition } from './http-composition-roster.mjs';
 import { Buffer } from 'node:buffer';
 import { isDeepStrictEqual, types } from 'node:util';
 import { createHash } from 'node:crypto';
@@ -379,7 +380,7 @@ function validObservation(value, cwd) {
     !exact(value, keys) ||
     value.schemaVersion !== 1 ||
     value.scope !== 'bootstrap-module-only' ||
-    value.compositionId !== 'reference' ||
+    !isHttpComposition(value.compositionId) ||
     value.namedExport !== 'createReferenceApplication' ||
     value.actualNamedExportObserved !== true ||
     value.factoryInvoked !== false ||
@@ -389,10 +390,11 @@ function validObservation(value, cwd) {
     !validByteRow(value.bootstrap.source, true) ||
     !validByteRow(value.bootstrap.emitted) ||
     !validByteRow(value.bootstrap.map) ||
-    value.bootstrap.source.path !== 'reference/api/src/bootstrap.ts' ||
-    value.bootstrap.source.sha256 !==
-      'ae8bb32ba4e6598b72488ee65a64046db2535db486588b775deb69deac7c7553' ||
-    value.bootstrap.emitted.path !== 'reference/api/dist/reference/api/src/bootstrap.js' ||
+    value.bootstrap.source.path !== httpComposition(value.compositionId).source ||
+    (value.compositionId === 'reference' &&
+      value.bootstrap.source.sha256 !==
+        'ae8bb32ba4e6598b72488ee65a64046db2535db486588b775deb69deac7c7553') ||
+    value.bootstrap.emitted.path !== httpComposition(value.compositionId).emitted ||
     value.bootstrap.map.path !== `${value.bootstrap.emitted.path}.map` ||
     value.evaluatedModuleURL !== pathToFileURL(join(cwd, value.bootstrap.emitted.path)).href ||
     !isDeepStrictEqual(value.blockedOn, [
@@ -590,7 +592,7 @@ function validBindings(value, context) {
     value.roster.length === 0 ||
     !validObservation(value.observation, value.cwd) ||
     !Array.isArray(value.trustedBootstrap) ||
-    value.trustedBootstrap.length !== 2 ||
+    value.trustedBootstrap.length !== 3 ||
     !Array.isArray(value.optionalProbes) ||
     value.optionalProbes.length > 2
   )
@@ -609,6 +611,7 @@ function validBindings(value, context) {
     members.set(row.url, row);
   }
   const controlPaths = [
+    'scripts/lib/http-composition-roster.mjs',
     'scripts/lib/http-runtime-worker.mjs',
     'scripts/lib/http-module-custody.mjs',
   ];

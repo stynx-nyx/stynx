@@ -1,3 +1,4 @@
+import { isHttpComposition } from './http-composition-roster.mjs';
 import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -62,7 +63,7 @@ function ownOutput(packageRoot, source) {
   // Exact existing rootDir layouts: packages use ../.., reference/api ../../... .
   return packageRoot.startsWith('packages/')
     ? `${packageRoot}/dist/${stem.slice('packages/'.length)}.js`
-    : packageRoot === 'reference/api'
+    : packageRoot === 'reference/api' || packageRoot === 'domain/demo-bookmark/api'
       ? `${packageRoot}/dist/${stem}.js`
       : undefined;
 }
@@ -265,7 +266,7 @@ function actualClasses(job) {
   const plan = job.referenceRegistry;
   if (
     job.mode !== 'reference-owned-loopback' ||
-    job.compositionId !== 'reference' ||
+    !isHttpComposition(job.compositionId) ||
     plan?.schemaVersion !== 1 ||
     plan.candidateCommit !== job.candidateCommit ||
     plan.tree !== job.tree ||

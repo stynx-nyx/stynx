@@ -2290,6 +2290,9 @@ importers:
       '@nestjs/platform-express':
         specifier: ^11.1.26
         version: 11.2.3(@nestjs/common@11.2.3(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)
+      '@stynx-domain/demo-bookmark-api':
+        specifier: workspace:*
+        version: link:../../domain/demo-bookmark/api
       '@stynx-nyx/audit':
         specifier: workspace:*
         version: link:../../packages/audit
@@ -2311,15 +2314,24 @@ importers:
       '@stynx-nyx/health':
         specifier: workspace:*
         version: link:../../packages/health
+      '@stynx-nyx/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@stynx-nyx/idempotency':
         specifier: workspace:*
         version: link:../../packages/idempotency
       '@stynx-nyx/logging':
         specifier: workspace:*
         version: link:../../packages/logging
+      '@stynx-nyx/offline-sync':
+        specifier: workspace:*
+        version: link:../../packages/offline-sync
       '@stynx-nyx/preferences':
         specifier: workspace:*
         version: link:../../packages/preferences
+      '@stynx-nyx/privacy':
+        specifier: workspace:*
+        version: link:../../packages/privacy
       '@stynx-nyx/ratelimit':
         specifier: workspace:*
         version: link:../../packages/ratelimit

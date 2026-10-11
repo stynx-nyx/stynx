@@ -1,3 +1,4 @@
+import { isHttpComposition } from './http-composition-roster.mjs';
 import { createHash } from 'node:crypto';
 import {
   lstatSync,
@@ -250,7 +251,7 @@ export async function runHttpRuntimeWorker() {
     if (
       job.schemaVersion !== 1 ||
       !['bootstrap-module-only', 'reference-owned-loopback'].includes(job.mode) ||
-      job.compositionId !== 'reference' ||
+      !isHttpComposition(job.compositionId) ||
       !/^[a-f0-9]{40}$/u.test(job.candidateCommit) ||
       !/^[a-f0-9]{40}$/u.test(job.tree) ||
       !/^[a-f0-9-]{36}$/u.test(job.nonce) ||
@@ -277,6 +278,7 @@ export async function runHttpRuntimeWorker() {
     for (const [name, sha256] of Object.entries(job.environment))
       if (digest(process.env[name] ?? '') !== sha256) fail('Private worker environment changed');
     const controlPaths = [
+      'scripts/lib/http-composition-roster.mjs',
       'scripts/lib/http-module-custody.mjs',
       'scripts/lib/http-runtime-bindings.mjs',
       'scripts/lib/http-runtime-census.mjs',
@@ -1392,16 +1394,20 @@ export async function runHttpRuntimeWorker() {
         fail('Required runtime module evaluation missing');
     }
     const trustedBootstrap = job.controls.filter((row) =>
-      ['scripts/lib/http-runtime-worker.mjs', 'scripts/lib/http-module-custody.mjs'].includes(
-        row.path,
-      ),
+      [
+        'scripts/lib/http-composition-roster.mjs',
+        'scripts/lib/http-runtime-worker.mjs',
+        'scripts/lib/http-module-custody.mjs',
+      ].includes(row.path),
     );
     if (job.mode === 'reference-owned-loopback') {
       for (const path of controlPaths) {
         if (
-          ['scripts/lib/http-runtime-worker.mjs', 'scripts/lib/http-module-custody.mjs'].includes(
-            path,
-          )
+          [
+            'scripts/lib/http-composition-roster.mjs',
+            'scripts/lib/http-runtime-worker.mjs',
+            'scripts/lib/http-module-custody.mjs',
+          ].includes(path)
         )
           continue;
         const url = pathToFileURL(resolve(job.checkoutRoot, path)).href;

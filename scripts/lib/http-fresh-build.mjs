@@ -1,3 +1,4 @@
+import { httpComposition, isHttpComposition } from './http-composition-roster.mjs';
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import {
@@ -287,7 +288,7 @@ function parseRequest(request) {
   if (
     !isAbsolute(values.sourceRepository) ||
     !/^[a-f0-9]{40}$/u.test(values.candidateCommit) ||
-    values.rootId !== 'reference'
+    !isHttpComposition(values.rootId)
   )
     refuse('Unsupported fresh build candidate or root');
   values.sourceRepository = realpathSync(values.sourceRepository);
@@ -1548,6 +1549,7 @@ export function workerModuleReceiptFromFreshBuild(handle) {
 // never compiler output. Independent acceptance must review these exact bytes
 // before a candidate using this diagnostic is admitted to a release task.
 const runtimeControlClosure = new Map([
+  ['scripts/lib/http-composition-roster.mjs', null],
   [
     'scripts/lib/http-runtime-worker.mjs',
     '64be2695835677d86a8f0cf825e150feba706ad7c0871f8da94106d55e8717cd',
@@ -1592,8 +1594,9 @@ function supervisorProtocolControl(state) {
 }
 
 function referenceBootstrapBinding(state) {
-  const sourcePath = 'reference/api/src/bootstrap.ts';
-  const outputPath = 'reference/api/dist/reference/api/src/bootstrap.js';
+  const composition = httpComposition(state.rootId);
+  const sourcePath = composition.source;
+  const outputPath = composition.emitted;
   const compiler = state.compilers.find((entry) => entry.plan.packageRoot === 'reference/api');
   const planned = compiler?.plan.expectedOutputs.find((row) => row.path === outputPath);
   const map = compiler?.outputs.mapLinks.find((row) => row.emittedPath === outputPath);
@@ -1981,7 +1984,7 @@ function runtimeProtocolBindings(state, job, descriptorBody, launchEnvironment) 
     // This is the initial, actually observed factory-export witness before the
     // real factory is invoked, also in the disjoint owned-loopback worker.
     scope: 'bootstrap-module-only',
-    compositionId: 'reference',
+    compositionId: state.rootId,
     bootstrap: structuredClone(job.bootstrap),
     namedExport: 'createReferenceApplication',
     evaluatedModuleURL: moduleURL,
@@ -2018,9 +2021,11 @@ function runtimeProtocolBindings(state, job, descriptorBody, launchEnvironment) 
     resolutionAnchors: structuredClone(job.resolutionAnchors),
     observation,
     trustedBootstrap: job.controls.filter((row) =>
-      ['scripts/lib/http-runtime-worker.mjs', 'scripts/lib/http-module-custody.mjs'].includes(
-        row.path,
-      ),
+      [
+        'scripts/lib/http-composition-roster.mjs',
+        'scripts/lib/http-runtime-worker.mjs',
+        'scripts/lib/http-module-custody.mjs',
+      ].includes(row.path),
     ),
     optionalProbes,
     requiredEvaluationURLs: [
@@ -2046,7 +2051,7 @@ const referenceFixtureSourceSha256 =
   'e713ef211e22459b8e866b80ce1ee3bef71da0f2dafdd2d18a1d4ab186c4cdf6';
 
 function requireReferenceFactoryAdmission(state) {
-  if (state.rootId !== 'reference') refuse('Unsupported real reference composition');
+  if (!isHttpComposition(state.rootId)) refuse('Unsupported real reference composition');
   for (const [name, sha256] of Object.entries(referenceFactoryAdmission))
     if (typeof sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(sha256))
       refuse(`Real reference admission is not independently bound: ${name}`);
@@ -2228,7 +2233,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
   };
   try {
     recheck(state);
-    if (state.rootId !== 'reference') refuse('Unsupported runtime composition');
+    if (!isHttpComposition(state.rootId)) refuse('Unsupported runtime composition');
     const controls = runtimeControls(state);
     const supervisorControls = [supervisorProtocolControl(state)];
     const receipt = workerModuleReceiptFromFreshBuild(handle);
@@ -2253,7 +2258,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
     const job = {
       schemaVersion: 1,
       mode: 'bootstrap-module-only',
-      compositionId: 'reference',
+      compositionId: state.rootId,
       nonce,
       candidateCommit: state.candidateCommit,
       tree: state.inputs.tree,
@@ -2387,7 +2392,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
       candidateCommit: state.candidateCommit,
       tree: state.inputs.tree,
       scope: job.mode,
-      compositionId: 'reference',
+      compositionId: state.rootId,
       nonce,
       child: {
         pid: child.pid,
@@ -2430,6 +2435,7 @@ export async function observeFreshHttpReferenceBootstrap(handle) {
 // remain historical; neither caller data nor a partial component receipt can
 // enable this disjoint resource-consuming mode.
 const referenceRuntimeControlClosure = new Map([
+  ['scripts/lib/http-composition-roster.mjs', null],
   ['scripts/lib/http-runtime-worker.mjs', null],
   ['scripts/lib/http-module-custody.mjs', null],
   ['scripts/lib/http-runtime-census.mjs', null],
@@ -2646,7 +2652,7 @@ export async function observeFreshHttpReferenceLoopback(handle) {
     const job = {
       schemaVersion: 1,
       mode: 'reference-owned-loopback',
-      compositionId: 'reference',
+      compositionId: state.rootId,
       nonce,
       candidateCommit: state.candidateCommit,
       tree: state.inputs.tree,
@@ -2904,7 +2910,7 @@ export async function observeFreshHttpReferenceLoopback(handle) {
       candidateCommit: state.candidateCommit,
       tree: state.inputs.tree,
       scope: job.mode,
-      compositionId: 'reference',
+      compositionId: state.rootId,
       nonce,
       child: {
         pid: workerSnapshot.pid,

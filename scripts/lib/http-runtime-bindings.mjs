@@ -1,3 +1,4 @@
+import { httpComposition, isHttpComposition } from './http-composition-roster.mjs';
 import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -31,11 +32,14 @@ function readBound(root, row) {
 /** Private worker entry point; never accepts an application factory or URL. */
 export async function observeReferenceBootstrapModule(job) {
   const binding = job.bootstrap;
+  const composition = httpComposition(job.compositionId);
   if (
-    job.compositionId !== 'reference' ||
-    binding.source.path !== 'reference/api/src/bootstrap.ts' ||
-    binding.source.sha256 !== 'ae8bb32ba4e6598b72488ee65a64046db2535db486588b775deb69deac7c7553' ||
-    binding.emitted.path !== 'reference/api/dist/reference/api/src/bootstrap.js' ||
+    !isHttpComposition(job.compositionId) ||
+    binding.source.path !== composition.source ||
+    (job.compositionId === 'reference' &&
+      binding.source.sha256 !==
+        'ae8bb32ba4e6598b72488ee65a64046db2535db486588b775deb69deac7c7553') ||
+    binding.emitted.path !== composition.emitted ||
     binding.map.path !== `${binding.emitted.path}.map`
   )
     refuse('Unknown runtime bootstrap binding');
@@ -89,7 +93,7 @@ export async function observeReferenceBootstrapModule(job) {
   const map = JSON.parse(mapBytes.toString('utf8'));
   if (
     map.version !== 3 ||
-    map.file !== 'bootstrap.js' ||
+    map.file !== composition.emitted.split('/').at(-1) ||
     map.sourceRoot ||
     map.sources?.length !== 1 ||
     resolve(dirname(resolve(job.checkoutRoot, binding.map.path)), map.sources[0]) !==
@@ -118,7 +122,7 @@ export async function observeReferenceBootstrapModule(job) {
   return {
     schemaVersion: 1,
     scope: 'bootstrap-module-only',
-    compositionId: 'reference',
+    compositionId: job.compositionId,
     bootstrap: structuredClone(binding),
     namedExport: 'createReferenceApplication',
     evaluatedModuleURL: moduleURL,

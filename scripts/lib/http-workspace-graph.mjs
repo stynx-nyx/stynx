@@ -48,7 +48,7 @@ function expandPattern(root, pattern) {
   if (
     parts.some(
       (part) =>
-        !part || part === '.' || part === '..' || (part !== '*' && /[*?\[\]{}()!\\:]/u.test(part)),
+        !part || part === '.' || part === '..' || (part !== '*' && /[*?[\]{}()!\\:]/u.test(part)),
     )
   )
     refuse('Unsupported workspace package pattern');
@@ -145,6 +145,7 @@ export function deriveHttpWorkspaceGraph(checkoutRoot) {
     return [...found].sort();
   };
   const selected = [];
+  const selectedTooling = [];
   const visited = new Set();
   const active = new Set();
   const visit = (name) => {
@@ -155,6 +156,29 @@ export function deriveHttpWorkspaceGraph(checkoutRoot) {
     const dependencyNames = edges(member);
     for (const dependency of dependencyNames) visit(dependency);
     const buildScript = member.manifest.scripts?.build;
+    if (buildScript === undefined) {
+      const sourceOnly = new Map([
+        ['@stynx-internal/eslint-config', 'tools/eslint-config'],
+        ['@stynx-internal/tsconfig', 'tools/tsconfig'],
+      ]);
+      if (
+        sourceOnly.get(name) !== member.root ||
+        member.manifest.private !== true ||
+        dependencyNames.length !== 0 ||
+        Object.keys(member.manifest.scripts ?? {}).some((key) => key !== 'test')
+      )
+        refuse('Unsupported selected workspace build script or source-only tooling');
+      selectedTooling.push({
+        name,
+        root: member.root,
+        manifestSha256: member.manifestSha256,
+        dependencyNames,
+        classification: 'source-only-workspace-tooling',
+      });
+      active.delete(name);
+      visited.add(name);
+      return;
+    }
     const compilerConfig = scripts.get(buildScript);
     if (!compilerConfig) refuse('Unsupported selected workspace build script');
     if ('prebuild' in member.manifest.scripts || 'postbuild' in member.manifest.scripts)
@@ -211,6 +235,7 @@ export function deriveHttpWorkspaceGraph(checkoutRoot) {
       .map(({ name, root: path, manifestSha256 }) => ({ name, root: path, manifestSha256 }))
       .sort((a, b) => a.name.localeCompare(b.name)),
     selected,
+    selectedTooling,
     topologicalScriptOrder: selected.map((member) => member.name),
     readinessPromoting: false,
   };
@@ -224,7 +249,9 @@ export function reconcileHttpWorkspaceSelector(checkoutRoot, selectorOutput) {
     refuse('Actual pnpm selector must be bounded primitive JSON text');
   const rows = JSON.parse(selectorOutput);
   if (!Array.isArray(rows)) refuse('Actual pnpm selector is not an array');
-  const selected = new Map(graph.selected.map((member) => [member.name, member]));
+  const selected = new Map(
+    [...graph.selected, ...graph.selectedTooling].map((member) => [member.name, member]),
+  );
   const seen = new Set();
   for (const row of rows) {
     if (

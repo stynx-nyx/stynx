@@ -1,3 +1,4 @@
+import { isHttpComposition } from './http-composition-roster.mjs';
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { isAbsolute } from 'node:path';
@@ -620,7 +621,7 @@ export async function openReferenceLifecycleChannel(job) {
     arguments.length !== 1 ||
     activeChannel ||
     job?.mode !== mode ||
-    job.compositionId !== 'reference' ||
+    !isHttpComposition(job.compositionId) ||
     typeof process.send !== 'function' ||
     !process.connected
   )
