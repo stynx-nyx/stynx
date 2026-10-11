@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.14",
+  "version": "1.3.15",
   "meta": {
-    "last_updated": "2026-10-11T13:26:53.035Z",
+    "last_updated": "2026-10-11T23:34:28.256Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -75,7 +75,8 @@
       "STYNX 1.6.0 Architect binds the actual HTTP worker startup and production parent IPC protocol/capture regressions, preserving every existing corpus projection, invariant relationship and gate obligation. These bounded identity, lifecycle, hostile-frame and serialization checks do not establish AppModule/object custody, complete middleware/routes, nominal HTTP performance, full audit or release readiness.",
       "STYNX 1.6.0 Architect combined-candidate rebind preserves all 629 executable test bindings, 15 invariants and 13 gate mappings while refreshing the independently accepted published DEVAI 2.5.0 adoption and closed HTTP protocol assertion projections. All 106 original HTTP cases and 183 original assertion obligations remain mapped; 40 added cases strengthen the boundary. This binding does not establish native HTTP custody, endpoint performance, provider, publication or overall audit PASS.",
       "STYNX 1.6.0 Architect rebind preserves all 629 executable test bindings and every prior invariant/gate relationship while binding the exact local S3 expiration-error assertion and four additive nested-runbook route/anchor assertions. Generated documentation and emulator fixtures do not establish production provider, HTTP custody, performance, overall audit or release readiness.",
-      "STYNX 1.6.0 Architect binds exact consumption-operation-clock parity and microsecond/tenant negatives, admitted non-evaluated resolution-anchor and worker/protocol projections, exact webhook failure matching, and strict prospective-versus-versioned registry-policy assertions. All prior corpus relationships, invariants, gate mappings and thresholds remain unchanged. Prospective version plans do not supply final version, registry, provider, coverage, HTTP performance or publication acceptance."
+      "STYNX 1.6.0 Architect binds exact consumption-operation-clock parity and microsecond/tenant negatives, admitted non-evaluated resolution-anchor and worker/protocol projections, exact webhook failure matching, and strict prospective-versus-versioned registry-policy assertions. All prior corpus relationships, invariants, gate mappings and thresholds remain unchanged. Prospective version plans do not supply final version, registry, provider, coverage, HTTP performance or publication acceptance.",
+      "STYNX 1.6.0 Architect binds 40 additive executable sensors and refreshes 10 existing projections against exact integrated candidate 56304e0b0bc34b552ea36889076c8c1a85b3078a, retaining all 632 prior corpus entries, every invariant/gate relationship and all thresholds. Exact expression review preserves eight changed-file assertion multisets; the DEVAI 2.6.0 identity/registered-binding/history/Doctor successors and the reviewed source-only workspace, native coverage configuration and fixture-finalization obligations retain their intended checks. Complete private build-support byte retention, original local bootstrap UNKNOWN/NOT_EVALUABLE, opaque baseline association, actual bounded raw/IPC/native-negative controls, native coverage correspondence and restricted-role storage regressions remain component evidence. These bindings do not establish installed successor admission, source/native whole-life or application custody, actual original-parent deadline expiry, complete supplemental workload, performance, provider, overall audit or release readiness."
     ]
   },
   "invariants": [
@@ -3595,16 +3596,16 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 134,
-      "assertion_digest_sha256": "67a4e8cef8e43901b1cdd53f1cad87b85d857aaa60efba06269bab0ca49fa948"
+      "assertion_count": 182,
+      "assertion_digest_sha256": "2055b10013e06374946390cd074660374bf15d8ee27fa2a5dfb612f7101c8331"
     },
     {
       "path": "packages/privacy/test/unit/privacy-runtime.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 55,
-      "assertion_digest_sha256": "9e2850c8ef0ab1ab561e30f7ba9b9fd3e556f605159e435b13376089cbbbea97"
+      "assertion_count": 59,
+      "assertion_digest_sha256": "85eae92c06ba3c28d8d8d5d85e9fe42aabf1b7a6cf687d4ec607aab8c2d674e9"
     },
     {
       "path": "packages/privacy/test/unit/privacy.controller.spec.ts",
@@ -3851,16 +3852,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 13,
-      "assertion_digest_sha256": "ff0f9449ed34a2e27dc0f2e429c1225386d5c5c633343a364ca4e656db2cf264"
+      "assertion_count": 25,
+      "assertion_digest_sha256": "464873b422463876958e0d9028de8e9621594ccb7048a5d5f4e9f80b6edd53d7"
     },
     {
       "path": "packages/storage/test/unit/s3.service.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 52,
-      "assertion_digest_sha256": "170ce0eefef854f71a896f4138ac0db6ed04613fd5b4f9c2cbc737da1f767313"
+      "assertion_count": 70,
+      "assertion_digest_sha256": "2aff5f38c076057bc66a78084e7d86ef50f2a3281d5a02b8150f040cd3622f0b"
     },
     {
       "path": "packages/tenancy/test/integration/tenancy.api-matrix.spec.ts",
@@ -4733,8 +4734,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 12,
-      "assertion_digest_sha256": "eaf34ad311b9b2923efbf7cfc24811e94a1840aa2536e52efce4e77eeb692e41"
+      "assertion_count": 15,
+      "assertion_digest_sha256": "9db74e979988077a4153dd56071ed8bcd27d7c72b3f1b23819e6c90660d13424"
     },
     {
       "path": "tools/repo-config/commitlint.test.cjs",
@@ -5045,16 +5046,16 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 133,
-      "assertion_digest_sha256": "1bd8140cc6aded0a7de50b783e1da256633411f8212be9cff500fe1f46e3cd11"
+      "assertion_count": 167,
+      "assertion_digest_sha256": "45c4e28744bb006857da3aa553c58502f2bb13120a13d0af1a4a5b5cf004dd62"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 875,
-      "assertion_digest_sha256": "d45f13af0196c4d1b1e178ad5c0830972321e86c30d4042355c786df04c871af"
+      "assertion_count": 899,
+      "assertion_digest_sha256": "b96b839454e9695adb889529421ae8d2ff68a8f36cb96ba98b8dd8ce19e67621"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -6707,8 +6708,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 25,
-      "assertion_digest_sha256": "17e54f7fa3d4e99be537fdad84aeaeea7c8528e241f091ab9f202b6784318bac"
+      "assertion_count": 64,
+      "assertion_digest_sha256": "cc91d0f4a7da7ee05802cb3ffd68d38503db9bc4737b2aaee1ee0535b98b1a50"
     },
     {
       "path": "test/scripts/coverage-population.test.mjs",
@@ -6739,8 +6740,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 44,
-      "assertion_digest_sha256": "1c40b05111411c69cbbf8845ed8659f36f03477acb47003d3ee7e0a185a8cde4"
+      "assertion_count": 57,
+      "assertion_digest_sha256": "8e6d064a996fa5f6184d2765bd9835b10606f171d0265c6df76565fe97a4bf38"
     },
     {
       "path": "test/scripts/http-fresh-build.test.mjs",
@@ -6763,8 +6764,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 14,
-      "assertion_digest_sha256": "5ee8b3c776f374b4afdeef4795f4727edc65af45d5368071989ef7962611b84b"
+      "assertion_count": 21,
+      "assertion_digest_sha256": "27753803a4478ee8f4d8bebaa736d2d77e0e8a7716bc14bc8a95faa9d6f6fbc1"
     },
     {
       "path": "packages/offline-sync/test/integration/offline-sync-consumption-clock.integration.spec.ts",
@@ -6789,6 +6790,326 @@
       "lifecycle": "supported",
       "assertion_count": 26,
       "assertion_digest_sha256": "eb4f184666f64cea55ae03a6d7e20d7c08a0d2f1cf0820aed88a094a4414c509"
+    },
+    {
+      "path": "test/db/demo-bookmark-storage-contract.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001", "INV-RBAC-001", "INV-TENANCY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 118,
+      "assertion_digest_sha256": "163d01af7d790dd755d080903304537ba674d1514b61bae18cc63925cf913302"
+    },
+    {
+      "path": "test/scripts/devai-260-installed-interfaces.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 66,
+      "assertion_digest_sha256": "0e2358f74d2d174dd324c89b66930a455ca3f80124fb6b5c8cdf03d4c6de161d"
+    },
+    {
+      "path": "test/scripts/finite-k6-origins.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 39,
+      "assertion_digest_sha256": "536b397f02888540fbb3be20b1345364e6ffac7689637f8426d316307a3633aa"
+    },
+    {
+      "path": "test/scripts/http-build-support.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 103,
+      "assertion_digest_sha256": "a99f372a565c4d9867e242dcca449e9358af5e6af3cddf0f1b9c0bfcfb5f64bb"
+    },
+    {
+      "path": "test/scripts/http-composition-roster.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 53,
+      "assertion_digest_sha256": "bbffa3eb3a2151350d6596a7309cf5674b988def9975c6235464e8e3a964bc9d"
+    },
+    {
+      "path": "test/scripts/http-fixture-failure-archive.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 79,
+      "assertion_digest_sha256": "d170f57d3dc1db780271b7a28c0f3afcef07d2a4b7c855b822733e85ee2c755d"
+    },
+    {
+      "path": "test/scripts/http-original-artifacts.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 54,
+      "assertion_digest_sha256": "15bb373cb4c07e6c4bdd83c4b946bb4aa6442fdbbb73a0c99b656f3e65516a35"
+    },
+    {
+      "path": "test/scripts/http-original-bootstrap-results.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 52,
+      "assertion_digest_sha256": "16cc18db8546f2326340722ba5e7c40e90acff0244a568034e162ef2500848b2"
+    },
+    {
+      "path": "test/scripts/http-original-exchange.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 23,
+      "assertion_digest_sha256": "521636a334e1e01901b3d1c6c7eb988166c71a200c48b360ca97d455e966d6e1"
+    },
+    {
+      "path": "test/scripts/http-original-lifecycle-controls.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 33,
+      "assertion_digest_sha256": "6c44e6baefbc7ac10bc7c7a6596cbf2f0ddc3e874161737d0f661e2482abd058"
+    },
+    {
+      "path": "test/scripts/http-original-network.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 40,
+      "assertion_digest_sha256": "8183d6a50d0dd86f01c84a17b5015dd396833a8935b25120916431b47ab55a32"
+    },
+    {
+      "path": "test/scripts/http-original-official-k6.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 5,
+      "assertion_digest_sha256": "16461606f7ed2f4eb235245c4a1dd9f4cabd9f0a176344a9ae7d6712b6394ff1"
+    },
+    {
+      "path": "test/scripts/http-original-protocol.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 84,
+      "assertion_digest_sha256": "a35d64db33877400de92c141991f478175e101882cd7a2fda0eedf495466a8ad"
+    },
+    {
+      "path": "test/scripts/http-original-quotas.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "30c6f1d231cb8314524cee58fae9b3f22f3d3b0be6c82923220fe2f0f8a641ab"
+    },
+    {
+      "path": "test/scripts/http-original-results.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 77,
+      "assertion_digest_sha256": "08552a30b812927f952ec6f328a68e096e4540cca8e0babc5e878b821cbe46af"
+    },
+    {
+      "path": "test/scripts/http-original-shutdown-source.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 10,
+      "assertion_digest_sha256": "e8d7f7a64aa293adaaf8eff9a3ea2031e0c4f29c88c654daea35d399373b80dd"
+    },
+    {
+      "path": "test/scripts/http-original-stream.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 39,
+      "assertion_digest_sha256": "76ce4b6d523740aee177789befb844205761799a117a33c84ff1d75869656058"
+    },
+    {
+      "path": "test/scripts/http-owned-native-generator.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 53,
+      "assertion_digest_sha256": "144188bb4a2d5f741ee48124cbbeb8890ac88e3cc4c3d7871a5e8aff07c8c487"
+    },
+    {
+      "path": "test/scripts/http-owned-observer-rejection.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "52e5939e6463e45fadccd7aa094e4773f4373d6843031240716fcb679dd17bc2"
+    },
+    {
+      "path": "test/scripts/http-owned-worker.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 10,
+      "assertion_digest_sha256": "07437bc93ba77a6cf6f65b1b087f2feb6bf0ea7d0ffcdaf1e0f0cf69d3be7f8a"
+    },
+    {
+      "path": "test/scripts/http-qualification-artifacts.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 51,
+      "assertion_digest_sha256": "c0a4491951c86e5346b34c70f8715dd937594019d33dfa761aa6339bcf300d0d"
+    },
+    {
+      "path": "test/scripts/http-qualification-declarations.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 32,
+      "assertion_digest_sha256": "56bad2a051d287a5807aed414bac609d11cf864d4f79aabeb5e624f9d32ef174"
+    },
+    {
+      "path": "test/scripts/http-qualification-live-channel.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 10,
+      "assertion_digest_sha256": "47a0b1c05518c95f47baa9caca1df7fcf55ca87660cde72757eb36e024faf7cd"
+    },
+    {
+      "path": "test/scripts/http-qualification-log-capture.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 46,
+      "assertion_digest_sha256": "5e990bbd4a3ff87f54d2f9b8ccf5e818bbd6c111725fb57617758156c2f7280c"
+    },
+    {
+      "path": "test/scripts/http-qualification-manifest.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 99,
+      "assertion_digest_sha256": "4eb0529411d41ba54a66bff667b6bed8a227f506594a16d0e822e78c861dd33b"
+    },
+    {
+      "path": "test/scripts/http-qualification-openapi.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 29,
+      "assertion_digest_sha256": "94c2ee394c2116b73dc7f3b6c2e9f57c2877824f82f99e79672824911c7dacb7"
+    },
+    {
+      "path": "test/scripts/http-qualification-protocol.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 24,
+      "assertion_digest_sha256": "e526b06263703abaf8d695017e2c05467268c1aa4862a7285a91575ded9e242e"
+    },
+    {
+      "path": "test/scripts/http-qualification-raw.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 23,
+      "assertion_digest_sha256": "81090d6c32d594463bf85a60247d6806a3cdda7826180322fd4be75ea35fea0a"
+    },
+    {
+      "path": "test/scripts/http-qualification-store.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 77,
+      "assertion_digest_sha256": "d63349da90ca3813a35d9b9f67ffda841acd397e6b8585dc69b81723aaaac9c2"
+    },
+    {
+      "path": "test/scripts/http-qualification-worker-body.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 12,
+      "assertion_digest_sha256": "0da154402b5454728e99b0fdec1fed8abba8b67d357cbcfa2a25e0b8de7adfa8"
+    },
+    {
+      "path": "test/scripts/http-reference-loopback-protocol.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 100,
+      "assertion_digest_sha256": "93ede73ca37a49359ff365fe067707d6589080da2b3ef1b1c444dab266c3c23e"
+    },
+    {
+      "path": "test/scripts/http-reference-nest-guard.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 18,
+      "assertion_digest_sha256": "b5b7ca09b326d7acd43254e7d50d69aff72468a9b57975f199749b03ec0ddbad"
+    },
+    {
+      "path": "test/scripts/http-reference-network-faults.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 67,
+      "assertion_digest_sha256": "f56e8634e2f10e2468db23021d0e3100b82feb873ce2be73ec3332503ed1397e"
+    },
+    {
+      "path": "test/scripts/http-reference-network.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 74,
+      "assertion_digest_sha256": "7554ba390ea0b42445fa0aaef7d7eaf5482ae41fb192592a33033176cc4d8530"
+    },
+    {
+      "path": "test/scripts/http-reference-private-handles.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 18,
+      "assertion_digest_sha256": "cf646885359ab4942bab2f17ca44ad019958e8756cbb2eb370842ae15591e1b2"
+    },
+    {
+      "path": "test/scripts/http-reference-registry.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 25,
+      "assertion_digest_sha256": "585b25fa8a53539f6d11e66dc762d9fc887476dc2a62841fbab9ac65639b4f53"
+    },
+    {
+      "path": "test/scripts/k6-baseline-upload-association.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 37,
+      "assertion_digest_sha256": "bb7d1afb502f52858a653d60cf3669accf847ad81ae96b780192bb1c231b9028"
+    },
+    {
+      "path": "test/scripts/native-coverage.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 83,
+      "assertion_digest_sha256": "d2eda641f5da3bad3f31505b4a59284815cbd834661c98b0534769d239316a76"
+    },
+    {
+      "path": "test/scripts/native-source-map.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 51,
+      "assertion_digest_sha256": "d6d0f9e1c52d1aa63ad2a1c383ab84e71438394157436d453e185bb63b101b1f"
+    },
+    {
+      "path": "test/scripts/native-v8-provider.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 46,
+      "assertion_digest_sha256": "36d1b0845324972d8116b33c556432bd6b519452cdcfcec203ae42ac8a2c42b6"
     }
   ],
   "suites": {
