@@ -2,10 +2,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx-nyx/data';
+import { Database, type Transaction } from '@stynx-nyx/data';
 import { parse } from 'yaml';
 import { z } from 'zod';
 import { PrivacyConfigurationError } from './errors';
+import { requirePrivacySystemContext, requirePrivacyTenantContext } from './privacy-context';
 import { STYNX_PRIVACY_OPTIONS } from './tokens';
 import type { PrivacyMapOverrideFile, PrivacyRule, StynxPrivacyModuleOptions } from './types';
 
@@ -20,12 +21,14 @@ const privacyRuleSchema = z.object({
   notes: z.string().trim().min(1).optional(),
   subjectColumn: z.string().regex(identifierPattern).optional(),
   tenantColumn: z.string().regex(identifierPattern).optional(),
-  retention: z.object({
-    timestampColumn: z.string().regex(identifierPattern),
-    olderThanDays: z.number().int().positive(),
-    target: z.enum(['live', 'archive', 'both']).optional(),
-    reason: z.string().trim().min(1).optional(),
-  }).optional(),
+  retention: z
+    .object({
+      timestampColumn: z.string().regex(identifierPattern),
+      olderThanDays: z.number().int().positive(),
+      target: z.enum(['live', 'archive', 'both']).optional(),
+      reason: z.string().trim().min(1).optional(),
+    })
+    .optional(),
 });
 
 const overrideSchema = z.object({
@@ -46,9 +49,7 @@ function keyOf(rule: Pick<PrivacyRule, 'tableSchema' | 'tableName' | 'columnName
 }
 
 function withoutUndefined<T extends Record<string, unknown>>(value: T): T {
-  return Object.fromEntries(
-    Object.entries(value).filter(([, entry]) => entry !== undefined),
-  ) as T;
+  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as T;
 }
 
 function normalizeDbRule(row: PiiMapRow): PrivacyRule {
@@ -81,6 +82,21 @@ export class PiiMapService {
 
   async load(): Promise<PrivacyRule[]> {
     const dbRules = await this.loadDatabaseRules();
+    return this.mergeRules(dbRules);
+  }
+
+  async loadTenant(): Promise<PrivacyRule[]> {
+    requirePrivacyTenantContext(this.moduleRef);
+    const dbRules = await this.database().txIndependent((trx) => this.queryDatabaseRules(trx), {
+      role: 'reader',
+      readonly: true,
+      replica: false,
+      retry: false,
+    });
+    return this.mergeRules(dbRules);
+  }
+
+  private mergeRules(dbRules: PrivacyRule[]): PrivacyRule[] {
     const overrides = this.loadOverrideRules();
     const merged = new Map<string, PrivacyRule>();
 
@@ -91,10 +107,13 @@ export class PiiMapService {
     for (const override of overrides) {
       const key = keyOf(override);
       const base = merged.get(key);
-      merged.set(key, withoutUndefined({
-        ...(base ?? {}),
-        ...override,
-      }) as PrivacyRule);
+      merged.set(
+        key,
+        withoutUndefined({
+          ...(base ?? {}),
+          ...override,
+        }) as PrivacyRule,
+      );
     }
 
     const rules = [...merged.values()];
@@ -110,16 +129,22 @@ export class PiiMapService {
     return rules.sort((left, right) =>
       `${left.tableSchema}.${left.tableName}.${left.columnName}`.localeCompare(
         `${right.tableSchema}.${right.tableName}.${right.columnName}`,
-      ));
+      ),
+    );
   }
 
   async loadDatabaseRules(): Promise<PrivacyRule[]> {
-    const database = this.database();
-    return database.withSystemContext('privacy pii map bootstrap load', async () =>
-      database.tx(
-        async (trx) => {
-          const result = await trx.query<PiiMapRow>(
-            `
+    requirePrivacySystemContext(this.moduleRef);
+    return this.database().txIndependent((trx) => this.queryDatabaseRules(trx), {
+      role: 'owner',
+      readonly: true,
+      replica: false,
+    });
+  }
+
+  private async queryDatabaseRules(trx: Pick<Transaction, 'query'>): Promise<PrivacyRule[]> {
+    const result = await trx.query<PiiMapRow>(
+      `
               select
                 table_schema,
                 table_name,
@@ -129,13 +154,9 @@ export class PiiMapService {
                 notes
               from core.pii_map
             `,
-            [],
-          );
-          return result.rows.map(normalizeDbRule);
-        },
-        { role: 'owner', readonly: true, replica: false },
-      ),
+      [],
     );
+    return result.rows.map(normalizeDbRule);
   }
 
   private loadOverrideRules(): PrivacyRule[] {

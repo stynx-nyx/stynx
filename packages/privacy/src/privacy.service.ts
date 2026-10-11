@@ -1,8 +1,11 @@
-import { randomUUID } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { createHmac, randomUUID } from 'node:crypto';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
 import JSZip from 'jszip';
+import { z } from 'zod';
+import { requirePrivacySystemContext, requirePrivacyTenantContext } from './privacy-context';
+import { UnconfiguredPrivacyCognitoAdmin } from './unconfigured-identity';
 import { PiiMapService } from './pii-map.service';
 import { generateRopaMarkdown, type RopaMetadata } from './ropa';
 import { PrivacyConfigurationError, PrivacyValidationError } from './errors';
@@ -41,8 +44,20 @@ function csvEscape(value: unknown): string {
   if (value === null || value === undefined) {
     return '';
   }
-  const text = typeof value === 'string' ? value : JSON.stringify(value);
-  if (/[",\n]/u.test(text)) {
+  let text = typeof value === 'string' ? value : JSON.stringify(value);
+  let significant = text;
+  while (significant && /^[\s\p{Cc}]/u.test(significant)) {
+    significant = significant.slice(1);
+  }
+  if (
+    typeof value === 'string' &&
+    (text.startsWith('\t') ||
+      text.startsWith('\r') ||
+      ['=', '+', '-', '@'].includes(significant[0] ?? ''))
+  ) {
+    text = `'${text}`;
+  }
+  if (/[",\n\r]/u.test(text)) {
     return `"${text.replace(/"/g, '""')}"`;
   }
   return text;
@@ -56,7 +71,30 @@ function groupRules(rules: PrivacyRule[]): Map<string, PrivacyRule[]> {
     existing.push(rule);
     grouped.set(key, existing);
   }
+  for (const [table, group] of grouped) {
+    if (
+      new Set(group.map((rule) => rule.subjectColumn)).size !== 1 ||
+      new Set(group.map((rule) => rule.tenantColumn)).size !== 1
+    ) {
+      throw new PrivacyConfigurationError('Conflicting PII table scope metadata', { table });
+    }
+  }
   return grouped;
+}
+
+const exportSchema = z
+  .object({
+    subjectUserId: z.uuid().optional(),
+    tenantId: z.uuid().optional(),
+    format: z.enum(['json', 'csv']),
+  })
+  .strict();
+const erasureSchema = z.object({ subjectUserId: z.uuid() }).strict();
+
+function validateInput<T>(schema: z.ZodType<T>, input: unknown): T {
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) throw new PrivacyValidationError('Malformed privacy request');
+  return parsed.data;
 }
 
 @Injectable()
@@ -73,44 +111,89 @@ export class PrivacyService {
   ) {}
 
   async exportData(input: PrivacyExportRequest): Promise<PrivacyExportResult> {
+    requirePrivacySystemContext(this.moduleRef);
+    return this.exportSnapshot(input);
+  }
+
+  async exportTenantData(input: PrivacyExportRequest): Promise<PrivacyExportResult> {
+    const { tenantId, actorId } = requirePrivacyTenantContext(this.moduleRef);
+    const validated = validateInput(exportSchema, input);
+    if (validated.tenantId && validated.tenantId !== tenantId) {
+      throw new ForbiddenException('Export tenant differs from the admitted tenant');
+    }
+    return this.exportSnapshot(
+      {
+        format: validated.format,
+        ...(validated.subjectUserId ? { subjectUserId: validated.subjectUserId } : {}),
+        ...(validated.tenantId ? { tenantId: validated.tenantId } : {}),
+      },
+      tenantId,
+      actorId,
+    );
+  }
+
+  private async exportSnapshot(
+    input: PrivacyExportRequest,
+    tenantId?: string,
+    actorId?: string,
+  ): Promise<PrivacyExportResult> {
     if (!input.subjectUserId && !input.tenantId) {
       throw new PrivacyValidationError('Export requires subjectUserId or tenantId');
     }
 
-    const rules = await this.piiMapService.load();
+    const rules = await this.loadRules(tenantId);
     const grouped = groupRules(rules);
     const tables: Array<{ table: string; liveRows: number; archiveRows: number }> = [];
     const snapshots: TableSnapshot[] = [];
 
-    const database = this.database();
-    await database.withSystemContext('privacy export bundle generation', async () =>
-      database.tx(
-        async (trx) => {
-          for (const [table, tableRules] of grouped) {
-            const liveRows = await this.selectTableRows(trx, tableRules, false, input.subjectUserId, input.tenantId);
-            const archiveRows = await this.selectTableRows(trx, tableRules, true, input.subjectUserId, input.tenantId);
-            if (liveRows.length === 0 && archiveRows.length === 0) {
-              continue;
-            }
-
-            tables.push({ table, liveRows: liveRows.length, archiveRows: archiveRows.length });
-            snapshots.push({ table: `${table}#live`, rows: liveRows });
-            snapshots.push({ table: `${table}#archive`, rows: archiveRows });
+    await this.runTransaction(
+      async (trx) => {
+        if (tenantId && input.subjectUserId)
+          await this.requireMember(trx, tenantId, input.subjectUserId);
+        for (const [table, tableRules] of grouped) {
+          const liveRows = await this.selectTableRows(
+            trx,
+            tableRules,
+            false,
+            input.subjectUserId,
+            tenantId ?? input.tenantId,
+          );
+          const archiveRows = await this.selectTableRows(
+            trx,
+            tableRules,
+            true,
+            input.subjectUserId,
+            tenantId ?? input.tenantId,
+          );
+          if (liveRows.length === 0 && archiveRows.length === 0) {
+            continue;
           }
-        },
-        { role: 'owner', readonly: true, replica: false },
-      ),
+
+          tables.push({ table, liveRows: liveRows.length, archiveRows: archiveRows.length });
+          snapshots.push({ table: `${table}#live`, rows: liveRows });
+          snapshots.push({ table: `${table}#archive`, rows: archiveRows });
+        }
+      },
+      tenantId,
+      true,
+      actorId,
     );
+    this.requireExportAuthority(tenantId, actorId);
 
     const zip = new JSZip();
     zip.file(
       'manifest.json',
-      JSON.stringify({
-        generatedAt: new Date().toISOString(),
-        subjectUserId: input.subjectUserId ?? null,
-        tenantId: input.tenantId ?? null,
-        tables,
-      }, null, 2),
+      JSON.stringify(
+        {
+          generatedAt: new Date().toISOString(),
+          subjectUserId: input.subjectUserId ?? null,
+          tenantId: tenantId ?? input.tenantId ?? null,
+          representations: { json: 'lossless', csv: 'spreadsheet-safe strings' },
+          tables,
+        },
+        null,
+        2,
+      ),
     );
 
     for (const snapshot of snapshots) {
@@ -119,56 +202,100 @@ export class PrivacyService {
 
       const columns = [...new Set(snapshot.rows.flatMap((row) => Object.keys(row)))];
       const csvLines = [
-        columns.join(','),
+        columns.map(csvEscape).join(','),
         ...snapshot.rows.map((row) => columns.map((column) => csvEscape(row[column])).join(',')),
       ];
       zip.file(`tables/${safeName}.csv`, csvLines.join('\n'));
     }
 
     const exportId = randomUUID();
-    const objectKey = `exports/${exportId}.zip`;
+    const objectKey = tenantId ? `exports/${tenantId}/${exportId}.zip` : `exports/${exportId}.zip`;
     const expiresInSeconds = this.options.exportTtlSeconds ?? 7 * 24 * 60 * 60;
+    const body = await zip.generateAsync({ type: 'nodebuffer' });
+    this.requireExportAuthority(tenantId, actorId);
     await this.objectStore.putObject({
       key: objectKey,
-      body: await zip.generateAsync({ type: 'nodebuffer' }),
+      body,
       contentType: 'application/zip',
       expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
     });
 
+    this.requireExportAuthority(tenantId, actorId);
+    const downloadUrl = await this.objectStore.presignDownload({
+      key: objectKey,
+      expiresInSeconds,
+    });
+    this.requireExportAuthority(tenantId, actorId);
     return {
       exportId,
       objectKey,
-      downloadUrl: await this.objectStore.presignDownload({ key: objectKey, expiresInSeconds }),
+      downloadUrl,
       expiresInSeconds,
       tables,
     };
   }
 
   async eraseSubject(input: PrivacyErasureRequest): Promise<PrivacyErasureResult> {
-    const rules = await this.piiMapService.load();
+    requirePrivacySystemContext(this.moduleRef);
+    if (
+      this.cognitoAdmin instanceof UnconfiguredPrivacyCognitoAdmin ||
+      typeof this.cognitoAdmin?.disableUser !== 'function'
+    ) {
+      throw new PrivacyConfigurationError('Global erasure requires a configured identity adapter');
+    }
+    return this.eraseSnapshot(input);
+  }
+
+  async eraseTenantSubject(input: PrivacyErasureRequest): Promise<PrivacyErasureResult> {
+    const { tenantId } = requirePrivacyTenantContext(this.moduleRef);
+    return this.eraseSnapshot(validateInput(erasureSchema, input), tenantId);
+  }
+
+  private async eraseSnapshot(
+    input: PrivacyErasureRequest,
+    tenantId?: string,
+  ): Promise<PrivacyErasureResult> {
+    const rules = await this.loadRules(tenantId);
+    if (
+      rules.some((rule) => rule.strategy === 'hash_with_salt') &&
+      !this.options.erasureSalt?.trim()
+    ) {
+      throw new PrivacyConfigurationError('Erasure hashing requires a nonempty salt');
+    }
     const actions: PrivacyErasureResult['actions'] = [];
 
-    const database = this.database();
-    await database.withSystemContext('privacy erasure execution run', async () =>
-      database.tx(
-        async (trx) => {
-          for (const rule of rules) {
-            const liveAffected = await this.applyErasureRule(trx, rule, false, input.subjectUserId);
-            const archiveAffected = await this.applyErasureRule(trx, rule, true, input.subjectUserId);
-            actions.push({
-              table: `${rule.tableSchema}.${rule.tableName}`,
-              column: rule.columnName,
-              strategy: rule.strategy,
-              liveAffected,
-              archiveAffected,
-            });
-          }
-        },
-        { role: 'owner', readonly: false, replica: false },
-      ),
+    await this.runTransaction(
+      async (trx) => {
+        if (tenantId) await this.requireMember(trx, tenantId, input.subjectUserId);
+        for (const rule of rules) {
+          const liveAffected = await this.applyErasureRule(
+            trx,
+            rule,
+            false,
+            input.subjectUserId,
+            tenantId,
+          );
+          const archiveAffected = await this.applyErasureRule(
+            trx,
+            rule,
+            true,
+            input.subjectUserId,
+            tenantId,
+          );
+          actions.push({
+            table: `${rule.tableSchema}.${rule.tableName}`,
+            column: rule.columnName,
+            strategy: rule.strategy,
+            liveAffected,
+            archiveAffected,
+          });
+        }
+      },
+      tenantId,
+      false,
     );
 
-    await this.cognitoAdmin.disableUser(input.subjectUserId);
+    if (!tenantId) await this.cognitoAdmin.disableUser(input.subjectUserId);
 
     return {
       subjectUserId: input.subjectUserId,
@@ -177,67 +304,88 @@ export class PrivacyService {
   }
 
   async applyRetention(dryRun = true): Promise<PrivacyRetentionResult> {
-    const rules = await this.piiMapService.load();
+    requirePrivacySystemContext(this.moduleRef);
+    return this.retentionSnapshot(dryRun);
+  }
+
+  async applyTenantRetention(dryRun = true): Promise<PrivacyRetentionResult> {
+    const { tenantId } = requirePrivacyTenantContext(this.moduleRef);
+    if (typeof dryRun !== 'boolean') throw new PrivacyValidationError('dryRun must be a boolean');
+    return this.retentionSnapshot(dryRun, tenantId);
+  }
+
+  private async retentionSnapshot(
+    dryRun: boolean,
+    tenantId?: string,
+  ): Promise<PrivacyRetentionResult> {
+    const rules = await this.loadRules(tenantId);
     const actions: PrivacyRetentionPlanItem[] = [];
     const partitions: PrivacyPartitionRetentionItem[] = [];
     const candidates = rules.filter((rule) => rule.retention !== undefined);
 
-    const database = this.database();
-    await database.withSystemContext('privacy retention enforcement sweep', async () =>
-      database.tx(
-        async (trx) => {
-          for (const rule of candidates) {
-            const retention = rule.retention!;
-            for (const target of this.targetsFor(rule)) {
-              const meta = target === 'archive'
+    await this.runTransaction(
+      async (trx) => {
+        for (const rule of candidates) {
+          const retention = rule.retention!;
+          for (const target of this.targetsFor(rule)) {
+            const meta =
+              target === 'archive'
                 ? { schema: 'archive', table: `${rule.tableSchema}_${rule.tableName}` }
                 : { schema: rule.tableSchema, table: rule.tableName };
-              const where = `${quoteIdent(retention.timestampColumn)} < (clock_timestamp() - ($1::text || ' days')::interval)`;
-              const countResult = await trx.query<{ total: number }>(
-                `select count(*)::int as total from ${quoteIdent(meta.schema)}.${quoteIdent(meta.table)} where ${where}`,
-                [String(retention.olderThanDays)],
-              );
-              const total = countResult.rows[0]?.total ?? 0;
-              if (total === 0) {
-                continue;
-              }
-
-              actions.push({
-                table: `${meta.schema}.${meta.table}`,
-                target,
-                strategy: rule.strategy,
-                affectedRows: total,
-                reason: retention.reason ?? `retention>${retention.olderThanDays}d`,
-              });
-
-              if (dryRun || rule.strategy !== 'delete_row') {
-                continue;
-              }
-
-              await trx.query(
-                `delete from ${quoteIdent(meta.schema)}.${quoteIdent(meta.table)} where ${where}`,
-                [String(retention.olderThanDays)],
-              );
+            const where = `${quoteIdent(retention.timestampColumn)} < (clock_timestamp() - ($1::text || ' days')::interval)${tenantId ? ` and ${quoteIdent(rule.tenantColumn!)} = $2::uuid` : ''}`;
+            const values = tenantId
+              ? [String(retention.olderThanDays), tenantId]
+              : [String(retention.olderThanDays)];
+            const countResult = await trx.query<{ total: number }>(
+              `select count(*)::int as total from ${quoteIdent(meta.schema)}.${quoteIdent(meta.table)} where ${where}`,
+              values,
+            );
+            const total = countResult.rows[0]?.total ?? 0;
+            if (total === 0) {
+              continue;
             }
-          }
 
-          // ADR-SESSIONS-0003: session month partitions expire 90 days after the month ends.
-          const expired = await trx.query<{ partition_name: string; month_end: string; dropped: boolean }>(
-            'select partition_name, month_end::text as month_end, dropped from auth.drop_expired_sessions_partitions($1::boolean)',
-            [dryRun],
-          );
-          for (const row of expired.rows) {
-            partitions.push({
-              table: 'auth.sessions',
-              partition: row.partition_name,
-              monthEnd: row.month_end,
-              dropped: row.dropped,
-              reason: 'retention>90d after month end',
+            actions.push({
+              table: `${meta.schema}.${meta.table}`,
+              target,
+              strategy: rule.strategy,
+              affectedRows: total,
+              reason: retention.reason ?? `retention>${retention.olderThanDays}d`,
             });
+
+            if (dryRun || rule.strategy !== 'delete_row') {
+              continue;
+            }
+
+            await trx.query(
+              `delete from ${quoteIdent(meta.schema)}.${quoteIdent(meta.table)} where ${where}`,
+              values,
+            );
           }
-        },
-        { role: 'owner', readonly: false, replica: false },
-      ),
+        }
+
+        // ADR-SESSIONS-0003: session month partitions expire 90 days after the month ends.
+        if (tenantId) return;
+        const expired = await trx.query<{
+          partition_name: string;
+          month_end: string;
+          dropped: boolean;
+        }>(
+          'select partition_name, month_end::text as month_end, dropped from auth.drop_expired_sessions_partitions($1::boolean)',
+          [dryRun],
+        );
+        for (const row of expired.rows) {
+          partitions.push({
+            table: 'auth.sessions',
+            partition: row.partition_name,
+            monthEnd: row.month_end,
+            dropped: row.dropped,
+            reason: 'retention>90d after month end',
+          });
+        }
+      },
+      tenantId,
+      Boolean(tenantId && dryRun),
     );
 
     return { dryRun, actions, partitions };
@@ -245,6 +393,67 @@ export class PrivacyService {
 
   async generateRopa(metadata: RopaMetadata = {}): Promise<string> {
     return generateRopaMarkdown(await this.piiMapService.load(), metadata);
+  }
+
+  private async loadRules(tenantId?: string): Promise<PrivacyRule[]> {
+    const rules = tenantId
+      ? await this.piiMapService.loadTenant()
+      : await this.piiMapService.load();
+    const groups = groupRules(rules);
+    return [...groups.values()].flatMap((group) =>
+      tenantId && !group[0]?.tenantColumn ? [] : group,
+    );
+  }
+
+  private requireExportAuthority(tenantId?: string, actorId?: string): void {
+    if (!tenantId) {
+      requirePrivacySystemContext(this.moduleRef);
+      return;
+    }
+    const admitted = requirePrivacyTenantContext(this.moduleRef);
+    if (admitted.tenantId !== tenantId || admitted.actorId !== actorId) {
+      throw new ForbiddenException('Privacy export context changed');
+    }
+  }
+
+  private async runTransaction<T>(
+    callback: (trx: Transaction) => Promise<T>,
+    tenantId: string | undefined,
+    readonly: boolean,
+    actorId?: string,
+  ): Promise<T> {
+    if (tenantId) {
+      const admitted = requirePrivacyTenantContext(this.moduleRef);
+      if (admitted.tenantId !== tenantId || (actorId && admitted.actorId !== actorId))
+        throw new ForbiddenException('Privacy tenant context changed');
+      return this.database().txIndependent(callback, {
+        role: readonly ? 'reader' : 'app',
+        readonly,
+        replica: false,
+        retry: false,
+        ...(readonly ? {} : { requireActor: true }),
+      });
+    }
+    requirePrivacySystemContext(this.moduleRef);
+    return this.database().txIndependent(callback, {
+      role: 'owner',
+      readonly,
+      replica: false,
+      retry: false,
+    });
+  }
+
+  private async requireMember(
+    trx: Pick<Transaction, 'query'>,
+    tenantId: string,
+    subjectUserId: string,
+  ): Promise<void> {
+    const result = await trx.query<{ allowed: boolean }>(
+      'select exists (select 1 from auth.memberships where tenant_id = $1::uuid and user_id = $2::uuid and is_active = true) as allowed',
+      [tenantId, subjectUserId],
+    );
+    if (result.rows[0]?.allowed !== true)
+      throw new ForbiddenException('Subject is not an active member of the admitted tenant');
   }
 
   private async selectTableRows(
@@ -293,6 +502,7 @@ export class PrivacyService {
     rule: PrivacyRule,
     onArchive: boolean,
     subjectUserId: string,
+    tenantId?: string,
   ): Promise<number> {
     if (!rule.subjectColumn) {
       throw new PrivacyConfigurationError('PII rule is missing subjectColumn metadata', {
@@ -304,24 +514,25 @@ export class PrivacyService {
     const schema = onArchive ? 'archive' : rule.tableSchema;
     const table = onArchive ? `${rule.tableSchema}_${rule.tableName}` : rule.tableName;
     const target = `${quoteIdent(schema)}.${quoteIdent(table)}`;
-    const where = `${quoteIdent(rule.subjectColumn)} = $1::uuid`;
+    const values: unknown[] = [subjectUserId];
+    if (tenantId) values.push(tenantId);
+    const where = `${quoteIdent(rule.subjectColumn)} = $1::uuid${tenantId ? ` and ${quoteIdent(rule.tenantColumn!)} = $2::uuid` : ''}`;
 
     await trx.query(`select set_config('app.erasure_strategy', $1, true)`, [rule.strategy]);
 
     if (rule.strategy === 'delete_row') {
-      const deleted = await trx.query(`delete from ${target} where ${where}`, [subjectUserId]);
+      const deleted = await trx.query(`delete from ${target} where ${where}`, values);
       return deleted.rowCount ?? 0;
     }
 
-    const values: unknown[] = [subjectUserId];
     let assignment = `${quoteIdent(rule.columnName)} = null`;
     if (rule.strategy === 'tombstone') {
       values.push(`[erased:${subjectUserId}]`);
-      assignment = `${quoteIdent(rule.columnName)} = $2`;
+      assignment = `${quoteIdent(rule.columnName)} = $${values.length}`;
     }
     if (rule.strategy === 'hash_with_salt') {
-      values.push(this.hashReplacement(rule, subjectUserId));
-      assignment = `${quoteIdent(rule.columnName)} = $2`;
+      values.push(this.hashReplacement(rule, subjectUserId, tenantId));
+      assignment = `${quoteIdent(rule.columnName)} = $${values.length}`;
     }
 
     const setClauses = [assignment];
@@ -336,11 +547,19 @@ export class PrivacyService {
     return updated.rowCount ?? 0;
   }
 
-  private hashReplacement(rule: PrivacyRule, subjectUserId: string): string {
-    return `hash:${Buffer.from(
-      `${this.options.erasureSalt}:${rule.tableSchema}.${rule.tableName}.${rule.columnName}:${subjectUserId}`,
-      'utf8',
-    ).toString('base64url')}`;
+  private hashReplacement(rule: PrivacyRule, subjectUserId: string, tenantId?: string): string {
+    return `hash:${createHmac('sha256', this.options.erasureSalt)
+      .update(
+        JSON.stringify([
+          'stynx-privacy-pseudonym-v1',
+          rule.tableSchema,
+          rule.tableName,
+          rule.columnName,
+          subjectUserId,
+          tenantId ?? null,
+        ]),
+      )
+      .digest('hex')}`;
   }
 
   private targetsFor(rule: PrivacyRule): Array<'live' | 'archive'> {
