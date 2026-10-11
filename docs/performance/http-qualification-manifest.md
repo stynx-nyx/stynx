@@ -141,7 +141,11 @@ The four original profiles retain their existing native metrics and comparison
 math. `storage_presign_duration_ms` p99 < 50 ms is an additional component
 requirement for document creation, not a 50 ms whole-HTTP limit.
 
-One real k6 v0.49.0 constant-arrival-rate case runs at a time: 2 targets/s for
+One real constant-arrival-rate case runs at a time, using the separately bound
+[finite derivative](finite-k6-derivative.md) of k6 v0.49.0. The manifest's
+`generatorVersion` records upstream ancestry; the derivative policy and actual
+source/build/native identity determine the selected executable. This clarification
+changes no roster or case digest. The fixed profile remains 2 targets/s for
 300 seconds, exactly 600 scheduled/started/completed/raw targets, two preallocated
 and ten maximum VUs. Keep every outcome in the raw distribution. Zero missing,
 dropped or duplicate targets; no failure filtering or pooling. Reconstruct pinned

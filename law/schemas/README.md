@@ -31,3 +31,8 @@ policy. `http-qualification-batch-evidence.schema.json` closes journal, attempt
 archive and derived batch-index records. Actual trusted origin, complete artifact
 closure, legal transitions, per-case acceptance and resume credit are additional
 semantic obligations; schema validity and journal self-hashes confer no authority.
+
+`finite-k6-derivative.schema.json` closes the exact prospective supplemental
+generator identity, source/build/control pins and preserved profile boundary.
+Its diagnostic build declarations do not supply actual task/native admission,
+real-time calibration, application floors or readiness.

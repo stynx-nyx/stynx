@@ -1,0 +1,281 @@
+{
+  "schemaVersion": "1.0.0",
+  "policyId": "stynx.finite-k6-derivative",
+  "policyVersion": "1.0.0",
+  "authority": "Architect",
+  "scope": "prospective-supplemental-derivative-and-component-calibration-binding",
+  "authoritySources": [
+    "law/adr/2026-10-10-http-performance-evidence.md",
+    "docs/performance/finite-k6-derivative.md"
+  ],
+  "identity": {
+    "identifier": "stynx-k6-0.49.0-finite-arrival-v1",
+    "executableBasename": "stynx-k6-0.49.0-finite-arrival-v1",
+    "privateExecutableRelativePath": "toolchain/k6/stynx-k6-0.49.0-finite-arrival-v1",
+    "linkerBuildId": "stynx-k6-0.49.0-finite-arrival-v1",
+    "derivative": true,
+    "officialReleaseBinary": false,
+    "upstreamVersionIsAncestryOnly": true,
+    "versionOutputEstablishesIdentity": false
+  },
+  "source": {
+    "upstreamVersion": "0.49.0",
+    "tag": "v0.49.0",
+    "tagObject": "23de52144eed35593ce0abfa046aff7684c48b2a",
+    "commit": "b5328aa782832a80451ea430075af8845dffb7cd",
+    "tree": "10e746d28f5dc0c0047143a24ed37b663b39dc79",
+    "tagSignatureVerified": false,
+    "archive": {
+      "url": "https://codeload.github.com/grafana/k6/tar.gz/b5328aa782832a80451ea430075af8845dffb7cd",
+      "bytes": 9777400,
+      "sha256": "ce0043ac6c2360d022e48cdf2b127a232016c8f65165aa6cd0261f29478ebf10"
+    },
+    "files": 3168,
+    "upstreamManifestSha256": "fb1f32c20822e0e22d685c6db43648b99499e2617aa9ae9422c2ee41edeefdd8",
+    "derivativeBytes": 48275973,
+    "derivativeManifestSha256": "fe74dec40e08086dfe1cc168a0390b6dd6c274773786ac7ebbb85d1aec4057b3",
+    "vendorFiles": 2463,
+    "vendorBytes": 42926135,
+    "vendorManifestSha256": "6f2cc2e69f68e4e6fe5fccd67760a01a7c3e40cc145f5f93550903075aa28f8b",
+    "changedFiles": ["lib/executor/constant_arrival_rate.go"],
+    "scheduler": {
+      "originalSha256": "1ca1f44d6a4297be73a9ea9c641695b6b488040505b0f3654604c87ef513fb25",
+      "derivativeSha256": "1a330754ac1cb274655da1b2962385759bfa9f1dcd2fc17aca4519ea1e929e54",
+      "derivativeBytes": 12813,
+      "guard": "dueOffset >= duration before timer.Reset, select, dispatch and drop",
+      "allOtherExecutorPathsUnchanged": true,
+      "productionInstrumentationPresent": false
+    },
+    "patch": {
+      "path": "scripts/native/k6-finite-arrival.patch",
+      "bytes": 328,
+      "sha256": "a6880fbffb99f0997cbe2b6b738ab89226ab5b590bb283af79124f151f5d920b"
+    },
+    "immutableSnapshotClaimed": false
+  },
+  "build": {
+    "goVersion": "go1.21.6",
+    "goSourceCommit": "cc85462b3d23193e4861813ea85e254cfe372403",
+    "command": [
+      "go",
+      "build",
+      "-mod=vendor",
+      "-trimpath",
+      "-buildvcs=false",
+      "-ldflags=-buildid=stynx-k6-0.49.0-finite-arrival-v1",
+      "-o",
+      "<owned-output>/stynx-k6-0.49.0-finite-arrival-v1",
+      "."
+    ],
+    "environment": {
+      "CGO_ENABLED": "0",
+      "GOTOOLCHAIN": "local",
+      "GOPROXY": "off",
+      "GOSUMDB": "off",
+      "GOWORK": "off",
+      "GOENV": "off",
+      "GOFLAGS": "",
+      "LANG": "C",
+      "LC_ALL": "C",
+      "TZ": "UTC"
+    },
+    "privatePaths": ["GOROOT", "GOCACHE", "GOMODCACHE", "HOME", "TMPDIR", "PATH"],
+    "separateInitiallyEmptyCachesRequired": true,
+    "completeSourceVendorToolchainRechecksRequired": true,
+    "samePlatformBinaryReproductionRequired": true,
+    "diagnosticBuilds": [
+      {
+        "platform": "darwin-arm64",
+        "goArchiveSha256": "0ff541fb37c38e5e5c5bcecc8f4f43c5ffd5e3a6c33a5d3e4003ded66fcfb331",
+        "goArchiveBytes": 65181002,
+        "installedGoFiles": 12572,
+        "installedGoBytes": 213233913,
+        "installedGoManifestSha256": "e163554ac7b392da4d7df58bef2663743cc45354e125a79a4bebbd9fcaa2b7ad",
+        "goExecutableSha256": "27e5b364612b9ca4609f3c92aecb2fc567a57fcf187d87490f50130b445f5af9",
+        "binaryBytes": 54863762,
+        "binarySha256": "8b298ebfdebe0996da23c4089055c110acb5e8f9ca23e6254bcbb1dbbe0ea12c",
+        "binaryPermissions": 493,
+        "independentEqualBuilds": 2,
+        "nativeClosureEstablished": false,
+        "protectedHostOriginEstablished": false
+      }
+    ],
+    "diagnosticLauncherNode": {
+      "version": "v24.20.0",
+      "platform": "darwin-arm64",
+      "bytes": 121911744,
+      "sha256": "9d050fd455b56426e25d4d603c7c501cbb2630348e836cf221dcce748e90588a"
+    }
+  },
+  "controls": [
+    {
+      "path": "scripts/lib/finite-k6-origins.mjs",
+      "sha256": "821bbec0698ffd35ee714d8d44aacf07c7237824a9e05769532182c36d62fe53",
+      "bytes": 24781
+    },
+    {
+      "path": "scripts/prepare-finite-k6.mjs",
+      "sha256": "d3f1a272cc49d19132f0f2ab52eb32479930aab05b221973668b9ac6efb0171f",
+      "bytes": 1121
+    },
+    {
+      "path": "scripts/native/k6-finite-arrival.patch",
+      "sha256": "a6880fbffb99f0997cbe2b6b738ab89226ab5b590bb283af79124f151f5d920b",
+      "bytes": 328
+    },
+    {
+      "path": "scripts/performance/http-qualification.k6.mjs",
+      "sha256": "cd40b8568c5d4890bc1437d8844d88e12a2ae532c1437c6652599d1b66188ea1",
+      "bytes": 7845
+    },
+    {
+      "path": "scripts/lib/http-qualification-raw.mjs",
+      "sha256": "77a5d8bf10e8a427cd556f918be00c8745407b162c59a9ec132c287a0be89a22",
+      "bytes": 12597
+    },
+    {
+      "path": "scripts/lib/http-qualification-metrics.mjs",
+      "sha256": "bbebfa03dbc3252ed7121584606e31e04a347420715e2ca9be4df105409fa9a1",
+      "bytes": 4040
+    },
+    {
+      "path": "scripts/lib/http-qualification-artifacts.mjs",
+      "sha256": "1c2cedcc053978215731eef5363804a6a76a3e893c95e84655437e2c1efe8245",
+      "bytes": 2982
+    },
+    {
+      "path": "scripts/lib/http-qualification-log-capture.mjs",
+      "sha256": "6dbdb8ee626795e162a596623de47c3130f323e4f864b6ba8c0258ccf1dc5a25",
+      "bytes": 3961
+    },
+    {
+      "path": "scripts/lib/http-owned-worker.mjs",
+      "sha256": "4ab07ec4d6e2f1380824d65d9bacbeb6c72b1b3c6f729610c1729ae8711771b8",
+      "bytes": 15949
+    },
+    {
+      "path": "scripts/lib/k6-baseline-json.mjs",
+      "sha256": "ad3ffe684f4c90e6826462ee47415ae900be4f983ac74a9cc00bdc595c554e36",
+      "bytes": 3972
+    }
+  ],
+  "supplemental": {
+    "executor": "constant-arrival-rate",
+    "rate": 2,
+    "timeUnitSeconds": 1,
+    "durationSeconds": 300,
+    "scheduledTargets": 600,
+    "preAllocatedVUs": 2,
+    "maxVUs": 10,
+    "targetsPerIteration": 1,
+    "concurrentCases": 1,
+    "completionGraceSeconds": 30,
+    "requestTimeoutSeconds": 30,
+    "noConnectionReuse": true,
+    "maxRedirects": 0,
+    "retries": 0,
+    "replacementRequests": 0,
+    "maxDroppedTargets": 0,
+    "unsegmented": true,
+    "ignoredExtraInvocations": 0,
+    "fullHttpMs": "nativeResponse.timings.blocked + nativeResponse.timings.duration",
+    "allEightNativeTimingsRetained": true,
+    "allOutcomesRetained": true,
+    "thresholdsAndPercentileAlgorithmUnchanged": true
+  },
+  "originalProfiles": {
+    "generator": "official-k6-0.49.0",
+    "derivativeSelectionAllowed": false,
+    "allExistingProfilesAndThresholdsRequired": true,
+    "files": [
+      {
+        "path": "test/perf/k6/auth.js",
+        "sha256": "73902151898229004819d442e7628b913c0491424e52a8191e7066c997ff0fce"
+      },
+      {
+        "path": "test/perf/k6/crud.js",
+        "sha256": "9ef52d969bab63598c63348506ee47ab2e0ff231c2908b1616bceceec802e52f"
+      },
+      {
+        "path": "test/perf/k6/upload.js",
+        "sha256": "bc9083eb1a1d2f7ffb1a4779463a0222bd64e010e1764f4ac7c62f676329c1c7"
+      },
+      {
+        "path": "test/perf/k6/cascade-delete.js",
+        "sha256": "bebb83afd2e533cd55706b391d0e6f274de16bd0db447ca2051937d58afdc5cf"
+      },
+      {
+        "path": "test/perf/k6/lib/config.js",
+        "sha256": "97da62e80067e456de658a44b09fda919a812889433852ff8b7a4cd8c6bfb677"
+      },
+      {
+        "path": "test/perf/k6/lib/stynx.js",
+        "sha256": "630e6f39b15385b5f0b10ec8d4da502ffe0f260d3ede37fd0df4d0b365b8e1e5"
+      },
+      {
+        "path": "test/perf/k6/check-summary.mjs",
+        "sha256": "f272f2189d5af003b91faa2439ac7289c0bb6bdbe83c2e1595dc4a48f001be02"
+      },
+      {
+        "path": "test/perf/k6/baseline-reference.json",
+        "sha256": "eba4663c342b60fd79effbacc450841c3499a611f14f1b84296adb15557c10d3"
+      }
+    ]
+  },
+  "retainedReviews": {
+    "engineerCheckpointSha256": "075fbfa753949403e698b59ed376f6a6fed45a779e1a6ed8b9679217054dbcd6",
+    "buildReceiptSha256": "c3625d24160ad2398799d1f4a99bd5a233320a4b096427241614e92a551635c7",
+    "buildSupplementSha256": "d7f2d5c8e1f1589d5316f558183c737993967e0d62997b7c7373b18b0a5d59cd",
+    "buildLauncherSha256": "2eaa446b952263b57eeeb59c4cca4f132e545f34de93ade0f2206407108b5c03",
+    "auditorBuildReviewSha256": "f01d354d725c1a7d2035bc893e5a17ec45691368feca9f03309b7714fb235f9b",
+    "inspectorObservationSha256": "1a277222a15f42b555d14ef56f8616f2ace4810847f0db985fed46e5343b1420",
+    "nativePrepatchRedSha256": "0b711fb3899a8013e76d23df077ba568a40eb861943e0295c7264df0f39f6d45",
+    "nativePatchedGreenSha256": "8403d89d0bf96125bf95bc4df0bfed53bd1e8da83d06b3487bfab38e3a5375f6",
+    "nativeInstrumentationCorrespondenceSha256": "17de8857db5998978531a727a39123d3ab8a4fc4b97bdac724c3eebd8f5f3bb4",
+    "selfHashesGrantOrigin": false
+  },
+  "admission": {
+    "policyAlonePermitsExecution": false,
+    "diagnosticBuildIsNativeAdmission": false,
+    "diagnosticCalibrationMayQualifyApplication": false,
+    "actualPublishedTaskAdmissionRequired": true,
+    "actualToolLoaderProcessClosureRequired": true,
+    "exactCalibrationLauncherBindingRequired": true,
+    "exactFinalParentControlBindingRequired": true,
+    "allApplicationFloorsRemainRequired": true,
+    "otherPlatformBinaryRequiresSuccessor": true,
+    "linuxBackendMandatedByThisBinding": false,
+    "nativeProfileAdmitted": false,
+    "runtimeCustodyComplete": false,
+    "realTimeCalibrationPerformed": false,
+    "performanceQualified": false,
+    "readinessPromoting": false
+  },
+  "generatorInvocation": {
+    "script": "scripts/performance/http-qualification.k6.mjs",
+    "argv": [
+      "--quiet",
+      "--log-format=raw",
+      "--config=<owned-empty-config>",
+      "run",
+      "--address=",
+      "--no-usage-report",
+      "--console-output=<owned-raw>",
+      "--out=json=<owned-metrics>",
+      "<candidate-script>"
+    ],
+    "configBytes": "{}\n",
+    "environmentKeys": [
+      "HOME",
+      "PATH",
+      "TZ",
+      "STYNX_HTTP_QUALIFICATION_INPUT",
+      "STYNX_HTTP_QUALIFICATION_INPUT_SHA256"
+    ],
+    "timezone": "UTC",
+    "allocationDerivedByOwnedParent": true,
+    "ambientPathLookup": false,
+    "cliOrConfigOverride": false,
+    "executionSegments": false
+  }
+}

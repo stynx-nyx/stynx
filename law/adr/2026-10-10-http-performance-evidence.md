@@ -28,6 +28,14 @@ remain blocked. Preserve each original scenario's genuinely fresh owned stack,
 exact tooling, authenticated baseline and every existing gate. This binding adds
 no product choice, backend mandate, population reduction or advance admission.
 
+The prospective [finite supplemental derivative](../policy/finite-k6-derivative.json)
+and [source/build contract](../../docs/performance/finite-k6-derivative.md) bind
+the reviewed half-open scheduler guard with a distinct executable/build identity.
+Its v0.49.0 label records ancestry only. Preserve the exact supplemental numerical
+profile and all four original official-generator profiles. Reproduced diagnostic
+builds and native test witnesses confer no runtime admission, real calibration,
+application floor or performance verdict.
+
 ## Authority and current evidence
 
 The Owner's complete 1.6.0 audit-remediation mandate, recorded in
