@@ -447,6 +447,52 @@ describe('Privacy tenant HTTP security and custody', () => {
       await request(server()).get(`/privacy/retention?${query}`).set(fixture.headers()).expect(400);
     expect(await fixture.snapshot()).toEqual(before);
   });
+  it('rejects a nonboolean direct retention argument after real admission and before privacy SQL', async () => {
+    const before = await fixture.snapshot();
+    const response = await request(server())
+      .get('/_privacy-test/retention-invalid-input')
+      .set(fixture.headers('reader'))
+      .expect(400);
+    expect(response.body).toMatchObject({
+      code: 'PRIVACY_VALIDATION_ERROR',
+      message: 'dryRun must be a boolean',
+    });
+    expect(
+      fixture.queries.filter(
+        (row) =>
+          row.sql.includes('core.pii_map') ||
+          row.sql.includes('privacy_http') ||
+          row.sql.includes('drop_expired_sessions_partitions'),
+      ),
+    ).toEqual([]);
+    expect(fixture.objectStore.calls).toEqual([]);
+    expect(fixture.disabledUsers).toEqual([]);
+    expect(await fixture.snapshot()).toEqual(before);
+  });
+  it('exports an explicitly matching tenant selector using the admitted restricted reader', async () => {
+    const before = await fixture.snapshot();
+    const response = await request(server())
+      .post('/privacy/exports')
+      .set(fixture.headers())
+      .send({ ...exportBody, tenantId: TENANT })
+      .expect(201);
+    const archive = await JSZip.loadAsync(
+      fixture.objectStore.objects.get(response.body.objectKey)!,
+    );
+    const manifest = JSON.parse(await archive.file('manifest.json')!.async('string'));
+    expect(manifest.tenantId).toBe(TENANT);
+    expect(response.body.objectKey).toMatch(new RegExp(`^exports/${TENANT}/`));
+    expect(response.body.tables.map((row: { table: string }) => row.table)).toEqual([
+      'privacy_http.attachments',
+      'privacy_http.subjects',
+    ]);
+    expect(
+      fixture.observations.some(
+        (row) => row.requestedRole === 'owner' || row.current_user === 'stynx_owner',
+      ),
+    ).toBe(false);
+    expect(await fixture.snapshot()).toEqual(before);
+  });
   it('refuses nominal HTTP, nested SystemContext, CLS reset and mismatched current frame before business SQL', async () => {
     const before = await fixture.snapshot();
     await request(server()).get('/_privacy-test/nominal').expect(403);

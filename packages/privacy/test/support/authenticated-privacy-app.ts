@@ -42,9 +42,11 @@ export const SALT = 'independent privacy fixture secret';
 @UseGuards(Auth.StynxAuthGuard)
 export class PrivacyBoundaryController {
   constructor(
-    @Inject(Privacy.PrivacyService) private readonly privacy: PrivacyServiceType,
+    @Inject(Privacy.PrivacyService)
+    private readonly privacy: PrivacyServiceType,
     @Inject(Data.Database) private readonly database: DatabaseType,
-    @Inject(Core.RequestContext) private readonly context: InstanceType<typeof Core.RequestContext>,
+    @Inject(Core.RequestContext)
+    private readonly context: InstanceType<typeof Core.RequestContext>,
     @Inject(Core.RequestContextMutator)
     private readonly mutator: InstanceType<typeof Core.RequestContextMutator>,
     private readonly cls: ClsService,
@@ -97,6 +99,13 @@ export class PrivacyBoundaryController {
         ),
       { role: 'app', requireActor: true, retry: false },
     );
+  }
+  @Get('retention-invalid-input')
+  @UseGuards(Auth.PermissionGuard)
+  @Auth.Permission('privacy:read')
+  invalidRetentionInput() {
+    // A malformed in-process caller is independent of the HTTP query parser.
+    return this.privacy.applyTenantRetention('false' as unknown as boolean);
   }
   @Get('context-mismatch')
   @UseGuards(Auth.PermissionGuard)
@@ -172,7 +181,11 @@ export class AuthenticatedPrivacyApp {
       subjectColumn: 'user_id',
       tenantColumn: 'tenant_id',
       strategy: 'delete_row',
-      retention: { timestampColumn: 'created_at', olderThanDays: 30, target: 'both' },
+      retention: {
+        timestampColumn: 'created_at',
+        olderThanDays: 30,
+        target: 'both',
+      },
     },
     {
       tableSchema: 'privacy_http',
@@ -213,8 +226,12 @@ export class AuthenticatedPrivacyApp {
       imports: [
         Data.StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: this.postgres.connectionString('privacy-owner') },
-            app: { connectionString: this.postgres.appConnectionString('privacy-app') },
+            owner: {
+              connectionString: this.postgres.connectionString('privacy-owner'),
+            },
+            app: {
+              connectionString: this.postgres.appConnectionString('privacy-app'),
+            },
             reader: {
               connectionString: this.postgres.appConnectionString('privacy-reader', 'stynx_reader'),
             },
@@ -244,7 +261,10 @@ export class AuthenticatedPrivacyApp {
       providers: [
         { provide: Sessions.STYNX_SESSIONS_OPTIONS, useValue: options },
         { provide: Sessions.STYNX_SESSION_STORE, useValue: this.sessions },
-        { provide: Sessions.STYNX_SESSION_MIRROR, useClass: Sessions.SessionMirrorWriter },
+        {
+          provide: Sessions.STYNX_SESSION_MIRROR,
+          useClass: Sessions.SessionMirrorWriter,
+        },
         Sessions.SessionJwtSigningService,
         Sessions.SessionService,
       ],
@@ -395,7 +415,10 @@ export class AuthenticatedPrivacyApp {
           const identity = await trx.query(
             "select current_user,session_user,current_setting('app.tenant_id',true) tenant,current_setting('app.actor_id',true) actor,current_setting('transaction_read_only') readonly",
           );
-          this.observations.push({ ...identity.rows[0], requestedRole: options?.role });
+          this.observations.push({
+            ...identity.rows[0],
+            requestedRole: options?.role,
+          });
           const originalQuery = trx.query;
           trx.query = (async (...args: Parameters<Transaction['query']>) => {
             if (typeof args[0] === 'string' && args[0].includes('"privacy_http"."subjects"'))
@@ -463,7 +486,10 @@ export class AuthenticatedPrivacyApp {
     kind: 'writer' | 'reader' | 'denied' | 'other' | 'otherWriter' = 'writer',
     tenant = TENANT,
   ) {
-    return { authorization: `Bearer ${this.token(kind)}`, 'x-tenant-id': tenant };
+    return {
+      authorization: `Bearer ${this.token(kind)}`,
+      'x-tenant-id': tenant,
+    };
   }
   async adminClient() {
     return this.postgres.connectAsAdmin();

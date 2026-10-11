@@ -1,8 +1,12 @@
+import type { ExecutionContext } from '@nestjs/common';
+import { requirePrivacyTenantContext } from '../../src/privacy-context';
+import { PrivacyRetentionPermissionGuard } from '../../src/privacy-retention.guard';
 import {
   initializePrivacyTestContext,
   closePrivacyTestContext,
   privacyUnitModuleRef,
   runPrivacyInternal,
+  runPrivacyUnadmittedUnitRequest,
 } from '../support/privacy-test-context';
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -643,5 +647,30 @@ describe('privacy runtime helpers', () => {
       bucketName: 'custom-bucket',
       region: 'us-east-1',
     });
+  });
+});
+
+describe('privacy admission and optional-query unit boundaries', () => {
+  it('refuses an actual missing Nest admission-port binding before database access', () => {
+    const database = { hasHeldConnection: vi.fn(() => false) };
+    const moduleRef = privacyUnitModuleRef(database);
+    expect(() =>
+      runPrivacyUnadmittedUnitRequest(() => requirePrivacyTenantContext(moduleRef)),
+    ).toThrow('Privacy requires verified tenant admission');
+    expect(database.hasHeldConnection).not.toHaveBeenCalled();
+  });
+
+  it('defaults an omitted optional query to read-only permission without granting mutation authority', () => {
+    const guard = new PrivacyRetentionPermissionGuard();
+    const context = (permissions: string[]) =>
+      ({
+        switchToHttp: () => ({
+          getRequest: () => ({ principal: { permissions } }),
+        }),
+      }) as unknown as ExecutionContext;
+    expect(guard.canActivate(context(['privacy:read']))).toBe(true);
+    expect(() => guard.canActivate(context(['privacy:subject-rights']))).toThrow(
+      'Missing permission privacy:read',
+    );
   });
 });
