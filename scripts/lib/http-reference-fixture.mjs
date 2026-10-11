@@ -1193,7 +1193,7 @@ async function createFixedReferenceFixture(identity, privacy) {
           accessKeyId: `stynx${randomBytes(8).toString('hex')}`,
           secretAccessKey: randomBytes(32).toString('hex'),
         },
-        storageBucket: `stynx-storage-${instance}`,
+        storageBucket: 'stynx-docs-http-fixture-us-east-1',
         privacyBucket: `stynx-privacy-${instance}`,
         downloads: new Set(),
       };
@@ -1438,7 +1438,7 @@ export async function ownedReferenceFixtureEnvironment(handle) {
     STYNX_COGNITO_JWKS_URI: 'https://cognito-http-fixture.invalid/.well-known/jwks.json',
     STYNX_REFERENCE_WEB_ORIGINS: 'http://127.0.0.1:3100',
     STYNX_STORAGE_REGION: 'us-east-1',
-    STYNX_STORAGE_BUCKET: state.object?.storageBucket ?? `stynx-http-fixture-${state.instance}`,
+    STYNX_STORAGE_BUCKET: state.object?.storageBucket ?? 'stynx-docs-http-fixture-us-east-1',
     ...(state.object
       ? {
           STYNX_STORAGE_ENDPOINT: state.object.endpoint,
