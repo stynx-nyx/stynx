@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { Controller, Get, Inject, UseGuards, type INestApplication } from '@nestjs/common';
+import { Controller, Get, Inject, Param, UseGuards, type INestApplication } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import type { Database as DatabaseType, Transaction } from '@stynx-nyx/data';
 import type {
@@ -38,9 +38,23 @@ export const FOREIGN_SUBJECT = '0197481e-7294-7c53-8b03-5c36d7c2831f';
 export const INACTIVE_SUBJECT = '0197481e-7294-7c53-8b03-5c36d7c28320';
 export const SALT = 'independent privacy fixture secret';
 
+// White-box defensive seam only: these TypeScript-private methods are not product API.
+type CapturedPrivacyAuthority = {
+  requireExportAuthority(tenantId: string, actorId: string): void;
+  runTransaction<T>(
+    callback: (transaction: Transaction) => Promise<T>,
+    tenantId: string,
+    readonly: boolean,
+    actorId: string,
+  ): Promise<T>;
+};
+type CapturedArgumentFault = 'tenant' | 'actor' | 'valid';
+
 @Controller('_privacy-test')
 @UseGuards(Auth.StynxAuthGuard)
 export class PrivacyBoundaryController {
+  readonly capturedAuthorityFailures: unknown[] = [];
+  capturedTransactionCallbacks = 0;
   constructor(
     @Inject(Privacy.PrivacyService)
     private readonly privacy: PrivacyServiceType,
@@ -106,6 +120,58 @@ export class PrivacyBoundaryController {
   invalidRetentionInput() {
     // A malformed in-process caller is independent of the HTTP query parser.
     return this.privacy.applyTenantRetention('false' as unknown as boolean);
+  }
+  @Get('captured-export-authority/:fault')
+  @UseGuards(Auth.PermissionGuard)
+  @Auth.Permission('privacy:read')
+  capturedExportAuthority(@Param('fault') fault: CapturedArgumentFault) {
+    const { tenantId, actorId } = this.capturedArguments(fault);
+    try {
+      (this.privacy as unknown as CapturedPrivacyAuthority).requireExportAuthority(
+        tenantId,
+        actorId,
+      );
+      return { tenantId, actorId };
+    } catch (error) {
+      this.capturedAuthorityFailures.push(error);
+      throw error;
+    }
+  }
+  @Get('captured-transaction-authority/:fault')
+  @UseGuards(Auth.PermissionGuard)
+  @Auth.Permission('privacy:read')
+  async capturedTransactionAuthority(@Param('fault') fault: CapturedArgumentFault) {
+    const { tenantId, actorId } = this.capturedArguments(fault);
+    try {
+      return await (this.privacy as unknown as CapturedPrivacyAuthority).runTransaction(
+        async (transaction) => {
+          this.capturedTransactionCallbacks++;
+          return (
+            await transaction.query(
+              "select current_user,session_user,current_setting('app.tenant_id',true) tenant,current_setting('app.actor_id',true) actor,current_setting('transaction_read_only') readonly",
+            )
+          ).rows[0];
+        },
+        tenantId,
+        true,
+        actorId,
+      );
+    } catch (error) {
+      this.capturedAuthorityFailures.push(error);
+      throw error;
+    }
+  }
+  private capturedArguments(fault: CapturedArgumentFault) {
+    const current = this.context.snapshot();
+    if (fault !== 'tenant' && fault !== 'actor' && fault !== 'valid')
+      throw new Error('Unsupported captured-argument test fault');
+    if (!current.tenantId || !current.actorId)
+      throw new Error('Missing actual authenticated test frame');
+    // Preserve live proof/CLS. Only the arguments captured by the caller become stale.
+    return {
+      tenantId: fault === 'tenant' ? OTHER_TENANT : current.tenantId,
+      actorId: fault === 'actor' ? OTHER_ACTOR : current.actorId,
+    };
   }
   @Get('context-mismatch')
   @UseGuards(Auth.PermissionGuard)

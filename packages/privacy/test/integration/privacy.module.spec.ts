@@ -1,3 +1,4 @@
+import { ForbiddenException } from '@nestjs/common';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
@@ -18,6 +19,7 @@ import { createHmac } from 'node:crypto';
 import request from 'supertest';
 import {
   AuthenticatedPrivacyApp,
+  PrivacyBoundaryController,
   TENANT,
   OTHER_TENANT,
   ACTOR,
@@ -729,6 +731,115 @@ describe('Privacy tenant HTTP security and custody', () => {
           !['stynx_app', 'stynx_reader'].includes(String(row.session_user)),
       ),
     ).toBe(false);
+  });
+  // White-box stale captured arguments; live HTTP proof/CLS stay valid throughout.
+  it.each(['tenant', 'actor'] as const)(
+    'refuses stale captured export %s independently of live proof admission',
+    async (fault) => {
+      const before = await fixture.snapshot();
+      const boundary = fixture.moduleRef.get(PrivacyBoundaryController);
+      boundary.capturedAuthorityFailures.length = 0;
+      boundary.capturedTransactionCallbacks = 0;
+      const response = await request(server())
+        .get(`/_privacy-test/captured-export-authority/${fault}`)
+        .set(fixture.headers())
+        .expect(403);
+      expect(response.body.message).toBe('Privacy export context changed');
+      expect(boundary.capturedAuthorityFailures).toHaveLength(1);
+      expect(boundary.capturedAuthorityFailures[0]).toBeInstanceOf(ForbiddenException);
+      expect((boundary.capturedAuthorityFailures[0] as ForbiddenException).getResponse()).toEqual({
+        statusCode: 403,
+        message: 'Privacy export context changed',
+        error: 'Forbidden',
+      });
+      expect(boundary.capturedTransactionCallbacks).toBe(0);
+      expect(
+        fixture.queries.filter(
+          (row) => row.sql.includes('core.pii_map') || row.sql.includes('privacy_http'),
+        ),
+      ).toEqual([]);
+      expect(fixture.objectStore.calls).toEqual([]);
+      expect(fixture.disabledUsers).toEqual([]);
+      expect(await fixture.snapshot()).toEqual(before);
+    },
+  );
+  it('accepts the actual current captured export pair without SQL or provider effects', async () => {
+    const before = await fixture.snapshot();
+    const boundary = fixture.moduleRef.get(PrivacyBoundaryController);
+    boundary.capturedAuthorityFailures.length = 0;
+    boundary.capturedTransactionCallbacks = 0;
+    const response = await request(server())
+      .get('/_privacy-test/captured-export-authority/valid')
+      .set(fixture.headers())
+      .expect(200);
+    expect(response.body).toEqual({ tenantId: TENANT, actorId: ACTOR });
+    expect(boundary.capturedAuthorityFailures).toEqual([]);
+    expect(boundary.capturedTransactionCallbacks).toBe(0);
+    expect(
+      fixture.queries.filter(
+        (row) => row.sql.includes('core.pii_map') || row.sql.includes('privacy_http'),
+      ),
+    ).toEqual([]);
+    expect(fixture.objectStore.calls).toEqual([]);
+    expect(fixture.disabledUsers).toEqual([]);
+    expect(await fixture.snapshot()).toEqual(before);
+  });
+  it.each(['tenant', 'actor'] as const)(
+    'refuses stale captured transaction %s without invoking its callback',
+    async (fault) => {
+      const before = await fixture.snapshot();
+      const boundary = fixture.moduleRef.get(PrivacyBoundaryController);
+      boundary.capturedAuthorityFailures.length = 0;
+      boundary.capturedTransactionCallbacks = 0;
+      const response = await request(server())
+        .get(`/_privacy-test/captured-transaction-authority/${fault}`)
+        .set(fixture.headers())
+        .expect(403);
+      expect(response.body.message).toBe('Privacy tenant context changed');
+      expect(boundary.capturedAuthorityFailures).toHaveLength(1);
+      expect(boundary.capturedAuthorityFailures[0]).toBeInstanceOf(ForbiddenException);
+      expect((boundary.capturedAuthorityFailures[0] as ForbiddenException).getResponse()).toEqual({
+        statusCode: 403,
+        message: 'Privacy tenant context changed',
+        error: 'Forbidden',
+      });
+      expect(boundary.capturedTransactionCallbacks).toBe(0);
+      expect(
+        fixture.queries.filter(
+          (row) => row.sql.includes('core.pii_map') || row.sql.includes('privacy_http'),
+        ),
+      ).toEqual([]);
+      expect(fixture.objectStore.calls).toEqual([]);
+      expect(fixture.disabledUsers).toEqual([]);
+      expect(await fixture.snapshot()).toEqual(before);
+    },
+  );
+  it('executes the current captured transaction pair exactly once using the real restricted reader', async () => {
+    const before = await fixture.snapshot();
+    const boundary = fixture.moduleRef.get(PrivacyBoundaryController);
+    boundary.capturedAuthorityFailures.length = 0;
+    boundary.capturedTransactionCallbacks = 0;
+    const response = await request(server())
+      .get('/_privacy-test/captured-transaction-authority/valid')
+      .set(fixture.headers())
+      .expect(200);
+    expect(response.body).toEqual({
+      current_user: 'stynx_reader',
+      session_user: 'stynx_reader',
+      tenant: TENANT,
+      actor: ACTOR,
+      readonly: 'on',
+    });
+    expect(boundary.capturedTransactionCallbacks).toBe(1);
+    expect(boundary.capturedAuthorityFailures).toEqual([]);
+    expect(
+      fixture.queries.filter(
+        (row) => row.sql.includes('core.pii_map') || row.sql.includes('privacy_http'),
+      ),
+    ).toEqual([]);
+    expect(fixture.objectStore.calls).toEqual([]);
+    expect(fixture.disabledUsers).toEqual([]);
+    expect(await fixture.snapshot()).toEqual(before);
   });
   it('refuses delivery if the active tenant changes after the actual SQL snapshot commits', async () => {
     const before = await fixture.snapshot();
