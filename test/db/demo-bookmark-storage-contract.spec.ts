@@ -662,4 +662,86 @@ describe('closed demo bookmark storage contract', () => {
       }
     });
   });
+
+  it('standalone forward SQL upgrades populated storage and repeats without changing historical rows', async () => {
+    await withFixture(async ({ owner }) => {
+      await owner.query(
+        await readFile(resolve(repoRoot, 'domain/demo-bookmark/db/migration.sql'), 'utf8'),
+      );
+      await add(owner, tenantA, 'https://example.test/standalone');
+      await add(owner, tenantB, 'https://example.test/standalone', randomUUID(), true);
+      const before = await snapshot(owner);
+      const forward = await readFile(
+        resolve(repoRoot, 'domain/demo-bookmark/db/0002_tenant_rls.sql'),
+        'utf8',
+      );
+      await owner.query(forward);
+      expect(await snapshot(owner)).toEqual(before);
+      expect((await readOnlyVerification(owner)).supported).toBe(true);
+      await owner.query(forward);
+      expect(await snapshot(owner)).toEqual(before);
+      expect((await readOnlyVerification(owner)).supported).toBe(true);
+      expect((await install(owner)).previousState).toBe('installed');
+    });
+  });
+
+  it('standalone forward SQL refuses unsafe SET-role rights and rolls every DDL change back', async () => {
+    await withFixture(async ({ admin, owner }) => {
+      await owner.query(
+        await readFile(resolve(repoRoot, 'domain/demo-bookmark/db/migration.sql'), 'utf8'),
+      );
+      await add(owner, tenantA, 'https://example.test/standalone-refusal');
+      const before = await snapshot(owner);
+      const role = `demo_fixture_${randomUUID().replaceAll('-', '')}`;
+      await admin.query(`create role ${role} nologin`);
+      try {
+        await owner.query(`grant usage on schema demo to ${role}`);
+        await owner.query(`grant truncate on ${bookmark},${tag} to ${role}`);
+        await admin.query(`grant ${role} to stynx_reader with inherit false, set true`);
+        const forward = await readFile(
+          resolve(repoRoot, 'domain/demo-bookmark/db/0002_tenant_rls.sql'),
+          'utf8',
+        );
+        try {
+          await expect(owner.query(forward)).rejects.toMatchObject({
+            code: 'P0001',
+            message: expect.stringMatching(/demo_bookmark_unsafe/),
+          });
+        } finally {
+          // An error in the SQL-owned transaction must be explicitly rolled back
+          // by the actual owner; the verifier cannot silently resume it.
+          await owner.query('rollback');
+        }
+        expect(await snapshot(owner)).toEqual(before);
+        expect(
+          (
+            await owner.query(
+              'select relrowsecurity,relforcerowsecurity from pg_class where oid=$1::regclass',
+              [bookmark],
+            )
+          ).rows,
+        ).toEqual([{ relrowsecurity: false, relforcerowsecurity: false }]);
+        expect(
+          (
+            await owner.query(
+              "select has_schema_privilege('stynx_app','demo','USAGE') as app_usage, has_schema_privilege('stynx_reader','demo','USAGE') as reader_usage",
+            )
+          ).rows,
+        ).toEqual([{ app_usage: false, reader_usage: false }]);
+        expect(
+          (
+            await owner.query(
+              'select count(*)::integer as count from pg_policy where polrelid=any($1::regclass[])',
+              [[bookmark, tag]],
+            )
+          ).rows,
+        ).toEqual([{ count: 0 }]);
+      } finally {
+        await admin.query(`revoke ${role} from stynx_reader`);
+        await owner.query(`revoke all on ${bookmark},${tag} from ${role}`);
+        await owner.query(`revoke all on schema demo from ${role}`);
+        await admin.query(`drop role ${role}`);
+      }
+    });
+  });
 });
