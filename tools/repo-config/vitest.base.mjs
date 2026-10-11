@@ -140,6 +140,47 @@ export function createVitestConfig({
       ? disabledCoverageThreshold
       : (coverageThreshold ?? getCoverageThreshold(packageName));
   const thresholdValues = coverageThresholdValues(threshold);
+  if (
+    !Array.isArray(collectCoverageFrom) ||
+    collectCoverageFrom.some(
+      (pattern) => typeof pattern !== 'string' || pattern.trim().length === 0 || pattern === '!',
+    )
+  ) {
+    throw new TypeError('Coverage collection requires nonempty glob patterns');
+  }
+  const coverageIncludes = collectCoverageFrom.filter((pattern) => !pattern.startsWith('!'));
+  const declaredCoverageExcludes = collectCoverageFrom
+    .filter((pattern) => pattern.startsWith('!'))
+    .map((pattern) => pattern.slice(1));
+  if (coverageIncludes.length === 0) {
+    throw new TypeError('Coverage collection requires a positive source population');
+  }
+  const barrelExcludes = pureBarrelEntryPoints(packageDir);
+  for (const pattern of declaredCoverageExcludes) {
+    if ([...pattern].some((character) => '*?[]{}()!'.includes(character))) {
+      throw new TypeError('Coverage subtraction requires an exact file pattern');
+    }
+    if (pattern.endsWith('/index.ts') && !barrelExcludes.includes(pattern)) {
+      throw new TypeError('Coverage cannot exclude an unclassified executable entry point');
+    }
+  }
+
+  const coverageRoot = [...resolve(packageDir).split(sep).join('/')]
+    .map((character) => ('*?[]{}()!+@\\'.includes(character) ? `\\${character}` : character))
+    .join('');
+  const bindCoveragePattern = (pattern) => {
+    if (
+      typeof pattern !== 'string' ||
+      pattern.trim().length === 0 ||
+      pattern.startsWith('/') ||
+      pattern.startsWith('!') ||
+      /^[A-Za-z]:/u.test(pattern) ||
+      pattern.split('/').includes('..')
+    ) {
+      throw new TypeError('Coverage requires package-relative patterns');
+    }
+    return `${coverageRoot}/${pattern}`;
+  };
 
   const drizzleAlias = patchDrizzle
     ? { 'drizzle-orm/entity': resolve(repoRoot, 'tools/repo-config/drizzle-entity-shim.mjs') }
@@ -205,7 +246,9 @@ export function createVitestConfig({
         provider: 'v8',
         reportsDirectory: resolve(packageDir, coverageDir),
         reporter: ['text', 'json', 'lcov'],
-        include: collectCoverageFrom,
+        // Vitest treats negated include globs as OR alternatives. Translate
+        // the already-declared subtraction into exclude to preserve its scope.
+        include: coverageIncludes.map(bindCoveragePattern),
         exclude: [
           // Vitest 4 matches `coverage.include` anywhere in the absolute
           // path and guards external files with a bare `startsWith(root)`,
@@ -213,16 +256,19 @@ export function createVitestConfig({
           // (`packages-web/angular` -> `packages-web/angular-tenancy`) would
           // leak into this package's population when its sources load
           // through a workspace alias. Pin the population to this package.
-          `${packageDir.split(sep).join('/')}-*/**`,
-          'src/generated/**',
-          'src/main.ts',
-          'src/**/*.module.ts',
-          'src/**/constants.ts',
-          'src/**/tokens.ts',
-          'src/**/types.ts',
-          'src/**/*.d.ts',
-          ...pureBarrelEntryPoints(packageDir),
-          ...coverageExclude,
+          `${coverageRoot}-*/**`,
+          ...[
+            'src/generated/**',
+            'src/main.ts',
+            'src/**/*.module.ts',
+            'src/**/constants.ts',
+            'src/**/tokens.ts',
+            'src/**/types.ts',
+            'src/**/*.d.ts',
+            ...barrelExcludes,
+            ...declaredCoverageExcludes,
+            ...coverageExclude,
+          ].map(bindCoveragePattern),
         ],
         thresholds: {
           ...thresholdValues,
