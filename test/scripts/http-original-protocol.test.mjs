@@ -444,3 +444,42 @@ test('bounded refused-frame capture retains1024 actual received frames then refu
   assert.equal(f.protocol.captured().captureComplete, false);
   assert.throws(() => f.protocol.finish(exit(f.expected)), invalid);
 });
+
+for (const [sqlEffectCount, objectEffectCount] of [
+  [null, null],
+  [null, 0],
+  [0, null],
+  [0, 0],
+])
+  test(`preparation SQL${sqlEffectCount}/object${objectEffectCount} retains unknown effects distinctly from zero`, () => {
+    const f = fixture();
+    const preparation = f.frames.find((frame) => frame.phase === 'preparation-complete');
+    preparation.body.sqlEffectCount = sqlEffectCount;
+    preparation.body.objectEffectCount = objectEffectCount;
+    f.frames.at(-1).body.phaseSha256 = sha(f.frames.slice(0, -1));
+    for (const frame of f.frames) assert.equal(f.protocol.receive(frame), true);
+    const result = f.protocol.finish(exit(f.expected));
+    assert.equal(result.componentWireComplete, true);
+    for (const key of [
+      'complete',
+      'runtimeCustodyComplete',
+      'performanceQualified',
+      'readinessPromoting',
+    ])
+      assert.equal(result[key], false);
+    const captured = f.protocol
+      .captured()
+      .frames.find((frame) => frame.phase === 'preparation-complete').body;
+    assert.equal(captured.sqlEffectCount, sqlEffectCount);
+    assert.equal(captured.objectEffectCount, objectEffectCount);
+  });
+for (const [key, value] of [
+  ['trafficCount', null],
+  ['sqlEffectCount', -1],
+  ['objectEffectCount', 0.5],
+  ['sqlEffectCount', '0'],
+])
+  test(`preparation still refuses ${key}=${value}`, () =>
+    refusesMutation((frames) => {
+      frames.find((frame) => frame.phase === 'preparation-complete').body[key] = value;
+    }));

@@ -493,3 +493,50 @@ test('original roster private-build selection refuses caller snapshots, proxies 
   });
   assert.equal(calls, 0);
 });
+
+test('OpenAPI parse reuse never outlives one complete actual-byte acquisition projection', (t) => {
+  const { root } = declarationFixture(t);
+  for (const path of [
+    'auth.js',
+    'crud.js',
+    'upload.js',
+    'cascade-delete.js',
+    'lib/config.js',
+    'lib/stynx.js',
+    'check-summary.mjs',
+    'baseline-reference.json',
+  ].map((path) => `test/perf/k6/${path}`)) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), readFileSync(join(repository, path)), { mode: 0o644 });
+  }
+  const before = loadHttpQualificationRoster(root);
+  const artifacts = [
+    ...new Set(
+      [...manifest.operations, ...manifest.publicExclusions].flatMap((operation) =>
+        operation.openapiOperations.map((reference) => reference.artifact),
+      ),
+    ),
+  ];
+  assert.deepEqual(
+    artifacts.sort(),
+    [
+      'docs/framework/contracts/openapi.json',
+      'docs/framework/contracts/openapi-compositions/offline-ctg9.json',
+      'docs/framework/contracts/openapi-compositions/offline-e6.json',
+    ].sort(),
+  );
+  for (const artifact of artifacts) {
+    const path = join(root, artifact);
+    const bytes = readFileSync(path);
+    writeFileSync(path, Buffer.concat([bytes, Buffer.from('\n')]));
+    for (const project of [
+      () => loadHttpQualificationCase(root, firstCase),
+      () => loadHttpQualificationRoster(root),
+      () => loadHttpOriginalScenarioRoster(root),
+    ])
+      assert.throws(project, invalid);
+    writeFileSync(path, bytes);
+  }
+  assert.deepEqual(loadHttpQualificationRoster(root), before);
+  assert.equal(loadHttpOriginalScenarioRoster(root).profiles.length, 8);
+});
