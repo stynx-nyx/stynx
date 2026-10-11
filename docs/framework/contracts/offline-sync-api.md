@@ -321,6 +321,25 @@ tenant's value or a global fallback; a scoped policy may admit more than 100 ite
 allow release only of an unused tail, and expose reconciliation/consumption for every number in the
 interval. Concurrent reservations cannot overlap.
 
+`getNumberingConsumption(id)` captures the existing service clock once and
+returns a read-only projection at that instant in both shipped stores. The
+additive durable-store port is
+`getNumberingConsumption(scope, id, now?: string)`; omitted time on a direct
+store call captures native present time once. Custom stores must honor the
+supplied instant to claim parity. An HTTP caller cannot override this clock.
+Unused values project `blocked` for a blocked reservation; otherwise terminal
+expired/cancelled/consumed state or `validUntil <= now` projects `expired`.
+Explicit claimed/applied/blocked/expired values and their evidence remain
+unchanged, as does the stored reservation status. Reads copy memory entries and
+persist no expiry or domain effects. Reconciliation reuses its already captured
+operation instant for both consumption observations.
+
+The comparison preserves accepted microsecond timestamp precision and offsets;
+invalid supplied instants fail closed. Database-time admission and lock-wait
+expiry checks, batch leases, receipt insertion timestamps and the item's
+`createdLocallyAt` expiry guard retain their existing clocks. This correction
+does not change TTLs, stored history, replay, public routes or response shapes.
+
 Batches are durable by `(tenant,device,deviceBatchId)`, with optional positive `batchSequence`,
 the declared item-key set, open/closed state and original receipts. A closed replay with equal
 context returns the same receipt with no second effect. Changed context or a repeated sequence

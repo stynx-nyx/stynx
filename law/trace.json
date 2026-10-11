@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.13",
+  "version": "1.3.14",
   "meta": {
-    "last_updated": "2026-10-11T12:27:58.952Z",
+    "last_updated": "2026-10-11T13:26:53.035Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -74,7 +74,8 @@
       "STYNX 1.6.0 Architect rebinds the additive default privacy identity-port configuration refusal assertions (71 to 74), preserving every previous corpus entry, assertion and invariant/gate relationship. This diagnostic binding does not establish full coverage, provider compatibility, HTTP performance or release readiness.",
       "STYNX 1.6.0 Architect binds the actual HTTP worker startup and production parent IPC protocol/capture regressions, preserving every existing corpus projection, invariant relationship and gate obligation. These bounded identity, lifecycle, hostile-frame and serialization checks do not establish AppModule/object custody, complete middleware/routes, nominal HTTP performance, full audit or release readiness.",
       "STYNX 1.6.0 Architect combined-candidate rebind preserves all 629 executable test bindings, 15 invariants and 13 gate mappings while refreshing the independently accepted published DEVAI 2.5.0 adoption and closed HTTP protocol assertion projections. All 106 original HTTP cases and 183 original assertion obligations remain mapped; 40 added cases strengthen the boundary. This binding does not establish native HTTP custody, endpoint performance, provider, publication or overall audit PASS.",
-      "STYNX 1.6.0 Architect rebind preserves all 629 executable test bindings and every prior invariant/gate relationship while binding the exact local S3 expiration-error assertion and four additive nested-runbook route/anchor assertions. Generated documentation and emulator fixtures do not establish production provider, HTTP custody, performance, overall audit or release readiness."
+      "STYNX 1.6.0 Architect rebind preserves all 629 executable test bindings and every prior invariant/gate relationship while binding the exact local S3 expiration-error assertion and four additive nested-runbook route/anchor assertions. Generated documentation and emulator fixtures do not establish production provider, HTTP custody, performance, overall audit or release readiness.",
+      "STYNX 1.6.0 Architect binds exact consumption-operation-clock parity and microsecond/tenant negatives, admitted non-evaluated resolution-anchor and worker/protocol projections, exact webhook failure matching, and strict prospective-versus-versioned registry-policy assertions. All prior corpus relationships, invariants, gate mappings and thresholds remain unchanged. Prospective version plans do not supply final version, registry, provider, coverage, HTTP performance or publication acceptance."
     ]
   },
   "invariants": [
@@ -5084,8 +5085,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 339,
-      "assertion_digest_sha256": "24de3c053406ebd21ba887281ab05cc9bc8b6dc1173c1939739dc14661d8ff6f"
+      "assertion_count": 387,
+      "assertion_digest_sha256": "b922ef8d2e81ed28414d0bf221a30fb262cd14ed4b3ec8dd00f94c56aa33073b"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -5389,7 +5390,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001", "INV-ERROR-001"],
       "lifecycle": "supported",
       "assertion_count": 51,
-      "assertion_digest_sha256": "bcfc7f835101ea735d621b27df256cee5e3fa37a17c2f46a2b0210aa45de1a2d"
+      "assertion_digest_sha256": "2e222973b3382012cfc781d104fa0258e0a0e4aab297b4fddc247b1e1fdd809c"
     },
     {
       "path": "packages/core/test/unit/clock.spec.ts",
@@ -5741,7 +5742,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 108,
-      "assertion_digest_sha256": "784cc4b22e993c74c4847a480a26526ad34500751efcdb1f24884199f3feb272"
+      "assertion_digest_sha256": "ed5ffa4fc82a49de5c588b561d0bc0b6e9a56f5eff6f466b1a6cefaf5f22ea71"
     },
     {
       "path": "packages/outbox/test/unit/outbox-adapters.spec.ts",
@@ -6755,15 +6756,39 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 222,
-      "assertion_digest_sha256": "fd33ca145d0a453d0b44959a6094f6beed05df4d09679e8074c5efdc151a8d14"
+      "assertion_digest_sha256": "7e3d7f7b3be4e7b43f9107700d2e650dd26b71c41e9740c4025594f4a329c515"
     },
     {
       "path": "test/scripts/http-runtime-worker.test.mjs",
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 13,
-      "assertion_digest_sha256": "f519d204336e7bf18331803700086b5f6b02ca1a81d924ba65c95741c9a1ee5d"
+      "assertion_count": 14,
+      "assertion_digest_sha256": "5ee8b3c776f374b4afdeef4795f4727edc65af45d5368071989ef7962611b84b"
+    },
+    {
+      "path": "packages/offline-sync/test/integration/offline-sync-consumption-clock.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 2,
+      "assertion_digest_sha256": "10cfe4649edfa1e5284d0c605e9a866205a50d9116952d72bd2e41c49cc376c2"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-sync-consumption-clock.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "12f010d1c32897846e04d64985ff4960cf0f948801af17ff41b26889edbe4c15"
+    },
+    {
+      "path": "test/scripts/http-runtime-resolution-anchors.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 26,
+      "assertion_digest_sha256": "eb4f184666f64cea55ae03a6d7e20d7c08a0d2f1cf0820aed88a094a4414c509"
     }
   ],
   "suites": {

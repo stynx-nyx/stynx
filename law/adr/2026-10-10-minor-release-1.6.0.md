@@ -162,6 +162,25 @@ the sixth file explicitly. Real AWS SDK/LocalStack adapter observations qualify
 only the declared local fixture and do not establish production-provider approval,
 object deletion/lifecycle, full coverage, latency or release readiness.
 
+## Protected integration and version-stage observation
+
+The feature candidate retains the published unified 1.5.7 manifest versions
+until normal protected integration. Its prospective 1.6.0 observation requires
+the exact governed 44-package roster, uniform root/package versions, absent
+prerelease state and a valid pending fixed-group minor plan whose computed
+target equals the registry policy's 1.6.0 target. A prospective plan is not an
+observation of already-versioned packages or permission to publish them.
+
+After the feature merge, the existing Changesets workflow generates the
+`ci: version packages` PR as a direct first-parent child of `origin/main`.
+The versioned candidate must have consumed its pending changesets and satisfy
+the unchanged exact 1.6.0 root/all-package assertions, registry monotonicity,
+release-context classification and publication controls. Preserve independent
+tests of both stages; reject mixed versions, invalid or mismatched plans and
+unconsumed changesets in the versioned state. Do not add a release-context
+exemption, synthetic manifest projection, test skip or weaker final gate to
+admit the feature candidate.
+
 ## Completion evidence
 
 Each issue closes only against its actual acceptance evidence, with upstream

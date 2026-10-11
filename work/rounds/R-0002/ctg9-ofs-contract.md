@@ -182,6 +182,7 @@ interface OfflineSyncDurableStore extends OfflineSyncStore {
   getNumberingConsumption(
     scope: TrustedOfflineSyncScope,
     id: string,
+    now?: string,
   ): Promise<NumberingConsumptionResult>;
   submitDurableSyncBatch(
     scope: TrustedOfflineSyncScope,
@@ -327,6 +328,32 @@ the reservation row with cancel, close and settle. A claim submitted after
 close/settle is reported as a discrepancy without changing the terminal
 `expired` projection; a cancelled reservation cannot gain a new claim in its
 released tail or make a later reservation ambiguous.
+
+Consumption reads are a read-only projection as of one operation instant. The
+unchanged public `OfflineSyncService.getNumberingConsumption(id)` captures the
+existing injected `options.now` once and forwards that exact value through the
+additive optional `OfflineSyncDurableStore.getNumberingConsumption(scope, id,
+now?: string)` parameter. Both shipped stores use it; a direct store call that
+omits the parameter captures native present time once. Custom stores must honor
+the parameter to satisfy this parity contract. Neither a caller HTTP field nor
+a read clock grants reservation admission authority.
+
+For otherwise unused numbers, a blocked reservation projects `blocked` first;
+otherwise an expired, cancelled or consumed reservation, or `validUntil` at or
+before the captured instant, projects `expired`. Explicit claimed, applied,
+blocked and expired consumption entries retain their status and evidence. The
+stored reservation status is returned unchanged. No read persists expiry,
+changes a range cursor or applies effects/events; returned memory entries are
+copies. Reconciliation uses its already captured operation instant for its
+initial/final consumption projections. Compare exact accepted timestamp
+instants, including six fractional digits and offsets, without a millisecond
+`Date` round-trip; invalid explicit instants refuse rather than fall back.
+
+This observation clock does not alter the database-time active-reservation
+admission and lock-wait expiry guard, batch leases or database insertion times.
+The item's numbering-expiry guard continues to compare `validUntil` with
+`createdLocallyAt`, independently of consumption observation time. Preserve
+keyed replay, terminal history and every existing assertion.
 
 `OfflineSyncPolicyResolver.resolve({tenantId,orgUnitId,operation,at})` returns the applicable reservation TTL, concurrency window, and batch cardinality policy from the host catalogue. The clock is injected. If the resolver is configured and returns no value for a required tenant/org policy, do not silently fall back to another tenant or a global default: apply the host's explicit missing-parameter outcome. With **no resolver configured**, preserve the published `reservationTtlMs ?? 86_400_000` behavior, identified as a legacy compatibility default rather than a catalogue value; keep the published 100-item maximum in that mode. With a resolver, accept its scoped policy, including more than 100 items when allowed; do not impose a new fixed ceiling. A missing or disabled concurrency window follows the host's existing warning/no-detection policy. A request-supplied `validUntil` remains subject to the host's existing contract and resolved policy. Do not add new limits for strings, hashes, UUIDs, or numbering.
 
