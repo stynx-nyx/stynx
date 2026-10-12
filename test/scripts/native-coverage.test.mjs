@@ -17,6 +17,7 @@ import { join, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import { createNativeCoverage } from '../../tools/repo-config/native-coverage.mjs';
+import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 const require = createRequire(import.meta.url);
 const compiler = require.resolve('typescript/lib/tsc.js');
 const engineRequire = createRequire(require.resolve('vitest/package.json'));
@@ -632,4 +633,56 @@ test('malformed owned source maps remain sticky after restoration and external I
       /outside the admitted census/u,
     );
     assert.equal(outside.evidence.sourceTransforms[0].status, 'REFUSED');
+  }));
+
+// Static configuration discovery grants no native-byte admission. Each actual
+// execution hook must acquire the same strict compiled-file proof independently.
+for (const boundary of ['buildStart', 'transform', 'swc'])
+  test(`native config discovery without outputs preserves first ${boundary} admission refusal`, () =>
+    fixture(({ root, options }) => {
+      rmSync(join(root, 'dist'), { recursive: true });
+      let config;
+      assert.doesNotThrow(() => {
+        config = createVitestConfig({
+          packageDir: root,
+          packageName: '@stynx-nyx/privacy',
+          nativeCoverageModules: options.modules,
+          collectCoverageFrom: options.includes,
+        });
+      });
+      assert.equal(config.test.coverage.provider, 'custom');
+      assert.deepEqual(config.test.coverage.nativeCoverage.modules, options.modules);
+      const native = config.plugins.find(
+        (plugin) => plugin.name === 'stynx:finite-native-coverage',
+      );
+      assert(native);
+      const swc = config.plugins.at(-1);
+      const transform = typeof swc.transform === 'function' ? swc.transform : swc.transform.handler;
+      const invoke =
+        boundary === 'buildStart'
+          ? () => native.buildStart()
+          : boundary === 'transform'
+            ? () => native.transform(sourceText, join(root, 'src/service.ts'))
+            : () => transform.call({}, sourceText, join(root, 'src/service.ts'));
+      assert.throws(invoke, { code: 'ENOENT', syscall: 'lstat', path: join(root, 'dist') });
+    }));
+
+test('deferred native configuration admits actual compiler bytes and retains later tamper refusal', () =>
+  fixture(({ root, options }) => {
+    const config = createVitestConfig({
+      packageDir: root,
+      packageName: '@stynx-nyx/privacy',
+      nativeCoverageModules: options.modules,
+      collectCoverageFrom: options.includes,
+    });
+    const native = config.plugins.find((plugin) => plugin.name === 'stynx:finite-native-coverage');
+    assert.doesNotThrow(() => native.buildStart());
+    const transformed = native.transform(sourceText, join(root, 'src/service.ts'));
+    assert.equal(typeof transformed.code, 'string');
+    writeFileSync(join(root, 'dist/service.js'), '// actual emitted-byte tamper\n');
+    assert.throws(() => native.buildStart(), /input changed after admission/);
+    assert.throws(
+      () => native.transform(sourceText, join(root, 'src/service.ts')),
+      /input changed after admission/,
+    );
   }));
