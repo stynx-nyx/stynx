@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.0
+
+### Patch Changes
+
+- Updated dependencies [1981c08]
+  - @stynx-nyx/sdk@1.6.0
+  - @stynx-nyx/angular-auth@1.6.0
+  - @stynx-nyx/angular-storage@1.6.0
+  - @stynx-nyx/angular-ui@1.6.0
+  - @stynx-nyx/angular-i18n@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes

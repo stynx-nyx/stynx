@@ -1,5 +1,20 @@
 # @stynx-nyx/storage
 
+## 1.6.0
+
+### Minor Changes
+
+- aeb738e: Expose idempotent object-store disposal and close owned S3 clients during Nest
+  application shutdown. Refuse object-store operations after successful disposal
+  and allow cleanup to be retried when the underlying client throws.
+
+### Patch Changes
+
+- Updated dependencies [d3a9e9d]
+  - @stynx-nyx/data@1.6.0
+  - @stynx-nyx/contracts@1.6.0
+  - @stynx-nyx/core@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes

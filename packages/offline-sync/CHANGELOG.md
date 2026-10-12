@@ -1,5 +1,23 @@
 # @stynx-nyx/offline-sync
 
+## 1.6.0
+
+### Minor Changes
+
+- c92c615: Add durable initial pending state, canonical payload verification and independently readable integrity rejections. Detect concurrency before application and enforce nullable-shift reservation admission with auditable replay and database race protection.
+- d1807c7: Publish the closed offline storage renderer and read-only verifier, duplicate-aware import parser, and owner-only atomic state import with immutable custody receipts. Independently verified archived acknowledgements retain their exact HTTP bytes and headers through the supported replay adapter.
+
+### Patch Changes
+
+- Updated dependencies [b3d8afe]
+- Updated dependencies [536bc4a]
+- Updated dependencies [d3a9e9d]
+  - @stynx-nyx/auth@1.6.0
+  - @stynx-nyx/data@1.6.0
+  - @stynx-nyx/backend@1.6.0
+  - @stynx-nyx/idempotency@1.6.0
+  - @stynx-nyx/core@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @stynx-nyx/angular
 
+## 1.6.0
+
+### Patch Changes
+
+- Updated dependencies [1981c08]
+  - @stynx-nyx/sdk@1.6.0
+  - @stynx-nyx/angular-tenancy@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes
