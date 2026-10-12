@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@n
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext, StynxError } from '@stynx-nyx/core';
 import { ErrorTranslatorService } from './error-translator.service';
+import { i18nTenantProofPort, runWithI18nHttpContext } from './http-context';
 
 interface ResponseLike {
   status(statusCode: number): ResponseLike;
@@ -15,6 +16,13 @@ export class LocalizedErrorFilter implements ExceptionFilter {
   constructor(private readonly moduleRef: ModuleRef) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
+    const request = host.switchToHttp().getRequest<object>();
+    runWithI18nHttpContext(request, i18nTenantProofPort(this.moduleRef), () =>
+      this.render(exception, host),
+    );
+  }
+
+  private render(exception: unknown, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<ResponseLike>();
 
     if (exception instanceof HttpException && !(exception instanceof StynxError)) {
@@ -26,9 +34,10 @@ export class LocalizedErrorFilter implements ExceptionFilter {
       const requestContext = this.moduleRef.get(RequestContext, { strict: false });
       const translator = this.moduleRef.get(ErrorTranslatorService, { strict: false });
       const locale = requestContext?.hasActiveContext() ? requestContext.locale : undefined;
-      const message = translator && locale
-        ? translator.translate(exception.messageKey, locale, exception.context)
-        : exception.message;
+      const message =
+        translator && locale
+          ? translator.translate(exception.messageKey, locale, exception.context)
+          : exception.message;
 
       response.status(exception.status).json({
         code: exception.code,

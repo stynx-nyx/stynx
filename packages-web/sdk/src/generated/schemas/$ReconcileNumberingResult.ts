@@ -3,14 +3,35 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ReconcileNumberingResult = {
-    properties: {
-        missingOnServer: {
-            type: 'UnknownJson',
-            isRequired: true,
-        },
-        unexpectedOnServer: {
-            type: 'UnknownJson',
-            isRequired: true,
-        },
+  properties: {
+    consumption: {
+      type: 'array',
+      contains: {
+        type: 'NumberingConsumptionEntry',
+      },
+      isRequired: true,
     },
+    missingOnServer: {
+      type: 'array',
+      contains: {
+        type: 'number',
+      },
+      isRequired: true,
+    },
+    reservationId: {
+      type: 'string',
+      isRequired: true,
+    },
+    status: {
+      type: 'NumberingReservationStatus',
+      isRequired: true,
+    },
+    unexpectedOnServer: {
+      type: 'array',
+      contains: {
+        type: 'number',
+      },
+      isRequired: true,
+    },
+  },
 } as const;

@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ThemePreferences = {
-    colorScheme: 'system' | 'light' | 'dark';
-    contrast: 'standard' | 'more';
-    density: 'comfortable' | 'compact';
+  colorScheme: 'system' | 'light' | 'dark';
+  contrast: 'standard' | 'more';
+  density: 'comfortable' | 'compact';
 };
-

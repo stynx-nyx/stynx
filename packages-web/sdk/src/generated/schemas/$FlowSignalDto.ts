@@ -3,28 +3,28 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $FlowSignalDto = {
-    properties: {
-        adapterKey: {
-            type: 'string',
-        },
-        payload: {
-            type: 'FlowJsonObject',
-        },
-        scopeCode: {
-            type: 'string',
-        },
-        scopeId: {
-            type: 'string',
-        },
-        signalKey: {
-            type: 'string',
-        },
-        targetId: {
-            type: 'string',
-            isRequired: true,
-        },
-        targetType: {
-            type: 'string',
-        },
+  properties: {
+    adapterKey: {
+      type: 'string',
     },
+    payload: {
+      type: 'FlowJsonObject',
+    },
+    scopeCode: {
+      type: 'string',
+    },
+    scopeId: {
+      type: 'string',
+    },
+    signalKey: {
+      type: 'string',
+    },
+    targetId: {
+      type: 'string',
+      isRequired: true,
+    },
+    targetType: {
+      type: 'string',
+    },
+  },
 } as const;

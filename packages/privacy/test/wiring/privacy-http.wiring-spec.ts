@@ -1,35 +1,56 @@
-import { Test } from '@nestjs/testing';
-import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { PrivacyController } from '../../src/privacy.controller';
-import { PrivacyService } from '../../src/privacy.service';
+import { AuthenticatedPrivacyApp } from '../support/authenticated-privacy-app';
 
 describe('PrivacyController E2E', () => {
-  let app: INestApplication;
-  const privacyService = {
-    applyRetention: vi.fn((dryRun: boolean) => ({ dryRun, actions: [] })),
-    eraseSubject: vi.fn(() => ({ erased: true })),
-    exportData: vi.fn(() => ({ files: [] })),
-  };
-
+  let fixture: AuthenticatedPrivacyApp;
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      controllers: [PrivacyController],
-      providers: [{ provide: PrivacyService, useValue: privacyService }],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    await app.init();
-  });
-
+    fixture = new AuthenticatedPrivacyApp();
+    await fixture.initialize();
+  }, 60_000);
   afterAll(async () => {
-    await app.close();
+    await fixture?.teardown();
   });
 
   it('serves retention dry-run requests through HTTP', async () => {
-    const response = await request(app.getHttpServer()).get('/privacy/retention').expect(200);
-
-    expect(response.body).toEqual({ dryRun: true, actions: [] });
-    expect(privacyService.applyRetention).toHaveBeenCalledWith(true);
+    // Observer calls the actual owned service, canonical guards and live SQL.
+    const applyRetention = vi.spyOn(fixture.privacy, 'applyTenantRetention');
+    const response = await request(fixture.app.getHttpServer())
+      .get('/privacy/retention')
+      .set(fixture.headers('reader'))
+      .expect(200);
+    expect(response.body).toEqual({
+      dryRun: true,
+      actions: [
+        {
+          table: 'privacy_http.attachments',
+          target: 'live',
+          strategy: 'delete_row',
+          affectedRows: 1,
+          reason: 'retention>30d',
+        },
+        {
+          table: 'archive.privacy_http_attachments',
+          target: 'archive',
+          strategy: 'delete_row',
+          affectedRows: 1,
+          reason: 'retention>30d',
+        },
+      ],
+      partitions: [],
+    });
+    expect(applyRetention).toHaveBeenCalledWith(true);
+    expect(fixture.observations.some((row) => row.requestedRole === 'owner')).toBe(false);
+    const business = fixture.queries.filter(
+      (row) => row.sql.includes('core.pii_map') || row.sql.includes('privacy_http'),
+    );
+    expect(business.length).toBeGreaterThan(0);
+    expect(
+      business.every(
+        (row) =>
+          row.current_user === 'stynx_reader' &&
+          row.session_user === 'stynx_reader' &&
+          row.readonly === 'on',
+      ),
+    ).toBe(true);
   });
 });

@@ -1,3 +1,4 @@
+import { consumptionReadInstant } from './consumption-projection';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OfflineSyncConfigurationError, OfflineSyncError } from './errors';
 import {
@@ -6,6 +7,11 @@ import {
   STYNX_OFFLINE_SYNC_STORE,
 } from './tokens';
 import type {
+  NumberingRange,
+  CreateNumberingRangeInput,
+  CancelNumberingRangeInput,
+  ListNumberingRangesInput,
+  NumberingRangePage,
   CancelNumberingReservationInput,
   NumberingReservation,
   OfflineSyncContextPort,
@@ -22,12 +28,15 @@ import type {
   SubmitSyncBatchOptions,
   OfflineSyncDurableStore,
   CTG9NumberingReservation,
+  CTG9ReserveNumberingInput,
   ReconcileNumberingInput,
   ReconcileNumberingResult,
   SettleNumberingInput,
   NumberingConsumptionResult,
   SyncBatchReceipt,
   SyncItemReceipt,
+  SyncIntegrityRejection,
+  SyncIntegrityRejectionIdentity,
   TrustedOfflineSyncScope,
   DurableBatchExecutionOptions,
   ListSyncBatchReceiptsInput,
@@ -45,6 +54,13 @@ import type {
 } from './types';
 import { canonicalPayloadHash, listDefaultLimit, listMaxLimit } from './listing';
 import { OFFLINE_SYNC_NO_SHIFT } from './numbering';
+import {
+  rangeCreation,
+  rangeIdentity,
+  rangeList,
+  rangeCancellation,
+  rangeNotFound,
+} from './range-administration';
 
 const queueStatuses = ['received', 'applied', 'conflict', 'rejected', 'pending'];
 
@@ -56,6 +72,48 @@ export class OfflineSyncService {
     @Inject(STYNX_OFFLINE_SYNC_OPTIONS)
     private readonly options: StynxOfflineSyncModuleOptions,
   ) {}
+
+  async createNumberingRange(input: CreateNumberingRangeInput): Promise<NumberingRange> {
+    const scope = this.context.current();
+    const request = rangeCreation(scope, input).input;
+    const operation = this.durable.createNumberingRange;
+    if (typeof operation !== 'function')
+      throw new OfflineSyncConfigurationError('createNumberingRange');
+    return operation.call(this.store, scope, request, this.now());
+  }
+
+  async getNumberingRange(id: string): Promise<NumberingRange> {
+    const scope = this.context.current();
+    const key = rangeIdentity(id);
+    const operation = this.durable.getNumberingRange;
+    if (typeof operation !== 'function')
+      throw new OfflineSyncConfigurationError('getNumberingRange');
+    const range = await operation.call(this.store, scope, key);
+    if (!range) throw rangeNotFound();
+    return range;
+  }
+
+  async listNumberingRanges(input: ListNumberingRangesInput = {}): Promise<NumberingRangePage> {
+    const scope = this.context.current();
+    const request = rangeList(input);
+    const operation = this.durable.listNumberingRanges;
+    if (typeof operation !== 'function')
+      throw new OfflineSyncConfigurationError('listNumberingRanges');
+    return operation.call(this.store, scope, request);
+  }
+
+  async cancelNumberingRange(
+    id: string,
+    input: CancelNumberingRangeInput = {},
+  ): Promise<NumberingRange> {
+    const scope = this.context.current();
+    const key = rangeIdentity(id);
+    const request = rangeCancellation(input);
+    const operation = this.durable.cancelNumberingRange;
+    if (typeof operation !== 'function')
+      throw new OfflineSyncConfigurationError('cancelNumberingRange');
+    return operation.call(this.store, scope, key, request, this.now());
+  }
 
   async reserveNumbering(input: ReserveNumberingInput): Promise<NumberingReservation> {
     this.assertText(input.orgUnitId, 'orgUnitId');
@@ -117,6 +175,105 @@ export class OfflineSyncService {
     return this.options.policyResolver ? ({ ...scope, agentId } as TrustedOfflineSyncScope) : scope;
   }
 
+  async reserveDurableNumbering(
+    input: CTG9ReserveNumberingInput,
+  ): Promise<CTG9NumberingReservation> {
+    if (!this.options.policyResolver) throw new OfflineSyncConfigurationError('policyResolver');
+    const reserve = this.durable.reserveDurableNumbering;
+    if (typeof reserve !== 'function')
+      throw new OfflineSyncConfigurationError('reserveDurableNumbering');
+    this.validateDurableReservationInput(input);
+    const scope = await this.reservationScope();
+    if (input.idempotencyKey !== undefined) {
+      const replay = this.durable.replayDurableNumberingReservation;
+      if (typeof replay !== 'function')
+        throw new OfflineSyncConfigurationError('replayDurableNumberingReservation');
+      const prior = await replay.call(this.store, scope, input);
+      if (prior) return prior;
+    }
+    const now = this.now();
+    const at = Date.parse(now);
+    if (!Number.isFinite(at)) throw new OfflineSyncConfigurationError('now');
+    const policy = await this.options.policyResolver.resolve({
+      tenantId: scope.tenantId,
+      orgUnitId: input.orgUnitId,
+      operation: 'reserve-numbering',
+      at: now,
+    });
+    const until = at + (policy.reservationTtlMs ?? Number.NaN);
+    if (!Number.isFinite(until) || until <= at || Math.abs(until) > 8.64e15)
+      this.invalid('reservation policy is missing.');
+    if (
+      input.validUntil !== undefined &&
+      (!Number.isFinite(Date.parse(input.validUntil)) || Date.parse(input.validUntil) <= at)
+    )
+      this.invalid('validUntil must be later than the current time.');
+    return reserve.call(this.store, scope, input, now, new Date(until).toISOString());
+  }
+
+  async replayDurableNumberingReservation(
+    input: CTG9ReserveNumberingInput,
+  ): Promise<CTG9NumberingReservation | null> {
+    if (!this.options.policyResolver) throw new OfflineSyncConfigurationError('policyResolver');
+    this.validateDurableReservationInput(input);
+    const replay = this.durable.replayDurableNumberingReservation;
+    if (typeof replay !== 'function')
+      throw new OfflineSyncConfigurationError('replayDurableNumberingReservation');
+    return replay.call(this.store, await this.reservationScope(), input);
+  }
+
+  private validateDurableReservationInput(input: CTG9ReserveNumberingInput): void {
+    const text = (value: string, field: string, maximum = 255): void => {
+      this.assertText(value, field);
+      if (
+        Buffer.byteLength(value) > maximum ||
+        value.includes('\0') ||
+        Buffer.from(value).toString('utf8') !== value
+      )
+        this.invalid(`${field} is invalid.`);
+    };
+    text(input.orgUnitId, 'orgUnitId');
+    text(input.deviceId, 'deviceId');
+    if (input.shiftId !== null) {
+      text(input.shiftId, 'shiftId');
+      if (input.shiftId.startsWith('stynx:') && input.shiftId !== OFFLINE_SYNC_NO_SHIFT)
+        this.invalid('shiftId uses a reserved namespace.');
+    }
+    text(input.entityType, 'entityType', 100);
+    if (input.idempotencyKey !== undefined) text(input.idempotencyKey, 'idempotencyKey');
+    if (input.series !== undefined) text(input.series, 'series', 80);
+    if (
+      input.rangeId !== undefined &&
+      !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/iu.test(input.rangeId)
+    )
+      this.invalid('rangeId must be a UUID.');
+    if (
+      !Number.isSafeInteger(input.requestedSize) ||
+      input.requestedSize < 1 ||
+      input.requestedSize > 100
+    )
+      this.invalid('requestedSize must be an integer between 1 and 100.');
+  }
+
+  async cancelDurableNumberingReservation(
+    id: string,
+    input: CancelNumberingReservationInput = {},
+  ): Promise<CTG9NumberingReservation> {
+    this.assertText(id, 'reservationId');
+    if (
+      input.reason !== undefined &&
+      (typeof input.reason !== 'string' ||
+        Buffer.byteLength(input.reason) > 500 ||
+        input.reason.includes('\0') ||
+        Buffer.from(input.reason).toString('utf8') !== input.reason)
+    )
+      this.invalid('reason must be valid text of at most 500 bytes.');
+    const cancel = this.durable.cancelDurableNumberingReservation;
+    if (typeof cancel !== 'function')
+      throw new OfflineSyncConfigurationError('cancelDurableNumberingReservation');
+    return cancel.call(this.store, this.context.current(), id, input, this.now());
+  }
+
   async cancelNumberingReservation(
     reservationId: string,
     input: CancelNumberingReservationInput = {},
@@ -160,7 +317,10 @@ export class OfflineSyncService {
     return this.durable.settleNumberingReservation(this.context.current(), id, input, this.now());
   }
   async getNumberingConsumption(id: string): Promise<NumberingConsumptionResult> {
-    return this.durable.getNumberingConsumption(this.context.current(), id);
+    const now = this.now();
+    if (typeof now !== 'string') this.invalid('Invalid consumption read instant.');
+    consumptionReadInstant(now);
+    return this.durable.getNumberingConsumption(this.context.current(), id, now);
   }
   async getSyncBatchReceipt(deviceId: string, deviceBatchId: string): Promise<SyncBatchReceipt> {
     const receipt = await this.durable.getSyncBatchReceipt(
@@ -176,6 +336,25 @@ export class OfflineSyncService {
       );
     return receipt;
   }
+  /** Read raw rejection provenance by its tenant-scoped attempt address, without applying anything. */
+  async getSyncIntegrityRejection(
+    identity: SyncIntegrityRejectionIdentity,
+  ): Promise<SyncIntegrityRejection> {
+    this.assertText(identity.deviceId, 'deviceId');
+    this.assertText(identity.deviceBatchId, 'deviceBatchId');
+    this.assertText(identity.queueItemId, 'queueItemId');
+    const method = this.durable.getSyncIntegrityRejection;
+    if (!method) throw new OfflineSyncConfigurationError('getSyncIntegrityRejection');
+    const record = await method.call(this.durable, this.context.current(), identity);
+    if (!record)
+      throw new OfflineSyncError(
+        'OFFLINE_SYNC_INTEGRITY_REJECTION_NOT_FOUND',
+        404,
+        'Integrity rejection was not found.',
+      );
+    return record;
+  }
+
   async getSyncItemReceipt(idempotencyKey: string): Promise<SyncItemReceipt> {
     const receipt = await this.durable.getSyncItemReceipt(this.context.current(), idempotencyKey);
     if (!receipt)

@@ -4,13 +4,12 @@
 /* eslint-disable */
 import type { PrivacyStrategy } from './PrivacyStrategy';
 export type PrivacyErasureResult = {
-    actions: Array<{
-        archiveAffected: number;
-        column: string;
-        liveAffected: number;
-        strategy: PrivacyStrategy;
-        table: string;
-    }>;
-    subjectUserId: string;
+  actions: Array<{
+    archiveAffected: number;
+    column: string;
+    liveAffected: number;
+    strategy: PrivacyStrategy;
+    table: string;
+  }>;
+  subjectUserId: string;
 };
-

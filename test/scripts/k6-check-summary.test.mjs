@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 import {
+  compareRequiredMetricTails,
   compareSummaries,
   comparedStatistics,
   effectiveBaseline,
@@ -61,6 +62,397 @@ test('the tracked metric roster and compared statistics are the documented ones'
       assert.ok(reference.metrics[metric][statistic] > 0, `${metric} ${statistic}`);
     }
     assert.ok(reference.metrics[metric]['p(95)'] <= reference.metrics[metric]['p(99)']);
+  }
+});
+
+function strictInput(requiredMetrics = [...trackedMetrics]) {
+  return {
+    current: summary(steady),
+    baseline: summary(steady),
+    reference: loadReference(referencePath),
+    requiredMetrics,
+  };
+}
+
+test('strict comparison requires both real observed tails and reference floors for every declared metric', () => {
+  const input = strictInput();
+  const original = structuredClone(input);
+  const report = compareRequiredMetricTails(input);
+  assert.deepEqual(Object.keys(report).sort(), ['degradations', 'observations']);
+  assert.deepEqual(report.degradations, []);
+  assert.deepEqual(
+    report.observations.map(({ metric }) => metric),
+    [...trackedMetrics],
+  );
+  for (const observation of report.observations) {
+    assert.deepEqual(
+      observation.statistics.map(({ statistic }) => statistic),
+      ['p(95)', 'p(99)'],
+    );
+    assert.equal(
+      observation.statistics.every(({ usable }) => usable),
+      true,
+    );
+  }
+  assert.deepEqual(input, original);
+});
+
+test('strict comparison reports only the declared metric population in declaration order', () => {
+  const requiredMetrics = ['storage_presign_duration_ms', 'auth_verify_duration_ms'];
+  const input = strictInput(requiredMetrics);
+  input.current.metrics.ratelimit_overhead_ms.values['p(95)'] = 'unrelated';
+  const report = compareRequiredMetricTails(input);
+  assert.deepEqual(
+    report.observations.map(({ metric }) => metric),
+    requiredMetrics,
+  );
+  assert.deepEqual(report.degradations, []);
+});
+
+test('strict comparison rejects missing, empty, duplicate, unknown and non-array required populations', () => {
+  for (const requiredMetrics of [
+    undefined,
+    null,
+    [],
+    '',
+    'auth_verify_duration_ms',
+    ['unknown_duration_ms'],
+    ['auth_verify_duration_ms', 'auth_verify_duration_ms'],
+    [undefined],
+    Array(1),
+    [1],
+  ]) {
+    assert.throws(
+      () => compareRequiredMetricTails({ ...strictInput(), requiredMetrics }),
+      /requiredMetrics/u,
+    );
+  }
+});
+
+test('strict comparison rejects unknown options and threshold overrides rather than ignoring them', () => {
+  for (const field of [
+    'maxRelativeIncreasePercent',
+    'minAbsoluteIncreaseMs',
+    'allowMissing',
+    'verdict',
+  ]) {
+    assert.throws(
+      () => compareRequiredMetricTails({ ...strictInput(), [field]: 9999 }),
+      /options/u,
+    );
+  }
+  for (const input of [undefined, null, [], false, 'input'])
+    assert.throws(() => compareRequiredMetricTails(input), /options/u);
+  for (const field of ['hiddenThresholdOverride', Symbol('thresholdOverride')]) {
+    const input = strictInput();
+    Object.defineProperty(input, field, { value: 9999 });
+    assert.throws(() => compareRequiredMetricTails(input), /options/u);
+  }
+});
+
+test('strict comparison rejects every missing, coerced, nonfinite or negative required tail independently', () => {
+  const metric = 'storage_presign_duration_ms';
+  for (const name of ['current', 'baseline', 'reference']) {
+    for (const statistic of ['p(95)', 'p(99)']) {
+      for (const invalid of [undefined, null, '10', true, NaN, Infinity, -Infinity, -1, {}, []]) {
+        const input = strictInput([metric]);
+        const tails =
+          name === 'reference' ? input[name].metrics[metric] : input[name].metrics[metric].values;
+        tails[statistic] = invalid;
+        assert.throws(
+          () => compareRequiredMetricTails(input),
+          (error) =>
+            error instanceof Error &&
+            error.message.includes(name) &&
+            error.message.includes(metric) &&
+            error.message.includes(statistic),
+        );
+      }
+    }
+    const absentMetric = strictInput([metric]);
+    delete absentMetric[name].metrics[metric];
+    assert.throws(() => compareRequiredMetricTails(absentMetric), /usable/u);
+    const absentSummary = strictInput([metric]);
+    delete absentSummary[name];
+    assert.throws(() => compareRequiredMetricTails(absentSummary), /usable/u);
+  }
+});
+
+test('strict comparison refuses legacy missing-metric skips and reference-only baseline rescue', () => {
+  const metric = 'storage_presign_duration_ms';
+  const absent = {
+    current: {},
+    baseline: {},
+    reference: loadReference(referencePath),
+    requiredMetrics: [metric],
+  };
+  assert.deepEqual(compareSummaries(absent).degradations, []);
+  assert.throws(() => compareRequiredMetricTails(absent), /current/u);
+  const rescued = { ...strictInput([metric]), baseline: {} };
+  const legacy = compareSummaries(rescued).observations.find((entry) => entry.metric === metric);
+  assert.equal(
+    legacy.statistics.every(({ usable }) => usable),
+    true,
+  );
+  assert.throws(() => compareRequiredMetricTails(rescued), /baseline/u);
+});
+
+test('strict comparison refuses numeric-string coercion and a single remaining usable tail', () => {
+  const metric = 'storage_presign_duration_ms';
+  const coerced = strictInput([metric]);
+  coerced.current.metrics[metric].values['p(95)'] = '7.835';
+  assert.equal(
+    compareSummaries(coerced).observations.find((entry) => entry.metric === metric).statistics[0]
+      .usable,
+    true,
+  );
+  assert.throws(() => compareRequiredMetricTails(coerced), /current/u);
+  const partial = strictInput([metric]);
+  delete partial.current.metrics[metric].values['p(99)'];
+  const legacy = compareSummaries(partial).observations.find((entry) => entry.metric === metric);
+  assert.equal(legacy.statistics.filter(({ usable }) => usable).length, 1);
+  assert.deepEqual(compareSummaries(partial).degradations, []);
+  assert.throws(() => compareRequiredMetricTails(partial), /p\(99\)/u);
+});
+
+test('zero measured tails remain valid with positive floors but zero effective baselines refuse', () => {
+  const metric = 'storage_presign_duration_ms';
+  const input = strictInput([metric]);
+  for (const name of ['current', 'baseline'])
+    input[name].metrics[metric].values = { 'p(95)': 0, 'p(99)': 0 };
+  const report = compareRequiredMetricTails(input);
+  assert.deepEqual(report.degradations, []);
+  assert.equal(
+    report.observations[0].statistics.every(
+      ({ current, baseline, usable }) => current === 0 && baseline > 0 && usable,
+    ),
+    true,
+  );
+  for (const statistic of ['p(95)', 'p(99)']) {
+    const zero = structuredClone(input);
+    zero.reference.metrics[metric][statistic] = 0;
+    assert.throws(() => compareRequiredMetricTails(zero), /positive effective baseline/u);
+  }
+});
+
+test('strict comparison preserves both-tail AND math and the exclusive 10 percent and 1 ms boundaries', () => {
+  const metric = 'storage_presign_duration_ms';
+  for (const { previous, current, degraded } of [
+    { previous: 20, current: 22, degraded: false },
+    { previous: 20, current: 22.001, degraded: true },
+    { previous: 5, current: 6, degraded: false },
+    { previous: 5, current: 6.001, degraded: true },
+  ]) {
+    const input = strictInput([metric]);
+    input.baseline.metrics[metric].values = { 'p(95)': previous, 'p(99)': previous };
+    input.reference.metrics[metric] = { 'p(95)': previous, 'p(99)': previous };
+    input.current.metrics[metric].values = { 'p(95)': current, 'p(99)': current };
+    assert.equal(compareRequiredMetricTails(input).degradations.length, degraded ? 1 : 0);
+    for (const statistic of ['p(95)', 'p(99)']) {
+      const single = structuredClone(input);
+      single.current.metrics[metric].values[statistic] = previous;
+      assert.deepEqual(compareRequiredMetricTails(single).degradations, []);
+    }
+  }
+});
+
+test('strict comparison uses the larger actual previous tail or committed reference floor independently', () => {
+  const metric = 'storage_presign_duration_ms';
+  const input = strictInput([metric]);
+  input.baseline.metrics[metric].values = { 'p(95)': 30, 'p(99)': 5 };
+  input.reference.metrics[metric] = { 'p(95)': 20, 'p(99)': 40 };
+  input.current.metrics[metric].values = { 'p(95)': 35, 'p(99)': 50 };
+  const report = compareRequiredMetricTails(input);
+  assert.deepEqual(
+    report.observations[0].statistics.map(({ baseline }) => baseline),
+    [30, 40],
+  );
+  assert.deepEqual(
+    report.degradations.map(({ metric }) => metric),
+    [metric],
+  );
+  assert.equal(report.degradations[0].statistics.length, 2);
+});
+
+test('strict comparison cannot inherit permissive environment threshold overrides', () => {
+  const metric = 'storage_presign_duration_ms';
+  const input = strictInput([metric]);
+  input.current.metrics[metric].values = { 'p(95)': 100, 'p(99)': 200 };
+  const run = spawnSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      'import {compareRequiredMetricTails} from "./test/perf/k6/check-summary.mjs"; const input=JSON.parse(process.argv[1]); console.log(JSON.stringify(compareRequiredMetricTails(input)));',
+      JSON.stringify(input),
+    ],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        STYNX_K6_BASELINE_MAX_RELATIVE_INCREASE_PERCENT: '999999',
+        STYNX_K6_BASELINE_MIN_ABSOLUTE_INCREASE_MS: '999999',
+      },
+    },
+  );
+  assert.equal(run.status, 0, run.stderr);
+  const report = JSON.parse(run.stdout);
+  assert.deepEqual(
+    report.degradations.map(({ metric }) => metric),
+    [metric],
+  );
+  assert.deepEqual(Object.keys(report).sort(), ['degradations', 'observations']);
+});
+
+test('strict required populations reject method overrides that could hide a real degradation', () => {
+  const metric = 'storage_presign_duration_ms';
+  const valid = strictInput([metric]);
+  valid.current.metrics[metric].values = { 'p(95)': 100, 'p(99)': 200 };
+  assert.equal(compareRequiredMetricTails(valid).degradations.length, 1);
+  let methodCalls = 0;
+  for (const method of ['includes', 'map', 'filter']) {
+    const candidate = structuredClone(valid);
+    candidate.requiredMetrics[method] = () => {
+      methodCalls += 1;
+      return false;
+    };
+    assert.throws(() => compareRequiredMetricTails(candidate), /requiredMetrics/u);
+  }
+  assert.equal(methodCalls, 0);
+});
+
+test('stateful required-metric iterators cannot hide absent actual tails during admission', () => {
+  let iterations = 0;
+  const candidate = {
+    current: {},
+    baseline: {},
+    reference: {},
+    requiredMetrics: ['storage_presign_duration_ms'],
+  };
+  candidate.requiredMetrics[Symbol.iterator] = function* () {
+    iterations += 1;
+    if (iterations < 3) yield 'storage_presign_duration_ms';
+  };
+  assert.throws(() => compareRequiredMetricTails(candidate), /requiredMetrics/u);
+  assert.equal(iterations, 0);
+});
+
+test('required populations must be dense own data without proxies, getters or alternate prototypes', () => {
+  let trapCalls = 0;
+  const accessor = strictInput(['storage_presign_duration_ms']);
+  Object.defineProperty(accessor.requiredMetrics, '0', {
+    get() {
+      trapCalls += 1;
+      return 'storage_presign_duration_ms';
+    },
+  });
+  assert.throws(() => compareRequiredMetricTails(accessor), /requiredMetrics/u);
+  const proxied = strictInput();
+  proxied.requiredMetrics = new Proxy(proxied.requiredMetrics, {
+    get() {
+      trapCalls += 1;
+      throw new Error('must not execute');
+    },
+  });
+  assert.throws(() => compareRequiredMetricTails(proxied), /requiredMetrics/u);
+  for (const prototype of [null, {}, Object.create(Array.prototype)]) {
+    const candidate = strictInput();
+    Object.setPrototypeOf(candidate.requiredMetrics, prototype);
+    assert.throws(() => compareRequiredMetricTails(candidate), /requiredMetrics/u);
+  }
+  const sparse = strictInput();
+  delete sparse.requiredMetrics[1];
+  assert.throws(() => compareRequiredMetricTails(sparse), /requiredMetrics/u);
+  assert.equal(trapCalls, 0);
+  const frozen = strictInput();
+  Object.freeze(frozen.requiredMetrics);
+  assert.equal(compareRequiredMetricTails(frozen).observations.length, trackedMetrics.length);
+});
+
+test('strict options and observed tail paths reject accessors and proxies without executing them', () => {
+  let trapCalls = 0;
+  const metric = 'storage_presign_duration_ms';
+  const accessed = strictInput([metric]);
+  Object.defineProperty(accessed, 'current', {
+    get() {
+      trapCalls += 1;
+      throw new Error('must not execute');
+    },
+  });
+  assert.throws(() => compareRequiredMetricTails(accessed), /options/u);
+  const options = new Proxy(strictInput(), {
+    ownKeys() {
+      trapCalls += 1;
+      throw new Error('must not execute');
+    },
+  });
+  assert.throws(() => compareRequiredMetricTails(options), /options/u);
+  for (const name of ['current', 'baseline', 'reference']) {
+    const candidate = strictInput([metric]);
+    const target =
+      name === 'reference'
+        ? candidate[name].metrics[metric]
+        : candidate[name].metrics[metric].values;
+    Object.defineProperty(target, 'p(95)', {
+      get() {
+        trapCalls += 1;
+        throw new Error('must not execute');
+      },
+    });
+    assert.throws(() => compareRequiredMetricTails(candidate), /usable own data/u);
+    const proxied = strictInput([metric]);
+    proxied[name] = new Proxy(proxied[name], {
+      getOwnPropertyDescriptor() {
+        trapCalls += 1;
+        throw new Error('must not execute');
+      },
+    });
+    assert.throws(() => compareRequiredMetricTails(proxied), /usable own data/u);
+  }
+  assert.equal(trapCalls, 0);
+});
+
+test('all four comparison inputs must be own properties rather than inherited valid summaries', () => {
+  const values = strictInput(['storage_presign_duration_ms']);
+  const originals = Object.fromEntries(
+    Object.keys(values).map((key) => [key, Object.getOwnPropertyDescriptor(Object.prototype, key)]),
+  );
+  try {
+    for (const [key, value] of Object.entries(values))
+      Object.defineProperty(Object.prototype, key, { value, writable: true, configurable: true });
+    assert.throws(() => compareRequiredMetricTails({}), /own data.*options/u);
+    for (const missing of Object.keys(values)) {
+      const candidate = { ...values };
+      delete candidate[missing];
+      assert.throws(() => compareRequiredMetricTails(candidate), /own data.*options/u);
+    }
+  } finally {
+    for (const [key, descriptor] of Object.entries(originals)) {
+      if (descriptor) Object.defineProperty(Object.prototype, key, descriptor);
+      else delete Object.prototype[key];
+    }
+  }
+});
+
+test('missing own options never invoke an inherited getter while checking the closed envelope', () => {
+  const original = Object.getOwnPropertyDescriptor(Object.prototype, 'current');
+  let getterCalls = 0;
+  try {
+    Object.defineProperty(Object.prototype, 'current', {
+      configurable: true,
+      get() {
+        getterCalls += 1;
+        throw new Error('inherited getter must not execute');
+      },
+    });
+    const candidate = strictInput(['storage_presign_duration_ms']);
+    delete candidate.current;
+    assert.throws(() => compareRequiredMetricTails(candidate), /own data.*options/u);
+    assert.equal(getterCalls, 0);
+  } finally {
+    if (original) Object.defineProperty(Object.prototype, 'current', original);
+    else delete Object.prototype.current;
   }
 });
 

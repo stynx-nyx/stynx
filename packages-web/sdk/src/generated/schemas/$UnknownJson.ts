@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $UnknownJson = {
-    description: `Route-specific schema not yet promoted to a typed contract.`,
-    properties: {
-    },
+  description: `Route-specific schema not yet promoted to a typed contract.`,
+  properties: {},
 } as const;

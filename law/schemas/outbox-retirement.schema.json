@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stynx.dev/schemas/outbox-retirement.schema.json",
+  "title": "Outbox retirement receipt",
+  "description": "JSON projection of OutboxEventRetirement under ADR-OUTBOX-0004. The service returns Date for retiredAt; JSON serialization is an ISO instant. This receipt proves operator disposition, never provider delivery.",
+  "$ref": "#/$defs/receipt",
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["idempotencyKey", "reason"],
+      "properties": {
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "description": "Runtime and SQL additionally require 1–255 UTF-8 bytes. Tenant, actor and event are bound separately, never accepted as identity overrides here."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "\\S",
+          "description": "Nonblank exact operator reason, at most 2048 UTF-8 bytes at runtime and in SQL; character count alone is not the byte bound."
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "tenantId",
+        "eventId",
+        "idempotencyKey",
+        "actorId",
+        "reason",
+        "previousStatus",
+        "retiredAt"
+      ],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "tenantId": { "type": "string", "format": "uuid" },
+        "eventId": { "type": "string", "format": "uuid" },
+        "idempotencyKey": { "$ref": "#/$defs/input/properties/idempotencyKey" },
+        "actorId": { "type": "string", "format": "uuid" },
+        "reason": { "$ref": "#/$defs/input/properties/reason" },
+        "previousStatus": { "enum": ["PENDING", "ERROR", "SENT", "SENT_UNRESOLVED"] },
+        "retiredAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "conflictReason": {
+      "enum": ["active-lease", "already-acked", "operation-conflict", "already-retired"]
+    }
+  }
+}

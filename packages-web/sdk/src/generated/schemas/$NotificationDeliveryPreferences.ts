@@ -3,18 +3,18 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $NotificationDeliveryPreferences = {
-    properties: {
-        email: {
-            type: 'boolean',
-            isRequired: true,
-        },
-        inApp: {
-            type: 'boolean',
-            isRequired: true,
-        },
-        push: {
-            type: 'boolean',
-            isRequired: true,
-        },
+  properties: {
+    email: {
+      type: 'boolean',
+      isRequired: true,
     },
+    inApp: {
+      type: 'boolean',
+      isRequired: true,
+    },
+    push: {
+      type: 'boolean',
+      isRequired: true,
+    },
+  },
 } as const;

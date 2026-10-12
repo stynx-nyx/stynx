@@ -10,10 +10,13 @@ function moduleRef(providers: Map<unknown, unknown>): ModuleRef {
   } as unknown as ModuleRef;
 }
 
-function context(values: { active?: boolean; locale?: string; tenantId?: string } = {}) {
+function context(
+  values: { active?: boolean; locale?: string; tenantId?: string; actorId?: string } = {},
+) {
   return {
     locale: values.locale,
     tenantId: values.tenantId,
+    actorId: values.actorId,
     hasActiveContext: vi.fn(() => values.active ?? false),
   } as unknown as RequestContext;
 }
@@ -21,9 +24,16 @@ function context(values: { active?: boolean; locale?: string; tenantId?: string 
 describe('LocaleService', () => {
   it('returns the active request locale without patching context', async () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
-    const catalog = { supportedLocales: vi.fn(() => ['en-US', 'pt-BR']) } as unknown as CatalogService;
+    const catalog = {
+      supportedLocales: vi.fn(() => ['en-US', 'pt-BR']),
+    } as unknown as CatalogService;
     const service = new LocaleService(
-      moduleRef(new Map([[RequestContext, context({ active: true, locale: 'en-US' })], [RequestContextMutator, mutator]])),
+      moduleRef(
+        new Map([
+          [RequestContext, context({ active: true, locale: 'en-US' })],
+          [RequestContextMutator, mutator],
+        ]),
+      ),
       catalog,
     );
 
@@ -33,9 +43,16 @@ describe('LocaleService', () => {
 
   it('uses the first supported Accept-Language entry and patches context', async () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
-    const catalog = { supportedLocales: vi.fn(() => ['en-US', 'pt-BR']) } as unknown as CatalogService;
+    const catalog = {
+      supportedLocales: vi.fn(() => ['en-US', 'pt-BR']),
+    } as unknown as CatalogService;
     const service = new LocaleService(
-      moduleRef(new Map([[RequestContext, context({ active: false })], [RequestContextMutator, mutator]])),
+      moduleRef(
+        new Map([
+          [RequestContext, context({ active: false })],
+          [RequestContextMutator, mutator],
+        ]),
+      ),
       catalog,
     );
 
@@ -45,9 +62,16 @@ describe('LocaleService', () => {
 
   it('trims a supported non-fallback language from a weighted header', async () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
-    const catalog = { supportedLocales: vi.fn(() => ['pt-BR', 'en-US']) } as unknown as CatalogService;
+    const catalog = {
+      supportedLocales: vi.fn(() => ['pt-BR', 'en-US']),
+    } as unknown as CatalogService;
     const service = new LocaleService(
-      moduleRef(new Map([[RequestContext, context({ active: false })], [RequestContextMutator, mutator]])),
+      moduleRef(
+        new Map([
+          [RequestContext, context({ active: false })],
+          [RequestContextMutator, mutator],
+        ]),
+      ),
       catalog,
     );
 
@@ -57,9 +81,16 @@ describe('LocaleService', () => {
 
   it('does not treat a partial or untrimmed language token as supported', async () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
-    const catalog = { supportedLocales: vi.fn(() => ['pt-BR', 'en-US']) } as unknown as CatalogService;
+    const catalog = {
+      supportedLocales: vi.fn(() => ['pt-BR', 'en-US']),
+    } as unknown as CatalogService;
     const service = new LocaleService(
-      moduleRef(new Map([[RequestContext, context({ active: false })], [RequestContextMutator, mutator]])),
+      moduleRef(
+        new Map([
+          [RequestContext, context({ active: false })],
+          [RequestContextMutator, mutator],
+        ]),
+      ),
       catalog,
     );
 
@@ -74,15 +105,17 @@ describe('LocaleService', () => {
       primeTenantOverrides: vi.fn(async () => undefined),
     } as unknown as CatalogService;
     const database = {
-      withSystemContext: vi.fn(async (_label: string, callback: () => Promise<string>) => callback()),
-      tx: vi.fn(async (callback: (trx: unknown) => Promise<string>) =>
+      withSystemContext: vi.fn(async (_label: string, callback: () => Promise<string>) =>
+        callback(),
+      ),
+      txIndependent: vi.fn(async (callback: (trx: unknown) => Promise<string>) =>
         callback({ query: vi.fn(async () => ({ rows: [{ locale: 'en-US' }] })) }),
       ),
     };
     const service = new LocaleService(
       moduleRef(
         new Map([
-          [RequestContext, context({ active: true, tenantId: 'tenant-1' })],
+          [RequestContext, context({ active: true, tenantId: 'tenant-1', actorId: 'actor-1' })],
           [RequestContextMutator, mutator],
           [Database, database],
         ]),
@@ -93,9 +126,9 @@ describe('LocaleService', () => {
     await expect(service.resolve('fr-FR')).resolves.toBe('en-US');
     expect(catalog.primeTenantOverrides).toHaveBeenCalledWith('tenant-1');
     expect(mutator.patch).toHaveBeenCalledWith({ locale: 'en-US' });
-    expect(database.withSystemContext).toHaveBeenCalledWith('i18n tenant locale lookup', expect.any(Function));
-    expect(database.tx).toHaveBeenCalledWith(expect.any(Function), {
-      role: 'owner',
+    expect(database.withSystemContext).not.toHaveBeenCalled();
+    expect(database.txIndependent).toHaveBeenCalledWith(expect.any(Function), {
+      role: 'reader',
       readonly: true,
       replica: false,
     });
@@ -108,15 +141,17 @@ describe('LocaleService', () => {
       primeTenantOverrides: vi.fn(async () => undefined),
     } as unknown as CatalogService;
     const database = {
-      withSystemContext: vi.fn(async (_label: string, callback: () => Promise<string | undefined>) => callback()),
-      tx: vi.fn(async (callback: (trx: unknown) => Promise<string | undefined>) =>
+      withSystemContext: vi.fn(
+        async (_label: string, callback: () => Promise<string | undefined>) => callback(),
+      ),
+      txIndependent: vi.fn(async (callback: (trx: unknown) => Promise<string | undefined>) =>
         callback({ query: vi.fn(async () => ({ rows: [{ locale: null }] })) }),
       ),
     };
     const service = new LocaleService(
       moduleRef(
         new Map([
-          [RequestContext, context({ active: true, tenantId: 'tenant-1' })],
+          [RequestContext, context({ active: true, tenantId: 'tenant-1', actorId: 'actor-1' })],
           [RequestContextMutator, mutator],
           [Database, database],
         ]),
@@ -136,7 +171,12 @@ describe('LocaleService', () => {
       translate: vi.fn(() => 'Olá'),
     } as unknown as CatalogService;
     const service = new LocaleService(
-      moduleRef(new Map([[RequestContext, requestContext], [RequestContextMutator, mutator]])),
+      moduleRef(
+        new Map([
+          [RequestContext, requestContext],
+          [RequestContextMutator, mutator],
+        ]),
+      ),
       catalog,
     );
 
@@ -151,7 +191,14 @@ describe('LocaleService', () => {
       translate: vi.fn(() => 'Olá'),
     } as unknown as CatalogService;
     const service = new LocaleService(
-      moduleRef(new Map([[RequestContext, context({ active: true, locale: 'pt-BR', tenantId: 'tenant-1' })]])),
+      moduleRef(
+        new Map([
+          [
+            RequestContext,
+            context({ active: true, locale: 'pt-BR', tenantId: 'tenant-1', actorId: 'actor-1' }),
+          ],
+        ]),
+      ),
       catalog,
     );
 
@@ -166,7 +213,12 @@ describe('LocaleService', () => {
       translate: vi.fn(() => 'Hello'),
     } as unknown as CatalogService;
     const service = new LocaleService(
-      moduleRef(new Map([[RequestContext, context({ active: false })], [RequestContextMutator, mutator]])),
+      moduleRef(
+        new Map([
+          [RequestContext, context({ active: false })],
+          [RequestContextMutator, mutator],
+        ]),
+      ),
       catalog,
     );
 
@@ -182,7 +234,12 @@ describe('LocaleService', () => {
       supportedLocales: vi.fn(() => []),
     } as unknown as CatalogService;
     const service = new LocaleService(
-      moduleRef(new Map([[RequestContext, context({ active: false })], [RequestContextMutator, mutator]])),
+      moduleRef(
+        new Map([
+          [RequestContext, context({ active: false })],
+          [RequestContextMutator, mutator],
+        ]),
+      ),
       catalog,
     );
 

@@ -6,6 +6,7 @@ export default createVitestConfig({
   packageName: '@stynx-nyx/i18n',
   include: ['test/**/*.spec.ts', 'test/wiring/**/*.wiring-spec.ts'],
   alias: {
+    '@stynx-nyx/auth': resolve(__dirname, '../auth/src/index.ts'),
     '@stynx-nyx/core': resolve(__dirname, '../core/src/index.ts'),
     '@stynx-nyx/data': resolve(__dirname, '../data/src/index.ts'),
     '@stynx-nyx/i18n': resolve(__dirname, 'src/index.ts'),

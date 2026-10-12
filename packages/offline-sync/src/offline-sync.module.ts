@@ -17,14 +17,51 @@ import type { StynxOfflineSyncModuleOptions } from './types';
 export class StynxOfflineSyncModule {
   static forRoot(options: StynxOfflineSyncModuleOptions = {}): DynamicModule {
     const ctg9 = options.policyResolver != null;
-    if (!ctg9) for (const port of ['itemApplier','eventPort','agentResolver','legacyItemIdentityResolver','legacyIdempotencyStore','handoffPort','concurrencyDetector','conflictResolver'] as const) {
-      if (options[port] != null) throw new OfflineSyncConfigurationError(port);
-    }
-    if (ctg9 && options.itemApplier && !options.eventPort) throw new OfflineSyncConfigurationError('eventPort');
-    if (ctg9 && options.store && !['blockNumberingReservation','closeNumberingReservation','reconcileNumberingReservation','settleNumberingReservation','getNumberingConsumption','submitDurableSyncBatch','getSyncBatchReceipt','getSyncItemReceipt'].every(method => typeof (options.store as unknown as Record<string, unknown>)[method] === 'function')) throw new OfflineSyncConfigurationError('store');
+    if (
+      options.initialQueueStatus !== undefined &&
+      (!ctg9 || !['received', 'pending'].includes(options.initialQueueStatus))
+    )
+      throw new OfflineSyncConfigurationError('initialQueueStatus');
+    if (!ctg9)
+      for (const port of [
+        'itemApplier',
+        'eventPort',
+        'agentResolver',
+        'legacyItemIdentityResolver',
+        'legacyIdempotencyStore',
+        'handoffPort',
+        'concurrencyDetector',
+        'conflictResolver',
+        'payloadHashPort',
+        'preApplyDetector',
+      ] as const) {
+        if (options[port] != null) throw new OfflineSyncConfigurationError(port);
+      }
+    if (ctg9 && options.itemApplier && !options.eventPort)
+      throw new OfflineSyncConfigurationError('eventPort');
+    if (
+      ctg9 &&
+      options.store &&
+      ![
+        'blockNumberingReservation',
+        'closeNumberingReservation',
+        'reconcileNumberingReservation',
+        'settleNumberingReservation',
+        'getNumberingConsumption',
+        'submitDurableSyncBatch',
+        'getSyncBatchReceipt',
+        'getSyncItemReceipt',
+      ].every(
+        (method) =>
+          typeof (options.store as unknown as Record<string, unknown>)[method] === 'function',
+      )
+    )
+      throw new OfflineSyncConfigurationError('store');
     return {
       module: StynxOfflineSyncModule,
-      ...(options.mountControllers === false ? {} : { controllers: [ctg9 ? CTG9OfflineSyncController : OfflineSyncController] }),
+      ...(options.mountControllers === false
+        ? {}
+        : { controllers: [ctg9 ? CTG9OfflineSyncController : OfflineSyncController] }),
       providers: [
         { provide: STYNX_OFFLINE_SYNC_OPTIONS, useValue: options },
         ...(options.store

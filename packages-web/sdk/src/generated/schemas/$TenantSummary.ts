@@ -3,34 +3,34 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $TenantSummary = {
-    properties: {
-        createdAt: {
-            type: 'string',
-            isRequired: true,
-        },
-        id: {
-            type: 'string',
-            isRequired: true,
-        },
-        isActive: {
-            type: 'boolean',
-            isRequired: true,
-        },
-        name: {
-            type: 'string',
-            isRequired: true,
-        },
-        slug: {
-            type: 'string',
-            isRequired: true,
-        },
-        state: {
-            type: 'TenantState',
-            isRequired: true,
-        },
-        updatedAt: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    createdAt: {
+      type: 'string',
+      isRequired: true,
     },
+    id: {
+      type: 'string',
+      isRequired: true,
+    },
+    isActive: {
+      type: 'boolean',
+      isRequired: true,
+    },
+    name: {
+      type: 'string',
+      isRequired: true,
+    },
+    slug: {
+      type: 'string',
+      isRequired: true,
+    },
+    state: {
+      type: 'TenantState',
+      isRequired: true,
+    },
+    updatedAt: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

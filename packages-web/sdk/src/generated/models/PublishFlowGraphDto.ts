@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type PublishFlowGraphDto = {
-    expectedDraftVersion?: string;
-    notes?: string;
+  expectedDraftVersion?: string;
+  notes?: string;
 };
-

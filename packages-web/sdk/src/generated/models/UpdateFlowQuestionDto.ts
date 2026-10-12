@@ -6,15 +6,14 @@ import type { FlowJsonObject } from './FlowJsonObject';
 import type { FlowQuestionFieldType } from './FlowQuestionFieldType';
 import type { JsonValue } from './JsonValue';
 export type UpdateFlowQuestionDto = {
-    blocksSubmit?: boolean;
-    fieldType?: FlowQuestionFieldType;
-    key?: string;
-    label?: string;
-    meta?: FlowJsonObject;
-    options?: Array<JsonValue>;
-    required?: boolean;
-    sortOrder?: number;
-    validators?: FlowJsonObject;
-    visibleIf?: FlowJsonObject;
+  blocksSubmit?: boolean;
+  fieldType?: FlowQuestionFieldType;
+  key?: string;
+  label?: string;
+  meta?: FlowJsonObject;
+  options?: Array<JsonValue>;
+  required?: boolean;
+  sortOrder?: number;
+  validators?: FlowJsonObject;
+  visibleIf?: FlowJsonObject;
 };
-

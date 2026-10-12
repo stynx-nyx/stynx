@@ -2,17 +2,31 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UnknownJson } from './UnknownJson';
+import type { InvalidationGuarantee } from './InvalidationGuarantee';
+import type { RegistrationState } from './RegistrationState';
+import type { SessionControlCapabilities } from './SessionControlCapabilities';
 export type SessionView = {
-    client?: string;
-    current: boolean;
-    deviceLabel?: string;
-    guarantee: UnknownJson;
-    location?: {
-        country?: string;
-        region?: string;
-    };
-    sessionId: string;
-    userAgent?: string;
+  capabilities: SessionControlCapabilities;
+  client?: string;
+  createdAt: string;
+  current: boolean;
+  deviceLabel?: string;
+  expiresAt: string | null;
+  guarantee: {
+    effectiveBy: string | null;
+    kind: InvalidationGuarantee;
+    propagationBoundSeconds: number | null;
+  };
+  lastSeenAt: string | null;
+  location?: {
+    country?: string;
+    region?: string;
+  };
+  provider: string;
+  sessionId: string;
+  sid: string;
+  state: RegistrationState;
+  tenantId: string;
+  terminalAt: string | null;
+  userAgent?: string;
 };
-

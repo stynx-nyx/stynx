@@ -3,37 +3,46 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $SessionGuarantee = {
-    properties: {
-        accessTokenExpiresAt: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-            isRequired: true,
+  properties: {
+    accessTokenExpiresAt: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
         },
-        effectiveBy: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
-            isRequired: true,
+        {
+          type: 'null',
         },
-        kind: {
-            type: 'InvalidationGuarantee',
-            isRequired: true,
-        },
-        propagationBoundSeconds: {
-            type: 'any-of',
-            contains: [{
-                type: 'number',
-            }, {
-                type: 'null',
-            }],
-            isRequired: true,
-        },
+      ],
+      isRequired: true,
     },
+    effectiveBy: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
+        },
+        {
+          type: 'null',
+        },
+      ],
+      isRequired: true,
+    },
+    kind: {
+      type: 'InvalidationGuarantee',
+      isRequired: true,
+    },
+    propagationBoundSeconds: {
+      type: 'any-of',
+      contains: [
+        {
+          type: 'number',
+        },
+        {
+          type: 'null',
+        },
+      ],
+      isRequired: true,
+    },
+  },
 } as const;

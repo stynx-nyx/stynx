@@ -41,7 +41,7 @@ function trackedPaths() {
 }
 
 function isExecutableTest(path) {
-  return /\.(?:spec|test)\.[cm]?[jt]sx?$/u.test(path);
+  return /\.(?:spec|test|e2e|wiring-spec)\.[cm]?[jt]sx?$/u.test(path);
 }
 
 function assertionProjection(path) {

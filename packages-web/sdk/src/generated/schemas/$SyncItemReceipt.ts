@@ -3,26 +3,26 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $SyncItemReceipt = {
-    properties: {
-        context: {
-            type: 'dictionary',
-            contains: {
-                type: 'JsonValue',
-            },
-        },
-        errorCode: {
-            type: 'string',
-        },
-        queueItemId: {
-            type: 'string',
-            isRequired: true,
-        },
-        status: {
-            type: 'OfflineSyncQueueStatus',
-            isRequired: true,
-        },
-        stynx: {
-            type: 'OfflineSyncStynxContext',
-        },
+  properties: {
+    context: {
+      type: 'dictionary',
+      contains: {
+        type: 'JsonValue',
+      },
     },
+    errorCode: {
+      type: 'string',
+    },
+    queueItemId: {
+      type: 'string',
+      isRequired: true,
+    },
+    status: {
+      type: 'OfflineSyncQueueStatus',
+      isRequired: true,
+    },
+    stynx: {
+      type: 'OfflineSyncStynxContext',
+    },
+  },
 } as const;

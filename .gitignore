@@ -103,6 +103,8 @@ docs/dist/
 docs/site/build/
 docs/site/.docusaurus/
 docs/site/.generated/
+packages/*/.typedoc/
+packages-web/*/.typedoc/
 
 # Test artefacts
 .test-results/

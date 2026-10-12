@@ -50,6 +50,9 @@ export interface SignatureTrustProof {
   chainSha256: readonly string[];
   signedAt: Date;
   tsaAt: Date;
+  /** Present only for the verified minimal B-LTA shape. */
+  archiveAt?: Date;
+  lta?: true;
   certificateValidatedAt: Date;
   revocationSource: 'ocsp' | 'crl';
   verificationRef: string;

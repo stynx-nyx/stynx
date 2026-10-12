@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.0.0",
+  "policy_id": "stynx.release-scope.1.6.0",
+  "policy_version": "1.0.0",
+  "authority": "Architect",
+  "ownerMandate": "2026-10-11 bounded publication before midnight America/Sao_Paulo; no k6 or mutation execution; no full scorecard PASS pursuit",
+  "releaseUnit": "stynx-workspace",
+  "version": "1.6.0",
+  "packageRoster": {
+    "path": "law/policy/stynx-package-roster.json",
+    "sha256": "59a5b90609da32eed0c8341515b5610322de262f9b9eef25c2cd510998ff67e7",
+    "count": 44
+  },
+  "rc": {
+    "profile": "rc",
+    "requiredCheck": "verified-local-rc",
+    "binding": "exact-tree",
+    "requiredNodes": [
+      "engines",
+      "api:contracts",
+      "lint:families",
+      "typecheck",
+      "test:unit",
+      "test:integration",
+      "build",
+      "reference:apps",
+      "db:rls",
+      "test:e2e",
+      "docs",
+      "test:performance",
+      "security",
+      "doctor",
+      "release:prepare"
+    ]
+  },
+  "omitted": {
+    "httpPerformance": "NOT_OBSERVED",
+    "k6": "NOT_OBSERVED",
+    "mutation": "NOT_RUN"
+  },
+  "audit": {
+    "requiredOverallPass": false,
+    "readinessPromoting": false,
+    "preserveHistorical": true
+  },
+  "productionProviderApprovalClaimed": false,
+  "consumerAcceptanceRequiredForPublication": false
+}

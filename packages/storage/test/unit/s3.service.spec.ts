@@ -9,7 +9,7 @@ import {
   PutObjectRetentionCommand,
   type PutBucketLifecycleConfigurationCommandInput,
   type PutObjectRetentionCommandInput,
-  type S3Client,
+  S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { StorageValidationError } from '../../src/errors';
@@ -449,4 +449,123 @@ describe('S3Service', () => {
       expiresIn: 300,
     });
   });
+});
+
+describe('S3Service owned client shutdown', () => {
+  function service() {
+    return new S3Service({
+      environment: 'test',
+      region: 'us-east-1',
+      kmsAlias: 'docs',
+      collections: {},
+      compliance: { presignRateLimit: { maxPerMinute: 1 } },
+    });
+  }
+  function owned(value: S3Service) {
+    // Observe the service's actual SDK object; never replace the owned client.
+    const client = Reflect.get(value, 'client') as import('@aws-sdk/client-s3').S3Client;
+    expect(client).toBeInstanceOf(S3Client);
+    return client;
+  }
+
+  it('forwards successful shutdown once and leaves bucket metadata informational', () => {
+    const value = service();
+    const client = owned(value);
+    const destroy = vi.spyOn(client, 'destroy');
+    try {
+      value.onApplicationShutdown();
+      value.onApplicationShutdown();
+      expect(Reflect.get(value, 'client')).toBe(client);
+      expect(destroy).toHaveBeenCalledTimes(1);
+      expect(value.bucket()).toBe('stynx-docs-test-us-east-1');
+    } finally {
+      destroy.mockRestore();
+      value.onApplicationShutdown();
+    }
+  });
+
+  it('propagates destruction failure and retries the original client without closing active admission', async () => {
+    const value = service();
+    const client = owned(value);
+    const fault = new Error('SDK disposal fault witness');
+    const destroy = vi.spyOn(client, 'destroy').mockImplementationOnce(() => {
+      throw fault;
+    });
+    try {
+      expect(() => value.onApplicationShutdown()).toThrow(fault);
+      await expect(
+        value.presignDownloadForTenant({ key: 'tenant/k', tenantId: 'tenant' }),
+      ).resolves.toBe('https://signed.example.test/object');
+      value.onApplicationShutdown();
+      value.onApplicationShutdown();
+      expect(Reflect.get(value, 'client')).toBe(client);
+      expect(destroy).toHaveBeenCalledTimes(2);
+      await expect(
+        value.presignDownloadForTenant({ key: 'tenant/k', tenantId: 'tenant' }),
+      ).rejects.toThrow('Storage service has been destroyed');
+    } finally {
+      destroy.mockRestore();
+      value.onApplicationShutdown();
+    }
+  });
+
+  it('refuses all eight network/signing entrypoints after disposal before quota consumption or SDK calls', async () => {
+    const value = service();
+    const client = owned(value);
+    const send = vi.spyOn(client, 'send');
+    const counters = Reflect.get(value, 'presignCounts') as Map<string, unknown>;
+    const signedBefore = vi.mocked(getSignedUrl).mock.calls.length;
+    value.onApplicationShutdown();
+    try {
+      const attempts = [
+        () => value.presignUpload({ key: 'k', contentType: 'text/plain', checksumSha256: 'abc' }),
+        () => value.presignDownload({ key: 'k', filename: 'file.txt' }),
+        () => value.presignDownloadForTenant({ key: 'tenant/k', tenantId: 'tenant' }),
+        () => value.configureLifecycle([]),
+        () => value.applyObjectLock('k', 'v1', { mode: 'COMPLIANCE', retainDays: 1 }),
+        () => value.headObject('k'),
+        () => value.deleteObject('k'),
+        () => value.deleteAllVersions('k'),
+      ];
+      expect(attempts).toHaveLength(8);
+      for (const attempt of attempts)
+        await expect(attempt()).rejects.toThrow('Storage service has been destroyed');
+      expect(counters.size).toBe(0);
+      expect(send).not.toHaveBeenCalled();
+      expect(vi.mocked(getSignedUrl).mock.calls.length).toBe(signedBefore);
+    } finally {
+      send.mockRestore();
+    }
+  });
+
+  for (const listed of [
+    { Versions: [{ Key: 'k', VersionId: 'v1' }] },
+    { Versions: [], DeleteMarkers: [] },
+  ]) {
+    it(`does not send a ${listed.Versions.length ? 'versioned' : 'fallback'} delete after shutdown during the listing await`, async () => {
+      const value = service();
+      const client = owned(value);
+      let resolveListing!: (value: typeof listed) => void;
+      const listing = new Promise<typeof listed>((resolve) => {
+        resolveListing = resolve;
+      });
+      // SDK fault/scheduling boundary only. This does not claim a real S3
+      // listing or transport shutdown; those are independent provider tests.
+      const send = vi.spyOn(client, 'send').mockImplementationOnce(() => listing as never);
+      const pending = value.deleteAllVersions('k');
+      try {
+        expect(send).toHaveBeenCalledTimes(1);
+        expect(send.mock.calls[0]?.[0]).toBeInstanceOf(ListObjectVersionsCommand);
+        value.onApplicationShutdown();
+        resolveListing(listed);
+        await expect(pending).rejects.toThrow('Storage service has been destroyed');
+        expect(send).toHaveBeenCalledTimes(1);
+      } finally {
+        resolveListing(listed);
+        await pending.catch(() => undefined);
+        send.mockRestore();
+        value.onApplicationShutdown();
+      }
+    });
+  }
 });

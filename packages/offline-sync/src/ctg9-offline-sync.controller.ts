@@ -1,4 +1,17 @@
-import { BadRequestException, Body, Controller, Param, Post, Get, UseGuards, Headers, Req, Res, Optional } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Param,
+  Post,
+  Get,
+  UseGuards,
+  Headers,
+  Req,
+  Res,
+  Optional,
+  StreamableFile,
+} from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit } from '@stynx-nyx/backend';
@@ -7,7 +20,7 @@ import { OfflineSyncConfigurationError, OfflineSyncError } from './errors';
 import { OfflineSyncService } from './offline-sync.service';
 import type {
   CancelNumberingReservationInput,
-  ReserveNumberingInput,
+  CTG9ReserveNumberingInput,
   ResolveSyncConflictInput,
   SubmitSyncBatchInput,
   ReconcileNumberingInput,
@@ -28,16 +41,18 @@ const identityKeys = new Set([
 @Controller('offline-sync')
 @UseGuards(StynxAuthGuard, PermissionGuard)
 export class CTG9OfflineSyncController {
-  constructor(private readonly service: OfflineSyncService,
-    @Optional() private readonly requestContext?: RequestContext) {}
+  constructor(
+    private readonly service: OfflineSyncService,
+    @Optional() private readonly requestContext?: RequestContext,
+  ) {}
 
   @Post('numbering-reservations')
   @Permission('offline-sync:numbering:reserve')
   @Idempotent('Idempotency-Key')
   @Audit({ action: 'offline-sync.numbering-reserved', entity: 'offline.numbering_reservations' })
-  reserveNumbering(@Body() input: ReserveNumberingInput) {
+  reserveNumbering(@Body() input: CTG9ReserveNumberingInput) {
     this.rejectContextOverrides(input);
-    return this.service.reserveNumbering(input);
+    return this.service.reserveDurableNumbering(input);
   }
 
   @Post('numbering-reservations/:id/cancel')
@@ -46,7 +61,7 @@ export class CTG9OfflineSyncController {
   @Audit({ action: 'offline-sync.numbering-cancelled', entity: 'offline.numbering_reservations' })
   cancelNumbering(@Param('id') id: string, @Body() input: CancelNumberingReservationInput) {
     this.rejectContextOverrides(input);
-    return this.service.cancelNumberingReservation(id, input);
+    return this.service.cancelDurableNumberingReservation(id, input);
   }
 
   @Post('numbering-reservations/:id/block')
@@ -55,7 +70,7 @@ export class CTG9OfflineSyncController {
   @Audit({ action: 'offline-sync.numbering-blocked', entity: 'offline.numbering_reservations' })
   blockNumbering(@Param('id') id: string, @Body() input: CancelNumberingReservationInput) {
     this.rejectContextOverrides(input);
-    return this.service.blockNumberingReservation(id,input);
+    return this.service.blockNumberingReservation(id, input);
   }
 
   @Post('numbering-reservations/:id/close')
@@ -64,7 +79,7 @@ export class CTG9OfflineSyncController {
   @Audit({ action: 'offline-sync.numbering-closed', entity: 'offline.numbering_reservations' })
   closeNumbering(@Param('id') id: string, @Body() input: CancelNumberingReservationInput) {
     this.rejectContextOverrides(input);
-    return this.service.closeNumberingReservation(id,input);
+    return this.service.closeNumberingReservation(id, input);
   }
 
   @Post('numbering-reservations/:id/reconcile')
@@ -73,7 +88,7 @@ export class CTG9OfflineSyncController {
   @Audit({ action: 'offline-sync.numbering-reconciled', entity: 'offline.numbering_reservations' })
   reconcileNumbering(@Param('id') id: string, @Body() input: ReconcileNumberingInput) {
     this.rejectContextOverrides(input);
-    return this.service.reconcileNumberingReservation(id,input);
+    return this.service.reconcileNumberingReservation(id, input);
   }
 
   @Post('numbering-reservations/:id/settle')
@@ -82,45 +97,95 @@ export class CTG9OfflineSyncController {
   @Audit({ action: 'offline-sync.numbering-settled', entity: 'offline.numbering_reservations' })
   settleNumbering(@Param('id') id: string, @Body() input: SettleNumberingInput) {
     this.rejectContextOverrides(input);
-    return this.service.settleNumberingReservation(id,input);
+    return this.service.settleNumberingReservation(id, input);
   }
 
   @Get('numbering-reservations/:id/consumption')
   @Permission('offline-sync:numbering:read')
-  getConsumption(@Param('id') id: string) { return this.service.getNumberingConsumption(id); }
+  getConsumption(@Param('id') id: string) {
+    return this.service.getNumberingConsumption(id);
+  }
 
   @Get('sync-batches/:deviceId/:deviceBatchId/receipt')
   @Permission('offline-sync:batches:read')
-  getBatchReceipt(@Param('deviceId') deviceId: string, @Param('deviceBatchId') deviceBatchId: string) {
-    return this.service.getSyncBatchReceipt(deviceId,deviceBatchId);
+  getBatchReceipt(
+    @Param('deviceId') deviceId: string,
+    @Param('deviceBatchId') deviceBatchId: string,
+  ) {
+    return this.service.getSyncBatchReceipt(deviceId, deviceBatchId);
   }
 
   @Get('sync-items/:idempotencyKey/receipt')
   @Permission('offline-sync:items:read')
-  getItemReceipt(@Param('idempotencyKey') key: string) { return this.service.getSyncItemReceipt(key); }
+  getItemReceipt(@Param('idempotencyKey') key: string) {
+    return this.service.getSyncItemReceipt(key);
+  }
 
   @Post('sync-batches')
   @Permission('offline-sync:batches:submit')
   @NoIdempotent()
   @Audit({ action: 'offline-sync.batch-submitted', entity: 'offline.sync_queue_items' })
-  async submitBatch(@Body() input: SubmitSyncBatchInput, @Headers('idempotency-key') key: string | undefined, @Req() req: { body: unknown; originalUrl?: string; url?: string; principal?: {id?:string}; actor?: {id?:string}; user?: {id?:string} }, @Res({ passthrough: true }) response: { status(code: number): unknown; setHeader(name: string, value: string): unknown }) {
+  async submitBatch(
+    @Body() input: SubmitSyncBatchInput,
+    @Headers('idempotency-key') key: string | undefined,
+    @Req()
+    req: {
+      body: unknown;
+      originalUrl?: string;
+      url?: string;
+      principal?: { id?: string };
+      actor?: { id?: string };
+      user?: { id?: string };
+    },
+    @Res({ passthrough: true })
+    response: { status(code: number): unknown; setHeader(name: string, value: string): unknown },
+  ) {
     this.rejectContextOverrides(input);
-    if (!key?.trim()) throw new BadRequestException('Idempotency-Key header is required for idempotent routes');
+    if (!key?.trim())
+      throw new BadRequestException('Idempotency-Key header is required for idempotent routes');
     try {
       const path = (req.originalUrl ?? req.url ?? '/offline-sync/sync-batches').split('?')[0]!;
       const userId = req.principal?.id ?? req.actor?.id ?? req.user?.id;
-      const result = await this.service.submitSyncBatch(input, { transportIdempotencyKey: key, method: 'POST', path, transportUserId:userId ?? null, requestBody: req.body, response });
+      let archived: { bytes: Uint8Array; headers: Readonly<Record<string, string>> } | undefined;
+      const result = await this.service.submitSyncBatch(input, {
+        transportIdempotencyKey: key,
+        method: 'POST',
+        path,
+        transportUserId: userId ?? null,
+        requestBody: req.body,
+        replayArchivedBody: (bytes, headers) => {
+          archived = { bytes, headers };
+        },
+        response,
+      });
+      if (archived) {
+        const type =
+          Object.entries(archived.headers).find(
+            ([name]) => name.toLowerCase() === 'content-type',
+          )?.[1] ?? 'application/json';
+        return new StreamableFile(Buffer.from(archived.bytes), {
+          type,
+          length: archived.bytes.length,
+        });
+      }
       if (result.receipt?.status === 'open') {
-        response.setHeader('Retry-After','1');
-        throw new OfflineSyncError('OFFLINE_SYNC:BATCH:in-progress',503,'Batch is in progress.',true);
+        response.setHeader('Retry-After', '1');
+        throw new OfflineSyncError(
+          'OFFLINE_SYNC:BATCH:in-progress',
+          503,
+          'Batch is in progress.',
+          true,
+        );
       }
       return result;
     } catch (error) {
       if (error instanceof OfflineSyncError && error.code === 'OFFLINE_SYNC:BATCH:in-progress') {
         response.setHeader('Retry-After', '1');
-        const requestId = this.requestContext?.hasActiveContext() ? this.requestContext.requestId : undefined;
+        const requestId = this.requestContext?.hasActiveContext()
+          ? this.requestContext.requestId
+          : undefined;
         if (!requestId) throw new OfflineSyncConfigurationError('RequestContext');
-        throw new OfflineSyncError(error.code,503,error.message,true,requestId);
+        throw new OfflineSyncError(error.code, 503, error.message, true, requestId);
       }
       throw error;
     }

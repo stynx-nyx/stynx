@@ -20,7 +20,19 @@ before evaluating the token. An absent or invalid bearer cannot retain a
 principal, actor, user, tenant, session, claim, or entitlement callback left by
 upstream middleware.
 
-`@stynx-nyx/contracts` exports a runtime `InvalidCredentialError` for a definitive credential rejection. Both built-in verification paths (`StynxJwtValidator` and `CognitoTokenVerifier`) and custom `TokenVerifier` implementations use that type only for malformed tokens, bad signatures, expired or not-yet-valid tokens, and failed issuer, audience, or token-use checks. An absent or malformed bearer header can be classified locally before verification. The optional-auth guard catches only `InvalidCredentialError` and then proceeds with the nominal actor; it never treats an arbitrary `Error`, a non-null result missing its principal, or an unknown JOSE error as invalid credentials. For compatibility with existing `TokenVerifier` adapters, an explicit `null` result is a definitive credential-rejection signal on the optional route; `undefined` or a malformed non-null result fails closed. JWKS fetch/refresh, key-source configuration, and other verifier failures propagate and fail the request. A verifier must preserve that distinction when wrapping third-party errors; an ambiguous failure propagates. Protected routes retain their existing denial behavior. A verified token whose session lookup definitively returns no active session may use the nominal actor on this optional route; a thrown session lookup error propagates.
+`@stynx-nyx/contracts` exports a runtime `InvalidCredentialError` for a definitive credential rejection. Both built-in verification paths (`StynxJwtValidator` and `CognitoTokenVerifier`) and custom `TokenVerifier` implementations use that type only for malformed tokens, bad signatures, expired or not-yet-valid tokens, and failed issuer, audience, or token-use checks. An absent or malformed bearer header can be classified locally before verification. The optional-auth guard catches only `InvalidCredentialError` and then proceeds with the nominal actor; it never treats an arbitrary `Error`, a non-null result missing its principal, or an unknown JOSE error as invalid credentials. For compatibility with existing `TokenVerifier` adapters, an explicit `null` result is a definitive credential-rejection signal on the optional route; `undefined` or a malformed non-null result fails closed. JWKS fetch/refresh, key-source configuration, and other verifier failures propagate and fail the request. A verifier must preserve that distinction when wrapping third-party errors; an ambiguous failure propagates. Protected routes retain their existing denial behavior. A verified token whose session lookup definitively returns no active session may use the nominal actor on this optional route; a thrown session lookup error propagates. The built-in session admission uses the additive `SessionService.getActive(sid)` contract below, not legacy `get` or a broad error catch.
+
+For the 1.6.0 audit integration, both optional and protected `StynxAuthGuard`
+paths call `SessionService.getActive(sid): Promise<SessionRecord | null>` when
+session checking applies. That method performs one store lookup and returns
+null only for definitive absence or a valid known inactive/expired record,
+under the [session admission contract](authorization-session-1.5.md#active-session-admission-in-160).
+It never falls back to `get`. Optional null leaves all verified identity and
+provenance absent and proceeds with the nominal actor; protected null raises the
+existing 401 `STYNX session is no longer active`. Store, clock, malformed-record
+and expiry-cleanup failures propagate, even when their error class resembles a
+credential error. A lookup failure is not a revocation signal. Preserve legacy
+`get`'s revoked-session `InvalidRefreshTokenError` behavior and its existing tests.
 
 For `StynxJwtValidator`, a JWKS response from `SessionJwtSigningService.getJwks()` or `jwksUri` with missing `keys`, a non-array `keys`, an empty array, or no usable verification key is a key-source/configuration failure. It must throw a non-`InvalidCredentialError` and must never turn a valid optional bearer into the nominal actor. This follows the existing `resolveKeys`/`verify` architecture: validate the fetched/cached key set before mapping over keys; a zero-key map cannot establish a bad signature. A token malformed independently of the key source may still be an invalid credential.
 
@@ -47,6 +59,21 @@ For an anonymous public request, tenancy sets `request.tenantId` and patches `Re
 ### UPS-TEN-05 — protected compatibility and negative cases
 
 Existing protected routes keep `isOptionalTenancyPath`, configurable `headerName`, `allowSubdomain`, membership cache, UUIDv7 tenant validation, and current messages. Header/claim disagreement, actor absent, and missing or inactive membership continue to fail closed with 403 `TENANT_ACCESS_DENIED`. A tenant UUID that is not v7 remains 400. A principal with membership only in A cannot select B. Public requests under A cannot read B's rows under real PostgreSQL RLS. Request context and audited writes must work for nominal UUID actors under A's RLS.
+
+For 1.6.0, active-tenant and membership SQL during normal HTTP admission use the
+restricted reader role, readonly primary routing and `Database.txIndependent` in
+a private temporary candidate-tenant/actor RequestContext frame. Do not create
+SystemContext, borrow owner or an ambient transaction, or emit the resolved-
+command proof before admission succeeds. The frame restores the prior context
+and is not a protected/verified proof. Public active-tenant lookup always uses
+the configured `publicTenant.actorId`; optional verified membership uses the
+verified actor. Preserve selection, source-conflict errors, membership predicates
+and cache policy, public nominal-actor behavior and the existing legacy plain-
+public/unverified fallback boundary. This role correction does not promote
+fallback fields into verified provenance. Independently prove actual reader
+`current_user`, tenant/actor GUCs, no request-time owner query, both tenants, and
+held-connection refusal even after derived/reset CLS context. Existing explicit
+internal tenant-admin owner operations remain unchanged.
 
 The exact runtime errors under the current `StynxErrorFilter` are:
 

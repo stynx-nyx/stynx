@@ -3,14 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export type PrivacyExportResult = {
-    downloadUrl: string;
-    expiresInSeconds: number;
-    exportId: string;
-    objectKey: string;
-    tables: Array<{
-        archiveRows: number;
-        liveRows: number;
-        table: string;
-    }>;
+  downloadUrl: string;
+  expiresInSeconds: number;
+  exportId: string;
+  objectKey: string;
+  tables: Array<{
+    archiveRows: number;
+    liveRows: number;
+    table: string;
+  }>;
 };
-

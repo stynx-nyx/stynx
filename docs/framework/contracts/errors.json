@@ -494,6 +494,110 @@
       "description": "Actor (user) exceeded its per-window quota."
     },
     {
+      "errorCode": "OUTBOX_RETIREMENT_INVALID",
+      "statusCode": 400,
+      "retriable": false,
+      "exception": "@stynx-nyx/outbox OutboxRetirementInputError",
+      "runtimeBody": {
+        "code": "OUTBOX_RETIREMENT_INVALID",
+        "message": "Outbox retirement requires a valid event, operation key and reason"
+      },
+      "description": "ADR-OUTBOX-0004: malformed event identity, operation key or nonblank bounded reason; no mutation. Retains the historical StynxErrorFilter code/message body, not the CTG5 law envelope."
+    },
+    {
+      "errorCode": "OUTBOX_RETIREMENT_CONFLICT",
+      "statusCode": 409,
+      "retriable": false,
+      "exception": "@stynx-nyx/outbox OutboxRetirementConflictError",
+      "runtimeBody": {
+        "code": "OUTBOX_RETIREMENT_CONFLICT",
+        "message": "Outbox retirement conflicts with the existing delivery or operation",
+        "context": {
+          "reason": "<active-lease | already-acked | operation-conflict | already-retired>"
+        }
+      },
+      "description": "ADR-OUTBOX-0004: active lease, acknowledged delivery or conflicting operation; projection and history unchanged. The typed reason is available on the exception. Same-operation replay returns the original receipt."
+    },
+    {
+      "errorCode": "OUTBOX_CONSUMER_STORAGE_CUTOVER_UNSUPPORTED",
+      "statusCode": 409,
+      "retriable": false,
+      "exception": "@stynx-nyx/outbox OutboxConsumerStorageCutoverUnsupportedError",
+      "runtimeBody": {
+        "code": "OUTBOX_CONSUMER_STORAGE_CUTOVER_UNSUPPORTED",
+        "message": "Legacy cutover requires the platform audit-chain contract",
+        "context": {
+          "reason": "<consumer-owned-storage | audit-chain-unavailable>"
+        }
+      },
+      "description": "ADR-OUTBOX-0004 D4: explicit consumer mode refuses before SQL; platform mode checks audit.fn_row_change safely before marker/domain mutation. Missing dependency is typed, never an unchecked regprocedure cast error."
+    },
+    {
+      "errorCode": "OFFLINE_SYNC_RANGE_IDEMPOTENCY_CONFLICT",
+      "statusCode": 409,
+      "retriable": false,
+      "exception": "@stynx-nyx/offline-sync OfflineSyncError",
+      "runtimeBody": {
+        "statusCode": 409,
+        "errorCode": "OFFLINE_SYNC_RANGE_IDEMPOTENCY_CONFLICT",
+        "message": "Range creation key was already used with a different request.",
+        "retryable": false
+      },
+      "description": "A tenant-scoped range creation key cannot bind changed fields or attributes. Equal replay returns the immutable original creation snapshot; the current range is read separately. Refusal creates no range or history."
+    },
+    {
+      "errorCode": "OFFLINE_SYNC_RANGE_CONFLICT",
+      "statusCode": 409,
+      "retriable": false,
+      "exception": "@stynx-nyx/offline-sync OfflineSyncError",
+      "runtimeBody": {
+        "statusCode": 409,
+        "errorCode": "OFFLINE_SYNC_RANGE_CONFLICT",
+        "message": "A numbering range already exists for this organizational unit, entity and series.",
+        "retryable": false
+      },
+      "description": "A distinct range creation violates existing tenant/org-unit/entity-type/series uniqueness. Exact keyed replay takes precedence and does not attempt another insert."
+    },
+    {
+      "errorCode": "OFFLINE_SYNC_RANGE_STATE",
+      "statusCode": 409,
+      "retriable": false,
+      "exception": "@stynx-nyx/offline-sync OfflineSyncError",
+      "runtimeBody": {
+        "statusCode": 409,
+        "errorCode": "OFFLINE_SYNC_RANGE_STATE",
+        "message": "Only an active numbering range can be cancelled.",
+        "retryable": false
+      },
+      "description": "An exhausted range cannot be cancelled through the admin seam. Repeated cancellation returns first stored cancellation facts and writes no second history. No counter, reservation or consumption is reversed."
+    },
+    {
+      "errorCode": "OFFLINE_SYNC_ACTIVE_RESERVATION",
+      "statusCode": 409,
+      "retriable": false,
+      "exception": "@stynx-nyx/offline-sync OfflineSyncError",
+      "runtimeBody": {
+        "statusCode": 409,
+        "errorCode": "OFFLINE_SYNC_ACTIVE_RESERVATION",
+        "message": "An active numbering reservation already exists for this device and shift.",
+        "retryable": false
+      },
+      "description": "ADR-MOBILE-OFFLINE-0004 D4: a distinct active reservation conflicts within trusted tenant/device/normalized-shift scope. CTG9 checks all origins; E6 checks active CTG9 rows. Exact keyed replay is answered first. Refusal leaves allocation counters and rows unchanged; existing reservations require lifecycle action or actual expiry."
+    },
+    {
+      "errorCode": "OFFLINE_SYNC_INTEGRITY_REJECTION_NOT_FOUND",
+      "statusCode": 404,
+      "retriable": false,
+      "exception": "@stynx-nyx/offline-sync OfflineSyncError",
+      "runtimeBody": {
+        "statusCode": 404,
+        "errorCode": "OFFLINE_SYNC_INTEGRITY_REJECTION_NOT_FOUND",
+        "message": "Integrity rejection was not found.",
+        "retryable": false
+      },
+      "description": "The trusted tenant has no integrity rejection at the deviceId/deviceBatchId/queueItemId attempt address. Other-tenant attempts remain indistinguishable from absent ones. The read performs no effects and invents no canonical queue identity or hash. Retains the OfflineSyncError body; no new HTTP route is implied."
+    },
+    {
       "errorCode": "INTERNAL:UNEXPECTED:*",
       "statusCode": 500,
       "retriable": false,
@@ -504,6 +608,32 @@
       "statusCode": 504,
       "retriable": true,
       "description": "Downstream dependency (DB, S3, Cognito) did not respond within the configured timeout. Caller may retry."
+    }
+  ],
+  "database_errors": [
+    {
+      "sqlstate": "STY43",
+      "message": "outbox_retirement_immutable",
+      "object": "outbox.reject_retirement_mutation",
+      "description": "BEFORE UPDATE OR DELETE rejects retirement-history mutation. This database integrity refusal is not a successful retirement and is not remapped into an invented HTTP delivery result."
+    },
+    {
+      "sqlstate": "STY44",
+      "message": "An active numbering reservation already exists for this device and shift.",
+      "object": "offline.guard_active_numbering_reservation",
+      "description": "Forward 0006 mixed-origin active-scope collision. The durable runtime maps this to OFFLINE_SYNC_ACTIVE_RESERVATION (409); failed allocation is rolled back."
+    },
+    {
+      "sqlstate": "STY45",
+      "message": "Active numbering reservation collisions require lifecycle resolution before upgrade.",
+      "object": "offline migration 0006 upgrade collision scan",
+      "description": "Owner/full-visibility atomic upgrade refuses existing active duplicate scopes and reports their identities. Resolve through authorized lifecycle operations; no silent cancellation, deletion or renumbering and no invented HTTP outcome."
+    },
+    {
+      "sqlstate": "STY46",
+      "message": "Numbering reservation scope and origin are immutable.",
+      "object": "offline.guard_active_numbering_reservation",
+      "description": "UPDATE cannot change reservation tenant, device, shift or origin. Integrity refusal preserves the stored identity; it is not mapped to an invented successful application result."
     }
   ],
   "extension_pattern": "Adopter modules add per-module errors.json files (e.g. `domain/demo-bookmark/api/docs/errors.json`) that enumerate domain-specific errorCodes following the `<DOMAIN>:<CATEGORY>:<DETAIL>` shape. These extend (do not replace) the baseline above.",

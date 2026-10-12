@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type NotificationDeliveryPreferences = {
-    email: boolean;
-    inApp: boolean;
-    push: boolean;
+  email: boolean;
+  inApp: boolean;
+  push: boolean;
 };
-

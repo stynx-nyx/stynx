@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync }
 import { dirname, join, relative } from 'node:path';
 
 const appRoot = process.cwd();
-const workspaceRoots = ['packages', 'packages-web'];
+const workspaceRoots = ['packages', 'packages-web', 'domain/demo-bookmark'];
 const workspacePackages = new Map();
 
 for (const workspaceRoot of workspaceRoots) {
@@ -25,6 +25,7 @@ for (const workspaceRoot of workspaceRoots) {
 
 const nodeModulesPaths = [
   join(appRoot, 'node_modules'),
+  join(appRoot, 'reference/api/node_modules'),
   ...Array.from(workspacePackages.values(), (packageRoot) => join(packageRoot, 'node_modules')),
 ];
 

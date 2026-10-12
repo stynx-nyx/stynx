@@ -3,12 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $CompleteDocumentDto = {
-    properties: {
-        checksumSha256: {
-            type: 'string',
-        },
-        contentType: {
-            type: 'string',
-        },
+  properties: {
+    checksumSha256: {
+      type: 'string',
     },
+    contentType: {
+      type: 'string',
+    },
+  },
 } as const;

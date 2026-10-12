@@ -77,3 +77,14 @@ Every dependency PR must show:
 - whether it is runtime, dev-only, peer, or optional;
 - audit result after installation;
 - affected public package API or generated SDK impact.
+
+## Maintained tooling security forks
+
+[ADR-SECURITY-FORK-0001](../../../law/adr/2026-10-10-maintained-braces-security-fork.md)
+records the real local braces/cache remediation, provenance, fixed structural limits
+and independent acceptance/maintenance requirements. Fork identities and exact
+overrides must resolve to demonstrated patched bytes. An advisory-range change
+or clean audit does not by itself demonstrate behavior; retain unchanged audits,
+installed compatibility/adversarial tests and independent source review. The
+http-cache-semantics fork must repair independently reproduced unsafe reuse,
+with disputed advisory metadata distinguished from actual behavior. Existing release/security gates remain in force.

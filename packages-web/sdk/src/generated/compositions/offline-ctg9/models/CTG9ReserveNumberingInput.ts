@@ -1,0 +1,15 @@
+/* generated using openapi-typescript-codegen -- do not edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+export type CTG9ReserveNumberingInput = {
+  deviceId: string;
+  entityType: string;
+  idempotencyKey?: string;
+  orgUnitId: string;
+  rangeId?: string;
+  requestedSize: number;
+  series?: string;
+  shiftId: string | null;
+  validUntil?: string;
+};

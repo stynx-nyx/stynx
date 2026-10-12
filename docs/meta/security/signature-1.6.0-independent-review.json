@@ -1,0 +1,342 @@
+{
+  "schemaVersion": "1.0.0",
+  "kind": "stynx-signature-independent-security-review-public-projection",
+  "role": "Auditor",
+  "projectionCreatedAt": "2026-10-12T00:24:55.497181+00:00",
+  "authority": "ADR-SIGNATURE-0002 D1.9; prospective exact-release publication boundary ADR-RELEASE-0001",
+  "scope": "ADR-SIGNATURE-0002 D1.9 independent security review of the accepted minimal one-DSS plus one-DocTimeStamp framework implementation",
+  "publicationSecurityVerdict": "PASS",
+  "verdictMeaning": "Independent security approval for publication of exactly the reviewed minimal-LTA framework bytes. This is not campaign certification, a current scorecard observation, release execution, general PAdES-LTA support, or production provider approval. Normal exact-candidate release gates remain required.",
+  "independence": {
+    "implementation_authored": false,
+    "tests_or_fixtures_authored": false,
+    "law_or_specs_authored": false,
+    "private_keys_read": false,
+    "repository_mutations": false,
+    "verification": "Read-only source and public fixture review; disposable external OpenSSL/DER checks and external JSON reports only."
+  },
+  "originalReview": {
+    "receiptId": "stynx-160-auditor-signature-final-security-review.json",
+    "sha256": "e983596d7abc1aad48259776ef9fbc7d69b2fb8cf83acdbe2fd16ceb59b57a29",
+    "createdAt": "2026-10-10T18:26:58.791865+00:00",
+    "reviewedCommit": "88de8f21ea96a9c9524473666d3d8841ae670f1f",
+    "reviewedTree": "4bba58be61091494246cfbc5d5a4576ba6bea957",
+    "sourceCommits": [
+      "845c5b7824b8ec50746a955f515205e32cdfd6c2",
+      "6192e0672e769f844248aa423ab1f042395f6a1f"
+    ],
+    "inspectorCheckpoint": "44e17b636efb977330201ff1eeb6ba0e3aee17b7",
+    "inspectorSupplementCheckpoint": "88de8f21ea96a9c9524473666d3d8841ae670f1f",
+    "architectApiCheckpoint": "29187063d4e3b9d8f45e4d641ebdbf641f44d9c7"
+  },
+  "tonightCustodyRecheck": {
+    "receiptId": "stynx-160-auditor-tonight-release-20261011.json",
+    "sha256": "bcc448fadc792c53db7b02f841bfed7ef5c3a874a91007a4404d93e191fab4b9",
+    "createdAt": "2026-10-12T00:23:24.811859+00:00",
+    "observedCommit": "cc67a7da7aaf479b774c02e5afd714263f42d530",
+    "observedTree": "5c603953cd271e4432ec9b712baab2790dfc7870",
+    "exactReviewedSourceAndEntireSignatureTreeUnchanged": true,
+    "allSupportingOriginalReceiptHashesMatch": true,
+    "newProductTestRun": false,
+    "overallReleaseReadinessClaimed": false
+  },
+  "byteIdentities": {
+    "sourceSha256": {
+      "packages/signature/src/cms-trust-verifier.ts": "7dedba60c07ee390d47ed93a3dbfb476de57d8f42515a8bfdbb647bf5b68a14e",
+      "packages/signature/src/pdf-trust-evidence.ts": "ee86333dd1bca159b9d7b90a8825aec67fb04cc599806424b8614515ef53311b",
+      "packages/signature/src/types.ts": "f4854a4c5f52ff468421af6a804290087f861a7edc6f8936b184cb0f0a563277"
+    },
+    "authority": {
+      "path": "law/adr/ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md",
+      "sha256": "ab8cdc1b8e5de20bedee810f8601dc2824fefee4c1cbb443825faa06650c91ae"
+    },
+    "reviewedPublicFixtureAndTestPathCount": 140,
+    "reviewedPublicFixtureAndTestSha256": {
+      "packages/signature/test/fixtures/lta-inspector/archive-tsa-root.cert.pem": "d0d0d15423b5a5958fd72eae944000a37c0eaf93ea685741edb62b2faef06b8d",
+      "packages/signature/test/fixtures/lta-inspector/boundary-crl-nextUpdate-one-ms.der": "b979f381dd4d1e779631c973639e9844a6705c035d137903adacfc3a80631122",
+      "packages/signature/test/fixtures/lta-inspector/boundary-crl-nextUpdate-one-ms.pdf": "dc7a31b6aef6c359b6578cdff8bcbd71733f521acd7b18443a1593978c547214",
+      "packages/signature/test/fixtures/lta-inspector/boundary-crl-thisUpdate-one-ms.der": "cc46c67980b826d3c24ad1096c5ce20d7dcae42b5483a1043fe102ccf096799e",
+      "packages/signature/test/fixtures/lta-inspector/boundary-crl-thisUpdate-one-ms.pdf": "0723cfabd5682e0f4b92d86e8c217b4c8ac4520c668506a33252989ef49f65df",
+      "packages/signature/test/fixtures/lta-inspector/boundary-ocsp-nextUpdate-one-ms.der": "5d160c563aed2779f0148c9e72b62294e7f1c9f90bbd495e2e9d48b504d99f73",
+      "packages/signature/test/fixtures/lta-inspector/boundary-ocsp-nextUpdate-one-ms.pdf": "721a76fc2c7a16e754b970cd4439e79e9b85447001d7848aafcb9b36bb1593cc",
+      "packages/signature/test/fixtures/lta-inspector/boundary-ocsp-producedAt-one-ms.der": "defb4776c6f71e18b10d27f92a520a10e938ca3dcbb1926b44e9b567b2e12f3e",
+      "packages/signature/test/fixtures/lta-inspector/boundary-ocsp-producedAt-one-ms.pdf": "2430454754f8a56c4d4164133696faf443609e84d3589177a3807a4ed7232201",
+      "packages/signature/test/fixtures/lta-inspector/boundary-ocsp-thisUpdate-one-ms.der": "d4a7d4721445acbe6264530717991179ea47f59f21e5a27d8c73a9bb2ef17d83",
+      "packages/signature/test/fixtures/lta-inspector/boundary-ocsp-thisUpdate-one-ms.pdf": "11d4a81e2d82573a96fcd3bb9514c256f265de38784ed019b566ae4a690324e4",
+      "packages/signature/test/fixtures/lta-inspector/certificate-duplicate-eku.pdf": "02afc52655c99029804af0b844f0da87ae94cfa0d1df8f329ba828471208afd7",
+      "packages/signature/test/fixtures/lta-inspector/certificate-duplicate-key-usage.pdf": "eb50314177981d87f12c4121dcae1df37640b4deac6973fd2b86f4a8361a655e",
+      "packages/signature/test/fixtures/lta-inspector/certificate-expired-at-verification.pdf": "c7db5a6a95a1db2afe758ce903a5f2f99c5234e2daebcf12c3785b41e555a251",
+      "packages/signature/test/fixtures/lta-inspector/certificate-malformed-key-usage.pdf": "757fd83f2ea89bb6b28c0d4ded43a3f49ff3740697f715919d088aff076ccb62",
+      "packages/signature/test/fixtures/lta-inspector/certificate-multiple-eku.pdf": "e6b51930ba6284b673ebbfa8b9f0cbb1f05edeea3e0c268aa95802ab905d7adf",
+      "packages/signature/test/fixtures/lta-inspector/certificate-no-digital-signature.pdf": "e212a149893b30755d43a73e9c1fe18599daa083c04b6cafa9d102290d67d67c",
+      "packages/signature/test/fixtures/lta-inspector/certificate-noncritical-eku.pdf": "c0fe3fc59f30415bf8e2e1788194f55d97b44f0ae9a632bdf47cf49cf595ed32",
+      "packages/signature/test/fixtures/lta-inspector/current-archive-plus-day.crl.der": "76dd9af4aea357e9a9320c3e10518efb6de9b5700c0e0e17fb0598f7e5b70b70",
+      "packages/signature/test/fixtures/lta-inspector/current-archive-plus-two-days.crl.der": "9f32c017981d8ff076c6b1eff3b676208b78e1e3ab949bbea4eb363b55280cbc",
+      "packages/signature/test/fixtures/lta-inspector/current-archive-revoked.crl.der": "d26cb6aec3f38948018745bfef97b6c1fd80fe5041bbeeae14505002b41fdda4",
+      "packages/signature/test/fixtures/lta-inspector/historical-crl-equality.pdf": "a544909810bb728c71350a2ce6c97f33368c43a1c7f0fbb4a07461d1e4015dc9",
+      "packages/signature/test/fixtures/lta-inspector/historical-crl-expired.pdf": "4cfc1ec4b3416c61b414b987512f1b638eb6ae40c67c54420f2d9682d225ee3a",
+      "packages/signature/test/fixtures/lta-inspector/historical-crl-good-then-late.pdf": "9b80f86db537394873dfdb1fbf4e6f6773473baaa399b1ede3f9a8e00225e752",
+      "packages/signature/test/fixtures/lta-inspector/historical-crl-late-then-good.pdf": "26a7260df5b85f117bed254306c2b358ea5dead991fcb09e24e05dccb214b99c",
+      "packages/signature/test/fixtures/lta-inspector/historical-crl-late.pdf": "a0fd0becbf84a4458a3810bdf8a3bbda4fe2039142334f4542d36d802220b6dd",
+      "packages/signature/test/fixtures/lta-inspector/historical-crl-no-next-update.pdf": "ae8c61a3e6813474ab17e0dea8d4b20060aa4204f5a5756f6c69cd7fc98cc13b",
+      "packages/signature/test/fixtures/lta-inspector/historical-global-only-late-crl.pdf": "856ab4ee8c5e214a576d4cc00bf198cf66bb16d3d0570e927467b8cef5db75e1",
+      "packages/signature/test/fixtures/lta-inspector/historical-global-only-late-ocsp.pdf": "34a22bb7d19fd5d34583265bbd68f2eb97f74089a3f6800a466dc5026d795468",
+      "packages/signature/test/fixtures/lta-inspector/historical-global-only-revoked-crl.pdf": "c337d2692ef1a4a087e0c93951619a25cbb942f02d4e4d65f13bc0031013e123",
+      "packages/signature/test/fixtures/lta-inspector/historical-missing-signer-status.pdf": "d1d673d805cacf25bbc3b9a925bee84eceec81a27092148dce02f2e32a37276a",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-delegated-good.pdf": "801e76c16583bc2895be26759cb14ea9a4e544fb77ab9107188c66911bd74993",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-delegated-malformed.pdf": "5426325bc8b260bf155fbaf79216a8e700997c17a54c3319e070967c6445eab2",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-delegated-no-digital-signature.pdf": "f29be2ad889160987d56accb10efe7b4e0aae47a5ffb5b91c77ebcf20cafbd1f",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-duplicate-contradictory.pdf": "f535c6c60455c2445af69b0d4e98640b3f45e1a03fb23a591fa8767938a9cd37",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-duplicate-different-hash.pdf": "85c5ef86442b967bc04fc960c6ff4961e714b1e6174895315dac59ac139420e2",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-duplicate-same-hash.pdf": "c289f38faf4539403b7811529b8aaecd217e6622a5323d5c09b629f6e49caca6",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-equality.pdf": "b5529515260ceef57fdf85d7cbae2e6cb5a71b4d720bca9a7f3ce1a3aad8cac4",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-expired.pdf": "b4af5124542bc16f26e68d07efc9012ee01bdf81ea03a7a51fd16b8568483664",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-failed-response-with-good.pdf": "caa5d74ccef4e9b1b7d110799ca51c2b145799783ee91f67a0a02e06b29d5212",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-good-then-late.pdf": "3a5d1b436fa6ff1655db5feaf1668563f95237da77fa01866f64e0a3e0d949f7",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-late-then-good.pdf": "c5fdd5eff484e6fe3397491ded67aae99e0bbb9373d40d18a5bef95b7fa5bfa8",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-late-update.pdf": "a3e2f90acfe9652c4b336f98a5773a6a2fbb932bf3e4fda2b52725461286edb6",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-no-next-update.pdf": "984a834347885863791cfe92dd7c82e9d911d2e951bcf1994aaaabcfbca88b25",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-responder-by-key.pdf": "0a5b9323a093e6c9657f72abc3f5a312d98d39250fa26c43ddaded2c25137cd7",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-responder-certificate-ambiguous.pdf": "7a26b111768a766cb042147bd8c44a841c899fb853b38682a184d3e578badf61",
+      "packages/signature/test/fixtures/lta-inspector/historical-ocsp-responder-certificate-missing.pdf": "9984bca7f85df7af05c8f910d9a45686024d0111f5c34313be0f85a514afe60b",
+      "packages/signature/test/fixtures/lta-inspector/minimal-lta.pdf": "899d859150f347f1fd254927b74b488199861ca9b828e2f9ddbfe2b62e3766df",
+      "packages/signature/test/fixtures/lta-inspector/path-ambiguous-signature-tsa-expired-at-archive.pdf": "c8173d4635468914e2a1533e6518c1cef248c41d2aff3e26208fcfe5e108013b",
+      "packages/signature/test/fixtures/lta-inspector/path-ambiguous-signature-tsa.cms.der": "d09edff9d02c1ec3a20a9a16ca581083d8e0baf65161d501dda485ab6f0499a0",
+      "packages/signature/test/fixtures/lta-inspector/path-control-expired-at-archive.pdf": "e9ffc4fe0ccd357f8c6474edb1ab0dd14968a39aa561f148655dc0089b1e965c",
+      "packages/signature/test/fixtures/lta-inspector/path-control.cms.der": "ff072f62c309821b50e865599845e372a02f09edb604c9c94d2f8816b39028a3",
+      "packages/signature/test/fixtures/lta-inspector/path-invalid-signature-tsa-version-expired-at-archive.pdf": "f8ffa7e0af34868c5667fe941fc2c2b71dd626581fff6e93e706b030f2eda1ba",
+      "packages/signature/test/fixtures/lta-inspector/path-invalid-signature-tsa-version.cms.der": "6c278b3bf12c6e312fb3c9d892e50a06b02d794009cb9a892deb62172c0bf109",
+      "packages/signature/test/fixtures/lta-inspector/path-signature-tsa-expired-at-archive.pdf": "7884bd91f9130e8c826eb90cabe07b9332c6f5913563617023b1b719c275cf18",
+      "packages/signature/test/fixtures/lta-inspector/path-signature-tsa.cms.der": "965a8980e0ae62f9bc901cb642882997a83b9c3925fed8f0c3be15bd26b0c957",
+      "packages/signature/test/fixtures/lta-inspector/path-signer-expired-at-archive.pdf": "fbc7afefd8d3dee7ce9edf8671065a476574e245d73969308c9f30c4a80b6b69",
+      "packages/signature/test/fixtures/lta-inspector/path-signer-leaf.cert.pem": "f9bf96171163a0b8cc6f54b76293ec8ca699520f3f2d8cfd85a95e31c7b06fa3",
+      "packages/signature/test/fixtures/lta-inspector/path-signer.cms.der": "a36c95679f55b4f0727d3815f16a0694ac890483d54b88bc3b6f98a933fc3e06",
+      "packages/signature/test/fixtures/lta-inspector/positive-certificate-no-key-usage.pdf": "3864488f72e50872bb711ae39845aa078fc06fb0d01b03e5c8b14218a23ecf60",
+      "packages/signature/test/fixtures/lta-inspector/positive-ess-sha1-issuer.pdf": "5c43fe79eb58c23021170ebdc7e56f4bf92d4cb0468cbaf0286e7e6a8ca1ae10",
+      "packages/signature/test/fixtures/lta-inspector/positive-ess-sha1.pdf": "502cdb061fb521d4be2bc4b2aea37ab2fbd5d2df3555cf3caab894277b2a722f",
+      "packages/signature/test/fixtures/lta-inspector/positive-max-clock-skew.pdf": "d6f8f9985e91550bce2889aaaff289c17db41ba3f0f2d24210e637a031bdd8b2",
+      "packages/signature/test/fixtures/lta-inspector/provenance.json": "fdb51c29782fae6f237b5bcbdff139b99ec6d8699f1996faa5fda4ccffc19dcd",
+      "packages/signature/test/fixtures/lta-inspector/signature-tsa-root.cert.pem": "879d75349af0962436a2d4d7b0459ff248f1b1ced19a50f0a45b39908a59dfcd",
+      "packages/signature/test/fixtures/lta-inspector/signature.cms.der": "e9261a638104e3e9b80f0d1033943735ee726f514643fe76eb9679e7501da7aa",
+      "packages/signature/test/fixtures/lta-inspector/signer-root.cert.pem": "ccb879322a3b75e6bdab2e7d8bd96a4e03337c00e1744b2d22c94970f2f55e2a",
+      "packages/signature/test/fixtures/lta-inspector/signer.cert.der": "0ef8ecbd3f24fdb6f69c7417b7fe7634b256b1a81e1fdefe5bf930e9a8914c36",
+      "packages/signature/test/fixtures/lta-inspector/signer.cert.pem": "78424f224cc9b03cabf638cb3f63ff82a2f837c4d4a78d8b8e4f308d5ef0f4f5",
+      "packages/signature/test/fixtures/lta-inspector/signer.ocsp.der": "0fb8992a2efe45cedce60147889b15e26982d9d7bd738eb8793ac6b5c5facc90",
+      "packages/signature/test/fixtures/lta-inspector/source.pdf": "0ccf9cead56ee2d5acbc9dfde3ae07e746be4339b92fd2702744a2ae13716f39",
+      "packages/signature/test/fixtures/lta-inspector/structural-catalog-metadata.pdf": "ee58f168d84ee8437418e6d55612eb5455e293e7c2d5e5d65346fdcf9c036c55",
+      "packages/signature/test/fixtures/lta-inspector/structural-changed-old-field.pdf": "b1c0367a2fa9cf83739e57f8f035f6715c8fef66646824e96f17659b16fccd16",
+      "packages/signature/test/fixtures/lta-inspector/structural-changed-sigflags.pdf": "a4a9528c38436cbbca2092f17a80e806a6ce0e602d88b1049e2d38310de35b99",
+      "packages/signature/test/fixtures/lta-inspector/structural-changed-trailer.pdf": "fde83182505003b72af6ffe3e8a4a8a947dda2640086296a693f78c66cacc6b6",
+      "packages/signature/test/fixtures/lta-inspector/structural-direct-field.pdf": "d2e8463a42515e3935cdf5076bad7a822503d0a5b82be8e898d9042da688b143",
+      "packages/signature/test/fixtures/lta-inspector/structural-duplicate-xref.pdf": "5bbcd5d579f1780279acf05a840899565110f72ea862137b5fcb9174e335f38b",
+      "packages/signature/test/fixtures/lta-inspector/structural-escaped-subfilter.pdf": "9736ae6481e4402821771b5f681c5e9345526464cd24b7827e43925baee64ca5",
+      "packages/signature/test/fixtures/lta-inspector/structural-escaped-type.pdf": "91856a86bc36eab55eb3d4df0e872c7d1e353f379e337d835455514d2626e239",
+      "packages/signature/test/fixtures/lta-inspector/structural-field-appearance.pdf": "ca201743a01e78037af2acc2f21f7c56dd47514b42eeb50d01451954a50c88e8",
+      "packages/signature/test/fixtures/lta-inspector/structural-field-bad-page.pdf": "e368e9ee80e1b92bb804600e4a3f9f8378b1759ac8d70d9c7d1b41064cca1563",
+      "packages/signature/test/fixtures/lta-inspector/structural-field-direct-value.pdf": "80318252128d0f1430a3b6b1fd742ebc53eecb66f369bbf3dfe850c1b86a5aa7",
+      "packages/signature/test/fixtures/lta-inspector/structural-field-parent.pdf": "7064235f0c00f6206dd9acd97eba9441edb0a59f067b45ce85677a47bd4eb9a4",
+      "packages/signature/test/fixtures/lta-inspector/structural-form-extra-key.pdf": "b7376f2398481187c4b0c2247577aa0e926bf8ec8729b7e4c825d1c7e40c3835",
+      "packages/signature/test/fixtures/lta-inspector/structural-nonzero-token-padding.pdf": "ca1e49b302facf779dd76f18b103049926035bafbe5d25c1ce2a8d212396b538",
+      "packages/signature/test/fixtures/lta-inspector/structural-positive-comment.pdf": "fa3bdf1bf82193f168cb8c4a238e58a36df365d590c54693f6a6292488fdb9b4",
+      "packages/signature/test/fixtures/lta-inspector/structural-positive-field-string.pdf": "ad6e5569c234197114616827af4b8b4350d3012929b723eb2b1a06c049c0b546",
+      "packages/signature/test/fixtures/lta-inspector/structural-removed-field.pdf": "fc2b94bbcc217e3b00af8c0065ed430150dec183ff7abebaf8f627401304b70f",
+      "packages/signature/test/fixtures/lta-inspector/structural-reordered-fields.pdf": "e499e58ed7d568babdb83fd4726cdd2e0ceee30a3d7e03abb420132cccd159e6",
+      "packages/signature/test/fixtures/lta-inspector/structural-unindexed-bytes.pdf": "28fb9c116b98ec7c525e415159c8241e59b1bf0b3c7d8e0aabd97e660c6d07b2",
+      "packages/signature/test/fixtures/lta-inspector/structural-unknown-timestamp-entry.pdf": "98cb4c54d26bc77d1188188653821857f5b66f59786d0b762bde5e16c3500d00",
+      "packages/signature/test/fixtures/lta-inspector/structural-unreferenced-object.pdf": "ccc25953ddd77b0ad4c9d578c4a8ca35efa5d15072469e7d8a2053ea16f60e25",
+      "packages/signature/test/fixtures/lta-inspector/structural-visible-field.pdf": "b40dfd33c2f0baab0f8a8efe5e5e7cb35e4a36225d8cc40d11d912796f390c2a",
+      "packages/signature/test/fixtures/lta-inspector/structural-wrong-filter.pdf": "02ae813e479ebc6ed0da676c054f0c3790605b3f96bf016eaadc6f713a5b280b",
+      "packages/signature/test/fixtures/lta-inspector/token-before-signature-time.pdf": "dab160685fee77bab02bd63ac77f270e06727d720f87706fdb2a5163fe160732",
+      "packages/signature/test/fixtures/lta-inspector/token-container-content-type.pdf": "0a24d22efeffa61d70505a2d0a0e0854e45c18bd2a5dc99a89865d4eb066fe6c",
+      "packages/signature/test/fixtures/lta-inspector/token-content-type-data.pdf": "587b8678dad4f7bf7262601110365fb0a133d59cc27d19290dd9c7a9f578aac3",
+      "packages/signature/test/fixtures/lta-inspector/token-content-type-multiple.pdf": "bd9b7165b8efee28b11b7e26eaf9effe0dc44cb91ffcd61f2e7fb9c37cfabdcd",
+      "packages/signature/test/fixtures/lta-inspector/token-content-type-wrong-type.pdf": "2c74451670434dbc0d4fb5646ef7d92f1cc07588bfffdeef3676a20bdc55e685",
+      "packages/signature/test/fixtures/lta-inspector/token-digest-wrong-type.pdf": "694f2e4d2a76edf0fed46f6d96c2745fdf71c7ccdb96284a2779cef65d9abaac",
+      "packages/signature/test/fixtures/lta-inspector/token-duplicate-attribute.pdf": "ec637cc932e463a43777b975b562b65da96ab9766e1f1b22f281aea4835cea81",
+      "packages/signature/test/fixtures/lta-inspector/token-ess-sha1-wrong-hash.pdf": "d50b932b8dfe8d0b3dc308135a12ff0720605811159964f07f3c1b3b08c187bb",
+      "packages/signature/test/fixtures/lta-inspector/token-ess-sha1-wrong-issuer.pdf": "1c574955dd3b08a7767ba6e91b98e96399e0fe4fc301e2f64dc8b7c727211289",
+      "packages/signature/test/fixtures/lta-inspector/token-ess-sha1-wrong-serial.pdf": "eb4f0be492f24d8442f6b8d9dc2213f3d2abd1ce20826e9e416ff445da3819c6",
+      "packages/signature/test/fixtures/lta-inspector/token-future-time.pdf": "baeaac207c73ffde2bceb94c7a335146fe93f8f0d18396103cf6b484207bee2c",
+      "packages/signature/test/fixtures/lta-inspector/token-missing-content-type.pdf": "909a32e8f335fba828cc4c0a6ce19ebf1e009f16cf143cdcf9dd7a26e8abe15e",
+      "packages/signature/test/fixtures/lta-inspector/token-missing-digest.pdf": "a6f4706c652e3b76a17a931ceb31088c5fb006986aa0bf1614f76df946709f5f",
+      "packages/signature/test/fixtures/lta-inspector/token-missing-ess.pdf": "3c9c8877128de1db4d765c329bd2347b59d7dd4aa830d51b726f1c6d141cdbb8",
+      "packages/signature/test/fixtures/lta-inspector/token-multiple-digests.pdf": "f354d14e2c62652208da0a2c496dcfe59787ca582a26a2a0f069a4f9d6d7122a",
+      "packages/signature/test/fixtures/lta-inspector/token-multiple-signers.pdf": "715ece40383c94ea837520c07710747243e07fec987f06e689431e3aef0d6758",
+      "packages/signature/test/fixtures/lta-inspector/token-tst-version-two.pdf": "499d9d78814c2332f519787021f1a79bcb1103ebe78182871b75906f15b40828",
+      "packages/signature/test/fixtures/lta-inspector/token-wrong-ess.pdf": "1c892fea3b368886f409d2ad2669b5f38c2a2e6dba221dfd3ef438a047369958",
+      "packages/signature/test/fixtures/lta-inspector/token-wrong-imprint.pdf": "7c32f4daf614ad303d2763fe36aa48466f9de0b27d45093a16f5b7a6a06324db",
+      "packages/signature/test/fixtures/lta/archive-revoked.crl.der": "a5fc2cbd324dece6d0ed37f6b0412ec02d03cc2b38cdea6dcc959326ddc26822",
+      "packages/signature/test/fixtures/lta/archive-tsa-root.cert.pem": "6fdf1cc2115eb6f0672d707bfca7c9ead7683ae5ec606427f8b1690cfab2ba3b",
+      "packages/signature/test/fixtures/lta/archive-tsa-root.crl.der": "bef4db3042595ddd7bb80d90719995266aa81c174794013597bad0ee0a83bc54",
+      "packages/signature/test/fixtures/lta/archive-tsa.ocsp.der": "c8ab836b625b77d0117d48fb3aa47c4480f9a1ac1a915e376a69bde44aca3668",
+      "packages/signature/test/fixtures/lta/blt-only.pdf": "fde654f4a20644791e547332ae06359123482880c5c79cab1af7caf5a4947e00",
+      "packages/signature/test/fixtures/lta/minimal-lta.pdf": "54b4e6124afe63f7f9fa769b28ccac29a306d9120fd0f5a50f1b89f28509dfee",
+      "packages/signature/test/fixtures/lta/minimal-lta.token.der": "431642449124dca2750754b0b955c87aedb177262b22ee3bb1a2014723932ad7",
+      "packages/signature/test/fixtures/lta/negative-later-metadata.pdf": "3209f763acb48bf2ae9ae9f3b20c05c2d84fccdaa7e4d4eb475b33234ea1bd64",
+      "packages/signature/test/fixtures/lta/negative-renewed-timestamp.pdf": "d4895108e2c53c467ee44b848d5218a21945c27a1af709a87ad23c96116d0e7e",
+      "packages/signature/test/fixtures/lta/negative-second-dss.pdf": "31eab380f20844ca2ba7ce5cb94e301b6b59e7d8fe43d2c5454d9a3891e3dd3f",
+      "packages/signature/test/fixtures/lta/negative-tampered-archive-token.pdf": "d786c5594ae17616257d94a0b2df72e08031ef5176cb56347a32685c76940e0e",
+      "packages/signature/test/fixtures/lta/negative-tampered-content.pdf": "aac87598d8ad5aeff008b4ac80255865e56802b12b059dd8601e52c32af04055",
+      "packages/signature/test/fixtures/lta/negative-trailing-bytes.pdf": "c730336f9c0d9e1709927270cd93661dc6fc5a890eb224cc5fcf8752484c09ab",
+      "packages/signature/test/fixtures/lta/provenance.json": "4ff251e371b7c6d20be1f6eb962f97ce1d33eefc6f95e44c9a1c5e10b570feb5",
+      "packages/signature/test/fixtures/lta/signature-timestamp.token.der": "7d940f855462a6000a89fdbdaadf55e09fd0fdb9702304daecf0e58723cea541",
+      "packages/signature/test/fixtures/lta/signature-tsa-root.cert.pem": "d7f65f396593f972d78fd409de81cf192622b8096a31e46fa55a4f4d7b5a1550",
+      "packages/signature/test/fixtures/lta/signature.cms.der": "5d4ca4258db94cad0fab39a5a765a98a140bc5b349236b1da165781a14249003",
+      "packages/signature/test/fixtures/lta/signer-root.cert.pem": "fca3985df20c77b5eeb90a0f3053fb84f0001fb946d4910b0d51451091784e5c",
+      "packages/signature/test/fixtures/lta/signer.cert.der": "08551f9c2652c4660a50593903df5a3675f033e0fab3896a3958147e7456eede",
+      "packages/signature/test/fixtures/lta/signer.cert.pem": "1145cb0f6c77d808ca2703313cb1ebcc71a4e535ee2d803ddd8a7b3fe395de92",
+      "packages/signature/test/fixtures/lta/source.pdf": "0ccf9cead56ee2d5acbc9dfde3ae07e746be4339b92fd2702744a2ae13716f39",
+      "packages/signature/test/integration/minimal-lta-container-boundaries.spec.ts": "57e1b0e67fb4d38841b6a447a866956c0d1a89a82529665f4cd4964ad2c3faf0",
+      "packages/signature/test/integration/minimal-lta-signed-variants.spec.ts": "6e42325ad88fcb3c65f68a9b9bd77e9bf4b3f73276ce125a243ad7776e1fec8b",
+      "packages/signature/test/integration/minimal-lta.spec.ts": "fb316906e73d307de7a9e28a5a643d69b51978499be4c50b46b9ded489eeeac6",
+      "packages/signature/test/support/generate-lta-pki.py": "b096212ac18fabe8426d6270a7e2c3a1e29beeaa17b93ae0a9138edc25be2812",
+      "packages/signature/test/support/generate-lta-variants.mjs": "88b071f827f153ca868bc3b0cb35a5ce2eda72f70580b8dd99d2dcb3959e79df",
+      "packages/signature/test/support/lta-fixture.ts": "5d8abff70e59b249435d189423e25eb49a49d56d9ce00027dcd64c481385c715"
+    },
+    "reviewedPublicFixtureAndTestRosterCanonicalSha256": "af0d41f63790465a59658f86dc064f1dc815b087e175a2cd091928851250ce01",
+    "publicFixtureProvenanceSha256": {
+      "lta": "4ff251e371b7c6d20be1f6eb962f97ce1d33eefc6f95e44c9a1c5e10b570feb5",
+      "lta_inspector": "fdb51c29782fae6f237b5bcbdff139b99ec6d8699f1996faa5fda4ccffc19dcd"
+    }
+  },
+  "reviewedRequirements": [
+    {
+      "id": "PDF-closure",
+      "result": "PASS",
+      "proof": "Exactly two linked appended revisions, explicit original/DSS/catalog/AcroForm/object/trailer allowlist, duplicate decoded dictionary key lexer, indexed definition/xref/overlap/orphan checks and no visible-page-content expansion; signed structural refusal fixtures."
+    },
+    {
+      "id": "Timestamp-coverage",
+      "result": "PASS",
+      "proof": "Full document timestamp ByteRange with only own Contents gap; exact DER and zero-padding checks; SHA-256 imprint covers all original approval and DSS bytes; independent OpenSSL raw timestamp signatures and range imprint checks."
+    },
+    {
+      "id": "RFC3161-CMS-binding",
+      "result": "PASS",
+      "proof": "TSTInfo v1, unique signed attributes, single TSTInfo contentType and OCTET STRING messageDigest, exact bound ESS v1/v2 hash/issuer/serial, critical unique timestamping-only EKU and present KU authorization; genuinely signed positive/refusal corpus."
+    },
+    {
+      "id": "Historical-path-and-status",
+      "result": "PASS",
+      "proof": "Signer and signature-TSA paths/status at archiveAt; covered DSS only, no online historical rescue; mandatory nextUpdate; exact inclusive update interval and producedAt ceiling; global DSS prepass prevents first-valid masking, duplicate target ambiguity, contradictory revoked/unknown status; authorized delegated OCSP signer and KU/path checks."
+    },
+    {
+      "id": "Archive-current-trust",
+      "result": "PASS",
+      "proof": "Explicit archive-TSA anchors intersect actual requested profile anchors; actual verification-time archive certificate path and current status separate from timestamp genTime; expired/untrusted/revoked/stale refusal. Exact trusted-leaf anchor selection repairs PKI.js multi-anchor root substitution without bypassing engine/path/time checks."
+    },
+    {
+      "id": "Exact-time-oracles",
+      "result": "PASS",
+      "proof": "Equality positives and five truly signed one-millisecond outside CRL thisUpdate/nextUpdate and OCSP producedAt/thisUpdate/nextUpdate boundaries. Status values remain whole-second; independently decoded archive genTime supplies ±1ms and remains after original signature timestamp. Specific refusal reasons asserted. Inherited timestamp clock skew positive300000ms/negative300001ms is preserved and distinct from historical status cutoffs."
+    },
+    {
+      "id": "Historical-shortened-cert-oracles",
+      "result": "PASS",
+      "proof": "Changed CMS covers exact original approval bytes and verifies cryptographically; chain independently valid at approval/original archive and invalid at later archive. OpenSSL independently confirms shortened signer validity/expiry. Source reason-specific path refusal and same-time valid control retained."
+    },
+    {
+      "id": "Immutable-readiness",
+      "result": "PASS",
+      "proof": "Deep-frozen full requested profile captured before challenge; proof verified under actual anchors/policy/level/revocation/LTA semantics, with genuine archive proof. Same id/revision weaker profile cannot promote capability; B-LT-only/missing-anchor/challenge refusals retained."
+    },
+    {
+      "id": "Compatibility-and-test-preservation",
+      "result": "PASS",
+      "proof": "All185 preexisting signature test/config files remain byte-identical from03f9a6ae; existing non-LTA suite passes. Additive archiveAt/lta fields and archive-time certificateValidatedAt are restricted to verified LTA results."
+    }
+  ],
+  "remainingConcreteCryptographicFindings": [],
+  "independentCryptoSummary": {
+    "openssl": "3.6.3",
+    "earlierRawArchiveSignedPdfs": 85,
+    "additionalSignedBoundaryPdfs": 5,
+    "allRawSignaturesValid": true,
+    "positivePacketCmsAndTimestampVerification": "OpenSSL PASS",
+    "newStatusSignatures": "Both CRLs and all three OCSP BasicResponse signatures independently OpenSSL PASS against exact issuer public key.",
+    "imprintExceptions": "Only intentional token-wrong-imprint semantic negative mismatches; all five new boundary imprints match.",
+    "privateKeyMarkersInPublicCorpus": 0
+  },
+  "separateInspectorExecution": {
+    "canonicalTestsPassed": 535,
+    "canonicalTestFiles": 30,
+    "newLtaTests": 124,
+    "coverage": {
+      "lines": {
+        "total": 1397,
+        "covered": 1388,
+        "skipped": 0,
+        "pct": 99.35
+      },
+      "statements": {
+        "total": 1572,
+        "covered": 1546,
+        "skipped": 0,
+        "pct": 98.34
+      },
+      "functions": {
+        "total": 234,
+        "covered": 234,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 1656,
+        "covered": 1618,
+        "skipped": 0,
+        "pct": 97.7
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "coverageProfile": "Unchanged population/config; no test deletion, threshold reduction or exclusion change. Existing local vitest threshold settings do not themselves enforce these measured percentages; normal repository release coverage gates remain separate.",
+    "newExecutionByProjection": false
+  },
+  "historicalPreservation": {
+    "filesChecked": 108,
+    "byteMismatches": [],
+    "originalRecords": 80,
+    "canonicalFirst80Sha256": "afc5143609ef11688295711e3d3381740abd9609f0ddfe7072850e63f585fb7e",
+    "prefixIdentical": true,
+    "historicalScorecardId": "SC-20261010T081604-001",
+    "historicalHistogram": {
+      "N/A": 2,
+      "PASS": 24,
+      "FAIL": 4,
+      "UNKNOWN": 6,
+      "REVIEW": 9
+    },
+    "readinessPromoting": false,
+    "newScorecardObservation": false
+  },
+  "productionProviderAcceptance": {
+    "claimed": false,
+    "consumerAcceptanceClaimed": false,
+    "fixtureClassification": "Synthetic public TEST PKI only. Test or discovery fixtures do not establish production provider compatibility or approval, legal qualification, DETRAN readiness or consumer acceptance.",
+    "externalInputsOutstanding": [
+      "Actual provider product/build/environment, sample operation/custodian and authorized provenance.",
+      "Approved per-UF/document-kind profile id/revision/source/approver/date, national floor and qualification policy/OID authority.",
+      "Public provider chains and explicitly approved signer/signature-TSA/archive-TSA anchor DER fingerprints.",
+      "Genuine current per-profile LTA readiness challenge and status/refresh/expiry plan."
+    ],
+    "approvalBoundary": "The verifier checks supplied cryptographic and profile inputs. Approval of actual provider/profile/OID/anchor data belongs to the consumer. Missing or invalid required production readiness challenge and unsupported LTA proof remain refusals."
+  },
+  "limitations": [
+    "Approval applies only to exact reviewed minimal one-DSS followed by one DocTimeStamp framework bytes; unsupported renewal or multiple-DSS shapes remain refused.",
+    "Any semantic change to reviewed implementation, tests, fixtures or authority requires renewed independent review; later metadata-only version staging does not establish a new product measurement.",
+    "Normal retained exact-candidate signed RC, protected integration and actual publication checks remain required.",
+    "HTTP/k6 NOT_OBSERVED, mutation NOT_RUN; no full audit PASS or performance qualification claimed."
+  ],
+  "primarySources": [
+    "https://www.rfc-editor.org/rfc/rfc3161.html",
+    "https://www.rfc-editor.org/rfc/rfc5816.html",
+    "https://www.rfc-editor.org/rfc/rfc5652.html#section-11.1",
+    "https://www.rfc-editor.org/rfc/rfc5280.html",
+    "https://www.rfc-editor.org/rfc/rfc6960.html",
+    "https://www.etsi.org/deliver/etsi_en/319100_319199/31914201/01.02.01_60/en_31914201v010201p.pdf"
+  ]
+}

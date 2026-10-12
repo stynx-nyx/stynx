@@ -3,8 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $EmptySessionControlRequest = {
-    type: 'dictionary',
-    contains: {
-        type: 'UnknownJson',
-    },
+  type: 'dictionary',
+  contains: {
+    type: 'UnknownJson',
+  },
 } as const;

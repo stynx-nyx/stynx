@@ -46,7 +46,11 @@ corepack pnpm changeset
 - `pnpm ci:stynx` runs the primary framework checks.
 - The required DEVAI local-RC lane is the canonical full release-candidate graph;
   it includes the governed lint families, end-to-end, performance, and RLS
-  checks. Mutation testing is not a release-readiness input.
+  checks. Exactly 1.6.0 follows the Owner-authorized bounded publication scope in
+  [ADR-RELEASE-0001](law/adr/2026-10-11-bounded-1.6.0-publication.md): no k6 or
+  mutation execution, explicit unmeasured HTTP performance, and unchanged
+  static/security/product and protected publication gates. The existing cold-unit
+  performance node remains required. Mutation testing is not a release-readiness input.
 - `pnpm ci:stynx:remote-full` provides the remote full lane.
 - `pnpm test:mutation` preserves the 38-target Stryker campaign as optional,
   manually invoked hardening. Its result cannot promote or block a release.

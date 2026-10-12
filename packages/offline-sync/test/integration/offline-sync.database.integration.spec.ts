@@ -39,6 +39,7 @@ describe('PostgresOfflineSyncStore', () => {
       ],
     }).compile();
     await moduleRef.init();
+    await postgres.ensureRoleLogin('stynx_app');
     migration = await readFile(
       resolve(__dirname, '../../migrations/0001_offline_sync.sql'),
       'utf8',

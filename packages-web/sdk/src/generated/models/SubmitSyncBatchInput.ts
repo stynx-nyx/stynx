@@ -2,11 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UnknownJson } from './UnknownJson';
+import type { SyncBatchItemInput } from './SyncBatchItemInput';
 export type SubmitSyncBatchInput = {
-    deviceBatchId: string;
-    deviceId: string;
-    items: UnknownJson;
-    orgUnitId: string;
+  deviceBatchId: string;
+  deviceId: string;
+  items: Array<SyncBatchItemInput>;
+  orgUnitId: string;
 };
-

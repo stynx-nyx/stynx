@@ -3,29 +3,29 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $FlowGraphImportEdge = {
-    properties: {
-        action: {
-            type: 'string',
-        },
-        fromNodeCode: {
-            type: 'string',
-            isRequired: true,
-        },
-        meta: {
-            type: 'FlowJsonObject',
-        },
-        rule: {
-            type: 'string',
-        },
-        sortOrder: {
-            type: 'number',
-        },
-        spawn: {
-            type: 'boolean',
-        },
-        toNodeCode: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    action: {
+      type: 'string',
     },
+    fromNodeCode: {
+      type: 'string',
+      isRequired: true,
+    },
+    meta: {
+      type: 'FlowJsonObject',
+    },
+    rule: {
+      type: 'string',
+    },
+    sortOrder: {
+      type: 'number',
+    },
+    spawn: {
+      type: 'boolean',
+    },
+    toNodeCode: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

@@ -1,0 +1,108 @@
+{
+  "classification": "SYNTHETIC TEST ONLY; no actual provider or production policy claim",
+  "source": "DETRAN R-0022 signing discovery public TEST packet, 2026-10-10",
+  "generatorSha256": "f45a9d4bf5144201a19794ef5bb987659ec24cacd41fda1de0620cf04d73b932",
+  "generatedAt": "2026-10-10T14:12:46.781065+00:00",
+  "files": [
+    {
+      "path": "source.pdf",
+      "bytes": 616,
+      "sha256": "0ccf9cead56ee2d5acbc9dfde3ae07e746be4339b92fd2702744a2ae13716f39"
+    },
+    {
+      "path": "signature.cms.der",
+      "bytes": 4871,
+      "sha256": "5d4ca4258db94cad0fab39a5a765a98a140bc5b349236b1da165781a14249003"
+    },
+    {
+      "path": "minimal-lta.pdf",
+      "bytes": 93127,
+      "sha256": "54b4e6124afe63f7f9fa769b28ccac29a306d9120fd0f5a50f1b89f28509dfee"
+    },
+    {
+      "path": "blt-only.pdf",
+      "bytes": 52650,
+      "sha256": "fde654f4a20644791e547332ae06359123482880c5c79cab1af7caf5a4947e00"
+    },
+    {
+      "path": "negative-tampered-archive-token.pdf",
+      "bytes": 93127,
+      "sha256": "d786c5594ae17616257d94a0b2df72e08031ef5176cb56347a32685c76940e0e"
+    },
+    {
+      "path": "negative-tampered-content.pdf",
+      "bytes": 93127,
+      "sha256": "aac87598d8ad5aeff008b4ac80255865e56802b12b059dd8601e52c32af04055"
+    },
+    {
+      "path": "negative-trailing-bytes.pdf",
+      "bytes": 93158,
+      "sha256": "c730336f9c0d9e1709927270cd93661dc6fc5a890eb224cc5fcf8752484c09ab"
+    },
+    {
+      "path": "negative-later-metadata.pdf",
+      "bytes": 93301,
+      "sha256": "3209f763acb48bf2ae9ae9f3b20c05c2d84fccdaa7e4d4eb475b33234ea1bd64"
+    },
+    {
+      "path": "negative-second-dss.pdf",
+      "bytes": 93375,
+      "sha256": "31eab380f20844ca2ba7ce5cb94e301b6b59e7d8fe43d2c5454d9a3891e3dd3f"
+    },
+    {
+      "path": "negative-renewed-timestamp.pdf",
+      "bytes": 133627,
+      "sha256": "d4895108e2c53c467ee44b848d5218a21945c27a1af709a87ad23c96116d0e7e"
+    },
+    {
+      "path": "signer-root.cert.pem",
+      "bytes": 1188,
+      "sha256": "fca3985df20c77b5eeb90a0f3053fb84f0001fb946d4910b0d51451091784e5c"
+    },
+    {
+      "path": "signature-tsa-root.cert.pem",
+      "bytes": 1204,
+      "sha256": "d7f65f396593f972d78fd409de81cf192622b8096a31e46fa55a4f4d7b5a1550"
+    },
+    {
+      "path": "archive-tsa-root.cert.pem",
+      "bytes": 1200,
+      "sha256": "6fdf1cc2115eb6f0672d707bfca7c9ead7683ae5ec606427f8b1690cfab2ba3b"
+    },
+    {
+      "path": "signer.cert.pem",
+      "bytes": 1180,
+      "sha256": "1145cb0f6c77d808ca2703313cb1ebcc71a4e535ee2d803ddd8a7b3fe395de92"
+    },
+    {
+      "path": "signer.cert.der",
+      "bytes": 830,
+      "sha256": "08551f9c2652c4660a50593903df5a3675f033e0fab3896a3958147e7456eede"
+    },
+    {
+      "path": "archive-tsa-root.crl.der",
+      "bytes": 392,
+      "sha256": "bef4db3042595ddd7bb80d90719995266aa81c174794013597bad0ee0a83bc54"
+    },
+    {
+      "path": "archive-tsa.ocsp.der",
+      "bytes": 1334,
+      "sha256": "c8ab836b625b77d0117d48fb3aa47c4480f9a1ac1a915e376a69bde44aca3668"
+    },
+    {
+      "path": "archive-revoked.crl.der",
+      "bytes": 416,
+      "sha256": "a5fc2cbd324dece6d0ed37f6b0412ec02d03cc2b38cdea6dcc959326ddc26822"
+    },
+    {
+      "path": "minimal-lta.token.der",
+      "bytes": 2426,
+      "sha256": "431642449124dca2750754b0b955c87aedb177262b22ee3bb1a2014723932ad7"
+    },
+    {
+      "path": "signature-timestamp.token.der",
+      "bytes": 2437,
+      "sha256": "7d940f855462a6000a89fdbdaadf55e09fd0fdb9702304daecf0e58723cea541"
+    }
+  ]
+}

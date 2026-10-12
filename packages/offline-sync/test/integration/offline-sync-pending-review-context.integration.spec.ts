@@ -37,6 +37,7 @@ const migrations = [
   '0002_durable_sync.sql',
   '0003_reservation_idempotency.sql',
   '0004_pending_state_and_conflict_actions.sql',
+  '0005_initial_queue_status.sql',
 ];
 const reserve = {
   orgUnitId: 'org-a',
@@ -123,17 +124,15 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
       } as StynxOfflineSyncModuleOptions,
     );
   const run = <T>(tenantId: string, fn: () => Promise<T>): Promise<T> =>
-    moduleRef
-      .get(RequestContextMutator)
-      .runWithRequestContext(
-        {
-          requestId: `ofs-157-${Math.random()}`,
-          tenantId,
-          actorId: `actor-${tenantId.slice(-2)}`,
-          startedAt: new Date(at),
-        },
-        fn,
-      );
+    moduleRef.get(RequestContextMutator).runWithRequestContext(
+      {
+        requestId: `ofs-157-${Math.random()}`,
+        tenantId,
+        actorId: `actor-${tenantId.slice(-2)}`,
+        startedAt: new Date(at),
+      },
+      fn,
+    );
   const sql = <T extends Record<string, unknown>>(
     tenantId: string,
     text: string,
@@ -190,6 +189,7 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
       ],
     }).compile();
     await moduleRef.init();
+    await pg.ensureRoleLogin('stynx_app');
     const admin = await pg.connectAsAdmin();
     try {
       for (const name of migrations)
@@ -1211,10 +1211,15 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
         ],
       }).compile();
       await oldModule.init();
+      await old.ensureRoleLogin('stynx_app');
       const admin = await old.connectAsAdmin();
       try {
         for (const name of migrations.slice(0, 3))
           await admin.query(await readFile(resolve(migrationDir, name), 'utf8'));
+        // Supply only the independent 0005 batch column so this sensor still isolates missing 0004 history and CHECK semantics.
+        await admin.query(
+          await readFile(resolve(migrationDir, '0005_initial_queue_status.sql'), 'utf8'),
+        );
         await admin.query(
           `insert into tenancy.tenants (id,slug,name,is_active,created_at,updated_at) values ($1::uuid,'ofs-157-old','OFS old',true,clock_timestamp(),clock_timestamp())`,
           [tenantA],

@@ -221,6 +221,7 @@ describe('OutboxService bootstrap ownership check', () => {
       'event_attempts',
       'event_delivery',
       'event_order_seq',
+      'event_retirements',
       'events',
       'legacy_event_map',
       'legacy_ownership',

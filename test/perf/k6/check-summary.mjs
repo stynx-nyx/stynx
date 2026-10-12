@@ -13,6 +13,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isProxy } from 'node:util/types';
 
 export const trackedMetrics = Object.freeze([
   'auth_verify_duration_ms',
@@ -77,6 +78,111 @@ export function compareSummaries({
     }
   }
   return { degradations, observations };
+}
+
+// Required-tail admission for complete HTTP evidence. This comparison does not
+// authenticate a previous-success artifact, establish candidate custody, or
+// confer a producer verdict. Those obligations remain with the owning producer.
+// Legacy threshold-only and missing-metric behavior above remains unchanged.
+export function compareRequiredMetricTails(options) {
+  const allowed = new Set(['current', 'baseline', 'reference', 'requiredMetrics']);
+  if (
+    !options ||
+    typeof options !== 'object' ||
+    isProxy(options) ||
+    Array.isArray(options) ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(options)) ||
+    Reflect.ownKeys(options).length !== allowed.size ||
+    [...allowed].some((key) => !Object.hasOwn(options, key)) ||
+    Reflect.ownKeys(options).some(
+      (key) =>
+        !allowed.has(key) || !Object.hasOwn(Object.getOwnPropertyDescriptor(options, key), 'value'),
+    )
+  )
+    throw new Error(
+      'Strict k6 comparison requires usable own data for all declared comparison options',
+    );
+  const { current, baseline, reference, requiredMetrics } = Object.fromEntries(
+    [...allowed].map((key) => [key, strictDataProperty(options, key, `options ${key}`)]),
+  );
+  if (
+    !Array.isArray(requiredMetrics) ||
+    isProxy(requiredMetrics) ||
+    Object.getPrototypeOf(requiredMetrics) !== Array.prototype ||
+    requiredMetrics.length === 0 ||
+    Reflect.ownKeys(requiredMetrics).length !== requiredMetrics.length + 1
+  )
+    throw new Error('Strict k6 comparison requires unique known nonempty requiredMetrics');
+  const required = [];
+  for (let index = 0; index < requiredMetrics.length; index += 1) {
+    const descriptor = Object.getOwnPropertyDescriptor(requiredMetrics, String(index));
+    if (
+      !descriptor ||
+      !Object.hasOwn(descriptor, 'value') ||
+      !trackedMetrics.includes(descriptor.value)
+    )
+      throw new Error('Strict k6 comparison requires unique known nonempty requiredMetrics');
+    required.push(descriptor.value);
+  }
+  const requiredSet = new Set(required);
+  if (requiredSet.size !== required.length)
+    throw new Error('Strict k6 comparison requires unique known nonempty requiredMetrics');
+  const selected = {
+    current: { metrics: {} },
+    baseline: { metrics: {} },
+    reference: { metrics: {} },
+  };
+  for (const metric of required) {
+    const tails = {};
+    for (const [name, input] of Object.entries({ current, baseline, reference })) {
+      tails[name] = {};
+      for (const statistic of comparedStatistics) {
+        const label = `${name} ${metric} ${statistic}`;
+        const path =
+          name === 'reference'
+            ? ['metrics', metric, statistic]
+            : ['metrics', metric, 'values', statistic];
+        let value = input;
+        for (const key of path) value = strictDataProperty(value, key, label);
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0)
+          throw new Error(`Strict k6 comparison requires usable ${name} ${metric} ${statistic}`);
+        tails[name][statistic] = value;
+      }
+      selected[name].metrics[metric] = name === 'reference' ? tails[name] : { values: tails[name] };
+    }
+    for (const statistic of comparedStatistics) {
+      if (Math.max(tails.baseline[statistic], tails.reference[statistic]) <= 0)
+        throw new Error(
+          `Strict k6 comparison requires positive effective baseline ${metric} ${statistic}`,
+        );
+    }
+  }
+  const report = compareSummaries({
+    ...selected,
+    maxRelativeIncreasePercent: 10,
+    minAbsoluteIncreaseMs: 1,
+  });
+  return {
+    observations: required.map((metric) =>
+      report.observations.find((entry) => entry.metric === metric),
+    ),
+    degradations: report.degradations.filter((entry) => requiredSet.has(entry.metric)),
+  };
+}
+
+function strictDataProperty(object, key, label) {
+  if (object === null || object === undefined) return undefined;
+  if (
+    typeof object !== 'object' ||
+    isProxy(object) ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(object))
+  )
+    throw new Error(`Strict k6 comparison requires usable own data ${label}`);
+  const descriptor = Object.getOwnPropertyDescriptor(object, key);
+  if (!descriptor) return undefined;
+  if (!Object.hasOwn(descriptor, 'value'))
+    throw new Error(`Strict k6 comparison requires usable own data ${label}`);
+  return descriptor.value;
 }
 
 export function loadReference(path) {

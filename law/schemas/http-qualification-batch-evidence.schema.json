@@ -1,0 +1,1123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/journalEvent"
+    },
+    {
+      "$ref": "#/$defs/attemptArchive"
+    },
+    {
+      "$ref": "#/$defs/batchIndex"
+    }
+  ],
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidateCommit",
+        "tree",
+        "manifestSha256",
+        "batchPolicySha256",
+        "evidenceSchemaSha256",
+        "producerClosureSha256"
+      ],
+      "properties": {
+        "candidateCommit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "manifestSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "batchPolicySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "evidenceSchemaSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "producerClosureSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caseId", "caseSha256", "compositionId"],
+      "properties": {
+        "caseId": {
+          "type": "string",
+          "pattern": "^(reference|offlineE6|offlineCTG9|i18n|privacy|domain)\\.[a-f0-9]{16}\\.[a-z][a-z0-9-]*$"
+        },
+        "caseSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "compositionId": {
+          "enum": ["reference", "offlineE6", "offlineCTG9", "i18n", "privacy", "domain"]
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "path", "sha256", "byteLength", "permissions"],
+      "properties": {
+        "role": {
+          "enum": [
+            "parent-report",
+            "worker-body",
+            "worker-ipc",
+            "target-raw",
+            "native-metrics",
+            "generator-stdout",
+            "generator-stderr",
+            "worker-stdout",
+            "worker-stderr",
+            "descriptor",
+            "allocation",
+            "fixture",
+            "cleanup",
+            "build-custody",
+            "native-custody",
+            "task-admission",
+            "acceptance"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*\\/$).+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "permissions": {
+          "const": 384
+        }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptArtifactSha256",
+        "verifierIdentitySha256",
+        "originVerified",
+        "fullClosureVerified"
+      ],
+      "properties": {
+        "receiptArtifactSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "verifierIdentitySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "originVerified": {
+          "const": true
+        },
+        "fullClosureVerified": {
+          "const": true
+        }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attemptId", "case", "state", "archiveSha256", "acceptance"],
+      "properties": {
+        "attemptId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "case": {
+          "$ref": "#/$defs/case"
+        },
+        "state": {
+          "enum": ["RUNNING", "QUALIFIED", "FAILED", "BLOCKED", "CLEANUP_UNKNOWN", "ABORTED"]
+        },
+        "archiveSha256": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "acceptance": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/acceptance"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "QUALIFIED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "archiveSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "acceptance": {
+                "$ref": "#/$defs/acceptance"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": ["FAILED", "BLOCKED", "CLEANUP_UNKNOWN", "ABORTED"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "acceptance": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "originalProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario", "state", "evidenceSha256"],
+      "properties": {
+        "scenario": {
+          "enum": ["auth", "crud", "upload", "cascade-delete"]
+        },
+        "state": {
+          "enum": ["PENDING", "RUNNING", "QUALIFIED", "FAILED", "BLOCKED", "CLEANUP_UNKNOWN"]
+        },
+        "evidenceSha256": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "QUALIFIED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "evidenceSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "journalEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "batchId",
+        "sequence",
+        "previousSha256",
+        "bindingSha256",
+        "event",
+        "compositionId",
+        "caseId",
+        "attemptId",
+        "archiveSha256",
+        "state",
+        "timestampUtc",
+        "readinessPromoting"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "kind": {
+          "const": "http-qualification-journal-event"
+        },
+        "batchId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "previousSha256": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "bindingSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "event": {
+          "enum": [
+            "BEGIN",
+            "ROOT_BEGIN",
+            "CASE_BEGIN",
+            "CASE_SEALED",
+            "ROOT_CLOSED",
+            "PAUSE",
+            "RESUME",
+            "STOP",
+            "FINAL"
+          ]
+        },
+        "caseId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^(reference|offlineE6|offlineCTG9|i18n|privacy|domain)\\.[a-f0-9]{16}\\.[a-z][a-z0-9-]*$"
+            }
+          ]
+        },
+        "attemptId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+            }
+          ]
+        },
+        "archiveSha256": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "state": {
+          "enum": [
+            null,
+            "RUNNING",
+            "QUALIFIED",
+            "FAILED",
+            "BLOCKED",
+            "CLEANUP_UNKNOWN",
+            "ABORTED",
+            "COMPLETE",
+            "PAUSED"
+          ]
+        },
+        "timestampUtc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,9})?Z$"
+        },
+        "readinessPromoting": {
+          "const": false
+        },
+        "compositionId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": ["reference", "offlineE6", "offlineCTG9", "i18n", "privacy", "domain"]
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "sequence": {
+                "const": 0
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "previousSha256": {
+                "type": "null"
+              },
+              "event": {
+                "const": "BEGIN"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "previousSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["CASE_BEGIN", "CASE_SEALED"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "caseId": {
+                "type": "string",
+                "pattern": "^(reference|offlineE6|offlineCTG9|i18n|privacy|domain)\\.[a-f0-9]{16}\\.[a-z][a-z0-9-]*$"
+              },
+              "attemptId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "const": "CASE_BEGIN"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "const": "RUNNING"
+              },
+              "archiveSha256": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "const": "CASE_SEALED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": ["QUALIFIED", "FAILED", "BLOCKED", "CLEANUP_UNKNOWN", "ABORTED"]
+              },
+              "archiveSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["ROOT_BEGIN", "ROOT_CLOSED", "CASE_BEGIN", "CASE_SEALED"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "compositionId": {
+                "enum": ["reference", "offlineE6", "offlineCTG9", "i18n", "privacy", "domain"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["BEGIN"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "sequence": {
+                "const": 0
+              },
+              "compositionId": {
+                "type": "null"
+              },
+              "caseId": {
+                "type": "null"
+              },
+              "attemptId": {
+                "type": "null"
+              },
+              "archiveSha256": {
+                "type": "null"
+              },
+              "state": {
+                "const": "RUNNING"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["ROOT_BEGIN", "ROOT_CLOSED"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "caseId": {
+                "type": "null"
+              },
+              "attemptId": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["ROOT_BEGIN"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "archiveSha256": {
+                "type": "null"
+              },
+              "state": {
+                "const": "RUNNING"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["ROOT_CLOSED"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "archiveSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "state": {
+                "const": "QUALIFIED"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["RESUME"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "compositionId": {
+                "type": "null"
+              },
+              "caseId": {
+                "type": "null"
+              },
+              "attemptId": {
+                "type": "null"
+              },
+              "archiveSha256": {
+                "type": "null"
+              },
+              "state": {
+                "const": "RUNNING"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["FINAL"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "compositionId": {
+                "type": "null"
+              },
+              "caseId": {
+                "type": "null"
+              },
+              "attemptId": {
+                "type": "null"
+              },
+              "archiveSha256": {
+                "type": "null"
+              },
+              "state": {
+                "const": "COMPLETE"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["PAUSE"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": ["PAUSED", "CLEANUP_UNKNOWN"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": ["STOP"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": ["FAILED", "BLOCKED", "CLEANUP_UNKNOWN", "ABORTED"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "attemptArchive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "batchId",
+        "attemptId",
+        "binding",
+        "case",
+        "state",
+        "artifacts",
+        "cleanupState",
+        "acceptance",
+        "readinessPromoting"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "kind": {
+          "const": "http-qualification-attempt-archive"
+        },
+        "batchId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "attemptId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "binding": {
+          "$ref": "#/$defs/binding"
+        },
+        "case": {
+          "$ref": "#/$defs/case"
+        },
+        "state": {
+          "enum": ["QUALIFIED", "FAILED", "BLOCKED", "CLEANUP_UNKNOWN", "ABORTED"]
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "cleanupState": {
+          "enum": ["ABSENT", "UNKNOWN", "NOT_STARTED"]
+        },
+        "acceptance": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/acceptance"
+            }
+          ]
+        },
+        "readinessPromoting": {
+          "const": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "QUALIFIED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cleanupState": {
+                "const": "ABSENT"
+              },
+              "acceptance": {
+                "$ref": "#/$defs/acceptance"
+              },
+              "artifacts": {
+                "allOf": [
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "parent-report"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "worker-body"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "worker-ipc"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "target-raw"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "native-metrics"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "generator-stdout"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "generator-stderr"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "worker-stdout"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "worker-stderr"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "descriptor"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "allocation"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "fixture"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "cleanup"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "build-custody"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "native-custody"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "task-admission"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "role": {
+                          "const": "acceptance"
+                        }
+                      },
+                      "required": ["role"],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                ],
+                "type": "array"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": ["FAILED", "BLOCKED", "CLEANUP_UNKNOWN", "ABORTED"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "acceptance": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "CLEANUP_UNKNOWN"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cleanupState": {
+                "const": "UNKNOWN"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "batchIndex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "batchId",
+        "binding",
+        "phase",
+        "plannedCases",
+        "attempts",
+        "originalProfiles",
+        "journalHeadSha256",
+        "overallVerdict",
+        "complete",
+        "readinessPromoting"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "kind": {
+          "const": "http-qualification-batch-index"
+        },
+        "batchId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "binding": {
+          "$ref": "#/$defs/binding"
+        },
+        "phase": {
+          "enum": ["RUNNING", "PAUSED", "BLOCKED", "FAILED", "COMPLETE"]
+        },
+        "plannedCases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/case"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attempt"
+          },
+          "uniqueItems": true
+        },
+        "originalProfiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/originalProfile"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "journalHeadSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "overallVerdict": {
+          "enum": ["PASS", "FAIL", "BLOCKED"]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "readinessPromoting": {
+          "const": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "overallVerdict": {
+                "const": "PASS"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "phase": {
+                "const": "COMPLETE"
+              },
+              "complete": {
+                "const": true
+              },
+              "originalProfiles": {
+                "items": {
+                  "properties": {
+                    "state": {
+                      "const": "QUALIFIED"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "complete": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "overallVerdict": {
+                "const": "PASS"
+              },
+              "phase": {
+                "const": "COMPLETE"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

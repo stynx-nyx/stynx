@@ -3,24 +3,24 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ProvisionTenantInput = {
-    properties: {
-        name: {
-            type: 'string',
-            isRequired: true,
-        },
-        ownerEmail: {
-            type: 'string',
-            isRequired: true,
-        },
-        ownerLocale: {
-            type: 'string',
-        },
-        ownerUserId: {
-            type: 'string',
-        },
-        slug: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    name: {
+      type: 'string',
+      isRequired: true,
     },
+    ownerEmail: {
+      type: 'string',
+      isRequired: true,
+    },
+    ownerLocale: {
+      type: 'string',
+    },
+    ownerUserId: {
+      type: 'string',
+    },
+    slug: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

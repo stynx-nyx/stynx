@@ -5,6 +5,22 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Adopt published DEVAI 2.6.0 and refresh the selected-adapter hook](2026-10-11-devai-2.6.0-adoption.md)
+
+- [Prospective local HTTP baseline bootstrap and mandatory comparison](2026-10-11-local-http-baseline-bootstrap.md)
+
+- [Bind explicit client roots and isolate demo bookmark storage](2026-10-11-client-roots-and-demo-bookmark-storage.md)
+- [Adopt published DEVAI 2.5.0 and its supported audit interfaces](2026-10-11-devai-2.5.0-adoption.md)
+
+- [Adopt published DEVAI 2.4.0 and project supported sensor inputs](2026-10-10-devai-2.4.0-adoption.md)
+
+- [ADR-PERF-0001 — Complete endpoint latency evidence alongside existing performance gates](2026-10-10-http-performance-evidence.md)
+- [ADR-SECURITY-FORK-0001 — Maintained braces and HTTP cache security forks](2026-10-10-maintained-braces-security-fork.md)
+
+- [Complete STYNX 1.6.0 minor campaign with upstream and consumer evidence](2026-10-10-minor-release-1.6.0.md)
+- [ADR-OUTBOX-0004 — Terminal delivery retirement and closed consumer storage bindings](ADR-OUTBOX-0004-retirement-and-closed-storage.md) — supersedes only OUTBOX-0003 D5 and specifies D2/D3 deliverables.
+- [ADR-MOBILE-OFFLINE-0004 — Durable parity and verified import](ADR-MOBILE-OFFLINE-0004-minor-parity-and-import.md) — resolves the accepted minor-release scope while preserving E6 and historical evidence.
+
 - [Release the migration-bearing fixed group as stable patch 1.5.7](2026-10-10-seventh-stable-patch-1.5.7.md)
 
 - [Adopt DEVAI 2.3.2 and preserve observation history](2026-10-10-devai-2.3.2-adoption.md)

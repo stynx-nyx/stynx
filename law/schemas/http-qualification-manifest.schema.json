@@ -1,0 +1,946 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "admission",
+    "authority",
+    "authoritySources",
+    "caseHash",
+    "cases",
+    "compositionPolicy",
+    "compositions",
+    "existingProfiles",
+    "fixtureContracts",
+    "operations",
+    "policyId",
+    "policyVersion",
+    "provisionalPopulation",
+    "publicExclusions",
+    "qualificationProfile",
+    "repositoryId",
+    "runtimeReconciliation",
+    "schemaVersion",
+    "scope",
+    "sourceCheckpoint"
+  ],
+  "properties": {
+    "admission": {
+      "const": {
+        "mode": "source-declaration-only",
+        "calibrationRequired": true,
+        "completeRuntimeReconciliationRequired": true,
+        "actualFixtureAllocationRequired": true,
+        "allSixExistingFloorsRequired": true,
+        "additionalPrivacyFloorsRequired": true,
+        "publishedTaskAdmissionRequired": true,
+        "callerReceiptsGrantAuthority": false,
+        "readinessPromoting": false
+      }
+    },
+    "authority": {
+      "const": "Architect"
+    },
+    "authoritySources": {
+      "const": [
+        "law/adr/2026-10-10-http-performance-evidence.md",
+        "docs/performance/http-endpoint-slos.md",
+        "docs/performance/supplemental-endpoint-workload.md"
+      ]
+    },
+    "caseHash": {
+      "const": {
+        "algorithm": "sha256",
+        "input": "UTF-8 JSON without whitespace; recursively lexicographic object keys; preserve array order; expanded binding object defined in contract, caseSha256 field omitted; no undefined or nonfinite values",
+        "wholeManifest": "sha256 of exact tracked UTF-8 bytes, independently bound by parent"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["caseId", "caseSha256", "compositionId", "originId", "semanticCaseId"],
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "caseSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "compositionId": {
+            "enum": ["reference", "offlineE6", "offlineCTG9", "i18n", "privacy", "domain"]
+          },
+          "originId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          },
+          "semanticCaseId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "minItems": 1167,
+      "maxItems": 1167,
+      "uniqueItems": true
+    },
+    "compositionPolicy": {
+      "const": {
+        "path": "law/policy/http-api-compositions.json",
+        "sha256": "884b1fdeca52bb823286900c7bad3b531d2fa8338713f6ac1d945c1f17e87a02",
+        "preserveCompatibilityBaseline": true,
+        "unknownAlternatives": "refuse"
+      }
+    },
+    "compositions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "factoryExport",
+          "factorySource",
+          "factorySourceSha256",
+          "id",
+          "importsReferenceAppModule",
+          "rootModule",
+          "rootModuleSha256"
+        ],
+        "properties": {
+          "factoryExport": {
+            "type": "string",
+            "minLength": 1
+          },
+          "factorySource": {
+            "type": "string",
+            "minLength": 1
+          },
+          "factorySourceSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "importsReferenceAppModule": {
+            "const": true
+          },
+          "rootModule": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rootModuleSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true
+    },
+    "existingProfiles": {
+      "const": {
+        "auth": {
+          "local": {
+            "rate": 100,
+            "durationSeconds": 300,
+            "preAllocatedVUs": 20,
+            "maxVUs": 200
+          },
+          "hardening": {
+            "rate": 10,
+            "durationSeconds": 300,
+            "preAllocatedVUs": 4,
+            "maxVUs": 25
+          }
+        },
+        "crud": {
+          "local": {
+            "rate": 10,
+            "durationSeconds": 600,
+            "preAllocatedVUs": 2,
+            "maxVUs": 20
+          },
+          "hardening": {
+            "rate": 4,
+            "durationSeconds": 600,
+            "preAllocatedVUs": 4,
+            "maxVUs": 25
+          }
+        },
+        "upload": {
+          "local": {
+            "rate": 50,
+            "durationSeconds": 300,
+            "preAllocatedVUs": 10,
+            "maxVUs": 100
+          },
+          "hardening": {
+            "rate": 5,
+            "durationSeconds": 300,
+            "preAllocatedVUs": 4,
+            "maxVUs": 25
+          }
+        },
+        "cascade-delete": {
+          "local": {
+            "rate": 25,
+            "durationSeconds": 300,
+            "preAllocatedVUs": 10,
+            "maxVUs": 100
+          },
+          "hardening": {
+            "rate": 2,
+            "durationSeconds": 300,
+            "preAllocatedVUs": 4,
+            "maxVUs": 25
+          }
+        }
+      }
+    },
+    "fixtureContracts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "allocation",
+          "id",
+          "negative",
+          "preparationImplementation",
+          "preparedReadRowsMinimum",
+          "preparedTargetsPerMutatingCase",
+          "providers",
+          "quota",
+          "read",
+          "seed",
+          "sessionExpiry",
+          "setupIncludedInTargetSamples",
+          "setupTrafficCounts",
+          "syntheticOnly",
+          "write"
+        ],
+        "properties": {
+          "allocation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "negative": {
+            "type": "string",
+            "minLength": 1
+          },
+          "preparationImplementation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "preparedReadRowsMinimum": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "preparedTargetsPerMutatingCase": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "providers": {
+            "type": "string",
+            "minLength": 1
+          },
+          "quota": {
+            "type": "string",
+            "minLength": 1
+          },
+          "read": {
+            "type": "string",
+            "minLength": 1
+          },
+          "seed": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sessionExpiry": {
+            "type": "string",
+            "minLength": 1
+          },
+          "setupIncludedInTargetSamples": {
+            "const": false
+          },
+          "setupTrafficCounts": {
+            "type": "string",
+            "minLength": 1
+          },
+          "syntheticOnly": {
+            "const": true
+          },
+          "write": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "minItems": 12,
+      "maxItems": 12,
+      "uniqueItems": true
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "classDecorators",
+          "componentSlo",
+          "compositionIds",
+          "conditionalPermission",
+          "controller",
+          "declarationId",
+          "file",
+          "fixtureContract",
+          "fixtureRecipeId",
+          "handler",
+          "method",
+          "methodDecorators",
+          "methodSha256",
+          "nominalStatusAuthority",
+          "openapiOperations",
+          "originId",
+          "package",
+          "parameters",
+          "path",
+          "returnType",
+          "semanticCases",
+          "sourceSha256",
+          "staticPermissions"
+        ],
+        "properties": {
+          "classDecorators": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "componentSlo": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["header", "metric", "milliseconds", "operator", "statistic"],
+                "properties": {
+                  "header": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "metric": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "milliseconds": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "operator": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "statistic": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "compositionIds": {
+            "type": "array",
+            "items": {
+              "enum": ["reference", "offlineE6", "offlineCTG9", "i18n", "privacy", "domain"]
+            }
+          },
+          "conditionalPermission": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ]
+          },
+          "controller": {
+            "type": "string",
+            "minLength": 1
+          },
+          "declarationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fixtureContract": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fixtureRecipeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "handler": {
+            "type": "string",
+            "minLength": 1
+          },
+          "method": {
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+          },
+          "methodDecorators": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "methodSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "nominalStatusAuthority": {
+            "type": "string",
+            "minLength": 1
+          },
+          "openapiOperations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "artifact",
+                "artifactSha256",
+                "documentedStatuses",
+                "operationId",
+                "operationPointer"
+              ],
+              "properties": {
+                "artifact": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "artifactSha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "documentedStatuses": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "operationId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "operationPointer": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "originId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          },
+          "package": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["decorators", "name", "optional", "type"],
+              "properties": {
+                "decorators": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "optional": {
+                  "type": "boolean"
+                },
+                "type": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "returnType": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ]
+          },
+          "semanticCases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "effect",
+                "expectedBusinessEffect",
+                "expectedStatus",
+                "id",
+                "initialState",
+                "query",
+                "response",
+                "targetReuse"
+              ],
+              "properties": {
+                "bodyFields": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [],
+                  "properties": {
+                    "format": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "shiftId": {
+                      "type": "null"
+                    }
+                  }
+                },
+                "effect": {
+                  "enum": ["read", "write"]
+                },
+                "expectedBody": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["code", "context", "message"],
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "context": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["originalCode"],
+                      "properties": {
+                        "originalCode": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "expectedBusinessEffect": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "expectedStatus": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "initialState": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "permission": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "query": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [],
+                  "properties": {
+                    "dryRun": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "response": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "targetReuse": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "sourceSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "staticPermissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "minItems": 216,
+      "maxItems": 216,
+      "uniqueItems": true
+    },
+    "policyId": {
+      "const": "stynx.http-qualification-manifest"
+    },
+    "policyVersion": {
+      "const": "1.0.1"
+    },
+    "provisionalPopulation": {
+      "const": {
+        "requiredOwnDeclarations": 216,
+        "requiredDeclaredMountedPairs": 1156,
+        "declaredSemanticCases": 1167,
+        "scheduledTargets": 700200,
+        "minimumSerialTargetSeconds": 350100,
+        "runtimeVerifiedCases": 0,
+        "minimumExcludes": "fresh-build/setup/admission/negatives/grace/shutdown/finalchecks/four-existing-profiles",
+        "provisionalUntilActualRuntimeReconciliation": true
+      }
+    },
+    "publicExclusions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "authority",
+          "bootstrapAllowlist",
+          "classDecorators",
+          "classification",
+          "compositionIds",
+          "controller",
+          "declarationId",
+          "file",
+          "handler",
+          "method",
+          "methodDecorators",
+          "methodSha256",
+          "openapiOperations",
+          "originId",
+          "package",
+          "parameters",
+          "path",
+          "qualificationSamples",
+          "returnType",
+          "sourceSha256"
+        ],
+        "properties": {
+          "authority": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["decorator", "sha256", "source"],
+            "properties": {
+              "decorator": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "bootstrapAllowlist": {
+            "type": "boolean"
+          },
+          "classDecorators": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "classification": {
+            "type": "string",
+            "minLength": 1
+          },
+          "compositionIds": {
+            "type": "array",
+            "items": {
+              "enum": ["reference", "offlineE6", "offlineCTG9", "i18n", "privacy", "domain"]
+            }
+          },
+          "controller": {
+            "type": "string",
+            "minLength": 1
+          },
+          "declarationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "handler": {
+            "type": "string",
+            "minLength": 1
+          },
+          "method": {
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+          },
+          "methodDecorators": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "methodSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "openapiOperations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "artifact",
+                "artifactSha256",
+                "documentedStatuses",
+                "operationId",
+                "operationPointer"
+              ],
+              "properties": {
+                "artifact": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "artifactSha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "documentedStatuses": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "operationId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "operationPointer": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "originId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          },
+          "package": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["decorators", "name", "optional", "type"],
+              "properties": {
+                "decorators": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "optional": {
+                  "type": "boolean"
+                },
+                "type": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "qualificationSamples": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "returnType": {
+            "type": "null"
+          },
+          "sourceSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true
+    },
+    "qualificationProfile": {
+      "const": {
+        "id": "supplemental-per-case-600-v1",
+        "executor": "constant-arrival-rate",
+        "rate": 2,
+        "timeUnitSeconds": 1,
+        "durationSeconds": 300,
+        "scheduledTargets": 600,
+        "preAllocatedVUs": 2,
+        "maxVUs": 10,
+        "targetsPerIteration": 1,
+        "concurrentCases": 1,
+        "replacementRequests": 0,
+        "maxDroppedTargets": 0,
+        "completionGraceSeconds": 30,
+        "startupSeconds": 30,
+        "preparationDeadlineSeconds": 180,
+        "shutdownSeconds": 30,
+        "finalChecksSeconds": 30,
+        "parentOperationDeadlineSeconds": 600,
+        "generator": "k6",
+        "generatorVersion": "0.49.0",
+        "percentile": {
+          "algorithm": "sorted-linear-interpolation",
+          "index": "p*(n-1)",
+          "fractions": [0.5, 0.95, 0.99],
+          "empty": "refuse"
+        },
+        "httpSlo": {
+          "read": {
+            "p50Ms": 200,
+            "p95Ms": 800
+          },
+          "write": {
+            "p50Ms": 500,
+            "p95Ms": 2000
+          },
+          "operator": "lt"
+        },
+        "rawOutcomes": "all600-no-failure-filtering-or-pooling",
+        "fullHttpTiming": {
+          "unit": "milliseconds",
+          "field": "fullHttpMs",
+          "expression": "nativeResponse.timings.blocked + nativeResponse.timings.duration",
+          "nativeFieldsRetained": [
+            "blocked",
+            "looking_up",
+            "connecting",
+            "tls_handshaking",
+            "sending",
+            "waiting",
+            "receiving",
+            "duration"
+          ],
+          "extraConnectionOrTlsAddition": false,
+          "redirects": 0,
+          "retries": 0,
+          "source": "https://raw.githubusercontent.com/grafana/k6/v0.49.0/lib/netext/httpext/tracer.go",
+          "preserveFourExistingProfileMetrics": true
+        }
+      }
+    },
+    "repositoryId": {
+      "const": "stynx-nyx/stynx"
+    },
+    "runtimeReconciliation": {
+      "const": {
+        "caseId": "compositionId.originId.semanticCaseId",
+        "caseExpansion": "all-listed-compositionIds-x-all-listed-semanticCases",
+        "preferencesMount": {
+          "source": "reference/api/src/app.module.ts",
+          "className": "GuardedPreferencesController",
+          "origin": "packages/preferences/src/preferences.controller.ts",
+          "preserveInheritedOrigins": true
+        },
+        "unknownSource": "refuse",
+        "unknownRuntime": "refuse-until-prospective-manifest-amendment",
+        "implicitHeadOptions": "actual-adapter-observation-required;not-assumed-covered-by-GET",
+        "prefixVersionHost": "actual-config-and-selector-bijection-required",
+        "duplicateInsideComposition": "refuse",
+        "openapiStatusAndEnvelope": "actual-source-handler-service-and-runtime-reconciliation-required;generated-200-default-not-authority"
+      }
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "scope": {
+      "const": "prospective-source-bound-operation-and-semantic-workload"
+    },
+    "sourceCheckpoint": {
+      "const": {
+        "commit": "766184517a802ea9c53cc1fd5f712202d7a9b90e",
+        "ownDeclarations": 223,
+        "requiredOwnDeclarations": 216,
+        "explicitPublicOwnDeclarations": 7,
+        "runtimeMountedVerified": false,
+        "sourceCountIsCap": false
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stynx.dev/schemas/http-qualification-manifest.schema.json",
+  "title": "Prospective source-bound HTTP qualification manifest",
+  "description": "Architect schema for this exact prospective source census. Closed structural validation is necessary but not admission: independently validate source and method bytes, reference uniqueness, complete cross-product and case hashes, runtime census, every fixture/effect/quota and actual raw custody. Current exact counts are this versioned declaration snapshot, never a cap on runtime additions; a changed census requires a reviewed successor."
+}

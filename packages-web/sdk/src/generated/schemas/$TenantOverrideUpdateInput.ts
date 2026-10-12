@@ -3,17 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $TenantOverrideUpdateInput = {
-    properties: {
-        catalog: {
-            type: 'dictionary',
-            contains: {
-                type: 'string',
-            },
-            isRequired: true,
-        },
-        locale: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    catalog: {
+      type: 'dictionary',
+      contains: {
+        type: 'string',
+      },
+      isRequired: true,
     },
+    locale: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

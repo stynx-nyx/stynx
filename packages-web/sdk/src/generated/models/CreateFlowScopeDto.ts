@@ -4,10 +4,9 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type CreateFlowScopeDto = {
-    adapterConfig?: FlowJsonObject;
-    adapterKey: string;
-    code: string;
-    label: string;
-    meta?: FlowJsonObject;
+  adapterConfig?: FlowJsonObject;
+  adapterKey: string;
+  code: string;
+  label: string;
+  meta?: FlowJsonObject;
 };
-

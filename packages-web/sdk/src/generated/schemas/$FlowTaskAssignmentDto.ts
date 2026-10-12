@@ -3,13 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $FlowTaskAssignmentDto = {
-    properties: {
-        note: {
-            type: 'string',
-        },
-        userId: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    note: {
+      type: 'string',
     },
+    userId: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

@@ -3,15 +3,15 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $DevLoginBody = {
-    properties: {
-        email: {
-            type: 'string',
-        },
-        tenantId: {
-            type: 'string',
-        },
-        tenantSlug: {
-            type: 'string',
-        },
+  properties: {
+    email: {
+      type: 'string',
     },
+    tenantId: {
+      type: 'string',
+    },
+    tenantSlug: {
+      type: 'string',
+    },
+  },
 } as const;

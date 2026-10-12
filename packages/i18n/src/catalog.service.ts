@@ -6,6 +6,7 @@ import { Database } from '@stynx-nyx/data';
 import IntlMessageFormat from 'intl-messageformat';
 import { STYNX_I18N_OPTIONS } from './tokens';
 import type { StynxI18nModuleOptions } from './types';
+import { requireI18nCacheContext } from './tenant-context';
 
 type Catalogs = Map<string, Map<string, string>>;
 
@@ -28,7 +29,13 @@ export class CatalogService {
     return [...this.catalogsMap().keys()];
   }
 
-  translate(key: string, locale: string, vars: Record<string, unknown> = {}, tenantId?: string): string {
+  translate(
+    key: string,
+    locale: string,
+    vars: Record<string, unknown> = {},
+    tenantId?: string,
+  ): string {
+    if (tenantId !== undefined) requireI18nCacheContext(this.moduleRef, tenantId);
     const catalogs = this.catalogsMap();
     const layered = this.mergeTenantOverrides(catalogs, tenantId);
     const exact = layered.get(locale)?.get(key);
@@ -45,32 +52,33 @@ export class CatalogService {
   }
 
   async primeTenantOverrides(tenantId: string): Promise<void> {
+    requireI18nCacheContext(this.moduleRef, tenantId);
     if (this.tenantOverrideCache.has(tenantId)) {
       return;
     }
-    this.tenantOverrideCache.set(tenantId, await this.tenantOverrides(tenantId));
+    this.setTenantOverrides(tenantId, await this.tenantOverrides(tenantId));
   }
 
   setTenantOverrides(tenantId: string, overrides: Record<string, string>): void {
-    this.tenantOverrideCache.set(tenantId, overrides);
+    requireI18nCacheContext(this.moduleRef, tenantId);
+    this.tenantOverrideCache.set(tenantId, { ...overrides });
   }
 
   async tenantOverrides(tenantId: string): Promise<Record<string, string>> {
+    const scope = requireI18nCacheContext(this.moduleRef, tenantId);
     const database = this.moduleRef.get(Database, { strict: false });
-    return database.withSystemContext('i18n tenant override lookup', async () =>
-      database.tx(
-        async (trx) => {
-          const result = await trx.query<{ settings: Record<string, unknown> | null }>(
-            `select settings from tenancy.tenant_settings where tenant_id = $1::uuid limit 1`,
-            [tenantId],
-          );
-          const settings = result.rows[0]?.settings ?? {};
-          return Object.fromEntries(
-            Object.entries(settings).filter(([entryKey]) => entryKey.startsWith('i18n.override.')),
-          ) as Record<string, string>;
-        },
-        { role: 'owner', readonly: true, replica: false },
-      ),
+    return database.txIndependent(
+      async (trx) => {
+        const result = await trx.query<{ settings: Record<string, unknown> | null }>(
+          `select settings from tenancy.tenant_settings where tenant_id = $1::uuid limit 1`,
+          [tenantId],
+        );
+        const settings = result.rows[0]?.settings ?? {};
+        return Object.fromEntries(
+          Object.entries(settings).filter(([entryKey]) => entryKey.startsWith('i18n.override.')),
+        ) as Record<string, string>;
+      },
+      { role: scope === 'tenant' ? 'reader' : 'owner', readonly: true, replica: false },
     );
   }
 
@@ -138,7 +146,9 @@ export class CatalogService {
       return catalogs;
     }
 
-    const merged: Catalogs = new Map([...catalogs.entries()].map(([locale, catalog]) => [locale, new Map(catalog)]));
+    const merged: Catalogs = new Map(
+      [...catalogs.entries()].map(([locale, catalog]) => [locale, new Map(catalog)]),
+    );
     for (const [key, value] of Object.entries(overrides)) {
       const match = /^i18n\.override\.([^.]+)\.(.+)$/u.exec(key);
       if (!match) {

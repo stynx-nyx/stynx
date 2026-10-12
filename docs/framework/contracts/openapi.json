@@ -831,25 +831,210 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "endNumber": {
+            "type": "number"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "nextNumber": {
+            "type": "number"
+          },
+          "orgUnitId": {
+            "type": "string"
+          },
+          "rangeId": {
+            "type": "string"
+          },
+          "reservationId": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string"
+          },
+          "shiftId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "startNumber": {
+            "type": "number"
+          },
           "status": {
             "$ref": "#/components/schemas/NumberingReservationStatus"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "validUntil": {
+            "type": "string"
           }
         },
-        "required": ["status"],
+        "required": [
+          "agentId",
+          "deviceId",
+          "endNumber",
+          "entityType",
+          "nextNumber",
+          "orgUnitId",
+          "rangeId",
+          "reservationId",
+          "series",
+          "shiftId",
+          "startNumber",
+          "status",
+          "tenantId",
+          "validUntil"
+        ],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
+      "CTG9ReserveNumberingInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "deviceId": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "orgUnitId": {
+            "type": "string"
+          },
+          "rangeId": {
+            "type": "string"
+          },
+          "requestedSize": {
+            "type": "number"
+          },
+          "series": {
+            "type": "string"
+          },
+          "shiftId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "validUntil": {
+            "type": "string"
+          }
+        },
+        "required": ["deviceId", "entityType", "orgUnitId", "requestedSize", "shiftId"],
         "x-stynx-source": "packages/offline-sync/src/types.ts"
       },
       "CTG9SubmitSyncBatchResult": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "acceptedItems": {
+            "type": "number"
+          },
+          "batchId": {
+            "type": "string"
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "duplicateItems": {
+            "type": "number"
+          },
           "items": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "agentId": {
+                  "type": "string"
+                },
+                "createdLocallyAt": {
+                  "type": "string"
+                },
+                "deviceId": {
+                  "type": "string"
+                },
+                "entityType": {
+                  "type": "string"
+                },
+                "idempotencyKey": {
+                  "type": "string"
+                },
+                "localEntityId": {
+                  "type": "string"
+                },
+                "orgUnitId": {
+                  "type": "string"
+                },
+                "payloadHash": {
+                  "type": "string"
+                },
+                "payloadJson": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  }
+                },
+                "queueItemId": {
+                  "type": "string"
+                },
+                "receivedAt": {
+                  "type": "string"
+                },
+                "reservedNumber": {
+                  "type": "number"
+                },
+                "status": {
+                  "$ref": "#/components/schemas/OfflineSyncQueueStatus"
+                },
+                "tenantId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "agentId",
+                "createdLocallyAt",
+                "deviceId",
+                "entityType",
+                "localEntityId",
+                "orgUnitId",
+                "payloadHash",
+                "payloadJson",
+                "queueItemId",
+                "receivedAt",
+                "status",
+                "tenantId"
+              ]
+            }
           },
           "receipt": {
             "$ref": "#/components/schemas/SyncBatchReceipt"
           }
         },
-        "required": ["items", "receipt"],
+        "required": ["acceptedItems", "batchId", "conflicts", "duplicateItems", "items", "receipt"],
         "x-stynx-source": "packages/offline-sync/src/types.ts"
       },
       "DemoTenant": {
@@ -1049,21 +1234,16 @@
           "agentRules": {
             "type": "array",
             "items": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/FlowJsonObject"
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "nodeCode": {
-                      "type": "string"
-                    }
-                  },
-                  "required": ["nodeCode"]
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "properties": {
+                "nodeCode": {
+                  "type": "string"
                 }
-              ]
+              },
+              "required": ["nodeCode"]
             }
           },
           "edges": {
@@ -1078,21 +1258,16 @@
           "nodeFormRules": {
             "type": "array",
             "items": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/FlowJsonObject"
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "nodeCode": {
-                      "type": "string"
-                    }
-                  },
-                  "required": ["nodeCode"]
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "properties": {
+                "nodeCode": {
+                  "type": "string"
                 }
-              ]
+              },
+              "required": ["nodeCode"]
             }
           },
           "nodes": {
@@ -1396,12 +1571,52 @@
         "required": ["email", "inApp", "push"],
         "x-stynx-source": "packages/preferences/src/types.ts"
       },
+      "NumberingConsumptionEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "finalizedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "number": {
+            "type": "number"
+          },
+          "serverEntityId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["available", "claimed-locally", "applied", "blocked", "expired"]
+          }
+        },
+        "required": ["finalizedAt", "number", "serverEntityId", "status"],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
       "NumberingConsumptionResult": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "consumption": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NumberingConsumptionEntry"
+            }
           },
           "reservationId": {
             "type": "string"
@@ -1482,13 +1697,28 @@
       "NumberingReservationStatus": {
         "anyOf": [
           {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "string",
+            "enum": ["reserved", "consumed", "expired", "cancelled"]
           },
           {
             "type": "string",
             "const": "blocked"
           }
         ],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
+      "OfflineSyncConcurrentPair": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "firstItemId": {
+            "type": "string"
+          },
+          "secondItemId": {
+            "type": "string"
+          }
+        },
+        "required": ["firstItemId", "secondItemId"],
         "x-stynx-source": "packages/offline-sync/src/types.ts"
       },
       "OfflineSyncConflictResolutionStrategy": {
@@ -1525,6 +1755,15 @@
           },
           "attempts": {
             "type": "number"
+          },
+          "concurrencySuspected": {
+            "type": "boolean"
+          },
+          "concurrentPairs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OfflineSyncConcurrentPair"
+            }
           },
           "consumerAttributes": {
             "$ref": "#/components/schemas/OfflineSyncConsumerAttributes"
@@ -1633,8 +1872,196 @@
         ],
         "x-stynx-source": "packages/preferences/src/types.ts"
       },
+      "PreferenceCategory": {
+        "type": "string",
+        "enum": ["locale", "theme", "accessibility", "notificationDelivery"],
+        "x-stynx-source": "packages/preferences/src/types.ts"
+      },
       "PreferencePatch": {
-        "$ref": "#/components/schemas/UnknownJson",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accessibility": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "largeText": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  },
+                  "reduceMotion": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  },
+                  "screenReaderOptimized": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "locale": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "locale": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  },
+                  "timezone": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "notificationDelivery": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  },
+                  "inApp": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  },
+                  "push": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "colorScheme": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["system", "light", "dark"]
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  },
+                  "contrast": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["standard", "more"]
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  },
+                  "density": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["comfortable", "compact"]
+                      },
+                      {
+                        "type": "null",
+                        "const": null
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          }
+        },
         "x-stynx-source": "packages/preferences/src/types.ts"
       },
       "PreferencesDocument": {
@@ -1983,7 +2410,10 @@
         "additionalProperties": false,
         "properties": {
           "claimedNumbers": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
           },
           "userRef": {
             "type": "string"
@@ -1995,15 +2425,52 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "consumption": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NumberingConsumptionEntry"
+            }
+          },
           "missingOnServer": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "reservationId": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/NumberingReservationStatus"
           },
           "unexpectedOnServer": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
           }
         },
-        "required": ["missingOnServer", "unexpectedOnServer"],
+        "required": [
+          "consumption",
+          "missingOnServer",
+          "reservationId",
+          "status",
+          "unexpectedOnServer"
+        ],
         "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
+      "RegistrationState": {
+        "type": "string",
+        "enum": [
+          "active",
+          "revocation_pending",
+          "revoked",
+          "failed",
+          "unsupported",
+          "expired",
+          "retired"
+        ],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
       },
       "ReserveNumberingInput": {
         "type": "object",
@@ -2107,6 +2574,94 @@
           "sid"
         ],
         "x-stynx-source": "packages/sessions/src/types.ts"
+      },
+      "SessionControlCapabilities": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "controlScopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionScope"
+            }
+          },
+          "identityGlobalAuthority": {
+            "type": "boolean"
+          },
+          "listScopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionScope"
+            }
+          },
+          "localEnforcement": {
+            "type": "string",
+            "enum": ["immediate", "bounded", "none"]
+          },
+          "providerConfirmation": {
+            "type": "boolean"
+          },
+          "retryReconciliation": {
+            "type": "boolean"
+          },
+          "revokeAll": {
+            "type": "boolean"
+          },
+          "revokeOne": {
+            "type": "boolean"
+          },
+          "revokeOthers": {
+            "type": "boolean"
+          },
+          "sharedAnchorBlastRadius": {
+            "type": "boolean"
+          },
+          "stableSessionIdentity": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "controlScopes",
+          "identityGlobalAuthority",
+          "listScopes",
+          "localEnforcement",
+          "providerConfirmation",
+          "retryReconciliation",
+          "revokeAll",
+          "revokeOne",
+          "revokeOthers",
+          "sharedAnchorBlastRadius",
+          "stableSessionIdentity"
+        ],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
+      },
+      "SessionDisplayMetadata": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "client": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "deviceClass": {
+            "type": "string"
+          },
+          "deviceLabel": {
+            "type": "string"
+          },
+          "providerLabel": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "userAgentFamily": {
+            "type": "string"
+          }
+        },
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
       },
       "SessionExchangeBody": {
         "type": "object",
@@ -2239,6 +2794,95 @@
         ],
         "x-stynx-source": "packages/sessions/src/control/types.ts"
       },
+      "SessionRegistration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "anchorId": {
+            "type": "string"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/SessionControlCapabilities"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "guarantee": {
+            "$ref": "#/components/schemas/SessionGuarantee"
+          },
+          "lastSeenAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/SessionDisplayMetadata"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "sharedAnchor": {
+            "type": "boolean"
+          },
+          "sid": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/RegistrationState"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "terminalAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          }
+        },
+        "required": [
+          "anchorId",
+          "capabilities",
+          "createdAt",
+          "expiresAt",
+          "guarantee",
+          "lastSeenAt",
+          "metadata",
+          "provider",
+          "sharedAnchor",
+          "sid",
+          "state",
+          "subjectId",
+          "tenantId",
+          "terminalAt"
+        ],
+        "x-stynx-source": "packages/sessions/src/control/types.ts"
+      },
       "SessionScope": {
         "type": "string",
         "enum": ["tenant", "identity"],
@@ -2274,7 +2918,13 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "capabilities": {
+            "$ref": "#/components/schemas/SessionControlCapabilities"
+          },
           "client": {
+            "type": "string"
+          },
+          "createdAt": {
             "type": "string"
           },
           "current": {
@@ -2283,8 +2933,60 @@
           "deviceLabel": {
             "type": "string"
           },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
           "guarantee": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "effectiveBy": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null",
+                    "const": null
+                  }
+                ]
+              },
+              "kind": {
+                "$ref": "#/components/schemas/InvalidationGuarantee"
+              },
+              "propagationBoundSeconds": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null",
+                    "const": null
+                  }
+                ]
+              }
+            },
+            "x-stynx-source": "packages/sessions/src/control/types.ts",
+            "required": ["effectiveBy", "kind", "propagationBoundSeconds"]
+          },
+          "lastSeenAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
           },
           "location": {
             "type": "object",
@@ -2298,14 +3000,50 @@
               }
             }
           },
+          "provider": {
+            "type": "string"
+          },
           "sessionId": {
             "type": "string"
+          },
+          "sid": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/RegistrationState"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "terminalAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
           },
           "userAgent": {
             "type": "string"
           }
         },
-        "required": ["current", "guarantee", "sessionId"],
+        "required": [
+          "capabilities",
+          "createdAt",
+          "current",
+          "expiresAt",
+          "guarantee",
+          "lastSeenAt",
+          "provider",
+          "sessionId",
+          "sid",
+          "state",
+          "tenantId",
+          "terminalAt"
+        ],
         "x-stynx-source": "packages/sessions/src/control/types.ts"
       },
       "SettleNumberingInput": {
@@ -2321,6 +3059,73 @@
         },
         "x-stynx-source": "packages/offline-sync/src/types.ts"
       },
+      "StoredSyncQueueItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "createdLocallyAt": {
+            "type": "string"
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "localEntityId": {
+            "type": "string"
+          },
+          "orgUnitId": {
+            "type": "string"
+          },
+          "payloadHash": {
+            "type": "string"
+          },
+          "payloadJson": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            }
+          },
+          "queueItemId": {
+            "type": "string"
+          },
+          "receivedAt": {
+            "type": "string"
+          },
+          "reservedNumber": {
+            "type": "number"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfflineSyncQueueStatus"
+          },
+          "tenantId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "agentId",
+          "createdLocallyAt",
+          "deviceId",
+          "entityType",
+          "idempotencyKey",
+          "localEntityId",
+          "orgUnitId",
+          "payloadHash",
+          "payloadJson",
+          "queueItemId",
+          "receivedAt",
+          "status",
+          "tenantId"
+        ],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
       "SubmitSyncBatchInput": {
         "type": "object",
         "additionalProperties": false,
@@ -2332,7 +3137,10 @@
             "type": "string"
           },
           "items": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncBatchItemInput"
+            }
           },
           "orgUnitId": {
             "type": "string"
@@ -2352,13 +3160,19 @@
             "type": "string"
           },
           "conflicts": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "duplicateItems": {
             "type": "number"
           },
           "items": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoredSyncQueueItem"
+            }
           }
         },
         "required": ["acceptedItems", "batchId", "conflicts", "duplicateItems", "items"],
@@ -2389,6 +3203,49 @@
         "required": ["activeSessionCount", "tenant"],
         "x-stynx-source": "packages/tenancy/src/types.ts"
       },
+      "SyncBatchItemInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "createdLocallyAt": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "localEntityId": {
+            "type": "string"
+          },
+          "payloadHash": {
+            "type": "string"
+          },
+          "payloadJson": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            }
+          },
+          "queueItemId": {
+            "type": "string"
+          },
+          "reservedNumber": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "createdLocallyAt",
+          "entityType",
+          "idempotencyKey",
+          "localEntityId",
+          "payloadHash",
+          "payloadJson",
+          "queueItemId"
+        ],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
       "SyncBatchReceipt": {
         "type": "object",
         "additionalProperties": false,
@@ -2411,7 +3268,10 @@
             "type": "string"
           },
           "items": {
-            "$ref": "#/components/schemas/UnknownJson"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncItemReceipt"
+            }
           },
           "responseBodyBytes": {
             "anyOf": [
@@ -2554,6 +3414,15 @@
               }
             ]
           },
+          "createdAt": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
           "locale": {
             "anyOf": [
               {
@@ -2565,11 +3434,20 @@
               }
             ]
           },
+          "name": {
+            "type": "string"
+          },
           "settings": {
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/JsonValue"
             }
+          },
+          "slug": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/TenantState"
           },
           "suspendedReason": {
             "anyOf": [
@@ -2592,9 +3470,21 @@
                 "const": null
               }
             ]
+          },
+          "updatedAt": {
+            "type": "string"
           }
         },
-        "required": ["settings"],
+        "required": [
+          "createdAt",
+          "id",
+          "isActive",
+          "name",
+          "settings",
+          "slug",
+          "state",
+          "updatedAt"
+        ],
         "x-stynx-source": "packages/tenancy/src/types.ts"
       },
       "TenantOverrideUpdateInput": {
@@ -3299,6 +4189,8 @@
           }
         ],
         "x-stynx-source": "packages/audit/src/audit.controller.ts",
+        "x-stynx-controller": "StynxAuditController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -3459,6 +4351,8 @@
           }
         ],
         "x-stynx-source": "packages/auth/src/auth.controller.ts",
+        "x-stynx-controller": "StynxAuthController",
+        "x-stynx-handler": "inspect",
         "x-stynx-route": "/_platform/perms/:sid",
         "responses": {
           "200": {
@@ -3605,6 +4499,8 @@
           }
         ],
         "x-stynx-source": "packages/auth/src/auth.controller.ts",
+        "x-stynx-controller": "StynxAuthController",
+        "x-stynx-handler": "invalidate",
         "x-stynx-route": "/_platform/perms/:sid/invalidate",
         "responses": {
           "200": {
@@ -3734,6 +4630,8 @@
         "tags": ["ReferenceProbes"],
         "security": [],
         "x-stynx-source": "reference/api/src/sample/reference-probes.controller.ts",
+        "x-stynx-controller": "ReferenceProbesController",
+        "x-stynx-handler": "dataTx",
         "responses": {
           "200": {
             "description": "OK",
@@ -3863,6 +4761,8 @@
         "x-stynx-no-request-body": true,
         "security": [],
         "x-stynx-source": "reference/api/src/sample/reference-probes.controller.ts",
+        "x-stynx-controller": "ReferenceProbesController",
+        "x-stynx-handler": "idempotency",
         "responses": {
           "200": {
             "description": "OK",
@@ -4002,6 +4902,8 @@
         ],
         "security": [],
         "x-stynx-source": "reference/api/src/sample/reference-probes.controller.ts",
+        "x-stynx-controller": "ReferenceProbesController",
+        "x-stynx-handler": "rateLimit",
         "responses": {
           "200": {
             "description": "OK",
@@ -4128,8 +5030,15 @@
       "get": {
         "operationId": "ReferenceProbes-get-probes-readonly-write-handler",
         "tags": ["ReferenceProbes"],
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
         "x-stynx-source": "reference/api/src/sample/reference-probes.controller.ts",
+        "x-stynx-controller": "ReferenceProbesController",
+        "x-stynx-handler": "readonlyWrite",
         "responses": {
           "200": {
             "description": "OK",
@@ -4258,6 +5167,8 @@
         "tags": ["ReferenceDevAuth"],
         "security": [],
         "x-stynx-source": "reference/api/src/sample/reference-dev-auth.controller.ts",
+        "x-stynx-controller": "ReferenceDevAuthController",
+        "x-stynx-handler": "authVerify",
         "responses": {
           "200": {
             "description": "OK",
@@ -4386,6 +5297,8 @@
         "tags": ["ReferenceDevAuth"],
         "security": [],
         "x-stynx-source": "reference/api/src/sample/reference-dev-auth.controller.ts",
+        "x-stynx-controller": "ReferenceDevAuthController",
+        "x-stynx-handler": "listDemoTenants",
         "responses": {
           "200": {
             "description": "OK",
@@ -4541,35 +5454,64 @@
         },
         "security": [],
         "x-stynx-source": "reference/api/src/sample/reference-dev-auth.controller.ts",
+        "x-stynx-controller": "ReferenceDevAuthController",
+        "x-stynx-handler": "login",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/SessionBundle"
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
                     },
-                    {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "properties": {
-                        "email": {
-                          "type": "string"
-                        },
-                        "permissions": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "tenantId": {
-                          "type": "string"
-                        }
-                      },
-                      "required": ["email", "permissions", "tenantId"]
+                    "accessTokenExpiresAt": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "idleExpiresAt": {
+                      "type": "string"
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "revokedSessionIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "sid": {
+                      "type": "string"
+                    },
+                    "tenantId": {
+                      "type": "string"
                     }
+                  },
+                  "required": [
+                    "accessToken",
+                    "accessTokenExpiresAt",
+                    "email",
+                    "expiresAt",
+                    "idleExpiresAt",
+                    "permissions",
+                    "refreshToken",
+                    "sid",
+                    "tenantId"
                   ]
                 },
                 "x-stynx-source-type": "Promise<SessionBundle & { tenantId: string; email: string; permissions: string[] }>",
@@ -4578,13 +5520,13 @@
                     "value": {
                       "accessToken": "example",
                       "accessTokenExpiresAt": "example",
+                      "email": "example",
                       "expiresAt": "example",
                       "idleExpiresAt": "example",
+                      "permissions": ["example"],
                       "refreshToken": "example",
                       "revokedSessionIds": ["example"],
                       "sid": "example",
-                      "email": "example",
-                      "permissions": ["example"],
                       "tenantId": "example"
                     }
                   }
@@ -4706,6 +5648,8 @@
           }
         ],
         "x-stynx-source": "packages/i18n/src/i18n.controller.ts",
+        "x-stynx-controller": "I18nController",
+        "x-stynx-handler": "listOverrides",
         "responses": {
           "200": {
             "description": "OK",
@@ -4857,6 +5801,8 @@
           }
         ],
         "x-stynx-source": "packages/i18n/src/i18n.controller.ts",
+        "x-stynx-controller": "I18nController",
+        "x-stynx-handler": "updateOverrides",
         "responses": {
           "200": {
             "description": "OK",
@@ -4991,6 +5937,8 @@
           }
         ],
         "x-stynx-source": "packages/sessions/src/jwks.controller.ts",
+        "x-stynx-controller": "SessionJwksController",
+        "x-stynx-handler": "jwks",
         "responses": {
           "200": {
             "description": "OK",
@@ -5003,36 +5951,28 @@
                     "keys": {
                       "type": "array",
                       "items": {
-                        "allOf": [
-                          {
-                            "type": "object",
-                            "additionalProperties": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                }
-                              ]
+                        "type": "object",
+                        "additionalProperties": {
+                          "anyOf": [
+                            {
+                              "type": "string"
                             }
+                          ]
+                        },
+                        "properties": {
+                          "alg": {
+                            "type": "string",
+                            "const": "RS256"
                           },
-                          {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "properties": {
-                              "alg": {
-                                "type": "string",
-                                "const": "RS256"
-                              },
-                              "kid": {
-                                "type": "string"
-                              },
-                              "use": {
-                                "type": "string",
-                                "const": "sig"
-                              }
-                            },
-                            "required": ["alg", "kid", "use"]
+                          "kid": {
+                            "type": "string"
+                          },
+                          "use": {
+                            "type": "string",
+                            "const": "sig"
                           }
-                        ]
+                        },
+                        "required": ["alg", "kid", "use"]
                       }
                     }
                   },
@@ -5198,6 +6138,8 @@
           }
         ],
         "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-controller": "SessionControlController",
+        "x-stynx-handler": "subject",
         "x-stynx-route": "/auth/session-administration/subjects/:subjectId/revoke",
         "responses": {
           "200": {
@@ -5362,6 +6304,8 @@
           }
         ],
         "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-controller": "SessionControlController",
+        "x-stynx-handler": "operation",
         "x-stynx-route": "/auth/session-operations/:operationId",
         "responses": {
           "200": {
@@ -5516,6 +6460,8 @@
           }
         ],
         "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-controller": "SessionControlController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -5532,15 +6478,40 @@
                   "default": {
                     "value": [
                       {
+                        "capabilities": {
+                          "controlScopes": ["tenant"],
+                          "identityGlobalAuthority": true,
+                          "listScopes": [{}],
+                          "localEnforcement": "immediate",
+                          "providerConfirmation": true,
+                          "retryReconciliation": true,
+                          "revokeAll": true,
+                          "revokeOne": true,
+                          "revokeOthers": true,
+                          "sharedAnchorBlastRadius": true,
+                          "stableSessionIdentity": true
+                        },
                         "client": "example",
+                        "createdAt": "example",
                         "current": true,
                         "deviceLabel": "example",
-                        "guarantee": "example",
+                        "expiresAt": "example",
+                        "guarantee": {
+                          "effectiveBy": "example",
+                          "kind": "immediate_local",
+                          "propagationBoundSeconds": 1
+                        },
+                        "lastSeenAt": "example",
                         "location": {
                           "country": "example",
                           "region": "example"
                         },
+                        "provider": "example",
                         "sessionId": "example",
+                        "sid": "example",
+                        "state": "active",
+                        "tenantId": "example",
+                        "terminalAt": "example",
                         "userAgent": "example"
                       }
                     ]
@@ -5675,6 +6646,8 @@
           }
         ],
         "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-controller": "SessionControlController",
+        "x-stynx-handler": "revoke",
         "x-stynx-route": "/auth/sessions/:sid",
         "responses": {
           "200": {
@@ -5844,6 +6817,8 @@
           }
         ],
         "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-controller": "SessionControlController",
+        "x-stynx-handler": "logout",
         "responses": {
           "200": {
             "description": "OK",
@@ -6012,6 +6987,8 @@
           }
         ],
         "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-controller": "SessionControlController",
+        "x-stynx-handler": "all",
         "responses": {
           "200": {
             "description": "OK",
@@ -6180,6 +7157,8 @@
           }
         ],
         "x-stynx-source": "packages/sessions/src/control/session-control.controller.ts",
+        "x-stynx-controller": "SessionControlController",
+        "x-stynx-handler": "others",
         "responses": {
           "200": {
             "description": "OK",
@@ -6355,6 +7334,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/documents.controller.ts",
+        "x-stynx-controller": "DocumentsController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -6499,6 +7480,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/documents.controller.ts",
+        "x-stynx-controller": "DocumentsController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/documents/:id",
         "responses": {
           "200": {
@@ -6663,6 +7646,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/documents.controller.ts",
+        "x-stynx-controller": "DocumentsController",
+        "x-stynx-handler": "complete",
         "x-stynx-route": "/documents/:id/complete",
         "responses": {
           "200": {
@@ -6808,6 +7793,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/documents.controller.ts",
+        "x-stynx-controller": "DocumentsController",
+        "x-stynx-handler": "download",
         "x-stynx-route": "/documents/:id/download",
         "responses": {
           "200": {
@@ -6953,6 +7940,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/documents.controller.ts",
+        "x-stynx-controller": "DocumentsController",
+        "x-stynx-handler": "hardDelete",
         "x-stynx-route": "/documents/:id/hard",
         "responses": {
           "200": {
@@ -7099,6 +8088,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/documents.controller.ts",
+        "x-stynx-controller": "DocumentsController",
+        "x-stynx-handler": "restore",
         "x-stynx-route": "/documents/:id/restore",
         "responses": {
           "200": {
@@ -7244,6 +8235,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/agent-rules.controller.ts",
+        "x-stynx-controller": "FlowAgentRulesController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/agent-rules/:id",
         "responses": {
           "200": {
@@ -7387,6 +8380,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/agent-rules.controller.ts",
+        "x-stynx-controller": "FlowAgentRulesController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/agent-rules/:id",
         "responses": {
           "200": {
@@ -7555,6 +8550,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/agent-rules.controller.ts",
+        "x-stynx-controller": "FlowAgentRulesController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/agent-rules/:id",
         "responses": {
           "200": {
@@ -7690,6 +8687,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/analytics.controller.ts",
+        "x-stynx-controller": "FlowAnalyticsController",
+        "x-stynx-handler": "dashboard",
         "responses": {
           "200": {
             "description": "OK",
@@ -7835,6 +8834,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/answers.controller.ts",
+        "x-stynx-controller": "FlowAnswersController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/answers/:id",
         "responses": {
           "200": {
@@ -8004,6 +9005,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/answers.controller.ts",
+        "x-stynx-controller": "FlowAnswersController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/answers/:id",
         "responses": {
           "200": {
@@ -8150,6 +9153,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/edges.controller.ts",
+        "x-stynx-controller": "FlowEdgesController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/edges/:id",
         "responses": {
           "200": {
@@ -8293,6 +9298,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/edges.controller.ts",
+        "x-stynx-controller": "FlowEdgesController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/edges/:id",
         "responses": {
           "200": {
@@ -8462,6 +9469,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/edges.controller.ts",
+        "x-stynx-controller": "FlowEdgesController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/edges/:id",
         "responses": {
           "200": {
@@ -8617,6 +9626,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/effects.controller.ts",
+        "x-stynx-controller": "FlowEffectsController",
+        "x-stynx-handler": "dispatch",
         "responses": {
           "200": {
             "description": "OK",
@@ -8752,6 +9763,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/events.controller.ts",
+        "x-stynx-controller": "FlowEventsController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -8887,6 +9900,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -9047,6 +10062,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -9192,6 +10209,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "answers",
         "x-stynx-route": "/flow/fills/:fillId/answers",
         "responses": {
           "200": {
@@ -9364,6 +10383,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "upsertAnswer",
         "x-stynx-route": "/flow/fills/:fillId/answers",
         "responses": {
           "200": {
@@ -9535,6 +10556,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "bulkUpsertAnswers",
         "x-stynx-route": "/flow/fills/:fillId/answers",
         "responses": {
           "200": {
@@ -9684,6 +10707,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "waivers",
         "x-stynx-route": "/flow/fills/:fillId/waivers",
         "responses": {
           "200": {
@@ -9856,6 +10881,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "createWaiver",
         "x-stynx-route": "/flow/fills/:fillId/waivers",
         "responses": {
           "200": {
@@ -10002,6 +11029,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/fills/:id",
         "responses": {
           "200": {
@@ -10146,6 +11175,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/fills/:id",
         "responses": {
           "200": {
@@ -10311,6 +11342,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/fills.controller.ts",
+        "x-stynx-controller": "FlowFillsController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/fills/:id",
         "responses": {
           "200": {
@@ -10457,6 +11490,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -10618,6 +11653,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -10763,6 +11800,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "fills",
         "x-stynx-route": "/flow/forms/:formId/fills",
         "responses": {
           "200": {
@@ -10935,6 +11974,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "createFill",
         "x-stynx-route": "/flow/forms/:formId/fills",
         "responses": {
           "200": {
@@ -11090,6 +12131,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "fillDetail",
         "x-stynx-route": "/flow/forms/:formId/fills/:fillId",
         "responses": {
           "200": {
@@ -11245,6 +12288,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "fillAnswers",
         "x-stynx-route": "/flow/forms/:formId/fills/:fillId/answers",
         "responses": {
           "200": {
@@ -11403,6 +12448,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "fillWaivers",
         "x-stynx-route": "/flow/forms/:formId/fills/:fillId/waivers",
         "responses": {
           "200": {
@@ -11584,6 +12631,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "createFillWaiver",
         "x-stynx-route": "/flow/forms/:formId/fills/:fillId/waivers",
         "responses": {
           "200": {
@@ -11730,6 +12779,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "questions",
         "x-stynx-route": "/flow/forms/:formId/questions",
         "responses": {
           "200": {
@@ -11915,6 +12966,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "createQuestion",
         "x-stynx-route": "/flow/forms/:formId/questions",
         "responses": {
           "200": {
@@ -12061,6 +13114,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/forms/:id",
         "responses": {
           "200": {
@@ -12205,6 +13260,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/forms/:id",
         "responses": {
           "200": {
@@ -12374,6 +13431,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/forms.controller.ts",
+        "x-stynx-controller": "FlowFormsController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/forms/:id",
         "responses": {
           "200": {
@@ -12520,6 +13579,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -12682,6 +13743,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -12826,6 +13889,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "listEdges",
         "x-stynx-route": "/flow/graphs/:graphId/edges",
         "responses": {
           "200": {
@@ -13001,6 +14066,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "createEdge",
         "x-stynx-route": "/flow/graphs/:graphId/edges",
         "responses": {
           "200": {
@@ -13146,6 +14213,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "listNodes",
         "x-stynx-route": "/flow/graphs/:graphId/nodes",
         "responses": {
           "200": {
@@ -13325,6 +14394,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "createNode",
         "x-stynx-route": "/flow/graphs/:graphId/nodes",
         "responses": {
           "200": {
@@ -13470,6 +14541,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "listTransitionEffects",
         "x-stynx-route": "/flow/graphs/:graphId/transition-effects",
         "responses": {
           "200": {
@@ -13643,6 +14716,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "createTransitionEffect",
         "x-stynx-route": "/flow/graphs/:graphId/transition-effects",
         "responses": {
           "200": {
@@ -13788,6 +14863,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/graphs/:id",
         "responses": {
           "200": {
@@ -13931,6 +15008,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/graphs/:id",
         "responses": {
           "200": {
@@ -14099,6 +15178,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/graphs/:id",
         "responses": {
           "200": {
@@ -14244,6 +15325,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "export",
         "x-stynx-route": "/flow/graphs/:id/export",
         "responses": {
           "200": {
@@ -14445,6 +15528,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "publish",
         "x-stynx-route": "/flow/graphs/:id/publish",
         "responses": {
           "200": {
@@ -14585,7 +15670,6 @@
                   "value": {
                     "agentRules": [
                       {
-                        "id": "00000000-0000-4000-8000-000000000000",
                         "nodeCode": "example"
                       }
                     ],
@@ -14607,7 +15691,6 @@
                     },
                     "nodeFormRules": [
                       {
-                        "id": "00000000-0000-4000-8000-000000000000",
                         "nodeCode": "example"
                       }
                     ],
@@ -14646,6 +15729,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/graphs.controller.ts",
+        "x-stynx-controller": "FlowGraphsController",
+        "x-stynx-handler": "import",
         "responses": {
           "200": {
             "description": "OK",
@@ -14827,6 +15912,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/node-form-rules.controller.ts",
+        "x-stynx-controller": "FlowNodeFormRulesController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/node-form-rules/:id",
         "responses": {
           "200": {
@@ -14970,6 +16057,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/node-form-rules.controller.ts",
+        "x-stynx-controller": "FlowNodeFormRulesController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/node-form-rules/:id",
         "responses": {
           "200": {
@@ -15140,6 +16229,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/node-form-rules.controller.ts",
+        "x-stynx-controller": "FlowNodeFormRulesController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/node-form-rules/:id",
         "responses": {
           "200": {
@@ -15275,6 +16366,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/node-runs.controller.ts",
+        "x-stynx-controller": "FlowNodeRunsController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -15420,6 +16513,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/node-runs.controller.ts",
+        "x-stynx-controller": "FlowNodeRunsController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/node-runs/:id",
         "responses": {
           "200": {
@@ -15566,6 +16661,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/nodes.controller.ts",
+        "x-stynx-controller": "FlowNodesController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/nodes/:id",
         "responses": {
           "200": {
@@ -15709,6 +16806,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/nodes.controller.ts",
+        "x-stynx-controller": "FlowNodesController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/nodes/:id",
         "responses": {
           "200": {
@@ -15882,6 +16981,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/nodes.controller.ts",
+        "x-stynx-controller": "FlowNodesController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/nodes/:id",
         "responses": {
           "200": {
@@ -16027,6 +17128,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/nodes.controller.ts",
+        "x-stynx-controller": "FlowNodesController",
+        "x-stynx-handler": "listAgentRules",
         "x-stynx-route": "/flow/nodes/:nodeId/agent-rules",
         "responses": {
           "200": {
@@ -16201,6 +17304,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/nodes.controller.ts",
+        "x-stynx-controller": "FlowNodesController",
+        "x-stynx-handler": "createAgentRule",
         "x-stynx-route": "/flow/nodes/:nodeId/agent-rules",
         "responses": {
           "200": {
@@ -16346,6 +17451,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/nodes.controller.ts",
+        "x-stynx-controller": "FlowNodesController",
+        "x-stynx-handler": "listFormRules",
         "x-stynx-route": "/flow/nodes/:nodeId/form-rules",
         "responses": {
           "200": {
@@ -16523,6 +17630,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/nodes.controller.ts",
+        "x-stynx-controller": "FlowNodesController",
+        "x-stynx-handler": "createFormRule",
         "x-stynx-route": "/flow/nodes/:nodeId/form-rules",
         "responses": {
           "200": {
@@ -16658,6 +17767,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/analytics.controller.ts",
+        "x-stynx-controller": "FlowAnalyticsController",
+        "x-stynx-handler": "openTasks",
         "responses": {
           "200": {
             "description": "OK",
@@ -16821,6 +17932,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "evaluate",
         "responses": {
           "200": {
             "description": "OK",
@@ -16965,6 +18078,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "deleteRule",
         "x-stynx-route": "/flow/policies/rules/:id",
         "responses": {
           "200": {
@@ -17108,6 +18223,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "getRule",
         "x-stynx-route": "/flow/policies/rules/:id",
         "responses": {
           "200": {
@@ -17281,6 +18398,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "updateRule",
         "x-stynx-route": "/flow/policies/rules/:id",
         "responses": {
           "200": {
@@ -17426,6 +18545,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "listSets",
         "responses": {
           "200": {
             "description": "OK",
@@ -17587,6 +18708,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "createSet",
         "responses": {
           "200": {
             "description": "OK",
@@ -17731,6 +18854,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "deleteSet",
         "x-stynx-route": "/flow/policies/sets/:id",
         "responses": {
           "200": {
@@ -17874,6 +18999,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "getSet",
         "x-stynx-route": "/flow/policies/sets/:id",
         "responses": {
           "200": {
@@ -18041,6 +19168,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "updateSet",
         "x-stynx-route": "/flow/policies/sets/:id",
         "responses": {
           "200": {
@@ -18186,6 +19315,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "listRules",
         "x-stynx-route": "/flow/policies/sets/:policySetId/rules",
         "responses": {
           "200": {
@@ -18365,6 +19496,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/policies.controller.ts",
+        "x-stynx-controller": "FlowPoliciesController",
+        "x-stynx-handler": "createRule",
         "x-stynx-route": "/flow/policies/sets/:policySetId/rules",
         "responses": {
           "200": {
@@ -18510,6 +19643,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/questions.controller.ts",
+        "x-stynx-controller": "FlowQuestionsController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/questions/:id",
         "responses": {
           "200": {
@@ -18654,6 +19789,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/questions.controller.ts",
+        "x-stynx-controller": "FlowQuestionsController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/questions/:id",
         "responses": {
           "200": {
@@ -18835,6 +19972,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/questions.controller.ts",
+        "x-stynx-controller": "FlowQuestionsController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/questions/:id",
         "responses": {
           "200": {
@@ -18981,6 +20120,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/questions.controller.ts",
+        "x-stynx-controller": "FlowQuestionsController",
+        "x-stynx-handler": "deleteScore",
         "x-stynx-route": "/flow/questions/:id/score",
         "responses": {
           "200": {
@@ -19125,6 +20266,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/questions.controller.ts",
+        "x-stynx-controller": "FlowQuestionsController",
+        "x-stynx-handler": "score",
         "x-stynx-route": "/flow/questions/:id/score",
         "responses": {
           "200": {
@@ -19291,6 +20434,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/questions.controller.ts",
+        "x-stynx-controller": "FlowQuestionsController",
+        "x-stynx-handler": "putScore",
         "x-stynx-route": "/flow/questions/:id/score",
         "responses": {
           "200": {
@@ -19427,6 +20572,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -19572,6 +20719,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/runs/:id",
         "responses": {
           "200": {
@@ -19734,6 +20883,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/runs/:id",
         "responses": {
           "200": {
@@ -19881,6 +21032,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "activity",
         "x-stynx-route": "/flow/runs/:id/activity",
         "responses": {
           "200": {
@@ -20027,6 +21180,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "listEvents",
         "x-stynx-route": "/flow/runs/:id/events",
         "responses": {
           "200": {
@@ -20176,6 +21331,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "facts",
         "x-stynx-route": "/flow/runs/:id/facts",
         "responses": {
           "200": {
@@ -20322,6 +21479,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "listNodeRuns",
         "x-stynx-route": "/flow/runs/:id/nodes",
         "responses": {
           "200": {
@@ -20471,6 +21630,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "listTasks",
         "x-stynx-route": "/flow/runs/:id/tasks",
         "responses": {
           "200": {
@@ -20637,6 +21798,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "ensure",
         "responses": {
           "200": {
             "description": "OK",
@@ -20772,6 +21935,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/runs.controller.ts",
+        "x-stynx-controller": "FlowRunsController",
+        "x-stynx-handler": "summary",
         "responses": {
           "200": {
             "description": "OK",
@@ -20906,6 +22071,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/scopes.controller.ts",
+        "x-stynx-controller": "FlowScopesController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -21068,6 +22235,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/scopes.controller.ts",
+        "x-stynx-controller": "FlowScopesController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -21212,6 +22381,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/scopes.controller.ts",
+        "x-stynx-controller": "FlowScopesController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/scopes/:id",
         "responses": {
           "200": {
@@ -21355,6 +22526,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/scopes.controller.ts",
+        "x-stynx-controller": "FlowScopesController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/scopes/:id",
         "responses": {
           "200": {
@@ -21524,6 +22697,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/scopes.controller.ts",
+        "x-stynx-controller": "FlowScopesController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/scopes/:id",
         "responses": {
           "200": {
@@ -21684,6 +22859,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/signal.controller.ts",
+        "x-stynx-controller": "FlowSignalController",
+        "x-stynx-handler": "signal",
         "responses": {
           "200": {
             "description": "OK",
@@ -21819,6 +22996,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -21964,6 +23143,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/tasks/:id",
         "responses": {
           "200": {
@@ -22128,6 +23309,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "accept",
         "x-stynx-route": "/flow/tasks/:id/accept",
         "responses": {
           "200": {
@@ -22296,6 +23479,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "act",
         "x-stynx-route": "/flow/tasks/:id/act",
         "responses": {
           "200": {
@@ -22461,6 +23646,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "assign",
         "x-stynx-route": "/flow/tasks/:id/assign",
         "responses": {
           "200": {
@@ -22607,6 +23794,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "candidates",
         "x-stynx-route": "/flow/tasks/:id/candidates",
         "responses": {
           "200": {
@@ -22774,6 +23963,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "decline",
         "x-stynx-route": "/flow/tasks/:id/decline",
         "responses": {
           "200": {
@@ -22938,6 +24129,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "unaccept",
         "x-stynx-route": "/flow/tasks/:id/unaccept",
         "responses": {
           "200": {
@@ -23102,6 +24295,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "unassign",
         "x-stynx-route": "/flow/tasks/:id/unassign",
         "responses": {
           "200": {
@@ -23266,6 +24461,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "withdraw",
         "x-stynx-route": "/flow/tasks/:id/withdraw",
         "responses": {
           "200": {
@@ -23421,6 +24618,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "usersByRole",
         "x-stynx-route": "/flow/tasks/roles/:role/users",
         "responses": {
           "200": {
@@ -23570,6 +24769,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/tasks.controller.ts",
+        "x-stynx-controller": "FlowTasksController",
+        "x-stynx-handler": "user",
         "x-stynx-route": "/flow/tasks/users/:id",
         "responses": {
           "200": {
@@ -23716,6 +24917,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/transition-effects.controller.ts",
+        "x-stynx-controller": "FlowTransitionEffectsController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/transition-effects/:id",
         "responses": {
           "200": {
@@ -23859,6 +25062,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/transition-effects.controller.ts",
+        "x-stynx-controller": "FlowTransitionEffectsController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/flow/transition-effects/:id",
         "responses": {
           "200": {
@@ -24026,6 +25231,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/transition-effects.controller.ts",
+        "x-stynx-controller": "FlowTransitionEffectsController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/transition-effects/:id",
         "responses": {
           "200": {
@@ -24161,6 +25368,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/waivers.controller.ts",
+        "x-stynx-controller": "FlowWaiversController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -24321,6 +25530,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/waivers.controller.ts",
+        "x-stynx-controller": "FlowWaiversController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -24466,6 +25677,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/waivers.controller.ts",
+        "x-stynx-controller": "FlowWaiversController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/flow/waivers/:id",
         "responses": {
           "200": {
@@ -24635,6 +25848,8 @@
           }
         ],
         "x-stynx-source": "packages/flow/src/controllers/waivers.controller.ts",
+        "x-stynx-controller": "FlowWaiversController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/flow/waivers/:id",
         "responses": {
           "200": {
@@ -24763,8 +25978,15 @@
       "get": {
         "operationId": "StynxHealth-get-healthz-liveness",
         "tags": ["StynxHealth"],
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
         "x-stynx-source": "packages/health/src/health.controller.ts",
+        "x-stynx-controller": "StynxHealthController",
+        "x-stynx-handler": "liveness",
         "responses": {
           "200": {
             "description": "OK",
@@ -24898,6 +26120,8 @@
           }
         ],
         "x-stynx-source": "packages/health/src/health.controller.ts",
+        "x-stynx-controller": "StynxHealthController",
+        "x-stynx-handler": "info",
         "responses": {
           "200": {
             "description": "OK",
@@ -25031,6 +26255,8 @@
           }
         ],
         "x-stynx-source": "packages/health/src/health.controller.ts",
+        "x-stynx-controller": "StynxHealthController",
+        "x-stynx-handler": "metricsEndpoint",
         "responses": {
           "200": {
             "description": "OK",
@@ -25195,6 +26421,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+        "x-stynx-controller": "OfflineSyncController",
+        "x-stynx-handler": "resolveConflict",
+        "x-stynx-composition": "offline-e6",
         "x-stynx-route": "/offline-sync/conflicts/:id/resolve",
         "responses": {
           "200": {
@@ -25221,6 +26450,13 @@
                       "stynx": {
                         "appliedAt": "example",
                         "attempts": 1,
+                        "concurrencySuspected": true,
+                        "concurrentPairs": [
+                          {
+                            "firstItemId": "example",
+                            "secondItemId": "example"
+                          }
+                        ],
                         "consumerAttributes": {},
                         "errorCode": "example",
                         "errorMessage": "example",
@@ -25340,7 +26576,405 @@
               }
             }
           }
-        }
+        },
+        "x-stynx-operation-variants": [
+          {
+            "operationId": "CTG9OfflineSync-post-offline-sync-conflicts-by-id-resolve-resolveConflict",
+            "tags": ["CTG9OfflineSync"],
+            "parameters": [
+              {
+                "name": "id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                },
+                "example": "00000000-0000-4000-8000-000000000000"
+              }
+            ],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ResolveSyncConflictInput"
+                  },
+                  "x-stynx-source-type": "ResolveSyncConflictInput",
+                  "examples": {
+                    "default": {
+                      "value": {
+                        "description": "example",
+                        "resolution": "device-wins",
+                        "userRef": "example"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "security": [
+              {
+                "bearerAuth": [],
+                "tenantHeader": []
+              }
+            ],
+            "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+            "x-stynx-controller": "CTG9OfflineSyncController",
+            "x-stynx-handler": "resolveConflict",
+            "x-stynx-composition": "offline-ctg9",
+            "x-stynx-route": "/offline-sync/conflicts/:id/resolve",
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/SyncConflict"
+                    },
+                    "x-stynx-source-type": "Promise<SyncConflict>",
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "conflictId": "example",
+                          "conflictType": "example",
+                          "description": "example",
+                          "localEntityId": "example",
+                          "payloadHash": "example",
+                          "queueItemId": "example",
+                          "resolution": "device-wins",
+                          "resolvedAt": "example",
+                          "resolvedBy": "example",
+                          "status": "open",
+                          "stynx": {
+                            "appliedAt": "example",
+                            "attempts": 1,
+                            "concurrencySuspected": true,
+                            "concurrentPairs": [
+                              {
+                                "firstItemId": "example",
+                                "secondItemId": "example"
+                              }
+                            ],
+                            "consumerAttributes": {},
+                            "errorCode": "example",
+                            "errorMessage": "example",
+                            "reasonCode": "example",
+                            "receiptId": "example",
+                            "receivedPayloadHash": "example",
+                            "relatedQueueItemId": "example",
+                            "retryable": true,
+                            "serverEntityId": "example",
+                            "storedPayloadHash": "example",
+                            "version": 1
+                          },
+                          "tenantId": "example"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "Bad request",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Bad request",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": {
+                "description": "Unauthorized",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unauthorized",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "403": {
+                "description": "Forbidden",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Forbidden",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "Not found",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Not found",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "description": "Unexpected error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unexpected error",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "operationId": "OfflineSync-post-offline-sync-conflicts-by-id-resolve-resolveConflict",
+            "tags": ["OfflineSync"],
+            "parameters": [
+              {
+                "name": "id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                },
+                "example": "00000000-0000-4000-8000-000000000000"
+              }
+            ],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ResolveSyncConflictInput"
+                  },
+                  "x-stynx-source-type": "ResolveSyncConflictInput",
+                  "examples": {
+                    "default": {
+                      "value": {
+                        "description": "example",
+                        "resolution": "device-wins",
+                        "userRef": "example"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "security": [
+              {
+                "bearerAuth": [],
+                "tenantHeader": []
+              }
+            ],
+            "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+            "x-stynx-controller": "OfflineSyncController",
+            "x-stynx-handler": "resolveConflict",
+            "x-stynx-composition": "offline-e6",
+            "x-stynx-route": "/offline-sync/conflicts/:id/resolve",
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/SyncConflict"
+                    },
+                    "x-stynx-source-type": "Promise<SyncConflict>",
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "conflictId": "example",
+                          "conflictType": "example",
+                          "description": "example",
+                          "localEntityId": "example",
+                          "payloadHash": "example",
+                          "queueItemId": "example",
+                          "resolution": "device-wins",
+                          "resolvedAt": "example",
+                          "resolvedBy": "example",
+                          "status": "open",
+                          "stynx": {
+                            "appliedAt": "example",
+                            "attempts": 1,
+                            "concurrencySuspected": true,
+                            "concurrentPairs": [
+                              {
+                                "firstItemId": "example",
+                                "secondItemId": "example"
+                              }
+                            ],
+                            "consumerAttributes": {},
+                            "errorCode": "example",
+                            "errorMessage": "example",
+                            "reasonCode": "example",
+                            "receiptId": "example",
+                            "receivedPayloadHash": "example",
+                            "relatedQueueItemId": "example",
+                            "retryable": true,
+                            "serverEntityId": "example",
+                            "storedPayloadHash": "example",
+                            "version": 1
+                          },
+                          "tenantId": "example"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "Bad request",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Bad request",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": {
+                "description": "Unauthorized",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unauthorized",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "403": {
+                "description": "Forbidden",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Forbidden",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "Not found",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Not found",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "description": "Unexpected error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unexpected error",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "/offline-sync/numbering-reservations": {
@@ -25380,6 +27014,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+        "x-stynx-controller": "OfflineSyncController",
+        "x-stynx-handler": "reserveNumbering",
+        "x-stynx-composition": "offline-e6",
         "responses": {
           "200": {
             "description": "OK",
@@ -25512,7 +27149,355 @@
               }
             }
           }
-        }
+        },
+        "x-stynx-operation-variants": [
+          {
+            "operationId": "CTG9OfflineSync-post-offline-sync-numbering-reservations-reserveNumbering",
+            "tags": ["CTG9OfflineSync"],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CTG9ReserveNumberingInput"
+                  },
+                  "x-stynx-source-type": "CTG9ReserveNumberingInput",
+                  "examples": {
+                    "default": {
+                      "value": {
+                        "deviceId": "example",
+                        "entityType": "example",
+                        "idempotencyKey": "example",
+                        "orgUnitId": "example",
+                        "rangeId": "example",
+                        "requestedSize": 1,
+                        "series": "example",
+                        "shiftId": "example",
+                        "validUntil": "example"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "security": [
+              {
+                "bearerAuth": [],
+                "tenantHeader": []
+              }
+            ],
+            "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+            "x-stynx-controller": "CTG9OfflineSyncController",
+            "x-stynx-handler": "reserveNumbering",
+            "x-stynx-composition": "offline-ctg9",
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/CTG9NumberingReservation"
+                    },
+                    "x-stynx-source-type": "Promise<CTG9NumberingReservation>",
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "agentId": "example",
+                          "deviceId": "example",
+                          "endNumber": 1,
+                          "entityType": "example",
+                          "nextNumber": 1,
+                          "orgUnitId": "example",
+                          "rangeId": "example",
+                          "reservationId": "example",
+                          "series": "example",
+                          "shiftId": "example",
+                          "startNumber": 1,
+                          "status": "reserved",
+                          "tenantId": "example",
+                          "validUntil": "example"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "Bad request",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Bad request",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": {
+                "description": "Unauthorized",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unauthorized",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "403": {
+                "description": "Forbidden",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Forbidden",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "Not found",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Not found",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "description": "Unexpected error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unexpected error",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "operationId": "OfflineSync-post-offline-sync-numbering-reservations-reserveNumbering",
+            "tags": ["OfflineSync"],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ReserveNumberingInput"
+                  },
+                  "x-stynx-source-type": "ReserveNumberingInput",
+                  "examples": {
+                    "default": {
+                      "value": {
+                        "deviceId": "example",
+                        "entityType": "example",
+                        "idempotencyKey": "example",
+                        "orgUnitId": "example",
+                        "rangeId": "example",
+                        "requestedSize": 1,
+                        "series": "example",
+                        "shiftId": "example",
+                        "validUntil": "example"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "security": [
+              {
+                "bearerAuth": [],
+                "tenantHeader": []
+              }
+            ],
+            "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+            "x-stynx-controller": "OfflineSyncController",
+            "x-stynx-handler": "reserveNumbering",
+            "x-stynx-composition": "offline-e6",
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/NumberingReservation"
+                    },
+                    "x-stynx-source-type": "Promise<NumberingReservation>",
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "agentId": "example",
+                          "deviceId": "example",
+                          "endNumber": 1,
+                          "entityType": "example",
+                          "nextNumber": 1,
+                          "orgUnitId": "example",
+                          "rangeId": "example",
+                          "reservationId": "example",
+                          "series": "example",
+                          "shiftId": "example",
+                          "startNumber": 1,
+                          "status": "reserved",
+                          "tenantId": "example",
+                          "validUntil": "example"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "Bad request",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Bad request",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": {
+                "description": "Unauthorized",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unauthorized",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "403": {
+                "description": "Forbidden",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Forbidden",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "Not found",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Not found",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "description": "Unexpected error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unexpected error",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "/offline-sync/numbering-reservations/{id}/block": {
@@ -25555,6 +27540,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+        "x-stynx-controller": "CTG9OfflineSyncController",
+        "x-stynx-handler": "blockNumbering",
+        "x-stynx-composition": "offline-ctg9",
         "x-stynx-route": "/offline-sync/numbering-reservations/:id/block",
         "responses": {
           "200": {
@@ -25568,7 +27556,20 @@
                 "examples": {
                   "default": {
                     "value": {
-                      "status": "example"
+                      "agentId": "example",
+                      "deviceId": "example",
+                      "endNumber": 1,
+                      "entityType": "example",
+                      "nextNumber": 1,
+                      "orgUnitId": "example",
+                      "rangeId": "example",
+                      "reservationId": "example",
+                      "series": "example",
+                      "shiftId": "example",
+                      "startNumber": 1,
+                      "status": "reserved",
+                      "tenantId": "example",
+                      "validUntil": "example"
                     }
                   }
                 }
@@ -25718,6 +27719,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+        "x-stynx-controller": "OfflineSyncController",
+        "x-stynx-handler": "cancelNumbering",
+        "x-stynx-composition": "offline-e6",
         "x-stynx-route": "/offline-sync/numbering-reservations/:id/cancel",
         "responses": {
           "200": {
@@ -25851,7 +27855,363 @@
               }
             }
           }
-        }
+        },
+        "x-stynx-operation-variants": [
+          {
+            "operationId": "CTG9OfflineSync-post-offline-sync-numbering-reservations-by-id-cancel-cancelNumbering",
+            "tags": ["CTG9OfflineSync"],
+            "parameters": [
+              {
+                "name": "id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                },
+                "example": "00000000-0000-4000-8000-000000000000"
+              }
+            ],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CancelNumberingReservationInput"
+                  },
+                  "x-stynx-source-type": "CancelNumberingReservationInput",
+                  "examples": {
+                    "default": {
+                      "value": {
+                        "reason": "example"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "security": [
+              {
+                "bearerAuth": [],
+                "tenantHeader": []
+              }
+            ],
+            "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+            "x-stynx-controller": "CTG9OfflineSyncController",
+            "x-stynx-handler": "cancelNumbering",
+            "x-stynx-composition": "offline-ctg9",
+            "x-stynx-route": "/offline-sync/numbering-reservations/:id/cancel",
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/CTG9NumberingReservation"
+                    },
+                    "x-stynx-source-type": "Promise<CTG9NumberingReservation>",
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "agentId": "example",
+                          "deviceId": "example",
+                          "endNumber": 1,
+                          "entityType": "example",
+                          "nextNumber": 1,
+                          "orgUnitId": "example",
+                          "rangeId": "example",
+                          "reservationId": "example",
+                          "series": "example",
+                          "shiftId": "example",
+                          "startNumber": 1,
+                          "status": "reserved",
+                          "tenantId": "example",
+                          "validUntil": "example"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "Bad request",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Bad request",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": {
+                "description": "Unauthorized",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unauthorized",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "403": {
+                "description": "Forbidden",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Forbidden",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "Not found",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Not found",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "description": "Unexpected error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unexpected error",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "operationId": "OfflineSync-post-offline-sync-numbering-reservations-by-id-cancel-cancelNumbering",
+            "tags": ["OfflineSync"],
+            "parameters": [
+              {
+                "name": "id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                },
+                "example": "00000000-0000-4000-8000-000000000000"
+              }
+            ],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CancelNumberingReservationInput"
+                  },
+                  "x-stynx-source-type": "CancelNumberingReservationInput",
+                  "examples": {
+                    "default": {
+                      "value": {
+                        "reason": "example"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "security": [
+              {
+                "bearerAuth": [],
+                "tenantHeader": []
+              }
+            ],
+            "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+            "x-stynx-controller": "OfflineSyncController",
+            "x-stynx-handler": "cancelNumbering",
+            "x-stynx-composition": "offline-e6",
+            "x-stynx-route": "/offline-sync/numbering-reservations/:id/cancel",
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/NumberingReservation"
+                    },
+                    "x-stynx-source-type": "Promise<NumberingReservation>",
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "agentId": "example",
+                          "deviceId": "example",
+                          "endNumber": 1,
+                          "entityType": "example",
+                          "nextNumber": 1,
+                          "orgUnitId": "example",
+                          "rangeId": "example",
+                          "reservationId": "example",
+                          "series": "example",
+                          "shiftId": "example",
+                          "startNumber": 1,
+                          "status": "reserved",
+                          "tenantId": "example",
+                          "validUntil": "example"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "Bad request",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Bad request",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": {
+                "description": "Unauthorized",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unauthorized",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "403": {
+                "description": "Forbidden",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Forbidden",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "Not found",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Not found",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "description": "Unexpected error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unexpected error",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "/offline-sync/numbering-reservations/{id}/close": {
@@ -25894,6 +28254,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+        "x-stynx-controller": "CTG9OfflineSyncController",
+        "x-stynx-handler": "closeNumbering",
+        "x-stynx-composition": "offline-ctg9",
         "x-stynx-route": "/offline-sync/numbering-reservations/:id/close",
         "responses": {
           "200": {
@@ -25907,7 +28270,20 @@
                 "examples": {
                   "default": {
                     "value": {
-                      "status": "example"
+                      "agentId": "example",
+                      "deviceId": "example",
+                      "endNumber": 1,
+                      "entityType": "example",
+                      "nextNumber": 1,
+                      "orgUnitId": "example",
+                      "rangeId": "example",
+                      "reservationId": "example",
+                      "series": "example",
+                      "shiftId": "example",
+                      "startNumber": 1,
+                      "status": "reserved",
+                      "tenantId": "example",
+                      "validUntil": "example"
                     }
                   }
                 }
@@ -26039,6 +28415,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+        "x-stynx-controller": "CTG9OfflineSyncController",
+        "x-stynx-handler": "getConsumption",
+        "x-stynx-composition": "offline-ctg9",
         "x-stynx-route": "/offline-sync/numbering-reservations/:id/consumption",
         "responses": {
           "200": {
@@ -26052,9 +28431,16 @@
                 "examples": {
                   "default": {
                     "value": {
-                      "consumption": "example",
+                      "consumption": [
+                        {
+                          "finalizedAt": "example",
+                          "number": 1,
+                          "serverEntityId": "example",
+                          "status": "available"
+                        }
+                      ],
                       "reservationId": "example",
-                      "status": {}
+                      "status": "reserved"
                     }
                   }
                 }
@@ -26190,7 +28576,7 @@
               "examples": {
                 "default": {
                   "value": {
-                    "claimedNumbers": "example",
+                    "claimedNumbers": [1],
                     "userRef": "example"
                   }
                 }
@@ -26205,6 +28591,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+        "x-stynx-controller": "CTG9OfflineSyncController",
+        "x-stynx-handler": "reconcileNumbering",
+        "x-stynx-composition": "offline-ctg9",
         "x-stynx-route": "/offline-sync/numbering-reservations/:id/reconcile",
         "responses": {
           "200": {
@@ -26218,8 +28607,18 @@
                 "examples": {
                   "default": {
                     "value": {
-                      "missingOnServer": "example",
-                      "unexpectedOnServer": {}
+                      "consumption": [
+                        {
+                          "finalizedAt": "example",
+                          "number": 1,
+                          "serverEntityId": "example",
+                          "status": "available"
+                        }
+                      ],
+                      "missingOnServer": [1],
+                      "reservationId": "example",
+                      "status": "reserved",
+                      "unexpectedOnServer": [1]
                     }
                   }
                 }
@@ -26370,6 +28769,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+        "x-stynx-controller": "CTG9OfflineSyncController",
+        "x-stynx-handler": "settleNumbering",
+        "x-stynx-composition": "offline-ctg9",
         "x-stynx-route": "/offline-sync/numbering-reservations/:id/settle",
         "responses": {
           "200": {
@@ -26383,7 +28785,20 @@
                 "examples": {
                   "default": {
                     "value": {
-                      "status": "example"
+                      "agentId": "example",
+                      "deviceId": "example",
+                      "endNumber": 1,
+                      "entityType": "example",
+                      "nextNumber": 1,
+                      "orgUnitId": "example",
+                      "rangeId": "example",
+                      "reservationId": "example",
+                      "series": "example",
+                      "shiftId": "example",
+                      "startNumber": 1,
+                      "status": "reserved",
+                      "tenantId": "example",
+                      "validUntil": "example"
                     }
                   }
                 }
@@ -26510,7 +28925,18 @@
                   "value": {
                     "deviceBatchId": "example",
                     "deviceId": "example",
-                    "items": "example",
+                    "items": [
+                      {
+                        "createdLocallyAt": "example",
+                        "entityType": "example",
+                        "idempotencyKey": "example",
+                        "localEntityId": "example",
+                        "payloadHash": "example",
+                        "payloadJson": {},
+                        "queueItemId": "example",
+                        "reservedNumber": 1
+                      }
+                    ],
                     "orgUnitId": "example"
                   }
                 }
@@ -26525,6 +28951,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+        "x-stynx-controller": "OfflineSyncController",
+        "x-stynx-handler": "submitBatch",
+        "x-stynx-composition": "offline-e6",
         "responses": {
           "200": {
             "description": "OK",
@@ -26546,9 +28975,26 @@
                     "value": {
                       "acceptedItems": 1,
                       "batchId": "example",
-                      "conflicts": "example",
+                      "conflicts": ["example"],
                       "duplicateItems": 1,
-                      "items": {}
+                      "items": [
+                        {
+                          "agentId": "example",
+                          "createdLocallyAt": "example",
+                          "deviceId": "example",
+                          "entityType": "example",
+                          "idempotencyKey": "example",
+                          "localEntityId": "example",
+                          "orgUnitId": "example",
+                          "payloadHash": "example",
+                          "payloadJson": {},
+                          "queueItemId": "example",
+                          "receivedAt": "example",
+                          "reservedNumber": 1,
+                          "status": "received",
+                          "tenantId": "example"
+                        }
+                      ]
                     }
                   }
                 }
@@ -26655,7 +29101,369 @@
               }
             }
           }
-        }
+        },
+        "x-stynx-operation-variants": [
+          {
+            "operationId": "CTG9OfflineSync-post-offline-sync-sync-batches-submitBatch",
+            "tags": ["CTG9OfflineSync"],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubmitSyncBatchInput"
+                  },
+                  "x-stynx-source-type": "SubmitSyncBatchInput",
+                  "examples": {
+                    "default": {
+                      "value": {
+                        "deviceBatchId": "example",
+                        "deviceId": "example",
+                        "items": [
+                          {
+                            "createdLocallyAt": "example",
+                            "entityType": "example",
+                            "idempotencyKey": "example",
+                            "localEntityId": "example",
+                            "payloadHash": "example",
+                            "payloadJson": {},
+                            "queueItemId": "example",
+                            "reservedNumber": 1
+                          }
+                        ],
+                        "orgUnitId": "example"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "security": [
+              {
+                "bearerAuth": [],
+                "tenantHeader": []
+              }
+            ],
+            "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+            "x-stynx-controller": "CTG9OfflineSyncController",
+            "x-stynx-handler": "submitBatch",
+            "x-stynx-composition": "offline-ctg9",
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/JsonValue"
+                    },
+                    "x-stynx-source-type": "unknown; setHeader(name: string, value: string): unknown",
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "example": true
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "Bad request",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Bad request",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": {
+                "description": "Unauthorized",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unauthorized",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "403": {
+                "description": "Forbidden",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Forbidden",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "Not found",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Not found",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "description": "Unexpected error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unexpected error",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "operationId": "OfflineSync-post-offline-sync-sync-batches-submitBatch",
+            "tags": ["OfflineSync"],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubmitSyncBatchInput"
+                  },
+                  "x-stynx-source-type": "SubmitSyncBatchInput",
+                  "examples": {
+                    "default": {
+                      "value": {
+                        "deviceBatchId": "example",
+                        "deviceId": "example",
+                        "items": [
+                          {
+                            "createdLocallyAt": "example",
+                            "entityType": "example",
+                            "idempotencyKey": "example",
+                            "localEntityId": "example",
+                            "payloadHash": "example",
+                            "payloadJson": {},
+                            "queueItemId": "example",
+                            "reservedNumber": 1
+                          }
+                        ],
+                        "orgUnitId": "example"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "security": [
+              {
+                "bearerAuth": [],
+                "tenantHeader": []
+              }
+            ],
+            "x-stynx-source": "packages/offline-sync/src/offline-sync.controller.ts",
+            "x-stynx-controller": "OfflineSyncController",
+            "x-stynx-handler": "submitBatch",
+            "x-stynx-composition": "offline-e6",
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/SubmitSyncBatchResult"
+                        },
+                        {
+                          "$ref": "#/components/schemas/CTG9SubmitSyncBatchResult"
+                        }
+                      ]
+                    },
+                    "x-stynx-source-type": "Promise<SubmitSyncBatchResult | CTG9SubmitSyncBatchResult>",
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "acceptedItems": 1,
+                          "batchId": "example",
+                          "conflicts": ["example"],
+                          "duplicateItems": 1,
+                          "items": [
+                            {
+                              "agentId": "example",
+                              "createdLocallyAt": "example",
+                              "deviceId": "example",
+                              "entityType": "example",
+                              "idempotencyKey": "example",
+                              "localEntityId": "example",
+                              "orgUnitId": "example",
+                              "payloadHash": "example",
+                              "payloadJson": {},
+                              "queueItemId": "example",
+                              "receivedAt": "example",
+                              "reservedNumber": 1,
+                              "status": "received",
+                              "tenantId": "example"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "Bad request",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Bad request",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "401": {
+                "description": "Unauthorized",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unauthorized",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "403": {
+                "description": "Forbidden",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Forbidden",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "Not found",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Not found",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default": {
+                "description": "Unexpected error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    "examples": {
+                      "default": {
+                        "value": {
+                          "statusCode": 400,
+                          "code": "STYNX_ERROR",
+                          "message": "Unexpected error",
+                          "correlationId": "req_000000000000"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "/offline-sync/sync-batches/{deviceId}/{deviceBatchId}/receipt": {
@@ -26689,6 +29497,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+        "x-stynx-controller": "CTG9OfflineSyncController",
+        "x-stynx-handler": "getBatchReceipt",
+        "x-stynx-composition": "offline-ctg9",
         "x-stynx-route": "/offline-sync/sync-batches/:deviceId/:deviceBatchId/receipt",
         "responses": {
           "200": {
@@ -26705,7 +29516,36 @@
                       "batchSequence": 1,
                       "deviceBatchId": "example",
                       "deviceId": "example",
-                      "items": "example",
+                      "items": [
+                        {
+                          "context": {},
+                          "errorCode": "example",
+                          "queueItemId": "example",
+                          "status": "received",
+                          "stynx": {
+                            "appliedAt": "example",
+                            "attempts": 1,
+                            "concurrencySuspected": true,
+                            "concurrentPairs": [
+                              {
+                                "firstItemId": "example",
+                                "secondItemId": "example"
+                              }
+                            ],
+                            "consumerAttributes": {},
+                            "errorCode": "example",
+                            "errorMessage": "example",
+                            "reasonCode": "example",
+                            "receiptId": "example",
+                            "receivedPayloadHash": "example",
+                            "relatedQueueItemId": "example",
+                            "retryable": true,
+                            "serverEntityId": "example",
+                            "storedPayloadHash": "example",
+                            "version": 1
+                          }
+                        }
+                      ],
                       "responseBodyBytes": "example",
                       "responseHeaders": {},
                       "responseStatus": 1,
@@ -26841,6 +29681,9 @@
           }
         ],
         "x-stynx-source": "packages/offline-sync/src/ctg9-offline-sync.controller.ts",
+        "x-stynx-controller": "CTG9OfflineSyncController",
+        "x-stynx-handler": "getItemReceipt",
+        "x-stynx-composition": "offline-ctg9",
         "x-stynx-route": "/offline-sync/sync-items/:idempotencyKey/receipt",
         "responses": {
           "200": {
@@ -26861,6 +29704,13 @@
                       "stynx": {
                         "appliedAt": "example",
                         "attempts": 1,
+                        "concurrencySuspected": true,
+                        "concurrentPairs": [
+                          {
+                            "firstItemId": "example",
+                            "secondItemId": "example"
+                          }
+                        ],
                         "consumerAttributes": {},
                         "errorCode": "example",
                         "errorMessage": "example",
@@ -27011,6 +29861,8 @@
           }
         ],
         "x-stynx-source": "packages/privacy/src/privacy.controller.ts",
+        "x-stynx-controller": "PrivacyController",
+        "x-stynx-handler": "eraseSubject",
         "responses": {
           "200": {
             "description": "OK",
@@ -27173,6 +30025,8 @@
           }
         ],
         "x-stynx-source": "packages/privacy/src/privacy.controller.ts",
+        "x-stynx-controller": "PrivacyController",
+        "x-stynx-handler": "exportData",
         "responses": {
           "200": {
             "description": "OK",
@@ -27327,6 +30181,8 @@
           }
         ],
         "x-stynx-source": "packages/privacy/src/privacy.controller.ts",
+        "x-stynx-controller": "PrivacyController",
+        "x-stynx-handler": "applyRetention",
         "responses": {
           "200": {
             "description": "OK",
@@ -27479,6 +30335,8 @@
           }
         ],
         "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "x-stynx-controller": "PreferencesController",
+        "x-stynx-handler": "profile",
         "responses": {
           "200": {
             "description": "OK",
@@ -27660,6 +30518,8 @@
           }
         ],
         "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "x-stynx-controller": "PreferencesController",
+        "x-stynx-handler": "patchProfile",
         "responses": {
           "200": {
             "description": "OK",
@@ -27824,6 +30684,8 @@
           }
         ],
         "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "x-stynx-controller": "PreferencesController",
+        "x-stynx-handler": "reset",
         "responses": {
           "200": {
             "description": "OK",
@@ -27978,6 +30840,8 @@
           }
         ],
         "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "x-stynx-controller": "PreferencesController",
+        "x-stynx-handler": "get",
         "responses": {
           "200": {
             "description": "OK",
@@ -28134,7 +30998,27 @@
               "x-stynx-source-type": "PreferencePatch",
               "examples": {
                 "default": {
-                  "value": "example"
+                  "value": {
+                    "accessibility": {
+                      "largeText": true,
+                      "reduceMotion": true,
+                      "screenReaderOptimized": true
+                    },
+                    "locale": {
+                      "locale": "example",
+                      "timezone": "example"
+                    },
+                    "notificationDelivery": {
+                      "email": true,
+                      "inApp": true,
+                      "push": true
+                    },
+                    "theme": {
+                      "colorScheme": "system",
+                      "contrast": "standard",
+                      "density": "comfortable"
+                    }
+                  }
                 }
               }
             }
@@ -28148,6 +31032,8 @@
           }
         ],
         "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "x-stynx-controller": "PreferencesController",
+        "x-stynx-handler": "patch",
         "responses": {
           "200": {
             "description": "OK",
@@ -28338,6 +31224,8 @@
           }
         ],
         "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "x-stynx-controller": "PreferencesController",
+        "x-stynx-handler": "put",
         "responses": {
           "200": {
             "description": "OK",
@@ -28505,6 +31393,8 @@
           }
         ],
         "x-stynx-source": "packages/preferences/src/preferences.controller.ts",
+        "x-stynx-controller": "PreferencesController",
+        "x-stynx-handler": "resetCategory",
         "x-stynx-route": "/profile/preferences/:category",
         "responses": {
           "200": {
@@ -28654,8 +31544,15 @@
       "get": {
         "operationId": "StynxHealth-get-readyz-handler",
         "tags": ["StynxHealth"],
-        "security": [],
+        "security": [
+          {
+            "bearerAuth": [],
+            "tenantHeader": []
+          }
+        ],
         "x-stynx-source": "packages/health/src/health.controller.ts",
+        "x-stynx-controller": "StynxHealthController",
+        "x-stynx-handler": "readiness",
         "responses": {
           "200": {
             "description": "OK",
@@ -28790,6 +31687,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/record-notes.controller.ts",
+        "x-stynx-controller": "RecordNotesController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -28946,6 +31845,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/record-notes.controller.ts",
+        "x-stynx-controller": "RecordNotesController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -29090,6 +31991,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/record-notes.controller.ts",
+        "x-stynx-controller": "RecordNotesController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/record-notes/:id",
         "responses": {
           "200": {
@@ -29233,6 +32136,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/record-notes.controller.ts",
+        "x-stynx-controller": "RecordNotesController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/record-notes/:id",
         "responses": {
           "200": {
@@ -29400,6 +32305,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/record-notes.controller.ts",
+        "x-stynx-controller": "RecordNotesController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/record-notes/:id",
         "responses": {
           "200": {
@@ -29545,6 +32452,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/record-notes.controller.ts",
+        "x-stynx-controller": "RecordNotesController",
+        "x-stynx-handler": "hardDelete",
         "x-stynx-route": "/record-notes/:id/hard",
         "responses": {
           "200": {
@@ -29691,6 +32600,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/record-notes.controller.ts",
+        "x-stynx-controller": "RecordNotesController",
+        "x-stynx-handler": "restore",
         "x-stynx-route": "/record-notes/:id/restore",
         "responses": {
           "200": {
@@ -29826,6 +32737,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/records.controller.ts",
+        "x-stynx-controller": "RecordsController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -29979,6 +32892,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/records.controller.ts",
+        "x-stynx-controller": "RecordsController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -30123,6 +33038,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/records.controller.ts",
+        "x-stynx-controller": "RecordsController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/records/:id",
         "responses": {
           "200": {
@@ -30266,6 +33183,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/records.controller.ts",
+        "x-stynx-controller": "RecordsController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/records/:id",
         "responses": {
           "200": {
@@ -30431,6 +33350,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/records.controller.ts",
+        "x-stynx-controller": "RecordsController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/records/:id",
         "responses": {
           "200": {
@@ -30576,6 +33497,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/records.controller.ts",
+        "x-stynx-controller": "RecordsController",
+        "x-stynx-handler": "hardDelete",
         "x-stynx-route": "/records/:id/hard",
         "responses": {
           "200": {
@@ -30722,6 +33645,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/records.controller.ts",
+        "x-stynx-controller": "RecordsController",
+        "x-stynx-handler": "restore",
         "x-stynx-route": "/records/:id/restore",
         "responses": {
           "200": {
@@ -30857,6 +33782,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/records.controller.ts",
+        "x-stynx-controller": "RecordsController",
+        "x-stynx-handler": "trash",
         "responses": {
           "200": {
             "description": "OK",
@@ -31004,6 +33931,8 @@
         },
         "security": [],
         "x-stynx-source": "packages/auth/src/auth.controller.ts",
+        "x-stynx-controller": "StynxAuthController",
+        "x-stynx-handler": "createSession",
         "responses": {
           "200": {
             "description": "OK",
@@ -31144,6 +34073,8 @@
           }
         ],
         "x-stynx-source": "packages/auth/src/auth.controller.ts",
+        "x-stynx-controller": "StynxAuthController",
+        "x-stynx-handler": "logout",
         "responses": {
           "200": {
             "description": "OK",
@@ -31296,6 +34227,8 @@
           }
         ],
         "x-stynx-source": "packages/auth/src/auth.controller.ts",
+        "x-stynx-controller": "StynxAuthController",
+        "x-stynx-handler": "switchSession",
         "responses": {
           "200": {
             "description": "OK",
@@ -31435,6 +34368,8 @@
           }
         ],
         "x-stynx-source": "packages/tenancy/src/tenancy.controller.ts",
+        "x-stynx-controller": "TenancyController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -31599,6 +34534,8 @@
           }
         ],
         "x-stynx-source": "packages/tenancy/src/tenancy.controller.ts",
+        "x-stynx-controller": "TenancyController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -31615,10 +34552,17 @@
                       "ownerUserId": "example",
                       "tenant": {
                         "archivedAt": "example",
+                        "createdAt": "example",
+                        "id": "example",
+                        "isActive": true,
                         "locale": "example",
+                        "name": "example",
                         "settings": {},
+                        "slug": "example",
+                        "state": "provisioning",
                         "suspendedReason": "example",
-                        "timezone": "example"
+                        "timezone": "example",
+                        "updatedAt": "example"
                       }
                     }
                   }
@@ -31751,6 +34695,8 @@
           }
         ],
         "x-stynx-source": "packages/tenancy/src/tenancy.controller.ts",
+        "x-stynx-controller": "TenancyController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/tenants/:id",
         "responses": {
           "200": {
@@ -31765,10 +34711,17 @@
                   "default": {
                     "value": {
                       "archivedAt": "example",
+                      "createdAt": "example",
+                      "id": "example",
+                      "isActive": true,
                       "locale": "example",
+                      "name": "example",
                       "settings": {},
+                      "slug": "example",
+                      "state": "provisioning",
                       "suspendedReason": "example",
-                      "timezone": "example"
+                      "timezone": "example",
+                      "updatedAt": "example"
                     }
                   }
                 }
@@ -31920,6 +34873,8 @@
           }
         ],
         "x-stynx-source": "packages/tenancy/src/tenancy.controller.ts",
+        "x-stynx-controller": "TenancyController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/tenants/:id",
         "responses": {
           "200": {
@@ -31934,10 +34889,17 @@
                   "default": {
                     "value": {
                       "archivedAt": "example",
+                      "createdAt": "example",
+                      "id": "example",
+                      "isActive": true,
                       "locale": "example",
+                      "name": "example",
                       "settings": {},
+                      "slug": "example",
+                      "state": "provisioning",
                       "suspendedReason": "example",
-                      "timezone": "example"
+                      "timezone": "example",
+                      "updatedAt": "example"
                     }
                   }
                 }
@@ -32070,6 +35032,8 @@
           }
         ],
         "x-stynx-source": "packages/tenancy/src/tenancy.controller.ts",
+        "x-stynx-controller": "TenancyController",
+        "x-stynx-handler": "archive",
         "x-stynx-route": "/tenants/:id/archive",
         "responses": {
           "200": {
@@ -32086,10 +35050,17 @@
                       "exportKey": "example",
                       "tenant": {
                         "archivedAt": "example",
+                        "createdAt": "example",
+                        "id": "example",
+                        "isActive": true,
                         "locale": "example",
+                        "name": "example",
                         "settings": {},
+                        "slug": "example",
+                        "state": "provisioning",
                         "suspendedReason": "example",
-                        "timezone": "example"
+                        "timezone": "example",
+                        "updatedAt": "example"
                       }
                     }
                   }
@@ -32223,6 +35194,8 @@
           }
         ],
         "x-stynx-source": "packages/tenancy/src/tenancy.controller.ts",
+        "x-stynx-controller": "TenancyController",
+        "x-stynx-handler": "purge",
         "x-stynx-route": "/tenants/:id/purge",
         "responses": {
           "200": {
@@ -32238,10 +35211,17 @@
                     "value": {
                       "tenant": {
                         "archivedAt": "example",
+                        "createdAt": "example",
+                        "id": "example",
+                        "isActive": true,
                         "locale": "example",
+                        "name": "example",
                         "settings": {},
+                        "slug": "example",
+                        "state": "provisioning",
                         "suspendedReason": "example",
-                        "timezone": "example"
+                        "timezone": "example",
+                        "updatedAt": "example"
                       }
                     }
                   }
@@ -32392,6 +35372,8 @@
           }
         ],
         "x-stynx-source": "packages/tenancy/src/tenancy.controller.ts",
+        "x-stynx-controller": "TenancyController",
+        "x-stynx-handler": "suspend",
         "x-stynx-route": "/tenants/:id/suspend",
         "responses": {
           "200": {
@@ -32408,10 +35390,17 @@
                       "activeSessionCount": 1,
                       "tenant": {
                         "archivedAt": "example",
+                        "createdAt": "example",
+                        "id": "example",
+                        "isActive": true,
                         "locale": "example",
+                        "name": "example",
                         "settings": {},
+                        "slug": "example",
+                        "state": "provisioning",
                         "suspendedReason": "example",
-                        "timezone": "example"
+                        "timezone": "example",
+                        "updatedAt": "example"
                       }
                     }
                   }
@@ -32534,6 +35523,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-entries.controller.ts",
+        "x-stynx-controller": "WorkItemEntriesController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -32686,6 +35677,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-entries.controller.ts",
+        "x-stynx-controller": "WorkItemEntriesController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -32830,6 +35823,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-entries.controller.ts",
+        "x-stynx-controller": "WorkItemEntriesController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/work-item-entries/:id",
         "responses": {
           "200": {
@@ -32973,6 +35968,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-entries.controller.ts",
+        "x-stynx-controller": "WorkItemEntriesController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/work-item-entries/:id",
         "responses": {
           "200": {
@@ -33136,6 +36133,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-entries.controller.ts",
+        "x-stynx-controller": "WorkItemEntriesController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/work-item-entries/:id",
         "responses": {
           "200": {
@@ -33281,6 +36280,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-entries.controller.ts",
+        "x-stynx-controller": "WorkItemEntriesController",
+        "x-stynx-handler": "hardDelete",
         "x-stynx-route": "/work-item-entries/:id/hard",
         "responses": {
           "200": {
@@ -33427,6 +36428,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-entries.controller.ts",
+        "x-stynx-controller": "WorkItemEntriesController",
+        "x-stynx-handler": "restore",
         "x-stynx-route": "/work-item-entries/:id/restore",
         "responses": {
           "200": {
@@ -33562,6 +36565,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-locks.controller.ts",
+        "x-stynx-controller": "WorkItemLocksController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -33715,6 +36720,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-locks.controller.ts",
+        "x-stynx-controller": "WorkItemLocksController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -33859,6 +36866,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-locks.controller.ts",
+        "x-stynx-controller": "WorkItemLocksController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/work-item-locks/:id",
         "responses": {
           "200": {
@@ -34002,6 +37011,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-locks.controller.ts",
+        "x-stynx-controller": "WorkItemLocksController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/work-item-locks/:id",
         "responses": {
           "200": {
@@ -34166,6 +37177,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-locks.controller.ts",
+        "x-stynx-controller": "WorkItemLocksController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/work-item-locks/:id",
         "responses": {
           "200": {
@@ -34311,6 +37324,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-locks.controller.ts",
+        "x-stynx-controller": "WorkItemLocksController",
+        "x-stynx-handler": "hardDelete",
         "x-stynx-route": "/work-item-locks/:id/hard",
         "responses": {
           "200": {
@@ -34457,6 +37472,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-item-locks.controller.ts",
+        "x-stynx-controller": "WorkItemLocksController",
+        "x-stynx-handler": "restore",
         "x-stynx-route": "/work-item-locks/:id/restore",
         "responses": {
           "200": {
@@ -34592,6 +37609,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-items.controller.ts",
+        "x-stynx-controller": "WorkItemsController",
+        "x-stynx-handler": "list",
         "responses": {
           "200": {
             "description": "OK",
@@ -34748,6 +37767,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-items.controller.ts",
+        "x-stynx-controller": "WorkItemsController",
+        "x-stynx-handler": "create",
         "responses": {
           "200": {
             "description": "OK",
@@ -34892,6 +37913,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-items.controller.ts",
+        "x-stynx-controller": "WorkItemsController",
+        "x-stynx-handler": "delete",
         "x-stynx-route": "/work-items/:id",
         "responses": {
           "200": {
@@ -35035,6 +38058,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-items.controller.ts",
+        "x-stynx-controller": "WorkItemsController",
+        "x-stynx-handler": "get",
         "x-stynx-route": "/work-items/:id",
         "responses": {
           "200": {
@@ -35203,6 +38228,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-items.controller.ts",
+        "x-stynx-controller": "WorkItemsController",
+        "x-stynx-handler": "update",
         "x-stynx-route": "/work-items/:id",
         "responses": {
           "200": {
@@ -35348,6 +38375,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-items.controller.ts",
+        "x-stynx-controller": "WorkItemsController",
+        "x-stynx-handler": "hardDelete",
         "x-stynx-route": "/work-items/:id/hard",
         "responses": {
           "200": {
@@ -35494,6 +38523,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-items.controller.ts",
+        "x-stynx-controller": "WorkItemsController",
+        "x-stynx-handler": "restore",
         "x-stynx-route": "/work-items/:id/restore",
         "responses": {
           "200": {
@@ -35629,6 +38660,8 @@
           }
         ],
         "x-stynx-source": "reference/api/src/sample/work-items.controller.ts",
+        "x-stynx-controller": "WorkItemsController",
+        "x-stynx-handler": "trash",
         "responses": {
           "200": {
             "description": "OK",

@@ -14,23 +14,33 @@ function handler(name: string): Function {
 describe('PrivacyController API contract', () => {
   it('delegates export, erasure, and retention requests to the privacy service', async () => {
     const service = {
-      exportData: vi.fn(async () => ({ downloadUrl: 'memory://export' })),
-      eraseSubject: vi.fn(async () => ({ actions: [] })),
-      applyRetention: vi.fn(async () => ({ dryRun: true, actions: [] })),
+      exportTenantData: vi.fn(async () => ({ downloadUrl: 'memory://export' })),
+      eraseTenantSubject: vi.fn(async () => ({ actions: [] })),
+      applyTenantRetention: vi.fn(async () => ({ dryRun: true, actions: [] })),
     } as unknown as PrivacyService;
     const controller = new PrivacyController(service);
 
-    await expect(controller.exportData({ subjectUserId: 'user-1', format: 'json' })).resolves.toEqual({
+    await expect(
+      controller.exportData({ subjectUserId: 'user-1', format: 'json' }),
+    ).resolves.toEqual({
       downloadUrl: 'memory://export',
     });
-    await expect(controller.eraseSubject({ subjectUserId: 'user-1' })).resolves.toEqual({ actions: [] });
+    await expect(controller.eraseSubject({ subjectUserId: 'user-1' })).resolves.toEqual({
+      actions: [],
+    });
     await expect(controller.applyRetention()).resolves.toEqual({ dryRun: true, actions: [] });
-    await expect(controller.applyRetention('false')).resolves.toEqual({ dryRun: true, actions: [] });
+    await expect(controller.applyRetention('false')).resolves.toEqual({
+      dryRun: true,
+      actions: [],
+    });
 
-    expect(service.exportData).toHaveBeenCalledWith({ subjectUserId: 'user-1', format: 'json' });
-    expect(service.eraseSubject).toHaveBeenCalledWith({ subjectUserId: 'user-1' });
-    expect(service.applyRetention).toHaveBeenNthCalledWith(1, true);
-    expect(service.applyRetention).toHaveBeenNthCalledWith(2, false);
+    expect(service.exportTenantData).toHaveBeenCalledWith({
+      subjectUserId: 'user-1',
+      format: 'json',
+    });
+    expect(service.eraseTenantSubject).toHaveBeenCalledWith({ subjectUserId: 'user-1' });
+    expect(service.applyTenantRetention).toHaveBeenNthCalledWith(1, true);
+    expect(service.applyTenantRetention).toHaveBeenNthCalledWith(2, false);
   });
 
   it('keeps privacy mutations explicitly non-idempotent', () => {

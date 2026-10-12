@@ -4,15 +4,14 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type FlowPolicyEvaluationDto = {
-    action?: string;
-    capability?: string;
-    facts?: FlowJsonObject;
-    nodeCode?: string;
-    policySetId?: string;
-    scopeCode?: string;
-    scopeId?: string;
-    statusCode?: string;
-    targetId?: string;
-    targetType?: string;
+  action?: string;
+  capability?: string;
+  facts?: FlowJsonObject;
+  nodeCode?: string;
+  policySetId?: string;
+  scopeCode?: string;
+  scopeId?: string;
+  statusCode?: string;
+  targetId?: string;
+  targetType?: string;
 };
-

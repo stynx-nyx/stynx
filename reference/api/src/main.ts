@@ -22,39 +22,17 @@ function emitStartupRecord(
   }
 }
 
-function resolveCorsOrigins(): string[] {
-  return (process.env.STYNX_REFERENCE_WEB_ORIGINS ?? 'http://127.0.0.1:3100,http://localhost:3100')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter((origin) => origin.length > 0);
-}
-
 async function bootstrap(): Promise<void> {
   let failureReason: StartupFailureReason = 'nest-initialization';
   emitStartupRecord({ protocol: startupProtocol, state: 'bootstrap-entered' });
   try {
     await import('reflect-metadata');
-    const [{ NestFactory }, { AppModule }, { configureSecurityHeaders }] = await Promise.all([
-      import('@nestjs/core'),
-      import('./app.module.js'),
-      import('./security-headers.js'),
-    ]);
-    const app = await NestFactory.create(AppModule, { bufferLogs: true });
-    emitStartupRecord({ protocol: startupProtocol, state: 'nest-created' });
-
-    failureReason = 'pre-listen-configuration';
-    configureSecurityHeaders(app);
-    app.enableCors({
-      origin: resolveCorsOrigins(),
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: [
-        'Authorization',
-        'Content-Type',
-        'Idempotency-Key',
-        'X-Request-Id',
-        'X-Tenant-Id',
-      ],
-      exposedHeaders: ['X-Request-Id', 'X-Stynx-Auth-Verify-Ms'],
+    const { createReferenceApplication } = await import('./bootstrap.js');
+    const app = await createReferenceApplication({
+      onNestCreated: () => {
+        emitStartupRecord({ protocol: startupProtocol, state: 'nest-created' });
+        failureReason = 'pre-listen-configuration';
+      },
     });
     const port = Number(process.env.PORT ?? '3000');
 

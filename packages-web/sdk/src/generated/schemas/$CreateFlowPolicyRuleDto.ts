@@ -3,38 +3,38 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $CreateFlowPolicyRuleDto = {
-    properties: {
-        action: {
-            type: 'string',
-        },
-        capability: {
-            type: 'string',
-        },
-        conditions: {
-            type: 'FlowJsonObject',
-        },
-        effect: {
-            type: 'FlowPolicyEffect',
-            isRequired: true,
-        },
-        meta: {
-            type: 'FlowJsonObject',
-        },
-        nodeCode: {
-            type: 'string',
-        },
-        policySetId: {
-            type: 'string',
-            isRequired: true,
-        },
-        priority: {
-            type: 'number',
-        },
-        reasonCode: {
-            type: 'string',
-        },
-        statusCode: {
-            type: 'string',
-        },
+  properties: {
+    action: {
+      type: 'string',
     },
+    capability: {
+      type: 'string',
+    },
+    conditions: {
+      type: 'FlowJsonObject',
+    },
+    effect: {
+      type: 'FlowPolicyEffect',
+      isRequired: true,
+    },
+    meta: {
+      type: 'FlowJsonObject',
+    },
+    nodeCode: {
+      type: 'string',
+    },
+    policySetId: {
+      type: 'string',
+      isRequired: true,
+    },
+    priority: {
+      type: 'number',
+    },
+    reasonCode: {
+      type: 'string',
+    },
+    statusCode: {
+      type: 'string',
+    },
+  },
 } as const;

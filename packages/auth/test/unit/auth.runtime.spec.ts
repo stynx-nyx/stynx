@@ -45,7 +45,11 @@ describe('auth runtime helpers', () => {
       }),
       next,
     );
-    expect(patch).toHaveBeenCalledWith({ tenantId: 'tenant-1', actorId: 'user-1', sessionId: 'sid-1' });
+    expect(patch).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      actorId: 'user-1',
+      sessionId: 'sid-1',
+    });
 
     patch.mockClear();
     interceptor.intercept(createExecutionContext({}), next);
@@ -96,13 +100,15 @@ describe('auth runtime helpers', () => {
         return false;
       }),
     } as unknown as Reflector);
-    expect(() => permissionGuard.canActivate(createExecutionContext({}))).toThrow(ForbiddenException);
+    expect(() => permissionGuard.canActivate(createExecutionContext({}))).toThrow(
+      ForbiddenException,
+    );
   });
 
   it('hydrates request auth context and readonly state from a valid bearer token', async () => {
     const moduleRef = {
       get: vi.fn(() => ({
-        get: vi.fn().mockResolvedValue({ sid: 'sid-1' }),
+        getActive: vi.fn().mockResolvedValue({ sid: 'sid-1' }),
       })),
     };
     const reflector = {
@@ -122,7 +128,12 @@ describe('auth runtime helpers', () => {
       }),
     };
 
-    const guard = new StynxAuthGuard(moduleRef as never, reflector, validator as never, permissionCache as never);
+    const guard = new StynxAuthGuard(
+      moduleRef as never,
+      reflector,
+      validator as never,
+      permissionCache as never,
+    );
     const request = {
       headers: {
         authorization: 'Bearer access-token',
@@ -144,7 +155,7 @@ describe('auth runtime helpers', () => {
     } as unknown as Reflector;
     const moduleRef = {
       get: vi.fn(() => ({
-        get: vi.fn().mockResolvedValue(null),
+        getActive: vi.fn().mockResolvedValue(null),
       })),
     };
     const validator = {
@@ -158,7 +169,12 @@ describe('auth runtime helpers', () => {
     const permissionCache = {
       getForSession: vi.fn(),
     };
-    const guard = new StynxAuthGuard(moduleRef as never, reflector, validator as never, permissionCache as never);
+    const guard = new StynxAuthGuard(
+      moduleRef as never,
+      reflector,
+      validator as never,
+      permissionCache as never,
+    );
 
     await expect(guard.canActivate(createExecutionContext({ headers: {} }))).rejects.toBeInstanceOf(
       UnauthorizedException,
@@ -201,7 +217,10 @@ describe('auth runtime helpers', () => {
     expect(() => decodeJwtClaims('broken')).toThrow('JWT is malformed');
 
     expect(
-      expandPermissionWildcards(['document:*:*', 'document:read:*'], ['document:read:*', 'document:write:*', 'other']),
+      expandPermissionWildcards(
+        ['document:*:*', 'document:read:*'],
+        ['document:read:*', 'document:write:*', 'other'],
+      ),
     ).toEqual(['document:*:*', 'document:read:*', 'document:write:*']);
     expect(computePermissionsHash(['b', 'a', 'a'])).toHaveLength(16);
     expect(headerToString(['tenant-1'])).toBe('tenant-1');

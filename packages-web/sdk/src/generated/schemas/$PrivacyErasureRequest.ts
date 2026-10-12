@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $PrivacyErasureRequest = {
-    properties: {
-        subjectUserId: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    subjectUserId: {
+      type: 'string',
+      isRequired: true,
     },
+  },
 } as const;

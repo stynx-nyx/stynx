@@ -3,18 +3,18 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $AccessibilityPreferences = {
-    properties: {
-        largeText: {
-            type: 'boolean',
-            isRequired: true,
-        },
-        reduceMotion: {
-            type: 'boolean',
-            isRequired: true,
-        },
-        screenReaderOptimized: {
-            type: 'boolean',
-            isRequired: true,
-        },
+  properties: {
+    largeText: {
+      type: 'boolean',
+      isRequired: true,
     },
+    reduceMotion: {
+      type: 'boolean',
+      isRequired: true,
+    },
+    screenReaderOptimized: {
+      type: 'boolean',
+      isRequired: true,
+    },
+  },
 } as const;

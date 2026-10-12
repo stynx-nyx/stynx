@@ -3,10 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $NumberingReservationStatus = {
-    type: 'any-of',
-    contains: [{
-        type: 'UnknownJson',
-    }, {
-        type: 'string',
-    }],
+  type: 'any-of',
+  contains: [
+    {
+      type: 'Enum',
+    },
+    {
+      type: 'string',
+    },
+  ],
 } as const;

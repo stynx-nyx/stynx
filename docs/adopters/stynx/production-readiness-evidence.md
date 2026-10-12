@@ -29,6 +29,12 @@ pnpm lint
 pnpm typecheck
 ```
 
+`pnpm security:audit` executes `pnpm audit --prod` with JSON output and applies
+the existing workspace policy at every severity. The narrow, expiring
+[ADR-SECURITY-AUDIT-0001 exceptions](../../../law/adr/2026-10-04-workspace-audit-exception.md)
+are logged separately. A successful wrapper exit means there are no unaccepted
+findings; an accepted exception does not establish a zero-finding audit PASS.
+
 ## Focused Package Evidence
 
 Critical frontend packages must keep deterministic package tests and fixture

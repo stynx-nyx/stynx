@@ -6,6 +6,9 @@
   "description": "Transactional outbox for stynx: same-transaction enqueue, claim-and-dispatch, pluggable dispatcher port, HMAC-verified inbound ACK",
   "main": "dist/outbox/src/index.js",
   "types": "dist/outbox/src/index.d.ts",
+  "bin": {
+    "stynx-outbox-storage": "dist/outbox/src/storage-cli.js"
+  },
   "engines": {
     "node": ">=24 <25"
   },
@@ -27,7 +30,7 @@
     "test": "vitest run --config ./vitest.config.ts",
     "test:int": "vitest run --config ./vitest.int.config.ts",
     "stryker": "pnpm exec stryker run stryker.conf.mjs",
-    "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+    "test:coverage": "vitest run --config ./vitest.coverage.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "dependencies": {
     "@stynx-nyx/contracts": "workspace:*",

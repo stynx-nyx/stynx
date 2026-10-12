@@ -1,11 +1,13 @@
-import { Body, Controller, Get, Put } from '@nestjs/common';
+import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { RequestContext } from '@stynx-nyx/core';
 import { NoIdempotent } from '@stynx-nyx/idempotency';
 import { I18nAdminService } from './i18n-admin.service';
 import type { TenantOverrideUpdateInput } from './types';
 
 @Controller('_tenancy/i18n/overrides')
+@UseGuards(StynxAuthGuard, PermissionGuard)
 export class I18nController {
   constructor(
     private readonly moduleRef: ModuleRef,
@@ -13,14 +15,16 @@ export class I18nController {
   ) {}
 
   @Get()
+  @Permission('i18n:read')
   listOverrides() {
-    return this.adminService.listOverrides(this.requestContext().tenantId ?? '');
+    return this.adminService.listTenantOverrides(this.requestContext().tenantId ?? '');
   }
 
   @Put()
   @NoIdempotent()
+  @Permission('i18n:write')
   updateOverrides(@Body() input: TenantOverrideUpdateInput) {
-    return this.adminService.updateOverrides(this.requestContext().tenantId ?? '', input);
+    return this.adminService.updateTenantOverrides(this.requestContext().tenantId ?? '', input);
   }
 
   private requestContext(): RequestContext {

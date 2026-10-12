@@ -7,7 +7,10 @@ import { StynxI18nModule } from '@stynx-nyx/i18n';
 import { SessionService } from '@stynx-nyx/sessions';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
 import { expect } from 'vitest';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
+import {
+  createPostgresTestDatabase,
+  type PostgresTestDatabase,
+} from '../../../../../packages/data/test/support/postgres';
 import { actors, type ActorName, seedRecordsAndNotesE2e } from './seed';
 
 export interface ReferenceApiE2eContext {
@@ -32,7 +35,11 @@ export interface ReferenceApiE2eOptions {
 class FixedCognitoJwtValidator {
   constructor(private readonly result: NonNullable<ReferenceApiE2eOptions['cognitoClaims']>) {}
 
-  async validateAccessToken(): Promise<{ sub: string; email: string; claims: Record<string, unknown> }> {
+  async validateAccessToken(): Promise<{
+    sub: string;
+    email: string;
+    claims: Record<string, unknown>;
+  }> {
     return {
       sub: this.result.sub,
       email: this.result.email,
@@ -46,9 +53,16 @@ function setRuntimeEnvironment(postgres: PostgresTestDatabase, redisUrl: string)
   process.env.AWS_SECRET_ACCESS_KEY = 'test';
   process.env.AWS_REGION = 'us-east-1';
   process.env.AWS_EC2_METADATA_DISABLED = 'true';
-  process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-e2e:owner');
-  process.env.STYNX_APP_DATABASE_URL = postgres.appConnectionString('@stynx-nyx/reference-api-e2e:app');
-  process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-e2e:reader');
+  process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString(
+    '@stynx-nyx/reference-api-e2e:owner',
+  );
+  process.env.STYNX_APP_DATABASE_URL = postgres.appConnectionString(
+    '@stynx-nyx/reference-api-e2e:app',
+  );
+  process.env.STYNX_READER_DATABASE_URL = postgres.appConnectionString(
+    '@stynx-nyx/reference-api-e2e:reader',
+    'stynx_reader',
+  );
   process.env.STYNX_REDIS_URL = redisUrl;
   process.env.STYNX_STORAGE_ENDPOINT = 'http://127.0.0.1:4566';
   process.env.STYNX_STORAGE_FORCE_PATH_STYLE = 'true';
@@ -60,24 +74,33 @@ function setRuntimeEnvironment(postgres: PostgresTestDatabase, redisUrl: string)
   process.env.STYNX_COGNITO_ISSUER = 'https://cognito.local';
 }
 
-async function mintActorSessions(sessionService: SessionService): Promise<Record<ActorName, string>> {
+async function mintActorSessions(
+  sessionService: SessionService,
+): Promise<Record<ActorName, string>> {
   const entries = await Promise.all(
-    (Object.entries(actors) as Array<[ActorName, typeof actors[ActorName]]>).map(async ([name, actor]) => {
-      const session = await sessionService.create(
-        actor.userId,
-        actor.tenantId,
-        actor.userId,
-        {},
-        { membershipId: actor.membershipId },
-      );
-      return [name, session.accessToken] as const;
-    }),
+    (Object.entries(actors) as Array<[ActorName, (typeof actors)[ActorName]]>).map(
+      async ([name, actor]) => {
+        const session = await sessionService.create(
+          actor.userId,
+          actor.tenantId,
+          actor.userId,
+          {},
+          { membershipId: actor.membershipId },
+        );
+        return [name, session.accessToken] as const;
+      },
+    ),
   );
   return Object.fromEntries(entries) as Record<ActorName, string>;
 }
 
-export async function setupReferenceApiE2e(options: ReferenceApiE2eOptions = {}): Promise<ReferenceApiE2eContext> {
-  const postgres = await createPostgresTestDatabase(options.databaseName ?? 'reference_api_records_notes');
+export async function setupReferenceApiE2e(
+  options: ReferenceApiE2eOptions = {},
+): Promise<ReferenceApiE2eContext> {
+  const postgres = await createPostgresTestDatabase(
+    options.databaseName ?? 'reference_api_records_notes',
+  );
+  await postgres.ensureRoleLogin('stynx_reader');
   const redis = await new GenericContainer('redis:7-alpine')
     .withEnvironment({ GLOG_minloglevel: '2' })
     .withExposedPorts(6379)
@@ -88,10 +111,7 @@ export async function setupReferenceApiE2e(options: ReferenceApiE2eOptions = {})
 
   const { AppModule } = await import('../../../src/app.module');
   const moduleBuilder = Test.createTestingModule({
-    imports: [
-      AppModule,
-      ...(options.includeI18n ? [StynxI18nModule.forRoot()] : []),
-    ],
+    imports: [AppModule, ...(options.includeI18n ? [StynxI18nModule.forRoot()] : [])],
   });
   if (options.cognitoClaims) {
     moduleBuilder
@@ -106,7 +126,7 @@ export async function setupReferenceApiE2e(options: ReferenceApiE2eOptions = {})
   await app.listen(0, '127.0.0.1');
   expect(app.getHttpServer().listening).toBe(true);
 
-  await seedRecordsAndNotesE2e(postgres);
+  await seedRecordsAndNotesE2e(postgres, options.includeI18n ? ['i18n:read', 'i18n:write'] : []);
 
   const sessionService = moduleRef.get(SessionService);
   return {
@@ -119,7 +139,9 @@ export async function setupReferenceApiE2e(options: ReferenceApiE2eOptions = {})
   };
 }
 
-export async function closeReferenceApiE2e(context: ReferenceApiE2eContext | undefined): Promise<void> {
+export async function closeReferenceApiE2e(
+  context: ReferenceApiE2eContext | undefined,
+): Promise<void> {
   if (context) {
     const httpServer = context.app.getHttpServer();
     expect(httpServer.listening).toBe(true);

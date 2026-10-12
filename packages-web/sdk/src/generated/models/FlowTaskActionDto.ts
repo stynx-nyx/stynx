@@ -4,8 +4,7 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type FlowTaskActionDto = {
-    action: string;
-    note?: string;
-    payload?: (FlowJsonObject | null);
+  action: string;
+  note?: string;
+  payload?: FlowJsonObject | null;
 };
-

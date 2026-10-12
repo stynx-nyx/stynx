@@ -1435,6 +1435,48 @@
       "commit": "e70414e46aa4502753a77ebd633b1eb2120b6d65",
       "authorized_by": "Owner",
       "reason": "Owner authorization on 2026-10-10 to proceed until complete 1.5.7 final publication includes required persistence of actual published-candidate observation evidence under ADR-DEVAI-ADOPTION-0014 decision 6 and ADR-DEVAI-ADOPTION-0018 decision 9. This agent-bound receipt maps source Inspector commit 0346c3439b60085ea6895a7a4bd7ed28683a5453 to exact landed Inspector commit e70414e46aa4502753a77ebd633b1eb2120b6d65 after PR #377's normal rebase merge; both full trees are byte-identical at 52040583d19c9eb83ee005c18e31225db0bab53c, with the same ten generated-evidence paths. They observe published 1.5.7 main 2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e: SC-20261010T081604-001 and EV-8e62770ffdb6fc4e, nine raw artifacts and the 80-record proof chain preserving its 75-record historical prefix. The actual scorecard remains RED/FAIL with 24 PASS, 4 FAIL, 9 REVIEW, 6 UNKNOWN and 2 N/A cells and readiness_promoting=false. The source receipt and all historical evidence remain preserved; no specification, threshold, product code or test is weakened. This receipt covers only the exact landed generated-evidence commit. The Owner supplied the end-to-end action mandate, not this computed SHA."
+    },
+    {
+      "forbidden_id": "FORBID-DROP-PROD",
+      "commit": "a1238d5edd2d5a289d4baf302b1d3f20532d0c13",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner full STYNX 1.6.0 independent installed-package verification and protected-integration mandate under ADR-0019 decision 6 for only the disposable database cleanup introduced in test/packages/i18n-installed/postgres.ts by this exact Inspector commit. createPostgresTestDatabase constructs its database from the test prefix plus random UUID hex, creates it for packed-migration/restricted-role tests, and its returned dispose method terminates connections selected by that exact owned database name before dropping that same database. This receipt covers owned test-database cleanup only, not production or arbitrary DROP action. The agent computed and reviewed the exact commit; the Owner supplied the bounded verification mandate, not its literal SHA."
+    },
+    {
+      "forbidden_id": "FORBID-EXTERNAL-MESSAGES",
+      "commit": "1c9dd8526c7db7e36a01df7195640bdbf91a796f",
+      "authorized_by": "Owner",
+      "reason": "Records the narrowly reviewed non-actuating lexical match in this exact Architect documentation commit under the Owner full STYNX 1.6.0 performance-evidence and protected-integration mandate (ADR-0019 decision 6 and ADR-PERF-0001). The matched word slack appears in docs/performance/supplemental-endpoint-workload.md as scheduling headroom for rolling-window quota allocation; the commit changes law/performance documentation and performs no external communication. This receipt records that incidental text match only and expressly grants no Slack, email, GitHub-comment or other external-message permission. The agent computed and reviewed the exact commit; this does not claim literal SHA approval by the Owner."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "e5ce4abbf00f0287cb86ea96b9ec38d49fa74b0c",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner full STYNX 1.6.0 implementation/publication mandate and subsequent explicit protected-integration/publication instruction under ADR-0019 decision 6 for this exact CI action: .github/workflows/hardening.yml changes STYNX_K6_STORAGE_PRESIGN_P99_MS from 500 to 50, restoring the existing accepted storage-presign p99 < 50 ms guard under ADR-PERF-0001 and its paired workflow page. All other workflow gates, loads and thresholds remain unchanged. The agent computed and reviewed this exact commit; this receipt does not claim the Owner supplied its literal SHA and authorizes no weakened gate or unrelated workflow change."
+    },
+    {
+      "forbidden_id": "FORBID-DROP-PROD",
+      "commit": "d1807c724de942ff266ce0f83735322a00b35dcd",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner full STYNX 1.6.0 offline storage/import verification and protected-integration mandate under ADR-0019 decision 6 for only the disposable database cleanup introduced in scripts/offline-storage-catalog-generate.mjs by this exact commit. The generator creates its own stynx_storage_generation_<random UUID hex> database, builds the canonical platform/offline catalog there, then closes its client and drops that same generated database in finally. This receipt covers that owned development-generation cleanup only, not a production database or arbitrary DROP action. The agent computed and reviewed the exact commit; the Owner supplied the bounded action mandate, not its literal SHA."
+    },
+    {
+      "forbidden_id": "FORBID-DROP-PROD",
+      "commit": "d3a9e9da28e5fc44d003a9d8a2f4d243f0b77ac0",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner full STYNX 1.6.0 storage verification and protected-integration mandate under ADR-0019 decision 6 for only the disposable database cleanup introduced in scripts/outbox-storage-catalog-generate.mjs by this exact commit. The generator creates its own stynx_storage_generation_<random UUID hex> database, builds the canonical platform catalog there, then closes its client and drops that same generated database in finally. This receipt covers that owned development-generation cleanup only, not a production database or arbitrary DROP action. The agent computed and reviewed the exact commit; the Owner supplied the bounded action mandate, not its literal SHA."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "cd0542143ad21e59551cbf3936d99c48647b2e78",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner's reaffirmed full STYNX 1.6.0 implementation, protected-integration and publication mandate under ADR-0019 decision 6 and ADR-DEVAI-ADOPTION-0020 for this exact registered DEVAI 2.5.0 upgrade commit. The generated .github/workflows/devai-local-rc-verify.yml advances only the trusted verifier identity from published @aarusso-nyx/devai@1.9.0 to independently verified published 2.4.0, including exact registry package/SRI/source/provenance substitutions; its SHA-256 is 30bb7935a0ad1ad7303217f77ac64e9c0c4c6ae3f70860d7c21f3a14e35964dc. Independent Auditor source review accepted the exact seven identity substitution classes; existing signer trust, inert candidate boundary, exact-tree transport, checks, permissions and all gates remain unchanged. The agent computed and reviewed this commit SHA; the Owner supplied the bounded action mandate, not its literal SHA. This receipt covers only the exact generated CI action; a rewritten landed commit requires its own exact receipt. Protected verifier-provenance control verification/update and normal remote integration remain separate prerequisites; this receipt supplies no gate waiver or completed STYNX audit/publication claim."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "953bddbdfaa3523be4e0e82cfe26e1917473768f",
+      "authorized_by": "Owner",
+      "reason": "Records the narrowly reviewed non-actuating lexical match in this exact Engineer commit under the Owner full STYNX 1.6.0 implementation, independent verification, protected-integration and publication mandate (ADR-0019 decision 6). The two added files scripts/lib/http-build-roster.mjs and scripts/lib/http-workspace-graph.mjs derive and validate read-only build-input/dependency rosters; the only matched rm -rf text is the closed Map allowlist of existing package-local disposable-dist build scripts followed by tsc -p tsconfig.json or tsc -p tsconfig.build.json. This commit adds no shell invocation, cleanup or deletion operation for those strings. This receipt covers only that exact textual allowlist match and grants no deletion of uncommitted or unrelated work, arbitrary cleanup, weakened gate or additional remote action. The agent computed and reviewed the exact known commit; the Owner supplied the bounded action mandate, not its literal SHA."
     }
   ]
 }

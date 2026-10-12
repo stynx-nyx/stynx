@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
 import { generateRequestId, RequestContext, RequestContextMutator } from '@stynx-nyx/core';
@@ -42,7 +42,7 @@ export class PermissionQueryService {
         );
         const current = membership.rows[0];
         if (!current) {
-          throw new Error('TENANT_ACCESS_DENIED');
+          throw new ForbiddenException('TENANT_ACCESS_DENIED');
         }
 
         const grants = await trx.query<PermissionKeyRow>(
@@ -90,11 +90,17 @@ export class PermissionQueryService {
     });
   }
 
-  async probeHash(userId: string, tenantId: string): Promise<{ hash: string | null; generation: number }> {
+  async probeHash(
+    userId: string,
+    tenantId: string,
+  ): Promise<{ hash: string | null; generation: number }> {
     return this.runWithActorContext(userId, tenantId, async () => {
       const database = this.requireDatabase();
       return database.tx(async (trx) => {
-        const result = await trx.query<{ effective_hash: string | null; effective_hash_generation: number | null }>(
+        const result = await trx.query<{
+          effective_hash: string | null;
+          effective_hash_generation: number | null;
+        }>(
           `
             select effective_hash, effective_hash_generation
             from auth.memberships
@@ -142,9 +148,11 @@ export class PermissionQueryService {
   }
 
   private requireDatabase() {
-    const database = this.moduleRef.get(Database, { strict: false }) as {
-      tx<T>(fn: (trx: Transaction) => Promise<T>): Promise<T>;
-    } | undefined;
+    const database = this.moduleRef.get(Database, { strict: false }) as
+      | {
+          tx<T>(fn: (trx: Transaction) => Promise<T>): Promise<T>;
+        }
+      | undefined;
     if (!database) {
       throw new Error('Database provider is unavailable to PermissionQueryService');
     }

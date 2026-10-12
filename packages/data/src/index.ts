@@ -24,3 +24,5 @@ export * from './errors';
 export * from './tokens';
 export * from './schema';
 export * from './query-helpers';
+export * from './storage-contract';
+export * from './storage-catalog';

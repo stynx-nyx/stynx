@@ -21,6 +21,7 @@ export const OUTBOX_APP_ROLE_CHECKED_RELATIONS: readonly string[] = Object.freez
   'event_delivery',
   'event_attempts',
   'event_acks',
+  'event_retirements',
   'legacy_event_map',
   'ack_quarantine',
   'event_order_seq',

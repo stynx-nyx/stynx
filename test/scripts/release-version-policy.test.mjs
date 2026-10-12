@@ -19,6 +19,7 @@ import {
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import test from 'node:test';
+import { parse as parseYaml } from 'yaml';
 
 import {
   collectPublicPackages,
@@ -84,9 +85,9 @@ const packageRoster = JSON.parse(
 // The registry census is validated against the current unified candidate
 // (registryVersionPolicyConstants.candidate), not the historical 1.2.0
 // rebaseline target that unified-rebaseline.mjs still describes.
-const currentCandidate = '1.5.7';
+const currentCandidate = '1.6.0';
 const previousCandidate = '1.5.0-rc.2';
-const preflightLatest = '1.5.6';
+const preflightLatest = '1.5.7';
 
 const campaignPolicy = {
   policy_id: 'stynx.package-roster',
@@ -2120,19 +2121,376 @@ test('Architect policy and workspace structurally define exactly 44/44/0', () =>
   assert.equal(packageRoster.counts.approved_first_publications, 0);
 });
 
-test('final registry policy candidate equals the root and all 44 publishable manifest versions', () => {
+// This observes the existing read-only validators. It does not version manifests,
+// establish a release commit's ancestry, or supply final publication credit.
+function assertCampaignVersionStage(root) {
   const candidate = currentCandidate;
-  const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
-  const publishablePackages = collectPublicPackages(repoRoot);
+  const rootManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  const publishablePackages = collectPublicPackages(root);
+  const config = JSON.parse(readFileSync(join(root, '.changeset/config.json'), 'utf8'));
+  const roster = JSON.parse(
+    readFileSync(join(root, 'law/policy/stynx-package-roster.json'), 'utf8'),
+  );
+  const anomaly = JSON.parse(
+    readFileSync(join(root, 'law/policy/registry-version-anomalies.json'), 'utf8'),
+  );
 
+  // These four original policy identities and the actual cardinality apply in
+  // both states; no prospective manifest is substituted for an observed one.
   assert.equal(registryVersionPolicyConstants.candidate, candidate);
   assert.equal(registryVersionPolicyConstants.previousCandidate, previousCandidate);
-  assert.equal(anomalyPolicy.next_unified_version, candidate);
-  assert.equal(anomalyPolicy.anomalies[0].allowed_candidate, candidate);
-  assert.equal(rootManifest.version, candidate);
+  assert.equal(anomaly.next_unified_version, candidate);
+  assert.equal(anomaly.anomalies[0].allowed_candidate, candidate);
+  assert.deepEqual(validateReleaseVersionPolicy(root, config), []);
   assert.equal(publishablePackages.length, 44);
-  for (const { manifest } of publishablePackages) {
-    assert.equal(manifest.version, candidate, `${manifest.name} must match the registry candidate`);
+  const names = publishablePackages.map(({ manifest }) => manifest.name).sort();
+  const governedNames = [...packageRoster.publishable_packages].sort();
+  assert.equal(new Set(names).size, 44);
+  assert.deepEqual(names, governedNames);
+  assert.equal(roster.counts.publishable, 44);
+  assert.deepEqual([...roster.publishable_packages].sort(), governedNames);
+  assert.equal(new Set(roster.publishable_packages).size, 44);
+  assert.deepEqual(config.fixed, [config.fixed[0]]);
+  assert.equal(new Set(config.fixed[0]).size, 44);
+  assert.deepEqual([...config.fixed[0]].sort(), governedNames);
+  assert.equal(fixedGroupVersion.readPreState(root), null);
+  const pending = readPendingChangesets(root);
+  for (const { file, releases } of pending) {
+    assert.ok(releases.length > 0, `${file}: a stable changeset must declare a release`);
+    assert.equal(new Set(releases.map(({ name }) => name)).size, releases.length);
+    for (const { name, type } of releases) {
+      assert.ok(names.includes(name), `${file}: unsupported package ${name}`);
+      assert.ok(!config.ignore?.includes(name), `${file}: ignored package ${name}`);
+      assert.ok(['patch', 'minor', 'major'].includes(type), `${file}: unsupported bump ${type}`);
+    }
+  }
+  const plan = planFixedGroupVersion(root, config);
+  assert.equal(plan.current, rootManifest.version);
+  assert.deepEqual(
+    plan.changesets,
+    pending.map(({ file, releases }) => ({
+      file,
+      types: [...new Set(releases.map(({ type }) => type))],
+    })),
+  );
+  const changesets = pending.map(({ file, releases, summary }) => ({
+    file,
+    releases,
+    summary,
+    sha256: createHash('sha256')
+      .update(readFileSync(join(root, file)))
+      .digest('hex'),
+  }));
+
+  let stage;
+  if (rootManifest.version === candidate) {
+    stage = 'VERSIONED';
+    assert.equal(pending.length, 0, 'the versioned candidate must consume its stable changesets');
+    assert.deepEqual(
+      validateReleaseVersionPolicy(root, config, { expectedVersion: candidate }),
+      [],
+    );
+    // Original final-candidate equalities remain exact, including all 44 rows.
+    assert.equal(rootManifest.version, candidate);
+    for (const { manifest } of publishablePackages) {
+      assert.equal(
+        manifest.version,
+        candidate,
+        `${manifest.name} must match the registry candidate`,
+      );
+    }
+    assert.equal(plan.bump, null);
+    assert.equal(plan.expected, candidate);
+  } else {
+    stage = 'PREVERSION';
+    assert.equal(rootManifest.version, preflightLatest);
+    for (const { manifest } of publishablePackages) {
+      assert.equal(
+        manifest.version,
+        preflightLatest,
+        `${manifest.name} must match the approved source`,
+      );
+    }
+    assert.ok(
+      pending.length > 0,
+      'the feature candidate requires a nonempty stable changeset plan',
+    );
+    assert.equal(plan.current, preflightLatest);
+    assert.equal(plan.bump, 'minor');
+    assert.equal(plan.expected, candidate);
+    assert.equal(anomaly.next_unified_version, plan.expected);
+    assert.equal(anomaly.anomalies[0].allowed_candidate, plan.expected);
+  }
+  return {
+    stage,
+    current: rootManifest.version,
+    target: candidate,
+    packageCount: names.length,
+    names,
+    plan,
+    changesets,
+  };
+}
+
+test('final registry policy candidate equals the root and all 44 publishable manifest versions', () => {
+  const observation = assertCampaignVersionStage(repoRoot);
+  assert.ok(['PREVERSION', 'VERSIONED'].includes(observation.stage));
+  assert.equal(observation.target, currentCandidate);
+  assert.equal(observation.packageCount, 44);
+});
+
+function createCampaignStageFixture({ version = preflightLatest, pending = true } = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'stynx-version-stage espaço 日本語 '));
+  mkdirSync(join(root, 'packages-web'), { recursive: true });
+  writeJson(join(root, 'package.json'), { name: 'stynx-workspace', private: true, version });
+  const names = [...packageRoster.publishable_packages].sort();
+  writeJson(join(root, '.changeset/config.json'), { fixed: [names], ignore: [] });
+  writeJson(join(root, 'law/policy/stynx-package-roster.json'), packageRoster);
+  writeJson(join(root, 'law/policy/registry-version-anomalies.json'), anomalyPolicy);
+  const manifestPaths = names.map((name, index) => {
+    const path = join(root, 'packages', name.split('/')[1], 'package.json');
+    writeJson(path, { name, version, dependencies: index ? { [names[0]]: `^${version}` } : {} });
+    return path;
+  });
+  writeJson(join(root, 'tools/create-stynx-app/template/package.json'), {
+    name: 'consumer-template',
+    dependencies: { [names[0]]: `^${version}` },
+  });
+  const changesetPath = join(root, '.changeset/feature.md');
+  if (pending)
+    writeFileSync(changesetPath, `---\n'${names[0]}': minor\n---\n\nActual fixture feature.\n`);
+  return { root, names, manifestPaths, changesetPath };
+}
+
+function mutateStageJson(path, mutate) {
+  const value = JSON.parse(readFileSync(path, 'utf8'));
+  mutate(value);
+  writeJson(path, value);
+}
+
+test('campaign version stages observe the actual preversion minor plan and consumed versioned manifests', () => {
+  for (const options of [{}, { version: currentCandidate, pending: false }]) {
+    const fixture = createCampaignStageFixture(options);
+    try {
+      const observation = assertCampaignVersionStage(fixture.root);
+      assert.equal(observation.stage, options.version ? 'VERSIONED' : 'PREVERSION');
+      assert.equal(observation.current, options.version ?? preflightLatest);
+      assert.equal(observation.target, currentCandidate);
+      assert.deepEqual(observation.names, fixture.names);
+      assert.equal(observation.packageCount, 44);
+      assert.equal(observation.plan.expected, currentCandidate);
+      assert.equal(observation.plan.bump, options.version ? null : 'minor');
+      assert.equal(observation.changesets.length, options.version ? 0 : 1);
+      if (!options.version) {
+        assert.equal(observation.changesets[0].file, '.changeset/feature.md');
+        assert.deepEqual(observation.changesets[0].releases, [
+          { name: fixture.names[0], type: 'minor' },
+        ]);
+        assert.equal(
+          observation.changesets[0].sha256,
+          createHash('sha256').update(readFileSync(fixture.changesetPath)).digest('hex'),
+        );
+      }
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+});
+
+const campaignStageRefusals = [
+  [
+    'mixed root version',
+    (f) =>
+      mutateStageJson(join(f.root, 'package.json'), (v) => {
+        v.version = '1.5.6';
+      }),
+  ],
+  [
+    'mixed package version',
+    (f) =>
+      mutateStageJson(f.manifestPaths[1], (v) => {
+        v.version = '1.5.6';
+      }),
+  ],
+  ['missing public package', (f) => rmSync(f.manifestPaths[0])],
+  [
+    'extra public package',
+    (f) =>
+      writeJson(join(f.root, 'packages/extra/package.json'), {
+        name: '@stynx-nyx/extra',
+        version: preflightLatest,
+      }),
+  ],
+  [
+    'duplicate public package',
+    (f) =>
+      writeJson(join(f.root, 'packages/extra/package.json'), {
+        name: f.names[0],
+        version: preflightLatest,
+      }),
+  ],
+  [
+    'missing fixed member',
+    (f) =>
+      mutateStageJson(join(f.root, '.changeset/config.json'), (v) => {
+        v.fixed[0].pop();
+      }),
+  ],
+  [
+    'extra fixed member',
+    (f) =>
+      mutateStageJson(join(f.root, '.changeset/config.json'), (v) => {
+        v.fixed[0].push('@stynx-nyx/extra');
+      }),
+  ],
+  [
+    'duplicate fixed member',
+    (f) =>
+      mutateStageJson(join(f.root, '.changeset/config.json'), (v) => {
+        v.fixed[0].push(v.fixed[0][0]);
+      }),
+  ],
+  [
+    'wrong fixed member',
+    (f) =>
+      mutateStageJson(join(f.root, '.changeset/config.json'), (v) => {
+        v.fixed[0][0] = '@stynx-nyx/extra';
+      }),
+  ],
+  [
+    'missing governed roster member',
+    (f) =>
+      mutateStageJson(join(f.root, 'law/policy/stynx-package-roster.json'), (v) => {
+        v.publishable_packages.pop();
+      }),
+  ],
+  [
+    'extra governed roster member',
+    (f) =>
+      mutateStageJson(join(f.root, 'law/policy/stynx-package-roster.json'), (v) => {
+        v.publishable_packages.push('@stynx-nyx/extra');
+      }),
+  ],
+  [
+    'duplicate governed roster member',
+    (f) =>
+      mutateStageJson(join(f.root, 'law/policy/stynx-package-roster.json'), (v) => {
+        v.publishable_packages[0] = v.publishable_packages[1];
+      }),
+  ],
+  [
+    'wrong governed cardinality',
+    (f) =>
+      mutateStageJson(join(f.root, 'law/policy/stynx-package-roster.json'), (v) => {
+        v.counts.publishable = 43;
+      }),
+  ],
+  ['missing changesets', (f) => rmSync(f.changesetPath)],
+  ['malformed changeset', (f) => writeFileSync(f.changesetPath, 'not frontmatter\n')],
+  [
+    'unsupported bump',
+    (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': breaking\n---\n`),
+  ],
+  [
+    'unsupported package alongside valid minor',
+    (f) =>
+      writeFileSync(
+        f.changesetPath,
+        `---\n'${f.names[0]}': minor\n'@stynx-nyx/unknown': major\n---\n`,
+      ),
+  ],
+  [
+    'ignored package',
+    (f) =>
+      mutateStageJson(join(f.root, '.changeset/config.json'), (v) => {
+        v.ignore = [f.names[0]];
+      }),
+  ],
+  ['no effective bump', (f) => writeFileSync(f.changesetPath, '---\n\n---\n\nEmpty release.\n')],
+  ['patch plan', (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': patch\n---\n`)],
+  ['major plan', (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': major\n---\n`)],
+  ['present prestate', (f) => writeRcPreState(f, { initialVersion: preflightLatest })],
+  ['malformed prestate', (f) => writeFileSync(join(f.root, '.changeset/pre.json'), '{')],
+  [
+    'disagreeing anomaly target',
+    (f) =>
+      mutateStageJson(join(f.root, 'law/policy/registry-version-anomalies.json'), (v) => {
+        v.next_unified_version = '1.6.1';
+      }),
+  ],
+  [
+    'disagreeing allowed candidate',
+    (f) =>
+      mutateStageJson(join(f.root, 'law/policy/registry-version-anomalies.json'), (v) => {
+        v.anomalies[0].allowed_candidate = '1.6.1';
+      }),
+  ],
+  [
+    'stale internal range',
+    (f) =>
+      mutateStageJson(f.manifestPaths[1], (v) => {
+        v.dependencies[f.names[0]] = '^1.5.6';
+      }),
+  ],
+  [
+    'stale template range',
+    (f) =>
+      mutateStageJson(join(f.root, 'tools/create-stynx-app/template/package.json'), (v) => {
+        v.dependencies[f.names[0]] = '^1.5.6';
+      }),
+  ],
+];
+for (const [label, mutate] of campaignStageRefusals) {
+  test(`campaign version stages refuse ${label}`, () => {
+    const fixture = createCampaignStageFixture();
+    try {
+      mutate(fixture);
+      assert.throws(() => assertCampaignVersionStage(fixture.root));
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+}
+
+test('campaign version stages refuse a wrong uniform source and unconsumed final changesets', () => {
+  for (const options of [
+    { version: '1.5.6' },
+    { version: '1.6.1', pending: false },
+    { version: currentCandidate },
+  ]) {
+    const fixture = createCampaignStageFixture(options);
+    try {
+      assert.throws(() => assertCampaignVersionStage(fixture.root));
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
+});
+
+test('campaign version stages enforce the final root and each of all 44 exact package equalities', () => {
+  const fixture = createCampaignStageFixture({ version: currentCandidate, pending: false });
+  try {
+    const rootPath = join(fixture.root, 'package.json');
+    const originalRoot = readFileSync(rootPath);
+    mutateStageJson(rootPath, (v) => {
+      v.version = preflightLatest;
+    });
+    assert.throws(() => assertCampaignVersionStage(fixture.root));
+    writeFileSync(rootPath, originalRoot);
+    for (const path of fixture.manifestPaths) {
+      const original = readFileSync(path);
+      mutateStageJson(path, (v) => {
+        v.version = preflightLatest;
+      });
+      assert.throws(
+        () => assertCampaignVersionStage(fixture.root),
+        `${path} cannot evade exact final equality`,
+      );
+      writeFileSync(path, original);
+    }
+    assert.equal(assertCampaignVersionStage(fixture.root).stage, 'VERSIONED');
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
   }
 });
 
@@ -2401,20 +2759,20 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 test('Architect anomaly policy is required at its exact approved digest', () => {
   // The next unified candidate must be explicitly bound in the Architect
   // policy; 1.2.0 remains historical rebaseline data.
-  assert.equal(currentCandidate, '1.5.7');
+  assert.equal(currentCandidate, '1.6.0');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
   assert.equal(anomalyPolicy.owner_decision.date, '2026-10-10');
   assert.equal(
     anomalyPolicy.owner_decision.repository_baseline,
-    '6dabf052b2948fe0c2688cdb23c9d390c16af5ed',
+    'c80342f867318be8b5c8065fd48ff1733b5dfa0e',
   );
   assert.equal(
     anomalyPolicy.owner_decision.repository_tree,
-    '9102e545c8c09b2ea4cf694cef1abea221a686e9',
+    '10bdedf56718ed7a87259e63b4557aaf439f3f74',
   );
   assert.deepEqual(anomalyPolicy.owner_decision.supersedes, {
     date: '2026-10-10',
-    next_unified_version: '1.5.6',
+    next_unified_version: '1.5.7',
   });
   for (const phrase of [
     '44',
@@ -2885,7 +3243,7 @@ test('coverage is executable and reports four metrics for every one of the 44 pa
       writeFileSync(join(packageDir, 'src', 'index.ts'), source);
       const config = createVitestConfig({ packageDir, packageName: `fixture-${name}` });
       assert.equal(
-        config.test.coverage.exclude.includes('src/index.ts'),
+        config.test.coverage.exclude.includes(join(packageDir, 'src/index.ts')),
         excluded,
         `${name}: executable, empty, or unparseable entrypoints must remain coverage-bearing`,
       );
@@ -2991,7 +3349,9 @@ test('D24.32 exact type-only coverage candidates fail closed and four configs bi
     packageDir: join(repoRoot, 'packages/mobile-runtime'),
     packageName: '@stynx-nyx/mobile-runtime',
   });
-  assert.deepEqual(sentinel.test.coverage.include, ['src/**/*.ts']);
+  assert.deepEqual(sentinel.test.coverage.include, [
+    join(repoRoot, 'packages/mobile-runtime/src/**/*.ts'),
+  ]);
   assert.deepEqual(
     {
       statements: sentinel.test.coverage.thresholds.statements,
@@ -3093,6 +3453,35 @@ test('scenario=all hardening reaches every k6 scenario with authenticated fail-c
   assert.match(hardening, /No current k6 summary files were produced/u);
 });
 
+test('hardening preserves the accepted ADR presign gate and upload scenario thresholds', () => {
+  const decision = repositorySource('law/adr/2026-09-12-k6-baseline-comparison.md');
+  const acceptedGate = decision.match(
+    /3\. \*\*The scenarios' own thresholds remain the hard line\.\*\* `p\(99\)<(\d+)`/u,
+  );
+  assert.equal(acceptedGate?.[1], '50', 'ADR-HARDENING-0001 decision 3 remains the authority');
+  const hardening = parseYaml(repositorySource('.github/workflows/hardening.yml'));
+  const environments = [hardening.env];
+  const commands = [];
+  for (const job of Object.values(hardening.jobs)) {
+    environments.push(job.env);
+    for (const step of job.steps ?? []) {
+      environments.push(step.env);
+      if (typeof step.run === 'string') commands.push(step.run);
+    }
+  }
+  const overrides = environments
+    .filter((environment) => environment && 'STYNX_K6_STORAGE_PRESIGN_P99_MS' in environment)
+    .map((environment) => String(environment.STYNX_K6_STORAGE_PRESIGN_P99_MS));
+  assert.deepEqual(overrides, [acceptedGate[1]]);
+  assert.doesNotMatch(commands.join('\n'), /STYNX_K6_STORAGE_PRESIGN_P99_MS\s*=/u);
+  const upload = repositorySource('test/perf/k6/upload.js');
+  const defaultGate = upload.match(/Number\(__ENV\.STYNX_K6_STORAGE_PRESIGN_P99_MS \|\| (\d+)\)/u);
+  assert.equal(defaultGate?.[1], acceptedGate[1]);
+  assert.match(upload, /storage_presign_duration_ms:\s*\[`p\(99\)<\$\{storagePresignP99Ms\}`\]/u);
+  assert.match(upload, /http_req_duration:\s*\['p\(95\)<1000'\]/u);
+  assert.match(upload, /http_req_failed:\s*\['rate<0\.02'\]/u);
+});
+
 test('live branch and release-tag protection drift are both fail-closed', () => {
   const protection = repositorySource('scripts/verify-branch-protection.mjs');
   for (const field of [
@@ -3168,7 +3557,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
   for (const [version, code] of [
     [currentCandidate, 'REGISTRY_CANDIDATE_EXISTS'],
     ['1.5.0-rc.4', null],
-    ['1.6.0', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['1.6.1', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
     ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
   ]) {
     const history = validRegistryCensus();
@@ -3332,7 +3721,7 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   );
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
-  assert.equal(preflightLatest, '1.5.6');
+  assert.equal(preflightLatest, '1.5.7');
   assert.deepEqual(
     validatePreflightDistTags({
       preflightLatest,
@@ -3475,7 +3864,7 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
       (error) => error?.code === code,
     );
   }
-  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 5n, 7n]);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 6n, 0n]);
   assert.throws(
     () => parseStableVersionTag(`v${previousCandidate}`),
     /malformed stable release tag/u,

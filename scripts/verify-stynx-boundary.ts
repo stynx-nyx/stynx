@@ -26,13 +26,19 @@ const violations: string[] = [];
 for (const file of files) {
   const text = readFileSync(file, 'utf8');
   for (const specifier of importSpecifiers(text)) {
-    if (specifier.startsWith('@stynx-nyx/')) imported.add(specifier.split('/').slice(0, 2).join('/'));
+    if (specifier.startsWith('@stynx-nyx/'))
+      imported.add(specifier.split('/').slice(0, 2).join('/'));
     if (specifier.startsWith('@stynx-nyx/'))
       imported.add(specifier.split('/').slice(0, 2).join('/'));
     if (forbidden.some((prefix) => specifier === prefix || specifier.startsWith(`${prefix}/`))) {
       violations.push(`${relative(repoRoot, file)} imports forbidden ${specifier}`);
     }
-    if (specifier.startsWith('@stynx') && !allowed.some((prefix) => specifier.startsWith(prefix))) {
+    if (
+      specifier.startsWith('@stynx') &&
+      !allowed.some((entry) =>
+        entry.endsWith('/') ? specifier.startsWith(entry) : specifier === entry,
+      )
+    ) {
       violations.push(`${relative(repoRoot, file)} imports undeclared STYNX seam ${specifier}`);
     }
   }

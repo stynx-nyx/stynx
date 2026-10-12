@@ -2,11 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { Controller, Get } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { RequestContext, StynxError } from '@stynx-nyx/core';
-import { createTestApp } from '@stynx-nyx/testing';
+import { RequestContext, StynxError, SystemContext } from '@stynx-nyx/core';
+import { AuthenticatedI18nApp } from '../support/authenticated-app';
 import request from 'supertest';
 import { I18nAdminService } from '../../src/i18n-admin.service';
-import { StynxI18nModule } from '../../src/i18n.module';
 import { LocaleService } from '../../src/locale.service';
 
 @Controller('demo')
@@ -36,21 +35,14 @@ class DemoController {
 }
 
 describe('StynxI18nModule integration', () => {
-
   it('resolves locale order, applies tenant overrides, renders ICU messages, and localizes errors', async () => {
     const tenantId = '01978f4a-32bf-7c27-a131-fd73a9e20111';
-    const testApp = await createTestApp({
-      localstack: { enabled: false },
-      overrides: {
-        imports: [
-          StynxI18nModule.forRoot({
-            workspaceRoot: resolve(process.cwd(), '../..'),
-            defaultLocale: 'pt-BR',
-          }),
-        ],
-        controllers: [DemoController],
-      },
-    });
+    const testApp = new AuthenticatedI18nApp(
+      [DemoController],
+      resolve(process.cwd(), '../..'),
+      false,
+    );
+    await testApp.initialize();
 
     try {
       const localeService = testApp.moduleRef.get(LocaleService);
@@ -102,18 +94,23 @@ describe('StynxI18nModule integration', () => {
       expect(localeService.t('ITEM_COUNT', { count: 1 }, 'pt-BR')).toBe('1 item');
       expect(localeService.t('ITEM_COUNT', { count: 2 }, 'en-US')).toBe('2 items');
 
-      await adminService.updateOverrides(tenantId, {
-        locale: 'pt-BR',
-        catalog: {
-          TEST_GREETING: 'Ola da tenant, {name}!',
-        },
-      });
+      await testApp.moduleRef
+        .get(SystemContext)
+        .withSystemContext('explicit i18n fixture administration', async () =>
+          adminService.updateOverrides(tenantId, {
+            locale: 'pt-BR',
+            catalog: {
+              TEST_GREETING: 'Ola da tenant, {name}!',
+            },
+          }),
+        );
 
       await testApp.requestContextMutator.runWithRequestContext(
         {
           requestId: randomUUID(),
           tenantId,
           locale: 'pt-BR',
+          actorId: '0197481e-7294-7c53-8b03-5c36d7c2831a',
           startedAt: new Date(),
         },
         async () => {

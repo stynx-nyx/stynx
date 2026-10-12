@@ -5,6 +5,4 @@
 /**
  * Route-specific schema not yet promoted to a typed contract.
  */
-export type UnknownJson = {
-};
-
+export type UnknownJson = {};

@@ -13,6 +13,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject, Injectable } from '@nestjs/common';
+import type { OnApplicationShutdown } from '@nestjs/common';
 import { StorageValidationError } from './errors';
 import { STYNX_STORAGE_OPTIONS } from './tokens';
 import type {
@@ -23,12 +24,13 @@ import type {
 } from './types';
 
 @Injectable()
-export class S3Service {
+export class S3Service implements OnApplicationShutdown {
   private readonly client: S3Client;
   private readonly bucketName: string;
   private readonly uploadExpiresInSeconds: number;
   private readonly downloadExpiresInSeconds: number;
   private readonly presignCounts = new Map<string, { count: number; windowStart: number }>();
+  private destroyed = false;
 
   constructor(
     @Inject(STYNX_STORAGE_OPTIONS)
@@ -37,10 +39,13 @@ export class S3Service {
     this.bucketName = options.bucketName ?? `stynx-docs-${options.environment}-${options.region}`;
     const expected = `stynx-docs-${options.environment}-${options.region}`;
     if (this.bucketName !== expected) {
-      throw new StorageValidationError('Bucket name does not match the required environment pattern', {
-        bucketName: this.bucketName,
-        expected,
-      });
+      throw new StorageValidationError(
+        'Bucket name does not match the required environment pattern',
+        {
+          bucketName: this.bucketName,
+          expected,
+        },
+      );
     }
 
     this.client = new S3Client({
@@ -54,6 +59,12 @@ export class S3Service {
     this.downloadExpiresInSeconds = options.downloadExpiresInSeconds ?? 300;
   }
 
+  onApplicationShutdown(): void {
+    if (this.destroyed) return;
+    this.client.destroy();
+    this.destroyed = true;
+  }
+
   bucket(): string {
     return this.bucketName;
   }
@@ -64,6 +75,7 @@ export class S3Service {
     checksumSha256: string;
     expiresInSeconds?: number;
   }) {
+    this.assertActive();
     const expiresInSeconds = input.expiresInSeconds ?? this.uploadExpiresInSeconds;
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
@@ -90,6 +102,7 @@ export class S3Service {
   }
 
   async presignDownload(input: { key: string; filename: string; expiresInSeconds?: number }) {
+    this.assertActive();
     const expiresInSeconds = input.expiresInSeconds ?? this.downloadExpiresInSeconds;
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
@@ -105,6 +118,7 @@ export class S3Service {
     tenantId: string;
     expiresInSeconds?: number;
   }): Promise<string> {
+    this.assertActive();
     this.checkPresignRateLimit(input.tenantId);
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
@@ -116,6 +130,7 @@ export class S3Service {
   }
 
   async configureLifecycle(rules: S3LifecycleRule[]): Promise<void> {
+    this.assertActive();
     const awsRules: LifecycleRule[] = rules.map((rule) => ({
       ID: rule.name,
       Status: 'Enabled',
@@ -139,11 +154,8 @@ export class S3Service {
     );
   }
 
-  async applyObjectLock(
-    key: string,
-    versionId: string,
-    config: S3ObjectLockConfig,
-  ): Promise<void> {
+  async applyObjectLock(key: string, versionId: string, config: S3ObjectLockConfig): Promise<void> {
+    this.assertActive();
     const retention: ObjectLockRetention = {
       Mode: config.mode,
       RetainUntilDate: new Date(Date.now() + config.retainDays * 24 * 60 * 60 * 1000),
@@ -160,6 +172,7 @@ export class S3Service {
   }
 
   async headObject(key: string): Promise<HeadedObject> {
+    this.assertActive();
     const response = await this.client.send(
       new HeadObjectCommand({
         Bucket: this.bucketName,
@@ -168,13 +181,16 @@ export class S3Service {
     );
     return {
       ...(response.ContentType ? { contentType: response.ContentType } : {}),
-      ...(typeof response.ContentLength === 'number' ? { contentLength: response.ContentLength } : {}),
+      ...(typeof response.ContentLength === 'number'
+        ? { contentLength: response.ContentLength }
+        : {}),
       ...(response.Metadata ? { metadata: response.Metadata } : {}),
       ...(response.VersionId ? { versionId: response.VersionId } : {}),
     };
   }
 
   async deleteObject(key: string): Promise<void> {
+    this.assertActive();
     await this.client.send(
       new DeleteObjectCommand({
         Bucket: this.bucketName,
@@ -184,21 +200,27 @@ export class S3Service {
   }
 
   async deleteAllVersions(key: string): Promise<void> {
+    this.assertActive();
     const listed = await this.client.send(
       new ListObjectVersionsCommand({
         Bucket: this.bucketName,
         Prefix: key,
       }),
     );
+    this.assertActive();
     const objects = [
-      ...(listed.Versions ?? []).filter((entry) => entry.Key === key).map((entry) => ({
-        Key: key,
-        ...(entry.VersionId ? { VersionId: entry.VersionId } : {}),
-      })),
-      ...(listed.DeleteMarkers ?? []).filter((entry) => entry.Key === key).map((entry) => ({
-        Key: key,
-        ...(entry.VersionId ? { VersionId: entry.VersionId } : {}),
-      })),
+      ...(listed.Versions ?? [])
+        .filter((entry) => entry.Key === key)
+        .map((entry) => ({
+          Key: key,
+          ...(entry.VersionId ? { VersionId: entry.VersionId } : {}),
+        })),
+      ...(listed.DeleteMarkers ?? [])
+        .filter((entry) => entry.Key === key)
+        .map((entry) => ({
+          Key: key,
+          ...(entry.VersionId ? { VersionId: entry.VersionId } : {}),
+        })),
     ];
 
     if (objects.length === 0) {
@@ -212,6 +234,10 @@ export class S3Service {
         Delete: { Objects: objects },
       }),
     );
+  }
+
+  private assertActive(): void {
+    if (this.destroyed) throw new Error('Storage service has been destroyed');
   }
 
   private checkPresignRateLimit(tenantId: string): void {

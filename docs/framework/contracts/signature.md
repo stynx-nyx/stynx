@@ -106,8 +106,9 @@ entries, shadow objects, changed signed objects, malformed xref chains, and
 xref semantics the verifier cannot establish are rejected. DSS/VRI certificate
 and revocation streams must be decodable and bound to the selected CMS; B-LT
 requires complete embedded evidence for the relevant signer and TSA chain.
-The verifier derives B-T versus B-LT from the artifact. LTA is not implemented
-by this verifier and any profile requiring LTA fails closed.
+The 1.5.x verifier derives B-T versus B-LT and refuses LTA. The accepted 1.6.0
+minimal LTA contract is specified below; an ADR or configured anchors alone do
+not establish implementation acceptance or provider readiness.
 
 The selected CMS must bind its SignerInfo to the supplied DER certificate
 through signer identity and the first `signing-certificate-v2` entry. The
@@ -137,6 +138,36 @@ Implementation dependencies required under the maestro's shared package/lockfile
 
 The combination is therefore _declarative rule OR predicate_. `qualifiedBy` is present only on QUALIFIED proofs from this verifier, and `SignatureService` preserves it in `evidence.trustProof` for audit. A consumer-owned verifier may set it, but it is then the consumer's statement under `verifierKind: 'consumer-owned'`. With neither `qualifiedPolicies` nor `qualifiesCertificate` configured, every verified artifact is ADVANCED and proofs have no `qualifiedBy` field, exactly as in 1.5.0; with only the predicate, it is called exactly as in 1.5.0 and the proof additionally carries `qualifiedBy`. Level enforcement is unchanged: a QUALIFIED request or profile minimum with an ADVANCED proof throws `SignatureLevelNotMetError` in sign, and manifest and withdrawal flows refuse it.
 
+## Minimal LTA — accepted 1.6.0 contract
+
+[ADR-SIGNATURE-0002 D1](../../../law/adr/ADR-SIGNATURE-0002-minimal-lta-and-profile-sets.md)
+admits exactly one approval signature, one appended DSS revision and then one
+DocTimeStamp revision, with no later bytes. The explicit revision allow-list,
+whole-file archive ByteRange/imprint and authenticated RFC3161 token must all
+verify; additional DSS/timestamps, renewed chains and unrelated object/content/
+form/metadata changes refuse. `archiveTsaTrustAnchorsPem?: readonly string[]` is
+additive and explicit, with no general/TSA-anchor fallback. Archive trust is its
+intersection with the requested profile's anchors.
+
+Verified LTA proof adds `archiveAt?: Date` and `lta?: true`, requires
+`padesProfile: 'PAdES-B-LTA'`, and uses the verified archive instant for
+`certificateValidatedAt`. Non-LTA proofs keep their old fields and results.
+The signer and signature-TSA paths/status use only archive-covered DSS evidence
+at that instant, independent of `profile.atTime`. Require
+`thisUpdate <= archiveAt <= nextUpdate`, with nextUpdate present, and OCSP
+`producedAt <= archiveAt`; all are finite positive dates. Equality is accepted,
+while post-archive update/production is refused without a future-skew extension.
+Missing historical evidence cannot be rescued by online fetching. The archive
+TSA path and revocation status are checked at actual verification now under
+existing current freshness rules. Its expiry/revocation bounds proof lifetime;
+a historical interval does not keep a current archive TSA valid indefinitely.
+
+Keep the existing non-LTA selected-time lower-bound rules unchanged. Acceptance
+requires independent real-crypto positive/negative Inspector evidence and the
+recorded independent D1 security review before fixed-group publication. Test PKI
+proves bounded framework behavior, not actual consumer provider compatibility,
+approved production anchors or qualification. The consumer supplies that evidence.
+
 ## Typed readiness — SIG-02
 
 `SignatureService.checkReadiness(profile)` returns `{ok:true, capabilities}` or throws configuration/capability error. It requires the selected PAdES profile, TSA, LTA if required, and the permitted OCSP/CRL mode; `simulated` is always down for a production profile. A claimed capability needs a functioning configured verifier (trusted handshake or signed challenge), not arbitrary `/health` JSON. Timeout, absent check, malformed or stale observation and missing capability are down. `SignatureReadinessIndicator` exported by `signature` has `name:'signature'` and `check(): Promise<{status:'up'|'down';details?:Record<string,unknown>}>`, structurally matching `StynxHealthIndicator` in `packages/health/src/tokens.ts`.
@@ -159,7 +190,11 @@ Decision: [ADR-SIGNATURE-0002](../../../law/adr/ADR-SIGNATURE-0002-minimal-lta-a
 
 **Anchor model.** `createCmsTrustVerifier` evaluates each call under the intersection of the profile's `trustAnchorsPem` and the verifier's `trustAnchorsPem`; the TSA chain is evaluated under the intersection of the profile's `trustAnchorsPem` with the verifier's `tsaTrustAnchorsPem` (or `trustAnchorsPem` when unset), so a TSA anchor must also be listed by the profile. An empty intersection on either side is `SignatureTrustError`. The recommended single verifier for a set is one `createCmsTrustVerifier` whose `trustAnchorsPem` and `tsaTrustAnchorsPem` are the union of all declared profiles' anchors: the intersection guarantees that the union widens no profile's trust, so an artifact anchored only in tenant A's profile is refused under tenant B's profile and vice versa. One verifier per profile is equally valid; a verifier that lists an anchor no profile lists never trusts it.
 
-**Challenge artifact.** For a production profile, `capabilities(profile)` calls `options.readinessChallenge(profile)` and requires real signed bytes (`originalDocument`, `signedDocument`, `cmsSignature`, `certificate`) that verify fully under that profile, with the returned `profile.id` and `profile.revision` equal to the requested ones; any other result is `SignatureCapabilityError` and the profile is down. The artifact must therefore meet the profile's PAdES level, TSA anchors and revocation mode at verification time; the consumer produces one per profile with the profile's own signer and TSA and rotates it when the profile's revision changes: a revision change without a new challenge leaves that profile not ready. The same underlying bytes may serve two profiles only if they verify independently under each, which requires the anchors in both profiles. STYNX caches no challenge result across profiles or calls; every `check()` verifies every declared profile. For an LTA profile the challenge is a B-LTA artifact (D1, not yet implemented).
+**Challenge artifact.** For a production profile, `capabilities(profile)` calls `options.readinessChallenge(profile)` and requires real signed bytes (`originalDocument`, `signedDocument`, `cmsSignature`, `certificate`) that verify fully under that profile, with the returned `profile.id` and `profile.revision` equal to the requested ones; any other result is `SignatureCapabilityError` and the profile is down. The artifact must therefore meet the profile's PAdES level, TSA anchors and revocation mode at verification time; the consumer produces one per profile with the profile's own signer and TSA and rotates it when the profile's revision changes: a revision change without a new challenge leaves that profile not ready. The same underlying bytes may serve two profiles only if they verify independently under each, which requires the anchors in both profiles. STYNX caches no challenge result across profiles or calls; every `check()` verifies every declared profile. For an LTA profile the challenge must yield a genuinely verified B-LTA proof
+with its actual archive fields. Capture the full requested immutable profile
+semantics before the callback and verify under that captured profile, never a
+weaker same-label `challenge.profile`. Label equality alone cannot authorize
+anchors or rules; an invalid or B-LT-only challenge leaves LTA not ready.
 
 ## Canonical session and batch manifests — SIG-03
 

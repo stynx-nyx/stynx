@@ -6,6 +6,7 @@ import { resolve, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { getCoverageThreshold } from './test-thresholds.mjs';
+import { createNativeCoverage } from './native-coverage.mjs';
 
 // unplugin-swc exports its plugin factories as `{ vite, esbuild, ... }` on the
 // default export. Vite's config loader sometimes double-wraps the default, so
@@ -14,6 +15,41 @@ const swc = swcMod && typeof swcMod.vite === 'function' ? swcMod : (swcMod?.defa
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '../..');
+
+function deferredNativeCoverage(options) {
+  let admitted;
+  const admission = () => (admitted ??= createNativeCoverage(options));
+  return {
+    include: options.modules.flatMap(({ source, output }) => [
+      resolve(options.packageDir, source),
+      resolve(options.packageDir, output),
+    ]),
+    plugin: {
+      name: 'stynx:finite-native-coverage',
+      enforce: 'pre',
+      buildStart(...args) {
+        return admission().plugin.buildStart.apply(this, args);
+      },
+      transform(...args) {
+        return admission().plugin.transform.apply(this, args);
+      },
+    },
+    wrapSwc(swcPlugin) {
+      const hook = swcPlugin.transform;
+      let wrapped;
+      const transform = function (...args) {
+        wrapped ??= admission().wrapSwc(swcPlugin);
+        const handler =
+          typeof wrapped.transform === 'function' ? wrapped.transform : wrapped.transform.handler;
+        return handler.apply(this, args);
+      };
+      return {
+        ...swcPlugin,
+        transform: typeof hook === 'function' ? transform : { ...hook, handler: transform },
+      };
+    },
+  };
+}
 
 // Resolve bare imports the way Node does — walk up to the workspace root and
 // check `.pnpm/node_modules/<pkg>` if the package isn't symlinked under the
@@ -121,6 +157,7 @@ export function createVitestConfig({
   include = ['test/**/*.spec.ts', 'test/**/*.test.ts'],
   collectCoverageFrom = ['src/**/*.ts'],
   coverageExclude = [],
+  nativeCoverageModules,
   coverageDir = 'coverage-vitest',
   coverageThreshold,
   alias = {},
@@ -140,6 +177,81 @@ export function createVitestConfig({
       ? disabledCoverageThreshold
       : (coverageThreshold ?? getCoverageThreshold(packageName));
   const thresholdValues = coverageThresholdValues(threshold);
+  if (
+    !Array.isArray(collectCoverageFrom) ||
+    collectCoverageFrom.some(
+      (pattern) => typeof pattern !== 'string' || pattern.trim().length === 0 || pattern === '!',
+    )
+  ) {
+    throw new TypeError('Coverage collection requires nonempty glob patterns');
+  }
+  const coverageIncludes = collectCoverageFrom.filter((pattern) => !pattern.startsWith('!'));
+  const declaredCoverageExcludes = collectCoverageFrom
+    .filter((pattern) => pattern.startsWith('!'))
+    .map((pattern) => pattern.slice(1));
+  if (coverageIncludes.length === 0) {
+    throw new TypeError('Coverage collection requires a positive source population');
+  }
+  const barrelExcludes = pureBarrelEntryPoints(packageDir);
+  for (const pattern of declaredCoverageExcludes) {
+    if ([...pattern].some((character) => '*?[]{}()!'.includes(character))) {
+      throw new TypeError('Coverage subtraction requires an exact file pattern');
+    }
+    if (pattern.endsWith('/index.ts') && !barrelExcludes.includes(pattern)) {
+      throw new TypeError('Coverage cannot exclude an unclassified executable entry point');
+    }
+  }
+
+  const coverageRoot = [...resolve(packageDir).split(sep).join('/')]
+    .map((character) => ('*?[]{}()!+@\\'.includes(character) ? `\\${character}` : character))
+    .join('');
+  const bindCoveragePattern = (pattern) => {
+    if (
+      typeof pattern !== 'string' ||
+      pattern.trim().length === 0 ||
+      pattern.startsWith('/') ||
+      pattern.startsWith('!') ||
+      /^[A-Za-z]:/u.test(pattern) ||
+      pattern.split('/').includes('..')
+    ) {
+      throw new TypeError('Coverage requires package-relative patterns');
+    }
+    return `${coverageRoot}/${pattern}`;
+  };
+
+  const sourceExcludes = [
+    'src/generated/**',
+    'src/main.ts',
+    'src/**/*.module.ts',
+    'src/**/constants.ts',
+    'src/**/tokens.ts',
+    'src/**/types.ts',
+    'src/**/*.d.ts',
+    ...barrelExcludes,
+    ...declaredCoverageExcludes,
+    ...coverageExclude,
+  ];
+  const nativeCoverage =
+    nativeCoverageModules === undefined
+      ? null
+      : deferredNativeCoverage({
+          packageDir,
+          modules: nativeCoverageModules,
+          includes: coverageIncludes,
+          excludes: sourceExcludes,
+        });
+  const swcPlugin = swc.vite({
+    swcrc: false,
+    configFile: false,
+    inputSourceMap: false,
+    jsc: {
+      parser: { syntax: 'typescript', decorators: true },
+      transform: { legacyDecorator: true, decoratorMetadata: true },
+      target: 'es2022',
+      keepClassNames: true,
+    },
+    module: { type: 'es6' },
+  });
 
   const drizzleAlias = patchDrizzle
     ? { 'drizzle-orm/entity': resolve(repoRoot, 'tools/repo-config/drizzle-entity-shim.mjs') }
@@ -151,17 +263,10 @@ export function createVitestConfig({
       alias: { ...drizzleAlias, ...alias },
     },
     plugins: [
+      ...(nativeCoverage ? [nativeCoverage.plugin] : []),
       workspaceFallbackResolve,
       drizzleIsPatch,
-      swc.vite({
-        jsc: {
-          parser: { syntax: 'typescript', decorators: true },
-          transform: { legacyDecorator: true, decoratorMetadata: true },
-          target: 'es2022',
-          keepClassNames: true,
-        },
-        module: { type: 'es6' },
-      }),
+      nativeCoverage ? nativeCoverage.wrapSwc(swcPlugin) : swcPlugin,
     ],
     test: {
       globals,
@@ -202,10 +307,32 @@ export function createVitestConfig({
         : {}),
       reporters: ['default'],
       coverage: {
-        provider: 'v8',
+        provider: nativeCoverage ? 'custom' : 'v8',
+        ...(nativeCoverage
+          ? {
+              customProviderModule: resolve(__dirname, 'native-v8-provider.mjs'),
+              nativeCoverage: {
+                modules: structuredClone(nativeCoverageModules),
+                includes: [...coverageIncludes],
+                excludes: [...sourceExcludes],
+                mode: process.env.STYNX_AGGREGATE_COVERAGE === '1' ? 'aggregate' : 'standalone',
+              },
+            }
+          : {}),
         reportsDirectory: resolve(packageDir, coverageDir),
         reporter: ['text', 'json', 'lcov'],
-        include: collectCoverageFrom,
+        // Vitest treats negated include globs as OR alternatives. Translate
+        // the already-declared subtraction into exclude to preserve its scope.
+        include: nativeCoverage
+          ? nativeCoverage.include.map((path) =>
+              [...path.split(sep).join('/')]
+                .map((character) =>
+                  '*?[]{}()!+@\\'.includes(character) ? `\\${character}` : character,
+                )
+                .join(''),
+            )
+          : coverageIncludes.map(bindCoveragePattern),
+        ...(nativeCoverage ? { excludeAfterRemap: true } : {}),
         exclude: [
           // Vitest 4 matches `coverage.include` anywhere in the absolute
           // path and guards external files with a bare `startsWith(root)`,
@@ -213,16 +340,8 @@ export function createVitestConfig({
           // (`packages-web/angular` -> `packages-web/angular-tenancy`) would
           // leak into this package's population when its sources load
           // through a workspace alias. Pin the population to this package.
-          `${packageDir.split(sep).join('/')}-*/**`,
-          'src/generated/**',
-          'src/main.ts',
-          'src/**/*.module.ts',
-          'src/**/constants.ts',
-          'src/**/tokens.ts',
-          'src/**/types.ts',
-          'src/**/*.d.ts',
-          ...pureBarrelEntryPoints(packageDir),
-          ...coverageExclude,
+          `${coverageRoot}-*/**`,
+          ...sourceExcludes.map(bindCoveragePattern),
         ],
         thresholds: {
           ...thresholdValues,

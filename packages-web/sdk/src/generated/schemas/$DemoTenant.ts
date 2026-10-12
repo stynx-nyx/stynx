@@ -3,18 +3,18 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $DemoTenant = {
-    properties: {
-        id: {
-            type: 'string',
-            isRequired: true,
-        },
-        name: {
-            type: 'string',
-            isRequired: true,
-        },
-        slug: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    id: {
+      type: 'string',
+      isRequired: true,
     },
+    name: {
+      type: 'string',
+      isRequired: true,
+    },
+    slug: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

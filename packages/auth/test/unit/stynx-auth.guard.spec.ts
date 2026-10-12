@@ -1,4 +1,4 @@
-import type { ExecutionContext } from '@nestjs/common';
+import { UnauthorizedException, type ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import * as contracts from '@stynx-nyx/contracts';
@@ -19,16 +19,23 @@ function createExecutionContext(request: Record<string, unknown>): ExecutionCont
 }
 
 describe('StynxAuthGuard', () => {
-  function createGuard(options: {
-    publicRoute?: boolean;
-    systemRoute?: boolean;
-    readonlyRoute?: boolean;
-    publicTenantRoute?: boolean | { optionalAuth?: boolean };
-    activeSession?: boolean;
-    sessionProvider?: boolean;
-  } = {}) {
+  function createGuard(
+    options: {
+      publicRoute?: boolean;
+      systemRoute?: boolean;
+      readonlyRoute?: boolean;
+      publicTenantRoute?: boolean | { optionalAuth?: boolean };
+      activeSession?: boolean;
+      sessionProvider?: boolean;
+    } = {},
+  ) {
     const sessionService = {
-      get: vi.fn().mockResolvedValue(options.activeSession === false ? null : { sid: 'sid-1' }),
+      get: vi.fn(() => {
+        throw new Error('Legacy get must not admit authentication');
+      }),
+      getActive: vi
+        .fn()
+        .mockResolvedValue(options.activeSession === false ? null : { sid: 'sid-1' }),
     };
     const moduleRef = {
       get: vi.fn((token: unknown) => {
@@ -60,7 +67,12 @@ describe('StynxAuthGuard', () => {
         permissions: ['records:read:*'],
       }),
     };
-    const guard = new StynxAuthGuard(moduleRef, reflector as never, validator as never, permissionCache as never);
+    const guard = new StynxAuthGuard(
+      moduleRef,
+      reflector as never,
+      validator as never,
+      permissionCache as never,
+    );
 
     return { guard, moduleRef, sessionService, reflector, validator, permissionCache };
   }
@@ -69,31 +81,45 @@ describe('StynxAuthGuard', () => {
     const publicContext = createExecutionContext({});
     const publicGuard = createGuard({ publicRoute: true });
     await expect(publicGuard.guard.canActivate(publicContext)).resolves.toBe(true);
-    expect(publicGuard.reflector.getAllAndOverride).toHaveBeenCalledWith(STYNX_PUBLIC_ROUTE, ['handler', 'controller']);
+    expect(publicGuard.reflector.getAllAndOverride).toHaveBeenCalledWith(STYNX_PUBLIC_ROUTE, [
+      'handler',
+      'controller',
+    ]);
 
     const systemContext = createExecutionContext({});
     const systemGuard = createGuard({ systemRoute: true });
     await expect(systemGuard.guard.canActivate(systemContext)).resolves.toBe(true);
-    expect(systemGuard.reflector.getAllAndOverride).toHaveBeenCalledWith(STYNX_SYSTEM_ROUTE, ['handler', 'controller']);
+    expect(systemGuard.reflector.getAllAndOverride).toHaveBeenCalledWith(STYNX_SYSTEM_ROUTE, [
+      'handler',
+      'controller',
+    ]);
   });
 
   it('handles optional public-tenant authentication before the generic public early return', async () => {
     const missing = createGuard({ publicTenantRoute: { optionalAuth: true } });
     const missingRequest = { headers: {} };
-    await expect(missing.guard.canActivate(createExecutionContext(missingRequest))).resolves.toBe(true);
+    await expect(missing.guard.canActivate(createExecutionContext(missingRequest))).resolves.toBe(
+      true,
+    );
     expect(missing.validator.validate).not.toHaveBeenCalled();
     expect(missingRequest).not.toHaveProperty('principal');
 
     const invalid = createGuard({ publicTenantRoute: { optionalAuth: true } });
-    invalid.validator.validate.mockRejectedValueOnce(new InvalidCredentialError('invalid signature'));
+    invalid.validator.validate.mockRejectedValueOnce(
+      new InvalidCredentialError('invalid signature'),
+    );
     const invalidRequest = { headers: { authorization: 'Bearer forged-token' } };
-    await expect(invalid.guard.canActivate(createExecutionContext(invalidRequest))).resolves.toBe(true);
+    await expect(invalid.guard.canActivate(createExecutionContext(invalidRequest))).resolves.toBe(
+      true,
+    );
     expect(invalidRequest).not.toHaveProperty('stynxClaims');
     expect(invalidRequest).not.toHaveProperty('principal');
 
     const verified = createGuard({ publicTenantRoute: { optionalAuth: true } });
     const verifiedRequest = { headers: { authorization: 'Bearer verified-token' } };
-    await expect(verified.guard.canActivate(createExecutionContext(verifiedRequest))).resolves.toBe(true);
+    await expect(verified.guard.canActivate(createExecutionContext(verifiedRequest))).resolves.toBe(
+      true,
+    );
     expect(verified.validator.validate).toHaveBeenCalledWith('verified-token');
     expect(verifiedRequest).toMatchObject({
       stynxClaims: { sub: 'user-1', tenantId: 'tenant-1', sid: 'sid-1' },
@@ -106,53 +132,94 @@ describe('StynxAuthGuard', () => {
     permissionCache.getForSession.mockRejectedValueOnce(new Error('permission cache unavailable'));
     const request = { headers: { authorization: 'Bearer verified-token' } };
 
-    await expect(guard.canActivate(createExecutionContext(request))).rejects.toThrow('permission cache unavailable');
+    await expect(guard.canActivate(createExecutionContext(request))).rejects.toThrow(
+      'permission cache unavailable',
+    );
     expect(request).not.toHaveProperty('stynxClaims');
     expect(request).not.toHaveProperty('principal');
   });
 
   it('uses a nominal identity for a revoked optional session and clears all prior identity fields', async () => {
-    const { guard } = createGuard({ publicTenantRoute: { optionalAuth: true }, activeSession: false });
+    const { guard } = createGuard({
+      publicTenantRoute: { optionalAuth: true },
+      activeSession: false,
+    });
     const request: Record<string, unknown> = {
       headers: { authorization: 'Bearer revoked' },
-      stynxClaims: { sub: 'stale' }, principal: { id: 'stale' }, user: { id: 'stale' }, actor: { id: 'stale' },
-      tenantId: 'stale-tenant', verifiedSessionId: 'stale-session', verifiedTenantClaim: 'stale-claim',
+      stynxClaims: { sub: 'stale' },
+      principal: { id: 'stale' },
+      user: { id: 'stale' },
+      actor: { id: 'stale' },
+      tenantId: 'stale-tenant',
+      verifiedSessionId: 'stale-session',
+      verifiedTenantClaim: 'stale-claim',
     };
     await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
-    for (const property of ['stynxClaims', 'principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim']) {
+    for (const property of [
+      'stynxClaims',
+      'principal',
+      'user',
+      'actor',
+      'tenantId',
+      'verifiedSessionId',
+      'verifiedTenantClaim',
+    ]) {
       expect(request).not.toHaveProperty(property);
     }
-    const marker = (contracts as Record<string, unknown>).STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as symbol;
+    const marker = (contracts as Record<string, unknown>)
+      .STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as symbol;
     expect(Reflect.get(request, marker)).toBe(undefined);
   });
 
   it('clears pre-seeded identity, entitlement, and verification provenance on nominal and nonoptional public-tenant branches', async () => {
-    const marker = (contracts as Record<string, unknown>).STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as symbol;
+    const marker = (contracts as Record<string, unknown>)
+      .STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as symbol;
     const cases: Array<{
       options: Parameters<typeof createGuard>[0];
       headers: Record<string, string>;
       invalidate?: boolean;
     }> = [
       { options: { publicTenantRoute: { optionalAuth: true } }, headers: {} },
-      { options: { publicTenantRoute: { optionalAuth: true } }, headers: { authorization: 'Bearer invalid' }, invalidate: true },
+      {
+        options: { publicTenantRoute: { optionalAuth: true } },
+        headers: { authorization: 'Bearer invalid' },
+        invalidate: true,
+      },
       { options: { publicTenantRoute: true }, headers: { authorization: 'Bearer ignored' } },
     ];
 
     for (const testCase of cases) {
       const { guard, validator } = createGuard(testCase.options);
-      if (testCase.invalidate) validator.validate.mockRejectedValueOnce(new InvalidCredentialError('invalid'));
+      if (testCase.invalidate)
+        validator.validate.mockRejectedValueOnce(new InvalidCredentialError('invalid'));
       const request: Record<string | symbol, unknown> = {
         headers: testCase.headers,
-        stynxClaims: { sub: 'stale' }, principal: { id: 'stale' }, user: { id: 'stale' }, actor: { id: 'stale' },
-        tenantId: 'stale-tenant', verifiedSessionId: 'stale-session', verifiedTenantClaim: 'stale-claim',
-        verifiedTenantEntitlement: { tenantId: 'stale-tenant' }, principalContext: { stale: true },
+        stynxClaims: { sub: 'stale' },
+        principal: { id: 'stale' },
+        user: { id: 'stale' },
+        actor: { id: 'stale' },
+        tenantId: 'stale-tenant',
+        verifiedSessionId: 'stale-session',
+        verifiedTenantClaim: 'stale-claim',
+        verifiedTenantEntitlement: { tenantId: 'stale-tenant' },
+        principalContext: { stale: true },
       };
       Reflect.set(request, marker, true);
       markVerifiedPrincipal(request);
 
       await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
 
-      for (const property of ['stynxClaims', 'principal', 'user', 'actor', 'tenantId', 'verifiedSessionId', 'verifiedTenantClaim', 'verifiedTenantEntitlement', 'principalContext']) {
+      for (const property of [
+        'stynxClaims',
+        'principal',
+        'user',
+        'actor',
+        'tenantId',
+        'verifiedSessionId',
+        'verifiedTenantClaim',
+        'verifiedTenantEntitlement',
+        'principalContext',
+      ]) {
         expect(request).not.toHaveProperty(property);
       }
       expect(Reflect.get(request, marker)).toBe(undefined);
@@ -161,46 +228,71 @@ describe('StynxAuthGuard', () => {
   });
 
   it('propagates an empty actual STYNX JWKS for an optional bearer instead of treating it as nominal', async () => {
-    const validator = new StynxJwtValidator({
-      get: vi.fn((token: unknown) => token === SessionJwtSigningService ? { getJwks: async () => ({ keys: [] }) } : undefined),
-    } as unknown as ModuleRef, {
-      stynx: { issuer: 'https://stynx.test' }, permissions: { dbFallbackOnRedisDown: true },
-    } as never);
-    const { moduleRef, reflector, permissionCache } = createGuard({ publicTenantRoute: { optionalAuth: true } });
-    const guard = new StynxAuthGuard(moduleRef, reflector as never, validator, permissionCache as never);
+    const validator = new StynxJwtValidator(
+      {
+        get: vi.fn((token: unknown) =>
+          token === SessionJwtSigningService ? { getJwks: async () => ({ keys: [] }) } : undefined,
+        ),
+      } as unknown as ModuleRef,
+      {
+        stynx: { issuer: 'https://stynx.test' },
+        permissions: { dbFallbackOnRedisDown: true },
+      } as never,
+    );
+    const { moduleRef, reflector, permissionCache } = createGuard({
+      publicTenantRoute: { optionalAuth: true },
+    });
+    const guard = new StynxAuthGuard(
+      moduleRef,
+      reflector as never,
+      validator,
+      permissionCache as never,
+    );
     const token = [
       'eyJhbGciOiJSUzI1NiIsImtpZCI6Im1pc3NpbmcifQ',
       'eyJpc3MiOiJodHRwczovL3N0eW54LnRlc3QiLCJzdWIiOiJ1c2VyLTEiLCJzaWQiOiJzaWQtMSIsInRlbmFudF9pZCI6InRlbmFudC0xIn0',
       'signature',
     ].join('.');
 
-    await expect(guard.canActivate(createExecutionContext({ headers: { authorization: `Bearer ${token}` } }))).rejects.not.toBeInstanceOf(InvalidCredentialError);
+    await expect(
+      guard.canActivate(createExecutionContext({ headers: { authorization: `Bearer ${token}` } })),
+    ).rejects.not.toBeInstanceOf(InvalidCredentialError);
   });
 
   it('propagates an optional verifier infrastructure failure instead of downgrading it to nominal', async () => {
     const { guard, validator } = createGuard({ publicTenantRoute: { optionalAuth: true } });
     validator.validate.mockRejectedValueOnce(new Error('JWKS endpoint unavailable'));
-    await expect(guard.canActivate(createExecutionContext({ headers: { authorization: 'Bearer valid' } }))).rejects.toThrow('JWKS endpoint unavailable');
+    await expect(
+      guard.canActivate(createExecutionContext({ headers: { authorization: 'Bearer valid' } })),
+    ).rejects.toThrow('JWKS endpoint unavailable');
   });
 
   it('uses the shared typed credential error and provenance marker only after optional verification', async () => {
-    const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as (new (message: string) => Error) | undefined;
-    const marker = (contracts as Record<string, unknown>).STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as symbol | undefined;
+    const InvalidCredentialError = (contracts as Record<string, unknown>).InvalidCredentialError as
+      (new (message: string) => Error) | undefined;
+    const marker = (contracts as Record<string, unknown>).STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL as
+      symbol | undefined;
     expect(InvalidCredentialError).toBeTypeOf('function');
     expect(typeof marker).toBe('symbol');
     const invalid = createGuard({ publicTenantRoute: { optionalAuth: true } });
     invalid.validator.validate.mockRejectedValueOnce(new InvalidCredentialError!('bad signature'));
     const invalidRequest = { headers: { authorization: 'Bearer invalid' } };
-    await expect(invalid.guard.canActivate(createExecutionContext(invalidRequest))).resolves.toBe(true);
+    await expect(invalid.guard.canActivate(createExecutionContext(invalidRequest))).resolves.toBe(
+      true,
+    );
     expect(Reflect.get(invalidRequest, marker!)).toBe(undefined);
     const verified = createGuard({ publicTenantRoute: { optionalAuth: true } });
     const verifiedRequest = { headers: { authorization: 'Bearer valid' } };
-    await expect(verified.guard.canActivate(createExecutionContext(verifiedRequest))).resolves.toBe(true);
+    await expect(verified.guard.canActivate(createExecutionContext(verifiedRequest))).resolves.toBe(
+      true,
+    );
     expect(Reflect.get(verifiedRequest, marker!)).toBe(true);
   });
 
   it('rejects missing bearer tokens and inactive sessions', async () => {
-    await expect(createGuard().guard.canActivate(createExecutionContext({ headers: {} }))).rejects.toMatchObject({
+    await expect(
+      createGuard().guard.canActivate(createExecutionContext({ headers: {} })),
+    ).rejects.toMatchObject({
       message: 'Missing STYNX bearer token',
     });
 
@@ -212,7 +304,9 @@ describe('StynxAuthGuard', () => {
   });
 
   it('validates bearer tokens, resolves permissions, and writes request principal state', async () => {
-    const { guard, validator, permissionCache, sessionService } = createGuard({ readonlyRoute: true });
+    const { guard, validator, permissionCache, sessionService } = createGuard({
+      readonlyRoute: true,
+    });
     const response = { setHeader: vi.fn() };
     const request = {
       headers: { authorization: 'Bearer token-with-trailing-space  ' },
@@ -226,8 +320,11 @@ describe('StynxAuthGuard', () => {
     await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
 
     expect(validator.validate).toHaveBeenCalledWith('token-with-trailing-space');
-    expect(sessionService.get).toHaveBeenCalledWith('sid-1');
-    expect(permissionCache.getForSession).toHaveBeenCalledWith(expect.objectContaining({ sid: 'sid-1' }));
+    expect(sessionService.getActive).toHaveBeenCalledWith('sid-1');
+    expect(sessionService.get).not.toHaveBeenCalled();
+    expect(permissionCache.getForSession).toHaveBeenCalledWith(
+      expect.objectContaining({ sid: 'sid-1' }),
+    );
     expect(request).toMatchObject({
       stynxClaims: {
         sid: 'sid-1',
@@ -261,7 +358,9 @@ describe('StynxAuthGuard', () => {
   });
 
   it('accepts authorization header arrays and response aliases without a session provider', async () => {
-    const { guard, validator, permissionCache, sessionService } = createGuard({ sessionProvider: false });
+    const { guard, validator, permissionCache, sessionService } = createGuard({
+      sessionProvider: false,
+    });
     const response = { setHeader: vi.fn() };
     const request = {
       headers: { authorization: ['Bearer array-token'] },
@@ -271,14 +370,45 @@ describe('StynxAuthGuard', () => {
     await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
 
     expect(validator.validate).toHaveBeenCalledWith('array-token');
-    expect(sessionService.get).not.toHaveBeenCalledTimes(1);
-    expect(permissionCache.getForSession).toHaveBeenCalledWith(expect.objectContaining({ tenantId: 'tenant-1' }));
+    expect(sessionService.getActive).not.toHaveBeenCalledTimes(1);
+    expect(permissionCache.getForSession).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: 'tenant-1' }),
+    );
     expect(request).toMatchObject({
       stynxReadonly: false,
       principal: { roles: [], tenants: ['tenant-1'] },
       user: { tenants: ['tenant-1'] },
       actor: { tenants: ['tenant-1'] },
     });
-    expect(response.setHeader).toHaveBeenCalledWith('X-Stynx-Auth-Verify-Ms', expect.stringMatching(/^\d+\.\d{3}$/u));
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'X-Stynx-Auth-Verify-Ms',
+      expect.stringMatching(/^\d+\.\d{3}$/u),
+    );
+  });
+  it('maps typed protected credential refusals to 401 before session or permission lookup', async () => {
+    const f = createGuard();
+    f.validator.validate.mockRejectedValueOnce(
+      new InvalidCredentialError('invalid protected signature'),
+    );
+    const result = f.guard.canActivate(
+      createExecutionContext({ headers: { authorization: 'Bearer forged' } }),
+    );
+    await expect(result).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(result).rejects.toMatchObject({ status: 401 });
+    expect(f.sessionService.getActive).not.toHaveBeenCalled();
+    expect(f.permissionCache.getForSession).not.toHaveBeenCalled();
+  });
+
+  it('propagates protected authentication infrastructure failures without relabeling them as credentials', async () => {
+    const f = createGuard();
+    const infrastructure = new Error('JWKS service unavailable');
+    f.validator.validate.mockRejectedValueOnce(infrastructure);
+    await expect(
+      f.guard.canActivate(
+        createExecutionContext({ headers: { authorization: 'Bearer valid-looking' } }),
+      ),
+    ).rejects.toBe(infrastructure);
+    expect(f.sessionService.getActive).not.toHaveBeenCalled();
+    expect(f.permissionCache.getForSession).not.toHaveBeenCalled();
   });
 });

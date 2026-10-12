@@ -3,6 +3,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type FlowTaskNoteDto = {
-    note?: string;
+  note?: string;
 };
-

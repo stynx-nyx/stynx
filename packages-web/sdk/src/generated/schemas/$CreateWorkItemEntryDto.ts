@@ -3,22 +3,22 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $CreateWorkItemEntryDto = {
-    properties: {
-        description: {
-            type: 'string',
-            isRequired: true,
-        },
-        quantity: {
-            type: 'string',
-            isRequired: true,
-        },
-        unitUnits: {
-            type: 'number',
-            isRequired: true,
-        },
-        workItemId: {
-            type: 'string',
-            isRequired: true,
-        },
+  properties: {
+    description: {
+      type: 'string',
+      isRequired: true,
     },
+    quantity: {
+      type: 'string',
+      isRequired: true,
+    },
+    unitUnits: {
+      type: 'number',
+      isRequired: true,
+    },
+    workItemId: {
+      type: 'string',
+      isRequired: true,
+    },
+  },
 } as const;

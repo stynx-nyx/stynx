@@ -4,8 +4,7 @@
 /* eslint-disable */
 import type { FlowJsonObject } from './FlowJsonObject';
 export type PutFlowQuestionScoreDto = {
-    failPoints?: string;
-    meta?: FlowJsonObject;
-    passPoints?: string;
+  failPoints?: string;
+  meta?: FlowJsonObject;
+  passPoints?: string;
 };
-

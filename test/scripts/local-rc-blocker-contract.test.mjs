@@ -47,17 +47,18 @@ const expectedNotificationsMutate = [
 
 function normalizeRootManifestRcVersion(source) {
   const version = JSON.parse(source).version;
-  assert.match(version, /^(?:1\.5\.0(?:-rc\.[1-9]\d*)?|1\.5\.[1-7])$/u);
+  assert.match(version, /^(?:1\.5\.0(?:-rc\.[1-9]\d*)?|1\.5\.[1-7]|1\.6\.0)$/u);
   const versionLine = `  "version": "${version}",`;
   assert.equal(source.split(versionLine).length, 2);
   return source.replace(versionLine, '  "version": "1.5.0-rc.1",');
 }
 
-test('frozen root manifest normalization accepts 1.5.7 and historical stable and 1.5.0 candidates', () => {
+test('frozen root manifest normalization accepts exact 1.6.0 and historical stable and 1.5.0 candidates', () => {
   const source = readFileSync(join(repoRoot, 'package.json'), 'utf8');
   const current = JSON.parse(source).version;
   const line = `  "version": "${current}",`;
   for (const version of [
+    '1.6.0',
     '1.5.7',
     '1.5.6',
     '1.5.5',
@@ -78,7 +79,8 @@ test('frozen root manifest normalization accepts 1.5.7 and historical stable and
     '0.5.2',
     '1.4.0',
     '1.5.8',
-    '1.6.0',
+    '1.6.1',
+    '1.6.0-rc.1',
     '2.5.2',
     '1.5.5-rc.1',
     '1.5.6-rc.1',
@@ -185,6 +187,7 @@ function createBuildFixture() {
         'turbo.json',
         'docs/framework/api/openapi.json',
         'packages',
+        'domain/demo-bookmark/api',
         'reference/api',
         'reference/web/package.json',
         'reference/web/playwright.config.mjs',
@@ -3632,7 +3635,7 @@ test('D17.7 production binds the singleton owned-listener classifier without def
   const reconstructedMain = frozenMainWithoutOwnedListenerBinding(main);
   assert.equal(
     createHash('sha256').update(reconstructedMain).digest('hex'),
-    '47a9ae09aa32abf13ca7b079c035d2b5e17c43b3c730651e82eccf8f292bd3eb',
+    'c6c00387c0dd2e60918bd619692c0f19ab8da1fdd62a87f34bac99b9be278c8f',
   );
   assert.equal(reconstructedMain.includes(ownedListenerBindingBegin), false);
   assert.equal(reconstructedMain.includes(ownedListenerBindingEnd), false);
@@ -3835,7 +3838,7 @@ test('D18 production marks every helper child and binds only exact managed main'
   const reconstructedMain = frozenMainWithoutOwnedListenerBinding(main);
   assert.equal(
     createHash('sha256').update(reconstructedMain).digest('hex'),
-    '47a9ae09aa32abf13ca7b079c035d2b5e17c43b3c730651e82eccf8f292bd3eb',
+    'c6c00387c0dd2e60918bd619692c0f19ab8da1fdd62a87f34bac99b9be278c8f',
   );
   assert.doesNotMatch(helper, /(?:find|reserve|probe)(?:Free|Available)?(?:Host|Port)/iu);
   assert.doesNotMatch(helper, /(?:fallbackHost|fallbackPort|alternateHost)/u);
@@ -4067,7 +4070,7 @@ test('D19 production binds the exact default-endpoint classifier without frozen 
   );
   assert.equal(
     createHash('sha256').update(main).digest('hex'),
-    'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
+    'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
   );
   assert.match(helper, new RegExp(escapeRegExpLiteral(defaultEndpointOutputPrefix), 'u'));
   assert.match(helper, /16384|16_384/u);
@@ -4370,12 +4373,12 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'utf8',
   );
   const frozenFiles = {
-    'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
+    'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'ed373a2c1f379eaf186bd2a888faf6dfc0706f0d9584724bfefa056fc50cfe0b',
+    'package.json': '080c1401625201d7c1350316e45ce21fabcb64cfbd7d8a95603b2025cb7f456b',
     'reference/api/package.json':
-      'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
+      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -4627,12 +4630,12 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'utf8',
   );
   const frozenFiles = {
-    'reference/api/src/main.ts': 'c56246aa274b5df7cd88ca11692f580fca724d60a41b69b0021bb63fbf0acc0b',
+    'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'ed373a2c1f379eaf186bd2a888faf6dfc0706f0d9584724bfefa056fc50cfe0b',
+    'package.json': '080c1401625201d7c1350316e45ce21fabcb64cfbd7d8a95603b2025cb7f456b',
     'reference/api/package.json':
-      'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
+      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -4715,12 +4718,12 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
 
 test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14', () => {
   const frozen = {
-    'reference/api/src/main.ts': 'c6175bfa1f231730a0c339a8f48fd28a7a04c1c3f6f60de643ae4b767bf7c7a9',
+    'reference/api/src/main.ts': '95fd04b29c57830982b7669f13c5f4466d11ca54b913241599b6e4685478146f',
     'reference/web/playwright.config.mjs':
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
-    'package.json': 'ed373a2c1f379eaf186bd2a888faf6dfc0706f0d9584724bfefa056fc50cfe0b',
+    'package.json': '080c1401625201d7c1350316e45ce21fabcb64cfbd7d8a95603b2025cb7f456b',
     'reference/api/package.json':
-      'd2e25e51077b2a2dd598eabafbf1899708bad21287ded71ab8c7bcaee7c9f601',
+      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -4949,7 +4952,10 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
     'test/unit/privacy.service.spec.ts',
     'test/wiring/privacy-http.wiring-spec.ts',
   ].sort();
-  const expectedIntegration = ['test/integration/privacy.module.spec.ts'];
+  const expectedIntegration = [
+    'test/integration/privacy.module.spec.ts',
+    'test/integration/privacy-object-store.provider.spec.ts',
+  ].sort();
   const expectedAll = [...expectedOrdinary, ...expectedIntegration].sort();
   const ordinary = resolvedPrivacyPopulation('vitest.config.ts');
   const integration = resolvedPrivacyPopulation('vitest.int.config.ts');
@@ -4957,9 +4963,9 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
 
   assert.equal(ordinary.length, 4);
   assert.deepEqual(ordinary, expectedOrdinary);
-  assert.equal(integration.length, 1);
+  assert.equal(integration.length, 2);
   assert.deepEqual(integration, expectedIntegration);
-  assert.equal(coverage.length, 5);
+  assert.equal(coverage.length, 6);
   assert.deepEqual(coverage, expectedAll);
   assert.deepEqual(
     ordinary.filter((path) => integration.includes(path)),
@@ -4972,7 +4978,72 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
   const coverageConfig = readFileSync(join(privacyRoot, 'vitest.coverage.config.ts'), 'utf8');
   const withoutPopulation = (source) =>
     source.replace(/^\s*include: \[[^\n]+\],$/mu, '  include: [D13_POPULATION],');
-  assert.equal(withoutPopulation(coverageConfig), withoutPopulation(ordinaryConfig));
+  // The coverage tier uses the reviewed native source/output correspondence and
+  // an ESM-safe directory binding. Require both exact additions before comparing
+  // every other shared option byte for byte.
+  const nativeModules = [
+    'errors',
+    'pii-map.service',
+    'privacy-context',
+    'privacy-object-store.service',
+    'privacy-retention.guard',
+    'privacy.controller',
+    'privacy.service',
+    'ropa',
+    'unconfigured-identity',
+  ].map((name) => ({ source: `src/${name}.ts`, output: `dist/privacy/src/${name}.js` }));
+  const ts = createRequire(import.meta.url)('typescript');
+  const parsedCoverage = ts.createSourceFile(
+    'vitest.coverage.config.ts',
+    coverageConfig,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  assert.equal(parsedCoverage.parseDiagnostics.length, 0);
+  const declarations = [];
+  const visit = (node) => {
+    if (
+      ts.isPropertyAssignment(node) &&
+      node.name.getText(parsedCoverage) === 'nativeCoverageModules'
+    )
+      declarations.push(node);
+    ts.forEachChild(node, visit);
+  };
+  visit(parsedCoverage);
+  assert.equal(declarations.length, 1);
+  const nativeProperty = declarations[0];
+  assert.equal(ts.isArrayLiteralExpression(nativeProperty.initializer), true);
+  const actualModules = nativeProperty.initializer.elements.map((element) => {
+    assert.equal(ts.isObjectLiteralExpression(element), true);
+    assert.deepEqual(
+      element.properties.map((property) => property.name.getText(parsedCoverage)),
+      ['source', 'output'],
+    );
+    return Object.fromEntries(
+      element.properties.map((property) => {
+        assert.equal(ts.isPropertyAssignment(property), true);
+        assert.equal(ts.isStringLiteral(property.initializer), true);
+        return [property.name.getText(parsedCoverage), property.initializer.text];
+      }),
+    );
+  });
+  assert.deepEqual(actualModules, nativeModules);
+  for (const { source } of actualModules)
+    assert.equal(lstatSync(join(privacyRoot, source)).isFile(), true);
+  assert.equal(coverageConfig[nativeProperty.end], ',');
+  const coverageWithoutNative =
+    coverageConfig.slice(0, nativeProperty.getFullStart()) +
+    coverageConfig.slice(nativeProperty.end + 1);
+  const sharedCoverageConfig = coverageWithoutNative
+    .replace(
+      "import { dirname, resolve } from 'node:path';",
+      "import { resolve } from 'node:path';",
+    )
+    .replace("import { fileURLToPath } from 'node:url';\n", '')
+    .replace('const packageDir = dirname(fileURLToPath(import.meta.url));\n\n', '')
+    .replace('packageDir: packageDir,', 'packageDir: __dirname,')
+    .replaceAll('resolve(packageDir,', 'resolve(__dirname,');
+  assert.equal(withoutPopulation(sharedCoverageConfig), withoutPopulation(ordinaryConfig));
   assert.match(ordinaryConfig, /test\/unit\/\*\*\/\*\.spec\.ts/u);
   assert.doesNotMatch(ordinaryConfig, /test\/integration/u);
   assert.match(integrationConfig, /include: \['test\/integration\/\*\*\/\*\.spec\.ts'\]/u);
@@ -4999,9 +5070,83 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
   );
 });
 
+function finalizeBuildFixture(fixture, primaryFailure) {
+  const fixtureRoot = assertSafeFixtureRoot(fixture.root);
+  const failures = primaryFailure === undefined ? [] : [primaryFailure];
+  const check = (action) => {
+    try {
+      action();
+    } catch (error) {
+      failures.push(error);
+    }
+  };
+  check(() => {
+    assert.ok(fixture.subprocessCwds.length >= 10);
+  });
+  check(() => {
+    assert.equal(
+      fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
+      true,
+    );
+  });
+  check(() => {
+    assert.equal(
+      fixture.destructiveTargets.every((target) =>
+        target === fixtureRoot
+          ? true
+          : relative(fixtureRoot, target) !== '' &&
+            !relative(fixtureRoot, target).startsWith('..') &&
+            !isAbsolute(relative(fixtureRoot, target)),
+      ),
+      true,
+    );
+  });
+  check(() => {
+    assert.equal(fixture.subprocessCwds.includes(repoRoot), false);
+  });
+  check(() => {
+    assert.equal(fixture.destructiveTargets.includes(repositoryPreferencesDist), false);
+  });
+  check(() => {
+    assert.equal(fixture.destructiveTargets.includes(join(repoRoot, 'reference/api/dist')), false);
+  });
+  check(() => removeFixture(fixture));
+  check(() => assert.equal(existsSync(fixtureRoot), false));
+  if (failures.length)
+    throw new AggregateError(
+      failures,
+      'Build fixture failed; original failure and every finalization refusal retained',
+      { cause: failures[0] },
+    );
+}
+
+test('failed build fixture preserves its primary failure and removes its exact owned directory despite census refusal', () => {
+  const fixture = {
+    root: mkdtempSync(join(tmpdir(), 'stynx-d10-fixture-')),
+    destructiveTargets: [],
+    subprocessCwds: [],
+  };
+  const primary = new Error('original build failure witness');
+  writeFileSync(join(fixture.root, 'retained-until-finalization'), 'owned disposable bytes');
+  assert.throws(
+    () => finalizeBuildFixture(fixture, primary),
+    (error) => {
+      assert.equal(error instanceof AggregateError, true);
+      assert.equal(error.cause, primary);
+      assert.equal(error.errors[0], primary);
+      assert.equal(error.errors.length, 2);
+      assert.match(error.errors[1].message, /subprocessCwds.length >= 10/u);
+      return true;
+    },
+  );
+  assert.equal(existsSync(fixture.root), false);
+  assert.deepEqual(fixture.destructiveTargets, [fixture.root]);
+});
+
 test('clean preferences build emits both exact exports and reference-api fails closed without declarations', () => {
   const fixture = createBuildFixture();
   const fixtureRoot = assertSafeFixtureRoot(fixture.root);
+  let primaryFailure;
   try {
     const trackedReferenceApiDist = run('git', [
       'ls-files',
@@ -5133,6 +5278,14 @@ test('clean preferences build emits both exact exports and reference-api fails c
         root: dirname(path),
         manifest: JSON.parse(readFileSync(path, 'utf8')),
       }));
+    for (const root of ['domain/demo-bookmark/api', 'tools/eslint-config', 'tools/tsconfig']) {
+      const path = join(fixtureRoot, root, 'package.json');
+      manifestEntries.push({
+        path,
+        root: dirname(path),
+        manifest: JSON.parse(readFileSync(path, 'utf8')),
+      });
+    }
     manifestEntries.push({
       path: join(fixtureApiRoot, 'package.json'),
       root: fixtureApiRoot,
@@ -5148,10 +5301,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
         ...(manifest.optionalDependencies ?? {}),
         ...(manifest.peerDependencies ?? {}),
         ...(manifest.devDependencies ?? {}),
-      }).filter(
-        ([dependency, version]) =>
-          dependency.startsWith('@stynx-nyx/') && String(version).startsWith('workspace:'),
-      );
+      }).filter(([, version]) => String(version).startsWith('workspace:'));
     const visitRuntimeDependency = (name) => {
       assert.equal(visiting.has(name), false, `runtime workspace dependency cycle at ${name}`);
       if (closure.has(name)) return;
@@ -5166,6 +5316,12 @@ test('clean preferences build emits both exact exports and reference-api fails c
     };
     visitRuntimeDependency('@stynx-nyx/reference-api');
     const derivedTaskIds = [...closure.keys()].map((name) => `${name}#build`).sort();
+    assert.equal(closure.size, 24);
+    const sourceOnlyTools = new Set(['@stynx-internal/eslint-config', '@stynx-internal/tsconfig']);
+    for (const name of sourceOnlyTools) {
+      assert.equal(closure.get(name).manifest.private, true);
+      assert.equal(closure.get(name).manifest.scripts.build, undefined);
+    }
 
     const installed = spawnInFixture(
       fixture,
@@ -5254,11 +5410,34 @@ test('clean preferences build emits both exact exports and reference-api fails c
     assert.ok(bootstrapEnteredIndex >= 0);
     assert.ok(runtimeImportIndex > bootstrapEnteredIndex);
     const runtimeTargets = new Map();
+    const domainModuleImport = /from '(@stynx-domain\/[^']+)'/u.exec(
+      readFileSync(join(fixtureApiRoot, 'src/performance/domain.module.ts'), 'utf8'),
+    )[1];
+    assert.equal(
+      domainModuleImport,
+      '@stynx-domain/demo-bookmark-api/dist/domain/demo-bookmark/api/src/demo-bookmark/demo-bookmark.module.js',
+    );
     for (const [name, entry] of closure) {
+      if (sourceOnlyTools.has(name)) continue;
       let runtimeTarget;
       if (name === '@stynx-nyx/reference-api') {
         assert.equal(entry.manifest.scripts.start, 'node dist/reference/api/src/main.js');
         runtimeTarget = entry.manifest.scripts.start.slice('node '.length);
+      } else if (name === '@stynx-domain/demo-bookmark-api') {
+        assert.equal(entry.manifest.private, true);
+        const tsconfig = JSON.parse(readFileSync(join(entry.root, 'tsconfig.json'), 'utf8'));
+        runtimeTarget = domainModuleImport.slice(`${name}/`.length);
+        assert.equal(
+          join(entry.root, runtimeTarget),
+          join(
+            entry.root,
+            tsconfig.compilerOptions.outDir,
+            relative(
+              resolve(entry.root, tsconfig.compilerOptions.rootDir),
+              join(entry.root, 'src/demo-bookmark/demo-bookmark.module.ts'),
+            ).replace(/\.ts$/u, '.js'),
+          ),
+        );
       } else {
         assert.equal(typeof entry.manifest.main, 'string');
         const rootExport = entry.manifest.exports?.['.'];
@@ -5286,9 +5465,15 @@ test('clean preferences build emits both exact exports and reference-api fails c
     }
     const resolvedPackages = new Set(['@stynx-nyx/reference-api']);
     for (const [importerName, entry] of closure) {
+      if (sourceOnlyTools.has(importerName)) continue;
       const importerRequire = createRequire(runtimeTargets.get(importerName));
       for (const [dependencyName] of workspaceDependencies(entry.manifest)) {
-        const resolvedRuntime = importerRequire.resolve(dependencyName);
+        if (sourceOnlyTools.has(dependencyName)) continue;
+        const resolvedRuntime = importerRequire.resolve(
+          dependencyName === '@stynx-domain/demo-bookmark-api'
+            ? domainModuleImport
+            : dependencyName,
+        );
         assert.equal(
           realpathSync(resolvedRuntime),
           realpathSync(runtimeTargets.get(dependencyName)),
@@ -5300,7 +5485,10 @@ test('clean preferences build emits both exact exports and reference-api fails c
         resolvedPackages.add(dependencyName);
       }
     }
-    assert.deepEqual([...resolvedPackages].sort(), [...closure.keys()].sort());
+    assert.deepEqual(
+      [...resolvedPackages].sort(),
+      [...closure.keys()].filter((name) => !sourceOnlyTools.has(name)).sort(),
+    );
     const compiledAppModule = join(fixtureReferenceApiDist, 'reference/api/src/app.module.js');
     assert.equal(
       assertInsideFixture(fixtureRoot, compiledAppModule, 'compiled AppModule'),
@@ -5487,27 +5675,10 @@ if (!terminal) {
     assert.ifError(rejected.error);
     assert.notEqual(rejected.status, 0);
     assert.match(rejected.stderr, /declaration output is unavailable/u);
+  } catch (error) {
+    primaryFailure = error;
   } finally {
-    assert.ok(fixture.subprocessCwds.length >= 10);
-    assert.equal(
-      fixture.subprocessCwds.every((cwd) => cwd === fixtureRoot),
-      true,
-    );
-    assert.equal(
-      fixture.destructiveTargets.every((target) =>
-        target === fixtureRoot
-          ? true
-          : relative(fixtureRoot, target) !== '' &&
-            !relative(fixtureRoot, target).startsWith('..') &&
-            !isAbsolute(relative(fixtureRoot, target)),
-      ),
-      true,
-    );
-    assert.equal(fixture.subprocessCwds.includes(repoRoot), false);
-    assert.equal(fixture.destructiveTargets.includes(repositoryPreferencesDist), false);
-    assert.equal(fixture.destructiveTargets.includes(join(repoRoot, 'reference/api/dist')), false);
-    removeFixture(fixture);
-    assert.equal(existsSync(fixtureRoot), false);
+    finalizeBuildFixture(fixture, primaryFailure);
   }
 });
 

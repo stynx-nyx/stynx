@@ -1,10 +1,19 @@
-import { type DynamicModule, Module } from '@nestjs/common';
+import {
+  type DynamicModule,
+  type MiddlewareConsumer,
+  type NestModule,
+  Module,
+  RequestMethod,
+} from '@nestjs/common';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
 import { PrivacyController } from './privacy.controller';
 import { PrivacyObjectStoreService } from './privacy-object-store.service';
 import { PiiMapService } from './pii-map.service';
 import { PrivacyService } from './privacy.service';
+import { PrivacyHttpContextMiddleware } from './privacy-context';
+import { PrivacyRetentionPermissionGuard } from './privacy-retention.guard';
+import { UnconfiguredPrivacyCognitoAdmin } from './unconfigured-identity';
 import {
   STYNX_PRIVACY_COGNITO_ADMIN,
   STYNX_PRIVACY_OBJECT_STORE,
@@ -12,12 +21,13 @@ import {
 } from './tokens';
 import type { PrivacyCognitoAdmin, PrivacyObjectStore, StynxPrivacyModuleOptions } from './types';
 
-class NoopPrivacyCognitoAdmin implements PrivacyCognitoAdmin {
-  async disableUser(_subjectUserId: string): Promise<void> {}
-}
-
 @Module({})
-export class StynxPrivacyModule {
+export class StynxPrivacyModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(PrivacyHttpContextMiddleware)
+      .forRoutes({ path: '{*path}', method: RequestMethod.ALL });
+  }
   static forRoot(
     options: StynxPrivacyModuleOptions & {
       objectStore?: PrivacyObjectStore;
@@ -45,10 +55,12 @@ export class StynxPrivacyModule {
         objectStoreProvider,
         {
           provide: STYNX_PRIVACY_COGNITO_ADMIN,
-          useValue: options.cognitoAdmin ?? new NoopPrivacyCognitoAdmin(),
+          useValue: options.cognitoAdmin ?? new UnconfiguredPrivacyCognitoAdmin(),
         },
         PiiMapService,
         PrivacyService,
+        PrivacyHttpContextMiddleware,
+        PrivacyRetentionPermissionGuard,
       ],
       exports: [
         STYNX_PRIVACY_OPTIONS,

@@ -4,6 +4,5 @@
 /* eslint-disable */
 import type { TenantDetail } from './TenantDetail';
 export type PurgeTenantResult = {
-    tenant: TenantDetail;
+  tenant: TenantDetail;
 };
-

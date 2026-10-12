@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:4c54e905-13c8-44f0-8bc3-1490a826212a",
+  "serialNumber": "urn:uuid:f94339de-0751-4adc-8ce5-50411f1d6fb5",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "4c54e90513c8d4f0bbc31490a826212a6864ed5badb5a26aeb289bb248c06631"
+        "value": "f94339de0751dadcbce550411f1d6fb53f6554bc8d764ef95723e10e5c07b899"
       },
       {
         "name": "stynx:package-manager",
@@ -52,7 +52,7 @@
     {
       "type": "library",
       "name": "@aarusso-nyx/devai",
-      "version": "2.3.2",
+      "version": "2.6.0",
       "scope": "required",
       "licenses": [
         {
@@ -61,7 +61,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@aarusso-nyx%2fdevai@2.3.2"
+      "purl": "pkg:npm/@aarusso-nyx%2fdevai@2.6.0"
     },
     {
       "type": "library",
@@ -468,6 +468,20 @@
         }
       ],
       "purl": "pkg:npm/@eslint%2fjs@10.0.1"
+    },
+    {
+      "type": "library",
+      "name": "@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/@jridgewell%2fsourcemap-codec@1.6.0"
     },
     {
       "type": "library",
@@ -1831,6 +1845,25 @@
     },
     {
       "type": "library",
+      "name": "braces",
+      "version": "3.0.4-stynx.1",
+      "scope": "excluded",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "tools/braces-safe"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "class-validator",
       "version": "0.15.1",
       "scope": "required",
@@ -1971,6 +2004,20 @@
     },
     {
       "type": "library",
+      "name": "fill-range",
+      "version": "7.1.1",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/fill-range@7.1.1"
+    },
+    {
+      "type": "library",
       "name": "github-actionlint",
       "version": "1.7.12",
       "scope": "required",
@@ -2024,6 +2071,25 @@
         }
       ],
       "purl": "pkg:npm/helmet@8.2.0"
+    },
+    {
+      "type": "library",
+      "name": "http-cache-semantics",
+      "version": "4.3.1-stynx.1",
+      "scope": "excluded",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "tools/http-cache-semantics-safe"
+        }
+      ]
     },
     {
       "type": "library",

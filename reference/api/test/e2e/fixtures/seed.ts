@@ -41,11 +41,10 @@ const allRecordsAndNotesPermissions = [
   'sample:record-note:hard-delete',
 ] as const;
 
-const adminPermissions = allRecordsAndNotesPermissions.filter((permission) => !permission.endsWith(':hard-delete'));
-const viewerPermissions = [
-  'sample:record:read',
-  'sample:record-note:read',
-] as const;
+const adminPermissions = allRecordsAndNotesPermissions.filter(
+  (permission) => !permission.endsWith(':hard-delete'),
+);
+const viewerPermissions = ['sample:record:read', 'sample:record-note:read'] as const;
 
 function now(): string {
   return new Date().toISOString();
@@ -69,7 +68,10 @@ async function grantPermissions(
   }
 }
 
-export async function seedRecordsAndNotesE2e(database: PostgresTestDatabase): Promise<void> {
+export async function seedRecordsAndNotesE2e(
+  database: PostgresTestDatabase,
+  additionalAdminPermissions: readonly string[] = [],
+): Promise<void> {
   const client = await database.connectAsAdmin();
   const stamp = now();
   try {
@@ -123,7 +125,7 @@ export async function seedRecordsAndNotesE2e(database: PostgresTestDatabase): Pr
       ],
     );
 
-    for (const permission of allRecordsAndNotesPermissions) {
+    for (const permission of [...allRecordsAndNotesPermissions, ...additionalAdminPermissions]) {
       await client.query(
         `
           insert into auth.perms (id, key, description)
@@ -134,8 +136,14 @@ export async function seedRecordsAndNotesE2e(database: PostgresTestDatabase): Pr
       );
     }
 
-    await grantPermissions(client, actors.adminA.membershipId, adminPermissions);
-    await grantPermissions(client, actors.adminB.membershipId, adminPermissions);
+    await grantPermissions(client, actors.adminA.membershipId, [
+      ...adminPermissions,
+      ...additionalAdminPermissions,
+    ]);
+    await grantPermissions(client, actors.adminB.membershipId, [
+      ...adminPermissions,
+      ...additionalAdminPermissions,
+    ]);
     await grantPermissions(client, actors.viewerA.membershipId, viewerPermissions);
   } finally {
     await client.end();

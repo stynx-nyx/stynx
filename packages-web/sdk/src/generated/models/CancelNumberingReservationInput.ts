@@ -3,6 +3,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CancelNumberingReservationInput = {
-    reason?: string;
+  reason?: string;
 };
-

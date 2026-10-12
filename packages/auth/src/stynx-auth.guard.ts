@@ -1,11 +1,13 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
-import { InvalidCredentialError, STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
+import {
+  InvalidCredentialError,
+  STYNX_BUILTIN_AUTH_GUARD,
+  STYNX_PUBLIC_TENANT_ROUTE,
+  STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL,
+  STYNX_VERIFIED_TENANT_ID,
+  type PublicTenantRouteOptions,
+} from '@stynx-nyx/contracts';
 import { SessionService } from '@stynx-nyx/sessions';
 import { PermissionCache } from './permission-cache';
 import { StynxJwtValidator } from './stynx-jwt.validator';
@@ -14,8 +16,11 @@ import type { RequestLike } from './types';
 import { headerToString } from './utils';
 import { clearVerifiedPrincipal, markVerifiedPrincipal } from './verified-principal';
 
-function responseLike(request: RequestLike): { setHeader(name: string, value: string): void } | null {
-  const candidate = (request.res ?? request.response) as { setHeader?: (name: string, value: string) => void } | undefined;
+function responseLike(
+  request: RequestLike,
+): { setHeader(name: string, value: string): void } | null {
+  const candidate = (request.res ?? request.response) as
+    { setHeader?: (name: string, value: string) => void } | undefined;
   if (!candidate?.setHeader) {
     return null;
   }
@@ -36,7 +41,10 @@ export class StynxAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestLike>();
     Reflect.deleteProperty(request, STYNX_VERIFIED_TENANT_ID);
-    const publicTenant = this.reflector.getAllAndOverride<PublicTenantRouteOptions | boolean>(STYNX_PUBLIC_TENANT_ROUTE, [context.getHandler(), context.getClass()]);
+    const publicTenant = this.reflector.getAllAndOverride<PublicTenantRouteOptions | boolean>(
+      STYNX_PUBLIC_TENANT_ROUTE,
+      [context.getHandler(), context.getClass()],
+    );
     if (publicTenant !== undefined && publicTenant !== false) {
       clearVerifiedPrincipal(request);
       Reflect.deleteProperty(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL);
@@ -47,11 +55,20 @@ export class StynxAuthGuard implements CanActivate {
       delete request.tenantId;
       delete (request as RequestLike & { verifiedSessionId?: string }).verifiedSessionId;
       delete (request as RequestLike & { verifiedTenantClaim?: string }).verifiedTenantClaim;
-      delete (request as RequestLike & { verifiedTenantEntitlement?: unknown }).verifiedTenantEntitlement;
+      delete (request as RequestLike & { verifiedTenantEntitlement?: unknown })
+        .verifiedTenantEntitlement;
       delete (request as RequestLike & { principalContext?: unknown }).principalContext;
-      (request as RequestLike & { publicTenantRoute: boolean; publicTenantOptionalAuth: boolean }).publicTenantRoute = true;
-      (request as RequestLike & { publicTenantOptionalAuth: boolean }).publicTenantOptionalAuth = publicTenant === true ? false : Boolean(publicTenant.optionalAuth);
-      request.stynxReadonly = Boolean(this.reflector.getAllAndOverride<boolean>(STYNX_READONLY_ROUTE, [context.getHandler(), context.getClass()]));
+      (
+        request as RequestLike & { publicTenantRoute: boolean; publicTenantOptionalAuth: boolean }
+      ).publicTenantRoute = true;
+      (request as RequestLike & { publicTenantOptionalAuth: boolean }).publicTenantOptionalAuth =
+        publicTenant === true ? false : Boolean(publicTenant.optionalAuth);
+      request.stynxReadonly = Boolean(
+        this.reflector.getAllAndOverride<boolean>(STYNX_READONLY_ROUTE, [
+          context.getHandler(),
+          context.getClass(),
+        ]),
+      );
       if (!publicTenant || publicTenant === true || !publicTenant.optionalAuth) return true;
       const authorization = headerToString(request.headers.authorization);
       const token = authorization?.match(/^Bearer +(\S+)$/u)?.[1];
@@ -63,24 +80,53 @@ export class StynxAuthGuard implements CanActivate {
         if (error instanceof InvalidCredentialError) return true;
         throw error;
       }
-      if (!claims || typeof claims.sub !== 'string' || !claims.sub || typeof claims.sid !== 'string' || !claims.sid || typeof claims.tenantId !== 'string' || !claims.tenantId) {
+      if (
+        !claims ||
+        typeof claims.sub !== 'string' ||
+        !claims.sub ||
+        typeof claims.sid !== 'string' ||
+        !claims.sid ||
+        typeof claims.tenantId !== 'string' ||
+        !claims.tenantId
+      ) {
         throw new UnauthorizedException('Token verification returned malformed claims');
       }
       const sessionService = this.moduleRef.get(SessionService, { strict: false });
-      if (sessionService && !await sessionService.get(claims.sid)) return true;
+      if (sessionService && !(await sessionService.getActive(claims.sid))) return true;
       const permissions = await this.permissionCache.getForSession(claims);
       request.stynxClaims = claims;
-      request.principal = { id: claims.sub, roles: [], permissions: permissions.permissions, tenants: [claims.tenantId], claims: claims.claims };
-      request.user = { id: claims.sub, permissions: permissions.permissions, tenants: [claims.tenantId], claims: claims.claims };
+      request.principal = {
+        id: claims.sub,
+        roles: [],
+        permissions: permissions.permissions,
+        tenants: [claims.tenantId],
+        claims: claims.claims,
+      };
+      request.user = {
+        id: claims.sub,
+        permissions: permissions.permissions,
+        tenants: [claims.tenantId],
+        claims: claims.claims,
+      };
       request.actor = request.user;
       markVerifiedPrincipal(request);
       Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
       return true;
     }
-    if (this.reflector.getAllAndOverride<boolean>(STYNX_PUBLIC_ROUTE, [context.getHandler(), context.getClass()])) {
+    if (
+      this.reflector.getAllAndOverride<boolean>(STYNX_PUBLIC_ROUTE, [
+        context.getHandler(),
+        context.getClass(),
+      ])
+    ) {
       return true;
     }
-    if (this.reflector.getAllAndOverride<boolean>(STYNX_SYSTEM_ROUTE, [context.getHandler(), context.getClass()])) {
+    if (
+      this.reflector.getAllAndOverride<boolean>(STYNX_SYSTEM_ROUTE, [
+        context.getHandler(),
+        context.getClass(),
+      ])
+    ) {
       return true;
     }
 
@@ -92,10 +138,18 @@ export class StynxAuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing STYNX bearer token');
     }
     const token = authorization.slice('Bearer '.length).trim();
-    const claims = await this.validator.validate(token);
+    let claims: Awaited<ReturnType<StynxJwtValidator['validate']>>;
+    try {
+      claims = await this.validator.validate(token);
+    } catch (error) {
+      if (error instanceof InvalidCredentialError) {
+        throw new UnauthorizedException('Invalid STYNX bearer token');
+      }
+      throw error;
+    }
     const sessionService = this.moduleRef.get(SessionService, { strict: false });
     if (sessionService) {
-      const session = await sessionService.get(claims.sid);
+      const session = await sessionService.getActive(claims.sid);
       if (!session) {
         throw new UnauthorizedException('STYNX session is no longer active');
       }
@@ -105,7 +159,10 @@ export class StynxAuthGuard implements CanActivate {
     request.stynxClaims = claims;
     request.tenantId = claims.tenantId;
     request.stynxReadonly = Boolean(
-      this.reflector.getAllAndOverride<boolean>(STYNX_READONLY_ROUTE, [context.getHandler(), context.getClass()]),
+      this.reflector.getAllAndOverride<boolean>(STYNX_READONLY_ROUTE, [
+        context.getHandler(),
+        context.getClass(),
+      ]),
     );
     request.principal = {
       id: claims.sub,

@@ -130,6 +130,20 @@ describe('outbox configurable application role (PostgreSQL/RLS)', () => {
   beforeAll(async () => {
     postgres = await createPostgresTestDatabase('stynx_outbox_app_role');
     admin = await postgres.connectAsAdmin();
+    const bootstrap = await Test.createTestingModule({
+      imports: [
+        StynxDataModule.forRoot({
+          connections: {
+            owner: { connectionString: postgres.connectionString('outbox-role-bootstrap-owner') },
+            app: { connectionString: postgres.appConnectionString('outbox-role-bootstrap-app') },
+            reader: { connectionString: postgres.connectionString('outbox-role-bootstrap-reader') },
+          },
+          migrations: { enabled: true },
+        }),
+      ],
+    }).compile();
+    modules.push(bootstrap);
+    await bootstrap.init();
     await admin.query(
       `insert into tenancy.tenants (id, slug, name)
        values ($1::uuid, 'outbox-role-a', 'Outbox role A'), ($2::uuid, 'outbox-role-b', 'Outbox role B')

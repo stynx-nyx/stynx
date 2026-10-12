@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import { resolvePublicationEvidenceRequirements } from './lib/release-evidence-scope.mjs';
 
 if (process.env.STYNX_ENABLE_REGISTRY_PUBLISH !== 'true') {
   console.log('Registry publish is disabled; campaign evidence is not required.');
@@ -20,22 +21,22 @@ if (git(['status', '--porcelain']) !== '') failures.push('candidate worktree is 
 const repository = process.env.GITHUB_REPOSITORY || repositoryFromOrigin();
 const checks = api(`repos/${repository}/commits/${candidate}/check-runs?per_page=100`);
 const runs = Array.isArray(checks?.check_runs) ? checks.check_runs : [];
-// The trusted local RC check was produced by the local RC verifier workflow
-// retired under ADR-DEVAI-ADOPTION-0002 and can no longer report; hardening
-// evidence remains a publication precondition.
-const requiredChecks = new Map([['k6', 'hardening scenario=all']]);
+// The prospective one-version scope is validated against the complete fixed
+// group and unchanged RC graph. Missing measurements are never called PASS.
+const { scope, requiredChecks: requirements } = resolvePublicationEvidenceRequirements(repoRoot);
+const requiredChecks = new Map(requirements);
 for (const [required, label] of requiredChecks) {
   const matching = runs.filter((run) => run.name === required);
   const successful = matching.filter(
     (run) =>
       run.status === 'completed' && run.conclusion === 'success' && run.head_sha === candidate,
   );
-  if (successful.length !== 1) {
+  if (matching.length !== 1 || successful.length !== 1) {
     failures.push(`${label} evidence is missing, stale, failed, duplicated, or foreign-tree`);
   }
 }
 
-const result = { ok: failures.length === 0, candidate, tree, failures };
+const result = { ok: failures.length === 0, candidate, tree, scope, failures };
 process.stdout.write(`${JSON.stringify(result)}\n`);
 if (!result.ok) process.exitCode = 1;
 

@@ -3,9 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ProblemDetails = {
-    type: 'dictionary',
-    contains: {
-        properties: {
-        },
-    },
+  type: 'dictionary',
+  contains: {
+    properties: {},
+  },
 } as const;

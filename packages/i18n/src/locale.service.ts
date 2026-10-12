@@ -3,6 +3,7 @@ import { ModuleRef } from '@nestjs/core';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
 import { CatalogService } from './catalog.service';
+import { hasI18nTenantAdmission } from './tenant-context';
 
 @Injectable()
 export class LocaleService {
@@ -28,21 +29,19 @@ export class LocaleService {
       return preferredFromHeader;
     }
 
-    const tenantId = requestContext.hasActiveContext() ? requestContext.tenantId : undefined;
+    const tenantId = hasI18nTenantAdmission(this.moduleRef) ? requestContext.tenantId : undefined;
     if (tenantId) {
       await this.catalogService.primeTenantOverrides(tenantId);
       const database = this.moduleRef.get(Database, { strict: false });
-      const tenantLocale = await database.withSystemContext('i18n tenant locale lookup', async () =>
-        database.tx(
-          async (trx) => {
-            const result = await trx.query<{ locale: string | null }>(
-              `select locale from tenancy.tenant_settings where tenant_id = $1::uuid limit 1`,
-              [tenantId],
-            );
-            return result.rows[0]?.locale ?? undefined;
-          },
-          { role: 'owner', readonly: true, replica: false },
-        ),
+      const tenantLocale = await database.txIndependent(
+        async (trx) => {
+          const result = await trx.query<{ locale: string | null }>(
+            `select locale from tenancy.tenant_settings where tenant_id = $1::uuid limit 1`,
+            [tenantId],
+          );
+          return result.rows[0]?.locale ?? undefined;
+        },
+        { role: 'reader', readonly: true, replica: false },
       );
       if (tenantLocale) {
         requestContextMutator.patch({ locale: tenantLocale });
@@ -57,8 +56,9 @@ export class LocaleService {
 
   t(key: string, vars: Record<string, unknown> = {}, locale?: string): string {
     const requestContext = this.requestContext();
-    const effectiveLocale = locale ?? (requestContext.hasActiveContext() ? requestContext.locale : undefined) ?? 'pt-BR';
-    const tenantId = requestContext.hasActiveContext() ? requestContext.tenantId : undefined;
+    const effectiveLocale =
+      locale ?? (requestContext.hasActiveContext() ? requestContext.locale : undefined) ?? 'pt-BR';
+    const tenantId = hasI18nTenantAdmission(this.moduleRef) ? requestContext.tenantId : undefined;
     return this.catalogService.translate(key, effectiveLocale, vars, tenantId);
   }
 

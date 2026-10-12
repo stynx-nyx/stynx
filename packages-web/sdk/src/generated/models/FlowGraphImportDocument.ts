@@ -5,16 +5,12 @@
 import type { FlowGraphImportEdge } from './FlowGraphImportEdge';
 import type { FlowGraphImportNode } from './FlowGraphImportNode';
 import type { FlowJsonObject } from './FlowJsonObject';
+import type { JsonValue } from './JsonValue';
 export type FlowGraphImportDocument = {
-    agentRules?: Array<(FlowJsonObject & {
-        nodeCode: string;
-    })>;
-    edges?: Array<FlowGraphImportEdge>;
-    graph: FlowJsonObject;
-    nodeFormRules?: Array<(FlowJsonObject & {
-        nodeCode: string;
-    })>;
-    nodes: Array<FlowGraphImportNode>;
-    transitionEffects?: Array<FlowJsonObject>;
+  agentRules?: Array<Record<string, JsonValue>>;
+  edges?: Array<FlowGraphImportEdge>;
+  graph: FlowJsonObject;
+  nodeFormRules?: Array<Record<string, JsonValue>>;
+  nodes: Array<FlowGraphImportNode>;
+  transitionEffects?: Array<FlowJsonObject>;
 };
-

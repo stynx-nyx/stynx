@@ -150,3 +150,24 @@ candidate is merged, exact-main checks pass, and the Owner names the exact
 commit in the package dispatch and local Pages authorization. Package and Pages
 publication receipts must then be reconciled with that same commit before the
 result is described as shipped.
+
+## Prospective STYNX 1.6.0 bounded publication
+
+The Owner's 2026-10-11 [bounded publication decision](../../../law/adr/2026-10-11-bounded-1.6.0-publication.md)
+preserves the fifteen-node signed local RC, ordinary static/security/product and
+coverage checks, strict protected integration and exact-main publication controls.
+Published DEVAI 2.6.0 is sufficient for that lane. No k6 or mutation campaign is
+executed for this publication. HTTP/k6 evidence is NOT_OBSERVED, mutation is
+NOT_RUN, and the actual audit observation remains non-promoting; no complete
+performance or fully green scorecard is claimed. Consumer/provider acceptance and
+issue closure require their separate actual evidence after publication.
+
+The [portable independent signature security review](../../meta/security/signature-1.6.0-independent-review.json)
+is attributed to the separate Auditor session and retained with this candidate.
+Its exact public projection SHA-256 is
+`c9aa779e469affdfb0b0c1fb8128a06cdc3ec5a1a06ba2d7ce66071eb29edfe9`.
+It records the original D1.9 PASS, reviewed source/authority/140 public fixture and
+test identities, independent authorship and later byte-custody recheck. That PASS
+covers only the reviewed minimal LTA framework bytes; it supplies no overall
+release readiness, current audit verdict or production provider/DETRAN approval.
+The signed exact-candidate RC preserves these public review bytes durably.

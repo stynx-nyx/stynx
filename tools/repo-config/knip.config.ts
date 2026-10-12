@@ -17,6 +17,11 @@ const config: KnipConfig = {
       entry: ['src/index.ts', 'src/public-api.ts', 'src/testing/index.ts'],
       project: ['src/**/*.ts'],
     },
+    'tools/braces-safe': {
+      // The shipped CommonJS package permits external deep imports of these utilities.
+      entry: ['index.js', 'lib/utils.js'],
+      project: ['**/*.js'],
+    },
     'domain/*/api': {
       entry: ['src/**/*.module.ts'],
       project: ['src/**/*.ts'],
@@ -26,7 +31,18 @@ const config: KnipConfig = {
       project: ['src/**/*.ts'],
     },
     'reference/*': {
-      entry: ['src/main.ts', 'scripts/**/*.{mjs,cjs,js,sh}', 'playwright.config.mjs', 'vitest.config.ts'],
+      entry: [
+        'src/main.ts',
+        // The owned HTTP worker resolves these composition factories from its closed roster.
+        'src/performance/domain.ts',
+        'src/performance/i18n.ts',
+        'src/performance/offline-ctg9.ts',
+        'src/performance/offline-e6.ts',
+        'src/performance/privacy.ts',
+        'scripts/**/*.{mjs,cjs,js,sh}',
+        'playwright.config.mjs',
+        'vitest.config.ts',
+      ],
       project: [
         'src/**/*.{ts,js,mjs,cjs}',
         'scripts/**/*.{ts,js,mjs,cjs}',
@@ -34,8 +50,18 @@ const config: KnipConfig = {
       ],
     },
     'test/*': {
-      // The CLI consumer copies this fixture into a temporary external project at runtime.
-      entry: ['validate.js', 'vitest.config.ts', 'support/*.ts', 'cli-generator/consumer-runtime.ts'],
+      // Package consumers copy these executable fixtures into external projects at runtime.
+      entry: [
+        'validate.js',
+        'vitest.config.ts',
+        'support/*.ts',
+        // The live-channel regression spawns this executable through a URL at runtime.
+        'support/http-reference-channel-child.mjs',
+        'cli-generator/consumer-runtime.ts',
+        'i18n-installed/run-integration.mjs',
+        'i18n-installed/consumer-runtime.ts',
+        'i18n-installed/consumer-imports.mjs',
+      ],
       project: ['**/*.{ts,js,mjs,cjs}'],
     },
     'apps/*': {

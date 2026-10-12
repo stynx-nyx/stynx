@@ -4,8 +4,7 @@
 /* eslint-disable */
 import type { TenantDetail } from './TenantDetail';
 export type ProvisionTenantResult = {
-    invitationToken: string;
-    ownerUserId: string;
-    tenant: TenantDetail;
+  invitationToken: string;
+  ownerUserId: string;
+  tenant: TenantDetail;
 };
-

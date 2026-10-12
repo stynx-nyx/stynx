@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { ModuleRef } from '@nestjs/core';
+import { systemModuleRef } from '../support/module-ref';
 import { CatalogService } from '../../src/catalog.service';
 
 function makeWorkspace(): string {
@@ -24,7 +25,7 @@ function makeWorkspace(): string {
 }
 
 function buildService(workspaceRoot: string): CatalogService {
-  const moduleRef = { get: vi.fn() } as unknown as ModuleRef;
+  const moduleRef = systemModuleRef();
   return new CatalogService(moduleRef, {
     workspaceRoot,
     defaultLocale: 'pt-BR',
@@ -151,14 +152,14 @@ describe('CatalogService.supportedLocales', () => {
         },
       ],
     }));
-    const moduleRef = {
-      get: vi.fn(() => ({
-        withSystemContext: vi.fn(async (_label: string, callback: () => Promise<unknown>) => callback()),
-        tx: vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
-          callback({ query }),
-        ),
-      })),
-    } as unknown as ModuleRef;
+    const moduleRef = systemModuleRef({
+      withSystemContext: vi.fn(async (_label: string, callback: () => Promise<unknown>) =>
+        callback(),
+      ),
+      txIndependent: vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
+        callback({ query }),
+      ),
+    });
     const svc = new CatalogService(moduleRef, {
       workspaceRoot: root,
       defaultLocale: 'pt-BR',
@@ -176,19 +177,22 @@ describe('CatalogService.supportedLocales', () => {
     try {
       mkdirSync(join(webRoot, 'packages-web', 'sample-web', 'i18n'), { recursive: true });
       mkdirSync(join(webRoot, 'packages', 'sample-no-i18n'), { recursive: true });
-      writeFileSync(join(webRoot, 'packages-web', 'sample-web', 'i18n', 'en-US.json'), JSON.stringify({
-        'web.title': 'Web title',
-      }));
+      writeFileSync(
+        join(webRoot, 'packages-web', 'sample-web', 'i18n', 'en-US.json'),
+        JSON.stringify({
+          'web.title': 'Web title',
+        }),
+      );
       writeFileSync(join(webRoot, 'packages-web', 'sample-web', 'i18n', 'README.md'), 'ignored');
       const query = vi.fn(async () => ({ rows: [{ settings: null }] }));
-      const moduleRef = {
-        get: vi.fn(() => ({
-          withSystemContext: vi.fn(async (_label: string, callback: () => Promise<unknown>) => callback()),
-          tx: vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
-            callback({ query }),
-          ),
-        })),
-      } as unknown as ModuleRef;
+      const moduleRef = systemModuleRef({
+        withSystemContext: vi.fn(async (_label: string, callback: () => Promise<unknown>) =>
+          callback(),
+        ),
+        txIndependent: vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
+          callback({ query }),
+        ),
+      });
       const svc = new CatalogService(moduleRef, {
         workspaceRoot: webRoot,
         defaultLocale: 'pt-BR',
@@ -204,9 +208,12 @@ describe('CatalogService.supportedLocales', () => {
   });
 
   it('ignores filenames that merely contain or extend the json suffix', () => {
-    writeFileSync(join(root, 'packages', 'sample-a', 'i18n', 'fr-FR.json.backup'), JSON.stringify({
-      'greeting.hello': 'Bonjour',
-    }));
+    writeFileSync(
+      join(root, 'packages', 'sample-a', 'i18n', 'fr-FR.json.backup'),
+      JSON.stringify({
+        'greeting.hello': 'Bonjour',
+      }),
+    );
     writeFileSync(join(root, 'packages', 'sample-a', 'i18n', 'READMEjson'), '{}');
     const svc = buildService(root);
 
@@ -220,9 +227,9 @@ describe('CatalogService.supportedLocales', () => {
       'i18n.override.pt-BR.greeting.hello.suffix': 'suffix key',
     });
 
-    expect(service.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, 'tenant-a'))
-      .toBe('Olá, Ana!');
-    expect(service.translate('greeting.hello.suffix', 'pt-BR', {}, 'tenant-a'))
-      .toBe('suffix key');
+    expect(service.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, 'tenant-a')).toBe(
+      'Olá, Ana!',
+    );
+    expect(service.translate('greeting.hello.suffix', 'pt-BR', {}, 'tenant-a')).toBe('suffix key');
   });
 });
