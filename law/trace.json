@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.22",
+  "version": "1.3.23",
   "meta": {
-    "last_updated": "2026-10-12T04:10:53.943116Z",
+    "last_updated": "2026-10-12T13:18:08.379055Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -83,7 +83,8 @@
       "STYNX 1.6.0 Architect rebind pins the Inspector actual-filesystem short-read attempt handshake and three added readiness/full-size/completion assertions. The original sixteen attempts, changed-snapshot refusal, real filesystem operations and five-second bounds remain unchanged; no production admission or readiness claim is added.",
       "STYNX 1.6.0 Architect rebind at a25b4d74239617036739e1ba2cf7bce9a63540ee pins the Inspector additive PostgreSQL legacy ACK replay with explicit null transport identity. Three new assertions verify exact archived replay, tenant/route/key/fingerprint lookup scope and absent userId despite a present business actor; every prior actor-bound replay, refusal and no-repeated-effects assertion and the zero-tolerance coverage floor remain unchanged. No provider, consumer or release-readiness verdict is inferred.",
       "STYNX 1.6.0 Architect binding of Inspector 182f8d4fe4794eaa11256090188087704967e463 under ADR-RELEASE-0002 pins canonical Changesets/storage/SBOM generation, strict Git-bound version-only artifact admission, real TypeScript declaration metadata normalization and retained structural API sensitivity. Existing private-workspace restoration assertions remain; generator order/failure witnesses are additive and the outbox artifact adds actual manifest equality while retaining its version-format assertion. All prior invariant mappings, coverage floors and protected release controls remain unchanged. Failed b609/PR380 evidence is preserved; no publication, full audit, k6/mutation, provider or consumer readiness verdict is inferred.",
-      "STYNX 1.6.0 Architect binding of Inspector 43ad406651a774b6ec66d62afccc6aab31b787bb under ADR-RELEASE-0002 pins the installed DEVAI 2.6.0 actual-Git source custody regression: changing only the genuine imported API helper bytes changes api:contracts and release:prepare keys while engines/typecheck/build remain identical; a separately unselected control changes release:prepare but leaves the API key identical. The protected descriptor bytes and all prior four storage bindings, assertions, invariant mappings, thresholds and controls remain unchanged. Two real test imports follow the byte-identical helper relocation into the existing API selector. Interrupted 6daeed evidence/cache remains preserved; this component proves source identity custody, not an executed RC, publication or readiness verdict."
+      "STYNX 1.6.0 Architect binding of Inspector 43ad406651a774b6ec66d62afccc6aab31b787bb under ADR-RELEASE-0002 pins the installed DEVAI 2.6.0 actual-Git source custody regression: changing only the genuine imported API helper bytes changes api:contracts and release:prepare keys while engines/typecheck/build remain identical; a separately unselected control changes release:prepare but leaves the API key identical. The protected descriptor bytes and all prior four storage bindings, assertions, invariant mappings, thresholds and controls remain unchanged. Two real test imports follow the byte-identical helper relocation into the existing API selector. Interrupted 6daeed evidence/cache remains preserved; this component proves source identity custody, not an executed RC, publication or readiness verdict.",
+      "2026-10-12 Architect rebind of Inspector 24a18319 pins explicit immutable historical flow-manifest component fixtures and actual 1.6.0 parser/worker early-refusal/no-effects witnesses (ADR-RELEASE-0003). Existing assertions, all four production anchors, actual candidate/fresh-build manifests and HTTP NOT_OBSERVED/readiness-false posture remain unchanged; diagnostic fixture success supplies no HTTP 1.6.0 admission."
     ]
   },
   "invariants": [
@@ -6771,8 +6772,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 21,
-      "assertion_digest_sha256": "27753803a4478ee8f4d8bebaa736d2d77e0e8a7716bc14bc8a95faa9d6f6fbc1"
+      "assertion_count": 25,
+      "assertion_digest_sha256": "8ef49f0d5a34435ebe028e706faabe4a678785350df64a8f82ca490a6a810ad3"
     },
     {
       "path": "packages/offline-sync/test/integration/offline-sync-consumption-clock.integration.spec.ts",
@@ -6795,8 +6796,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "eb4f184666f64cea55ae03a6d7e20d7c08a0d2f1cf0820aed88a094a4414c509"
+      "assertion_count": 28,
+      "assertion_digest_sha256": "0f582c50488c8833de59f15e1673db8bff9ebf5b9017382d2322aa2c9610872f"
     },
     {
       "path": "test/db/demo-bookmark-storage-contract.spec.ts",
