@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.16",
+  "version": "1.3.17",
   "meta": {
-    "last_updated": "2026-10-12T00:26:58.551308Z",
+    "last_updated": "2026-10-12T00:54:49.307447Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -77,7 +77,8 @@
       "STYNX 1.6.0 Architect rebind preserves all 629 executable test bindings and every prior invariant/gate relationship while binding the exact local S3 expiration-error assertion and four additive nested-runbook route/anchor assertions. Generated documentation and emulator fixtures do not establish production provider, HTTP custody, performance, overall audit or release readiness.",
       "STYNX 1.6.0 Architect binds exact consumption-operation-clock parity and microsecond/tenant negatives, admitted non-evaluated resolution-anchor and worker/protocol projections, exact webhook failure matching, and strict prospective-versus-versioned registry-policy assertions. All prior corpus relationships, invariants, gate mappings and thresholds remain unchanged. Prospective version plans do not supply final version, registry, provider, coverage, HTTP performance or publication acceptance.",
       "STYNX 1.6.0 Architect binds 40 additive executable sensors and refreshes 10 existing projections against exact integrated candidate 56304e0b0bc34b552ea36889076c8c1a85b3078a, retaining all 632 prior corpus entries, every invariant/gate relationship and all thresholds. Exact expression review preserves eight changed-file assertion multisets; the DEVAI 2.6.0 identity/registered-binding/history/Doctor successors and the reviewed source-only workspace, native coverage configuration and fixture-finalization obligations retain their intended checks. Complete private build-support byte retention, original local bootstrap UNKNOWN/NOT_EVALUABLE, opaque baseline association, actual bounded raw/IPC/native-negative controls, native coverage correspondence and restricted-role storage regressions remain component evidence. These bindings do not establish installed successor admission, source/native whole-life or application custody, actual original-parent deadline expiry, complete supplemental workload, performance, provider, overall audit or release readiness.",
-      "2026-10-11 Architect binds exact 1.6.0 bounded-publication refusal sensors and the prospective exact 1.6.0 root-version normalizer under ADR-RELEASE-0001; all prior assertion counts/thresholds and historical evidence remain preserved."
+      "2026-10-11 Architect binds exact 1.6.0 bounded-publication refusal sensors and the prospective exact 1.6.0 root-version normalizer under ADR-RELEASE-0001; all prior assertion counts/thresholds and historical evidence remain preserved.",
+      "2026-10-11 Architect exact-successor rebind pins Inspector 07ab4f88 and 9fac27f0 restricted-role demo/PostgreSQL fixtures and the Owner-selected tenant HTTP privacy behavior: cross-tenant export refusal with unchanged SQL/object state, tenant-only retention and erasure, no global identity disable, and unchanged second-tenant state. All five privacy behavior cases remain; three protection assertions are added. Seven other assertion counts remain unchanged. Filtered-environment fixtures establish their actual UID/GID, preserve the original six-second native absence bound and require ESRCH rather than EPERM as absence; early-root support preserves the original primary refusal and verifies attached retained cleanup evidence. Script hygiene changes execute no k6 or mutation and preserve thresholds and readiness_promoting=false. Actual check:trace --print at 947ea1b99d8cd5c60ccbed527b365b4689dde58f matches the independently sealed combined Inspector projection."
     ]
   },
   "invariants": [
@@ -1582,7 +1583,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 54,
-      "assertion_digest_sha256": "2567c7e84b47554e115b5922007df27d0fdab765bd9694a96a4c6198fadcee8c"
+      "assertion_digest_sha256": "0e4e4580bfa33bbbfe5be8aad63f29584a1b834232a7e9acee5e726f1875b826"
     },
     {
       "path": "domain/demo-bookmark/api/test/bookmark.controller.spec.ts",
@@ -6549,8 +6550,8 @@
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 31,
-      "assertion_digest_sha256": "a56558a81be7d05c4b935af9336be7cd6678f6a87ae045b87fb287040b55b656"
+      "assertion_count": 34,
+      "assertion_digest_sha256": "5f948fb8788fa9fe4ad39bb1cda6f2eb41836413ff9ec6946a08e20cf9347d93"
     },
     {
       "path": "reference/api/test/e2e/flows/profile-and-preferences.e2e.ts",
@@ -6854,7 +6855,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 52,
-      "assertion_digest_sha256": "16cc18db8546f2326340722ba5e7c40e90acff0244a568034e162ef2500848b2"
+      "assertion_digest_sha256": "5f087ea67e477e511118ff81a6e5694fff428866d4b47f0bbe73946fdea824b5"
     },
     {
       "path": "test/scripts/http-original-exchange.test.mjs",
@@ -6878,7 +6879,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 40,
-      "assertion_digest_sha256": "8183d6a50d0dd86f01c84a17b5015dd396833a8935b25120916431b47ab55a32"
+      "assertion_digest_sha256": "795dac1d8de9d381e63cb4fb52e90c56b98e0eb509aefaf7c40e1917e18ebeb8"
     },
     {
       "path": "test/scripts/http-original-official-k6.test.mjs",
@@ -6958,7 +6959,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 51,
-      "assertion_digest_sha256": "c0a4491951c86e5346b34c70f8715dd937594019d33dfa761aa6339bcf300d0d"
+      "assertion_digest_sha256": "b0b731c02e67618c91cb0e5e7a3bc60979d701d79aee63d7c2d0af9923a5ce85"
     },
     {
       "path": "test/scripts/http-qualification-declarations.test.mjs",
@@ -6966,7 +6967,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 32,
-      "assertion_digest_sha256": "56bad2a051d287a5807aed414bac609d11cf864d4f79aabeb5e624f9d32ef174"
+      "assertion_digest_sha256": "627788b5f8ccd19ce8aebb825606e547830500f8b8f6f9ed444fd867b1dfd1c9"
     },
     {
       "path": "test/scripts/http-qualification-live-channel.test.mjs",
@@ -6998,7 +6999,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 29,
-      "assertion_digest_sha256": "94c2ee394c2116b73dc7f3b6c2e9f57c2877824f82f99e79672824911c7dacb7"
+      "assertion_digest_sha256": "b38418e5cf24201fa748c047826b66a15c9b6dfbaee5cd23fff83fc7f6c208de"
     },
     {
       "path": "test/scripts/http-qualification-protocol.test.mjs",
@@ -7086,7 +7087,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 37,
-      "assertion_digest_sha256": "bb7d1afb502f52858a653d60cf3669accf847ad81ae96b780192bb1c231b9028"
+      "assertion_digest_sha256": "b62debb7767e2052f8285ee2428c93a5fe3a01b88c4a3bcd5175d4b9a6f0b8d5"
     },
     {
       "path": "test/scripts/native-coverage.test.mjs",
