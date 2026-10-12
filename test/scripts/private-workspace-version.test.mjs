@@ -32,21 +32,28 @@ function manifest(name, extra = {}) {
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'stynx-private-version-'));
-  put(root, 'pnpm-workspace.yaml', [
-    'packages:',
-    "  - 'packages/*'",
-    "  - 'packages-web/*'",
-    "  - 'reference/*'",
-    "  - 'domain/*/api'",
-    "  - 'domain/*/web'",
-    "  - 'tools/*'",
-    "  - 'test/*'",
-    "  - 'docs/site'",
-    '',
-  ].join('\n'));
+  put(
+    root,
+    'pnpm-workspace.yaml',
+    [
+      'packages:',
+      "  - 'packages/*'",
+      "  - 'packages-web/*'",
+      "  - 'reference/*'",
+      "  - 'domain/*/api'",
+      "  - 'domain/*/web'",
+      "  - 'tools/*'",
+      "  - 'test/*'",
+      "  - 'docs/site'",
+      '',
+    ].join('\n'),
+  );
   const originals = new Map([
     ['package.json', manifest('workspace-root', { private: true, version: '1.5.0-rc.3' })],
-    ['tools/image-size-safe/package.json', Buffer.from('{ "name": "image-size-safe", "private": true, "version": "2.0.3-stynx.1" }\n')],
+    [
+      'tools/image-size-safe/package.json',
+      Buffer.from('{ "name": "image-size-safe", "private": true, "version": "2.0.3-stynx.1" }\n'),
+    ],
     ['tools/image-size-safe/CHANGELOG.md', Buffer.from('# image-size-safe\r\n\r\nold entry\r\n')],
     ['domain/orders/api/package.json', manifest('orders-api', { private: true, version: '0.7.1' })],
     ['docs/site/package.json', manifest('docs-site', { private: true, version: '1.0.0' })],
@@ -54,8 +61,14 @@ function fixture() {
     ['test/db/package.json', manifest('database-tests', { private: true })],
     ['packages/public/package.json', manifest('@stynx-nyx/public', { version: '1.5.0-rc.3' })],
     ['packages/public/CHANGELOG.md', Buffer.from('# public original\n')],
-    ['node_modules/decoy/package.json', manifest('dependency-decoy', { private: true, version: '3.0.0' })],
-    ['tools/image-size-safe/dist/package.json', manifest('build-decoy', { private: true, version: '4.0.0' })],
+    [
+      'node_modules/decoy/package.json',
+      manifest('dependency-decoy', { private: true, version: '3.0.0' }),
+    ],
+    [
+      'tools/image-size-safe/dist/package.json',
+      manifest('build-decoy', { private: true, version: '4.0.0' }),
+    ],
   ]);
   for (const [path, bytes] of originals) put(root, path, bytes);
   return { root, originals };
@@ -68,14 +81,16 @@ function mutateAsChangesets(root) {
     'docs/site/package.json',
     'test/db/package.json',
     'packages/public/package.json',
-  ]) put(root, path, manifest(`changed-${path}`, { version: '1.5.0' }));
+  ])
+    put(root, path, manifest(`changed-${path}`, { version: '1.5.0' }));
   for (const path of [
     'tools/image-size-safe/CHANGELOG.md',
     'domain/orders/api/CHANGELOG.md',
     'docs/site/CHANGELOG.md',
     'test/db/CHANGELOG.md',
     'packages/public/CHANGELOG.md',
-  ]) put(root, path, '# generated\n');
+  ])
+    put(root, path, '# generated\n');
 }
 
 async function helper() {
@@ -99,12 +114,15 @@ test('private snapshot restores exact bytes and absence across workspace globs w
       'test/db/package.json',
       'node_modules/decoy/package.json',
       'tools/image-size-safe/dist/package.json',
-    ]) assert.deepEqual(readFileSync(join(root, path)), originals.get(path), path);
+    ])
+      assert.deepEqual(readFileSync(join(root, path)), originals.get(path), path);
     for (const path of ['domain/orders/api/CHANGELOG.md', 'test/db/CHANGELOG.md']) {
       assert.equal(existsSync(join(root, path)), false, path);
     }
-    assert.deepEqual(readFileSync(join(root, 'packages/public/package.json')),
-      manifest('changed-packages/public/package.json', { version: '1.5.0' }));
+    assert.deepEqual(
+      readFileSync(join(root, 'packages/public/package.json')),
+      manifest('changed-packages/public/package.json', { version: '1.5.0' }),
+    );
     assert.equal(readFileSync(join(root, 'packages/public/CHANGELOG.md'), 'utf8'), '# generated\n');
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -119,7 +137,10 @@ test('private discovery fails closed on missing or malformed workspace manifest'
       const path = join(root, 'domain/orders/api/package.json');
       if (caseName === 'missing') rmSync(path);
       else writeFileSync(path, '{ broken');
-      assert.throws(() => snapshotPrivateWorkspacePackages(root), /domain\/orders\/api\/package\.json|manifest|JSON/u);
+      assert.throws(
+        () => snapshotPrivateWorkspacePackages(root),
+        /domain\/orders\/api\/package\.json|manifest|JSON/u,
+      );
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -139,8 +160,10 @@ test('snapshot can restore after Changesets fails midway', async () => {
     } finally {
       restorePrivateWorkspacePackages(snapshot);
     }
-    assert.deepEqual(readFileSync(join(root, 'tools/image-size-safe/package.json')),
-      originals.get('tools/image-size-safe/package.json'));
+    assert.deepEqual(
+      readFileSync(join(root, 'tools/image-size-safe/package.json')),
+      originals.get('tools/image-size-safe/package.json'),
+    );
     assert.equal(existsSync(join(root, 'domain/orders/api/CHANGELOG.md')), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -149,22 +172,59 @@ test('snapshot can restore after Changesets fails midway', async () => {
 
 test('wrapper captures before direct Changesets spawn and restores in finally before every downstream action', () => {
   const source = readFileSync(wrapperPath, 'utf8');
-  assert.doesNotMatch(source, /run\(\s*['"]pnpm['"]\s*,\s*\[\s*['"]exec['"]\s*,\s*['"]changeset['"]\s*,\s*['"]version['"]\s*\]\s*\)/u);
+  assert.doesNotMatch(
+    source,
+    /run\(\s*['"]pnpm['"]\s*,\s*\[\s*['"]exec['"]\s*,\s*['"]changeset['"]\s*,\s*['"]version['"]\s*\]\s*\)/u,
+  );
   const capture = source.indexOf('snapshotPrivateWorkspacePackages(');
-  const spawn = source.search(/spawnSync\(\s*['"]pnpm['"]\s*,\s*\[\s*['"]exec['"]\s*,\s*['"]changeset['"]\s*,\s*['"]version['"]\s*\]/u);
+  const spawn = source.search(
+    /spawnSync\(\s*['"]pnpm['"]\s*,\s*\[\s*['"]exec['"]\s*,\s*['"]changeset['"]\s*,\s*['"]version['"]\s*\]/u,
+  );
   const finallyAt = source.indexOf('finally', spawn);
   const restore = source.indexOf('restorePrivateWorkspacePackages(', finallyAt);
   const generated = source.indexOf('validateGeneratedVersionTransition(', spawn);
   const fixed = source.indexOf('applyFixedGroupVersion(', spawn);
   const sync = source.indexOf('syncReleaseVersion(', spawn);
+  const offline = source.indexOf(
+    "run(process.execPath, ['scripts/offline-storage-generate.mjs', '--write'])",
+    spawn,
+  );
+  const outbox = source.indexOf(
+    "run(process.execPath, ['scripts/outbox-storage-generate.mjs', '--write'])",
+    spawn,
+  );
   const sbom = source.indexOf("run('pnpm', ['security:sbom'])", spawn);
-  for (const [label, at] of [['capture', capture], ['spawn', spawn], ['finally', finallyAt], ['restore', restore], ['validation', generated], ['fixed group', fixed], ['sync', sync], ['SBOM', sbom]]) {
+  for (const [label, at] of [
+    ['capture', capture],
+    ['spawn', spawn],
+    ['finally', finallyAt],
+    ['restore', restore],
+    ['validation', generated],
+    ['fixed group', fixed],
+    ['sync', sync],
+    ['offline generator', offline],
+    ['outbox generator', outbox],
+    ['SBOM', sbom],
+  ]) {
     assert.ok(at >= 0, `${label} must be present`);
   }
-  assert.ok(capture < spawn && spawn < finallyAt && finallyAt < restore, 'snapshot and finally order');
-  assert.ok(restore < Math.min(generated, fixed, sync, sbom), 'restore must precede all generated work');
-  assert.match(source.slice(restore, generated), /(?:\.error|\.status|status\s*\?\?\s*1)/u,
-    'Changesets result must be checked only after restoration');
+  assert.ok(
+    capture < spawn && spawn < finallyAt && finallyAt < restore,
+    'snapshot and finally order',
+  );
+  assert.ok(
+    restore < Math.min(generated, fixed, sync, offline, outbox, sbom),
+    'restore must precede all generated work',
+  );
+  assert.ok(
+    sync < offline && offline < outbox && outbox < sbom,
+    'both storage generators follow version synchronization and precede SBOM',
+  );
+  assert.match(
+    source.slice(restore, generated),
+    /(?:\.error|\.status|status\s*\?\?\s*1)/u,
+    'Changesets result must be checked only after restoration',
+  );
 });
 
 function wrapperHarness() {
@@ -177,7 +237,10 @@ function wrapperHarness() {
   let source = readFileSync(wrapperPath, 'utf8');
   source = source.replace("from 'node:child_process'", "from './spawn-stub.mjs'");
   put(root, 'scripts/version-packages.mjs', source);
-  put(root, 'scripts/lib/fixed-group-version.mjs', `
+  put(
+    root,
+    'scripts/lib/fixed-group-version.mjs',
+    `
 import { appendFileSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 function check(root, phase) {
@@ -190,8 +253,12 @@ export const readPreState = () => null;
 export const unifiedVersion = root => { check(root, 'generated'); return '1.5.0-rc.3'; };
 export const validateGeneratedVersionTransition = ({}) => {};
 export const applyFixedGroupVersion = root => { check(root, 'fixed'); return { manifests:0, changelogs:0 }; };
-`);
-  put(root, 'scripts/lib/release-version-policy.mjs', `
+`,
+  );
+  put(
+    root,
+    'scripts/lib/release-version-policy.mjs',
+    `
 import { appendFileSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 function check(root, phase) {
@@ -200,8 +267,12 @@ function check(root, phase) {
 }
 export const syncReleaseVersion = root => { check(root, 'sync'); return {packageCount:1, version:'1.5.0'}; };
 export const validateReleaseVersionPolicy = root => { check(root, 'policy'); return []; };
-`);
-  put(root, 'scripts/spawn-stub.mjs', `
+`,
+  );
+  put(
+    root,
+    'scripts/spawn-stub.mjs',
+    `
 import { appendFileSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 export function spawnSync(command, args, options) {
@@ -223,6 +294,13 @@ export function spawnSync(command, args, options) {
     if (process.env.SPAWN_CASE === 'nonzero') return {status:7};
     return {status:0};
   }
+  if (command === process.execPath && args.length === 2 && args[1] === '--write' &&
+      ['scripts/offline-storage-generate.mjs', 'scripts/outbox-storage-generate.mjs'].includes(args[0])) {
+    if (!readFileSync(resolve(root, 'tools/image-size-safe/package.json'), 'utf8').includes('2.0.3-stynx.1')) throw new Error('storage generation saw unrestored private manifest');
+    const phase = args[0].includes('offline-') ? 'offline' : 'outbox';
+    appendFileSync(resolve(root, 'phases'), phase + '\\n');
+    return {status:process.env.GENERATOR_FAILURE === phase ? 9 : 0};
+  }
   if (args.join(' ') === 'security:sbom') {
     if (!readFileSync(resolve(root, 'tools/image-size-safe/package.json'), 'utf8').includes('2.0.3-stynx.1')) throw new Error('SBOM saw unrestored private manifest');
     appendFileSync(resolve(root, 'phases'), 'sbom\\n');
@@ -230,7 +308,8 @@ export function spawnSync(command, args, options) {
   }
   throw new Error('unexpected subprocess: ' + command + ' ' + args.join(' '));
 }
-`);
+`,
+  );
   return { root, originals };
 }
 
@@ -244,16 +323,39 @@ test('wrapper restores on success, nonzero, null status, and spawn error before 
         encoding: 'utf8',
       });
       assert.equal(result.error, undefined, mode);
-      assert.equal(result.status, mode === 'success' ? 0 : mode === 'nonzero' ? 7 : 1, `${mode}: ${result.stderr}`);
-      assert.deepEqual(readFileSync(join(root, 'tools/image-size-safe/package.json')),
-        originals.get('tools/image-size-safe/package.json'), mode);
-      assert.deepEqual(readFileSync(join(root, 'tools/image-size-safe/CHANGELOG.md')),
-        originals.get('tools/image-size-safe/CHANGELOG.md'), mode);
+      assert.equal(
+        result.status,
+        mode === 'success' ? 0 : mode === 'nonzero' ? 7 : 1,
+        `${mode}: ${result.stderr}`,
+      );
+      assert.deepEqual(
+        readFileSync(join(root, 'tools/image-size-safe/package.json')),
+        originals.get('tools/image-size-safe/package.json'),
+        mode,
+      );
+      assert.deepEqual(
+        readFileSync(join(root, 'tools/image-size-safe/CHANGELOG.md')),
+        originals.get('tools/image-size-safe/CHANGELOG.md'),
+        mode,
+      );
       assert.equal(existsSync(join(root, 'domain/orders/api/CHANGELOG.md')), false, mode);
-      assert.equal(readFileSync(join(root, 'packages/public/CHANGELOG.md'), 'utf8'), '# public changed\n');
+      assert.equal(
+        readFileSync(join(root, 'packages/public/CHANGELOG.md'), 'utf8'),
+        '# public changed\n',
+      );
       const phases = readFileSync(join(root, 'phases'), 'utf8').trim().split('\n');
       assert.equal(phases[0], 'spawn');
-      if (mode === 'success') assert.deepEqual(phases, ['spawn', 'generated', 'fixed', 'sync', 'policy', 'sbom']);
+      if (mode === 'success')
+        assert.deepEqual(phases, [
+          'spawn',
+          'generated',
+          'fixed',
+          'sync',
+          'policy',
+          'offline',
+          'outbox',
+          'sbom',
+        ]);
       else assert.deepEqual(phases, ['spawn'], mode);
       if (mode === 'error') assert.match(result.stderr, /synthetic spawn error/u);
     } finally {
@@ -281,3 +383,41 @@ test('wrapper reports original Changesets failure and every restoration error', 
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+for (const phase of ['offline', 'outbox'])
+  test(`controlled wrapper witness stops after ${phase} generator failure before later work`, () => {
+    const { root, originals } = wrapperHarness();
+    try {
+      const result = spawnSync(process.execPath, ['scripts/version-packages.mjs'], {
+        cwd: root,
+        env: { ...process.env, SPAWN_CASE: 'success', GENERATOR_FAILURE: phase },
+        encoding: 'utf8',
+      });
+      assert.ifError(result.error);
+      assert.equal(result.status, 9);
+      assert.match(
+        result.stderr,
+        new RegExp(`${phase}-storage-generate\\.mjs --write failed`, 'u'),
+      );
+      assert.deepEqual(readFileSync(join(root, 'phases'), 'utf8').trim().split('\n'), [
+        'spawn',
+        'generated',
+        'fixed',
+        'sync',
+        'policy',
+        'offline',
+        ...(phase === 'outbox' ? ['outbox'] : []),
+      ]);
+      assert.deepEqual(
+        readFileSync(join(root, 'tools/image-size-safe/package.json')),
+        originals.get('tools/image-size-safe/package.json'),
+      );
+      assert.deepEqual(
+        readFileSync(join(root, 'tools/image-size-safe/CHANGELOG.md')),
+        originals.get('tools/image-size-safe/CHANGELOG.md'),
+      );
+      assert.equal(existsSync(join(root, 'domain/orders/api/CHANGELOG.md')), false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
