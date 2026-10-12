@@ -20,6 +20,7 @@ COPY scripts/verify-reference-api-build-inputs.mjs ./scripts/verify-reference-ap
 COPY packages ./packages
 COPY packages-web ./packages-web
 COPY reference/api ./reference/api
+COPY domain/demo-bookmark/api ./domain/demo-bookmark/api
 
 FROM workspace AS build
 
@@ -30,9 +31,10 @@ RUN --mount=type=secret,id=node_auth_token \
   NODE_AUTH_TOKEN="$(cat /run/secrets/node_auth_token)" \
   NODE_OPTIONS=--disable-warning=DEP0169 pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @stynx-nyx/reference-api... build
-RUN mkdir -p runtime-dist/reference/api runtime-dist/packages \
+RUN mkdir -p runtime-dist/reference/api runtime-dist/packages runtime-dist/domain/demo-bookmark/api \
   && cp -R reference/api/dist runtime-dist/reference/api/dist \
   && cp -R reference/api/migrations runtime-dist/reference/api/migrations \
+  && cp -R domain/demo-bookmark/api/dist runtime-dist/domain/demo-bookmark/api/dist \
   && for package in packages/*; do \
     if [ -d "${package}/dist" ]; then \
       mkdir -p "runtime-dist/${package}"; \
@@ -65,8 +67,10 @@ RUN apt-get update \
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=prod-deps --chown=node:node /app/packages ./packages
 COPY --from=prod-deps --chown=node:node /app/reference/api ./reference/api
+COPY --from=prod-deps --chown=node:node /app/domain/demo-bookmark/api ./domain/demo-bookmark/api
 COPY --from=build --chown=node:node /app/runtime-dist/packages/. ./packages
 COPY --from=build --chown=node:node /app/runtime-dist/reference/api/. ./reference/api
+COPY --from=build --chown=node:node /app/runtime-dist/domain/demo-bookmark/api/. ./domain/demo-bookmark/api
 
 RUN node reference/api/scripts/repair-runtime-workspace-links.mjs \
   && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
