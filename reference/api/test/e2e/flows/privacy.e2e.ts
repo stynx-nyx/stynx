@@ -60,7 +60,10 @@ interface PostErasureState {
   erasureEventCount: number;
 }
 
-async function loadExportArchive(context: ReferenceApiPrivacyE2eContext, objectKey: string): Promise<JSZip> {
+async function loadExportArchive(
+  context: ReferenceApiPrivacyE2eContext,
+  objectKey: string,
+): Promise<JSZip> {
   const zipBuffer = context.objectStore.objects.get(objectKey);
   expect(zipBuffer).toBeDefined();
   return JSZip.loadAsync(zipBuffer as Buffer);
@@ -72,7 +75,9 @@ async function readZipJson<T>(archive: JSZip, path: string): Promise<T> {
   return JSON.parse(await file!.async('string')) as T;
 }
 
-async function queryPostErasureState(context: ReferenceApiPrivacyE2eContext): Promise<PostErasureState> {
+async function queryPostErasureState(
+  context: ReferenceApiPrivacyE2eContext,
+): Promise<PostErasureState> {
   return context.database.withSystemContext('privacy e2e erasure verification', async () =>
     context.database.tx(
       async (trx) => {
@@ -84,7 +89,9 @@ async function queryPostErasureState(context: ReferenceApiPrivacyE2eContext): Pr
           `,
           [context.subjects.tenantA.subjectUserId],
         );
-        const tenantAArchived = await trx.query<PrivacySubjectRow & { last_erasure_at: string | null }>(
+        const tenantAArchived = await trx.query<
+          PrivacySubjectRow & { last_erasure_at: string | null }
+        >(
           `
             select id::text, tenant_id::text, subject_user_id::text, email, phone, note, profile_json, last_erasure_at::text
             from archive.privacy_fixture_subjects
@@ -116,7 +123,11 @@ async function queryPostErasureState(context: ReferenceApiPrivacyE2eContext): Pr
           `,
           [context.subjects.tenantA.subjectUserId],
         );
-        const erasureAudit = await trx.query<{ table_schema: string; table_name: string; operation: string }>(
+        const erasureAudit = await trx.query<{
+          table_schema: string;
+          table_name: string;
+          operation: string;
+        }>(
           `
             select table_schema, table_name, operation
             from audit.log
@@ -161,22 +172,31 @@ describe('@stynx-nyx/reference-api e2e privacy', () => {
   });
 
   it('exports a subject bundle with live and archive privacy rows', async () => {
-    const exported = (await adminA.post('/privacy/exports').send({
-      subjectUserId: context.subjects.tenantA.subjectUserId,
-      tenantId: tenants.tenantA,
-      format: 'json',
-    }).expect(201)).body as PrivacyExportBody;
+    const exported = (
+      await adminA
+        .post('/privacy/exports')
+        .send({
+          subjectUserId: context.subjects.tenantA.subjectUserId,
+          tenantId: tenants.tenantA,
+          format: 'json',
+        })
+        .expect(201)
+    ).body as PrivacyExportBody;
 
-    expect(exported).toEqual(expect.objectContaining({
-      exportId: expect.any(String),
-      objectKey: expect.stringMatching(/^exports\/.+\.zip$/u),
-      downloadUrl: `memory://${exported.objectKey}?ttl=900`,
-      expiresInSeconds: 900,
-    }));
-    expect(exported.tables).toEqual(expect.arrayContaining([
-      { table: 'privacy_fixture.attachments', liveRows: 1, archiveRows: 1 },
-      { table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 1 },
-    ]));
+    expect(exported).toEqual(
+      expect.objectContaining({
+        exportId: expect.any(String),
+        objectKey: expect.stringMatching(/^exports\/.+\.zip$/u),
+        downloadUrl: `memory://${exported.objectKey}?ttl=900`,
+        expiresInSeconds: 900,
+      }),
+    );
+    expect(exported.tables).toEqual(
+      expect.arrayContaining([
+        { table: 'privacy_fixture.attachments', liveRows: 1, archiveRows: 1 },
+        { table: 'privacy_fixture.subjects', liveRows: 1, archiveRows: 1 },
+      ]),
+    );
 
     const archive = await loadExportArchive(context, exported.objectKey);
     const manifest = await readZipJson<{
@@ -193,37 +213,55 @@ describe('@stynx-nyx/reference-api e2e privacy', () => {
       'tables/privacy_fixture.attachments_live.json',
     );
 
-    expect(manifest).toEqual(expect.objectContaining({
-      subjectUserId: context.subjects.tenantA.subjectUserId,
-      tenantId: tenants.tenantA,
-    }));
+    expect(manifest).toEqual(
+      expect.objectContaining({
+        subjectUserId: context.subjects.tenantA.subjectUserId,
+        tenantId: tenants.tenantA,
+      }),
+    );
     expect(liveSubjects).toHaveLength(1);
-    expect(liveSubjects[0]).toEqual(expect.objectContaining({
-      tenant_id: tenants.tenantA,
-      subject_user_id: context.subjects.tenantA.subjectUserId,
-      email: 'privacy-tenant-a-live@example.com',
-    }));
+    expect(liveSubjects[0]).toEqual(
+      expect.objectContaining({
+        tenant_id: tenants.tenantA,
+        subject_user_id: context.subjects.tenantA.subjectUserId,
+        email: 'privacy-tenant-a-live@example.com',
+      }),
+    );
     expect(JSON.stringify(liveSubjects)).not.toContain('privacy-tenant-b-live@example.com');
     expect(liveAttachments[0]?.blob_key).toBe(`s3://privacy/${tenants.tenantA}/live`);
   });
 
   it('rejects an export request without a subject or tenant selector', async () => {
-    await adminA.post('/privacy/exports').send({ format: 'json' }).expect(400)
+    await adminA
+      .post('/privacy/exports')
+      .send({ format: 'json' })
+      .expect(400)
       .expect(({ body }) => {
-        expect(body).toEqual(expect.objectContaining({
-          code: 'PRIVACY_VALIDATION_ERROR',
-          message: 'Export requires subjectUserId or tenantId',
-        }));
+        expect(body).toEqual(
+          expect.objectContaining({
+            code: 'PRIVACY_VALIDATION_ERROR',
+            message: 'Export requires subjectUserId or tenantId',
+          }),
+        );
       });
   });
 
   it('keeps tenant-filtered exports and direct RLS reads isolated', async () => {
-    const crossTenant = (await adminA.post('/privacy/exports').send({
-      subjectUserId: context.subjects.tenantA.subjectUserId,
-      tenantId: tenants.tenantB,
-      format: 'json',
-    }).expect(201)).body as PrivacyExportBody;
-    expect(crossTenant.tables).toEqual([]);
+    const before = await queryPostErasureState(context);
+    const storedObjects = [...context.objectStore.objects].map(([key, bytes]) => [
+      key,
+      Buffer.from(bytes),
+    ]);
+    await adminA
+      .post('/privacy/exports')
+      .send({
+        subjectUserId: context.subjects.tenantA.subjectUserId,
+        tenantId: tenants.tenantB,
+        format: 'json',
+      })
+      .expect(403);
+    expect([...context.objectStore.objects]).toEqual(storedObjects);
+    expect(await queryPostErasureState(context)).toEqual(before);
 
     await expectRLSIsolated(
       (tenantId) =>
@@ -238,99 +276,121 @@ describe('@stynx-nyx/reference-api e2e privacy', () => {
   });
 
   it('reports retention candidates without deleting archive rows', async () => {
-    const retention = (await adminA.get('/privacy/retention?dryRun=true').expect(200)).body as PrivacyRetentionBody;
+    const before = await queryPostErasureState(context);
+    const retention = (await adminA.get('/privacy/retention?dryRun=true').expect(200))
+      .body as PrivacyRetentionBody;
 
     expect(retention.dryRun).toBe(true);
-    expect(retention.actions).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        table: 'archive.privacy_fixture_subjects',
-        target: 'archive',
-        strategy: 'tombstone',
-        affectedRows: 2,
-        reason: 'nightly fixture cleanup',
-      }),
-    ]));
+    expect(retention.actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          table: 'archive.privacy_fixture_subjects',
+          target: 'archive',
+          strategy: 'tombstone',
+          affectedRows: 1,
+          reason: 'nightly fixture cleanup',
+        }),
+      ]),
+    );
+    expect(await queryPostErasureState(context)).toEqual(before);
   });
 
   it('erases a subject across live and archive stores and writes LGPD audit rows', async () => {
-    const erased = (await adminA.post('/privacy/erasures').send({
-      subjectUserId: context.subjects.tenantA.subjectUserId,
-    }).expect(201)).body as PrivacyErasureBody;
+    const tenantBBefore = (await queryPostErasureState(context)).tenantBLive;
+    const erased = (
+      await adminA
+        .post('/privacy/erasures')
+        .send({
+          subjectUserId: context.subjects.tenantA.subjectUserId,
+        })
+        .expect(201)
+    ).body as PrivacyErasureBody;
 
     expect(erased.subjectUserId).toBe(context.subjects.tenantA.subjectUserId);
-    expect(erased.actions).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        table: 'privacy_fixture.attachments',
-        column: 'blob_key',
-        strategy: 'delete_row',
-        liveAffected: 1,
-        archiveAffected: 1,
-      }),
-      expect.objectContaining({
-        table: 'privacy_fixture.subjects',
-        column: 'email',
-        strategy: 'nullify',
-        liveAffected: 1,
-        archiveAffected: 1,
-      }),
-      expect.objectContaining({
-        table: 'privacy_fixture.subjects',
-        column: 'phone',
-        strategy: 'hash_with_salt',
-        liveAffected: 1,
-        archiveAffected: 1,
-      }),
-      expect.objectContaining({
-        table: 'privacy_fixture.subjects',
-        column: 'note',
-        strategy: 'tombstone',
-        liveAffected: 1,
-        archiveAffected: 1,
-      }),
-    ]));
-    expect(context.cognitoAdmin.disabledUsers).toEqual([context.subjects.tenantA.subjectUserId]);
+    expect(erased.actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          table: 'privacy_fixture.attachments',
+          column: 'blob_key',
+          strategy: 'delete_row',
+          liveAffected: 1,
+          archiveAffected: 1,
+        }),
+        expect.objectContaining({
+          table: 'privacy_fixture.subjects',
+          column: 'email',
+          strategy: 'nullify',
+          liveAffected: 1,
+          archiveAffected: 1,
+        }),
+        expect.objectContaining({
+          table: 'privacy_fixture.subjects',
+          column: 'phone',
+          strategy: 'hash_with_salt',
+          liveAffected: 1,
+          archiveAffected: 1,
+        }),
+        expect.objectContaining({
+          table: 'privacy_fixture.subjects',
+          column: 'note',
+          strategy: 'tombstone',
+          liveAffected: 1,
+          archiveAffected: 1,
+        }),
+      ]),
+    );
+    expect(context.cognitoAdmin.disabledUsers).toEqual([]);
 
     const state = await queryPostErasureState(context);
-    expect(state.tenantALive).toEqual(expect.objectContaining({
-      email: null,
-      note: `[erased:${context.subjects.tenantA.subjectUserId}]`,
-      profile_json: null,
-    }));
+    expect(state.tenantALive).toEqual(
+      expect.objectContaining({
+        email: null,
+        note: `[erased:${context.subjects.tenantA.subjectUserId}]`,
+        profile_json: null,
+      }),
+    );
     expect(state.tenantALive?.phone).toContain('hash:');
-    expect(state.tenantAArchived).toEqual(expect.objectContaining({
-      email: null,
-      note: `[erased:${context.subjects.tenantA.subjectUserId}]`,
-      profile_json: null,
-    }));
+    expect(state.tenantAArchived).toEqual(
+      expect.objectContaining({
+        email: null,
+        note: `[erased:${context.subjects.tenantA.subjectUserId}]`,
+        profile_json: null,
+      }),
+    );
     expect(state.tenantAArchived?.last_erasure_at).toBeTruthy();
     expect(state.tenantAAttachments).toBe(0);
     expect(state.tenantAArchivedAttachments).toBe(0);
-    expect(state.tenantBLive).toEqual(expect.objectContaining({
-      email: 'privacy-tenant-b-live@example.com',
-      tenant_id: tenants.tenantB,
-    }));
-    expect(state.erasureAuditRows).toEqual(expect.arrayContaining([
+    expect(state.tenantBLive).toEqual(
       expect.objectContaining({
-        table_schema: 'privacy_fixture',
-        table_name: 'subjects',
-        operation: 'UPDATE',
+        email: 'privacy-tenant-b-live@example.com',
+        tenant_id: tenants.tenantB,
       }),
-      expect.objectContaining({
-        table_schema: 'archive',
-        table_name: 'privacy_fixture_subjects',
-        operation: 'UPDATE',
-      }),
-      expect.objectContaining({
-        table_schema: 'privacy_fixture',
-        table_name: 'attachments',
-        operation: 'DELETE',
-      }),
-      expect.objectContaining({
-        table_schema: 'archive',
-        table_name: 'privacy_fixture_attachments',
-        operation: 'DELETE',
-      }),
-    ]));
+    );
+    expect(state.tenantBLive).toEqual(tenantBBefore);
+    expect(state.erasureAuditRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          table_schema: 'privacy_fixture',
+          table_name: 'subjects',
+          operation: 'UPDATE',
+        }),
+        expect.objectContaining({
+          table_schema: 'archive',
+          table_name: 'privacy_fixture_subjects',
+          operation: 'UPDATE',
+        }),
+        expect.objectContaining({
+          table_schema: 'privacy_fixture',
+          table_name: 'attachments',
+          operation: 'DELETE',
+        }),
+        expect.objectContaining({
+          table_schema: 'archive',
+          table_name: 'privacy_fixture_attachments',
+          operation: 'DELETE',
+        }),
+      ]),
+    );
     expect(state.erasureEventCount).toBeGreaterThanOrEqual(5);
   });
 });

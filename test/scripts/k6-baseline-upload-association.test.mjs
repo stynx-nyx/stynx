@@ -5,7 +5,6 @@ import { collectLegacyK6BaselineUploadAssociation } from '../../scripts/lib/k6-b
 import {
   acquiredAssociationFixture,
   signed,
-  token,
   uploadAction,
 } from './support/k6-baseline-association-fixture.mjs';
 

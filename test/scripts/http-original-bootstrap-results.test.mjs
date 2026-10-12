@@ -133,7 +133,14 @@ for (const [label, change] of [
   ['profile override', (options) => ({ ...options, profile: { rate: 1 } })],
   ['hardening', (options) => ({ ...options, profileId: 'hardening' })],
   ['other scenario', (options) => ({ ...options, scenarioId: 'other' })],
-  ['missing reference', ({ reference: _reference, ...options }) => options],
+  [
+    'missing reference',
+    (options) => {
+      const withoutReference = { ...options };
+      delete withoutReference.reference;
+      return withoutReference;
+    },
+  ],
   [
     'proxy',
     (options) =>

@@ -73,7 +73,7 @@ for (const [label, body] of [
   ],
   [
     'missing quota',
-    bytes.toString().replace(/      STYNX_SAMPLE_RECORD_CREATE_LIMIT: '6000'\n/u, ''),
+    bytes.toString().replace(/ {6}STYNX_SAMPLE_RECORD_CREATE_LIMIT: '6000'\n/u, ''),
   ],
   [
     'extra quota',

@@ -18,6 +18,7 @@ import { Database, StynxDataModule } from '@stynx-nyx/data';
 // but that's a @stynx-nyx/data API change out of scope for this commit.
 import { StynxMigrationRunner } from '../../../../../packages/data/src/migration-runner';
 import { RequestContextMutator } from '@stynx-nyx/core';
+import { createPostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
 
 function localUser(): string {
   return process.env.STYNX_TEST_PG_USER ?? userInfo().username;
@@ -39,10 +40,6 @@ function localSocketDir(): string {
   return process.env.STYNX_TEST_PG_SOCKET_DIR ?? '/tmp';
 }
 
-function databaseName(prefix: string): string {
-  return `${prefix}_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
-}
-
 function adminConfig(database = 'postgres'): ClientConfig {
   const host = localHost();
   if (host) {
@@ -55,18 +52,6 @@ function adminConfig(database = 'postgres'): ClientConfig {
     };
   }
   return { host: localSocketDir(), user: localUser(), database };
-}
-
-function connectionStringFor(database: string, applicationName: string): string {
-  const host = localHost();
-  if (host) {
-    const url = new URL(`postgresql://${encodeURIComponent(localUser())}@${host}:${localPort()}/${database}`);
-    const password = localPassword();
-    if (password) url.password = password;
-    url.searchParams.set('application_name', applicationName);
-    return url.toString();
-  }
-  return `postgresql://${encodeURIComponent(localUser())}@/${encodeURIComponent(database)}?host=${encodeURIComponent(localSocketDir())}&application_name=${encodeURIComponent(applicationName)}`;
 }
 
 async function withClient<T>(config: ClientConfig, fn: (client: Client) => Promise<T>): Promise<T> {
@@ -100,20 +85,21 @@ export interface DemoBookmarkFixture {
  * disposes in afterAll.
  */
 export async function createDemoBookmarkFixture(): Promise<DemoBookmarkFixture> {
-  const database = databaseName('stynx_demo_bookmark');
-
-  await withClient(adminConfig(), async (client) => {
-    await client.query(`create database "${database}"`);
-  });
-
-  const cs = connectionStringFor(database, 'demo-bookmark-test');
+  const postgres = await createPostgresTestDatabase('stynx_demo_bookmark', { useTemplate: false });
+  const database = postgres.database;
+  await postgres.ensureRoleLogin('stynx_reader');
   const module = await Test.createTestingModule({
     imports: [
       StynxDataModule.forRoot({
         connections: {
-          owner: { connectionString: cs },
-          app: { connectionString: cs },
-          reader: { connectionString: cs },
+          owner: { connectionString: postgres.adminConnectionString('demo-bookmark-test:owner') },
+          app: { connectionString: postgres.appConnectionString('demo-bookmark-test:app') },
+          reader: {
+            connectionString: postgres.appConnectionString(
+              'demo-bookmark-test:reader',
+              'stynx_reader',
+            ),
+          },
         },
         migrations: { enabled: true },
       }),
@@ -136,6 +122,11 @@ export async function createDemoBookmarkFixture(): Promise<DemoBookmarkFixture> 
   await withClient(adminConfig(database), async (client) => {
     await client.query('set role stynx_owner');
     await client.query(migrationSql);
+    await client.query('grant usage on schema demo to stynx_app, stynx_reader');
+    await client.query(
+      'grant select, insert, update, delete on all tables in schema demo to stynx_app',
+    );
+    await client.query('grant select on all tables in schema demo to stynx_reader');
     await client.query('reset role');
   });
 
@@ -190,7 +181,11 @@ export async function createDemoBookmarkFixture(): Promise<DemoBookmarkFixture> 
     tenantB,
     userA,
     userB,
-    async runAs<T>(tenantId: string, actorId: string, fn: (db: Database) => Promise<T>): Promise<T> {
+    async runAs<T>(
+      tenantId: string,
+      actorId: string,
+      fn: (db: Database) => Promise<T>,
+    ): Promise<T> {
       return requestContextMutator.runWithRequestContext(
         {
           requestId: randomUUID(),

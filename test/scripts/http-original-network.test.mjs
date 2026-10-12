@@ -154,7 +154,9 @@ test('actual listener and refused transport rows remain ordered and retained thr
     if (!closed)
       try {
         closeOwnedReferenceNetworkScope(handle);
-      } catch {}
+      } catch (error) {
+        void error;
+      }
     restored();
   }
 });
@@ -190,7 +192,9 @@ test('actual sticky-refusal storage retains exactly100k rows without truncation,
     if (!closed)
       try {
         closeOwnedReferenceNetworkScope(handle);
-      } catch {}
+      } catch (error) {
+        void error;
+      }
     restored();
   }
 });

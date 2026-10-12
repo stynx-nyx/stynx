@@ -12,13 +12,13 @@ import {
   type PrivacyObjectStore,
 } from '@stynx-nyx/privacy';
 import { SessionService } from '@stynx-nyx/sessions';
-import {
-  LGPD_FIXTURE_MIGRATIONS,
-  lgpdFixturePiiMapYaml,
-} from '@stynx-nyx/testing';
+import { LGPD_FIXTURE_MIGRATIONS, lgpdFixturePiiMapYaml } from '@stynx-nyx/testing';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
 import { expect } from 'vitest';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
+import {
+  createPostgresTestDatabase,
+  type PostgresTestDatabase,
+} from '../../../../../packages/data/test/support/postgres';
 import { actors, tenants, type ActorName, seedRecordsAndNotesE2e } from './seed';
 
 export interface PrivacySubjectFixture {
@@ -146,9 +146,15 @@ function setRuntimeEnvironment(postgres: PostgresTestDatabase, redisUrl: string)
   process.env.AWS_SECRET_ACCESS_KEY = 'test';
   process.env.AWS_REGION = 'us-east-1';
   process.env.AWS_EC2_METADATA_DISABLED = 'true';
-  process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-privacy-e2e:owner');
-  process.env.STYNX_APP_DATABASE_URL = postgres.appConnectionString('@stynx-nyx/reference-api-privacy-e2e:app');
-  process.env.STYNX_READER_DATABASE_URL = postgres.connectionString('@stynx-nyx/reference-api-privacy-e2e:reader');
+  process.env.STYNX_OWNER_DATABASE_URL = postgres.connectionString(
+    '@stynx-nyx/reference-api-privacy-e2e:owner',
+  );
+  process.env.STYNX_APP_DATABASE_URL = postgres.appConnectionString(
+    '@stynx-nyx/reference-api-privacy-e2e:app',
+  );
+  process.env.STYNX_READER_DATABASE_URL = postgres.connectionString(
+    '@stynx-nyx/reference-api-privacy-e2e:reader',
+  );
   process.env.STYNX_REDIS_URL = redisUrl;
   process.env.STYNX_STORAGE_ENDPOINT = 'http://127.0.0.1:4566';
   process.env.STYNX_STORAGE_FORCE_PATH_STYLE = 'true';
@@ -169,6 +175,8 @@ async function applyLgpdFixtureMigrations(client: StynxPgClient): Promise<void> 
     await step(client);
   }
   await client.query(`
+    grant select, update on privacy_fixture.subjects to stynx_app;
+    grant select, delete on privacy_fixture.attachments to stynx_app;
     grant select on privacy_fixture.subjects to stynx_reader;
     grant select on privacy_fixture.attachments to stynx_reader;
     grant select on archive.privacy_fixture_subjects to stynx_reader;
@@ -243,7 +251,9 @@ async function seedSubjectFixture(
     `,
     [ids.actorId, ids.archivedSubjectId],
   );
-  await client.query(`delete from privacy_fixture.subjects where id = $1::uuid`, [ids.archivedSubjectId]);
+  await client.query(`delete from privacy_fixture.subjects where id = $1::uuid`, [
+    ids.archivedSubjectId,
+  ]);
   await client.query(
     `
       insert into archive.privacy_fixture_attachments (
@@ -255,12 +265,16 @@ async function seedSubjectFixture(
     `,
     [ids.actorId, ids.archivedAttachmentId],
   );
-  await client.query(`delete from privacy_fixture.attachments where id = $1::uuid`, [ids.archivedAttachmentId]);
+  await client.query(`delete from privacy_fixture.attachments where id = $1::uuid`, [
+    ids.archivedAttachmentId,
+  ]);
 
   return ids;
 }
 
-async function seedPrivacyE2e(database: PostgresTestDatabase): Promise<ReferenceApiPrivacyE2eContext['subjects']> {
+async function seedPrivacyE2e(
+  database: PostgresTestDatabase,
+): Promise<ReferenceApiPrivacyE2eContext['subjects']> {
   const client = await database.connectAsAdmin();
   try {
     await applyLgpdFixtureMigrations(client);
@@ -285,18 +299,22 @@ async function seedPrivacyE2e(database: PostgresTestDatabase): Promise<Reference
   }
 }
 
-async function mintActorSessions(sessionService: SessionService): Promise<Record<ActorName, string>> {
+async function mintActorSessions(
+  sessionService: SessionService,
+): Promise<Record<ActorName, string>> {
   const entries = await Promise.all(
-    (Object.entries(actors) as Array<[ActorName, typeof actors[ActorName]]>).map(async ([name, actor]) => {
-      const session = await sessionService.create(
-        actor.userId,
-        actor.tenantId,
-        actor.userId,
-        {},
-        { membershipId: actor.membershipId },
-      );
-      return [name, session.accessToken] as const;
-    }),
+    (Object.entries(actors) as Array<[ActorName, (typeof actors)[ActorName]]>).map(
+      async ([name, actor]) => {
+        const session = await sessionService.create(
+          actor.userId,
+          actor.tenantId,
+          actor.userId,
+          {},
+          { membershipId: actor.membershipId },
+        );
+        return [name, session.accessToken] as const;
+      },
+    ),
   );
   return Object.fromEntries(entries) as Record<ActorName, string>;
 }
@@ -335,7 +353,7 @@ export async function setupReferenceApiPrivacyE2e(): Promise<ReferenceApiPrivacy
   await postgres.ensureRoleLogin('stynx_app');
   await app.listen(0, '127.0.0.1');
   expect(app.getHttpServer().listening).toBe(true);
-  await seedRecordsAndNotesE2e(postgres);
+  await seedRecordsAndNotesE2e(postgres, ['privacy:subject-rights', 'privacy:read']);
   const subjects = await seedPrivacyE2e(postgres);
 
   const sessionService = moduleRef.get(SessionService);
@@ -353,7 +371,9 @@ export async function setupReferenceApiPrivacyE2e(): Promise<ReferenceApiPrivacy
   };
 }
 
-export async function closeReferenceApiPrivacyE2e(context: ReferenceApiPrivacyE2eContext | undefined): Promise<void> {
+export async function closeReferenceApiPrivacyE2e(
+  context: ReferenceApiPrivacyE2eContext | undefined,
+): Promise<void> {
   if (context) {
     const httpServer = context.app.getHttpServer();
     expect(httpServer.listening).toBe(true);

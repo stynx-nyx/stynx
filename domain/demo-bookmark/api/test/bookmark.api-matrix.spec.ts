@@ -3,14 +3,22 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { PermissionCache, PermissionGuard, StynxAuthGuard, StynxJwtValidator } from '@stynx-nyx/auth';
+import {
+  PermissionCache,
+  PermissionGuard,
+  StynxAuthGuard,
+  StynxJwtValidator,
+} from '@stynx-nyx/auth';
 import { StynxDataModule } from '@stynx-nyx/data';
 import { SessionService } from '@stynx-nyx/sessions';
 import { BookmarkController } from '../src/demo-bookmark/controllers/bookmark.controller';
 import { BookmarkTagController } from '../src/demo-bookmark/controllers/bookmark-tag.controller';
 import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service';
 import { BookmarkTagService } from '../src/demo-bookmark/services/bookmark-tag.service';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../packages/data/test/support/postgres';
+import {
+  createPostgresTestDatabase,
+  type PostgresTestDatabase,
+} from '../../../../packages/data/test/support/postgres';
 
 const READ_TOKEN = 'reader';
 const WRITE_TOKEN = 'writer';
@@ -59,6 +67,11 @@ async function applyDemoMigration(database: PostgresTestDatabase): Promise<void>
   try {
     await client.query('set role stynx_owner');
     await client.query(migrationSql);
+    await client.query('grant usage on schema demo to stynx_app, stynx_reader');
+    await client.query(
+      'grant select, insert, update, delete on all tables in schema demo to stynx_app',
+    );
+    await client.query('grant select on all tables in schema demo to stynx_reader');
     await client.query('reset role');
   } finally {
     await client.end();
@@ -101,7 +114,8 @@ describe('Demo bookmark API error matrix', () => {
     const response = await fetch(`${baseUrl}${path}`, {
       method,
       headers,
-      body: options.rawBody ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined),
+      body:
+        options.rawBody ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined),
     });
     return {
       status: response.status,
@@ -110,7 +124,9 @@ describe('Demo bookmark API error matrix', () => {
     };
   }
 
-  async function createBookmark(input: Partial<{ url: string; title: string; notes: string }> = {}) {
+  async function createBookmark(
+    input: Partial<{ url: string; title: string; notes: string }> = {},
+  ) {
     const response = await http('POST', '/api/demo/bookmark/bookmark', {
       token: WRITE_TOKEN,
       body: {
@@ -125,13 +141,27 @@ describe('Demo bookmark API error matrix', () => {
 
   beforeAll(async () => {
     database = await createPostgresTestDatabase('stynx_demo_bookmark_api_matrix');
+    await database.ensureRoleLogin('stynx_reader');
     moduleRef = await Test.createTestingModule({
       imports: [
         StynxDataModule.forRoot({
           connections: {
-            owner: { connectionString: database.connectionString('@stynx-nyx/demo-bookmark-api:matrix:owner') },
-            app: { connectionString: database.connectionString('@stynx-nyx/demo-bookmark-api:matrix:app') },
-            reader: { connectionString: database.connectionString('@stynx-nyx/demo-bookmark-api:matrix:reader') },
+            owner: {
+              connectionString: database.connectionString(
+                '@stynx-nyx/demo-bookmark-api:matrix:owner',
+              ),
+            },
+            app: {
+              connectionString: database.appConnectionString(
+                '@stynx-nyx/demo-bookmark-api:matrix:app',
+              ),
+            },
+            reader: {
+              connectionString: database.appConnectionString(
+                '@stynx-nyx/demo-bookmark-api:matrix:reader',
+                'stynx_reader',
+              ),
+            },
           },
           migrations: { enabled: true },
         }),
@@ -175,6 +205,7 @@ describe('Demo bookmark API error matrix', () => {
           provide: SessionService,
           useValue: {
             get: async () => ({ status: 'active' }),
+            getActive: async () => ({ status: 'active' }),
           },
         },
       ],
@@ -204,7 +235,9 @@ describe('Demo bookmark API error matrix', () => {
 
       expect(response.status).toBe(200);
       expect(response.headers.get('x-request-id')).toBe(requestId);
-      expect(response.body).toEqual(expect.arrayContaining([expect.objectContaining({ id: created.id })]));
+      expect(response.body).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: created.id })]),
+      );
     });
 
     it('returns 400 when request-id syntax is invalid', async () => {
@@ -238,7 +271,11 @@ describe('Demo bookmark API error matrix', () => {
       });
 
       expect(response.status).toBe(201);
-      expect(response.body).toMatchObject({ tenantId: TENANT_ID, ownerId: ACTOR_ID, title: 'Created' });
+      expect(response.body).toMatchObject({
+        tenantId: TENANT_ID,
+        ownerId: ACTOR_ID,
+        title: 'Created',
+      });
     });
 
     it('returns 400 for malformed JSON', async () => {
@@ -273,7 +310,9 @@ describe('Demo bookmark API error matrix', () => {
     it('returns 200 for an existing bookmark', async () => {
       const created = await createBookmark({ title: 'Get target' });
 
-      const response = await http('GET', `/api/demo/bookmark/bookmark/${created.id}`, { token: READ_TOKEN });
+      const response = await http('GET', `/api/demo/bookmark/bookmark/${created.id}`, {
+        token: READ_TOKEN,
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({ id: created.id, title: 'Get target' });
@@ -285,12 +324,16 @@ describe('Demo bookmark API error matrix', () => {
     });
 
     it('returns 403 when the principal lacks demo:bookmark:read', async () => {
-      const response = await http('GET', `/api/demo/bookmark/bookmark/${UNKNOWN_UUID}`, { token: VIEWER_TOKEN });
+      const response = await http('GET', `/api/demo/bookmark/bookmark/${UNKNOWN_UUID}`, {
+        token: VIEWER_TOKEN,
+      });
       expect(response.status).toBe(403);
     });
 
     it('returns 404 for an unknown bookmark id', async () => {
-      const response = await http('GET', `/api/demo/bookmark/bookmark/${UNKNOWN_UUID}`, { token: READ_TOKEN });
+      const response = await http('GET', `/api/demo/bookmark/bookmark/${UNKNOWN_UUID}`, {
+        token: READ_TOKEN,
+      });
 
       expect(response.status).toBe(404);
       expect(response.body).toMatchObject({ message: `BOOKMARK_NOT_FOUND:${UNKNOWN_UUID}` });
@@ -351,7 +394,9 @@ describe('Demo bookmark API error matrix', () => {
     it('returns 200 for a valid bookmark delete', async () => {
       const created = await createBookmark({ title: 'Delete target' });
 
-      const response = await http('DELETE', `/api/demo/bookmark/bookmark/${created.id}`, { token: WRITE_TOKEN });
+      const response = await http('DELETE', `/api/demo/bookmark/bookmark/${created.id}`, {
+        token: WRITE_TOKEN,
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({ status: 'soft-deleted', id: created.id });
@@ -363,12 +408,16 @@ describe('Demo bookmark API error matrix', () => {
     });
 
     it('returns 403 when the principal lacks demo:bookmark:write', async () => {
-      const response = await http('DELETE', `/api/demo/bookmark/bookmark/${UNKNOWN_UUID}`, { token: READ_TOKEN });
+      const response = await http('DELETE', `/api/demo/bookmark/bookmark/${UNKNOWN_UUID}`, {
+        token: READ_TOKEN,
+      });
       expect(response.status).toBe(403);
     });
 
     it('returns 404 for an unknown bookmark id', async () => {
-      const response = await http('DELETE', `/api/demo/bookmark/bookmark/${UNKNOWN_UUID}`, { token: WRITE_TOKEN });
+      const response = await http('DELETE', `/api/demo/bookmark/bookmark/${UNKNOWN_UUID}`, {
+        token: WRITE_TOKEN,
+      });
 
       expect(response.status).toBe(404);
       expect(response.body).toMatchObject({ message: `BOOKMARK_NOT_FOUND:${UNKNOWN_UUID}` });
@@ -383,12 +432,18 @@ describe('Demo bookmark API error matrix', () => {
         body: { bookmark_id: created.id, tag: 'matrix' },
       });
 
-      const response = await http('GET', `/api/demo/bookmark/bookmark-tag?bookmark_id=${created.id}`, {
-        token: READ_TOKEN,
-      });
+      const response = await http(
+        'GET',
+        `/api/demo/bookmark/bookmark-tag?bookmark_id=${created.id}`,
+        {
+          token: READ_TOKEN,
+        },
+      );
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual(expect.arrayContaining([expect.objectContaining({ tag: 'matrix' })]));
+      expect(response.body).toEqual(
+        expect.arrayContaining([expect.objectContaining({ tag: 'matrix' })]),
+      );
     });
 
     it('returns 401 without a bearer token', async () => {
@@ -397,7 +452,9 @@ describe('Demo bookmark API error matrix', () => {
     });
 
     it('returns 403 when the principal lacks demo:bookmark:read', async () => {
-      const response = await http('GET', '/api/demo/bookmark/bookmark-tag', { token: VIEWER_TOKEN });
+      const response = await http('GET', '/api/demo/bookmark/bookmark-tag', {
+        token: VIEWER_TOKEN,
+      });
       expect(response.status).toBe(403);
     });
   });
@@ -460,30 +517,49 @@ describe('Demo bookmark API error matrix', () => {
         body: { bookmark_id: created.id, tag: 'delete-me' },
       });
 
-      const response = await http('DELETE', `/api/demo/bookmark/bookmark-tag/${created.id}/delete-me`, {
-        token: WRITE_TOKEN,
-      });
+      const response = await http(
+        'DELETE',
+        `/api/demo/bookmark/bookmark-tag/${created.id}/delete-me`,
+        {
+          token: WRITE_TOKEN,
+        },
+      );
 
       expect(response.status).toBe(200);
-      expect(response.body).toMatchObject({ status: 'deleted', bookmarkId: created.id, tag: 'delete-me' });
+      expect(response.body).toMatchObject({
+        status: 'deleted',
+        bookmarkId: created.id,
+        tag: 'delete-me',
+      });
     });
 
     it('returns 401 without a bearer token', async () => {
-      const response = await http('DELETE', `/api/demo/bookmark/bookmark-tag/${UNKNOWN_UUID}/missing`);
+      const response = await http(
+        'DELETE',
+        `/api/demo/bookmark/bookmark-tag/${UNKNOWN_UUID}/missing`,
+      );
       expect(response.status).toBe(401);
     });
 
     it('returns 403 when the principal lacks demo:bookmark:write', async () => {
-      const response = await http('DELETE', `/api/demo/bookmark/bookmark-tag/${UNKNOWN_UUID}/missing`, {
-        token: READ_TOKEN,
-      });
+      const response = await http(
+        'DELETE',
+        `/api/demo/bookmark/bookmark-tag/${UNKNOWN_UUID}/missing`,
+        {
+          token: READ_TOKEN,
+        },
+      );
       expect(response.status).toBe(403);
     });
 
     it('returns 404 for an unknown bookmark id', async () => {
-      const response = await http('DELETE', `/api/demo/bookmark/bookmark-tag/${UNKNOWN_UUID}/missing`, {
-        token: WRITE_TOKEN,
-      });
+      const response = await http(
+        'DELETE',
+        `/api/demo/bookmark/bookmark-tag/${UNKNOWN_UUID}/missing`,
+        {
+          token: WRITE_TOKEN,
+        },
+      );
 
       expect(response.status).toBe(404);
       expect(response.body).toMatchObject({ message: `BOOKMARK_NOT_FOUND:${UNKNOWN_UUID}` });
@@ -492,9 +568,13 @@ describe('Demo bookmark API error matrix', () => {
     it('returns 404 for an unknown tag on an existing bookmark', async () => {
       const created = await createBookmark({ title: 'Missing tag parent' });
 
-      const response = await http('DELETE', `/api/demo/bookmark/bookmark-tag/${created.id}/missing`, {
-        token: WRITE_TOKEN,
-      });
+      const response = await http(
+        'DELETE',
+        `/api/demo/bookmark/bookmark-tag/${created.id}/missing`,
+        {
+          token: WRITE_TOKEN,
+        },
+      );
 
       expect(response.status).toBe(404);
       expect(response.body).toMatchObject({ message: `TAG_NOT_FOUND:${created.id}/missing` });

@@ -5301,7 +5301,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
         ...(manifest.optionalDependencies ?? {}),
         ...(manifest.peerDependencies ?? {}),
         ...(manifest.devDependencies ?? {}),
-      }).filter(([dependency, version]) => String(version).startsWith('workspace:'));
+      }).filter(([, version]) => String(version).startsWith('workspace:'));
     const visitRuntimeDependency = (name) => {
       assert.equal(visiting.has(name), false, `runtime workspace dependency cycle at ${name}`);
       if (closure.has(name)) return;
