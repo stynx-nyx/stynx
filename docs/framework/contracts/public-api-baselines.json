@@ -1762,7 +1762,7 @@
         "offline-sync/src/storage-catalog.generated.d.ts": "49be0685724a2a90abf795de9c4cd4847c6cb70ad3900b7d1ffa926f7f61833e",
         "offline-sync/src/storage-cli.d.ts": "07f14ca47e569c573140f8ab7161e5c70a8df5f5a8e1b68ea4637b7793a5e3fb",
         "offline-sync/src/storage-invariants.d.ts": "bdb6598c1337c1968400eb9e5f59f2e3f1aea465fdcf135be9fe627e727424d8",
-        "offline-sync/src/storage-template.generated.d.ts": "5c3f7c2ee90699699d508b0e388c6d856101933514b23d0200e1389583989779",
+        "offline-sync/src/storage-template.generated.d.ts": "8f148767682f2820ae484e0a27f71ccacddca747a47f5fc8327e75879f1dabd0",
         "offline-sync/src/storage.d.ts": "92ca39b932cad2863b81175fdd805dccd8b70011f1b6e6106331f2aa806c55dc",
         "offline-sync/src/stynx-context.d.ts": "2a9d01488d09c12d0c1d43194b5edfb5ae1f05ada3281cd6ee2784e035ef180c",
         "offline-sync/src/stynx-offline-sync.context.d.ts": "fcebc8134cc5adf24633a46aa8be589538a8d627496b56c95672ccf981d22d68",
@@ -1869,7 +1869,7 @@
         "outbox/src/row-mapper.d.ts": "95f16a057b8fd75ee6287d8e887a036b36e7a80bdc1ab165caa15f2545024721",
         "outbox/src/storage-catalog.generated.d.ts": "ef0edadba5cbab8c2699be4c00566b0e3b2af841fcae9b345ebe29f5af0bae14",
         "outbox/src/storage-cli.d.ts": "60379d7ab4ef63133adffe76ae37808e74dff5574675ef59bab408b680c5bf00",
-        "outbox/src/storage-template.generated.d.ts": "f0cb0ef70bd4fd9b4c83c0caf5afa2d18175a5429bbafcafa48d262ecce47e02",
+        "outbox/src/storage-template.generated.d.ts": "d40c2d09c792d2c54053a21c73516b5828652726ef74d1adf1fdaeb3af980d6f",
         "outbox/src/storage.d.ts": "428f1a0a9c4d50c75fd5bb7de432a111b03a099e2163d305aba006e27e928a97",
         "outbox/src/types.d.ts": "f12656aca60b7bcb258ed022ce4b4469687cdc763f13ab1b040535295a3b0624"
       }
