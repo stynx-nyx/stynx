@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import {
   chmodSync,
+  chownSync,
   closeSync,
   ftruncateSync,
   linkSync,
@@ -40,6 +41,7 @@ function file(mode, size = 23) {
   } finally {
     closeSync(fd);
   }
+  chownSync(path, process.getuid(), process.getgid());
   chmodSync(path, mode);
   return path;
 }

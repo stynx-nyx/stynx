@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import {
   chmodSync,
+  chownSync,
   closeSync,
   ftruncateSync,
   linkSync,
@@ -35,6 +36,7 @@ after(() => rmSync(root, { recursive: true, force: true }));
 function file(bytes = Buffer.from('actual private artifact\n')) {
   const path = join(root, `artifact-${++ordinal}.bin`);
   writeFileSync(path, bytes, { mode: 0o600, flag: 'wx' });
+  chownSync(path, process.getuid(), process.getgid());
   return path;
 }
 function sized(size) {

@@ -23,6 +23,7 @@ const sourcePath = fileURLToPath(
 );
 const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
 const sourceSha256 = hash(fs.readFileSync(sourcePath));
+const additionalOwnedDirectories = [];
 let root,
   canonicalRoot,
   ownership,
@@ -35,10 +36,15 @@ const failure = Object.assign(new Error(`Inspector owned early-root fault: ${fau
   code: 'INSPECTOR_EARLY_ROOT_FAULT',
 });
 fs.mkdtempSync = (...args) => {
-  root = originals.mkdtemp(...args);
-  ownership = originals.lstat(root);
-  canonicalRoot = originals.realpath(root);
-  return root;
+  const allocated = originals.mkdtemp(...args);
+  if (root === undefined) {
+    root = allocated;
+    ownership = originals.lstat(root);
+    canonicalRoot = originals.realpath(root);
+  } else {
+    additionalOwnedDirectories.push({ path: allocated, stat: originals.lstat(allocated) });
+  }
+  return allocated;
 };
 fs.lstatSync = (...args) => {
   if (args[0] === root && fault === 'lstat' && !triggered) {
@@ -86,7 +92,11 @@ try {
       nonce: 'a'.repeat(36),
     }),
     (error) => {
-      observed = { code: error.code, cleanup: error.cleanup ?? null };
+      observed = {
+        code: error.code,
+        cleanup: error.cleanup ?? null,
+        failureEvidence: error.failureEvidence ?? null,
+      };
       return true;
     },
   );
@@ -105,9 +115,7 @@ try {
   } else {
     assert.equal(
       observed.code,
-      fault === 'lstat'
-        ? 'HTTP_REFERENCE_FIXTURE_INITIAL_ROOT_CLEANUP'
-        : 'HTTP_REFERENCE_FIXTURE_CLEANUP',
+      fault === 'lstat' ? 'HTTP_REFERENCE_FIXTURE_INITIAL_ROOT_CLEANUP' : failure.code,
     );
     assert.equal(observed.cleanup.complete, false);
     assert.equal(observed.cleanup.readinessPromoting, false);
@@ -116,6 +124,18 @@ try {
       hash(fault === 'lstat' ? root : canonicalRoot),
     );
     assert.equal(retained, true, 'Unknown ownership or failed removal must be explicitly retained');
+    if (fault === 'remove') {
+      assert.equal(observed.failureEvidence.captured, true);
+      assert.equal(observed.failureEvidence.cleanupRecordComplete, true);
+      assert.equal(observed.failureEvidence.resourceDirectoryOutcome, 'RETAINED');
+      assert.equal(observed.failureEvidence.retainedResourceDirectory, canonicalRoot);
+      assert.equal(observed.failureEvidence.readinessPromoting, false);
+      const cleanupBytes = fs.readFileSync(`${observed.failureEvidence.directory}/cleanup.json`);
+      const cleanup = JSON.parse(cleanupBytes);
+      assert.equal(cleanup.cleanup.complete, false);
+      assert.deepEqual(cleanup.cleanup.failures, ['DIRECTORY_CLEANUP']);
+      assert.equal(cleanup.readinessPromoting, false);
+    }
   }
   result = {
     sourceSha256,
@@ -146,6 +166,14 @@ try {
     fs.rmSync(root, { recursive: true, force: false });
   }
   assert.equal(root === undefined || !fs.existsSync(root), true);
+  for (const { path, stat } of additionalOwnedDirectories) {
+    const current = fs.lstatSync(path);
+    assert.equal(current.dev, stat.dev);
+    assert.equal(current.ino, stat.ino);
+    assert.equal(current.isSymbolicLink(), false);
+    fs.rmSync(path, { recursive: true, force: false });
+    assert.equal(fs.existsSync(path), false);
+  }
   for (const [actual, expected] of [
     [fs.mkdtempSync, originals.mkdtemp],
     [fs.lstatSync, originals.lstat],

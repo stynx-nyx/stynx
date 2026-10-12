@@ -332,6 +332,7 @@ try {
                 Reflect.apply(originalProbe, process, [-before.pid, 0]);
                 return false;
               } catch (error) {
+                if (error.code === 'EPERM') return false;
                 assert.equal(error.code, 'ESRCH');
                 return true;
               }
