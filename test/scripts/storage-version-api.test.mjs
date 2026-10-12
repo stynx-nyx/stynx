@@ -21,7 +21,7 @@ function fixture(directory, version = '1.5.7') {
   const source = readFileSync(
     resolve(root, `packages/${directory}/src/storage-template.generated.ts`),
     'utf8',
-  ).replace(/^  packageVersion: '[^']+',$/mu, `  packageVersion: '${version}',`);
+  ).replace(/^ {2}packageVersion: '[^']+',$/mu, `  packageVersion: '${version}',`);
   return {
     packageName: `@stynx-nyx/${directory}`,
     declarationPath: `${directory}/src/storage-template.generated.d.ts`,
@@ -68,7 +68,7 @@ for (const directory of packages) {
     [
       'missing literal',
       (value) => {
-        value.source = value.source.replace(/^    readonly packageVersion:.*\n/mu, '');
+        value.source = value.source.replace(/^ {4}readonly packageVersion:.*\n/mu, '');
       },
     ],
     [

@@ -51,7 +51,7 @@ function run(root, args) {
   return result;
 }
 function packageVersion(body, version) {
-  const matches = [...body.toString('utf8').matchAll(/^  packageVersion: '([^'\r\n]+)',$/gmu)];
+  const matches = [...body.toString('utf8').matchAll(/^ {2}packageVersion: '([^'\r\n]+)',$/gmu)];
   assert.equal(matches.length, 1);
   if (version === undefined) return matches[0][1];
   return Buffer.from(
@@ -381,7 +381,7 @@ for (const [name, mutate] of [
       value.storageVersionArtifacts[0].before = Buffer.from(
         value.storageVersionArtifacts[0].before
           .toString('utf8')
-          .replace(/^  packageVersion:.*\n/mu, ''),
+          .replace(/^ {2}packageVersion:.*\n/mu, ''),
       );
     },
   ],
