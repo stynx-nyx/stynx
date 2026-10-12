@@ -35,17 +35,24 @@ or treating a historical component test as current runtime qualification.
    SHA-256 `7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1`
    before use. Do not reconstruct it by changing the current manifest's version,
    omit other fields or rely on an unavailable historical checkout at test time.
-2. Parser and worker component fixtures use those historical bytes only as
-   explicitly nonattesting diagnostic inputs. Preserve all positive protocol
-   behavior and negative witnesses. The fixture does not establish a producing
+2. Parser, worker and installed Nest guard component fixtures use those historical
+   bytes only as explicitly nonattesting diagnostic inputs. A test-owned Nest
+   layout may contain byte-identical copies of the actual production guard and
+   existing child producer, the verified historical manifest and resolution of
+   the actual installed Nest modules. Independently assert copied source byte
+   identity and retain every source, process, dependency, cache and lifecycle
+   check; do not transform evaluated source or substitute owned components.
+   Preserve all positive protocol behavior and negative witnesses. The fixture does not establish a producing
    build, current candidate identity, application effects, native custody,
    accepted performance, provider approval or release readiness.
 3. Add an independent refusal witness using the actual canonical 1.6.0 manifest:
    SHA-256 `3946614be3f519c7da9e6a1c8e374efa25e589efab3baa6f7ba50bbef97c52e0`,
    Git blob `79aa37b2d5283ef7538bdd5af84dc982e9809113`, length 1,827 bytes.
    Prove refusal before startup with zero startup frames and no application
-   effects. Preserve exact hash/blob/length, environment, Node and process
-   checks; no version whitelist, normalization or caller authority is added.
+   effects. The copied Nest layout also rejects that manifest with
+   `HTTP_REFERENCE_LIFECYCLE_NEST_PREPARATION_ANCHOR` before dependency
+   preparation or application creation/listening. Preserve exact hash/blob/length,
+   environment, Node and process checks; no version whitelist, normalization or caller authority is added.
 4. Leave all four production HTTP observer modules and their physical pins
    unchanged. Never replace an actual candidate, private fresh-build or live
    application manifest with historical fixture data. Full HTTP admission for
