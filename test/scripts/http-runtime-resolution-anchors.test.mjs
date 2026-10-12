@@ -1,13 +1,22 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { after, test } from 'node:test';
 import { createHttpRuntimeProtocol } from '../../scripts/lib/http-runtime-protocol.mjs';
 import { createProtocolFixture, moduleFacts } from './support/http-runtime-protocol-fixture.mjs';
+import { versionedDiagnosticFlowManifestRefusal } from './support/http-runtime-historical-flow-manifest.mjs';
 
 const repository = resolve(import.meta.dirname, '../..');
 const root = realpathSync(mkdtempSync(join(tmpdir(), 'stynx anchor parser espaço 日本語 ')));
@@ -114,6 +123,25 @@ test('both exact non-evaluated anchors permit finite parser rows without inventi
   }
   assert.equal(protocol.snapshot().processCustodyQualified, false);
   assert.equal(protocol.snapshot().readinessPromoting, false);
+});
+
+test('actual 1.6.0 flow manifest cannot replace the historical diagnostic anchor', () => {
+  const directory = join(root, 'actual-1.6-anchor-refusal');
+  const local = createProtocolFixture(repository, directory);
+  const expected = local.context();
+  const manifest = expected.bindings.resolutionAnchors[1].manifest;
+  const bytes = versionedDiagnosticFlowManifestRefusal();
+  const path = join(directory, manifest.path);
+  writeFileSync(path, bytes);
+  const stat = lstatSync(path);
+  manifest.sha256 = digest(bytes);
+  manifest.blob = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+  manifest.byteLength = bytes.length;
+  manifest.permissions = stat.mode & 0o7777;
+  manifest.device = stat.dev;
+  manifest.inode = stat.ino;
+  assert.deepEqual(readFileSync(path), bytes);
+  assert.throws(() => createHttpRuntimeProtocol(expected), invalid);
 });
 
 const contextMutations = [

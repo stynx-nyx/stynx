@@ -4,6 +4,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   chmodSync,
   copyFileSync,
+  existsSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -17,6 +18,10 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
 import { observeFreshHttpReferenceBootstrap } from '../../scripts/lib/http-fresh-build.mjs';
+import {
+  historicalDiagnosticFlowManifest,
+  versionedDiagnosticFlowManifestRefusal,
+} from './support/http-runtime-historical-flow-manifest.mjs';
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -143,7 +148,9 @@ function fixture(root, name) {
   };
   for (const [manifest, caller, literal, requests] of anchorRules) {
     mkdirSync(dirname(join(checkoutRoot, manifest)), { recursive: true });
-    copyFileSync(join(repository, manifest), join(checkoutRoot, manifest));
+    if (manifest === 'packages/flow/package.json')
+      writeFileSync(join(checkoutRoot, manifest), historicalDiagnosticFlowManifest());
+    else copyFileSync(join(repository, manifest), join(checkoutRoot, manifest));
     const source = readFileSync(join(checkoutRoot, caller), 'utf8'),
       start = source.indexOf(literal);
     assert.equal(start >= 0 && source.indexOf(literal, start + 1) === -1, true);
@@ -276,6 +283,30 @@ test('actual worker startup enforces descriptor, process and control custody', a
         assert.deepEqual(result.frames[0].result.resolutionAnchors, f.job.resolutionAnchors);
       },
     );
+  await t.test('actual 1.6.0 manifest refuses before startup or module effects', async () => {
+    const originalCandidateManifest = readFileSync(join(repository, 'packages/flow/package.json'));
+    const f = fixture(root, 'actual-1.6-manifest-early-refusal');
+    const manifest = f.job.resolutionAnchors[1].manifest;
+    const bytes = versionedDiagnosticFlowManifestRefusal();
+    writeFileSync(join(f.checkoutRoot, manifest.path), bytes);
+    manifest.sha256 = hash(bytes);
+    manifest.blob = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+    const marker = join(f.checkoutRoot, 'unexpected-module-effect');
+    const member = join(f.checkoutRoot, 'member.mjs');
+    writeFileSync(
+      member,
+      `import {writeFileSync} from 'node:fs'; writeFileSync(${JSON.stringify(marker)}, 'effect');\n`,
+    );
+    f.job.receipt.files[0].sha256 = hash(readFileSync(member));
+    const result = await execute(f);
+    assert.deepEqual(result.frames, []);
+    assert.equal(existsSync(marker), false);
+    assert.deepEqual(readFileSync(join(f.checkoutRoot, manifest.path)), bytes);
+    assert.deepEqual(
+      readFileSync(join(repository, 'packages/flow/package.json')),
+      originalCandidateManifest,
+    );
+  });
   const cases = [
     [
       'no private IPC channel',
