@@ -1,5 +1,29 @@
 # @stynx-nyx/privacy
 
+## 1.6.0
+
+### Minor Changes
+
+- ea6b0b3: Require authenticated tenant permissions for privacy HTTP operations, isolate exports,
+  erasures and retention to admitted tenants, and reserve global administration for
+  explicit internal SystemContext callers. Use HMAC pseudonyms and spreadsheet-safe CSV.
+
+### Patch Changes
+
+- aeb738e: Expose idempotent object-store disposal and close owned S3 clients during Nest
+  application shutdown. Refuse object-store operations after successful disposal
+  and allow cleanup to be retried when the underlying client throws.
+- Updated dependencies [b3d8afe]
+- Updated dependencies [aeb738e]
+- Updated dependencies [536bc4a]
+- Updated dependencies [d3a9e9d]
+  - @stynx-nyx/auth@1.6.0
+  - @stynx-nyx/storage@1.6.0
+  - @stynx-nyx/data@1.6.0
+  - @stynx-nyx/idempotency@1.6.0
+  - @stynx-nyx/contracts@1.6.0
+  - @stynx-nyx/core@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes
