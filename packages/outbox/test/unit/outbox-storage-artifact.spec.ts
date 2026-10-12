@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { renderOutboxStorage } from '../../src/index';
 
 // ADR-OUTBOX-0003 D2/D3; ADR-OUTBOX-0004 D4: the published renderer is a
@@ -14,6 +16,9 @@ describe('outbox standalone storage artifact', () => {
     });
     expect(artifact.contractVersion).toMatch(/^\d+\.\d+\.\d+$/u);
     expect(artifact.packageVersion).toMatch(/^\d+\.\d+\.\d+(?:[-+].+)?$/u);
+    expect(artifact.packageVersion).toBe(
+      JSON.parse(readFileSync(resolve(__dirname, '../../package.json'), 'utf8')).version,
+    );
     expect(artifact.manifest).toEqual(expect.any(Object));
     expect(artifact.objectsSql).toMatch(/event_retirements/u);
     expect(artifact.objectsSql).toMatch(/FORCE ROW LEVEL SECURITY/iu);
