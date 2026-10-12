@@ -1,8 +1,7 @@
-import { createRequire } from 'node:module';
+import { decode, encode } from '@jridgewell/sourcemap-codec';
 import ts from 'typescript';
 import { types } from 'node:util';
 
-const { decode, encode } = createRequire(import.meta.url)('@jridgewell/sourcemap-codec');
 const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 const refuse = (message) => {
   throw new Error(`Native source map: ${message}`);
