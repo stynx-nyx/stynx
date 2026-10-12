@@ -17,6 +17,7 @@ import {
   isVersionedPreModeCandidate,
   releaseContextConstants,
   ReleaseContextError,
+  versionedStorageTemplates,
 } from './lib/release-context.mjs';
 import { collectPublicPackages } from './lib/release-version-policy.mjs';
 
@@ -60,6 +61,36 @@ function parseChanges(baseCommit, headCommit) {
 
 function readGitJson(revision, path) {
   return JSON.parse(git(['show', `${revision}:${path}`]));
+}
+
+function readGitBytes(revision, path) {
+  const result = spawnSync('git', ['-C', repoRoot, 'show', `${revision}:${path}`], {
+    cwd: repoRoot,
+    shell: false,
+  });
+  if (result.error || result.status !== 0 || result.signal !== null) {
+    fail('RELEASE_CONTEXT_STORAGE_VERSION', `cannot read exact storage object ${revision}:${path}`);
+  }
+  return result.stdout;
+}
+
+function storageVersionArtifacts(baseCommit, versionCommit) {
+  const paths = versionedStorageTemplates.map(({ path }) => path);
+  const existing = git(['ls-tree', '--name-only', '-r', baseCommit, '--', ...paths]);
+  if (existing === '') return [];
+  if (existing.split('\n').length !== paths.length) {
+    fail(
+      'RELEASE_CONTEXT_STORAGE_VERSION',
+      'base contains an incomplete storage-template population',
+    );
+  }
+  return versionedStorageTemplates.map(({ path, manifestPath }) => ({
+    path,
+    before: readGitBytes(baseCommit, path),
+    after: readGitBytes(versionCommit, path),
+    baseVersion: readGitJson(baseCommit, manifestPath).version,
+    version: readGitJson(versionCommit, manifestPath).version,
+  }));
 }
 
 function candidateHead(baseCommit) {
@@ -359,6 +390,7 @@ function releaseContext() {
     followUpChanges: marker ? parseChanges(marker.sha, headCommit) : [],
     rootManifestFollowUpValid: marker ? rootManifestFollowUpValid(marker.sha, rebaseline) : false,
     versionRebaselineValid: rebaseline,
+    storageVersionArtifacts: marker ? storageVersionArtifacts(baseCommit, marker.sha) : [],
   });
   return classified.kind === 'ordinary'
     ? (versionedPreModeContext(baseCommit, headCommit, commits) ??
