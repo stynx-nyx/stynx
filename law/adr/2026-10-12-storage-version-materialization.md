@@ -78,6 +78,27 @@ exception or an intended structural API change.
    commit therefore needs no API baseline path admission or blanket baseline
    regeneration. Actual emitted version literals and runtime artifact versions
    continue to match their manifests; normalization does not modify either.
+6. Keep the actual imported hashing helper at
+   `scripts/verify-public-api-declaration.mjs`, covered by the existing
+   `api:contracts` input selector `scripts/verify-*api*.mjs`. The initial
+   `scripts/lib/public-api-declaration.mjs` location was not covered by that
+   node's selectors. Preserve the interrupted candidate and its diagnostic
+   evidence; a result cached without that dependency cannot establish its
+   current API-node custody. Move the actual module and update its real imports
+   without changing behavior, suppressing tests or deleting cache entries.
+
+   Root `test-tasks.json` is Engineer-owned workspace configuration, not a
+   registered adopter-policy projection. The published DEVAI 2.6.0 closed
+   adopter-policy schema has no task-descriptor or input-selector projection.
+   No `.devai/config` edit, registered rebind, adoption-policy change or private
+   descriptor override is needed for this source-closure repair. Preserve the
+   existing descriptor and its publication digest, default-main protected
+   controls, all task commands, dependencies and fifteen-node RC population.
+   Before another RC, independently reconstruct the policy with the installed
+   CLI and demonstrate that the actual imported helper is a selected API input
+   and changing its bytes changes the API task identity. The supported cache
+   then determines reuse from the corrected inputs; an old API-node cache hit
+   is not acceptance of this repaired source.
 
 ## Acceptance and preserved limits
 
