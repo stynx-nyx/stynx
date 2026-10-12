@@ -1,14 +1,26 @@
 # `@stynx-nyx/privacy`
 
+## Purpose
+
 Tenant privacy exports, erasure and retention for NestJS, with PII metadata and a
 ROPA Markdown generator. Legal basis, retention policy and provider approval remain
 application responsibilities.
 
-## Installation and configuration
+## Audience
+
+Backend developers integrating tenant subject-rights endpoints, and operators
+implementing reviewed internal privacy jobs. Applications supply legal policy,
+verified authentication and production provider qualification.
+
+## Install
 
 ```bash
 pnpm add @stynx-nyx/privacy
 ```
+
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference).
+
+## Quick start
 
 Configure the canonical STYNX authentication, sessions, tenancy and data modules
 in the host application. Privacy HTTP requires their actual verified tenant and
@@ -25,6 +37,8 @@ StynxPrivacyModule.forRoot({
   bucketName: configuredPrivacyBucket,
 });
 ```
+
+## Configuration
 
 The variables above come from the application's reviewed configuration. Required
 `StynxPrivacyModuleOptions` fields are `environment`, `region` and `erasureSalt`.
@@ -99,7 +113,7 @@ Global retention defaults to dry-run and retains the existing owner-only session
 partition rules, including the database clock, 90-day cutoff and current/next-month
 protection. Tenant HTTP retention never performs that partition maintenance.
 
-## Public exports
+## Public API surface
 
 The package exports `StynxPrivacyModule`, `PrivacyController`, `PrivacyService`,
 `PiiMapService`, `PrivacyObjectStoreService`, configuration/provider tokens, request
@@ -109,9 +123,38 @@ and result interfaces, rule/retention types, and `PrivacyValidationError` (400,
 `PrivacyService.generateRopa` obtains rules through the internal metadata lane.
 No PII property decorator or asynchronous job API is supplied.
 
-See the repository's privacy administration contract for the exact admission and
-independent verification obligations. Actual storage and identity provider
-qualification is separate from unit or in-memory adapter tests.
+## Examples
+
+With an authenticated tenant context and the permissions listed above, submit
+`{subjectUserId: '<subject-uuid>', format: 'json'}` to `POST /privacy/exports`.
+The subject must be an active member of the verified tenant. Inspect the completed
+response only after upload and download-URL generation succeed.
+
+Use `GET /privacy/retention?dryRun=true` with `privacy:read` to inspect tenant
+retention actions before applying them with `dryRun=false` and
+`privacy:subject-rights`. Both responses keep `partitions: []`; whole-partition
+maintenance belongs to reviewed global internal jobs.
+
+## Common pitfalls
+
+- A caller-supplied tenant header or manually created context cannot replace the
+  verified authentication, tenancy and audit-actor bindings.
+- Tenant completion covers the admitted tenant, rather than global user records
+  or every tenant associated with a subject.
+- Upload expiry metadata does not establish object deletion. Configure and verify
+  the storage provider's lifecycle separately.
+- A configured adapter or passing in-memory tests does not qualify production
+  storage, identity effects or provider approval.
+
+## Related packages
+
+`@stynx-nyx/auth`, `@stynx-nyx/sessions` and `@stynx-nyx/tenancy` provide the
+verified request context; `@stynx-nyx/data` supplies restricted transactions and
+`@stynx-nyx/storage` supports object storage integration.
+
+See `docs/framework/contracts/privacy-administration-1.6.md` for the exact
+admission and independent verification obligations. Actual storage and identity
+provider qualification is separate from unit or in-memory adapter tests.
 
 <!-- stynx:generated-dependencies:start -->
 
