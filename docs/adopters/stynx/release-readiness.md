@@ -161,3 +161,13 @@ executed for this publication. HTTP/k6 evidence is NOT_OBSERVED, mutation is
 NOT_RUN, and the actual audit observation remains non-promoting; no complete
 performance or fully green scorecard is claimed. Consumer/provider acceptance and
 issue closure require their separate actual evidence after publication.
+
+The [portable independent signature security review](../../meta/security/signature-1.6.0-independent-review.json)
+is attributed to the separate Auditor session and retained with this candidate.
+Its exact public projection SHA-256 is
+`c9aa779e469affdfb0b0c1fb8128a06cdc3ec5a1a06ba2d7ce66071eb29edfe9`.
+It records the original D1.9 PASS, reviewed source/authority/140 public fixture and
+test identities, independent authorship and later byte-custody recheck. That PASS
+covers only the reviewed minimal LTA framework bytes; it supplies no overall
+release readiness, current audit verdict or production provider/DETRAN approval.
+The signed exact-candidate RC preserves these public review bytes durably.

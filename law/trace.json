@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.15",
+  "version": "1.3.16",
   "meta": {
-    "last_updated": "2026-10-11T23:34:28.256Z",
+    "last_updated": "2026-10-12T00:26:58.551308Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -76,7 +76,8 @@
       "STYNX 1.6.0 Architect combined-candidate rebind preserves all 629 executable test bindings, 15 invariants and 13 gate mappings while refreshing the independently accepted published DEVAI 2.5.0 adoption and closed HTTP protocol assertion projections. All 106 original HTTP cases and 183 original assertion obligations remain mapped; 40 added cases strengthen the boundary. This binding does not establish native HTTP custody, endpoint performance, provider, publication or overall audit PASS.",
       "STYNX 1.6.0 Architect rebind preserves all 629 executable test bindings and every prior invariant/gate relationship while binding the exact local S3 expiration-error assertion and four additive nested-runbook route/anchor assertions. Generated documentation and emulator fixtures do not establish production provider, HTTP custody, performance, overall audit or release readiness.",
       "STYNX 1.6.0 Architect binds exact consumption-operation-clock parity and microsecond/tenant negatives, admitted non-evaluated resolution-anchor and worker/protocol projections, exact webhook failure matching, and strict prospective-versus-versioned registry-policy assertions. All prior corpus relationships, invariants, gate mappings and thresholds remain unchanged. Prospective version plans do not supply final version, registry, provider, coverage, HTTP performance or publication acceptance.",
-      "STYNX 1.6.0 Architect binds 40 additive executable sensors and refreshes 10 existing projections against exact integrated candidate 56304e0b0bc34b552ea36889076c8c1a85b3078a, retaining all 632 prior corpus entries, every invariant/gate relationship and all thresholds. Exact expression review preserves eight changed-file assertion multisets; the DEVAI 2.6.0 identity/registered-binding/history/Doctor successors and the reviewed source-only workspace, native coverage configuration and fixture-finalization obligations retain their intended checks. Complete private build-support byte retention, original local bootstrap UNKNOWN/NOT_EVALUABLE, opaque baseline association, actual bounded raw/IPC/native-negative controls, native coverage correspondence and restricted-role storage regressions remain component evidence. These bindings do not establish installed successor admission, source/native whole-life or application custody, actual original-parent deadline expiry, complete supplemental workload, performance, provider, overall audit or release readiness."
+      "STYNX 1.6.0 Architect binds 40 additive executable sensors and refreshes 10 existing projections against exact integrated candidate 56304e0b0bc34b552ea36889076c8c1a85b3078a, retaining all 632 prior corpus entries, every invariant/gate relationship and all thresholds. Exact expression review preserves eight changed-file assertion multisets; the DEVAI 2.6.0 identity/registered-binding/history/Doctor successors and the reviewed source-only workspace, native coverage configuration and fixture-finalization obligations retain their intended checks. Complete private build-support byte retention, original local bootstrap UNKNOWN/NOT_EVALUABLE, opaque baseline association, actual bounded raw/IPC/native-negative controls, native coverage correspondence and restricted-role storage regressions remain component evidence. These bindings do not establish installed successor admission, source/native whole-life or application custody, actual original-parent deadline expiry, complete supplemental workload, performance, provider, overall audit or release readiness.",
+      "2026-10-11 Architect binds exact 1.6.0 bounded-publication refusal sensors and the prospective exact 1.6.0 root-version normalizer under ADR-RELEASE-0001; all prior assertion counts/thresholds and historical evidence remain preserved."
     ]
   },
   "invariants": [
@@ -5055,7 +5056,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 899,
-      "assertion_digest_sha256": "b96b839454e9695adb889529421ae8d2ff68a8f36cb96ba98b8dd8ce19e67621"
+      "assertion_digest_sha256": "a50c3a8c3e09d1c89809d7c9c73b83c08731fa2b2722649c0c9b53b2c1309160"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -7110,6 +7111,14 @@
       "lifecycle": "supported",
       "assertion_count": 46,
       "assertion_digest_sha256": "36d1b0845324972d8116b33c556432bd6b519452cdcfcec203ae42ac8a2c42b6"
+    },
+    {
+      "path": "test/scripts/release-evidence-scope.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
+      "lifecycle": "supported",
+      "assertion_count": 18,
+      "assertion_digest_sha256": "6d07929bce5de3ab442a2af70ee67d28d0978f8048148ad883b26589272b7f25"
     }
   ],
   "suites": {
