@@ -293,3 +293,14 @@ permission to freeze a defect or admit cross-variant schemas. Follow the exact
 registry semantics in the endpoint contract, and independently verify all old
 primary client operations plus every admitted variant. No generated file or
 mutable operation spelling can create compatibility authority.
+
+## Prospective 1.6.0 publication scope — 2026-10-11
+
+[ADR-RELEASE-0001](2026-10-11-bounded-1.6.0-publication.md) records the later Owner
+mandate: publish exactly 1.6.0 with no k6 execution and explicit NOT_OBSERVED HTTP
+performance. The complete producer, native/baseline/resume requirements and
+unchanged SLOs/profile thresholds above remain follow-up qualification work;
+they no longer block that exact bounded publication. Keep the existing cold-unit
+`test:performance` RC node and every assertion. No missing measurement becomes
+PASS or N/A, no historical evidence is relabeled, and no future release inherits
+this one-version scope.

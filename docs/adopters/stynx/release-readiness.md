@@ -150,3 +150,14 @@ candidate is merged, exact-main checks pass, and the Owner names the exact
 commit in the package dispatch and local Pages authorization. Package and Pages
 publication receipts must then be reconciled with that same commit before the
 result is described as shipped.
+
+## Prospective STYNX 1.6.0 bounded publication
+
+The Owner's 2026-10-11 [bounded publication decision](../../../law/adr/2026-10-11-bounded-1.6.0-publication.md)
+preserves the fifteen-node signed local RC, ordinary static/security/product and
+coverage checks, strict protected integration and exact-main publication controls.
+Published DEVAI 2.6.0 is sufficient for that lane. No k6 or mutation campaign is
+executed for this publication. HTTP/k6 evidence is NOT_OBSERVED, mutation is
+NOT_RUN, and the actual audit observation remains non-promoting; no complete
+performance or fully green scorecard is claimed. Consumer/provider acceptance and
+issue closure require their separate actual evidence after publication.

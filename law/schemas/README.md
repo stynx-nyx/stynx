@@ -36,3 +36,9 @@ semantic obligations; schema validity and journal self-hashes confer no authorit
 generator identity, source/build/control pins and preserved profile boundary.
 Its diagnostic build declarations do not supply actual task/native admission,
 real-time calibration, application floors or readiness.
+
+`release-scope-1.6.0.schema.json` validates the exact one-version bounded
+publication policy under ADR-RELEASE-0001. It preserves the full fifteen-node RC,
+requires verified-local-rc at publication and declares HTTP/k6 NOT_OBSERVED,
+mutation NOT_RUN and non-promoting audit standing. Schema validity alone grants
+neither a candidate receipt nor publication success.

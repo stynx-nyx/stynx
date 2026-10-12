@@ -190,3 +190,13 @@ verification, intended emitted API and trace bindings, exact candidate release
 proof, all-package registry/tag/release verification and preserved new machine
 observation evidence. Mutation hardening remains optional and non-promoting.
 This decision supplies scope and authority, not an advance success verdict.
+
+## Prospective bounded publication amendment — 2026-10-11
+
+The Owner's later same-day publication priority is recorded in
+[ADR-RELEASE-0001](2026-10-11-bounded-1.6.0-publication.md). Exactly 1.6.0 uses its
+closed bounded machine scope, unchanged fifteen-node signed RC and retained
+static/security/product/protected release controls. No k6 or mutation execution;
+full HTTP qualification, complete-green audit, consumer/provider acceptance and
+issue closure continue only against actual follow-up evidence. The original
+mandate and historical observations above remain preserved, without advance PASS.
