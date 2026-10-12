@@ -176,15 +176,22 @@ function writeTypeDocTsconfig(pkg) {
   const targetDir = resolve(pkg.dirPath, '.typedoc');
   const targetPath = resolve(targetDir, 'tsconfig.json');
   const extendsPath = relative(targetDir, tsconfigPath).split(sep).join('/');
+  const compilerOptions = { ignoreDeprecations: '6.0' };
+  if (pkg.manifest.name === '@stynx-nyx/notifications') {
+    const inherited = JSON.parse(readFileSync(tsconfigPath, 'utf8'));
+    compilerOptions.paths = {
+      ...inherited.compilerOptions.paths,
+      '@stynx-nyx/auth': ['packages/auth/src/index.ts'],
+      '@stynx-nyx/sessions': ['packages/sessions/src/index.ts'],
+    };
+  }
   mkdirSync(targetDir, { recursive: true });
   writeFileSync(
     targetPath,
     `${JSON.stringify(
       {
         extends: extendsPath.startsWith('.') ? extendsPath : `./${extendsPath}`,
-        compilerOptions: {
-          ignoreDeprecations: '6.0',
-        },
+        compilerOptions,
       },
       null,
       2,
@@ -230,7 +237,10 @@ function typeDocOptionsFor(pkg) {
 }
 
 const packages = [
-  ...collectPackages('packages', (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/')),
+  ...collectPackages(
+    'packages',
+    (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
+  ),
   ...collectPackages(
     'packages-web',
     (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
