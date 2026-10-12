@@ -1,8 +1,89 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { test } from 'node:test';
+import { spawn, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { after, test } from 'node:test';
+import {
+  historicalDiagnosticFlowManifest,
+  versionedDiagnosticFlowManifestRefusal,
+} from './support/http-runtime-historical-flow-manifest.mjs';
+
+const repository = resolve(import.meta.dirname, '../..');
+const diagnosticRoot = realpathSync(
+  mkdtempSync(join(tmpdir(), 'stynx historical Nest guard espaço 日本語 ')),
+);
+// Exact production/helper bytes run in a diagnostic-owned layout. Only its
+// non-evaluated manifest anchor is historical; every Nest dependency is still
+// the actual installed package. This is never a candidate build/live handle.
+function createDiagnosticLayout(root, manifestBytes) {
+  for (const relative of [
+    'scripts/lib/http-reference-nest-guard.mjs',
+    'test/scripts/support/http-reference-nest-child.mjs',
+  ]) {
+    const bytes = readFileSync(join(repository, relative));
+    const target = join(root, relative);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, bytes);
+    assert.deepEqual(readFileSync(target), bytes);
+  }
+  const manifest = join(root, 'packages/flow/package.json');
+  mkdirSync(dirname(manifest), { recursive: true });
+  writeFileSync(manifest, manifestBytes);
+  symlinkSync(join(repository, 'node_modules'), join(root, 'node_modules'), 'dir');
+  symlinkSync(
+    join(repository, 'packages/flow/node_modules'),
+    join(dirname(manifest), 'node_modules'),
+    'dir',
+  );
+  return manifest;
+}
+const manifest = createDiagnosticLayout(diagnosticRoot, historicalDiagnosticFlowManifest());
+after(() => rmSync(diagnosticRoot, { recursive: true, force: true }));
+
+test('actual 1.6.0 Nest anchor refuses before installed dependency evaluation without changing the candidate', () => {
+  const candidateManifest = readFileSync(join(repository, 'packages/flow/package.json'));
+  const root = join(diagnosticRoot, 'actual-versioned-anchor-refusal');
+  const anchor = createDiagnosticLayout(root, versionedDiagnosticFlowManifestRefusal());
+  const child = spawnSync(
+    process.execPath,
+    [
+      join(root, 'test/scripts/support/http-reference-nest-child.mjs'),
+      'actual-versioned-anchor',
+      anchor,
+    ],
+    {
+      env: {
+        PATH: `${dirname(process.execPath)}:/usr/bin:/bin`,
+        NODE_DISABLE_COMPILE_CACHE: '1',
+      },
+      encoding: 'utf8',
+      timeout: 10_000,
+      killSignal: 'SIGKILL',
+    },
+  );
+  assert.ifError(child.error);
+  assert.equal(child.status, 0, child.stderr);
+  assert.equal(child.signal, null);
+  assert.equal(child.stderr, '');
+  const observation = JSON.parse(child.stdout);
+  assert.equal(observation.status, 'PASS');
+  assert.equal(observation.dependencyTargetsLoaded, 0);
+  assert.equal(observation.runtimeCustodyComplete, false);
+  assert.equal(observation.performanceQualified, false);
+  assert.equal(observation.readinessPromoting, false);
+  assert.throws(() => process.kill(child.pid, 0), { code: 'ESRCH' });
+  assert.deepEqual(readFileSync(join(repository, 'packages/flow/package.json')), candidateManifest);
+});
 
 // Every positive uses actual installed public NestFactory.create, a minimal
 // real Module/owned provider and ExpressAdapter. Negative forwarding faults are
@@ -45,11 +126,7 @@ for (const kind of [
   test(`shared production Nest guard: real installed ${kind} with retained child closure`, async (t) => {
     const child = spawn(
       process.execPath,
-      [
-        fileURLToPath(new URL('./support/http-reference-nest-child.mjs', import.meta.url)),
-        kind,
-        fileURLToPath(new URL('../../packages/flow/package.json', import.meta.url)),
-      ],
+      [join(diagnosticRoot, 'test/scripts/support/http-reference-nest-child.mjs'), kind, manifest],
       {
         env: {
           PATH: `${dirname(process.execPath)}:/usr/bin:/bin`,
@@ -115,6 +192,10 @@ for (const kind of [
         actualChildCloseObserved: true,
         actualChildAbsence: 'ESRCH',
         productFactoryAccepted: false,
+        diagnosticHistoricalManifest: true,
+        productionGuardSha256: createHash('sha256')
+          .update(readFileSync(join(diagnosticRoot, 'scripts/lib/http-reference-nest-guard.mjs')))
+          .digest('hex'),
       }),
     );
   });

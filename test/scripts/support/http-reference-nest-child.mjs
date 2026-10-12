@@ -22,6 +22,22 @@ import {
 const [kind, origin] = process.argv.slice(2);
 const originURL = pathToFileURL(origin).href;
 const require = createRequire(originURL);
+if (kind === 'actual-versioned-anchor') {
+  const targets = [
+    '@nestjs/core/nest-factory',
+    '@nestjs/core/nest-application',
+    '@nestjs/platform-express/adapters/express-adapter',
+  ].map((specifier) => require.resolve(specifier));
+  assert(targets.every((path) => require.cache[path] === undefined));
+  assert.throws(() => prepareReferenceNestGuard(), {
+    code: 'HTTP_REFERENCE_LIFECYCLE_NEST_PREPARATION_ANCHOR',
+  });
+  assert(targets.every((path) => require.cache[path] === undefined));
+  process.stdout.write(
+    `${JSON.stringify({ kind, status: 'PASS', dependencyTargetsLoaded: 0, runtimeCustodyComplete: false, performanceQualified: false, readinessPromoting: false })}\n`,
+  );
+  process.exit(0);
+}
 require('reflect-metadata');
 if (kind.startsWith('preloaded-')) {
   const targets = {
