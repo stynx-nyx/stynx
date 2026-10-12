@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.17",
+  "version": "1.3.18",
   "meta": {
-    "last_updated": "2026-10-12T00:54:49.307447Z",
+    "last_updated": "2026-10-12T01:12:36.623313Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -78,7 +78,8 @@
       "STYNX 1.6.0 Architect binds exact consumption-operation-clock parity and microsecond/tenant negatives, admitted non-evaluated resolution-anchor and worker/protocol projections, exact webhook failure matching, and strict prospective-versus-versioned registry-policy assertions. All prior corpus relationships, invariants, gate mappings and thresholds remain unchanged. Prospective version plans do not supply final version, registry, provider, coverage, HTTP performance or publication acceptance.",
       "STYNX 1.6.0 Architect binds 40 additive executable sensors and refreshes 10 existing projections against exact integrated candidate 56304e0b0bc34b552ea36889076c8c1a85b3078a, retaining all 632 prior corpus entries, every invariant/gate relationship and all thresholds. Exact expression review preserves eight changed-file assertion multisets; the DEVAI 2.6.0 identity/registered-binding/history/Doctor successors and the reviewed source-only workspace, native coverage configuration and fixture-finalization obligations retain their intended checks. Complete private build-support byte retention, original local bootstrap UNKNOWN/NOT_EVALUABLE, opaque baseline association, actual bounded raw/IPC/native-negative controls, native coverage correspondence and restricted-role storage regressions remain component evidence. These bindings do not establish installed successor admission, source/native whole-life or application custody, actual original-parent deadline expiry, complete supplemental workload, performance, provider, overall audit or release readiness.",
       "2026-10-11 Architect binds exact 1.6.0 bounded-publication refusal sensors and the prospective exact 1.6.0 root-version normalizer under ADR-RELEASE-0001; all prior assertion counts/thresholds and historical evidence remain preserved.",
-      "2026-10-11 Architect exact-successor rebind pins Inspector 07ab4f88 and 9fac27f0 restricted-role demo/PostgreSQL fixtures and the Owner-selected tenant HTTP privacy behavior: cross-tenant export refusal with unchanged SQL/object state, tenant-only retention and erasure, no global identity disable, and unchanged second-tenant state. All five privacy behavior cases remain; three protection assertions are added. Seven other assertion counts remain unchanged. Filtered-environment fixtures establish their actual UID/GID, preserve the original six-second native absence bound and require ESRCH rather than EPERM as absence; early-root support preserves the original primary refusal and verifies attached retained cleanup evidence. Script hygiene changes execute no k6 or mutation and preserve thresholds and readiness_promoting=false. Actual check:trace --print at 947ea1b99d8cd5c60ccbed527b365b4689dde58f matches the independently sealed combined Inspector projection."
+      "2026-10-11 Architect exact-successor rebind pins Inspector 07ab4f88 and 9fac27f0 restricted-role demo/PostgreSQL fixtures and the Owner-selected tenant HTTP privacy behavior: cross-tenant export refusal with unchanged SQL/object state, tenant-only retention and erasure, no global identity disable, and unchanged second-tenant state. All five privacy behavior cases remain; three protection assertions are added. Seven other assertion counts remain unchanged. Filtered-environment fixtures establish their actual UID/GID, preserve the original six-second native absence bound and require ESRCH rather than EPERM as absence; early-root support preserves the original primary refusal and verifies attached retained cleanup evidence. Script hygiene changes execute no k6 or mutation and preserve thresholds and readiness_promoting=false. Actual check:trace --print at 947ea1b99d8cd5c60ccbed527b365b4689dde58f matches the independently sealed combined Inspector projection.",
+      "2026-10-11 Architect exact-successor rebind at 5d13e3681d602b8798b4682ad4ae799b2052fb74 preserves all 673 prior test bindings and existing invariant/gate relationships, adds the six-site exact module boundary CLI sensor under INV-CORE-001, and binds nine additive native coverage runtime assertions. Prefix authorization remains limited to slash-terminated namespace declarations; the approved complete demo-module string is exact, with sibling and suffix refusals. Lazy coverage import does not validate absent fresh outputs or perform runtime admission; actual execution retains source/hash refusal checks. Inspector 8ec6651b preserves the root manifest three-site freeze and 899 assertion count. These bindings grant no k6/mutation execution, provider approval or release-readiness verdict."
     ]
   },
   "invariants": [
@@ -7094,8 +7095,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 83,
-      "assertion_digest_sha256": "d2eda641f5da3bad3f31505b4a59284815cbd834661c98b0534769d239316a76"
+      "assertion_count": 92,
+      "assertion_digest_sha256": "c707d327a423b5c5897eaab1e2ce0c903e334df5c36adb2d8e37abe956bf77b7"
     },
     {
       "path": "test/scripts/native-source-map.test.mjs",
@@ -7120,6 +7121,14 @@
       "lifecycle": "supported",
       "assertion_count": 18,
       "assertion_digest_sha256": "6d07929bce5de3ab442a2af70ee67d28d0978f8048148ad883b26589272b7f25"
+    },
+    {
+      "path": "test/scripts/stynx-boundary.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "f0dca639a5aa534c7b22edbb3288c946553b30476033c5c4103e01346de46e77"
     }
   ],
   "suites": {
