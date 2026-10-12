@@ -1,5 +1,16 @@
 # @stynx-nyx/ratelimit
 
+## 1.6.0
+
+### Patch Changes
+
+- Updated dependencies [b3d8afe]
+- Updated dependencies [536bc4a]
+- Updated dependencies [d3a9e9d]
+  - @stynx-nyx/auth@1.6.0
+  - @stynx-nyx/data@1.6.0
+  - @stynx-nyx/contracts@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes

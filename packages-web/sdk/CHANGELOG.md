@@ -1,5 +1,11 @@
 # @stynx-nyx/sdk
 
+## 1.6.0
+
+### Minor Changes
+
+- 1981c08: Preserve all existing generated SDK methods and expose the complete CTG9 offline HTTP contract through a separate `OfflineCtg9` namespace. Generate both offline controller contracts without overwriting their shared method and path registrations.
+
 ## 1.5.7
 
 ### Patch Changes
