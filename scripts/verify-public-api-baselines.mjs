@@ -4,7 +4,7 @@ import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync 
 import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
-import { normalizePublicApiDeclaration } from './lib/public-api-declaration.mjs';
+import { normalizePublicApiDeclaration } from './verify-public-api-declaration.mjs';
 
 const repoRoot = process.cwd();
 const write = process.argv.includes('--write');
