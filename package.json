@@ -215,7 +215,8 @@
         "packages-web"
       ],
       "allowedPackages": [
-        "@stynx-nyx/"
+        "@stynx-nyx/",
+        "@stynx-domain/demo-bookmark-api/dist/domain/demo-bookmark/api/src/demo-bookmark/demo-bookmark.module.js"
       ],
       "forbiddenImports": [],
       "requireStynxPackages": []
