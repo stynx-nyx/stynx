@@ -16,6 +16,41 @@ const swc = swcMod && typeof swcMod.vite === 'function' ? swcMod : (swcMod?.defa
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '../..');
 
+function deferredNativeCoverage(options) {
+  let admitted;
+  const admission = () => (admitted ??= createNativeCoverage(options));
+  return {
+    include: options.modules.flatMap(({ source, output }) => [
+      resolve(options.packageDir, source),
+      resolve(options.packageDir, output),
+    ]),
+    plugin: {
+      name: 'stynx:finite-native-coverage',
+      enforce: 'pre',
+      buildStart(...args) {
+        return admission().plugin.buildStart.apply(this, args);
+      },
+      transform(...args) {
+        return admission().plugin.transform.apply(this, args);
+      },
+    },
+    wrapSwc(swcPlugin) {
+      const hook = swcPlugin.transform;
+      let wrapped;
+      const transform = function (...args) {
+        wrapped ??= admission().wrapSwc(swcPlugin);
+        const handler =
+          typeof wrapped.transform === 'function' ? wrapped.transform : wrapped.transform.handler;
+        return handler.apply(this, args);
+      };
+      return {
+        ...swcPlugin,
+        transform: typeof hook === 'function' ? transform : { ...hook, handler: transform },
+      };
+    },
+  };
+}
+
 // Resolve bare imports the way Node does — walk up to the workspace root and
 // check `.pnpm/node_modules/<pkg>` if the package isn't symlinked under the
 // importing package. Vitest's stricter ESM resolver otherwise fails on
@@ -199,7 +234,7 @@ export function createVitestConfig({
   const nativeCoverage =
     nativeCoverageModules === undefined
       ? null
-      : createNativeCoverage({
+      : deferredNativeCoverage({
           packageDir,
           modules: nativeCoverageModules,
           includes: coverageIncludes,
