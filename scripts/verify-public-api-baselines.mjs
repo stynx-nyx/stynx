@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync 
 import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
+import { normalizePublicApiDeclaration } from './lib/public-api-declaration.mjs';
 
 const repoRoot = process.cwd();
 const write = process.argv.includes('--write');
@@ -92,7 +93,12 @@ function packageBaseline(spec) {
   const declarationHashes = Object.fromEntries(
     declarationFiles.map((file) => {
       const relativeFile = relative(distDir, file);
-      const normalized = readFileSync(file, 'utf8').replace(/\r\n/gu, '\n').trim();
+      const normalized = normalizePublicApiDeclaration({
+        packageName: spec.name,
+        declarationPath: relativeFile,
+        packageVersion: manifest.version,
+        source: readFileSync(file, 'utf8'),
+      });
       return [relativeFile, createHash('sha256').update(normalized).digest('hex')];
     }),
   );
