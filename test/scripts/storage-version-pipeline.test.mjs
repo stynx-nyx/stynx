@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, resolve } from 'node:path';
 import test from 'node:test';
 import ts from 'typescript';
-import { normalizePublicApiDeclaration } from '../../scripts/lib/public-api-declaration.mjs';
+import { normalizePublicApiDeclaration } from '../../scripts/verify-public-api-declaration.mjs';
 import { classifyReleaseContext, ReleaseContextError } from '../../scripts/lib/release-context.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '../..');
