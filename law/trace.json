@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.19",
+  "version": "1.3.20",
   "meta": {
-    "last_updated": "2026-10-12T01:44:08.245284Z",
+    "last_updated": "2026-10-12T02:28:39.143989Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -80,7 +80,8 @@
       "2026-10-11 Architect binds exact 1.6.0 bounded-publication refusal sensors and the prospective exact 1.6.0 root-version normalizer under ADR-RELEASE-0001; all prior assertion counts/thresholds and historical evidence remain preserved.",
       "2026-10-11 Architect exact-successor rebind pins Inspector 07ab4f88 and 9fac27f0 restricted-role demo/PostgreSQL fixtures and the Owner-selected tenant HTTP privacy behavior: cross-tenant export refusal with unchanged SQL/object state, tenant-only retention and erasure, no global identity disable, and unchanged second-tenant state. All five privacy behavior cases remain; three protection assertions are added. Seven other assertion counts remain unchanged. Filtered-environment fixtures establish their actual UID/GID, preserve the original six-second native absence bound and require ESRCH rather than EPERM as absence; early-root support preserves the original primary refusal and verifies attached retained cleanup evidence. Script hygiene changes execute no k6 or mutation and preserve thresholds and readiness_promoting=false. Actual check:trace --print at 947ea1b99d8cd5c60ccbed527b365b4689dde58f matches the independently sealed combined Inspector projection.",
       "2026-10-11 Architect exact-successor rebind at 5d13e3681d602b8798b4682ad4ae799b2052fb74 preserves all 673 prior test bindings and existing invariant/gate relationships, adds the six-site exact module boundary CLI sensor under INV-CORE-001, and binds nine additive native coverage runtime assertions. Prefix authorization remains limited to slash-terminated namespace declarations; the approved complete demo-module string is exact, with sibling and suffix refusals. Lazy coverage import does not validate absent fresh outputs or perform runtime admission; actual execution retains source/hash refusal checks. Inspector 8ec6651b preserves the root manifest three-site freeze and 899 assertion count. These bindings grant no k6/mutation execution, provider approval or release-readiness verdict.",
-      "STYNX 1.6.0 Architect rebind pins the Inspector actual-filesystem short-read attempt handshake and three added readiness/full-size/completion assertions. The original sixteen attempts, changed-snapshot refusal, real filesystem operations and five-second bounds remain unchanged; no production admission or readiness claim is added."
+      "STYNX 1.6.0 Architect rebind pins the Inspector actual-filesystem short-read attempt handshake and three added readiness/full-size/completion assertions. The original sixteen attempts, changed-snapshot refusal, real filesystem operations and five-second bounds remain unchanged; no production admission or readiness claim is added.",
+      "STYNX 1.6.0 Architect rebind at a25b4d74239617036739e1ba2cf7bce9a63540ee pins the Inspector additive PostgreSQL legacy ACK replay with explicit null transport identity. Three new assertions verify exact archived replay, tenant/route/key/fingerprint lookup scope and absent userId despite a present business actor; every prior actor-bound replay, refusal and no-repeated-effects assertion and the zero-tolerance coverage floor remain unchanged. No provider, consumer or release-readiness verdict is inferred."
     ]
   },
   "invariants": [
@@ -5474,8 +5475,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 216,
-      "assertion_digest_sha256": "99e912c134f9884b0c847bace1e8d1e6a8e5b9cc24dd0ca6c0f0ce3561078ff3"
+      "assertion_count": 219,
+      "assertion_digest_sha256": "ab5860d20ba7288ba1591b95f241933ad7fa1db936907d690f9ba6fb47dcd3d1"
     },
     {
       "path": "packages/offline-sync/test/integration/offline-sync-lists-reserve.integration.spec.ts",
