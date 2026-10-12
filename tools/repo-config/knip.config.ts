@@ -57,6 +57,8 @@ const config: KnipConfig = {
         'support/*.ts',
         // The live-channel regression spawns this executable through a URL at runtime.
         'support/http-reference-channel-child.mjs',
+        // Nest guard diagnostics copy and spawn this executable outside the checkout.
+        'support/http-reference-nest-child.mjs',
         'cli-generator/consumer-runtime.ts',
         'i18n-installed/run-integration.mjs',
         'i18n-installed/consumer-runtime.ts',
