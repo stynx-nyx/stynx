@@ -425,7 +425,12 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       const service = module.get(OfflineSyncService) as OfflineSyncService & {
         submitSyncBatch(
           value: typeof input,
-          options: { transportIdempotencyKey: string; method: 'POST'; path: string },
+          options: {
+            transportIdempotencyKey: string;
+            method: 'POST';
+            path: string;
+            transportUserId?: string | null;
+          },
         ): Promise<unknown>;
       };
       const contexts = moduleRef.get(RequestContextMutator);
@@ -484,6 +489,25 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
               requestFingerprint: expect.stringMatching(/^[a-f0-9]{64}$/),
             }),
           );
+          // A historical HTTP transport may have no identity even when the
+          // tenant-scoped business/audit actor remains present. Never invent
+          // that actor in the archived transport-idempotency lookup.
+          legacy.lookup.mockImplementationOnce(async (decision) => ({
+            ...valid,
+            requestFingerprint: decision.requestFingerprint,
+          }));
+          await expect(
+            service.submitSyncBatch(input, { ...options, transportUserId: null }),
+          ).resolves.toEqual(legacyBody);
+          expect(legacy.lookup).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+              tenantId: tenantA,
+              routeKey: 'POST:/offline-sync/sync-batches',
+              headerValue: 'legacy-transport-key',
+              requestFingerprint: expect.stringMatching(/^[a-f0-9]{64}$/),
+            }),
+          );
+          expect(legacy.lookup.mock.lastCall?.[0]).not.toHaveProperty('userId');
           expect(legacy.reserve).not.toHaveBeenCalled();
           expect(legacy.persistResponse).not.toHaveBeenCalled();
           expect(legacy.clearReservation).not.toHaveBeenCalled();
