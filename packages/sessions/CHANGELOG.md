@@ -1,5 +1,18 @@
 # @stynx-nyx/sessions
 
+## 1.6.0
+
+### Minor Changes
+
+- b3d8afe: Add validated active-session admission for built-in authentication guards, preserving legacy session reads. Definitively inactive sessions use the optional public actor or receive the protected-route denial; malformed state and infrastructure failures propagate. Return the documented forbidden response when an authenticated user lacks active tenant membership.
+
+### Patch Changes
+
+- Updated dependencies [d3a9e9d]
+  - @stynx-nyx/data@1.6.0
+  - @stynx-nyx/idempotency@1.6.0
+  - @stynx-nyx/core@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes

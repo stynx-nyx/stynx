@@ -1,5 +1,16 @@
 # @stynx-nyx/tenancy
 
+## 1.6.0
+
+### Patch Changes
+
+- a561c23: Validate HTTP tenant activity and membership through independent restricted-reader transactions with tenant and actor context, without creating an owner or system context. Preserve final admission proofs, membership caching and explicit internal tenant administration.
+- Updated dependencies [d3a9e9d]
+  - @stynx-nyx/data@1.6.0
+  - @stynx-nyx/idempotency@1.6.0
+  - @stynx-nyx/contracts@1.6.0
+  - @stynx-nyx/core@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes
