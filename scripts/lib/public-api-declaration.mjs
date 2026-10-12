@@ -26,7 +26,7 @@ export function normalizePublicApiDeclaration({
   );
   if (!metadata) return normalized;
 
-  const rows = [...normalized.matchAll(/^    readonly packageVersion: "([^"\r\n]+)";$/gmu)];
+  const rows = [...normalized.matchAll(/^ {4}readonly packageVersion: "([^"\r\n]+)";$/gmu)];
   if (
     !normalized.startsWith(`export declare const ${metadata.exportName}: {\n`) ||
     rows.length !== 1 ||
