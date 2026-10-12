@@ -9,6 +9,7 @@
     "baseUrl": "../..",
     "ignoreDeprecations": "6.0",
     "paths": {
+      "@stynx-nyx/auth": ["packages/auth/src/index.ts"],
       "@stynx-nyx/core": ["packages/core/src/index.ts"],
       "@stynx-nyx/contracts": ["packages/contracts/src/index.ts"],
       "@stynx-nyx/data": ["packages/data/src/index.ts"],
@@ -16,7 +17,8 @@
       "@stynx-nyx/integration-adapter": ["packages/integration-adapter/src/index.ts"],
       "@stynx-nyx/idempotency": ["packages/idempotency/src/index.ts"],
       "@stynx-nyx/logging": ["packages/logging/src/index.ts"],
-      "@stynx-nyx/preferences": ["packages/preferences/src/index.ts"]
+      "@stynx-nyx/preferences": ["packages/preferences/src/index.ts"],
+      "@stynx-nyx/sessions": ["packages/sessions/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts"]
