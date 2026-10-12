@@ -74,13 +74,18 @@ try {
 
 if (changesetError || changesetResult?.error || changesetResult?.status !== 0 || restorationError) {
   const status = changesetResult?.status ?? 1;
-  console.error(`[version-packages] Changesets version exit status ${changesetResult?.status ?? 'null'}${changesetResult?.signal ? ` (signal ${changesetResult.signal})` : ''}`);
+  console.error(
+    `[version-packages] Changesets version exit status ${changesetResult?.status ?? 'null'}${changesetResult?.signal ? ` (signal ${changesetResult.signal})` : ''}`,
+  );
   if (changesetError || changesetResult?.error) {
-    console.error(`[version-packages] Changesets spawn error: ${(changesetError ?? changesetResult.error).message}`);
+    console.error(
+      `[version-packages] Changesets spawn error: ${(changesetError ?? changesetResult.error).message}`,
+    );
   }
   if (restorationError) {
     console.error(`[version-packages] ${restorationError.message}:`);
-    for (const error of restorationError.errors ?? [restorationError]) console.error(`- ${error.message}`);
+    for (const error of restorationError.errors ?? [restorationError])
+      console.error(`- ${error.message}`);
   }
   process.exit(status === 0 ? 1 : status);
 }
@@ -119,6 +124,8 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
+run(process.execPath, ['scripts/offline-storage-generate.mjs', '--write']);
+run(process.execPath, ['scripts/outbox-storage-generate.mjs', '--write']);
 run('pnpm', ['security:sbom']);
 
 function run(command, args) {
