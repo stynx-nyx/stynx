@@ -2155,8 +2155,16 @@ function assertCampaignVersionStage(root) {
   assert.deepEqual([...config.fixed[0]].sort(), governedNames);
   assert.equal(fixedGroupVersion.readPreState(root), null);
   const pending = readPendingChangesets(root);
-  for (const { file, releases } of pending) {
-    assert.ok(releases.length > 0, `${file}: a stable changeset must declare a release`);
+  for (const { file, releases, summary } of pending) {
+    if (file === '.changeset/smart-friends-grab.md') {
+      // This campaign's reviewed CLI-produced acknowledgement declares no release.
+      // It remains in the full consumption census and cannot satisfy the minor plan.
+      assert.deepEqual(readFileSync(join(root, file)), Buffer.from('---\n---\n'));
+      assert.deepEqual(releases, []);
+      assert.equal(summary, '');
+    } else {
+      assert.ok(releases.length > 0, `${file}: a stable changeset must declare a release`);
+    }
     assert.equal(new Set(releases.map(({ name }) => name)).size, releases.length);
     for (const { name, type } of releases) {
       assert.ok(names.includes(name), `${file}: unsupported package ${name}`);
@@ -2296,6 +2304,80 @@ test('campaign version stages observe the actual preversion minor plan and consu
     }
   }
 });
+
+test('campaign version stages retain the actual Changesets empty acknowledgement beside the minor feature plan', () => {
+  const fixture = createCampaignStageFixture();
+  try {
+    writeFileSync(join(fixture.root, 'pnpm-workspace.yaml'), 'packages:\n  - packages/*\n');
+    const generated = spawnSync(
+      process.execPath,
+      [join(repoRoot, 'node_modules/@changesets/cli/bin.js'), 'add', '--empty'],
+      { cwd: fixture.root, encoding: 'utf8', timeout: 10_000 },
+    );
+    assert.ifError(generated.error);
+    assert.equal(generated.status, 0, generated.stderr);
+    assert.equal(generated.signal, null);
+    const emitted = readdirSync(join(fixture.root, '.changeset')).filter(
+      (name) => name.endsWith('.md') && name !== 'feature.md',
+    );
+    assert.equal(emitted.length, 1);
+    const emittedPath = join(fixture.root, '.changeset', emitted[0]);
+    const actualBytes = readFileSync(emittedPath);
+    assert.deepEqual(actualBytes, Buffer.from('---\n---\n'));
+    const acknowledgementPath = join(fixture.root, '.changeset/smart-friends-grab.md');
+    writeFileSync(acknowledgementPath, actualBytes);
+    if (emittedPath !== acknowledgementPath) rmSync(emittedPath);
+    const observation = assertCampaignVersionStage(fixture.root);
+    assert.equal(observation.stage, 'PREVERSION');
+    assert.equal(observation.plan.bump, 'minor');
+    assert.equal(observation.plan.expected, currentCandidate);
+    assert.equal(observation.packageCount, 44);
+    assert.equal(observation.changesets.length, 2);
+    const acknowledgement = observation.changesets.find(
+      ({ file }) => file === '.changeset/smart-friends-grab.md',
+    );
+    assert.deepEqual(acknowledgement.releases, []);
+    assert.equal(acknowledgement.summary, '');
+    assert.equal(acknowledgement.sha256, createHash('sha256').update(actualBytes).digest('hex'));
+    assert.deepEqual(observation.plan.changesets, [
+      { file: '.changeset/feature.md', types: ['minor'] },
+      { file: '.changeset/smart-friends-grab.md', types: [] },
+    ]);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+for (const [label, path, bytes, removeFeature, version] of [
+  ['unknown empty row', 'unknown-acknowledgement.md', '---\n---\n', false],
+  ['malformed acknowledgement', 'smart-friends-grab.md', '---\nnot frontmatter\n---\n', false],
+  ['altered acknowledgement spacing', 'smart-friends-grab.md', '---\n\n---\n', false],
+  ['altered acknowledgement newline', 'smart-friends-grab.md', '---\r\n---\r\n', false],
+  ['undeclared feature summary', 'smart-friends-grab.md', '---\n---\nNew feature.\n', false],
+  ['acknowledgement declaring a release', 'smart-friends-grab.md', 'release', false],
+  ['acknowledgement without any feature', 'smart-friends-grab.md', '---\n---\n', true],
+  [
+    'unconsumed final acknowledgement',
+    'smart-friends-grab.md',
+    '---\n---\n',
+    true,
+    currentCandidate,
+  ],
+]) {
+  test(`campaign version stages refuse ${label}`, () => {
+    const fixture = createCampaignStageFixture(version ? { version, pending: false } : {});
+    try {
+      writeFileSync(
+        join(fixture.root, '.changeset', path),
+        bytes === 'release' ? `---\n'${fixture.names[0]}': minor\n---\n` : bytes,
+      );
+      if (removeFeature && existsSync(fixture.changesetPath)) rmSync(fixture.changesetPath);
+      assert.throws(() => assertCampaignVersionStage(fixture.root));
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+}
 
 const campaignStageRefusals = [
   [
