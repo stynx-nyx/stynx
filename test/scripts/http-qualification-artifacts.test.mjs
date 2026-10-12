@@ -189,7 +189,7 @@ test('repeated descriptor-stage mode refusals release every actually opened FD',
 for (const kind of ['growth', 'short-read', 'replacement'])
   test(`bounded actual ${kind} mutation refuses a changed snapshot without filesystem substitutes`, async (t) => {
     const path = sized(maximumBytes);
-    const control = new Int32Array(new SharedArrayBuffer(4 * Int32Array.BYTES_PER_ELEMENT));
+    const control = new Int32Array(new SharedArrayBuffer(8 * Int32Array.BYTES_PER_ELEMENT));
     const worker = new Worker(new URL('./support/http-artifact-mutator.mjs', import.meta.url), {
       workerData: { path, kind, maximumBytes, control: control.buffer },
     });
@@ -209,6 +209,21 @@ for (const kind of ['growth', 'short-read', 'replacement'])
     try {
       assert.equal(Atomics.load(control, 0), 1, 'actual mutator must start');
       for (let index = 0; index < 16; index++) {
+        const attempt = index + 1;
+        if (kind === 'short-read') {
+          Atomics.store(control, 3, attempt);
+          Atomics.notify(control, 3);
+          while (Atomics.load(control, 4) !== attempt && Date.now() < deadline)
+            await new Promise((resolve) => setTimeout(resolve, 5));
+          assert.equal(Atomics.load(control, 4), attempt, 'each mutator attempt must be ready');
+          assert.equal(
+            lstatSync(path).size,
+            maximumBytes,
+            'each actual read starts from a full file',
+          );
+          Atomics.store(control, 5, attempt);
+          Atomics.notify(control, 5);
+        }
         try {
           const observed = readHttpQualificationArtifact(root, path);
           assert.equal(observed.row.byteLength, observed.bytes.length);
@@ -220,6 +235,14 @@ for (const kind of ['growth', 'short-read', 'replacement'])
             error.code,
           );
           refusals++;
+        } finally {
+          if (kind === 'short-read') {
+            Atomics.store(control, 6, attempt);
+            Atomics.notify(control, 6);
+            while (Atomics.load(control, 7) !== attempt && Date.now() < deadline)
+              await new Promise((resolve) => setTimeout(resolve, 5));
+            assert.equal(Atomics.load(control, 7), attempt, 'each actual mutation must finish');
+          }
         }
       }
       assert.ok(Atomics.load(control, 2) > 0, 'real filesystem mutation must occur');
@@ -236,6 +259,7 @@ for (const kind of ['growth', 'short-read', 'replacement'])
       );
     } finally {
       Atomics.store(control, 1, 1);
+      for (const field of [3, 5, 6]) Atomics.notify(control, field);
       const timer = setTimeout(() => {
         void worker.terminate();
       }, 5_000);

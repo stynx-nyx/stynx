@@ -9,11 +9,32 @@ let fd = openSync(path, 'r+');
 Atomics.store(control, 0, 1);
 try {
   while (Atomics.load(control, 1) === 0) {
+    if (kind === 'short-read') {
+      // Per-attempt request/ready/go/done/finished handshake keeps the parent
+      // from sampling one stable truncated file sixteen times. Reads and
+      // truncations are still actual competing filesystem operations.
+      const previous = Atomics.load(control, 7);
+      while (Atomics.load(control, 3) === previous && Atomics.load(control, 1) === 0)
+        Atomics.wait(control, 3, previous, 5_000);
+      if (Atomics.load(control, 1) !== 0) break;
+      const attempt = Atomics.load(control, 3);
+      ftruncateSync(fd, maximumBytes);
+      Atomics.store(control, 4, attempt);
+      Atomics.notify(control, 4);
+      while (Atomics.load(control, 5) !== attempt && Atomics.load(control, 1) === 0)
+        Atomics.wait(control, 5, Atomics.load(control, 5), 5_000);
+      if (Atomics.load(control, 1) !== 0) break;
+      do {
+        ftruncateSync(fd, 1024);
+        ftruncateSync(fd, maximumBytes);
+        Atomics.add(control, 2, 1);
+      } while (Atomics.load(control, 6) !== attempt && Atomics.load(control, 1) === 0);
+      Atomics.store(control, 7, attempt);
+      Atomics.notify(control, 7);
+      continue;
+    }
     if (kind === 'growth') {
       writeSync(fd, Buffer.from([1]), 0, 1, maximumBytes);
-      ftruncateSync(fd, maximumBytes);
-    } else if (kind === 'short-read') {
-      ftruncateSync(fd, 1024);
       ftruncateSync(fd, maximumBytes);
     } else if (kind === 'replacement') {
       const temporary = `${path}.replacement`;
