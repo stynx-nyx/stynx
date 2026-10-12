@@ -1,5 +1,19 @@
 # @stynx-nyx/auth
 
+## 1.6.0
+
+### Patch Changes
+
+- b3d8afe: Add validated active-session admission for built-in authentication guards, preserving legacy session reads. Definitively inactive sessions use the optional public actor or receive the protected-route denial; malformed state and infrastructure failures propagate. Return the documented forbidden response when an authenticated user lacks active tenant membership.
+- 536bc4a: Protect i18n administration with verified authentication and explicit read/write permissions. Add tenant-context administration methods using restricted database roles, validate tenant bindings before cache access, and publish cached updates only after independent commit. Refuse held transactions instead of publishing uncommitted state or borrowing a privileged connection. Existing internal administration methods require an already active SystemContext outside HTTP execution; preauthentication locale resolution retains non-tenant fallbacks without privileged lookups. Declare the actual auth, contracts and idempotency runtime dependencies. Reject invalid protected-route credentials with HTTP 401 while preserving infrastructure failures.
+- Updated dependencies [b3d8afe]
+- Updated dependencies [d3a9e9d]
+  - @stynx-nyx/sessions@1.6.0
+  - @stynx-nyx/data@1.6.0
+  - @stynx-nyx/idempotency@1.6.0
+  - @stynx-nyx/contracts@1.6.0
+  - @stynx-nyx/core@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes

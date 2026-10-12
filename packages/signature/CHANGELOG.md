@@ -1,5 +1,16 @@
 # @stynx-nyx/signature
 
+## 1.6.0
+
+### Minor Changes
+
+- 845c5b7: Verify the minimal single-DSS, single-document-timestamp PAdES-B-LTA shape with explicit archive TSA trust, archive-time historical evidence and profile-bound readiness challenges.
+
+### Patch Changes
+
+- @stynx-nyx/health@1.6.0
+- @stynx-nyx/integration-adapter@1.6.0
+
 ## 1.5.7
 
 ### Patch Changes
