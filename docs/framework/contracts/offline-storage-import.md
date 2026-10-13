@@ -28,6 +28,37 @@ separately applicable to an existing installation and may be reapplied without
 rewriting operational rows. Follow installation or upgrade with the read-only
 verifier for the exact package and configured binding.
 
+## Bound forward migrations
+
+`renderOfflineStorageMigrations(options?: OfflineStorageOptions)` returns an
+`OfflineStorageMigrationsArtifact` with `contractVersion`, `packageVersion`, the
+resolved `binding` and every registered migration in canonical forward order.
+Each `OfflineStorageMigration` is exactly `{ source: { path, sha256 }, sql,
+sqlSha256 }`. Source path/digest identify the original immutable migration file;
+`sqlSha256` identifies the exact UTF-8 bound SQL returned for execution. Digests
+are lowercase hexadecimal SHA-256. Statements retain their original order with
+the same reviewed identifier/policy projection as the full renderer, including
+custom roles, tenant UUID table and omitted optional reader. Rendering is pure
+and uses only shipped generated inputs; it neither executes nor selects SQL.
+
+The consumer selects only a missing suffix after independently admitting its
+previously receipted contiguous raw-source prefix, exact digests and binding.
+Refuse unknown/missing/mismatched history and unreceipted populated storage.
+Establish prior-state compatibility with the independently pinned prior
+version's read-only verifier, or trusted persisted catalog custody and applicable
+row checks for that exact prefix/binding. The current full-catalog verifier cannot
+certify an older schema; table presence cannot replace prior-state evidence.
+
+The configured owner applies the missing suffix in order during exclusive
+migration maintenance with full visibility, in its own writable transaction.
+Persist original source identity, binding and actual bound SQL digest with the
+successful consumer ledger transaction. Roll back both DDL/data and ledger on
+failure. An already complete verified ledger skips every historical migration;
+no backfill is repeated. Then apply final `roleBindingsSql` and run the exact
+current read-only verifier. This API supplies no ledger, prior-state verifier,
+live-supported claim, hidden transaction, role creation or platform bootstrap.
+The full `objectsSql` artifact remains fresh-only.
+
 The separately exported owner maintenance operation is:
 
 ```ts

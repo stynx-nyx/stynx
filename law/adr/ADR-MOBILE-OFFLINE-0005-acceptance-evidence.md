@@ -159,6 +159,86 @@ accepted and no existing digest is recomputed. The new import format is additive
 not a permissive unknown-kind escape. Imported reconciliation history causes no
 domain effect, claim reapplication or event emission.
 
+## D6 — Bound forward-migration artifacts for consumer storage
+
+DETRAN's populated custom-bound installation exposed an incomplete D6 delivery:
+the full fresh artifact is not repeatable, historical migration files name
+platform roles and `tenancy.tenants`, and the supported identifier binder was
+private. Correct this 1.6.1 offline upgrade gap with an additive pure renderer;
+do not rewrite any historical migration or make the fresh artifact repeatable.
+
+Publish `renderOfflineStorageMigrations(options?: OfflineStorageOptions):
+OfflineStorageMigrationsArtifact` and these types through the package entrypoint:
+
+```ts
+interface OfflineStorageMigration {
+  source: { path: string; sha256: string };
+  sql: string;
+  sqlSha256: string;
+}
+
+interface OfflineStorageMigrationsArtifact {
+  contractVersion: string;
+  packageVersion: string;
+  binding: StorageRoleBinding;
+  migrations: readonly OfflineStorageMigration[];
+}
+```
+
+Return every registered offline migration, currently 0001–0009, in canonical
+forward order. `source.path` is the same package-relative identity used by the
+existing manifest; `source.sha256` is SHA-256 of the exact original migration
+file bytes. `sqlSha256` independently hashes UTF-8 bytes of the returned bound
+`sql`. Both digest fields are lowercase 64-character hexadecimal strings.
+Binding cannot change an original source identity, falsely label transformed
+SQL as original bytes or replace an earlier migration receipt.
+
+Generate each migration's ordered classified statement metadata from those same
+immutable sources. Preserve statement order within each migration, including
+backfills, locks, ownership, grants and policy transitions; do not reconstruct
+forward SQL by splitting the full fresh artifact. Apply the existing reviewed
+object identifier binder only to object statements and the binding-statement
+projection only to binding statements. Keep its explicit legacy PUBLIC-policy
+normalization, custom policy names, quoted role/tenant identifiers and optional
+reader omission. Reject unsupported future grammar/tokens during generation.
+Runtime rendering uses only shipped digest-bound generated inputs: no filesystem,
+subprocess, database, ambient checkout, arbitrary SQL template or caller-supplied
+migration source. Validate options through the existing closed binding contract.
+The existing full fresh renderer's SQL behavior and live verifier stay intact.
+
+The consumer owns selection and execution. Require a previously receipted,
+contiguous raw-source prefix with matching source digests and binding identity;
+unknown, missing, mismatched or non-prefix history refuses before mutation. A
+populated unreceipted installation is not automatically adopted. Before forward
+DDL, establish the prior installed contract using its independently pinned
+version's read-only verifier, or independently trusted persisted catalog custody
+and applicable row-invariant checks for that exact prior prefix and binding.
+The latest full-catalog verifier cannot certify an older legitimate schema;
+table presence or a migration filename alone is insufficient prior-state proof.
+The renderer verifies none of these caller-owned preconditions and supplies no
+live-supported verdict, selection inference or migration-ledger implementation.
+
+Apply only the missing suffix in order, under the configured owner's writable
+maintenance transaction, exclusive consumer migration coordination and full row
+visibility. Record the actual original source identity, binding and bound SQL
+digest with the consumer's successful transaction; never record an unapplied
+migration or commit a partial chain. No application connection, platform
+bootstrap runner, role creation, hidden transaction or implicit privilege
+escalation is introduced. Apply the separately repeatable final role bindings,
+then independently verify the final exact package/binding in a read-only owner
+transaction. A failed migration leaves prior rows/catalog/ledger unchanged when
+the owner transaction is rolled back. Repeated consumer upgrade with the same
+verified complete ledger executes no historical migration or backfill.
+
+Inspector verifies raw identities and output digests, deterministic generation,
+ordered bindings, default/custom/quoted identifiers and null-reader behavior,
+installed-package rendering without source access, and real PostgreSQL populated
+custom-bound forward upgrades. Include 0001→0009 backfill preservation and
+0008→0009 history extension, actual owner/full visibility, restricted direct
+login, FORCE RLS and two-tenant negatives. Preserve the existing fresh-artifact
+replay refusal/rollback witness. Consumer ledger/prior-state admission remains
+DETRAN acceptance evidence; STYNX fixtures alone cannot establish its completion.
+
 ## Acceptance
 
 Inspector probes both real stores for each named gap, preserving every existing
