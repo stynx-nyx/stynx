@@ -58,7 +58,16 @@ This correction remains within the approved 1.6.1 offline acceptance scope.
 
 Add optional module option
 `domainOutcomeClassifier?: OfflineSyncDomainOutcomeClassifier`, with these
-additive public types:
+additive public types. `OfflineSyncDurableStore` also adds readonly optional
+`supportsDomainOutcomeClassifier?: true`. Both shipped stores expose literal
+`true`; a custom store may opt in only after implementing this complete contract.
+A configured classifier requires CTG9 `policyResolver` and that exact capability.
+`OfflineSyncService.submitSyncBatch` refuses `OfflineSyncConfigurationError`
+for `domainOutcomeClassifier` before either legacy or durable submission when
+one is absent. With no classifier, existing custom stores and E6 remain unchanged.
+The capability declares supported behavior; it supplies no acceptance evidence.
+
+The classifier types are:
 
 ```ts
 interface OfflineSyncDomainFailure {
