@@ -36,6 +36,7 @@ export const versionedStorageTemplates = Object.freeze([
 // ADR-RELEASE-0004: exact reviewed net changes after the 1.6.1 marker.
 // Historical patch profiles keep their existing follow-up rules.
 const patch161FollowUpStatuses = new Map([
+  ['packages/offline-sync/test/unit/offline-sync.service.spec.ts', 'M'],
   ['packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts', 'M'],
   [
     'packages/offline-sync/test/integration/offline-sync-nullable-reservations.integration.spec.ts',
