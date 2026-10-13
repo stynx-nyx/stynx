@@ -97,6 +97,14 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
       tick: () => {
         clock += 1000;
       },
+      readConflictCode: async (id) =>
+        (
+          await query(
+            GAP_TENANT_A,
+            "select evidence->>'errorCode' as code from offline.sync_conflict_evidence where conflict_id=$1::uuid",
+            [id],
+          )
+        ).rows[0]!.code,
       readConflictActions: async (id) =>
         (
           await query(
