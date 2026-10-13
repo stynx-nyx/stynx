@@ -1591,7 +1591,7 @@ export async function pgSubmit(
             : !classification.valid
               ? 'OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID'
               : options.ports.domainOutcomeClassifier
-                ? (domainFailureCode(error) ?? 'OFFLINE_SYNC_ITEM_FAILED')
+                ? (classification.code ?? domainFailureCode(error) ?? 'OFFLINE_SYNC_ITEM_FAILED')
                 : ((error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED');
           // A retryable failure of a re-application leaves the receipt `pending` for the resumed batch.
           const expected: SyncItemReceipt['status'] = reapplying ? 'pending' : initialStatus;

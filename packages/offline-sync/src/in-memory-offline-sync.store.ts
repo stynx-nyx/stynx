@@ -1850,7 +1850,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                 : !classification.valid
                   ? 'OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID'
                   : runtime.ports.domainOutcomeClassifier
-                    ? (domainFailureCode(error) ?? 'OFFLINE_SYNC_ITEM_FAILED')
+                    ? (classification.code ??
+                      domainFailureCode(error) ??
+                      'OFFLINE_SYNC_ITEM_FAILED')
                     : ((error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED');
               stynx = executionStynxContext(runtime, {
                 receiptId: key,
