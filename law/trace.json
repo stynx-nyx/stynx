@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.33",
+  "version": "1.3.34",
   "meta": {
-    "last_updated": "2026-10-13T06:33:08.442838Z",
+    "last_updated": "2026-10-13T15:49:58.758490Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -94,7 +94,8 @@
       "STYNX 1.6.1 Architect binds Inspector 9c7ee40e publication-guard repairs against Engineer 625242f5 and the prospective registry/consumed-context authority. The one existing release-version-policy projection advances from405 to431 literal assertions; its historical Owner/anomaly/1.5.x/RC witnesses are retained, current campaign fixtures use1.6.1/latest1.6.0, and the new closed consumed-marker/storage/root-dependency/follow-up guards have positive and refusal witnesses. All other687 corpus entries and prior relationships are unchanged. The current authenticated44-package census/anomaly artifact was independently reviewed; no registry mutation, new publication, full RC or audit PASS is asserted.",
       "STYNX 1.6.1 Architect binds Inspector 68cc57397188823ef088d9d02b755239a371f0f1 final RC calibration repairs against the independently verified published DEVAI 2.6.1 and reviewed additive OpenAPI. The adoption projection advances from 167 to 202 assertions, retaining historical 2.5.0/2.6.0 receipt bytes and adding exact current identity, runtime-only migration, task-binding and declaration-readiness checks; the API coverage projection advances from 155 to 157 with explicit optional agentId type/requiredness. The other 686 corpus entries, all invariant/gate relationships, SQL refusals, generated-artifact size limits and thresholds remain unchanged. Exact API helper version and OpenAPI size freezes are independently refreshed without projection drift; normal SBOM generation updates only the reviewed lock/DEVAI identity. Failed and aborted RC evidence remains historical; these bindings assert neither completed RC nor consumer, provider, publication or overall audit acceptance.",
       "STYNX 1.6.1 Architect binds Inspector 9940ce632790c6557c794dac6965580421cfd0ce against Engineer c1224903 declaring-dependency security producers under ADR-RELEASE-0004. The existing storage-version-pipeline projection adds three real-producer regression cases for local dependency custody under different ambient hoists, distinct declared versions in SBOM/license checks and second-version denied-license refusal; the original 35 cases remain unchanged. All 688 corpus paths, other 687 projections, invariant/gate mappings, historical evidence and thresholds are preserved. Normal release-checkout SBOM generation retains distinct installed declaring versions; actual license policy passes without an exception. This binding does not establish a completed RC, publication, consumer/provider acceptance or overall audit PASS.",
-      "STYNX 1.6.1 Architect binds Inspector 41fb6064baadc28fede0e793fe4a9d2338506824 actual PostgreSQL fixture repairs under ADR-RELEASE-0004. Four existing corpus projections refresh for current0009 fixture installation, exact D1 sequence and D2 persisted submit-receipt context, canonical stored conflict fields and explicitly advanced injected action clocks. Historical upgrade/refusal schemas and exact action/cursor order assertions remain; three action-instant assertions and two populated0007-to0009 row-preservation/reconciliation assertions are additive. All 688 corpus paths, other 684 projections, invariant/gate mappings, historical evidence and thresholds remain unchanged. Inspector observed67/67 affected PostgreSQL cases PASS with zero skips or unhandled errors; cleanup drains both owned operations while preserving rejection. This component binding does not establish a completed RC, publication, consumer/provider acceptance or overall audit PASS."
+      "STYNX 1.6.1 Architect binds Inspector 41fb6064baadc28fede0e793fe4a9d2338506824 actual PostgreSQL fixture repairs under ADR-RELEASE-0004. Four existing corpus projections refresh for current0009 fixture installation, exact D1 sequence and D2 persisted submit-receipt context, canonical stored conflict fields and explicitly advanced injected action clocks. Historical upgrade/refusal schemas and exact action/cursor order assertions remain; three action-instant assertions and two populated0007-to0009 row-preservation/reconciliation assertions are additive. All 688 corpus paths, other 684 projections, invariant/gate mappings, historical evidence and thresholds remain unchanged. Inspector observed67/67 affected PostgreSQL cases PASS with zero skips or unhandled errors; cleanup drains both owned operations while preserving rejection. This component binding does not establish a completed RC, publication, consumer/provider acceptance or overall audit PASS.",
+      "STYNX 1.6.1 Architect binds the independent boundary/coverage regressions through f2085f32f5ebdc1d6b7431e231e71eedc7e0f901 against Engineer a918f99513fed383e66dee96164321cef88780bf and 2cd2b03ec3e05ac17b166e29c06642dcc9f5d86d under MOBILE-OFFLINE-0005 D4.1. Six existing projections refresh; all 688 corpus paths, other 682 projections, invariant/gate relationships and historical evidence remain unchanged. Meaningful data/service and offline refusal/import/rollback tests retain the original assertions and unchanged 100% requirements. Public races cover unrelated writes, foreign dirty acknowledgements, nested owned E6/index/history rollback, detached callbacks, pending children, independent conflict progress, queue contention and per-item commit custody. The new nested-refusal pause is inside an already-entered resolver with its original sentinel/state assertions retained; late authorization separately proves no resolver invocation. Inspector observed1042 offline cases/51 files with100% metrics and data100%; these are component observations, not a completed RC or publication/audit/consumer/provider verdict. Existing PostgreSQL initial received admission after fatal configuration refusal is not applied provenance and is not forced to equal memory absence."
     ]
   },
   "invariants": [
@@ -4939,8 +4940,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 18,
-      "assertion_digest_sha256": "0b8953c2d50c5ff01662fbe590fa317c11e031fb436d373249721026bb5740d8"
+      "assertion_count": 33,
+      "assertion_digest_sha256": "5fb17ff38c99f04bf86ab9251bf35ab1a2b460a84c185e1ee333f8e511980fb6"
     },
     {
       "path": "packages/offline-sync/test/unit/postgres-offline-sync.store.spec.ts",
@@ -7305,16 +7306,16 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 8,
-      "assertion_digest_sha256": "39c168da6f2eb973f50eaddce65b5ff2097590259158b5529361b2799cf76a5d"
+      "assertion_count": 20,
+      "assertion_digest_sha256": "486c2aac4b9342f1855b940c5c9c60a831833cfaf6691194b3cda12ed11eafd0"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-reconciliation-import.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 8,
-      "assertion_digest_sha256": "12717cd81fa6db152bc35d059619883de4e95aacdcf7440c2848cfcba912e261"
+      "assertion_count": 14,
+      "assertion_digest_sha256": "03d9f6183f8f0bc0b12352546b000ae5e4cf248b7aa054f0e3b8ed0c59f74164"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-sync-acceptance-gaps.spec.ts",
@@ -7353,8 +7354,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 13,
-      "assertion_digest_sha256": "06fc0956f56dce7669615c38a700f7668e8d959c0b3d6d6bbbf838e596fa1096"
+      "assertion_count": 20,
+      "assertion_digest_sha256": "28d9c50382649475d0b30594b6f9ba3294fb8717d5d5e2553815994e0c175b6c"
     },
     {
       "path": "packages/offline-sync/test/integration/offline-domain-outcomes.integration.spec.ts",
@@ -7362,15 +7363,15 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 33,
-      "assertion_digest_sha256": "087f119289cdbfff1369202b561922bb49621cb9147b987a77343d985d343444"
+      "assertion_digest_sha256": "d3da7e323d265664341d1e1fcbefaf40a288863419d4f1cb4b294f47d8908f1f"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-domain-outcomes.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 19,
-      "assertion_digest_sha256": "9d106097fdf201863de263f83621ac0a96282f2e37ecbc49ca5cd7da164e7988"
+      "assertion_count": 110,
+      "assertion_digest_sha256": "22ac54c9e0d8c96f31953b351fe6a5ec66b5371d7af1c7a47ba17048123c3ee6"
     }
   ],
   "suites": {
