@@ -2,55 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://stynx.dev/schemas/offline-import.schema.json",
   "title": "STYNX closed offline import manifest",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["formatVersion", "source", "manifestSha256", "mappings", "records", "archives"],
-  "properties": {
-    "formatVersion": {
-      "const": "stynx-offline-import/1"
-    },
-    "source": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["system", "snapshotId", "sha256"],
-      "properties": {
-        "system": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 255
-        },
-        "snapshotId": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4096
-        },
-        "sha256": {
-          "$ref": "#/$defs/digest"
-        }
-      }
-    },
-    "manifestSha256": {
-      "$ref": "#/$defs/digest"
-    },
-    "mappings": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/mapping"
-      }
-    },
-    "records": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/record"
-      }
-    },
-    "archives": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/archive"
-      }
-    }
-  },
   "$defs": {
     "uuid": {
       "type": "string",
@@ -1432,6 +1383,19 @@
               "$ref": "#/$defs/conflictActionsRow"
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "reconciliations"
+            },
+            "row": {
+              "$ref": "#/$defs/reconciliationsRow"
+            }
+          }
         }
       ]
     },
@@ -1667,6 +1631,27 @@
               "$ref": "#/$defs/conflictActionsKey"
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "reconciliations"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/reconciliationsKey"
+            }
+          }
         }
       ]
     },
@@ -1715,6 +1700,651 @@
           "$ref": "#/$defs/object"
         }
       }
+    },
+    "reconciliationsRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "tenant_id",
+        "reservation_id",
+        "actor_id",
+        "created_at",
+        "claimed_numbers",
+        "user_ref",
+        "idempotency_key",
+        "request_fingerprint",
+        "result_json"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "tenant_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "reservation_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/text"
+        },
+        "created_at": {
+          "$ref": "#/$defs/instant"
+        },
+        "claimed_numbers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/bigint"
+          }
+        },
+        "user_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "idempotency_key": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_fingerprint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reservationId",
+            "status",
+            "consumption",
+            "missingOnServer",
+            "unexpectedOnServer",
+            "reconciliationId"
+          ],
+          "properties": {
+            "reservationId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "status": {
+              "enum": ["reserved", "consumed", "expired", "cancelled", "blocked"]
+            },
+            "consumption": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["number", "status", "serverEntityId", "finalizedAt"],
+                "properties": {
+                  "number": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "status": {
+                    "enum": ["available", "claimed-locally", "applied", "blocked", "expired"]
+                  },
+                  "serverEntityId": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/text"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "finalizedAt": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/instant"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "missingOnServer": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "unexpectedOnServer": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "reconciliationId": {
+              "$ref": "#/$defs/uuid"
+            }
+          }
+        }
+      }
+    },
+    "reconciliationsKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tenant_id", "id"],
+      "properties": {
+        "tenant_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "id": {
+          "$ref": "#/$defs/uuid"
+        }
+      }
+    },
+    "recordV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "ranges"
+            },
+            "row": {
+              "$ref": "#/$defs/rangesRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "reservations"
+            },
+            "row": {
+              "$ref": "#/$defs/reservationsRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "queueItems"
+            },
+            "row": {
+              "$ref": "#/$defs/queueItemsRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "conflicts"
+            },
+            "row": {
+              "$ref": "#/$defs/conflictsRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "batches"
+            },
+            "row": {
+              "$ref": "#/$defs/batchesRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "transportKeys"
+            },
+            "row": {
+              "$ref": "#/$defs/transportKeysRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "receipts"
+            },
+            "row": {
+              "$ref": "#/$defs/receiptsRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "attempts"
+            },
+            "row": {
+              "$ref": "#/$defs/attemptsRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "consumption"
+            },
+            "row": {
+              "$ref": "#/$defs/consumptionRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "conflictEvidence"
+            },
+            "row": {
+              "$ref": "#/$defs/conflictEvidenceRow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "row"],
+          "properties": {
+            "kind": {
+              "const": "conflictActions"
+            },
+            "row": {
+              "$ref": "#/$defs/conflictActionsRow"
+            }
+          }
+        }
+      ]
+    },
+    "mappingV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "ranges"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/rangesKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "reservations"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/reservationsKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "queueItems"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/queueItemsKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "conflicts"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/conflictsKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "batches"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/batchesKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "transportKeys"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/transportKeysKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "receipts"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/receiptsKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "attempts"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/attemptsKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "consumption"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/consumptionKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "conflictEvidence"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/conflictEvidenceKey"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "tenantId", "sourceKey", "targetKey"],
+          "properties": {
+            "kind": {
+              "const": "conflictActions"
+            },
+            "tenantId": {
+              "$ref": "#/$defs/uuid"
+            },
+            "sourceKey": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "targetKey": {
+              "$ref": "#/$defs/conflictActionsKey"
+            }
+          }
+        }
+      ]
     }
-  }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formatVersion", "source", "manifestSha256", "mappings", "records", "archives"],
+      "properties": {
+        "formatVersion": {
+          "const": "stynx-offline-import/1"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["system", "snapshotId", "sha256"],
+          "properties": {
+            "system": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "snapshotId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "sha256": {
+              "$ref": "#/$defs/digest"
+            }
+          }
+        },
+        "manifestSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "mappings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mappingV1"
+          }
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recordV1"
+          }
+        },
+        "archives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/archive"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formatVersion", "source", "manifestSha256", "mappings", "records", "archives"],
+      "properties": {
+        "formatVersion": {
+          "const": "stynx-offline-import/2"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["system", "snapshotId", "sha256"],
+          "properties": {
+            "system": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "snapshotId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "sha256": {
+              "$ref": "#/$defs/digest"
+            }
+          }
+        },
+        "manifestSha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "mappings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mapping"
+          }
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/record"
+          }
+        },
+        "archives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/archive"
+          }
+        }
+      }
+    }
+  ]
 }
