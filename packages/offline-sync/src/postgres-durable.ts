@@ -1,3 +1,4 @@
+import { domainErrorContext } from './domain-error-context';
 import { pgSortInstant } from './listing';
 import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection';
 import { createHash, randomUUID } from 'node:crypto';
@@ -46,6 +47,7 @@ import {
   recordedAttempts,
   splitStynxContext,
   stynxContextOf,
+  executionStynxContext,
 } from './stynx-context';
 
 interface BatchRow {
@@ -97,8 +99,9 @@ const failure = (
   code: 'OFFLINE_SYNC_BATCH_CONFLICT' | 'OFFLINE_SYNC_BATCH_SEQUENCE',
   status: number,
   message: string,
+  context?: Readonly<Record<string, unknown>>,
 ): never => {
-  throw new OfflineSyncError(code, status, message);
+  throw new OfflineSyncError(code, status, message, false, undefined, context);
 };
 const mapReservation = (r: ReservationRow): CTG9NumberingReservation => ({
   reservationId: r.id,
@@ -822,12 +825,21 @@ export async function pgSubmit(
         );
         const expected = Number(sequences.rows[0]?.batch_sequence ?? 0) + 1;
         if (input.batchSequence < expected)
-          failure('OFFLINE_SYNC_BATCH_CONFLICT', 409, 'Batch sequence already used.');
+          failure('OFFLINE_SYNC_BATCH_CONFLICT', 409, 'Batch sequence already used.', {
+            expectedSequence: expected,
+            receivedSequence: input.batchSequence,
+            deviceBatchId: input.deviceBatchId,
+          });
         if (input.batchSequence > expected)
           failure(
             'OFFLINE_SYNC_BATCH_SEQUENCE',
             422,
             `Expected batch sequence ${expected}; received ${input.batchSequence}.`,
+            {
+              expectedSequence: expected,
+              receivedSequence: input.batchSequence,
+              deviceBatchId: input.deviceBatchId,
+            },
           );
       }
       const inserted = (
@@ -1262,9 +1274,14 @@ export async function pgSubmit(
                   : {}),
               }
             : null;
+        const originalStynx =
+          preflight.kind === 'duplicate'
+            ? splitStynxContext(preflight.receipt.context_json).stynx
+            : undefined;
         receipts.push({
           queueItemId: item.queueItemId,
           status,
+          ...(originalStynx ? { stynx: originalStynx } : {}),
           ...(errorCode ? { errorCode } : {}),
           ...(duplicateContext && Object.keys(duplicateContext).length
             ? { context: duplicateContext }
@@ -1355,7 +1372,7 @@ export async function pgSubmit(
                   prepared.pairs,
                   now,
                 );
-                stynx = stynxContextOf({
+                stynx = executionStynxContext(options, {
                   ...recorded.marks,
                   receiptId: key,
                   attempts,
@@ -1508,7 +1525,7 @@ export async function pgSubmit(
               // D3 items 2 and 4: written once, in the transaction that produced them, from the injected clock
               // and the original application result; a replay returns these stored values. The platform object
               // of the receipt is replaced (an earlier attempt's failure fields are not carried), the host keys stay.
-              stynx = stynxContextOf({
+              stynx = executionStynxContext(options, {
                 ...conflictMarks,
                 concurrencySuspected:
                   context.concurrencySuspected !== undefined ||
@@ -1550,24 +1567,30 @@ export async function pgSubmit(
           errorCode = undefined;
         } catch (error) {
           if (error instanceof OfflineSyncConfigurationError) throw error;
+          const domainContext = domainErrorContext(error);
           const classified =
+            domainContext.valid &&
             error instanceof HttpException &&
             error.getStatus() >= 400 &&
             error.getStatus() < 500 &&
             !(error instanceof OfflineSyncError && error.code === 'OFFLINE_SYNC_BATCH_CONFLICT');
           const numbering = error instanceof OfflineSyncNumberingOutcome ? error : null;
-          errorCode = (error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED';
+          errorCode = domainContext.valid
+            ? ((error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED')
+            : 'OFFLINE_SYNC_DOMAIN_CONTEXT_INVALID';
           // A retryable failure of a re-application leaves the receipt `pending` for the resumed batch.
           const expected: SyncItemReceipt['status'] = reapplying ? 'pending' : initialStatus;
           if (numbering) {
             status = numbering.receiptStatus;
             receiptContext = numbering.context;
-          } else if (classified) status = 'rejected';
-          else {
+          } else if (classified) {
+            status = 'rejected';
+            receiptContext = domainContext.context;
+          } else {
             status = expected;
             retryable = true;
           }
-          stynx = stynxContextOf({
+          stynx = executionStynxContext(options, {
             receiptId: key,
             errorCode,
             errorMessage: error instanceof Error ? error.message : String(error),
@@ -1620,7 +1643,7 @@ export async function pgSubmit(
                     ...numbering.context,
                     errorCode: numbering.code,
                     detectedAt: now,
-                    stynx: stynxContextOf({
+                    stynx: executionStynxContext(options, {
                       receiptId: key,
                       reasonCode: numbering.code,
                       errorCode: numbering.code,
@@ -1692,6 +1715,7 @@ export async function pgSubmit(
         status,
         ...(errorCode ? { errorCode } : {}),
         ...(Object.keys(resultContext).length ? { context: resultContext } : {}),
+        ...(stynx ? { stynx } : {}),
       });
       results.push({
         ...item,
@@ -1703,6 +1727,7 @@ export async function pgSubmit(
         receivedAt: now,
         ...(errorCode ? { errorCode } : {}),
         ...(Object.keys(resultContext).length ? { context: resultContext } : {}),
+        ...(stynx ? { stynx } : {}),
       });
     }
     const receipt: SyncBatchReceipt = {

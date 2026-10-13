@@ -167,12 +167,34 @@ export class OfflineSyncService {
     );
   }
 
-  private async reservationScope(): Promise<TrustedOfflineSyncScope> {
+  private async reservationScope(agentId?: string): Promise<TrustedOfflineSyncScope> {
     const scope = this.context.current();
-    const agentId = this.options.agentResolver
-      ? await this.options.agentResolver.resolve(scope, 'reserve-numbering')
+    const resolvedAgentId = await this.businessAgent(scope, 'reserve-numbering', agentId);
+    return this.options.policyResolver
+      ? ({ ...scope, agentId: resolvedAgentId } as TrustedOfflineSyncScope)
+      : scope;
+  }
+
+  private async businessAgent(
+    scope: TrustedOfflineSyncScope,
+    operation: string,
+    candidate?: string,
+  ): Promise<string> {
+    if (candidate !== undefined) {
+      this.assertText(candidate, 'agentId');
+      if (Buffer.byteLength(candidate) > 255) this.invalid('agentId must not exceed 255 bytes.');
+      if (!this.options.agentResolver) throw new OfflineSyncConfigurationError('agentResolver');
+    }
+    const resolver = this.options.agentResolver;
+    const agentId = resolver
+      ? candidate === undefined
+        ? await resolver.resolve(scope, operation)
+        : await resolver.resolve(scope, operation, { agentId: candidate })
       : scope.actorId;
-    return this.options.policyResolver ? ({ ...scope, agentId } as TrustedOfflineSyncScope) : scope;
+    this.assertText(agentId, 'resolved agentId');
+    if (Buffer.byteLength(agentId) > 255)
+      this.invalid('resolved agentId must not exceed 255 bytes.');
+    return agentId;
   }
 
   async reserveDurableNumbering(
@@ -183,7 +205,7 @@ export class OfflineSyncService {
     if (typeof reserve !== 'function')
       throw new OfflineSyncConfigurationError('reserveDurableNumbering');
     this.validateDurableReservationInput(input);
-    const scope = await this.reservationScope();
+    const scope = await this.reservationScope(input.agentId);
     if (input.idempotencyKey !== undefined) {
       const replay = this.durable.replayDurableNumberingReservation;
       if (typeof replay !== 'function')
@@ -546,9 +568,11 @@ export class OfflineSyncService {
       input.items.some((item) => item.idempotencyKey && item.reservedNumber !== undefined)
     )
       throw new OfflineSyncConfigurationError('itemApplier');
-    const agentId = this.options.agentResolver
-      ? await this.options.agentResolver.resolve(scope, 'submit-sync-batch')
-      : scope.actorId;
+    const agentId = await this.businessAgent(
+      scope,
+      'submit-sync-batch',
+      'agentId' in input ? (input.agentId as string | undefined) : undefined,
+    );
     const transport = options ?? {
       transportIdempotencyKey: `service:${input.deviceId}:${input.deviceBatchId}`,
       method: 'POST' as const,
@@ -591,6 +615,7 @@ export class OfflineSyncService {
           input: ResolveSyncConflictInput,
           now: string,
           port: NonNullable<StynxOfflineSyncModuleOptions['conflictResolver']>,
+          eventPort?: StynxOfflineSyncModuleOptions['resolutionEventPort'],
         ) => Promise<SyncConflict>;
       };
       if (specialized.resolveWithPort)
@@ -600,7 +625,10 @@ export class OfflineSyncService {
           input,
           this.now(),
           this.options.conflictResolver,
+          ...(this.options.resolutionEventPort ? [this.options.resolutionEventPort] : []),
         );
+      if (this.options.resolutionEventPort)
+        throw new OfflineSyncConfigurationError('resolveWithPort');
       return this.options.conflictResolver.resolve(
         {} as import('@stynx-nyx/data').Transaction,
         conflictId,

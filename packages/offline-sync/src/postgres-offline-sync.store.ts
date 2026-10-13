@@ -273,6 +273,7 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
     input: ResolveSyncConflictInput,
     now: string,
     port: OfflineSyncConflictResolver,
+    eventPort?: import('./types').OfflineSyncEventPort,
   ): Promise<SyncConflict> {
     return this.database
       .tx(async (trx) => {
@@ -335,9 +336,10 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
         const consumerAttributes = boundedConsumerAttributes(supplied);
         if (resolved.status === 'resolved' && input.resolution === 'retry_after_correction')
           await this.returnToPending(trx, scope, id, row, now);
+        const actionId = randomUUID();
         await trx.query(
-          `insert into offline.sync_conflict_actions (tenant_id,conflict_id,action,reason,user_ref,actor_id,resulting_status)
-        values ($1::uuid,$2::uuid,$3,$4,$5,$6,$7)`,
+          `insert into offline.sync_conflict_actions (tenant_id,conflict_id,action,reason,user_ref,actor_id,resulting_status,id,created_at)
+        values ($1::uuid,$2::uuid,$3,$4,$5,$6,$7,$8::uuid,$9::timestamptz)`,
           [
             scope.tenantId,
             id,
@@ -346,6 +348,8 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
             input.userRef ?? null,
             scope.actorId,
             resolved.status,
+            actionId,
+            now,
           ],
         );
         if (resolved.status === 'resolved')
@@ -383,6 +387,20 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
           ],
         );
         const platform = splitStynxContext(stored.rows[0]?.evidence);
+        await eventPort?.appendInTransaction(trx, {
+          entity: 'offline.sync-conflict',
+          entityId: id,
+          idempotencyKey: `stynx:offline-sync:resolution:${actionId}`,
+          payload: {
+            actionId,
+            conflictId: id,
+            queueItemId: row.queue_item_id,
+            action: input.resolution,
+            resultingStatus: resolved.status,
+            actorId: scope.actorId,
+            at: now,
+          },
+        });
         return resolved.status === 'resolved'
           ? {
               ...resolved,

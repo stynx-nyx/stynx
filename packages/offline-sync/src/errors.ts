@@ -56,6 +56,7 @@ export class OfflineSyncError extends HttpException {
     message: string,
     retryable = false,
     requestId?: string,
+    readonly context?: Readonly<Record<string, unknown>>,
   ) {
     super(
       {
@@ -64,6 +65,7 @@ export class OfflineSyncError extends HttpException {
         message,
         retryable,
         ...(requestId ? { requestId } : {}),
+        ...(context ? { context } : {}),
       },
       status,
     );
