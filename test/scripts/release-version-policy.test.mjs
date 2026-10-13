@@ -64,6 +64,7 @@ import {
   readPendingChangesets,
 } from '../../scripts/lib/fixed-group-version.mjs';
 import * as fixedGroupVersion from '../../scripts/lib/fixed-group-version.mjs';
+import * as releaseContext from '../../scripts/lib/release-context.mjs';
 import { typeOnlyCoverageExclusions } from '../../tools/repo-config/coverage-population.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 
@@ -85,9 +86,9 @@ const packageRoster = JSON.parse(
 // The registry census is validated against the current unified candidate
 // (registryVersionPolicyConstants.candidate), not the historical 1.2.0
 // rebaseline target that unified-rebaseline.mjs still describes.
-const currentCandidate = '1.6.0';
+const currentCandidate = '1.6.1';
 const previousCandidate = '1.5.0-rc.2';
-const preflightLatest = '1.5.7';
+const preflightLatest = '1.6.0';
 
 const campaignPolicy = {
   policy_id: 'stynx.package-roster',
@@ -2012,6 +2013,207 @@ test('stable 1.5.7 patch context rejects drift in release identity, marker, pack
   }
 });
 
+function patch161ReleaseFixture() {
+  const marker = '1e329a5e';
+  const gitBytes = (revision, path) => {
+    const result = spawnSync('git', ['show', `${revision}:${path}`], { cwd: repoRoot });
+    assert.equal(result.status, 0, result.stderr.toString());
+    return result.stdout;
+  };
+  const gitJson = (revision, path) => JSON.parse(gitBytes(revision, path).toString());
+  const changed = spawnSync(
+    'git',
+    ['diff', '--name-status', '--no-renames', `${marker}^`, marker],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+  assert.equal(changed.status, 0, changed.stderr);
+  const markerChanges = changed.stdout
+    .trim()
+    .split('\n')
+    .map((line) => {
+      const [status, path] = line.split('\t');
+      return { status, path };
+    });
+  const followUp = spawnSync('git', ['diff', '--name-status', '--no-renames', marker, '546c7ec8'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+  assert.equal(followUp.status, 0, followUp.stderr);
+  const followUpChanges = followUp.stdout
+    .trim()
+    .split('\n')
+    .map((line) => {
+      const [status, path] = line.split('\t');
+      return { status, path };
+    });
+  assert.equal(followUpChanges.length, 95);
+  return {
+    baseRootVersion: '1.6.0',
+    markerParentRootVersion: '1.6.0',
+    candidateRootVersion: '1.6.1',
+    markerCommits: [
+      { sha: 'a'.repeat(40), subject: 'docs(repo): govern the 1.6.1 patch candidate' },
+      { sha: 'b'.repeat(40), subject: 'chore(release): prepare the 1.6.1 fixed group' },
+      { sha: 'c'.repeat(40), subject: 'test(repo): bind the 1.6.1 release candidate' },
+    ],
+    markerChanges,
+    markerParentChangesets: ['.changeset/offline-acceptance-evidence.md'],
+    followUpChanges,
+    rootManifestMatchesMarker: false,
+    rootManifestAtMarker: gitJson(marker, 'package.json'),
+    rootManifestAtHead: JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')),
+    storageVersionArtifacts: releaseContext.versionedStorageTemplates.map(({ path }) => ({
+      path,
+      before: gitBytes(`${marker}^`, path),
+      after: gitBytes(marker, path),
+      baseVersion: '1.6.0',
+      version: '1.6.1',
+    })),
+    packageStates: collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+      name,
+      manifestPath: relative(repoRoot, manifestPath),
+      parentVersion: gitJson(`${marker}^`, relative(repoRoot, manifestPath)).version,
+      candidateVersion: JSON.parse(readFileSync(manifestPath, 'utf8')).version,
+    })),
+    changesetIdsOnDisk: [],
+    preState: null,
+    markerParentPreState: null,
+  };
+}
+
+test('stable 1.6.1 patch context accepts the actual consumed marker, both version-only storage templates and exact DEVAI adoption', () => {
+  const input = patch161ReleaseFixture();
+  assert.equal(typeof releaseContext.isPatch161VersionedCandidate, 'function');
+  assert.equal(input.markerChanges.length, 97);
+  assert.equal(input.packageStates.length, 44);
+  assert.equal(input.storageVersionArtifacts.length, 2);
+  assert.equal(input.rootManifestAtMarker.devDependencies['@aarusso-nyx/devai'], '2.6.0');
+  assert.equal(input.rootManifestAtHead.devDependencies['@aarusso-nyx/devai'], '2.6.1');
+  assert.equal(releaseContext.isPatch161VersionedCandidate(input), true);
+  assert.equal(isSeventhStablePatchVersionedCandidate(input), false);
+});
+
+test('stable 1.6.1 patch context refuses wrong markers, package groups, storage bodies and unrelated post-version changes', () => {
+  const original = patch161ReleaseFixture();
+  assert.equal(typeof releaseContext.isPatch161VersionedCandidate, 'function');
+  const mutations = [
+    ['wrong base', (value) => (value.baseRootVersion = '1.5.7')],
+    ['wrong marker parent', (value) => (value.markerParentRootVersion = '1.5.7')],
+    ['wrong candidate', (value) => (value.candidateRootVersion = '1.6.2')],
+    ['missing consumed changeset', (value) => (value.markerParentChangesets = [])],
+    [
+      'extra consumed changeset',
+      (value) => value.markerParentChangesets.push('.changeset/unreviewed.md'),
+    ],
+    ['unconsumed changeset', (value) => value.changesetIdsOnDisk.push('unreviewed')],
+    [
+      'wrong marker',
+      (value) => (value.markerCommits[1].subject = 'chore(repo): version fixed group to 1.6.1'),
+    ],
+    [
+      'duplicate marker',
+      (value) =>
+        value.markerCommits.push({ sha: 'd'.repeat(40), subject: value.markerCommits[1].subject }),
+    ],
+    ['missing preparation', (value) => value.markerCommits.shift()],
+    ['missing package', (value) => value.packageStates.pop()],
+    [
+      'duplicate package identity',
+      (value) => (value.packageStates[1].name = value.packageStates[0].name),
+    ],
+    [
+      'duplicate package manifest',
+      (value) => (value.packageStates[1].manifestPath = value.packageStates[0].manifestPath),
+    ],
+    ['stale package', (value) => (value.packageStates[0].candidateVersion = '1.6.0')],
+    ['wrong package parent', (value) => (value.packageStates[0].parentVersion = '1.5.7')],
+    [
+      'missing marker manifest',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.packageStates[0].manifestPath,
+        );
+      },
+    ],
+    ['missing storage snapshot', (value) => value.storageVersionArtifacts.pop()],
+    ['wrong storage version', (value) => (value.storageVersionArtifacts[0].version = '1.6.2')],
+    [
+      'storage body change',
+      (value) =>
+        (value.storageVersionArtifacts[0].after = Buffer.concat([
+          value.storageVersionArtifacts[0].after,
+          Buffer.from('\n// unreviewed storage body\n'),
+        ])),
+    ],
+    [
+      'missing storage marker',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.storageVersionArtifacts[0].path,
+        );
+      },
+    ],
+    ['unrelated root script', (value) => (value.rootManifestAtHead.scripts.lint = 'true')],
+    [
+      'wrong DEVAI candidate',
+      (value) => (value.rootManifestAtHead.devDependencies['@aarusso-nyx/devai'] = '2.6.2'),
+    ],
+    [
+      'wrong DEVAI marker',
+      (value) => (value.rootManifestAtMarker.devDependencies['@aarusso-nyx/devai'] = '2.5.0'),
+    ],
+    ['prerelease retained', (value) => (value.preState = { mode: 'pre', tag: 'rc' })],
+    [
+      'parent prerelease retained',
+      (value) => (value.markerParentPreState = { mode: 'pre', tag: 'rc' }),
+    ],
+    [
+      'old work-round wildcard',
+      (value) =>
+        value.followUpChanges.push({ status: 'M', path: 'work/rounds/R-0003/unreviewed.md' }),
+    ],
+    [
+      'unreviewed law',
+      (value) => value.followUpChanges.push({ status: 'M', path: 'law/adr/unreviewed.md' }),
+    ],
+    [
+      'unreviewed product',
+      (value) =>
+        value.followUpChanges.push({ status: 'M', path: 'packages/auth/src/unreviewed.ts' }),
+    ],
+    [
+      'workflow mutation',
+      (value) => value.followUpChanges.push({ status: 'M', path: '.github/workflows/release.yml' }),
+    ],
+    [
+      'deleted follow-up',
+      (value) => value.followUpChanges.push({ status: 'D', path: 'law/trace.json' }),
+    ],
+    [
+      'duplicate follow-up path',
+      (value) => value.followUpChanges.push({ ...value.followUpChanges[0] }),
+    ],
+    [
+      'wrong follow-up status',
+      (value) => value.followUpChanges.push({ status: 'A', path: 'package.json' }),
+    ],
+  ];
+  const clone = () => ({
+    ...structuredClone(original),
+    storageVersionArtifacts: original.storageVersionArtifacts.map((artifact) => ({
+      ...artifact,
+      before: Buffer.from(artifact.before),
+      after: Buffer.from(artifact.after),
+    })),
+  });
+  assert.equal(releaseContext.isPatch161VersionedCandidate(clone()), true);
+  for (const [label, mutate] of mutations) {
+    const invalid = clone();
+    mutate(invalid);
+    assert.equal(releaseContext.isPatch161VersionedCandidate(invalid), false, label);
+  }
+});
+
 test('Semgrep ignore list preserves build exclusions and only exact public PKI fixture keys', () => {
   const entries = readFileSync(join(repoRoot, '.semgrepignore'), 'utf8')
     .split(/\r?\n/u)
@@ -2158,7 +2360,7 @@ function assertCampaignVersionStage(root) {
   for (const { file, releases, summary } of pending) {
     if (file === '.changeset/smart-friends-grab.md') {
       // This campaign's reviewed CLI-produced acknowledgement declares no release.
-      // It remains in the full consumption census and cannot satisfy the minor plan.
+      // It remains in the full consumption census and cannot satisfy the patch plan.
       assert.deepEqual(readFileSync(join(root, file)), Buffer.from('---\n---\n'));
       assert.deepEqual(releases, []);
       assert.equal(summary, '');
@@ -2224,7 +2426,7 @@ function assertCampaignVersionStage(root) {
       'the feature candidate requires a nonempty stable changeset plan',
     );
     assert.equal(plan.current, preflightLatest);
-    assert.equal(plan.bump, 'minor');
+    assert.equal(plan.bump, 'patch');
     assert.equal(plan.expected, candidate);
     assert.equal(anomaly.next_unified_version, plan.expected);
     assert.equal(anomaly.anomalies[0].allowed_candidate, plan.expected);
@@ -2266,7 +2468,7 @@ function createCampaignStageFixture({ version = preflightLatest, pending = true 
   });
   const changesetPath = join(root, '.changeset/feature.md');
   if (pending)
-    writeFileSync(changesetPath, `---\n'${names[0]}': minor\n---\n\nActual fixture feature.\n`);
+    writeFileSync(changesetPath, `---\n'${names[0]}': patch\n---\n\nActual fixture feature.\n`);
   return { root, names, manifestPaths, changesetPath };
 }
 
@@ -2276,7 +2478,7 @@ function mutateStageJson(path, mutate) {
   writeJson(path, value);
 }
 
-test('campaign version stages observe the actual preversion minor plan and consumed versioned manifests', () => {
+test('campaign version stages observe the actual preversion patch plan and consumed versioned manifests', () => {
   for (const options of [{}, { version: currentCandidate, pending: false }]) {
     const fixture = createCampaignStageFixture(options);
     try {
@@ -2287,12 +2489,12 @@ test('campaign version stages observe the actual preversion minor plan and consu
       assert.deepEqual(observation.names, fixture.names);
       assert.equal(observation.packageCount, 44);
       assert.equal(observation.plan.expected, currentCandidate);
-      assert.equal(observation.plan.bump, options.version ? null : 'minor');
+      assert.equal(observation.plan.bump, options.version ? null : 'patch');
       assert.equal(observation.changesets.length, options.version ? 0 : 1);
       if (!options.version) {
         assert.equal(observation.changesets[0].file, '.changeset/feature.md');
         assert.deepEqual(observation.changesets[0].releases, [
-          { name: fixture.names[0], type: 'minor' },
+          { name: fixture.names[0], type: 'patch' },
         ]);
         assert.equal(
           observation.changesets[0].sha256,
@@ -2305,7 +2507,7 @@ test('campaign version stages observe the actual preversion minor plan and consu
   }
 });
 
-test('campaign version stages retain the actual Changesets empty acknowledgement beside the minor feature plan', () => {
+test('campaign version stages retain the actual Changesets empty acknowledgement beside the patch feature plan', () => {
   const fixture = createCampaignStageFixture();
   try {
     writeFileSync(join(fixture.root, 'pnpm-workspace.yaml'), 'packages:\n  - packages/*\n');
@@ -2329,7 +2531,7 @@ test('campaign version stages retain the actual Changesets empty acknowledgement
     if (emittedPath !== acknowledgementPath) rmSync(emittedPath);
     const observation = assertCampaignVersionStage(fixture.root);
     assert.equal(observation.stage, 'PREVERSION');
-    assert.equal(observation.plan.bump, 'minor');
+    assert.equal(observation.plan.bump, 'patch');
     assert.equal(observation.plan.expected, currentCandidate);
     assert.equal(observation.packageCount, 44);
     assert.equal(observation.changesets.length, 2);
@@ -2340,7 +2542,7 @@ test('campaign version stages retain the actual Changesets empty acknowledgement
     assert.equal(acknowledgement.summary, '');
     assert.equal(acknowledgement.sha256, createHash('sha256').update(actualBytes).digest('hex'));
     assert.deepEqual(observation.plan.changesets, [
-      { file: '.changeset/feature.md', types: ['minor'] },
+      { file: '.changeset/feature.md', types: ['patch'] },
       { file: '.changeset/smart-friends-grab.md', types: [] },
     ]);
   } finally {
@@ -2369,7 +2571,7 @@ for (const [label, path, bytes, removeFeature, version] of [
     try {
       writeFileSync(
         join(fixture.root, '.changeset', path),
-        bytes === 'release' ? `---\n'${fixture.names[0]}': minor\n---\n` : bytes,
+        bytes === 'release' ? `---\n'${fixture.names[0]}': patch\n---\n` : bytes,
       );
       if (removeFeature && existsSync(fixture.changesetPath)) rmSync(fixture.changesetPath);
       assert.throws(() => assertCampaignVersionStage(fixture.root));
@@ -2474,11 +2676,11 @@ const campaignStageRefusals = [
     (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': breaking\n---\n`),
   ],
   [
-    'unsupported package alongside valid minor',
+    'unsupported package alongside valid patch',
     (f) =>
       writeFileSync(
         f.changesetPath,
-        `---\n'${f.names[0]}': minor\n'@stynx-nyx/unknown': major\n---\n`,
+        `---\n'${f.names[0]}': patch\n'@stynx-nyx/unknown': major\n---\n`,
       ),
   ],
   [
@@ -2489,7 +2691,7 @@ const campaignStageRefusals = [
       }),
   ],
   ['no effective bump', (f) => writeFileSync(f.changesetPath, '---\n\n---\n\nEmpty release.\n')],
-  ['patch plan', (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': patch\n---\n`)],
+  ['minor plan', (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': minor\n---\n`)],
   ['major plan', (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': major\n---\n`)],
   ['present prestate', (f) => writeRcPreState(f, { initialVersion: preflightLatest })],
   ['malformed prestate', (f) => writeFileSync(join(f.root, '.changeset/pre.json'), '{')],
@@ -2497,14 +2699,14 @@ const campaignStageRefusals = [
     'disagreeing anomaly target',
     (f) =>
       mutateStageJson(join(f.root, 'law/policy/registry-version-anomalies.json'), (v) => {
-        v.next_unified_version = '1.6.1';
+        v.next_unified_version = '1.6.2';
       }),
   ],
   [
     'disagreeing allowed candidate',
     (f) =>
       mutateStageJson(join(f.root, 'law/policy/registry-version-anomalies.json'), (v) => {
-        v.anomalies[0].allowed_candidate = '1.6.1';
+        v.anomalies[0].allowed_candidate = '1.6.2';
       }),
   ],
   [
@@ -2537,7 +2739,7 @@ for (const [label, mutate] of campaignStageRefusals) {
 test('campaign version stages refuse a wrong uniform source and unconsumed final changesets', () => {
   for (const options of [
     { version: '1.5.6' },
-    { version: '1.6.1', pending: false },
+    { version: '1.6.2', pending: false },
     { version: currentCandidate },
   ]) {
     const fixture = createCampaignStageFixture(options);
@@ -2841,9 +3043,19 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 test('Architect anomaly policy is required at its exact approved digest', () => {
   // The next unified candidate must be explicitly bound in the Architect
   // policy; 1.2.0 remains historical rebaseline data.
-  assert.equal(currentCandidate, '1.6.0');
+  assert.equal(currentCandidate, '1.6.1');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
   assert.equal(anomalyPolicy.owner_decision.date, '2026-10-10');
+  const historicalPolicy = spawnSync(
+    'git',
+    ['show', '546c7ec8:law/policy/registry-version-anomalies.json'],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+  assert.equal(historicalPolicy.status, 0, historicalPolicy.stderr);
+  assert.deepEqual(
+    anomalyPolicy.owner_decision,
+    JSON.parse(historicalPolicy.stdout).owner_decision,
+  );
   assert.equal(
     anomalyPolicy.owner_decision.repository_baseline,
     'c80342f867318be8b5c8065fd48ff1733b5dfa0e',
@@ -2859,6 +3071,35 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
   for (const phrase of [
     '44',
     previousCandidate,
+    '1.6.0',
+    'exact-main-SHA',
+    'rc',
+    'latest',
+    '1.5.7',
+  ]) {
+    assert.ok(
+      anomalyPolicy.owner_decision.statement.includes(phrase),
+      `Owner statement must name ${phrase}`,
+    );
+  }
+  const prospective = anomalyPolicy.prospective_owner_decision;
+  assert.equal(prospective.date, '2026-10-13');
+  assert.equal(prospective.repository_baseline, '546c7ec8f3faa870ca4ae9f81ed27a8febb70f21');
+  assert.equal(prospective.repository_tree, '26132340edf16d671675cda64d1a4e42708b6987');
+  assert.equal(prospective.next_unified_version, currentCandidate);
+  assert.equal(prospective.preflight_latest_version, preflightLatest);
+  assert.equal(prospective.preserved_rc_version, previousCandidate);
+  assert.deepEqual(prospective.supersedes, {
+    next_unified_version: '1.6.0',
+    preflight_latest_version: '1.5.7',
+  });
+  assert.equal(
+    prospective.previous_closure_condition,
+    JSON.parse(historicalPolicy.stdout).anomalies[0].closure_condition,
+  );
+  for (const phrase of [
+    '44',
+    previousCandidate,
     currentCandidate,
     'exact-main-SHA',
     'rc',
@@ -2866,8 +3107,8 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
     preflightLatest,
   ]) {
     assert.ok(
-      anomalyPolicy.owner_decision.statement.includes(phrase),
-      `Owner statement must name ${phrase}`,
+      prospective.statement.includes(phrase),
+      `prospective Owner statement must name ${phrase}`,
     );
   }
   assert.equal(anomalyPolicy.preflight_latest_version, preflightLatest);
@@ -3622,6 +3863,11 @@ test('final registry monotonicity accepts prerelease history and only its singul
     '1.5.1',
     '1.5.2',
     '1.5.3',
+    '1.5.4',
+    '1.5.5',
+    '1.5.6',
+    '1.5.7',
+    '1.6.0',
   ]) {
     const history = validRegistryCensus();
     history.set(
@@ -3639,7 +3885,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
   for (const [version, code] of [
     [currentCandidate, 'REGISTRY_CANDIDATE_EXISTS'],
     ['1.5.0-rc.4', null],
-    ['1.6.1', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['1.6.2', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
     ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
   ]) {
     const history = validRegistryCensus();
@@ -3658,6 +3904,8 @@ test('final registry monotonicity accepts prerelease history and only its singul
     '1.5.1',
     '1.5.2',
     '1.5.3',
+    '1.6.0',
+    '1.6.2',
   ]) {
     assertPolicyError(
       () => loadRegistryAnomalyPolicy(repoRoot, candidate),
@@ -3803,7 +4051,7 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   );
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
-  assert.equal(preflightLatest, '1.5.7');
+  assert.equal(preflightLatest, '1.6.0');
   assert.deepEqual(
     validatePreflightDistTags({
       preflightLatest,
@@ -3812,7 +4060,7 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
     }),
     { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' },
   );
-  for (const latest of ['2.0.0', currentCandidate, '1.4.0']) {
+  for (const latest of ['2.0.0', currentCandidate, '1.4.0', '1.5.7']) {
     assert.throws(
       () =>
         validatePreflightDistTags({
@@ -3946,7 +4194,7 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
       (error) => error?.code === code,
     );
   }
-  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 6n, 0n]);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 6n, 1n]);
   assert.throws(
     () => parseStableVersionTag(`v${previousCandidate}`),
     /malformed stable release tag/u,
