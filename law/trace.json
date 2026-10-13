@@ -5318,7 +5318,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 1,
-      "assertion_digest_sha256": "5b9bff1561c3637fc4ef3de24d049aae0787a2492fc2c91ff7c570f3573ad336"
+      "assertion_digest_sha256": "0aa820868eaa2e8067379e7fb2aa5c3286a2908489028490f05b46647821b44e"
     },
     {
       "path": "packages/tenancy/test/unit/public-tenant-configuration.check.spec.ts",
