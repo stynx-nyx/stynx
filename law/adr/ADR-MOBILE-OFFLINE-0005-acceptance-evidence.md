@@ -350,6 +350,14 @@ existing typed conflict family before writing rather than waiting while holding
 other keys. Descendant writes may inherit an ancestor claim. This prevents
 overlapping owners from committing from another operation's uncommitted facts.
 
+Apply the same foreign-claim admission check to mutation-relevant reads and
+early acknowledgements. An E6 duplicate fast path cannot acknowledge a queue
+identity reached through another owner's uncommitted payload/E6/queue index.
+Refuse through the existing typed conflict family before acknowledgement; after
+the owner rolls back, an independent retry can materialize its own valid item.
+Claim the canonical queue before resolution callbacks, not only at the later
+state write. Public read-only diagnostic methods gain no new isolation promise.
+
 On child success, merge its undo custody into the parent: retain the earliest
 prior value, advance the last-owned-write identity and transfer claims. On
 failure, close the affected frame and descendants first, then undo their owned
@@ -361,12 +369,27 @@ releases its claims without undo. A closed detached child's cleanup cannot
 replay an obsolete journal. Full tenant snapshots may remain only inside
 exclusive CTG9 execution, where independent writers cannot coexist.
 
+A failed shared root operation undoes its entire owned journal, including an
+earlier partial multi-item E6 prefix, while retaining the actual rejection.
+Successful roots check child completion before releasing claims. Preserve the
+existing CTG9 **per-item** transaction boundary: after an item completes, its
+projection journal becomes committed baseline before the next item begins.
+A later fatal item or batch failure must not undo earlier completed item
+receipts/projections while their consumption/domain/event effects remain
+committed. Roll back only the failed or unfinished item and its descendants;
+do not silently introduce whole-batch atomicity. The exclusive admission permit
+may remain held across the batch without retaining completed items as undoable
+ancestor writes.
+
 Inspector must retain the unchanged independent-resolution and terminal-contender
 witness, prove unrelated successful shared writes survive a failing resolution,
 and retain the nested own-effect/index/history rollback and detached-callback
 refusals. Tests, coverage thresholds and event-final-write ordering remain
 unchanged; this is the bounded correction for verified isolation and progress
 defects, not a new concurrency feature or a waiver.
+Also cover failed shared E6 prefixes, foreign same-hash duplicate acknowledgement
+refusal and independent retry, and a two-item CTG9 batch whose first committed
+receipt/effect survives a fatal later item with no repeated effect on replay.
 
 ## D5 — Durable reconciliation history (V-13)
 
