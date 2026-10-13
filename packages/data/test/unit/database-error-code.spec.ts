@@ -45,6 +45,29 @@ function databaseFixture() {
 }
 
 describe('Database own-data error code boundary', () => {
+  it('preserves a hostile descriptor failure through rollback without retry or remapping', async () => {
+    const { database, query, release } = databaseFixture();
+    let inspections = 0;
+    const failure = new Proxy(new Error('consumer business refusal'), {
+      getOwnPropertyDescriptor: () => {
+        inspections += 1;
+        throw new Error('descriptor access refused');
+      },
+    });
+    const body = vi.fn(async () => {
+      throw failure;
+    });
+    await expect(
+      database.tx(body, { strictItemMode: true, retry: { attempts: 3, jitterMs: [0, 0] } }),
+    ).rejects.toBe(failure);
+    expect(inspections).toBeGreaterThan(0);
+    expect(body).toHaveBeenCalledTimes(1);
+    expect(query).toHaveBeenCalledWith('ROLLBACK');
+    expect(query).not.toHaveBeenCalledWith('COMMIT');
+    expect(release).toHaveBeenCalledTimes(1);
+    expect(database.hasHeldConnection()).toBe(false);
+  });
+
   for (const code of ['40001', '57014'] as const) {
     it(`does not execute a code getter or reinterpret its ${code} result`, async () => {
       const { database, query, release } = databaseFixture();

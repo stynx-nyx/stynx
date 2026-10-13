@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
 import { OfflineSyncService } from '../../src/offline-sync.service';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
 import type {
   OfflineSyncContextPort,
   SyncBatchItemInput,
@@ -62,6 +63,103 @@ function item(overrides: Partial<SyncBatchItemInput> = {}): SyncBatchItemInput {
 }
 
 describe('OfflineSyncService', () => {
+  // INV-OFFLINE-001; MOBILE-OFFLINE-0005 D3: UTF-8 identity bounds must refuse before durable writes.
+  it.each(['candidate', 'resolved'] as const)(
+    'rejects an oversized %s business agent before storing a batch, then accepts the byte boundary',
+    async (source) => {
+      const { store, context } = createHarness();
+      const bounded = `${'é'.repeat(127)}a`;
+      const oversized = 'é'.repeat(128);
+      let effectiveAgent = source === 'resolved' ? oversized : bounded;
+      const resolve = vi.fn(async () => effectiveAgent);
+      const service = new OfflineSyncService(store, context, {
+        now: () => now,
+        policyResolver: { resolve: async () => ({ maxBatchItems: 100 }) },
+        agentResolver: { resolve },
+      });
+      const input = {
+        orgUnitId: 'org-a',
+        deviceId: 'device-a',
+        deviceBatchId: `agent-boundary-${source}`,
+        agentId: source === 'candidate' ? oversized : bounded,
+        items: [
+          item({
+            idempotencyKey: undefined,
+            reservedNumber: undefined,
+            payloadHash: canonicalOfflineSyncPayloadHash({ severity: 'minor' }),
+          }),
+        ],
+      };
+      await expect(service.submitSyncBatch(input)).rejects.toMatchObject({
+        code: 'OFFLINE_SYNC_INVALID_INPUT',
+        message: `${source === 'candidate' ? 'agentId' : 'resolved agentId'} must not exceed 255 bytes.`,
+      });
+      expect(resolve).toHaveBeenCalledTimes(source === 'candidate' ? 0 : 1);
+      expect((await service.listSyncBatchReceipts({})).items).toEqual([]);
+      expect(store.getQueueItem(tenantA, 'sync-item-1')).toBeUndefined();
+      effectiveAgent = bounded;
+      const result = await service.submitSyncBatch({ ...input, agentId: bounded });
+      expect(result.items[0]).toMatchObject({ agentId: bounded, status: 'received' });
+      expect((await service.listSyncBatchReceipts({})).items).toHaveLength(1);
+      expect(resolve).toHaveBeenLastCalledWith(context.scope, 'submit-sync-batch', {
+        agentId: bounded,
+      });
+    },
+  );
+
+  // D5 optional custom-store capability: refuse rather than invent reconciliation history.
+  it('refuses reconciliation history on a store without that optional capability', async () => {
+    const { store, context } = createHarness();
+    // Explicit legacy-capability fixture; the real store and service otherwise execute.
+    Object.defineProperty(store, 'listNumberingReconciliations', { value: undefined });
+    const service = new OfflineSyncService(store, context, { now: () => now });
+    await expect(
+      service.listNumberingReconciliations({ reservationId: 'reservation-a' }),
+    ).rejects.toMatchObject({
+      code: 'OFFLINE_SYNC_CONFIGURATION_ERROR',
+      message: 'Invalid offline-sync configuration: listNumberingReconciliations',
+    });
+    expect((await service.listSyncBatchReceipts({})).items).toEqual([]);
+  });
+
+  // D4 requires atomic resolution/event support; never fall back to a resolver without its transaction.
+  it('refuses a resolution event binding when the legacy store has no atomic resolver port', async () => {
+    const { store, context, service: initialService } = createHarness();
+    await initialService.submitSyncBatch({
+      orgUnitId: 'org-a',
+      deviceId: 'device-a',
+      deviceBatchId: 'resolution-port',
+      items: [item()],
+    });
+    const conflict = await initialService.openConflict('sync-item-1', {
+      conflictType: 'version-mismatch',
+      description: 'Concurrent server update',
+    });
+    Object.defineProperty(store, 'resolveWithPort', { value: undefined });
+    const resolve = vi.fn(async () => ({ ...conflict, status: 'resolved' as const }));
+    const appendInTransaction = vi.fn(async () => undefined);
+    const appendManyInTransaction = vi.fn(async () => undefined);
+    const service = new OfflineSyncService(store, context, {
+      now: () => now,
+      conflictResolver: { resolve },
+      resolutionEventPort: { appendInTransaction, appendManyInTransaction },
+    });
+    const before = store.getQueueItem(tenantA, 'sync-item-1');
+    await expect(
+      service.resolveConflict(conflict.conflictId, { resolution: 'server-wins' }),
+    ).rejects.toMatchObject({
+      code: 'OFFLINE_SYNC_CONFIGURATION_ERROR',
+      message: 'Invalid offline-sync configuration: resolveWithPort',
+    });
+    expect(resolve).not.toHaveBeenCalled();
+    expect(appendInTransaction).not.toHaveBeenCalled();
+    expect(appendManyInTransaction).not.toHaveBeenCalled();
+    expect(await service.listSyncConflicts({})).toMatchObject({
+      items: [expect.objectContaining({ conflictId: conflict.conflictId, status: 'open' })],
+    });
+    expect(store.getQueueItem(tenantA, 'sync-item-1')).toEqual(before);
+  });
+
   it('returns the complete reservation projection and explicit validity override', async () => {
     const { service } = createHarness();
     const reservation = await service.reserveNumbering({
