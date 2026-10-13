@@ -5221,8 +5221,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 431,
-      "assertion_digest_sha256": "e171b02559ba3bac1a1fd6f28787c033bed3ed8d9b689e1bdf8a4f64ddfe3e6e"
+      "assertion_count": 434,
+      "assertion_digest_sha256": "e76bb83f5f96fd28eed86c9109e5880342a53edf66f4095c9f7a5c024d8acc75"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -7251,8 +7251,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 28,
-      "assertion_digest_sha256": "53689010734d2c24eac5a3830202f1a317c19af0b6aa9a34d9bc2fc85b1ad558"
+      "assertion_count": 41,
+      "assertion_digest_sha256": "aacaad2e2251527f5648f3fb5bac75be9ea1d199016cbc468a6aecd771cf5eef"
     },
     {
       "path": "test/scripts/stynx-boundary.test.mjs",
