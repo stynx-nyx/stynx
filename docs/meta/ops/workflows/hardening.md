@@ -24,6 +24,9 @@ Secret `DEVAI_REPO_TOKEN`.
 
 Not a pull-request gate.
 
+The scheduled and manually dispatched runs serialize on the ref. A newer run
+does not cancel an active hardening measurement.
+
 The upload scenario sets `STYNX_K6_STORAGE_PRESIGN_P99_MS=50`, retaining
 the existing accepted limit `storage_presign_duration_ms` p99 < 50 ms and
 the scenario default. See [ADR-PERF-0001](../../../../law/adr/2026-10-10-http-performance-evidence.md).

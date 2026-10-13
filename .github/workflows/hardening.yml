@@ -30,14 +30,14 @@ permissions:
 
 concurrency:
   group: hardening-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   k6:
     name: k6
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run isolated k6 scenarios
         # NODE_AUTH_TOKEN_FILE feeds docker-compose.yml's file-based build
