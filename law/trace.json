@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.25",
+  "version": "1.3.26",
   "meta": {
-    "last_updated": "2026-10-12T13:46:07.980775Z",
+    "last_updated": "2026-10-13T01:34:34.203314Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -86,7 +86,8 @@
       "STYNX 1.6.0 Architect binding of Inspector 43ad406651a774b6ec66d62afccc6aab31b787bb under ADR-RELEASE-0002 pins the installed DEVAI 2.6.0 actual-Git source custody regression: changing only the genuine imported API helper bytes changes api:contracts and release:prepare keys while engines/typecheck/build remain identical; a separately unselected control changes release:prepare but leaves the API key identical. The protected descriptor bytes and all prior four storage bindings, assertions, invariant mappings, thresholds and controls remain unchanged. Two real test imports follow the byte-identical helper relocation into the existing API selector. Interrupted 6daeed evidence/cache remains preserved; this component proves source identity custody, not an executed RC, publication or readiness verdict.",
       "2026-10-12 Architect rebind of Inspector 24a18319 pins explicit immutable historical flow-manifest component fixtures and actual 1.6.0 parser/worker early-refusal/no-effects witnesses (ADR-RELEASE-0003). Existing assertions, all four production anchors, actual candidate/fresh-build manifests and HTTP NOT_OBSERVED/readiness-false posture remain unchanged; diagnostic fixture success supplies no HTTP 1.6.0 admission.",
       "2026-10-12 Architect rebind of Inspector d78c3de9 adds the actual installed Nest diagnostic layout: copied production guard/child bytes are verified unchanged, all existing component scenarios remain, and the canonical 1.6.0 manifest is refused before target dependency evaluation. No actual candidate or fresh-build manifest, production anchor, threshold, HTTP admission or readiness verdict changes (ADR-RELEASE-0003).",
-      "2026-10-12 Architect rebind of Inspector 6748206d pins actual installed Changesets empty-acknowledgement generation and the exact protected smart-friends-grab.md eight-byte no-release row. All other feature declarations, the complete consumption census, minor 1.6.0 plan and final zero-pending rule remain; eight additive refusals cover unknown, malformed, altered, feature-bearing, sole and unconsumed acknowledgements. No production, canonical admission, threshold, release scope or readiness verdict changes."
+      "2026-10-12 Architect rebind of Inspector 6748206d pins actual installed Changesets empty-acknowledgement generation and the exact protected smart-friends-grab.md eight-byte no-release row. All other feature declarations, the complete consumption census, minor 1.6.0 plan and final zero-pending rule remain; eight additive refusals cover unknown, malformed, altered, feature-bearing, sole and unconsumed acknowledgements. No production, canonical admission, threshold, release scope or readiness verdict changes.",
+      "STYNX 1.6.1 Architect binding preserves every prior executable relationship and assertion, binds Inspector acceptance, reconciliation/import, populated upgrade, fresh-only installation rollback and repeated role-binding witnesses through bc6ae9e0, and refreshes the exact 1.6.1 release-scope/freeze projections. Shared behavior assertions execute through both real-store wrappers; their corpus counts remain the literal per-file projection. These bindings establish neither consumer adoption nor a fully green audit, HTTP performance or mutation result."
     ]
   },
   "invariants": [
@@ -350,6 +351,10 @@
         {
           "doc": "docs/framework/contracts/offline-sync-api.md",
           "anchor": "invariants"
+        },
+        {
+          "doc": "law/adr/ADR-MOBILE-OFFLINE-0005-acceptance-evidence.md",
+          "anchor": "acceptance"
         }
       ],
       "tests": [
@@ -381,6 +386,51 @@
           "names": ["CTG9 OFS batch HTTP contract"],
           "assertions": [
             "Actual mounted CTG9 controller transport preserves trusted context precedence, batch replay bytes/status/headers, bounded held-lease refusal and transport fingerprint conflicts; package wiring evidence, not consumer adoption or real-store parity."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/offline-sync/test/unit/offline-sync-acceptance-gaps.spec.ts",
+          "names": ["Offline acceptance gap contracts through the memory store"],
+          "assertions": [
+            "Structured sequence/domain/attempt evidence, missing-window signal, trusted business-agent resolution, fail-atomic conflict resolution events and durable reconciliation execute through the shared behavior runner."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/offline-sync/test/integration/offline-sync-acceptance-gaps.integration.spec.ts",
+          "names": ["Offline acceptance gap contracts through real PostgreSQL"],
+          "assertions": [
+            "The same shared acceptance behaviors execute against real PostgreSQL with direct restricted-role login, FORCE RLS and tenant/actor context; includes forward 0009 populated upgrade and immutable history negatives."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/offline-sync/test/unit/offline-reconciliation-import.spec.ts",
+          "names": ["Versioned reconciliation import contract"],
+          "assertions": [
+            "The exact eleven-kind /1 contract remains closed; /2 reconciliation claims, stable identity, chronology and immutable result evidence admit or refuse without loss."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/offline-sync/test/integration/offline-reconciliation-import.integration.spec.ts",
+          "names": ["Reconciliation history owner import"],
+          "assertions": [
+            "Custom tenant/owner bindings preserve original reconciliation actor/time/result across transaction rollback, exact restart, mismatched replay and tenant/state consistency refusal."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/offline-sync/test/integration/offline-storage-reapply.integration.spec.ts",
+          "names": ["Rendered offline storage fresh-install and role-binding boundaries"],
+          "assertions": [
+            "Fresh installation verifies; full objects replay refuses atomically with all rows/catalog unchanged, while separately repeated role bindings preserve the supported populated contract."
           ],
           "mode": "gray_box"
         }
@@ -5065,7 +5115,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 899,
-      "assertion_digest_sha256": "a50c3a8c3e09d1c89809d7c9c73b83c08731fa2b2722649c0c9b53b2c1309160"
+      "assertion_digest_sha256": "bc10afb909dd2769972c632b41e0a98c58c7b1163a31593815cd1f9b53fae262"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -5489,7 +5539,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 87,
-      "assertion_digest_sha256": "3fd89e722465f628f0a23992065a8963e7e42735afb68b868374a68206cae4fb"
+      "assertion_digest_sha256": "53ebf265dce93a224457fa3b1b31175d3289237d4df8966d8a84250078f0502e"
     },
     {
       "path": "packages/offline-sync/test/unit/ctg9-parity.spec.ts",
@@ -5505,7 +5555,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 203,
-      "assertion_digest_sha256": "bd11e87f8e01e3cc46ca68d091dc68d9a6a609f843535c8b5dcf19fc265b131c"
+      "assertion_digest_sha256": "1f10fc617cb24ef013bf5161b9b0a4fa3b8415519bfd02bbf7f86c0333fc8588"
     },
     {
       "path": "packages/offline-sync/test/unit/postgres-lists-reserve.spec.ts",
@@ -5752,8 +5802,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
-      "assertion_count": 108,
-      "assertion_digest_sha256": "ed5ffa4fc82a49de5c588b561d0bc0b6e9a56f5eff6f466b1a6cefaf5f22ea71"
+      "assertion_count": 109,
+      "assertion_digest_sha256": "ea61d21ecd06b17ab4314b01d701f3d5f2e1eb697ad2308c09108041dd46959e"
     },
     {
       "path": "packages/outbox/test/unit/outbox-adapters.spec.ts",
@@ -5977,7 +6027,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 138,
-      "assertion_digest_sha256": "776086339f046175e48f56bf91c4874dcbd27290a5b83548c560b885d6cdf94f"
+      "assertion_digest_sha256": "e28f977513a30d4dd53fea16a29550fcae8128b096f5af624fd2e8252934bf53"
     },
     {
       "path": "packages/offline-sync/test/unit/postgres-pending-review-context.spec.ts",
@@ -5985,7 +6035,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 79,
-      "assertion_digest_sha256": "faace415072997ec6bacd8ec4510241b21b040c79fdc7051b04e85551a3a2b4b"
+      "assertion_digest_sha256": "3d2f394a52af0b8e16772c5eaffd0ef2a7ff1d77840a0c721c381f28ccf6ed43"
     },
     {
       "path": "packages/outbox/test/integration/app-role.integration.spec.ts",
@@ -6057,7 +6107,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 62,
-      "assertion_digest_sha256": "f5a5797a87e6722f88236f1f200e46e42e5a0eb017cb537af3420aa39c5ded58"
+      "assertion_digest_sha256": "cbe0f0522a4d10538f2777d66f9ec573d1a3a0e2d9eff23a4b97a71203d6944f"
     },
     {
       "path": "packages/offline-sync/test/integration/offline-sync-initial-mode.integration.spec.ts",
@@ -6105,7 +6155,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 38,
-      "assertion_digest_sha256": "e689ff42b3cc4acd50448ce7d63f9d25f00c3d88c848d53ce468f263bef692eb"
+      "assertion_digest_sha256": "1136d0f57c5dd9996003b5af07f5afeb438de879ef2b41e29620c292825b50b1"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-storage-cli.spec.ts",
@@ -6336,8 +6386,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 39,
-      "assertion_digest_sha256": "1e37562c24a2815e8c43754453a9237ae5dfcd6160bf71eb68b712f6d3d67389"
+      "assertion_count": 47,
+      "assertion_digest_sha256": "97a1cb1a015c994c960b412518d5d5dc5b21a0b4b3644a60313aac1f1d103c44"
     },
     {
       "path": "test/scripts/outbox-storage-references.test.mjs",
@@ -6783,7 +6833,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 2,
-      "assertion_digest_sha256": "10cfe4649edfa1e5284d0c605e9a866205a50d9116952d72bd2e41c49cc376c2"
+      "assertion_digest_sha256": "1fd724a3ee309fce480e185cc33cc2a6db48fa9d054c7f6382e45c843834e272"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-sync-consumption-clock.spec.ts",
@@ -7126,8 +7176,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 18,
-      "assertion_digest_sha256": "6d07929bce5de3ab442a2af70ee67d28d0978f8048148ad883b26589272b7f25"
+      "assertion_count": 28,
+      "assertion_digest_sha256": "53689010734d2c24eac5a3830202f1a317c19af0b6aa9a34d9bc2fc85b1ad558"
     },
     {
       "path": "test/scripts/stynx-boundary.test.mjs",
@@ -7160,6 +7210,46 @@
       "lifecycle": "supported",
       "assertion_count": 24,
       "assertion_digest_sha256": "1da03a700a85574b157219ad90063584b4e001b8d9b8194f9eab8fe9be0c5f11"
+    },
+    {
+      "path": "packages/offline-sync/test/integration/offline-reconciliation-import.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 16,
+      "assertion_digest_sha256": "be82e478cb4c8b0255bb2e3200c345f7fd6bb4e70741287f1b4053290520d9b1"
+    },
+    {
+      "path": "packages/offline-sync/test/integration/offline-storage-reapply.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "da9da9c1fac5190d1ae85d464561fc017fcf75c3d5bed775108618f930249214"
+    },
+    {
+      "path": "packages/offline-sync/test/integration/offline-sync-acceptance-gaps.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "39c168da6f2eb973f50eaddce65b5ff2097590259158b5529361b2799cf76a5d"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-reconciliation-import.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 8,
+      "assertion_digest_sha256": "12717cd81fa6db152bc35d059619883de4e95aacdcf7440c2848cfcba912e261"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-sync-acceptance-gaps.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 0,
+      "assertion_digest_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
   ],
   "suites": {
