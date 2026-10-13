@@ -460,17 +460,18 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
         '2026-09-28T00:00:00Z',
       ),
     ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT' });
-    expect(query).toHaveBeenCalledTimes(2);
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query).toHaveBeenCalledWith(expect.stringContaining('for update'), [
+      scope.tenantId,
+      reservation.id,
+    ]);
   });
 
   it('reconciles claims and reports missing and unexpected server evidence', async () => {
     const { database, query } = databaseWith(
       { rows: [reservation] },
-      { rows: [] },
-      { rows: [{ status: 'reserved' }] },
       {},
       {},
-      { rows: [reservation] },
       {
         rows: [
           { number: '100', status: 'claimed-locally', server_entity_id: null, finalized_at: null },
@@ -482,6 +483,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
           },
         ],
       },
+      {},
     );
     await expect(
       pgReconcile(database, scope, reservation.id, { claimedNumbers: [100] }, now),
@@ -493,17 +495,11 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     ]);
   });
 
-  it('returns unchanged evidence for a closed reservation and rejects a disappeared one', async () => {
+  it('returns unchanged evidence for a closed reservation and rejects a missing one before any write', async () => {
     const closed = { ...reservation, status: 'consumed' };
     await expect(
       pgReconcile(
-        databaseWith(
-          { rows: [closed] },
-          { rows: [] },
-          { rows: [{ status: 'consumed' }] },
-          { rows: [closed] },
-          { rows: [] },
-        ).database,
+        databaseWith({ rows: [closed] }, { rows: [] }, {}).database,
         scope,
         reservation.id,
         { claimedNumbers: [] },
@@ -512,7 +508,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     ).resolves.toMatchObject({ status: 'consumed', missingOnServer: [], unexpectedOnServer: [] });
     await expect(
       pgReconcile(
-        databaseWith({ rows: [reservation] }, { rows: [] }, { rows: [] }).database,
+        databaseWith({ rows: [] }).database,
         scope,
         reservation.id,
         { claimedNumbers: [] },
@@ -521,13 +517,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_RESERVATION_NOT_FOUND' });
     await expect(
       pgReconcile(
-        databaseWith(
-          { rows: [closed] },
-          { rows: [] },
-          { rows: [{ status: 'consumed' }] },
-          { rows: [closed] },
-          { rows: [] },
-        ).database,
+        databaseWith({ rows: [closed] }, { rows: [] }, {}).database,
         scope,
         reservation.id,
         {},

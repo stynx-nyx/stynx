@@ -57,6 +57,8 @@ describe('UPS-OFS-01 real restricted PostgreSQL consumption operation clock', ()
         '0005_initial_queue_status.sql',
         '0006_nullable_active_reservations.sql',
         '0007_range_administration.sql',
+        '0008_import_receipts.sql',
+        '0009_numbering_reconciliations.sql',
       ])
         await admin.query(await readFile(resolve(__dirname, '../../migrations', name), 'utf8'));
       await admin.query(

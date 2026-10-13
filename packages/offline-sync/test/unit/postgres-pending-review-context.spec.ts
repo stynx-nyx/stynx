@@ -53,6 +53,10 @@ const row = {
   agent_id: 'agent-a',
   device_batch_id: 'batch-a',
   queue_item_id: 'queue-1',
+  local_entity_id: 'local-1',
+  payload_hash: hash,
+  conflict_type: 'domain',
+  description: 'host',
   idempotency_key: 'key-1',
   item_status: 'conflict',
   reserved_number: '7',
@@ -254,6 +258,8 @@ describe('PostgreSQL conflict resolution boundary (D1, D2)', () => {
       'u-1',
       'actor-a',
       'open',
+      expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+      now,
     ]);
     expect(statements.some((statement) => statement.sql.includes("set status='resolved'"))).toBe(
       false,
@@ -346,7 +352,17 @@ describe('PostgreSQL conflict resolution boundary (D1, D2)', () => {
       statements.find((statement) =>
         statement.sql.includes('insert into offline.sync_conflict_actions'),
       )!.values,
-    ).toEqual([scope.tenantId, conflictId, 'reject', null, null, 'actor-a', 'resolved']);
+    ).toEqual([
+      scope.tenantId,
+      conflictId,
+      'reject',
+      null,
+      null,
+      'actor-a',
+      'resolved',
+      expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+      now,
+    ]);
     expect(
       statements.find((statement) => statement.sql.includes("set status='resolved'"))!.values,
     ).toEqual([scope.tenantId, conflictId, 'reject', null, null, 'actor-a', now]);
@@ -898,6 +914,14 @@ describe('PostgreSQL durable submission boundary (D1, D3)', () => {
         queueItemId: 'queue-renamed',
         status: 'applied',
         context: { originalQueueItemId: 'queue-1' },
+        stynx: {
+          version: 1,
+          receiptId: 'key-1',
+          appliedAt: now,
+          serverEntityId: 'server-1',
+          attempts: 2,
+          consumerAttributes: { ok: true },
+        },
       },
     ]);
     expect(

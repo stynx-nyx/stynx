@@ -508,11 +508,11 @@ describe('UPS-OFS-07 manual review keeps the conflict open (ADR-MOBILE-OFFLINE-0
     expect(first).toEqual({
       conflictId,
       tenantId: tenantA,
-      queueItemId: '',
-      localEntityId: '',
+      queueItemId: 'm-1',
+      localEntityId: 'local-m-1',
       payloadHash: hash,
       conflictType: 'domain',
-      description: 'host',
+      description: 'OFFLINE_SYNC_NUMBERING_EXPIRED',
       status: 'open',
       stynx: {
         version: 1,
