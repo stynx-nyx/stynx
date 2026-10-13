@@ -47,6 +47,118 @@ Invalid supplied domain context is a retryable item failure, recorded as
 open and no domain, numbering or event effect commits. Historical receipts and
 responses are never reconstructed from a newer exception or policy.
 
+### D1.1 — Optional consumer domain-outcome classification
+
+The 2026-10-13 DETRAN comparison identified a remaining V-04 state-mapping gap:
+context preservation alone does not retain consumer business outcomes. The
+existing `OfflineSyncNumberingOutcome` is reserved for its closed platform
+numbering codes. Consumers must not forge those codes, return an applied result
+for a failed effect or relabel a durable rejection only in an HTTP response.
+This correction remains within the approved 1.6.1 offline acceptance scope.
+
+Add optional module option
+`domainOutcomeClassifier?: OfflineSyncDomainOutcomeClassifier`, with these
+additive public types:
+
+```ts
+interface OfflineSyncDomainFailure {
+  readonly code: string;
+  readonly httpStatus?: number;
+  readonly context?: Readonly<Record<string, unknown>>;
+}
+interface OfflineSyncDomainOutcome {
+  readonly status: 'received' | 'rejected' | 'conflict';
+  readonly conflict?: {
+    readonly type: 'domain' | 'concurrency';
+    readonly description: string;
+  };
+}
+interface OfflineSyncDomainOutcomeClassifier {
+  classify(
+    failure: OfflineSyncDomainFailure,
+    item: CTG9SyncBatchItemInput,
+    context: OfflineSyncItemContext,
+  ): OfflineSyncDomainOutcome | undefined;
+}
+```
+
+This is a synchronous, deterministic consumer-owned classification boundary,
+not an execution port: pass no transaction, write callback or raw exception.
+Invoke it only after the failed item transaction has fully rolled back, with
+detached item/context data and the actual trusted scope, effective business agent
+and stable receipt identity. The failure carries the original nonblank own-data
+string `code` (at most 255 UTF-8 bytes), HTTP status only for an actual
+`HttpException`, and the already validated/detached D1 context. Never infer a code
+from a message or accept request-body tenant/actor replacements.
+
+Platform errors are ineligible: configuration, upgrade, integrity, sequence,
+replay/lease, numbering and other `OfflineSyncError` failures retain their exact
+existing behavior; codes beginning `OFFLINE_SYNC` are reserved independently of
+the error class. Invalid domain context is handled before this classifier and
+retains `OFFLINE_SYNC_DOMAIN_CONTEXT_INVALID`. Uncoded or malformed-code failures,
+an absent classifier, or an `undefined` result preserve the existing fallback:
+classified nonplatform HTTP 4xx rejection or retryable initial/pending state.
+No consumer-specific code table is shipped in STYNX.
+
+A supplied outcome is a terminal observation for this attempt: persist its
+exact status and original code/context to canonical queue, receipt and applicable
+attempt records in the normal separate refusal transaction. It commits no domain
+effect, numbering consumption or applied-item event and contains no fabricated
+application time/entity. A `received` outcome cannot request a conflict; it
+closes the batch when all other items are terminal. Add optional platform field
+`OfflineSyncStynxContext.terminalReceived?: true`, produced only for this newly
+classified received outcome together with `retryable: false`. Same-key/hash
+submissions, including another batch, return that original receipt without
+reapplication or reopening its batch. Marker absence preserves old received and
+pending retry semantics; historical responses and receipts are not rewritten.
+
+The existing `offline-import.schema.json` already admits legal JSON objects in
+receipt/attempt `context_json` through `$defs/object`; it has no closed `stynx`
+member definition to widen. Preserve that historical schema and its record/kind
+closures. Owner-only import must preserve an actually recorded terminal marker,
+never infer or invent it for old received rows. Inspector must exercise its
+lossless import round-trip, valid `true`/received/nonretryable relationship and
+refusal of contradictory newly asserted marker evidence.
+
+For `rejected` or `conflict`, an optional descriptor opens one tenant-scoped
+canonical conflict and its evidence in that same refusal transaction, using
+platform-generated conflict ID, trusted queue/local/hash identity and actual
+clock. `description` is a nonblank legal string of at most 4000 UTF-8 bytes.
+Only domain/concurrency types are admitted; integrity remains exclusively the
+platform hash-verification path. Status `conflict` without a descriptor is
+permitted: a consumer may record a business collision without opening a supervisor
+case. A returned descriptor never supplies tenant, actor, IDs, allowed actions,
+hashes or application provenance.
+
+Use existing `conflictResolver.allowedActions` with the same trusted item context;
+without that hook retain domain defaults `reject`/`retry_after_correction` and
+concurrency default `manual_review`. Preserve the existing resolver/action
+validation and resolution-event behavior. Keep consumer receipt context untouched;
+conflict identity/actions are available through the existing canonical conflict
+and action reads. Store original consumer context as a distinct nested `context`
+member in the new conflict evidence, alongside platform code/instant/context;
+never overwrite a consumer field named `conflictId`, `allowedActions` or `stynx`.
+The last remains invalid under D1, rather than a classifier escape.
+
+Validate the closed outcome shape without coercion, accessors, unknown fields or
+thenables. A thrown classifier or invalid result becomes retryable
+`OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID` after rollback, preserving initial/pending
+state and an open batch. A failure while persisting conflict/receipt evidence
+rolls back that complete refusal transaction and cannot commit a partial conflict
+or report a closed success. Classification is not rerun for stored duplicates or
+closed replay. Shipped memory/PostgreSQL stores must agree; custom stores may not
+silently claim support while ignoring a configured classifier.
+
+Inspector acceptance must prove default compatibility, all three terminal states
+and both optional conflict types, unknown-code fallback, non-HTTP typed business
+errors, reserved/platform refusals, invalid context/result/async/throwing cases,
+original consumer context and identity, actual effect rollback, refusal-write
+atomicity, terminal received cross-batch duplicate/replay, pending reapplication,
+tenant isolation and both-store parity. Keep all existing assertions. DETRAN owns
+its code/outcome table and independent mapping/characterization proof against the
+installed published package; this contract supplies neither that proof nor
+permission to change DETRAN's public protocol.
+
 ## D2 — Structured missing-window signal and returned receipt context (V-05/V-07)
 
 Add optional `OfflineSyncStynxContext.signals`, a readonly array of records with
