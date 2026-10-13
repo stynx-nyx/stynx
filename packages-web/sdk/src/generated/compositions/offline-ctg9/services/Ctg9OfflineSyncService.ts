@@ -5,6 +5,7 @@
 import type { CancelNumberingReservationInput } from '../models/CancelNumberingReservationInput';
 import type { CTG9NumberingReservation } from '../models/CTG9NumberingReservation';
 import type { CTG9ReserveNumberingInput } from '../models/CTG9ReserveNumberingInput';
+import type { CTG9SubmitSyncBatchInput } from '../models/CTG9SubmitSyncBatchInput';
 import type { JsonValue } from '../models/JsonValue';
 import type { NumberingConsumptionResult } from '../models/NumberingConsumptionResult';
 import type { ProblemDetails } from '../models/ProblemDetails';
@@ -12,7 +13,6 @@ import type { ReconcileNumberingInput } from '../models/ReconcileNumberingInput'
 import type { ReconcileNumberingResult } from '../models/ReconcileNumberingResult';
 import type { ResolveSyncConflictInput } from '../models/ResolveSyncConflictInput';
 import type { SettleNumberingInput } from '../models/SettleNumberingInput';
-import type { SubmitSyncBatchInput } from '../models/SubmitSyncBatchInput';
 import type { SyncBatchReceipt } from '../models/SyncBatchReceipt';
 import type { SyncConflict } from '../models/SyncConflict';
 import type { SyncItemReceipt } from '../models/SyncItemReceipt';
@@ -243,7 +243,7 @@ export class Ctg9OfflineSyncService {
   public ctg9OfflineSyncPostOfflineSyncSyncBatchesSubmitBatch({
     requestBody,
   }: {
-    requestBody: SubmitSyncBatchInput;
+    requestBody: CTG9SubmitSyncBatchInput;
   }): CancelablePromise<JsonValue | ProblemDetails> {
     return this.httpRequest.request({
       method: 'POST',

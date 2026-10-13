@@ -2,6 +2,12 @@
 
 ## 1.6.1
 
+### Patch Changes
+
+- Regenerate the offline HTTP client from the source contract, including CTG9
+  business-agent input, reconciliation replay keys and IDs, source-pending signals
+  and terminal received receipt markers. Preserve existing routes and operations.
+
 ## 1.6.0
 
 ### Minor Changes

@@ -7,6 +7,7 @@ import type { NumberingReservationStatus } from './NumberingReservationStatus';
 export type ReconcileNumberingResult = {
   consumption: Array<NumberingConsumptionEntry>;
   missingOnServer: Array<number>;
+  reconciliationId?: string;
   reservationId: string;
   status: NumberingReservationStatus;
   unexpectedOnServer: Array<number>;

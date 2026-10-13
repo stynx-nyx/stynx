@@ -18,6 +18,9 @@ export const $ReconcileNumberingResult = {
       },
       isRequired: true,
     },
+    reconciliationId: {
+      type: 'string',
+    },
     reservationId: {
       type: 'string',
       isRequired: true,
