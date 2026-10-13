@@ -1,5 +1,16 @@
 # @stynx-nyx/testing
 
+## 1.6.1
+
+### Patch Changes
+
+- @stynx-nyx/audit@1.6.1
+- @stynx-nyx/auth@1.6.1
+- @stynx-nyx/core@1.6.1
+- @stynx-nyx/data@1.6.1
+- @stynx-nyx/sessions@1.6.1
+- @stynx-nyx/storage@1.6.1
+
 ## 1.6.0
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @stynx-nyx/angular-storage
 
+## 1.6.1
+
+### Patch Changes
+
+- @stynx-nyx/angular@1.6.1
+- @stynx-nyx/angular-i18n@1.6.1
+- @stynx-nyx/angular-ui@1.6.1
+
 ## 1.6.0
 
 ### Patch Changes
