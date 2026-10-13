@@ -58,10 +58,8 @@
       ]
     },
     "type_check": {
-      "argv": [
-        "pnpm",
-        "typecheck"
-      ]
+      "taskId": "typecheck",
+      "population": "workspace-typecheck"
     },
     "plant_depth": {
       "excludeGlobs": [
@@ -114,6 +112,18 @@
         "packages-web/angular-profile/src",
         "packages-web/angular-audit/src"
       ]
+    },
+    "build": {
+      "taskId": "build",
+      "population": "workspace-build"
+    },
+    "perf_test": {
+      "taskId": "test:performance",
+      "population": "cold-unit-perf"
+    },
+    "migration_check": {
+      "taskId": "db:rls",
+      "population": "migration-rls"
     }
   },
   "surfaces": {

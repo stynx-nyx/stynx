@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.6.2",
+  "policy_version": "1.6.3",
   "source_path": "law/policy/devai-adoption.json",
-  "source_digest_sha256": "fde2b641e1eb589ed73d1a79716b0d9dc828f03bb04560dfaee29e3027dd4a88",
+  "source_digest_sha256": "d0fa1c959ca2f7695f0349eafa68e83adf32ea58d23cd3a4728135fda3eba316",
   "materialized": {
     ".devai/config/project.json": "01ce87dd0a3cbc966cb4d6e6eee74fc0765481e171d30b516ca41760239ce4b6",
     ".devai/config/domains.json": "74cd7cb8a0ab2588422f197ba574323018cb24135b6944eaa987aebbe036f29e",
@@ -11,13 +11,13 @@
     ".devai/config/scorecard-na.json": "1c771ff287822cb00becba04817b3e35e4472074f1ee2cdccd29b2469fbea7de",
     ".devai/config/glob-guards.json": "759bf9dd020fff02a75cdc184780c04e4883bde6a82e16290ce7f0b8ab70d4bd",
     ".devai/config/release-verification.json": "2e7b9bb872ecbea45027cefbb183fd08764bb863073da5c40b2e15aa08b2a0aa",
-    ".devai/config/sensor-inputs.json": "5920f4b695d2bd4cc7de372986ae0cc65fa557a86827bd9b0091e1c3845bbb66"
+    ".devai/config/sensor-inputs.json": "52ead3a64279357f3c04b0dcaca70416f9d20af7dc3f9411600bbeba9594d91d"
   },
   "retired_keys": [],
   "authority_extension": {
     "extension_id": "stynx.client-path-authority",
-    "extension_version": "1.6.2",
-    "digest_sha256": "71250d8d742f93a81afee5ad931b5bb7f68497d6025d0a645b283932f06c8901",
+    "extension_version": "1.6.3",
+    "digest_sha256": "c86d7935147d37879809d6dbca626bcdd2e21b845288b0f66992153cd0877554",
     "rule_count": 68
   }
 }
