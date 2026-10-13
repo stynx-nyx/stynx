@@ -1,17 +1,17 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-package-identity",
-  "policy_version": "1.7.0",
+  "policy_version": "1.8.0",
   "authority": "Architect",
   "description": "Exact published registry identity of the root-only DEVAI dependency adopted by STYNX; generated bindings remain owned by registered CLI operations.",
   "registry": "https://npm.pkg.github.com",
   "package": "@aarusso-nyx/devai",
-  "version": "2.6.0",
-  "tarball": "https://npm.pkg.github.com/download/@aarusso-nyx/devai/2.6.0/f763c5168c26cb1001ab16d78e41606fef4899d5",
-  "integrity": "sha512-oqHqd5p7ILm6zXxcAPuEZS1V5m53epgMzWBrqBQmhJDcOdSCnt04GFOFAAIA44TE69b3QyzyDxMYqnJkoqPj0w==",
-  "shasum": "f763c5168c26cb1001ab16d78e41606fef4899d5",
-  "sha256": "d2b19a7e4004204ada80cc9b21cd55dfbe4a97f6e6b2f26004dfc7db324bcc02",
-  "source_commit": "e1b56483da2592e9af1ef82cae5a752ba82f004f",
-  "source_tree": "252e6851865640539ffc17cab41854d0716a01e1",
-  "signed_tag_object": "f126f66693c4e9d720f1e2ab1155fe943b6de520"
+  "version": "2.6.1",
+  "tarball": "https://npm.pkg.github.com/download/@aarusso-nyx/devai/2.6.1/359984f6b336628abd55b9dc8b58344161d0c720",
+  "integrity": "sha512-yubW7tfA74mVDXWSqzfWLOrzWKIUMMOW/nBQ2kYijzvfjF22rzM/6nalR5bu0HJCouDyWg56lOXUg2d9J5qCGA==",
+  "shasum": "359984f6b336628abd55b9dc8b58344161d0c720",
+  "sha256": "b6e481480d9273d2cbefc5519034d6f9841050552ea2262846fb81f6b1aca311",
+  "source_commit": "082eefb196d9240516ab947ba9985f39d2a99251",
+  "source_tree": "39c1ba2080863ed5f02bea0e306348fa4bb9b65d",
+  "signed_tag_object": "5686a85acb3b7e5e02a66abdff20ac4ca3af61cb"
 }

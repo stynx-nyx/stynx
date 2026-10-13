@@ -28,6 +28,11 @@ each package records its history in its own `CHANGELOG.md`.
 The engineering rules and ownership boundaries for these paths are documented
 in [docs/meta/development-contract.md](docs/meta/development-contract.md).
 
+Workspace governance adopts the exact published `@aarusso-nyx/devai@2.6.1`
+package at tier 1, with Constitution 1.0.2 pinned. The verified registry/source
+identity is [law/policy/devai-package-identity.json](law/policy/devai-package-identity.json);
+generated bindings are refreshed only through the installed CLI.
+
 ## Workspace commands
 
 ```bash
@@ -51,7 +56,7 @@ corepack pnpm changeset
   mutation execution, explicit unmeasured HTTP performance, and unchanged
   static/security/product and protected publication gates. The existing cold-unit
   performance node remains required. The separate prospective 1.6.1 scope in
-  [ADR-RELEASE-0002](law/adr/2026-10-12-patch-1.6.1-and-practical-audit.md)
+  [ADR-RELEASE-0004](law/adr/2026-10-12-patch-1.6.1-and-practical-audit.md)
   retains that floor under the Owner's no-k6/no-mutation direction while repairing
   offline-sync and admitted evidence first. Mutation testing is not a release-readiness input.
 - `pnpm ci:stynx:remote-full` provides the remote full lane.

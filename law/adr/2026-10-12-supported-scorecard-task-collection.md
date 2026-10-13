@@ -162,3 +162,37 @@ introduced. The two existing N/A cells, thresholds, populations, lookbacks,
 minimum samples, exclusions and `readiness_promoting=false` remain unchanged.
 A partial adoption or failed check remains visible; it cannot be promoted to a
 successful collection or overall audit PASS.
+
+## Published 2.6.1 adoption record — 2026-10-13
+
+Independent upstream publication verification completed before actual adoption:
+registry/archive SHA-256
+`b6e481480d9273d2cbefc5519034d6f9841050552ea2262846fb81f6b1aca311`,
+signed tag object `5686a85acb3b7e5e02a66abdff20ac4ca3af61cb`, source commit
+`082eefb196d9240516ab947ba9985f39d2a99251` and tree
+`39c1ba2080863ed5f02bea0e306348fa4bb9b65d`. The exact registry integrity,
+tarball and source identities are recorded in
+[package identity policy 1.8.0](../policy/devai-package-identity.json).
+The immutable [DEVAI v2.6.1 release](https://github.com/aarusso-nyx/devai/releases/tag/v2.6.1)
+is dependency publication evidence, not STYNX publication or readiness.
+
+A normal frozen-lockfile install supplied the published package; all 423 installed
+payload files independently matched its registry archive. The actual installed
+upgrade preview admitted exactly `MIG-2.6.1-runtime-repair-identity-refresh`, with
+no retired keys, replaced defaults, obligations or refusals. Its five targets
+were the constitution pointer, project version, adopter-policy binding receipt,
+compiled authority and GitHub host adapter. The project/receipt version refresh
+is the same reviewed result as the isolated rehearsals, not an additional policy
+interface. The upgrade receipt is the sixth generated changed file. No workflow,
+constitution pin, adopter source policy, task descriptor or operational-law bytes
+changed; no generated file was edited by hand.
+
+Registered upgrade/write followed by adopter-policy bind/write passed under the
+Architect declaration. All five upgrade target digests matched, the journal
+reported no interrupted bind, and the final upgrade preview was current/no-op.
+Unskipped Doctor passed all 16 checks. Its four task rows were declaration-plan,
+diagnostic-only readiness; they establish no execution-prerequisite receipt or
+measurement standing. Independent Inspector package/freeze checks remain required.
+All 125 preexisting historical record/proof/state files and the source adoption
+policy remained byte-identical. No canonical observation, proof-chain append,
+k6 or mutation execution was performed by this adoption.
