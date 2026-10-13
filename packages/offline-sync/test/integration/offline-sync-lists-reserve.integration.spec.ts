@@ -585,8 +585,32 @@ describe('UPS-OFS-05/-09/-10/-11/-12 PostgreSQL reservation idempotency, listing
     const result = await run(tenantA, () => a.submitSyncBatch(input, transport('ht-1')));
     expect(result.receipt).toMatchObject({ status: 'closed', responseStatus: 201 });
     expect(result.receipt.items).toEqual([
-      { queueItemId: 'h-1', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
-      { queueItemId: 'h-2', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
+      {
+        queueItemId: 'h-1',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+        stynx: {
+          version: 1,
+          receiptId: 'h-1',
+          errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          receivedPayloadHash: oneByte,
+          retryable: false,
+        },
+      },
+      {
+        queueItemId: 'h-2',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+        stynx: {
+          version: 1,
+          receiptId: 'h-2',
+          errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          receivedPayloadHash: longHash,
+          retryable: false,
+        },
+      },
       {
         queueItemId: 'h-3',
         status: 'applied',
@@ -598,7 +622,19 @@ describe('UPS-OFS-05/-09/-10/-11/-12 PostgreSQL reservation idempotency, listing
           attempts: 1,
         },
       },
-      { queueItemId: 'h-4', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
+      {
+        queueItemId: 'h-4',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+        stynx: {
+          version: 1,
+          receiptId: 'h-4',
+          errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          receivedPayloadHash: `sha256:${'A'.repeat(64)}`,
+          retryable: false,
+        },
+      },
     ]);
     expect(
       result.items.map((stored) => [stored.queueItemId, stored.status, stored.payloadHash]),
@@ -735,7 +771,21 @@ describe('UPS-OFS-05/-09/-10/-11/-12 PostgreSQL reservation idempotency, listing
       ),
     );
     expect(again.receipt.items).toEqual([
-      { queueItemId: 'h-5', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
+      {
+        queueItemId: 'h-5',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+        stynx: {
+          version: 1,
+          receiptId: 'h-1',
+          errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          receivedPayloadHash: oneByte,
+          retryable: false,
+          storedPayloadHash: hash,
+          relatedQueueItemId: 'h-1',
+        },
+      },
     ]);
     expect(await run(tenantA, () => a.getSyncItemReceipt('h-1'))).toEqual({
       queueItemId: 'h-1',

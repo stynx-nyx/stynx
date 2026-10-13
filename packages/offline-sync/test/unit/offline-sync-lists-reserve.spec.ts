@@ -295,10 +295,10 @@ describe('UPS-OFS-10 non-canonical payload hash is a per-item integrity rejectio
     ]), transportOf('nc-1'));
     expect(result.receipt.status).toBe('closed');
     expect(result.receipt.items).toEqual([
-      { queueItemId: 'nc-1-a', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
-      { queueItemId: 'nc-1-b', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
-      { queueItemId: 'nc-1-c', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
-      { queueItemId: 'nc-1-d', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
+      { queueItemId: 'nc-1-a', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', stynx: { version: 1, receiptId: 'nc-1-a', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', receivedPayloadHash: 'x', retryable: false } },
+      { queueItemId: 'nc-1-b', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', stynx: { version: 1, receiptId: 'nc-1-b', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', receivedPayloadHash: 'h'.repeat(128), retryable: false } },
+      { queueItemId: 'nc-1-c', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', stynx: { version: 1, receiptId: 'nc-1-c', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', receivedPayloadHash: `sha256:${'A'.repeat(64)}`, retryable: false } },
+      { queueItemId: 'nc-1-d', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', stynx: { version: 1, receiptId: 'nc-1-d', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', receivedPayloadHash: 'é'.repeat(127) + 'z', retryable: false } },
       { queueItemId: 'nc-1-e', status: 'applied', stynx: { version: 1, receiptId: 'nc-1-e', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-nc-1-e', attempts: 1 } },
     ]);
     expect(result.items.map(stored => [stored.queueItemId, stored.status, stored.payloadHash])).toEqual([
@@ -316,7 +316,7 @@ describe('UPS-OFS-10 non-canonical payload hash is a per-item integrity rejectio
     expect(applier.apply).toHaveBeenCalledTimes(2);
     // With an existing original the item is still rejected the same way; the original is untouched.
     const again = await service.submitSyncBatch(batch('device-a', 'nc-3', [{ ...item('nc-3-a', 'nc-1-a'), payloadHash: 'x' }]), transportOf('nc-3'));
-    expect(again.receipt.items).toEqual([{ queueItemId: 'nc-3-a', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' }]);
+    expect(again.receipt.items).toEqual([{ queueItemId: 'nc-3-a', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', stynx: { version: 1, receiptId: 'nc-1-a', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', receivedPayloadHash: 'x', retryable: false, storedPayloadHash: hash, relatedQueueItemId: 'nc-2-a' } }]);
     expect(await service.getSyncItemReceipt('nc-1-a')).toEqual({ queueItemId: 'nc-2-a', status: 'applied',
       stynx: { version: 1, receiptId: 'nc-1-a', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-nc-2-a', attempts: 1 } });
     expect(applier.apply).toHaveBeenCalledTimes(2);
@@ -435,7 +435,7 @@ describe('UPS-OFS-14 contract sensors (in-memory)', () => {
     const resequenced = await service.submitSyncBatch({ ...batch('device-a', 'v03-1'), batchSequence: 2 }, transportOf('v03-1c')).catch((caught: unknown) => caught as OfflineSyncError);
     expect(resequenced.code).toBe('OFFLINE_SYNC_BATCH_CONFLICT');
     const mismatch = await service.submitSyncBatch(batch('device-a', 'v03-2', [{ ...item('v03-2-1', 'v03-1-1'), payloadHash: `sha256:${'f'.repeat(64)}` }]), transportOf('v03-2'));
-    expect(mismatch.receipt.items).toEqual([{ queueItemId: 'v03-2-1', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' }]);
+    expect(mismatch.receipt.items).toEqual([{ queueItemId: 'v03-2-1', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', stynx: { version: 1, receiptId: 'v03-1-1', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', receivedPayloadHash: `sha256:${'f'.repeat(64)}`, retryable: false, storedPayloadHash: hash, relatedQueueItemId: 'v03-1-1' } }]);
     expect(await service.getSyncItemReceipt('v03-1-1')).toEqual({ queueItemId: 'v03-1-1', status: 'applied',
       stynx: { version: 1, receiptId: 'v03-1-1', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-v03-1-1', attempts: 1 } });
   });
@@ -484,7 +484,7 @@ describe('UPS-OFS-14 contract sensors (in-memory)', () => {
       { ...item('v05-q3', 'v05-k1'), payloadHash: `sha256:${'e'.repeat(64)}` }, item('v05-q1', 'v05-k9'), item('v05-q4', 'v05-k4'),
     ]), transportOf('v05-3'));
     expect(mixed.receipt.items).toEqual([
-      { queueItemId: 'v05-q3', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
+      { queueItemId: 'v05-q3', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', stynx: { version: 1, receiptId: 'v05-k1', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY', receivedPayloadHash: `sha256:${'e'.repeat(64)}`, retryable: false, storedPayloadHash: hash, relatedQueueItemId: 'v05-q1' } },
       { queueItemId: 'v05-q1', status: 'rejected', errorCode: 'OFFLINE_SYNC_QUEUE_ID_REUSED' },
       { queueItemId: 'v05-q4', status: 'applied', stynx: { version: 1, receiptId: 'v05-k4', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-v05-q4', attempts: 1 } },
     ]);

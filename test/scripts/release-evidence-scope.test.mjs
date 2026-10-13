@@ -21,26 +21,32 @@ function write(root, path, value) {
   mkdirSync(dirname(join(root, path)), { recursive: true });
   writeFileSync(join(root, path), `${JSON.stringify(value, null, 2)}\n`);
 }
-function fixture(t) {
+function fixture(t, version = '1.6.0') {
   const root = mkdtempSync(join(tmpdir(), 'stynx-release-scope-inspector-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   for (const path of [
     'package.json',
-    'test-tasks.json',
-    'law/schemas/release-scope-1.6.0.schema.json',
-    'law/policy/release-scope-1.6.0.json',
+    `law/schemas/release-scope-${version}.schema.json`,
+    `law/policy/release-scope-${version}.json`,
     'law/policy/stynx-package-roster.json',
   ]) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     cpSync(join(repository, path), join(root, path));
   }
+  cpSync(
+    join(
+      repository,
+      version === '1.6.0' ? 'test/fixtures/release-scope/test-tasks-1.6.0.json' : 'test-tasks.json',
+    ),
+    join(root, 'test-tasks.json'),
+  );
   for (const name of read(root, 'law/policy/stynx-package-roster.json').publishable_packages) {
     const shortName = name.split('/')[1];
     // The production discovery function reads the real complete filesystem population.
-    write(root, `packages/${shortName}/package.json`, { name, version: '1.6.0' });
+    write(root, `packages/${shortName}/package.json`, { name, version });
   }
   mkdirSync(join(root, 'packages-web'));
-  write(root, 'package.json', { ...read(root, 'package.json'), version: '1.6.0' });
+  write(root, 'package.json', { ...read(root, 'package.json'), version });
   return root;
 }
 const mutate = (root, path, transform) => write(root, path, transform(read(root, path)));
@@ -64,7 +70,7 @@ test('exact scoped version retains all 44 packages and 15 RC nodes and reports o
   assert.equal(selected.scope.productionProviderApprovalClaimed, false);
 });
 
-for (const version of ['1.5.7', '1.6.1', '1.7.0', '2.0.0', '1.6.0-rc.1'])
+for (const version of ['1.5.7', '1.7.0', '2.0.0', '1.6.0-rc.1'])
   test(`version ${version} retains original k6 requirement without scoped policy authority`, (t) => {
     const root = fixture(t);
     mutate(root, 'package.json', (value) => ({ ...value, version }));
@@ -316,3 +322,92 @@ test('actual verifier retains successful k6 requirement for old version', (t) =>
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(JSON.parse(result.stdout).scope, null);
 });
+
+// INV-REL-001: prospective patch authority remains closed and nonpromoting.
+test('1.6.1 selects its own exact authority and retains all mandatory RC nodes', (t) => {
+  const root = fixture(t, '1.6.1');
+  const selected = resolvePublicationEvidenceRequirements(root);
+  assert.deepEqual(selected.requiredChecks, [
+    ['verified-local-rc', 'signed exact-candidate local RC'],
+  ]);
+  assert.equal(selected.scope.version, '1.6.1');
+  assert.equal(selected.scope.packageRoster.count, 44);
+  assert.equal(selected.scope.rc.requiredNodes.length, 15);
+  assert.deepEqual(
+    selected.scope.rc.requiredNodes,
+    read(repository, 'law/policy/release-scope-1.6.0.json').rc.requiredNodes,
+  );
+  assert.deepEqual(selected.scope.omitted, {
+    httpPerformance: 'NOT_OBSERVED',
+    k6: 'NOT_OBSERVED',
+    mutation: 'NOT_RUN',
+  });
+  assert.deepEqual(selected.scope.audit, {
+    requiredOverallPass: false,
+    readinessPromoting: false,
+    preserveHistorical: true,
+  });
+  assert.equal(selected.scope.productionProviderApprovalClaimed, false);
+  assert.equal(selected.scope.consumerAcceptanceRequiredForPublication, false);
+});
+
+for (const [label, change] of [
+  ['missing policy', (root) => rmSync(join(root, 'law/policy/release-scope-1.6.1.json'))],
+  ['missing schema', (root) => rmSync(join(root, 'law/schemas/release-scope-1.6.1.schema.json'))],
+  [
+    'schema bytes',
+    (root) =>
+      writeFileSync(
+        join(root, 'law/schemas/release-scope-1.6.1.schema.json'),
+        readFileSync(join(root, 'law/schemas/release-scope-1.6.1.schema.json'), 'utf8') + ' ',
+      ),
+  ],
+  [
+    'policy extra field',
+    (root) => mutate(root, 'law/policy/release-scope-1.6.1.json', (v) => ({ ...v, bypass: true })),
+  ],
+  [
+    'false omitted PASS',
+    (root) =>
+      mutate(root, 'law/policy/release-scope-1.6.1.json', (v) => ({
+        ...v,
+        omitted: { ...v.omitted, k6: 'PASS' },
+      })),
+  ],
+  [
+    'readiness promotion',
+    (root) =>
+      mutate(root, 'law/policy/release-scope-1.6.1.json', (v) => ({
+        ...v,
+        audit: { ...v.audit, readinessPromoting: true },
+      })),
+  ],
+  [
+    'RC command change',
+    (root) =>
+      mutate(root, 'test-tasks.json', (v) => ({
+        ...v,
+        tasks: v.tasks.map((task) =>
+          task.nodeId === 'security' ? { ...task, argv: ['node', '-e', 'process.exit(0)'] } : task,
+        ),
+      })),
+  ],
+  [
+    'historical task substitution',
+    (root) =>
+      cpSync(
+        join(repository, 'test/fixtures/release-scope/test-tasks-1.6.0.json'),
+        join(root, 'test-tasks.json'),
+      ),
+  ],
+  [
+    'mixed package version',
+    (root) => mutate(root, 'packages/core/package.json', (v) => ({ ...v, version: '1.6.0' })),
+  ],
+  ['missing package', (root) => rmSync(join(root, 'packages/core'), { recursive: true })],
+])
+  test(`1.6.1 scoped selection refuses ${label}`, (t) => {
+    const root = fixture(t, '1.6.1');
+    change(root);
+    assert.throws(() => resolvePublicationEvidenceRequirements(root));
+  });
