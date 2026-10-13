@@ -41,6 +41,12 @@ runner, input selectors, environment allowlist and toolchain keys. The label is
 not a measurement; executing an admitted task and recording its actual output
 is required. The ordinary RC graph/commands remain the same fifteen nodes.
 
+Task-bound sensing requires the actual supported prerequisite check-cache receipt
+(schema 1.1.0, affected or RC profile), bound to the exact repository, candidate,
+policy, task keys and result digests. Execute the required prerequisites through
+the registered check path first. Raw stdout or a signed export cannot substitute
+for that cache receipt; the selected sensor task still executes anew.
+
 The performance task is the retained cold-unit subprocess measurement. It is
 not k6, HTTP qualification, endpoint latency or native performance. No k6 or
 mutation execution is authorized. Do not add those tasks to obtain a green cell.
@@ -64,6 +70,10 @@ observe the full scorecard. Preserve the installed canonical sensor population;
 individual invocation is a supported admission path, not permission to omit a
 failing member. A task-mode preset refusal is not worked around by modifying the
 installed package or supplying synthetic member context.
+Capture both actual stdout and stderr gate envelopes, including returned
+`error.context.payload.results`; failed readings are not discarded merely because
+the CLI reports `ACTION_GATE_FAILED` on stderr. Preserve original failed attempts
+and append corrections when an earlier collector parsed the streams incorrectly.
 
 Inspector owns the recording session; Auditor independently verifies exact
 candidate/inputs/outcomes, append-only custody, history preservation and full
