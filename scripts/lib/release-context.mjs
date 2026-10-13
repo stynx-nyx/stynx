@@ -36,6 +36,11 @@ export const versionedStorageTemplates = Object.freeze([
 // ADR-RELEASE-0004: exact reviewed net changes after the 1.6.1 marker.
 // Historical patch profiles keep their existing follow-up rules.
 const patch161FollowUpStatuses = new Map([
+  ['docs/meta/security/sbom.cdx.json', 'M'],
+  ['test/scripts/api-task-source-custody.test.mjs', 'M'],
+  ['test/scripts/devai-adoption-contract.test.mjs', 'M'],
+  ['test/scripts/http-qualification-openapi.test.mjs', 'M'],
+  ['test/scripts/verify-api-coverage.test.mjs', 'M'],
   ['.devai/config/adopter-policy-binding.json', 'M'],
   ['.devai/config/authority-policy.json', 'M'],
   ['.devai/config/github-actions-host-adapter.json', 'M'],
