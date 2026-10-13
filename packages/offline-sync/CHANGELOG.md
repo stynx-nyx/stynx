@@ -7,6 +7,8 @@
 - a5260d1: Correct offline-sync acceptance gaps with structured sequence and domain context,
   trusted business-agent propagation, source-pending signals, transactional resolution
   events and immutable reconciliation history with lossless versioned import support.
+  Publish ordered, source-bound forward migration SQL with configurable tenant and
+  role bindings for verified populated upgrades without replaying fresh installation.
   - @stynx-nyx/auth@1.6.1
   - @stynx-nyx/backend@1.6.1
   - @stynx-nyx/core@1.6.1

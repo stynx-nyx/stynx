@@ -33,6 +33,17 @@ export interface OfflineStorageArtifact {
   roleBindingsSql: string;
   manifest: OfflineStorageManifest;
 }
+export interface OfflineStorageMigration {
+  source: { path: string; sha256: string };
+  sql: string;
+  sqlSha256: string;
+}
+export interface OfflineStorageMigrationsArtifact {
+  contractVersion: string;
+  packageVersion: string;
+  binding: StorageRoleBinding;
+  migrations: readonly OfflineStorageMigration[];
+}
 
 const DEFAULT_ROLES = ['stynx_owner', 'stynx_app', 'stynx_reader'] as const;
 function roleMap(binding: StorageRoleBinding): Record<string, string> {
@@ -168,6 +179,31 @@ export function renderOfflineStorage(options: OfflineStorageOptions = {}): Offli
       ],
     },
   };
+}
+
+/** Pure ordered forward SQL; caller owns prior-state admission, ledger and transactions. */
+export function renderOfflineStorageMigrations(
+  options: OfflineStorageOptions = {},
+): OfflineStorageMigrationsArtifact {
+  const binding = resolveStorageRoleBinding(options);
+  const { contractVersion, packageVersion } = OFFLINE_STORAGE_TEMPLATE;
+  const migrations = OFFLINE_STORAGE_TEMPLATE.migrations.map(({ source, statements }) => {
+    const sql =
+      statements
+        .map((statement) =>
+          statement.kind === 'binding'
+            ? bindStatement(statement.sql, binding)
+            : bindSql(statement.sql, binding),
+        )
+        .filter((statement) => statement !== null)
+        .join('\n\n') + '\n';
+    return {
+      source: { ...source },
+      sql,
+      sqlSha256: createHash('sha256').update(sql, 'utf8').digest('hex'),
+    };
+  });
+  return { contractVersion, packageVersion, binding, migrations };
 }
 
 /** Verifies the live owner read-only transaction; never repairs, grants or commits. */
