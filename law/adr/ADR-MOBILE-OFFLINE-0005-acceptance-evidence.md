@@ -315,6 +315,59 @@ original error-identity and state assertion. Independently cover late
 queue/conflict/action resurrection. This fixture setup correction strengthens
 callback lifetime admission and authorizes no assertion removal or weakening.
 
+#### D4.1 refinement — independent resolution progress
+
+The unchanged V-08 witness requires a second conflict of the same tenant to
+resolve while a first conflict waits in its final event callback. A blanket
+tenant mutex contradicts that valid behavior. This prospective refinement
+supersedes only the blanket serialization and shared-frame snapshot restoration
+above; ownership, closed-frame fences, child completion and all existing tests
+remain required.
+
+Use an exclusive/shared tenant admission boundary. Durable CTG9 execution owns
+exclusive admission and waits for active independent projection operations;
+external E6 submit/open-conflict/legacy and resolver-backed resolutions use
+shared admission. Once exclusive work is queued, do not admit later independent
+shared owners ahead of it indefinitely. Owned nested calls inherit their active
+permit without self-waiting; nested durable batches and cross-tenant ownership
+still refuse. Other tenants remain independent. Restore resolution serialization
+for the same canonical queue item (therefore also the same conflict), with
+same-owner recursive/overlapping acquisition refused before self-wait. Different
+queue-item conflicts retain independent progress. No deadline or public API is
+changed.
+An owned nested acquisition that would wait on another owner's queue lock must
+also refuse before waiting, avoiding cycles between reentrant domain ports.
+Independent external contenders may wait normally on that queue's lock.
+
+A shared operation cannot restore an entire tenant snapshot. Use private owned
+write journals for the queue/conflict projections and their associated maps,
+including E6/payload indexes, receipt/batch associations, conflict metadata,
+integrity facts and action history. Before each map mutation, record its actual
+prior presence/value and resulting value under the active frame. Claim the
+map-identity/key before writing: another independent owner or an active
+non-ancestor sibling frame cannot mutate that claimed key; refuse through the
+existing typed conflict family before writing rather than waiting while holding
+other keys. Descendant writes may inherit an ancestor claim. This prevents
+overlapping owners from committing from another operation's uncommitted facts.
+
+On child success, merge its undo custody into the parent: retain the earliest
+prior value, advance the last-owned-write identity and transfer claims. On
+failure, close the affected frame and descendants first, then undo their owned
+writes in reverse order, validating current write custody before restoration.
+Restore/delete only keys actually written by those frames; never replace a
+foreign committed value or scan-delete unrelated tenant entries. Remove only
+owned action IDs and retain the monotonic action-sequence counter. Root success
+releases its claims without undo. A closed detached child's cleanup cannot
+replay an obsolete journal. Full tenant snapshots may remain only inside
+exclusive CTG9 execution, where independent writers cannot coexist.
+
+Inspector must retain the unchanged independent-resolution and terminal-contender
+witness, prove unrelated successful shared writes survive a failing resolution,
+and retain the nested own-effect/index/history rollback and detached-callback
+refusals. Tests, coverage thresholds and event-final-write ordering remain
+unchanged; this is the bounded correction for verified isolation and progress
+defects, not a new concurrency feature or a waiver.
+
 ## D5 — Durable reconciliation history (V-13)
 
 Add optional `ReconcileNumberingInput.idempotencyKey` (1–255 UTF-8 bytes) and
