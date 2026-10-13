@@ -640,7 +640,34 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   }
 
   /** Same transitions as `PostgresOfflineSyncStore.resolveWithPort` (ADR-MOBILE-OFFLINE-0003 D1, D2, D3). */
+  private readonly conflictResolutionLocks = new Map<string, Promise<void>>();
+
   async resolveWithPort(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    input: ResolveSyncConflictInput,
+    now: string,
+    port: OfflineSyncConflictResolver,
+    eventPort?: import('./types').OfflineSyncEventPort,
+  ): Promise<SyncConflict> {
+    const key = this.key(scope.tenantId, id);
+    const previous = this.conflictResolutionLocks.get(key) ?? Promise.resolve();
+    let release!: () => void;
+    const current = new Promise<void>((done) => {
+      release = done;
+    });
+    this.conflictResolutionLocks.set(key, current);
+    await previous;
+    try {
+      return await this.resolveWithPortLocked(scope, id, input, now, port, eventPort);
+    } finally {
+      release();
+      if (this.conflictResolutionLocks.get(key) === current)
+        this.conflictResolutionLocks.delete(key);
+    }
+  }
+
+  private async resolveWithPortLocked(
     scope: TrustedOfflineSyncScope,
     id: string,
     input: ResolveSyncConflictInput,
@@ -693,8 +720,8 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       receipt: receiptEntry ? this.itemReceipts.get(receiptEntry[0]) : undefined,
       conflict: this.conflicts.get(key),
       stynx: this.conflictStynx.get(key),
-      actionCount: this.conflictActions.length,
     };
+    const actionId = randomUUID();
     try {
       const { consumerAttributes: supplied, ...resolved } = await port.resolve(
         trx,
@@ -747,7 +774,6 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         } as SyncItemReceipt;
         this.itemReceipts.set(receiptEntry![0], { ...receiptEntry![1], receipt: pending });
       }
-      const actionId = randomUUID();
       this.conflictActions.push({
         record: {
           actionId,
@@ -819,7 +845,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       if (before.conflict) this.conflicts.set(key, before.conflict);
       if (before.stynx) this.conflictStynx.set(key, before.stynx);
       else this.conflictStynx.delete(key);
-      this.conflictActions.splice(before.actionCount);
+      const actionIndex = this.conflictActions.findIndex(
+        (entry) => entry.record.actionId === actionId,
+      );
+      if (actionIndex >= 0) this.conflictActions.splice(actionIndex, 1);
       throw error;
     }
   }
