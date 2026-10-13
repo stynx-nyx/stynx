@@ -1,3 +1,10 @@
+import {
+  reconciliationConflict,
+  reconciliationList,
+  reconciliationRequest,
+  reconciliationResult,
+  reconciliationSortInstant,
+} from './reconciliation';
 import { domainErrorContext } from './domain-error-context';
 import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection';
 import {
@@ -58,6 +65,8 @@ import type {
   OfflineSyncDurableStore,
   CTG9NumberingReservation,
   CTG9ReserveNumberingInput,
+  ListNumberingReconciliationsInput,
+  NumberingReconciliationRecord,
   ReconcileNumberingInput,
   ReconcileNumberingResult,
   SettleNumberingInput,
@@ -106,6 +115,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   >();
   private readonly conflicts = new Map<string, SyncConflict>();
   private readonly consumption = new Map<string, Map<number, NumberingConsumptionEntry>>();
+  private readonly reconciliations = new Map<
+    string,
+    { fingerprint: string; record: NumberingReconciliationRecord }
+  >();
   private readonly itemReceipts = new Map<
     string,
     {
@@ -1008,6 +1021,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     now: string,
   ): Promise<ReconcileNumberingResult> {
     const observedAt = consumptionReadInstant(now);
+    const request = reconciliationRequest(scope, input);
     const key = this.key(scope.tenantId, id);
     const reservation = this.reservations.get(key);
     const entries = this.consumption.get(key);
@@ -1017,30 +1031,79 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         404,
         'Reservation was not found.',
       );
-    for (const number of input.claimedNumbers ?? []) {
+    const replay =
+      input.idempotencyKey === undefined
+        ? undefined
+        : [...this.reconciliations.values()].find(
+            ({ record }) =>
+              record.tenantId === scope.tenantId &&
+              record.reservationId === id &&
+              record.idempotencyKey === input.idempotencyKey,
+          );
+    if (replay) {
+      if (replay.fingerprint !== request.fingerprint) reconciliationConflict();
+      return structuredClone(replay.record.result);
+    }
+    for (const number of request.claimedNumbers)
       if (!entries.has(number))
         throw new OfflineSyncError(
           'OFFLINE_SYNC_INVALID_INPUT',
           400,
           'Claimed number is outside the reservation.',
         );
-    }
-    const claims = new Set(input.claimedNumbers ?? []);
-    for (const [number, entry] of entries)
-      if (claims.has(number) && entry.status === 'available')
-        entries.set(number, { ...entry, status: 'claimed-locally' });
-    const consumption = projectNumberingConsumption(reservation, [...entries.values()], observedAt);
-    return {
+    if (reservation.status === 'reserved')
+      for (const number of request.claimedNumbers) {
+        const entry = entries.get(number)!;
+        if (entry.status === 'available')
+          entries.set(number, { ...entry, status: 'claimed-locally' });
+      }
+    const reconciliationId = randomUUID();
+    const result = reconciliationResult(
+      {
+        reservationId: id,
+        status: reservation.status,
+        consumption: projectNumberingConsumption(reservation, [...entries.values()], observedAt),
+      },
+      request.claimedNumbers,
+      reconciliationId,
+    );
+    const record: NumberingReconciliationRecord = {
+      reconciliationId,
+      tenantId: scope.tenantId,
       reservationId: id,
-      status: reservation.status,
-      consumption,
-      missingOnServer: consumption
-        .filter((entry) => claims.has(entry.number) && entry.status !== 'applied')
-        .map((entry) => entry.number),
-      unexpectedOnServer: consumption
-        .filter((entry) => !claims.has(entry.number) && entry.status === 'applied')
-        .map((entry) => entry.number),
+      actorId: scope.actorId,
+      createdAt: now,
+      claimedNumbers: request.claimedNumbers,
+      ...(input.userRef === undefined ? {} : { userRef: input.userRef }),
+      ...(input.idempotencyKey === undefined ? {} : { idempotencyKey: input.idempotencyKey }),
+      result,
     };
+    this.reconciliations.set(this.key(scope.tenantId, reconciliationId), {
+      fingerprint: request.fingerprint,
+      record: structuredClone(record),
+    });
+    return result;
+  }
+
+  async listNumberingReconciliations(
+    scope: TrustedOfflineSyncScope,
+    input: ListNumberingReconciliationsInput,
+  ): Promise<OfflineSyncPage<NumberingReconciliationRecord>> {
+    const limit = reconciliationList(input);
+    return pageOf(
+      [...this.reconciliations.values()]
+        .filter(
+          ({ record }) =>
+            record.tenantId === scope.tenantId && record.reservationId === input.reservationId,
+        )
+        .map(({ record }) => ({
+          key: [reconciliationSortInstant(record.createdAt), record.reconciliationId],
+          value: structuredClone(record),
+        })),
+      2,
+      input.cursor,
+      limit,
+    );
   }
 
   async getNumberingConsumption(
