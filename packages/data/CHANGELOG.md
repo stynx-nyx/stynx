@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Read transaction error codes from own data properties without evaluating application
+  getters. Preserve PostgreSQL SQLSTATE retry and transaction-error mappings.
 - @stynx-nyx/core@1.6.1
 
 ## 1.6.0

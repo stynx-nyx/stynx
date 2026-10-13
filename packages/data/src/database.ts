@@ -56,16 +56,23 @@ interface ResolvedExecutionContext {
 
 const TX_CONTEXT_KEY = Symbol('stynx.data.tx');
 
+function transactionErrorCode(error: unknown): string | undefined {
+  try {
+    if (!error || typeof error !== 'object') return undefined;
+    const descriptor = Object.getOwnPropertyDescriptor(error, 'code');
+    const code: unknown = descriptor && 'value' in descriptor ? descriptor.value : undefined;
+    return typeof code === 'string' ? code : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function isRetryableError(error: unknown): error is Error & { code: string } {
-  return (
-    error instanceof Error &&
-    (error as Error & { code?: string }).code !== undefined &&
-    ['40001', '40P01'].includes((error as Error & { code: string }).code)
-  );
+  return error instanceof Error && ['40001', '40P01'].includes(transactionErrorCode(error) ?? '');
 }
 
 function mapTransactionError(error: unknown): unknown {
-  const code = (error as { code?: string })?.code;
+  const code = transactionErrorCode(error);
   if (code === '40001' && (error as Error).message === 'audit_chain_requires_read_committed') {
     return new AuditChainIsolationError();
   }
@@ -246,7 +253,7 @@ export class Database extends CoreDatabase {
         if (isRetryableError(mapped)) {
           throw new SerializationFailureError({
             attempts: attempt,
-            code: mapped.code,
+            code: transactionErrorCode(mapped),
             ...(lastError ? { lastError: String(lastError) } : {}),
           });
         }
