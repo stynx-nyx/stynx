@@ -96,7 +96,7 @@ describe('OfflineSyncService', () => {
       });
       expect(resolve).toHaveBeenCalledTimes(source === 'candidate' ? 0 : 1);
       expect((await service.listSyncBatchReceipts({})).items).toEqual([]);
-      expect(store.getQueueItem(tenantA, 'sync-item-1')).toBeUndefined();
+      expect(store.getQueueItem(tenantA, 'sync-item-1')).toBe(undefined);
       effectiveAgent = bounded;
       const result = await service.submitSyncBatch({ ...input, agentId: bounded });
       expect(result.items[0]).toMatchObject({ agentId: bounded, status: 'received' });
