@@ -240,6 +240,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     scope: TrustedOfflineSyncScope,
     operation: (frame: MemoryMutationFrame) => Promise<T>,
     conflictId?: string,
+    rollback?: () => void,
   ): Promise<T> {
     this.assertMutationOwner(scope);
     const parent = this.mutationContext.getStore()!;
@@ -263,6 +264,11 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       const result = await this.mutationContext.run(frame, () => operation(frame));
       this.assertFrameComplete(frame);
       return result;
+    } catch (error) {
+      const active = this.frameIsActive(frame);
+      frame.active = false;
+      if (active) rollback?.();
+      throw error;
     } finally {
       frame.active = false;
       parent.children.delete(frame);
@@ -277,6 +283,12 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     const queueBatches = new Map([...this.queueBatches].filter(([key]) => key.startsWith(prefix)));
     const payloads = new Map([...this.payloadIndex].filter(([key]) => key.startsWith(prefix)));
     const e6Items = new Map([...this.e6Items].filter(([key]) => key.startsWith(prefix)));
+    const integrityConflicts = new Map(
+      [...this.integrityConflicts].filter(([key]) => key.startsWith(prefix)),
+    );
+    const integrityRejections = new Map(
+      [...this.integrityRejections].filter(([key]) => key.startsWith(prefix)),
+    );
     const actions = this.conflictActions.filter(({ record }) => record.tenantId === tenantId);
     const conflicts = new Map(
       [...this.conflicts].filter(([, value]) => value.tenantId === tenantId),
@@ -302,6 +314,12 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       for (const [key, value] of payloads) this.payloadIndex.set(key, value);
       for (const key of this.e6Items.keys()) if (key.startsWith(prefix)) this.e6Items.delete(key);
       for (const [key, value] of e6Items) this.e6Items.set(key, value);
+      for (const key of this.integrityConflicts.keys())
+        if (key.startsWith(prefix)) this.integrityConflicts.delete(key);
+      for (const [key, value] of integrityConflicts) this.integrityConflicts.set(key, value);
+      for (const key of this.integrityRejections.keys())
+        if (key.startsWith(prefix)) this.integrityRejections.delete(key);
+      for (const [key, value] of integrityRejections) this.integrityRejections.set(key, value);
       for (let index = this.conflictActions.length - 1; index >= 0; index--)
         if (this.conflictActions[index]!.record.tenantId === tenantId)
           this.conflictActions.splice(index, 1);
@@ -847,27 +865,24 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       batchId: receiptEntry?.[1].deviceBatchId ?? '',
       now,
     };
-    const allowed = (await port.allowedActions?.(trx, id, context)) ??
-      this.conflictAllowedActions.get(key) ??
-      (receipt?.context?.allowedActions as readonly string[] | undefined) ?? [
-        'device-wins',
-        'server-wins',
-        'manual-review',
-      ];
-    if (!allowed.includes(input.resolution))
-      throw new OfflineSyncError(
-        'OFFLINE_SYNC_CONFLICT_RESOLUTION',
-        409,
-        'Resolution action is not allowed.',
-      );
-    const before = {
-      queueItem: this.queueItems.get(itemKey),
-      receipt: receiptEntry ? this.itemReceipts.get(receiptEntry[0]) : undefined,
-      conflict: this.conflicts.get(key),
-      stynx: this.conflictStynx.get(key),
-    };
-    const actionId = randomUUID();
+    const rollback = this.captureItemState(scope.tenantId);
     try {
+      const allowed = (await port.allowedActions?.(trx, id, context)) ??
+        this.conflictAllowedActions.get(key) ??
+        (receipt?.context?.allowedActions as readonly string[] | undefined) ?? [
+          'device-wins',
+          'server-wins',
+          'manual-review',
+        ];
+      this.assertMutationOwner(scope);
+      if (!allowed.includes(input.resolution))
+        throw new OfflineSyncError(
+          'OFFLINE_SYNC_CONFLICT_RESOLUTION',
+          409,
+          'Resolution action is not allowed.',
+        );
+      const actionId = randomUUID();
+
       const { consumerAttributes: supplied, ...resolved } = await this.checkedAwait(
         scope,
         port.resolve(trx, id, input.resolution, context),
@@ -994,18 +1009,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     } catch (error) {
       const active = this.frameIsActive(frame);
       frame.active = false;
-      if (before.queueItem && active) this.queueItems.set(itemKey, before.queueItem);
-      if (receiptEntry && before.receipt && active)
-        this.itemReceipts.set(receiptEntry[0], before.receipt);
-      if (before.conflict && active) this.conflicts.set(key, before.conflict);
-      if (active) {
-        if (before.stynx) this.conflictStynx.set(key, before.stynx);
-        else this.conflictStynx.delete(key);
-      }
-      const actionIndex = this.conflictActions.findIndex(
-        (entry) => entry.record.actionId === actionId,
-      );
-      if (actionIndex >= 0) this.conflictActions.splice(actionIndex, 1);
+      if (active) rollback();
       throw error;
     }
   }
@@ -1729,7 +1733,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         let serverEntityId: string | undefined;
         let receiptContext: Record<string, unknown> | undefined;
         let coveringReservationKey: string | undefined;
-        let refusalRollback: (() => void) | undefined;
+
         let stynx: OfflineSyncStynxContext | undefined;
         const queueItemId = reapplying ? previous.item.queueItemId : item.queueItemId;
         const portItem = queueItemId === item.queueItemId ? item : { ...item, queueItemId };
@@ -1743,101 +1747,76 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           now,
           receiptId: key,
         };
-        try {
-          if (!item.idempotencyKey) errorCode = 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED';
-          else {
-            const trx = {
-              token: randomUUID(),
-            } as unknown as import('@stynx-nyx/data').Transaction;
-            const rollback = this.captureItemState(scope.tenantId);
-            const apply = async (): Promise<void> => {
-              const prepared = await this.checkedAwait(
-                scope,
-                prepareOfflineSyncItem(
-                  trx,
-                  portItem,
-                  itemContext,
-                  runtime,
-                  async (id) =>
-                    id === queueItemId || this.queueItems.has(this.key(scope.tenantId, id)),
-                ),
-              );
-              itemContext = prepared.context;
-              const recordPairs = async (
-                pairs: readonly OfflineSyncConcurrentPair[],
-              ): Promise<boolean> => {
-                let conflict = false;
-                for (const pair of pairs) {
-                  for (const affected of [pair.firstItemId, pair.secondItemId]) {
-                    const conflictId = randomUUID();
-                    const relatedQueueItemId =
-                      affected === pair.firstItemId ? pair.secondItemId : pair.firstItemId;
-                    const allowedActions = (await this.checkedAwait(
-                      scope,
-                      runtime.ports.conflictResolver?.allowedActions?.(
-                        trx,
-                        conflictId,
-                        itemContext,
-                      ),
-                    )) ?? ['manual-review'];
-                    const evidence = { conflictId, relatedQueueItemId, allowedActions };
-                    const conflictStynx = executionStynxContext(runtime, {
-                      reasonCode: 'OFFLINE_SYNC_CONCURRENCY_SUSPECTED',
-                      concurrencySuspected: true,
-                      concurrentPairs: [pair],
-                      relatedQueueItemId,
-                      retryable: allowedActions.includes('retry_after_correction'),
-                    });
-                    for (const [storedKey, old] of this.itemReceipts)
-                      if (
-                        old.item.queueItemId === affected &&
-                        storedKey.startsWith(`${scope.tenantId}:`)
-                      ) {
-                        this.itemReceipts.set(storedKey, {
-                          ...old,
-                          receipt: {
-                            ...old.receipt,
-                            status: 'conflict',
-                            context: evidence,
-                            stynx: {
-                              ...(old.receipt.stynx ?? { version: 1 }),
-                              ...conflictStynx,
-                            },
-                          },
-                        });
-                        const affectedQueue = this.queueItems.get(
-                          this.key(scope.tenantId, affected),
-                        );
-                        this.queueItems.set(this.key(scope.tenantId, affected), {
-                          ...affectedQueue!,
+
+        if (!item.idempotencyKey) errorCode = 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED';
+        else {
+          const trx = {
+            token: randomUUID(),
+          } as unknown as import('@stynx-nyx/data').Transaction;
+          const rollback = this.captureItemState(scope.tenantId);
+          const apply = async (): Promise<void> => {
+            const prepared = await this.checkedAwait(
+              scope,
+              prepareOfflineSyncItem(
+                trx,
+                portItem,
+                itemContext,
+                runtime,
+                async (id) =>
+                  id === queueItemId || this.queueItems.has(this.key(scope.tenantId, id)),
+              ),
+            );
+            itemContext = prepared.context;
+            const recordPairs = async (
+              pairs: readonly OfflineSyncConcurrentPair[],
+            ): Promise<boolean> => {
+              let conflict = false;
+              for (const pair of pairs) {
+                for (const affected of [pair.firstItemId, pair.secondItemId]) {
+                  const conflictId = randomUUID();
+                  const relatedQueueItemId =
+                    affected === pair.firstItemId ? pair.secondItemId : pair.firstItemId;
+                  const allowedActions = (await this.checkedAwait(
+                    scope,
+                    runtime.ports.conflictResolver?.allowedActions?.(trx, conflictId, itemContext),
+                  )) ?? ['manual-review'];
+                  const evidence = { conflictId, relatedQueueItemId, allowedActions };
+                  const conflictStynx = executionStynxContext(runtime, {
+                    reasonCode: 'OFFLINE_SYNC_CONCURRENCY_SUSPECTED',
+                    concurrencySuspected: true,
+                    concurrentPairs: [pair],
+                    relatedQueueItemId,
+                    retryable: allowedActions.includes('retry_after_correction'),
+                  });
+                  for (const [storedKey, old] of this.itemReceipts)
+                    if (
+                      old.item.queueItemId === affected &&
+                      storedKey.startsWith(`${scope.tenantId}:`)
+                    ) {
+                      this.itemReceipts.set(storedKey, {
+                        ...old,
+                        receipt: {
+                          ...old.receipt,
                           status: 'conflict',
-                        });
-                        this.saveConflict(
-                          {
-                            conflictId,
-                            tenantId: scope.tenantId,
-                            queueItemId: affected,
-                            localEntityId: old.item.localEntityId,
-                            payloadHash: old.item.payloadHash,
-                            conflictType: 'concurrency',
-                            description: 'Concurrent agent activity',
-                            status: 'open',
+                          context: evidence,
+                          stynx: {
+                            ...(old.receipt.stynx ?? { version: 1 }),
+                            ...conflictStynx,
                           },
-                          now,
-                          allowedActions,
-                          conflictStynx,
-                        );
-                      }
-                    if (affected === queueItemId) {
-                      receiptContext = evidence;
-                      stynx = conflictStynx;
+                        },
+                      });
+                      const affectedQueue = this.queueItems.get(this.key(scope.tenantId, affected));
+                      this.queueItems.set(this.key(scope.tenantId, affected), {
+                        ...affectedQueue!,
+                        status: 'conflict',
+                      });
                       this.saveConflict(
                         {
                           conflictId,
                           tenantId: scope.tenantId,
                           queueItemId: affected,
-                          localEntityId: item.localEntityId,
-                          payloadHash: item.payloadHash,
+                          localEntityId: old.item.localEntityId,
+                          payloadHash: old.item.payloadHash,
                           conflictType: 'concurrency',
                           description: 'Concurrent agent activity',
                           status: 'open',
@@ -1847,318 +1826,325 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                         conflictStynx,
                       );
                     }
+                  if (affected === queueItemId) {
+                    receiptContext = evidence;
+                    stynx = conflictStynx;
+                    this.saveConflict(
+                      {
+                        conflictId,
+                        tenantId: scope.tenantId,
+                        queueItemId: affected,
+                        localEntityId: item.localEntityId,
+                        payloadHash: item.payloadHash,
+                        conflictType: 'concurrency',
+                        description: 'Concurrent agent activity',
+                        status: 'open',
+                      },
+                      now,
+                      allowedActions,
+                      conflictStynx,
+                    );
                   }
-                  if (pair.firstItemId === queueItemId || pair.secondItemId === queueItemId)
-                    conflict = true;
                 }
-                return conflict;
-              };
-              if (prepared.defer) {
-                // Admission guarantees a nonempty pair containing this canonical item.
-                await this.checkedAwait(scope, recordPairs(prepared.pairs));
-                status = 'conflict';
-                stynx = {
-                  ...executionStynxContext(runtime, {
-                    receiptId: key,
-                    attempts,
-                    concurrencySuspected: itemContext.concurrencySuspected,
-                    concurrentPairs: itemContext.concurrentPairs,
-                  }),
-                  ...stynx,
-                };
-              } else {
-                const covering =
-                  item.reservedNumber === undefined
-                    ? []
-                    : [...this.reservations.entries()].filter(
-                        ([reservationKey, reservation]) =>
-                          reservationKey.startsWith(`${scope.tenantId}:`) &&
-                          reservation.deviceId === input.deviceId &&
-                          reservation.orgUnitId === input.orgUnitId &&
-                          reservation.entityType === item.entityType &&
-                          reservation.startNumber <= item.reservedNumber! &&
-                          item.reservedNumber! <= reservation.endNumber &&
-                          (!item.reservationId ||
-                            reservation.reservationId === item.reservationId) &&
-                          (reservation.status !== 'cancelled' ||
-                            ['applied', 'claimed-locally'].includes(
-                              this.consumption.get(reservationKey)?.get(item.reservedNumber!)
-                                ?.status ?? '',
-                            )),
-                      );
-                if (item.reservedNumber !== undefined && covering.length === 0)
-                  throw new OfflineSyncNumberingOutcome(
-                    'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
-                    item.reservedNumber,
-                    item.reservationId ?? null,
-                  );
-                if (covering.length > 1)
-                  throw new OfflineSyncNumberingOutcome(
-                    'OFFLINE_SYNC_NUMBERING_AMBIGUOUS',
-                    item.reservedNumber!,
-                    null,
-                  );
-                if (covering[0]) {
-                  const [reservationKey, reservation] = covering[0];
-                  coveringReservationKey = reservationKey;
-                  const entry = this.consumption.get(reservationKey)?.get(item.reservedNumber!);
-                  if (entry?.status === 'applied')
-                    throw new OfflineSyncNumberingOutcome(
-                      'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',
-                      item.reservedNumber!,
-                      reservation.reservationId,
-                    );
-                  if (
-                    reservation.status !== 'reserved' ||
-                    Date.parse(reservation.validUntil) < Date.parse(item.createdLocallyAt)
-                  )
-                    throw new OfflineSyncNumberingOutcome(
-                      'OFFLINE_SYNC_NUMBERING_EXPIRED',
-                      item.reservedNumber!,
-                      reservation.reservationId,
-                    );
-                }
-                if (runtime.ports.itemApplier) {
-                  const applied = await this.checkedAwait(
-                    scope,
-                    runtime.ports.itemApplier.apply(trx, portItem, itemContext),
-                  );
-                  const consumerAttributes = boundedConsumerAttributes(applied.consumerAttributes);
-                  serverEntityId = applied.serverEntityId;
-                  const pairs = [...prepared.pairs];
-                  if (
-                    runtime.policy.concurrencyWindowMinutes &&
-                    runtime.ports.concurrencyDetector
-                  ) {
-                    const detected = await this.checkedAwait(
-                      scope,
-                      runtime.ports.concurrencyDetector.detect(trx, portItem, itemContext),
-                    );
-                    if (detected.suspected)
-                      for (const pair of detected.pairs) {
-                        if (
-                          await this.checkedAwait(
-                            scope,
-                            runtime.ports.handoffPort?.permits(trx, pair, itemContext),
-                          )
-                        )
-                          continue;
-                        if (
-                          !pairs.some(
-                            (old) =>
-                              [old.firstItemId, old.secondItemId].includes(pair.firstItemId) &&
-                              [old.firstItemId, old.secondItemId].includes(pair.secondItemId),
-                          )
-                        )
-                          pairs.push(pair);
-                      }
-                  }
-                  status = (await this.checkedAwait(scope, recordPairs(pairs)))
-                    ? 'conflict'
-                    : 'applied';
-                  stynx = {
-                    ...(stynx ?? { version: 1 }),
-                    ...executionStynxContext(runtime, {
-                      concurrencySuspected:
-                        itemContext.concurrencySuspected !== undefined ||
-                        (runtime.policy.concurrencyWindowMinutes &&
-                          runtime.ports.concurrencyDetector)
-                          ? pairs.length > 0
-                          : undefined,
-                      concurrentPairs:
-                        itemContext.concurrencySuspected !== undefined ||
-                        (runtime.policy.concurrencyWindowMinutes &&
-                          runtime.ports.concurrencyDetector)
-                          ? pairs
-                          : undefined,
-                      receiptId: key,
-                      appliedAt: now,
-                      serverEntityId,
-                      attempts,
-                      consumerAttributes,
-                    }),
-                  };
-                  // D1 item 6: a re-application never reuses the event key of an earlier attempt.
-                  await this.checkedAwait(
-                    scope,
-                    runtime.ports.eventPort!.appendInTransaction(trx, {
-                      entity: item.entityType,
-                      entityId: applied.serverEntityId,
-                      idempotencyKey: reapplying ? `${key}:retry:${attempts}` : key,
-                      payload: item.payloadJson,
-                    }),
-                  );
-                }
+                if (pair.firstItemId === queueItemId || pair.secondItemId === queueItemId)
+                  conflict = true;
               }
+              return conflict;
             };
-            try {
-              await this.ownedFrame(scope, apply);
-            } catch (error) {
-              rollback();
-              if (runtime.ports.domainOutcomeClassifier)
-                refusalRollback = this.captureItemState(scope.tenantId);
-              if (error instanceof OfflineSyncConfigurationError) throw error;
-              serverEntityId = undefined;
-              coveringReservationKey = undefined;
-              receiptContext = undefined;
-              const domainContext = domainErrorContext(error);
-              const classification = classifyDomainOutcome(
-                runtime.ports.domainOutcomeClassifier,
-                error,
-                domainContext,
-                portItem,
-                itemContext,
-              );
-              const outcome = classification.outcome;
-              const classified =
-                domainContext.valid &&
-                classification.valid &&
-                error instanceof HttpException &&
-                error.getStatus() >= 400 &&
-                error.getStatus() < 500 &&
-                !(
-                  error instanceof OfflineSyncError && error.code === 'OFFLINE_SYNC_BATCH_CONFLICT'
+            if (prepared.defer) {
+              // Admission guarantees a nonempty pair containing this canonical item.
+              await this.checkedAwait(scope, recordPairs(prepared.pairs));
+              status = 'conflict';
+              stynx = {
+                ...executionStynxContext(runtime, {
+                  receiptId: key,
+                  attempts,
+                  concurrencySuspected: itemContext.concurrencySuspected,
+                  concurrentPairs: itemContext.concurrentPairs,
+                }),
+                ...stynx,
+              };
+            } else {
+              const covering =
+                item.reservedNumber === undefined
+                  ? []
+                  : [...this.reservations.entries()].filter(
+                      ([reservationKey, reservation]) =>
+                        reservationKey.startsWith(`${scope.tenantId}:`) &&
+                        reservation.deviceId === input.deviceId &&
+                        reservation.orgUnitId === input.orgUnitId &&
+                        reservation.entityType === item.entityType &&
+                        reservation.startNumber <= item.reservedNumber! &&
+                        item.reservedNumber! <= reservation.endNumber &&
+                        (!item.reservationId || reservation.reservationId === item.reservationId) &&
+                        (reservation.status !== 'cancelled' ||
+                          ['applied', 'claimed-locally'].includes(
+                            this.consumption.get(reservationKey)?.get(item.reservedNumber!)
+                              ?.status ?? '',
+                          )),
+                    );
+              if (item.reservedNumber !== undefined && covering.length === 0)
+                throw new OfflineSyncNumberingOutcome(
+                  'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
+                  item.reservedNumber,
+                  item.reservationId ?? null,
                 );
-              const numbering = error instanceof OfflineSyncNumberingOutcome ? error : null;
-              if ((classified || outcome) && !numbering) receiptContext = domainContext.context;
-              status =
-                numbering?.receiptStatus ??
-                outcome?.status ??
-                (classified ? 'rejected' : reapplying ? 'pending' : initialStatus);
-              errorCode = !domainContext.valid
-                ? 'OFFLINE_SYNC_DOMAIN_CONTEXT_INVALID'
-                : !classification.valid
-                  ? 'OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID'
-                  : runtime.ports.domainOutcomeClassifier
-                    ? (classification.code ??
-                      domainFailureCode(error) ??
-                      'OFFLINE_SYNC_ITEM_FAILED')
-                    : ((error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED');
-              stynx = executionStynxContext(runtime, {
-                receiptId: key,
-                errorCode,
-                errorMessage: error instanceof Error ? error.message : String(error),
-                attempts,
-                reasonCode: numbering?.code ?? (outcome ? errorCode : undefined),
-                retryable: outcome ? false : !classified,
-                ...(outcome?.status === 'received' ? { terminalReceived: true } : {}),
-              });
-              if (numbering || outcome?.conflict) {
-                const conflictType = numbering ? 'domain' : outcome!.conflict!.type;
-                const conflictId = randomUUID();
-                const allowedActions =
-                  (await this.checkedAwait(
+              if (covering.length > 1)
+                throw new OfflineSyncNumberingOutcome(
+                  'OFFLINE_SYNC_NUMBERING_AMBIGUOUS',
+                  item.reservedNumber!,
+                  null,
+                );
+              if (covering[0]) {
+                const [reservationKey, reservation] = covering[0];
+                coveringReservationKey = reservationKey;
+                const entry = this.consumption.get(reservationKey)?.get(item.reservedNumber!);
+                if (entry?.status === 'applied')
+                  throw new OfflineSyncNumberingOutcome(
+                    'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',
+                    item.reservedNumber!,
+                    reservation.reservationId,
+                  );
+                if (
+                  reservation.status !== 'reserved' ||
+                  Date.parse(reservation.validUntil) < Date.parse(item.createdLocallyAt)
+                )
+                  throw new OfflineSyncNumberingOutcome(
+                    'OFFLINE_SYNC_NUMBERING_EXPIRED',
+                    item.reservedNumber!,
+                    reservation.reservationId,
+                  );
+              }
+              if (runtime.ports.itemApplier) {
+                const applied = await this.checkedAwait(
+                  scope,
+                  runtime.ports.itemApplier.apply(trx, portItem, itemContext),
+                );
+                const consumerAttributes = boundedConsumerAttributes(applied.consumerAttributes);
+                serverEntityId = applied.serverEntityId;
+                const pairs = [...prepared.pairs];
+                if (runtime.policy.concurrencyWindowMinutes && runtime.ports.concurrencyDetector) {
+                  const detected = await this.checkedAwait(
                     scope,
-                    runtime.ports.conflictResolver?.allowedActions?.(trx, conflictId, itemContext),
-                  )) ??
-                  (conflictType === 'concurrency'
-                    ? ['manual_review']
-                    : ['reject', 'retry_after_correction']);
-                if (numbering)
-                  receiptContext = { ...numbering.context, conflictId, allowedActions };
-                this.saveConflict(
-                  {
-                    conflictId,
-                    tenantId: scope.tenantId,
-                    queueItemId,
-                    localEntityId: item.localEntityId,
-                    payloadHash: item.payloadHash,
-                    conflictType,
-                    description: numbering?.code ?? outcome!.conflict!.description,
-                    status: 'open',
-                  },
-                  now,
-                  allowedActions,
-                  executionStynxContext(runtime, {
+                    runtime.ports.concurrencyDetector.detect(trx, portItem, itemContext),
+                  );
+                  if (detected.suspected)
+                    for (const pair of detected.pairs) {
+                      if (
+                        await this.checkedAwait(
+                          scope,
+                          runtime.ports.handoffPort?.permits(trx, pair, itemContext),
+                        )
+                      )
+                        continue;
+                      if (
+                        !pairs.some(
+                          (old) =>
+                            [old.firstItemId, old.secondItemId].includes(pair.firstItemId) &&
+                            [old.firstItemId, old.secondItemId].includes(pair.secondItemId),
+                        )
+                      )
+                        pairs.push(pair);
+                    }
+                }
+                status = (await this.checkedAwait(scope, recordPairs(pairs)))
+                  ? 'conflict'
+                  : 'applied';
+                stynx = {
+                  ...(stynx ?? { version: 1 }),
+                  ...executionStynxContext(runtime, {
+                    concurrencySuspected:
+                      itemContext.concurrencySuspected !== undefined ||
+                      (runtime.policy.concurrencyWindowMinutes && runtime.ports.concurrencyDetector)
+                        ? pairs.length > 0
+                        : undefined,
+                    concurrentPairs:
+                      itemContext.concurrencySuspected !== undefined ||
+                      (runtime.policy.concurrencyWindowMinutes && runtime.ports.concurrencyDetector)
+                        ? pairs
+                        : undefined,
                     receiptId: key,
-                    reasonCode: errorCode,
-                    errorCode,
+                    appliedAt: now,
+                    serverEntityId,
                     attempts,
-                    retryable: allowedActions.includes('retry_after_correction'),
+                    consumerAttributes,
                   }),
-                  numbering ? undefined : domainContext.context,
+                };
+                // D1 item 6: a re-application never reuses the event key of an earlier attempt.
+                await this.checkedAwait(
+                  scope,
+                  runtime.ports.eventPort!.appendInTransaction(trx, {
+                    entity: item.entityType,
+                    entityId: applied.serverEntityId,
+                    idempotencyKey: reapplying ? `${key}:retry:${attempts}` : key,
+                    payload: item.payloadJson,
+                  }),
                 );
               }
-              if (!classified && !outcome) retryable = true;
             }
-          }
-          // Host keys of an earlier attempt stay on the stored receipt, as the PostgreSQL merge keeps them (D3.1).
-          receiptContext =
-            previous?.receipt.context || receiptContext
-              ? { ...previous?.receipt.context, ...receiptContext }
-              : undefined;
-          const resultContext = {
-            ...receiptContext,
-            ...(reapplying && queueItemId !== item.queueItemId
-              ? { originalQueueItemId: queueItemId }
-              : {}),
           };
-          const saved: CTG9SubmitSyncBatchResult['items'][number] = {
-            ...item,
-            tenantId: scope.tenantId,
-            agentId: runtime.agentId,
-            orgUnitId: input.orgUnitId,
-            deviceId: input.deviceId,
-            status,
-            receivedAt: now,
-            ...(Object.keys(resultContext).length ? { context: resultContext } : {}),
-            ...(stynx ? { stynx } : {}),
-          };
-          const itemReceipt: SyncItemReceipt = {
-            queueItemId: item.queueItemId,
-            status,
-            ...(errorCode ? { errorCode } : {}),
-            ...(Object.keys(resultContext).length ? { context: resultContext } : {}),
-            ...(stynx ? { stynx } : {}),
-          };
-          const storedReceipt: SyncItemReceipt = {
-            queueItemId,
-            status,
-            ...(errorCode ? { errorCode } : {}),
-            ...(receiptContext ? { context: receiptContext } : {}),
-            ...(stynx ? { stynx } : {}),
-          };
-          const storedItem = queueItemId === item.queueItemId ? saved : { ...saved, queueItemId };
-          this.assertFrameComplete(itemFrame);
-          this.queueItems.set(this.key(scope.tenantId, queueItemId), {
-            ...storedItem,
-            idempotencyKey: key,
-          } as StoredSyncQueueItem);
-          if (!reapplying)
-            this.queueBatches.set(this.key(scope.tenantId, queueItemId), input.deviceBatchId);
-          this.itemReceipts.set(itemKey, {
-            hash: item.payloadHash,
-            batchKey: reapplying ? previous.batchKey : identity,
-            receipt: storedReceipt,
-            item: storedItem,
-            deviceBatchId: reapplying ? previous.deviceBatchId : input.deviceBatchId,
-            receivedAt: previous?.receivedAt ?? now,
-          });
-          if (
-            coveringReservationKey &&
-            serverEntityId !== undefined &&
-            ['applied', 'conflict'].includes(status) &&
-            item.reservedNumber !== undefined
-          ) {
-            const entries = this.consumption.get(coveringReservationKey)!;
-            const entry = entries.get(item.reservedNumber)!;
-            entries.set(item.reservedNumber, {
-              ...entry,
-              status: 'applied',
-              serverEntityId,
-              finalizedAt: now,
+          try {
+            await this.ownedFrame(scope, apply);
+          } catch (error) {
+            rollback();
+
+            if (error instanceof OfflineSyncConfigurationError) throw error;
+            serverEntityId = undefined;
+            coveringReservationKey = undefined;
+            receiptContext = undefined;
+            const domainContext = domainErrorContext(error);
+            const classification = classifyDomainOutcome(
+              runtime.ports.domainOutcomeClassifier,
+              error,
+              domainContext,
+              portItem,
+              itemContext,
+            );
+            const outcome = classification.outcome;
+            const classified =
+              domainContext.valid &&
+              classification.valid &&
+              error instanceof HttpException &&
+              error.getStatus() >= 400 &&
+              error.getStatus() < 500 &&
+              !(error instanceof OfflineSyncError && error.code === 'OFFLINE_SYNC_BATCH_CONFLICT');
+            const numbering = error instanceof OfflineSyncNumberingOutcome ? error : null;
+            if ((classified || outcome) && !numbering) receiptContext = domainContext.context;
+            status =
+              numbering?.receiptStatus ??
+              outcome?.status ??
+              (classified ? 'rejected' : reapplying ? 'pending' : initialStatus);
+            errorCode = !domainContext.valid
+              ? 'OFFLINE_SYNC_DOMAIN_CONTEXT_INVALID'
+              : !classification.valid
+                ? 'OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID'
+                : runtime.ports.domainOutcomeClassifier
+                  ? (classification.code ?? domainFailureCode(error) ?? 'OFFLINE_SYNC_ITEM_FAILED')
+                  : ((error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED');
+            stynx = executionStynxContext(runtime, {
+              receiptId: key,
+              errorCode,
+              errorMessage: error instanceof Error ? error.message : String(error),
+              attempts,
+              reasonCode: numbering?.code ?? (outcome ? errorCode : undefined),
+              retryable: outcome ? false : !classified,
+              ...(outcome?.status === 'received' ? { terminalReceived: true } : {}),
             });
+            if (numbering || outcome?.conflict) {
+              const conflictType = numbering ? 'domain' : outcome!.conflict!.type;
+              const conflictId = randomUUID();
+              const allowedActions =
+                (await this.checkedAwait(
+                  scope,
+                  runtime.ports.conflictResolver?.allowedActions?.(trx, conflictId, itemContext),
+                )) ??
+                (conflictType === 'concurrency'
+                  ? ['manual_review']
+                  : ['reject', 'retry_after_correction']);
+              if (numbering) receiptContext = { ...numbering.context, conflictId, allowedActions };
+              this.saveConflict(
+                {
+                  conflictId,
+                  tenantId: scope.tenantId,
+                  queueItemId,
+                  localEntityId: item.localEntityId,
+                  payloadHash: item.payloadHash,
+                  conflictType,
+                  description: numbering?.code ?? outcome!.conflict!.description,
+                  status: 'open',
+                },
+                now,
+                allowedActions,
+                executionStynxContext(runtime, {
+                  receiptId: key,
+                  reasonCode: errorCode,
+                  errorCode,
+                  attempts,
+                  retryable: allowedActions.includes('retry_after_correction'),
+                }),
+                numbering ? undefined : domainContext.context,
+              );
+            }
+            if (!classified && !outcome) retryable = true;
           }
-          stored.push(saved);
-          itemReceipts.push(itemReceipt);
-        } catch (error) {
-          itemFrame.active = false;
-          refusalRollback?.();
-          throw error;
         }
+        // Host keys of an earlier attempt stay on the stored receipt, as the PostgreSQL merge keeps them (D3.1).
+        receiptContext =
+          previous?.receipt.context || receiptContext
+            ? { ...previous?.receipt.context, ...receiptContext }
+            : undefined;
+        const resultContext = {
+          ...receiptContext,
+          ...(reapplying && queueItemId !== item.queueItemId
+            ? { originalQueueItemId: queueItemId }
+            : {}),
+        };
+        const saved: CTG9SubmitSyncBatchResult['items'][number] = {
+          ...item,
+          tenantId: scope.tenantId,
+          agentId: runtime.agentId,
+          orgUnitId: input.orgUnitId,
+          deviceId: input.deviceId,
+          status,
+          receivedAt: now,
+          ...(Object.keys(resultContext).length ? { context: resultContext } : {}),
+          ...(stynx ? { stynx } : {}),
+        };
+        const itemReceipt: SyncItemReceipt = {
+          queueItemId: item.queueItemId,
+          status,
+          ...(errorCode ? { errorCode } : {}),
+          ...(Object.keys(resultContext).length ? { context: resultContext } : {}),
+          ...(stynx ? { stynx } : {}),
+        };
+        const storedReceipt: SyncItemReceipt = {
+          queueItemId,
+          status,
+          ...(errorCode ? { errorCode } : {}),
+          ...(receiptContext ? { context: receiptContext } : {}),
+          ...(stynx ? { stynx } : {}),
+        };
+        const storedItem = queueItemId === item.queueItemId ? saved : { ...saved, queueItemId };
+        this.assertFrameComplete(itemFrame);
+        this.queueItems.set(this.key(scope.tenantId, queueItemId), {
+          ...storedItem,
+          idempotencyKey: key,
+        } as StoredSyncQueueItem);
+        if (!reapplying)
+          this.queueBatches.set(this.key(scope.tenantId, queueItemId), input.deviceBatchId);
+        this.itemReceipts.set(itemKey, {
+          hash: item.payloadHash,
+          batchKey: reapplying ? previous.batchKey : identity,
+          receipt: storedReceipt,
+          item: storedItem,
+          deviceBatchId: reapplying ? previous.deviceBatchId : input.deviceBatchId,
+          receivedAt: previous?.receivedAt ?? now,
+        });
+        if (
+          coveringReservationKey &&
+          serverEntityId !== undefined &&
+          ['applied', 'conflict'].includes(status) &&
+          item.reservedNumber !== undefined
+        ) {
+          const entries = this.consumption.get(coveringReservationKey)!;
+          const entry = entries.get(item.reservedNumber)!;
+          entries.set(item.reservedNumber, {
+            ...entry,
+            status: 'applied',
+            serverEntityId,
+            finalizedAt: now,
+          });
+        }
+        stored.push(saved);
+        itemReceipts.push(itemReceipt);
       };
       for (const item of input.items)
-        await this.ownedFrame(scope, (frame) => processItem(item, frame));
+        await this.ownedFrame(
+          scope,
+          (frame) => processItem(item, frame),
+          undefined,
+          this.captureItemState(scope.tenantId),
+        );
       const finalReceipt: SyncBatchReceipt = {
         ...receipt,
         status: retryable ? 'open' : 'closed',
