@@ -17,14 +17,17 @@ const componentIndex = new Map();
 for (const manifestPath of packageManifests) {
   const manifest = readJson(manifestPath);
   if (manifest.name) {
-    componentIndex.set(manifest.name, workspaceComponent(manifest, manifestPath));
+    const component = workspaceComponent(manifest, manifestPath);
+    componentIndex.set(`${component.name}@${component.version}`, component);
   }
   for (const dependencyName of dependencyNames(manifest)) {
     if (dependencyName.startsWith('@stynx-nyx/') || dependencyName.startsWith('@stynx-nyx/'))
       continue;
-    const dependencyManifest = resolveInstalledManifest(dependencyName);
-    if (!dependencyManifest || componentIndex.has(dependencyName)) continue;
-    componentIndex.set(dependencyName, externalComponent(dependencyName, dependencyManifest));
+    const dependencyManifest = resolveInstalledManifest(dependencyName, manifestPath);
+    if (!dependencyManifest) continue;
+    const identity = `${dependencyName}@${dependencyManifest.version ?? '0.0.0'}`;
+    if (componentIndex.has(identity)) continue;
+    componentIndex.set(identity, externalComponent(dependencyName, dependencyManifest));
   }
 }
 
@@ -115,8 +118,9 @@ function dependencyNames(manifest) {
   ].sort((left, right) => left.localeCompare(right));
 }
 
-function resolveInstalledManifest(packageName) {
+function resolveInstalledManifest(packageName, declaringManifestPath) {
   const candidates = [
+    resolve(dirname(declaringManifestPath), 'node_modules', packageName, 'package.json'),
     resolve(repoRoot, 'node_modules', packageName, 'package.json'),
     resolve(repoRoot, 'node_modules/.pnpm/node_modules', packageName, 'package.json'),
   ];

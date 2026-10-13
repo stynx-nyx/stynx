@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const repoRoot = process.cwd();
 const policy = JSON.parse(
@@ -27,16 +27,17 @@ const releaseManifests = manifests.filter(
       (manifest.name.startsWith('@stynx-nyx/') || manifest.name.startsWith('@stynx-nyx/'))),
 );
 
-for (const { manifest } of releaseManifests) {
+for (const { manifest, path: manifestPath } of releaseManifests) {
   for (const dependencyName of dependencyNames(manifest)) {
     if (workspaceNames.has(dependencyName)) continue;
-    if (checked.has(dependencyName)) continue;
-    checked.add(dependencyName);
-    const dependencyManifest = resolveInstalledManifest(dependencyName);
+    const dependencyManifest = resolveInstalledManifest(dependencyName, manifestPath);
     if (!dependencyManifest) {
       failures.push(`${dependencyName}: dependency manifest not found in node_modules`);
       continue;
     }
+    const identity = `${dependencyName}@${dependencyManifest.version ?? '0.0.0'}`;
+    if (checked.has(identity)) continue;
+    checked.add(identity);
     const licenses = extractLicenseIds(dependencyManifest.license);
     if (licenses.length === 0) {
       failures.push(`${dependencyName}: missing license metadata`);
@@ -103,8 +104,9 @@ function dependencyNames(manifest) {
   ].sort((left, right) => left.localeCompare(right));
 }
 
-function resolveInstalledManifest(packageName) {
+function resolveInstalledManifest(packageName, declaringManifestPath) {
   const candidates = [
+    resolve(dirname(declaringManifestPath), 'node_modules', packageName, 'package.json'),
     resolve(repoRoot, 'node_modules', packageName, 'package.json'),
     resolve(repoRoot, 'node_modules/.pnpm/node_modules', packageName, 'package.json'),
   ];
