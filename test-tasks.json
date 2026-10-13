@@ -86,7 +86,12 @@
       ],
       "toolchainKeys": ["node", "pnpm", "typescript"],
       "allowlistedEnv": ["CI"],
-      "outputContract": { "kind": "command", "requiredResult": "pass" }
+      "sensorKinds": ["type_check"],
+      "outputContract": {
+        "kind": "command-result",
+        "requiredResult": "pass",
+        "population": "workspace-typecheck"
+      }
     },
     {
       "nodeId": "test:unit",
@@ -159,14 +164,16 @@
       ],
       "toolchainKeys": ["node", "pnpm", "typescript"],
       "allowlistedEnv": ["CI", "NODE_ENV"],
+      "sensorKinds": ["build"],
       "outputContract": {
-        "kind": "command",
+        "kind": "workspace-build",
         "requiredResult": "pass",
         "paths": [
           "packages/data/dist/data/src/index.js",
           "packages/preferences/dist/preferences/src/index.js",
           "packages/cli/dist/cli/src/main.js"
-        ]
+        ],
+        "population": "workspace-build"
       }
     },
     {
@@ -226,7 +233,12 @@
         "STYNX_TEST_PG_SOCKET_DIR",
         "STYNX_TEST_PG_TEMPLATE"
       ],
-      "outputContract": { "kind": "command", "requiredResult": "pass" }
+      "sensorKinds": ["migration_check"],
+      "outputContract": {
+        "kind": "command-result",
+        "requiredResult": "pass",
+        "population": "migration-rls"
+      }
     },
     {
       "nodeId": "test:e2e",
@@ -352,7 +364,12 @@
         "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
         "TESTCONTAINERS_REUSE_ENABLE"
       ],
-      "outputContract": { "kind": "command", "requiredResult": "pass" }
+      "sensorKinds": ["perf_test"],
+      "outputContract": {
+        "kind": "command-result",
+        "requiredResult": "pass",
+        "population": "cold-unit-perf"
+      }
     },
     {
       "nodeId": "security",
