@@ -345,7 +345,21 @@ describe('UPS-OFS-06 pending queue state (ADR-MOBILE-OFFLINE-0003 D1, in-memory)
       transportOf('q-1-b2'),
     );
     expect(changed.receipt.items).toEqual([
-      { queueItemId: 'q-1', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
+      {
+        queueItemId: 'q-1',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+        stynx: {
+          version: 1,
+          receiptId: 'q-1',
+          errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          receivedPayloadHash: `sha256:${'b'.repeat(64)}`,
+          retryable: false,
+          storedPayloadHash: hash,
+          relatedQueueItemId: 'q-1',
+        },
+      },
     ]);
     expect(await service.getSyncItemReceipt('q-1')).toMatchObject({ status: 'pending' });
     expect(applier.apply).not.toHaveBeenCalled();
@@ -973,7 +987,21 @@ describe('UPS-OFS-08 typed receipt and conflict context (ADR-MOBILE-OFFLINE-0003
       transportOf('ib-2'),
     );
     expect(first.receipt.items).toEqual([
-      { queueItemId: 'i-1b', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
+      {
+        queueItemId: 'i-1b',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+        stynx: {
+          version: 1,
+          receiptId: 'i-1',
+          errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          receivedPayloadHash: `sha256:${'b'.repeat(64)}`,
+          retryable: false,
+          storedPayloadHash: hash,
+          relatedQueueItemId: 'i-1',
+        },
+      },
     ]);
     expect(first.duplicateItems).toBe(0);
     const [conflict] = (await service.listSyncConflicts({ conflictType: 'integrity' })).items;

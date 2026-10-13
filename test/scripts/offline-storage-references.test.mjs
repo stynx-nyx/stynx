@@ -331,3 +331,39 @@ for (const permission of ['omitted', 'true'])
     assert.match(result.stderr, /Import object rules require false or a schema/u);
     assert.deepEqual(readFileSync(target), original);
   });
+
+// INV-OFFLINE-001: application event identifiers are not truncated into SQL names.
+test('offline closure accepts a hyphenated application event while still checking complete relation names', (t) => {
+  const accepted = run(
+    fixture(
+      t,
+      "const event = { entity: 'offline.sync-conflict' }; const query = 'select id from offline.numbering_reconciliations';",
+    ),
+  );
+  assert.equal(accepted.status, 0, accepted.stderr);
+  const rejected = run(
+    fixture(t, 'const query = \'select * from offline."unregistered-history"\';'),
+  );
+  assert.notEqual(rejected.status, 0);
+  assert.match(rejected.stderr, /unknown offline object unregistered-history/u);
+  const exact = run(fixture(t, "const query = 'select * from offline.sync';"));
+  assert.notEqual(exact.status, 0);
+  assert.match(exact.stderr, /unknown offline object sync/u);
+});
+
+test('offline closure refuses changed reconciliation SQL expansion and producer inputs', (t) => {
+  const directory = fixture(t);
+  alter(
+    directory,
+    'packages/offline-sync/src/postgres-reconciliation.ts',
+    "pgSortInstant('created_at')",
+    'pgSortInstant(unreviewedColumn)',
+  );
+  const rejected = run(directory);
+  assert.notEqual(rejected.status, 0);
+  assert.match(
+    rejected.stderr,
+    /postgres-reconciliation\.ts: dynamic SQL producer source changed without review/u,
+  );
+  assert.match(rejected.stderr, /unregistered dynamic offline SQL producer/u);
+});

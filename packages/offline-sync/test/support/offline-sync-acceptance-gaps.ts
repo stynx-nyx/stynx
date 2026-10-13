@@ -169,6 +169,87 @@ export function registerOfflineGapContracts(harness: () => OfflineGapHarness): v
     expect(getterCalls).toBe(0);
   });
 
+  it('V-05 projects rejected attempt facts without borrowing original application identity or inventing a canonical hash', async () => {
+    const h = harness();
+    const itemApplier = applying();
+    const service = h.service({ itemApplier, eventPort: events() });
+    const original = batch('integrity-original');
+    const originalReceipt = (await h.run(GAP_TENANT_A, () => service.submitSyncBatch(original)))
+      .receipt.items[0]!;
+    expect(originalReceipt.stynx).toMatchObject({
+      appliedAt: GAP_AT,
+      serverEntityId: 'server-entity',
+    });
+    h.tick();
+    const mismatchBase = batch('integrity-mismatch');
+    const mismatch = {
+      ...mismatchBase,
+      items: [
+        {
+          ...mismatchBase.items[0]!,
+          idempotencyKey: original.items[0]!.idempotencyKey,
+          payloadHash: canonicalOfflineSyncPayloadHash({ different: true }),
+        },
+      ],
+    };
+    const malformedBase = batch('integrity-malformed');
+    const malformed = {
+      ...malformedBase,
+      items: [{ ...malformedBase.items[0]!, payloadHash: 'sha256:not-canonical' }],
+    };
+    for (const input of [mismatch, malformed]) {
+      const outcome = await h.run(GAP_TENANT_A, () => service.submitSyncBatch(input));
+      const proof = await h.run(GAP_TENANT_A, () =>
+        service.getSyncIntegrityRejection({
+          deviceId: input.deviceId,
+          deviceBatchId: input.deviceBatchId,
+          queueItemId: input.items[0]!.queueItemId,
+        }),
+      );
+      expect(outcome.receipt.items[0]).toEqual({
+        queueItemId: input.items[0]!.queueItemId,
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+        stynx: {
+          version: 1,
+          receiptId: proof.idempotencyKey,
+          errorCode: proof.errorCode,
+          reasonCode: proof.errorCode,
+          receivedPayloadHash: proof.receivedPayloadHash,
+          ...(proof.storedPayloadHash ? { storedPayloadHash: proof.storedPayloadHash } : {}),
+          ...(proof.originalQueueItemId ? { relatedQueueItemId: proof.originalQueueItemId } : {}),
+          retryable: false,
+        },
+      });
+      expect(proof.rejectedAt).toBe(
+        input === mismatch ? '2026-10-12T12:00:01.000Z' : '2026-10-12T12:00:02.000Z',
+      );
+      expect(outcome.receipt.items[0]!.stynx).not.toHaveProperty('appliedAt');
+      expect(outcome.receipt.items[0]!.stynx).not.toHaveProperty('serverEntityId');
+      if (input === malformed) {
+        expect(proof).not.toHaveProperty('storedPayloadHash');
+        expect(outcome.receipt.items[0]!.stynx).not.toHaveProperty('storedPayloadHash');
+      }
+      h.tick();
+      expect(await h.run(GAP_TENANT_A, () => service.submitSyncBatch(input))).toEqual(outcome);
+      expect(
+        await h.run(GAP_TENANT_A, () =>
+          service.getSyncIntegrityRejection({
+            deviceId: input.deviceId,
+            deviceBatchId: input.deviceBatchId,
+            queueItemId: input.items[0]!.queueItemId,
+          }),
+        ),
+      ).toEqual(proof);
+    }
+    expect(
+      await h.run(GAP_TENANT_A, () =>
+        service.getSyncItemReceipt(original.items[0]!.idempotencyKey!),
+      ),
+    ).toEqual(originalReceipt);
+    expect(itemApplier.apply).toHaveBeenCalledTimes(1);
+  });
+
   it('V-07 records source-pending signal only for an unresolved concurrency window and preserves it on closed replay', async () => {
     const h = harness();
     const detect = vi.fn(async () => ({ suspected: false, pairs: [] }));

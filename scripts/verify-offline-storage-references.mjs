@@ -24,6 +24,11 @@ const DYNAMIC_SQL = {
     'afa13b8fd72b178903b21fd41ca1fd1cd85ada238c536ae1ef59db9d5a96bb04',
     'cded115a4da52d5033779b381728c44fd05086e5f531ad8c2d29ae8494712988',
   ],
+  'postgres-reconciliation.ts': [
+    '7a5a7a45a03a817f36ddabec5eccd21fc4860eefa5e506f6e78b3d527d198011',
+    '5a614622c06062e03dbbe3840762b437f4d022e664fa8244b2c4cf06f68181cf',
+    '14b981ddeff25ceaf0d6c3a5587d39a59d1d3c995d1eca4b4ba855b880a66203',
+  ],
   'postgres-listing.ts': [
     '69a3e3ce3adc4c42c8eff3ace250d94274caa667c292b9c114b9dba5faeb3609',
     'd32e73cedfa940a5bbea43d32fd2187bd6339dc3708d5706dc3f500aa6a40b7f',
@@ -56,17 +61,18 @@ const DYNAMIC_SQL = {
 // The entire producer binding is frozen too: unchanged SQL text cannot admit
 // identifiers from a newly changed, unreviewed data source.
 const DYNAMIC_PRODUCER_SOURCES = {
-  'listing.ts': 'fea36da2dd9b2c83919c9a765441c38a1bc909b2e250ed8644581368e03f62cd',
-  'stynx-context.ts': '6f67c1fa7b8eef350afdb1d0d53f049995306f97dcb329a6f751fb92cad6107e',
+  'listing.ts': '160347fb814a76c5ec5d09a553852b4538299865adb7dfb3e8e318e33a5e46d2',
+  'stynx-context.ts': 'cff6d850b59b0b6309c0242839f8bfd5a67a425976e036908929723d1fe5df1f',
 
   'import-preflight.ts': 'a079ab03949aba9cd8fec29a8c2245f56f7b03ad16200815a92fbe68c544c962',
-  'import-state.ts': '6f4f9cc023374aa51216fc515574a307d188d905157d781327965f00b6588763',
-  'storage-invariants.ts': '015287ef7ec6651d417840069bee9ad88cc80e8b9f8a0c302a0c69662d680e61',
+  'import-state.ts': '15b7597d57df3a8d9f176f6b5a4799c8ac5af41ef01cff25852a6b63d9783493',
+  'storage-invariants.ts': '0482be3f6e8b54e64d7709c6328bd4077c46143c2cfc6cef79d83a749661c302',
   'storage.ts': 'b452fa9bbc9c58c72eda7eac206f19b32a670fb3bf39e82847124af77d82cd8a',
-  'postgres-durable.ts': '662baced1d1a58129c4cbe0f390d21d86eaba2bfc2f2d48c97dd0ca1cc0eb56c',
+  'postgres-reconciliation.ts': '67e1fc701ea76cc2b46915daf5a11211dda456f98fdecc1b62513df64a3b3a86',
+  'postgres-durable.ts': '0eb59fbfd6972029a98fab44518142e27a7a187bba0ee9981c1540fa7977547e',
   'postgres-listing.ts': '642ea1b2aefdc19f361d2eeb4c75ac40723418e662b7ca2ff14334db3c87d646',
   'postgres-offline-sync.store.ts':
-    'e550ba9959054aa434168e8c0a9dbb4e74806bc005c05686adcec26f37f0a0f6',
+    '73a6c123b52d16fc19c613ab33f9da1e39b76824b1066900b04e68a55a342dee',
 };
 
 const require = createRequire(resolve(root, 'node_modules/.pnpm/node_modules/_.js'));
@@ -421,7 +427,7 @@ for (const file of files(dir)) {
       const sql = pieces.join('__DYNAMIC__');
       if (/^\.{1,2}\//u.test(sql)) return;
       for (const match of sql.matchAll(
-        /(?:\boffline|"offline")\s*\.\s*(?:"([^"]+)"|([a-z_][a-z0-9_]*))/giu,
+        /(?:\boffline|"offline")\s*\.\s*(?:"([^"]+)"|([a-z_][a-z0-9_]*)(?![a-z0-9_-]))/giu,
       )) {
         const name = match[1] ?? match[2].toLowerCase();
         if (name.includes('__dynamic__') || name.includes('__DYNAMIC__')) continue;
@@ -440,9 +446,12 @@ for (const file of files(dir)) {
         if (!DYNAMIC_SQL[basename(file)]?.includes(digest))
           failures.push(`${file}: unregistered dynamic offline SQL producer ${digest}`);
         else if (
-          ['postgres-listing.ts', 'postgres-durable.ts', 'postgres-offline-sync.store.ts'].includes(
-            basename(file),
-          )
+          [
+            'postgres-listing.ts',
+            'postgres-durable.ts',
+            'postgres-offline-sync.store.ts',
+            'postgres-reconciliation.ts',
+          ].includes(basename(file))
         ) {
           let variants = [node.head.text];
           for (const span of node.templateSpans) {
