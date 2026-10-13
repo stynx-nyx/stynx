@@ -272,7 +272,7 @@ async function integrityRejection(
   } | null,
   options: DurableBatchExecutionOptions,
   now: string,
-): Promise<void> {
+): Promise<OfflineSyncStynxContext | undefined> {
   const stynx = stynxContextOf({
     receiptId: key,
     errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
@@ -298,7 +298,15 @@ async function integrityRejection(
       now,
     ],
   );
-  if (!original) return;
+  const recorded = (
+    await trx.query<{ context_json: Record<string, unknown> | null }>(
+      `select context_json from offline.sync_item_attempts where tenant_id=$1::uuid
+      and device_id=$2 and device_batch_id=$3 and queue_item_id=$4`,
+      [scope.tenantId, input.deviceId, input.deviceBatchId, item.queueItemId],
+    )
+  ).rows[0];
+  const proof = splitStynxContext(recorded?.context_json).stynx;
+  if (!original) return proof;
   const existing = await trx.query<{ id: string }>(
     `select c.id from offline.sync_conflicts c
     join offline.sync_conflict_evidence e on e.tenant_id=c.tenant_id and e.conflict_id=c.id
@@ -306,7 +314,7 @@ async function integrityRejection(
       and e.evidence->'stynx'->>'receivedPayloadHash'=$3 limit 1`,
     [scope.tenantId, original.id, item.payloadHash],
   );
-  if (existing.rows[0]) return;
+  if (existing.rows[0]) return proof;
   const conflictId = randomUUID();
   await trx.query(
     `insert into offline.sync_conflicts
@@ -353,6 +361,7 @@ async function integrityRejection(
       }),
     ],
   );
+  return proof;
 }
 export async function pgGetBatch(
   database: Database,
@@ -989,9 +998,19 @@ export async function pgSubmit(
                 [scope.tenantId, key],
               )
             ).rows[0] ?? null;
-          await integrityRejection(trx, scope, input, item, key, original, options, now);
+          const stynx = await integrityRejection(
+            trx,
+            scope,
+            input,
+            item,
+            key,
+            original,
+            options,
+            now,
+          );
           return {
             kind: 'non-canonical' as const,
+            stynx,
             receipt: {
               queue_item_id: item.queueItemId,
               status: 'rejected' as const,
@@ -1145,8 +1164,17 @@ export async function pgSubmit(
           )
         ).rows[0]!;
         if (receipt.payload_hash !== item.payloadHash) {
-          await integrityRejection(trx, scope, input, item, key, stored, options, now);
-          return { kind: 'integrity' as const, receipt };
+          const stynx = await integrityRejection(
+            trx,
+            scope,
+            input,
+            item,
+            key,
+            stored,
+            options,
+            now,
+          );
+          return { kind: 'integrity' as const, receipt, stynx };
         }
         // ADR-MOBILE-OFFLINE-0003 D1 item 4: a `pending` receipt is applied again only by a later batch of
         // the same device under a different batch id with the identical hash (checked above).
@@ -1223,9 +1251,11 @@ export async function pgSubmit(
               }
             : null;
         const originalStynx =
-          preflight.kind === 'duplicate'
-            ? splitStynxContext(preflight.receipt.context_json).stynx
-            : undefined;
+          'stynx' in preflight
+            ? preflight.stynx
+            : preflight.kind === 'duplicate'
+              ? splitStynxContext(preflight.receipt.context_json).stynx
+              : undefined;
         receipts.push({
           queueItemId: item.queueItemId,
           status,
