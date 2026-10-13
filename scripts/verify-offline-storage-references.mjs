@@ -69,10 +69,10 @@ const DYNAMIC_PRODUCER_SOURCES = {
   'storage-invariants.ts': '0482be3f6e8b54e64d7709c6328bd4077c46143c2cfc6cef79d83a749661c302',
   'storage.ts': 'ab2ba8a75a4fc58d17cbbf63d98e04a1932d53c66c72b7c29f214d2c040e422b',
   'postgres-reconciliation.ts': '67e1fc701ea76cc2b46915daf5a11211dda456f98fdecc1b62513df64a3b3a86',
-  'postgres-durable.ts': '0eb59fbfd6972029a98fab44518142e27a7a187bba0ee9981c1540fa7977547e',
+  'postgres-durable.ts': 'dffcf47ad634aa2c62c705aafa8a1e3b9819d111b0c7ca515d48deb43740697d',
   'postgres-listing.ts': '642ea1b2aefdc19f361d2eeb4c75ac40723418e662b7ca2ff14334db3c87d646',
   'postgres-offline-sync.store.ts':
-    '73a6c123b52d16fc19c613ab33f9da1e39b76824b1066900b04e68a55a342dee',
+    'f0bfda660e75a7020f71c289729f3f8ee436cc12444a0c8196f40ad088e880c6',
 };
 
 const require = createRequire(resolve(root, 'node_modules/.pnpm/node_modules/_.js'));
