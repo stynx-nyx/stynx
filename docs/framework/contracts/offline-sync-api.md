@@ -781,7 +781,8 @@ Independent D1.1 witnesses supplement the V-04 row above:
   plain coded failures”, “D1.1 refuses invalid, async, throwing and accessor
   outcomes without coercion or partial terminal state”, and “D1.1 reclassifies a
   correction-pending cross-batch attempt using the original queue and receipt
-  identity”. Its parameterized cases cover all three terminal statuses and both
+  identity”, and “D1.1 keeps the captured original code when the classifier mutates
+  its external exception”. Its parameterized cases cover all three terminal statuses and both
   optional conflict types.
 - [`test/unit/offline-domain-outcomes.spec.ts`](../../../packages/offline-sync/test/unit/offline-domain-outcomes.spec.ts):
   “D1.1 restores actual memory-store effects before classifier invocation” and
@@ -797,6 +798,10 @@ Independent D1.1 witnesses supplement the V-04 row above:
 - [`packages/data/test/unit/database-error-code.spec.ts`](../../../packages/data/test/unit/database-error-code.spec.ts)
   separately verifies that code getters are never invoked and inherited codes
   never trigger transaction retry/remapping, for `40001` and `57014`.
+
+The focused Inspector cohort through `d4f6b155` passed 87 cases: 24 memory-store,
+33 PostgreSQL and 30 database unit cases, including retained existing tests.
+This bounded cohort does not replace the full release profile or DETRAN acceptance.
 
 **D6 bound forward installation.** Exported `renderOfflineStorageMigrations`,
 `OfflineStorageMigrationsArtifact` and `OfflineStorageMigration` expose the ordered
