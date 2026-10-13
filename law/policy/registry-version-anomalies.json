@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.registry-version-anomalies",
   "canonical_line": "1.x",
-  "next_unified_version": "1.6.0",
-  "preflight_latest_version": "1.5.7",
+  "next_unified_version": "1.6.1",
+  "preflight_latest_version": "1.6.0",
   "owner_decision": {
     "date": "2026-10-10",
     "repository_baseline": "c80342f867318be8b5c8065fd48ff1733b5dfa0e",
@@ -27,14 +27,43 @@
         "observed_at": "2026-08-24T02:04:20.663Z"
       },
       "rationale": "The Owner adjudicated 2.0.0 as an incorrect major assignment rather than a canonical STYNX 2.x decision.",
-      "allowed_candidate": "1.6.0",
+      "allowed_candidate": "1.6.1",
       "allowed_effects": ["registry-monotonicity-exception"],
       "permitted_remediation": ["retain-as-noncanonical-history"],
       "deletion_requires": "new-owner-authorization-naming-version-id-and-recovery-evidence",
       "deprecation_requires": "new-owner-authorization-naming-package-version-action-and-message",
-      "closure_condition": "Unified stable 1.6.0 is verified for all 44 publishable packages, latest resolves to 1.6.0, rc remains at 1.5.0-rc.2, and angular-profile 2.0.0 remains immutable non-canonical history.",
+      "closure_condition": "Unified stable 1.6.1 is verified for all 44 publishable packages, latest resolves to 1.6.1, rc remains at 1.5.0-rc.2, and angular-profile 2.0.0 remains immutable non-canonical history.",
       "applies_to_other_packages": false,
       "applies_to_other_versions": false
     }
-  ]
+  ],
+  "prospective_owner_decision": {
+    "date": "2026-10-13",
+    "owner_mandate_date": "2026-10-12",
+    "repository_baseline": "546c7ec8f3faa870ca4ae9f81ed27a8febb70f21",
+    "repository_tree": "26132340edf16d671675cda64d1a4e42708b6987",
+    "next_unified_version": "1.6.1",
+    "preflight_latest_version": "1.6.0",
+    "preserved_rc_version": "1.5.0-rc.2",
+    "scope_adr": "ADR-RELEASE-0004",
+    "scope_policy": "law/policy/release-scope-1.6.1.json",
+    "supersedes": {
+      "next_unified_version": "1.6.0",
+      "preflight_latest_version": "1.5.7"
+    },
+    "authenticated_registry_observation": {
+      "observed_at": "2026-10-13T04:41:17.431Z",
+      "package_count": 44,
+      "latest": "1.6.0",
+      "rc": "1.5.0-rc.2",
+      "candidate": "1.6.1",
+      "candidate_absent_for_all_packages": true,
+      "metadata_census_sha256": "8df4cbd7cf19c5701a2079d51da8d93dd45e503ac55980791a129addff8111c9",
+      "complete_github_inventory_sha256": "db354fc0ac9b0d5a4845fe1d96f8fa3b8ea092409f85bfe37fa9a3cef27b356e",
+      "anomaly_artifact_report_sha256": "41ab2e9d067b95a5b7fd55f6df1226ae6d6af3ef4c2ec985eae6d916007022e6",
+      "observation_report_sha256": "5ba73c6217525f169446981f5956ee7a1adabaea2df3b0c43aba22ce6479f5dc"
+    },
+    "previous_closure_condition": "Unified stable 1.6.0 is verified for all 44 publishable packages, latest resolves to 1.6.0, rc remains at 1.5.0-rc.2, and angular-profile 2.0.0 remains immutable non-canonical history.",
+    "statement": "The Owner explicitly authorized the STYNX 1.6.1 plan and continued protected integration/publication: offline-sync and evidence first, practical audit improvement, no k6 or mutation tests, and DETRAN adoption in parallel. This prospective binding activates exactly 1.6.1 under ADR-RELEASE-0004 and release-scope-1.6.1.json; the entire earlier owner_decision remains historical and does not describe the current registry. Fresh authenticated complete 44-package metadata and GitHub inventory observed latest 1.6.0, rc 1.5.0-rc.2 and 1.6.1 absent for all 44. A new authenticated download independently retains angular-profile 2.0.0 exact artifact SHA-256/integrity and GitHub version ID1024692931 unchanged. Inspector reviewed this current census. Preflight latest must remain 1.6.0 and rc must remain 1.5.0-rc.2 until publication; rerun fresh exact-main preflight immediately before publication. Publish only latest after the unchanged ordinary product/release gates, signed exact-candidate RC, independent exact-tree verification, protected integration, action-specific exact-main-SHA Owner receipt, publish:true and protected environment approval. Preserve all 44 artifact/integrity/tag/release checks. Feature publication may precede rolling-history/full audit recovery; disclose the actual publication-time scorecard and omissions with readiness_promoting=false. Preserve historical 1.5.7/1.6.0 observation bytes and proof-chain prefix, tests and thresholds. Stop at the first failed, partial or ambiguous actual publication; recovery requires fresh exact Owner authorization. This decision authorizes no deletion, deprecation, replacement or dist-tag mutation of angular-profile 2.0.0; it remains immutable non-canonical history. This is existing Owner direction, not an action-specific receipt for an unknown future main SHA or a claim of 1.6.1 publication."
+  }
 }
