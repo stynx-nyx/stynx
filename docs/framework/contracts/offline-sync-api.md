@@ -773,6 +773,31 @@ throwing classification becomes retryable `OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID`.
 The precise validation, rollback and import boundaries remain in
 [ADR-MOBILE-OFFLINE-0005 D1.1](../../../law/adr/ADR-MOBILE-OFFLINE-0005-acceptance-evidence.md#d11--optional-consumer-domain-outcome-classification).
 
+Independent D1.1 witnesses supplement the V-04 row above:
+
+- [`test/support/offline-domain-outcomes.ts`](../../../packages/offline-sync/test/support/offline-domain-outcomes.ts)
+  executes through the unit and real PostgreSQL files below, including
+  “D1.1 preserves absent and undefined classifier defaults for unknown HTTP and
+  plain coded failures”, “D1.1 refuses invalid, async, throwing and accessor
+  outcomes without coercion or partial terminal state”, and “D1.1 reclassifies a
+  correction-pending cross-batch attempt using the original queue and receipt
+  identity”. Its parameterized cases cover all three terminal statuses and both
+  optional conflict types.
+- [`test/unit/offline-domain-outcomes.spec.ts`](../../../packages/offline-sync/test/unit/offline-domain-outcomes.spec.ts):
+  “D1.1 restores actual memory-store effects before classifier invocation” and
+  “D1.1 refuses configured unsupported custom stores and legacy mode before
+  invoking a domain port”.
+- [`test/integration/offline-domain-outcomes.integration.spec.ts`](../../../packages/offline-sync/test/integration/offline-domain-outcomes.integration.spec.ts):
+  “D1.1 classifies only after actual effect rollback and atomically persists
+  original refusal/conflict evidence”, “D1.1 rolls back every refusal write when
+  receipt persistence fails after conflict creation”, “D1.1 restricts canonical
+  domain outcome evidence by two tenants under FORCE RLS”, and “D1.1 imports an
+  actual source terminal received marker losslessly and refuses contradictory
+  marker assertions”.
+- [`packages/data/test/unit/database-error-code.spec.ts`](../../../packages/data/test/unit/database-error-code.spec.ts)
+  separately verifies that code getters are never invoked and inherited codes
+  never trigger transaction retry/remapping, for `40001` and `57014`.
+
 **D6 bound forward installation.** Exported `renderOfflineStorageMigrations`,
 `OfflineStorageMigrationsArtifact` and `OfflineStorageMigration` expose the ordered
 immutable raw-source identities and separate bound SQL digests. They do not

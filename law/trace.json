@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.27",
+  "version": "1.3.28",
   "meta": {
-    "last_updated": "2026-10-13T02:16:58.020738Z",
+    "last_updated": "2026-10-13T03:55:52.374485Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -88,7 +88,8 @@
       "2026-10-12 Architect rebind of Inspector d78c3de9 adds the actual installed Nest diagnostic layout: copied production guard/child bytes are verified unchanged, all existing component scenarios remain, and the canonical 1.6.0 manifest is refused before target dependency evaluation. No actual candidate or fresh-build manifest, production anchor, threshold, HTTP admission or readiness verdict changes (ADR-RELEASE-0003).",
       "2026-10-12 Architect rebind of Inspector 6748206d pins actual installed Changesets empty-acknowledgement generation and the exact protected smart-friends-grab.md eight-byte no-release row. All other feature declarations, the complete consumption census, minor 1.6.0 plan and final zero-pending rule remain; eight additive refusals cover unknown, malformed, altered, feature-bearing, sole and unconsumed acknowledgements. No production, canonical admission, threshold, release scope or readiness verdict changes.",
       "STYNX 1.6.1 Architect binding preserves every prior executable relationship and assertion, binds Inspector acceptance, reconciliation/import, populated upgrade, fresh-only installation rollback and repeated role-binding witnesses through bc6ae9e0, and refreshes the exact 1.6.1 release-scope/freeze projections. Shared behavior assertions execute through both real-store wrappers; their corpus counts remain the literal per-file projection. These bindings establish neither consumer adoption nor a fully green audit, HTTP performance or mutation result.",
-      "STYNX 1.6.1 Architect adds the three Inspector bound-forward-migration witnesses from b75345c0934bad9594f130b2f1a73baed72d6cf7 against Engineer a04f2d55, preserving all 682 prior executable bindings and literal assertion projections. Raw migration identities, ordered bound SQL hashes, installed offline rendering, populated custom-bound prefixes, collision rollback and restricted two-tenant RLS are covered. Fixture-local suffix selection does not establish consumer ledger/prior-state admission, DETRAN acceptance, executed coverage, HTTP performance, mutation or overall audit PASS."
+      "STYNX 1.6.1 Architect adds the three Inspector bound-forward-migration witnesses from b75345c0934bad9594f130b2f1a73baed72d6cf7 against Engineer a04f2d55, preserving all 682 prior executable bindings and literal assertion projections. Raw migration identities, ordered bound SQL hashes, installed offline rendering, populated custom-bound prefixes, collision rollback and restricted two-tenant RLS are covered. Fixture-local suffix selection does not establish consumer ledger/prior-state admission, DETRAN acceptance, executed coverage, HTTP performance, mutation or overall audit PASS.",
+      "STYNX 1.6.1 Architect binds three Inspector D1.1 outcome/transaction witnesses through 816f30b2e800cd2d4c0e03d1c16d77740499bb7b against Engineer bfdb731e and explicit store capability. Every prior 685 corpus entry, including the original 682 assertion projections, is unchanged. Shared tests execute through memory and real PostgreSQL wrappers; literal file projections do not count support assertions twice. Canonical terminal states, optional conflict identity, reserved-error bypass, detached contexts, actual rollback, tenant isolation and source terminal-marker import custody are covered. This establishes no consumer acceptance, publication, executed-coverage standing, HTTP performance, mutation or overall audit PASS."
     ]
   },
   "invariants": [
@@ -461,6 +462,33 @@
             "Real PostgreSQL custom tenant-table/role prefix 0001 and 0008 upgrades preserve history and backfill exactly once, pass the final read-only verifier and direct restricted two-tenant FORCE RLS; prefix 0005 collision and old migration replay refuse transactionally. Fixture-local selection establishes no consumer ledger admission."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/data/test/unit/database-error-code.spec.ts",
+          "names": ["Database own-data error code boundary"],
+          "assertions": [
+            "Database item rollback preserves original business failures without executing code accessors or using inherited codes to retry/remap them."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/offline-sync/test/integration/offline-domain-outcomes.integration.spec.ts",
+          "names": ["Domain-outcome contracts through real PostgreSQL"],
+          "assertions": [
+            "Shared canonical classification contracts execute with actual item/refusal transaction rollback, direct restricted two-tenant FORCE RLS and lossless terminal-marker import/contradiction refusal."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/offline-sync/test/unit/offline-domain-outcomes.spec.ts",
+          "names": ["Domain-outcome contracts through the memory store"],
+          "assertions": [
+            "Canonical domain status/conflict outcomes, detached trusted inputs, terminal cross-batch replay, correction-pending identity, invalid/platform bypass and actual memory effect/refusal rollback; configured unsupported stores and E6 refuse."
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": ["packages/mobile-runtime/src/**", "packages/offline-sync/src/**"]
@@ -7302,6 +7330,30 @@
       "lifecycle": "supported",
       "assertion_count": 20,
       "assertion_digest_sha256": "453ef9438f7e7798edf3ada5f2c75dfe71856dd2c55ac6b6582c9b6126031120"
+    },
+    {
+      "path": "packages/data/test/unit/database-error-code.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 13,
+      "assertion_digest_sha256": "06fc0956f56dce7669615c38a700f7668e8d959c0b3d6d6bbbf838e596fa1096"
+    },
+    {
+      "path": "packages/offline-sync/test/integration/offline-domain-outcomes.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 33,
+      "assertion_digest_sha256": "fbf9e657e6eae05d179cf30f7d0f20f33b6a1e2058fba3392d208cca05076693"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-domain-outcomes.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 19,
+      "assertion_digest_sha256": "9695ff1c50d7da225688984b2d73884aae5599e0c8d654b19b480668730a12d8"
     }
   ],
   "suites": {
