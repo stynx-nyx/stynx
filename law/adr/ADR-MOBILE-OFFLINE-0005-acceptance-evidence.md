@@ -265,6 +265,19 @@ any write. Closed-frame cleanup must not restore stale local snapshots over
 another owner's state. Preserve the genuine conditional rollback behavior;
 do not replace it with unconditional restoration of pre-await records.
 
+Track active owned child frames before their first await and remove them only
+when settled. A frame whose body returns successfully cannot commit or return
+success while an owned child remains active: refuse through the existing typed
+conflict/batch family and perform its normal owned projection rollback. Do not
+wait indefinitely for detached work or change any deadline. If the body itself
+fails, preserve that actual error instead of replacing it with a child-lifetime
+error, and close the frame before rollback. In particular, a fire-and-forget
+resolver paused in `resolutionEventPort` cannot leave its earlier queue/conflict/
+action changes committed when the parent applier returns. After parent rollback,
+the child must refuse stale success and cannot restore its obsolete snapshot.
+Keep event append as the final write required by D4; moving store writes after
+an awaited event is not an alternative to ownership completion.
+
 Avoid self-deadlock: same-conflict recursive resolution and nested durable-batch
 entry cannot wait on a lock/promise held by their own frame; refuse them through
 existing typed conflict/in-progress errors. An owned callback cannot acquire
@@ -287,6 +300,9 @@ resolver after parent rollback refuses without resurrection. Retain the existing
 nested resolver-refusal witness and prove other-tenant progress, self-deadlock
 refusals and ordinary replay/rollback behavior. No private-map tampering,
 coverage exclusion, threshold reduction or fault-disguising rename is allowed.
+Also prove that a parent whose applier returns successfully while an owned
+resolver event remains pending refuses and rolls back those partial facts;
+releasing the event afterward neither resurrects them nor reports stale success.
 
 ## D5 — Durable reconciliation history (V-13)
 
