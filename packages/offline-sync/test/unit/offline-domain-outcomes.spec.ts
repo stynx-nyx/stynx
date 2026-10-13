@@ -66,6 +66,7 @@ describe('Domain-outcome contracts through the memory store', () => {
     });
     let clock = Date.parse(GAP_AT);
     return {
+      fatalReceiptMaterialization: 'absent' as const,
       service: (options = {}, tenantId = GAP_TENANT_A) =>
         new OfflineSyncService(
           store,
@@ -426,6 +427,179 @@ describe('Domain-outcome contracts through the memory store', () => {
     ).toHaveLength(1);
   });
 
+  it('D4.1 preserves an independent E6 writer and action history while a shared resolution rolls back only its own nested effects', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const original = legacyBatch('shared-resolution-root');
+    await store.submitSyncBatch(memoryScope, original, GAP_AT);
+    const originalConflict = await store.openConflict(
+      memoryScope,
+      original.items[0]!.queueItemId,
+      { conflictType: 'domain', description: 'shared root' },
+      GAP_AT,
+    );
+    const shadow = legacyBatch('shared-resolution-own-shadow');
+    const entered = deferred(),
+      release = deferred();
+    const failure = new Error('actual shared resolution refusal');
+    let shadowId = '';
+    const failing = store
+      .resolveWithPort(
+        memoryScope,
+        originalConflict.conflictId,
+        { resolution: 'manual_review' },
+        GAP_AT,
+        {
+          allowedActions: async () => ['manual_review'],
+          resolve: async () => {
+            await store.submitSyncBatch(memoryScope, shadow, GAP_AT);
+            const conflict = await store.openConflict(
+              memoryScope,
+              shadow.items[0]!.queueItemId,
+              { conflictType: 'domain', description: 'own shadow' },
+              GAP_AT,
+            );
+            shadowId = conflict.conflictId;
+            entered.release();
+            await release.promise;
+            throw failure;
+          },
+        },
+      )
+      .catch((error: unknown) => error);
+    await entered.promise;
+    const unrelated = legacyBatch('shared-resolution-independent-writer');
+    let writerFinished = false;
+    const writer = (async () => {
+      await store.submitSyncBatch(memoryScope, unrelated, GAP_AT);
+      const conflict = await store.openConflict(
+        memoryScope,
+        unrelated.items[0]!.queueItemId,
+        { conflictType: 'domain', description: 'independent committed history' },
+        GAP_AT,
+      );
+      const resolved = await store.resolveWithPort(
+        memoryScope,
+        conflict.conflictId,
+        { resolution: 'manual_review' },
+        GAP_AT,
+        {
+          allowedActions: async () => ['manual_review'],
+          resolve: async () => ({ ...conflict, status: 'resolved' }),
+        },
+      );
+      writerFinished = true;
+      return resolved;
+    })();
+    let finishedWhilePaused: boolean;
+    try {
+      await new Promise<void>((done) => setImmediate(done));
+      finishedWhilePaused = writerFinished;
+    } finally {
+      release.release();
+    }
+    expect(await failing).toBe(failure);
+    const resolved = await writer;
+    expect(finishedWhilePaused).toBe(true);
+    expect(
+      (await store.listSyncQueueItems(memoryScope, { deviceId: unrelated.deviceId })).items,
+    ).toHaveLength(1);
+    expect(
+      (await store.listSyncConflicts(memoryScope, { queueItemId: unrelated.items[0]!.queueItemId }))
+        .items,
+    ).toEqual([expect.objectContaining({ conflictId: resolved.conflictId, status: 'resolved' })]);
+    expect(
+      (await store.listSyncConflictActions(memoryScope, { conflictId: resolved.conflictId })).items,
+    ).toEqual([
+      expect.objectContaining({ conflictId: resolved.conflictId, resultingStatus: 'resolved' }),
+    ]);
+    expect(
+      (await store.listSyncQueueItems(memoryScope, { deviceId: shadow.deviceId })).items,
+    ).toEqual([]);
+    expect(
+      (await store.listSyncConflicts(memoryScope, { queueItemId: shadow.items[0]!.queueItemId }))
+        .items,
+    ).toEqual([]);
+    expect(
+      (await store.listSyncConflictActions(memoryScope, { conflictId: shadowId })).items,
+    ).toEqual([]);
+    expect(
+      (await store.listSyncConflicts(memoryScope, { queueItemId: original.items[0]!.queueItemId }))
+        .items,
+    ).toEqual([
+      expect.objectContaining({ conflictId: originalConflict.conflictId, status: 'open' }),
+    ]);
+  });
+
+  it('D4.1 never acknowledges a duplicate identity read from another shared owner that later rolls back', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const original = legacyBatch('uncommitted-payload-root');
+    await store.submitSyncBatch(memoryScope, original, GAP_AT);
+    const originalConflict = await store.openConflict(
+      memoryScope,
+      original.items[0]!.queueItemId,
+      { conflictType: 'domain', description: 'payload root' },
+      GAP_AT,
+    );
+    const shadow = legacyBatch('uncommitted-payload-shadow');
+    const entered = deferred(),
+      release = deferred();
+    const failure = new Error('rollback uncommitted payload identity');
+    const failing = store
+      .resolveWithPort(
+        memoryScope,
+        originalConflict.conflictId,
+        { resolution: 'manual_review' },
+        GAP_AT,
+        {
+          allowedActions: async () => ['manual_review'],
+          resolve: async () => {
+            await store.submitSyncBatch(memoryScope, shadow, GAP_AT);
+            entered.release();
+            await release.promise;
+            throw failure;
+          },
+        },
+      )
+      .catch((error: unknown) => error);
+    await entered.promise;
+    const freshItem = {
+      ...shadow.items[0]!,
+      queueItemId: 'independent-samehash-new-id',
+      idempotencyKey: 'independent-samehash-new-key',
+    };
+    const prefixItem = legacyBatch('independent-refused-prefix').items[0]!;
+    const freshInput = {
+      ...shadow,
+      deviceBatchId: 'independent-samehash-batch',
+      items: [prefixItem, freshItem],
+    };
+    const attempt = store.submitSyncBatch(memoryScope, freshInput, GAP_AT).then(
+      (result) => ({ result }),
+      (error: unknown) => ({ error }),
+    );
+    try {
+      await new Promise<void>((done) => setImmediate(done));
+    } finally {
+      release.release();
+    }
+    expect(await failing).toBe(failure);
+    const outcome = await attempt;
+    expect(outcome).toMatchObject({ error: { code: 'OFFLINE_SYNC_CONFLICT_STATE', status: 409 } });
+    expect(store.getQueueItem(GAP_TENANT_A, prefixItem.queueItemId)).toBe(undefined);
+    expect(store.getQueueItem(GAP_TENANT_A, freshItem.queueItemId)).toBe(undefined);
+    const fresh = await store.submitSyncBatch(memoryScope, freshInput, GAP_AT);
+    expect(fresh).toMatchObject({
+      duplicateItems: 0,
+      items: [{ queueItemId: prefixItem.queueItemId }, { queueItemId: freshItem.queueItemId }],
+    });
+    expect(
+      (await store.listSyncQueueItems(memoryScope, { deviceId: shadow.deviceId })).items
+        .map((item) => item.queueItemId)
+        .sort(),
+    ).toEqual([prefixItem.queueItemId, freshItem.queueItemId].sort());
+    expect(store.getQueueItem(GAP_TENANT_A, shadow.items[0]!.queueItemId)).toBe(undefined);
+  });
+
   it('D4.1 fences a detached successful resolver after its owning applier fails', async () => {
     const store = new InMemoryOfflineSyncStore();
     const entered = deferred(),
@@ -782,6 +956,184 @@ describe('Domain-outcome contracts through the memory store', () => {
       status: 409,
       message: 'A conflict cannot recursively resolve itself.',
     });
+  });
+
+  it('D4.1 refuses overlapping sibling resolutions of one queue and permits completed owned resolution reuse', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const shadow = legacyBatch('owned-queue-reuse');
+    const entered = deferred(),
+      release = deferred();
+    let overlap: unknown,
+      firstId = '',
+      siblingId = '';
+    const forbidden = vi.fn(async () => {
+      throw new Error('overlapping sibling must not enter');
+    });
+    const subject = memoryService(store, {
+      itemApplier: {
+        apply: async () => {
+          await store.submitSyncBatch(memoryScope, shadow, GAP_AT);
+          const first = await store.openConflict(
+            memoryScope,
+            shadow.items[0]!.queueItemId,
+            { conflictType: 'domain', description: 'first queue conflict' },
+            GAP_AT,
+          );
+          const sibling = await store.openConflict(
+            memoryScope,
+            shadow.items[0]!.queueItemId,
+            { conflictType: 'domain', description: 'second queue conflict' },
+            GAP_AT,
+          );
+          firstId = first.conflictId;
+          siblingId = sibling.conflictId;
+          const pending = store.resolveWithPort(
+            memoryScope,
+            firstId,
+            { resolution: 'manual_review' },
+            GAP_AT,
+            {
+              allowedActions: async () => ['manual_review'],
+              resolve: async () => {
+                entered.release();
+                await release.promise;
+                return { ...first, status: 'open' };
+              },
+            },
+          );
+          await entered.promise;
+          try {
+            overlap = await store
+              .resolveWithPort(memoryScope, siblingId, { resolution: 'manual_review' }, GAP_AT, {
+                allowedActions: async () => ['manual_review'],
+                resolve: forbidden,
+              })
+              .catch((error: unknown) => error);
+          } finally {
+            release.release();
+          }
+          await pending;
+          await store.resolveWithPort(
+            memoryScope,
+            firstId,
+            { resolution: 'manual_review' },
+            GAP_AT,
+            {
+              allowedActions: async () => ['manual_review'],
+              resolve: async () => ({ ...first, status: 'resolved' }),
+            },
+          );
+          return { serverEntityId: 'owned-queue-parent-committed' };
+        },
+      },
+    });
+    const result = await subject.submitSyncBatch(domainBatch('owned-queue-parent'));
+    expect(result.receipt.items[0]).toMatchObject({
+      status: 'applied',
+      stynx: { serverEntityId: 'owned-queue-parent-committed' },
+    });
+    expect(overlap).toMatchObject({
+      code: 'OFFLINE_SYNC_CONFLICT_STATE',
+      status: 409,
+      message: 'A queue item cannot recursively resolve itself.',
+    });
+    expect(forbidden).not.toHaveBeenCalled();
+    const actions = await store.listSyncConflictActions(memoryScope, { conflictId: firstId });
+    expect(actions.items.map((action) => action.resultingStatus)).toEqual(['resolved', 'open']);
+    expect(new Set(actions.items.map((action) => action.actionId)).size).toBe(2);
+    expect(
+      (await store.listSyncConflictActions(memoryScope, { conflictId: siblingId })).items,
+    ).toEqual([]);
+    expect(
+      (await store.listSyncConflicts(memoryScope, { queueItemId: shadow.items[0]!.queueItemId }))
+        .items,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ conflictId: firstId, status: 'resolved' }),
+        expect.objectContaining({ conflictId: siblingId, status: 'open' }),
+      ]),
+    );
+  });
+
+  it('D4.1 refuses an owned callback waiting on another owner queue while preserving both independent histories', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const a = legacyBatch('cross-owner-a'),
+      b = legacyBatch('cross-owner-b');
+    await store.submitSyncBatch(memoryScope, a, GAP_AT);
+    await store.submitSyncBatch(memoryScope, b, GAP_AT);
+    const first = await store.openConflict(
+      memoryScope,
+      a.items[0]!.queueItemId,
+      { conflictType: 'domain', description: 'queue A' },
+      GAP_AT,
+    );
+    const second = await store.openConflict(
+      memoryScope,
+      b.items[0]!.queueItemId,
+      { conflictType: 'domain', description: 'queue B' },
+      GAP_AT,
+    );
+    const entered = deferred(),
+      release = deferred();
+    const pending = store.resolveWithPort(
+      memoryScope,
+      second.conflictId,
+      { resolution: 'manual_review' },
+      GAP_AT,
+      {
+        allowedActions: async () => ['manual_review'],
+        resolve: async () => {
+          entered.release();
+          await release.promise;
+          return { ...second, status: 'resolved' };
+        },
+      },
+    );
+    await entered.promise;
+    let nested: unknown;
+    const forbidden = vi.fn(async () => {
+      throw new Error('foreign owner port must not enter');
+    });
+    try {
+      const resolved = await store.resolveWithPort(
+        memoryScope,
+        first.conflictId,
+        { resolution: 'manual_review' },
+        GAP_AT,
+        {
+          allowedActions: async () => ['manual_review'],
+          resolve: async () => {
+            nested = await store
+              .resolveWithPort(
+                memoryScope,
+                second.conflictId,
+                { resolution: 'manual_review' },
+                GAP_AT,
+                { allowedActions: async () => ['manual_review'], resolve: forbidden },
+              )
+              .catch((error: unknown) => error);
+            return { ...first, status: 'resolved' };
+          },
+        },
+      );
+      expect(resolved).toMatchObject({ conflictId: first.conflictId, status: 'resolved' });
+    } finally {
+      release.release();
+    }
+    expect(await pending).toMatchObject({ conflictId: second.conflictId, status: 'resolved' });
+    expect(nested).toMatchObject({
+      code: 'OFFLINE_SYNC_CONFLICT_STATE',
+      status: 409,
+      message: 'An owned callback cannot wait for another queue owner.',
+    });
+    expect(forbidden).not.toHaveBeenCalled();
+    for (const conflict of [first, second])
+      expect(
+        (await store.listSyncConflictActions(memoryScope, { conflictId: conflict.conflictId }))
+          .items,
+      ).toEqual([
+        expect.objectContaining({ conflictId: conflict.conflictId, resultingStatus: 'resolved' }),
+      ]);
   });
 
   it('D4.1 rolls back an unfinished child started while admitting a numbering refusal without leaving orphan evidence', async () => {

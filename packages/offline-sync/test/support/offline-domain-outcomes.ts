@@ -35,6 +35,7 @@ export const domainEvents = () => ({
 });
 
 export interface OfflineDomainHarness extends OfflineGapHarness {
+  readonly fatalReceiptMaterialization: 'absent' | 'received';
   readConflictActions(conflictId: string): Promise<readonly string[]>;
   readConflictCode(conflictId: string): Promise<string>;
 }
@@ -377,6 +378,129 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
       (await h.run(GAP_TENANT_A, () => service.listSyncQueueItems({ deviceId: input.deviceId })))
         .items[0],
     ).toMatchObject({ agentId: 'effective-business-agent', payloadJson: { citation: 42 } });
+  });
+
+  it('D4.1 preserves a completed item when a later item fatally refuses and retries without repeating its effect', async () => {
+    const h = harness();
+    const first = { ...domainBatch('completed-before-fatal'), orgUnitId: 'completed-item-org' };
+    const second = domainBatch('fatal-second-item').items[0]!;
+    const failure = new OfflineSyncConfigurationError('second item refuses');
+    const eventPort = domainEvents();
+    const apply = vi.fn(
+      async (_trx: unknown, item: import('../../src/types').CTG9SyncBatchItemInput) => {
+        if (item.queueItemId === second.queueItemId) throw failure;
+        return { serverEntityId: 'first-committed-server' };
+      },
+    );
+    const subject = h.service({ itemApplier: { apply }, eventPort });
+    await h.run(GAP_TENANT_A, () =>
+      subject.createNumberingRange({
+        orgUnitId: first.orgUnitId,
+        entityType: 'citation',
+        series: 'PER-ITEM',
+        startNumber: 1,
+        endNumber: 10,
+      }),
+    );
+    const reservation = await h.run(GAP_TENANT_A, () =>
+      subject.reserveDurableNumbering({
+        orgUnitId: first.orgUnitId,
+        deviceId: first.deviceId,
+        shiftId: null,
+        entityType: 'citation',
+        requestedSize: 2,
+      }),
+    );
+    const input = {
+      ...first,
+      items: [
+        { ...first.items[0]!, reservedNumber: reservation.startNumber },
+        { ...second, reservedNumber: reservation.endNumber },
+      ],
+    };
+    await expect(h.run(GAP_TENANT_A, () => subject.submitSyncBatch(input))).rejects.toBe(failure);
+    const firstReceipt = await h.run(GAP_TENANT_A, () =>
+      subject.getSyncItemReceipt(input.items[0]!.idempotencyKey!),
+    );
+    expect(firstReceipt).toMatchObject({
+      status: 'applied',
+      stynx: { serverEntityId: 'first-committed-server', appliedAt: GAP_AT, attempts: 1 },
+    });
+    if (h.fatalReceiptMaterialization === 'received') {
+      const secondReceipt = await h.run(GAP_TENANT_A, () =>
+        subject.getSyncItemReceipt(second.idempotencyKey!),
+      );
+      // Published PostgreSQL admission commits this stub separately from the failed item effects.
+      expect(secondReceipt).toEqual({ queueItemId: second.queueItemId, status: 'received' });
+      expect(secondReceipt).not.toHaveProperty('stynx.appliedAt');
+      expect(secondReceipt).not.toHaveProperty('stynx.serverEntityId');
+      expect(secondReceipt).not.toHaveProperty('stynx.attempts');
+    } else
+      await expect(
+        h.run(GAP_TENANT_A, () => subject.getSyncItemReceipt(second.idempotencyKey!)),
+      ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND', status: 404 });
+    const queues = (
+      await h.run(GAP_TENANT_A, () => subject.listSyncQueueItems({ deviceId: first.deviceId }))
+    ).items;
+    expect(queues).toContainEqual(
+      expect.objectContaining({ queueItemId: input.items[0]!.queueItemId, status: 'applied' }),
+    );
+    if (h.fatalReceiptMaterialization === 'received') {
+      expect(queues).toContainEqual(
+        expect.objectContaining({ queueItemId: second.queueItemId, status: 'received' }),
+      );
+      expect(queues).toHaveLength(2);
+    } else expect(queues).toHaveLength(1);
+    const consumption = await h.run(GAP_TENANT_A, () =>
+      subject.getNumberingConsumption(reservation.reservationId),
+    );
+    expect(consumption.consumption).toEqual([
+      {
+        number: reservation.startNumber,
+        status: 'applied',
+        serverEntityId: 'first-committed-server',
+        finalizedAt: GAP_AT,
+      },
+      {
+        number: reservation.endNumber,
+        status: 'available',
+        serverEntityId: null,
+        finalizedAt: null,
+      },
+    ]);
+    expect(eventPort.appendInTransaction).toHaveBeenCalledTimes(1);
+    expect(eventPort.appendInTransaction).toHaveBeenCalledWith(expect.anything(), {
+      entity: 'citation',
+      entityId: 'first-committed-server',
+      idempotencyKey: input.items[0]!.idempotencyKey,
+      payload: input.items[0]!.payloadJson,
+    });
+    const retry = vi.fn(async () => ({ serverEntityId: 'second-retried-server' }));
+    const next = h.service({ itemApplier: { apply: retry }, eventPort });
+    const result = await h.run(GAP_TENANT_A, () => next.submitSyncBatch(input));
+    expect(result.receipt.items).toMatchObject([
+      firstReceipt,
+      { status: 'applied', stynx: { serverEntityId: 'second-retried-server' } },
+    ]);
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(retry).toHaveBeenCalledWith(
+      expect.anything(),
+      input.items[1],
+      expect.objectContaining({ receiptId: second.idempotencyKey }),
+    );
+    expect(
+      await h.run(GAP_TENANT_A, () => next.getSyncItemReceipt(input.items[0]!.idempotencyKey!)),
+    ).toEqual(firstReceipt);
+    expect(eventPort.appendInTransaction).toHaveBeenCalledTimes(2);
+    expect(
+      (await h.run(GAP_TENANT_A, () => next.getNumberingConsumption(reservation.reservationId)))
+        .consumption[0],
+    ).toEqual(consumption.consumption[0]);
+    expect(
+      (await h.run(GAP_TENANT_A, () => next.submitSyncBatch(input))).receipt.responseBodyBytes,
+    ).toEqual(result.receipt.responseBodyBytes);
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(eventPort.appendInTransaction).toHaveBeenCalledTimes(2);
   });
 
   it('D1.1 bypasses classifier for platform, reserved, uncoded, malformed and invalid-context failures', async () => {
