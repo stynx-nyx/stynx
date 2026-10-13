@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.devai-adoption",
-  "policy_version": "1.6.2",
+  "policy_version": "1.6.3",
   "project": {
     "project_type": "platform-package",
     "repo": {
@@ -155,7 +155,8 @@
         ]
       },
       "type_check": {
-        "argv": ["pnpm", "typecheck"]
+        "taskId": "typecheck",
+        "population": "workspace-typecheck"
       },
       "plant_depth": {
         "excludeGlobs": ["packages-web/sdk/src/generated/**"]
@@ -206,6 +207,18 @@
           "packages-web/angular-profile/src",
           "packages-web/angular-audit/src"
         ]
+      },
+      "build": {
+        "taskId": "build",
+        "population": "workspace-build"
+      },
+      "perf_test": {
+        "taskId": "test:performance",
+        "population": "cold-unit-perf"
+      },
+      "migration_check": {
+        "taskId": "db:rls",
+        "population": "migration-rls"
       }
     },
     "surfaces": {

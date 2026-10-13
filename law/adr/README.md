@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [Supported task-bound scorecard readings and complete individual collection](2026-10-12-supported-scorecard-task-collection.md)
+
 - [STYNX 1.6.1 offline fixes and practical audit recovery](2026-10-12-patch-1.6.1-and-practical-audit.md)
 - [ADR-MOBILE-OFFLINE-0005 — Additive acceptance evidence](ADR-MOBILE-OFFLINE-0005-acceptance-evidence.md)
 
