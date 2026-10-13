@@ -2215,7 +2215,25 @@ test('stable 1.6.1 patch context refuses wrong markers, package groups, storage 
 });
 
 function patch162ReleaseFixture() {
-  const marker = '0ad79ac204499f511acf00820590400973588459';
+  const uniqueAncestorBySubject = (subject) => {
+    const result = spawnSync('git', ['log', '--first-parent', '--format=%H%x09%s', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const matches = result.stdout
+      .trim()
+      .split('\n')
+      .map((line) => line.split('\t'))
+      .filter(([, actualSubject]) => actualSubject === subject);
+    assert.equal(matches.length, 1, `expected one ancestor with subject: ${subject}`);
+    assert.match(matches[0][0], /^[0-9a-f]{40}$/u);
+    return matches[0][0];
+  };
+  const marker = uniqueAncestorBySubject(releaseContextConstants.patch162VersionCommitSubject);
+  const scripts = uniqueAncestorBySubject(
+    'fix(stynx-workspace): prepare exact 1.6.2 marker classification',
+  );
   const gitBytes = (revision, path) => {
     const result = spawnSync('git', ['show', `${revision}:${path}`], { cwd: repoRoot });
     assert.equal(result.status, 0, result.stderr.toString());
@@ -2251,14 +2269,11 @@ function patch162ReleaseFixture() {
     markerParentChangesets: ['.changeset/contracts-built-barrel-smoke.md'],
     // DEVAI 2.6.2 is not published yet. Model only its reviewed root dependency
     // transition; the actual follow-up map is closed after installed adoption.
-    followUpChanges: [
-      ...gitChanges(marker, 'd8c513fcbc77e3de7186083a2de74a594a6a0007'),
-      { status: 'M', path: 'package.json' },
-    ],
+    followUpChanges: [...gitChanges(marker, scripts), { status: 'M', path: 'package.json' }],
     rootManifestMatchesMarker: true,
     rootManifestAtMarker,
     rootManifestAtHead: {
-      ...rootManifestAtMarker,
+      ...structuredClone(rootManifestAtMarker),
       devDependencies: {
         ...rootManifestAtMarker.devDependencies,
         '@aarusso-nyx/devai': '2.6.2',
