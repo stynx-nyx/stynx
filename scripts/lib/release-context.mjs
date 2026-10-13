@@ -16,6 +16,7 @@ const fourthStablePatchVersionCommitSubject = 'chore(repo): version fixed group 
 const fifthStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.5';
 const sixthStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.6';
 const seventhStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.7';
+const patch161VersionCommitSubject = 'chore(release): prepare the 1.6.1 fixed group';
 
 export const versionedStorageTemplates = Object.freeze([
   Object.freeze({
@@ -30,6 +31,154 @@ export const versionedStorageTemplates = Object.freeze([
     generator: 'outbox-storage-generate.mjs',
     exportName: 'OUTBOX_STORAGE_TEMPLATE',
   }),
+]);
+
+// ADR-RELEASE-0004: exact reviewed net changes after the 1.6.1 marker.
+// Historical patch profiles keep their existing follow-up rules.
+const patch161FollowUpStatuses = new Map([
+  ['.devai/config/adopter-policy-binding.json', 'M'],
+  ['.devai/config/authority-policy.json', 'M'],
+  ['.devai/config/github-actions-host-adapter.json', 'M'],
+  ['.devai/config/project.json', 'M'],
+  ['.devai/config/upgrade-receipt.json', 'M'],
+  ['.devai/constitution.md', 'M'],
+  ['AGENTS.md', 'M'],
+  ['README.md', 'M'],
+  ['docs/framework/api/openapi.json', 'M'],
+  ['docs/framework/contracts/consumer-storage.md', 'M'],
+  ['docs/framework/contracts/offline-storage-import.md', 'M'],
+  ['docs/framework/contracts/offline-sync-api.md', 'M'],
+  ['docs/framework/contracts/openapi-compositions/offline-ctg9.json', 'M'],
+  ['docs/framework/contracts/openapi-compositions/offline-e6.json', 'M'],
+  ['docs/framework/contracts/openapi.json', 'M'],
+  ['docs/framework/contracts/public-api-baselines.json', 'M'],
+  ['law/adr/2026-10-12-patch-1.6.1-and-practical-audit.md', 'M'],
+  ['law/adr/2026-10-12-supported-scorecard-task-collection.md', 'M'],
+  ['law/adr/ADR-MOBILE-OFFLINE-0005-acceptance-evidence.md', 'M'],
+  ['law/policy/devai-package-identity.json', 'M'],
+  ['law/policy/forbidden-action-authorizations.json', 'M'],
+  ['law/policy/registry-version-anomalies.json', 'M'],
+  ['law/schemas/README.md', 'M'],
+  ['law/trace.json', 'M'],
+  ['package.json', 'M'],
+  ['packages-web/sdk/CHANGELOG.md', 'M'],
+  ['packages-web/sdk/src/generated/compositions/offline-ctg9/index.ts', 'M'],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/models/CTG9ReserveNumberingInput.ts',
+    'M',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/models/CTG9SubmitSyncBatchInput.ts',
+    'A',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/models/CTG9SyncBatchItemInput.ts',
+    'A',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/models/OfflineSyncStynxContext.ts',
+    'M',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/models/ReconcileNumberingInput.ts',
+    'M',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/models/ReconcileNumberingResult.ts',
+    'M',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/schemas/$CTG9ReserveNumberingInput.ts',
+    'M',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/schemas/$CTG9SubmitSyncBatchInput.ts',
+    'A',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/schemas/$CTG9SyncBatchItemInput.ts',
+    'A',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/schemas/$OfflineSyncStynxContext.ts',
+    'M',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/schemas/$ReconcileNumberingInput.ts',
+    'M',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/schemas/$ReconcileNumberingResult.ts',
+    'M',
+  ],
+  [
+    'packages-web/sdk/src/generated/compositions/offline-ctg9/services/Ctg9OfflineSyncService.ts',
+    'M',
+  ],
+  ['packages-web/sdk/src/generated/index.ts', 'M'],
+  ['packages-web/sdk/src/generated/models/CTG9ReserveNumberingInput.ts', 'M'],
+  ['packages-web/sdk/src/generated/models/CTG9SubmitSyncBatchInput.ts', 'A'],
+  ['packages-web/sdk/src/generated/models/CTG9SyncBatchItemInput.ts', 'A'],
+  ['packages-web/sdk/src/generated/models/OfflineSyncStynxContext.ts', 'M'],
+  ['packages-web/sdk/src/generated/models/ReconcileNumberingInput.ts', 'M'],
+  ['packages-web/sdk/src/generated/models/ReconcileNumberingResult.ts', 'M'],
+  ['packages-web/sdk/src/generated/schemas/$CTG9ReserveNumberingInput.ts', 'M'],
+  ['packages-web/sdk/src/generated/schemas/$CTG9SubmitSyncBatchInput.ts', 'A'],
+  ['packages-web/sdk/src/generated/schemas/$CTG9SyncBatchItemInput.ts', 'A'],
+  ['packages-web/sdk/src/generated/schemas/$OfflineSyncStynxContext.ts', 'M'],
+  ['packages-web/sdk/src/generated/schemas/$ReconcileNumberingInput.ts', 'M'],
+  ['packages-web/sdk/src/generated/schemas/$ReconcileNumberingResult.ts', 'M'],
+  ['packages/data/CHANGELOG.md', 'M'],
+  ['packages/data/src/database.ts', 'M'],
+  ['packages/data/test/unit/database-error-code.spec.ts', 'A'],
+  ['packages/offline-sync/CHANGELOG.md', 'M'],
+  ['packages/offline-sync/src/domain-error-context.ts', 'M'],
+  ['packages/offline-sync/src/domain-outcome.ts', 'A'],
+  ['packages/offline-sync/src/import-validation.ts', 'M'],
+  ['packages/offline-sync/src/in-memory-offline-sync.store.ts', 'M'],
+  ['packages/offline-sync/src/index.ts', 'M'],
+  ['packages/offline-sync/src/offline-sync.service.ts', 'M'],
+  ['packages/offline-sync/src/postgres-durable.ts', 'M'],
+  ['packages/offline-sync/src/postgres-offline-sync.store.ts', 'M'],
+  ['packages/offline-sync/src/storage-catalog.generated.ts', 'M'],
+  ['packages/offline-sync/src/storage-invariants.ts', 'M'],
+  ['packages/offline-sync/src/storage-template.generated.ts', 'M'],
+  ['packages/offline-sync/src/storage.ts', 'M'],
+  ['packages/offline-sync/src/types.ts', 'M'],
+  ['packages/offline-sync/test/integration/offline-domain-outcomes.integration.spec.ts', 'A'],
+  ['packages/offline-sync/test/integration/offline-reconciliation-import.integration.spec.ts', 'A'],
+  ['packages/offline-sync/test/integration/offline-storage-migrations.integration.spec.ts', 'A'],
+  ['packages/offline-sync/test/integration/offline-storage-reapply.integration.spec.ts', 'A'],
+  ['packages/offline-sync/test/integration/offline-storage.integration.spec.ts', 'M'],
+  ['packages/offline-sync/test/integration/offline-sync-acceptance-gaps.integration.spec.ts', 'M'],
+  [
+    'packages/offline-sync/test/integration/offline-sync-consumption-clock.integration.spec.ts',
+    'M',
+  ],
+  ['packages/offline-sync/test/integration/offline-sync-lists-reserve.integration.spec.ts', 'M'],
+  ['packages/offline-sync/test/support/offline-domain-outcomes.ts', 'A'],
+  ['packages/offline-sync/test/support/offline-reconciliation-import-fixture.ts', 'A'],
+  ['packages/offline-sync/test/support/offline-sync-acceptance-gaps.ts', 'M'],
+  ['packages/offline-sync/test/unit/offline-domain-outcomes.spec.ts', 'A'],
+  ['packages/offline-sync/test/unit/offline-reconciliation-import.spec.ts', 'A'],
+  ['packages/offline-sync/test/unit/offline-storage-artifact.spec.ts', 'M'],
+  ['packages/offline-sync/test/unit/offline-storage-migrations-packed.spec.ts', 'A'],
+  ['packages/offline-sync/test/unit/offline-storage-migrations.spec.ts', 'A'],
+  ['packages/offline-sync/test/unit/offline-sync-lists-reserve.spec.ts', 'M'],
+  ['packages/offline-sync/test/unit/offline-sync-pending-review-context.spec.ts', 'M'],
+  ['packages/offline-sync/test/unit/postgres-durable-coverage.spec.ts', 'M'],
+  ['packages/offline-sync/test/unit/postgres-pending-review-context.spec.ts', 'M'],
+  ['pnpm-lock.yaml', 'M'],
+  ['scripts/lib/registry-version-policy.mjs', 'M'],
+  ['scripts/lib/release-context.mjs', 'M'],
+  ['scripts/offline-storage-generate.mjs', 'M'],
+  ['scripts/run-release-preparation.mjs', 'M'],
+  ['scripts/verify-offline-storage-references.mjs', 'M'],
+  ['test/fixtures/release-scope/test-tasks-1.6.0.json', 'A'],
+  ['test/scripts/local-rc-blocker-contract.test.mjs', 'M'],
+  ['test/scripts/offline-storage-references.test.mjs', 'M'],
+  ['test/scripts/release-evidence-scope.test.mjs', 'M'],
+  ['test/scripts/release-version-policy.test.mjs', 'M'],
 ]);
 
 const allowedVersionSupportPaths = new Set([
@@ -703,6 +852,71 @@ export function isSeventhStablePatchVersionedCandidate(input) {
   });
 }
 
+/** The reviewed 1.6.1 patch retains closed marker and follow-up admission. */
+export function isPatch161VersionedCandidate(input) {
+  if (
+    !input ||
+    !Array.isArray(input.markerChanges) ||
+    !Array.isArray(input.followUpChanges) ||
+    !Array.isArray(input.storageVersionArtifacts) ||
+    !input.rootManifestAtMarker ||
+    !input.rootManifestAtHead ||
+    input.rootManifestAtMarker.version !== '1.6.1' ||
+    input.rootManifestAtHead.version !== '1.6.1' ||
+    input.rootManifestAtMarker.devDependencies?.['@aarusso-nyx/devai'] !== '2.6.0' ||
+    input.rootManifestAtHead.devDependencies?.['@aarusso-nyx/devai'] !== '2.6.1'
+  )
+    return false;
+
+  const expectedRootManifest = {
+    ...input.rootManifestAtMarker,
+    devDependencies: {
+      ...input.rootManifestAtMarker.devDependencies,
+      '@aarusso-nyx/devai': '2.6.1',
+    },
+  };
+  if (
+    !isDeepStrictEqual(input.rootManifestAtHead, expectedRootManifest) ||
+    new Set(input.followUpChanges.map(({ path }) => path)).size !== input.followUpChanges.length ||
+    input.followUpChanges.some(
+      ({ path, status }) => patch161FollowUpStatuses.get(path) !== status,
+    ) ||
+    input.storageVersionArtifacts.some(
+      ({ baseVersion, version }) => baseVersion !== '1.6.0' || version !== '1.6.1',
+    )
+  )
+    return false;
+
+  try {
+    validateStorageVersionChanges(input.markerChanges, input.storageVersionArtifacts);
+  } catch (error) {
+    if (error instanceof ReleaseContextError) return false;
+    throw error;
+  }
+  if (input.storageVersionArtifacts.length !== versionedStorageTemplates.length) return false;
+
+  return isExactStablePatchVersionedCandidate(
+    {
+      ...input,
+      rootManifestMatchesMarker: true,
+      markerChanges: input.markerChanges.filter(
+        ({ path }) => !versionedStorageTemplates.some((template) => template.path === path),
+      ),
+    },
+    {
+      baseVersion: '1.6.0',
+      parentVersion: '1.6.0',
+      candidateVersion: '1.6.1',
+      changesetPaths: ['.changeset/offline-acceptance-evidence.md'],
+      markerSubject: patch161VersionCommitSubject,
+      allowedFollowUpPaths: new Set(patch161FollowUpStatuses.keys()),
+      allowedAddedFollowUpPaths: new Set(
+        [...patch161FollowUpStatuses].filter(([, status]) => status === 'A').map(([path]) => path),
+      ),
+    },
+  );
+}
+
 export function classifyReleaseContext({
   baseCommit,
   headCommit,
@@ -764,6 +978,7 @@ export const releaseContextConstants = Object.freeze({
   fifthStablePatchVersionCommitSubject,
   sixthStablePatchVersionCommitSubject,
   seventhStablePatchVersionCommitSubject,
+  patch161VersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',
