@@ -92,6 +92,7 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
   registerDomainOutcomeContracts(() => {
     clock = Date.parse(GAP_AT);
     return {
+      fatalReceiptMaterialization: 'received' as const,
       service,
       run,
       tick: () => {
