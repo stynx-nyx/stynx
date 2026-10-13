@@ -17,6 +17,7 @@ const fifthStablePatchVersionCommitSubject = 'chore(repo): version fixed group t
 const sixthStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.6';
 const seventhStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.7';
 const patch161VersionCommitSubject = 'chore(release): prepare the 1.6.1 fixed group';
+const patch162VersionCommitSubject = 'chore(stynx-workspace): version fixed group to 1.6.2';
 
 export const versionedStorageTemplates = Object.freeze([
   Object.freeze({
@@ -212,6 +213,24 @@ const allowedVersionSupportPaths = new Set([
   'packages/pdf-a/README.md',
   'packages/pdf-a-vera-docker/README.md',
   'tools/create-stynx-app/template/package.json',
+]);
+
+// ADR-RELEASE-0005: the 1.6.2 SBOM was regenerated after the version marker.
+// Keep historical marker populations unchanged.
+const patch162VersionSupportPaths = new Set(
+  [...allowedVersionSupportPaths].filter((path) => path !== 'docs/meta/security/sbom.cdx.json'),
+);
+
+// Complete this closed map after the published DEVAI bind and before freezing
+// the exact candidate. A newly generated path must be reviewed explicitly.
+const patch162FollowUpStatuses = new Map([
+  ['docs/meta/security/sbom.cdx.json', 'M'],
+  ['law/trace.json', 'M'],
+  ['test/scripts/local-rc-blocker-contract.test.mjs', 'M'],
+  ['scripts/lib/release-context.mjs', 'M'],
+  ['scripts/run-release-preparation.mjs', 'M'],
+  ['test/scripts/release-version-policy.test.mjs', 'M'],
+  ['law/adr/2026-10-13-patch-1.6.2-audit-tranche.md', 'M'],
 ]);
 
 const allowedVersionFollowUpPaths = new Set([
@@ -711,6 +730,7 @@ function isExactStablePatchVersionedCandidate(
     markerSubject,
     allowedFollowUpPaths,
     allowedAddedFollowUpPaths,
+    versionSupportPaths = allowedVersionSupportPaths,
   },
 ) {
   if (
@@ -761,7 +781,7 @@ function isExactStablePatchVersionedCandidate(
     expected.set(manifestPath, 'M');
     expected.set(manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'), 'M');
   }
-  for (const path of allowedVersionSupportPaths) expected.set(path, 'M');
+  for (const path of versionSupportPaths) expected.set(path, 'M');
   if (
     markerChanges.length !== expected.size ||
     markerChanges.some(({ path, status }) => expected.get(path) !== status) ||
@@ -941,6 +961,72 @@ export function isPatch161VersionedCandidate(input) {
   );
 }
 
+/** The 1.6.2 marker and its reviewed post-marker population are closed. */
+export function isPatch162VersionedCandidate(input) {
+  if (
+    !input ||
+    !Array.isArray(input.markerChanges) ||
+    !Array.isArray(input.followUpChanges) ||
+    !Array.isArray(input.storageVersionArtifacts) ||
+    !input.rootManifestAtMarker ||
+    !input.rootManifestAtHead ||
+    input.rootManifestAtMarker.version !== '1.6.2' ||
+    input.rootManifestAtHead.version !== '1.6.2' ||
+    input.rootManifestAtMarker.devDependencies?.['@aarusso-nyx/devai'] !== '2.6.1' ||
+    input.rootManifestAtHead.devDependencies?.['@aarusso-nyx/devai'] !== '2.6.2'
+  )
+    return false;
+
+  const expectedRootManifest = {
+    ...input.rootManifestAtMarker,
+    devDependencies: {
+      ...input.rootManifestAtMarker.devDependencies,
+      '@aarusso-nyx/devai': '2.6.2',
+    },
+  };
+  if (
+    !isDeepStrictEqual(input.rootManifestAtHead, expectedRootManifest) ||
+    new Set(input.followUpChanges.map(({ path }) => path)).size !== input.followUpChanges.length ||
+    input.followUpChanges.some(
+      ({ path, status }) => patch162FollowUpStatuses.get(path) !== status,
+    ) ||
+    input.storageVersionArtifacts.some(
+      ({ baseVersion, version }) => baseVersion !== '1.6.1' || version !== '1.6.2',
+    )
+  )
+    return false;
+
+  try {
+    validateStorageVersionChanges(input.markerChanges, input.storageVersionArtifacts);
+  } catch (error) {
+    if (error instanceof ReleaseContextError) return false;
+    throw error;
+  }
+  if (input.storageVersionArtifacts.length !== versionedStorageTemplates.length) return false;
+
+  return isExactStablePatchVersionedCandidate(
+    {
+      ...input,
+      rootManifestMatchesMarker: true,
+      markerChanges: input.markerChanges.filter(
+        ({ path }) => !versionedStorageTemplates.some((template) => template.path === path),
+      ),
+    },
+    {
+      baseVersion: '1.6.1',
+      parentVersion: '1.6.1',
+      candidateVersion: '1.6.2',
+      changesetPaths: ['.changeset/contracts-built-barrel-smoke.md'],
+      markerSubject: patch162VersionCommitSubject,
+      allowedFollowUpPaths: new Set(patch162FollowUpStatuses.keys()),
+      allowedAddedFollowUpPaths: new Set(
+        [...patch162FollowUpStatuses].filter(([, status]) => status === 'A').map(([path]) => path),
+      ),
+      versionSupportPaths: patch162VersionSupportPaths,
+    },
+  );
+}
+
 export function classifyReleaseContext({
   baseCommit,
   headCommit,
@@ -1003,6 +1089,7 @@ export const releaseContextConstants = Object.freeze({
   sixthStablePatchVersionCommitSubject,
   seventhStablePatchVersionCommitSubject,
   patch161VersionCommitSubject,
+  patch162VersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',
