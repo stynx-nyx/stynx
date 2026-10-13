@@ -2214,6 +2214,167 @@ test('stable 1.6.1 patch context refuses wrong markers, package groups, storage 
   }
 });
 
+function patch162ReleaseFixture() {
+  const marker = '0ad79ac204499f511acf00820590400973588459';
+  const gitBytes = (revision, path) => {
+    const result = spawnSync('git', ['show', `${revision}:${path}`], { cwd: repoRoot });
+    assert.equal(result.status, 0, result.stderr.toString());
+    return result.stdout;
+  };
+  const gitJson = (revision, path) => JSON.parse(gitBytes(revision, path).toString());
+  const gitChanges = (from, to) => {
+    const result = spawnSync('git', ['diff', '--name-status', '--no-renames', from, to], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout
+      .trim()
+      .split('\n')
+      .map((line) => {
+        const [status, path] = line.split('\t');
+        return { status, path };
+      });
+  };
+  const markerChanges = gitChanges(`${marker}^`, marker);
+  const rootManifestAtMarker = gitJson(marker, 'package.json');
+  return {
+    baseRootVersion: '1.6.1',
+    markerParentRootVersion: gitJson(`${marker}^`, 'package.json').version,
+    candidateRootVersion: rootManifestAtMarker.version,
+    markerCommits: [
+      { sha: 'a'.repeat(40), subject: 'docs(release): govern 1.6.2' },
+      { sha: marker, subject: releaseContextConstants.patch162VersionCommitSubject },
+      { sha: 'b'.repeat(40), subject: 'test(release): inspect 1.6.2' },
+    ],
+    markerChanges,
+    markerParentChangesets: ['.changeset/contracts-built-barrel-smoke.md'],
+    // DEVAI 2.6.2 is not published yet. Model only its reviewed root dependency
+    // transition; the actual follow-up map is closed after installed adoption.
+    followUpChanges: [
+      ...gitChanges(marker, 'd8c513fcbc77e3de7186083a2de74a594a6a0007'),
+      { status: 'M', path: 'package.json' },
+    ],
+    rootManifestMatchesMarker: true,
+    rootManifestAtMarker,
+    rootManifestAtHead: {
+      ...rootManifestAtMarker,
+      devDependencies: {
+        ...rootManifestAtMarker.devDependencies,
+        '@aarusso-nyx/devai': '2.6.2',
+      },
+    },
+    storageVersionArtifacts: releaseContext.versionedStorageTemplates.map(({ path }) => ({
+      path,
+      before: gitBytes(`${marker}^`, path),
+      after: gitBytes(marker, path),
+      baseVersion: '1.6.1',
+      version: '1.6.2',
+    })),
+    packageStates: collectPublicPackages(repoRoot).map(({ name, manifestPath }) => {
+      const path = relative(repoRoot, manifestPath);
+      return {
+        name,
+        manifestPath: path,
+        parentVersion: gitJson(`${marker}^`, path).version,
+        candidateVersion: gitJson(marker, path).version,
+      };
+    }),
+    changesetIdsOnDisk: [],
+    preState: null,
+    markerParentPreState: null,
+  };
+}
+
+test('stable 1.6.2 patch accepts the actual 96-path marker and version-only storage templates', () => {
+  const input = patch162ReleaseFixture();
+  assert.equal(input.markerChanges.length, 96);
+  assert.equal(input.packageStates.length, 44);
+  assert.equal(input.storageVersionArtifacts.length, 2);
+  assert.equal(input.rootManifestAtMarker.devDependencies['@aarusso-nyx/devai'], '2.6.1');
+  assert.equal(input.rootManifestAtHead.devDependencies['@aarusso-nyx/devai'], '2.6.2');
+  assert.equal(releaseContext.isPatch162VersionedCandidate(input), true);
+});
+
+test('stable 1.6.2 patch refuses marker, roster, storage, follow-up and root drift', () => {
+  const original = patch162ReleaseFixture();
+  const clone = () => ({
+    ...structuredClone(original),
+    storageVersionArtifacts: original.storageVersionArtifacts.map((artifact) => ({
+      ...artifact,
+      before: Buffer.from(artifact.before),
+      after: Buffer.from(artifact.after),
+    })),
+  });
+  const mutations = [
+    ['wrong base', (value) => (value.baseRootVersion = '1.6.0')],
+    ['wrong marker parent', (value) => (value.markerParentRootVersion = '1.6.0')],
+    ['wrong marker subject', (value) => (value.markerCommits[1].subject = 'chore: other version')],
+    [
+      'duplicate marker',
+      (value) =>
+        value.markerCommits.push({ sha: 'c'.repeat(40), subject: value.markerCommits[1].subject }),
+    ],
+    ['missing consumed changeset', (value) => (value.markerParentChangesets = [])],
+    ['unconsumed changeset', (value) => value.changesetIdsOnDisk.push('unreviewed')],
+    ['missing package', (value) => value.packageStates.pop()],
+    ['duplicate package', (value) => (value.packageStates[1].name = value.packageStates[0].name)],
+    ['wrong package version', (value) => (value.packageStates[0].candidateVersion = '1.6.1')],
+    [
+      'missing package marker path',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.packageStates[0].manifestPath,
+        );
+      },
+    ],
+    [
+      'extra marker path',
+      (value) => value.markerChanges.push({ status: 'M', path: 'docs/unreviewed.md' }),
+    ],
+    ['duplicate marker path', (value) => value.markerChanges.push({ ...value.markerChanges[0] })],
+    ['wrong marker status', (value) => (value.markerChanges[0].status = 'M')],
+    ['missing storage snapshot', (value) => value.storageVersionArtifacts.pop()],
+    [
+      'tampered storage body',
+      (value) => {
+        value.storageVersionArtifacts[0].after = Buffer.concat([
+          value.storageVersionArtifacts[0].after,
+          Buffer.from('// unreviewed body\n'),
+        ]);
+      },
+    ],
+    [
+      'missing storage marker path',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(
+          ({ path }) => path !== value.storageVersionArtifacts[0].path,
+        );
+      },
+    ],
+    [
+      'unreviewed follow-up',
+      (value) =>
+        value.followUpChanges.push({ status: 'M', path: 'packages/core/src/unreviewed.ts' }),
+    ],
+    ['duplicate follow-up', (value) => value.followUpChanges.push({ ...value.followUpChanges[0] })],
+    ['wrong follow-up status', (value) => (value.followUpChanges[0].status = 'A')],
+    ['deleted follow-up', (value) => (value.followUpChanges[0].status = 'D')],
+    [
+      'wrong DEVAI version',
+      (value) => (value.rootManifestAtHead.devDependencies['@aarusso-nyx/devai'] = '2.6.3'),
+    ],
+    ['unreviewed root field', (value) => (value.rootManifestAtHead.scripts.lint = 'true')],
+    ['prerelease retained', (value) => (value.preState = { mode: 'pre' })],
+  ];
+  assert.equal(releaseContext.isPatch162VersionedCandidate(clone()), true);
+  for (const [label, mutate] of mutations) {
+    const invalid = clone();
+    mutate(invalid);
+    assert.equal(releaseContext.isPatch162VersionedCandidate(invalid), false, label);
+  }
+});
+
 test('Semgrep ignore list preserves build exclusions and only exact public PKI fixture keys', () => {
   const entries = readFileSync(join(repoRoot, '.semgrepignore'), 'utf8')
     .split(/\r?\n/u)
