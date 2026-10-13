@@ -18,6 +18,16 @@ owner transaction. Shared types and default/custom binding rules are defined in
 [consumer storage](consumer-storage.md). Neither operation copies a consumer
 schema, executes hidden subprocesses or repairs storage.
 
+Apply `objectsSql` once to fresh offline storage in an owner transaction. It is
+a projection of the ordered migration chain, including data backfills, and is
+not an idempotent reinstall script. Existing installations apply only their
+missing forward migrations through the consumer's migration ledger; never replay
+the full fresh artifact over populated storage. A refused transactional replay
+must roll back without changing catalog or stored facts. `roleBindingsSql` is
+separately applicable to an existing installation and may be reapplied without
+rewriting operational rows. Follow installation or upgrade with the read-only
+verifier for the exact package and configured binding.
+
 The separately exported owner maintenance operation is:
 
 ```ts
