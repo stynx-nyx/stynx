@@ -225,6 +225,19 @@ function validateRow(record: OfflineImportRecord): void {
         importRefuse('batches.response_body_base64');
     }
   }
+  if (record.kind === 'receipts' || record.kind === 'attempts') {
+    const platform = (row.context_json as Record<string, unknown> | null)?.stynx;
+    if (platform && typeof platform === 'object' && Object.hasOwn(platform, 'terminalReceived')) {
+      const facts = platform as Record<string, unknown>;
+      if (
+        facts.terminalReceived !== true ||
+        facts.version !== 1 ||
+        row.status !== 'received' ||
+        facts.retryable !== false
+      )
+        importRefuse(`${record.kind}.terminalReceived`);
+    }
+  }
   if (record.kind === 'reconciliations' && !validReconciliationEvidence(record.row))
     importRefuse('reconciliations.identity');
   if (record.kind === 'queueItems') boundedImportText(record.row.id, 'queueItems.id', 255);

@@ -572,6 +572,11 @@ export class OfflineSyncService {
         itemKeys.add(item.idempotencyKey);
       }
     }
+    if (
+      this.options.domainOutcomeClassifier &&
+      (!this.options.policyResolver || this.durable.supportsDomainOutcomeClassifier !== true)
+    )
+      throw new OfflineSyncConfigurationError('domainOutcomeClassifier');
     if (!this.options.policyResolver)
       return this.store.submitSyncBatch(scope, input as SubmitSyncBatchInput, now);
     if (
