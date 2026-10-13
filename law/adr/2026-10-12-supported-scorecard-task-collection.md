@@ -196,3 +196,62 @@ measurement standing. Independent Inspector package/freeze checks remain require
 All 125 preexisting historical record/proof/state files and the source adoption
 policy remained byte-identical. No canonical observation, proof-chain append,
 k6 or mutation execution was performed by this adoption.
+
+## Prospective exact descriptor trust transition — 2026-10-13
+
+Actual pre-RC comparison found that the trusted published 2.4.0 and installed
+2.6.1 builders produce identical policies for the same descriptor, but the four
+reviewed task-binding changes above make the candidate policy differ from the
+default-branch control descriptor. Preserve that refusal. Do not relabel the
+policy, export under an unexecuted descriptor, change the trusted verifier pin,
+remove `cmp`, or accept arbitrary candidate policy.
+
+Permit a single closed STYNX-owned admission extension in the otherwise
+package-generated `.github/workflows/devai-local-rc-verify.yml`, paired with its
+existing operations reference. This prospectively amends only the earlier
+generated-workflow no-edit rule for this reviewed guard; the generated verifier
+core, package integrity/provenance, inert candidate handling and protected
+main-sourced trust/toolchain/environment controls remain unchanged. Future
+registered generation must preserve this reviewed extension or refuse pending
+review, never silently erase it. No `.devai/config` hand edit is authorized.
+
+The ordinary path requires candidate and control descriptor canonical digests
+equal and reconstructs from control. The sole transition path requires both:
+
+- control digest `48c430787a229bd8ee9accb8fa731aea62cc184876957195cfadfbc4d953cfec`;
+- candidate digest `9874165c7677c070c472d6facfe8666fd48fb680244e8cf3b51e8b44fbf77b92`.
+
+Use the pinned trusted verifier's canonical hashing and independently reconstruct
+the expected candidate from control by changing only the four named tasks:
+their exact `sensorKinds`, the reviewed `outputContract.kind` and matching
+population in the table above. Build retains its original output paths. Require
+canonical equality with that reconstructed descriptor before selecting candidate
+for policy reconstruction. Every other descriptor field, all 17 declared tasks,
+the ordinary 15-node RC closure, commands, dependencies, environments, selectors,
+toolchains and required PASS floors remain unchanged. Any other descriptor delta
+refuses. Preserve exact reconstructed-policy byte comparison, signature/trust,
+artifact completeness and every ordinary verifier obligation. Once main carries
+the reviewed descriptor, normal equality applies; this is not a general candidate
+descriptor fallback.
+
+Effect authority remains pending a concrete Owner decision. Prepare Engineer CI
+commit W0, independent Inspector regressions, and final Architect bindings before
+requesting approval. Present W0's exact SHA/workflow blob digest and a reviewed
+final snapshot F descending from W0, with all product/law/tests/config/descriptor
+bytes fixed. One approval may authorize the exact W0 `FORBID-CI-WITHOUT-ADR`
+receipt and one reviewed-branch dispatch for a later candidate C only when C
+descends from F and its only tracked changes are append-only exact-action
+receipts and Architect trace metadata with corpus/projections/invariants/gates
+unchanged. Workflow bytes equal W0; all other frozen bytes equal F. Independently
+verify and report actual C/tree, successful signed 15-node RC and immutable
+manifest before dispatch. Resolve the workflow ref to that exact C, retain main
+controls, and use normal protected integration. An actual rebased landed CI
+receipt remains bound to the same approved workflow blob and action mandate.
+
+No previous merge-method/bootstrap exception supplies this new dispatch consent;
+no administrator bypass or protected-setting relaxation is authorized. A changed
+workflow, additional source change, moved control identity or incomplete RC
+requires renewed review/authority. This prospective rule is not an approval of an
+unknown literal SHA, an issued receipt, a dispatched run or publication success.
+Inspector must prove ordinary equality, the sole exact transition and refusal
+of every unapproved descriptor/task/floor change through the actual guard.
