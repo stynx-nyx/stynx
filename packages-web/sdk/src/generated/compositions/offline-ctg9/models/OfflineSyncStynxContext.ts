@@ -18,6 +18,10 @@ export type OfflineSyncStynxContext = {
   relatedQueueItemId?: string;
   retryable?: boolean;
   serverEntityId?: string;
+  signals?: Array<{
+    code: string;
+  }>;
   storedPayloadHash?: string;
+  terminalReceived?: boolean;
   version: number;
 };

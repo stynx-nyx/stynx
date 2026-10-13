@@ -10,6 +10,9 @@ export const $ReconcileNumberingInput = {
         type: 'number',
       },
     },
+    idempotencyKey: {
+      type: 'string',
+    },
     userRef: {
       type: 'string',
     },

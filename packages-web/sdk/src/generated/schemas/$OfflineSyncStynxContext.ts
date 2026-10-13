@@ -46,8 +46,22 @@ export const $OfflineSyncStynxContext = {
     serverEntityId: {
       type: 'string',
     },
+    signals: {
+      type: 'array',
+      contains: {
+        properties: {
+          code: {
+            type: 'string',
+            isRequired: true,
+          },
+        },
+      },
+    },
     storedPayloadHash: {
       type: 'string',
+    },
+    terminalReceived: {
+      type: 'boolean',
     },
     version: {
       type: 'number',

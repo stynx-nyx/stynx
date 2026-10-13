@@ -4,6 +4,9 @@
 /* eslint-disable */
 export const $CTG9ReserveNumberingInput = {
   properties: {
+    agentId: {
+      type: 'string',
+    },
     deviceId: {
       type: 'string',
       isRequired: true,

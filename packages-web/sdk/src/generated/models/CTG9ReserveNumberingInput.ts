@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CTG9ReserveNumberingInput = {
+  agentId?: string;
   deviceId: string;
   entityType: string;
   idempotencyKey?: string;

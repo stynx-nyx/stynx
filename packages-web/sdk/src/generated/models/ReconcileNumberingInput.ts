@@ -4,5 +4,6 @@
 /* eslint-disable */
 export type ReconcileNumberingInput = {
   claimedNumbers?: Array<number>;
+  idempotencyKey?: string;
   userRef?: string;
 };
