@@ -21,8 +21,8 @@ import { OfflineSyncService } from './offline-sync.service';
 import type {
   CancelNumberingReservationInput,
   CTG9ReserveNumberingInput,
+  CTG9SubmitSyncBatchInput,
   ResolveSyncConflictInput,
-  SubmitSyncBatchInput,
   ReconcileNumberingInput,
   SettleNumberingInput,
 } from './types';
@@ -51,7 +51,7 @@ export class CTG9OfflineSyncController {
   @Idempotent('Idempotency-Key')
   @Audit({ action: 'offline-sync.numbering-reserved', entity: 'offline.numbering_reservations' })
   reserveNumbering(@Body() input: CTG9ReserveNumberingInput) {
-    this.rejectContextOverrides(input);
+    this.rejectContextOverrides(input, true);
     return this.service.reserveDurableNumbering(input);
   }
 
@@ -126,7 +126,7 @@ export class CTG9OfflineSyncController {
   @NoIdempotent()
   @Audit({ action: 'offline-sync.batch-submitted', entity: 'offline.sync_queue_items' })
   async submitBatch(
-    @Body() input: SubmitSyncBatchInput,
+    @Body() input: CTG9SubmitSyncBatchInput,
     @Headers('idempotency-key') key: string | undefined,
     @Req()
     req: {
@@ -140,7 +140,7 @@ export class CTG9OfflineSyncController {
     @Res({ passthrough: true })
     response: { status(code: number): unknown; setHeader(name: string, value: string): unknown },
   ) {
-    this.rejectContextOverrides(input);
+    this.rejectContextOverrides(input, true);
     if (!key?.trim())
       throw new BadRequestException('Idempotency-Key header is required for idempotent routes');
     try {
@@ -200,11 +200,13 @@ export class CTG9OfflineSyncController {
     return this.service.resolveConflict(id, input);
   }
 
-  protected rejectContextOverrides(input: unknown): void {
+  protected rejectContextOverrides(input: unknown, allowAgentCandidate = false): void {
     if (
       input &&
       typeof input === 'object' &&
-      Object.keys(input).some((key) => identityKeys.has(key))
+      Object.keys(input).some(
+        (key) => identityKeys.has(key) && !(allowAgentCandidate && key === 'agentId'),
+      )
     ) {
       throw new OfflineSyncError(
         'OFFLINE_SYNC_CONTEXT_OVERRIDE',

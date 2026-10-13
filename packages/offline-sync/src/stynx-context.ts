@@ -1,5 +1,10 @@
 import { OfflineSyncError } from './errors';
-import type { OfflineSyncConsumerAttributes, OfflineSyncStynxContext, SyncConflict } from './types';
+import type {
+  DurableBatchExecutionOptions,
+  OfflineSyncConsumerAttributes,
+  OfflineSyncStynxContext,
+  SyncConflict,
+} from './types';
 
 /** Upper bound, in UTF-8 bytes of the JSON serialization, of `consumerAttributes` (ADR-MOBILE-OFFLINE-0003 D3.3). */
 export const OFFLINE_SYNC_CONSUMER_ATTRIBUTES_MAX_BYTES = 4096;
@@ -17,6 +22,21 @@ export function stynxContextOf(fields: StynxContextFields): OfflineSyncStynxCont
   for (const [name, value] of Object.entries(fields))
     if (value !== undefined) context[name] = value;
   return context as unknown as OfflineSyncStynxContext;
+}
+
+/** Signals are facts about the configured policy, never inferred concurrency pairs. */
+export function executionStynxContext(
+  options: DurableBatchExecutionOptions,
+  fields: StynxContextFields,
+): OfflineSyncStynxContext {
+  return stynxContextOf({
+    ...fields,
+    ...(options.ports.policyResolver &&
+    options.ports.concurrencyDetector &&
+    options.policy.concurrencyWindowMinutes == null
+      ? { signals: [{ code: 'SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING' as const }] }
+      : {}),
+  });
 }
 
 /** Returns the attributes unchanged, or throws 400 when they are not a JSON object within the byte bound. */

@@ -32,6 +32,7 @@ export interface OfflineSyncStynxContext {
   readonly consumerAttributes?: OfflineSyncConsumerAttributes;
   readonly concurrencySuspected?: boolean;
   readonly concurrentPairs?: readonly OfflineSyncConcurrentPair[];
+  readonly signals?: readonly { readonly code: 'SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING' }[];
 }
 
 export type OfflineSyncConflictResolutionStrategy =
@@ -260,6 +261,7 @@ export interface StynxOfflineSyncModuleOptions {
   readonly payloadHashPort?: OfflineSyncPayloadHashPort;
   readonly preApplyDetector?: OfflineSyncConcurrencyDetector;
   readonly eventPort?: OfflineSyncEventPort;
+  readonly resolutionEventPort?: OfflineSyncEventPort;
   readonly concurrencyDetector?: OfflineSyncConcurrencyDetector;
   readonly handoffPort?: OfflineSyncHandoffPort;
   readonly conflictResolver?: OfflineSyncConflictResolver;
@@ -271,7 +273,11 @@ export interface StynxOfflineSyncModuleOptions {
 }
 
 export interface OfflineSyncAgentResolver {
-  resolve(scope: TrustedOfflineSyncScope, operation: string): Promise<string>;
+  resolve(
+    scope: TrustedOfflineSyncScope,
+    operation: string,
+    request?: { readonly agentId?: string },
+  ): Promise<string>;
 }
 export interface OfflineSyncPolicy {
   reservationTtlMs?: number;
@@ -303,6 +309,7 @@ export interface CTG9SyncBatchItemInput extends Omit<SyncBatchItemInput, 'idempo
   readonly reservationId?: string;
 }
 export interface CTG9SubmitSyncBatchInput extends Omit<SubmitSyncBatchInput, 'items'> {
+  readonly agentId?: string;
   readonly batchSequence?: number | null;
   readonly items: readonly CTG9SyncBatchItemInput[];
 }
@@ -392,6 +399,7 @@ export interface OfflineSyncConflictResolver {
 }
 export type NumberingReservationStatus = NumberingReservation['status'] | 'blocked';
 export interface CTG9ReserveNumberingInput extends Omit<ReserveNumberingInput, 'shiftId'> {
+  readonly agentId?: string;
   readonly shiftId: string | null;
 }
 export interface CTG9NumberingReservation extends Omit<NumberingReservation, 'status' | 'shiftId'> {

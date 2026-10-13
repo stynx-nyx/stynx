@@ -99,6 +99,7 @@ export function reservationFingerprint(
     .update(
       stableStringify({
         agentId,
+        ...(input.agentId === undefined ? {} : { requestedAgentId: input.agentId }),
         orgUnitId: input.orgUnitId,
         deviceId: input.deviceId,
         shiftId: input.shiftId,
