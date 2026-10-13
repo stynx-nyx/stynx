@@ -1,4 +1,4 @@
-import type { OfflineImportManifest } from './import-schema.generated';
+import type { OfflineImportManifest, OfflineImportRecord } from './import-schema.generated';
 import type { OfflineImportReceipt } from './import-contract';
 import { validateArchiveAck } from './import-archive';
 import {
@@ -26,7 +26,11 @@ export function importRecordCounts(
   manifest: OfflineImportManifest,
 ): OfflineImportReceipt['recordCounts'] {
   const counts = Object.fromEntries(
-    Object.keys(IMPORT_RELATIONS).map((kind) => [kind, 0]),
+    Object.keys(IMPORT_RELATIONS)
+      .filter(
+        (kind) => manifest.formatVersion !== 'stynx-offline-import/1' || kind !== 'reconciliations',
+      )
+      .map((kind) => [kind, 0]),
   ) as Record<keyof typeof IMPORT_RELATIONS, number>;
   for (const record of manifest.records) counts[record.kind]++;
   return counts;
@@ -76,9 +80,13 @@ export function readOfflineImportLedger(row: OfflineImportLedgerRow): OfflineImp
       !Array.isArray(receipt.archives)
     )
       return null;
+    const records: readonly OfflineImportRecord[] = manifest.records;
     const batches = new Map(
-      manifest.records
-        .filter((record) => record.kind === 'batches')
+      records
+        .filter(
+          (record): record is Extract<OfflineImportRecord, { kind: 'batches' }> =>
+            record.kind === 'batches',
+        )
         .map((record) => [
           importBatchIdentity({
             tenant_id: record.row.tenant_id,

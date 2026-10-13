@@ -123,6 +123,7 @@ export async function inspectOfflineRows(
     numbering_consumption: ['finalized_at'],
     sync_conflict_evidence: ['created_at'],
     sync_conflict_actions: ['created_at'],
+    numbering_reconciliations: ['created_at'],
   };
   for (const [table, columns] of Object.entries(instantColumns)) {
     const finiteFindings = await trx.query<{ tenantId: string; count: string }>(
