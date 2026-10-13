@@ -13,6 +13,10 @@ const scopedVersions = {
     schemaSha256: 'ee3e7818cde37f70b1fcba7176034b15c720a7cda29cb8ab318ceda3913c9e69',
     taskDescriptorSha256: '90b0952227996845f424a94a3109301d2db554734f59384be9d4b8ad2fbe3582',
   },
+  '1.6.2': {
+    schemaSha256: '3ee0c8dc30417ce340bd7180030494caf241f27b5f879b3f32d117eafbd7e5ee',
+    taskDescriptorSha256: '90b0952227996845f424a94a3109301d2db554734f59384be9d4b8ad2fbe3582',
+  },
 };
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
