@@ -398,7 +398,7 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
           row.status = status;
           row.context_json = {
             original: 'source-context',
-            stynx: { terminalReceived: marker, retryable },
+            stynx: { version: 1, terminalReceived: marker, retryable },
           };
           await target.query(
             `begin; set local role ${target.escapeIdentifier(destination.options.ownerRole!)}`,
@@ -414,6 +414,25 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
               .rows,
           ).toEqual([{ count: '0' }]);
         }
+      await target.query(
+        `begin; set local role ${target.escapeIdentifier(destination.options.ownerRole!)}`,
+      );
+      const historical = structuredClone(manifest);
+      for (const record of historical.records)
+        if (record.kind === 'receipts' || record.kind === 'attempts') {
+          delete (
+            (record.row.context_json as Record<string, unknown>).stynx as Record<string, unknown>
+          ).terminalReceived;
+        }
+      await importOfflineState(target, rehashManifest(historical), {
+        storage: destination.options,
+      });
+      for (const relation of ['sync_item_receipts', 'sync_item_attempts']) {
+        const old = (await target.query(`select context_json from offline.${relation}`)).rows;
+        expect(old).toHaveLength(1);
+        expect(old[0]!.context_json.stynx).not.toHaveProperty('terminalReceived');
+      }
+      await target.query('rollback');
       await target.query(
         `begin; set local role ${target.escapeIdentifier(destination.options.ownerRole!)}`,
       );
