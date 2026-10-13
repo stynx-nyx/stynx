@@ -517,3 +517,138 @@ test('historical markers without storage artifacts retain their closed version c
   );
   assert.equal(classifyReleaseContext(value).kind, 'version-pr');
 });
+
+function securityProducerFixture(t, ambientVersion, declarations) {
+  const root = mkdtempSync(join(tmpdir(), 'stynx dependency custody espaço 日本語-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  for (const path of [
+    'scripts/generate-sbom.mjs',
+    'scripts/verify-license-policy.mjs',
+    'docs/meta/security/license-policy.json',
+    'tools/image-size-safe',
+  ])
+    copy(root, path);
+  const manifest = (value) => `${JSON.stringify(value, null, 2)}\n`;
+  put(
+    root,
+    'package.json',
+    manifest({
+      name: 'dependency-custody-fixture',
+      private: true,
+      version: '1.6.1',
+      packageManager: 'pnpm@9.15.0',
+      license: 'MIT',
+    }),
+  );
+  // The lock identity is identical; only the irrelevant ambient hoist differs.
+  put(root, 'pnpm-lock.yaml', "lockfileVersion: '9.0'\n");
+  put(
+    root,
+    'node_modules/.pnpm/node_modules/commander/package.json',
+    manifest({
+      name: 'commander',
+      version: ambientVersion,
+      license: 'MIT',
+    }),
+  );
+  for (const [index, declaration] of declarations.entries()) {
+    const directory = `packages/evidence-${index}`;
+    put(
+      root,
+      `${directory}/package.json`,
+      manifest({
+        name: `@stynx-nyx/evidence-${index}`,
+        version: '1.6.1',
+        license: 'MIT',
+        dependencies: { commander: declaration.version },
+      }),
+    );
+    put(
+      root,
+      `${directory}/node_modules/commander/package.json`,
+      manifest({
+        name: 'commander',
+        version: declaration.version,
+        license: declaration.license ?? 'MIT',
+      }),
+    );
+  }
+  // Use the actual owned image-size fork and its parser safety assertions.
+  run(root, [
+    join(repoRoot, 'node_modules/.pnpm/node_modules/esbuild/bin/esbuild'),
+    ...['heif', 'icns', 'jxl'].map((name) => `tools/image-size-safe/lib/types/${name}.ts`),
+    '--bundle',
+    '--platform=node',
+    '--format=esm',
+    '--outdir=tools/image-size-safe/dist/types',
+    '--out-extension:.js=.mjs',
+  ]);
+  return root;
+}
+
+function produceSecuritySbom(root) {
+  run(root, ['scripts/generate-sbom.mjs', '--write']);
+  const bytes = readFileSync(join(root, 'docs/meta/security/sbom.cdx.json'));
+  return { bytes, document: JSON.parse(bytes) };
+}
+
+test('real SBOM resolves the declaring workspace dependency identically under different ambient hoists', (t) => {
+  const first = securityProducerFixture(t, '14.0.0', [{ version: '15.0.0' }]);
+  const second = securityProducerFixture(t, '16.0.0', [{ version: '15.0.0' }]);
+  const before = produceSecuritySbom(first);
+  const after = produceSecuritySbom(second);
+  assert.deepEqual(before.bytes, after.bytes);
+  for (const { document } of [before, after]) {
+    const external = document.components.filter(({ name }) => name === 'commander');
+    assert.deepEqual(
+      external.map(({ version }) => version),
+      ['15.0.0'],
+    );
+    assert.deepEqual(external[0].licenses, [{ license: { id: 'MIT' } }]);
+    assert.equal(external[0].purl, 'pkg:npm/commander@15.0.0');
+    assert.equal(document.metadata.component.version, '1.6.1');
+    assert.equal(document.components.find(({ name }) => name === 'image-size').scope, 'excluded');
+  }
+  run(first, ['scripts/generate-sbom.mjs', '--check']);
+  run(second, ['scripts/generate-sbom.mjs', '--check']);
+});
+
+test('real SBOM and license policy retain both distinct versions declared by release workspaces', (t) => {
+  const root = securityProducerFixture(t, '14.0.0', [{ version: '15.0.0' }, { version: '16.0.0' }]);
+  const { document } = produceSecuritySbom(root);
+  const external = document.components.filter(({ name }) => name === 'commander');
+  assert.deepEqual(
+    external.map(({ version }) => version),
+    ['15.0.0', '16.0.0'],
+  );
+  assert.deepEqual(
+    external.map(({ purl }) => purl),
+    ['pkg:npm/commander@15.0.0', 'pkg:npm/commander@16.0.0'],
+  );
+  assert.equal(
+    document.components.filter(({ name }) => name.startsWith('@stynx-nyx/evidence-')).length,
+    2,
+  );
+  const result = run(root, ['scripts/verify-license-policy.mjs']);
+  assert.match(
+    result.stdout,
+    /OK: 2 direct external dependencies checked across 3 release manifests/u,
+  );
+});
+
+test('real license policy refuses the second declared version with a denied license after an allowed first version', (t) => {
+  const root = securityProducerFixture(t, '14.0.0', [
+    { version: '15.0.0', license: 'MIT' },
+    { version: '16.0.0', license: 'AGPL-3.0-only' },
+  ]);
+  const result = spawnSync(process.execPath, ['scripts/verify-license-policy.mjs'], {
+    cwd: root,
+    encoding: 'utf8',
+    timeout: 60000,
+  });
+  assert.ifError(result.error);
+  assert.equal(result.signal, null);
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /commander.*denied license AGPL-3\.0-only/u);
+  assert.doesNotMatch(result.stderr, /missing license metadata|manifest not found/u);
+});
