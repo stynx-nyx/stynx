@@ -21,7 +21,7 @@ export interface OfflineSyncStynxContext {
   readonly errorMessage?: string;
   /** Item transactions started for the receipt; replay and reads never increase it. */
   readonly attempts?: number;
-  /** Numbering outcome code, `OFFLINE_SYNC_ITEM_INTEGRITY` or `OFFLINE_SYNC_CONCURRENCY_SUSPECTED`. */
+  /** Numbering/integrity/concurrency code or the original code of a classified domain outcome. */
   readonly reasonCode?: string;
   /** Hash received by a rejected integrity submission, verbatim (including a non-canonical one). */
   readonly receivedPayloadHash?: string;
