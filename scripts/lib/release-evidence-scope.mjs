@@ -4,9 +4,16 @@ import { resolve } from 'node:path';
 import { canonicalize } from './mutation-roster.mjs';
 import { discoverPublishablePackages } from './publishable-packages.mjs';
 
-const schemaPath = 'law/schemas/release-scope-1.6.0.schema.json';
-const schemaSha256 = 'd9041edc1e883361bd89fa9973bcb7377c539d0445225fc460b1c10aa7dad298';
-const taskDescriptorSha256 = 'da6e68962024d81f27d0a022505501b202db0eb3bb3d79890bd9943a767aa6cc';
+const scopedVersions = {
+  '1.6.0': {
+    schemaSha256: 'd9041edc1e883361bd89fa9973bcb7377c539d0445225fc460b1c10aa7dad298',
+    taskDescriptorSha256: 'da6e68962024d81f27d0a022505501b202db0eb3bb3d79890bd9943a767aa6cc',
+  },
+  '1.6.1': {
+    schemaSha256: 'ee3e7818cde37f70b1fcba7176034b15c720a7cda29cb8ab318ceda3913c9e69',
+    taskDescriptorSha256: '90b0952227996845f424a94a3109301d2db554734f59384be9d4b8ad2fbe3582',
+  },
+};
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 function invalid(message) {
@@ -29,16 +36,19 @@ function constantValue(schema) {
   );
 }
 
-/** Select the expressly scoped 1.6.0 rule, retaining k6 for every other version. */
+/** Select only expressly scoped release rules; all other versions retain their existing gate. */
 export function resolvePublicationEvidenceRequirements(repoRoot) {
   const json = (path) => JSON.parse(readFileSync(resolve(repoRoot, path), 'utf8'));
-  if (json('package.json').version !== '1.6.0') {
+  const version = json('package.json').version;
+  const reviewed = scopedVersions[version];
+  if (!reviewed) {
     return { scope: null, requiredChecks: [['k6', 'hardening scenario=all']] };
   }
+  const schemaPath = `law/schemas/release-scope-${version}.schema.json`;
   const schemaBytes = readFileSync(resolve(repoRoot, schemaPath));
-  if (digest(schemaBytes) !== schemaSha256) invalid('schema identity changed');
+  if (digest(schemaBytes) !== reviewed.schemaSha256) invalid('schema identity changed');
   const expected = constantValue(JSON.parse(schemaBytes.toString('utf8')));
-  const scope = json('law/policy/release-scope-1.6.0.json');
+  const scope = json(`law/policy/release-scope-${version}.json`);
   if (canonicalize(scope) !== canonicalize(expected)) invalid('policy differs from closed schema');
   const rosterBytes = readFileSync(resolve(repoRoot, scope.packageRoster.path));
   if (digest(rosterBytes) !== scope.packageRoster.sha256)
@@ -52,7 +62,7 @@ export function resolvePublicationEvidenceRequirements(repoRoot) {
   )
     invalid('fixed-group version or package population differs');
   const descriptorBytes = readFileSync(resolve(repoRoot, 'test-tasks.json'));
-  if (digest(descriptorBytes) !== taskDescriptorSha256)
+  if (digest(descriptorBytes) !== reviewed.taskDescriptorSha256)
     invalid('reviewed task commands or execution controls changed');
   const descriptor = JSON.parse(descriptorBytes.toString('utf8'));
   const profile = descriptor.profiles.find((entry) => entry.profileId === scope.rc.profile);
