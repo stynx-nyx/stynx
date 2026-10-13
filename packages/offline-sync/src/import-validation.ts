@@ -14,6 +14,7 @@ import type {
   OfflineImportRecord,
   OfflineImportMapping,
   OfflineImportBatchesKey,
+  OfflineImportReconciliationsRow,
 } from './import-schema.generated';
 
 export const IMPORT_RELATIONS = {
@@ -224,24 +225,8 @@ function validateRow(record: OfflineImportRecord): void {
         importRefuse('batches.response_body_base64');
     }
   }
-  if (record.kind === 'reconciliations') {
-    const r = record.row;
-    const claims = r.claimed_numbers.map(Number);
-    if (
-      claims.some((n) => !Number.isSafeInteger(n)) ||
-      claims.some((n, i) => i > 0 && n <= claims[i - 1]!) ||
-      r.result_json.reconciliationId !== r.id ||
-      r.result_json.reservationId !== r.reservation_id ||
-      (r.idempotency_key === null) !== (r.request_fingerprint === null) ||
-      (r.request_fingerprint !== null &&
-        r.request_fingerprint !==
-          importDigest({
-            claimedNumbers: claims,
-            userRef: r.user_ref,
-          }))
-    )
-      importRefuse('reconciliations.identity');
-  }
+  if (record.kind === 'reconciliations' && !validReconciliationEvidence(record.row))
+    importRefuse('reconciliations.identity');
   if (record.kind === 'queueItems') boundedImportText(record.row.id, 'queueItems.id', 255);
   if (record.kind === 'ranges') {
     const r = record.row;
@@ -521,4 +506,75 @@ export function parseOfflineImportManifest(text: string): OfflineImportManifest 
 
 export function importBatchIdentity(batch: OfflineImportBatchesKey): string {
   return canonicalImportJson(batch);
+}
+
+export interface ReconciliationReservationBounds {
+  readonly start_number: string;
+  readonly end_number: string;
+}
+
+/** Verify an immutable operation snapshot, never a reconstruction from current consumption. */
+export function validReconciliationEvidence(
+  value: unknown,
+  bounds?: ReconciliationReservationBounds,
+): boolean {
+  try {
+    // The same closed published schema applies to imported and live persisted JSON.
+    canonicalImportJson(value);
+    if (!conforms(value, schema.$defs.reconciliationsRow!)) return false;
+    const row = value as OfflineImportReconciliationsRow;
+    boundedImportText(row.actor_id, 'reconciliations.actor_id', 255);
+    if (row.user_ref !== null) boundedImportText(row.user_ref, 'reconciliations.user_ref', 255, 0);
+    if (row.idempotency_key !== null)
+      boundedImportText(row.idempotency_key, 'reconciliations.idempotency_key', 255);
+    const claims = row.claimed_numbers.map(Number);
+    const result = row.result_json;
+    if (
+      claims.some(
+        (number, index) =>
+          !Number.isSafeInteger(number) || (index > 0 && number <= claims[index - 1]!),
+      ) ||
+      result.reconciliationId !== row.id ||
+      result.reservationId !== row.reservation_id ||
+      (row.idempotency_key === null) !== (row.request_fingerprint === null) ||
+      (row.request_fingerprint !== null &&
+        row.request_fingerprint !== importDigest({ claimedNumbers: claims, userRef: row.user_ref }))
+    )
+      return false;
+    const entries = result.consumption;
+    if (
+      entries.length === 0 ||
+      entries.some((entry, index) => index > 0 && entry.number !== entries[index - 1]!.number + 1)
+    )
+      return false;
+    const numbers = new Set(entries.map((entry) => entry.number));
+    if (claims.some((number) => !numbers.has(number))) return false;
+    if (bounds) {
+      if (typeof bounds.start_number !== 'string' || typeof bounds.end_number !== 'string')
+        return false;
+      const start = Number(bounds.start_number),
+        end = Number(bounds.end_number);
+      if (
+        !Number.isSafeInteger(start) ||
+        !Number.isSafeInteger(end) ||
+        start > end ||
+        entries[0]!.number !== start ||
+        entries[entries.length - 1]!.number !== end
+      )
+        return false;
+    }
+    const claimSet = new Set(claims);
+    const missing = entries
+      .filter((entry) => claimSet.has(entry.number) && entry.status !== 'applied')
+      .map((entry) => entry.number);
+    const unexpected = entries
+      .filter((entry) => !claimSet.has(entry.number) && entry.status === 'applied')
+      .map((entry) => entry.number);
+    return (
+      canonicalImportJson(result.missingOnServer) === canonicalImportJson(missing) &&
+      canonicalImportJson(result.unexpectedOnServer) === canonicalImportJson(unexpected)
+    );
+  } catch {
+    return false;
+  }
 }
