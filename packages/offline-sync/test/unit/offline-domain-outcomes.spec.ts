@@ -160,6 +160,14 @@ describe('Domain-outcome contracts through the memory store', () => {
       (await subject.listSyncConflicts({ queueItemId: input.items[0]!.queueItemId })).items,
     ).toEqual([]);
     expect((await subject.listSyncItemReceipts({ deviceId: input.deviceId })).items).toEqual([]);
+    const refused = store as unknown as {
+      conflictAllowedActions: Map<string, unknown>;
+      conflictStynx: Map<string, unknown>;
+      conflictDomainContexts: Map<string, unknown>;
+    };
+    expect([...refused.conflictAllowedActions]).toEqual([]);
+    expect([...refused.conflictStynx]).toEqual([]);
+    expect([...refused.conflictDomainContexts]).toEqual([]);
     expect(
       (await subject.listSyncBatchReceipts({ deviceId: input.deviceId })).items[0],
     ).toMatchObject({ status: 'open', responseStatus: null });

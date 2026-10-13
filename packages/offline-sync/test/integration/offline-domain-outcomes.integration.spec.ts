@@ -173,7 +173,18 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
           [reservation.reservationId],
         )
       ).rows,
-    ).toEqual([{ status: 'available', server_entity_id: null }]);
+    ).toEqual([]);
+    expect(
+      (await run(GAP_TENANT_A, () => subject.getNumberingConsumption(reservation.reservationId)))
+        .consumption,
+    ).toEqual([
+      {
+        number: reservation.startNumber,
+        status: 'available',
+        serverEntityId: null,
+        finalizedAt: null,
+      },
+    ]);
     const evidence = (
       await query(
         GAP_TENANT_A,
@@ -190,7 +201,7 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
         context: consumer,
         errorCode: 'BUSINESS_CLOSED',
         detectedAt: GAP_AT,
-        stynx: { receiptId: 'key-sql-effect-rollback', retryable: false },
+        stynx: { receiptId: 'key-sql-effect-rollback', retryable: true },
       },
     });
     expect(eventPort.appendInTransaction).not.toHaveBeenCalled();
@@ -335,7 +346,14 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
       'open',
     );
     terminal = true;
-    const source = await run(GAP_TENANT_A, () => subject.submitSyncBatch(input));
+    const retryBase = domainBatch('actual-source-terminal-import-retry');
+    const retry = {
+      ...retryBase,
+      deviceId: input.deviceId,
+      items: [{ ...retryBase.items[0]!, idempotencyKey: input.items[0]!.idempotencyKey }],
+    };
+    const sourceBatchIds = [input.deviceBatchId, retry.deviceBatchId];
+    const source = await run(GAP_TENANT_A, () => subject.submitSyncBatch(retry));
     expect(source.receipt.items[0]!.stynx).toMatchObject({
       terminalReceived: true,
       retryable: false,
@@ -354,8 +372,8 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
       ] as const) {
         const rows = (
           await sourceAdmin.query(
-            `select to_jsonb(t) as row from offline.${relation} t where tenant_id=$1::uuid and device_batch_id=$2`,
-            [GAP_TENANT_A, input.deviceBatchId],
+            `select to_jsonb(t) as row from offline.${relation} t where tenant_id=$1::uuid and device_batch_id=any($2::text[])`,
+            [GAP_TENANT_A, sourceBatchIds],
           )
         ).rows;
         for (const { row } of rows) {
@@ -453,8 +471,8 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
       ).toEqual(
         (
           await sourceAdmin.query(
-            'select to_jsonb(a) as row from offline.sync_item_attempts a where device_batch_id=$1',
-            [input.deviceBatchId],
+            'select to_jsonb(a) as row from offline.sync_item_attempts a where device_batch_id=any($1::text[])',
+            [sourceBatchIds],
           )
         ).rows,
       );
