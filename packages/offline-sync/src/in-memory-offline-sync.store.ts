@@ -18,6 +18,7 @@ import {
   rangeNotFound,
 } from './range-administration';
 import { createHash, randomUUID } from 'node:crypto';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { HttpException, UnprocessableEntityException } from '@nestjs/common';
 import {
   OfflineSyncConfigurationError,
@@ -99,6 +100,14 @@ import type {
   SyncQueueItemRecord,
 } from './types';
 
+interface MemoryMutationFrame {
+  tenantId: string;
+  active: boolean;
+  children: Set<MemoryMutationFrame>;
+  parent?: MemoryMutationFrame;
+  conflictId?: string;
+}
+
 /** Deterministic process-local store for tests and sandbox wiring. */
 export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   readonly supportsDomainOutcomeClassifier = true as const;
@@ -158,11 +167,107 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     record: SyncConflictActionRecord;
     sequence: string;
   }[] = [];
+  private conflictActionSequence = 0;
   private readonly integrityConflicts = new Map<string, string>();
   private readonly integrityRejections = new Map<string, SyncIntegrityRejection>();
   /** Batches of one tenant run one at a time, standing in for the PostgreSQL receipt row lock (D1 item 4). */
   private readonly tenantGate = new Map<string, Promise<void>>();
+  private readonly mutationContext = new AsyncLocalStorage<MemoryMutationFrame>();
   private readonly transport = new Map<string, { batchIdentity: string; fingerprint: string }>();
+
+  private frameIsActive(frame: MemoryMutationFrame): boolean {
+    for (let current: MemoryMutationFrame | undefined = frame; current; current = current.parent)
+      if (!current.active) return false;
+    return true;
+  }
+
+  private assertMutationOwner(scope: TrustedOfflineSyncScope): void {
+    const frame = this.mutationContext.getStore();
+    if (frame && (frame.tenantId !== scope.tenantId || !this.frameIsActive(frame)))
+      throw new OfflineSyncError(
+        'OFFLINE_SYNC_CONFLICT_STATE',
+        409,
+        'Memory transaction ownership is no longer valid for this tenant.',
+      );
+  }
+
+  private assertFrameComplete(frame: MemoryMutationFrame): void {
+    if (!this.frameIsActive(frame) || frame.children.size !== 0)
+      throw new OfflineSyncError(
+        'OFFLINE_SYNC_CONFLICT_STATE',
+        409,
+        'Memory transaction cannot commit closed or unfinished owned work.',
+      );
+  }
+
+  private async checkedAwait<T>(
+    scope: TrustedOfflineSyncScope,
+    operation: T | PromiseLike<T>,
+  ): Promise<T> {
+    const result = await operation;
+    this.assertMutationOwner(scope);
+    return result;
+  }
+
+  private async mutateTenant<T>(
+    scope: TrustedOfflineSyncScope,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    this.assertMutationOwner(scope);
+    if (this.mutationContext.getStore()) return operation();
+    const previous = this.tenantGate.get(scope.tenantId) ?? Promise.resolve();
+    const owner: MemoryMutationFrame = {
+      tenantId: scope.tenantId,
+      active: true,
+      children: new Set(),
+    };
+    const run = () => this.mutationContext.run(owner, operation);
+    const result = previous.then(run, run);
+    const gate = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    this.tenantGate.set(scope.tenantId, gate);
+    try {
+      return await result;
+    } finally {
+      owner.active = false;
+      if (this.tenantGate.get(scope.tenantId) === gate) this.tenantGate.delete(scope.tenantId);
+    }
+  }
+
+  private async ownedFrame<T>(
+    scope: TrustedOfflineSyncScope,
+    operation: (frame: MemoryMutationFrame) => Promise<T>,
+    conflictId?: string,
+  ): Promise<T> {
+    this.assertMutationOwner(scope);
+    const parent = this.mutationContext.getStore()!;
+    if (conflictId !== undefined)
+      for (let current: MemoryMutationFrame | undefined = parent; current; current = current.parent)
+        if (current.conflictId === conflictId)
+          throw new OfflineSyncError(
+            'OFFLINE_SYNC_CONFLICT_STATE',
+            409,
+            'A conflict cannot recursively resolve itself.',
+          );
+    const frame: MemoryMutationFrame = {
+      tenantId: scope.tenantId,
+      active: true,
+      children: new Set(),
+      parent,
+      ...(conflictId === undefined ? {} : { conflictId }),
+    };
+    parent.children.add(frame);
+    try {
+      const result = await this.mutationContext.run(frame, () => operation(frame));
+      this.assertFrameComplete(frame);
+      return result;
+    } finally {
+      frame.active = false;
+      parent.children.delete(frame);
+    }
+  }
 
   /** Restore only this tenant's owned item projections after a failed sandbox item boundary. */
   private captureItemState(tenantId: string): () => void {
@@ -170,6 +275,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     const queues = new Map([...this.queueItems].filter(([key]) => key.startsWith(prefix)));
     const receipts = new Map([...this.itemReceipts].filter(([key]) => key.startsWith(prefix)));
     const queueBatches = new Map([...this.queueBatches].filter(([key]) => key.startsWith(prefix)));
+    const payloads = new Map([...this.payloadIndex].filter(([key]) => key.startsWith(prefix)));
+    const e6Items = new Map([...this.e6Items].filter(([key]) => key.startsWith(prefix)));
+    const actions = this.conflictActions.filter(({ record }) => record.tenantId === tenantId);
     const conflicts = new Map(
       [...this.conflicts].filter(([, value]) => value.tenantId === tenantId),
     );
@@ -189,6 +297,15 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       for (const key of this.queueBatches.keys())
         if (key.startsWith(prefix)) this.queueBatches.delete(key);
       for (const [key, value] of queueBatches) this.queueBatches.set(key, value);
+      for (const key of this.payloadIndex.keys())
+        if (key.startsWith(prefix)) this.payloadIndex.delete(key);
+      for (const [key, value] of payloads) this.payloadIndex.set(key, value);
+      for (const key of this.e6Items.keys()) if (key.startsWith(prefix)) this.e6Items.delete(key);
+      for (const [key, value] of e6Items) this.e6Items.set(key, value);
+      for (let index = this.conflictActions.length - 1; index >= 0; index--)
+        if (this.conflictActions[index]!.record.tenantId === tenantId)
+          this.conflictActions.splice(index, 1);
+      this.conflictActions.push(...actions);
       for (const [key, value] of this.conflicts)
         if (value.tenantId === tenantId) {
           this.conflicts.delete(key);
@@ -540,56 +657,58 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     input: SubmitSyncBatchInput,
     now: string,
   ): Promise<SubmitSyncBatchResult> {
-    const stored: StoredSyncQueueItem[] = [];
-    let duplicateItems = 0;
-    for (const item of input.items) {
-      const payloadKey = this.key(scope.tenantId, item.payloadHash);
-      const existingId = this.payloadIndex.get(payloadKey);
-      if (existingId) {
-        const existing = this.queueItems.get(this.key(scope.tenantId, existingId));
-        if (existing) {
-          duplicateItems += 1;
-          stored.push(existing);
-          continue;
+    return this.mutateTenant(scope, async () => {
+      const stored: StoredSyncQueueItem[] = [];
+      let duplicateItems = 0;
+      for (const item of input.items) {
+        const payloadKey = this.key(scope.tenantId, item.payloadHash);
+        const existingId = this.payloadIndex.get(payloadKey);
+        if (existingId) {
+          const existing = this.queueItems.get(this.key(scope.tenantId, existingId));
+          if (existing) {
+            duplicateItems += 1;
+            stored.push(existing);
+            continue;
+          }
         }
+        const itemKey = this.key(scope.tenantId, item.queueItemId);
+        const reused = this.queueItems.get(itemKey);
+        if (reused && reused.payloadHash !== item.payloadHash) {
+          throw new OfflineSyncError(
+            'OFFLINE_SYNC_QUEUE_ID_REUSED',
+            409,
+            `Queue item ${item.queueItemId} was already used with another payload hash.`,
+          );
+        }
+        const queueItem: StoredSyncQueueItem = {
+          ...item,
+          tenantId: scope.tenantId,
+          agentId: scope.actorId,
+          orgUnitId: input.orgUnitId,
+          deviceId: input.deviceId,
+          status: 'received',
+          receivedAt: now,
+        };
+        this.queueItems.set(itemKey, queueItem);
+        this.queueBatches.set(itemKey, input.deviceBatchId);
+        this.e6Items.set(this.key(scope.tenantId, item.idempotencyKey), {
+          item: queueItem,
+          batchKey: this.key(scope.tenantId, `${input.deviceId}:${input.deviceBatchId}`),
+          deviceBatchId: input.deviceBatchId,
+        });
+        this.payloadIndex.set(payloadKey, item.queueItemId);
+        stored.push(queueItem);
       }
-      const itemKey = this.key(scope.tenantId, item.queueItemId);
-      const reused = this.queueItems.get(itemKey);
-      if (reused && reused.payloadHash !== item.payloadHash) {
-        throw new OfflineSyncError(
-          'OFFLINE_SYNC_QUEUE_ID_REUSED',
-          409,
-          `Queue item ${item.queueItemId} was already used with another payload hash.`,
-        );
-      }
-      const queueItem: StoredSyncQueueItem = {
-        ...item,
-        tenantId: scope.tenantId,
-        agentId: scope.actorId,
-        orgUnitId: input.orgUnitId,
-        deviceId: input.deviceId,
-        status: 'received',
-        receivedAt: now,
+      return {
+        batchId: input.deviceBatchId,
+        acceptedItems: input.items.length,
+        duplicateItems,
+        conflicts: stored
+          .filter((item) => item.status === 'conflict')
+          .map((item) => item.queueItemId),
+        items: stored,
       };
-      this.queueItems.set(itemKey, queueItem);
-      this.queueBatches.set(itemKey, input.deviceBatchId);
-      this.e6Items.set(this.key(scope.tenantId, item.idempotencyKey), {
-        item: queueItem,
-        batchKey: this.key(scope.tenantId, `${input.deviceId}:${input.deviceBatchId}`),
-        deviceBatchId: input.deviceBatchId,
-      });
-      this.payloadIndex.set(payloadKey, item.queueItemId);
-      stored.push(queueItem);
-    }
-    return {
-      batchId: input.deviceBatchId,
-      acceptedItems: input.items.length,
-      duplicateItems,
-      conflicts: stored
-        .filter((item) => item.status === 'conflict')
-        .map((item) => item.queueItemId),
-      items: stored,
-    };
+    });
   }
 
   async openConflict(
@@ -598,28 +717,30 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     input: OpenSyncConflictInput,
     now: string,
   ): Promise<SyncConflict> {
-    const queueKey = this.key(scope.tenantId, queueItemId);
-    const item = this.queueItems.get(queueKey);
-    if (!item) {
-      throw new OfflineSyncError(
-        'OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND',
-        404,
-        `Sync queue item ${queueItemId} was not found.`,
-      );
-    }
-    this.queueItems.set(queueKey, { ...item, status: 'conflict' });
-    const conflict: SyncConflict = {
-      conflictId: randomUUID(),
-      tenantId: scope.tenantId,
-      queueItemId,
-      localEntityId: item.localEntityId,
-      payloadHash: item.payloadHash,
-      conflictType: input.conflictType,
-      description: input.description,
-      status: 'open',
-    };
-    this.saveConflict(conflict, now);
-    return conflict;
+    return this.mutateTenant(scope, async () => {
+      const queueKey = this.key(scope.tenantId, queueItemId);
+      const item = this.queueItems.get(queueKey);
+      if (!item) {
+        throw new OfflineSyncError(
+          'OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND',
+          404,
+          `Sync queue item ${queueItemId} was not found.`,
+        );
+      }
+      this.queueItems.set(queueKey, { ...item, status: 'conflict' });
+      const conflict: SyncConflict = {
+        conflictId: randomUUID(),
+        tenantId: scope.tenantId,
+        queueItemId,
+        localEntityId: item.localEntityId,
+        payloadHash: item.payloadHash,
+        conflictType: input.conflictType,
+        description: input.description,
+        status: 'open',
+      };
+      this.saveConflict(conflict, now);
+      return conflict;
+    });
   }
 
   async resolveConflict(
@@ -628,45 +749,51 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     input: ResolveSyncConflictInput,
     now: string,
   ): Promise<SyncConflict> {
-    const conflictKey = this.key(scope.tenantId, conflictId);
-    const conflict = this.conflicts.get(conflictKey);
-    if (!conflict) {
-      throw new OfflineSyncError(
-        'OFFLINE_SYNC_CONFLICT_NOT_FOUND',
-        404,
-        `Sync conflict ${conflictId} was not found.`,
-      );
-    }
-    if (conflict.status !== 'open') {
-      throw new OfflineSyncError(
-        'OFFLINE_SYNC_CONFLICT_STATE',
-        409,
-        `Sync conflict ${conflictId} is ${conflict.status}; expected open.`,
-      );
-    }
-    const resolved: SyncConflict = {
-      ...conflict,
-      description: input.description ?? conflict.description,
-      status: 'resolved',
-      resolution: input.resolution,
-      resolvedBy: scope.actorId,
-      resolvedAt: now,
-    };
-    this.conflicts.set(conflictKey, resolved);
-    const queueKey = this.key(scope.tenantId, conflict.queueItemId);
-    const queueItem = this.queueItems.get(queueKey);
-    if (queueItem) {
-      this.queueItems.set(queueKey, {
-        ...queueItem,
-        status: input.resolution === 'server-wins' ? 'rejected' : 'applied',
-      });
-    }
-    return resolved;
+    return this.mutateTenant(scope, () =>
+      this.ownedFrame(
+        scope,
+        async () => {
+          const conflictKey = this.key(scope.tenantId, conflictId);
+          const conflict = this.conflicts.get(conflictKey);
+          if (!conflict) {
+            throw new OfflineSyncError(
+              'OFFLINE_SYNC_CONFLICT_NOT_FOUND',
+              404,
+              `Sync conflict ${conflictId} was not found.`,
+            );
+          }
+          if (conflict.status !== 'open') {
+            throw new OfflineSyncError(
+              'OFFLINE_SYNC_CONFLICT_STATE',
+              409,
+              `Sync conflict ${conflictId} is ${conflict.status}; expected open.`,
+            );
+          }
+          const resolved: SyncConflict = {
+            ...conflict,
+            description: input.description ?? conflict.description,
+            status: 'resolved',
+            resolution: input.resolution,
+            resolvedBy: scope.actorId,
+            resolvedAt: now,
+          };
+          this.conflicts.set(conflictKey, resolved);
+          const queueKey = this.key(scope.tenantId, conflict.queueItemId);
+          const queueItem = this.queueItems.get(queueKey);
+          if (queueItem) {
+            this.queueItems.set(queueKey, {
+              ...queueItem,
+              status: input.resolution === 'server-wins' ? 'rejected' : 'applied',
+            });
+          }
+          return resolved;
+        },
+        conflictId,
+      ),
+    );
   }
 
   /** Same transitions as `PostgresOfflineSyncStore.resolveWithPort` (ADR-MOBILE-OFFLINE-0003 D1, D2, D3). */
-  private readonly conflictResolutionLocks = new Map<string, Promise<void>>();
-
   async resolveWithPort(
     scope: TrustedOfflineSyncScope,
     id: string,
@@ -675,21 +802,13 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     port: OfflineSyncConflictResolver,
     eventPort?: import('./types').OfflineSyncEventPort,
   ): Promise<SyncConflict> {
-    const key = this.key(scope.tenantId, id);
-    const previous = this.conflictResolutionLocks.get(key) ?? Promise.resolve();
-    let release!: () => void;
-    const current = new Promise<void>((done) => {
-      release = done;
-    });
-    this.conflictResolutionLocks.set(key, current);
-    await previous;
-    try {
-      return await this.resolveWithPortLocked(scope, id, input, now, port, eventPort);
-    } finally {
-      release();
-      if (this.conflictResolutionLocks.get(key) === current)
-        this.conflictResolutionLocks.delete(key);
-    }
+    return this.mutateTenant(scope, () =>
+      this.ownedFrame(
+        scope,
+        () => this.resolveWithPortLocked(scope, id, input, now, port, eventPort),
+        id,
+      ),
+    );
   }
 
   private async resolveWithPortLocked(
@@ -700,6 +819,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     port: OfflineSyncConflictResolver,
     eventPort?: import('./types').OfflineSyncEventPort,
   ): Promise<SyncConflict> {
+    const frame = this.mutationContext.getStore()!;
     const key = this.key(scope.tenantId, id);
     const conflict = this.conflicts.get(key);
     if (!conflict)
@@ -748,12 +868,11 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     };
     const actionId = randomUUID();
     try {
-      const { consumerAttributes: supplied, ...resolved } = await port.resolve(
-        trx,
-        id,
-        input.resolution,
-        context,
+      const { consumerAttributes: supplied, ...resolved } = await this.checkedAwait(
+        scope,
+        port.resolve(trx, id, input.resolution, context),
       );
+      this.assertMutationOwner(scope);
       if (resolved.status !== 'resolved' && resolved.status !== 'open')
         throw new OfflineSyncError(
           'OFFLINE_SYNC_CONFLICT_RESOLUTION',
@@ -811,7 +930,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           resultingStatus: resolved.status,
           createdAt: now,
         },
-        sequence: String(this.conflictActions.length + 1).padStart(12, '0'),
+        sequence: String(++this.conflictActionSequence).padStart(12, '0'),
       });
       const platform = this.conflictStynx.get(key);
       if (consumerAttributes !== undefined)
@@ -827,7 +946,35 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           resolvedBy: scope.actorId,
           resolvedAt: now,
         });
-        await eventPort?.appendInTransaction(trx, {
+        await this.checkedAwait(
+          scope,
+          eventPort?.appendInTransaction(trx, {
+            entity: 'offline.sync-conflict',
+            entityId: id,
+            idempotencyKey: `stynx:offline-sync:resolution:${actionId}`,
+            payload: {
+              actionId,
+              conflictId: id,
+              queueItemId: conflict.queueItemId,
+              action: input.resolution,
+              resultingStatus: resolved.status,
+              actorId: scope.actorId,
+              at: now,
+            },
+          }),
+        );
+        this.assertFrameComplete(frame);
+        return {
+          ...canonical,
+          resolution: input.resolution,
+          resolvedBy: scope.actorId,
+          resolvedAt: now,
+          ...(stynx ? { stynx } : {}),
+        };
+      }
+      await this.checkedAwait(
+        scope,
+        eventPort?.appendInTransaction(trx, {
           entity: 'offline.sync-conflict',
           entityId: id,
           idempotencyKey: `stynx:offline-sync:resolution:${actionId}`,
@@ -840,36 +987,21 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             actorId: scope.actorId,
             at: now,
           },
-        });
-        return {
-          ...canonical,
-          resolution: input.resolution,
-          resolvedBy: scope.actorId,
-          resolvedAt: now,
-          ...(stynx ? { stynx } : {}),
-        };
-      }
-      await eventPort?.appendInTransaction(trx, {
-        entity: 'offline.sync-conflict',
-        entityId: id,
-        idempotencyKey: `stynx:offline-sync:resolution:${actionId}`,
-        payload: {
-          actionId,
-          conflictId: id,
-          queueItemId: conflict.queueItemId,
-          action: input.resolution,
-          resultingStatus: resolved.status,
-          actorId: scope.actorId,
-          at: now,
-        },
-      });
+        }),
+      );
+      this.assertFrameComplete(frame);
       return { ...withoutResolution(canonical), ...(stynx ? { stynx } : {}) };
     } catch (error) {
-      if (before.queueItem) this.queueItems.set(itemKey, before.queueItem);
-      if (receiptEntry && before.receipt) this.itemReceipts.set(receiptEntry[0], before.receipt);
-      if (before.conflict) this.conflicts.set(key, before.conflict);
-      if (before.stynx) this.conflictStynx.set(key, before.stynx);
-      else this.conflictStynx.delete(key);
+      const active = this.frameIsActive(frame);
+      frame.active = false;
+      if (before.queueItem && active) this.queueItems.set(itemKey, before.queueItem);
+      if (receiptEntry && before.receipt && active)
+        this.itemReceipts.set(receiptEntry[0], before.receipt);
+      if (before.conflict && active) this.conflicts.set(key, before.conflict);
+      if (active) {
+        if (before.stynx) this.conflictStynx.set(key, before.stynx);
+        else this.conflictStynx.delete(key);
+      }
       const actionIndex = this.conflictActions.findIndex(
         (entry) => entry.record.actionId === actionId,
       );
@@ -937,10 +1069,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       now,
       receiptId: key,
     };
-    const allowedActions = (await runtime.ports.conflictResolver?.allowedActions?.(
-      trx,
-      conflictId,
-      context,
+    const allowedActions = (await this.checkedAwait(
+      scope,
+      runtime.ports.conflictResolver?.allowedActions?.(trx, conflictId, context),
     )) ?? ['reject'];
     saveRejection();
     this.integrityConflicts.set(dedupe, conflictId);
@@ -1192,6 +1323,14 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     options: SubmitSyncBatchOptions,
     now: string,
   ): Promise<CTG9SubmitSyncBatchResult> {
+    this.assertMutationOwner(scope);
+    if (this.mutationContext.getStore())
+      throw new OfflineSyncError(
+        'OFFLINE_SYNC:BATCH:in-progress',
+        503,
+        'Nested durable batches cannot wait on their owner.',
+        true,
+      );
     const supplied = options as Partial<DurableBatchExecutionOptions>;
     const runtime: DurableBatchExecutionOptions = {
       ...options,
@@ -1375,35 +1514,44 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       const itemReceipts: SyncItemReceipt[] = [];
       let duplicates = 0;
       let retryable = false;
-      for (const item of input.items) {
+      const processItem = async (
+        item: CTG9SyncBatchItemInput,
+        itemFrame: MemoryMutationFrame,
+      ): Promise<void> => {
         const key = itemKeys.get(item.queueItemId)!;
         const initialStatus =
           item.idempotencyKey && record.initialQueueStatus === 'pending' ? 'pending' : 'received';
         if (
-          !(await verifyOfflineSyncPayloadHash(
-            item,
-            {
-              ...scope,
-              agentId: runtime.agentId,
-              orgUnitId: input.orgUnitId,
-              deviceId: input.deviceId,
-              batchId: input.deviceBatchId,
-              now,
-              receiptId: key,
-            },
-            runtime.ports.payloadHashPort,
+          !(await this.checkedAwait(
+            scope,
+            verifyOfflineSyncPayloadHash(
+              item,
+              {
+                ...scope,
+                agentId: runtime.agentId,
+                orgUnitId: input.orgUnitId,
+                deviceId: input.deviceId,
+                batchId: input.deviceBatchId,
+                now,
+                receiptId: key,
+              },
+              runtime.ports.payloadHashPort,
+            ),
           ))
         ) {
           // ADR-MOBILE-OFFLINE-0003 D4: per-item integrity rejection; no queue row, receipt or effect.
           const original = this.itemReceipts.get(this.key(scope.tenantId, key))?.item;
-          const integrityStynx = await this.integrityConflict(
+          const integrityStynx = await this.checkedAwait(
             scope,
-            input,
-            item,
-            key,
-            original ? { ...original, idempotencyKey: key } : undefined,
-            runtime,
-            now,
+            this.integrityConflict(
+              scope,
+              input,
+              item,
+              key,
+              original ? { ...original, idempotencyKey: key } : undefined,
+              runtime,
+              now,
+            ),
           );
           const rejected = {
             ...item,
@@ -1423,7 +1571,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
             stynx: integrityStynx,
           });
-          continue;
+          return;
         }
         const previousQueue = this.queueItems.get(this.key(scope.tenantId, item.queueItemId));
         if (previousQueue && previousQueue.idempotencyKey !== key) {
@@ -1443,7 +1591,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             status: 'rejected',
             errorCode: 'OFFLINE_SYNC_QUEUE_ID_REUSED',
           });
-          continue;
+          return;
         }
         const itemKey = this.key(scope.tenantId, key);
         const e6 = this.e6Items.get(itemKey);
@@ -1451,7 +1599,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           const legacy = this.queueItems.get(this.key(scope.tenantId, e6.item.queueItemId))!;
           const sameHash = legacy.payloadHash === item.payloadHash;
           const integrityStynx = !sameHash
-            ? await this.integrityConflict(scope, input, item, key, legacy, runtime, now)
+            ? await this.checkedAwait(
+                scope,
+                this.integrityConflict(scope, input, item, key, legacy, runtime, now),
+              )
             : undefined;
           if (sameHash && e6.batchKey !== identity) duplicates += 1;
           const legacyReceived = sameHash && legacy.status === 'received';
@@ -1497,7 +1648,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             ...(context ? { context } : {}),
             ...(integrityStynx ? { stynx: integrityStynx } : {}),
           });
-          continue;
+          return;
         }
         const previous = this.itemReceipts.get(itemKey);
         // D1 item 4: a `pending` receipt is applied again only by a later batch of the same device under a
@@ -1541,17 +1692,20 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
               ...(Object.keys(duplicateContext).length ? { context: duplicateContext } : {}),
               ...(previous.receipt.stynx ? { stynx: previous.receipt.stynx } : {}),
             });
-            continue;
+            return;
           }
           if (previous.hash !== item.payloadHash) {
-            const integrityStynx = await this.integrityConflict(
+            const integrityStynx = await this.checkedAwait(
               scope,
-              input,
-              item,
-              key,
-              { ...previous.item, idempotencyKey: key },
-              runtime,
-              now,
+              this.integrityConflict(
+                scope,
+                input,
+                item,
+                key,
+                { ...previous.item, idempotencyKey: key },
+                runtime,
+                now,
+              ),
             );
             const rejected = {
               ...previous.item,
@@ -1567,7 +1721,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
               errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
               stynx: integrityStynx,
             });
-            continue;
+            return;
           }
         }
         let status: SyncItemReceipt['status'] = initialStatus;
@@ -1592,16 +1746,21 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         try {
           if (!item.idempotencyKey) errorCode = 'OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED';
           else {
-            const trx = { token: randomUUID() } as unknown as import('@stynx-nyx/data').Transaction;
+            const trx = {
+              token: randomUUID(),
+            } as unknown as import('@stynx-nyx/data').Transaction;
             const rollback = this.captureItemState(scope.tenantId);
-            try {
-              const prepared = await prepareOfflineSyncItem(
-                trx,
-                portItem,
-                itemContext,
-                runtime,
-                async (id) =>
-                  id === queueItemId || this.queueItems.has(this.key(scope.tenantId, id)),
+            const apply = async (): Promise<void> => {
+              const prepared = await this.checkedAwait(
+                scope,
+                prepareOfflineSyncItem(
+                  trx,
+                  portItem,
+                  itemContext,
+                  runtime,
+                  async (id) =>
+                    id === queueItemId || this.queueItems.has(this.key(scope.tenantId, id)),
+                ),
               );
               itemContext = prepared.context;
               const recordPairs = async (
@@ -1613,10 +1772,13 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                     const conflictId = randomUUID();
                     const relatedQueueItemId =
                       affected === pair.firstItemId ? pair.secondItemId : pair.firstItemId;
-                    const allowedActions = (await runtime.ports.conflictResolver?.allowedActions?.(
-                      trx,
-                      conflictId,
-                      itemContext,
+                    const allowedActions = (await this.checkedAwait(
+                      scope,
+                      runtime.ports.conflictResolver?.allowedActions?.(
+                        trx,
+                        conflictId,
+                        itemContext,
+                      ),
                     )) ?? ['manual-review'];
                     const evidence = { conflictId, relatedQueueItemId, allowedActions };
                     const conflictStynx = executionStynxContext(runtime, {
@@ -1637,7 +1799,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                             ...old.receipt,
                             status: 'conflict',
                             context: evidence,
-                            stynx: { ...(old.receipt.stynx ?? { version: 1 }), ...conflictStynx },
+                            stynx: {
+                              ...(old.receipt.stynx ?? { version: 1 }),
+                              ...conflictStynx,
+                            },
                           },
                         });
                         const affectedQueue = this.queueItems.get(
@@ -1690,7 +1855,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
               };
               if (prepared.defer) {
                 // Admission guarantees a nonempty pair containing this canonical item.
-                await recordPairs(prepared.pairs);
+                await this.checkedAwait(scope, recordPairs(prepared.pairs));
                 status = 'conflict';
                 stynx = {
                   ...executionStynxContext(runtime, {
@@ -1754,7 +1919,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                     );
                 }
                 if (runtime.ports.itemApplier) {
-                  const applied = await runtime.ports.itemApplier.apply(trx, portItem, itemContext);
+                  const applied = await this.checkedAwait(
+                    scope,
+                    runtime.ports.itemApplier.apply(trx, portItem, itemContext),
+                  );
                   const consumerAttributes = boundedConsumerAttributes(applied.consumerAttributes);
                   serverEntityId = applied.serverEntityId;
                   const pairs = [...prepared.pairs];
@@ -1762,14 +1930,18 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                     runtime.policy.concurrencyWindowMinutes &&
                     runtime.ports.concurrencyDetector
                   ) {
-                    const detected = await runtime.ports.concurrencyDetector.detect(
-                      trx,
-                      portItem,
-                      itemContext,
+                    const detected = await this.checkedAwait(
+                      scope,
+                      runtime.ports.concurrencyDetector.detect(trx, portItem, itemContext),
                     );
                     if (detected.suspected)
                       for (const pair of detected.pairs) {
-                        if (await runtime.ports.handoffPort?.permits(trx, pair, itemContext))
+                        if (
+                          await this.checkedAwait(
+                            scope,
+                            runtime.ports.handoffPort?.permits(trx, pair, itemContext),
+                          )
+                        )
                           continue;
                         if (
                           !pairs.some(
@@ -1781,7 +1953,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                           pairs.push(pair);
                       }
                   }
-                  status = (await recordPairs(pairs)) ? 'conflict' : 'applied';
+                  status = (await this.checkedAwait(scope, recordPairs(pairs)))
+                    ? 'conflict'
+                    : 'applied';
                   stynx = {
                     ...(stynx ?? { version: 1 }),
                     ...executionStynxContext(runtime, {
@@ -1805,14 +1979,20 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                     }),
                   };
                   // D1 item 6: a re-application never reuses the event key of an earlier attempt.
-                  await runtime.ports.eventPort!.appendInTransaction(trx, {
-                    entity: item.entityType,
-                    entityId: applied.serverEntityId,
-                    idempotencyKey: reapplying ? `${key}:retry:${attempts}` : key,
-                    payload: item.payloadJson,
-                  });
+                  await this.checkedAwait(
+                    scope,
+                    runtime.ports.eventPort!.appendInTransaction(trx, {
+                      entity: item.entityType,
+                      entityId: applied.serverEntityId,
+                      idempotencyKey: reapplying ? `${key}:retry:${attempts}` : key,
+                      payload: item.payloadJson,
+                    }),
+                  );
                 }
               }
+            };
+            try {
+              await this.ownedFrame(scope, apply);
             } catch (error) {
               rollback();
               if (runtime.ports.domainOutcomeClassifier)
@@ -1867,10 +2047,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                 const conflictType = numbering ? 'domain' : outcome!.conflict!.type;
                 const conflictId = randomUUID();
                 const allowedActions =
-                  (await runtime.ports.conflictResolver?.allowedActions?.(
-                    trx,
-                    conflictId,
-                    itemContext,
+                  (await this.checkedAwait(
+                    scope,
+                    runtime.ports.conflictResolver?.allowedActions?.(trx, conflictId, itemContext),
                   )) ??
                   (conflictType === 'concurrency'
                     ? ['manual_review']
@@ -1940,6 +2119,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             ...(stynx ? { stynx } : {}),
           };
           const storedItem = queueItemId === item.queueItemId ? saved : { ...saved, queueItemId };
+          this.assertFrameComplete(itemFrame);
           this.queueItems.set(this.key(scope.tenantId, queueItemId), {
             ...storedItem,
             idempotencyKey: key,
@@ -1972,10 +2152,13 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           stored.push(saved);
           itemReceipts.push(itemReceipt);
         } catch (error) {
+          itemFrame.active = false;
           refusalRollback?.();
           throw error;
         }
-      }
+      };
+      for (const item of input.items)
+        await this.ownedFrame(scope, (frame) => processItem(item, frame));
       const finalReceipt: SyncBatchReceipt = {
         ...receipt,
         status: retryable ? 'open' : 'closed',
@@ -2000,17 +2183,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       if (!retryable) record.result = result;
       return result;
     };
-    const gate = this.tenantGate.get(scope.tenantId) ?? Promise.resolve();
-    record.promise = gate.then(run, run);
-    this.tenantGate.set(
-      scope.tenantId,
-      record.promise.then(
-        () => undefined,
-        () => undefined,
-      ),
-    );
+    record.promise = this.mutateTenant(scope, run);
     try {
-      return await record.promise;
+      return await this.checkedAwait(scope, record.promise);
     } finally {
       delete record.promise;
     }
