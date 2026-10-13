@@ -259,6 +259,11 @@ owner. Close a frame before restoring its snapshot and after its boundary ends.
 After any awaited port, validate that frame before changing queue, receipt,
 conflict/evidence or action state. A detached callback whose frame has closed
 must not reacquire ownership or write stale state into a later transaction.
+After a successful awaited result, validate ownership before invoking the next
+domain port as well as before writing. In particular, late `allowedActions`
+completion on a closed frame must refuse before `resolve` is invoked. Preserve
+the original refusal of a callback already entered before closure; do not start
+a new callback on a closed frame merely to obtain a subsequent refusal.
 Preserve an actual callback refusal; when a callback returns successfully after
 closure, refuse through the existing typed conflict/batch error family before
 any write. Closed-frame cleanup must not restore stale local snapshots over
@@ -303,6 +308,12 @@ coverage exclusion, threshold reduction or fault-disguising rename is allowed.
 Also prove that a parent whose applier returns successfully while an owned
 resolver event remains pending refuses and rolls back those partial facts;
 releasing the event afterward neither resurrects them nor reports stale success.
+For the new unpublished nested-refusal witness, place its pause inside the
+already-entered resolver rather than before resolver admission; retain every
+original error-identity and state assertion. Independently cover late
+`allowedActions` completion with `resolve` not called, typed refusal and no
+queue/conflict/action resurrection. This fixture setup correction strengthens
+callback lifetime admission and authorizes no assertion removal or weakening.
 
 ## D5 — Durable reconciliation history (V-13)
 
