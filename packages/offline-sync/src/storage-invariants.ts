@@ -1,6 +1,7 @@
 import type { StorageVerifierTransaction } from '@stynx-nyx/data';
 import {
   validRangeCreationEvidence,
+  validReconciliationEvidence,
   bytesDigest,
   importBatchIdentity,
   importDigest,
@@ -146,6 +147,27 @@ export async function inspectOfflineRows(
       findings.push({
         tenantId: row.tenant_id,
         finding: 'range-creation-receipt-integrity',
+        count: '1',
+      });
+  }
+  const reconciliations = await trx.query<
+    Record<string, unknown> & {
+      tenant_id: string;
+      start_number: string;
+      end_number: string;
+    }
+  >(
+    `select h.id::text,h.tenant_id::text,h.reservation_id::text,h.actor_id,
+      to_char(h.created_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as created_at,
+      h.claimed_numbers,h.user_ref,h.idempotency_key,h.request_fingerprint,h.result_json,
+      r.start_number::text,r.end_number::text from offline.numbering_reconciliations h
+      left join offline.numbering_reservations r on r.tenant_id=h.tenant_id and r.id=h.reservation_id`,
+  );
+  for (const { start_number, end_number, ...row } of reconciliations.rows) {
+    if (!validReconciliationEvidence(row, { start_number, end_number }))
+      findings.push({
+        tenantId: row.tenant_id,
+        finding: 'reconciliation-snapshot-integrity',
         count: '1',
       });
   }
