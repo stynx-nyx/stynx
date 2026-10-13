@@ -50,7 +50,10 @@ corepack pnpm changeset
   [ADR-RELEASE-0001](law/adr/2026-10-11-bounded-1.6.0-publication.md): no k6 or
   mutation execution, explicit unmeasured HTTP performance, and unchanged
   static/security/product and protected publication gates. The existing cold-unit
-  performance node remains required. Mutation testing is not a release-readiness input.
+  performance node remains required. The separate prospective 1.6.1 scope in
+  [ADR-RELEASE-0002](law/adr/2026-10-12-patch-1.6.1-and-practical-audit.md)
+  retains that floor under the Owner's no-k6/no-mutation direction while repairing
+  offline-sync and admitted evidence first. Mutation testing is not a release-readiness input.
 - `pnpm ci:stynx:remote-full` provides the remote full lane.
 - `pnpm test:mutation` preserves the 38-target Stryker campaign as optional,
   manually invoked hardening. Its result cannot promote or block a release.
