@@ -104,8 +104,30 @@ interface MemoryMutationFrame {
   tenantId: string;
   active: boolean;
   children: Set<MemoryMutationFrame>;
+  changes: MemoryProjectionChange[];
+  claims: Set<MemoryProjectionClaim>;
+  releases: (() => void)[];
   parent?: MemoryMutationFrame;
   conflictId?: string;
+}
+
+interface MemoryProjectionVersion {
+  previous: MemoryProjectionVersion | undefined;
+  present: boolean;
+  value: unknown;
+  rolledBack: boolean;
+}
+
+interface MemoryProjectionChange {
+  order: number;
+  version?: MemoryProjectionVersion;
+  undo: () => void;
+}
+
+interface MemoryProjectionClaim {
+  owners: Set<MemoryMutationFrame>;
+  versions: Map<unknown, MemoryProjectionVersion>;
+  key: unknown;
 }
 
 /** Deterministic process-local store for tests and sandbox wiring. */
@@ -173,6 +195,21 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   /** Batches of one tenant run one at a time, standing in for the PostgreSQL receipt row lock (D1 item 4). */
   private readonly tenantGate = new Map<string, Promise<void>>();
   private readonly mutationContext = new AsyncLocalStorage<MemoryMutationFrame>();
+  private readonly sharedMutations = new Map<string, Set<Promise<void>>>();
+  private readonly projectionVersions = new WeakMap<
+    object,
+    Map<unknown, MemoryProjectionVersion>
+  >();
+  private readonly projectionClaims = new WeakMap<object, Map<unknown, MemoryProjectionClaim>>();
+  private projectionSequence = 0;
+  private readonly queueResolutionLocks = new Map<
+    string,
+    {
+      owner: MemoryMutationFrame;
+      frame: MemoryMutationFrame;
+      promise: Promise<void>;
+    }
+  >();
   private readonly transport = new Map<string, { batchIdentity: string; fingerprint: string }>();
 
   private frameIsActive(frame: MemoryMutationFrame): boolean {
@@ -181,7 +218,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     return true;
   }
 
-  private assertMutationOwner(scope: TrustedOfflineSyncScope): void {
+  private assertMutationOwner(scope: Pick<TrustedOfflineSyncScope, 'tenantId'>): void {
     const frame = this.mutationContext.getStore();
     if (frame && (frame.tenantId !== scope.tenantId || !this.frameIsActive(frame)))
       throw new OfflineSyncError(
@@ -209,30 +246,169 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     return result;
   }
 
+  private isAncestor(ancestor: MemoryMutationFrame, frame: MemoryMutationFrame): boolean {
+    for (let current: MemoryMutationFrame | undefined = frame; current; current = current.parent)
+      if (current === ancestor) return true;
+    return false;
+  }
+
+  private releaseClaims(frame: MemoryMutationFrame): void {
+    for (const claim of frame.claims) {
+      claim.owners.delete(frame);
+      if (claim.owners.size === 0) claim.versions.get(claim.key)!.previous = undefined;
+    }
+    frame.claims.clear();
+  }
+
+  private assertProjectionClaim<K, V>(map: Map<K, V>, key: K): void {
+    const frame = this.mutationContext.getStore()!;
+    this.assertMutationOwner(frame);
+    const claim = this.projectionClaims.get(map)?.get(key);
+    if (claim)
+      for (const owner of claim.owners)
+        if (!this.isAncestor(owner, frame) && !this.isAncestor(frame, owner))
+          throw new OfflineSyncError(
+            'OFFLINE_SYNC_CONFLICT_STATE',
+            409,
+            'Another memory transaction owns this projection key.',
+          );
+  }
+
+  private readProjection<K, V>(map: Map<K, V>, key: K): V | undefined {
+    this.assertProjectionClaim(map, key);
+    return map.get(key);
+  }
+
+  private claimProjection<K, V>(map: Map<K, V>, key: K) {
+    const frame = this.mutationContext.getStore()!;
+    this.assertProjectionClaim(map, key);
+    let versions = this.projectionVersions.get(map);
+    if (!versions) this.projectionVersions.set(map, (versions = new Map()));
+    let claims = this.projectionClaims.get(map);
+    if (!claims) this.projectionClaims.set(map, (claims = new Map()));
+    let claim = claims.get(key);
+    if (!claim) claims.set(key, (claim = { owners: new Set(), versions, key }));
+    for (let current: MemoryMutationFrame | undefined = frame; current; current = current.parent) {
+      claim.owners.add(current);
+      current.claims.add(claim);
+    }
+    let previous = versions.get(key);
+    if (!previous) {
+      previous = {
+        previous: undefined,
+        present: map.has(key),
+        value: map.get(key),
+        rolledBack: false,
+      };
+      versions.set(key, previous);
+    }
+    return { frame, versions, previous };
+  }
+
+  private writeProjection<K, V>(map: Map<K, V>, key: K, value: V): Map<K, V> {
+    const { frame, versions, previous } = this.claimProjection(map, key);
+    const version: MemoryProjectionVersion = {
+      previous,
+      present: true,
+      value,
+      rolledBack: false,
+    };
+    frame.changes.push({
+      order: ++this.projectionSequence,
+      version,
+      undo: () => {
+        if (versions.get(key) !== version) return;
+        let prior = version.previous!;
+        while (prior.rolledBack) prior = prior.previous!;
+        if (prior.present) map.set(key, prior.value as V);
+        else map.delete(key);
+        versions.set(key, prior);
+      },
+    });
+    versions.set(key, version);
+    return map.set(key, value);
+  }
+
+  private appendConflictAction(entry: {
+    record: SyncConflictActionRecord;
+    sequence: string;
+  }): void {
+    const frame = this.mutationContext.getStore()!;
+    this.assertMutationOwner(frame);
+    frame.changes.push({
+      order: ++this.projectionSequence,
+      undo: () => {
+        for (let index = this.conflictActions.length - 1; index >= 0; index -= 1)
+          if (this.conflictActions[index]!.record.actionId === entry.record.actionId)
+            this.conflictActions.splice(index, 1);
+      },
+    });
+    this.conflictActions.push(entry);
+  }
+
+  private rollbackFrame(frame: MemoryMutationFrame): void {
+    const frames: MemoryMutationFrame[] = [];
+    const changes: MemoryProjectionChange[] = [];
+    const close = (current: MemoryMutationFrame): void => {
+      current.active = false;
+      frames.push(current);
+      changes.push(...current.changes);
+      current.changes = [];
+      for (const child of current.children) close(child);
+    };
+    close(frame);
+    for (const change of changes) if (change.version) change.version.rolledBack = true;
+    for (const change of changes.sort((left, right) => right.order - left.order)) change.undo();
+    for (const current of frames) this.releaseClaims(current);
+  }
+
   private async mutateTenant<T>(
     scope: TrustedOfflineSyncScope,
     operation: () => Promise<T>,
+    exclusive = false,
   ): Promise<T> {
     this.assertMutationOwner(scope);
     if (this.mutationContext.getStore()) return operation();
     const previous = this.tenantGate.get(scope.tenantId) ?? Promise.resolve();
+    const readers = this.sharedMutations.get(scope.tenantId) ?? new Set<Promise<void>>();
     const owner: MemoryMutationFrame = {
       tenantId: scope.tenantId,
       active: true,
       children: new Set(),
+      changes: [],
+      claims: new Set(),
+      releases: [],
     };
     const run = () => this.mutationContext.run(owner, operation);
-    const result = previous.then(run, run);
+    const admitted = exclusive ? Promise.all([previous, ...readers]) : previous;
+    const result = admitted.then(run, run);
     const gate = result.then(
       () => undefined,
       () => undefined,
     );
-    this.tenantGate.set(scope.tenantId, gate);
+    if (exclusive) this.tenantGate.set(scope.tenantId, gate);
+    else {
+      readers.add(gate);
+      this.sharedMutations.set(scope.tenantId, readers);
+    }
     try {
-      return await result;
+      const value = await result;
+      this.assertFrameComplete(owner);
+      return value;
+    } catch (error) {
+      this.rollbackFrame(owner);
+      throw error;
     } finally {
       owner.active = false;
-      if (this.tenantGate.get(scope.tenantId) === gate) this.tenantGate.delete(scope.tenantId);
+      owner.changes = [];
+      this.releaseClaims(owner);
+      for (const release of owner.releases) release();
+      if (exclusive) {
+        if (this.tenantGate.get(scope.tenantId) === gate) this.tenantGate.delete(scope.tenantId);
+      } else {
+        readers.delete(gate);
+        if (readers.size === 0) this.sharedMutations.delete(scope.tenantId);
+      }
     }
   }
 
@@ -240,7 +416,6 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     scope: TrustedOfflineSyncScope,
     operation: (frame: MemoryMutationFrame) => Promise<T>,
     conflictId?: string,
-    rollback?: () => void,
   ): Promise<T> {
     this.assertMutationOwner(scope);
     const parent = this.mutationContext.getStore()!;
@@ -256,6 +431,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       tenantId: scope.tenantId,
       active: true,
       children: new Set(),
+      changes: [],
+      claims: new Set(),
+      releases: [],
       parent,
       ...(conflictId === undefined ? {} : { conflictId }),
     };
@@ -263,81 +441,67 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     try {
       const result = await this.mutationContext.run(frame, () => operation(frame));
       this.assertFrameComplete(frame);
+      parent.changes.push(...frame.changes);
+      frame.changes = [];
       return result;
     } catch (error) {
-      const active = this.frameIsActive(frame);
-      frame.active = false;
-      if (active) rollback?.();
+      this.rollbackFrame(frame);
       throw error;
     } finally {
       frame.active = false;
       parent.children.delete(frame);
+      this.releaseClaims(frame);
     }
   }
 
-  /** Restore only this tenant's owned item projections after a failed sandbox item boundary. */
-  private captureItemState(tenantId: string): () => void {
-    const prefix = `${tenantId}:`;
-    const queues = new Map([...this.queueItems].filter(([key]) => key.startsWith(prefix)));
-    const receipts = new Map([...this.itemReceipts].filter(([key]) => key.startsWith(prefix)));
-    const queueBatches = new Map([...this.queueBatches].filter(([key]) => key.startsWith(prefix)));
-    const payloads = new Map([...this.payloadIndex].filter(([key]) => key.startsWith(prefix)));
-    const e6Items = new Map([...this.e6Items].filter(([key]) => key.startsWith(prefix)));
-    const integrityConflicts = new Map(
-      [...this.integrityConflicts].filter(([key]) => key.startsWith(prefix)),
-    );
-    const integrityRejections = new Map(
-      [...this.integrityRejections].filter(([key]) => key.startsWith(prefix)),
-    );
-    const actions = this.conflictActions.filter(({ record }) => record.tenantId === tenantId);
-    const conflicts = new Map(
-      [...this.conflicts].filter(([, value]) => value.tenantId === tenantId),
-    );
-    const created = new Map([...this.conflictCreatedAt].filter(([key]) => conflicts.has(key)));
-    const allowed = new Map([...this.conflictAllowedActions].filter(([key]) => conflicts.has(key)));
-    const evidence = new Map([...this.conflictStynx].filter(([key]) => conflicts.has(key)));
-    const domainContexts = new Map(
-      [...this.conflictDomainContexts].filter(([key]) => conflicts.has(key)),
-    );
-    return () => {
-      for (const key of this.queueItems.keys())
-        if (key.startsWith(prefix)) this.queueItems.delete(key);
-      for (const [key, value] of queues) this.queueItems.set(key, value);
-      for (const key of this.itemReceipts.keys())
-        if (key.startsWith(prefix)) this.itemReceipts.delete(key);
-      for (const [key, value] of receipts) this.itemReceipts.set(key, value);
-      for (const key of this.queueBatches.keys())
-        if (key.startsWith(prefix)) this.queueBatches.delete(key);
-      for (const [key, value] of queueBatches) this.queueBatches.set(key, value);
-      for (const key of this.payloadIndex.keys())
-        if (key.startsWith(prefix)) this.payloadIndex.delete(key);
-      for (const [key, value] of payloads) this.payloadIndex.set(key, value);
-      for (const key of this.e6Items.keys()) if (key.startsWith(prefix)) this.e6Items.delete(key);
-      for (const [key, value] of e6Items) this.e6Items.set(key, value);
-      for (const key of this.integrityConflicts.keys())
-        if (key.startsWith(prefix)) this.integrityConflicts.delete(key);
-      for (const [key, value] of integrityConflicts) this.integrityConflicts.set(key, value);
-      for (const key of this.integrityRejections.keys())
-        if (key.startsWith(prefix)) this.integrityRejections.delete(key);
-      for (const [key, value] of integrityRejections) this.integrityRejections.set(key, value);
-      for (let index = this.conflictActions.length - 1; index >= 0; index--)
-        if (this.conflictActions[index]!.record.tenantId === tenantId)
-          this.conflictActions.splice(index, 1);
-      this.conflictActions.push(...actions);
-      for (const [key, value] of this.conflicts)
-        if (value.tenantId === tenantId) {
-          this.conflicts.delete(key);
-          this.conflictCreatedAt.delete(key);
-          this.conflictAllowedActions.delete(key);
-          this.conflictStynx.delete(key);
-          this.conflictDomainContexts.delete(key);
-        }
-      for (const [key, value] of conflicts) this.conflicts.set(key, value);
-      for (const [key, value] of created) this.conflictCreatedAt.set(key, value);
-      for (const [key, value] of allowed) this.conflictAllowedActions.set(key, value);
-      for (const [key, value] of evidence) this.conflictStynx.set(key, value);
-      for (const [key, value] of domainContexts) this.conflictDomainContexts.set(key, value);
+  private async queueResolution<T>(
+    scope: TrustedOfflineSyncScope,
+    id: string,
+    nested: boolean,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    const frame = this.mutationContext.getStore()!;
+    let owner = frame;
+    while (owner.parent) owner = owner.parent;
+    const conflict = this.conflicts.get(this.key(scope.tenantId, id));
+    const key = this.key(scope.tenantId, conflict?.queueItemId ?? id);
+    for (;;) {
+      const previous = this.queueResolutionLocks.get(key);
+      if (!previous) break;
+      if (previous.owner === owner) {
+        if (this.frameIsActive(previous.frame))
+          throw new OfflineSyncError(
+            'OFFLINE_SYNC_CONFLICT_STATE',
+            409,
+            'A queue item cannot recursively resolve itself.',
+          );
+        previous.frame = frame;
+        this.claimProjection(this.queueItems, key);
+        return operation();
+      }
+      if (nested)
+        throw new OfflineSyncError(
+          'OFFLINE_SYNC_CONFLICT_STATE',
+          409,
+          'An owned callback cannot wait for another queue owner.',
+        );
+      await this.checkedAwait(scope, previous.promise);
+    }
+    let release!: () => void;
+    const lock = {
+      owner,
+      frame,
+      promise: new Promise<void>((done) => {
+        release = done;
+      }),
     };
+    this.queueResolutionLocks.set(key, lock);
+    owner.releases.push(() => {
+      this.queueResolutionLocks.delete(key);
+      release();
+    });
+    this.claimProjection(this.queueItems, key);
+    return operation();
   }
 
   seedNumberingRange(range: NumberingRange): void {
@@ -680,9 +844,12 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       let duplicateItems = 0;
       for (const item of input.items) {
         const payloadKey = this.key(scope.tenantId, item.payloadHash);
-        const existingId = this.payloadIndex.get(payloadKey);
+        const existingId = this.readProjection(this.payloadIndex, payloadKey);
         if (existingId) {
-          const existing = this.queueItems.get(this.key(scope.tenantId, existingId));
+          const existing = this.readProjection(
+            this.queueItems,
+            this.key(scope.tenantId, existingId),
+          );
           if (existing) {
             duplicateItems += 1;
             stored.push(existing);
@@ -690,7 +857,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           }
         }
         const itemKey = this.key(scope.tenantId, item.queueItemId);
-        const reused = this.queueItems.get(itemKey);
+        const reused = this.readProjection(this.queueItems, itemKey);
         if (reused && reused.payloadHash !== item.payloadHash) {
           throw new OfflineSyncError(
             'OFFLINE_SYNC_QUEUE_ID_REUSED',
@@ -707,14 +874,14 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           status: 'received',
           receivedAt: now,
         };
-        this.queueItems.set(itemKey, queueItem);
-        this.queueBatches.set(itemKey, input.deviceBatchId);
-        this.e6Items.set(this.key(scope.tenantId, item.idempotencyKey), {
+        this.writeProjection(this.queueItems, itemKey, queueItem);
+        this.writeProjection(this.queueBatches, itemKey, input.deviceBatchId);
+        this.writeProjection(this.e6Items, this.key(scope.tenantId, item.idempotencyKey), {
           item: queueItem,
           batchKey: this.key(scope.tenantId, `${input.deviceId}:${input.deviceBatchId}`),
           deviceBatchId: input.deviceBatchId,
         });
-        this.payloadIndex.set(payloadKey, item.queueItemId);
+        this.writeProjection(this.payloadIndex, payloadKey, item.queueItemId);
         stored.push(queueItem);
       }
       return {
@@ -737,7 +904,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   ): Promise<SyncConflict> {
     return this.mutateTenant(scope, async () => {
       const queueKey = this.key(scope.tenantId, queueItemId);
-      const item = this.queueItems.get(queueKey);
+      const item = this.readProjection(this.queueItems, queueKey);
       if (!item) {
         throw new OfflineSyncError(
           'OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND',
@@ -745,7 +912,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           `Sync queue item ${queueItemId} was not found.`,
         );
       }
-      this.queueItems.set(queueKey, { ...item, status: 'conflict' });
+      this.writeProjection(this.queueItems, queueKey, { ...item, status: 'conflict' });
       const conflict: SyncConflict = {
         conflictId: randomUUID(),
         tenantId: scope.tenantId,
@@ -767,45 +934,48 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     input: ResolveSyncConflictInput,
     now: string,
   ): Promise<SyncConflict> {
+    const nested = this.mutationContext.getStore() !== undefined;
+
     return this.mutateTenant(scope, () =>
       this.ownedFrame(
         scope,
-        async () => {
-          const conflictKey = this.key(scope.tenantId, conflictId);
-          const conflict = this.conflicts.get(conflictKey);
-          if (!conflict) {
-            throw new OfflineSyncError(
-              'OFFLINE_SYNC_CONFLICT_NOT_FOUND',
-              404,
-              `Sync conflict ${conflictId} was not found.`,
-            );
-          }
-          if (conflict.status !== 'open') {
-            throw new OfflineSyncError(
-              'OFFLINE_SYNC_CONFLICT_STATE',
-              409,
-              `Sync conflict ${conflictId} is ${conflict.status}; expected open.`,
-            );
-          }
-          const resolved: SyncConflict = {
-            ...conflict,
-            description: input.description ?? conflict.description,
-            status: 'resolved',
-            resolution: input.resolution,
-            resolvedBy: scope.actorId,
-            resolvedAt: now,
-          };
-          this.conflicts.set(conflictKey, resolved);
-          const queueKey = this.key(scope.tenantId, conflict.queueItemId);
-          const queueItem = this.queueItems.get(queueKey);
-          if (queueItem) {
-            this.queueItems.set(queueKey, {
-              ...queueItem,
-              status: input.resolution === 'server-wins' ? 'rejected' : 'applied',
-            });
-          }
-          return resolved;
-        },
+        () =>
+          this.queueResolution(scope, conflictId, nested, async () => {
+            const conflictKey = this.key(scope.tenantId, conflictId);
+            const conflict = this.readProjection(this.conflicts, conflictKey);
+            if (!conflict) {
+              throw new OfflineSyncError(
+                'OFFLINE_SYNC_CONFLICT_NOT_FOUND',
+                404,
+                `Sync conflict ${conflictId} was not found.`,
+              );
+            }
+            if (conflict.status !== 'open') {
+              throw new OfflineSyncError(
+                'OFFLINE_SYNC_CONFLICT_STATE',
+                409,
+                `Sync conflict ${conflictId} is ${conflict.status}; expected open.`,
+              );
+            }
+            const resolved: SyncConflict = {
+              ...conflict,
+              description: input.description ?? conflict.description,
+              status: 'resolved',
+              resolution: input.resolution,
+              resolvedBy: scope.actorId,
+              resolvedAt: now,
+            };
+            this.writeProjection(this.conflicts, conflictKey, resolved);
+            const queueKey = this.key(scope.tenantId, conflict.queueItemId);
+            const queueItem = this.readProjection(this.queueItems, queueKey);
+            if (queueItem) {
+              this.writeProjection(this.queueItems, queueKey, {
+                ...queueItem,
+                status: input.resolution === 'server-wins' ? 'rejected' : 'applied',
+              });
+            }
+            return resolved;
+          }),
         conflictId,
       ),
     );
@@ -820,10 +990,15 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     port: OfflineSyncConflictResolver,
     eventPort?: import('./types').OfflineSyncEventPort,
   ): Promise<SyncConflict> {
+    const nested = this.mutationContext.getStore() !== undefined;
+
     return this.mutateTenant(scope, () =>
       this.ownedFrame(
         scope,
-        () => this.resolveWithPortLocked(scope, id, input, now, port, eventPort),
+        () =>
+          this.queueResolution(scope, id, nested, () =>
+            this.resolveWithPortLocked(scope, id, input, now, port, eventPort),
+          ),
         id,
       ),
     );
@@ -839,7 +1014,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   ): Promise<SyncConflict> {
     const frame = this.mutationContext.getStore()!;
     const key = this.key(scope.tenantId, id);
-    const conflict = this.conflicts.get(key);
+    const conflict = this.readProjection(this.conflicts, key);
     if (!conflict)
       throw new OfflineSyncError('OFFLINE_SYNC_CONFLICT_NOT_FOUND', 404, 'Conflict was not found.');
     if (conflict.status !== 'open')
@@ -850,7 +1025,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       );
     const prefix = `${scope.tenantId}:`;
     const itemKey = this.key(scope.tenantId, conflict.queueItemId);
-    const item = this.queueItems.get(itemKey)!;
+    const item = this.readProjection(this.queueItems, itemKey)!;
     const trx = { token: randomUUID() } as unknown as import('@stynx-nyx/data').Transaction;
     const receiptEntry = [...this.itemReceipts.entries()].find(
       ([storedKey, value]) =>
@@ -865,128 +1040,107 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       batchId: receiptEntry?.[1].deviceBatchId ?? '',
       now,
     };
-    const rollback = this.captureItemState(scope.tenantId);
-    try {
-      const allowed = (await port.allowedActions?.(trx, id, context)) ??
-        this.conflictAllowedActions.get(key) ??
-        (receipt?.context?.allowedActions as readonly string[] | undefined) ?? [
-          'device-wins',
-          'server-wins',
-          'manual-review',
-        ];
-      this.assertMutationOwner(scope);
-      if (!allowed.includes(input.resolution))
-        throw new OfflineSyncError(
-          'OFFLINE_SYNC_CONFLICT_RESOLUTION',
-          409,
-          'Resolution action is not allowed.',
-        );
-      const actionId = randomUUID();
 
-      const { consumerAttributes: supplied, ...resolved } = await this.checkedAwait(
-        scope,
-        port.resolve(trx, id, input.resolution, context),
+    const allowed = (await port.allowedActions?.(trx, id, context)) ??
+      this.readProjection(this.conflictAllowedActions, key) ??
+      (receipt?.context?.allowedActions as readonly string[] | undefined) ?? [
+        'device-wins',
+        'server-wins',
+        'manual-review',
+      ];
+    this.assertMutationOwner(scope);
+    if (!allowed.includes(input.resolution))
+      throw new OfflineSyncError(
+        'OFFLINE_SYNC_CONFLICT_RESOLUTION',
+        409,
+        'Resolution action is not allowed.',
       );
-      this.assertMutationOwner(scope);
-      if (resolved.status !== 'resolved' && resolved.status !== 'open')
+    const actionId = randomUUID();
+
+    const { consumerAttributes: supplied, ...resolved } = await this.checkedAwait(
+      scope,
+      port.resolve(trx, id, input.resolution, context),
+    );
+    this.assertMutationOwner(scope);
+    if (resolved.status !== 'resolved' && resolved.status !== 'open')
+      throw new OfflineSyncError(
+        'OFFLINE_SYNC_CONFLICT_RESOLUTION',
+        409,
+        'Conflict resolver did not resolve the conflict.',
+      );
+    const consumerAttributes = boundedConsumerAttributes(supplied);
+    if (resolved.status === 'resolved' && input.resolution === 'retry_after_correction') {
+      // D1 item 3: only a `conflict` item without a committed effect and without another open conflict.
+      const otherOpen = [...this.conflicts.entries()].some(
+        ([storedKey, other]) =>
+          storedKey.startsWith(prefix) &&
+          storedKey !== key &&
+          other.queueItemId === conflict.queueItemId &&
+          other.status === 'open',
+      );
+      const appliedNumber =
+        item.reservedNumber !== undefined &&
+        [...this.reservations.entries()].some(
+          ([reservationKey, reservation]) =>
+            reservationKey.startsWith(prefix) &&
+            reservation.deviceId === item.deviceId &&
+            reservation.orgUnitId === item.orgUnitId &&
+            reservation.entityType === item.entityType &&
+            this.consumption.get(reservationKey)?.get(item.reservedNumber!)?.status === 'applied',
+        );
+      if (
+        item.status !== 'conflict' ||
+        receipt?.status !== 'conflict' ||
+        receipt.stynx?.appliedAt !== undefined ||
+        appliedNumber ||
+        otherOpen
+      )
         throw new OfflineSyncError(
           'OFFLINE_SYNC_CONFLICT_RESOLUTION',
           409,
-          'Conflict resolver did not resolve the conflict.',
+          'The item cannot return to pending.',
         );
-      const consumerAttributes = boundedConsumerAttributes(supplied);
-      if (resolved.status === 'resolved' && input.resolution === 'retry_after_correction') {
-        // D1 item 3: only a `conflict` item without a committed effect and without another open conflict.
-        const otherOpen = [...this.conflicts.entries()].some(
-          ([storedKey, other]) =>
-            storedKey.startsWith(prefix) &&
-            storedKey !== key &&
-            other.queueItemId === conflict.queueItemId &&
-            other.status === 'open',
-        );
-        const appliedNumber =
-          item.reservedNumber !== undefined &&
-          [...this.reservations.entries()].some(
-            ([reservationKey, reservation]) =>
-              reservationKey.startsWith(prefix) &&
-              reservation.deviceId === item.deviceId &&
-              reservation.orgUnitId === item.orgUnitId &&
-              reservation.entityType === item.entityType &&
-              this.consumption.get(reservationKey)?.get(item.reservedNumber!)?.status === 'applied',
-          );
-        if (
-          item.status !== 'conflict' ||
-          receipt?.status !== 'conflict' ||
-          receipt.stynx?.appliedAt !== undefined ||
-          appliedNumber ||
-          otherOpen
-        )
-          throw new OfflineSyncError(
-            'OFFLINE_SYNC_CONFLICT_RESOLUTION',
-            409,
-            'The item cannot return to pending.',
-          );
-        this.queueItems.set(itemKey, { ...item, status: 'pending' });
-        const pending = {
-          ...Object.fromEntries(Object.entries(receipt).filter(([name]) => name !== 'errorCode')),
-          status: 'pending',
-        } as SyncItemReceipt;
-        this.itemReceipts.set(receiptEntry![0], { ...receiptEntry![1], receipt: pending });
-      }
-      this.conflictActions.push({
-        record: {
-          actionId,
-          tenantId: scope.tenantId,
-          conflictId: id,
-          action: input.resolution,
-          ...(input.description === undefined ? {} : { reason: input.description }),
-          ...(input.userRef === undefined ? {} : { userRef: input.userRef }),
-          actorId: scope.actorId,
-          resultingStatus: resolved.status,
-          createdAt: now,
-        },
-        sequence: String(++this.conflictActionSequence).padStart(12, '0'),
+      this.writeProjection(this.queueItems, itemKey, { ...item, status: 'pending' });
+      const pending = {
+        ...Object.fromEntries(Object.entries(receipt).filter(([name]) => name !== 'errorCode')),
+        status: 'pending',
+      } as SyncItemReceipt;
+      this.writeProjection(this.itemReceipts, receiptEntry![0], {
+        ...receiptEntry![1],
+        receipt: pending,
       });
-      const platform = this.conflictStynx.get(key);
-      if (consumerAttributes !== undefined)
-        this.conflictStynx.set(key, { ...(platform ?? { version: 1 }), consumerAttributes });
-      const stynx = this.conflictStynx.get(key);
-      const canonical = { ...resolved, ...conflict, status: resolved.status };
-      if (resolved.status === 'resolved') {
-        // The stored conflict keeps its identity, as the PostgreSQL row does; the resolver's object is returned.
-        this.conflicts.set(key, {
-          ...conflict,
-          status: 'resolved',
-          resolution: input.resolution,
-          resolvedBy: scope.actorId,
-          resolvedAt: now,
-        });
-        await this.checkedAwait(
-          scope,
-          eventPort?.appendInTransaction(trx, {
-            entity: 'offline.sync-conflict',
-            entityId: id,
-            idempotencyKey: `stynx:offline-sync:resolution:${actionId}`,
-            payload: {
-              actionId,
-              conflictId: id,
-              queueItemId: conflict.queueItemId,
-              action: input.resolution,
-              resultingStatus: resolved.status,
-              actorId: scope.actorId,
-              at: now,
-            },
-          }),
-        );
-        this.assertFrameComplete(frame);
-        return {
-          ...canonical,
-          resolution: input.resolution,
-          resolvedBy: scope.actorId,
-          resolvedAt: now,
-          ...(stynx ? { stynx } : {}),
-        };
-      }
+    }
+    this.appendConflictAction({
+      record: {
+        actionId,
+        tenantId: scope.tenantId,
+        conflictId: id,
+        action: input.resolution,
+        ...(input.description === undefined ? {} : { reason: input.description }),
+        ...(input.userRef === undefined ? {} : { userRef: input.userRef }),
+        actorId: scope.actorId,
+        resultingStatus: resolved.status,
+        createdAt: now,
+      },
+      sequence: String(++this.conflictActionSequence).padStart(12, '0'),
+    });
+    const platform = this.readProjection(this.conflictStynx, key);
+    if (consumerAttributes !== undefined)
+      this.writeProjection(this.conflictStynx, key, {
+        ...(platform ?? { version: 1 }),
+        consumerAttributes,
+      });
+    const stynx = this.readProjection(this.conflictStynx, key);
+    const canonical = { ...resolved, ...conflict, status: resolved.status };
+    if (resolved.status === 'resolved') {
+      // The stored conflict keeps its identity, as the PostgreSQL row does; the resolver's object is returned.
+      this.writeProjection(this.conflicts, key, {
+        ...conflict,
+        status: 'resolved',
+        resolution: input.resolution,
+        resolvedBy: scope.actorId,
+        resolvedAt: now,
+      });
       await this.checkedAwait(
         scope,
         eventPort?.appendInTransaction(trx, {
@@ -1005,13 +1159,33 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         }),
       );
       this.assertFrameComplete(frame);
-      return { ...withoutResolution(canonical), ...(stynx ? { stynx } : {}) };
-    } catch (error) {
-      const active = this.frameIsActive(frame);
-      frame.active = false;
-      if (active) rollback();
-      throw error;
+      return {
+        ...canonical,
+        resolution: input.resolution,
+        resolvedBy: scope.actorId,
+        resolvedAt: now,
+        ...(stynx ? { stynx } : {}),
+      };
     }
+    await this.checkedAwait(
+      scope,
+      eventPort?.appendInTransaction(trx, {
+        entity: 'offline.sync-conflict',
+        entityId: id,
+        idempotencyKey: `stynx:offline-sync:resolution:${actionId}`,
+        payload: {
+          actionId,
+          conflictId: id,
+          queueItemId: conflict.queueItemId,
+          action: input.resolution,
+          resultingStatus: resolved.status,
+          actorId: scope.actorId,
+          at: now,
+        },
+      }),
+    );
+    this.assertFrameComplete(frame);
+    return { ...withoutResolution(canonical), ...(stynx ? { stynx } : {}) };
   }
 
   /** D3 item 6 in memory: one `integrity` conflict per tenant, key and received hash, referencing the original item. */
@@ -1029,8 +1203,8 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       JSON.stringify([input.deviceId, input.deviceBatchId, item.queueItemId]),
     );
     const saveRejection = (): void => {
-      if (!this.integrityRejections.has(rejectionKey))
-        this.integrityRejections.set(rejectionKey, {
+      if (this.readProjection(this.integrityRejections, rejectionKey) === undefined)
+        this.writeProjection(this.integrityRejections, rejectionKey, {
           tenantId: scope.tenantId,
           deviceId: input.deviceId,
           deviceBatchId: input.deviceBatchId,
@@ -1045,7 +1219,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         });
     };
     const rejectionContext = (): OfflineSyncStynxContext => {
-      const recorded = this.integrityRejections.get(rejectionKey)!;
+      const recorded = this.readProjection(this.integrityRejections, rejectionKey)!;
       return stynxContextOf({
         receiptId: recorded.idempotencyKey,
         errorCode: recorded.errorCode,
@@ -1057,7 +1231,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       });
     };
     const dedupe = this.key(scope.tenantId, `${key}\0${item.payloadHash}`);
-    if (!original || this.integrityConflicts.has(dedupe)) {
+    if (!original || this.readProjection(this.integrityConflicts, dedupe) !== undefined) {
       saveRejection();
       return rejectionContext();
     }
@@ -1078,7 +1252,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       runtime.ports.conflictResolver?.allowedActions?.(trx, conflictId, context),
     )) ?? ['reject'];
     saveRejection();
-    this.integrityConflicts.set(dedupe, conflictId);
+    this.writeProjection(this.integrityConflicts, dedupe, conflictId);
     this.saveConflict(
       {
         conflictId,
@@ -1544,7 +1718,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           ))
         ) {
           // ADR-MOBILE-OFFLINE-0003 D4: per-item integrity rejection; no queue row, receipt or effect.
-          const original = this.itemReceipts.get(this.key(scope.tenantId, key))?.item;
+          const original = this.readProjection(
+            this.itemReceipts,
+            this.key(scope.tenantId, key),
+          )?.item;
           const integrityStynx = await this.checkedAwait(
             scope,
             this.integrityConflict(
@@ -1577,7 +1754,10 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           });
           return;
         }
-        const previousQueue = this.queueItems.get(this.key(scope.tenantId, item.queueItemId));
+        const previousQueue = this.readProjection(
+          this.queueItems,
+          this.key(scope.tenantId, item.queueItemId),
+        );
         if (previousQueue && previousQueue.idempotencyKey !== key) {
           const rejected = {
             ...item,
@@ -1598,9 +1778,12 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           return;
         }
         const itemKey = this.key(scope.tenantId, key);
-        const e6 = this.e6Items.get(itemKey);
+        const e6 = this.readProjection(this.e6Items, itemKey);
         if (e6) {
-          const legacy = this.queueItems.get(this.key(scope.tenantId, e6.item.queueItemId))!;
+          const legacy = this.readProjection(
+            this.queueItems,
+            this.key(scope.tenantId, e6.item.queueItemId),
+          )!;
           const sameHash = legacy.payloadHash === item.payloadHash;
           const integrityStynx = !sameHash
             ? await this.checkedAwait(
@@ -1625,7 +1808,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             queueItemId: legacy.queueItemId,
             status: legacy.status,
           };
-          this.itemReceipts.set(itemKey, {
+          this.writeProjection(this.itemReceipts, itemKey, {
             hash: legacy.payloadHash,
             batchKey: e6.batchKey,
             receipt: originalReceipt,
@@ -1654,7 +1837,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           });
           return;
         }
-        const previous = this.itemReceipts.get(itemKey);
+        const previous = this.readProjection(this.itemReceipts, itemKey);
         // D1 item 4: a `pending` receipt is applied again only by a later batch of the same device under a
         // different batch id with the identical hash; the receipt keeps its original batch binding.
         const reapplying =
@@ -1753,7 +1936,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           const trx = {
             token: randomUUID(),
           } as unknown as import('@stynx-nyx/data').Transaction;
-          const rollback = this.captureItemState(scope.tenantId);
+
           const apply = async (): Promise<void> => {
             const prepared = await this.checkedAwait(
               scope,
@@ -1793,7 +1976,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                       old.item.queueItemId === affected &&
                       storedKey.startsWith(`${scope.tenantId}:`)
                     ) {
-                      this.itemReceipts.set(storedKey, {
+                      this.writeProjection(this.itemReceipts, storedKey, {
                         ...old,
                         receipt: {
                           ...old.receipt,
@@ -1805,8 +1988,11 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
                           },
                         },
                       });
-                      const affectedQueue = this.queueItems.get(this.key(scope.tenantId, affected));
-                      this.queueItems.set(this.key(scope.tenantId, affected), {
+                      const affectedQueue = this.readProjection(
+                        this.queueItems,
+                        this.key(scope.tenantId, affected),
+                      );
+                      this.writeProjection(this.queueItems, this.key(scope.tenantId, affected), {
                         ...affectedQueue!,
                         status: 'conflict',
                       });
@@ -1986,8 +2172,6 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           try {
             await this.ownedFrame(scope, apply);
           } catch (error) {
-            rollback();
-
             if (error instanceof OfflineSyncConfigurationError) throw error;
             serverEntityId = undefined;
             coveringReservationKey = undefined;
@@ -2106,13 +2290,17 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         };
         const storedItem = queueItemId === item.queueItemId ? saved : { ...saved, queueItemId };
         this.assertFrameComplete(itemFrame);
-        this.queueItems.set(this.key(scope.tenantId, queueItemId), {
+        this.writeProjection(this.queueItems, this.key(scope.tenantId, queueItemId), {
           ...storedItem,
           idempotencyKey: key,
         } as StoredSyncQueueItem);
         if (!reapplying)
-          this.queueBatches.set(this.key(scope.tenantId, queueItemId), input.deviceBatchId);
-        this.itemReceipts.set(itemKey, {
+          this.writeProjection(
+            this.queueBatches,
+            this.key(scope.tenantId, queueItemId),
+            input.deviceBatchId,
+          );
+        this.writeProjection(this.itemReceipts, itemKey, {
           hash: item.payloadHash,
           batchKey: reapplying ? previous.batchKey : identity,
           receipt: storedReceipt,
@@ -2139,12 +2327,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         itemReceipts.push(itemReceipt);
       };
       for (const item of input.items)
-        await this.ownedFrame(
-          scope,
-          (frame) => processItem(item, frame),
-          undefined,
-          this.captureItemState(scope.tenantId),
-        );
+        await this.ownedFrame(scope, (frame) => processItem(item, frame));
       const finalReceipt: SyncBatchReceipt = {
         ...receipt,
         status: retryable ? 'open' : 'closed',
@@ -2169,7 +2352,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       if (!retryable) record.result = result;
       return result;
     };
-    record.promise = this.mutateTenant(scope, run);
+    record.promise = this.mutateTenant(scope, run, true);
     try {
       return await this.checkedAwait(scope, record.promise);
     } finally {
@@ -2335,11 +2518,12 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     domainContext?: Record<string, unknown>,
   ): void {
     const key = this.key(conflict.tenantId, conflict.conflictId);
-    this.conflicts.set(key, conflict);
-    this.conflictCreatedAt.set(key, now);
-    if (allowedActions) this.conflictAllowedActions.set(key, allowedActions);
-    if (stynx) this.conflictStynx.set(key, stynx);
-    if (domainContext) this.conflictDomainContexts.set(key, structuredClone(domainContext));
+    this.writeProjection(this.conflicts, key, conflict);
+    this.writeProjection(this.conflictCreatedAt, key, now);
+    if (allowedActions) this.writeProjection(this.conflictAllowedActions, key, allowedActions);
+    if (stynx) this.writeProjection(this.conflictStynx, key, stynx);
+    if (domainContext)
+      this.writeProjection(this.conflictDomainContexts, key, structuredClone(domainContext));
   }
 
   private key(tenantId: string, id: string): string {
