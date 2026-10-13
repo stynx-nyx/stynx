@@ -757,10 +757,31 @@ describe('UPS-OFS-08 typed receipt and conflict context (ADR-MOBILE-OFFLINE-0003
       batch('device-a', 'db-1', [item('d-1'), item('d-2')]),
       transportOf('db-1'),
     );
-    // The submit result keeps its published fields; the platform object is exposed by lookups and listings (D3.5).
+    // ADR-MOBILE-OFFLINE-0005 D2 adds the same persisted platform facts to new submit results.
     expect(result.receipt.items).toEqual([
-      { queueItemId: 'd-1', status: 'applied' },
-      { queueItemId: 'd-2', status: 'applied' },
+      {
+        queueItemId: 'd-1',
+        status: 'applied',
+        stynx: {
+          version: 1,
+          receiptId: 'd-1',
+          appliedAt: '2026-09-28T12:00:00.000Z',
+          serverEntityId: 'server-d-1',
+          attempts: 1,
+          consumerAttributes: { agency: 'A1', nested: { ok: true } },
+        },
+      },
+      {
+        queueItemId: 'd-2',
+        status: 'applied',
+        stynx: {
+          version: 1,
+          receiptId: 'd-2',
+          appliedAt: '2026-09-28T12:00:00.000Z',
+          serverEntityId: 'server-d-2',
+          attempts: 1,
+        },
+      },
     ]);
     const receipt = await service.getSyncItemReceipt('d-1');
     expect(receipt).toEqual({ queueItemId: 'd-1', status: 'applied', stynx: applied });
@@ -866,8 +887,32 @@ describe('UPS-OFS-08 typed receipt and conflict context (ADR-MOBILE-OFFLINE-0003
       transportOf('db-3'),
     );
     expect(bounded.receipt.items).toEqual([
-      { queueItemId: 'd-5', status: 'rejected', errorCode: 'OFFLINE_SYNC_INVALID_INPUT' },
-      { queueItemId: 'd-6', status: 'rejected', errorCode: 'OFFLINE_SYNC_INVALID_INPUT' },
+      {
+        queueItemId: 'd-5',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_INVALID_INPUT',
+        stynx: {
+          version: 1,
+          receiptId: 'd-5',
+          errorCode: 'OFFLINE_SYNC_INVALID_INPUT',
+          errorMessage: 'consumerAttributes must be a JSON object of at most 4096 bytes.',
+          attempts: 1,
+          retryable: false,
+        },
+      },
+      {
+        queueItemId: 'd-6',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_INVALID_INPUT',
+        stynx: {
+          version: 1,
+          receiptId: 'd-6',
+          errorCode: 'OFFLINE_SYNC_INVALID_INPUT',
+          errorMessage: 'consumerAttributes must be a JSON object of at most 4096 bytes.',
+          attempts: 1,
+          retryable: false,
+        },
+      },
     ]);
     expect((await service.getSyncItemReceipt('d-5')).stynx).toMatchObject({
       errorCode: 'OFFLINE_SYNC_INVALID_INPUT',
@@ -1140,6 +1185,18 @@ describe('in-memory parity edges (ADR-MOBILE-OFFLINE-0003 D1, D3)', () => {
           transportOf('gb-2'),
         )
       ).receipt.items,
-    ).toEqual([{ queueItemId: 'g-2', status: 'applied' }]);
+    ).toEqual([
+      {
+        queueItemId: 'g-2',
+        status: 'applied',
+        stynx: {
+          version: 1,
+          receiptId: 'g-2',
+          appliedAt: '2026-09-28T12:00:00.000Z',
+          serverEntityId: 'server-g-2',
+          attempts: 1,
+        },
+      },
+    ]);
   });
 });
