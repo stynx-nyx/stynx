@@ -106,3 +106,59 @@ samples/exclusions, historical 1.5.7 observation bytes and proof-chain prefix.
 `readiness_promoting=false` remains mandatory. Practical green cells are earned
 by actual new measurements and product repairs, never a weaker denominator or a
 claim that full audit PASS is a release precondition.
+
+## Prospective published DEVAI 2.6.1 patch adoption
+
+The Owner's continuing 1.6.1 mandate authorizes the narrow upstream repair and
+published dependency adoption needed for this collection protocol. This is
+prospective authority: it does not assert that 2.6.1 is published, installed or
+accepted. Before adoption, independently verify its actual registry archive,
+integrity, source/tag/release identities and complete installed file population.
+Architect records those exact observed identities in the package identity policy;
+Engineer then pins the published version and lockfile. An unpublished archive,
+sibling source or rehearsal package cannot supply the final adoption.
+
+This patch is limited to consistent executable-test filename classification,
+Doctor's declaration bootstrap admission and task-bound dry-run authority. It
+adds no adopter input interface, inventory capability, release scope or sensor
+population. The current adopter source policy and exact task declarations remain
+unchanged. Constitution 1.0.2 and its pinned digest remain unchanged.
+
+After the exact published package is installed, Architect uses its registered
+CLI under the declared toolchain. Inspect read-only
+`init upgrade --target . --as-role architect --format json` before the matching
+operation with `--write`. The isolated prepublication rehearsal proposed only
+these generated refresh targets:
+
+- `.devai/constitution.md`;
+- `.devai/config/github-actions-host-adapter.json`;
+- `.devai/config/authority-policy.json`;
+- `.devai/config/upgrade-receipt.json`.
+
+The actual installed plan governs; a changed target set, refusal or unresolved
+obligation requires review of the concrete result before mutation. Then inspect
+and apply `init bind --target . --adopter-policy law/policy/devai-adoption.json
+--as-role architect --write --format json`, retaining the operational-law then
+adopter-policy ordering in ADOPTION-0010. Never hand-edit generated configuration,
+change adapter selection, refresh an unrelated hook or silently accept retired
+keys. Verify generated digests, postchecks, current/no-op upgrade readback and
+unskipped Doctor. Existing exact forbidden-action receipts grant only their
+recorded operations; any actual workflow edit requires its own exact-commit
+Owner receipt under the existing controls.
+
+Inspector independently rebinds dependency freezes and verifies the installed
+package. Legitimate `.e2e.ts` and `.wiring-spec.ts` tests must agree between the
+trace and executable-test classifiers without renaming or relabeling tests.
+Doctor may report task declarations ready without execution-prerequisite
+receipts only as `declaration-plan`, `diagnostic-only` readiness. Actual task
+execution must still refuse missing or foreign prerequisite receipts. Task-bound
+dry-run must preserve the normal Inspector declaration/consent boundary; a
+read-only host plan must not bypass the task's declared local-write authority.
+None of these results is an execution receipt, reading or release verdict.
+
+Hash and preserve every preexisting observation/proof file, the historical 1.5.7
+observation bytes and proof-chain prefix. No k6 or mutation execution is
+introduced. The two existing N/A cells, thresholds, populations, lookbacks,
+minimum samples, exclusions and `readiness_promoting=false` remain unchanged.
+A partial adoption or failed check remains visible; it cannot be promoted to a
+successful collection or overall audit PASS.
