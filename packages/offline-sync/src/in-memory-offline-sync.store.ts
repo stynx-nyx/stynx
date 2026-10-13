@@ -766,6 +766,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       if (consumerAttributes !== undefined)
         this.conflictStynx.set(key, { ...(platform ?? { version: 1 }), consumerAttributes });
       const stynx = this.conflictStynx.get(key);
+      const canonical = { ...resolved, ...conflict, status: resolved.status };
       if (resolved.status === 'resolved') {
         // The stored conflict keeps its identity, as the PostgreSQL row does; the resolver's object is returned.
         this.conflicts.set(key, {
@@ -790,7 +791,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           },
         });
         return {
-          ...resolved,
+          ...canonical,
           resolution: input.resolution,
           resolvedBy: scope.actorId,
           resolvedAt: now,
@@ -811,7 +812,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           at: now,
         },
       });
-      return { ...withoutResolution(resolved), ...(stynx ? { stynx } : {}) };
+      return { ...withoutResolution(canonical), ...(stynx ? { stynx } : {}) };
     } catch (error) {
       if (before.queueItem) this.queueItems.set(itemKey, before.queueItem);
       if (receiptEntry && before.receipt) this.itemReceipts.set(receiptEntry[0], before.receipt);

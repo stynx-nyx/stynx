@@ -1,5 +1,5 @@
 ---
-"@stynx-nyx/offline-sync": patch
+'@stynx-nyx/offline-sync': patch
 ---
 
 Correct offline-sync acceptance gaps with structured sequence and domain context,

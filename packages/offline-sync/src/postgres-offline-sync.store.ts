@@ -287,8 +287,12 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
           item_status: string;
           reserved_number: string | null;
           entity_type: string;
+          local_entity_id: string;
+          payload_hash: string;
+          conflict_type: string;
+          description: string;
         }>(
-          `select q.org_unit_id,q.device_id,q.agent_id,q.device_batch_id,q.id as queue_item_id,q.idempotency_key,q.status as item_status,q.reserved_number,q.entity_type
+          `select q.org_unit_id,q.device_id,q.agent_id,q.device_batch_id,q.id as queue_item_id,q.idempotency_key,q.status as item_status,q.reserved_number,q.entity_type,c.local_entity_id,c.payload_hash,c.conflict_type,c.description
           from offline.sync_conflicts c
           join offline.sync_queue_items q on q.tenant_id=c.tenant_id and q.id=c.sync_queue_item_id
           where c.tenant_id=$1::uuid and c.id=$2::uuid and c.status='open' for update of c`,
@@ -387,6 +391,16 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
           ],
         );
         const platform = splitStynxContext(stored.rows[0]?.evidence);
+        const canonical = {
+          ...resolved,
+          conflictId: id,
+          tenantId: scope.tenantId,
+          queueItemId: row.queue_item_id,
+          localEntityId: row.local_entity_id,
+          payloadHash: row.payload_hash,
+          conflictType: row.conflict_type,
+          description: row.description,
+        };
         await eventPort?.appendInTransaction(trx, {
           entity: 'offline.sync-conflict',
           entityId: id,
@@ -403,14 +417,14 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
         });
         return resolved.status === 'resolved'
           ? {
-              ...resolved,
+              ...canonical,
               resolution: input.resolution,
               resolvedBy: scope.actorId,
               resolvedAt: now,
               ...(platform.stynx ? { stynx: platform.stynx } : {}),
             }
           : {
-              ...withoutResolution(resolved),
+              ...withoutResolution(canonical),
               ...(platform.stynx ? { stynx: platform.stynx } : {}),
             };
       })
