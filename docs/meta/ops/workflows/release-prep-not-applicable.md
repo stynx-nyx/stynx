@@ -24,3 +24,4 @@ None.
 ## Notes
 
 Job names must stay identical to `release-prep.yml`; `scripts/lint-workflows.mjs` enforces the mirrored path list.
+Runs on the same ref serialize, matching the release-prep concurrency policy.

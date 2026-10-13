@@ -23,3 +23,5 @@ Secret `DEVAI_REPO_TOKEN`.
 ## Notes
 
 Called by `module-demo-bookmark.yml`.
+Typecheck runs on the same ref supersede older runs of this read-only reusable
+workflow. Its concurrency group uses a distinct prefix from the caller's group.

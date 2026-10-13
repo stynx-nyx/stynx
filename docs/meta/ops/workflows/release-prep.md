@@ -26,3 +26,5 @@ Secret `DEVAI_REPO_TOKEN`.
 ## Notes
 
 `package-policy` and `dependency-audit` are required checks on `main`. Its path filter is mirrored by `release-prep-not-applicable.yml`, and `scripts/lint-workflows.mjs` fails closed when the two lists diverge.
+Runs on the same ref serialize so a later release-readiness run cannot cancel an
+in-progress run.
