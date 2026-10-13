@@ -29,6 +29,8 @@ import type {
   OfflineSyncDurableStore,
   CTG9NumberingReservation,
   CTG9ReserveNumberingInput,
+  ListNumberingReconciliationsInput,
+  NumberingReconciliationRecord,
   ReconcileNumberingInput,
   ReconcileNumberingResult,
   SettleNumberingInput,
@@ -331,6 +333,15 @@ export class OfflineSyncService {
       input,
       this.now(),
     );
+  }
+  async listNumberingReconciliations(
+    input: ListNumberingReconciliationsInput,
+  ): Promise<OfflineSyncPage<NumberingReconciliationRecord>> {
+    this.assertText(input.reservationId, 'reservationId');
+    const operation = this.durable.listNumberingReconciliations;
+    if (typeof operation !== 'function')
+      throw new OfflineSyncConfigurationError('listNumberingReconciliations');
+    return operation.call(this.store, this.context.current(), this.page(input));
   }
   async settleNumberingReservation(
     id: string,

@@ -1,3 +1,4 @@
+export { pgReconcile } from './postgres-reconciliation';
 import { domainErrorContext } from './domain-error-context';
 import { pgSortInstant } from './listing';
 import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection';
@@ -17,8 +18,6 @@ import type {
   NumberingConsumptionEntry,
   CTG9NumberingReservation,
   CancelNumberingReservationInput,
-  ReconcileNumberingInput,
-  ReconcileNumberingResult,
   SettleNumberingInput,
   CTG9SyncBatchItemInput,
   OfflineSyncStynxContext,
@@ -533,57 +532,6 @@ export async function pgConsumption(
       ),
     };
   });
-}
-export async function pgReconcile(
-  database: Database,
-  scope: TrustedOfflineSyncScope,
-  id: string,
-  input: ReconcileNumberingInput,
-  now: string,
-): Promise<ReconcileNumberingResult> {
-  const initial = await pgConsumption(database, scope, id, now);
-  const claims = new Set(input.claimedNumbers ?? []);
-  if ([...claims].some((n) => !initial.consumption.some((e) => e.number === n)))
-    throw new OfflineSyncError('OFFLINE_SYNC_INVALID_INPUT', 400, 'Claim is outside reservation.');
-  await txDurable(database, async (trx) => {
-    const reservation = (
-      await trx.query<{ status: string }>(
-        `select status from offline.numbering_reservations
-      where tenant_id=$1::uuid and id=$2::uuid for update`,
-        [scope.tenantId, id],
-      )
-    ).rows[0];
-    if (!reservation)
-      throw new OfflineSyncError(
-        'OFFLINE_SYNC_RESERVATION_NOT_FOUND',
-        404,
-        'Reservation was not found.',
-      );
-    if (reservation.status !== 'reserved') return;
-    for (const number of claims)
-      await trx.query(
-        `insert into offline.numbering_consumption
-      (tenant_id,reservation_id,number,status) values ($1::uuid,$2::uuid,$3,'claimed-locally')
-      on conflict (tenant_id,reservation_id,number) do update
-        set status=case when offline.numbering_consumption.status='available' then 'claimed-locally' else offline.numbering_consumption.status end`,
-        [scope.tenantId, id, number],
-      );
-    await trx.query(
-      `update offline.numbering_reservations set audit_actor_id=$3,
-      updated_at=$4::timestamptz where tenant_id=$1::uuid and id=$2::uuid`,
-      [scope.tenantId, id, scope.actorId, now],
-    );
-  });
-  const result = await pgConsumption(database, scope, id, now);
-  return {
-    ...result,
-    missingOnServer: result.consumption
-      .filter((e) => claims.has(e.number) && e.status !== 'applied')
-      .map((e) => e.number),
-    unexpectedOnServer: result.consumption
-      .filter((e) => !claims.has(e.number) && e.status === 'applied')
-      .map((e) => e.number),
-  };
 }
 
 async function pgRecordConcurrency(

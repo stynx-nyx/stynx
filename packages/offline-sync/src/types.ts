@@ -418,6 +418,7 @@ export interface NumberingConsumptionResult {
   readonly consumption: readonly NumberingConsumptionEntry[];
 }
 export interface ReconcileNumberingInput {
+  readonly idempotencyKey?: string;
   readonly claimedNumbers?: readonly number[];
   readonly userRef?: string;
 }
@@ -426,8 +427,23 @@ export interface SettleNumberingInput {
   readonly userRef?: string;
 }
 export interface ReconcileNumberingResult extends NumberingConsumptionResult {
+  readonly reconciliationId?: string;
   readonly missingOnServer: readonly number[];
   readonly unexpectedOnServer: readonly number[];
+}
+export interface NumberingReconciliationRecord {
+  readonly reconciliationId: string;
+  readonly tenantId: string;
+  readonly reservationId: string;
+  readonly actorId: string;
+  readonly createdAt: string;
+  readonly claimedNumbers: readonly number[];
+  readonly userRef?: string;
+  readonly idempotencyKey?: string;
+  readonly result: ReconcileNumberingResult;
+}
+export interface ListNumberingReconciliationsInput extends OfflineSyncListInput {
+  readonly reservationId: string;
 }
 export interface SyncItemReceipt {
   readonly queueItemId: string;
@@ -543,6 +559,10 @@ export interface OfflineSyncDurableStore extends OfflineSyncStore {
     input: CancelNumberingReservationInput,
     now: string,
   ): Promise<CTG9NumberingReservation>;
+  listNumberingReconciliations?(
+    scope: TrustedOfflineSyncScope,
+    input: ListNumberingReconciliationsInput,
+  ): Promise<OfflineSyncPage<NumberingReconciliationRecord>>;
   reconcileNumberingReservation(
     scope: TrustedOfflineSyncScope,
     id: string,

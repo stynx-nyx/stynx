@@ -17,6 +17,7 @@ const files = [
   '0006_nullable_active_reservations.sql',
   '0007_range_administration.sql',
   '0008_import_receipts.sql',
+  '0009_numbering_reconciliations.sql',
 ];
 const objects = [];
 const bindings = [];

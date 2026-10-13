@@ -1,3 +1,4 @@
+import { pgReconcile, pgListReconciliations } from './postgres-reconciliation';
 import {
   pgCreateNumberingRange,
   pgGetNumberingRange,
@@ -41,7 +42,6 @@ import {
   pgGetIntegrityRejection,
   pgTransition,
   pgConsumption,
-  pgReconcile,
   pgSubmit,
 } from './postgres-durable';
 import type {
@@ -64,6 +64,8 @@ import type {
   OfflineSyncDurableStore,
   CTG9NumberingReservation,
   CTG9ReserveNumberingInput,
+  ListNumberingReconciliationsInput,
+  NumberingReconciliationRecord,
   ReconcileNumberingInput,
   ReconcileNumberingResult,
   SettleNumberingInput,
@@ -185,6 +187,12 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
     now: string,
   ): Promise<ReconcileNumberingResult> {
     return pgReconcile(this.database, scope, id, input, now);
+  }
+  listNumberingReconciliations(
+    scope: TrustedOfflineSyncScope,
+    input: ListNumberingReconciliationsInput,
+  ): Promise<OfflineSyncPage<NumberingReconciliationRecord>> {
+    return pgListReconciliations(this.database, scope, input);
   }
   getNumberingConsumption(
     scope: TrustedOfflineSyncScope,
