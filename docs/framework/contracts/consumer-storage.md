@@ -208,7 +208,12 @@ Offline `objectsSql` is applied once to fresh storage. Unlike the repeatable
 outbox objects artifact, it includes the ordered offline migration chain and
 backfills. Existing offline installations use the consumer's migration ledger to
 apply only missing forward migrations, then separately apply `roleBindingsSql`
-and run `verifyOfflineStorage` in the required read-only owner transaction. The
+and run `verifyOfflineStorage` in the required read-only owner transaction. Use
+`renderOfflineStorageMigrations` for supported per-migration custom bindings and
+original source/bound SQL identities. Its pure ordered artifact supplies no
+selection or live-state inference: the consumer must admit a receipted contiguous
+prefix and prove the prior exact contract before mutation, using a pinned prior
+verifier or trusted catalog custody and applicable row checks. The
 role-binding projection may be reapplied; the complete fresh objects artifact
 must not be replayed over existing storage.
 
