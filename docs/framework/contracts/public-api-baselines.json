@@ -1744,7 +1744,7 @@
         "offline-sync/src/import-schema.generated.d.ts": "04c3e2590ded2c01cff0547f9b546209d6bfa6ee4a4febc6a4b5eba1772bac5e",
         "offline-sync/src/import-state.d.ts": "8c1a405f8a6d744e181e31c7096888fd63d2378e9711d4d3295dcc75e7f7077e",
         "offline-sync/src/import-validation.d.ts": "c62cd85478eceb89eca61981c794586fbad3f999a0f7ed510fa45cd7fe51799b",
-        "offline-sync/src/in-memory-offline-sync.store.d.ts": "bdc5e1b34379b13f06bfa62ead38a8f1a87e8c1a7940eb340c11a220b52295ef",
+        "offline-sync/src/in-memory-offline-sync.store.d.ts": "d4031958b6fdd8939256a6dc5b7c673f0e156f54069c47f784b0d49d87552f48",
         "offline-sync/src/index.d.ts": "a00272e8469193eca5d0e03d136b3bc9dd56e56555af8fa6eabb5a038ed87f1d",
         "offline-sync/src/instant-microseconds.d.ts": "8de9d9c35922724e717d1e495f8340439e4d7a2cff5a0214d60202902c007173",
         "offline-sync/src/listing.d.ts": "58e84dfe3688b199c28b29f2175ce59abd239bb77a4e2885ca2617a82df6e6f5",
