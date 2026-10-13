@@ -8,6 +8,7 @@ import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
 } from '../../../data/test/support/postgres';
+import { OfflineSyncUpgradeRequiredError } from '../../src/errors';
 import { OfflineSyncService } from '../../src/offline-sync.service';
 import { OutboxService } from '@stynx-nyx/outbox';
 import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
@@ -207,5 +208,122 @@ describe('Offline acceptance gap contracts through real PostgreSQL', () => {
         )
       ).rows,
     ).toEqual([{ count: '4' }]);
+  });
+  it('V-13 reports the missing reconciliation migration for genuine missing-table and missing-column failures without losing history', async () => {
+    const subject = new OfflineSyncService(new PostgresOfflineSyncStore(moduleRef), {
+      current: () => ({ tenantId: GAP_TENANT_A, actorId: 'authenticated-audit-actor' }),
+    });
+    const mutator = moduleRef.get(RequestContextMutator);
+    const read = () =>
+      mutator.runWithRequestContext(
+        {
+          requestId: 'missing-history',
+          tenantId: GAP_TENANT_A,
+          actorId: 'authenticated-audit-actor',
+          startedAt: new Date(GAP_AT),
+        },
+        () =>
+          subject.listNumberingReconciliations({
+            reservationId: '90000000-0000-4000-8000-0000000000d1',
+          }),
+      );
+    const store = new PostgresOfflineSyncStore(moduleRef);
+    const scope = { tenantId: GAP_TENANT_A, actorId: 'authenticated-audit-actor' };
+    expect(
+      await mutator.runWithRequestContext(
+        { requestId: 'direct-history-default', ...scope, startedAt: new Date(GAP_AT) },
+        () =>
+          store.listNumberingReconciliations(scope, {
+            reservationId: '90000000-0000-4000-8000-0000000000d1',
+          }),
+      ),
+    ).toEqual({ items: [], nextCursor: null });
+    for (const limit of [0, -1, 1.5, 201])
+      await expect(
+        store.listNumberingReconciliations(scope, {
+          reservationId: '90000000-0000-4000-8000-0000000000d1',
+          limit,
+        }),
+      ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT', status: 400 });
+    const admin = await pg.connectAsAdmin();
+    try {
+      const capture = async () =>
+        (
+          await admin.query(
+            'select to_jsonb(r) as row from offline.numbering_reconciliations r order by id',
+          )
+        ).rows;
+      const before = await capture();
+      expect(before).toHaveLength(4);
+      for (const [remove, restore] of [
+        [
+          'alter table offline.numbering_reconciliations rename to numbering_reconciliations_pending_upgrade',
+          'alter table offline.numbering_reconciliations_pending_upgrade rename to numbering_reconciliations',
+        ],
+        [
+          'alter table offline.numbering_reconciliations rename column result_json to result_json_pending_upgrade',
+          'alter table offline.numbering_reconciliations rename column result_json_pending_upgrade to result_json',
+        ],
+      ]) {
+        await admin.query(remove!);
+        try {
+          const error = await read().catch((caught: unknown) => caught);
+          expect(error).toBeInstanceOf(OfflineSyncUpgradeRequiredError);
+          expect((error as OfflineSyncUpgradeRequiredError).getResponse()).toEqual({
+            statusCode: 503,
+            errorCode: 'OFFLINE_SYNC_UPGRADE_REQUIRED',
+            message: 'Offline-sync migration 0009 is required.',
+            retryable: true,
+          });
+        } finally {
+          await admin.query(restore!);
+        }
+        expect(await capture()).toEqual(before);
+        expect(await read()).toEqual({ items: [], nextCursor: null });
+      }
+    } finally {
+      await admin.end();
+    }
+  });
+  it('V-13 preserves a real closed-pool infrastructure refusal without fabricating a migration requirement', async () => {
+    const isolated = await Test.createTestingModule({
+      imports: [
+        StynxDataModule.forRoot({
+          connections: {
+            owner: { connectionString: pg.connectionString('closed-owner') },
+            app: { connectionString: pg.appConnectionString('closed-app') },
+            reader: { connectionString: pg.connectionString('closed-reader') },
+          },
+        }),
+      ],
+    }).compile();
+    await isolated.init();
+    const mutator = isolated.get(RequestContextMutator);
+    const subject = new OfflineSyncService(new PostgresOfflineSyncStore(isolated), {
+      current: () => ({ tenantId: GAP_TENANT_A, actorId: 'authenticated-audit-actor' }),
+    });
+    const read = () =>
+      mutator.runWithRequestContext(
+        {
+          requestId: 'closed-history',
+          tenantId: GAP_TENANT_A,
+          actorId: 'authenticated-audit-actor',
+          startedAt: new Date(GAP_AT),
+        },
+        () =>
+          subject.listNumberingReconciliations({
+            reservationId: '90000000-0000-4000-8000-0000000000d1',
+          }),
+      );
+    try {
+      expect(await read()).toEqual({ items: [], nextCursor: null });
+    } finally {
+      await isolated.close();
+    }
+    const error = await read().catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).not.toBeInstanceOf(OfflineSyncUpgradeRequiredError);
+    expect(error).toMatchObject({ message: 'Cannot use a pool after calling end on the pool' });
+    expect(error).not.toHaveProperty('code');
   });
 });

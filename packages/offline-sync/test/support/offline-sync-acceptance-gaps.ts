@@ -547,6 +547,54 @@ export function registerOfflineGapContracts(harness: () => OfflineGapHarness): v
     expect(appended.sort()).toEqual([conflicts[1]!, conflicts[2]!].sort());
   });
 
+  it('V-13 refuses malformed reconciliation requests and pagination before recording any history', async () => {
+    const h = harness();
+    const service = h.service();
+    const reservation = await h.run(GAP_TENANT_A, () =>
+      service.reserveDurableNumbering({
+        orgUnitId: 'org-a',
+        deviceId: 'invalid-reconciliation-device',
+        shiftId: null,
+        entityType: 'citation',
+        requestedSize: 1,
+      }),
+    );
+    const before = await h.run(GAP_TENANT_A, () =>
+      service.getNumberingConsumption(reservation.reservationId),
+    );
+    for (const input of [
+      { userRef: 42 },
+      { userRef: 'unsafe\0value' },
+      { userRef: 'é'.repeat(128) },
+      { userRef: '\ud800' },
+      { claimedNumbers: '1' },
+      { claimedNumbers: [1.5] },
+      { claimedNumbers: [Number.MAX_SAFE_INTEGER + 1] },
+    ])
+      await expect(
+        h.run(GAP_TENANT_A, () =>
+          service.reconcileNumberingReservation(
+            reservation.reservationId,
+            input as import('../../src/types').ReconcileNumberingInput,
+          ),
+        ),
+      ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT', status: 400 });
+    for (const limit of [0, -1, 1.5, 201])
+      await expect(
+        h.run(GAP_TENANT_A, () =>
+          service.listNumberingReconciliations({ reservationId: reservation.reservationId, limit }),
+        ),
+      ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT', status: 400 });
+    expect(
+      await h.run(GAP_TENANT_A, () =>
+        service.listNumberingReconciliations({ reservationId: reservation.reservationId }),
+      ),
+    ).toEqual({ items: [], nextCursor: null });
+    expect(
+      await h.run(GAP_TENANT_A, () => service.getNumberingConsumption(reservation.reservationId)),
+    ).toEqual(before);
+  });
+
   it('V-13 appends tenant-scoped immutable reconciliation snapshots with exact keyed replay and no post-close revival', async () => {
     const h = harness();
     const service = h.service();
