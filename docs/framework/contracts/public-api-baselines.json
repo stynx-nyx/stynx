@@ -1772,7 +1772,7 @@
         "offline-sync/src/stynx-offline-sync.context.d.ts": "fcebc8134cc5adf24633a46aa8be589538a8d627496b56c95672ccf981d22d68",
         "offline-sync/src/tokens.d.ts": "4e61e74969a88170ece0593c2a5adc7350fa5d92839c1c6d919a1faa6e1fb7ae",
         "offline-sync/src/transport.d.ts": "b16056b54dfb86ffa272f525fddb5e5f4bafd563969de62ffe07ed3492231968",
-        "offline-sync/src/types.d.ts": "58a063c670d7e0526fcc7f17353610fd66bab2f360c279cab77b9cb7be1d793f",
+        "offline-sync/src/types.d.ts": "b987f3891c1a916952c11c6c083473661bcbb87d2de748bd87ff3f8ea1490bf4",
         "ratelimit/src/constants.d.ts": "f1630757acaa18c99b46f14333e41ee658ce8074fa4491b0d8eeeff290bfe2d9",
         "ratelimit/src/decorators.d.ts": "f65c70534099fabe4dbbc0b966626223b0ac408466c137899a786044a33ac478",
         "ratelimit/src/index.d.ts": "7a47d53410475bc838cd640bc0e09339cf9e8af42cf9eb93d5702216dc16c6e8",
@@ -2385,7 +2385,7 @@
       },
       "declarationHashes": {
         "types/stynx-nyx-sdk-testing.d.ts": "4f1bad288ada6326583a3e6a0a54d7627a03eac3b668adeea9dded12ac5656b8",
-        "types/stynx-nyx-sdk.d.ts": "adfb3cf990dd6786d5fe22bb5bb017c37c1e98df32dd023bec8768912c0fdf80"
+        "types/stynx-nyx-sdk.d.ts": "594ce7138f9d124286eaea9e18a8ae6e0775d20d3157a73adf423bc04f9b2891"
       }
     },
     "@stynx-nyx/sessions": {
