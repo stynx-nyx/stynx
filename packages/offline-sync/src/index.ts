@@ -18,11 +18,17 @@ export * from './types';
 
 export { canonicalOfflineSyncPayload, canonicalOfflineSyncPayloadHash } from './payload-integrity';
 
-export { renderOfflineStorage, verifyOfflineStorage } from './storage';
+export {
+  renderOfflineStorage,
+  renderOfflineStorageMigrations,
+  verifyOfflineStorage,
+} from './storage';
 export type {
   OfflineStorageOptions,
   OfflineStorageManifest,
   OfflineStorageArtifact,
+  OfflineStorageMigration,
+  OfflineStorageMigrationsArtifact,
 } from './storage';
 export { importOfflineState } from './import-state';
 export { parseOfflineImportManifest } from './import-validation';

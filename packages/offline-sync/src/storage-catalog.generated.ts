@@ -159,7 +159,7 @@ export const OFFLINE_STORAGE_CATALOG = {
     },
     {
       path: 'scripts/offline-storage-generate.mjs',
-      sha256: 'f97e18cada9f66982af1d36febcb1ebed09b1c6a0c4c819a293e98f5ae30f14b',
+      sha256: '4a77542b8393d0c9f1703589990e8f71ceeaa2a804a198ae91087ea1519df7b4',
     },
     {
       path: 'tools/migration-linter/src/sql.ts',
