@@ -736,6 +736,43 @@ history relation without inventing prior observations. The versioned import
 mapping and preservation rules are defined in the existing
 [`stynx-offline-import/2` contract](offline-storage-import.md#prospective-161-reconciliation-history-extension).
 
+**V-04 optional canonical outcomes.** A consumer may supply
+`StynxOfflineSyncModuleOptions.domainOutcomeClassifier` to classify its original
+nonreserved domain error codes after item rollback. The synchronous
+`OfflineSyncDomainOutcomeClassifier.classify` receives detached
+`OfflineSyncDomainFailure`, item and trusted item context; `undefined` preserves
+the existing fallback. It returns `received`, `rejected` or `conflict`, with an
+optional domain/concurrency conflict descriptor for the latter two. The consumer
+owns that code table; STYNX defines no DETRAN business codes.
+
+Compose existing reviewed consumer instances:
+
+```ts
+const options: StynxOfflineSyncModuleOptions = {
+  policyResolver: reviewedPolicyResolver,
+  domainOutcomeClassifier: reviewedDomainOutcomeClassifier,
+};
+```
+
+Configured classification requires CTG9 `policyResolver` and a durable store
+whose readonly `supportsDomainOutcomeClassifier` is exactly `true`. Both shipped
+stores declare it; an unsupported custom store or missing resolver fails with
+`OfflineSyncConfigurationError('domainOutcomeClassifier')` before submission.
+Without the option, existing custom-store/E6 behavior remains unchanged.
+
+The result changes canonical queue/receipt/attempt state, preserving original
+consumer context. A classified received outcome records
+`OfflineSyncStynxContext.terminalReceived: true` and `retryable: false`: it may
+close the batch and same-key/hash cross-batch duplicates return the original
+receipt without applying it again. Absent markers preserve legacy retry behavior.
+No failed application effect or applied-item event commits. Optional conflict
+creation shares the refusal transaction; canonical conflict/action reads carry
+its identity/actions without replacing consumer context fields. Platform errors
+and invalid domain context bypass this classifier. Invalid, asynchronous or
+throwing classification becomes retryable `OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID`.
+The precise validation, rollback and import boundaries remain in
+[ADR-MOBILE-OFFLINE-0005 D1.1](../../../law/adr/ADR-MOBILE-OFFLINE-0005-acceptance-evidence.md#d11--optional-consumer-domain-outcome-classification).
+
 **D6 bound forward installation.** Exported `renderOfflineStorageMigrations`,
 `OfflineStorageMigrationsArtifact` and `OfflineStorageMigration` expose the ordered
 immutable raw-source identities and separate bound SQL digests. They do not
