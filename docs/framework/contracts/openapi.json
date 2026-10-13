@@ -904,6 +904,9 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "agentId": {
+            "type": "string"
+          },
           "deviceId": {
             "type": "string"
           },
@@ -941,6 +944,43 @@
           }
         },
         "required": ["deviceId", "entityType", "orgUnitId", "requestedSize", "shiftId"],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
+      "CTG9SubmitSyncBatchInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "batchSequence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
+          },
+          "deviceBatchId": {
+            "type": "string"
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CTG9SyncBatchItemInput"
+            }
+          },
+          "orgUnitId": {
+            "type": "string"
+          }
+        },
+        "required": ["deviceBatchId", "deviceId", "items", "orgUnitId"],
         "x-stynx-source": "packages/offline-sync/src/types.ts"
       },
       "CTG9SubmitSyncBatchResult": {
@@ -1035,6 +1075,51 @@
           }
         },
         "required": ["acceptedItems", "batchId", "conflicts", "duplicateItems", "items", "receipt"],
+        "x-stynx-source": "packages/offline-sync/src/types.ts"
+      },
+      "CTG9SyncBatchItemInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "createdLocallyAt": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "localEntityId": {
+            "type": "string"
+          },
+          "payloadHash": {
+            "type": "string"
+          },
+          "payloadJson": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            }
+          },
+          "queueItemId": {
+            "type": "string"
+          },
+          "reservationId": {
+            "type": "string"
+          },
+          "reservedNumber": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "createdLocallyAt",
+          "entityType",
+          "localEntityId",
+          "payloadHash",
+          "payloadJson",
+          "queueItemId"
+        ],
         "x-stynx-source": "packages/offline-sync/src/types.ts"
       },
       "DemoTenant": {
@@ -1792,8 +1877,26 @@
           "serverEntityId": {
             "type": "string"
           },
+          "signals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "const": "SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING"
+                }
+              },
+              "required": ["code"]
+            }
+          },
           "storedPayloadHash": {
             "type": "string"
+          },
+          "terminalReceived": {
+            "type": "boolean",
+            "const": true
           },
           "version": {
             "type": "number",
@@ -2415,6 +2518,9 @@
               "type": "number"
             }
           },
+          "idempotencyKey": {
+            "type": "string"
+          },
           "userRef": {
             "type": "string"
           }
@@ -2436,6 +2542,9 @@
             "items": {
               "type": "number"
             }
+          },
+          "reconciliationId": {
+            "type": "string"
           },
           "reservationId": {
             "type": "string"
@@ -26466,7 +26575,13 @@
                         "relatedQueueItemId": "example",
                         "retryable": true,
                         "serverEntityId": "example",
+                        "signals": [
+                          {
+                            "code": "SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING"
+                          }
+                        ],
                         "storedPayloadHash": "example",
+                        "terminalReceived": true,
                         "version": 1
                       },
                       "tenantId": "example"
@@ -26664,7 +26779,13 @@
                             "relatedQueueItemId": "example",
                             "retryable": true,
                             "serverEntityId": "example",
+                            "signals": [
+                              {
+                                "code": "SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING"
+                              }
+                            ],
                             "storedPayloadHash": "example",
+                            "terminalReceived": true,
                             "version": 1
                           },
                           "tenantId": "example"
@@ -26862,7 +26983,13 @@
                             "relatedQueueItemId": "example",
                             "retryable": true,
                             "serverEntityId": "example",
+                            "signals": [
+                              {
+                                "code": "SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING"
+                              }
+                            ],
                             "storedPayloadHash": "example",
+                            "terminalReceived": true,
                             "version": 1
                           },
                           "tenantId": "example"
@@ -27165,6 +27292,7 @@
                   "examples": {
                     "default": {
                       "value": {
+                        "agentId": "example",
                         "deviceId": "example",
                         "entityType": "example",
                         "idempotencyKey": "example",
@@ -28577,6 +28705,7 @@
                 "default": {
                   "value": {
                     "claimedNumbers": [1],
+                    "idempotencyKey": "example",
                     "userRef": "example"
                   }
                 }
@@ -28616,6 +28745,7 @@
                         }
                       ],
                       "missingOnServer": [1],
+                      "reconciliationId": "example",
                       "reservationId": "example",
                       "status": "reserved",
                       "unexpectedOnServer": [1]
@@ -29111,12 +29241,14 @@
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/SubmitSyncBatchInput"
+                    "$ref": "#/components/schemas/CTG9SubmitSyncBatchInput"
                   },
-                  "x-stynx-source-type": "SubmitSyncBatchInput",
+                  "x-stynx-source-type": "CTG9SubmitSyncBatchInput",
                   "examples": {
                     "default": {
                       "value": {
+                        "agentId": "example",
+                        "batchSequence": 1,
                         "deviceBatchId": "example",
                         "deviceId": "example",
                         "items": [
@@ -29128,6 +29260,7 @@
                             "payloadHash": "example",
                             "payloadJson": {},
                             "queueItemId": "example",
+                            "reservationId": "example",
                             "reservedNumber": 1
                           }
                         ],
@@ -29541,7 +29674,13 @@
                             "relatedQueueItemId": "example",
                             "retryable": true,
                             "serverEntityId": "example",
+                            "signals": [
+                              {
+                                "code": "SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING"
+                              }
+                            ],
                             "storedPayloadHash": "example",
+                            "terminalReceived": true,
                             "version": 1
                           }
                         }
@@ -29720,7 +29859,13 @@
                         "relatedQueueItemId": "example",
                         "retryable": true,
                         "serverEntityId": "example",
+                        "signals": [
+                          {
+                            "code": "SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING"
+                          }
+                        ],
                         "storedPayloadHash": "example",
+                        "terminalReceived": true,
                         "version": 1
                       }
                     }
