@@ -47,17 +47,18 @@ const expectedNotificationsMutate = [
 
 function normalizeRootManifestRcVersion(source) {
   const version = JSON.parse(source).version;
-  assert.match(version, /^(?:1\.5\.0(?:-rc\.[1-9]\d*)?|1\.5\.[1-7]|1\.6\.[01])$/u);
+  assert.match(version, /^(?:1\.5\.0(?:-rc\.[1-9]\d*)?|1\.5\.[1-7]|1\.6\.[012])$/u);
   const versionLine = `  "version": "${version}",`;
   assert.equal(source.split(versionLine).length, 2);
   return source.replace(versionLine, '  "version": "1.5.0-rc.1",');
 }
 
-test('frozen root manifest normalization accepts exact 1.6.0 and 1.6.1 and historical stable and 1.5.0 candidates', () => {
+test('frozen root manifest normalization accepts exact 1.6.0 through 1.6.2 and historical stable and 1.5.0 candidates', () => {
   const source = readFileSync(join(repoRoot, 'package.json'), 'utf8');
   const current = JSON.parse(source).version;
   const line = `  "version": "${current}",`;
   for (const version of [
+    '1.6.2',
     '1.6.1',
     '1.6.0',
     '1.5.7',
@@ -80,7 +81,7 @@ test('frozen root manifest normalization accepts exact 1.6.0 and 1.6.1 and histo
     '0.5.2',
     '1.4.0',
     '1.5.8',
-    '1.6.2',
+    '1.6.3',
     '1.6.0-rc.1',
     '2.5.2',
     '1.5.5-rc.1',
