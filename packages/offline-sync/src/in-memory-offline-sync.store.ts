@@ -2326,8 +2326,11 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         stored.push(saved);
         itemReceipts.push(itemReceipt);
       };
-      for (const item of input.items)
+      for (const item of input.items) {
         await this.ownedFrame(scope, (frame) => processItem(item, frame));
+        // CTG9 commits each completed item; a later fatal item cannot undo its effects.
+        this.mutationContext.getStore()!.changes = [];
+      }
       const finalReceipt: SyncBatchReceipt = {
         ...receipt,
         status: retryable ? 'open' : 'closed',
