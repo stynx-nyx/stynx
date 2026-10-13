@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { OfflineSyncConfigurationError } from '../../src/errors';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
 import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
 import { OfflineSyncService } from '../../src/offline-sync.service';
-import { GAP_AT, GAP_TENANT_A } from '../support/offline-sync-acceptance-gaps';
+import { GAP_AT, GAP_TENANT_A, GAP_TENANT_B } from '../support/offline-sync-acceptance-gaps';
 
 import {
   registerDomainOutcomeContracts,
@@ -10,6 +11,44 @@ import {
   domainFailure,
   domainEvents,
 } from '../support/offline-domain-outcomes';
+
+const deferred = () => {
+  let release!: () => void;
+  const promise = new Promise<void>((done) => {
+    release = done;
+  });
+  return { promise, release };
+};
+const memoryScope = { tenantId: GAP_TENANT_A, actorId: 'authenticated-audit-actor' };
+const legacyBatch = (id: string): import('../../src/types').SubmitSyncBatchInput => {
+  const input = domainBatch(id);
+  const payloadJson = { legacyEffect: id };
+  return {
+    ...input,
+    items: [
+      {
+        ...input.items[0]!,
+        idempotencyKey: `key-${id}`,
+        payloadJson,
+        payloadHash: canonicalOfflineSyncPayloadHash(payloadJson),
+      },
+    ],
+  };
+};
+const memoryService = (
+  store: InMemoryOfflineSyncStore,
+  options: Partial<import('../../src/types').StynxOfflineSyncModuleOptions> = {},
+) =>
+  new OfflineSyncService(
+    store,
+    { current: () => memoryScope },
+    {
+      now: () => GAP_AT,
+      policyResolver: { resolve: async () => ({ reservationTtlMs: 60_000 }) },
+      eventPort: domainEvents(),
+      ...options,
+    },
+  );
 
 describe('Domain-outcome contracts through the memory store', () => {
   registerDomainOutcomeContracts(() => {
@@ -224,12 +263,10 @@ describe('Domain-outcome contracts through the memory store', () => {
               { resolution: 'manual_review' },
               GAP_AT,
               {
-                allowedActions: async () => {
+                allowedActions: async () => ['manual_review'],
+                resolve: async () => {
                   entered();
                   await paused;
-                  return ['manual_review'];
-                },
-                resolve: async () => {
                   throw refusal;
                 },
               },
@@ -305,4 +342,603 @@ describe('Domain-outcome contracts through the memory store', () => {
       ).items,
     ).toEqual([]);
   });
+  it('D4.1 serializes an unrelated same-tenant E6 writer through failed-item rollback while another tenant progresses', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const entered = deferred(),
+      release = deferred();
+    const failure = new OfflineSyncConfigurationError('original paused applier failure');
+    const subject = memoryService(store, {
+      itemApplier: {
+        apply: async () => {
+          entered.release();
+          await release.promise;
+          throw failure;
+        },
+      },
+    });
+    const batch = subject
+      .submitSyncBatch(domainBatch('isolated-failed-parent'))
+      .catch((error: unknown) => error);
+    await entered.promise;
+    let writerFinished = false;
+    const unrelated = legacyBatch('unrelated-e6-writer');
+    const writer = (async () => {
+      const result = await store.submitSyncBatch(memoryScope, unrelated, GAP_AT);
+      const conflict = await store.openConflict(
+        memoryScope,
+        unrelated.items[0]!.queueItemId,
+        { conflictType: 'domain', description: 'independent committed effect' },
+        GAP_AT,
+      );
+      writerFinished = true;
+      return { result, conflict };
+    })();
+    const otherScope = { ...memoryScope, tenantId: GAP_TENANT_B };
+    const otherInput = legacyBatch('independent-other-tenant');
+    let otherResult!: import('../../src/types').SyncConflict;
+    let finishedWhilePaused: boolean;
+    try {
+      await store.submitSyncBatch(otherScope, otherInput, GAP_AT);
+      const otherConflict = await store.openConflict(
+        otherScope,
+        otherInput.items[0]!.queueItemId,
+        { conflictType: 'domain', description: 'other tenant' },
+        GAP_AT,
+      );
+      otherResult = await store.resolveConflict(
+        otherScope,
+        otherConflict.conflictId,
+        { resolution: 'server-wins' },
+        GAP_AT,
+      );
+      await new Promise<void>((done) => setImmediate(done));
+      finishedWhilePaused = writerFinished;
+    } finally {
+      release.release();
+    }
+    expect(await batch).toBe(failure);
+    const { conflict } = await writer;
+    expect(finishedWhilePaused).toBe(false);
+    expect(otherResult).toMatchObject({ tenantId: GAP_TENANT_B, status: 'resolved' });
+    expect((await subject.listSyncQueueItems({ deviceId: unrelated.deviceId })).items).toHaveLength(
+      1,
+    );
+    expect(
+      (await subject.listSyncConflicts({ queueItemId: unrelated.items[0]!.queueItemId })).items,
+    ).toEqual([expect.objectContaining({ conflictId: conflict.conflictId, status: 'open' })]);
+    const resolved = await store.resolveWithPort(
+      memoryScope,
+      conflict.conflictId,
+      { resolution: 'manual_review' },
+      GAP_AT,
+      {
+        allowedActions: async () => ['manual_review'],
+        resolve: async () => ({ ...conflict, status: 'resolved' }),
+      },
+    );
+    expect(resolved).toMatchObject({
+      conflictId: conflict.conflictId,
+      status: 'resolved',
+      resolvedBy: memoryScope.actorId,
+    });
+    expect(
+      (await subject.listSyncConflictActions({ conflictId: conflict.conflictId })).items,
+    ).toHaveLength(1);
+  });
+
+  it('D4.1 fences a detached successful resolver after its owning applier fails', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const entered = deferred(),
+      release = deferred();
+    const shadow = legacyBatch('detached-success-effect');
+    const failure = new OfflineSyncConfigurationError('owning applier failed');
+    let child!: Promise<unknown>,
+      conflictId = '';
+    const subject = memoryService(store, {
+      itemApplier: {
+        apply: async () => {
+          await store.submitSyncBatch(memoryScope, shadow, GAP_AT);
+          const conflict = await store.openConflict(
+            memoryScope,
+            shadow.items[0]!.queueItemId,
+            { conflictType: 'domain', description: 'uncommitted shadow' },
+            GAP_AT,
+          );
+          conflictId = conflict.conflictId;
+          child = store
+            .resolveWithPort(memoryScope, conflictId, { resolution: 'manual_review' }, GAP_AT, {
+              allowedActions: async () => ['manual_review'],
+              resolve: async () => {
+                entered.release();
+                await release.promise;
+                return { ...conflict, status: 'resolved' };
+              },
+            })
+            .catch((error: unknown) => error);
+          await entered.promise;
+          throw failure;
+        },
+      },
+    });
+    try {
+      await expect(subject.submitSyncBatch(domainBatch('detached-failed-owner'))).rejects.toBe(
+        failure,
+      );
+    } finally {
+      release.release();
+    }
+    expect(await child).toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_STATE', status: 409 });
+    expect((await subject.listSyncQueueItems({ deviceId: shadow.deviceId })).items).toEqual([]);
+    expect(
+      (await subject.listSyncConflicts({ queueItemId: shadow.items[0]!.queueItemId })).items,
+    ).toEqual([]);
+    expect((await subject.listSyncConflictActions({ conflictId })).items).toEqual([]);
+  });
+
+  it('D4.1 refuses late allowedActions success before invoking a resolver from a closed owning frame', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const entered = deferred(),
+      release = deferred();
+    const shadow = legacyBatch('late-allowed-actions');
+    const failure = new OfflineSyncConfigurationError('closed before resolution admission');
+    const resolve = vi.fn(async () => {
+      throw new Error('stale resolver must never start');
+    });
+    let child!: Promise<unknown>,
+      conflictId = '';
+    const subject = memoryService(store, {
+      itemApplier: {
+        apply: async () => {
+          await store.submitSyncBatch(memoryScope, shadow, GAP_AT);
+          const conflict = await store.openConflict(
+            memoryScope,
+            shadow.items[0]!.queueItemId,
+            { conflictType: 'domain', description: 'awaiting admission' },
+            GAP_AT,
+          );
+          conflictId = conflict.conflictId;
+          child = store
+            .resolveWithPort(memoryScope, conflictId, { resolution: 'manual_review' }, GAP_AT, {
+              allowedActions: async () => {
+                entered.release();
+                await release.promise;
+                return ['manual_review'];
+              },
+              resolve,
+            })
+            .catch((error: unknown) => error);
+          await entered.promise;
+          throw failure;
+        },
+      },
+    });
+    try {
+      await expect(subject.submitSyncBatch(domainBatch('late-allowed-owner'))).rejects.toBe(
+        failure,
+      );
+    } finally {
+      release.release();
+    }
+    expect(await child).toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_STATE', status: 409 });
+    expect(resolve).not.toHaveBeenCalled();
+    expect((await subject.listSyncQueueItems({ deviceId: shadow.deviceId })).items).toEqual([]);
+    expect(
+      (await subject.listSyncConflicts({ queueItemId: shadow.items[0]!.queueItemId })).items,
+    ).toEqual([]);
+    expect((await subject.listSyncConflictActions({ conflictId })).items).toEqual([]);
+  });
+
+  for (const status of ['resolved', 'open'] as const)
+    it(`D4.1 refuses a successful applier whose owned ${status} resolver is still appending its final event`, async () => {
+      const store = new InMemoryOfflineSyncStore();
+      const entered = deferred(),
+        release = deferred();
+      const shadow = legacyBatch(`pending-event-${status}`);
+      let child!: Promise<unknown>,
+        conflictId = '';
+      const subject = memoryService(store, {
+        itemApplier: {
+          apply: async () => {
+            await store.submitSyncBatch(memoryScope, shadow, GAP_AT);
+            const conflict = await store.openConflict(
+              memoryScope,
+              shadow.items[0]!.queueItemId,
+              { conflictType: 'domain', description: 'pending final event' },
+              GAP_AT,
+            );
+            conflictId = conflict.conflictId;
+            child = store
+              .resolveWithPort(
+                memoryScope,
+                conflictId,
+                { resolution: 'manual_review' },
+                GAP_AT,
+                {
+                  allowedActions: async () => ['manual_review'],
+                  resolve: async () => ({ ...conflict, status }),
+                },
+                {
+                  appendInTransaction: async () => {
+                    entered.release();
+                    await release.promise;
+                  },
+                  appendManyInTransaction: async () => undefined,
+                },
+              )
+              .catch((error: unknown) => error);
+            await entered.promise;
+            return { serverEntityId: 'must-not-commit-parent' };
+          },
+        },
+      });
+      let result!: Awaited<ReturnType<OfflineSyncService['submitSyncBatch']>>;
+      try {
+        result = await subject.submitSyncBatch(domainBatch(`unfinished-event-parent-${status}`));
+      } finally {
+        release.release();
+      }
+      expect(result.receipt.items[0]).toMatchObject({
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_CONFLICT_STATE',
+      });
+      expect(result.receipt.items[0]).not.toHaveProperty('serverEntityId');
+      expect(result.receipt.items[0]!.stynx).not.toHaveProperty('appliedAt');
+      expect(await child).toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_STATE', status: 409 });
+      expect((await subject.listSyncQueueItems({ deviceId: shadow.deviceId })).items).toEqual([]);
+      expect(
+        (await subject.listSyncConflicts({ queueItemId: shadow.items[0]!.queueItemId })).items,
+      ).toEqual([]);
+      expect((await subject.listSyncConflictActions({ conflictId })).items).toEqual([]);
+    });
+
+  it('D4.1 rolls back completed owned E6 indexes and action history while preserving historical facts and allowing exact-key CTG9 application', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const historical = legacyBatch('historical-before-rollback');
+    await store.submitSyncBatch(memoryScope, historical, GAP_AT);
+    const historicConflict = await store.openConflict(
+      memoryScope,
+      historical.items[0]!.queueItemId,
+      { conflictType: 'domain', description: 'historical' },
+      GAP_AT,
+    );
+    await store.resolveWithPort(
+      memoryScope,
+      historicConflict.conflictId,
+      { resolution: 'manual_review' },
+      GAP_AT,
+      {
+        allowedActions: async () => ['manual_review'],
+        resolve: async () => ({ ...historicConflict, status: 'resolved' }),
+      },
+    );
+    const historyBefore = await store.listSyncConflictActions(memoryScope, {
+      conflictId: historicConflict.conflictId,
+    });
+    const shadow = legacyBatch('completed-owned-shadow');
+    let conflictId = '';
+    const failure = new OfflineSyncConfigurationError(
+      'applier fails after completed nested resolution',
+    );
+    const subject = memoryService(store, {
+      itemApplier: {
+        apply: async () => {
+          await store.submitSyncBatch(memoryScope, shadow, GAP_AT);
+          const conflict = await store.openConflict(
+            memoryScope,
+            shadow.items[0]!.queueItemId,
+            { conflictType: 'domain', description: 'completed own effect' },
+            GAP_AT,
+          );
+          conflictId = conflict.conflictId;
+          await store.resolveWithPort(
+            memoryScope,
+            conflictId,
+            { resolution: 'manual_review' },
+            GAP_AT,
+            {
+              allowedActions: async () => ['manual_review'],
+              resolve: async () => ({ ...conflict, status: 'resolved' }),
+            },
+          );
+          throw failure;
+        },
+      },
+    });
+    await expect(subject.submitSyncBatch(domainBatch('completed-owned-parent'))).rejects.toBe(
+      failure,
+    );
+    expect((await subject.listSyncQueueItems({ deviceId: shadow.deviceId })).items).toEqual([]);
+    expect((await subject.listSyncConflictActions({ conflictId })).items).toEqual([]);
+    expect(
+      await store.listSyncConflictActions(memoryScope, { conflictId: historicConflict.conflictId }),
+    ).toEqual(historyBefore);
+    const apply = vi.fn(async () => ({ serverEntityId: 'fresh-after-index-rollback' }));
+    const next = memoryService(store, { itemApplier: { apply } });
+    const result = await next.submitSyncBatch({
+      ...shadow,
+      deviceBatchId: 'post-rollback-durable',
+    });
+    expect(result.receipt.items[0]).toMatchObject({
+      queueItemId: shadow.items[0]!.queueItemId,
+      status: 'applied',
+      stynx: { serverEntityId: 'fresh-after-index-rollback' },
+    });
+    expect(result.receipt.items[0]!.stynx).not.toHaveProperty('legacyReceived');
+    expect(apply).toHaveBeenCalledTimes(1);
+    const replay = await next.submitSyncBatch({
+      ...shadow,
+      deviceBatchId: 'post-rollback-durable',
+    });
+    expect(replay.receipt.responseBodyBytes).toEqual(result.receipt.responseBodyBytes);
+    expect(apply).toHaveBeenCalledTimes(1);
+    // Payload lookup must also forget the discarded E6 identity, not alias this new public item.
+    const legacy = await store.submitSyncBatch(
+      memoryScope,
+      {
+        ...shadow,
+        deviceBatchId: 'new-e6-after-rollback',
+        items: [
+          {
+            ...shadow.items[0]!,
+            queueItemId: 'post-rollback-e6-new-id',
+            idempotencyKey: 'post-rollback-e6-new-key',
+          },
+        ],
+      },
+      GAP_AT,
+    );
+    expect(legacy).toMatchObject({
+      duplicateItems: 0,
+      items: [{ queueItemId: 'post-rollback-e6-new-id' }],
+    });
+  });
+
+  it('D4.1 refuses nested durable batches, cross-tenant ownership and recursive same-conflict resolution without self-deadlock', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    let nestedBatch!: Promise<unknown>, wrongTenant: unknown;
+    let nestedBeforeOwner = false;
+    const subject = memoryService(store, {
+      itemApplier: {
+        apply: async (_trx, item) => {
+          if (item.queueItemId !== 'nested-owner')
+            return { serverEntityId: 'unexpected-nested-effect' };
+          let settled = false;
+          nestedBatch = subject
+            .submitSyncBatch(domainBatch('nested-durable-refused'))
+            .catch((error: unknown) => error)
+            .then((value) => {
+              settled = true;
+              return value;
+            });
+          await new Promise<void>((done) => setImmediate(done));
+          nestedBeforeOwner = settled;
+          wrongTenant = await store
+            .submitSyncBatch(
+              { ...memoryScope, tenantId: GAP_TENANT_B },
+              legacyBatch('nested-wrong-tenant'),
+              GAP_AT,
+            )
+            .catch((error: unknown) => error);
+          return { serverEntityId: 'safe-owner-effect' };
+        },
+      },
+    });
+    const result = await subject.submitSyncBatch(domainBatch('nested-owner'));
+    expect(result.receipt.items[0]).toMatchObject({
+      status: 'applied',
+      stynx: { serverEntityId: 'safe-owner-effect' },
+    });
+    expect(nestedBeforeOwner).toBe(true);
+    expect(await nestedBatch).toMatchObject({
+      code: 'OFFLINE_SYNC:BATCH:in-progress',
+      status: 503,
+    });
+    expect(wrongTenant).toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_STATE', status: 409 });
+    expect(
+      (await store.listSyncQueueItems({ ...memoryScope, tenantId: GAP_TENANT_B }, {})).items,
+    ).toEqual([]);
+    const legacy = legacyBatch('recursive-resolution');
+    await store.submitSyncBatch(memoryScope, legacy, GAP_AT);
+    const conflict = await store.openConflict(
+      memoryScope,
+      legacy.items[0]!.queueItemId,
+      { conflictType: 'domain', description: 'recursive' },
+      GAP_AT,
+    );
+    let nested!: Promise<unknown>,
+      completedBeforeParent = false;
+    await store.resolveWithPort(
+      memoryScope,
+      conflict.conflictId,
+      { resolution: 'manual_review' },
+      GAP_AT,
+      {
+        allowedActions: async () => ['manual_review'],
+        resolve: async () => {
+          nested = store
+            .resolveWithPort(
+              memoryScope,
+              conflict.conflictId,
+              { resolution: 'manual_review' },
+              GAP_AT,
+              {
+                allowedActions: async () => ['manual_review'],
+                resolve: async () => ({ ...conflict, status: 'resolved' }),
+              },
+            )
+            .catch((error: unknown) => error)
+            .then((value: unknown) => {
+              completedBeforeParent = true;
+              return value;
+            });
+          await new Promise<void>((done) => setImmediate(done));
+          expect(completedBeforeParent).toBe(true);
+          return { ...conflict, status: 'resolved' };
+        },
+      },
+    );
+    expect(await nested).toMatchObject({
+      code: 'OFFLINE_SYNC_CONFLICT_STATE',
+      status: 409,
+      message: 'A conflict cannot recursively resolve itself.',
+    });
+  });
+
+  it('D4.1 rolls back an unfinished child started while admitting a numbering refusal without leaving orphan evidence', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const historical = legacyBatch('refusal-child-historical');
+    await store.submitSyncBatch(memoryScope, historical, GAP_AT);
+    const conflict = await store.openConflict(
+      memoryScope,
+      historical.items[0]!.queueItemId,
+      { conflictType: 'domain', description: 'existing conflict before refusal' },
+      GAP_AT,
+    );
+    const entered = deferred(),
+      release = deferred();
+    let child!: Promise<unknown>;
+    const subject = memoryService(store, {
+      itemApplier: { apply: async () => ({ serverEntityId: 'numbering-must-refuse-first' }) },
+      conflictResolver: {
+        allowedActions: async () => {
+          child = store
+            .resolveWithPort(
+              memoryScope,
+              conflict.conflictId,
+              { resolution: 'manual_review' },
+              GAP_AT,
+              {
+                allowedActions: async () => ['manual_review'],
+                resolve: async () => ({ ...conflict, status: 'resolved' }),
+              },
+              {
+                appendInTransaction: async () => {
+                  entered.release();
+                  await release.promise;
+                },
+                appendManyInTransaction: async () => undefined,
+              },
+            )
+            .catch((error: unknown) => error);
+          await entered.promise;
+          return ['reject'];
+        },
+        resolve: async () => ({ ...conflict, status: 'resolved' }),
+      },
+    });
+    const input = domainBatch('numbering-refusal-pending-child');
+    try {
+      await expect(
+        subject.submitSyncBatch({ ...input, items: [{ ...input.items[0]!, reservedNumber: 999 }] }),
+      ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_STATE', status: 409 });
+    } finally {
+      release.release();
+    }
+    expect(await child).toMatchObject({ code: 'OFFLINE_SYNC_CONFLICT_STATE', status: 409 });
+    expect((await subject.listSyncQueueItems({ deviceId: input.deviceId })).items).toEqual([]);
+    expect(
+      (await subject.listSyncConflicts({ queueItemId: input.items[0]!.queueItemId })).items,
+    ).toEqual([]);
+    await expect(subject.getSyncItemReceipt(input.items[0]!.idempotencyKey!)).rejects.toMatchObject(
+      { code: 'OFFLINE_SYNC_QUEUE_ITEM_NOT_FOUND', status: 404 },
+    );
+    expect(
+      (await subject.listSyncConflictActions({ conflictId: conflict.conflictId })).items,
+    ).toEqual([]);
+    expect(
+      (await subject.listSyncConflicts({ queueItemId: historical.items[0]!.queueItemId })).items,
+    ).toEqual([expect.objectContaining({ conflictId: conflict.conflictId, status: 'open' })]);
+  });
+
+  for (const phase of ['allowedActions', 'resolve', 'event'] as const)
+    it(`D4.1 rolls back all nested effects of a directly failing ${phase} callback and preserves its exact refusal`, async () => {
+      const store = new InMemoryOfflineSyncStore();
+      const original = legacyBatch('direct-resolution-original');
+      await store.submitSyncBatch(memoryScope, original, GAP_AT);
+      const originalConflict = await store.openConflict(
+        memoryScope,
+        original.items[0]!.queueItemId,
+        { conflictType: 'domain', description: 'original canonical conflict' },
+        GAP_AT,
+      );
+      const shadow = legacyBatch('direct-resolution-shadow');
+      const failure = new Error('actual direct resolution callback refusal');
+      let shadowConflict = '';
+      const effect = async () => {
+        await store.submitSyncBatch(memoryScope, shadow, GAP_AT);
+        const conflict = await store.openConflict(
+          memoryScope,
+          shadow.items[0]!.queueItemId,
+          { conflictType: 'domain', description: 'nested shadow' },
+          GAP_AT,
+        );
+        shadowConflict = conflict.conflictId;
+        await store.resolveWithPort(
+          memoryScope,
+          shadowConflict,
+          { resolution: 'manual_review' },
+          GAP_AT,
+          {
+            allowedActions: async () => ['manual_review'],
+            resolve: async () => ({ ...conflict, status: 'resolved' }),
+          },
+        );
+        throw failure;
+      };
+      await expect(
+        store.resolveWithPort(
+          memoryScope,
+          originalConflict.conflictId,
+          { resolution: 'manual_review' },
+          GAP_AT,
+          {
+            allowedActions: async () => {
+              if (phase === 'allowedActions') await effect();
+              return ['manual_review'];
+            },
+            resolve: async () => {
+              if (phase === 'resolve') await effect();
+              return { ...originalConflict, status: 'resolved' };
+            },
+          },
+          {
+            appendInTransaction: async () => {
+              if (phase === 'event') await effect();
+            },
+            appendManyInTransaction: async () => undefined,
+          },
+        ),
+      ).rejects.toBe(failure);
+      expect(
+        (await store.listSyncQueueItems(memoryScope, { deviceId: shadow.deviceId })).items,
+      ).toEqual([]);
+      expect(
+        (await store.listSyncConflicts(memoryScope, { queueItemId: shadow.items[0]!.queueItemId }))
+          .items,
+      ).toEqual([]);
+      expect(
+        (await store.listSyncConflictActions(memoryScope, { conflictId: shadowConflict })).items,
+      ).toEqual([]);
+      expect(
+        (
+          await store.listSyncConflicts(memoryScope, {
+            queueItemId: original.items[0]!.queueItemId,
+          })
+        ).items,
+      ).toEqual([
+        expect.objectContaining({ conflictId: originalConflict.conflictId, status: 'open' }),
+      ]);
+      const apply = vi.fn(async () => ({
+        serverEntityId: 'direct-resolution-fresh-after-rollback',
+      }));
+      const result = await memoryService(store, { itemApplier: { apply } }).submitSyncBatch({
+        ...shadow,
+        deviceBatchId: 'direct-resolution-post-rollback',
+      });
+      expect(result.receipt.items[0]).toMatchObject({
+        status: 'applied',
+        stynx: { serverEntityId: 'direct-resolution-fresh-after-rollback' },
+      });
+      expect(apply).toHaveBeenCalledTimes(1);
+    });
 });
