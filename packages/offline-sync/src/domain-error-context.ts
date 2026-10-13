@@ -1,4 +1,5 @@
 import { HttpException } from '@nestjs/common';
+import { canonicalOfflineSyncPayload } from './payload-integrity';
 
 /** A rejected item keeps only lossless, bounded host context; invalid evidence remains retryable. */
 export function domainErrorContext(error: unknown): {
@@ -20,36 +21,15 @@ export function domainErrorContext(error: unknown): {
       if (!descriptor || !('value' in descriptor)) return { valid: false };
     }
     if (value === undefined) return { valid: true };
-    const seen = new Set<object>();
-    const json = (entry: unknown): boolean => {
-      if (entry === null || typeof entry === 'string' || typeof entry === 'boolean') return true;
-      if (typeof entry === 'number') return Number.isFinite(entry);
-      if (!entry || typeof entry !== 'object' || seen.has(entry)) return false;
-      seen.add(entry);
-      const descriptors = Object.getOwnPropertyDescriptors(entry);
-      const valid =
-        (Array.isArray(entry) || Object.getPrototypeOf(entry) === Object.prototype) &&
-        Reflect.ownKeys(entry).every((key) => {
-          if (Array.isArray(entry) && key === 'length') return true;
-          if (typeof key !== 'string') return false;
-          const descriptor = descriptors[key];
-          return (
-            !!descriptor && descriptor.enumerable && 'value' in descriptor && json(descriptor.value)
-          );
-        }) &&
-        (!Array.isArray(entry) || Object.keys(entry).length === entry.length);
-      seen.delete(entry);
-      return valid;
-    };
     if (
       !value ||
       typeof value !== 'object' ||
       Array.isArray(value) ||
       Object.getPrototypeOf(value) !== Object.prototype ||
-      'stynx' in value ||
-      !json(value)
+      'stynx' in value
     )
       return { valid: false };
+    canonicalOfflineSyncPayload(value as Record<string, unknown>);
     const bytes = JSON.stringify(value);
     if (Buffer.byteLength(bytes) > 4096) return { valid: false };
     return { valid: true, context: JSON.parse(bytes) as Record<string, unknown> };
