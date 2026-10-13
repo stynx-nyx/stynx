@@ -67,7 +67,7 @@ const DYNAMIC_PRODUCER_SOURCES = {
   'import-preflight.ts': 'a079ab03949aba9cd8fec29a8c2245f56f7b03ad16200815a92fbe68c544c962',
   'import-state.ts': '15b7597d57df3a8d9f176f6b5a4799c8ac5af41ef01cff25852a6b63d9783493',
   'storage-invariants.ts': '0482be3f6e8b54e64d7709c6328bd4077c46143c2cfc6cef79d83a749661c302',
-  'storage.ts': 'b452fa9bbc9c58c72eda7eac206f19b32a670fb3bf39e82847124af77d82cd8a',
+  'storage.ts': 'ab2ba8a75a4fc58d17cbbf63d98e04a1932d53c66c72b7c29f214d2c040e422b',
   'postgres-reconciliation.ts': '67e1fc701ea76cc2b46915daf5a11211dda456f98fdecc1b62513df64a3b3a86',
   'postgres-durable.ts': '0eb59fbfd6972029a98fab44518142e27a7a187bba0ee9981c1540fa7977547e',
   'postgres-listing.ts': '642ea1b2aefdc19f361d2eeb4c75ac40723418e662b7ca2ff14334db3c87d646',
