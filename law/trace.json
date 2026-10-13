@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.28",
+  "version": "1.3.29",
   "meta": {
-    "last_updated": "2026-10-13T03:55:52.374485Z",
+    "last_updated": "2026-10-13T04:22:28.904230Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -89,7 +89,8 @@
       "2026-10-12 Architect rebind of Inspector 6748206d pins actual installed Changesets empty-acknowledgement generation and the exact protected smart-friends-grab.md eight-byte no-release row. All other feature declarations, the complete consumption census, minor 1.6.0 plan and final zero-pending rule remain; eight additive refusals cover unknown, malformed, altered, feature-bearing, sole and unconsumed acknowledgements. No production, canonical admission, threshold, release scope or readiness verdict changes.",
       "STYNX 1.6.1 Architect binding preserves every prior executable relationship and assertion, binds Inspector acceptance, reconciliation/import, populated upgrade, fresh-only installation rollback and repeated role-binding witnesses through bc6ae9e0, and refreshes the exact 1.6.1 release-scope/freeze projections. Shared behavior assertions execute through both real-store wrappers; their corpus counts remain the literal per-file projection. These bindings establish neither consumer adoption nor a fully green audit, HTTP performance or mutation result.",
       "STYNX 1.6.1 Architect adds the three Inspector bound-forward-migration witnesses from b75345c0934bad9594f130b2f1a73baed72d6cf7 against Engineer a04f2d55, preserving all 682 prior executable bindings and literal assertion projections. Raw migration identities, ordered bound SQL hashes, installed offline rendering, populated custom-bound prefixes, collision rollback and restricted two-tenant RLS are covered. Fixture-local suffix selection does not establish consumer ledger/prior-state admission, DETRAN acceptance, executed coverage, HTTP performance, mutation or overall audit PASS.",
-      "STYNX 1.6.1 Architect binds three Inspector D1.1 outcome/transaction witnesses through 816f30b2e800cd2d4c0e03d1c16d77740499bb7b against Engineer bfdb731e and explicit store capability. Every prior 685 corpus entry, including the original 682 assertion projections, is unchanged. Shared tests execute through memory and real PostgreSQL wrappers; literal file projections do not count support assertions twice. Canonical terminal states, optional conflict identity, reserved-error bypass, detached contexts, actual rollback, tenant isolation and source terminal-marker import custody are covered. This establishes no consumer acceptance, publication, executed-coverage standing, HTTP performance, mutation or overall audit PASS."
+      "STYNX 1.6.1 Architect binds three Inspector D1.1 outcome/transaction witnesses through 816f30b2e800cd2d4c0e03d1c16d77740499bb7b against Engineer bfdb731e and explicit store capability. Every prior 685 corpus entry, including the original 682 assertion projections, is unchanged. Shared tests execute through memory and real PostgreSQL wrappers; literal file projections do not count support assertions twice. Canonical terminal states, optional conflict identity, reserved-error bypass, detached contexts, actual rollback, tenant isolation and source terminal-marker import custody are covered. This establishes no consumer acceptance, publication, executed-coverage standing, HTTP performance, mutation or overall audit PASS.",
+      "STYNX 1.6.1 Architect rebinds only the two existing D1.1 wrapper projections after Inspector d4f6b15509f9ac666db43e877101edb3936c0aca adds the shared original-code custody witness against Engineer ce04fce6. Every original 682 corpus entry/projection, all other prior bindings and all assertion counts remain unchanged. Inspector d7de5967 refreshes only three manifest SHA constants, without changing its assertion projection. Actual published DEVAI 2.6.1 is adopted through registered CLI operations; neither binding nor diagnostic Doctor readiness grants execution standing, consumer acceptance or release/audit PASS."
     ]
   },
   "invariants": [
@@ -7345,7 +7346,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 33,
-      "assertion_digest_sha256": "fbf9e657e6eae05d179cf30f7d0f20f33b6a1e2058fba3392d208cca05076693"
+      "assertion_digest_sha256": "087f119289cdbfff1369202b561922bb49621cb9147b987a77343d985d343444"
     },
     {
       "path": "packages/offline-sync/test/unit/offline-domain-outcomes.spec.ts",
@@ -7353,7 +7354,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
       "lifecycle": "supported",
       "assertion_count": 19,
-      "assertion_digest_sha256": "9695ff1c50d7da225688984b2d73884aae5599e0c8d654b19b480668730a12d8"
+      "assertion_digest_sha256": "9d106097fdf201863de263f83621ac0a96282f2e37ecbc49ca5cd7da164e7988"
     }
   ],
   "suites": {
