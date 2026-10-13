@@ -183,6 +183,84 @@ describe('Domain-outcome contracts through the memory store', () => {
       (await subject.listSyncConflicts({ queueItemId: input.items[0]!.queueItemId })).items,
     ).toHaveLength(1);
   });
+  it('D1.1 does not resurrect failed applier effects when their pending resolver subsequently refuses', async () => {
+    const store = new InMemoryOfflineSyncStore();
+    const scope = { tenantId: GAP_TENANT_A, actorId: 'authenticated-audit-actor' };
+    const shadow = domainBatch('failed-applier-shadow');
+    const shadowItem = { ...shadow.items[0]!, idempotencyKey: 'failed-applier-shadow-key' };
+    let resume!: () => void;
+    let entered!: () => void;
+    const paused = new Promise<void>((done) => {
+      resume = done;
+    });
+    const ready = new Promise<void>((done) => {
+      entered = done;
+    });
+    const refusal = new Error('resolver refused after its applier rolled back');
+    let conflictId = '';
+    let resolution!: Promise<unknown>;
+    const subject = new OfflineSyncService(
+      store,
+      { current: () => scope },
+      {
+        now: () => GAP_AT,
+        policyResolver: { resolve: async () => ({ reservationTtlMs: 60_000 }) },
+        domainOutcomeClassifier: { classify: () => undefined },
+        eventPort: domainEvents(),
+        itemApplier: {
+          apply: async () => {
+            // These genuine public writes are effects of this failing item, not an unrelated writer.
+            await store.submitSyncBatch(scope, { ...shadow, items: [shadowItem] }, GAP_AT);
+            const conflict = await store.openConflict(
+              scope,
+              shadowItem.queueItemId,
+              { conflictType: 'domain', description: 'uncommitted applier effect' },
+              GAP_AT,
+            );
+            conflictId = conflict.conflictId;
+            resolution = store.resolveWithPort(
+              scope,
+              conflictId,
+              { resolution: 'manual_review' },
+              GAP_AT,
+              {
+                allowedActions: async () => {
+                  entered();
+                  await paused;
+                  return ['manual_review'];
+                },
+                resolve: async () => {
+                  throw refusal;
+                },
+              },
+            );
+            await ready;
+            throw domainFailure();
+          },
+        },
+      },
+    );
+    try {
+      const result = await subject.submitSyncBatch(domainBatch('failed-applier-parent'));
+      expect(result.receipt.items[0]).toMatchObject({
+        status: 'received',
+        errorCode: 'BUSINESS_CLOSED',
+        stynx: { retryable: true },
+      });
+      expect((await subject.listSyncQueueItems({ deviceId: shadow.deviceId })).items).toEqual([]);
+      expect(
+        (await subject.listSyncConflicts({ queueItemId: shadowItem.queueItemId })).items,
+      ).toEqual([]);
+    } finally {
+      resume();
+    }
+    await expect(resolution).rejects.toBe(refusal);
+    expect((await subject.listSyncQueueItems({ deviceId: shadow.deviceId })).items).toEqual([]);
+    expect(
+      (await subject.listSyncConflicts({ queueItemId: shadowItem.queueItemId })).items,
+    ).toEqual([]);
+    expect((await subject.listSyncConflictActions({ conflictId })).items).toEqual([]);
+  });
   it('D1.1 refuses configured unsupported custom stores and legacy mode before invoking a domain port', async () => {
     const store = new InMemoryOfflineSyncStore();
     const unsupported = new Proxy(store, {

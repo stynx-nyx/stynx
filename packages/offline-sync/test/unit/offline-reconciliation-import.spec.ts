@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseOfflineImportManifest } from '../../src/import-validation';
+import {
+  parseOfflineImportManifest,
+  validReconciliationEvidence,
+  importDigest,
+} from '../../src/import-validation';
 import { OfflineImportError } from '../../src/import-contract';
 import { importManifest, IMPORT_AT, rehashManifest } from '../support/offline-import-fixtures';
 import {
@@ -102,4 +106,68 @@ describe('Versioned reconciliation import contract', () => {
         OfflineImportError,
       );
     });
+  it('validates closed persisted evidence and complete reservation bounds independently of import parsing', () => {
+    const row = () => structuredClone(reconciliationImportManifest().records.at(-1)!.row);
+    const valid = row();
+    expect(validReconciliationEvidence(valid, { start_number: '1', end_number: '10' })).toBe(true);
+    const keyed = row();
+    Object.assign(keyed, {
+      user_ref: null,
+      claimed_numbers: ['2'],
+      idempotency_key: 'historic-key',
+      request_fingerprint: importDigest({ claimedNumbers: [2], userRef: null }),
+    });
+    (keyed.result_json as Record<string, unknown>).missingOnServer = [2];
+    expect(validReconciliationEvidence(keyed)).toBe(true);
+    expect(validReconciliationEvidence(keyed, { start_number: '1', end_number: '10' })).toBe(true);
+    for (const mutate of [
+      (r: Record<string, unknown>) => {
+        r.unknown = true;
+      },
+      (r: Record<string, unknown>) => {
+        r.claimed_numbers = ['2', '2'];
+      },
+      (r: Record<string, unknown>) => {
+        r.claimed_numbers = ['3', '2'];
+      },
+      (r: Record<string, unknown>) => {
+        r.claimed_numbers = ['9007199254740992'];
+      },
+      (r: Record<string, unknown>) => {
+        (r.result_json as Record<string, unknown>).reconciliationId =
+          '99999999-9999-4999-8999-999999999999';
+      },
+      (r: Record<string, unknown>) => {
+        (r.result_json as Record<string, unknown>).reservationId =
+          '99999999-9999-4999-8999-999999999999';
+      },
+      (r: Record<string, unknown>) => {
+        r.idempotency_key = 'unpaired';
+      },
+      (r: Record<string, unknown>) => {
+        r.idempotency_key = 'wrong-fingerprint';
+        r.request_fingerprint = '0'.repeat(64);
+      },
+      (r: Record<string, unknown>) => {
+        r.actor_id = '\ud800';
+      },
+    ]) {
+      const invalid = row();
+      mutate(invalid as Record<string, unknown>);
+      expect(validReconciliationEvidence(invalid)).toBe(false);
+    }
+    for (const bounds of [
+      { start_number: 1, end_number: '10' },
+      { start_number: '1', end_number: 10 },
+    ])
+      expect(
+        validReconciliationEvidence(
+          valid,
+          bounds as unknown as import('../../src/import-validation').ReconciliationReservationBounds,
+        ),
+      ).toBe(false);
+    const cyclic = row();
+    (cyclic as Record<string, unknown>).cycle = cyclic;
+    expect(validReconciliationEvidence(cyclic)).toBe(false);
+  });
 });

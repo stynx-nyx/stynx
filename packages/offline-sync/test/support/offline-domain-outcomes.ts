@@ -389,6 +389,9 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
       },
     });
     const cases = [
+      null,
+      'consumer primitive',
+      42,
       new Error('BUSINESS_CLOSED'),
       malformed,
       Object.assign(new Error('blank'), { code: ' ' }),
@@ -417,6 +420,12 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
         service.submitSyncBatch(domainBatch(`bypass-${index}`)),
       );
       expect(result.receipt.items[0]!.stynx).not.toHaveProperty('terminalReceived');
+      if (index < 3)
+        expect(result.receipt.items[0]).toMatchObject({
+          status: 'received',
+          errorCode: 'OFFLINE_SYNC_ITEM_FAILED',
+          stynx: { retryable: true },
+        });
       if (index === cases.length - 1)
         expect(result.receipt.items[0]).toMatchObject({
           status: 'received',
@@ -455,6 +464,115 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
       errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
     });
     expect(classify).not.toHaveBeenCalled();
+  });
+
+  it('D1.1 rejects inherited and accessor context without executing consumer accessors', async () => {
+    const h = harness();
+    let reads = 0;
+    const inherited = Object.assign(Object.create({ context: { inherited: true } }) as Error, {
+      code: 'BUSINESS_CLOSED',
+      message: 'inherited context',
+    });
+    const accessor = Object.defineProperty(
+      Object.assign(new Error('accessor context'), { code: 'BUSINESS_CLOSED' }),
+      'context',
+      {
+        get: () => {
+          reads += 1;
+          return { unsafe: true };
+        },
+      },
+    );
+    const classify = vi.fn(() => ({ status: 'received' as const }));
+    for (const [index, error] of [inherited, accessor].entries()) {
+      const subject = h.service({
+        itemApplier: {
+          apply: async () => {
+            throw error;
+          },
+        },
+        eventPort: domainEvents(),
+        domainOutcomeClassifier: { classify },
+      });
+      const result = await h.run(GAP_TENANT_A, () =>
+        subject.submitSyncBatch(domainBatch(`context-descriptor-${index}`)),
+      );
+      expect(result.receipt.items[0]).toMatchObject({
+        status: 'received',
+        errorCode: 'OFFLINE_SYNC_DOMAIN_CONTEXT_INVALID',
+        stynx: { retryable: true },
+      });
+      expect(result.receipt.items[0]!.context).toBe(undefined);
+    }
+    expect(classify).not.toHaveBeenCalled();
+    expect(reads).toBe(0);
+  });
+
+  it('D1.1 preserves a context-free coded failure without fabricating consumer context', async () => {
+    const h = harness();
+    const classify = vi.fn((failure: import('../../src/types').OfflineSyncDomainFailure) => {
+      expect(failure).toEqual({ code: 'BUSINESS_CLOSED' });
+      return {
+        status: 'conflict' as const,
+        conflict: { type: 'domain' as const, description: 'context-free collision' },
+      };
+    });
+    const input = domainBatch('context-free-classification');
+    const subject = h.service({
+      itemApplier: {
+        apply: async () => {
+          throw Object.assign(new Error('closed'), { code: 'BUSINESS_CLOSED' });
+        },
+      },
+      eventPort: domainEvents(),
+      domainOutcomeClassifier: { classify },
+    });
+    const result = await h.run(GAP_TENANT_A, () => subject.submitSyncBatch(input));
+    expect(result.receipt.items[0]).toMatchObject({
+      status: 'conflict',
+      errorCode: 'BUSINESS_CLOSED',
+    });
+    expect(result.receipt.items[0]!.context).toBe(undefined);
+    const conflicts = await h.run(GAP_TENANT_A, () =>
+      subject.listSyncConflicts({ queueItemId: input.items[0]!.queueItemId }),
+    );
+    expect(conflicts.items).toHaveLength(1);
+    expect(conflicts.items[0]!.stynx).not.toHaveProperty('consumerAttributes');
+    expect(await h.readConflictCode(conflicts.items[0]!.conflictId)).toBe('BUSINESS_CLOSED');
+    expect(classify).toHaveBeenCalledTimes(1);
+  });
+
+  it('D1.1 consumes rejected asynchronous classifier returns and keeps the item retryable', async () => {
+    const h = harness();
+    const input = domainBatch('rejected-async-classifier');
+    const classify = vi.fn(() =>
+      Promise.reject(new Error('consumer async rejection')),
+    ) as unknown as OfflineSyncDomainOutcomeClassifier['classify'];
+    const subject = h.service({
+      itemApplier: {
+        apply: async () => {
+          throw domainFailure();
+        },
+      },
+      eventPort: domainEvents(),
+      domainOutcomeClassifier: { classify },
+    });
+    const result = await h.run(GAP_TENANT_A, () => subject.submitSyncBatch(input));
+    await new Promise<void>((done) => setImmediate(done));
+    expect(result.receipt.status).toBe('open');
+    expect(result.receipt.items[0]).toMatchObject({
+      status: 'received',
+      errorCode: 'OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID',
+      stynx: { retryable: true },
+    });
+    expect(
+      (
+        await h.run(GAP_TENANT_A, () =>
+          subject.listSyncConflicts({ queueItemId: input.items[0]!.queueItemId }),
+        )
+      ).items,
+    ).toEqual([]);
+    expect(classify).toHaveBeenCalledTimes(1);
   });
 
   it('D1.1 refuses invalid, async, throwing and accessor outcomes without coercion or partial terminal state', async () => {
@@ -654,6 +772,90 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
       context: { ...consumer, originalQueueItemId: input.items[0]!.queueItemId },
       stynx: { terminalReceived: true, retryable: false, attempts: 2 },
     });
+    expect(classify).toHaveBeenCalledTimes(2);
+    const stored = await h.run(GAP_TENANT_A, () =>
+      subject.getSyncItemReceipt(input.items[0]!.idempotencyKey!),
+    );
+    expect(stored).toMatchObject({
+      queueItemId: input.items[0]!.queueItemId,
+      status: 'received',
+      context: consumer,
+    });
+    expect(
+      (await h.run(GAP_TENANT_A, () => subject.submitSyncBatch(input))).receipt.responseBodyBytes,
+    ).toEqual(original.receipt.responseBodyBytes);
+    expect(classify).toHaveBeenCalledTimes(2);
+  });
+  it('D1.1 reclassifies a correction-pending same-queue new-batch attempt without inventing an original-queue alias', async () => {
+    const h = harness();
+    const input = domainBatch('same-queue-origin');
+    const consumer = {
+      conflictId: 'consumer-original-id',
+      allowedActions: ['consumer-original-action'],
+      originalField: { value: 42 },
+    };
+    let outcome: 'conflict' | 'received' = 'conflict';
+    const classify = vi.fn(
+      (
+        _failure: unknown,
+        item: import('../../src/types').CTG9SyncBatchItemInput,
+        context: import('../../src/types').OfflineSyncItemContext,
+      ) => {
+        expect(item.queueItemId).toBe(input.items[0]!.queueItemId);
+        expect(context.receiptId).toBe(input.items[0]!.idempotencyKey);
+        return outcome === 'conflict'
+          ? {
+              status: 'conflict' as const,
+              conflict: { type: 'domain' as const, description: 'correctable collision' },
+            }
+          : { status: 'received' as const };
+      },
+    );
+    let originalConflict!: import('../../src/types').SyncConflictRecord;
+    const subject = h.service({
+      itemApplier: {
+        apply: async () => {
+          throw domainFailure(consumer);
+        },
+      },
+      eventPort: domainEvents(),
+      domainOutcomeClassifier: { classify },
+      conflictResolver: {
+        allowedActions: async () => ['retry_after_correction'],
+        resolve: async () => ({ ...originalConflict, status: 'resolved' }),
+      },
+    });
+    const original = await h.run(GAP_TENANT_A, () => subject.submitSyncBatch(input));
+    expect(original.receipt.items[0]).toMatchObject({ status: 'conflict', context: consumer });
+    originalConflict = (
+      await h.run(GAP_TENANT_A, () =>
+        subject.listSyncConflicts({ queueItemId: input.items[0]!.queueItemId }),
+      )
+    ).items[0]!;
+    await h.run(GAP_TENANT_A, () =>
+      subject.resolveConflict(originalConflict.conflictId, {
+        resolution: 'retry_after_correction',
+      }),
+    );
+    expect(
+      await h.run(GAP_TENANT_A, () => subject.getSyncItemReceipt(input.items[0]!.idempotencyKey!)),
+    ).toMatchObject({ status: 'pending', context: consumer });
+    outcome = 'received';
+    h.tick();
+    const next = domainBatch('same-queue-next');
+    const corrected = {
+      ...next,
+      deviceId: input.deviceId,
+      items: [{ ...input.items[0]! }],
+    };
+    const result = await h.run(GAP_TENANT_A, () => subject.submitSyncBatch(corrected));
+    expect(result.receipt.status).toBe('closed');
+    expect(result.receipt.items[0]).toMatchObject({
+      status: 'received',
+      context: consumer,
+      stynx: { terminalReceived: true, retryable: false, attempts: 2 },
+    });
+    expect(result.receipt.items[0]!.context).not.toHaveProperty('originalQueueItemId');
     expect(classify).toHaveBeenCalledTimes(2);
     const stored = await h.run(GAP_TENANT_A, () =>
       subject.getSyncItemReceipt(input.items[0]!.idempotencyKey!),
