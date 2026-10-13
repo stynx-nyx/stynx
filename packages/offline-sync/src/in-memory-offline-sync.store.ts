@@ -875,7 +875,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     original: StoredSyncQueueItem | undefined,
     runtime: DurableBatchExecutionOptions,
     now: string,
-  ): Promise<void> {
+  ): Promise<OfflineSyncStynxContext> {
     const rejectionKey = this.key(
       scope.tenantId,
       JSON.stringify([input.deviceId, input.deviceBatchId, item.queueItemId]),
@@ -896,10 +896,22 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
           errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
         });
     };
+    const rejectionContext = (): OfflineSyncStynxContext => {
+      const recorded = this.integrityRejections.get(rejectionKey)!;
+      return stynxContextOf({
+        receiptId: recorded.idempotencyKey,
+        errorCode: recorded.errorCode,
+        reasonCode: recorded.errorCode,
+        receivedPayloadHash: recorded.receivedPayloadHash,
+        storedPayloadHash: recorded.storedPayloadHash,
+        relatedQueueItemId: recorded.originalQueueItemId,
+        retryable: false,
+      });
+    };
     const dedupe = this.key(scope.tenantId, `${key}\0${item.payloadHash}`);
     if (!original || this.integrityConflicts.has(dedupe)) {
       saveRejection();
-      return;
+      return rejectionContext();
     }
 
     const conflictId = randomUUID();
@@ -942,6 +954,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         retryable: allowedActions.includes('retry_after_correction'),
       }),
     );
+    return rejectionContext();
   }
 
   getQueueItem(tenantId: string, queueItemId: string): StoredSyncQueueItem | undefined {
@@ -1371,7 +1384,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         ) {
           // ADR-MOBILE-OFFLINE-0003 D4: per-item integrity rejection; no queue row, receipt or effect.
           const original = this.itemReceipts.get(this.key(scope.tenantId, key))?.item;
-          await this.integrityConflict(
+          const integrityStynx = await this.integrityConflict(
             scope,
             input,
             item,
@@ -1389,12 +1402,14 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             status: 'rejected' as const,
             receivedAt: now,
             errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+            stynx: integrityStynx,
           };
           stored.push(rejected);
           itemReceipts.push({
             queueItemId: item.queueItemId,
             status: 'rejected',
             errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+            stynx: integrityStynx,
           });
           continue;
         }
@@ -1423,8 +1438,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         if (e6) {
           const legacy = this.queueItems.get(this.key(scope.tenantId, e6.item.queueItemId))!;
           const sameHash = legacy.payloadHash === item.payloadHash;
-          if (!sameHash)
-            await this.integrityConflict(scope, input, item, key, legacy, runtime, now);
+          const integrityStynx = !sameHash
+            ? await this.integrityConflict(scope, input, item, key, legacy, runtime, now)
+            : undefined;
           if (sameHash && e6.batchKey !== identity) duplicates += 1;
           const legacyReceived = sameHash && legacy.status === 'received';
           const status: SyncItemReceipt['status'] =
@@ -1460,12 +1476,14 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             receivedAt: now,
             ...(errorCode ? { errorCode } : {}),
             ...(context ? { context } : {}),
+            ...(integrityStynx ? { stynx: integrityStynx } : {}),
           });
           itemReceipts.push({
             queueItemId: item.queueItemId,
             status,
             ...(errorCode ? { errorCode } : {}),
             ...(context ? { context } : {}),
+            ...(integrityStynx ? { stynx: integrityStynx } : {}),
           });
           continue;
         }
@@ -1512,7 +1530,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
             continue;
           }
           if (previous.hash !== item.payloadHash) {
-            await this.integrityConflict(
+            const integrityStynx = await this.integrityConflict(
               scope,
               input,
               item,
@@ -1526,12 +1544,14 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
               queueItemId: item.queueItemId,
               status: 'rejected' as const,
               errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+              stynx: integrityStynx,
             };
             stored.push(rejected);
             itemReceipts.push({
               queueItemId: item.queueItemId,
               status: 'rejected',
               errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+              stynx: integrityStynx,
             });
             continue;
           }
