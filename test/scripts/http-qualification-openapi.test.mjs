@@ -35,7 +35,7 @@ const paths = [
   'docs/framework/contracts/openapi-compositions/offline-ctg9.json',
   'docs/framework/contracts/openapi-compositions/offline-e6.json',
 ];
-const actualSizes = [1_183_394, 1_183_394, 1_128_963, 1_089_910];
+const actualSizes = [1_187_817, 1_187_817, 1_132_828, 1_092_971];
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const invalid = { code: 'HTTP_QUALIFICATION_ARTIFACT_INVALID' };
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');

@@ -840,7 +840,12 @@ test('CTG9 reservation body preserves inherited required fields while widening o
     const legacy = contract.components.schemas.ReserveNumberingInput;
     const durable = contract.components.schemas.CTG9ReserveNumberingInput;
     assert.equal(durable.additionalProperties, false);
-    assert.deepEqual(Object.keys(durable.properties).sort(), Object.keys(legacy.properties).sort());
+    assert.deepEqual(
+      Object.keys(durable.properties).sort(),
+      [...Object.keys(legacy.properties), 'agentId'].sort(),
+    );
+    assert.deepEqual(durable.properties.agentId, { type: 'string' });
+    assert.equal(durable.required.includes('agentId'), false);
     assert.deepEqual(durable.required.slice().sort(), [
       'deviceId',
       'entityType',
