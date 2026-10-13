@@ -587,7 +587,17 @@ describe('UPS-OFS-05/-09/-10/-11/-12 PostgreSQL reservation idempotency, listing
     expect(result.receipt.items).toEqual([
       { queueItemId: 'h-1', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
       { queueItemId: 'h-2', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
-      { queueItemId: 'h-3', status: 'applied' },
+      {
+        queueItemId: 'h-3',
+        status: 'applied',
+        stynx: {
+          version: 1,
+          receiptId: 'h-3',
+          appliedAt: now,
+          serverEntityId: 'server-h-3',
+          attempts: 1,
+        },
+      },
       { queueItemId: 'h-4', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
     ]);
     expect(
@@ -689,8 +699,28 @@ describe('UPS-OFS-05/-09/-10/-11/-12 PostgreSQL reservation idempotency, listing
       ),
     );
     expect(later.receipt.items).toEqual([
-      { queueItemId: 'h-1', status: 'applied' },
-      { queueItemId: 'h-2', status: 'applied' },
+      {
+        queueItemId: 'h-1',
+        status: 'applied',
+        stynx: {
+          version: 1,
+          receiptId: 'h-1',
+          appliedAt: '2026-09-28T13:00:01.000Z',
+          serverEntityId: 'server-h-1',
+          attempts: 1,
+        },
+      },
+      {
+        queueItemId: 'h-2',
+        status: 'applied',
+        stynx: {
+          version: 1,
+          receiptId: 'h-2',
+          appliedAt: '2026-09-28T13:00:01.000Z',
+          serverEntityId: 'server-h-2',
+          attempts: 1,
+        },
+      },
     ]);
     // An existing original with a non-canonical resubmission is still a per-item rejection; the original is untouched.
     const again = await run(tenantA, () =>

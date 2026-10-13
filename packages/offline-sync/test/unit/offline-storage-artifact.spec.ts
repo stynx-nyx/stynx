@@ -19,6 +19,7 @@ const relations = [
   'sync_conflict_actions',
   'numbering_reservation_scopes',
   'sync_import_receipts',
+  'numbering_reconciliations',
 ];
 
 describe('D6 offline storage artifact and fail-closed verifier admission', () => {

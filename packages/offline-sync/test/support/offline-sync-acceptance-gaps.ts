@@ -125,11 +125,26 @@ export function registerOfflineGapContracts(harness: () => OfflineGapHarness): v
 
   it('V-04 refuses illegal or oversized domain context as retryable evidence rather than silently dropping it', async () => {
     const h = harness();
+    let getterCalls = 0;
+    const accessor = Object.defineProperty({}, 'value', {
+      enumerable: true,
+      get: () => {
+        getterCalls += 1;
+        return 'must-not-read';
+      },
+    });
+    const lossyArray: unknown[] & { extra?: string } = new Array<unknown>(2);
+    lossyArray[0] = 'present';
+    lossyArray.extra = 'must-not-drop';
     const contexts: Record<string, unknown>[] = [
       { stynx: { version: 1, appliedAt: GAP_AT } },
       { text: 'é'.repeat(2048) },
       { number: Number.NaN },
       { value: undefined },
+      { text: '\ud800' },
+      { ['\ud800']: 'invalid-key' },
+      { entries: lossyArray },
+      accessor,
     ];
     const apply = vi.fn(async (_trx: unknown, item: { queueItemId: string }) => {
       const index = Number(item.queueItemId.slice('illegal-context-'.length));
@@ -151,6 +166,7 @@ export function registerOfflineGapContracts(harness: () => OfflineGapHarness): v
       expect(stored.stynx).toMatchObject({ retryable: true });
       expect(stored.context).toBeUndefined();
     }
+    expect(getterCalls).toBe(0);
   });
 
   it('V-07 records source-pending signal only for an unresolved concurrency window and preserves it on closed replay', async () => {
@@ -346,6 +362,108 @@ export function registerOfflineGapContracts(harness: () => OfflineGapHarness): v
     ).rejects.toBeInstanceOf(HttpException);
     expect(resolutionEventPort.appendInTransaction).toHaveBeenCalledTimes(3);
     expect(resolutionEventPort.appendManyInTransaction).not.toHaveBeenCalled();
+  });
+
+  it('V-08 isolates a failing resolution from another conflict history and serializes terminal contenders', async () => {
+    const h = harness();
+    let enter!: () => void;
+    let release!: () => void;
+    const entered = new Promise<void>((resolve) => {
+      enter = resolve;
+    });
+    const waiting = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let failingConflict = '';
+    const appended: string[] = [];
+    const resolutionEventPort = {
+      appendInTransaction: async (
+        trx: import('@stynx-nyx/data').Transaction,
+        event: OfflineSyncEvent,
+      ) => {
+        if (event.entityId === failingConflict) {
+          enter();
+          await waiting;
+          throw new Error('isolated resolution failure');
+        }
+        await h.appendResolution?.(trx, event);
+        appended.push(event.entityId);
+      },
+      appendManyInTransaction: async () => undefined,
+    };
+    const service = h.service({
+      itemApplier: applying(),
+      eventPort: events(),
+      resolutionEventPort,
+      conflictResolver: {
+        allowedActions: async () => ['reject'],
+        resolve: async (_trx, conflictId) => ({
+          conflictId,
+          tenantId: GAP_TENANT_A,
+          queueItemId: '',
+          localEntityId: '',
+          payloadHash: '',
+          conflictType: 'domain',
+          description: 'resolved',
+          status: 'resolved',
+        }),
+      },
+    });
+    const conflicts: string[] = [];
+    for (const id of [
+      'resolution-race-fail',
+      'resolution-race-other',
+      'resolution-race-contenders',
+    ]) {
+      const result = await h.run(GAP_TENANT_A, () =>
+        service.submitSyncBatch({
+          ...batch(id),
+          items: [{ ...batch(id).items[0]!, reservedNumber: 999 }],
+        }),
+      );
+      conflicts.push(result.receipt.items[0]!.context!.conflictId as string);
+    }
+    failingConflict = conflicts[0]!;
+    const failed = h
+      .run(GAP_TENANT_A, () => service.resolveConflict(failingConflict, { resolution: 'reject' }))
+      .catch((error: unknown) => error);
+    await entered;
+    try {
+      await h.run(GAP_TENANT_A, () =>
+        service.resolveConflict(conflicts[1]!, { resolution: 'reject' }),
+      );
+    } finally {
+      release();
+    }
+    expect(await failed).toBeInstanceOf(Error);
+    expect(
+      (
+        await h.run(GAP_TENANT_A, () =>
+          service.listSyncConflictActions({ conflictId: failingConflict }),
+        )
+      ).items,
+    ).toEqual([]);
+    expect(
+      (
+        await h.run(GAP_TENANT_A, () =>
+          service.listSyncConflictActions({ conflictId: conflicts[1]! }),
+        )
+      ).items,
+    ).toHaveLength(1);
+    const outcomes = await Promise.allSettled(
+      Array.from({ length: 2 }, () =>
+        h.run(GAP_TENANT_A, () => service.resolveConflict(conflicts[2]!, { resolution: 'reject' })),
+      ),
+    );
+    expect(outcomes.map((value) => value.status).sort()).toEqual(['fulfilled', 'rejected']);
+    expect(
+      (
+        await h.run(GAP_TENANT_A, () =>
+          service.listSyncConflictActions({ conflictId: conflicts[2]! }),
+        )
+      ).items,
+    ).toHaveLength(1);
+    expect(appended.sort()).toEqual([conflicts[1]!, conflicts[2]!].sort());
   });
 
   it('V-13 appends tenant-scoped immutable reconciliation snapshots with exact keyed replay and no post-close revival', async () => {

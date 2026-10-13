@@ -259,7 +259,7 @@ describe('D6 independent closed offline storage PostgreSQL installation', () => 
   });
 });
 
-it('verifies the independently migrated default catalog through0008 without modifying populated history', async () => {
+it('verifies the independently migrated default catalog through0009 without modifying populated history', async () => {
   const postgres = await createPostgresTestDatabase('stynx_offline_storage_default', {
     useTemplate: false,
   });
@@ -288,6 +288,7 @@ it('verifies the independently migrated default catalog through0008 without modi
       '0006_nullable_active_reservations.sql',
       '0007_range_administration.sql',
       '0008_import_receipts.sql',
+      '0009_numbering_reconciliations.sql',
     ]) {
       await admin.query('begin');
       await admin.query(await readFile(resolve(__dirname, '../../migrations', name), 'utf8'));
