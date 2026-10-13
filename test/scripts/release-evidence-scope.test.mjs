@@ -226,7 +226,7 @@ for (const [label, change] of [
   });
 
 function actualVerifier(t, runs, { version = '1.6.0', dirty = false } = {}) {
-  const root = fixture(t);
+  const root = fixture(t, ['1.6.0', '1.6.1', '1.6.2'].includes(version) ? version : '1.6.0');
   mutate(root, 'package.json', (value) => ({ ...value, version }));
   for (const path of [
     'scripts/verify-missing-evidence.mjs',
@@ -411,3 +411,118 @@ for (const [label, change] of [
     change(root);
     assert.throws(() => resolvePublicationEvidenceRequirements(root));
   });
+
+test('1.6.2 binds the complete published RC graph and keeps omissions nonpromoting', (t) => {
+  const root = fixture(t, '1.6.2');
+  const selected = resolvePublicationEvidenceRequirements(root);
+  const prior = read(repository, 'law/policy/release-scope-1.6.1.json');
+  assert.equal(selected.scope.version, '1.6.2');
+  assert.equal(selected.scope.packageRoster.count, 44);
+  assert.deepEqual(selected.scope.rc.requiredNodes, prior.rc.requiredNodes);
+  assert.equal(selected.scope.rc.requiredNodes.length, 15);
+  assert.deepEqual(selected.requiredChecks, [
+    ['verified-local-rc', 'signed exact-candidate local RC'],
+  ]);
+  assert.deepEqual(selected.scope.omitted, {
+    httpPerformance: 'NOT_OBSERVED',
+    k6: 'NOT_OBSERVED',
+    mutation: 'NOT_RUN',
+  });
+  assert.deepEqual(selected.scope.audit, {
+    requiredOverallPass: false,
+    readinessPromoting: false,
+    preserveHistorical: true,
+  });
+  assert.equal(selected.scope.productionProviderApprovalClaimed, false);
+  assert.equal(selected.scope.consumerAcceptanceRequiredForPublication, false);
+});
+
+for (const [label, change] of [
+  ['missing closed policy', (root) => rmSync(join(root, 'law/policy/release-scope-1.6.2.json'))],
+  [
+    'schema byte drift',
+    (root) =>
+      writeFileSync(
+        join(root, 'law/schemas/release-scope-1.6.2.schema.json'),
+        readFileSync(join(root, 'law/schemas/release-scope-1.6.2.schema.json')) + ' ',
+      ),
+  ],
+  [
+    'scope expansion',
+    (root) => mutate(root, 'law/policy/release-scope-1.6.2.json', (v) => ({ ...v, bypass: true })),
+  ],
+  [
+    'promoted omission',
+    (root) =>
+      mutate(root, 'law/policy/release-scope-1.6.2.json', (v) => ({
+        ...v,
+        omitted: { ...v.omitted, k6: 'PASS' },
+      })),
+  ],
+  [
+    'readiness promotion',
+    (root) =>
+      mutate(root, 'law/policy/release-scope-1.6.2.json', (v) => ({
+        ...v,
+        audit: { ...v.audit, readinessPromoting: true },
+      })),
+  ],
+  [
+    'roster byte drift',
+    (root) =>
+      writeFileSync(
+        join(root, 'law/policy/stynx-package-roster.json'),
+        readFileSync(join(root, 'law/policy/stynx-package-roster.json')) + ' ',
+      ),
+  ],
+  [
+    'mixed package version',
+    (root) => mutate(root, 'packages/core/package.json', (v) => ({ ...v, version: '1.6.1' })),
+  ],
+  [
+    'removed security task',
+    (root) =>
+      mutate(root, 'test-tasks.json', (v) => ({
+        ...v,
+        tasks: v.tasks.filter((task) => task.nodeId !== 'security'),
+      })),
+  ],
+  [
+    'security command bypass',
+    (root) =>
+      mutate(root, 'test-tasks.json', (v) => ({
+        ...v,
+        tasks: v.tasks.map((task) =>
+          task.nodeId === 'security' ? { ...task, argv: ['node', '-e', 'process.exit(0)'] } : task,
+        ),
+      })),
+  ],
+  [
+    'descriptor byte drift',
+    (root) =>
+      writeFileSync(
+        join(root, 'test-tasks.json'),
+        readFileSync(join(root, 'test-tasks.json')) + ' ',
+      ),
+  ],
+])
+  test(`1.6.2 refuses ${label}`, (t) => {
+    const root = fixture(t, '1.6.2');
+    change(root);
+    assert.throws(() => resolvePublicationEvidenceRequirements(root));
+  });
+
+test('1.6.2 actual verifier requires unique successful exact-head RC evidence', (t) => {
+  for (const [runs, accepted] of [
+    [(sha) => [check(sha)], true],
+    [() => [check('0'.repeat(40))], false],
+    [(sha) => [check(sha), check(sha)], false],
+    [(sha) => [check(sha, { conclusion: 'failure' })], false],
+  ]) {
+    const result = actualVerifier(t, runs, { version: '1.6.2' });
+    assert.equal(result.status, accepted ? 0 : 1, result.stderr || result.stdout);
+    const report = JSON.parse(result.stdout.trim());
+    assert.equal(report.ok, accepted);
+    assert.equal(report.scope.version, '1.6.2');
+  }
+});

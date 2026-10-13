@@ -86,9 +86,9 @@ const packageRoster = JSON.parse(
 // The registry census is validated against the current unified candidate
 // (registryVersionPolicyConstants.candidate), not the historical 1.2.0
 // rebaseline target that unified-rebaseline.mjs still describes.
-const currentCandidate = '1.6.1';
+const currentCandidate = '1.6.2';
 const previousCandidate = '1.5.0-rc.2';
-const preflightLatest = '1.6.0';
+const preflightLatest = '1.6.1';
 
 const campaignPolicy = {
   policy_id: 'stynx.package-roster',
@@ -2699,14 +2699,14 @@ const campaignStageRefusals = [
     'disagreeing anomaly target',
     (f) =>
       mutateStageJson(join(f.root, 'law/policy/registry-version-anomalies.json'), (v) => {
-        v.next_unified_version = '1.6.2';
+        v.next_unified_version = '1.6.3';
       }),
   ],
   [
     'disagreeing allowed candidate',
     (f) =>
       mutateStageJson(join(f.root, 'law/policy/registry-version-anomalies.json'), (v) => {
-        v.anomalies[0].allowed_candidate = '1.6.2';
+        v.anomalies[0].allowed_candidate = '1.6.3';
       }),
   ],
   [
@@ -2739,7 +2739,7 @@ for (const [label, mutate] of campaignStageRefusals) {
 test('campaign version stages refuse a wrong uniform source and unconsumed final changesets', () => {
   for (const options of [
     { version: '1.5.6' },
-    { version: '1.6.2', pending: false },
+    { version: preflightLatest, pending: false },
     { version: currentCandidate },
   ]) {
     const fixture = createCampaignStageFixture(options);
@@ -3043,7 +3043,7 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 test('Architect anomaly policy is required at its exact approved digest', () => {
   // The next unified candidate must be explicitly bound in the Architect
   // policy; 1.2.0 remains historical rebaseline data.
-  assert.equal(currentCandidate, '1.6.1');
+  assert.equal(currentCandidate, '1.6.2');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
   assert.equal(anomalyPolicy.owner_decision.date, '2026-10-10');
   const historicalPolicy = spawnSync(
@@ -3084,18 +3084,26 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
   }
   const prospective = anomalyPolicy.prospective_owner_decision;
   assert.equal(prospective.date, '2026-10-13');
-  assert.equal(prospective.repository_baseline, '546c7ec8f3faa870ca4ae9f81ed27a8febb70f21');
-  assert.equal(prospective.repository_tree, '26132340edf16d671675cda64d1a4e42708b6987');
+  assert.equal(prospective.repository_baseline, '3e3da1f7ceb6dd4a7dd2f9d6e0dc704437e262a0');
+  assert.equal(prospective.repository_tree, 'e2ce9989249d1bc13403dc21f5a421b24178ef29');
   assert.equal(prospective.next_unified_version, currentCandidate);
   assert.equal(prospective.preflight_latest_version, preflightLatest);
   assert.equal(prospective.preserved_rc_version, previousCandidate);
   assert.deepEqual(prospective.supersedes, {
-    next_unified_version: '1.6.0',
-    preflight_latest_version: '1.5.7',
+    next_unified_version: '1.6.1',
+    preflight_latest_version: '1.6.0',
   });
-  assert.equal(
-    prospective.previous_closure_condition,
-    JSON.parse(historicalPolicy.stdout).anomalies[0].closure_condition,
+  assert.equal(prospective.scope_adr, 'ADR-RELEASE-0005');
+  assert.equal(prospective.scope_policy, 'law/policy/release-scope-1.6.2.json');
+  const publishedPolicy = spawnSync(
+    'git',
+    ['show', 'v1.6.1:law/policy/registry-version-anomalies.json'],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+  assert.equal(publishedPolicy.status, 0, publishedPolicy.stderr);
+  assert.deepEqual(
+    anomalyPolicy.prior_prospective_owner_decision_1_6_1,
+    JSON.parse(publishedPolicy.stdout).prospective_owner_decision,
   );
   for (const phrase of [
     '44',
@@ -3868,6 +3876,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
     '1.5.6',
     '1.5.7',
     '1.6.0',
+    '1.6.1',
   ]) {
     const history = validRegistryCensus();
     history.set(
@@ -3885,7 +3894,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
   for (const [version, code] of [
     [currentCandidate, 'REGISTRY_CANDIDATE_EXISTS'],
     ['1.5.0-rc.4', null],
-    ['1.6.2', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['1.6.3', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
     ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
   ]) {
     const history = validRegistryCensus();
@@ -3905,7 +3914,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
     '1.5.2',
     '1.5.3',
     '1.6.0',
-    '1.6.2',
+    '1.6.1',
   ]) {
     assertPolicyError(
       () => loadRegistryAnomalyPolicy(repoRoot, candidate),
@@ -4051,7 +4060,7 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   );
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
-  assert.equal(preflightLatest, '1.6.0');
+  assert.equal(preflightLatest, '1.6.1');
   assert.deepEqual(
     validatePreflightDistTags({
       preflightLatest,
@@ -4194,7 +4203,7 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
       (error) => error?.code === code,
     );
   }
-  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 6n, 1n]);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 6n, 2n]);
   assert.throws(
     () => parseStableVersionTag(`v${previousCandidate}`),
     /malformed stable release tag/u,
