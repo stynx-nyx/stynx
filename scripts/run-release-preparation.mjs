@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import {
   classifyReleaseContext,
   isFinalVersionedCandidate,
+  isPatch161VersionedCandidate,
   isSeventhStablePatchVersionedCandidate,
   isSixthStablePatchVersionedCandidate,
   isFifthStablePatchVersionedCandidate,
@@ -313,9 +314,12 @@ function stablePatchVersionedContext(
     };
   });
   const markerIndex = commits.findIndex(({ sha }) => sha === marker.sha);
-  const followUpChanges = commits
-    .slice(markerIndex + 1)
-    .flatMap(({ sha }) => parseChanges(git(['rev-parse', `${sha}^`]), sha));
+  const followUpChanges =
+    markerSubject === releaseContextConstants.patch161VersionCommitSubject
+      ? parseChanges(marker.sha, headCommit)
+      : commits
+          .slice(markerIndex + 1)
+          .flatMap(({ sha }) => parseChanges(git(['rev-parse', `${sha}^`]), sha));
   const input = {
     baseRootVersion: readGitJson(baseCommit, 'package.json').version,
     markerParentRootVersion: readGitJson(markerParent, 'package.json').version,
@@ -335,6 +339,13 @@ function stablePatchVersionedContext(
     markerParentPreState: parentFiles.includes('.changeset/pre.json')
       ? readGitJson(markerParent, '.changeset/pre.json')
       : null,
+    ...(markerSubject === releaseContextConstants.patch161VersionCommitSubject
+      ? {
+          rootManifestAtMarker: readGitJson(marker.sha, 'package.json'),
+          rootManifestAtHead: readGitJson(headCommit, 'package.json'),
+          storageVersionArtifacts: storageVersionArtifacts(markerParent, marker.sha),
+        }
+      : {}),
   };
   if (!predicate(input)) {
     throw new ReleaseContextError(
@@ -395,6 +406,10 @@ function releaseContext() {
   return classified.kind === 'ordinary'
     ? (versionedPreModeContext(baseCommit, headCommit, commits) ??
         finalVersionedContext(baseCommit, headCommit, commits) ??
+        stablePatchVersionedContext(baseCommit, headCommit, commits, {
+          markerSubject: releaseContextConstants.patch161VersionCommitSubject,
+          predicate: isPatch161VersionedCandidate,
+        }) ??
         stablePatchVersionedContext(baseCommit, headCommit, commits, {
           markerSubject: releaseContextConstants.seventhStablePatchVersionCommitSubject,
           predicate: isSeventhStablePatchVersionedCandidate,
