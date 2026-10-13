@@ -23,7 +23,7 @@ import {
 } from '../../../data/test/support/postgres';
 
 // INV-OFFLINE-001; UPS-OFS-06, UPS-OFS-07, UPS-OFS-08 (#317; ADR-MOBILE-OFFLINE-0003 D1, D2, D3). Real
-// PostgreSQL, 0001→0004, app-role pool bound at connection startup so FORCE RLS applies, two tenants.
+// PostgreSQL, 0001→0005, app-role pool bound at connection startup so FORCE RLS applies, two tenants.
 const tenantA = '00000000-0000-4000-8000-0000000000a7';
 const tenantB = '00000000-0000-4000-8000-0000000000b7';
 const at = '2026-09-28T12:00:00.000Z';
@@ -301,7 +301,21 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
       ),
     );
     expect(changed.receipt.items).toEqual([
-      { queueItemId: 'p-1', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
+      {
+        queueItemId: 'p-1',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+        stynx: {
+          version: 1,
+          receiptId: 'p-1',
+          errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          receivedPayloadHash: otherHash,
+          storedPayloadHash: hash,
+          relatedQueueItemId: 'p-1',
+          retryable: false,
+        },
+      },
     ]);
     expect(
       (
@@ -446,7 +460,24 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
     const suspected = await run(tenantA, () =>
       a.submitSyncBatch(batch('dev-c2', 'cb-2', [item('c-2')]), transport('cb-2')),
     );
-    expect(suspected.receipt.items).toEqual([{ queueItemId: 'c-2', status: 'conflict' }]);
+    expect(suspected.receipt.items).toEqual([
+      {
+        queueItemId: 'c-2',
+        status: 'conflict',
+        stynx: {
+          version: 1,
+          receiptId: 'c-2',
+          appliedAt: at,
+          attempts: 1,
+          serverEntityId: 'server-c-2',
+          concurrencySuspected: true,
+          concurrentPairs: pairs,
+          reasonCode: 'OFFLINE_SYNC_CONCURRENCY_SUSPECTED',
+          relatedQueueItemId: 'c-1',
+          retryable: true,
+        },
+      },
+    ]);
     const suspectedReceipt = await run(tenantA, () => a.getSyncItemReceipt('c-2'));
     const concurrency = (suspectedReceipt.context as { conflictId: string }).conflictId;
     expect(suspectedReceipt).toMatchObject({
@@ -550,7 +581,10 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
     const resolver = resolverOf(['manual_review', 'reject', 'retry_after_correction'], {
       reviewer: 'desk-3',
     });
-    const a = service(tenantA, { conflictResolver: resolver });
+    let reviewAt = at;
+    const secondReviewAt = '2026-09-28T12:00:00.001Z';
+    const finalReviewAt = '2026-09-28T12:00:00.002Z';
+    const a = service(tenantA, { conflictResolver: resolver, now: () => reviewAt });
     const { conflictId } = await expiredConflict(a, 'dev-m', 'm-1', [
       'manual_review',
       'reject',
@@ -566,11 +600,11 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
     expect(first).toEqual({
       conflictId,
       tenantId: tenantA,
-      queueItemId: 'host',
-      localEntityId: 'host',
+      queueItemId: 'm-1',
+      localEntityId: 'local-m-1',
       payloadHash: hash,
       conflictType: 'domain',
-      description: 'host',
+      description: 'OFFLINE_SYNC_NUMBERING_EXPIRED',
       status: 'open',
       stynx: {
         version: 1,
@@ -611,6 +645,7 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
         createdAt: expect.stringMatching(/Z$/u),
       },
     ]);
+    reviewAt = secondReviewAt;
     expect(
       (
         await run(tenantA, () =>
@@ -632,6 +667,7 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
       code: 'OFFLINE_SYNC_CONFLICT_RESOLUTION',
       message: 'Conflict resolver did not resolve the conflict.',
     });
+    reviewAt = finalReviewAt;
     const closed = await run(tenantA, () =>
       a.resolveConflict(conflictId, { resolution: 'reject', description: 'wrong agency' }),
     );
@@ -640,7 +676,7 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
       status: 'resolved',
       resolution: 'reject',
       resolvedBy: 'actor-a7',
-      resolvedAt: at,
+      resolvedAt: finalReviewAt,
       stynx: { consumerAttributes: { reviewer: 'desk-3' } },
     });
     expect(
@@ -664,6 +700,7 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
       ['reject', 'resolved', null],
       ['manual_review', 'open', 'user-2'],
     ]);
+    expect(page.items.map((action) => action.createdAt)).toEqual([finalReviewAt, secondReviewAt]);
     const rest = await run(tenantA, () =>
       a.listSyncConflictActions({ conflictId, limit: 2, cursor: page.nextCursor! }),
     );
@@ -671,6 +708,7 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
       items: [{ action: 'manual_review', reason: 'needs a supervisor', userRef: 'user-1' }],
       nextCursor: null,
     });
+    expect(rest.items.map((action) => action.createdAt)).toEqual([at]);
     // Evidence keeps the history of the closing action as before; the conflict listing exposes the platform object.
     expect(
       (await run(tenantA, () => a.listSyncConflicts({ queueItemId: 'm-1' }))).items,
@@ -746,7 +784,9 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
     let allowed = ['manual_review', 'reject'];
     const allowedActions = vi.fn(async () => allowed as never);
     const resolver = { ...resolverOf(allowed), allowedActions };
-    const a = service(tenantA, { conflictResolver: resolver });
+    let actionAt = at;
+    const finalActionAt = '2026-09-28T12:00:00.001Z';
+    const a = service(tenantA, { conflictResolver: resolver, now: () => actionAt });
     const { conflictId } = await expiredConflict(a, 'dev-policy', 'policy-db', allowed);
     allowedActions.mockClear();
     await run(tenantA, () => a.resolveConflict(conflictId, { resolution: 'manual_review' }));
@@ -764,17 +804,16 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
     expect(resolver.resolve).toHaveBeenCalledTimes(1);
     expect(await snapshot()).toEqual(before);
     allowed = ['accept_server'];
+    actionAt = finalActionAt;
     await expect(
       run(tenantA, () => a.resolveConflict(conflictId, { resolution: 'accept_server' })),
     ).resolves.toMatchObject({ status: 'resolved', resolution: 'accept_server' });
     expect(resolver.resolve).toHaveBeenCalledTimes(2);
-    expect(
-      (await run(tenantA, () => a.listSyncConflictActions({ conflictId }))).items.map(
-        (action) => action.action,
-      ),
-    ).toEqual(['accept_server', 'manual_review']);
+    const history = (await run(tenantA, () => a.listSyncConflictActions({ conflictId }))).items;
+    expect(history.map((action) => action.action)).toEqual(['accept_server', 'manual_review']);
+    expect(history.map((action) => action.createdAt)).toEqual([finalActionAt, at]);
     expect(allowedActions.mock.calls).toHaveLength(3);
-    for (const call of allowedActions.mock.calls) {
+    for (const [index, call] of allowedActions.mock.calls.entries()) {
       expect(call).toEqual([
         expect.any(Object),
         conflictId,
@@ -785,7 +824,7 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
           orgUnitId: 'org-a',
           deviceId: 'dev-policy',
           batchId: 'policy-db-b1',
-          now: at,
+          now: index === 2 ? finalActionAt : at,
         },
       ]);
     }
@@ -861,10 +900,6 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
     const result = await run(tenantA, () =>
       a.submitSyncBatch(batch('dev-d', 'db-1', [item('d-1'), item('d-2')]), transport('db-1')),
     );
-    expect(result.receipt.items).toEqual([
-      { queueItemId: 'd-1', status: 'applied' },
-      { queueItemId: 'd-2', status: 'applied' },
-    ]);
     const expected = {
       version: 1,
       receiptId: 'd-1',
@@ -873,6 +908,20 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
       attempts: 1,
       consumerAttributes: { agency: 'A1', nested: { ok: true, list: [1, 'two'] } },
     };
+    expect(result.receipt.items).toEqual([
+      { queueItemId: 'd-1', status: 'applied', stynx: expected },
+      {
+        queueItemId: 'd-2',
+        status: 'applied',
+        stynx: {
+          version: 1,
+          receiptId: 'd-2',
+          appliedAt: at,
+          serverEntityId: 'server-d-2',
+          attempts: 1,
+        },
+      },
+    ]);
     expect(await run(tenantA, () => a.getSyncItemReceipt('d-1'))).toEqual({
       queueItemId: 'd-1',
       status: 'applied',
@@ -986,7 +1035,19 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
         )
       ).receipt.items,
     ).toEqual([
-      { queueItemId: 'd-5', status: 'rejected', errorCode: 'OFFLINE_SYNC_INVALID_INPUT' },
+      {
+        queueItemId: 'd-5',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_INVALID_INPUT',
+        stynx: {
+          version: 1,
+          receiptId: 'd-5',
+          errorCode: 'OFFLINE_SYNC_INVALID_INPUT',
+          errorMessage: 'consumerAttributes must be a JSON object of at most 4096 bytes.',
+          attempts: 1,
+          retryable: false,
+        },
+      },
     ]);
     expect(events).toHaveLength(eventsBefore);
     expect(
@@ -1041,7 +1102,21 @@ describe('UPS-OFS-06/-07/-08 PostgreSQL pending state, open manual review and ty
       ),
     );
     expect(first.receipt.items).toEqual([
-      { queueItemId: 'i-1b', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
+      {
+        queueItemId: 'i-1b',
+        status: 'rejected',
+        errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+        stynx: {
+          version: 1,
+          receiptId: 'i-1',
+          errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          reasonCode: 'OFFLINE_SYNC_ITEM_INTEGRITY',
+          receivedPayloadHash: otherHash,
+          storedPayloadHash: hash,
+          relatedQueueItemId: 'i-1',
+          retryable: false,
+        },
+      },
     ]);
     const [conflict] = (
       await run(tenantA, () =>

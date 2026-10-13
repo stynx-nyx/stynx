@@ -19,7 +19,7 @@ import {
   type PostgresTestDatabase,
 } from '../../../data/test/support/postgres';
 
-// INV-OFFLINE-001; UPS-OFS-01…04. This suite executes 0001→0002 against real PostgreSQL.
+// INV-OFFLINE-001; UPS-OFS-01…04. Prove historical 0001→0002 and exercise the current 0001→0009 PostgreSQL schema.
 const tenantA = '00000000-0000-4000-8000-0000000000a1';
 const tenantB = '00000000-0000-4000-8000-0000000000b1';
 const hash = `sha256:${createHash('sha256').update('{}').digest('hex')}`;
@@ -100,6 +100,10 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
         '0003_reservation_idempotency.sql',
         '0004_pending_state_and_conflict_actions.sql',
         '0005_initial_queue_status.sql',
+        '0006_nullable_active_reservations.sql',
+        '0007_range_administration.sql',
+        '0008_import_receipts.sql',
+        '0009_numbering_reconciliations.sql',
       ])
         await admin.query(await readFile(resolve(migrationDir, name), 'utf8'));
       await admin.query(`create table offline.ctg9_item_effect_probe (
@@ -999,6 +1003,11 @@ describe('CTG9 OFS additive PostgreSQL upgrade', () => {
       errorCode: 'OFFLINE_SYNC_BATCH_SEQUENCE',
       message: 'Expected batch sequence 2; received 3.',
       retryable: false,
+      context: {
+        deviceBatchId: 'pg-sequence-three',
+        expectedSequence: 2,
+        receivedSequence: 3,
+      },
     });
     const admin = await pg.connectAsAdmin();
     try {

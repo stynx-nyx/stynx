@@ -46,7 +46,13 @@ async function fixture(upgrade = true) {
       '0004_pending_state_and_conflict_actions.sql',
       '0005_initial_queue_status.sql',
       '0006_nullable_active_reservations.sql',
-      ...(upgrade ? ['0007_range_administration.sql'] : []),
+      ...(upgrade
+        ? [
+            '0007_range_administration.sql',
+            '0008_import_receipts.sql',
+            '0009_numbering_reconciliations.sql',
+          ]
+        : []),
     ]) {
       await admin.query('begin');
       await admin.query(await sql(name));
@@ -174,6 +180,35 @@ describe('UPS-OFS-09 PostgreSQL range administration and populated0007 upgrade',
       });
       expect(result).not.toHaveProperty('createdBy');
       expect(result).not.toHaveProperty('consumerAttributes');
+      // Continue the genuinely populated 0007 database through both later migrations.
+      const historicalRows = async () => ({
+        ranges: (
+          await admin.query(
+            'select to_jsonb(r)::text as bytes from offline.numbering_ranges r order by id',
+          )
+        ).rows,
+        reservations: (
+          await admin.query(
+            'select to_jsonb(r)::text as bytes from offline.numbering_reservations r order by id',
+          )
+        ).rows,
+        consumption: (
+          await admin.query(
+            'select to_jsonb(r)::text as bytes from offline.numbering_consumption r order by number',
+          )
+        ).rows,
+      });
+      const populated0007 = await historicalRows();
+      for (const name of ['0008_import_receipts.sql', '0009_numbering_reconciliations.sql']) {
+        await admin.query('begin');
+        await admin.query(await sql(name));
+        await admin.query('commit');
+      }
+      expect(await historicalRows()).toEqual(populated0007);
+      expect(
+        (await admin.query('select count(*)::int as count from offline.numbering_reconciliations'))
+          .rows,
+      ).toEqual([{ count: 0 }]);
     } finally {
       await admin.query('rollback');
       await admin.end();
@@ -547,9 +582,15 @@ describe('UPS-OFS-09 PostgreSQL range administration and populated0007 upgrade',
         } else expect(claims).toHaveLength(0);
       } finally {
         release();
-        await first;
-        await second;
-        await admin.end();
+        // Drain both owned operations before closing the observer connection.
+        // A rejected operation remains a failure; cleanup never suppresses it.
+        await Promise.allSettled([first, second]);
+        try {
+          await first;
+          await second;
+        } finally {
+          await admin.end();
+        }
       }
     },
   );
