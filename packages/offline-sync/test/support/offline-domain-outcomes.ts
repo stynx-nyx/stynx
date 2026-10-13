@@ -536,4 +536,87 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
     ).toEqual(second.receipt.responseBodyBytes);
     expect(apply).toHaveBeenCalledTimes(2);
   });
+  it('D1.1 reclassifies a correction-pending cross-batch attempt using the original queue and receipt identity', async () => {
+    const h = harness();
+    const input = domainBatch('correction-origin');
+    const consumer = {
+      conflictId: 'consumer-original-id',
+      allowedActions: ['consumer-original-action'],
+      originalField: { value: 42 },
+    };
+    let outcome: 'conflict' | 'received' = 'conflict';
+    const classify = vi.fn(
+      (
+        _failure: unknown,
+        item: import('../../src/types').CTG9SyncBatchItemInput,
+        context: import('../../src/types').OfflineSyncItemContext,
+      ) => {
+        expect(item.queueItemId).toBe(input.items[0]!.queueItemId);
+        expect(context.receiptId).toBe(input.items[0]!.idempotencyKey);
+        return outcome === 'conflict'
+          ? {
+              status: 'conflict' as const,
+              conflict: { type: 'domain' as const, description: 'correctable collision' },
+            }
+          : { status: 'received' as const };
+      },
+    );
+    let originalConflict!: import('../../src/types').SyncConflictRecord;
+    const subject = h.service({
+      itemApplier: {
+        apply: async () => {
+          throw domainFailure(consumer);
+        },
+      },
+      eventPort: domainEvents(),
+      domainOutcomeClassifier: { classify },
+      conflictResolver: {
+        allowedActions: async () => ['retry_after_correction'],
+        resolve: async () => ({ ...originalConflict, status: 'resolved' }),
+      },
+    });
+    const original = await h.run(GAP_TENANT_A, () => subject.submitSyncBatch(input));
+    expect(original.receipt.items[0]).toMatchObject({ status: 'conflict', context: consumer });
+    originalConflict = (
+      await h.run(GAP_TENANT_A, () =>
+        subject.listSyncConflicts({ queueItemId: input.items[0]!.queueItemId }),
+      )
+    ).items[0]!;
+    await h.run(GAP_TENANT_A, () =>
+      subject.resolveConflict(originalConflict.conflictId, {
+        resolution: 'retry_after_correction',
+      }),
+    );
+    expect(
+      await h.run(GAP_TENANT_A, () => subject.getSyncItemReceipt(input.items[0]!.idempotencyKey!)),
+    ).toMatchObject({ status: 'pending', context: consumer });
+    outcome = 'received';
+    h.tick();
+    const next = domainBatch('correction-next');
+    const corrected = {
+      ...next,
+      deviceId: input.deviceId,
+      items: [{ ...next.items[0]!, idempotencyKey: input.items[0]!.idempotencyKey }],
+    };
+    const result = await h.run(GAP_TENANT_A, () => subject.submitSyncBatch(corrected));
+    expect(result.receipt.status).toBe('closed');
+    expect(result.receipt.items[0]).toMatchObject({
+      status: 'received',
+      context: { ...consumer, originalQueueItemId: input.items[0]!.queueItemId },
+      stynx: { terminalReceived: true, retryable: false, attempts: 2 },
+    });
+    expect(classify).toHaveBeenCalledTimes(2);
+    const stored = await h.run(GAP_TENANT_A, () =>
+      subject.getSyncItemReceipt(input.items[0]!.idempotencyKey!),
+    );
+    expect(stored).toMatchObject({
+      queueItemId: input.items[0]!.queueItemId,
+      status: 'received',
+      context: consumer,
+    });
+    expect(
+      (await h.run(GAP_TENANT_A, () => subject.submitSyncBatch(input))).receipt.responseBodyBytes,
+    ).toEqual(original.receipt.responseBodyBytes);
+    expect(classify).toHaveBeenCalledTimes(2);
+  });
 }

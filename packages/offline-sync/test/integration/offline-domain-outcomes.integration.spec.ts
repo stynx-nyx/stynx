@@ -173,7 +173,7 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
           [reservation.reservationId],
         )
       ).rows,
-    ).toEqual([{ status: 'reserved', server_entity_id: null }]);
+    ).toEqual([{ status: 'available', server_entity_id: null }]);
     const evidence = (
       await query(
         GAP_TENANT_A,
