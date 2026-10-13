@@ -701,13 +701,63 @@ documented here rather than implied.
 Server-side device attestation is deferred to Phase 5. This API authenticates the actor and scopes
 database access, but it cannot independently prove the client's posture claim.
 
-### Prospective 1.6.1 acceptance corrections
+### Current 1.6.1 candidate implementation verification map
 
 [ADR-MOBILE-OFFLINE-0005](../../../law/adr/ADR-MOBILE-OFFLINE-0005-acceptance-evidence.md)
-specifies the additive V-03/V-04 structured context, V-05 returned platform
-context, V-07 missing-window signal, V-08 explicitly configured resolution
-events, V-10 business-agent candidate and V-13 durable reconciliation history.
-The published 1.6.0 map above remains historical and does not certify this new
-implementation. New claims require candidate-bound ordinary tests, installed
-package evidence and actual DETRAN mapping/acceptance. Legacy closed responses
-retain their exact bytes, including fields absent when originally recorded.
+is implemented in the current candidate. This map supplements the preserved
+published 1.6.0 observation above; it does not establish final 1.6.1 publication
+or DETRAN acceptance. Legacy closed responses retain their exact recorded bytes,
+including fields absent when originally recorded.
+
+The exact shared test titles below are declared in
+[`test/support/offline-sync-acceptance-gaps.ts`](../../../packages/offline-sync/test/support/offline-sync-acceptance-gaps.ts)
+and executed through both
+[`test/unit/offline-sync-acceptance-gaps.spec.ts`](../../../packages/offline-sync/test/unit/offline-sync-acceptance-gaps.spec.ts)
+with `InMemoryOfflineSyncStore`, and
+[`test/integration/offline-sync-acceptance-gaps.integration.spec.ts`](../../../packages/offline-sync/test/integration/offline-sync-acceptance-gaps.integration.spec.ts)
+with `PostgresOfflineSyncStore` and real PostgreSQL. Paths in this section are
+relative to `packages/offline-sync/`.
+
+| Verification | Implemented public contract                                                                                                                                                                                                                                                                                                | Exact shared test title                                                                                                                                                                                                         |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V-03         | `OfflineSyncError.context` and its HTTP response expose `expectedSequence`, `receivedSequence` and `deviceBatchId`; refused duplicate/gap sequences remain unconsumed.                                                                                                                                                     | “V-03 exposes sequence identities as structured evidence without consuming refused sequence numbers”                                                                                                                            |
+| V-04         | `SyncItemReceipt.context` preserves validated domain JSON, preferring response context over the error's own context. Illegal, lossy, reserved-key or oversized context produces retryable `OFFLINE_SYNC_DOMAIN_CONTEXT_INVALID` after rollback.                                                                            | “V-04 preserves bounded domain context, response precedence and exact closed replay independently of error mutation”; “V-04 refuses illegal or oversized domain context as retryable evidence rather than silently dropping it” |
+| V-05         | Returned `SyncItemReceipt.stynx` uses the persisted `OfflineSyncStynxContext` for the current outcome. Integrity rejections retain the received attempt's facts; they borrow neither original application identity nor a fabricated canonical hash.                                                                        | “V-05 projects rejected attempt facts without borrowing original application identity or inventing a canonical hash”                                                                                                            |
+| V-07         | `OfflineSyncStynxContext.signals` records `SYNC_CONCURRENCY_WINDOW_SOURCE_PENDING` for an unresolved concurrency window. Explicit zero disables the window without that signal; closed replay preserves its original evidence.                                                                                             | “V-07 records source-pending signal only for an unresolved concurrency window and preserves it on closed replay”                                                                                                                |
+| V-08         | Optional `StynxOfflineSyncModuleOptions.resolutionEventPort` appends one `OfflineSyncEvent` per accepted action, in the resolution transaction after durable state. Entity `offline.sync-conflict` and key `stynx:offline-sync:resolution:<actionId>` bind the action; append failure rolls back state, history and event. | “V-08 appends one event per accepted action after durable state and rolls every change back when append fails”; “V-08 isolates a failing resolution from another conflict history and serializes terminal contenders”           |
+| V-10         | `OfflineSyncAgentResolver.resolve(scope, operation, request?)` receives the optional business-agent candidate. Only its resolved value becomes `agentId`; authenticated tenant/audit actor stay separate. An absent candidate preserves the two-argument call.                                                             | “V-10 passes a business-agent candidate only to its resolver and preserves authenticated audit identity”                                                                                                                        |
+| V-13         | `OfflineSyncService.reconcileNumberingReservation` returns a stable reconciliation ID; `listNumberingReconciliations` exposes tenant-scoped `NumberingReconciliationRecord` snapshots. Keyed replay is exact, changed keyed input refuses, and observing a closed reservation never revives it.                            | “V-13 appends tenant-scoped immutable reconciliation snapshots with exact keyed replay and no post-close revival”                                                                                                               |
+
+The PostgreSQL integration file additionally verifies “V-13 populated forward
+upgrade preserves reservation and consumption bytes without inventing historical
+reconciliations” and “V-13 reconciliation history enforces FORCE RLS, direct
+restricted login and append-only application grants”. Forward `0009` creates the
+history relation without inventing prior observations. The versioned import
+mapping and preservation rules are defined in the existing
+[`stynx-offline-import/2` contract](offline-storage-import.md#prospective-161-reconciliation-history-extension).
+
+**D6 bound forward installation.** Exported `renderOfflineStorageMigrations`,
+`OfflineStorageMigrationsArtifact` and `OfflineStorageMigration` expose the ordered
+immutable raw-source identities and separate bound SQL digests. They do not
+select a suffix or admit a consumer ledger. The
+[consumer storage contract](consumer-storage.md) and
+[bound forward migration contract](offline-storage-import.md#bound-forward-migrations)
+retain the fresh-only full artifact, prior-state admission, owner transaction and
+read-only verification boundaries. Existing evidence is:
+
+- [`test/unit/offline-storage-migrations.spec.ts`](../../../packages/offline-sync/test/unit/offline-storage-migrations.spec.ts):
+  “binds every original source and exact ordered output for %j”, “changes bound
+  output digests without changing immutable source identities”, and “refuses
+  unsupported selection/unsafe bindings rather than admitting a ledger: %j”.
+- [`test/unit/offline-storage-migrations-packed.spec.ts`](../../../packages/offline-sync/test/unit/offline-storage-migrations-packed.spec.ts):
+  “renders identical output offline with filesystem and process effects refused”,
+  against the actual packed renderer.
+- [`test/integration/offline-storage-migrations.integration.spec.ts`](../../../packages/offline-sync/test/integration/offline-storage-migrations.integration.spec.ts):
+  “preserves populated prefix 000%s and admits only supported forward upgrade
+  with no reader”, for prefixes 0001, 0008 and the 0005 collision refusal. The
+  witnesses preserve stored facts, exercise custom tenant/role bindings and prove
+  restricted-login, FORCE RLS and two-tenant isolation.
+
+These implementation witnesses do not certify DETRAN's actual source mappings,
+previously receipted migration prefix, prior-state custody, installed published
+package or application acceptance. Those consumer proofs remain required.
