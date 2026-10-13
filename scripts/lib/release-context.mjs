@@ -224,6 +224,7 @@ const patch162VersionSupportPaths = new Set(
 // Complete this closed map after the published DEVAI bind and before freezing
 // the exact candidate. A newly generated path must be reviewed explicitly.
 const patch162FollowUpStatuses = new Map([
+  ['package.json', 'M'],
   ['docs/meta/security/sbom.cdx.json', 'M'],
   ['law/trace.json', 'M'],
   ['test/scripts/local-rc-blocker-contract.test.mjs', 'M'],
