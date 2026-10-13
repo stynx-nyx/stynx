@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.29",
+  "version": "1.3.30",
   "meta": {
-    "last_updated": "2026-10-13T04:22:28.904230Z",
+    "last_updated": "2026-10-13T04:50:59.781329Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -90,7 +90,8 @@
       "STYNX 1.6.1 Architect binding preserves every prior executable relationship and assertion, binds Inspector acceptance, reconciliation/import, populated upgrade, fresh-only installation rollback and repeated role-binding witnesses through bc6ae9e0, and refreshes the exact 1.6.1 release-scope/freeze projections. Shared behavior assertions execute through both real-store wrappers; their corpus counts remain the literal per-file projection. These bindings establish neither consumer adoption nor a fully green audit, HTTP performance or mutation result.",
       "STYNX 1.6.1 Architect adds the three Inspector bound-forward-migration witnesses from b75345c0934bad9594f130b2f1a73baed72d6cf7 against Engineer a04f2d55, preserving all 682 prior executable bindings and literal assertion projections. Raw migration identities, ordered bound SQL hashes, installed offline rendering, populated custom-bound prefixes, collision rollback and restricted two-tenant RLS are covered. Fixture-local suffix selection does not establish consumer ledger/prior-state admission, DETRAN acceptance, executed coverage, HTTP performance, mutation or overall audit PASS.",
       "STYNX 1.6.1 Architect binds three Inspector D1.1 outcome/transaction witnesses through 816f30b2e800cd2d4c0e03d1c16d77740499bb7b against Engineer bfdb731e and explicit store capability. Every prior 685 corpus entry, including the original 682 assertion projections, is unchanged. Shared tests execute through memory and real PostgreSQL wrappers; literal file projections do not count support assertions twice. Canonical terminal states, optional conflict identity, reserved-error bypass, detached contexts, actual rollback, tenant isolation and source terminal-marker import custody are covered. This establishes no consumer acceptance, publication, executed-coverage standing, HTTP performance, mutation or overall audit PASS.",
-      "STYNX 1.6.1 Architect rebinds only the two existing D1.1 wrapper projections after Inspector d4f6b15509f9ac666db43e877101edb3936c0aca adds the shared original-code custody witness against Engineer ce04fce6. Every original 682 corpus entry/projection, all other prior bindings and all assertion counts remain unchanged. Inspector d7de5967 refreshes only three manifest SHA constants, without changing its assertion projection. Actual published DEVAI 2.6.1 is adopted through registered CLI operations; neither binding nor diagnostic Doctor readiness grants execution standing, consumer acceptance or release/audit PASS."
+      "STYNX 1.6.1 Architect rebinds only the two existing D1.1 wrapper projections after Inspector d4f6b15509f9ac666db43e877101edb3936c0aca adds the shared original-code custody witness against Engineer ce04fce6. Every original 682 corpus entry/projection, all other prior bindings and all assertion counts remain unchanged. Inspector d7de5967 refreshes only three manifest SHA constants, without changing its assertion projection. Actual published DEVAI 2.6.1 is adopted through registered CLI operations; neither binding nor diagnostic Doctor readiness grants execution standing, consumer acceptance or release/audit PASS.",
+      "STYNX 1.6.1 Architect binds Inspector 9c7ee40e publication-guard repairs against Engineer 625242f5 and the prospective registry/consumed-context authority. The one existing release-version-policy projection advances from405 to431 literal assertions; its historical Owner/anomaly/1.5.x/RC witnesses are retained, current campaign fixtures use1.6.1/latest1.6.0, and the new closed consumed-marker/storage/root-dependency/follow-up guards have positive and refusal witnesses. All other687 corpus entries and prior relationships are unchanged. The current authenticated44-package census/anomaly artifact was independently reviewed; no registry mutation, new publication, full RC or audit PASS is asserted."
     ]
   },
   "invariants": [
@@ -1181,6 +1182,18 @@
             "Actual worker subprocess startup verifies descriptor, process/environment, source/map and control-module custody; forged handles, extra arguments and invalid startup inputs refuse before trusted bootstrap. Startup fixtures do not establish actual application/middleware/HTTP or performance readiness."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "test/scripts/release-version-policy.test.mjs",
+          "names": [
+            "stable 1.6.1 patch context accepts the actual consumed marker, both version-only storage templates and exact DEVAI adoption",
+            "stable 1.6.1 patch context refuses wrong markers, package groups, storage bodies and unrelated post-version changes"
+          ],
+          "assertions": [
+            "Exact consumed patch admission preserves the uniform44-package group, sole changeset, version-only generated storage, exact DEVAI root dependency and101 closed net path/status entries; existing historical release and registry/anomaly witnesses remain."
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": ["packages/**", "packages-web/**", "reference/**", "domain/**", "tools/**"]
@@ -5203,8 +5216,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 405,
-      "assertion_digest_sha256": "8c1c81acd6755406789e3bdfb4ebd26b93dbc5d565079939b3c977ab836c645b"
+      "assertion_count": 431,
+      "assertion_digest_sha256": "e171b02559ba3bac1a1fd6f28787c033bed3ed8d9b689e1bdf8a4f64ddfe3e6e"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
