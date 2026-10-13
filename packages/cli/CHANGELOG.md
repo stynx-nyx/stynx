@@ -1,5 +1,11 @@
 # @stynx-nyx/cli
 
+## 1.6.1
+
+### Patch Changes
+
+- @stynx-nyx/privacy@1.6.1
+
 ## 1.6.0
 
 ### Patch Changes

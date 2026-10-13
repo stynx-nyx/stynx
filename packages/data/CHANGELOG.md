@@ -1,5 +1,11 @@
 # @stynx-nyx/data
 
+## 1.6.1
+
+### Patch Changes
+
+- @stynx-nyx/core@1.6.1
+
 ## 1.6.0
 
 ### Minor Changes
