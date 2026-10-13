@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.26",
+  "version": "1.3.27",
   "meta": {
-    "last_updated": "2026-10-13T01:34:34.203314Z",
+    "last_updated": "2026-10-13T02:16:58.020738Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -87,7 +87,8 @@
       "2026-10-12 Architect rebind of Inspector 24a18319 pins explicit immutable historical flow-manifest component fixtures and actual 1.6.0 parser/worker early-refusal/no-effects witnesses (ADR-RELEASE-0003). Existing assertions, all four production anchors, actual candidate/fresh-build manifests and HTTP NOT_OBSERVED/readiness-false posture remain unchanged; diagnostic fixture success supplies no HTTP 1.6.0 admission.",
       "2026-10-12 Architect rebind of Inspector d78c3de9 adds the actual installed Nest diagnostic layout: copied production guard/child bytes are verified unchanged, all existing component scenarios remain, and the canonical 1.6.0 manifest is refused before target dependency evaluation. No actual candidate or fresh-build manifest, production anchor, threshold, HTTP admission or readiness verdict changes (ADR-RELEASE-0003).",
       "2026-10-12 Architect rebind of Inspector 6748206d pins actual installed Changesets empty-acknowledgement generation and the exact protected smart-friends-grab.md eight-byte no-release row. All other feature declarations, the complete consumption census, minor 1.6.0 plan and final zero-pending rule remain; eight additive refusals cover unknown, malformed, altered, feature-bearing, sole and unconsumed acknowledgements. No production, canonical admission, threshold, release scope or readiness verdict changes.",
-      "STYNX 1.6.1 Architect binding preserves every prior executable relationship and assertion, binds Inspector acceptance, reconciliation/import, populated upgrade, fresh-only installation rollback and repeated role-binding witnesses through bc6ae9e0, and refreshes the exact 1.6.1 release-scope/freeze projections. Shared behavior assertions execute through both real-store wrappers; their corpus counts remain the literal per-file projection. These bindings establish neither consumer adoption nor a fully green audit, HTTP performance or mutation result."
+      "STYNX 1.6.1 Architect binding preserves every prior executable relationship and assertion, binds Inspector acceptance, reconciliation/import, populated upgrade, fresh-only installation rollback and repeated role-binding witnesses through bc6ae9e0, and refreshes the exact 1.6.1 release-scope/freeze projections. Shared behavior assertions execute through both real-store wrappers; their corpus counts remain the literal per-file projection. These bindings establish neither consumer adoption nor a fully green audit, HTTP performance or mutation result.",
+      "STYNX 1.6.1 Architect adds the three Inspector bound-forward-migration witnesses from b75345c0934bad9594f130b2f1a73baed72d6cf7 against Engineer a04f2d55, preserving all 682 prior executable bindings and literal assertion projections. Raw migration identities, ordered bound SQL hashes, installed offline rendering, populated custom-bound prefixes, collision rollback and restricted two-tenant RLS are covered. Fixture-local suffix selection does not establish consumer ledger/prior-state admission, DETRAN acceptance, executed coverage, HTTP performance, mutation or overall audit PASS."
     ]
   },
   "invariants": [
@@ -431,6 +432,33 @@
           "names": ["Rendered offline storage fresh-install and role-binding boundaries"],
           "assertions": [
             "Fresh installation verifies; full objects replay refuses atomically with all rows/catalog unchanged, while separately repeated role bindings preserve the supported populated contract."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/offline-sync/test/unit/offline-storage-migrations.spec.ts",
+          "names": ["Ordered consumer-owned offline migration artifacts"],
+          "assertions": [
+            "All nine original migration byte identities and separate bound UTF-8 SQL digests remain ordered/deterministic with default, custom Unicode and omitted-reader binding; unsafe identifiers and unsupported selection refuse."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "unit",
+          "path": "packages/offline-sync/test/unit/offline-storage-migrations-packed.spec.ts",
+          "names": ["Packed ordered offline migration renderer"],
+          "assertions": [
+            "The installed packed renderer export produces matching custom-bound artifacts while filesystem and process effects are refused during rendering without a source checkout."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/offline-sync/test/integration/offline-storage-migrations.integration.spec.ts",
+          "names": ["Bound offline forward SQL on populated consumer installations"],
+          "assertions": [
+            "Real PostgreSQL custom tenant-table/role prefix 0001 and 0008 upgrades preserve history and backfill exactly once, pass the final read-only verifier and direct restricted two-tenant FORCE RLS; prefix 0005 collision and old migration replay refuse transactionally. Fixture-local selection establishes no consumer ledger admission."
           ],
           "mode": "gray_box"
         }
@@ -7250,6 +7278,30 @@
       "lifecycle": "supported",
       "assertion_count": 0,
       "assertion_digest_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "packages/offline-sync/test/integration/offline-storage-migrations.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 22,
+      "assertion_digest_sha256": "8d908657874624972a8bbd5cf6a6ebb2f9f4188539da41599e635da539bd6b20"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-storage-migrations-packed.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 4,
+      "assertion_digest_sha256": "d0eba4afadc28329120f32445e511f3800c4bc2c87dfb8d1adbbdf30385d9e1f"
+    },
+    {
+      "path": "packages/offline-sync/test/unit/offline-storage-migrations.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-OFFLINE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "453ef9438f7e7798edf3ada5f2c75dfe71856dd2c55ac6b6582c9b6126031120"
     }
   ],
   "suites": {
