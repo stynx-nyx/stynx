@@ -154,6 +154,7 @@ interface ConflictRow {
 
 @Injectable()
 export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
+  readonly supportsDomainOutcomeClassifier = true as const;
   constructor(private readonly moduleRef: ModuleRef) {}
 
   blockNumberingReservation(

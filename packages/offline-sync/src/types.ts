@@ -29,6 +29,8 @@ export interface OfflineSyncStynxContext {
   readonly storedPayloadHash?: string;
   readonly relatedQueueItemId?: string;
   readonly retryable?: boolean;
+  /** Explicit terminal received domain observation; absence preserves legacy retry behavior. */
+  readonly terminalReceived?: true;
   readonly consumerAttributes?: OfflineSyncConsumerAttributes;
   readonly concurrencySuspected?: boolean;
   readonly concurrentPairs?: readonly OfflineSyncConcurrentPair[];
@@ -258,6 +260,7 @@ export interface StynxOfflineSyncModuleOptions {
   readonly policyResolver?: OfflineSyncPolicyResolver;
   readonly agentResolver?: OfflineSyncAgentResolver;
   readonly itemApplier?: OfflineSyncItemApplier;
+  readonly domainOutcomeClassifier?: OfflineSyncDomainOutcomeClassifier;
   readonly payloadHashPort?: OfflineSyncPayloadHashPort;
   readonly preApplyDetector?: OfflineSyncConcurrencyDetector;
   readonly eventPort?: OfflineSyncEventPort;
@@ -278,6 +281,25 @@ export interface OfflineSyncAgentResolver {
     operation: string,
     request?: { readonly agentId?: string },
   ): Promise<string>;
+}
+export interface OfflineSyncDomainFailure {
+  readonly code: string;
+  readonly httpStatus?: number;
+  readonly context?: Readonly<Record<string, unknown>>;
+}
+export interface OfflineSyncDomainOutcome {
+  readonly status: 'received' | 'rejected' | 'conflict';
+  readonly conflict?: {
+    readonly type: 'domain' | 'concurrency';
+    readonly description: string;
+  };
+}
+export interface OfflineSyncDomainOutcomeClassifier {
+  classify(
+    failure: OfflineSyncDomainFailure,
+    item: CTG9SyncBatchItemInput,
+    context: OfflineSyncItemContext,
+  ): OfflineSyncDomainOutcome | undefined;
 }
 export interface OfflineSyncPolicy {
   reservationTtlMs?: number;
@@ -510,6 +532,8 @@ export interface SyncIntegrityRejection extends SyncIntegrityRejectionIdentity {
 }
 
 export interface OfflineSyncDurableStore extends OfflineSyncStore {
+  /** Explicit opt-in to canonical D1.1 outcomes; configured consumers fail closed otherwise. */
+  readonly supportsDomainOutcomeClassifier?: true;
   createNumberingRange?(
     scope: TrustedOfflineSyncScope,
     input: CreateNumberingRangeInput,

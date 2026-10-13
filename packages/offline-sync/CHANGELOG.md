@@ -9,6 +9,9 @@
   events and immutable reconciliation history with lossless versioned import support.
   Publish ordered, source-bound forward migration SQL with configurable tenant and
   role bindings for verified populated upgrades without replaying fresh installation.
+  Add an opt-in, detached domain-outcome classifier for canonical received, rejected
+  and conflict receipts. Preserve original domain context, terminal received replay,
+  transactional refusal evidence and legacy behavior when no classifier is installed.
   - @stynx-nyx/auth@1.6.1
   - @stynx-nyx/backend@1.6.1
   - @stynx-nyx/core@1.6.1

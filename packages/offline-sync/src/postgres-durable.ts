@@ -1,5 +1,6 @@
 export { pgReconcile } from './postgres-reconciliation';
 import { domainErrorContext } from './domain-error-context';
+import { classifyDomainOutcome, domainFailureCode } from './domain-outcome';
 import { pgSortInstant } from './listing';
 import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection';
 import { createHash, randomUUID } from 'node:crypto';
@@ -1190,6 +1191,7 @@ export async function pgSubmit(
           receipt.device_batch_id !== input.deviceBatchId ||
           receipt.queue_item_id !== item.queueItemId ||
           receipt.status !== initialStatus ||
+          splitStynxContext(receipt.context_json).stynx?.terminalReceived === true ||
           (!item.idempotencyKey && !insertedReceipt.rowCount)
         ) {
           if (
@@ -1212,7 +1214,10 @@ export async function pgSubmit(
                 item.payloadHash,
                 receipt.status,
                 receipt.error_code,
-                JSON.stringify({ originalQueueItemId: receipt.queue_item_id }),
+                JSON.stringify({
+                  ...(options.ports.domainOutcomeClassifier ? receipt.context_json : {}),
+                  originalQueueItemId: receipt.queue_item_id,
+                }),
               ],
             );
           }
@@ -1239,7 +1244,15 @@ export async function pgSubmit(
           preflight.kind === 'integrity'
             ? 'OFFLINE_SYNC_ITEM_INTEGRITY'
             : preflight.receipt.error_code;
-        if (status === initialStatus && item.idempotencyKey && options.ports.itemApplier)
+        if (
+          status === initialStatus &&
+          item.idempotencyKey &&
+          options.ports.itemApplier &&
+          !(
+            preflight.kind === 'duplicate' &&
+            splitStynxContext(preflight.receipt.context_json).stynx?.terminalReceived === true
+          )
+        )
           retryable = true;
         const duplicateContext =
           preflight.kind === 'duplicate'
@@ -1288,6 +1301,16 @@ export async function pgSubmit(
       let receiptContext: Record<string, unknown> | undefined;
       let stynx: OfflineSyncStynxContext | undefined;
       let attempts = 0;
+      let refusalAttemptRecorded = false;
+      let failureContext: OfflineSyncItemContext = {
+        ...scope,
+        agentId: options.agentId,
+        orgUnitId: input.orgUnitId,
+        deviceId: input.deviceId,
+        batchId: input.deviceBatchId,
+        now,
+        receiptId: key,
+      };
       // The queue row keeps its original id; a re-applying batch may declare the key under another id.
       let queueItemId = item.queueItemId;
       const itemApplier = options.ports.itemApplier;
@@ -1340,6 +1363,7 @@ export async function pgSubmit(
                 },
               );
               const context = prepared.context;
+              failureContext = context;
               if (prepared.defer) {
                 const recorded = await pgRecordConcurrency(
                   trx,
@@ -1546,21 +1570,37 @@ export async function pgSubmit(
         } catch (error) {
           if (error instanceof OfflineSyncConfigurationError) throw error;
           const domainContext = domainErrorContext(error);
+          const classification = classifyDomainOutcome(
+            options.ports.domainOutcomeClassifier,
+            error,
+            domainContext,
+            queueItemId === item.queueItemId ? item : { ...item, queueItemId },
+            failureContext,
+          );
+          const outcome = classification.outcome;
           const classified =
             domainContext.valid &&
+            classification.valid &&
             error instanceof HttpException &&
             error.getStatus() >= 400 &&
             error.getStatus() < 500 &&
             !(error instanceof OfflineSyncError && error.code === 'OFFLINE_SYNC_BATCH_CONFLICT');
           const numbering = error instanceof OfflineSyncNumberingOutcome ? error : null;
-          errorCode = domainContext.valid
-            ? ((error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED')
-            : 'OFFLINE_SYNC_DOMAIN_CONTEXT_INVALID';
+          errorCode = !domainContext.valid
+            ? 'OFFLINE_SYNC_DOMAIN_CONTEXT_INVALID'
+            : !classification.valid
+              ? 'OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID'
+              : options.ports.domainOutcomeClassifier
+                ? (domainFailureCode(error) ?? 'OFFLINE_SYNC_ITEM_FAILED')
+                : ((error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED');
           // A retryable failure of a re-application leaves the receipt `pending` for the resumed batch.
           const expected: SyncItemReceipt['status'] = reapplying ? 'pending' : initialStatus;
           if (numbering) {
             status = numbering.receiptStatus;
             receiptContext = numbering.context;
+          } else if (outcome) {
+            status = outcome.status;
+            receiptContext = domainContext.context;
           } else if (classified) {
             status = 'rejected';
             receiptContext = domainContext.context;
@@ -1573,12 +1613,14 @@ export async function pgSubmit(
             errorCode,
             errorMessage: error instanceof Error ? error.message : String(error),
             attempts: attempts || undefined,
-            reasonCode: numbering?.code,
-            retryable: !classified,
+            reasonCode: numbering?.code ?? (outcome ? errorCode : undefined),
+            retryable: outcome ? false : !classified,
+            ...(outcome?.status === 'received' ? { terminalReceived: true } : {}),
           });
           await txDurable(database, async (trx) => {
             await renewLease(trx, scope, input, token, generation);
-            if (numbering) {
+            if (numbering || outcome?.conflict) {
+              const conflictType = numbering ? 'domain' : outcome!.conflict!.type;
               const conflictId = randomUUID();
               const itemContext = {
                 ...scope,
@@ -1592,22 +1634,27 @@ export async function pgSubmit(
               await trx.query(
                 `insert into offline.sync_conflicts
               (id,tenant_id,sync_queue_item_id,local_entity_id,payload_hash,conflict_type,description,status,created_at)
-              values ($1::uuid,$2::uuid,$3,$4,$5,'domain',$6,'open',$7::timestamptz)`,
+              values ($1::uuid,$2::uuid,$3,$4,$5,$8,$6,'open',$7::timestamptz)`,
                 [
                   conflictId,
                   scope.tenantId,
                   queueItemId,
                   item.localEntityId,
                   item.payloadHash,
-                  numbering.code,
+                  numbering?.code ?? outcome!.conflict!.description,
                   now,
+                  conflictType,
                 ],
               );
-              const allowedActions = (await options.ports.conflictResolver?.allowedActions?.(
-                trx,
-                conflictId,
-                itemContext,
-              )) ?? ['reject', 'retry_after_correction'];
+              const allowedActions =
+                (await options.ports.conflictResolver?.allowedActions?.(
+                  trx,
+                  conflictId,
+                  itemContext,
+                )) ??
+                (conflictType === 'concurrency'
+                  ? ['manual_review']
+                  : ['reject', 'retry_after_correction']);
               await trx.query(
                 `insert into offline.sync_conflict_evidence
               (tenant_id,conflict_id,queue_item_id,allowed_actions,evidence)
@@ -1618,20 +1665,24 @@ export async function pgSubmit(
                   queueItemId,
                   JSON.stringify(allowedActions),
                   JSON.stringify({
-                    ...numbering.context,
-                    errorCode: numbering.code,
+                    ...(numbering
+                      ? numbering.context
+                      : domainContext.context
+                        ? { context: domainContext.context }
+                        : {}),
+                    errorCode,
                     detectedAt: now,
                     stynx: executionStynxContext(options, {
                       receiptId: key,
-                      reasonCode: numbering.code,
-                      errorCode: numbering.code,
+                      reasonCode: errorCode,
+                      errorCode,
                       attempts,
                       retryable: allowedActions.includes('retry_after_correction'),
                     }),
                   }),
                 ],
               );
-              receiptContext = { ...numbering.context, conflictId, allowedActions };
+              if (numbering) receiptContext = { ...numbering.context, conflictId, allowedActions };
             }
             await trx.query(
               `update offline.sync_item_receipts set status=$3,error_code=$4,
@@ -1650,12 +1701,39 @@ export async function pgSubmit(
                 JSON.stringify(stynx),
               ],
             );
-            if (classified)
+            if (classified || outcome)
               await trx.query(
                 `update offline.sync_queue_items set status=$3,
             updated_at=$4::timestamptz where tenant_id=$1::uuid and id=$2`,
                 [scope.tenantId, queueItemId, status, now],
               );
+            if (outcome && reapplying) {
+              await trx.query(
+                `insert into offline.sync_item_attempts
+                  (tenant_id,device_id,device_batch_id,queue_item_id,idempotency_key,payload_hash,status,error_code,context_json)
+                  values ($1::uuid,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
+                  on conflict (tenant_id,device_id,device_batch_id,queue_item_id)
+                  do update set status=excluded.status,error_code=excluded.error_code,context_json=excluded.context_json`,
+                [
+                  scope.tenantId,
+                  input.deviceId,
+                  input.deviceBatchId,
+                  item.queueItemId,
+                  key,
+                  item.payloadHash,
+                  status,
+                  errorCode,
+                  JSON.stringify({
+                    ...receiptContext,
+                    ...(queueItemId !== item.queueItemId
+                      ? { originalQueueItemId: queueItemId }
+                      : {}),
+                    stynx,
+                  }),
+                ],
+              );
+              refusalAttemptRecorded = true;
+            }
           });
         }
       }
@@ -1666,7 +1744,7 @@ export async function pgSubmit(
           : {}),
       };
       // D1 item 4: the re-applying batch records its outcome as an attempt; the receipt keeps its batch binding.
-      if (reapplying)
+      if (reapplying && !refusalAttemptRecorded)
         await txDurable(database, async (trx) => {
           await renewLease(trx, scope, input, token, generation);
           await trx.query(
