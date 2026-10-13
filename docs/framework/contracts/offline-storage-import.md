@@ -430,3 +430,33 @@ atomic invalid-prefix rollback, equal/changed source replay, mapping/tenant
 refusals, nullable reservations and immutable history, lossless timestamps/bigints,
 missing proof and exact archived wire bytes. No test, threshold or historical
 observation is weakened for import support.
+
+## Prospective 1.6.1 reconciliation history extension
+
+[ADR-MOBILE-OFFLINE-0005 D5](../../../law/adr/ADR-MOBILE-OFFLINE-0005-acceptance-evidence.md#d5--durable-reconciliation-history-v-13)
+adds `stynx-offline-import/2`. Its envelope retains the same closed fields and
+digest rules. Version `/1` still admits exactly the original eleven kinds;
+`reconciliations` is refused under `/1`. Version `/2` additionally admits
+`{ kind: 'reconciliations', row }` mapped by exact `targetKey: { tenant_id, id }`
+to `offline.numbering_reconciliations`.
+
+The closed row has `id`, `tenant_id`, `reservation_id`, `actor_id`, `created_at`,
+`claimed_numbers`, `user_ref`, `idempotency_key`, `request_fingerprint` and
+`result_json`. Nullable fields are explicit null. `claimed_numbers` uses the
+existing canonical-decimal bigint import representation; its safe-integer,
+sorted-unique semantics are independently validated. `result_json` is the actual
+complete closed reconciliation result, including its `reconciliationId`, stable
+reservation/status, consumption snapshot and missing/unexpected arrays. Preserve
+original actor, instant, key, claim set and result; do not recompute the result
+against current consumption, invent an old observation or apply any claim again.
+
+Require row ID = result reconciliation ID, reservation ID = result reservation
+ID, same-tenant existing reservation, valid result/claim numbers in the original
+interval and the declared request-key/fingerprint relationship. Keyed replay
+uniqueness is scoped to tenant/reservation; unknown fields, kinds, malformed
+snapshots, dangling mappings or conflicting existing evidence refuse atomically.
+Import causes no domain effect or resolution event. The verifier includes forward
+migration `0009` and its immutable, FORCE RLS relation under the consumer binding.
+Old `/1` manifests and their immutable digests remain valid without synthetic
+reconciliation rows. Candidate-bound installed-package, populated upgrade and
+restart/idempotence tests are required before declaring this extension delivered.

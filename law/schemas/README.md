@@ -8,7 +8,8 @@ generated documentation is a published view, never a second authority.
 JSON receipt. Service `Date` values serialize as ISO instants; runtime/SQL also
 enforce the documented UTF-8 byte bounds. Retirement never proves delivery.
 
-`offline-import.schema.json` defines the closed eleven-kind storage DTO union,
+`offline-import.schema.json` defines the closed versioned storage DTO union
+(eleven kinds under `/1`, additively twelve under `/2`),
 exact primary-key mappings and archived-response envelope for owner-only import.
 The import contract additionally requires byte bounds, legal-JSON/canonical
 digest validation, lossless timestamp/bigint handling and cross-record invariants;
