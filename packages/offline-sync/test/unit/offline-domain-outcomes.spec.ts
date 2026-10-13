@@ -40,7 +40,7 @@ describe('Domain-outcome contracts through the memory store', () => {
       readConflictActions: async (conflictId) =>
         (
           store as unknown as { conflictAllowedActions: Map<string, readonly string[]> }
-        ).conflictAllowedActions.get(conflictId)!,
+        ).conflictAllowedActions.get(`${GAP_TENANT_A}:${conflictId}`)!,
       run: async (_tenantId, operation) => operation(),
       tick: () => {
         clock += 1000;
@@ -49,6 +49,17 @@ describe('Domain-outcome contracts through the memory store', () => {
   });
   it('D1.1 restores actual memory-store effects before classifier invocation', async () => {
     const store = new InMemoryOfflineSyncStore();
+    store.seedNumberingRange({
+      id: '10000000-0000-4000-8000-0000000000e2',
+      tenantId: GAP_TENANT_A,
+      orgUnitId: 'org-a',
+      entityType: 'citation',
+      series: 'M',
+      startNumber: 1,
+      endNumber: 100,
+      nextNumber: 1,
+      status: 'active',
+    });
     const scope = { tenantId: GAP_TENANT_A, actorId: 'authenticated-audit-actor' };
     const seed = new OfflineSyncService(
       store,
@@ -86,7 +97,26 @@ describe('Domain-outcome contracts through the memory store', () => {
         domainOutcomeClassifier: { classify },
       },
     );
-    const result = await subject.submitSyncBatch(domainBatch('memory-effect-rollback'));
+    const input = domainBatch('memory-effect-rollback');
+    const reservation = await subject.reserveDurableNumbering({
+      orgUnitId: input.orgUnitId,
+      deviceId: input.deviceId,
+      shiftId: null,
+      entityType: 'citation',
+      requestedSize: 1,
+    });
+    const result = await subject.submitSyncBatch({
+      ...input,
+      items: [{ ...input.items[0]!, reservedNumber: reservation.startNumber }],
+    });
+    expect((await subject.getNumberingConsumption(reservation.reservationId)).consumption).toEqual([
+      {
+        number: reservation.startNumber,
+        status: 'available',
+        serverEntityId: null,
+        finalizedAt: null,
+      },
+    ]);
     expect(result.receipt.items[0]).toMatchObject({
       status: 'received',
       stynx: { terminalReceived: true },
