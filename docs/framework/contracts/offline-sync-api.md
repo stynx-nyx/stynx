@@ -675,7 +675,7 @@ replace that post-apply detector.
 between 1 and N queue items." With no limit (`maxBatchItems: null` or absent under a policy
 resolver), an empty batch reports "items must contain at least 1 queue item." E6 keeps N = 100.
 
-### UPS-OFS-14 verification map (V-01…V-15, except V-09)
+### UPS-OFS-14 verification map (published 1.6.0; V-01…V-15, except V-09)
 
 The test paths are below `packages/offline-sync/test/`. Every row names a test titled after its
 verification (`V-nn …`). The **Gap** column lists behavior that STYNX does not provide today; it is
@@ -700,3 +700,14 @@ documented here rather than implied.
 
 Server-side device attestation is deferred to Phase 5. This API authenticates the actor and scopes
 database access, but it cannot independently prove the client's posture claim.
+
+### Prospective 1.6.1 acceptance corrections
+
+[ADR-MOBILE-OFFLINE-0005](../../../law/adr/ADR-MOBILE-OFFLINE-0005-acceptance-evidence.md)
+specifies the additive V-03/V-04 structured context, V-05 returned platform
+context, V-07 missing-window signal, V-08 explicitly configured resolution
+events, V-10 business-agent candidate and V-13 durable reconciliation history.
+The published 1.6.0 map above remains historical and does not certify this new
+implementation. New claims require candidate-bound ordinary tests, installed
+package evidence and actual DETRAN mapping/acceptance. Legacy closed responses
+retain their exact bytes, including fields absent when originally recorded.

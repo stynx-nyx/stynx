@@ -5,6 +5,9 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [STYNX 1.6.1 offline fixes and practical audit recovery](2026-10-12-patch-1.6.1-and-practical-audit.md)
+- [ADR-MOBILE-OFFLINE-0005 — Additive acceptance evidence](ADR-MOBILE-OFFLINE-0005-acceptance-evidence.md)
+
 - [Adopt published DEVAI 2.6.0 and refresh the selected-adapter hook](2026-10-11-devai-2.6.0-adoption.md)
 
 - [Prospective local HTTP baseline bootstrap and mandatory comparison](2026-10-11-local-http-baseline-bootstrap.md)
