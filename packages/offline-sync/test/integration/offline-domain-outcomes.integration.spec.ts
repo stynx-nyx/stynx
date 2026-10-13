@@ -320,15 +320,21 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
 
   it('D1.1 imports an actual source terminal received marker losslessly and refuses contradictory marker assertions', async () => {
     const input = domainBatch('actual-source-terminal-import');
+    let terminal = false;
     const subject = service({
+      initialQueueStatus: 'pending',
       itemApplier: {
         apply: async () => {
           throw domainFailure({ original: 'source-context' });
         },
       },
       eventPort: domainEvents(),
-      domainOutcomeClassifier: { classify: () => ({ status: 'received' }) },
+      domainOutcomeClassifier: { classify: () => (terminal ? { status: 'received' } : undefined) },
     });
+    expect((await run(GAP_TENANT_A, () => subject.submitSyncBatch(input))).receipt.status).toBe(
+      'open',
+    );
+    terminal = true;
     const source = await run(GAP_TENANT_A, () => subject.submitSyncBatch(input));
     expect(source.receipt.items[0]!.stynx).toMatchObject({
       terminalReceived: true,
@@ -344,6 +350,7 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
         ['queueItems', 'sync_queue_items'],
         ['transportKeys', 'sync_batch_transport_keys'],
         ['receipts', 'sync_item_receipts'],
+        ['attempts', 'sync_item_attempts'],
       ] as const) {
         const rows = (
           await sourceAdmin.query(
@@ -373,51 +380,66 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
           stynx: { terminalReceived: true, retryable: false },
         },
       });
+      expect(records.find((record) => record.kind === 'attempts')!.row).toMatchObject({
+        status: 'received',
+        context_json: { stynx: { terminalReceived: true, retryable: false } },
+      });
       await target.query('insert into auth.tenants values($1)', [GAP_TENANT_A]);
       const manifest = importManifest(records);
-      for (const [status, retryable, marker] of [
-        ['rejected', false, true],
-        ['received', true, true],
-        ['received', false, false],
-      ] as const) {
-        const contradictory = structuredClone(manifest);
-        const row = contradictory.records.find((record) => record.kind === 'receipts')!
-          .row as unknown as Record<string, unknown>;
-        row.status = status;
-        row.context_json = {
-          original: 'source-context',
-          stynx: { terminalReceived: marker, retryable },
-        };
-        await target.query(
-          `begin; set local role ${target.escapeIdentifier(destination.options.ownerRole!)}`,
-        );
-        await expect(
-          importOfflineState(target, rehashManifest(contradictory), {
-            storage: destination.options,
-          }),
-        ).rejects.toBeInstanceOf(OfflineImportError);
-        await target.query('rollback');
-        expect(
-          (await target.query('select count(*)::text as count from offline.sync_item_receipts'))
-            .rows,
-        ).toEqual([{ count: '0' }]);
-      }
+      for (const kind of ['receipts', 'attempts'] as const)
+        for (const [status, retryable, marker] of [
+          ['rejected', false, true],
+          ['received', true, true],
+          ['received', false, false],
+        ] as const) {
+          const contradictory = structuredClone(manifest);
+          const row = contradictory.records.find((record) => record.kind === kind)!
+            .row as unknown as Record<string, unknown>;
+          row.status = status;
+          row.context_json = {
+            original: 'source-context',
+            stynx: { terminalReceived: marker, retryable },
+          };
+          await target.query(
+            `begin; set local role ${target.escapeIdentifier(destination.options.ownerRole!)}`,
+          );
+          await expect(
+            importOfflineState(target, rehashManifest(contradictory), {
+              storage: destination.options,
+            }),
+          ).rejects.toBeInstanceOf(OfflineImportError);
+          await target.query('rollback');
+          expect(
+            (await target.query('select count(*)::text as count from offline.sync_item_receipts'))
+              .rows,
+          ).toEqual([{ count: '0' }]);
+        }
       await target.query(
         `begin; set local role ${target.escapeIdentifier(destination.options.ownerRole!)}`,
       );
       await importOfflineState(target, manifest, { storage: destination.options });
       await target.query('commit');
       const imported = (
-        await target.query('select status,error_code,context_json from offline.sync_item_receipts')
+        await target.query('select to_jsonb(r) as row from offline.sync_item_receipts r')
       ).rows;
       const original = (
         await sourceAdmin.query(
-          'select status,error_code,context_json from offline.sync_item_receipts where idempotency_key=$1',
+          'select to_jsonb(r) as row from offline.sync_item_receipts r where idempotency_key=$1',
           ['key-actual-source-terminal-import'],
         )
       ).rows;
       expect(imported).toEqual(original);
-      expect(imported[0]!.context_json.stynx).toMatchObject({
+      expect(
+        (await target.query('select to_jsonb(a) as row from offline.sync_item_attempts a')).rows,
+      ).toEqual(
+        (
+          await sourceAdmin.query(
+            'select to_jsonb(a) as row from offline.sync_item_attempts a where device_batch_id=$1',
+            [input.deviceBatchId],
+          )
+        ).rows,
+      );
+      expect(imported[0]!.row.context_json.stynx).toMatchObject({
         terminalReceived: true,
         retryable: false,
       });
@@ -427,11 +449,7 @@ describe('Domain-outcome contracts through real PostgreSQL', () => {
       await importOfflineState(target, manifest, { storage: destination.options });
       await target.query('commit');
       expect(
-        (
-          await target.query(
-            'select status,error_code,context_json from offline.sync_item_receipts',
-          )
-        ).rows,
+        (await target.query('select to_jsonb(r) as row from offline.sync_item_receipts r')).rows,
       ).toEqual(imported);
     } finally {
       await target.query('rollback');
