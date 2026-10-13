@@ -299,7 +299,7 @@ describe('UPS-OFS-10 non-canonical payload hash is a per-item integrity rejectio
       { queueItemId: 'nc-1-b', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
       { queueItemId: 'nc-1-c', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
       { queueItemId: 'nc-1-d', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
-      { queueItemId: 'nc-1-e', status: 'applied' },
+      { queueItemId: 'nc-1-e', status: 'applied', stynx: { version: 1, receiptId: 'nc-1-e', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-nc-1-e', attempts: 1 } },
     ]);
     expect(result.items.map(stored => [stored.queueItemId, stored.status, stored.payloadHash])).toEqual([
       ['nc-1-a', 'rejected', 'x'], ['nc-1-b', 'rejected', 'h'.repeat(128)], ['nc-1-c', 'rejected', `sha256:${'A'.repeat(64)}`],
@@ -312,7 +312,7 @@ describe('UPS-OFS-10 non-canonical payload hash is a per-item integrity rejectio
     expect((await service.listSyncItemReceipts()).items.map(receipt => receipt.receiptId)).toEqual(['nc-1-e']);
     // The same key with a canonical hash applies in a later batch: the key was never consumed.
     const later = await service.submitSyncBatch(batch('device-a', 'nc-2', [item('nc-2-a', 'nc-1-a')]), transportOf('nc-2'));
-    expect(later.receipt.items).toEqual([{ queueItemId: 'nc-2-a', status: 'applied' }]);
+    expect(later.receipt.items).toEqual([{ queueItemId: 'nc-2-a', status: 'applied', stynx: { version: 1, receiptId: 'nc-1-a', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-nc-2-a', attempts: 1 } }]);
     expect(applier.apply).toHaveBeenCalledTimes(2);
     // With an existing original the item is still rejected the same way; the original is untouched.
     const again = await service.submitSyncBatch(batch('device-a', 'nc-3', [{ ...item('nc-3-a', 'nc-1-a'), payloadHash: 'x' }]), transportOf('nc-3'));
@@ -455,13 +455,13 @@ describe('UPS-OFS-14 contract sensors (in-memory)', () => {
     ]), transportOf('v04'));
     expect(applier.apply).toHaveBeenCalledTimes(3);
     expect(result.receipt.items).toEqual([
-      { queueItemId: 'v04-4xx', status: 'rejected', errorCode: 'DOMAIN_REFUSED' },
-      { queueItemId: 'v04-nocov', status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
+      { queueItemId: 'v04-4xx', status: 'rejected', errorCode: 'DOMAIN_REFUSED', stynx: { version: 1, receiptId: 'v04-4xx', errorCode: 'DOMAIN_REFUSED', errorMessage: 'domain refused', attempts: 1, retryable: false } },
+      { queueItemId: 'v04-nocov', status: 'rejected', errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE', stynx: { version: 1, receiptId: 'v04-nocov', errorCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE', errorMessage: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE', attempts: 1, retryable: false, reasonCode: 'OFFLINE_SYNC_NUMBERING_NO_COVERAGE' },
         context: { number: 999, reservationId: null, conflictId: expect.any(String), allowedActions: ['reject', 'retry_after_correction'] } },
-      { queueItemId: 'v04-expired', status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED',
+      { queueItemId: 'v04-expired', status: 'conflict', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED', stynx: { version: 1, receiptId: 'v04-expired', errorCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED', errorMessage: 'OFFLINE_SYNC_NUMBERING_EXPIRED', attempts: 1, retryable: false, reasonCode: 'OFFLINE_SYNC_NUMBERING_EXPIRED' },
         context: { number: reservation.startNumber, reservationId: reservation.reservationId, conflictId: expect.any(String), allowedActions: ['reject', 'retry_after_correction'] } },
-      { queueItemId: 'v04-ok', status: 'applied' },
-      { queueItemId: 'v04-boom', status: 'received', errorCode: 'OFFLINE_SYNC_ITEM_FAILED' },
+      { queueItemId: 'v04-ok', status: 'applied', stynx: { version: 1, receiptId: 'v04-ok', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-v04-ok', attempts: 1 } },
+      { queueItemId: 'v04-boom', status: 'received', errorCode: 'OFFLINE_SYNC_ITEM_FAILED', stynx: { version: 1, receiptId: 'v04-boom', errorCode: 'OFFLINE_SYNC_ITEM_FAILED', errorMessage: 'outage', attempts: 1, retryable: true } },
     ]);
     expect(result.receipt).toMatchObject({ status: 'open', responseStatus: null });
     expect(result.conflicts).toEqual(['v04-expired']);
@@ -479,14 +479,14 @@ describe('UPS-OFS-14 contract sensors (in-memory)', () => {
     const replay = await service.submitSyncBatch(batch('device-b', 'v05-2', [item('v05-q2', 'v05-k1')]), transportOf('v05-2'));
     expect(applier.apply).toHaveBeenCalledTimes(1);
     expect(replay.duplicateItems).toBe(1);
-    expect(replay.receipt.items).toEqual([{ queueItemId: 'v05-q2', status: 'applied', context: { originalQueueItemId: 'v05-q1' } }]);
+    expect(replay.receipt.items).toEqual([{ queueItemId: 'v05-q2', status: 'applied', context: { originalQueueItemId: 'v05-q1' }, stynx: { version: 1, receiptId: 'v05-k1', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-v05-q1', attempts: 1 } }]);
     const mixed = await service.submitSyncBatch(batch('device-a', 'v05-3', [
       { ...item('v05-q3', 'v05-k1'), payloadHash: `sha256:${'e'.repeat(64)}` }, item('v05-q1', 'v05-k9'), item('v05-q4', 'v05-k4'),
     ]), transportOf('v05-3'));
     expect(mixed.receipt.items).toEqual([
       { queueItemId: 'v05-q3', status: 'rejected', errorCode: 'OFFLINE_SYNC_ITEM_INTEGRITY' },
       { queueItemId: 'v05-q1', status: 'rejected', errorCode: 'OFFLINE_SYNC_QUEUE_ID_REUSED' },
-      { queueItemId: 'v05-q4', status: 'applied' },
+      { queueItemId: 'v05-q4', status: 'applied', stynx: { version: 1, receiptId: 'v05-k4', appliedAt: '2026-09-28T12:00:00.000Z', serverEntityId: 'server-v05-q4', attempts: 1 } },
     ]);
     expect(mixed.receipt.status).toBe('closed');
     expect(applier.apply).toHaveBeenCalledTimes(2);

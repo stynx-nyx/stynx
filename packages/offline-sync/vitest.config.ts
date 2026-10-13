@@ -15,6 +15,7 @@ export default createVitestConfig({
   ],
   sequentialFiles: coverageRun,
   alias: {
+    '@stynx-nyx/outbox': resolve(__dirname, '../outbox/src/index.ts'),
     '@stynx-nyx/auth': resolve(__dirname, '../auth/src/index.ts'),
     '@stynx-nyx/backend': resolve(__dirname, '../backend/src/index.ts'),
     '@stynx-nyx/contracts': resolve(__dirname, '../contracts/src/index.ts'),

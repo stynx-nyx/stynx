@@ -6,6 +6,7 @@ export default createVitestConfig({
   packageName: '@stynx-nyx/offline-sync',
   include: ['test/integration/**/*.integration.spec.ts'],
   alias: {
+    '@stynx-nyx/outbox': resolve(__dirname, '../outbox/src/index.ts'),
     '@stynx-nyx/core': resolve(__dirname, '../core/src/index.ts'),
     '@stynx-nyx/data': resolve(__dirname, '../data/src/index.ts'),
     '@stynx-nyx/auth': resolve(__dirname, '../auth/src/index.ts'),
