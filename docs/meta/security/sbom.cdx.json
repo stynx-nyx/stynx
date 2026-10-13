@@ -1733,6 +1733,34 @@
     },
     {
       "type": "library",
+      "name": "@types/node",
+      "version": "25.6.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/@types%2fnode@25.6.0"
+    },
+    {
+      "type": "library",
+      "name": "@types/node",
+      "version": "25.9.3",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/@types%2fnode@25.9.3"
+    },
+    {
+      "type": "library",
       "name": "@types/pg",
       "version": "8.20.0",
       "scope": "required",
@@ -1893,7 +1921,7 @@
     {
       "type": "library",
       "name": "commander",
-      "version": "14.0.3",
+      "version": "15.0.0",
       "scope": "required",
       "licenses": [
         {
@@ -1902,7 +1930,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/commander@14.0.3"
+      "purl": "pkg:npm/commander@15.0.0"
     },
     {
       "type": "library",

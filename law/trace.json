@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.31",
+  "version": "1.3.32",
   "meta": {
-    "last_updated": "2026-10-13T05:29:25.070981Z",
+    "last_updated": "2026-10-13T05:47:44.302695Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -92,7 +92,8 @@
       "STYNX 1.6.1 Architect binds three Inspector D1.1 outcome/transaction witnesses through 816f30b2e800cd2d4c0e03d1c16d77740499bb7b against Engineer bfdb731e and explicit store capability. Every prior 685 corpus entry, including the original 682 assertion projections, is unchanged. Shared tests execute through memory and real PostgreSQL wrappers; literal file projections do not count support assertions twice. Canonical terminal states, optional conflict identity, reserved-error bypass, detached contexts, actual rollback, tenant isolation and source terminal-marker import custody are covered. This establishes no consumer acceptance, publication, executed-coverage standing, HTTP performance, mutation or overall audit PASS.",
       "STYNX 1.6.1 Architect rebinds only the two existing D1.1 wrapper projections after Inspector d4f6b15509f9ac666db43e877101edb3936c0aca adds the shared original-code custody witness against Engineer ce04fce6. Every original 682 corpus entry/projection, all other prior bindings and all assertion counts remain unchanged. Inspector d7de5967 refreshes only three manifest SHA constants, without changing its assertion projection. Actual published DEVAI 2.6.1 is adopted through registered CLI operations; neither binding nor diagnostic Doctor readiness grants execution standing, consumer acceptance or release/audit PASS.",
       "STYNX 1.6.1 Architect binds Inspector 9c7ee40e publication-guard repairs against Engineer 625242f5 and the prospective registry/consumed-context authority. The one existing release-version-policy projection advances from405 to431 literal assertions; its historical Owner/anomaly/1.5.x/RC witnesses are retained, current campaign fixtures use1.6.1/latest1.6.0, and the new closed consumed-marker/storage/root-dependency/follow-up guards have positive and refusal witnesses. All other687 corpus entries and prior relationships are unchanged. The current authenticated44-package census/anomaly artifact was independently reviewed; no registry mutation, new publication, full RC or audit PASS is asserted.",
-      "STYNX 1.6.1 Architect binds Inspector 68cc57397188823ef088d9d02b755239a371f0f1 final RC calibration repairs against the independently verified published DEVAI 2.6.1 and reviewed additive OpenAPI. The adoption projection advances from 167 to 202 assertions, retaining historical 2.5.0/2.6.0 receipt bytes and adding exact current identity, runtime-only migration, task-binding and declaration-readiness checks; the API coverage projection advances from 155 to 157 with explicit optional agentId type/requiredness. The other 686 corpus entries, all invariant/gate relationships, SQL refusals, generated-artifact size limits and thresholds remain unchanged. Exact API helper version and OpenAPI size freezes are independently refreshed without projection drift; normal SBOM generation updates only the reviewed lock/DEVAI identity. Failed and aborted RC evidence remains historical; these bindings assert neither completed RC nor consumer, provider, publication or overall audit acceptance."
+      "STYNX 1.6.1 Architect binds Inspector 68cc57397188823ef088d9d02b755239a371f0f1 final RC calibration repairs against the independently verified published DEVAI 2.6.1 and reviewed additive OpenAPI. The adoption projection advances from 167 to 202 assertions, retaining historical 2.5.0/2.6.0 receipt bytes and adding exact current identity, runtime-only migration, task-binding and declaration-readiness checks; the API coverage projection advances from 155 to 157 with explicit optional agentId type/requiredness. The other 686 corpus entries, all invariant/gate relationships, SQL refusals, generated-artifact size limits and thresholds remain unchanged. Exact API helper version and OpenAPI size freezes are independently refreshed without projection drift; normal SBOM generation updates only the reviewed lock/DEVAI identity. Failed and aborted RC evidence remains historical; these bindings assert neither completed RC nor consumer, provider, publication or overall audit acceptance.",
+      "STYNX 1.6.1 Architect binds Inspector 9940ce632790c6557c794dac6965580421cfd0ce against Engineer c1224903 declaring-dependency security producers under ADR-RELEASE-0004. The existing storage-version-pipeline projection adds three real-producer regression cases for local dependency custody under different ambient hoists, distinct declared versions in SBOM/license checks and second-version denied-license refusal; the original 35 cases remain unchanged. All 688 corpus paths, other 687 projections, invariant/gate mappings, historical evidence and thresholds are preserved. Normal release-checkout SBOM generation retains distinct installed declaring versions; actual license policy passes without an exception. This binding does not establish a completed RC, publication, consumer/provider acceptance or overall audit PASS."
     ]
   },
   "invariants": [
@@ -7271,8 +7272,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 23,
-      "assertion_digest_sha256": "119ebc7b371b1d7e86e4f39735ba468908fa3c45624b9ba8b1b709ce3b81e35e"
+      "assertion_count": 38,
+      "assertion_digest_sha256": "5f51fdb84069fafb66abcc689c8da449d5024d6d48989ad594892cb72ec2f384"
     },
     {
       "path": "test/scripts/api-task-source-custody.test.mjs",
