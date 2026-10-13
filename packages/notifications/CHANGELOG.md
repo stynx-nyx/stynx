@@ -1,5 +1,18 @@
 # @stynx-nyx/notifications
 
+## 1.6.2
+
+### Patch Changes
+
+- Updated dependencies [ea81001]
+  - @stynx-nyx/contracts@1.6.2
+  - @stynx-nyx/i18n@1.6.2
+  - @stynx-nyx/preferences@1.6.2
+  - @stynx-nyx/core@1.6.2
+  - @stynx-nyx/data@1.6.2
+  - @stynx-nyx/integration-adapter@1.6.2
+  - @stynx-nyx/logging@1.6.2
+
 ## 1.6.1
 
 ### Patch Changes
