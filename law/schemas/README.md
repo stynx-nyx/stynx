@@ -45,6 +45,6 @@ mutation NOT_RUN and non-promoting audit standing. Schema validity alone grants
 neither a candidate receipt nor publication success.
 
 `release-scope-1.6.1.schema.json` separately validates the exact prospective
-1.6.1 scope under ADR-RELEASE-0002. The 1.6.0 scope remains immutable. Both retain
+1.6.1 scope under ADR-RELEASE-0004. The 1.6.0 scope remains immutable. Both retain
 all fifteen signed RC nodes and truthful unobserved HTTP/mutation standing;
 neither schema validity nor audit greenness establishes publication success.
