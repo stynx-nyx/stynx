@@ -74,6 +74,15 @@ async function fixture(upgrade = true) {
       await admin.query('begin');
       await admin.query(await migration());
       await admin.query('commit');
+      for (const name of [
+        '0007_range_administration.sql',
+        '0008_import_receipts.sql',
+        '0009_numbering_reconciliations.sql',
+      ]) {
+        await admin.query('begin');
+        await admin.query(await readFile(resolve(__dirname, '../../migrations', name), 'utf8'));
+        await admin.query('commit');
+      }
     }
   } finally {
     await admin.end();
