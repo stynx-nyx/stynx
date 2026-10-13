@@ -204,6 +204,14 @@ database state, not a permission to import later rows without rechecking.
 
 ## Upgrade and import boundaries
 
+Offline `objectsSql` is applied once to fresh storage. Unlike the repeatable
+outbox objects artifact, it includes the ordered offline migration chain and
+backfills. Existing offline installations use the consumer's migration ledger to
+apply only missing forward migrations, then separately apply `roleBindingsSql`
+and run `verifyOfflineStorage` in the required read-only owner transaction. The
+role-binding projection may be reapplied; the complete fresh objects artifact
+must not be replayed over existing storage.
+
 Apply forward migrations/artifacts before code uses new objects. Preserve
 historical migration bytes, batch responses, event/attempt/ACK/history rows and
 observation evidence. Outbox has no independent `database/ddl` mirror: its platform
