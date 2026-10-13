@@ -41,7 +41,11 @@ export interface OfflineImportReceipt {
   readonly mappingSha256: string;
   readonly importedBy: string;
   readonly importedAt: string;
-  readonly recordCounts: Readonly<Record<OfflineImportRecordKind, number>>;
+  readonly recordCounts: Readonly<
+    Record<Exclude<OfflineImportRecordKind, 'reconciliations'>, number> & {
+      reconciliations?: number;
+    }
+  >;
   readonly archives: readonly {
     readonly batch: OfflineImportBatchesKey;
     readonly verdict: 'verified' | 'unverified';

@@ -32,6 +32,7 @@ const ORDER: readonly OfflineImportRecord['kind'][] = [
   'consumption',
   'conflictEvidence',
   'conflictActions',
+  'reconciliations',
 ];
 const LOCK_RELATIONS = [
   ...Object.values(IMPORT_RELATIONS),
@@ -62,22 +63,26 @@ function columns(kind: OfflineImportRecord['kind']): Column[] {
   return Object.entries(definitions[`${kind}Row`]!.properties).map(([source, rule]) => {
     const refs = [rule.$ref, ...(rule.anyOf ?? []).map((item) => item.$ref)];
     const cast =
-      source === 'response_body_base64'
-        ? 'bytea'
-        : refs.includes('#/$defs/uuid')
-          ? 'uuid'
-          : refs.includes('#/$defs/bigint')
-            ? 'bigint'
-            : refs.includes('#/$defs/instant')
-              ? 'timestamptz'
-              : refs.some((ref) => ['#/$defs/object', '#/$defs/headers'].includes(ref ?? '')) ||
-                  rule.type === 'array'
-                ? source === 'consumer_attributes'
-                  ? 'json'
-                  : 'jsonb'
-                : source === 'response_status'
-                  ? 'integer'
-                  : 'text';
+      source === 'claimed_numbers'
+        ? 'bigint[]'
+        : source === 'result_json'
+          ? 'jsonb'
+          : source === 'response_body_base64'
+            ? 'bytea'
+            : refs.includes('#/$defs/uuid')
+              ? 'uuid'
+              : refs.includes('#/$defs/bigint')
+                ? 'bigint'
+                : refs.includes('#/$defs/instant')
+                  ? 'timestamptz'
+                  : refs.some((ref) => ['#/$defs/object', '#/$defs/headers'].includes(ref ?? '')) ||
+                      rule.type === 'array'
+                    ? source === 'consumer_attributes'
+                      ? 'json'
+                      : 'jsonb'
+                    : source === 'response_status'
+                      ? 'integer'
+                      : 'text';
     return {
       source,
       target: source === 'response_body_base64' ? 'response_body_bytes' : source,

@@ -28,6 +28,7 @@ export const IMPORT_RELATIONS = {
   consumption: 'numbering_consumption',
   conflictEvidence: 'sync_conflict_evidence',
   conflictActions: 'sync_conflict_actions',
+  reconciliations: 'numbering_reconciliations',
 } as const;
 export const IMPORT_KEYS = {
   ranges: ['id'],
@@ -41,6 +42,7 @@ export const IMPORT_KEYS = {
   consumption: ['tenant_id', 'reservation_id', 'number'],
   conflictEvidence: ['tenant_id', 'conflict_id', 'queue_item_id'],
   conflictActions: ['tenant_id', 'id'],
+  reconciliations: ['tenant_id', 'id'],
 } as const;
 export function importDigest(value: unknown): string {
   return `sha256:${createHash('sha256').update(canonicalImportJson(value)).digest('hex')}`;
@@ -174,6 +176,7 @@ function validateRow(record: OfflineImportRecord): void {
   const perKind: Partial<
     Record<OfflineImportRecord['kind'], Record<string, readonly [number, number]>>
   > = {
+    reconciliations: { actor_id: [1, 255], user_ref: [0, 255] },
     ranges: {
       created_by: [1, 255],
       creation_key: [1, 255],
@@ -220,6 +223,24 @@ function validateRow(record: OfflineImportRecord): void {
       )
         importRefuse('batches.response_body_base64');
     }
+  }
+  if (record.kind === 'reconciliations') {
+    const r = record.row;
+    const claims = r.claimed_numbers.map(Number);
+    if (
+      claims.some((n) => !Number.isSafeInteger(n)) ||
+      claims.some((n, i) => i > 0 && n <= claims[i - 1]!) ||
+      r.result_json.reconciliationId !== r.id ||
+      r.result_json.reservationId !== r.reservation_id ||
+      (r.idempotency_key === null) !== (r.request_fingerprint === null) ||
+      (r.request_fingerprint !== null &&
+        r.request_fingerprint !==
+          importDigest({
+            claimedNumbers: claims,
+            userRef: r.user_ref,
+          }))
+    )
+      importRefuse('reconciliations.identity');
   }
   if (record.kind === 'queueItems') boundedImportText(record.row.id, 'queueItems.id', 255);
   if (record.kind === 'ranges') {
