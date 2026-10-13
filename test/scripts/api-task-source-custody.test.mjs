@@ -89,7 +89,7 @@ test('published API task identity binds the genuine helper bytes without changin
   assert.equal(
     JSON.parse(readFileSync(resolve(root, 'node_modules/@aarusso-nyx/devai/package.json'), 'utf8'))
       .version,
-    '2.6.0',
+    '2.6.1',
   );
   const directory = mkdtempSync(join(tmpdir(), 'stynx api custody ação-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
