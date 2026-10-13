@@ -197,61 +197,86 @@ All 125 preexisting historical record/proof/state files and the source adoption
 policy remained byte-identical. No canonical observation, proof-chain append,
 k6 or mutation execution was performed by this adoption.
 
-## Prospective exact descriptor trust transition — 2026-10-13
+## Prospective auxiliary descriptor verification — 2026-10-13
 
-Actual pre-RC comparison found that the trusted published 2.4.0 and installed
-2.6.1 builders produce identical policies for the same descriptor, but the four
-reviewed task-binding changes above make the candidate policy differ from the
-default-branch control descriptor. Preserve that refusal. Do not relabel the
-policy, export under an unexecuted descriptor, change the trusted verifier pin,
-remove `cmp`, or accept arbitrary candidate policy.
+This supersedes the product-inline proposal recorded in commit `8fce0b4e`.
+Actual installed Doctor reports its generated-workflow boundary false after an
+inline guard, and the unchanged adoption tests require every Doctor check true.
+The uncommitted product prototype was restored; preserve that refusal and all
+assertions. Product candidates retain the byte-exact generated workflow and
+normal Doctor requirements. No generated-product-workflow exception is granted.
 
-Permit a single closed STYNX-owned admission extension in the otherwise
-package-generated `.github/workflows/devai-local-rc-verify.yml`, paired with its
-existing operations reference. This prospectively amends only the earlier
-generated-workflow no-edit rule for this reviewed guard; the generated verifier
-core, package integrity/provenance, inert candidate handling and protected
-main-sourced trust/toolchain/environment controls remain unchanged. Future
-registered generation must preserve this reviewed extension or refuse pending
-review, never silently erase it. No `.devai/config` hand edit is authorized.
+Actual comparison found that trusted published 2.4.0 and installed 2.6.1 builders
+produce identical policies for the same descriptor. Only the four reviewed task
+bindings above differ from default-main controls. Do not relabel a policy,
+export under an unexecuted descriptor, change the trusted verifier, remove `cmp`
+or accept arbitrary candidate policy.
 
-The ordinary path requires candidate and control descriptor canonical digests
-equal and reconstructs from control. The sole transition path requires both:
+Prepare one isolated, unmerged auxiliary branch from the final reviewed product
+snapshot F. Engineer commit W0 changes only the existing registered
+`.github/workflows/devai-local-rc-verify.yml` by adding closed descriptor
+admission and selecting its admitted descriptor. Independent guard regressions
+and Architect review produce auxiliary snapshot B descending from W0. Those
+auxiliary CI/test changes never enter the product branch, package or final main.
+The auxiliary branch is not claimed to pass product Doctor or the product RC.
+Preserve every auxiliary commit, test result and rejected prototype externally.
 
-- control digest `48c430787a229bd8ee9accb8fa731aea62cc184876957195cfadfbc4d953cfec`;
-- candidate digest `9874165c7677c070c472d6facfe8666fd48fb680244e8cf3b51e8b44fbf77b92`.
+In the auxiliary guard, ordinary candidate/control canonical digest equality
+selects control. The sole transition requires these exact canonical digests:
 
-Use the pinned trusted verifier's canonical hashing and independently reconstruct
-the expected candidate from control by changing only the four named tasks:
-their exact `sensorKinds`, the reviewed `outputContract.kind` and matching
-population in the table above. Build retains its original output paths. Require
-canonical equality with that reconstructed descriptor before selecting candidate
-for policy reconstruction. Every other descriptor field, all 17 declared tasks,
-the ordinary 15-node RC closure, commands, dependencies, environments, selectors,
-toolchains and required PASS floors remain unchanged. Any other descriptor delta
-refuses. Preserve exact reconstructed-policy byte comparison, signature/trust,
-artifact completeness and every ordinary verifier obligation. Once main carries
-the reviewed descriptor, normal equality applies; this is not a general candidate
-descriptor fallback.
+- control `48c430787a229bd8ee9accb8fa731aea62cc184876957195cfadfbc4d953cfec`;
+- candidate `9874165c7677c070c472d6facfe8666fd48fb680244e8cf3b51e8b44fbf77b92`.
 
-Effect authority remains pending a concrete Owner decision. Prepare Engineer CI
-commit W0, independent Inspector regressions, and final Architect bindings before
-requesting approval. Present W0's exact SHA/workflow blob digest and a reviewed
-final snapshot F descending from W0, with all product/law/tests/config/descriptor
-bytes fixed. One approval may authorize the exact W0 `FORBID-CI-WITHOUT-ADR`
-receipt and one reviewed-branch dispatch for a later candidate C only when C
-descends from F and its only tracked changes are append-only exact-action
-receipts and Architect trace metadata with corpus/projections/invariants/gates
-unchanged. Workflow bytes equal W0; all other frozen bytes equal F. Independently
-verify and report actual C/tree, successful signed 15-node RC and immutable
-manifest before dispatch. Resolve the workflow ref to that exact C, retain main
-controls, and use normal protected integration. An actual rebased landed CI
-receipt remains bound to the same approved workflow blob and action mandate.
+Use the trusted verifier's canonical hashing and reconstruct candidate from
+control by changing only the four tasks' exact `sensorKinds`, reviewed output
+kind and population specified above. Build's output paths remain unchanged.
+Require canonical equality with that reconstruction. Retain all 17 declared
+tasks, the 15-node RC closure, commands, dependencies, environments, selectors,
+toolchains and PASS floors; every other delta refuses. The verifier core remains
+byte/structurally identical after stripping only this guard and descriptor
+selection. Main still supplies trust/toolchain/environment; retain the pinned
+2.4.0 package integrity/provenance, inert candidate handling, exact policy byte
+comparison, signature, artifact completeness and all ordinary obligations.
 
-No previous merge-method/bootstrap exception supplies this new dispatch consent;
-no administrator bypass or protected-setting relaxation is authorized. A changed
-workflow, additional source change, moved control identity or incomplete RC
-requires renewed review/authority. This prospective rule is not an approval of an
-unknown literal SHA, an issued receipt, a dispatched run or publication success.
-Inspector must prove ordinary equality, the sole exact transition and refusal
-of every unapproved descriptor/task/floor change through the actual guard.
+Effect authority remains pending a concrete Owner decision. Freeze the final
+reviewed product snapshot F as literal product candidate C; no auxiliary receipt
+or CI/test change is added to C. Its normal RC may run while approval is pending.
+Present exact C/F, W0 SHA/workflow blob digest and reviewed auxiliary B, with
+every CI/product/law/test/config/descriptor byte fixed. One approval may authorize
+the W0 `FORBID-CI-WITHOUT-ADR` receipt and one auxiliary-branch dispatch for that
+exact C, allowing future B1 only as a descendant of B with append-only exact W0
+receipt and Architect trace metadata added. Corpus, assertion projections,
+invariants and gates remain unchanged; all other auxiliary bytes equal B and its
+workflow blob equals W0. Product C retains its original generated workflow.
+
+Record W0's receipt only in auxiliary B1's canonical authorization registry for
+its ordinary pre-push scan. W0 exists solely in auxiliary ancestry; product C
+has no corresponding CI change or receipt obligation. Preserve that auxiliary
+receipt/branch/evidence, and never merge auxiliary CI, tests or receipt commits
+into C. This avoids an unknown future product identity and does not exempt any
+actual product forbidden action from its own required receipt.
+
+Run the ordinary full signed 15-node RC and Doctor only on raw-clean product C.
+Independently verify and report actual C/tree, complete signed bundle/manifest
+and both remote heads before dispatch. The existing published publisher's
+`--default-branch` parameter forwards the approved auxiliary branch as workflow
+`--ref` while `candidate_sha` remains C. Use that supported CLI directly with
+ordinary exact candidate/tree/policy/signer/trust checks; do not patch the
+main-hardcoded repository wrapper or installed package. Push product C and B1
+through normal hooks first; the evidence-only tag does not make C reachable.
+
+Pin auxiliary remote=B1 immediately before dispatch and verify actual run head
+B1, input C, workflow blob and unique successful `verified-local-rc` CheckRun
+head C. Do not also dispatch the incompatible ordinary-main verifier for C;
+preserve failures and never fabricate/delete a check. Normal protected product
+integration follows. Verify full merged-main M tree equals C exactly, then the
+unchanged generated main workflow must succeed on M: main now carries the new
+descriptor and ordinary equality applies. Auxiliary W0 never lands, so no landed
+CI receipt correction loop is introduced. A C check is not an M check.
+
+No previous merge/bootstrap exception grants this consent; no admin bypass,
+protected-setting relaxation, force push, unknown workflow edit or test
+relaxation is authorized. Moving refs/controls, other post-review mutations or
+incomplete RC require renewed review/authority. This rule supplies no literal
+future SHA, issued receipt, dispatch, merge or publication claim. Exact-main
+publication controls and independent 44-artifact verification remain required.
