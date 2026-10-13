@@ -232,6 +232,62 @@ manual-review action semantics remain. In-memory storage stages or rolls back
 its state consistently with the PostgreSQL boundary. The consumer may map these
 events into its existing envelopes; STYNX invents no DETRAN event code.
 
+### D4.1 — Process-local transaction ownership and rollback isolation
+
+Actual release coverage review exposed a real isolation gap in the memory
+store: an item rollback restores tenant-wide queue/conflict snapshots while
+unrelated public E6 submit, open-conflict and resolution calls can mutate those
+maps outside the durable-batch gate. Such a rollback must not erase another
+public operation. Nor may a detached resolver recreate queue/conflict/action
+facts after its owning item rolled back. This repairs the existing atomicity
+obligation; it grants no new public API or consumer outcome.
+
+Use a private per-store asynchronous ownership context and the existing
+same-tenant mutation gate. Serialize every public operation that mutates the
+snapshotted queue/conflict projections: E6 `submitSyncBatch`, `openConflict`,
+legacy `resolveConflict`, resolver-backed `resolveWithPort` and the durable
+batch execution. An unrelated caller waits until the current owner releases
+the gate, then validates and writes against the committed/restored state.
+Different tenants remain independent. Do not change same-batch replay,
+in-progress lease behavior, transport identity or request admission.
+
+Active, same-store/same-tenant operations invoked inside a transaction port
+inherit its ownership and reenter without awaiting their own gate. This keeps
+legitimate nested E6 effects part of the failing applier's sandbox transaction.
+Track the lifetime of the owned item/resolution frame separately from the batch
+owner. Close a frame before restoring its snapshot and after its boundary ends.
+After any awaited port, validate that frame before changing queue, receipt,
+conflict/evidence or action state. A detached callback whose frame has closed
+must not reacquire ownership or write stale state into a later transaction.
+Preserve an actual callback refusal; when a callback returns successfully after
+closure, refuse through the existing typed conflict/batch error family before
+any write. Closed-frame cleanup must not restore stale local snapshots over
+another owner's state. Preserve the genuine conditional rollback behavior;
+do not replace it with unconditional restoration of pre-await records.
+
+Avoid self-deadlock: same-conflict recursive resolution and nested durable-batch
+entry cannot wait on a lock/promise held by their own frame; refuse them through
+existing typed conflict/in-progress errors. An owned callback cannot acquire
+another tenant's mutation context; refuse that scope mismatch rather than
+broadening the transaction's tenant. Unrelated other-tenant requests remain
+admitted normally. No public transaction token or reentrancy option is added.
+
+Rollback restores all owned queue/conflict projection facts consistently,
+including their E6 item/payload indexes and action history; stale indexes or
+orphaned history cannot survive removal of their owning failed effects. Existing
+historical facts remain untouched. PostgreSQL retains its real transaction/row
+lock implementation; memory must preserve the same ownership principle, without
+pretending that process-local gates are PostgreSQL isolation evidence.
+
+Inspector acceptance uses only public APIs and real asynchronous barriers:
+an unrelated same-tenant E6 queue/conflict survives a paused CTG9 item's failure;
+its later resolution succeeds against canonical state; nested own effects still
+roll back, including replay/index/history observations; a detached successful
+resolver after parent rollback refuses without resurrection. Retain the existing
+nested resolver-refusal witness and prove other-tenant progress, self-deadlock
+refusals and ordinary replay/rollback behavior. No private-map tampering,
+coverage exclusion, threshold reduction or fault-disguising rename is allowed.
+
 ## D5 — Durable reconciliation history (V-13)
 
 Add optional `ReconcileNumberingInput.idempotencyKey` (1–255 UTF-8 bytes) and
