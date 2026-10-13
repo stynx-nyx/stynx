@@ -48,3 +48,8 @@ neither a candidate receipt nor publication success.
 1.6.1 scope under ADR-RELEASE-0004. The 1.6.0 scope remains immutable. Both retain
 all fifteen signed RC nodes and truthful unobserved HTTP/mutation standing;
 neither schema validity nor audit greenness establishes publication success.
+
+`release-scope-1.6.2.schema.json` validates the prospective audit-tranche
+patch under ADR-RELEASE-0005. It retains the fifteen-node signed RC and
+non-promoting standing without running k6 or mutation tests. Its exact
+descriptor and schema identities must be independently rebound before use.
