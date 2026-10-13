@@ -37,6 +37,12 @@ describe('Domain-outcome contracts through the memory store', () => {
             ...options,
           },
         ),
+      readConflictCode: async (conflictId) =>
+        (
+          store as unknown as {
+            conflictStynx: Map<string, import('../../src/types').OfflineSyncStynxContext>;
+          }
+        ).conflictStynx.get(`${GAP_TENANT_A}:${conflictId}`)!.errorCode!,
       readConflictActions: async (conflictId) =>
         (
           store as unknown as { conflictAllowedActions: Map<string, readonly string[]> }

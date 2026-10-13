@@ -36,8 +36,57 @@ export const domainEvents = () => ({
 
 export interface OfflineDomainHarness extends OfflineGapHarness {
   readConflictActions(conflictId: string): Promise<readonly string[]>;
+  readConflictCode(conflictId: string): Promise<string>;
 }
 export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarness): void {
+  it('D1.1 keeps the captured original code when the classifier mutates its external exception', async () => {
+    const h = harness();
+    const input = domainBatch('original-code-custody');
+    const failure = domainFailure({ originalContext: true });
+    const classify = vi.fn((observed: import('../../src/types').OfflineSyncDomainFailure) => {
+      expect(observed).toEqual({ code: 'BUSINESS_CLOSED', context: { originalContext: true } });
+      failure.code = 'BUSINESS_MUTATED_AFTER_CLASSIFICATION';
+      return {
+        status: 'conflict' as const,
+        conflict: { type: 'domain' as const, description: 'original code custody' },
+      };
+    });
+    const subject = h.service({
+      itemApplier: {
+        apply: async () => {
+          throw failure;
+        },
+      },
+      eventPort: domainEvents(),
+      domainOutcomeClassifier: { classify },
+    });
+    const result = await h.run(GAP_TENANT_A, () => subject.submitSyncBatch(input));
+    expect(failure.code).toBe('BUSINESS_MUTATED_AFTER_CLASSIFICATION');
+    expect(classify).toHaveBeenCalledTimes(1);
+    expect(result.receipt.items[0]).toMatchObject({
+      status: 'conflict',
+      errorCode: 'BUSINESS_CLOSED',
+      stynx: { errorCode: 'BUSINESS_CLOSED', reasonCode: 'BUSINESS_CLOSED' },
+    });
+    expect(
+      await h.run(GAP_TENANT_A, () => subject.getSyncItemReceipt(input.items[0]!.idempotencyKey!)),
+    ).toMatchObject({
+      errorCode: 'BUSINESS_CLOSED',
+      stynx: { errorCode: 'BUSINESS_CLOSED', reasonCode: 'BUSINESS_CLOSED' },
+    });
+    const conflicts = (
+      await h.run(GAP_TENANT_A, () =>
+        subject.listSyncConflicts({ queueItemId: input.items[0]!.queueItemId }),
+      )
+    ).items;
+    expect(conflicts).toHaveLength(1);
+    expect(conflicts[0]!.stynx).toMatchObject({
+      errorCode: 'BUSINESS_CLOSED',
+      reasonCode: 'BUSINESS_CLOSED',
+    });
+    expect(await h.readConflictCode(conflicts[0]!.conflictId)).toBe('BUSINESS_CLOSED');
+  });
+
   it('D1.1 preserves absent and undefined classifier defaults for unknown HTTP and plain coded failures', async () => {
     const h = harness();
     for (const [index, classifier] of [undefined, { classify: vi.fn(() => undefined) }].entries()) {
