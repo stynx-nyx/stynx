@@ -2259,10 +2259,6 @@ function patch162ReleaseFixture() {
   const markerChanges = gitChanges(`${marker}^`, marker);
   const rootManifestAtMarker = gitJson(marker, 'package.json');
   const followUpChanges = gitChanges(marker, 'HEAD');
-  if (!followUpChanges.some(({ path }) => path === 'package.json')) {
-    // The published DEVAI pin is the one prospective follow-up before install.
-    followUpChanges.push({ status: 'M', path: 'package.json' });
-  }
   return {
     baseRootVersion: '1.6.1',
     markerParentRootVersion: gitJson(`${marker}^`, 'package.json').version,
@@ -2277,13 +2273,7 @@ function patch162ReleaseFixture() {
     followUpChanges,
     rootManifestMatchesMarker: true,
     rootManifestAtMarker,
-    rootManifestAtHead: {
-      ...structuredClone(rootManifestAtMarker),
-      devDependencies: {
-        ...rootManifestAtMarker.devDependencies,
-        '@aarusso-nyx/devai': '2.6.2',
-      },
-    },
+    rootManifestAtHead: gitJson('HEAD', 'package.json'),
     storageVersionArtifacts: releaseContext.versionedStorageTemplates.map(({ path }) => ({
       path,
       before: gitBytes(`${marker}^`, path),
@@ -2311,12 +2301,21 @@ test('stable 1.6.2 patch accepts the actual 96-path marker and version-only stor
   assert.equal(input.markerChanges.length, 96);
   assert.equal(input.packageStates.length, 44);
   assert.equal(input.storageVersionArtifacts.length, 2);
-  assert.equal(input.followUpChanges.length, 9);
-  assert.ok(
-    input.followUpChanges.some(
-      ({ status, path }) => status === 'A' && path === 'law/adr/2026-10-13-devai-2.6.2-adoption.md',
-    ),
-  );
+  assert.equal(input.followUpChanges.length, 21);
+  const changed = new Map(input.followUpChanges.map(({ path, status }) => [path, status]));
+  for (const path of [
+    '.devai/config/adopter-policy-binding.json',
+    '.devai/config/authority-policy.json',
+    '.devai/config/upgrade-receipt.json',
+    '.devai/constitution.md',
+    'law/policy/devai-package-identity.json',
+    'package.json',
+    'pnpm-lock.yaml',
+    'test/scripts/devai-adoption-contract.test.mjs',
+  ]) {
+    assert.equal(changed.get(path), 'M', path);
+  }
+  assert.equal(changed.get('law/adr/2026-10-13-devai-2.6.2-adoption.md'), 'A');
   assert.equal(input.rootManifestAtMarker.devDependencies['@aarusso-nyx/devai'], '2.6.1');
   assert.equal(input.rootManifestAtHead.devDependencies['@aarusso-nyx/devai'], '2.6.2');
   assert.equal(releaseContext.isPatch162VersionedCandidate(input), true);
@@ -2389,6 +2388,14 @@ test('stable 1.6.2 patch refuses marker, roster, storage, follow-up and root dri
       (value) => {
         value.followUpChanges = value.followUpChanges.filter(
           ({ path }) => path !== 'law/adr/2026-10-13-devai-2.6.2-adoption.md',
+        );
+      },
+    ],
+    [
+      'missing generated bind follow-up',
+      (value) => {
+        value.followUpChanges = value.followUpChanges.filter(
+          ({ path }) => path !== '.devai/config/upgrade-receipt.json',
         );
       },
     ],
