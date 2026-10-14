@@ -5222,7 +5222,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 450,
-      "assertion_digest_sha256": "f0bc0f4afb5330c5e70c8d0be8d57ed38f3658e74bbccbbc5203eb39d23743d1"
+      "assertion_digest_sha256": "b2c2924e9c2802781300037e60bf9806684f8218ad2a9c93c42ff1aeb5d7e728"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -7276,7 +7276,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 38,
-      "assertion_digest_sha256": "5f51fdb84069fafb66abcc689c8da449d5024d6d48989ad594892cb72ec2f384"
+      "assertion_digest_sha256": "998467372c26829bb1fb8436ca103a7b0280d613027a4d7540b1cd3909d98eb8"
     },
     {
       "path": "test/scripts/api-task-source-custody.test.mjs",
