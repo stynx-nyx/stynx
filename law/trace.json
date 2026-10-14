@@ -5181,8 +5181,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 202,
-      "assertion_digest_sha256": "1da88b2e23995112045ecdea05f9f8ac2b34cce05cea30b05a5e6f7bf4a3a7fa"
+      "assertion_count": 219,
+      "assertion_digest_sha256": "13763107ec59c8791d6f3a4971b949e1e6b4d9a63c55ab5a19c617627e568b7e"
     },
     {
       "path": "test/scripts/local-rc-blocker-contract.test.mjs",
