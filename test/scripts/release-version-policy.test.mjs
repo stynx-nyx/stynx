@@ -2015,6 +2015,7 @@ test('stable 1.5.7 patch context rejects drift in release identity, marker, pack
 
 function patch161ReleaseFixture() {
   const marker = '1e329a5e';
+  const historicalHead = '546c7ec8';
   const gitBytes = (revision, path) => {
     const result = spawnSync('git', ['show', `${revision}:${path}`], { cwd: repoRoot });
     assert.equal(result.status, 0, result.stderr.toString());
@@ -2034,10 +2035,14 @@ function patch161ReleaseFixture() {
       const [status, path] = line.split('\t');
       return { status, path };
     });
-  const followUp = spawnSync('git', ['diff', '--name-status', '--no-renames', marker, '546c7ec8'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  });
+  const followUp = spawnSync(
+    'git',
+    ['diff', '--name-status', '--no-renames', marker, historicalHead],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    },
+  );
   assert.equal(followUp.status, 0, followUp.stderr);
   const followUpChanges = followUp.stdout
     .trim()
@@ -2061,7 +2066,7 @@ function patch161ReleaseFixture() {
     followUpChanges,
     rootManifestMatchesMarker: false,
     rootManifestAtMarker: gitJson(marker, 'package.json'),
-    rootManifestAtHead: JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')),
+    rootManifestAtHead: gitJson(historicalHead, 'package.json'),
     storageVersionArtifacts: releaseContext.versionedStorageTemplates.map(({ path }) => ({
       path,
       before: gitBytes(`${marker}^`, path),
@@ -2073,7 +2078,7 @@ function patch161ReleaseFixture() {
       name,
       manifestPath: relative(repoRoot, manifestPath),
       parentVersion: gitJson(`${marker}^`, relative(repoRoot, manifestPath)).version,
-      candidateVersion: JSON.parse(readFileSync(manifestPath, 'utf8')).version,
+      candidateVersion: gitJson(historicalHead, relative(repoRoot, manifestPath)).version,
     })),
     changesetIdsOnDisk: [],
     preState: null,
@@ -2231,9 +2236,6 @@ function patch162ReleaseFixture() {
     return matches[0][0];
   };
   const marker = uniqueAncestorBySubject(releaseContextConstants.patch162VersionCommitSubject);
-  const scripts = uniqueAncestorBySubject(
-    'fix(stynx-workspace): prepare exact 1.6.2 marker classification',
-  );
   const gitBytes = (revision, path) => {
     const result = spawnSync('git', ['show', `${revision}:${path}`], { cwd: repoRoot });
     assert.equal(result.status, 0, result.stderr.toString());
@@ -2256,6 +2258,11 @@ function patch162ReleaseFixture() {
   };
   const markerChanges = gitChanges(`${marker}^`, marker);
   const rootManifestAtMarker = gitJson(marker, 'package.json');
+  const followUpChanges = gitChanges(marker, 'HEAD');
+  if (!followUpChanges.some(({ path }) => path === 'package.json')) {
+    // The published DEVAI pin is the one prospective follow-up before install.
+    followUpChanges.push({ status: 'M', path: 'package.json' });
+  }
   return {
     baseRootVersion: '1.6.1',
     markerParentRootVersion: gitJson(`${marker}^`, 'package.json').version,
@@ -2267,9 +2274,7 @@ function patch162ReleaseFixture() {
     ],
     markerChanges,
     markerParentChangesets: ['.changeset/contracts-built-barrel-smoke.md'],
-    // DEVAI 2.6.2 is not published yet. Model only its reviewed root dependency
-    // transition; the actual follow-up map is closed after installed adoption.
-    followUpChanges: [...gitChanges(marker, scripts), { status: 'M', path: 'package.json' }],
+    followUpChanges,
     rootManifestMatchesMarker: true,
     rootManifestAtMarker,
     rootManifestAtHead: {
@@ -2306,6 +2311,12 @@ test('stable 1.6.2 patch accepts the actual 96-path marker and version-only stor
   assert.equal(input.markerChanges.length, 96);
   assert.equal(input.packageStates.length, 44);
   assert.equal(input.storageVersionArtifacts.length, 2);
+  assert.equal(input.followUpChanges.length, 9);
+  assert.ok(
+    input.followUpChanges.some(
+      ({ status, path }) => status === 'A' && path === 'law/adr/2026-10-13-devai-2.6.2-adoption.md',
+    ),
+  );
   assert.equal(input.rootManifestAtMarker.devDependencies['@aarusso-nyx/devai'], '2.6.1');
   assert.equal(input.rootManifestAtHead.devDependencies['@aarusso-nyx/devai'], '2.6.2');
   assert.equal(releaseContext.isPatch162VersionedCandidate(input), true);
@@ -2373,6 +2384,14 @@ test('stable 1.6.2 patch refuses marker, roster, storage, follow-up and root dri
         value.followUpChanges.push({ status: 'M', path: 'packages/core/src/unreviewed.ts' }),
     ],
     ['duplicate follow-up', (value) => value.followUpChanges.push({ ...value.followUpChanges[0] })],
+    [
+      'missing declared follow-up',
+      (value) => {
+        value.followUpChanges = value.followUpChanges.filter(
+          ({ path }) => path !== 'law/adr/2026-10-13-devai-2.6.2-adoption.md',
+        );
+      },
+    ],
     ['wrong follow-up status', (value) => (value.followUpChanges[0].status = 'A')],
     ['deleted follow-up', (value) => (value.followUpChanges[0].status = 'D')],
     [
