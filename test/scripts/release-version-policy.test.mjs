@@ -2301,7 +2301,7 @@ test('stable 1.6.2 patch accepts the actual 96-path marker and version-only stor
   assert.equal(input.markerChanges.length, 96);
   assert.equal(input.packageStates.length, 44);
   assert.equal(input.storageVersionArtifacts.length, 2);
-  assert.equal(input.followUpChanges.length, 21);
+  assert.equal(input.followUpChanges.length, 22);
   const changed = new Map(input.followUpChanges.map(({ path, status }) => [path, status]));
   for (const path of [
     '.devai/config/adopter-policy-binding.json',
@@ -2312,6 +2312,7 @@ test('stable 1.6.2 patch accepts the actual 96-path marker and version-only stor
     'package.json',
     'pnpm-lock.yaml',
     'test/scripts/devai-adoption-contract.test.mjs',
+    'test/scripts/storage-version-pipeline.test.mjs',
   ]) {
     assert.equal(changed.get(path), 'M', path);
   }
@@ -2396,6 +2397,14 @@ test('stable 1.6.2 patch refuses marker, roster, storage, follow-up and root dri
       (value) => {
         value.followUpChanges = value.followUpChanges.filter(
           ({ path }) => path !== '.devai/config/upgrade-receipt.json',
+        );
+      },
+    ],
+    [
+      'missing storage fixture repair follow-up',
+      (value) => {
+        value.followUpChanges = value.followUpChanges.filter(
+          ({ path }) => path !== 'test/scripts/storage-version-pipeline.test.mjs',
         );
       },
     ],
