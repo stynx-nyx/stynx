@@ -28,7 +28,7 @@ each package records its history in its own `CHANGELOG.md`.
 The engineering rules and ownership boundaries for these paths are documented
 in [docs/meta/development-contract.md](docs/meta/development-contract.md).
 
-Workspace governance adopts the exact published `@aarusso-nyx/devai@2.6.1`
+Workspace governance adopts the exact published `@aarusso-nyx/devai@2.6.2`
 package at tier 1, with Constitution 1.0.2 pinned. The verified registry/source
 identity is [law/policy/devai-package-identity.json](law/policy/devai-package-identity.json);
 generated bindings are refreshed only through the installed CLI.
