@@ -226,6 +226,7 @@ const patch162VersionSupportPaths = new Set(
 const patch162FollowUpStatuses = new Map([
   ['package.json', 'M'],
   ['docs/meta/security/sbom.cdx.json', 'M'],
+  ['law/adr/2026-10-13-devai-2.6.2-adoption.md', 'A'],
   ['law/trace.json', 'M'],
   ['test/scripts/local-rc-blocker-contract.test.mjs', 'M'],
   ['scripts/lib/release-context.mjs', 'M'],
@@ -987,6 +988,7 @@ export function isPatch162VersionedCandidate(input) {
   };
   if (
     !isDeepStrictEqual(input.rootManifestAtHead, expectedRootManifest) ||
+    input.followUpChanges.length !== patch162FollowUpStatuses.size ||
     new Set(input.followUpChanges.map(({ path }) => path)).size !== input.followUpChanges.length ||
     input.followUpChanges.some(
       ({ path, status }) => patch162FollowUpStatuses.get(path) !== status,
