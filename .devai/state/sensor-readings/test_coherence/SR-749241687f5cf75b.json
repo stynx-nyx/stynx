@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-749241687f5cf75b",
+  "sensor": {
+    "name": "test-coherence",
+    "kind": "test_coherence"
+  },
+  "timestamp": "2026-10-14T05:23:14.453Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense-test-coherence",
+  "command_hash": "61bbc16d5a32d45d900bed084562635adc680ff04bb11652288da7a66abefaa1",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "TEST_COHERENCE_NAMING_MIXED",
+      "message": "Test-file naming mixes .test.* (1) and .spec.* (411)."
+    }
+  ],
+  "metrics": {
+    "packages_scanned": 31,
+    "source_files": 633,
+    "test_files": 412,
+    "global_ratio": 0.651,
+    "packages_below_min_ratio": 0,
+    "naming_uses_test": 1,
+    "naming_uses_spec": 411,
+    "naming_consistent": 0
+  }
+}

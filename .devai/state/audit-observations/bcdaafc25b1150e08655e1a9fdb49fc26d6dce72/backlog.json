@@ -1,0 +1,350 @@
+{
+  "schemaVersion": "1.0.0",
+  "merge_sha": "bcdaafc25b1150e08655e1a9fdb49fc26d6dce72",
+  "previous_merge_sha": "2cd3c8b78f1d3c5075fb0a3074915684b6fc6b1e",
+  "generated_at": "2026-10-14T01:47:41-03:00",
+  "observations": [
+    {
+      "cell": "F1:T1",
+      "verdict": "N/A",
+      "reading_ids": []
+    },
+    {
+      "cell": "F1:T2",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-25d2b90957f089f5"
+      ]
+    },
+    {
+      "cell": "F1:T3",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-bcfde137b66fdb6c"
+      ]
+    },
+    {
+      "cell": "F1:T4",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-378f8ecfd0a05041"
+      ]
+    },
+    {
+      "cell": "F1:T5",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-24b0347937dab8d8"
+      ]
+    },
+    {
+      "cell": "F1:T6",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-b6fa57b4d68db4ae"
+      ]
+    },
+    {
+      "cell": "F1:T7",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-97dce7fec041aad0"
+      ]
+    },
+    {
+      "cell": "F1:T8",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-c91ae351f8a7324f"
+      ]
+    },
+    {
+      "cell": "F1:T9",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-76a93b1815e39c7b"
+      ]
+    },
+    {
+      "cell": "F2:T1",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-13447bc9ba000662"
+      ]
+    },
+    {
+      "cell": "F2:T2",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-1122616734d743d8"
+      ]
+    },
+    {
+      "cell": "F2:T3",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-45fd3f808a6fd10c"
+      ]
+    },
+    {
+      "cell": "F2:T4",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-7feddf7d97fce749"
+      ]
+    },
+    {
+      "cell": "F2:T5",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-620759456da04da2"
+      ]
+    },
+    {
+      "cell": "F2:T6",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-559bd8992d1c9a37"
+      ]
+    },
+    {
+      "cell": "F2:T7",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-23afef4c62bbebc3"
+      ]
+    },
+    {
+      "cell": "F2:T8",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-9e2286587417d862"
+      ]
+    },
+    {
+      "cell": "F2:T9",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-c79cd9416ed9ef5b"
+      ]
+    },
+    {
+      "cell": "F3:T1",
+      "verdict": "UNKNOWN",
+      "reading_ids": []
+    },
+    {
+      "cell": "F3:T2",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-eee428b474457227"
+      ]
+    },
+    {
+      "cell": "F3:T3",
+      "verdict": "REVIEW",
+      "reading_ids": [
+        "SR-749241687f5cf75b"
+      ]
+    },
+    {
+      "cell": "F3:T4",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-fc7bb0aeefb41079"
+      ]
+    },
+    {
+      "cell": "F3:T5",
+      "verdict": "REVIEW",
+      "reading_ids": [
+        "SR-4a1e3b1b24af5ace"
+      ]
+    },
+    {
+      "cell": "F3:T6",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-7adb3564f50aa5c9"
+      ]
+    },
+    {
+      "cell": "F3:T7",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-91b4d1f127ee7b11"
+      ]
+    },
+    {
+      "cell": "F3:T8",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-e32253c89dab86d6"
+      ]
+    },
+    {
+      "cell": "F3:T9",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-6a56de1e8f03e2f7"
+      ]
+    },
+    {
+      "cell": "F4:T1",
+      "verdict": "REVIEW",
+      "reading_ids": [
+        "SR-6a629a2156291c5e",
+        "SR-ba3ed5170b4d0400",
+        "SR-90cbe72a08b81877",
+        "SR-c4a6f75debcef6d6",
+        "SR-fb58b9c123d95f67",
+        "SR-285e6f2a7d92bd04",
+        "SR-35c5398902505d00"
+      ]
+    },
+    {
+      "cell": "F4:T2",
+      "verdict": "REVIEW",
+      "reading_ids": [
+        "SR-6a629a2156291c5e",
+        "SR-ba3ed5170b4d0400",
+        "SR-c4a6f75debcef6d6",
+        "SR-35c5398902505d00"
+      ]
+    },
+    {
+      "cell": "F4:T3",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-fb58b9c123d95f67"
+      ]
+    },
+    {
+      "cell": "F4:T4",
+      "verdict": "FAIL",
+      "reading_ids": [
+        "SR-892e1b63593ab440"
+      ]
+    },
+    {
+      "cell": "F4:T5",
+      "verdict": "N/A",
+      "reading_ids": []
+    },
+    {
+      "cell": "F4:T6",
+      "verdict": "REVIEW",
+      "reading_ids": [
+        "SR-90cbe72a08b81877",
+        "SR-285e6f2a7d92bd04"
+      ]
+    },
+    {
+      "cell": "F4:T7",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-543d6ec0b90354f4"
+      ]
+    },
+    {
+      "cell": "F4:T8",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-e400688661ecfe06"
+      ]
+    },
+    {
+      "cell": "F4:T9",
+      "verdict": "REVIEW",
+      "reading_ids": [
+        "SR-0e30f9fa4266c305"
+      ]
+    },
+    {
+      "cell": "F5:T1",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-bac7f4c22caa7d6d"
+      ]
+    },
+    {
+      "cell": "F5:T2",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-35f8a359dee808f0"
+      ]
+    },
+    {
+      "cell": "F5:T3",
+      "verdict": "FAIL",
+      "reading_ids": [
+        "SR-7de753841401da4a",
+        "SR-f8644c2a94d299a9"
+      ]
+    },
+    {
+      "cell": "F5:T4",
+      "verdict": "FAIL",
+      "reading_ids": [
+        "SR-45bd104ecaa4ac8e"
+      ]
+    },
+    {
+      "cell": "F5:T5",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-1bb5731059d62458"
+      ]
+    },
+    {
+      "cell": "F5:T6",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-683a1e5d90c4f6be"
+      ]
+    },
+    {
+      "cell": "F5:T7",
+      "verdict": "REVIEW",
+      "reading_ids": [
+        "SR-daecce2159281415"
+      ]
+    },
+    {
+      "cell": "F5:T8",
+      "verdict": "PASS",
+      "reading_ids": [
+        "SR-29adb72feed8df95"
+      ]
+    },
+    {
+      "cell": "F5:T9",
+      "verdict": "REVIEW",
+      "reading_ids": [
+        "SR-1c53c982d28285b0"
+      ]
+    }
+  ],
+  "deltas": {
+    "additions": [
+      {
+        "cell": "F4:T4",
+        "verdict": "FAIL"
+      }
+    ],
+    "completions": [
+      {
+        "cell": "F2:T1",
+        "verdict": "FAIL"
+      },
+      {
+        "cell": "F2:T6",
+        "verdict": "REVIEW"
+      },
+      {
+        "cell": "F5:T5",
+        "verdict": "REVIEW"
+      }
+    ]
+  }
+}

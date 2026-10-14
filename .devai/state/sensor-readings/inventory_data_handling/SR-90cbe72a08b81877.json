@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-90cbe72a08b81877",
+  "sensor": {
+    "name": "inventory:data-handling",
+    "kind": "inventory_data_handling",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-10-14T05:22:41.645Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense data-handling --repo-root /private/tmp/stynx-162-observation-prep",
+  "command_hash": "ca8f823c3dec765de2c02a61ad6fc1fb456c4ecc29eccc9e501d3605e43db50f",
+  "tier": "L0",
+  "duration_ms": 8,
+  "metrics": {
+    "table_count": 10,
+    "pii_column_count": 2,
+    "unlabeled_pii_column_count": 2,
+    "data_handling_hash": "4060c20c3cd65aefa437a075e7c450c1125884a8814c393f95bb366e0c17f747"
+  }
+}

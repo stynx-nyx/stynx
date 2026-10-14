@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-9e2286587417d862",
+  "sensor": {
+    "name": "task:typecheck",
+    "kind": "type_check"
+  },
+  "timestamp": "2026-10-14T05:20:15.834Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "pnpm run typecheck",
+  "command_hash": "820e51a8ce2030a7fc492d97c59748201bf27e985d82c6304c55c93ceaaa3553",
+  "exit_code": 0,
+  "duration_ms": 1549,
+  "out_head": "\n> stynx-workspace@1.6.2 typecheck /private/tmp/stynx-162-observation-prep\n> turbo run typecheck --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter=@stynx-nyx/docs-site\n\n\n   • Packages in scope: @stynx-internal/create-stynx-app, @stynx-internal/eslint-config, @stynx-internal/migration-linter, @stynx-internal/tsconfig, @stynx-nyx/angular, @stynx-nyx/angular-audit, @stynx-nyx/angular-auth, @stynx-nyx/angular-flow, @stynx-nyx/angular-i18n, @stynx-nyx/angular-iam, @stynx-nyx/angular-profile, @stynx-nyx/angular-sessions, @stynx-nyx/angular-storage, @stynx-nyx/angular-tenancy, @stynx-nyx/angular-trash, @stynx-nyx/angular-ui, @stynx-nyx/audit, @stynx-nyx/auth, @stynx-nyx/backend, @stynx-nyx/cli, @stynx-nyx/contracts, @stynx-nyx/core, @stynx-nyx/data, @stynx-nyx/docs-site, @stynx-nyx/feature-flags, @stynx-nyx/flow, @stynx-nyx/health, @stynx-nyx/i18n, @stynx-nyx/idempotency, @stynx-nyx/integration-adapter, @stynx-nyx/jobs, @stynx-nyx/logging, @stynx-nyx/mobile-runtime, @stynx-nyx/notifications, @stynx-nyx/offline-sync, @stynx-nyx/outbox, @stynx-nyx/pdf, @stynx-nyx/pdf-a, @stynx-nyx/pdf-a-vera-docker, @stynx-nyx/preferences, @stynx-nyx/privacy, @stynx-nyx/ratelimit, @stynx-nyx/sdk, @stynx-nyx/sessions, @stynx-nyx/signature, @stynx-nyx/storage, @stynx-nyx/tenancy, @stynx-nyx/testing, @stynx-nyx/worklist, braces, http-cache-semantics, image-size\n   • Running typecheck in 52 packages\n   • Remote caching disabled, using shared worktree cache\n\n@stynx-nyx/contracts:build: cache hit, replaying logs 601396728af068ea\n@stynx-nyx/contracts:build:  WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n@stynx-nyx/contracts:build: \n@stynx-nyx/contracts:build: > @stynx-nyx/contracts@1.6.2 build /private/tmp/stynx-162-observation-prep/packages/contracts\n@stynx-nyx/contracts:build: > tsc -p tsconfig.json\n@stynx-nyx/contracts:build: \n@stynx-nyx/angular-i18n:typecheck: cache hit, replaying logs e55fadff02ce144e\n@stynx-nyx/contracts:typech",
+  "err_head": " WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "output_digests": "{\"stderr\":\"6e1630ee6bd8e371fd84ea34c1b8021652227ed0da1a1ca6fe7c1e00fd7d9f80\",\"stdout\":\"3deb8d803b483bc13c1ef8191754013ec645eaf2c648b740eaaaa2e8283e231d\"}",
+    "task_id": "typecheck",
+    "population": "workspace-typecheck",
+    "runner": "turbo-typescript-v1",
+    "task_key": "63b735189ed8f077bf945cc9c2d8d99e9e9d4d4e220bdd9c6ef977ba83d4cad2",
+    "input_digest": "07d6165ea934de7b273a13ef552d34f939331eb8dddbf611c5d7b1e18c32ed2b",
+    "stdout_sha256": "3deb8d803b483bc13c1ef8191754013ec645eaf2c648b740eaaaa2e8283e231d",
+    "stderr_sha256": "6e1630ee6bd8e371fd84ea34c1b8021652227ed0da1a1ca6fe7c1e00fd7d9f80",
+    "descriptor_digest": "9874165c7677c070c472d6facfe8666fd48fb680244e8cf3b51e8b44fbf77b92",
+    "task_policy_digest": "ef8560549160d07ea8e29390e0c77844f19471f214d1717f42bec84bea9ffd15",
+    "candidate_commit": "bcdaafc25b1150e08655e1a9fdb49fc26d6dce72",
+    "candidate_tree": "d40768dbd6fcc179495db2bdd01241f77f488412",
+    "prerequisite_digests": "{\"engines\":\"36fe40b6b480543b228b8cc520e94196e1ae8b0ca7d50afddaab634be88daf37\"}"
+  }
+}

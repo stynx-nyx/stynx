@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "sensor": {
+    "name": "lint",
+    "kind": "lint"
+  },
+  "timestamp": "2026-10-14T05:22:27.256Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "npx eslint --format=json .",
+  "command_hash": "8d9b0650453acd8fb0ff85a50669099fd0cdae99e8e4739d2717eb93a244efb6",
+  "exit_code": 0,
+  "duration_ms": 16417,
+  "out_head": "[{\"filePath\":\"/private/tmp/stynx-162-observation-prep/docs/site/.docusaurus/@easyops-cn/docusaurus-search-local/default/generated-constants.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/private/tmp/stynx-162-observation-prep/docs/site/.docusaurus/@easyops-cn/docusaurus-search-local/default/generated.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/private/tmp/stynx-162-observation-prep/docs/site/.docusaurus/client-modules.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/private/tmp/stynx-162-observation-prep/docs/site/.docusaurus/docusaurus.config.mjs\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/private/tmp/stynx-162-observation-prep/docs/site/.docusaurus/registry.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/private/tmp/stynx-162-observation-prep/docs/site/.docusaurus/routes.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/private/tmp/stynx-162-observation-prep/docs/site/docusaurus.config.js\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\":0,\"fixableErrorCount\":0,\"fixableWarningCount\":0,\"usedDeprecatedRules\":[]},{\"filePath\":\"/private/tmp/stynx-162-observation-prep/docs/site/scripts/generate-api-reference.mjs\",\"messages\":[],\"suppressedMessages\":[],\"errorCount\":0,\"fatalErrorCount\":0,\"warningCount\"",
+  "err_head": "",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "error_count": 0,
+    "warning_count": 0,
+    "timeout_ms": 120000
+  },
+  "id": "SR-620759456da04da2"
+}

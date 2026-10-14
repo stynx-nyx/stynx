@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-7feddf7d97fce749",
+  "sensor": {
+    "name": "task:db:rls",
+    "kind": "migration_check"
+  },
+  "timestamp": "2026-10-14T05:20:39.378Z",
+  "status": "pass",
+  "deterministic": false,
+  "command": "pnpm run devai:db-rls",
+  "command_hash": "0106cf76cb28d16b2a21e09faed684baad19f6f18b8952205f57e7ff885b9ef5",
+  "exit_code": 0,
+  "duration_ms": 3939,
+  "out_head": "\n> stynx-workspace@1.6.2 devai:db-rls /private/tmp/stynx-162-observation-prep\n> pnpm --filter @stynx-nyx/cli build && node packages/cli/dist/cli/src/main.js migrate up --database-url \"${STYNX_DATABASE_URL:-${DATABASE_URL:-}}\" && pnpm db:verify && pnpm db:acceptance && pnpm check:rls-negative && pnpm check:rls-smoke\n\n\n> @stynx-nyx/cli@1.6.2 build /private/tmp/stynx-162-observation-prep/packages/cli\n> tsc -p tsconfig.json\n\n[]\n\n> stynx-workspace@1.6.2 db:verify /private/tmp/stynx-162-observation-prep\n> node scripts/db-verify.mjs\n\n[db:verify] passed\n\n> stynx-workspace@1.6.2 db:acceptance /private/tmp/stynx-162-observation-prep\n> node scripts/verify-db-acceptance.mjs\n\nDB acceptance: 4 DDL files, 1 seed files.\n\n> stynx-workspace@1.6.2 check:rls-negative /private/tmp/stynx-162-observation-prep\n> node scripts/verify-rls-negative.mjs\n\n[rls-negative] OK: 7 tenant-scoped tables checked\n\n> stynx-workspace@1.6.2 check:rls-smoke /private/tmp/stynx-162-observation-prep\n> bash scripts/check-rls-smoke.sh\n\n[RLS] running optional live checks via psql\n[RLS] smoke check passed\n",
+  "err_head": " WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "output_digests": "{\"stderr\":\"c828b21a3a47bc79c4d0d0d6462d1657f8a850daaf48fb6108814aa379ad5e54\",\"stdout\":\"2d063a930968ac1433f191cb8de3948dc78bf6b312d8ee454c600afc7e94319e\"}",
+    "task_id": "db:rls",
+    "population": "migration-rls",
+    "runner": "stynx-postgresql-v1",
+    "task_key": "ba429d4ee7b67a7ba6b186aac245ddca41b3c31846dc7740396355613dadb02a",
+    "input_digest": "3650e557debcfdce98e1b6aca5e289bb94a803e7d4751c47803ca3123e9b36a8",
+    "stdout_sha256": "2d063a930968ac1433f191cb8de3948dc78bf6b312d8ee454c600afc7e94319e",
+    "stderr_sha256": "c828b21a3a47bc79c4d0d0d6462d1657f8a850daaf48fb6108814aa379ad5e54",
+    "descriptor_digest": "9874165c7677c070c472d6facfe8666fd48fb680244e8cf3b51e8b44fbf77b92",
+    "task_policy_digest": "7898632ea4c71fca23d0928906712121db7316919edeeea4888afca5185deb03",
+    "candidate_commit": "bcdaafc25b1150e08655e1a9fdb49fc26d6dce72",
+    "candidate_tree": "d40768dbd6fcc179495db2bdd01241f77f488412",
+    "prerequisite_digests": "{\"build\":\"3d658464ff58f7c5fa014ea632f016333b97bd06e9cd193dbef48efe4c12de20\",\"engines\":\"36fe40b6b480543b228b8cc520e94196e1ae8b0ca7d50afddaab634be88daf37\",\"test:integration\":\"22d78fe1806314b603b53216161d0629fd6c8fcdee1cebbe93157033551c1e90\",\"test:unit\":\"7da7bde84e960d7bf4a85870187c90b3cdb4750761b2110f15afbb4880002b01\",\"typecheck\":\"823bbe8f43b9a9065464a13698289749dde6163dea444befcd1fa818297dbc10\"}"
+  }
+}

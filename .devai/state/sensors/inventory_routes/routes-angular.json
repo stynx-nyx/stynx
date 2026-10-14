@@ -1,0 +1,547 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-10-14T04:47:41.000Z",
+  "framework": "angular",
+  "routes": [
+    {
+      "id": "angular:0fea066d34df",
+      "path": "",
+      "component": {
+        "file": "packages-web/angular-profile/src/routes.ts",
+        "name": "StynxProfileFormComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-profile/src/routes.ts",
+          "startLine": 8,
+          "endLine": 14
+        }
+      ]
+    },
+    {
+      "id": "angular:732eaf4f3496",
+      "path": "",
+      "parentId": "angular:eef934e4e1e5",
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 115,
+          "endLine": 119
+        }
+      ]
+    },
+    {
+      "id": "angular:773c7c7baf68",
+      "path": "",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "DashboardPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 45,
+          "endLine": 50
+        }
+      ]
+    },
+    {
+      "id": "angular:c7e190fe92c8",
+      "path": "**",
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 124,
+          "endLine": 127
+        }
+      ]
+    },
+    {
+      "id": "angular:eef934e4e1e5",
+      "path": "admin",
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 111,
+          "endLine": 123
+        }
+      ]
+    },
+    {
+      "id": "angular:272246d0bbc0",
+      "path": "assignments",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowTaskListComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 42,
+          "endLine": 46
+        }
+      ]
+    },
+    {
+      "id": "angular:494aca3e4d10",
+      "path": "dashboard",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowDashboardComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 67,
+          "endLine": 71
+        }
+      ]
+    },
+    {
+      "id": "angular:3b3700efd48b",
+      "path": "fills",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowFillsComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 32,
+          "endLine": 36
+        }
+      ]
+    },
+    {
+      "id": "angular:c184862deca3",
+      "path": "fills/:fillId",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowFillsComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 37,
+          "endLine": 41
+        }
+      ]
+    },
+    {
+      "id": "angular:35d5a7d5d443",
+      "path": "flow",
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 105,
+          "endLine": 110
+        }
+      ]
+    },
+    {
+      "id": "angular:432f5ad3bbcc",
+      "path": "forms",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowFormsComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 17,
+          "endLine": 21
+        }
+      ]
+    },
+    {
+      "id": "angular:2cd65300da6b",
+      "path": "forms/:formId",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowFormsComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 22,
+          "endLine": 26
+        }
+      ]
+    },
+    {
+      "id": "angular:a2623837f828",
+      "path": "forms/:formId/fills/:fillId",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowFillsComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 27,
+          "endLine": 31
+        }
+      ]
+    },
+    {
+      "id": "angular:f75d03f244bf",
+      "path": "login",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "LoginPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 29,
+          "endLine": 33
+        }
+      ]
+    },
+    {
+      "id": "angular:5759925edf30",
+      "path": "my-tasks",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowMyTasksInboxComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 47,
+          "endLine": 51
+        }
+      ]
+    },
+    {
+      "id": "angular:063e5586dd28",
+      "path": "open-tasks",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowOpenTasksComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 72,
+          "endLine": 76
+        }
+      ]
+    },
+    {
+      "id": "angular:e481c73360b7",
+      "path": "policies",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowGraphDesignerComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 82,
+          "endLine": 86
+        }
+      ]
+    },
+    {
+      "id": "angular:d80ccd838a68",
+      "path": "preferences",
+      "component": {
+        "file": "packages-web/angular-profile/src/routes.ts",
+        "name": "StynxPreferencesFormComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-profile/src/routes.ts",
+          "startLine": 15,
+          "endLine": 20
+        }
+      ]
+    },
+    {
+      "id": "angular:6e240ebaab29",
+      "path": "records",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "RecordsPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 51,
+          "endLine": 56
+        }
+      ]
+    },
+    {
+      "id": "angular:ba802acb620e",
+      "path": "records/:id",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "RecordDetailPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 63,
+          "endLine": 68
+        }
+      ]
+    },
+    {
+      "id": "angular:a2be614438a4",
+      "path": "records/:id/edit",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "RecordFormPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 69,
+          "endLine": 74
+        }
+      ]
+    },
+    {
+      "id": "angular:74c446fcce6d",
+      "path": "records/new",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "RecordFormPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 57,
+          "endLine": 62
+        }
+      ]
+    },
+    {
+      "id": "angular:d18aa75186ce",
+      "path": "runs/:runId/activity",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowRunActivityComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 57,
+          "endLine": 61
+        }
+      ]
+    },
+    {
+      "id": "angular:cc90befe2571",
+      "path": "scopes/:scopeId/graphs/:graphId",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowGraphDesignerComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 12,
+          "endLine": 16
+        }
+      ]
+    },
+    {
+      "id": "angular:d7836f1f2dfd",
+      "path": "security",
+      "component": {
+        "file": "packages-web/angular-profile/src/routes.ts",
+        "name": "StynxProfileSecurityComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-profile/src/routes.ts",
+          "startLine": 21,
+          "endLine": 25
+        }
+      ]
+    },
+    {
+      "id": "angular:8117bb14663c",
+      "path": "shell",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "ShellFixturePageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 24,
+          "endLine": 28
+        }
+      ]
+    },
+    {
+      "id": "angular:9345f4352236",
+      "path": "shell/settings",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "ShellFixturePageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 19,
+          "endLine": 23
+        }
+      ]
+    },
+    {
+      "id": "angular:efd09b7f34c5",
+      "path": "summary",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowRunSummaryComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 77,
+          "endLine": 81
+        }
+      ]
+    },
+    {
+      "id": "angular:0bd495fb1521",
+      "path": "tasks/:taskId",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowTaskListComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 52,
+          "endLine": 56
+        }
+      ]
+    },
+    {
+      "id": "angular:48bb793ef001",
+      "path": "tenant",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "TenantSelectionPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 39,
+          "endLine": 44
+        }
+      ]
+    },
+    {
+      "id": "angular:908ab7c0fb93",
+      "path": "trash",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "TrashPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 99,
+          "endLine": 104
+        }
+      ]
+    },
+    {
+      "id": "angular:59804940f868",
+      "path": "unauthorized",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "UnauthorizedPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 34,
+          "endLine": 38
+        }
+      ]
+    },
+    {
+      "id": "angular:8026ec72a5a2",
+      "path": "waivers",
+      "component": {
+        "file": "packages-web/angular-flow/src/routes.ts",
+        "name": "StynxFlowWaiversComponent"
+      },
+      "evidence": [
+        {
+          "path": "packages-web/angular-flow/src/routes.ts",
+          "startLine": 62,
+          "endLine": 66
+        }
+      ]
+    },
+    {
+      "id": "angular:0ab7904057a8",
+      "path": "work-items",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "WorkItemsPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 75,
+          "endLine": 80
+        }
+      ]
+    },
+    {
+      "id": "angular:1b72966aa38a",
+      "path": "work-items/:id",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "WorkItemDetailPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 93,
+          "endLine": 98
+        }
+      ]
+    },
+    {
+      "id": "angular:a4d610392694",
+      "path": "work-items/:id/edit",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "WorkItemFormPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 87,
+          "endLine": 92
+        }
+      ]
+    },
+    {
+      "id": "angular:fb0c26d00f05",
+      "path": "work-items/new",
+      "component": {
+        "file": "reference/web/src/app/app.routes.ts",
+        "name": "WorkItemFormPageComponent"
+      },
+      "evidence": [
+        {
+          "path": "reference/web/src/app/app.routes.ts",
+          "startLine": 81,
+          "endLine": 86
+        }
+      ]
+    }
+  ]
+}

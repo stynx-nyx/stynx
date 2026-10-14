@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-559bd8992d1c9a37",
+  "sensor": {
+    "name": "security-scan",
+    "kind": "security_scan"
+  },
+  "timestamp": "2026-10-14T05:22:36.210Z",
+  "status": "pass",
+  "deterministic": false,
+  "command": "pnpm audit --json",
+  "command_hash": "f94effb1655d1d0b007b3c6543061f5de53dad08a1278a581152253f3f34d247",
+  "tier": "L0",
+  "exit_code": 1,
+  "findings": [],
+  "metrics": {
+    "tool": "pnpm",
+    "total_vulnerabilities": 4,
+    "critical": 0,
+    "high": 0,
+    "moderate": 4,
+    "low": 0,
+    "info": 0,
+    "pass_max_high": 0,
+    "review_max_high": 5
+  }
+}

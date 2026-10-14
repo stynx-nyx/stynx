@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-892e1b63593ab440",
+  "sensor": {
+    "name": "inventory-adherence",
+    "kind": "inventory_adherence"
+  },
+  "timestamp": "2026-10-14T05:22:50.889Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense-inventory-adherence",
+  "command_hash": "7f08cb76c9a1f4dc2bd5d1be86f022c6ed87e3b49baad79246eed300c7cccfd6",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "error",
+      "code": "INVENTORY_ADHERENCE_BELOW_THRESHOLD",
+      "message": "394 orphans exceed max_orphans=50."
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-e56c49c9",
+      "file": ""
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-297dda32",
+      "file": ""
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-866e974d",
+      "file": ""
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-78f8ff6c",
+      "file": ""
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-cd8d9726",
+      "file": ""
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-e6bccbcc",
+      "file": ""
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-9de11d2f",
+      "file": ""
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-d2251f79",
+      "file": ""
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-5c59868a",
+      "file": ""
+    },
+    {
+      "severity": "info",
+      "code": "INVENTORY_ADHERENCE_ORPHAN",
+      "message": "Unclaimed route: ROUTE-7c3c7d6e",
+      "file": ""
+    }
+  ],
+  "metrics": {
+    "total_count": 2273,
+    "claimed_count": 1879,
+    "orphan_count": 394,
+    "max_orphans": 50
+  }
+}

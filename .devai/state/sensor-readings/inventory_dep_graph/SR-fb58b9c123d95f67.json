@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-fb58b9c123d95f67",
+  "sensor": {
+    "name": "inventory:dep-graph",
+    "kind": "inventory_dep_graph",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-10-14T05:22:43.224Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense dep-graph --repo-root /private/tmp/stynx-162-observation-prep",
+  "command_hash": "7356bd614c269531339ad4b71de93f933cef98728675a3803c0d81df7696063b",
+  "tier": "L0",
+  "duration_ms": 650,
+  "metrics": {
+    "node_count": 1565,
+    "edge_count": 6994
+  }
+}

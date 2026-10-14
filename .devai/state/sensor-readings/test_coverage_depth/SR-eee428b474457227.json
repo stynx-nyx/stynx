@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "sensor": {
+    "name": "test-coverage-depth",
+    "kind": "test_coverage_depth"
+  },
+  "timestamp": "2026-10-14T05:22:48.978Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-test-coverage-depth",
+  "command_hash": "d7b2f1c9b6051a6c97d386b14e31285260fa137788e6d75d81d1caaa100be471",
+  "tier": "L2",
+  "findings": [],
+  "metrics": {
+    "lines_total": 18785,
+    "lines_covered": 18785,
+    "lines_pct": 100,
+    "threshold_pass": 80,
+    "threshold_review": 50
+  },
+  "id": "SR-eee428b474457227"
+}

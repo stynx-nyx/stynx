@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-13447bc9ba000662",
+  "sensor": {
+    "name": "plant-coverage",
+    "kind": "plant_coverage"
+  },
+  "timestamp": "2026-10-14T05:22:47.967Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-plant-coverage",
+  "command_hash": "795653f993ca4aadb9de3352e0c028f747f98c7740e2e555f1a02896c8016fa4",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "endpoint_count": 227,
+    "route_count": 37,
+    "missing_files": 0
+  }
+}

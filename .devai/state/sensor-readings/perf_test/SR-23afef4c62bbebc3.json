@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-23afef4c62bbebc3",
+  "sensor": {
+    "name": "task:test:performance",
+    "kind": "perf_test"
+  },
+  "timestamp": "2026-10-14T05:20:54.272Z",
+  "status": "pass",
+  "deterministic": false,
+  "command": "pnpm run test:perf",
+  "command_hash": "45ab7738e7ca7bf5391799e935700063ba7171649f76dedc3f5314ab3eed6601",
+  "exit_code": 0,
+  "duration_ms": 6923,
+  "out_head": "\n> stynx-workspace@1.6.2 test:perf /private/tmp/stynx-162-observation-prep\n> node scripts/perf-smoke.mjs\n\n{\"p50_ms\":1035,\"p95_ms\":1269,\"throughput_rps\":0.97,\"samples\":5,\"threshold\":{\"p50_ms\":5000,\"p95_ms\":9000,\"rps_min\":0.2},\"pass\":true}\n",
+  "err_head": " WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n WARN  Issue while reading \"/private/tmp/stynx-162-observation-prep/.npmrc\". Failed to replace env in config: ${NODE_AUTH_TOKEN}\n[perf-smoke] sample 1/5: 1269ms ok\n[perf-smoke] sample 2/5: 976ms ok\n[perf-smoke] sample 3/5: 951ms ok\n[perf-smoke] sample 4/5: 1040ms ok\n[perf-smoke] sample 5/5: 1035ms ok\n",
+  "killed": false,
+  "findings": [],
+  "metrics": {
+    "output_digests": "{\"stderr\":\"e18cb661143251b9a722b57db23f3e48462dcf7ac859534feeabe3fcd7aae0bd\",\"stdout\":\"60b25a89acd28932db7a18beba0655fc26feb464088d5bcb7ab66c8a2f041883\"}",
+    "task_id": "test:performance",
+    "population": "cold-unit-perf",
+    "runner": "stynx-performance-v1",
+    "task_key": "00eaec0b4768b27c27f1371762f94fdd23d741b87e6e6473bcb315ff49b7aa57",
+    "input_digest": "f8abd0b1bed004369af644de8736daffaa76583372e88574427e06905e9d89ee",
+    "stdout_sha256": "60b25a89acd28932db7a18beba0655fc26feb464088d5bcb7ab66c8a2f041883",
+    "stderr_sha256": "e18cb661143251b9a722b57db23f3e48462dcf7ac859534feeabe3fcd7aae0bd",
+    "descriptor_digest": "9874165c7677c070c472d6facfe8666fd48fb680244e8cf3b51e8b44fbf77b92",
+    "task_policy_digest": "bd79e95a8d9eec7693200293b03de2b00030f13a02cc6c35852b7c04a76d8c0d",
+    "candidate_commit": "bcdaafc25b1150e08655e1a9fdb49fc26d6dce72",
+    "candidate_tree": "d40768dbd6fcc179495db2bdd01241f77f488412",
+    "prerequisite_digests": "{\"build\":\"3d658464ff58f7c5fa014ea632f016333b97bd06e9cd193dbef48efe4c12de20\",\"db:rls\":\"1d11152e38d48ae6fd02c7393ea48fc1d5e3fa40992f66c544c0e308103a0235\",\"engines\":\"36fe40b6b480543b228b8cc520e94196e1ae8b0ca7d50afddaab634be88daf37\",\"reference:apps\":\"08da6e8dc21d4f86499fd437c3b9c2d0f02ccdd48d26cbf73033e0d65def1892\",\"test:integration\":\"22d78fe1806314b603b53216161d0629fd6c8fcdee1cebbe93157033551c1e90\",\"test:unit\":\"7da7bde84e960d7bf4a85870187c90b3cdb4750761b2110f15afbb4880002b01\",\"typecheck\":\"823bbe8f43b9a9065464a13698289749dde6163dea444befcd1fa818297dbc10\"}",
+    "p50_ms": 1035,
+    "p95_ms": 1269,
+    "throughput_rps": 0.97
+  }
+}

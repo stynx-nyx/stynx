@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-ba3ed5170b4d0400",
+  "sensor": {
+    "name": "inventory:coverage",
+    "kind": "inventory_coverage",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-10-14T05:22:44.153Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense coverage --repo-root /private/tmp/stynx-162-observation-prep",
+  "command_hash": "877ddd0ad0d1c81b85caf201b02bec8345e6559d96695db3d5718e42786eae75",
+  "tier": "L0",
+  "duration_ms": 19,
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "AMBIGUOUS_ENDPOINT_REFERENCE",
+      "message": "Use-case endpoint reference \"GET /records/:id\" names multiple source compositions; no endpoint is credited. Use the exact qualified API endpoint id."
+    },
+    {
+      "severity": "warning",
+      "code": "AMBIGUOUS_ENDPOINT_REFERENCE",
+      "message": "Use-case endpoint reference \"GET /records\" names multiple source compositions; no endpoint is credited. Use the exact qualified API endpoint id."
+    },
+    {
+      "severity": "warning",
+      "code": "AMBIGUOUS_ENDPOINT_REFERENCE",
+      "message": "Use-case endpoint reference \"POST /records\" names multiple source compositions; no endpoint is credited. Use the exact qualified API endpoint id."
+    },
+    {
+      "severity": "warning",
+      "code": "AMBIGUOUS_ENDPOINT_REFERENCE",
+      "message": "Use-case endpoint reference \"DELETE /records/:id\" names multiple source compositions; no endpoint is credited. Use the exact qualified API endpoint id."
+    }
+  ],
+  "metrics": {
+    "route_count": 37,
+    "endpoint_count": 227,
+    "use_case_count": 14,
+    "link_count": 49,
+    "unmapped_route_count": 37,
+    "unmapped_endpoint_count": 181,
+    "inferred_path_match_count": 0,
+    "coverage_hash": "769bd8c199f63c4bd36179ef0931f686a6d82647b0c258150150d917de45579d"
+  }
+}
