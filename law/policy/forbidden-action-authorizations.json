@@ -1495,6 +1495,12 @@
       "commit": "9b82d91f84ae048c15a67ee92241904265f4ad69",
       "authorized_by": "Owner",
       "reason": "Records the Owner's explicit authorization of the exact STYNX 1.6.2 Architect workflow commit under ADR-DEVAI-ADOPTION-0023 after independent Inspector review. The commit aligns only authored checkout and setup-node action pins, changes hardening and both release-prep workflows to serialize same-ref runs, and makes the read-only reusable typecheck supersede older same-ref runs. It updates the composite setup action and paired workflow documentation. The DEVAI-generated workflows, permissions, required gates, tests, thresholds and triggers remain unchanged. F5:T3 and F5:T4 remain non-PASS pending separate evidence. This receipt covers only this exact commit and does not authorize a rewritten commit, publication, or a gate waiver."
+    },
+    {
+      "forbidden_id": "FORBID-CI-WITHOUT-ADR",
+      "commit": "2e1709e51a079ea72aeab2d6cc2948c271406df1",
+      "authorized_by": "Owner",
+      "reason": "Records the Owner's explicit authorization of the exact landed protected-rebase identity of the previously reviewed authored-workflow commit 9b82d91f84ae048c15a67ee92241904265f4ad69 under ADR-DEVAI-ADOPTION-0023. The complete binary patches of source and landed commits have identical SHA-256 9a4e842a32d5f95d7e0aff69b217dc8a10a86bb376e2e871bf56c7cde43ae178. The landed commit is on verified main 6007696def587d28a9c1c91723e1cb0ae2b7d58b with signed product tree a7c869d0ce8dd58c6af2296c026aadc024d8b645. This append-only receipt preserves the source receipt and covers only the exact landed workflow commit; it changes no workflow, generated binding, test, threshold or gate and grants no further CI change, publication or waiver."
     }
   ]
 }
