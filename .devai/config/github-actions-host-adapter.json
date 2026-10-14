@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "adapter_id": "github-actions-main-observation",
-  "adapter_version": "2.6.1",
+  "adapter_version": "2.6.2",
   "repository": "stynx-nyx/stynx",
   "workflow_path": ".github/workflows/devai-main-observation.yml",
   "workflow_digest_sha256": "d669e5fdec6287ac047bdcfcf0bccfdfa9d298156e9b4161ec10f8827f91a2e1",
@@ -21,6 +21,6 @@
   "publication_consent_variable": "DEVAI_ALLOW_OBSERVATION_PUBLICATION",
   "package_binding": {
     "name": "@aarusso-nyx/devai",
-    "version": "2.6.1"
+    "version": "2.6.2"
   }
 }
