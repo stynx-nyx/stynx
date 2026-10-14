@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-f8644c2a94d299a9",
+  "sensor": {
+    "name": "harness-coherence",
+    "kind": "harness_coherence"
+  },
+  "timestamp": "2026-10-14T05:23:26.522Z",
+  "status": "fail",
+  "deterministic": true,
+  "command": "devai sense-harness-coherence",
+  "command_hash": "b6c6e606ff19573cb165f392dbd2eaf5adf8f8d5b7febe611b3123414b7641fe",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_ACTION_VERSION_DRIFT",
+      "message": "Action actions/upload-artifact pinned to multiple versions across workflows: ea165f8d65b6e75b540449e92b4886f43607fa02, 043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/audit.yml has jobs whose effect is unknown (preflight, audit-tier-gate, audit-integration, audit-build); review their steps in the reviewed workflow step registry, since an unproved effect cannot satisfy the concurrency policy."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/ci.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/docs.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/hardening.yml has jobs whose effect is unknown (k6); review their steps in the reviewed workflow step registry, since an unproved effect cannot satisfy the concurrency policy."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/module-demo-bookmark.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/reference-apps.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/release-prep.yml has jobs whose effect is unknown (semgrep, package-policy, dependency-audit, release-drafts); review their steps in the reviewed workflow step registry, since an unproved effect cannot satisfy the concurrency policy."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/release.yml has jobs whose effect is unknown (forbidden-actions, release); review their steps in the reviewed workflow step registry, since an unproved effect cannot satisfy the concurrency policy."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/reusable-typecheck.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    },
+    {
+      "severity": "warning",
+      "code": "HARNESS_COHERENCE_CONCURRENCY_POLICY",
+      "message": ".github/workflows/semantic-pr-title.yml must declare a non-empty concurrency group with cancel-in-progress: true (superseding)."
+    }
+  ],
+  "metrics": {
+    "workflow_count": 13,
+    "action_version_drift_count": 1,
+    "permissions_mixed": 0,
+    "concurrency_mixed": 0,
+    "concurrency_semantic_issues": 10,
+    "incoherence_score": 11,
+    "max_review_incoherence": 3
+  }
+}

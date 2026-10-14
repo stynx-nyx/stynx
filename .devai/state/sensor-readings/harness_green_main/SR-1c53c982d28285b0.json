@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-1c53c982d28285b0",
+  "sensor": {
+    "name": "harness-green-main",
+    "kind": "harness_green_main"
+  },
+  "timestamp": "2026-10-14T05:23:06.476Z",
+  "status": "review",
+  "deterministic": false,
+  "command": "gh run list --workflow ci.yml --event pull_request --json attempt,conclusion,createdAt,databaseId,event,headBranch,headSha,status,updatedAt --limit 1000 --created >=2026-09-14 && gh pr list --state all --limit 1000 --json baseRefName,closedAt,createdAt,headRefName,headRefOid,mergedAt,number,state",
+  "command_hash": "e5500b1a14c71b09a6426b091863831a52d94c0b8531b4b812fa1920e26dcd77",
+  "tier": "L2",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "HARNESS_GREEN_MAIN_PARTIAL",
+      "message": "Success rate 91.6% (over 95 pull requests, workflow ci.yml, event pull_request, head branch *, final head per pull request) is below pass threshold 95%."
+    }
+  ],
+  "metrics": {
+    "run_count": 95,
+    "success_count": 87,
+    "success_pct": 91.58,
+    "threshold_pass": 95,
+    "threshold_review": 80,
+    "sample_size": 95,
+    "minimum_sample": 20,
+    "population_workflow": "ci.yml",
+    "population_event": "pull_request",
+    "population_head_branch": "*",
+    "population_base_branch": "main",
+    "population_attempts": "last",
+    "population_include_cancelled": false,
+    "population_lookback_days": 30,
+    "population_base_branch_verified": true,
+    "population_excluded_jobs_unverified": 0,
+    "population_unverified": "",
+    "population_outcome_unit": "pull-request-final-head",
+    "population_window_runs": 172,
+    "population_pending_open": 0,
+    "final_head_ungated": 0
+  }
+}

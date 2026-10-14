@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "sensor": {
+    "name": "spec-alignment",
+    "kind": "spec_alignment"
+  },
+  "timestamp": "2026-10-14T05:23:07.522Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense-spec-alignment",
+  "command_hash": "973b1e07803f8c106ec5529818013f9d2edfef33dfe8c1571eb8d9e3b06ef858",
+  "tier": "L0",
+  "findings": [],
+  "metrics": {
+    "invariants_scanned": 16,
+    "invariants_broken_forward": 0,
+    "source_files_scanned": 497,
+    "source_files_claimed": 497,
+    "reverse_pct": 100,
+    "reverse_threshold_pct": 80
+  },
+  "id": "SR-378f8ecfd0a05041"
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-35c5398902505d00",
+  "sensor": {
+    "name": "inventory:routes",
+    "kind": "inventory_routes",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-10-14T05:22:38.720Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense routes --repo-root /private/tmp/stynx-162-observation-prep",
+  "command_hash": "e502367084760b38d739d870fd93e7a815cd939b39014a1710189226a7e5c701",
+  "tier": "L0",
+  "duration_ms": 65,
+  "metrics": {
+    "route_count": 37,
+    "route_file_count": 3,
+    "routes_hash": "d00d03802b2612384fd36132b0efade0d1df92a7c44181162f86e06ae9222b88"
+  }
+}

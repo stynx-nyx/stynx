@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0.0",
+  "sensor": {
+    "name": "site-drift",
+    "kind": "site_drift"
+  },
+  "timestamp": "2026-10-14T05:26:00.621Z",
+  "status": "unknown",
+  "deterministic": true,
+  "command": "devai sense site drift",
+  "command_hash": "3945f1bc482cd88900c3ba12dfcac604834479b9ef01a62a86cd91ffe811f5d2",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "SITE_DRIFT_SOURCE_UNREACHABLE",
+      "message": "Published source 456155a17c695e7a25b585a9b7106164f6c64bb5 is not reachable from local objects."
+    }
+  ],
+  "metrics": {
+    "repository_head": "bcdaafc25b1150e08655e1a9fdb49fc26d6dce72",
+    "published_source_provenance": "journal",
+    "journal_intent_id": "7055059128"
+  },
+  "id": "SR-79d2f3843e1f408a"
+}

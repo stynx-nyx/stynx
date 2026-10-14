@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-c4a6f75debcef6d6",
+  "sensor": {
+    "name": "inventory:data-model",
+    "kind": "inventory_data_model",
+    "version": "1.0.0"
+  },
+  "timestamp": "2026-10-14T05:22:39.707Z",
+  "status": "pass",
+  "deterministic": true,
+  "command": "devai sense data-model --repo-root /private/tmp/stynx-162-observation-prep",
+  "command_hash": "06522e16074bf238e8eabe9cffa635fb87542034ada309ca2effbf22545ffa4f",
+  "tier": "L0",
+  "duration_ms": 12,
+  "metrics": {
+    "table_count": 10,
+    "column_count": 88,
+    "foreign_key_count": 0,
+    "migration_file_count": 9,
+    "tables_hash": "35f587eace5237be8173e20b97e81a82337018722049095d9ed8546f414a1ef8",
+    "dialect": "postgres"
+  }
+}

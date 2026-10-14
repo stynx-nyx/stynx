@@ -1,0 +1,424 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "SR-4a1e3b1b24af5ace",
+  "sensor": {
+    "name": "test-idiomaticity",
+    "kind": "test_idiomaticity"
+  },
+  "timestamp": "2026-10-14T05:23:19.756Z",
+  "status": "review",
+  "deterministic": true,
+  "command": "devai sense-test-idiomaticity",
+  "command_hash": "ba9a215bfa7e188ae25b1f24d0fc0e91238fcb9a3db3092089b3588d364451d7",
+  "tier": "L0",
+  "findings": [
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/audit/test/wiring/audit-http.wiring-spec.ts",
+      "file": "packages/audit/test/wiring/audit-http.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/auth/test/integration/auth.api-matrix.spec.ts",
+      "file": "packages/auth/test/integration/auth.api-matrix.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/auth/test/integration/auth.module.spec.ts",
+      "file": "packages/auth/test/integration/auth.module.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/auth/test/integration/session-policy-http.integration.spec.ts",
+      "file": "packages/auth/test/integration/session-policy-http.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/auth/test/wiring/auth-http.wiring-spec.ts",
+      "file": "packages/auth/test/wiring/auth-http.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/backend/test/integration/angular-transactional-command-http.spec.ts",
+      "file": "packages/backend/test/integration/angular-transactional-command-http.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts",
+      "file": "packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/backend/test/integration/authorization-app-guard.integration.spec.ts",
+      "file": "packages/backend/test/integration/authorization-app-guard.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/backend/test/integration/ctg9-outbox-sse.integration.spec.ts",
+      "file": "packages/backend/test/integration/ctg9-outbox-sse.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/backend/test/integration/if-match-http.spec.ts",
+      "file": "packages/backend/test/integration/if-match-http.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
+      "file": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/backend/test/integration/transactional-command-errors.integration.spec.ts",
+      "file": "packages/backend/test/integration/transactional-command-errors.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/backend/test/integration/transactional-command-faults.integration.spec.ts",
+      "file": "packages/backend/test/integration/transactional-command-faults.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/backend/test/integration/transactional-command-filters.integration.spec.ts",
+      "file": "packages/backend/test/integration/transactional-command-filters.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/backend/test/integration/transactional-command-http.spec.ts",
+      "file": "packages/backend/test/integration/transactional-command-http.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/backend/test/integration/transactional-command-no-module.integration.spec.ts",
+      "file": "packages/backend/test/integration/transactional-command-no-module.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/backend/test/integration/transactional-command-provenance.integration.spec.ts",
+      "file": "packages/backend/test/integration/transactional-command-provenance.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/core/test/integration/core.module.spec.ts",
+      "file": "packages/core/test/integration/core.module.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/data/test/integration/app-role-name.integration.spec.ts",
+      "file": "packages/data/test/integration/app-role-name.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/data/test/integration/ctg9-independent-seal.spec.ts",
+      "file": "packages/data/test/integration/ctg9-independent-seal.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/i18n/test/integration/i18n.api-matrix.spec.ts",
+      "file": "packages/i18n/test/integration/i18n.api-matrix.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/i18n/test/integration/i18n.module.spec.ts",
+      "file": "packages/i18n/test/integration/i18n.module.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/i18n/test/wiring/i18n-http.wiring-spec.ts",
+      "file": "packages/i18n/test/wiring/i18n-http.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/jobs/test/integration/actor-rls.integration.spec.ts",
+      "file": "packages/jobs/test/integration/actor-rls.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts",
+      "file": "packages/offline-sync/test/integration/ctg9-upgrade.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/offline-sync/test/integration/offline-domain-outcomes.integration.spec.ts",
+      "file": "packages/offline-sync/test/integration/offline-domain-outcomes.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/offline-sync/test/integration/offline-import.integration.spec.ts",
+      "file": "packages/offline-sync/test/integration/offline-import.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/offline-sync/test/integration/offline-sync-acceptance-gaps.integration.spec.ts",
+      "file": "packages/offline-sync/test/integration/offline-sync-acceptance-gaps.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/offline-sync/test/integration/offline-sync-initial-mode.integration.spec.ts",
+      "file": "packages/offline-sync/test/integration/offline-sync-initial-mode.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/offline-sync/test/integration/offline-sync-pending-review-context.integration.spec.ts",
+      "file": "packages/offline-sync/test/integration/offline-sync-pending-review-context.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/offline-sync/test/wiring/ctg9-extended-routes.wiring-spec.ts",
+      "file": "packages/offline-sync/test/wiring/ctg9-extended-routes.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/offline-sync/test/wiring/ctg9-http.wiring-spec.ts",
+      "file": "packages/offline-sync/test/wiring/ctg9-http.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/offline-sync/test/wiring/ctg9-legacy-http.wiring-spec.ts",
+      "file": "packages/offline-sync/test/wiring/ctg9-legacy-http.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/offline-sync/test/wiring/ctg9-mode.wiring-spec.ts",
+      "file": "packages/offline-sync/test/wiring/ctg9-mode.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/offline-sync/test/wiring/offline-sync.controller.wiring-spec.ts",
+      "file": "packages/offline-sync/test/wiring/offline-sync.controller.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/outbox/test/integration/ctg9-delivery.integration.spec.ts",
+      "file": "packages/outbox/test/integration/ctg9-delivery.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/outbox/test/integration/ctg9-sse-admission.integration.spec.ts",
+      "file": "packages/outbox/test/integration/ctg9-sse-admission.integration.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/privacy/test/integration/privacy-object-store.provider.spec.ts",
+      "file": "packages/privacy/test/integration/privacy-object-store.provider.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/privacy/test/integration/privacy.module.spec.ts",
+      "file": "packages/privacy/test/integration/privacy.module.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/privacy/test/wiring/privacy-http.wiring-spec.ts",
+      "file": "packages/privacy/test/wiring/privacy-http.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/sessions/test/integration/sessions.module.spec.ts",
+      "file": "packages/sessions/test/integration/sessions.module.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/sessions/test/wiring/sessions-jwks.wiring-spec.ts",
+      "file": "packages/sessions/test/wiring/sessions-jwks.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/signature/test/integration/minimal-lta.spec.ts",
+      "file": "packages/signature/test/integration/minimal-lta.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/signature/test/integration/qualified-policy.spec.ts",
+      "file": "packages/signature/test/integration/qualified-policy.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/signature/test/integration/trust-gate.spec.ts",
+      "file": "packages/signature/test/integration/trust-gate.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: packages/signature/test/integration/trust-profile-sets.spec.ts",
+      "file": "packages/signature/test/integration/trust-profile-sets.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: packages/tenancy/test/wiring/tenancy-http.wiring-spec.ts",
+      "file": "packages/tenancy/test/wiring/tenancy-http.wiring-spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/audit.e2e.ts",
+      "file": "reference/api/test/e2e/flows/audit.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/auth-and-permissions.e2e.ts",
+      "file": "reference/api/test/e2e/flows/auth-and-permissions.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/documents.e2e.ts",
+      "file": "reference/api/test/e2e/flows/documents.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/error-matrix.e2e.ts",
+      "file": "reference/api/test/e2e/flows/error-matrix.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/flow-design-and-runtime.e2e.ts",
+      "file": "reference/api/test/e2e/flows/flow-design-and-runtime.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/i18n.e2e.ts",
+      "file": "reference/api/test/e2e/flows/i18n.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/idempotency.e2e.ts",
+      "file": "reference/api/test/e2e/flows/idempotency.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/privacy.e2e.ts",
+      "file": "reference/api/test/e2e/flows/privacy.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/profile-and-preferences.e2e.ts",
+      "file": "reference/api/test/e2e/flows/profile-and-preferences.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/rate-limit.e2e.ts",
+      "file": "reference/api/test/e2e/flows/rate-limit.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/readonly-write-rollback.e2e.ts",
+      "file": "reference/api/test/e2e/flows/readonly-write-rollback.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/records-and-notes.e2e.ts",
+      "file": "reference/api/test/e2e/flows/records-and-notes.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/role-and-permission-management.e2e.ts",
+      "file": "reference/api/test/e2e/flows/role-and-permission-management.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/sessions-management.e2e.ts",
+      "file": "reference/api/test/e2e/flows/sessions-management.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/tenancy.e2e.ts",
+      "file": "reference/api/test/e2e/flows/tenancy.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/e2e/flows/work-items.e2e.ts",
+      "file": "reference/api/test/e2e/flows/work-items.e2e.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/integration/reference-api.runtime.spec.ts",
+      "file": "reference/api/test/integration/reference-api.runtime.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file has unresolved mock ownership: reference/api/test/integration/reference-api.unit-coverage.spec.ts",
+      "file": "reference/api/test/integration/reference-api.unit-coverage.spec.ts"
+    },
+    {
+      "severity": "warning",
+      "code": "TEST_IDIOMATICITY_MOCK_IN_INTEGRATION",
+      "message": "Integration/e2e file substitutes owned behavior or an unproved local double: reference/api/test/integration/reference-dev-auth.api-matrix.spec.ts",
+      "file": "reference/api/test/integration/reference-dev-auth.api-matrix.spec.ts"
+    }
+  ],
+  "metrics": {
+    "test_files": 688,
+    "mock_calls": 4312,
+    "call_through_observers": 53,
+    "observed_fault_injections": 0,
+    "external_port_substitutions": 79,
+    "fixture_calls": 434,
+    "snapshot_calls": 0,
+    "mock_heavy_files": 259,
+    "mock_heavy_ratio": 0.376,
+    "mocks_in_integration_files": 66
+  }
+}
