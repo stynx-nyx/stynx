@@ -242,10 +242,12 @@ const patch162FollowUpStatuses = new Map([
   ['pnpm-lock.yaml', 'M'],
   ['scripts/lib/release-context.mjs', 'M'],
   ['scripts/run-release-preparation.mjs', 'M'],
+  ['test/scripts/api-task-source-custody.test.mjs', 'M'],
   ['test/scripts/devai-adoption-contract.test.mjs', 'M'],
   ['test/scripts/local-rc-blocker-contract.test.mjs', 'M'],
   ['test/scripts/release-version-policy.test.mjs', 'M'],
   ['test/scripts/storage-version-pipeline.test.mjs', 'M'],
+  ['test/scripts/validate.js', 'M'],
 ]);
 
 const allowedVersionFollowUpPaths = new Set([
