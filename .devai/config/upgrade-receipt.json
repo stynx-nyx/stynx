@@ -1,14 +1,14 @@
 {
   "schemaVersion": "1.0.0",
-  "from": "2.6.0",
-  "to": "2.6.1",
-  "upgraded_at": "2026-10-13T04:13:52.233Z",
+  "from": "2.6.1",
+  "to": "2.6.2",
+  "upgraded_at": "2026-10-14T02:09:47.244Z",
   "constitution": {
     "from": "1.0.2",
     "to": "1.0.2"
   },
   "migrations": [
-    "MIG-2.6.1-runtime-repair-identity-refresh"
+    "MIG-2.6.2-runtime-repair-identity-refresh"
   ],
   "retired_keys": [],
   "changed_files": [
@@ -16,50 +16,56 @@
       "path": ".devai/config/project.json",
       "operation": "update",
       "segment": "adopter-policy",
-      "sha256": "0dce62a20fd1a76d9de0bf4f788a2ddfce16d7542e4f7985e731d3097c00156d"
+      "sha256": "9b69afca2a039af84839eecf7aa0d133b65a37c8c8787fb26f07b43aa23093c9"
     },
     {
       "path": ".devai/config/adopter-policy-binding.json",
       "operation": "update",
       "segment": "adopter-policy",
-      "sha256": "0ccf2522ef3dd5350e83f10d80950e80cc1bf3c39d674ede936b9ad82d33761f"
+      "sha256": "dbe97746c60154b4eb22fac9e4e183d5afd541a93800ded7282310072f2ba7e7"
+    },
+    {
+      "path": ".devai/config/subprocess-effects.json",
+      "operation": "update",
+      "segment": "subprocess-effects",
+      "sha256": "2686563fc019b169fb5a66e3abd35e5d564a59ba35fb3ba5de5bfecfac2e110a"
     },
     {
       "path": ".devai/config/authority-policy.json",
       "operation": "update",
       "segment": "authority",
-      "sha256": "c7a43e75fac0a2b62001199c8f1b69d938c7a7b9d94fae9abd6022c6994507a0"
+      "sha256": "ddabb0136038f8b2daac7d03ab0df762fbc279840d9d563537720564e9a72e9f"
     },
     {
       "path": ".devai/config/github-actions-host-adapter.json",
       "operation": "update",
       "segment": "host-adapters",
-      "sha256": "7b95ce1f7db8550d54c84a36d4167328e3faa0af01d50fb5fa2ee652898e6d39"
+      "sha256": "3f887f89ea7ffb44030be5cc7b761285e53a534d3a218a45e4604526d821cbe3"
     },
     {
       "path": ".devai/constitution.md",
       "operation": "update",
       "segment": "constitution",
-      "sha256": "adcb2f27ae97053f27146ad023246644db2b34b70df79e9d76e53f3840752bce"
+      "sha256": "242fd01a1cf86508d90ab53692a3ca6d91485c5c3ead5e9ce0457f2dd4e24669"
     }
   ],
   "stale_version_stamps": [
     {
       "path": ".devai/constitution.md",
       "field": "generated-by",
-      "version": "2.6.0",
+      "version": "2.6.1",
       "refreshed": true
     },
     {
       "path": ".devai/config/project.json",
       "field": "devai_version",
-      "version": "2.6.0",
+      "version": "2.6.1",
       "refreshed": true
     },
     {
       "path": ".devai/config/github-actions-host-adapter.json",
       "field": "package_binding.version",
-      "version": "2.6.0",
+      "version": "2.6.1",
       "refreshed": true
     }
   ],
