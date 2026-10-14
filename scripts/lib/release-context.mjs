@@ -221,18 +221,30 @@ const patch162VersionSupportPaths = new Set(
   [...allowedVersionSupportPaths].filter((path) => path !== 'docs/meta/security/sbom.cdx.json'),
 );
 
-// Complete this closed map after the published DEVAI bind and before freezing
-// the exact candidate. A newly generated path must be reviewed explicitly.
+// ADR-DEVAI-ADOPTION-0024: the published CLI bind and inspected follow-up
+// population are closed. A newly changed path must be reviewed explicitly.
 const patch162FollowUpStatuses = new Map([
-  ['package.json', 'M'],
+  ['.devai/config/adopter-policy-binding.json', 'M'],
+  ['.devai/config/authority-policy.json', 'M'],
+  ['.devai/config/github-actions-host-adapter.json', 'M'],
+  ['.devai/config/project.json', 'M'],
+  ['.devai/config/subprocess-effects.json', 'M'],
+  ['.devai/config/upgrade-receipt.json', 'M'],
+  ['.devai/constitution.md', 'M'],
+  ['AGENTS.md', 'M'],
+  ['README.md', 'M'],
   ['docs/meta/security/sbom.cdx.json', 'M'],
   ['law/adr/2026-10-13-devai-2.6.2-adoption.md', 'A'],
+  ['law/adr/2026-10-13-patch-1.6.2-audit-tranche.md', 'M'],
+  ['law/policy/devai-package-identity.json', 'M'],
   ['law/trace.json', 'M'],
-  ['test/scripts/local-rc-blocker-contract.test.mjs', 'M'],
+  ['package.json', 'M'],
+  ['pnpm-lock.yaml', 'M'],
   ['scripts/lib/release-context.mjs', 'M'],
   ['scripts/run-release-preparation.mjs', 'M'],
+  ['test/scripts/devai-adoption-contract.test.mjs', 'M'],
+  ['test/scripts/local-rc-blocker-contract.test.mjs', 'M'],
   ['test/scripts/release-version-policy.test.mjs', 'M'],
-  ['law/adr/2026-10-13-patch-1.6.2-audit-tranche.md', 'M'],
 ]);
 
 const allowedVersionFollowUpPaths = new Set([
