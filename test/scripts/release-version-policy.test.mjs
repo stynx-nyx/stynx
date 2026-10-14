@@ -2301,7 +2301,7 @@ test('stable 1.6.2 patch accepts the actual 96-path marker and version-only stor
   assert.equal(input.markerChanges.length, 96);
   assert.equal(input.packageStates.length, 44);
   assert.equal(input.storageVersionArtifacts.length, 2);
-  assert.equal(input.followUpChanges.length, 22);
+  assert.equal(input.followUpChanges.length, 24);
   const changed = new Map(input.followUpChanges.map(({ path, status }) => [path, status]));
   for (const path of [
     '.devai/config/adopter-policy-binding.json',
@@ -2311,8 +2311,10 @@ test('stable 1.6.2 patch accepts the actual 96-path marker and version-only stor
     'law/policy/devai-package-identity.json',
     'package.json',
     'pnpm-lock.yaml',
+    'test/scripts/api-task-source-custody.test.mjs',
     'test/scripts/devai-adoption-contract.test.mjs',
     'test/scripts/storage-version-pipeline.test.mjs',
+    'test/scripts/validate.js',
   ]) {
     assert.equal(changed.get(path), 'M', path);
   }
@@ -2405,6 +2407,22 @@ test('stable 1.6.2 patch refuses marker, roster, storage, follow-up and root dri
       (value) => {
         value.followUpChanges = value.followUpChanges.filter(
           ({ path }) => path !== 'test/scripts/storage-version-pipeline.test.mjs',
+        );
+      },
+    ],
+    [
+      'missing API task custody fixture follow-up',
+      (value) => {
+        value.followUpChanges = value.followUpChanges.filter(
+          ({ path }) => path !== 'test/scripts/api-task-source-custody.test.mjs',
+        );
+      },
+    ],
+    [
+      'missing package identity validation follow-up',
+      (value) => {
+        value.followUpChanges = value.followUpChanges.filter(
+          ({ path }) => path !== 'test/scripts/validate.js',
         );
       },
     ],
