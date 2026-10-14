@@ -34,8 +34,8 @@ function copy(root, path) {
   mkdirSync(dirname(join(root, path)), { recursive: true });
   cpSync(join(repoRoot, path), join(root, path), { recursive: true });
 }
-function run(root, args) {
-  const result = spawnSync(process.execPath, args, {
+function run(root, args, executable = process.execPath) {
+  const result = spawnSync(executable, args, {
     cwd: root,
     encoding: 'utf8',
     timeout: 60000,
@@ -190,15 +190,18 @@ test('canonical version pipeline updates both generated storage versions and pre
     put(root, templatePath(directory), readFileSync(join(repoRoot, templatePath(directory))));
   }
   // Compile the genuine local fork used by the actual SBOM safety checks.
-  run(root, [
+  run(
+    root,
+    [
+      ...['heif', 'icns', 'jxl'].map((name) => `tools/image-size-safe/lib/types/${name}.ts`),
+      '--bundle',
+      '--platform=node',
+      '--format=esm',
+      '--outdir=tools/image-size-safe/dist/types',
+      '--out-extension:.js=.mjs',
+    ],
     join(repoRoot, 'node_modules/.pnpm/node_modules/esbuild/bin/esbuild'),
-    ...['heif', 'icns', 'jxl'].map((name) => `tools/image-size-safe/lib/types/${name}.ts`),
-    '--bundle',
-    '--platform=node',
-    '--format=esm',
-    '--outdir=tools/image-size-safe/dist/types',
-    '--out-extension:.js=.mjs',
-  ]);
+  );
   const before = new Map();
   const catalogs = new Map();
   const declarationHashes = new Map();
@@ -574,15 +577,18 @@ function securityProducerFixture(t, ambientVersion, declarations) {
     );
   }
   // Use the actual owned image-size fork and its parser safety assertions.
-  run(root, [
+  run(
+    root,
+    [
+      ...['heif', 'icns', 'jxl'].map((name) => `tools/image-size-safe/lib/types/${name}.ts`),
+      '--bundle',
+      '--platform=node',
+      '--format=esm',
+      '--outdir=tools/image-size-safe/dist/types',
+      '--out-extension:.js=.mjs',
+    ],
     join(repoRoot, 'node_modules/.pnpm/node_modules/esbuild/bin/esbuild'),
-    ...['heif', 'icns', 'jxl'].map((name) => `tools/image-size-safe/lib/types/${name}.ts`),
-    '--bundle',
-    '--platform=node',
-    '--format=esm',
-    '--outdir=tools/image-size-safe/dist/types',
-    '--out-extension:.js=.mjs',
-  ]);
+  );
   return root;
 }
 
