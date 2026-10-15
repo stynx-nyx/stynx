@@ -6,14 +6,15 @@ Constitution Article 6 assigns write authority by path; the harness enforces it.
 
 ## Before you edit: routing table
 
-| If you change…                                           | Read first                                                                                                 |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| authority, receipts, forbidden actions                   | the relevant article in `.devai/pin/constitution.md` and `law/policy/forbidden-action-authorizations.json` |
-| tenancy, RLS, database, generated tooling, release state | the matching section of `docs/meta/development-contract.md` (authoritative for STYNX-specific boundaries)  |
-| a published package's public API                         | the baseline procedure below                                                                               |
-| a workflow file                                          | the receipt and docs-page requirements below                                                               |
-| `package.json` or the reference package manifests        | the byte-freeze rule below                                                                                 |
-| an ADR or schema                                         | `law/adr/README.md` index, then only the record you touch; `law/schemas` for the schema you touch          |
+| If you change…                                           | Read first                                                                                                                                          |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| authority, receipts, forbidden actions                   | the relevant article in `.devai/pin/constitution.md` and `law/policy/forbidden-action-authorizations.json`                                          |
+| any behavior or test change                              | `docs/meta/development-contract.md` Engineering rules (rule 6: preserve tests, assertions, coverage thresholds, mutation targets and quality gates) |
+| tenancy, RLS, database, generated tooling, release state | the matching section of `docs/meta/development-contract.md` (authoritative for STYNX-specific boundaries)                                           |
+| a published package's public API                         | the baseline procedure below                                                                                                                        |
+| a workflow file                                          | the receipt and docs-page requirements below                                                                                                        |
+| `package.json` or the reference package manifests        | the byte-freeze rule below                                                                                                                          |
+| an ADR or schema                                         | `law/adr/README.md` index, then only the record you touch; `law/schemas` for the schema you touch                                                   |
 
 A failed check that names an article or contract section is also a read trigger.
 
