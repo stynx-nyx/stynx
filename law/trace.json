@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.36",
+  "version": "1.3.37",
   "meta": {
-    "last_updated": "2026-10-17T06:15:51.906436Z",
+    "last_updated": "2026-10-17T06:41:05.828362Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-17 Architect rebind anchors the historical 1.6.2 release test fixture to its reviewed endpoint, preserving all 450 assertion sites, exact 96/24 path counts and negative mutations; current candidate release admission remains independently governed.",
       "2026-10-17 Architect rebind pins the added Unix-socket fixture credential regression: explicit escaped password, application role, endpoint, database and application name remain intact; existing assertions and authentication remain unchanged.",
       "2026-10-17 Architect cross-review rebind pins STX-REV-01: positive mapped then-branch hits for both source and CJS execution, retaining untouched-zero witnesses.",
       "2026-10-17 Architect rebind pins Inspector rescue-consolidation tests for real source/CJS coverage merging, untouched source zero coverage, and bound-input refusals before and during collection. Coverage policy and production provider remain unchanged.",
@@ -5225,7 +5226,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 450,
-      "assertion_digest_sha256": "4ff3d86f162d6e461e729cf643333d8c8fcfe2533747995e40052b09acc6cf46"
+      "assertion_digest_sha256": "715e35475926662ed667b212fb786b04b6e4e118d821319279a2c63a11f7026b"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
