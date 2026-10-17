@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.37",
+  "version": "1.3.38",
   "meta": {
-    "last_updated": "2026-10-17T06:41:05.828362Z",
+    "last_updated": "2026-10-17T07:13:28.569745Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-17 Architect rebind adds exact restore response status and record identity assertions before existing trash disappearance and detail checks. All prior assertions remain; this test synchronization does not resolve the separately deferred stale-list UI race.",
       "2026-10-17 Architect rebind anchors the historical 1.6.2 release test fixture to its reviewed endpoint, preserving all 450 assertion sites, exact 96/24 path counts and negative mutations; current candidate release admission remains independently governed.",
       "2026-10-17 Architect rebind pins the added Unix-socket fixture credential regression: explicit escaped password, application role, endpoint, database and application name remain intact; existing assertions and authentication remain unchanged.",
       "2026-10-17 Architect cross-review rebind pins STX-REV-01: positive mapped then-branch hits for both source and CJS execution, retaining untouched-zero witnesses.",
@@ -4427,8 +4428,8 @@
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "23c0d52f07eed3a709ba4b8cc62c98bdebe8000cf7a1e465843130100694623f"
+      "assertion_count": 9,
+      "assertion_digest_sha256": "f4404342b0792f359a60b60c675d91b5fd015aaa9285b5ae93c1642f465bcde8"
     },
     {
       "path": "reference/web/test/e2e/records/crud.spec.ts",
