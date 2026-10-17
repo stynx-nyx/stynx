@@ -2236,6 +2236,8 @@ function patch162ReleaseFixture() {
     return matches[0][0];
   };
   const marker = uniqueAncestorBySubject(releaseContextConstants.patch162VersionCommitSubject);
+  // This fixture describes the reviewed release follow-up, not later repository history.
+  const fixtureHead = uniqueAncestorBySubject('docs(stynx-workspace): bind 24-path release scope');
   const gitBytes = (revision, path) => {
     const result = spawnSync('git', ['show', `${revision}:${path}`], { cwd: repoRoot });
     assert.equal(result.status, 0, result.stderr.toString());
@@ -2258,7 +2260,7 @@ function patch162ReleaseFixture() {
   };
   const markerChanges = gitChanges(`${marker}^`, marker);
   const rootManifestAtMarker = gitJson(marker, 'package.json');
-  const followUpChanges = gitChanges(marker, 'HEAD');
+  const followUpChanges = gitChanges(marker, fixtureHead);
   return {
     baseRootVersion: '1.6.1',
     markerParentRootVersion: gitJson(`${marker}^`, 'package.json').version,
@@ -2273,7 +2275,7 @@ function patch162ReleaseFixture() {
     followUpChanges,
     rootManifestMatchesMarker: true,
     rootManifestAtMarker,
-    rootManifestAtHead: gitJson('HEAD', 'package.json'),
+    rootManifestAtHead: gitJson(fixtureHead, 'package.json'),
     storageVersionArtifacts: releaseContext.versionedStorageTemplates.map(({ path }) => ({
       path,
       before: gitBytes(`${marker}^`, path),
