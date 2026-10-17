@@ -2,6 +2,30 @@ import { Client } from 'pg';
 import { createPostgresTestDatabase } from '../support/postgres';
 
 describe('PostgreSQL fixture bootstrap without a migrated template', () => {
+  it('preserves escaped direct-role credentials and the Unix socket endpoint', async () => {
+    const postgres = await createPostgresTestDatabase('stynx_fixture_socket_uri', {
+      useTemplate: false,
+    });
+    try {
+      vi.stubEnv('STYNX_TEST_PG_HOST', undefined);
+      vi.stubEnv('STYNX_TEST_PG_SOCKET_DIR', '/tmp/fixture socket é');
+      vi.stubEnv('STYNX_TEST_PG_PASSWORD', 'fixture:@/% é');
+      const app = new Client({
+        connectionString: postgres.appConnectionString('fixture socket credentials'),
+      });
+      expect(Reflect.get(app, 'connectionParameters')).toMatchObject({
+        host: '/tmp/fixture socket é',
+        database: postgres.database,
+        user: 'stynx_app',
+        password: 'fixture:@/% é',
+        application_name: 'fixture socket credentials',
+      });
+    } finally {
+      vi.unstubAllEnvs();
+      await postgres.dispose();
+    }
+  });
+
   it('serializes shared role setup across concurrently owned databases', async () => {
     const count = 8;
     const outcomes = await Promise.allSettled(
