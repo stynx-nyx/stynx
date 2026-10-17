@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.3.35",
   "meta": {
-    "last_updated": "2026-10-13T16:39:28.579483Z",
+    "last_updated": "2026-10-17T05:14:41.039323Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,8 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-17 Architect cross-review rebind pins STX-REV-01: positive mapped then-branch hits for both source and CJS execution, retaining untouched-zero witnesses.",
+      "2026-10-17 Architect rebind pins Inspector rescue-consolidation tests for real source/CJS coverage merging, untouched source zero coverage, and bound-input refusals before and during collection. Coverage policy and production provider remain unchanged.",
       "2026-10-06 Architect rebind pins the exact 1.5.4 stable patch classifier and root manifest admission (ADR-DEVAI-ADOPTION-0012).",
       "2026-10-04 Architect rebind pins the exact 1.5.3 stable patch classifier and root manifest admission (ADR-DEVAI-ADOPTION-0011).",
       "2026-10-04 Architect binding adds the auth.sessions partition retention sensor (ADR-SESSIONS-0003) and rebinds the privacy retention assertions.",
@@ -7243,8 +7245,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 46,
-      "assertion_digest_sha256": "36d1b0845324972d8116b33c556432bd6b519452cdcfcec203ae42ac8a2c42b6"
+      "assertion_count": 78,
+      "assertion_digest_sha256": "ac460e1f7cae72ca2af4f529dc87fa6ada4a4347b67d672d32665d3f7bb046ac"
     },
     {
       "path": "test/scripts/release-evidence-scope.test.mjs",
