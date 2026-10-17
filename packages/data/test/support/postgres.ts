@@ -89,7 +89,10 @@ function connectionString(
     return url.toString();
   }
 
-  return `postgresql://${encodeURIComponent(login.user)}@/${encodeURIComponent(database)}?host=${encodeURIComponent(localSocketDir())}&application_name=${encodeURIComponent(applicationName)}`;
+  const socketUri = `postgresql://${encodeURIComponent(login.user)}@/${encodeURIComponent(database)}?host=${encodeURIComponent(localSocketDir())}&application_name=${encodeURIComponent(applicationName)}`;
+  return login.password === undefined
+    ? socketUri
+    : withPostgresCredentials(socketUri, { user: login.user, password: login.password });
 }
 
 /** Rewrites a test connection string so the pool logs in as `role` (default `stynx_app`). */

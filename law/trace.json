@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.35",
+  "version": "1.3.38",
   "meta": {
-    "last_updated": "2026-10-13T16:39:28.579483Z",
+    "last_updated": "2026-10-17T07:13:28.569745Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,11 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-17 Architect rebind adds exact restore response status and record identity assertions before existing trash disappearance and detail checks. All prior assertions remain; this test synchronization does not resolve the separately deferred stale-list UI race.",
+      "2026-10-17 Architect rebind anchors the historical 1.6.2 release test fixture to its reviewed endpoint, preserving all 450 assertion sites, exact 96/24 path counts and negative mutations; current candidate release admission remains independently governed.",
+      "2026-10-17 Architect rebind pins the added Unix-socket fixture credential regression: explicit escaped password, application role, endpoint, database and application name remain intact; existing assertions and authentication remain unchanged.",
+      "2026-10-17 Architect cross-review rebind pins STX-REV-01: positive mapped then-branch hits for both source and CJS execution, retaining untouched-zero witnesses.",
+      "2026-10-17 Architect rebind pins Inspector rescue-consolidation tests for real source/CJS coverage merging, untouched source zero coverage, and bound-input refusals before and during collection. Coverage policy and production provider remain unchanged.",
       "2026-10-06 Architect rebind pins the exact 1.5.4 stable patch classifier and root manifest admission (ADR-DEVAI-ADOPTION-0012).",
       "2026-10-04 Architect rebind pins the exact 1.5.3 stable patch classifier and root manifest admission (ADR-DEVAI-ADOPTION-0011).",
       "2026-10-04 Architect binding adds the auth.sessions partition retention sensor (ADR-SESSIONS-0003) and rebinds the privacy retention assertions.",
@@ -4423,8 +4428,8 @@
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "23c0d52f07eed3a709ba4b8cc62c98bdebe8000cf7a1e465843130100694623f"
+      "assertion_count": 9,
+      "assertion_digest_sha256": "f4404342b0792f359a60b60c675d91b5fd015aaa9285b5ae93c1642f465bcde8"
     },
     {
       "path": "reference/web/test/e2e/records/crud.spec.ts",
@@ -5222,7 +5227,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 450,
-      "assertion_digest_sha256": "4ff3d86f162d6e461e729cf643333d8c8fcfe2533747995e40052b09acc6cf46"
+      "assertion_digest_sha256": "715e35475926662ed667b212fb786b04b6e4e118d821319279a2c63a11f7026b"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -6477,8 +6482,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 6,
-      "assertion_digest_sha256": "866e6ce03029df24a07ea3cca0d667a1ce9ef7dc3ea7a588237e3b15a6226dd3"
+      "assertion_count": 7,
+      "assertion_digest_sha256": "45b24faa4d28124aa1a5b117614adfe6f4e402697b4d6fe7c2dbb8a94b6a4a2f"
     },
     {
       "path": "packages/data/test/unit/postgres-fixture.spec.ts",
@@ -7243,8 +7248,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 46,
-      "assertion_digest_sha256": "36d1b0845324972d8116b33c556432bd6b519452cdcfcec203ae42ac8a2c42b6"
+      "assertion_count": 78,
+      "assertion_digest_sha256": "ac460e1f7cae72ca2af4f529dc87fa6ada4a4347b67d672d32665d3f7bb046ac"
     },
     {
       "path": "test/scripts/release-evidence-scope.test.mjs",

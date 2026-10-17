@@ -33,7 +33,16 @@ test('record soft-delete appears in trash and can be restored', async ({ page })
   }).toBe(1);
   const trashedRecord = page.getByRole('article').filter({ hasText: recordTitle });
   await expect(trashedRecord).toBeVisible();
-  await trashedRecord.getByRole('button', { name: 'Restore' }).click();
+  const [restoreResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        new URL(response.url()).pathname === `/records/${recordId}/restore`,
+    ),
+    trashedRecord.getByRole('button', { name: 'Restore' }).click(),
+  ]);
+  expect(restoreResponse.status()).toBe(201);
+  expect(await restoreResponse.json()).toMatchObject({ id: recordId, title: recordTitle });
   await expect(trashedRecord).toBeHidden();
 
   await page.goto(`/records/${recordId}`);
