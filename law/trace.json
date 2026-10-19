@@ -4874,8 +4874,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 55,
-      "assertion_digest_sha256": "80b7f8a472e0e615f4d40092d53a6fd6d90dddfc2f1f1614b668e2cb9aed944f"
+      "assertion_count": 64,
+      "assertion_digest_sha256": "8592d770616e03f43a43f52f0071208a7c7ec9bfe32aac8454380db16e3edc87"
     },
     {
       "path": "tools/migration-linter/test/migration-linter.spec.ts",
