@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { userInfo } from 'node:os';
 import { resolve } from 'node:path';
 import { Client, type ClientConfig } from 'pg';
-import { applyRolePrefix, DEFAULT_ROLE_PREFIX, platformRoleNames } from '../../src/platform-roles';
+import { applyRolePrefix, DEFAULT_ROLE_PREFIX, platformRoleNames } from '../../src/platform-roles.js';
 
 function localSocketDir(): string {
   return process.env.STYNX_TEST_PG_SOCKET_DIR ?? '/tmp';
