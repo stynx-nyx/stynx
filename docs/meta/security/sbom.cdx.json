@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:0d694df6-1d34-4690-86a4-c7dc72c7baa6",
+  "serialNumber": "urn:uuid:86c19c7d-ebee-40e3-88fd-2a0a579abd35",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "0d694df61d344690f6a4c7dc72c7baa6120c21707e63f64c63e261d661775e35"
+        "value": "86c19c7debee20e3a8fd2a0a579abd35dceb158cbf16e0d240748b623548191b"
       },
       {
         "name": "stynx:package-manager",
@@ -747,32 +747,6 @@
     },
     {
       "type": "library",
-      "name": "@stynx-internal/eslint-config",
-      "version": "0.2.0",
-      "scope": "excluded",
-      "licenses": [],
-      "properties": [
-        {
-          "name": "stynx:workspacePath",
-          "value": "tools/eslint-config"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "@stynx-internal/migration-linter",
-      "version": "0.2.0",
-      "scope": "excluded",
-      "licenses": [],
-      "properties": [
-        {
-          "name": "stynx:workspacePath",
-          "value": "tools/migration-linter"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "@stynx-nyx/angular-audit",
       "version": "1.6.2",
       "scope": "required",
@@ -1166,6 +1140,19 @@
     },
     {
       "type": "library",
+      "name": "@stynx-nyx/eslint-config",
+      "version": "0.2.0",
+      "scope": "excluded",
+      "licenses": [],
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "tools/eslint-config"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "@stynx-nyx/feature-flags",
       "version": "1.6.2",
       "scope": "required",
@@ -1321,6 +1308,26 @@
         {
           "name": "stynx:workspacePath",
           "value": "packages/logging"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@stynx-nyx/migration-linter",
+      "version": "0.2.0",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "BUSL-1.1"
+          }
+        }
+      ],
+      "purl": "pkg:npm/@stynx-nyx%2fmigration-linter@0.2.0",
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "tools/migration-linter"
         }
       ]
     },

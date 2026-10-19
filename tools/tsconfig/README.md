@@ -8,7 +8,7 @@ A monorepo needs consistent TypeScript settings, but a Node server, an Angular a
 
 You reach for it when authoring a new `@stynx-*` package, or aligning a package's compiler config to the workspace standard.
 
-What it does NOT do: it's not a linter (that's [`@stynx-internal/eslint-config`](/docs/tools/eslint-config/)). It doesn't bundle or build (your bundler/tsc does).
+What it does NOT do: it's not a linter (that's [`@stynx-nyx/eslint-config`](/docs/tools/eslint-config/)). It doesn't bundle or build (your bundler/tsc does).
 
 ## Audience
 
@@ -93,7 +93,7 @@ Each preset is a JSON config you `extends`. Override `compilerOptions` in your l
 
 ## Related packages
 
-- [`@stynx-internal/eslint-config`](/docs/tools/eslint-config/) — the paired ESLint configs; use both together.
+- [`@stynx-nyx/eslint-config`](/docs/tools/eslint-config/) — the paired ESLint configs; use both together.
 - [`@stynx-internal/create-stynx-app`](/docs/tools/create-stynx-app/) — scaffolds apps that extend these presets.
 
 ## TypeDoc reference

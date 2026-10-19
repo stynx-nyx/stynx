@@ -293,7 +293,7 @@ importers:
       '@nestjs/testing':
         specifier: ^11.1.26
         version: 11.2.3(@nestjs/common@11.2.3(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@nestjs/platform-express@11.2.3)
-      '@stynx-internal/eslint-config':
+      '@stynx-nyx/eslint-config':
         specifier: workspace:*
         version: link:../../../tools/eslint-config
       '@stynx-nyx/tsconfig':
@@ -326,12 +326,12 @@ importers:
       '@angular/router':
         specifier: 22.2.1
         version: 22.2.1(@angular/common@22.2.1(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2)(zone.js@0.16.2))(@angular/platform-browser@22.2.1(@angular/common@22.2.1(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2)(zone.js@0.16.2)))(rxjs@7.8.2)
-      '@stynx-internal/eslint-config':
-        specifier: workspace:*
-        version: link:../../../tools/eslint-config
       '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../../../packages-web/angular
+      '@stynx-nyx/eslint-config':
+        specifier: workspace:*
+        version: link:../../../tools/eslint-config
       '@stynx-nyx/tsconfig':
         specifier: workspace:*
         version: link:../../../tools/tsconfig
@@ -2513,7 +2513,41 @@ importers:
 
   tools/create-stynx-app: {}
 
-  tools/eslint-config: {}
+  tools/eslint-config:
+    dependencies:
+      '@angular-eslint/eslint-plugin':
+        specifier: 22.0.0
+        version: 22.0.0(@typescript-eslint/utils@8.70.0(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3)
+      '@angular-eslint/eslint-plugin-template':
+        specifier: 22.0.0
+        version: 22.0.0(@angular-eslint/template-parser@22.0.0(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/types@8.70.0)(@typescript-eslint/utils@8.70.0(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3)
+      '@angular-eslint/template-parser':
+        specifier: 22.0.0
+        version: 22.0.0(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3)
+      '@eslint/js':
+        specifier: ^10.0.1
+        version: 10.0.1(eslint@10.10.0(jiti@2.7.0))
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.61.0
+        version: 8.70.0(@typescript-eslint/parser@8.70.0(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.61.0
+        version: 8.70.0(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3)
+      eslint:
+        specifier: ^10.5.0
+        version: 10.10.0(jiti@2.7.0)
+      eslint-plugin-boundaries:
+        specifier: ^6.0.2
+        version: 6.0.2(@typescript-eslint/parser@8.70.0(eslint@10.10.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.10.0(jiti@2.7.0))
+      eslint-plugin-jsdoc:
+        specifier: ^63.0.2
+        version: 63.3.3(eslint@10.10.0(jiti@2.7.0))
+      globals:
+        specifier: ^17.7.0
+        version: 17.13.0
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
 
   tools/http-cache-semantics-safe: {}
 
