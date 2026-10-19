@@ -17,6 +17,14 @@ export interface StynxDataConnectionOptions {
 
 export interface StynxDataMigrationOptions {
   enabled?: boolean;
+  /**
+   * Product role prefix applied to the platform migrations' role identifiers
+   * at apply time (S-18): the roles become `<prefix>_owner`, `<prefix>_app`
+   * and `<prefix>_reader`. Default `'stynx'`, which applies the files byte
+   * for byte. A lower-case PostgreSQL identifier of at most 56 characters.
+   * Set `appRoleName` to `<prefix>_app` alongside it.
+   */
+  rolePrefix?: string;
   runner?: (pools: Record<StynxDataRole, Pool>) => Promise<void>;
 }
 

@@ -11,4 +11,5 @@ export * from './fake-transaction.js';
 export * from './lgpd-fixture.js';
 export * from './matchers.js';
 export * from './mint-test-session.js';
+export * from './roles.js';
 export * from './types.js';

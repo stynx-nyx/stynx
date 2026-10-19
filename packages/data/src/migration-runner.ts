@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { STYNX_DATA_OPTIONS, type StynxDataModuleOptions } from './tokens.js';
 import { StynxPoolRegistry } from './pools.js';
+import { applyRolePrefix, platformRoleNames, type PlatformRoleNames } from './platform-roles.js';
 
 const moduleDir = dirname(fileURLToPath(import.meta.url));
 
@@ -45,6 +46,8 @@ export class StynxMigrationRunner implements OnModuleInit {
   }
 
   async runPlatformMigrations(): Promise<void> {
+    const rolePrefix = this.options.migrations?.rolePrefix;
+    const roles = platformRoleNames(rolePrefix);
     await this.pools.onModuleInit();
     const owner = this.pools.pools.owner;
     const client = await owner.connect();
@@ -69,7 +72,7 @@ export class StynxMigrationRunner implements OnModuleInit {
       const ownerRoleApplied = appliedIds.has('0002_extensions.sql');
 
       if (ownerRoleApplied) {
-        await this.promoteBootstrapObjectsToOwner(client);
+        await this.promoteBootstrapObjectsToOwner(client, roles);
       }
 
       for (const filename of filenames) {
@@ -77,10 +80,11 @@ export class StynxMigrationRunner implements OnModuleInit {
           continue;
         }
 
+        // The checksum stays the file's: the prefix is applied, never recorded.
         const migrationSql = await readFile(resolve(migrationDir, filename), 'utf8');
         await client.query('BEGIN');
         try {
-          await client.query(migrationSql);
+          await client.query(applyRolePrefix(migrationSql, rolePrefix));
           await client.query(
             `
               insert into core.schema_migrations (id, checksum, applied_at)
@@ -90,7 +94,7 @@ export class StynxMigrationRunner implements OnModuleInit {
             [filename, migrationSql],
           );
           if (filename === '0002_extensions.sql') {
-            await this.promoteBootstrapObjectsToOwner(client);
+            await this.promoteBootstrapObjectsToOwner(client, roles);
           }
           await client.query('COMMIT');
         } catch (error) {
@@ -103,9 +107,13 @@ export class StynxMigrationRunner implements OnModuleInit {
     }
   }
 
-  private async promoteBootstrapObjectsToOwner(client: { query: (sql: string) => Promise<unknown> }): Promise<void> {
-    await client.query('ALTER SCHEMA core OWNER TO stynx_owner');
-    await client.query('ALTER TABLE core.schema_migrations OWNER TO stynx_owner');
-    await client.query('SET ROLE stynx_owner');
+  private async promoteBootstrapObjectsToOwner(
+    client: { query: (sql: string) => Promise<unknown> },
+    roles: PlatformRoleNames,
+  ): Promise<void> {
+    // `roles.owner` is a validated lower-case identifier (platform-roles.ts).
+    await client.query(`ALTER SCHEMA core OWNER TO ${roles.owner}`);
+    await client.query(`ALTER TABLE core.schema_migrations OWNER TO ${roles.owner}`);
+    await client.query(`SET ROLE ${roles.owner}`);
   }
 }
