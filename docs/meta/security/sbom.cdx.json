@@ -760,19 +760,6 @@
     },
     {
       "type": "library",
-      "name": "@stynx-internal/migration-linter",
-      "version": "0.2.0",
-      "scope": "excluded",
-      "licenses": [],
-      "properties": [
-        {
-          "name": "stynx:workspacePath",
-          "value": "tools/migration-linter"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "@stynx-internal/tsconfig",
       "version": "0.2.0",
       "scope": "excluded",
@@ -1334,6 +1321,25 @@
         {
           "name": "stynx:workspacePath",
           "value": "packages/logging"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@stynx-nyx/migration-linter",
+      "version": "0.2.0",
+      "scope": "excluded",
+      "licenses": [
+        {
+          "license": {
+            "id": "BUSL-1.1"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "tools/migration-linter"
         }
       ]
     },

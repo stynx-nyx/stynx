@@ -1,6 +1,16 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
-import { validateSqlWithParser } from './parser.js';
+import { ensureParser, ParserUnavailableError, validateSqlWithParser } from './parser.js';
+import {
+  assertBaseDir,
+  checkAppliedBytes,
+  checkGlobalPrefixes,
+  checkPiiAnnotations,
+  checkPolicyGucs,
+  LintInputError,
+  readManifest,
+  type PopulationFile,
+} from './context-rules.js';
 import { containsDestructiveSql } from './destructive.js';
 import {
   collectLeadingComments,
@@ -387,22 +397,97 @@ function buildFileContext(targetRoot: string, filePath: string): FileContext {
 }
 
 export async function lintSqlTarget(target: string, options: LintOptions = {}): Promise<LintRunResult> {
-  const absoluteTarget = resolve(target);
+  return lintSqlTargets([target], options);
+}
+
+/**
+ * Lints one or more migration roots as a single population: LINT001–009, LINT011 and LINT012 run
+ * per file; LINT010 (prefix uniqueness) and LINT013 (applied bytes) run across every root.
+ * Throws LintInputError when a root, the base dir or the manifest is unavailable. A parser that
+ * cannot be loaded yields one parserIssues entry per file, never a clean result.
+ */
+export async function lintSqlTargets(targets: readonly string[], options: LintOptions = {}): Promise<LintRunResult> {
+  if (targets.length === 0) {
+    throw new LintInputError('No migration target given.');
+  }
+  const roots = targets.map((target) => resolve(target));
+  for (const [index, root] of roots.entries()) {
+    if (!existsSync(root)) {
+      throw new LintInputError(`Migration target ${targets[index]} does not exist.`);
+    }
+  }
+  const manifest = options.manifest ? readManifest(options.manifest) : null;
+  const baseDir = options.baseDir ? assertBaseDir(options.baseDir) : null;
+
+  let parserUnavailable: ParserUnavailableError | null = null;
+  try {
+    await ensureParser();
+  } catch (error) {
+    if (!(error instanceof ParserUnavailableError)) {
+      throw error;
+    }
+    parserUnavailable = error;
+  }
+
+  const result: LintRunResult = { files: [], issues: [], parserIssues: [] };
+  const population: PopulationFile[] = [];
+  const seen = new Set<string>();
+  for (const root of roots) {
+    await lintRoot(root, options, result, population, seen, parserUnavailable);
+  }
+
+  const report = (issue: LintIssue): void => {
+    result.issues.push(issue);
+  };
+  checkGlobalPrefixes(population, report);
+  checkAppliedBytes(roots, population, manifest, baseDir, report);
+
+  result.issues.sort((left, right) => {
+    if (left.file !== right.file) {
+      return left.file.localeCompare(right.file);
+    }
+    if (left.line !== right.line) {
+      return left.line - right.line;
+    }
+    return left.code.localeCompare(right.code);
+  });
+
+  return result;
+}
+
+async function lintRoot(
+  absoluteTarget: string,
+  options: LintOptions,
+  result: LintRunResult,
+  population: PopulationFile[],
+  seen: Set<string>,
+  parserUnavailable: ParserUnavailableError | null,
+): Promise<void> {
   const rootForRelativePaths = statSync(absoluteTarget).isDirectory()
     ? absoluteTarget
     : resolve(absoluteTarget, '..');
-  const files = walkSqlFiles(absoluteTarget);
-  const result: LintRunResult = {
-    files: files.map((file) => relative(process.cwd(), file) || file),
-    issues: [],
-    parserIssues: [],
-  };
+  const files = walkSqlFiles(absoluteTarget).filter((file) => {
+    if (seen.has(file)) {
+      return false;
+    }
+    seen.add(file);
+    return true;
+  });
+  for (const file of files) {
+    const displayFile = relative(process.cwd(), file) || file;
+    result.files.push(displayFile);
+    population.push({ filePath: file, relativeFile: relative(rootForRelativePaths, file) || file, displayFile });
+  }
 
   const knownSoftTables = new Set<string>();
   const archiveNameOwners = new Map<string, string>();
 
   for (const filePath of files) {
     const file = buildFileContext(rootForRelativePaths, filePath);
+    if (parserUnavailable) {
+      result.parserIssues.push({ file: file.relativeFile, message: parserUnavailable.message });
+      continue;
+    }
     try {
       await validateSqlWithParser(file.sql);
     } catch (error) {
@@ -422,6 +507,11 @@ export async function lintSqlTarget(target: string, options: LintOptions = {}): 
     const explicitArchiveAlters = new Set<string>();
 
     for (const statement of file.statements) {
+      checkPolicyGucs(file.sql, file.relativeFile, statement, (issue) => result.issues.push(issue));
+      if (options.lgpd) {
+        checkPiiAnnotations(file.sql, file.relativeFile, statement, (issue) => result.issues.push(issue));
+      }
+
       const helperCreate = helperCreateTable(statement);
       if (helperCreate) {
         helperCreates.push(helperCreate);
@@ -622,16 +712,4 @@ export async function lintSqlTarget(target: string, options: LintOptions = {}): 
       knownSoftTables.add(table);
     }
   }
-
-  result.issues.sort((left, right) => {
-    if (left.file !== right.file) {
-      return left.file.localeCompare(right.file);
-    }
-    if (left.line !== right.line) {
-      return left.line - right.line;
-    }
-    return left.code.localeCompare(right.code);
-  });
-
-  return result;
 }

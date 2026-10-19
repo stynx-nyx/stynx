@@ -638,7 +638,7 @@ writeDoc(
 );
 writeDoc(
   'tools/index.md',
-  '# Tools\n\nInternal workspace tooling published under `@stynx-internal/*`: the scaffolder, shared ESLint config, migration linter, and TS config.\n',
+  '# Tools\n\nWorkspace tooling: the scaffolder, shared ESLint config and TS config under `@stynx-internal/*`, and the migration linter `@stynx-nyx/migration-linter`.\n',
   'Tools',
 );
 writeDoc(
@@ -785,15 +785,18 @@ syncPackageReadmes(
   'packages-web',
   (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
 );
-// R15 follow-up: surface tool packages on the published site. All current
-// tools live under @stynx-internal/* (create-stynx-app, eslint-config,
-// migration-linter, tsconfig). Internal scripts without a package.json
-// (ci-local, repo-config, stryker, npm-security-upgrade-auditor) are
-// intentionally skipped — they're not published packages.
+// R15 follow-up: surface tool packages on the published site. Tools live
+// under @stynx-internal/* (create-stynx-app, eslint-config, tsconfig) or, once
+// named for publication, @stynx-nyx/* (migration-linter). Internal scripts
+// without a package.json (ci-local, repo-config, stryker,
+// npm-security-upgrade-auditor) are intentionally skipped — they're not
+// published packages.
 syncPackageReadmes(
   'tools',
   'tools',
-  (name) => typeof name === 'string' && name.startsWith('@stynx-internal/'),
+  (name) =>
+    typeof name === 'string' &&
+    (name.startsWith('@stynx-internal/') || name.startsWith('@stynx-nyx/')),
 );
 syncSpecs();
 
