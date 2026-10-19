@@ -1,7 +1,7 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { Observable, of } from 'rxjs';
-import { DbContextInterceptor } from '../../src/db-context/db-context.interceptor';
-import { getPrincipalFromRequest } from '../../src/common/request-context';
+import { DbContextInterceptor } from '../../src/db-context/db-context.interceptor.js';
+import { getPrincipalFromRequest } from '../../src/common/request-context.js';
 
 const PRINCIPAL = {
   id: 'p-1',

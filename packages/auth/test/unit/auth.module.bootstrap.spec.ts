@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { StynxAuthModule } from '../../src/auth.module';
+import { StynxAuthModule } from '../../src/auth.module.js';
 
 @Controller('/auth-bootstrap')
 class AuthBootstrapController {

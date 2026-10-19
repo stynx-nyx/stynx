@@ -1,19 +1,19 @@
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { StynxAuthModule } from '../../src/auth.module';
-import { ActorContextInterceptor } from '../../src/actor-context.interceptor';
-import { CognitoJwtValidator } from '../../src/cognito-jwt.validator';
-import { EffectiveHashComputer } from '../../src/effective-hash-computer';
-import { PermissionCache } from '../../src/permission-cache';
-import { PermissionCacheMetrics } from '../../src/permission-cache-metrics';
-import { PermissionGuard } from '../../src/permission.guard';
-import { PermissionQueryService } from '../../src/permission-query.service';
-import { RedisPermissionCacheBackend } from '../../src/redis-permission-cache-backend';
-import { StynxAuthController } from '../../src/auth.controller';
-import { StynxAuthService } from '../../src/auth.service';
-import { StynxAuthGuard } from '../../src/stynx-auth.guard';
-import { StynxJwtValidator } from '../../src/stynx-jwt.validator';
-import { STYNX_AUTH_OPTIONS, STYNX_PERMISSION_CACHE_BACKEND } from '../../src/tokens';
-import { resolveAuthOptions } from '../../src/types';
+import { StynxAuthModule } from '../../src/auth.module.js';
+import { ActorContextInterceptor } from '../../src/actor-context.interceptor.js';
+import { CognitoJwtValidator } from '../../src/cognito-jwt.validator.js';
+import { EffectiveHashComputer } from '../../src/effective-hash-computer.js';
+import { PermissionCache } from '../../src/permission-cache.js';
+import { PermissionCacheMetrics } from '../../src/permission-cache-metrics.js';
+import { PermissionGuard } from '../../src/permission.guard.js';
+import { PermissionQueryService } from '../../src/permission-query.service.js';
+import { RedisPermissionCacheBackend } from '../../src/redis-permission-cache-backend.js';
+import { StynxAuthController } from '../../src/auth.controller.js';
+import { StynxAuthService } from '../../src/auth.service.js';
+import { StynxAuthGuard } from '../../src/stynx-auth.guard.js';
+import { StynxJwtValidator } from '../../src/stynx-jwt.validator.js';
+import { STYNX_AUTH_OPTIONS, STYNX_PERMISSION_CACHE_BACKEND } from '../../src/tokens.js';
+import { resolveAuthOptions } from '../../src/types.js';
 
 describe('StynxAuthModule', () => {
   it('builds the dynamic module with the expected controller, providers, and exports', () => {

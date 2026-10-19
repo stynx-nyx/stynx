@@ -9,7 +9,7 @@ import {
   type SessionGuarantee,
   type SessionRegistration,
   type TrustedSessionContext,
-} from '../../src/control';
+} from '../../src/control/index.js';
 
 const tenantA = '00000000-0000-4000-8000-000000000001';
 const tenantB = '00000000-0000-7000-8000-000000000002';

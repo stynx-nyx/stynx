@@ -1,5 +1,5 @@
-import { OutboxService } from '../../src/outbox.service';
-import type { OutboxAppendEvent, OutboxEntitySelector, OutboxSqlExecutor } from '../../src/types';
+import { OutboxService } from '../../src/outbox.service.js';
+import type { OutboxAppendEvent, OutboxEntitySelector, OutboxSqlExecutor } from '../../src/types.js';
 
 // UPS-OBX-07 (#316): declared destinations at append and the entity filter of both dispatch sweeps.
 

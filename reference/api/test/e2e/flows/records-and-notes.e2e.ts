@@ -6,15 +6,15 @@ import {
   expectRLSIsolated,
 } from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { recordNotes, records } from '../../../src/sample/schema';
+import { recordNotes, records } from '../../../src/sample/schema.js';
 import {
   closeReferenceApiE2e,
   queryRowsAsTenant,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
-} from '../fixtures/app';
-import { createAuthenticatedAgent, type AuthenticatedAgent } from '../fixtures/http';
-import { actors, tenants } from '../fixtures/seed';
+} from '../fixtures/app.js';
+import { createAuthenticatedAgent, type AuthenticatedAgent } from '../fixtures/http.js';
+import { actors, tenants } from '../fixtures/seed.js';
 
 interface RecordBody {
   id: string;

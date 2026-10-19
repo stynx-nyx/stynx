@@ -1,10 +1,10 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { StynxDataModule } from '@stynx-nyx/data';
-import { AuditSqlSink } from '../../src/sql-adapter';
+import { AuditSqlSink } from '../../src/sql-adapter.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const TENANT = 'f1111111-1111-4111-8111-111111111111';
 const ACTOR = 'f2222222-2222-4222-8222-222222222222';

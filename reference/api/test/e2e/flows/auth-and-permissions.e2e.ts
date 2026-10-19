@@ -7,9 +7,9 @@ import {
   queryRowsAsTenant,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
-} from '../fixtures/app';
-import { createAuthenticatedAgent, type AuthenticatedAgent } from '../fixtures/http';
-import { actors, tenants } from '../fixtures/seed';
+} from '../fixtures/app.js';
+import { createAuthenticatedAgent, type AuthenticatedAgent } from '../fixtures/http.js';
+import { actors, tenants } from '../fixtures/seed.js';
 
 interface SessionBundleBody {
   sid: string;

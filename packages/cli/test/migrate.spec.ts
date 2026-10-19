@@ -26,7 +26,7 @@ import {
   migrationStatus,
   type MigrationClient,
   type MigrationClientFactoryOptions,
-} from '../src/migrate';
+} from '../src/migrate.js';
 
 class FakeMigrationClient implements MigrationClient {
   readonly applied = new Map<string, string>();

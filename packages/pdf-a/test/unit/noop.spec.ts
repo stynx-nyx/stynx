@@ -1,4 +1,4 @@
-import { NoopPdfAValidator } from '../../src';
+import { NoopPdfAValidator } from '../../src/index.js';
 
 describe('NoopPdfAValidator', () => {
   it('returns a passing PDF/A-2b result by default', async () => {

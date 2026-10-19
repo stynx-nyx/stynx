@@ -15,7 +15,7 @@ import { Test } from '@nestjs/testing';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 /** Real owned authentication services, a published session adapter and restricted PostgreSQL. */
 export class RealAuthenticationFixture {

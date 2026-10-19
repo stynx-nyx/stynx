@@ -7,8 +7,8 @@ import { RequestContext, StynxCoreModule } from '@stynx-nyx/core';
 import { StynxDataModule } from '@stynx-nyx/data';
 import request from 'supertest';
 import { z } from 'zod';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { StynxTenancyModule } from '../../src/tenancy.module';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { StynxTenancyModule } from '../../src/tenancy.module.js';
 
 const TENANT_A = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const MEMBER_A = '0197481e-7294-7c53-8b03-5c36d7c2831a';

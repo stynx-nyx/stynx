@@ -1,4 +1,4 @@
-import { JobsRegistry, JobsService, JobsWorker, StynxJobsModule } from '../../src/index';
+import { JobsRegistry, JobsService, JobsWorker, StynxJobsModule } from '../../src/index.js';
 
 describe('jobs module wiring', () => {
   it('exports the public scheduling providers and registers configured handlers', () => {

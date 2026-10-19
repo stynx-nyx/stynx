@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { CTG9OfflineSyncController } from '../../src/ctg9-offline-sync.controller';
-import { batchContextFingerprint, transportCompositeKey } from '../../src/transport';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { CTG9OfflineSyncController } from '../../src/ctg9-offline-sync.controller.js';
+import { batchContextFingerprint, transportCompositeKey } from '../../src/transport.js';
 import type {
   OfflineSyncStore,
   StynxOfflineSyncModuleOptions,
   SubmitSyncBatchInput,
   SyncConflict,
-} from '../../src/types';
+} from '../../src/types.js';
 
 const scope = { tenantId: '0197481e-6f84-77e4-8d6d-41f0b6fca9c1', actorId: 'agent-1' };
 const now = '2026-09-28T12:00:00.000Z';

@@ -8,7 +8,7 @@
 //   - constructor overrides
 //   - early-throw header-shape validation
 
-import { CognitoTokenVerifier } from '../../src/cognito-token-verifier';
+import { CognitoTokenVerifier } from '../../src/cognito-token-verifier.js';
 import * as contracts from '@stynx-nyx/contracts';
 
 describe('CognitoTokenVerifier — constructor', () => {

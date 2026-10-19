@@ -3,8 +3,8 @@ import { Test } from '@nestjs/testing';
 import { RequestContext, RequestContextMutator, RequestContextInterceptor, StynxCoreModule } from '@stynx-nyx/core';
 import { defer, from, lastValueFrom } from 'rxjs';
 import { z } from 'zod';
-import { StynxLogger } from '../../src/logger.service';
-import { StynxLoggingModule } from '../../src/logging.module';
+import { StynxLogger } from '../../src/logger.service.js';
+import { StynxLoggingModule } from '../../src/logging.module.js';
 
 @Controller()
 class LoggingController {

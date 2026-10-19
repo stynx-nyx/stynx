@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PreferencesController } from '../src/preferences.controller';
-import { PLATFORM_PREFERENCE_DEFAULTS } from '../src/schema';
-import { tenantA, changed, errorCode } from './support/preferences-harness';
+import { PreferencesController } from '../src/preferences.controller.js';
+import { PLATFORM_PREFERENCE_DEFAULTS } from '../src/schema.js';
+import { tenantA, changed, errorCode } from './support/preferences-harness.js';
 
 describe('preferences controller trusted identity and revision contract', () => {
   it('enforces strong If-Match and rejects every identity override spelling before service calls', async () => {

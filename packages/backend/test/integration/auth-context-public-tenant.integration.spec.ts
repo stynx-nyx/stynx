@@ -19,7 +19,7 @@ import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 import {
   InMemorySessionStore,
   SessionService,
@@ -33,8 +33,8 @@ import {
 } from '@stynx-nyx/sessions';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import request from 'supertest';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
-import { STYNX_TENANT_ENTITLEMENT_POLICY, STYNX_TOKEN_VERIFIER } from '../../src/auth/constants';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
+import { STYNX_TENANT_ENTITLEMENT_POLICY, STYNX_TOKEN_VERIFIER } from '../../src/auth/constants.js';
 
 const TENANT_A = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const TENANT_B = '0197481e-6f84-77e4-8d6d-41f0b6fca9c2';

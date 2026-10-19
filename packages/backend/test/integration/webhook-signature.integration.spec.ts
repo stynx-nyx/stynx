@@ -10,11 +10,11 @@ import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import request from 'supertest';
 import { z } from 'zod';
-import { StynxWebhookSignatureModule, WebhookSignatureGuard } from '../../src';
+import { StynxWebhookSignatureModule, WebhookSignatureGuard } from '../../src/index.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 // UPS-HOOK-02: two separate Nest processes must share this atomic reservation.
 class SharedReplayStore {

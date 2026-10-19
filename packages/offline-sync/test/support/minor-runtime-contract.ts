@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
 import { expect, it, vi } from 'vitest';
-import type { OfflineSyncService } from '../../src/offline-sync.service';
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
+import type { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
 import type {
   CTG9SubmitSyncBatchInput,
   CTG9SubmitSyncBatchResult,
   OfflineSyncItemContext,
   StynxOfflineSyncModuleOptions,
-} from '../../src/types';
+} from '../../src/types.js';
 
 export const MINOR_TENANT_A = '00000000-0000-4000-8000-0000000000a9';
 export const MINOR_TENANT_B = '00000000-0000-4000-8000-0000000000b9';

@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { renderOfflineStorage, verifyOfflineStorage } from '../../src/storage';
-import { OFFLINE_STORAGE_TEMPLATE } from '../../src/storage-template.generated';
+import { renderOfflineStorage, verifyOfflineStorage } from '../../src/storage.js';
+import { OFFLINE_STORAGE_TEMPLATE } from '../../src/storage-template.generated.js';
 
 const relations = [
   'numbering_ranges',

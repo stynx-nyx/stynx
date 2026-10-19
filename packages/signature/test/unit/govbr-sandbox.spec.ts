@@ -1,4 +1,4 @@
-import { createGovBrSandboxAdapter, govBrSandboxCallbackUrl } from '../../src';
+import { createGovBrSandboxAdapter, govBrSandboxCallbackUrl } from '../../src/index.js';
 
 describe('GovBrSandboxAdapter', () => {
   const request = {

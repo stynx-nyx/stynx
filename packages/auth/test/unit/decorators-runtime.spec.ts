@@ -8,7 +8,7 @@ import {
   STYNX_READONLY_ROUTE,
   STYNX_SYSTEM_ROUTE,
   System,
-} from '../../src/decorators';
+} from '../../src/decorators.js';
 
 describe('auth decorators', () => {
   it('attaches public, system, readonly, and permission metadata', () => {

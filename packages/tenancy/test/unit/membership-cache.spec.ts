@@ -1,4 +1,4 @@
-import { MembershipAccessCache } from '../../src/membership-cache';
+import { MembershipAccessCache } from '../../src/membership-cache.js';
 
 describe('MembershipAccessCache', () => {
   afterEach(() => {

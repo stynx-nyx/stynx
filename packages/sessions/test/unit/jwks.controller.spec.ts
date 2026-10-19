@@ -1,5 +1,5 @@
-import { SessionJwksController } from '../../src/jwks.controller';
-import type { SessionJwtSigningService } from '../../src/jwt-signing.service';
+import { SessionJwksController } from '../../src/jwks.controller.js';
+import type { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
 
 describe('SessionJwksController API contract', () => {
   it('publishes the signing service JWKS payload', async () => {

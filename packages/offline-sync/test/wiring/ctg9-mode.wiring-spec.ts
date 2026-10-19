@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 import { RequestMethod, type Type } from '@nestjs/common';
-import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
+import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants.js';
 import { STYNX_PERMISSION_ROUTE } from '@stynx-nyx/auth';
 import { STYNX_IDEMPOTENT_ROUTE } from '@stynx-nyx/idempotency';
 import { describe, expect, it, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
-import { StynxOfflineSyncModule } from '../../src/offline-sync.module';
-import type { StynxOfflineSyncModuleOptions } from '../../src/types';
+import { StynxOfflineSyncModule } from '../../src/offline-sync.module.js';
+import type { StynxOfflineSyncModuleOptions } from '../../src/types.js';
 
 // INV-OFFLINE-001; adoption-mode compatibility at module bootstrap.
 type Route = { method: RequestMethod; path: string; permission: string; idempotent: boolean };

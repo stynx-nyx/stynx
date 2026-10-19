@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { Client } from 'pg';
-import { StynxDataModule } from '../../src/data.module';
-import { Database } from '../../src/database';
-import { AppRoleConfigurationError, TransactionIdentityMismatchError } from '../../src/errors';
-import type { StynxDataModuleOptions } from '../../src/tokens';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres';
+import { StynxDataModule } from '../../src/data.module.js';
+import { Database } from '../../src/database.js';
+import { AppRoleConfigurationError, TransactionIdentityMismatchError } from '../../src/errors.js';
+import type { StynxDataModuleOptions } from '../../src/tokens.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres.js';
 
 // INV-RBAC-001; UPS-OBX-10 (ADR-OUTBOX-0003 D1): the application SQL role is
 // configuration, a conforming role other than stynx_app is accepted, a role

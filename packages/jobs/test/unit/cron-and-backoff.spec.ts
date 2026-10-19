@@ -1,4 +1,4 @@
-import { computeBackoffMs, InvalidCronExpressionError, nextCronRunAt, parseCronExpression } from '../../src/index';
+import { computeBackoffMs, InvalidCronExpressionError, nextCronRunAt, parseCronExpression } from '../../src/index.js';
 
 describe('cron and retry primitives', () => {
   it('calculates UTC cron occurrences and cron DOM/DOW OR semantics', () => {

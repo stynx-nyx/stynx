@@ -17,13 +17,13 @@ import {
 } from '@stynx-nyx/idempotency';
 import request from 'supertest';
 import { z } from 'zod';
-import { Audit, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
-import { StynxAuthModule } from '../../src/auth/auth.module';
+import { Audit, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index.js';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
+import { StynxAuthModule } from '../../src/auth/auth.module.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9d1';
 const ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2832a';

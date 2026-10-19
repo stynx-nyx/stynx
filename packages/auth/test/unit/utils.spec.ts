@@ -1,5 +1,5 @@
 import { InvalidCredentialError } from '@stynx-nyx/contracts';
-import { base64UrlDecode, base64UrlEncode, computePermissionsHash, decodeJwtClaims, expandPermissionWildcards, headerToString, verifyJwtWithJwk } from '../../src/utils';
+import { base64UrlDecode, base64UrlEncode, computePermissionsHash, decodeJwtClaims, expandPermissionWildcards, headerToString, verifyJwtWithJwk } from '../../src/utils.js';
 
 describe('auth utils', () => {
   it('normalizes permissions before hashing', () => {

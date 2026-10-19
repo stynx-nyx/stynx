@@ -5,7 +5,7 @@ import {
   type WebhookReplayStore,
   type WebhookVerificationInput,
   type WebhookVerificationOptions,
-} from '../../src';
+} from '../../src/index.js';
 
 // UPS-HOOK-01: the store's single synchronous reservation is the atomic boundary.
 class AtomicReplayStore implements WebhookReplayStore {

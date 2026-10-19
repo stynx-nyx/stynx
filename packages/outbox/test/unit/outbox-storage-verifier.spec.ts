@@ -1,4 +1,4 @@
-import { verifyOutboxStorage } from '../../src/index';
+import { verifyOutboxStorage } from '../../src/index.js';
 
 // The library is a report-producing observer over a caller-owned transaction;
 // missing visibility cannot become a pass or trigger connection/transaction repair.

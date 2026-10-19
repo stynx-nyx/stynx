@@ -1,4 +1,4 @@
-import { AuditSqlReader, AuditSqlSink } from '../../src/sql-adapter';
+import { AuditSqlReader, AuditSqlSink } from '../../src/sql-adapter.js';
 
 function makeExecutor(responses: unknown[] = []) {
   let i = 0;

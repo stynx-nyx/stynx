@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import type { OfflineSyncService } from '../../src/offline-sync.service';
-import type { CreateNumberingRangeInput } from '../../src/types';
+import type { OfflineSyncService } from '../../src/offline-sync.service.js';
+import type { CreateNumberingRangeInput } from '../../src/types.js';
 
 export const RANGE_TENANT_A = '00000000-0000-4000-8000-0000000000a5';
 export const RANGE_TENANT_B = '00000000-0000-4000-8000-0000000000b5';

@@ -2,11 +2,11 @@ import { EventEmitter } from 'node:events';
 import {
   PgTenantDbClientLifecycle,
   ResponseEventRequestDbClientLifecycle,
-} from '../../src/db-context/request-db-client-lifecycle';
+} from '../../src/db-context/request-db-client-lifecycle.js';
 import type {
   ResponseLike,
   TenantBoundDbClientFactory,
-} from '../../src/db-context/request-db-client-lifecycle';
+} from '../../src/db-context/request-db-client-lifecycle.js';
 
 function fakeResponse() {
   const emitter = new EventEmitter();

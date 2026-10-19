@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CTG9OfflineSyncController } from '../../src/ctg9-offline-sync.controller';
-import type { OfflineSyncService } from '../../src/offline-sync.service';
+import { CTG9OfflineSyncController } from '../../src/ctg9-offline-sync.controller.js';
+import type { OfflineSyncService } from '../../src/offline-sync.service.js';
 
 // INV-OFFLINE-001; UPS-OFS-01…04. CTG9 routes retain trusted scope and
 // forward every extended command/read to the service with its route identity.

@@ -6,14 +6,14 @@ import {
   SessionControlController,
   SessionControlError,
   SessionControlService,
-} from '../../src/control';
+} from '../../src/control/index.js';
 import type {
   SessionMutationResult,
   SessionOperationRecord,
   SessionRegistration,
   TrustedSessionContext,
-} from '../../src/control';
-import { SessionMirrorWriter } from '../../src/session-mirror.writer';
+} from '../../src/control/index.js';
+import { SessionMirrorWriter } from '../../src/session-mirror.writer.js';
 
 const tenantId = '00000000-0000-4000-8000-000000000001';
 const sid = '00000000-0000-4000-8000-000000000011';

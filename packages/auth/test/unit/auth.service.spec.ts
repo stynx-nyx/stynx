@@ -1,7 +1,7 @@
 import type { ModuleRef } from '@nestjs/core';
 import type { SessionBundle } from '@stynx-nyx/sessions';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
-import { StynxAuthService } from '../../src/auth.service';
+import { StynxAuthService } from '../../src/auth.service.js';
 
 describe('StynxAuthService', () => {
   const permissionCache = {

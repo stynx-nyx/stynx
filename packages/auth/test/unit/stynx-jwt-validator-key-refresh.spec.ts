@@ -7,14 +7,14 @@ vi.mock('node:crypto', async (importOriginal) => {
   return { ...actual, createPublicKey: vi.fn(actual.createPublicKey) };
 });
 
-vi.mock('../../src/utils', async () => {
-  const actual = await vi.importActual('../../src/utils');
+vi.mock('../../src/utils.js', async () => {
+  const actual = await vi.importActual('../../src/utils.js');
   return { ...actual, verifyJwtWithJwk: vi.fn() };
 });
 
 import { createPublicKey } from 'node:crypto';
-import { StynxJwtValidator } from '../../src/stynx-jwt.validator';
-import { base64UrlEncode, verifyJwtWithJwk } from '../../src/utils';
+import { StynxJwtValidator } from '../../src/stynx-jwt.validator.js';
+import { base64UrlEncode, verifyJwtWithJwk } from '../../src/utils.js';
 
 type Jwk = Record<string, string>;
 type KeySet = { source: unknown; version: number; keys: Jwk[]; expiresAt: number; forcedRefreshStartedAt?: number };
@@ -70,7 +70,7 @@ async function flushMicrotasks(): Promise<void> {
 describe('StynxJwtValidator key-source edge cases', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+    const actual = await vi.importActual<typeof import('../../src/utils.js')>('../../src/utils.js');
     (verifyJwtWithJwk as Mock).mockImplementation((token: string, key: Jwk) => actual.verifyJwtWithJwk(token, key));
   });
 

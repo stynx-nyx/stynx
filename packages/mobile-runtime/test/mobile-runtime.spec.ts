@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OfflineFirstMobileRuntime } from '../src/runtime';
+import { OfflineFirstMobileRuntime } from '../src/runtime.js';
 import {
   FixedMobileClock,
   InMemoryEncryptedMobileStore,
@@ -8,8 +8,8 @@ import {
   SandboxStynxMobileSessionPort,
   SequentialMobileIdPort,
   SimulatedMobilePrinterPort,
-} from '../src/testing';
-import type { MobileEvidenceDraft, MobileEntityDraft, MobileSyncQueueItem } from '../src/types';
+} from '../src/testing.js';
+import type { MobileEvidenceDraft, MobileEntityDraft, MobileSyncQueueItem } from '../src/types.js';
 
 type TeatEntityType = 'ait' | 'crash-record';
 

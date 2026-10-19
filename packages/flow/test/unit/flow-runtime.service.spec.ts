@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { FlowRuntimeService } from '../../src/flow-runtime.service';
+import { FlowRuntimeService } from '../../src/flow-runtime.service.js';
 import type { Mock } from 'vitest';
 
 const SCOPE = '0190abcd-1234-7abc-89ab-000000000001';

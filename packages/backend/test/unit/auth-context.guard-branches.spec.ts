@@ -1,7 +1,7 @@
 import { UnauthorizedException } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
 import { STYNX_PUBLIC_TENANT_OPTIONS, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL } from '@stynx-nyx/contracts';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
 
 const PRINCIPAL = {
   id: 'p-1',

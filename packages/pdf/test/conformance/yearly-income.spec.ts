@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { PdfVerificationEvidenceAppender, PublicPayrollPdfBuilder } from '../../src';
-import type { PublicYearlyIncomeDocument } from '../../src';
+import { PdfVerificationEvidenceAppender, PublicPayrollPdfBuilder } from '../../src/index.js';
+import type { PublicYearlyIncomeDocument } from '../../src/index.js';
 import {
   VERAPDF_CONFORMANCE_TIMEOUT_MS,
   isVeraPdfDockerUsable,
   validatePdfsA2b,
-} from './verapdf';
+} from './verapdf.js';
 
 const describeIfDocker = isVeraPdfDockerUsable() ? describe : describe.skip;
 

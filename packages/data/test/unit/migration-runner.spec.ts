@@ -3,7 +3,7 @@
 // the integration suite's job. Tests here exercise the wiring paths
 // that fire regardless of database connectivity.
 
-import { StynxMigrationRunner } from '../../src/migration-runner';
+import { StynxMigrationRunner } from '../../src/migration-runner.js';
 
 describe('StynxMigrationRunner.onModuleInit', () => {
   function makeRunner(opts: Partial<{ enabled: boolean; runner?: (pools: unknown) => Promise<void> }> = {}) {
@@ -126,7 +126,7 @@ describe('StynxMigrationRunner.runPlatformMigrations (mocked client)', () => {
     const readFile = vi.fn(async () => 'select broken');
     vi.doMock('node:fs/promises', () => ({ readdir, readFile }));
     const { StynxMigrationRunner: MockedMigrationRunner } =
-      (await import('../../src/migration-runner')) as typeof import('../../src/migration-runner');
+      (await import('../../src/migration-runner.js')) as typeof import('../../src/migration-runner.js');
     const bodyError = new Error('body failed');
     const query = vi.fn(async (sql: string) => {
       if (sql.includes('select id from core.schema_migrations')) {
@@ -166,7 +166,7 @@ describe('StynxMigrationRunner.runPlatformMigrations (mocked client)', () => {
     const readFile = vi.fn();
     vi.doMock('node:fs/promises', () => ({ readdir, readFile }));
     const { StynxMigrationRunner: MockedMigrationRunner } =
-      (await import('../../src/migration-runner')) as typeof import('../../src/migration-runner');
+      (await import('../../src/migration-runner.js')) as typeof import('../../src/migration-runner.js');
     const release = vi.fn();
     const runner = new MockedMigrationRunner(
       { migrations: { enabled: false } } as never,

@@ -1,8 +1,8 @@
-import { InMemorySessionStore } from '../../src/in-memory-session-store';
-import { SessionJwtSigningService } from '../../src/jwt-signing.service';
-import { createSessionStoreReadinessIndicator } from '../../src/readiness';
-import { SessionService } from '../../src/session.service';
-import { resolveSessionsOptions, type SessionRecord, type SessionStore } from '../../src/types';
+import { InMemorySessionStore } from '../../src/in-memory-session-store.js';
+import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
+import { createSessionStoreReadinessIndicator } from '../../src/readiness.js';
+import { SessionService } from '../../src/session.service.js';
+import { resolveSessionsOptions, type SessionRecord, type SessionStore } from '../../src/types.js';
 
 const now = new Date('2026-05-18T12:00:00.000Z');
 

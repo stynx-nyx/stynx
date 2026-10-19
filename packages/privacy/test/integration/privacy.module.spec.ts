@@ -11,10 +11,10 @@ import {
   lgpdFixturePiiMapYaml,
   seedLgpdFixture,
 } from '@stynx-nyx/testing';
-import { PiiMapService } from '../../src/pii-map.service';
-import { PrivacyService } from '../../src/privacy.service';
-import { StynxPrivacyModule } from '../../src/privacy.module';
-import type { PrivacyCognitoAdmin, PrivacyObjectStore } from '../../src/types';
+import { PiiMapService } from '../../src/pii-map.service.js';
+import { PrivacyService } from '../../src/privacy.service.js';
+import { StynxPrivacyModule } from '../../src/privacy.module.js';
+import type { PrivacyCognitoAdmin, PrivacyObjectStore } from '../../src/types.js';
 import { createHmac } from 'node:crypto';
 import request from 'supertest';
 import {
@@ -27,7 +27,7 @@ import {
   FOREIGN_SUBJECT,
   INACTIVE_SUBJECT,
   SALT,
-} from '../support/authenticated-privacy-app';
+} from '../support/authenticated-privacy-app.js';
 
 class InMemoryPrivacyObjectStore implements PrivacyObjectStore {
   readonly objects = new Map<string, Buffer>();

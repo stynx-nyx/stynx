@@ -4,8 +4,8 @@ import {
   VeraPdfDockerError,
   VeraPdfDockerValidator,
   VeraPdfReportParseError,
-} from '../../src';
-import type { VeraPdfDockerRunRequest } from '../../src';
+} from '../../src/index.js';
+import type { VeraPdfDockerRunRequest } from '../../src/index.js';
 
 describe('VeraPdfDockerValidator', () => {
   it('runs the pinned image and emits validation telemetry', async () => {

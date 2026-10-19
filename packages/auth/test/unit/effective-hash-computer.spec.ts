@@ -1,5 +1,5 @@
 import type { ModuleRef } from '@nestjs/core';
-import { EffectiveHashComputer } from '../../src/effective-hash-computer';
+import { EffectiveHashComputer } from '../../src/effective-hash-computer.js';
 
 describe('EffectiveHashComputer', () => {
   function createService() {

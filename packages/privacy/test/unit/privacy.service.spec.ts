@@ -4,14 +4,14 @@ import {
   closePrivacyTestContext,
   privacyUnitModuleRef,
   runPrivacyInternal,
-} from '../support/privacy-test-context';
-import { PiiMapService } from '../../src/pii-map.service';
-import { UnconfiguredPrivacyCognitoAdmin } from '../../src/unconfigured-identity';
-import { PrivacyService } from '../../src/privacy.service';
-import { StynxPrivacyModule } from '../../src/privacy.module';
-import { PrivacyConfigurationError } from '../../src/errors';
-import { STYNX_PRIVACY_COGNITO_ADMIN } from '../../src/tokens';
-import type { PrivacyCognitoAdmin, PrivacyObjectStore, PrivacyRule } from '../../src/types';
+} from '../support/privacy-test-context.js';
+import { PiiMapService } from '../../src/pii-map.service.js';
+import { UnconfiguredPrivacyCognitoAdmin } from '../../src/unconfigured-identity.js';
+import { PrivacyService } from '../../src/privacy.service.js';
+import { StynxPrivacyModule } from '../../src/privacy.module.js';
+import { PrivacyConfigurationError } from '../../src/errors.js';
+import { STYNX_PRIVACY_COGNITO_ADMIN } from '../../src/tokens.js';
+import type { PrivacyCognitoAdmin, PrivacyObjectStore, PrivacyRule } from '../../src/types.js';
 import type { Mock } from 'vitest';
 
 beforeAll(initializePrivacyTestContext);

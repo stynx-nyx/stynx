@@ -1,4 +1,4 @@
-import { createStynxFixtures } from '../src/fixtures';
+import { createStynxFixtures } from '../src/fixtures.js';
 
 describe('createStynxFixtures unit defaults', () => {
   function makeClient() {

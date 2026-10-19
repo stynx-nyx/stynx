@@ -7,34 +7,34 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { from, lastValueFrom, of, throwError } from 'rxjs';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
-import { StynxAuthModule } from '../../src/auth/auth.module';
-import { ClaimFirstTenantEntitlementPolicy } from '../../src/auth/claim-first-tenant-entitlement.policy';
-import { RequiredTenantHeaderResolver } from '../../src/auth/required-tenant-header.resolver';
-import { getPrincipalFromRequest } from '../../src/common/request-context';
-import { AuditInterceptor } from '../../src/audit/audit.interceptor';
-import { StynxAuditModule } from '../../src/audit/audit.module';
-import { AuthorizationGuard } from '../../src/authorization/authorization.guard';
-import { StynxAuthorizationModule } from '../../src/authorization/authorization.module';
-import { DefaultPolicyEvaluator } from '../../src/authorization/default-policy-evaluator';
-import { DbContextInterceptor } from '../../src/db-context/db-context.interceptor';
-import { StynxDbContextModule } from '../../src/db-context/db-context.module';
-import { PgSessionDbContextApplier } from '../../src/db-context/pg-session-db-context.applier';
-import { TenantLifecycleMiddleware } from '../../src/db-context/tenant-lifecycle.middleware';
-import { IdempotencyInterceptor } from '../../src/idempotency/idempotency.interceptor';
-import type { IdempotencyStore } from '../../src/idempotency/types';
-import { StynxPlatformPipelineModule } from '../../src/pipeline/platform-pipeline.module';
-import { RateLimitGuard } from '../../src/rate-limit/rate-limit.guard';
-import type { RateLimitStore } from '../../src/rate-limit/types';
-import { DefaultSlaCategoryResolver } from '../../src/sla/default-sla-category.resolver';
-import { LoggerSlaEventSink } from '../../src/sla/logger-sla-event.sink';
-import { StynxSlaModule } from '../../src/sla/sla.module';
-import { SlaMonitorInterceptor } from '../../src/sla/sla-monitor.interceptor';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
+import { StynxAuthModule } from '../../src/auth/auth.module.js';
+import { ClaimFirstTenantEntitlementPolicy } from '../../src/auth/claim-first-tenant-entitlement.policy.js';
+import { RequiredTenantHeaderResolver } from '../../src/auth/required-tenant-header.resolver.js';
+import { getPrincipalFromRequest } from '../../src/common/request-context.js';
+import { AuditInterceptor } from '../../src/audit/audit.interceptor.js';
+import { StynxAuditModule } from '../../src/audit/audit.module.js';
+import { AuthorizationGuard } from '../../src/authorization/authorization.guard.js';
+import { StynxAuthorizationModule } from '../../src/authorization/authorization.module.js';
+import { DefaultPolicyEvaluator } from '../../src/authorization/default-policy-evaluator.js';
+import { DbContextInterceptor } from '../../src/db-context/db-context.interceptor.js';
+import { StynxDbContextModule } from '../../src/db-context/db-context.module.js';
+import { PgSessionDbContextApplier } from '../../src/db-context/pg-session-db-context.applier.js';
+import { TenantLifecycleMiddleware } from '../../src/db-context/tenant-lifecycle.middleware.js';
+import { IdempotencyInterceptor } from '../../src/idempotency/idempotency.interceptor.js';
+import type { IdempotencyStore } from '../../src/idempotency/types.js';
+import { StynxPlatformPipelineModule } from '../../src/pipeline/platform-pipeline.module.js';
+import { RateLimitGuard } from '../../src/rate-limit/rate-limit.guard.js';
+import type { RateLimitStore } from '../../src/rate-limit/types.js';
+import { DefaultSlaCategoryResolver } from '../../src/sla/default-sla-category.resolver.js';
+import { LoggerSlaEventSink } from '../../src/sla/logger-sla-event.sink.js';
+import { StynxSlaModule } from '../../src/sla/sla.module.js';
+import { SlaMonitorInterceptor } from '../../src/sla/sla-monitor.interceptor.js';
 import {
   STYNX_SLA_CATEGORY_RESOLVER,
   STYNX_SLA_EVENT_SINK,
   STYNX_SLA_OPTIONS,
-} from '../../src/sla/constants';
+} from '../../src/sla/constants.js';
 
 function httpContext(request: Record<string, unknown>, handlerName = 'handler') {
   return {

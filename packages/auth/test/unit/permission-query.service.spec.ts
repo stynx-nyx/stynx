@@ -1,7 +1,7 @@
 import type { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
-import { PermissionQueryService } from '../../src/permission-query.service';
+import { PermissionQueryService } from '../../src/permission-query.service.js';
 import type { Mock } from 'vitest';
 
 function createQueryResult(rows: unknown[]) {

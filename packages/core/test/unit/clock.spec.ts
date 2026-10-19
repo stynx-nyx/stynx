@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { describe, expect, it, vi } from 'vitest';
-import { provideStynxClock, STYNX_CLOCK, SystemClock, type Clock } from '../../src';
+import { provideStynxClock, STYNX_CLOCK, SystemClock, type Clock } from '../../src/index.js';
 
 describe('Clock', () => {
   it('returns a fresh valid Date from SystemClock on every call', () => {

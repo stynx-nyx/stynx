@@ -3,7 +3,7 @@ import type {
   OfflineImportManifest,
   OfflineImportRecord,
   OfflineImportMapping,
-} from '../../src/import-schema.generated';
+} from '../../src/import-schema.generated.js';
 
 export const IMPORT_TENANT = '11111111-1111-4111-8111-111111111111';
 export const IMPORT_OTHER_TENANT = '22222222-2222-4222-8222-222222222222';

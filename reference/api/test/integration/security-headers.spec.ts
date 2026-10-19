@@ -1,7 +1,7 @@
 import { Controller, Get, Module, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { configureSecurityHeaders } from '../../src/security-headers';
+import { configureSecurityHeaders } from '../../src/security-headers.js';
 
 @Controller('/security-header-probe')
 class SecurityHeaderProbeController {

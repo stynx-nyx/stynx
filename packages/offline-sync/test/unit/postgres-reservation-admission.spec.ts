@@ -4,9 +4,9 @@ import {
   pgReplayDurableReservation,
   pgReserveDurableNumbering,
   pgCancelDurableReservation,
-} from '../../src/postgres-reservations';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
-import type { CTG9ReserveNumberingInput } from '../../src/types';
+} from '../../src/postgres-reservations.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
+import type { CTG9ReserveNumberingInput } from '../../src/types.js';
 const scope = { tenantId: '00000000-0000-4000-8000-0000000000d4', actorId: 'actor' };
 const now = '2026-10-10T12:00:00.000Z';
 const until = '2026-10-11T12:00:00.000Z';

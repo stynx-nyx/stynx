@@ -2,13 +2,13 @@ import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { StynxDataModule, Database } from '@stynx-nyx/data';
-import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants';
-import { InMemoryRateLimitMetrics } from '../../src/metrics';
-import { DatabaseRateLimitPolicyResolver } from '../../src/rate-limit-policy.service';
-import { RateLimitGuard } from '../../src/rate-limit.guard';
-import { RedisSlidingWindowRateLimitStore } from '../../src/redis-rate-limit.store';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { startRedisDockerContainer, stopRedisDockerContainer, type RedisDockerContainer } from '../../../../test/support/redis-docker';
+import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants.js';
+import { InMemoryRateLimitMetrics } from '../../src/metrics.js';
+import { DatabaseRateLimitPolicyResolver } from '../../src/rate-limit-policy.service.js';
+import { RateLimitGuard } from '../../src/rate-limit.guard.js';
+import { RedisSlidingWindowRateLimitStore } from '../../src/redis-rate-limit.store.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { startRedisDockerContainer, stopRedisDockerContainer, type RedisDockerContainer } from '../../../../test/support/redis-docker.js';
 
 function createExecutionContext(request: Record<string, unknown>, handler: Function): ExecutionContext {
   return {

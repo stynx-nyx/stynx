@@ -8,15 +8,15 @@ import { RequestContextMutator } from '@stynx-nyx/core';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
+} from '../../../data/test/support/postgres.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
 import {
   CLOCK_TENANT_A,
   CLOCK_TENANT_B,
   CLOCK_ACTOR,
   registerConsumptionClockContracts,
-} from '../support/consumption-clock-contract';
+} from '../support/consumption-clock-contract.js';
 
 describe('UPS-OFS-01 real restricted PostgreSQL consumption operation clock', () => {
   const effects: string[] = [];

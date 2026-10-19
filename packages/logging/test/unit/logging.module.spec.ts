@@ -1,6 +1,6 @@
-import { RequestLoggingMiddleware } from '../../src/request-logging.middleware';
-import { StynxLoggingModule } from '../../src/logging.module';
-import { STYNX_LOGGING_OPTIONS } from '../../src/tokens';
+import { RequestLoggingMiddleware } from '../../src/request-logging.middleware.js';
+import { StynxLoggingModule } from '../../src/logging.module.js';
+import { STYNX_LOGGING_OPTIONS } from '../../src/tokens.js';
 
 describe('StynxLoggingModule', () => {
   it('wires default options and applies the request middleware', () => {

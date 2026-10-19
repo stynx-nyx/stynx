@@ -1,4 +1,4 @@
-import { planAuditDetach } from '../../src/retention';
+import { planAuditDetach } from '../../src/retention.js';
 
 // Constants pinned for boundary assertions. Computed once here rather than
 // inline so the reader can audit them and so the assertions are precise.

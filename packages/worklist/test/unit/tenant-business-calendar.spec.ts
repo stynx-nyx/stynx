@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TenantBusinessCalendar, WorklistInputError } from '../../src';
+import { TenantBusinessCalendar, WorklistInputError } from '../../src/index.js';
 
 const A = '01978f4a-32bf-7c27-a131-fd73a9e101a1';
 const B = '01978f4a-32bf-7c27-a131-fd73a9e101a2';

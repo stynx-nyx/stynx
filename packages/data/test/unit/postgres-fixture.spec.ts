@@ -1,5 +1,5 @@
 import { Client } from 'pg';
-import { asAppRole, withPostgresCredentials } from '../support/postgres';
+import { asAppRole, withPostgresCredentials } from '../support/postgres.js';
 
 describe('PostgreSQL fixture direct-role connection identity', () => {
   afterEach(() => vi.unstubAllEnvs());

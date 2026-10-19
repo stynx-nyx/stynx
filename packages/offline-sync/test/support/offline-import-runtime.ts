@@ -3,10 +3,10 @@ import { Test } from '@nestjs/testing';
 import { RequestContextMutator } from '@stynx-nyx/core';
 import { StynxDataModule } from '@stynx-nyx/data';
 import { vi } from 'vitest';
-import { StynxOfflineSyncModule } from '../../src/offline-sync.module';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import type { OfflineStorageFixture } from './offline-storage-fixture';
-import { realOfflineHttpAuthentication } from './real-http-authentication';
+import { StynxOfflineSyncModule } from '../../src/offline-sync.module.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import type { OfflineStorageFixture } from './offline-storage-fixture.js';
+import { realOfflineHttpAuthentication } from './real-http-authentication.js';
 
 export async function importedRuntime(
   value: OfflineStorageFixture,

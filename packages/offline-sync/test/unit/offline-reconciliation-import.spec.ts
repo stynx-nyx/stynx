@@ -3,13 +3,13 @@ import {
   parseOfflineImportManifest,
   validReconciliationEvidence,
   importDigest,
-} from '../../src/import-validation';
-import { OfflineImportError } from '../../src/import-contract';
-import { importManifest, IMPORT_AT, rehashManifest } from '../support/offline-import-fixtures';
+} from '../../src/import-validation.js';
+import { OfflineImportError } from '../../src/import-contract.js';
+import { importManifest, IMPORT_AT, rehashManifest } from '../support/offline-import-fixtures.js';
 import {
   reconciliationImportManifest,
   RECONCILIATION_IMPORT_ID,
-} from '../support/offline-reconciliation-import-fixture';
+} from '../support/offline-reconciliation-import-fixture.js';
 
 // INV-OFFLINE-001; ADR-MOBILE-OFFLINE-0005 D5: independent /1-/2 closed parser witnesses.
 describe('Versioned reconciliation import contract', () => {
@@ -163,7 +163,7 @@ describe('Versioned reconciliation import contract', () => {
       expect(
         validReconciliationEvidence(
           valid,
-          bounds as unknown as import('../../src/import-validation').ReconciliationReservationBounds,
+          bounds as unknown as import('../../src/import-validation.js').ReconciliationReservationBounds,
         ),
       ).toBe(false);
     const cyclic = row();

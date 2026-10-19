@@ -13,7 +13,7 @@ import {
   StatementTimeoutError,
   TenantContextMissingError,
   TransactionRequiredError,
-} from '../../src/errors';
+} from '../../src/errors.js';
 
 describe('data errors', () => {
   it('exposes stable error codes and context', () => {

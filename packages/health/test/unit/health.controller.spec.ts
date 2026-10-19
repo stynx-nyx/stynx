@@ -1,8 +1,8 @@
 import { ServiceUnavailableException } from '@nestjs/common';
 import { HealthCheckError } from '@nestjs/terminus';
-import { StynxHealthController } from '../../src/health.controller';
-import type { StynxHealthService } from '../../src/health.service';
-import type { StynxMetricsService } from '../../src/metrics.service';
+import { StynxHealthController } from '../../src/health.controller.js';
+import type { StynxHealthService } from '../../src/health.service.js';
+import type { StynxMetricsService } from '../../src/metrics.service.js';
 
 describe('StynxHealthController API contract', () => {
   function createController(readiness: () => Promise<unknown>, allowlist?: string[]) {

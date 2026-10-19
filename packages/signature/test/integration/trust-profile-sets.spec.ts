@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Test } from '@nestjs/testing';
 import { StynxHealthService } from '@stynx-nyx/health';
-import * as sig from '../../src';
+import * as sig from '../../src/index.js';
 import {
   blt2CmsSignature,
   blt2SignedDocument,
@@ -16,7 +16,7 @@ import {
   profile,
   root2Pem,
   rootPem,
-} from '../fixtures/trust';
+} from '../fixtures/trust.js';
 
 // UPS-SIG-07 / ADR-SIGNATURE-0002 D2 / INV-SIGNATURE-001. Several production
 // trust profiles in one mounted module, proven with two real, disjoint test PKI

@@ -1,8 +1,8 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
-import { OutboxService } from '../../src/outbox.service';
-import { StynxOutboxModule } from '../../src/outbox.module';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import { OutboxService } from '../../src/outbox.service.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 
 const TENANT_A = '11111111-1111-1111-1111-111111111111';
 const TENANT_B = '22222222-2222-2222-2222-222222222222';

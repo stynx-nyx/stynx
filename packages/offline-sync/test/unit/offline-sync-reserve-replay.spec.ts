@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Database } from '@stynx-nyx/data';
-import { OfflineSyncReservationReplayError } from '../../src/errors';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { decodeCursor, encodeCursor, reservationFingerprint } from '../../src/listing';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
-import { pgListBatches, pgListConflicts, pgListItemReceipts, pgListQueueItems } from '../../src/postgres-listing';
-import type { OfflineSyncPolicy, OfflineSyncStore, StynxOfflineSyncModuleOptions } from '../../src/types';
+import { OfflineSyncReservationReplayError } from '../../src/errors.js';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { decodeCursor, encodeCursor, reservationFingerprint } from '../../src/listing.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
+import { pgListBatches, pgListConflicts, pgListItemReceipts, pgListQueueItems } from '../../src/postgres-listing.js';
+import type { OfflineSyncPolicy, OfflineSyncStore, StynxOfflineSyncModuleOptions } from '../../src/types.js';
 
 // INV-OFFLINE-001; UPS-OFS-05, UPS-OFS-11 (#317, PR #330 review): keyed replay precedes time and
 // policy checks, replay returns the current state, forged cursors are 400, validUntil is normalized.

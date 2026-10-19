@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { spawn } from 'node:child_process';
-import { runDoctorForApp } from '../src/doctor';
+import { runDoctorForApp } from '../src/doctor.js';
 import type { Mock } from 'vitest';
 
 vi.mock('node:child_process', () => ({

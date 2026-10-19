@@ -16,9 +16,9 @@ import { Database, StynxDataModule } from '@stynx-nyx/data';
 // reach into the package source via the workspace symlink. F-9 step 2/N
 // could also be unblocked by re-exporting the class from packages/data/src/index.ts,
 // but that's a @stynx-nyx/data API change out of scope for this commit.
-import { StynxMigrationRunner } from '../../../../../packages/data/src/migration-runner';
+import { StynxMigrationRunner } from '../../../../../packages/data/src/migration-runner.js';
 import { RequestContextMutator } from '@stynx-nyx/core';
-import { createPostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
+import { createPostgresTestDatabase } from '../../../../../packages/data/test/support/postgres.js';
 
 function localUser(): string {
   return process.env.STYNX_TEST_PG_USER ?? userInfo().username;

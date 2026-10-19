@@ -4,7 +4,7 @@ import {
   IMPORT_ID,
   IMPORT_TENANT,
   rehashManifest,
-} from './offline-import-fixtures';
+} from './offline-import-fixtures.js';
 
 export const RECONCILIATION_IMPORT_ID = '88888888-8888-4888-8888-888888888888';
 /** Independent immutable archive, deliberately predating this release and carrying no invented request key. */

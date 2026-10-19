@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
-import type { CTG9SubmitSyncBatchInput, StynxOfflineSyncModuleOptions } from '../../src/types';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
+import type { CTG9SubmitSyncBatchInput, StynxOfflineSyncModuleOptions } from '../../src/types.js';
 
 const tenantId = '00000000-0000-4000-8000-0000000000a1';
 const at = '2026-10-10T12:00:00.000Z';

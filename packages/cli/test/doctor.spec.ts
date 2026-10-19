@@ -6,7 +6,7 @@ vi.mock('node:child_process', () => ({
   spawnSync: mockChildProcess.spawnSync,
 }));
 
-import { runDoctor } from '../src/doctor';
+import { runDoctor } from '../src/doctor.js';
 
 describe('runDoctor', () => {
   it('normalizes nullish spawn status and captured output', () => {

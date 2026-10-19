@@ -2,8 +2,8 @@ import type { RequestContext, SystemContext } from '@stynx-nyx/core';
 import type { ClsService } from 'nestjs-cls';
 import type { PoolClient } from 'pg';
 import { describe, expect, it, vi } from 'vitest';
-import { Database } from '../../src/database';
-import type { StynxPoolRegistry } from '../../src/pools';
+import { Database } from '../../src/database.js';
+import type { StynxPoolRegistry } from '../../src/pools.js';
 
 // INV-OFFLINE-001; D1.1: transaction rollback must preserve malformed business failures without executing code accessors.
 // The real Database/Transaction execute; only the external pg client is a unit fixture.

@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { lastValueFrom, of } from 'rxjs';
-import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
-import { IfMatchExceptionFilter, IfMatchPreconditionInterceptor, PreconditionFailedError, PreconditionRequiredError, RevisionETagInterceptor } from '../../src/if-match/if-match';
-import { EXCEPTION_FILTERS_METADATA, INTERCEPTORS_METADATA } from '@nestjs/common/constants';
-import * as backend from '../../src/index';
+import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants.js';
+import { IfMatchExceptionFilter, IfMatchPreconditionInterceptor, PreconditionFailedError, PreconditionRequiredError, RevisionETagInterceptor } from '../../src/if-match/if-match.js';
+import { EXCEPTION_FILTERS_METADATA, INTERCEPTORS_METADATA } from '@nestjs/common/constants.js';
+import * as backend from '../../src/index.js';
 
 type IfMatchError = Error & { getStatus(): number };
 type IfMatchApi = {

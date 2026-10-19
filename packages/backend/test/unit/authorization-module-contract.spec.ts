@@ -1,7 +1,7 @@
 import { APP_GUARD } from '@nestjs/core';
-import { STYNX_AUTHZ_POLICY_EVALUATOR, StynxAuthorizationModule } from '../../src';
-import { DefaultPolicyEvaluator } from '../../src/authorization/default-policy-evaluator';
-import { AuthorizationGuard } from '../../src/authorization/authorization.guard';
+import { STYNX_AUTHZ_POLICY_EVALUATOR, StynxAuthorizationModule } from '../../src/index.js';
+import { DefaultPolicyEvaluator } from '../../src/authorization/default-policy-evaluator.js';
+import { AuthorizationGuard } from '../../src/authorization/authorization.guard.js';
 
 describe('StynxAuthorizationModule contract', () => {
   it('always binds and exports the default policy evaluator token', () => {

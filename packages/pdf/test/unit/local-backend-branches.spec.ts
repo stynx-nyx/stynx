@@ -1,16 +1,16 @@
 import { vi } from 'vitest';
 
 const mocks = { launch: vi.fn() };
-let LocalPdfRenderBackend: typeof import('../../src').LocalPdfRenderBackend;
-let PdfProfileUnsupportedError: typeof import('../../src').PdfProfileUnsupportedError;
-let PdfValidationError: typeof import('../../src').PdfValidationError;
-type RenderRequest = import('../../src').RenderRequest;
+let LocalPdfRenderBackend: typeof import('../../src/index.js').LocalPdfRenderBackend;
+let PdfProfileUnsupportedError: typeof import('../../src/index.js').PdfProfileUnsupportedError;
+let PdfValidationError: typeof import('../../src/index.js').PdfValidationError;
+type RenderRequest = import('../../src/index.js').RenderRequest;
 
 describe('LocalPdfRenderBackend branches', () => {
   beforeAll(async () => {
     vi.resetModules();
     vi.doMock('playwright', () => ({ chromium: { launch: mocks.launch } }));
-    ({ LocalPdfRenderBackend, PdfProfileUnsupportedError, PdfValidationError } = await import('../../src'));
+    ({ LocalPdfRenderBackend, PdfProfileUnsupportedError, PdfValidationError } = await import('../../src/index.js'));
   });
   beforeEach(() => mocks.launch.mockReset());
   afterAll(() => { vi.doUnmock('playwright'); vi.resetModules(); });

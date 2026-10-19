@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants';
-import { RateLimit } from '../../src/decorators';
+import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants.js';
+import { RateLimit } from '../../src/decorators.js';
 
 describe('RateLimit decorator', () => {
   it('attaches route metadata', () => {

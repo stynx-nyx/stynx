@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OfflineFirstMobileRuntime } from '../src/runtime';
+import { OfflineFirstMobileRuntime } from '../src/runtime.js';
 import {
   FixedMobileClock,
   InMemoryEncryptedMobileStore,
@@ -9,7 +9,7 @@ import {
   SequentialMobileIdPort,
   SimulatedMobilePrinterPort,
   stableJson,
-} from '../src/testing';
+} from '../src/testing.js';
 import type {
   CreateMobileDraftInput,
   MobileConflictResolution,
@@ -20,7 +20,7 @@ import type {
   MobilePrintReceipt,
   MobileSessionContext,
   MobileSyncQueueItem,
-} from '../src/types';
+} from '../src/types.js';
 
 interface Harness {
   readonly runtime: OfflineFirstMobileRuntime;

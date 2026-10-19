@@ -1,11 +1,11 @@
 import { RequestContext, SystemContext } from '@stynx-nyx/core';
 import { ClsService } from 'nestjs-cls';
 import type { PoolClient } from 'pg';
-import { AppRoleVerifier, DEFAULT_APP_ROLE_NAME, resolveAppRoleName } from '../../src/app-role';
-import { Database } from '../../src/database';
-import { AppRoleConfigurationError, TransactionIdentityMismatchError } from '../../src/errors';
-import { StynxPoolRegistry } from '../../src/pools';
-import type { StynxDataModuleOptions } from '../../src/tokens';
+import { AppRoleVerifier, DEFAULT_APP_ROLE_NAME, resolveAppRoleName } from '../../src/app-role.js';
+import { Database } from '../../src/database.js';
+import { AppRoleConfigurationError, TransactionIdentityMismatchError } from '../../src/errors.js';
+import { StynxPoolRegistry } from '../../src/pools.js';
+import type { StynxDataModuleOptions } from '../../src/tokens.js';
 
 // INV-RBAC-001; UPS-OBX-10 (ADR-OUTBOX-0003 D1 items 1, 3 and 7): the
 // application SQL role is configuration, validated once, and its properties

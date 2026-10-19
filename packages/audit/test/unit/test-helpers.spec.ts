@@ -1,4 +1,4 @@
-import { expectAuditRow, findAuditRows, type Queryable } from '../../src/test-helpers';
+import { expectAuditRow, findAuditRows, type Queryable } from '../../src/test-helpers.js';
 
 function queryable(rows: Array<Record<string, unknown>>): Queryable {
   return {

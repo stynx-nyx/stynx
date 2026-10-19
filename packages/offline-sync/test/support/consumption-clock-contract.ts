@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
-import type { OfflineSyncService } from '../../src/offline-sync.service';
-import type { OfflineSyncDurableStore } from '../../src/types';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
+import type { OfflineSyncService } from '../../src/offline-sync.service.js';
+import type { OfflineSyncDurableStore } from '../../src/types.js';
 
 export const CLOCK_TENANT_A = '00000000-0000-4000-8000-0000000000c8';
 export const CLOCK_TENANT_B = '00000000-0000-4000-8000-0000000000d8';

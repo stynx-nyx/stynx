@@ -17,7 +17,7 @@ vi.mock('node:fs', async (importOriginal) => {
   };
 });
 
-import { generateModule } from '../src/generate-module';
+import { generateModule } from '../src/generate-module.js';
 
 describe('generate module destination race', () => {
   it('aborts atomically if the destination appears after staging', () => {

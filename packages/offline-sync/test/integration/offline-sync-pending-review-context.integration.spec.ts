@@ -6,9 +6,9 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { HttpException } from '@nestjs/common';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { RequestContextMutator } from '@stynx-nyx/core';
-import { OfflineSyncUpgradeRequiredError } from '../../src/errors';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
+import { OfflineSyncUpgradeRequiredError } from '../../src/errors.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
 import type {
   CTG9SubmitSyncBatchInput,
   CTG9SyncBatchItemInput,
@@ -16,11 +16,11 @@ import type {
   OfflineSyncItemContext,
   StynxOfflineSyncModuleOptions,
   SyncConflict,
-} from '../../src/types';
+} from '../../src/types.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 // INV-OFFLINE-001; UPS-OFS-06, UPS-OFS-07, UPS-OFS-08 (#317; ADR-MOBILE-OFFLINE-0003 D1, D2, D3). Real
 // PostgreSQL, 0001→0005, app-role pool bound at connection startup so FORCE RLS applies, two tenants.

@@ -7,22 +7,22 @@ import { RequestContextMutator } from '@stynx-nyx/core';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
-import { importOfflineState } from '../../src/import-state';
-import { OfflineImportError } from '../../src/import-contract';
-import type { OfflineImportRecord } from '../../src/import-schema.generated';
-import type { StynxOfflineSyncModuleOptions } from '../../src/types';
-import { fixture, dispose } from '../support/offline-storage-fixture';
-import { importManifest, rehashManifest } from '../support/offline-import-fixtures';
-import { GAP_AT, GAP_TENANT_A, GAP_TENANT_B } from '../support/offline-sync-acceptance-gaps';
+} from '../../../data/test/support/postgres.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
+import { importOfflineState } from '../../src/import-state.js';
+import { OfflineImportError } from '../../src/import-contract.js';
+import type { OfflineImportRecord } from '../../src/import-schema.generated.js';
+import type { StynxOfflineSyncModuleOptions } from '../../src/types.js';
+import { fixture, dispose } from '../support/offline-storage-fixture.js';
+import { importManifest, rehashManifest } from '../support/offline-import-fixtures.js';
+import { GAP_AT, GAP_TENANT_A, GAP_TENANT_B } from '../support/offline-sync-acceptance-gaps.js';
 import {
   registerDomainOutcomeContracts,
   domainBatch,
   domainFailure,
   domainEvents,
-} from '../support/offline-domain-outcomes';
+} from '../support/offline-domain-outcomes.js';
 
 // INV-OFFLINE-001; D1.1: real item/refusal transactions and direct restricted-role FORCE RLS.
 describe('Domain-outcome contracts through real PostgreSQL', () => {

@@ -9,11 +9,11 @@ import {
   RestoreConflictError,
   SoftDeleteBlockedError,
   TransactionRequiredError,
-} from '../../src/errors';
-import { documentVersions, documents } from '../../src/schema/storage';
-import { Transaction, type StynxDrizzleDatabase } from '../../src/transaction';
-import type { StynxDataMetricsSink } from '../../src/tokens';
-import type { TableMeta } from '../../src/internal/table-meta';
+} from '../../src/errors.js';
+import { documentVersions, documents } from '../../src/schema/storage.js';
+import { Transaction, type StynxDrizzleDatabase } from '../../src/transaction.js';
+import type { StynxDataMetricsSink } from '../../src/tokens.js';
+import type { TableMeta } from '../../src/internal/table-meta.js';
 import type { Mock } from 'vitest';
 
 describe('Transaction', () => {

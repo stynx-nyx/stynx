@@ -1,6 +1,6 @@
-import { OutboxService } from '../../src/outbox.service';
-import { OutboxEventNotFailedError, OutboxNotFoundError } from '../../src/errors';
-import type { OutboxSqlExecutor } from '../../src/types';
+import { OutboxService } from '../../src/outbox.service.js';
+import { OutboxEventNotFailedError, OutboxNotFoundError } from '../../src/errors.js';
+import type { OutboxSqlExecutor } from '../../src/types.js';
 
 const tenant = '11111111-1111-4111-8111-111111111111';
 const eventId = '22222222-2222-4222-8222-222222222222';

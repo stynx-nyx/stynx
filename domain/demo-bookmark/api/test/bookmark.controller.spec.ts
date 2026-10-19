@@ -6,8 +6,8 @@
 
 import { Test } from '@nestjs/testing';
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
-import { BookmarkController } from '../src/demo-bookmark/controllers/bookmark.controller';
-import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service';
+import { BookmarkController } from '../src/demo-bookmark/controllers/bookmark.controller.js';
+import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service.js';
 
 describe('BookmarkController', () => {
   const fakeBookmark = {

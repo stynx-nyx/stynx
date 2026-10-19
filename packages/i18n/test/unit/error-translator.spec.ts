@@ -1,9 +1,9 @@
-import { ErrorTranslatorService } from '../../src/error-translator.service';
+import { ErrorTranslatorService } from '../../src/error-translator.service.js';
 
 describe('ErrorTranslatorService', () => {
   it('delegates translate(key, locale, vars) to LocaleService.t', () => {
     const t = vi.fn().mockReturnValue('translated');
-    const localeService = { t } as unknown as import('../../src/locale.service').LocaleService;
+    const localeService = { t } as unknown as import('../../src/locale.service.js').LocaleService;
     const svc = new ErrorTranslatorService(localeService);
 
     const out = svc.translate('error.boom', 'pt-BR', { reason: 'x' });
@@ -14,7 +14,7 @@ describe('ErrorTranslatorService', () => {
 
   it('passes empty vars when none provided', () => {
     const t = vi.fn().mockReturnValue('translated');
-    const localeService = { t } as unknown as import('../../src/locale.service').LocaleService;
+    const localeService = { t } as unknown as import('../../src/locale.service.js').LocaleService;
     const svc = new ErrorTranslatorService(localeService);
 
     svc.translate('error.empty', 'en-US');

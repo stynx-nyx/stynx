@@ -10,8 +10,8 @@ import { expect } from 'vitest';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../../../packages/data/test/support/postgres';
-import { actors, type ActorName, seedRecordsAndNotesE2e } from './seed';
+} from '../../../../../packages/data/test/support/postgres.js';
+import { actors, type ActorName, seedRecordsAndNotesE2e } from './seed.js';
 
 export interface ReferenceApiE2eContext {
   app: INestApplication;
@@ -109,7 +109,7 @@ export async function setupReferenceApiE2e(
 
   setRuntimeEnvironment(postgres, `redis://${redis.getHost()}:${redis.getMappedPort(6379)}`);
 
-  const { AppModule } = await import('../../../src/app.module');
+  const { AppModule } = await import('../../../src/app.module.js');
   const moduleBuilder = Test.createTestingModule({
     imports: [AppModule, ...(options.includeI18n ? [StynxI18nModule.forRoot()] : [])],
   });

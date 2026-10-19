@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { PostgresSessionRegistry, type SessionControlCapabilities } from '../../src/control';
+import { PostgresSessionRegistry, type SessionControlCapabilities } from '../../src/control/index.js';
 
 const migration = readFileSync(
   resolve(__dirname, '../../../../reference/api/migrations/0004_session_control.sql'),

@@ -1,7 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { StynxDataModule } from '@stynx-nyx/data';
 import type { Client } from 'pg';
-import { asAppRole, createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import { asAppRole, createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 
 const tenantA = '01978f4a-32bf-7c27-a131-fd73a9e101a1';
 const tenantB = '01978f4a-32bf-7c27-a131-fd73a9e101b2';

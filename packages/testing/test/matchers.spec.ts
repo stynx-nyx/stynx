@@ -21,7 +21,7 @@ import {
   expectRLSIsolated,
   expectRestoreConflict,
   expectSoftDeleteBlocked,
-} from '../src/matchers';
+} from '../src/matchers.js';
 
 const unitSchema = pgSchema('unit');
 const unitDocuments = softDeletable(unitSchema.table('documents', {

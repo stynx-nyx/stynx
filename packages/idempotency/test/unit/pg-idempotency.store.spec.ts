@@ -1,5 +1,5 @@
-import { PgIdempotencyStore } from '../../src/pg-idempotency.store';
-import type { IdempotencyDecisionContext, IdempotencySqlExecutor } from '../../src/types';
+import { PgIdempotencyStore } from '../../src/pg-idempotency.store.js';
+import type { IdempotencyDecisionContext, IdempotencySqlExecutor } from '../../src/types.js';
 
 function context(overrides: Partial<IdempotencyDecisionContext> = {}): IdempotencyDecisionContext {
   return {

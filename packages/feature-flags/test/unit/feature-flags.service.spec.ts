@@ -5,7 +5,7 @@ import {
   FeatureFlagsService,
   InMemoryFeatureFlagProvider,
   JsonFileFeatureFlagProvider,
-} from '../../src';
+} from '../../src/index.js';
 
 describe('FeatureFlagsService', () => {
   it('resolves tenant overrides before environment and global defaults', async () => {

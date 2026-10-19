@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { PublicPayrollPdfBuilder, sha256Hex, validatePdfAStyle } from '../../src';
+import { PublicPayrollPdfBuilder, sha256Hex, validatePdfAStyle } from '../../src/index.js';
 import type {
   PdfEvidenceInput,
   PublicPayslipDocument,
   PublicYearlyIncomeDocument,
-} from '../../src';
+} from '../../src/index.js';
 
 describe('PublicPayrollPdfBuilder', () => {
   it('renders stable payslip bytes from package-owned fixtures', async () => {
