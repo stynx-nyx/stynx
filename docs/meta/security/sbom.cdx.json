@@ -1328,7 +1328,7 @@
       "type": "library",
       "name": "@stynx-nyx/migration-linter",
       "version": "0.2.0",
-      "scope": "excluded",
+      "scope": "required",
       "licenses": [
         {
           "license": {
@@ -1336,6 +1336,7 @@
           }
         }
       ],
+      "purl": "pkg:npm/@stynx-nyx%2fmigration-linter@0.2.0",
       "properties": [
         {
           "name": "stynx:workspacePath",
