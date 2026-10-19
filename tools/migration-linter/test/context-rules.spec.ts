@@ -82,6 +82,44 @@ test('LINT010 each root alone is clean', async () => {
   }
 });
 
+test('LINT010 duplicates that all exist in --base-dir are applied history and stay clean', async () => {
+  const run = await runCli(
+    ['applied', '--format=json', '--base-dir', 'base'],
+    join(contextDir, 'lint010-base'),
+  );
+  assert.equal(run.status, 0, run.stderr);
+  assert.deepEqual(JSON.parse(run.stdout).issues, []);
+});
+
+test('LINT010 a new file reusing a base-present prefix yields exactly LINT010 and exit 1', async () => {
+  const run = await runCli(
+    ['applied', 'added', '--format=json', '--base-dir', 'base'],
+    join(contextDir, 'lint010-base'),
+  );
+  assert.equal(run.status, 1, run.stderr);
+  const output = JSON.parse(run.stdout);
+  assert.deepEqual(codes(output), ['LINT010']);
+  assert.equal(output.issues[0].file, '0012_gamma.sql');
+});
+
+test('LINT010 without --base-dir every file counts as new, so duplicates are flagged', async () => {
+  const run = await runCli(['applied', '--format=json'], join(contextDir, 'lint010-base'));
+  assert.equal(run.status, 1, run.stderr);
+  assert.deepEqual(codes(JSON.parse(run.stdout)), ['LINT010']);
+});
+
+test('LINT010 two new roots sharing a prefix are flagged against an empty --base-dir', async () => {
+  const scratch = mkdtempSync(join(tmpdir(), 'stynx-lint010-base-'));
+  try {
+    const roots = [join(contextDir, 'lint010', 'root-a'), join(contextDir, 'lint010', 'root-b')];
+    const run = await runCli([...roots, '--format=json', '--base-dir', scratch], packageRoot);
+    assert.equal(run.status, 1, run.stderr);
+    assert.deepEqual(codes(JSON.parse(run.stdout)), ['LINT010']);
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+});
+
 test('LINT011 an auth. GUC in a policy yields exactly LINT011 and exit 1', async () => {
   const result = await lintSqlTarget(join(fixturesDir, 'lint011-fail.sql'));
   assert.deepEqual(codes(result), ['LINT011']);
