@@ -1,15 +1,30 @@
 {
-  "name": "@stynx-internal/migration-linter",
+  "name": "@stynx-nyx/migration-linter",
   "private": true,
   "version": "0.2.0",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "type": "module",
   "description": "Archive-aware SQL migration linter for the STYNX monorepo",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
     "stynx-migration-lint": "./dist/src/cli.js"
   },
   "files": [
-    "dist",
-    "README.md"
+    "dist/src",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -17,7 +32,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
     "lint:repo": "pnpm run build && node dist/src/cli.js ../../packages/data/migrations",
-    "test": "pnpm run build && node --test dist/test/migration-linter.spec.js"
+    "test": "pnpm run build && node --test dist/test/migration-linter.spec.js dist/test/context-rules.spec.js"
   },
   "dependencies": {
     "pg-query-emscripten": "^5.1.0"
@@ -25,5 +40,10 @@
   "devDependencies": {
     "@types/node": "24.13.4",
     "typescript": "^6.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stynx-nyx/stynx.git",
+    "directory": "tools/migration-linter"
   }
 }

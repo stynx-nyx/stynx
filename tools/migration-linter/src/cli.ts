@@ -1,51 +1,73 @@
 #!/usr/bin/env node
-import { statSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { lintSqlTarget } from './lint.js';
+import { lintSqlTargets } from './lint.js';
+import type { LintOptions } from './types.js';
 
 type OutputFormat = 'human' | 'json';
 
-function parseArgs(argv: string[]): { target: string; format: OutputFormat; includeFixSuggestions: boolean } {
-  const positionals: string[] = [];
-  let format: OutputFormat = 'human';
-  let includeFixSuggestions = false;
+const USAGE =
+  'Usage: stynx-migration-lint <migration-file-or-dir>... [--format=json|human] [--fix-suggestions] [--lgpd] [--base-dir <dir>] [--manifest <path>]';
 
-  for (const arg of argv) {
-    if (arg.startsWith('--format=')) {
-      const candidate = arg.slice('--format='.length);
-      if (candidate === 'json' || candidate === 'human') {
+interface CliArgs {
+  targets: string[];
+  format: OutputFormat;
+  options: LintOptions;
+}
+
+function parseArgs(argv: string[]): CliArgs {
+  const targets: string[] = [];
+  let format: OutputFormat = 'human';
+  const options: LintOptions = {};
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index] ?? '';
+    const [flag, inlineValue] = arg.startsWith('--') && arg.includes('=')
+      ? [arg.slice(0, arg.indexOf('=')), arg.slice(arg.indexOf('=') + 1)]
+      : [arg, undefined];
+    const value = (): string => {
+      const candidate = inlineValue ?? argv[(index += 1)];
+      if (candidate === undefined || candidate.length === 0) {
+        throw new Error(`${flag} requires a value.`);
+      }
+      return candidate;
+    };
+
+    switch (flag) {
+      case '--format': {
+        const candidate = value();
+        if (candidate !== 'json' && candidate !== 'human') {
+          throw new Error(`Unsupported format: ${candidate}`);
+        }
         format = candidate;
         continue;
       }
-      throw new Error(`Unsupported format: ${candidate}`);
+      case '--fix-suggestions':
+        options.includeFixSuggestions = true;
+        continue;
+      case '--lgpd':
+        options.lgpd = true;
+        continue;
+      case '--base-dir':
+        options.baseDir = value();
+        continue;
+      case '--manifest':
+        options.manifest = value();
+        continue;
+      default:
+        if (arg.startsWith('--')) {
+          throw new Error(`Unknown flag: ${arg}`);
+        }
+        targets.push(arg);
     }
-    if (arg === '--fix-suggestions') {
-      includeFixSuggestions = true;
-      continue;
-    }
-    if (arg.startsWith('--')) {
-      throw new Error(`Unknown flag: ${arg}`);
-    }
-    positionals.push(arg);
   }
 
-  if (positionals.length !== 1) {
-    throw new Error('Usage: stynx-migration-lint <migration-file-or-dir> [--format=json|human] [--fix-suggestions]');
+  if (targets.length === 0) {
+    throw new Error(USAGE);
   }
 
-  const target = positionals[0];
-  if (!target) {
-    throw new Error('Missing migration target.');
-  }
-
-  return {
-    target,
-    format,
-    includeFixSuggestions,
-  };
+  return { targets, format, options };
 }
 
-function printHuman(result: Awaited<ReturnType<typeof lintSqlTarget>>): void {
+function printHuman(result: Awaited<ReturnType<typeof lintSqlTargets>>): void {
   if (result.parserIssues.length > 0) {
     console.error('Parser errors:');
     for (const issue of result.parserIssues) {
@@ -73,12 +95,7 @@ function printHuman(result: Awaited<ReturnType<typeof lintSqlTarget>>): void {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  const target = resolve(args.target);
-  statSync(target);
-
-  const result = await lintSqlTarget(target, {
-    includeFixSuggestions: args.includeFixSuggestions,
-  });
+  const result = await lintSqlTargets(args.targets, args.options);
 
   if (args.format === 'json') {
     console.log(JSON.stringify(result, null, 2));
