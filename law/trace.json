@@ -5212,7 +5212,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 899,
-      "assertion_digest_sha256": "8f24192f194ed89b65cf291431a929041abfe7111b8b017173c3ec9b1a0a6744"
+      "assertion_digest_sha256": "8e29f12aa8d70dc6e23b5ecf144c0e96e16fb72a64ee9e6d1e28415d7bd81d42"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
