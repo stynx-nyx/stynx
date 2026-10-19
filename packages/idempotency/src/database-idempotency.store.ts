@@ -1,12 +1,12 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
-import { STYNX_IDEMPOTENCY_OPTIONS } from './constants';
+import { STYNX_IDEMPOTENCY_OPTIONS } from './constants.js';
 import type {
   IdempotencyDecisionContext,
   IdempotencyInterceptorOptions,
   IdempotencyStoredEntry,
   IdempotencyStore,
-} from './types';
+} from './types.js';
 
 interface DurableRow {
   request_fingerprint: string | null;

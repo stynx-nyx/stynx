@@ -6,13 +6,13 @@ import {
   type RedisModules,
   type RedisScripts,
 } from 'redis';
-import { STYNX_IDEMPOTENCY_OPTIONS } from './constants';
+import { STYNX_IDEMPOTENCY_OPTIONS } from './constants.js';
 import type {
   IdempotencyBackend,
   IdempotencyDecisionContext,
   IdempotencyInterceptorOptions,
   IdempotencyStoredEntry,
-} from './types';
+} from './types.js';
 
 function stringifyIdempotencyValue(value: unknown): string {
   return JSON.stringify(value, (_key, current) => (typeof current === 'bigint' ? current.toString() : current));

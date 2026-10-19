@@ -3,9 +3,9 @@
  *
  * @packageDocumentation
  */
-export * from './dedupe';
-export * from './logger.service';
-export * from './logging.module';
-export * from './pino.factory';
-export * from './request-logging.middleware';
-export * from './tokens';
+export * from './dedupe.js';
+export * from './logger.service.js';
+export * from './logging.module.js';
+export * from './pino.factory.js';
+export * from './request-logging.middleware.js';
+export * from './tokens.js';

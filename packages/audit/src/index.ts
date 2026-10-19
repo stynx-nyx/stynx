@@ -3,11 +3,11 @@
  *
  * @packageDocumentation
  */
-export * from './audit.controller';
-export * from './audit.module';
-export * from './audit.service';
-export * from './retention';
-export * from './sql-adapter';
-export * from './test-helpers';
-export * from './tokens';
-export * from './types';
+export * from './audit.controller.js';
+export * from './audit.module.js';
+export * from './audit.service.js';
+export * from './retention.js';
+export * from './sql-adapter.js';
+export * from './test-helpers.js';
+export * from './tokens.js';
+export * from './types.js';

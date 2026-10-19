@@ -9,9 +9,9 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { makeLiveOnly, softDeletable } from '../table-markers';
-import { users } from './auth';
-import { tenants } from './tenancy';
+import { makeLiveOnly, softDeletable } from '../table-markers.js';
+import { users } from './auth.js';
+import { tenants } from './tenancy.js';
 
 export const flowSchema = pgSchema('flow');
 

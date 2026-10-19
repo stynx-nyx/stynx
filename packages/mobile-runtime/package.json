@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Framework-free offline-first mobile runtime (E6) for stynx consumer apps",
+  "type": "module",
   "main": "dist/mobile-runtime/src/index.js",
   "types": "dist/mobile-runtime/src/index.d.ts",
   "engines": {
@@ -12,12 +13,12 @@
   "exports": {
     ".": {
       "types": "./dist/mobile-runtime/src/index.d.ts",
-      "require": "./dist/mobile-runtime/src/index.js",
+      "import": "./dist/mobile-runtime/src/index.js",
       "default": "./dist/mobile-runtime/src/index.js"
     },
     "./testing": {
       "types": "./dist/mobile-runtime/src/testing.d.ts",
-      "require": "./dist/mobile-runtime/src/testing.js",
+      "import": "./dist/mobile-runtime/src/testing.js",
       "default": "./dist/mobile-runtime/src/testing.js"
     }
   },

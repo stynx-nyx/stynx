@@ -7,8 +7,8 @@ import {
   Optional,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import type { RequestLike } from '../common/request-context';
-import type { RateLimitDecisionContext, RateLimitGuardOptions, RateLimitStore } from './types';
+import type { RequestLike } from '../common/request-context.js';
+import type { RateLimitDecisionContext, RateLimitGuardOptions, RateLimitStore } from './types.js';
 
 interface Bucket {
   count: number;

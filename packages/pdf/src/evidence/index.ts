@@ -1,2 +1,2 @@
-export * from './pdf-verification-evidence-appender';
-export * from './types';
+export * from './pdf-verification-evidence-appender.js';
+export * from './types.js';

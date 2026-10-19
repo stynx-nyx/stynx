@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { NoIdempotent } from '@stynx-nyx/idempotency';
-import { PrivacyService } from './privacy.service';
-import { PrivacyRetentionPermissionGuard, privacyRetentionDryRun } from './privacy-retention.guard';
-import type { PrivacyErasureRequest, PrivacyExportRequest } from './types';
+import { PrivacyService } from './privacy.service.js';
+import { PrivacyRetentionPermissionGuard, privacyRetentionDryRun } from './privacy-retention.guard.js';
+import type { PrivacyErasureRequest, PrivacyExportRequest } from './types.js';
 
 @Controller('privacy')
 export class PrivacyController {

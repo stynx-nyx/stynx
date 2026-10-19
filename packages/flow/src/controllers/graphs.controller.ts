@@ -12,7 +12,7 @@ import {
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, NoIdempotent } from '@stynx-nyx/backend';
 import { Idempotent } from '@stynx-nyx/idempotency';
-import { FlowDesignService } from '../flow-design.service';
+import { FlowDesignService } from '../flow-design.service.js';
 import type {
   CreateFlowEdgeDto,
   CreateFlowGraphDto,
@@ -21,7 +21,7 @@ import type {
   FlowGraphImportDocument,
   PublishFlowGraphDto,
   UpdateFlowGraphDto,
-} from '../types';
+} from '../types.js';
 
 @Controller('/flow/graphs')
 @UseGuards(StynxAuthGuard, PermissionGuard)

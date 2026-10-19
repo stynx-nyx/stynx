@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { RequestContextMutator } from '@stynx-nyx/core';
 import { Observable } from 'rxjs';
-import type { RequestLike } from './types';
+import type { RequestLike } from './types.js';
 
 @Injectable()
 export class ActorContextInterceptor implements NestInterceptor {

@@ -14,7 +14,7 @@ import type {
   MobileIdPort,
   MobilePrinterPort,
   MobileStynxSessionPort,
-} from './ports';
+} from './ports.js';
 import type {
   MobileConflictResolution,
   MobileEntityDraft,
@@ -25,7 +25,7 @@ import type {
   MobileSyncBatchResult,
   MobileSyncQueueItem,
   SyncConflictResolutionStrategy,
-} from './types';
+} from './types.js';
 
 interface SealedValue {
   readonly sealed: string;

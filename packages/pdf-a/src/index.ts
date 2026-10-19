@@ -3,7 +3,7 @@
  *
  * @packageDocumentation
  */
-export * from './types';
-export * from './telemetry';
-export * from './stubs/noop';
-export * from './stubs/strict';
+export * from './types.js';
+export * from './telemetry.js';
+export * from './stubs/noop.js';
+export * from './stubs/strict.js';

@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { STYNX_IDEMPOTENT_ROUTE, STYNX_NO_IDEMPOTENT_ROUTE } from './constants';
-import type { IdempotentMetadata } from './types';
+import { STYNX_IDEMPOTENT_ROUTE, STYNX_NO_IDEMPOTENT_ROUTE } from './constants.js';
+import type { IdempotentMetadata } from './types.js';
 
 export function Idempotent(headerNameOrOptions: string | IdempotentMetadata = 'Idempotency-Key', ttlMs?: number): MethodDecorator & ClassDecorator {
   const metadata: IdempotentMetadata = typeof headerNameOrOptions === 'string'

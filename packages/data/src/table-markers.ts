@@ -1,5 +1,5 @@
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
-import type { LiveOnlyTable, SoftDeletableTable } from './types';
+import type { LiveOnlyTable, SoftDeletableTable } from './types.js';
 
 const SOFT_DELETABLE = Symbol.for('stynx.data.soft-deletable');
 const LIVE_ONLY = Symbol.for('stynx.data.live-only');

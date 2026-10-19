@@ -5,14 +5,14 @@ import type {
   SignatureTrustProfile,
   SignatureTrustProfileAggregation,
   StynxSignatureModuleOptions,
-} from './types';
-import { SignatureService } from './signature.service';
-import { StynxSignatureModule } from './signature.module';
-import { isCmsTrustVerifier } from './cms-trust-verifier';
-import { registerSignatureHealthWitness } from './health-witness';
-import { declaredTrustProfiles } from './trust-profile-set';
+} from './types.js';
+import { SignatureService } from './signature.service.js';
+import { StynxSignatureModule } from './signature.module.js';
+import { isCmsTrustVerifier } from './cms-trust-verifier.js';
+import { registerSignatureHealthWitness } from './health-witness.js';
+import { declaredTrustProfiles } from './trust-profile-set.js';
 
-export { isSignatureHealthWitness } from './health-witness';
+export { isSignatureHealthWitness } from './health-witness.js';
 
 type IndicatorResult = {status:'up'|'down';details?:Record<string,unknown>};
 const isProfileList = (

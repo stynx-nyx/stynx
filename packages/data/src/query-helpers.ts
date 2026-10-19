@@ -5,10 +5,10 @@ import type {
   PgSelectBuilder,
 } from 'drizzle-orm/pg-core';
 import type { PoolClient, QueryResultRow } from 'pg';
-import { archiveOf } from './internal/archive-schema';
-import { getTableMeta, quoteIdent } from './internal/table-meta';
-import { isSoftDeletable } from './table-markers';
-import type { SoftDeletableTable } from './types';
+import { archiveOf } from './internal/archive-schema.js';
+import { getTableMeta, quoteIdent } from './internal/table-meta.js';
+import { isSoftDeletable } from './table-markers.js';
+import type { SoftDeletableTable } from './types.js';
 
 export type LiveSelectBuilder = ReturnType<PgSelectBuilder<undefined>['from']>;
 

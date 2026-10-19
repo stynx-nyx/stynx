@@ -13,7 +13,7 @@ import {
   PDFString,
   decodePDFRawStream,
 } from 'pdf-lib';
-import { SignatureTrustError, SignatureTrustUnavailableError } from './errors';
+import { SignatureTrustError, SignatureTrustUnavailableError } from './errors.js';
 
 const name = (value: string) => PDFName.of(value);
 type Evidence = {

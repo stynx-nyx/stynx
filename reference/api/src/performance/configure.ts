@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
-import { configureSecurityHeaders } from '../security-headers';
-import type { ReferenceApplicationOptions } from '../bootstrap';
+import { configureSecurityHeaders } from '../security-headers.js';
+import type { ReferenceApplicationOptions } from '../bootstrap.js';
 
 /** Apply the real reference HTTP middleware; this does not initialize or listen. */
 export function configurePerformanceApplication(

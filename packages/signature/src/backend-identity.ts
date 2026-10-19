@@ -1,4 +1,4 @@
-import type { SignatureBackend } from './types';
+import type { SignatureBackend } from './types.js';
 
 const mocks = new WeakSet<object>();
 export function markMockSignatureBackend<T extends SignatureBackend>(backend:T):T {

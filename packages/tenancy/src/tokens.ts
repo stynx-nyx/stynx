@@ -1,4 +1,4 @@
-import type { ResolvedStynxTenancyModuleOptions } from './types';
+import type { ResolvedStynxTenancyModuleOptions } from './types.js';
 
 export const STYNX_TENANCY_OPTIONS = Symbol('STYNX_TENANCY_OPTIONS');
 export const STYNX_TENANT_PREFIX_PROVISIONER = Symbol('STYNX_TENANT_PREFIX_PROVISIONER');

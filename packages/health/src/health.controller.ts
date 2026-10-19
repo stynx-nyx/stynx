@@ -9,10 +9,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { HealthCheckError } from '@nestjs/terminus';
-import { StynxPlatformInfoGuard } from './info.guard';
-import { StynxMetricsService } from './metrics.service';
-import { StynxHealthService } from './health.service';
-import { STYNX_HEALTH_OPTIONS, type StynxHealthModuleOptions } from './tokens';
+import { StynxPlatformInfoGuard } from './info.guard.js';
+import { StynxMetricsService } from './metrics.service.js';
+import { StynxHealthService } from './health.service.js';
+import { STYNX_HEALTH_OPTIONS, type StynxHealthModuleOptions } from './tokens.js';
 
 export interface RequestLike {
   ip?: string;

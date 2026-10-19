@@ -1,6 +1,6 @@
 import { getTableColumns } from 'drizzle-orm';
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
-import { getTableMeta, quoteIdent } from './table-meta';
+import { getTableMeta, quoteIdent } from './table-meta.js';
 
 export interface ArchiveMirrorColumn {
   propertyKey: string;

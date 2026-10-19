@@ -3,8 +3,8 @@ import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx-ny
 import { Idempotent } from '@stynx-nyx/idempotency';
 import { RateLimit } from '@stynx-nyx/ratelimit';
 import { Audit } from '@stynx-nyx/backend';
-import type { CompleteDocumentDto, CreateDocumentDto } from './dto';
-import { ReferenceSampleService } from './reference-sample.service';
+import type { CompleteDocumentDto, CreateDocumentDto } from './dto.js';
+import { ReferenceSampleService } from './reference-sample.service.js';
 
 interface ResponseLike {
   setHeader(name: string, value: string): void;

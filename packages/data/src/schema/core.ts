@@ -9,7 +9,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { tenants } from './tenancy';
+import { tenants } from './tenancy.js';
 
 export const coreSchema = pgSchema('core');
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' });

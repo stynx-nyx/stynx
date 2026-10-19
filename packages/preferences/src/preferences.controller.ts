@@ -13,8 +13,8 @@ import {
   Res,
 } from '@nestjs/common';
 import { NoIdempotent } from '@stynx-nyx/idempotency';
-import { PreferencesError } from './errors';
-import { PreferencesService } from './preferences.service';
+import { PreferencesError } from './errors.js';
+import { PreferencesService } from './preferences.service.js';
 import type {
   PlatformProfile,
   PreferenceCategory,
@@ -23,7 +23,7 @@ import type {
   PreferenceValues,
   ProfilePatch,
   TrustedPreferenceScope,
-} from './types';
+} from './types.js';
 const identityKeys = new Set([
   'tenantId',
   'tenant_id',

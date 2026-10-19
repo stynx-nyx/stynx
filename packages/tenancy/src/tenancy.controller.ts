@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { NoIdempotent } from '@stynx-nyx/idempotency';
-import { TenancyPlatformAdminGuard } from './tenancy-platform-admin.guard';
-import { TenancyService } from './tenancy.service';
-import type { ProvisionTenantInput, SuspendTenantInput, UpdateTenantInput } from './types';
+import { TenancyPlatformAdminGuard } from './tenancy-platform-admin.guard.js';
+import { TenancyService } from './tenancy.service.js';
+import type { ProvisionTenantInput, SuspendTenantInput, UpdateTenantInput } from './types.js';
 
 @Controller('/tenants')
 @UseGuards(TenancyPlatformAdminGuard)

@@ -5,7 +5,7 @@ import type {
   OfflineImportManifest,
   OfflineImportRecord,
   OfflineImportTransportKeysRow,
-} from './import-schema.generated';
+} from './import-schema.generated.js';
 
 export type OfflineArchivedResponse = OfflineImportArchive;
 export type OfflineImportRecordKind = OfflineImportRecord['kind'];

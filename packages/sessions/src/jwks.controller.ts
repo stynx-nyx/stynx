@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { SessionJwtSigningService } from './jwt-signing.service';
+import { SessionJwtSigningService } from './jwt-signing.service.js';
 
 @Controller('/.well-known')
 export class SessionJwksController {

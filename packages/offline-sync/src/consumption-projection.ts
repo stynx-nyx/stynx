@@ -1,6 +1,6 @@
-import { instantMicroseconds } from './instant-microseconds';
-import { OfflineSyncError } from './errors';
-import type { CTG9NumberingReservation, NumberingConsumptionEntry } from './types';
+import { instantMicroseconds } from './instant-microseconds.js';
+import { OfflineSyncError } from './errors.js';
+import type { CTG9NumberingReservation, NumberingConsumptionEntry } from './types.js';
 
 /** Capture one observation instant; this does not authorize reservation admission. */
 export function consumptionReadInstant(now?: string): bigint {

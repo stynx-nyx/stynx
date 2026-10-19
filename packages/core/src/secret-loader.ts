@@ -4,9 +4,9 @@ import {
   type SecretsManagerClientConfig,
 } from '@aws-sdk/client-secrets-manager';
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { SecretLoadError } from './errors';
-import type { StynxCoreModuleOptions } from './config';
-import { STYNX_CORE_OPTIONS } from './tokens';
+import { SecretLoadError } from './errors.js';
+import type { StynxCoreModuleOptions } from './config.js';
+import { STYNX_CORE_OPTIONS } from './tokens.js';
 
 interface CachedSecret {
   value: string;

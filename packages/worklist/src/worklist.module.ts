@@ -7,11 +7,11 @@ import {
   WORKLIST_EVENT_SINK,
   WORKLIST_SCHEDULER,
   type WorklistModuleOptions,
-} from './ports';
-import { WorklistStrategyRegistry } from './strategies';
-import { WorklistItemsService } from './worklist-items.service';
-import { WorklistQueuesService } from './worklist-queues.service';
-import { WorklistSlaService } from './worklist-sla.service';
+} from './ports.js';
+import { WorklistStrategyRegistry } from './strategies.js';
+import { WorklistItemsService } from './worklist-items.service.js';
+import { WorklistQueuesService } from './worklist-queues.service.js';
+import { WorklistSlaService } from './worklist-sla.service.js';
 
 @Module({})
 export class StynxWorklistModule {

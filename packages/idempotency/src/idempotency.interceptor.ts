@@ -14,8 +14,8 @@ import { Reflector } from '@nestjs/core';
 import { headerToString } from '@stynx-nyx/contracts';
 import { firstValueFrom, from, type Observable } from 'rxjs';
 import { createHash, randomUUID } from 'node:crypto';
-import { STYNX_IDEMPOTENCY_BACKEND, STYNX_IDEMPOTENCY_METRICS, STYNX_IDEMPOTENCY_OPTIONS, STYNX_IDEMPOTENCY_STORE, STYNX_IDEMPOTENT_ROUTE, STYNX_NO_IDEMPOTENT_ROUTE } from './constants';
-import type { RequestLike } from './request-context';
+import { STYNX_IDEMPOTENCY_BACKEND, STYNX_IDEMPOTENCY_METRICS, STYNX_IDEMPOTENCY_OPTIONS, STYNX_IDEMPOTENCY_STORE, STYNX_IDEMPOTENT_ROUTE, STYNX_NO_IDEMPOTENT_ROUTE } from './constants.js';
+import type { RequestLike } from './request-context.js';
 import type {
   IdempotencyBackend,
   IdempotencyDecisionContext,
@@ -24,7 +24,7 @@ import type {
   IdempotencyMetricsSink,
   IdempotencyStore,
   IdempotencyStoredEntry,
-} from './types';
+} from './types.js';
 
 
 interface CachedResponse {

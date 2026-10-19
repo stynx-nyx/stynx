@@ -1,6 +1,6 @@
 import type { QueryResult, QueryResultRow } from 'pg';
-import { ArchiveMirrorMissingError } from '../errors';
-import { mirrorQualifiedName, qualifiedName, quoteIdent, type TableMeta } from './table-meta';
+import { ArchiveMirrorMissingError } from '../errors.js';
+import { mirrorQualifiedName, qualifiedName, quoteIdent, type TableMeta } from './table-meta.js';
 
 export interface RegistryEntry {
   parentSchema: string;

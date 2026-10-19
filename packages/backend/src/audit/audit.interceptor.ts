@@ -10,14 +10,14 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { AuditEventEnvelope, AuditSink } from '@stynx-nyx/contracts';
 import { from, mergeMap, Observable } from 'rxjs';
-import { getPrincipalFromRequest, type RequestLike } from '../common/request-context';
+import { getPrincipalFromRequest, type RequestLike } from '../common/request-context.js';
 import {
   STYNX_AUDIT_METADATA,
   STYNX_AUDIT_METADATA_REDACTION_POLICY,
   STYNX_AUDIT_SINK,
-} from './constants';
-import type { AuditMetadata } from './decorators';
-import type { AuditMetadataRedactionPolicy } from './redaction-policy';
+} from './constants.js';
+import type { AuditMetadata } from './decorators.js';
+import type { AuditMetadataRedactionPolicy } from './redaction-policy.js';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {

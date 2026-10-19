@@ -9,11 +9,11 @@ import type {
   PdfAValidationResult,
   PdfAValidator,
 } from '@stynx-nyx/pdf-a';
-import { DEFAULT_VERAPDF_IMAGE, DEFAULT_VERAPDF_TIMEOUT_MS } from './constants';
-import { runVeraPdfDocker } from './docker';
-import type { VeraPdfDockerRunner } from './docker';
-import { VeraPdfDockerError } from './errors';
-import { parseVeraPdfJson } from './parse-report';
+import { DEFAULT_VERAPDF_IMAGE, DEFAULT_VERAPDF_TIMEOUT_MS } from './constants.js';
+import { runVeraPdfDocker } from './docker.js';
+import type { VeraPdfDockerRunner } from './docker.js';
+import { VeraPdfDockerError } from './errors.js';
+import { parseVeraPdfJson } from './parse-report.js';
 
 export interface VeraPdfDockerValidatorOptions {
   image?: string;

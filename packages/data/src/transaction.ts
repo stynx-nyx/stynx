@@ -6,7 +6,7 @@ import {
   ArchiveMirrorMissingError,
   ReadOnlyViolationError,
   TransactionRequiredError,
-} from './errors';
+} from './errors.js';
 import {
   describeBlockingChildren as describeBlockingChildrenInternal,
   ensureMirrorExists as ensureMirrorExistsInternal,
@@ -20,17 +20,17 @@ import {
   type ArchivedParent,
   type ArchiveLookupRow,
   type RegistryEntry,
-} from './internal/archive-relations';
-import { restoreByReference as restoreByReferenceInternal } from './internal/archive-restore';
+} from './internal/archive-relations.js';
+import { restoreByReference as restoreByReferenceInternal } from './internal/archive-restore.js';
 import {
   buildCascadePlan as buildCascadePlanInternal,
   softDeleteByReference as softDeleteByReferenceInternal,
-} from './internal/soft-delete-cascade';
-import { getTableMeta, qualifiedName, type TableMeta } from './internal/table-meta';
-import { createTransactionSelectRoot, type TransactionSelectRoot } from './query-helpers';
-import * as schema from './schema';
-import { isSoftDeletable } from './table-markers';
-import type { StynxDataMetricsSink, StynxDataRole } from './tokens';
+} from './internal/soft-delete-cascade.js';
+import { getTableMeta, qualifiedName, type TableMeta } from './internal/table-meta.js';
+import { createTransactionSelectRoot, type TransactionSelectRoot } from './query-helpers.js';
+import * as schema from './schema/index.js';
+import { isSoftDeletable } from './table-markers.js';
+import type { StynxDataMetricsSink, StynxDataRole } from './tokens.js';
 import type {
   CascadePlan,
   HardDeleteFromArchiveOptions,
@@ -41,7 +41,7 @@ import type {
   SoftDeleteOptions,
   SoftDeleteResult,
   SoftDeletableTable,
-} from './types';
+} from './types.js';
 
 export type StynxDrizzleDatabase = NodePgDatabase<typeof schema>;
 

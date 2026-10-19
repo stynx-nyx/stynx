@@ -1,8 +1,8 @@
 import { SecretLoader } from '@stynx-nyx/core';
 import { Injectable, Inject, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { Pool, type PoolConfig } from 'pg';
-import { AppRoleVerifier, resolveAppRoleName } from './app-role';
-import { STYNX_DATA_OPTIONS, type StynxDataModuleOptions, type StynxDataRole } from './tokens';
+import { AppRoleVerifier, resolveAppRoleName } from './app-role.js';
+import { STYNX_DATA_OPTIONS, type StynxDataModuleOptions, type StynxDataRole } from './tokens.js';
 
 export interface StynxPgPoolOptions {
   connectionString?: string | undefined;

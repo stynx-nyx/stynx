@@ -2,14 +2,14 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuard
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, NoIdempotent, RateLimit } from '@stynx-nyx/backend';
 import { Idempotent } from '@stynx-nyx/idempotency';
-import { FlowFormsService } from '../flow-forms.service';
+import { FlowFormsService } from '../flow-forms.service.js';
 import type {
   BulkFlowAnswerWriteRequestDto,
   CreateFlowFillDto,
   CreateFlowWaiverDto,
   FlowAnswerWriteDto,
   UpdateFlowFillDto,
-} from '../types';
+} from '../types.js';
 
 @Controller('/flow/fills')
 @UseGuards(StynxAuthGuard, PermissionGuard)

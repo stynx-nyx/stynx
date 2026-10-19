@@ -2,7 +2,7 @@ import { applyDecorators, Catch, HttpException, Inject, Injectable, Logger, Opti
   type ArgumentsHost, type CallHandler, type ExceptionFilter, type ExecutionContext, type NestInterceptor } from '@nestjs/common';
 import { HttpAdapterHost, ModuleRef, ModulesContainer, Reflector } from '@nestjs/core';
 import { APP_GUARD } from '@nestjs/core';
-import { EXCEPTION_FILTERS_METADATA, FILTER_CATCH_EXCEPTIONS, GUARDS_METADATA } from '@nestjs/common/constants';
+import { EXCEPTION_FILTERS_METADATA, FILTER_CATCH_EXCEPTIONS, GUARDS_METADATA } from '@nestjs/common/constants.js';
 import { generateRequestId, normalizeRequestId, RequestContext } from '@stynx-nyx/core';
 import { Database, StynxDataError } from '@stynx-nyx/data';
 import { STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE,
@@ -15,10 +15,10 @@ import { STYNX_IDEMPOTENT_ROUTE, TransactionalIdempotencyStore,
   type TransactionalStoredResponse } from '@stynx-nyx/idempotency';
 import { createHash } from 'node:crypto';
 import { firstValueFrom, from, type Observable } from 'rxjs';
-import { STYNX_AUDIT_METADATA } from '../audit/constants';
-import type { AuditMetadata } from '../audit/decorators';
-import { PatternAuditMetadataRedactionPolicy } from '../audit/redaction-policy';
-import type { RequestLike } from '../common/request-context';
+import { STYNX_AUDIT_METADATA } from '../audit/constants.js';
+import type { AuditMetadata } from '../audit/decorators.js';
+import { PatternAuditMetadataRedactionPolicy } from '../audit/redaction-policy.js';
+import type { RequestLike } from '../common/request-context.js';
 
 export const STYNX_TRANSACTIONAL_COMMAND = Symbol('STYNX_TRANSACTIONAL_COMMAND');
 export const STYNX_TRANSACTIONAL_COMMAND_OPTIONS = Symbol('STYNX_TRANSACTIONAL_COMMAND_OPTIONS');

@@ -1,6 +1,6 @@
-import { OfflineSyncError } from './errors';
-import { OFFLINE_SYNC_NO_SHIFT } from './numbering';
-import type { CTG9NumberingReservation, NumberingReservation } from './types';
+import { OfflineSyncError } from './errors.js';
+import { OFFLINE_SYNC_NO_SHIFT } from './numbering.js';
+import type { CTG9NumberingReservation, NumberingReservation } from './types.js';
 
 /** Normalize only the admission scope; never normalize stored values or replay fingerprints. */
 export const reservationShiftScope = (shift: string | null): string | null =>

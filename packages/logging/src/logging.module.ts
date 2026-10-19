@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
-import { LoggingDedupeService } from './dedupe';
-import { StynxLogger } from './logger.service';
-import { createPinoLogger, RequestLogFieldFactory } from './pino.factory';
-import { RequestLoggingMiddleware } from './request-logging.middleware';
-import { STYNX_LOGGING_OPTIONS, STYNX_PINO_LOGGER, type StynxLoggingOptions } from './tokens';
+import { LoggingDedupeService } from './dedupe.js';
+import { StynxLogger } from './logger.service.js';
+import { createPinoLogger, RequestLogFieldFactory } from './pino.factory.js';
+import { RequestLoggingMiddleware } from './request-logging.middleware.js';
+import { STYNX_LOGGING_OPTIONS, STYNX_PINO_LOGGER, type StynxLoggingOptions } from './tokens.js';
 
 @Module({})
 export class StynxLoggingModule implements NestModule {

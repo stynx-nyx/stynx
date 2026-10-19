@@ -5,10 +5,10 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { STYNX_PERMISSION_ROUTE, STYNX_PUBLIC_ROUTE, STYNX_SYSTEM_ROUTE } from './decorators';
+import { STYNX_PERMISSION_ROUTE, STYNX_PUBLIC_ROUTE, STYNX_SYSTEM_ROUTE } from './decorators.js';
 import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
-import type { RequestLike } from './types';
-import { hasVerifiedPrincipal } from './verified-principal';
+import type { RequestLike } from './types.js';
+import { hasVerifiedPrincipal } from './verified-principal.js';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {

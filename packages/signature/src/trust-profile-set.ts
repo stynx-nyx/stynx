@@ -1,5 +1,5 @@
-import { SignatureProviderConfigurationError } from './errors';
-import type { SignatureTrustProfile, StynxSignatureModuleOptions } from './types';
+import { SignatureProviderConfigurationError } from './errors.js';
+import type { SignatureTrustProfile, StynxSignatureModuleOptions } from './types.js';
 
 /**
  * The declared trust-profile set of a module: `trustProfile`, if present, followed by

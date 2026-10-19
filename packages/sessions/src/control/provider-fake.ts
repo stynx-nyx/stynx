@@ -4,7 +4,7 @@ import type {
   SessionControlCapabilities,
   SessionProviderAdapter,
   TrustedSessionContext,
-} from './types';
+} from './types.js';
 export const COGNITO_COMPATIBLE_CAPABILITIES: SessionControlCapabilities = {
   stableSessionIdentity: false,
   listScopes: ['tenant'],

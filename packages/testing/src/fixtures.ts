@@ -6,7 +6,7 @@ import type {
   TenantFixture,
   TestingFixtures,
   UserFixture,
-} from './types';
+} from './types.js';
 
 function now(): string {
   return new Date().toISOString();

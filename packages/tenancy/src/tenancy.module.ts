@@ -3,14 +3,14 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
 import { STYNX_PUBLIC_TENANT_OPTIONS, STYNX_RESOLVED_TENANT_COMMAND_CONTEXT } from '@stynx-nyx/contracts';
-import { resolvedTenantCommandContextPort } from './command-context.port';
-import { TenantContextInterceptor } from './tenant-context.interceptor';
-import { PublicTenantConfigurationCheck } from './public-tenant-configuration.check';
-import { MembershipAccessCache } from './membership-cache';
-import { TENANT_SYSTEM_OPERATION_SINK_PROVIDER, TenantSystemOperationSink } from './tenant-system-operation.sink';
-import { TenancyController } from './tenancy.controller';
-import { TenancyPlatformAdminGuard } from './tenancy-platform-admin.guard';
-import { TenancyService } from './tenancy.service';
+import { resolvedTenantCommandContextPort } from './command-context.port.js';
+import { TenantContextInterceptor } from './tenant-context.interceptor.js';
+import { PublicTenantConfigurationCheck } from './public-tenant-configuration.check.js';
+import { MembershipAccessCache } from './membership-cache.js';
+import { TENANT_SYSTEM_OPERATION_SINK_PROVIDER, TenantSystemOperationSink } from './tenant-system-operation.sink.js';
+import { TenancyController } from './tenancy.controller.js';
+import { TenancyPlatformAdminGuard } from './tenancy-platform-admin.guard.js';
+import { TenancyService } from './tenancy.service.js';
 import {
   STYNX_TENANCY_OPTIONS,
   STYNX_TENANT_ARCHIVE_EXPORTER,
@@ -18,8 +18,8 @@ import {
   STYNX_TENANT_MEMBERSHIP_CACHE,
   STYNX_TENANT_PREFIX_PROVISIONER,
   STYNX_TENANT_PURGE_DELEGATE,
-} from './tokens';
-import { resolveTenancyOptions, type StynxTenancyModuleOptions } from './types';
+} from './tokens.js';
+import { resolveTenancyOptions, type StynxTenancyModuleOptions } from './types.js';
 
 @Module({})
 export class StynxTenancyModule {

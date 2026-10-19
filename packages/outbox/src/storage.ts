@@ -12,8 +12,8 @@ import type {
   StorageVerificationReport,
   StorageVerifierTransaction,
 } from '@stynx-nyx/data';
-import { OUTBOX_STORAGE_TEMPLATE } from './storage-template.generated';
-import { OUTBOX_STORAGE_CATALOG } from './storage-catalog.generated';
+import { OUTBOX_STORAGE_TEMPLATE } from './storage-template.generated.js';
+import { OUTBOX_STORAGE_CATALOG } from './storage-catalog.generated.js';
 
 export type OutboxStorageOptions = StorageBindingOptions;
 export interface OutboxStorageManifest {

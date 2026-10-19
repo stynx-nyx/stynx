@@ -3,7 +3,7 @@ import { Database, sessions as authSessions } from '@stynx-nyx/data';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'node:crypto';
-import type { SessionMirror, SessionMirrorEntry } from './types';
+import type { SessionMirror, SessionMirrorEntry } from './types.js';
 
 @Injectable()
 export class SessionMirrorWriter implements SessionMirror {

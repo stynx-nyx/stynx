@@ -1,5 +1,5 @@
 import type { SQLWrapper } from 'drizzle-orm';
-import type { StynxDataRole } from './tokens';
+import type { StynxDataRole } from './tokens.js';
 
 export interface TxOptions {
   isolation?: 'read uncommitted' | 'read committed' | 'repeatable read' | 'serializable';

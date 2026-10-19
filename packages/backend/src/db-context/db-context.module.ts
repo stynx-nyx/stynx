@@ -1,16 +1,16 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import type { DbContextApplier } from '@stynx-nyx/contracts';
-import { DbContextInterceptor, type DbClientResolver } from './db-context.interceptor';
+import { DbContextInterceptor, type DbClientResolver } from './db-context.interceptor.js';
 import {
   STYNX_DB_CLIENT_RESOLVER,
   STYNX_DB_CONTEXT_APPLIER,
   STYNX_REQUEST_DB_CLIENT_LIFECYCLE,
-} from './constants';
+} from './constants.js';
 import {
   PgSessionDbContextApplier,
   type PgSessionDbContextApplierOptions,
-} from './pg-session-db-context.applier';
-import type { RequestDbClientLifecycle } from './request-db-client-lifecycle';
+} from './pg-session-db-context.applier.js';
+import type { RequestDbClientLifecycle } from './request-db-client-lifecycle.js';
 
 export interface StynxDbContextModuleOptions {
   applier?: DbContextApplier;

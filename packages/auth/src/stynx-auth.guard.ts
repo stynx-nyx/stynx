@@ -9,12 +9,12 @@ import {
   type PublicTenantRouteOptions,
 } from '@stynx-nyx/contracts';
 import { SessionService } from '@stynx-nyx/sessions';
-import { PermissionCache } from './permission-cache';
-import { StynxJwtValidator } from './stynx-jwt.validator';
-import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from './decorators';
-import type { RequestLike } from './types';
-import { headerToString } from './utils';
-import { clearVerifiedPrincipal, markVerifiedPrincipal } from './verified-principal';
+import { PermissionCache } from './permission-cache.js';
+import { StynxJwtValidator } from './stynx-jwt.validator.js';
+import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from './decorators.js';
+import type { RequestLike } from './types.js';
+import { headerToString } from './utils.js';
+import { clearVerifiedPrincipal, markVerifiedPrincipal } from './verified-principal.js';
 
 function responseLike(
   request: RequestLike,

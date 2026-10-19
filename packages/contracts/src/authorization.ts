@@ -1,4 +1,4 @@
-import type { Principal } from './auth';
+import type { Principal } from './auth.js';
 
 export type RequirementMatchMode = 'all' | 'any';
 

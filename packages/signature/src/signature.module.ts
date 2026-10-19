@@ -1,22 +1,22 @@
 import { type DynamicModule, Module, Injectable, Inject, type OnApplicationBootstrap } from '@nestjs/common';
-import { SignatureProviderConfigurationError } from './errors';
-import { isCmsTrustVerifier } from './cms-trust-verifier';
-import { isSignatureHealthWitness } from './health-witness';
-import { isMockSignatureBackend } from './backend-identity';
-import { HttpSignatureProviderClient } from './http-provider-client';
-import { ProviderBackedSignatureBackend } from './provider-backend';
-import { SignatureService } from './signature.service';
-import { declaredTrustProfiles } from './trust-profile-set';
+import { SignatureProviderConfigurationError } from './errors.js';
+import { isCmsTrustVerifier } from './cms-trust-verifier.js';
+import { isSignatureHealthWitness } from './health-witness.js';
+import { isMockSignatureBackend } from './backend-identity.js';
+import { HttpSignatureProviderClient } from './http-provider-client.js';
+import { ProviderBackedSignatureBackend } from './provider-backend.js';
+import { SignatureService } from './signature.service.js';
+import { declaredTrustProfiles } from './trust-profile-set.js';
 import {
   STYNX_SIGNATURE_BACKEND,
   STYNX_SIGNATURE_OPTIONS,
   STYNX_SIGNATURE_PROVIDER_CLIENT,
-} from './tokens';
+} from './tokens.js';
 import type {
   SignatureBackend,
   SignatureProviderClient,
   StynxSignatureModuleOptions,
-} from './types';
+} from './types.js';
 
 @Injectable()
 class SignatureBootstrapGuard implements OnApplicationBootstrap {

@@ -8,8 +8,8 @@ import {
 import { ModuleRef } from '@nestjs/core';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { LocaleService } from './locale.service';
-import { i18nTenantProofPort, runWithI18nHttpContext } from './http-context';
+import { LocaleService } from './locale.service.js';
+import { i18nTenantProofPort, runWithI18nHttpContext } from './http-context.js';
 
 @Injectable()
 export class LocaleInterceptor implements NestInterceptor {

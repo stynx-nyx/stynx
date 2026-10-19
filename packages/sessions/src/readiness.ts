@@ -1,4 +1,4 @@
-import type { SessionStore } from './types';
+import type { SessionStore } from './types.js';
 
 /** Structural health indicator; hosts compose it with StynxHealthModule. */
 export function createSessionStoreReadinessIndicator(

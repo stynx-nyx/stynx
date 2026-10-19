@@ -1,8 +1,8 @@
 import { Inject, Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { ModulesContainer } from '@nestjs/core';
 import { hasPublicTenantRoute } from '@stynx-nyx/contracts';
-import { STYNX_TENANCY_OPTIONS } from './tokens';
-import type { ResolvedStynxTenancyModuleOptions } from './types';
+import { STYNX_TENANCY_OPTIONS } from './tokens.js';
+import type { ResolvedStynxTenancyModuleOptions } from './types.js';
 
 @Injectable()
 export class PublicTenantConfigurationCheck implements OnApplicationBootstrap {

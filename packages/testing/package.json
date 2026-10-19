@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Testing harness and archive-aware matchers for stynx consumers",
+  "type": "module",
   "main": "dist/testing/src/index.js",
   "types": "dist/testing/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/testing/src/index.d.ts",
-      "require": "./dist/testing/src/index.js",
+      "import": "./dist/testing/src/index.js",
       "default": "./dist/testing/src/index.js"
     }
   },

@@ -1,5 +1,5 @@
 import type { TenantEntitlementContext } from '@stynx-nyx/contracts';
-import type { TenantEntitlementFallback } from './claim-first-tenant-entitlement.policy';
+import type { TenantEntitlementFallback } from './claim-first-tenant-entitlement.policy.js';
 
 type RowResult<T> = { rows: T[] } | T[];
 

@@ -3,12 +3,12 @@
  *
  * @packageDocumentation
  */
-export * from './errors';
-export * from './pii-map.service';
-export * from './privacy.controller';
-export * from './privacy.module';
-export * from './privacy.service';
-export * from './privacy-object-store.service';
-export * from './ropa';
-export * from './tokens';
-export * from './types';
+export * from './errors.js';
+export * from './pii-map.service.js';
+export * from './privacy.controller.js';
+export * from './privacy.module.js';
+export * from './privacy.service.js';
+export * from './privacy-object-store.service.js';
+export * from './ropa.js';
+export * from './tokens.js';
+export * from './types.js';

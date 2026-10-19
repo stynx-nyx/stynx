@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Postgres-backed background job scheduler and worker runtime for stynx (E2)",
+  "type": "module",
   "main": "dist/jobs/src/index.js",
   "types": "dist/jobs/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/jobs/src/index.d.ts",
-      "require": "./dist/jobs/src/index.js",
+      "import": "./dist/jobs/src/index.js",
       "default": "./dist/jobs/src/index.js"
     }
   },

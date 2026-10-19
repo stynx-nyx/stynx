@@ -4,9 +4,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
 import IntlMessageFormat from 'intl-messageformat';
-import { STYNX_I18N_OPTIONS } from './tokens';
-import type { StynxI18nModuleOptions } from './types';
-import { requireI18nCacheContext } from './tenant-context';
+import { STYNX_I18N_OPTIONS } from './tokens.js';
+import type { StynxI18nModuleOptions } from './types.js';
+import { requireI18nCacheContext } from './tenant-context.js';
 
 type Catalogs = Map<string, Map<string, string>>;
 

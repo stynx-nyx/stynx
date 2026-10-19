@@ -1,7 +1,7 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { validateWebhookVerificationOptions } from '@stynx-nyx/integration-adapter';
-import { WebhookSignatureGuard, type StynxWebhookSignatureOptions } from './webhook-signature.guard';
-import { STYNX_WEBHOOK_SIGNATURE_OPTIONS } from './webhook-signature.tokens';
+import { WebhookSignatureGuard, type StynxWebhookSignatureOptions } from './webhook-signature.guard.js';
+import { STYNX_WEBHOOK_SIGNATURE_OPTIONS } from './webhook-signature.tokens.js';
 
 @Module({})
 export class StynxWebhookSignatureModule {
