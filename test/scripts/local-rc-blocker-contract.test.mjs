@@ -4380,7 +4380,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
     'package.json': '443d9ee4913160d5a408e5ba81881dd2b5daf9be029dd8bb54d45241673c7375',
     'reference/api/package.json':
-      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
+      'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -4637,7 +4637,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
     'package.json': '443d9ee4913160d5a408e5ba81881dd2b5daf9be029dd8bb54d45241673c7375',
     'reference/api/package.json':
-      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
+      'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -4725,7 +4725,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
     'package.json': '443d9ee4913160d5a408e5ba81881dd2b5daf9be029dd8bb54d45241673c7375',
     'reference/api/package.json':
-      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
+      'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
     'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
@@ -5447,7 +5447,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
         assert.equal(typeof entry.manifest.main, 'string');
         const rootExport = entry.manifest.exports?.['.'];
         assert.equal(typeof rootExport, 'object');
-        assert.equal(rootExport.require, `./${entry.manifest.main}`);
+        assert.equal(rootExport.import, `./${entry.manifest.main}`);
         assert.equal(rootExport.default, `./${entry.manifest.main}`);
         runtimeTarget = entry.manifest.main;
       }
