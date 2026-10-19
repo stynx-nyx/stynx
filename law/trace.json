@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.3.39",
   "meta": {
-    "last_updated": "2026-10-19T23:00:00.000000Z",
+    "last_updated": "2026-10-19T23:30:00.000000Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-19 Architect rebind for SM-06 follow-up (template apply.sh runs `stynx migrate up --role-prefix <product>` with no URL on argv, 09 \u00a71): binds packages/cli/test/migrate-pg-env.integration.spec.ts (migrateUp with prefix demo and only PG* set against the STYNX_TEST_PG_* scratch PostgreSQL; skipped when none is configured) and rebinds packages/cli/test/migrate.spec.ts (no connectionString reaches the pg client or factory without a URL) and packages/cli/test/cli-program.spec.ts (--database-url optional on migrate status|up|down|redo; audit verify unchanged). No assertion is removed or weakened beyond the intended optional flag.",
       "2026-10-19 Architect rebind for SM-06: binds packages/data/test/unit/platform-roles.spec.ts (default prefix applies every platform migration byte for byte; prefix demo rewrites only stynx_{owner,app,reader} identifiers; invalid prefixes refused), packages/data/test/unit/migration-runner-role-prefix.spec.ts, packages/data/test/integration/role-prefix.integration.spec.ts (scratch PostgreSQL: default stays on stynx_*; prefix demo bootstraps demo_{owner,app,reader} with demo_app NOBYPASSRLS, no stynx_* role owning, granted or named in the database, tenant isolation as the product app role), packages/cli/test/migrate-role-prefix.spec.ts and packages/testing/test/roles.unit.spec.ts, and rebinds the extended packages/cli/test/cli-program.spec.ts (--role-prefix surface) and packages/testing/test/create-test-app.unit.spec.ts (product role names). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
       "2026-10-19 Architect rebind for SM-03: binds tools/eslint-config/test/rule-families.spec.mjs (one eslint --max-warnings=0 fixture per enabled rule family exits 1 naming its rule, a clean fixture per profile exits 0, the exports map and named-factory surface, and the unchanged STYNX workspace levels) and rebinds test/scripts/http-workspace-graph.test.mjs after its source-only tooling fixture follows the @stynx-nyx/eslint-config rename. All 57 workspace-graph assertion sites are unchanged in count and text; no assertion is removed or weakened.",
       "2026-10-17 Architect rebind adds exact restore response status and record identity assertions before existing trash disappearance and detail checks. All prior assertions remain; this test synchronization does not resolve the separately deferred stale-list UI race.",
@@ -2894,8 +2895,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 52,
-      "assertion_digest_sha256": "8b893ad01fbbc93fa44e97bcd27c803e1af62446b4fc3daf888f23e213dae355"
+      "assertion_count": 56,
+      "assertion_digest_sha256": "949233c3a0cdf9dc2ea9e208dd9d1357862188b5d38824cceacb2b2cbb82c5e2"
     },
     {
       "path": "packages/cli/test/cli.spec.ts",
@@ -2918,8 +2919,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 36,
-      "assertion_digest_sha256": "2f92f01f80b6d0dc08f4ea0121cec1ec20bed98e12199d1f99e0ae08d647c8a2"
+      "assertion_count": 40,
+      "assertion_digest_sha256": "07bbdbacfb97aab43a2d85807cfab8bb8ea346160ad6d413dd55e4c7beb8d98b"
     },
     {
       "path": "packages/contracts/test/contracts.test.mjs",
@@ -7436,6 +7437,14 @@
       "lifecycle": "supported",
       "assertion_count": 6,
       "assertion_digest_sha256": "975f8331ead85c92a626c0bacfea578926f3238e01f63e993d503c71c3a7fdf4"
+    },
+    {
+      "path": "packages/cli/test/migrate-pg-env.integration.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "218cc136ed8e43e7b9b135f4229e1552f571cbca125b2bf736bdf75b6877ca3e"
     }
   ],
   "suites": {
