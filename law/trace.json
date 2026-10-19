@@ -4898,8 +4898,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 24,
-      "assertion_digest_sha256": "660b8a3ad8b5821dc6f0b9315de7b70fa453a6631b0f4007b5e8c189c5193bf4"
+      "assertion_count": 29,
+      "assertion_digest_sha256": "2c510e69120cab38a8511cd4f5d738e78afd3c2f226f6950f6abeea8ae5dcdb9"
     },
     {
       "path": "packages/mobile-runtime/test/mobile-runtime-edge-cases.spec.ts",
@@ -5195,7 +5195,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 899,
-      "assertion_digest_sha256": "ebb56ce2ba7571a8cfb6e5822803126b93ef293157b8b5961d7e02b272384bd2"
+      "assertion_digest_sha256": "8f24192f194ed89b65cf291431a929041abfe7111b8b017173c3ec9b1a0a6744"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -6881,7 +6881,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 57,
-      "assertion_digest_sha256": "8e6d064a996fa5f6184d2765bd9835b10606f171d0265c6df76565fe97a4bf38"
+      "assertion_digest_sha256": "7fdd7661de7e4a0f970d4086b1c0d9a8c1a84dfc434bb92cbfd863237883402a"
     },
     {
       "path": "test/scripts/http-fresh-build.test.mjs",
