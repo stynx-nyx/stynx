@@ -8,6 +8,7 @@ import {
   StynxDataModule,
   type StynxPgClient,
 } from '@stynx-nyx/data';
+import { DEFAULT_TEST_APP_ROLES, testAppRolePrefix, type TestAppRoleNames } from './roles';
 import type {
   CreateTestAppOptions,
   StartedCognitoHandle,
@@ -122,41 +123,40 @@ function connectionStringWithAppName(base: string, appName: string): string {
   return url.toString();
 }
 
-/** Platform application role of `0001_roles.sql`; the app pool logs in as it. */
-const APP_ROLE = 'stynx_app';
-const APP_ROLE_PASSWORD = 'stynx_app';
-
 /**
  * ADR-OUTBOX-0003 D1 refuses an application pool whose `current_user` is not
  * the application role or whose login is privileged, so the container's
- * superuser cannot serve the app pool. Create the role ahead of the platform
- * migrations (which keep it: `0001_roles.sql` is `IF NOT EXISTS`) and bind a
- * login password for the test container only.
+ * superuser cannot serve the app pool. Create the application role ahead of
+ * the platform migrations (which keep it: `0001_roles.sql` is `IF NOT EXISTS`)
+ * and bind a login password, equal to the role name, for the test container
+ * only. `appRole` is a validated lower-case identifier (`testAppRolePrefix`).
  */
-async function bindApplicationRoleLogin(adminConnectionString: string): Promise<void> {
+async function bindApplicationRoleLogin(adminConnectionString: string, appRole: string): Promise<void> {
   const client = createStynxPgClient({ connectionString: adminConnectionString });
   await client.connect();
   try {
     await client.query(`do $$
       begin
-        if not exists (select 1 from pg_catalog.pg_roles where rolname = '${APP_ROLE}') then
-          create role ${APP_ROLE} login noinherit nobypassrls;
+        if not exists (select 1 from pg_catalog.pg_roles where rolname = '${appRole}') then
+          create role ${appRole} login noinherit nobypassrls;
         end if;
       end $$`);
-    await client.query(`alter role ${APP_ROLE} with login password '${APP_ROLE_PASSWORD}'`);
+    await client.query(`alter role ${appRole} with login password '${appRole}'`);
   } finally {
     await client.end();
   }
 }
 
-function applicationConnectionString(base: string, appName: string): string {
+function applicationConnectionString(base: string, appName: string, appRole: string): string {
   const url = new URL(connectionStringWithAppName(base, appName));
-  url.username = APP_ROLE;
-  url.password = APP_ROLE_PASSWORD;
+  url.username = appRole;
+  url.password = appRole;
   return url.toString();
 }
 
 export async function createTestApp(options: CreateTestAppOptions = {}): Promise<TestAppContext> {
+  const roles: TestAppRoleNames = options.roles ?? DEFAULT_TEST_APP_ROLES;
+  const rolePrefix = testAppRolePrefix(roles);
   let postgres: StartedPostgresHandle | undefined;
   let redis: StartedRedisHandle | undefined;
   let localstack: StartedLocalstackHandle | undefined;
@@ -175,7 +175,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
       ? await startCognitoContainer(options.cognito.image ?? 'jagregory/cognito-local:latest')
       : undefined;
 
-    await bindApplicationRoleLogin(postgres.adminConnectionString);
+    await bindApplicationRoleLogin(postgres.adminConnectionString, roles.app);
 
     testingModule = await Test.createTestingModule({
       imports: [
@@ -191,6 +191,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
               connectionString: applicationConnectionString(
                 postgres.connectionString,
                 '@stynx-nyx/testing:app',
+                roles.app,
               ),
             },
             reader: {
@@ -200,7 +201,8 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
               ),
             },
           },
-          migrations: { enabled: true },
+          migrations: { enabled: true, rolePrefix },
+          appRoleName: roles.app,
         }),
         ...(options.overrides?.imports ?? []),
       ],

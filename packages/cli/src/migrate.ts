@@ -14,6 +14,12 @@ export interface MigrationClientFactoryOptions {
 
 export interface MigrationOptions {
   migrationDir?: string;
+  /**
+   * Product role prefix (S-18): the platform roles become `<prefix>_owner`,
+   * `<prefix>_app` and `<prefix>_reader` at apply time. Default `'stynx'`,
+   * which applies the files byte for byte.
+   */
+  rolePrefix?: string;
   clientFactory?: (options: MigrationClientFactoryOptions) => MigrationClient;
 }
 
@@ -31,6 +37,31 @@ export interface MigrationSpec {
 
 interface JournalRow {
   id: string;
+}
+
+/** Role prefix the platform migration files are written with. */
+const DEFAULT_ROLE_PREFIX = 'stynx';
+const ROLE_PREFIX_PATTERN = /^[a-z_][a-z0-9_]*$/u;
+/** `NAMEDATALEN - 1` minus the longest suffix, `_reader`. */
+const ROLE_PREFIX_MAX_LENGTH = 63 - '_reader'.length;
+/** Exactly the platform role identifiers; schema names and other `stynx` text are untouched. */
+const PLATFORM_ROLE_IDENTIFIER = /\bstynx_(owner|app|reader)\b/gu;
+
+function rolePrefixOf(options?: MigrationOptions): string {
+  const prefix = options?.rolePrefix ?? DEFAULT_ROLE_PREFIX;
+  if (prefix.length > ROLE_PREFIX_MAX_LENGTH || !ROLE_PREFIX_PATTERN.test(prefix)) {
+    throw new TypeError(
+      `Invalid role prefix: expected a lower-case PostgreSQL identifier of at most ${ROLE_PREFIX_MAX_LENGTH} characters`,
+    );
+  }
+  return prefix;
+}
+
+/** Rewrites the platform role identifiers of `sql` to `prefix`; the default prefix is the identity. */
+function applyRolePrefix(sql: string, prefix: string): string {
+  return prefix === DEFAULT_ROLE_PREFIX
+    ? sql
+    : sql.replace(PLATFORM_ROLE_IDENTIFIER, (_identifier, role: string) => `${prefix}_${role}`);
 }
 
 function defaultClientFactory(options: MigrationClientFactoryOptions): MigrationClient {
@@ -93,11 +124,13 @@ async function appliedMigrationIds(client: MigrationClient): Promise<string[]> {
   return (appliedRows.rows as Array<{ id: string }>).map((row) => row.id);
 }
 
-async function promoteBootstrapObjectsToOwner(client: MigrationClient): Promise<void> {
-  await client.query('ALTER SCHEMA core OWNER TO stynx_owner');
-  await client.query('ALTER TABLE core.schema_migrations OWNER TO stynx_owner');
-  await client.query('ALTER TABLE core.schema_migration_journal OWNER TO stynx_owner');
-  await client.query('SET ROLE stynx_owner');
+async function promoteBootstrapObjectsToOwner(client: MigrationClient, prefix: string): Promise<void> {
+  // `prefix` is a validated lower-case identifier (rolePrefixOf).
+  const owner = `${prefix}_owner`;
+  await client.query(`ALTER SCHEMA core OWNER TO ${owner}`);
+  await client.query(`ALTER TABLE core.schema_migrations OWNER TO ${owner}`);
+  await client.query(`ALTER TABLE core.schema_migration_journal OWNER TO ${owner}`);
+  await client.query(`SET ROLE ${owner}`);
 }
 
 async function latestAppliedIds(client: MigrationClient, limit: number): Promise<string[]> {
@@ -117,11 +150,12 @@ function checksum(sql: string): string {
   return `${sql.length}:${Buffer.from(sql, 'utf8').toString('base64url').slice(0, 24)}`;
 }
 
-async function applyMigrationUp(client: MigrationClient, spec: MigrationSpec): Promise<void> {
+async function applyMigrationUp(client: MigrationClient, spec: MigrationSpec, prefix: string): Promise<void> {
+  // The checksum stays the file's: the prefix is applied, never recorded.
   const sql = readFileSync(spec.upPath, 'utf8');
   await client.query('begin');
   try {
-    await client.query(sql);
+    await client.query(applyRolePrefix(sql, prefix));
     await client.query(
       `
         insert into core.schema_migrations (id, checksum, applied_at)
@@ -141,14 +175,14 @@ async function applyMigrationUp(client: MigrationClient, spec: MigrationSpec): P
   }
 }
 
-async function applyMigrationDown(client: MigrationClient, spec: MigrationSpec): Promise<void> {
+async function applyMigrationDown(client: MigrationClient, spec: MigrationSpec, prefix: string): Promise<void> {
   if (!spec.downPath) {
     throw new Error(`Migration ${spec.id} is not rollbackable: missing .down.sql pair`);
   }
   const sql = readFileSync(spec.downPath, 'utf8');
   await client.query('begin');
   try {
-    await client.query(sql);
+    await client.query(applyRolePrefix(sql, prefix));
     await client.query('delete from core.schema_migrations where id = $1', [spec.id]);
     await client.query(
       'insert into core.schema_migration_journal (id, checksum, direction) values ($1, $2, $3)',
@@ -182,6 +216,7 @@ export async function migrateUp(
   dryRun = false,
   options?: MigrationOptions,
 ): Promise<string[]> {
+  const prefix = rolePrefixOf(options);
   return withClient(connectionString, options, async (client) => {
     await ensureMigrationTables(client);
     const specs = listMigrationSpecs(rootDir, options);
@@ -192,12 +227,12 @@ export async function migrateUp(
       return pending.map((spec) => spec.id);
     }
     if (ownerRoleApplied) {
-      await promoteBootstrapObjectsToOwner(client);
+      await promoteBootstrapObjectsToOwner(client, prefix);
     }
     for (const spec of pending) {
-      await applyMigrationUp(client, spec);
+      await applyMigrationUp(client, spec, prefix);
       if (spec.id === '0002_extensions.sql') {
-        await promoteBootstrapObjectsToOwner(client);
+        await promoteBootstrapObjectsToOwner(client, prefix);
       }
     }
     return pending.map((spec) => spec.id);
@@ -211,6 +246,7 @@ export async function migrateDown(
   dryRun = false,
   options?: MigrationOptions,
 ): Promise<string[]> {
+  const prefix = rolePrefixOf(options);
   return withClient(connectionString, options, async (client) => {
     await ensureMigrationTables(client);
     const specs = new Map(listMigrationSpecs(rootDir, options).map((spec) => [spec.id, spec]));
@@ -225,7 +261,7 @@ export async function migrateDown(
       return targets.map((target) => target.id);
     }
     for (const target of targets) {
-      await applyMigrationDown(client, target);
+      await applyMigrationDown(client, target, prefix);
     }
     return targets.map((target) => target.id);
   });
@@ -241,6 +277,7 @@ export async function migrateRedo(
   if (dryRun) {
     return { down, up: down };
   }
+  const prefix = rolePrefixOf(options);
   const specs = new Map(listMigrationSpecs(rootDir, options).map((spec) => [spec.id, spec]));
   await withClient(connectionString, options, async (client) => {
     await ensureMigrationTables(client);
@@ -249,7 +286,7 @@ export async function migrateRedo(
       if (!spec) {
         throw new Error(`Migration ${id} is missing from the migration directory`);
       }
-      await applyMigrationUp(client, spec);
+      await applyMigrationUp(client, spec, prefix);
     }
   });
   return { down, up: down };
