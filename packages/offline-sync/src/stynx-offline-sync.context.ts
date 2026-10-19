@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext } from '@stynx-nyx/core';
-import { OfflineSyncError } from './errors';
-import type { OfflineSyncContextPort, TrustedOfflineSyncScope } from './types';
+import { OfflineSyncError } from './errors.js';
+import type { OfflineSyncContextPort, TrustedOfflineSyncScope } from './types.js';
 
 @Injectable()
 export class StynxOfflineSyncContext implements OfflineSyncContextPort {

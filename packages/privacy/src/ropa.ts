@@ -1,4 +1,4 @@
-import type { PrivacyRule } from './types';
+import type { PrivacyRule } from './types.js';
 
 export interface RopaMetadata {
   controllers?: string[];

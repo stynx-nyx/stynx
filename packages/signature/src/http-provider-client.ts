@@ -3,7 +3,7 @@ import {
   SignatureProviderConfigurationError,
   SignatureProviderError,
   SignatureProviderResponseError,
-} from './errors';
+} from './errors.js';
 import type {
   CertificateValidationRequest,
   CertificateValidationResult,
@@ -14,7 +14,7 @@ import type {
   RevocationSource,
   SignatureCertificateRef,
   VerifyResult,
-} from './types';
+} from './types.js';
 
 type UpperRevocationSource = 'OCSP' | 'CRL' | 'EMBEDDED' | 'NONE';
 

@@ -5,10 +5,10 @@ import {
   InMemoryCircuitBreaker,
   type CircuitBreaker,
 } from '@stynx-nyx/integration-adapter';
-import { NotificationNoRecipientAddressError } from '../errors';
-import { STYNX_NOTIFICATIONS_OPTIONS } from '../tokens';
-import type { StynxNotificationsModuleOptions } from '../types';
-import type { ChannelAdapter, ChannelSendInput, ChannelSendResult } from './channel-adapter';
+import { NotificationNoRecipientAddressError } from '../errors.js';
+import { STYNX_NOTIFICATIONS_OPTIONS } from '../tokens.js';
+import type { StynxNotificationsModuleOptions } from '../types.js';
+import type { ChannelAdapter, ChannelSendInput, ChannelSendResult } from './channel-adapter.js';
 
 /**
  * SES-backed email channel adapter. `@aws-sdk/client-ses` is imported ONLY in this

@@ -1,4 +1,4 @@
-import { EffectiveHashComputer } from './effective-hash-computer';
+import { EffectiveHashComputer } from './effective-hash-computer.js';
 
 const expectedMutationMethods = [
   'afterMembershipRoleMutation',

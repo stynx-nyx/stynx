@@ -2,19 +2,19 @@ import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext } from '@stynx-nyx/core';
-import { PreferencesError } from './errors';
+import { PreferencesError } from './errors.js';
 import {
   PLATFORM_PREFERENCE_DEFAULTS,
   preferencePatchSchema,
   preferenceValuesSchema,
   profilePatchSchema,
-} from './schema';
+} from './schema.js';
 import {
   STYNX_PREFERENCES_AUDIT,
   STYNX_PREFERENCES_AVATAR,
   STYNX_PREFERENCES_OPTIONS,
   STYNX_PREFERENCES_STORE,
-} from './tokens';
+} from './tokens.js';
 import type {
   PlatformProfile,
   PreferenceCategory,
@@ -28,7 +28,7 @@ import type {
   StoredSubjectPreferences,
   StynxPreferencesModuleOptions,
   TrustedPreferenceScope,
-} from './types';
+} from './types.js';
 
 const categories: PreferenceCategory[] = [
   'locale',

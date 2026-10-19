@@ -1,7 +1,7 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import { STYNX_IDEMPOTENCY_OPTIONS, STYNX_IDEMPOTENCY_STORE } from './constants';
-import { IdempotencyInterceptor } from './idempotency.interceptor';
-import type { IdempotencyInterceptorOptions, IdempotencyStore } from './types';
+import { STYNX_IDEMPOTENCY_OPTIONS, STYNX_IDEMPOTENCY_STORE } from './constants.js';
+import { IdempotencyInterceptor } from './idempotency.interceptor.js';
+import type { IdempotencyInterceptorOptions, IdempotencyStore } from './types.js';
 
 export interface StynxIdempotencyModuleOptions extends IdempotencyInterceptorOptions {
   store?: IdempotencyStore;

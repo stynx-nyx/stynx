@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { StynxOfflineSyncModule } from '@stynx-nyx/offline-sync';
-import { AppModule } from '../app.module';
-import { OfflinePerformanceStorageInstaller } from './offline-storage';
-import { createOfflineBookmarkApplicationPorts } from './offline-bookmark';
+import { AppModule } from '../app.module.js';
+import { OfflinePerformanceStorageInstaller } from './offline-storage.js';
+import { createOfflineBookmarkApplicationPorts } from './offline-bookmark.js';
 import {
   createReferenceOfflineAgentResolver,
   OfflineReferenceAgentBindings,
-} from './offline-agent';
+} from './offline-agent.js';
 
 @Module({
   imports: [

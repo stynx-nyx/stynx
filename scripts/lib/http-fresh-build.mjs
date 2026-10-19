@@ -1961,9 +1961,9 @@ function runtimeResolutionAnchors(state, controls, nonce, mode) {
   const rules = [
     [
       'reference/api/package.json',
-      '04da6430b3b10b7c2e39b3cff45214fd199fa30ced6087e2ce3cd0b53bdf803c',
-      '57a59bdfe390a0481368cd3bb3d2ac3975a16d9e',
-      2112,
+      'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
+      'e741af47000046c97f3ce464175a71b825923d67',
+      2132,
       'scripts/lib/http-module-custody.mjs',
       "createRequire(new URL('../../reference/api/package.json', import.meta.url))('reflect-metadata')",
       ['reflect-metadata'],

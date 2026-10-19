@@ -2,8 +2,8 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, NoIdempotent } from '@stynx-nyx/backend';
 import { Idempotent } from '@stynx-nyx/idempotency';
-import { FlowFormsService } from '../flow-forms.service';
-import type { CreateFlowWaiverDto, UpdateFlowWaiverDto } from '../types';
+import { FlowFormsService } from '../flow-forms.service.js';
+import type { CreateFlowWaiverDto, UpdateFlowWaiverDto } from '../types.js';
 
 @Controller('/flow/waivers')
 @UseGuards(StynxAuthGuard, PermissionGuard)

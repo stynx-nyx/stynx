@@ -21,14 +21,14 @@ import type {
   UpdateWorkItemDto,
   UpdateWorkItemEntryDto,
   UpdateWorkItemLockDto,
-} from './dto';
+} from './dto.js';
 import {
   recordNotes,
   records,
   workItemEntries,
   workItemLocks,
   workItems,
-} from './schema';
+} from './schema.js';
 
 type SampleTable =
   | typeof records

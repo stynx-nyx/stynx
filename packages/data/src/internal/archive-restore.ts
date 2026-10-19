@@ -3,10 +3,10 @@ import {
   ArchiveMirrorMissingError,
   RestoreCascadeParentsArchivedError,
   RestoreConflictError,
-} from '../errors';
-import type { RestoreOptions, RestoreResult } from '../types';
-import { mirrorQualifiedName, qualifiedName, quoteIdent, type TableMeta } from './table-meta';
-import type { ArchivedParent, ArchiveLookupRow, RegistryEntry } from './archive-relations';
+} from '../errors.js';
+import type { RestoreOptions, RestoreResult } from '../types.js';
+import { mirrorQualifiedName, qualifiedName, quoteIdent, type TableMeta } from './table-meta.js';
+import type { ArchivedParent, ArchiveLookupRow, RegistryEntry } from './archive-relations.js';
 
 export interface RestoreContext {
   query<TRow extends QueryResultRow = QueryResultRow>(

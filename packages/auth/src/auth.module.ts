@@ -2,21 +2,21 @@ import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
-import { ActorContextInterceptor } from './actor-context.interceptor';
-import { StynxAuthController } from './auth.controller';
-import { StynxAuthService } from './auth.service';
-import { CognitoJwtValidator } from './cognito-jwt.validator';
-import { EffectiveHashComputer } from './effective-hash-computer';
-import { PermissionCache } from './permission-cache';
-import { PermissionCacheMetrics } from './permission-cache-metrics';
-import { PermissionGuard } from './permission.guard';
-import { PermissionQueryService } from './permission-query.service';
-import { RedisPermissionCacheBackend } from './redis-permission-cache-backend';
-import { StynxAuthGuard } from './stynx-auth.guard';
-import { PublicTenantBootstrap } from './public-tenant-bootstrap';
-import { StynxJwtValidator } from './stynx-jwt.validator';
-import { STYNX_AUTH_OPTIONS, STYNX_PERMISSION_CACHE_BACKEND } from './tokens';
-import { resolveAuthOptions, type StynxAuthModuleOptions } from './types';
+import { ActorContextInterceptor } from './actor-context.interceptor.js';
+import { StynxAuthController } from './auth.controller.js';
+import { StynxAuthService } from './auth.service.js';
+import { CognitoJwtValidator } from './cognito-jwt.validator.js';
+import { EffectiveHashComputer } from './effective-hash-computer.js';
+import { PermissionCache } from './permission-cache.js';
+import { PermissionCacheMetrics } from './permission-cache-metrics.js';
+import { PermissionGuard } from './permission.guard.js';
+import { PermissionQueryService } from './permission-query.service.js';
+import { RedisPermissionCacheBackend } from './redis-permission-cache-backend.js';
+import { StynxAuthGuard } from './stynx-auth.guard.js';
+import { PublicTenantBootstrap } from './public-tenant-bootstrap.js';
+import { StynxJwtValidator } from './stynx-jwt.validator.js';
+import { STYNX_AUTH_OPTIONS, STYNX_PERMISSION_CACHE_BACKEND } from './tokens.js';
+import { resolveAuthOptions, type StynxAuthModuleOptions } from './types.js';
 
 @Module({})
 export class StynxAuthModule {

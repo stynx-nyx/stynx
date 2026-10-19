@@ -1,6 +1,6 @@
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { SessionJwtSigningService, resolveSessionsOptions, type StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
-import type { MintedTestSession, MintTestSessionInput } from './types';
+import type { MintedTestSession, MintTestSessionInput } from './types.js';
 
 function createDefaultKeySet(): StynxSessionSigningKeySet {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });

@@ -1,8 +1,8 @@
-export { pgReconcile } from './postgres-reconciliation';
-import { domainErrorContext } from './domain-error-context';
-import { classifyDomainOutcome, domainFailureCode } from './domain-outcome';
-import { pgSortInstant } from './listing';
-import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection';
+export { pgReconcile } from './postgres-reconciliation.js';
+import { domainErrorContext } from './domain-error-context.js';
+import { classifyDomainOutcome, domainFailureCode } from './domain-outcome.js';
+import { pgSortInstant } from './listing.js';
+import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { HttpException, UnprocessableEntityException } from '@nestjs/common';
 import { Database, IndependentTransactionConnectionError, type Transaction } from '@stynx-nyx/data';
@@ -24,23 +24,23 @@ import type {
   OfflineSyncStynxContext,
   OfflineSyncItemContext,
   OfflineSyncConcurrentPair,
-} from './types';
+} from './types.js';
 import {
   OfflineSyncConfigurationError,
   OfflineSyncError,
   OfflineSyncNumberingOutcome,
   OfflineSyncUpgradeRequiredError,
-} from './errors';
+} from './errors.js';
 import {
   applyReplayResponse,
   batchContextFingerprint,
   captureReplayableHeaders,
   transportCompositeKey,
   transportFingerprint,
-} from './transport';
-import { verifyOfflineSyncPayloadHash } from './payload-integrity';
-import { prepareOfflineSyncItem } from './pre-apply';
-import { activeReservationError } from './reservation-admission';
+} from './transport.js';
+import { verifyOfflineSyncPayloadHash } from './payload-integrity.js';
+import { prepareOfflineSyncItem } from './pre-apply.js';
+import { activeReservationError } from './reservation-admission.js';
 import {
   boundedConsumerAttributes,
   mergeStynxSql,
@@ -48,7 +48,7 @@ import {
   splitStynxContext,
   stynxContextOf,
   executionStynxContext,
-} from './stynx-context';
+} from './stynx-context.js';
 
 interface BatchRow {
   response_body_is_archived?: boolean;

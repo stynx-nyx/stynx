@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { PDFArray, PDFHexString, PDFName, PDFNumber, PDFString, type PDFDocument } from 'pdf-lib';
 
-import { loadSrgbIccProfile } from './assets';
+import { loadSrgbIccProfile } from './assets.js';
 
 export interface PdfAMetadataInput {
   title: string;

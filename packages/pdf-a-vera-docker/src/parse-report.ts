@@ -5,7 +5,7 @@ import type {
   PdfAVersion,
   PdfAValidationResult,
 } from '@stynx-nyx/pdf-a';
-import { VeraPdfReportParseError } from './errors';
+import { VeraPdfReportParseError } from './errors.js';
 
 type JsonRecord = Record<string, unknown>;
 

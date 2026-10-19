@@ -1,11 +1,11 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthorizationGuard } from './authorization.guard';
-import { DefaultPolicyEvaluator } from './default-policy-evaluator';
-import { STYNX_AUTHZ_OPTIONS, STYNX_AUTHZ_POLICY_EVALUATOR } from './constants';
-import type { StynxAuthorizationModuleOptions } from './authorization.types';
+import { AuthorizationGuard } from './authorization.guard.js';
+import { DefaultPolicyEvaluator } from './default-policy-evaluator.js';
+import { STYNX_AUTHZ_OPTIONS, STYNX_AUTHZ_POLICY_EVALUATOR } from './constants.js';
+import type { StynxAuthorizationModuleOptions } from './authorization.types.js';
 
-export type { AuthorizationTarget, StynxAuthorizationModuleOptions } from './authorization.types';
+export type { AuthorizationTarget, StynxAuthorizationModuleOptions } from './authorization.types.js';
 
 @Module({})
 export class StynxAuthorizationModule {

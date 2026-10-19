@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
-import { RequestContextMissingError, RequestContextMutationError } from './errors';
-import type { SystemExecutionContext } from './database';
-import { generateRequestId } from './request-id';
+import { RequestContextMissingError, RequestContextMutationError } from './errors.js';
+import type { SystemExecutionContext } from './database.js';
+import { generateRequestId } from './request-id.js';
 
 
 const REQUEST_CONTEXT_KEY = Symbol('stynx.request-context');

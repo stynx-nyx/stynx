@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "veraPDF Docker adapter for the stynx PDF/A validator contract",
+  "type": "module",
   "main": "dist/pdf-a-vera-docker/src/index.js",
   "types": "dist/pdf-a-vera-docker/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/pdf-a-vera-docker/src/index.d.ts",
-      "require": "./dist/pdf-a-vera-docker/src/index.js",
+      "import": "./dist/pdf-a-vera-docker/src/index.js",
       "default": "./dist/pdf-a-vera-docker/src/index.js"
     }
   },

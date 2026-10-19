@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { Database, type Transaction } from '@stynx-nyx/data';
-import { OfflineSyncConfigurationError, OfflineSyncUpgradeRequiredError } from './errors';
-import { canonicalOfflineSyncPayload } from './payload-integrity';
-import { importInstantMicroseconds } from './import-validation';
+import { OfflineSyncConfigurationError, OfflineSyncUpgradeRequiredError } from './errors.js';
+import { canonicalOfflineSyncPayload } from './payload-integrity.js';
+import { importInstantMicroseconds } from './import-validation.js';
 import {
   cloneRange,
   rangeCancellation,
@@ -11,7 +11,7 @@ import {
   rangeIdentity,
   rangeList,
   rangeNotFound,
-} from './range-administration';
+} from './range-administration.js';
 import type {
   CancelNumberingRangeInput,
   CreateNumberingRangeInput,
@@ -19,7 +19,7 @@ import type {
   NumberingRange,
   NumberingRangePage,
   TrustedOfflineSyncScope,
-} from './types';
+} from './types.js';
 
 interface RangeRow {
   id: string;

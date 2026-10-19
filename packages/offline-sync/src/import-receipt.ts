@@ -1,6 +1,6 @@
-import type { OfflineImportManifest, OfflineImportRecord } from './import-schema.generated';
-import type { OfflineImportReceipt } from './import-contract';
-import { validateArchiveAck } from './import-archive';
+import type { OfflineImportManifest, OfflineImportRecord } from './import-schema.generated.js';
+import type { OfflineImportReceipt } from './import-contract.js';
+import { validateArchiveAck } from './import-archive.js';
 import {
   canonicalImportJson,
   importDigest,
@@ -8,7 +8,7 @@ import {
   IMPORT_RELATIONS,
   validateOfflineImportManifest,
   importBatchIdentity,
-} from './import-validation';
+} from './import-validation.js';
 
 export interface OfflineImportLedgerRow {
   source_identity_sha256: string;

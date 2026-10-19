@@ -1,5 +1,5 @@
 import { CanActivate, ForbiddenException, Inject, Injectable } from '@nestjs/common';
-import { STYNX_HEALTH_OPTIONS, type StynxHealthModuleOptions } from './tokens';
+import { STYNX_HEALTH_OPTIONS, type StynxHealthModuleOptions } from './tokens.js';
 
 @Injectable()
 export class StynxPlatformInfoGuard implements CanActivate {

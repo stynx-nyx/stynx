@@ -1,18 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { WorklistInputError, WorklistSchedulerRequiredError } from './errors';
+import { WorklistInputError, WorklistSchedulerRequiredError } from './errors.js';
 import {
   WORKLIST_BREACH_JOB_TYPE,
   WORKLIST_EVENT_SINK,
   WORKLIST_SCHEDULER,
   type WorklistEventSink,
   type WorklistSchedulerPort,
-} from './ports';
-import { mapEventRow, type WorklistRow } from './row-utils';
-import { mapWorklistSqlError } from './sql-errors';
-import type { WorklistEvent } from './types';
-import { parseWorklistInput, scheduleBreachSchema } from './validation';
+} from './ports.js';
+import { mapEventRow, type WorklistRow } from './row-utils.js';
+import { mapWorklistSqlError } from './sql-errors.js';
+import type { WorklistEvent } from './types.js';
+import { parseWorklistInput, scheduleBreachSchema } from './validation.js';
 
 @Injectable()
 export class WorklistSlaService {

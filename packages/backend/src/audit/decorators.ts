@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { STYNX_AUDIT_METADATA } from './constants';
+import { STYNX_AUDIT_METADATA } from './constants.js';
 
 export interface AuditMetadata {
   action: string;

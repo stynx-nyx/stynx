@@ -1,8 +1,8 @@
-import { sha256Hex } from './signature.service';
-import { SignatureTrustError } from './errors';
-import { SignatureTrustUnavailableError, SignatureProviderConfigurationError } from './errors';
-import { isCmsTrustVerifier } from './cms-trust-verifier';
-import type { SignatureCertificateRef, SignatureTrustProfile, SignatureTrustVerifier } from './types';
+import { sha256Hex } from './signature.service.js';
+import { SignatureTrustError } from './errors.js';
+import { SignatureTrustUnavailableError, SignatureProviderConfigurationError } from './errors.js';
+import { isCmsTrustVerifier } from './cms-trust-verifier.js';
+import type { SignatureCertificateRef, SignatureTrustProfile, SignatureTrustVerifier } from './types.js';
 
 export function canonicalRfc8785Json(value: unknown, seen = new WeakSet<object>()): string {
   if (value === null || typeof value === 'boolean' || typeof value === 'string')

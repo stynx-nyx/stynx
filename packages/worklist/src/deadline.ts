@@ -1,10 +1,10 @@
-import { WorklistCalendarRequiredError, WorklistInputError } from './errors';
-import type { WorklistBusinessCalendar } from './ports';
+import { WorklistCalendarRequiredError, WorklistInputError } from './errors.js';
+import type { WorklistBusinessCalendar } from './ports.js';
 import type {
   ResolvedWorklistDeadline,
   WorklistDeadline,
   WorklistQueueDefaultDeadline,
-} from './types';
+} from './types.js';
 
 function validDate(value: Date | string, field: string): Date {
   const date = value instanceof Date ? new Date(value) : new Date(value);

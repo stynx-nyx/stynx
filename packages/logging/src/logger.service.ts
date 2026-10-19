@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Logger } from 'pino';
-import { LoggingDedupeService } from './dedupe';
-import { RequestLogFieldFactory, type RequestScopedLogFields } from './pino.factory';
-import { STYNX_PINO_LOGGER } from './tokens';
+import { LoggingDedupeService } from './dedupe.js';
+import { RequestLogFieldFactory, type RequestScopedLogFields } from './pino.factory.js';
+import { STYNX_PINO_LOGGER } from './tokens.js';
 
 export type LogContext = string | RequestScopedLogFields;
 

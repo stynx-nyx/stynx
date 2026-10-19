@@ -1,4 +1,4 @@
-import type { OutboxDispatcherPort, OutboxRow, OutboxTransportEvidence } from './types';
+import type { OutboxDispatcherPort, OutboxRow, OutboxTransportEvidence } from './types.js';
 
 function evidenceHeaders(headers: Record<string, string>): Record<string, string> {
   const safe = new Set(['content-type', 'x-outbox-event-id', 'x-outbox-idempotency-key']);

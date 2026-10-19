@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Param, Patch, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, NoIdempotent } from '@stynx-nyx/backend';
-import { FlowFormsService } from '../flow-forms.service';
-import type { UpdateFlowAnswerDto } from '../types';
+import { FlowFormsService } from '../flow-forms.service.js';
+import type { UpdateFlowAnswerDto } from '../types.js';
 
 @Controller('/flow/answers')
 @UseGuards(StynxAuthGuard, PermissionGuard)

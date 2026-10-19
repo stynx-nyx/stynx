@@ -3,8 +3,8 @@ import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx-ny
 import { Idempotent } from '@stynx-nyx/idempotency';
 import { RateLimit } from '@stynx-nyx/ratelimit';
 import { Audit } from '@stynx-nyx/backend';
-import type { CreateRecordNoteDto, ListQuery, UpdateRecordNoteDto } from './dto';
-import { ReferenceSampleService } from './reference-sample.service';
+import type { CreateRecordNoteDto, ListQuery, UpdateRecordNoteDto } from './dto.js';
+import { ReferenceSampleService } from './reference-sample.service.js';
 
 function envNumber(name: string, fallback: number): number {
   const raw = process.env[name];

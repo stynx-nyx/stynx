@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { SignatureCertificateValidationError, SignatureProviderResponseError } from './errors';
+import { SignatureCertificateValidationError, SignatureProviderResponseError } from './errors.js';
 import type {
   ProviderSignResult,
   SignatureBackend,
@@ -10,7 +10,7 @@ import type {
   VerificationPolicy,
   VerifyRequest,
   VerifyResult,
-} from './types';
+} from './types.js';
 
 export class ProviderBackedSignatureBackend implements SignatureBackend {
   constructor(

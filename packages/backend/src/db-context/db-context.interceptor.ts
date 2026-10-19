@@ -1,13 +1,13 @@
 import { CallHandler, ExecutionContext, Inject, Injectable, NestInterceptor, Optional } from '@nestjs/common';
 import type { DbContextApplier, DbSessionContext } from '@stynx-nyx/contracts';
 import { finalize, from, mergeMap, Observable } from 'rxjs';
-import { getPrincipalFromRequest, type RequestLike } from '../common/request-context';
+import { getPrincipalFromRequest, type RequestLike } from '../common/request-context.js';
 import {
   STYNX_DB_CLIENT_RESOLVER,
   STYNX_DB_CONTEXT_APPLIER,
   STYNX_REQUEST_DB_CLIENT_LIFECYCLE,
-} from './constants';
-import type { RequestDbClientLifecycle } from './request-db-client-lifecycle';
+} from './constants.js';
+import type { RequestDbClientLifecycle } from './request-db-client-lifecycle.js';
 
 export type DbClientResolver = (request: RequestLike) => unknown;
 interface PreparedRequestState {

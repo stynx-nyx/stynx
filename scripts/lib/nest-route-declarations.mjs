@@ -94,6 +94,7 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
         record.importSource?.startsWith('.') &&
         resolve(dirname(file), record.importSource)
           .replaceAll('\\', '/')
+          .replace(/\.js$/u, '')
           .endsWith('/packages/auth/src/decorators')
       );
     }

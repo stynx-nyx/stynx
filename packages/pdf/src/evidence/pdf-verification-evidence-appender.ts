@@ -1,26 +1,28 @@
-import { createRequire } from 'node:module';
 import { PDFDocument, rgb } from 'pdf-lib';
-import { embedPdfAFonts } from '../internals/pdf-a-fonts';
-import { applyPdfAConformanceMetadata } from '../internals/pdf-a-metadata';
-import { appendIncrementalEvidenceObject } from '../internals/pdf-incremental-evidence';
+import { embedPdfAFonts } from '../internals/pdf-a-fonts.js';
+import { applyPdfAConformanceMetadata } from '../internals/pdf-a-metadata.js';
+import { appendIncrementalEvidenceObject } from '../internals/pdf-incremental-evidence.js';
 
 import type {
   PdfPadesEvidenceAdapter,
   PdfVerificationEvidenceAppenderOptions,
   PdfVerificationEvidenceInput,
-} from './types';
+} from './types.js';
 
-const loadPeerPackage = createRequire(__filename);
+// A non-literal specifier keeps @stynx-nyx/signature a runtime peer: TypeScript does not
+// resolve it, so monorepo tsconfig paths never compile the sibling package source into
+// the @stynx-nyx/pdf tarball.
+const SIGNATURE_PEER_SPECIFIER: string = '@stynx-nyx/signature';
 
 export class PdfVerificationEvidenceAppender {
-  private readonly evidenceAdapter: PdfPadesEvidenceAdapter;
+  private evidenceAdapter: PdfPadesEvidenceAdapter | undefined;
 
   constructor(private readonly options: PdfVerificationEvidenceAppenderOptions = {}) {
-    this.evidenceAdapter =
-      options.evidenceAdapter ?? createDefaultPadesEvidenceAdapter(options.now);
+    this.evidenceAdapter = options.evidenceAdapter;
   }
 
   async embedVerificationHint(input: PdfVerificationEvidenceInput): Promise<Uint8Array> {
+    const evidenceAdapter = await this.resolveEvidenceAdapter();
     try {
       const pdf = await PDFDocument.load(input.payload, {
         ignoreEncryption: true,
@@ -37,13 +39,13 @@ export class PdfVerificationEvidenceAppender {
       });
       applyPdfAConformanceMetadata(pdf, metadataFromInput(input));
       const rendered = await pdf.save({ useObjectStreams: false });
-      const evidenceBlock = this.evidenceBlock(rendered, input);
+      const evidenceBlock = this.evidenceBlock(evidenceAdapter, rendered, input);
       return this.appendEvidenceBlock(rendered, evidenceBlock);
     } catch {
       return Buffer.concat([
         Buffer.from(input.payload),
         Buffer.from(`\n%%STYNX-PDF-VERIFY:${input.verifyUrl}\n`, 'utf8'),
-        Buffer.from(this.evidenceBlock(input.payload, input)),
+        Buffer.from(this.evidenceBlock(evidenceAdapter, input.payload, input)),
       ]);
     }
   }
@@ -52,8 +54,17 @@ export class PdfVerificationEvidenceAppender {
     return appendIncrementalEvidenceObject(payload, evidenceBlock);
   }
 
-  private evidenceBlock(payload: Uint8Array, input: PdfVerificationEvidenceInput): Uint8Array {
-    const signed = this.evidenceAdapter.sign({
+  private async resolveEvidenceAdapter(): Promise<PdfPadesEvidenceAdapter> {
+    this.evidenceAdapter ??= await createDefaultPadesEvidenceAdapter(this.options.now);
+    return this.evidenceAdapter;
+  }
+
+  private evidenceBlock(
+    evidenceAdapter: PdfPadesEvidenceAdapter,
+    payload: Uint8Array,
+    input: PdfVerificationEvidenceInput,
+  ): Uint8Array {
+    const signed = evidenceAdapter.sign({
       payload,
       verifyUrl: input.verifyUrl,
       reason: input.reason,
@@ -86,10 +97,12 @@ function parseDate(value: string | undefined): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
-function createDefaultPadesEvidenceAdapter(now: (() => Date) | undefined): PdfPadesEvidenceAdapter {
+async function createDefaultPadesEvidenceAdapter(
+  now: (() => Date) | undefined,
+): Promise<PdfPadesEvidenceAdapter> {
   // Keep @stynx-nyx/signature as a runtime peer so @stynx-nyx/pdf does not compile the
   // sibling package source into its tarball through monorepo tsconfig paths.
-  const signature = loadPeerPackage('@stynx-nyx/signature') as {
+  const signature = (await import(SIGNATURE_PEER_SPECIFIER)) as {
     createMockPadesEvidenceAdapter: (now?: () => Date) => PdfPadesEvidenceAdapter;
   };
   return signature.createMockPadesEvidenceAdapter(now);

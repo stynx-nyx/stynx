@@ -2,8 +2,8 @@
 
 import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx-nyx/auth';
-import { BookmarkTagService } from '../services/bookmark-tag.service';
-import { CreateBookmarkTagDto } from '../dto/create-bookmark-tag.dto';
+import { BookmarkTagService } from '../services/bookmark-tag.service.js';
+import { CreateBookmarkTagDto } from '../dto/create-bookmark-tag.dto.js';
 
 @Controller('/api/demo/bookmark/bookmark-tag')
 @UseGuards(StynxAuthGuard, PermissionGuard)

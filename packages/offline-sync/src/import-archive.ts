@@ -1,20 +1,20 @@
 import { validateHeaderValue } from 'node:http';
-import { OfflineImportError } from './import-contract';
-import type { OfflineArchiveVerificationPort, OfflineImportReceipt } from './import-contract';
+import { OfflineImportError } from './import-contract.js';
+import type { OfflineArchiveVerificationPort, OfflineImportReceipt } from './import-contract.js';
 import type {
   OfflineImportManifest,
   OfflineImportArchive,
   OfflineImportBatchesKey,
-} from './import-schema.generated';
+} from './import-schema.generated.js';
 import {
   canonicalImportJson,
   importDigest,
   parseImportJson,
   freezeImportJson,
   importInstantMicroseconds,
-} from './import-validation';
-import { importBatchIdentity } from './import-validation';
-import { splitStynxContext } from './stynx-context';
+} from './import-validation.js';
+import { importBatchIdentity } from './import-validation.js';
+import { splitStynxContext } from './stynx-context.js';
 
 function refuse(): never {
   throw new OfflineImportError('archive-invalid', 'archived-response');

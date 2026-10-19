@@ -6,7 +6,7 @@ import {
   type StynxHealthIndicator,
   type StynxHealthIndicatorResult,
   type StynxHealthModuleOptions,
-} from './tokens';
+} from './tokens.js';
 
 class CallbackIndicator implements StynxHealthIndicator {
   constructor(

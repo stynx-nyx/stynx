@@ -11,12 +11,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { NoIdempotent } from '@stynx-nyx/idempotency';
-import { Permission, Public } from './decorators';
-import { PermissionGuard } from './permission.guard';
-import { StynxAuthGuard } from './stynx-auth.guard';
-import { StynxAuthService } from './auth.service';
-import type { RequestLike } from './types';
-import { headerToString } from './utils';
+import { Permission, Public } from './decorators.js';
+import { PermissionGuard } from './permission.guard.js';
+import { StynxAuthGuard } from './stynx-auth.guard.js';
+import { StynxAuthService } from './auth.service.js';
+import type { RequestLike } from './types.js';
+import { headerToString } from './utils.js';
 
 export interface SessionExchangeBody {
   cognitoToken?: string;

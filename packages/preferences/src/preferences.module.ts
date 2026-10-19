@@ -1,19 +1,19 @@
 import { type DynamicModule, Module } from '@nestjs/common';
-import { InMemoryPreferencesStore } from './in-memory-preferences.store';
-import { PostgresPreferencesStore } from './postgres-preferences.store';
-import { PreferencesController } from './preferences.controller';
-import { PreferencesService } from './preferences.service';
+import { InMemoryPreferencesStore } from './in-memory-preferences.store.js';
+import { PostgresPreferencesStore } from './postgres-preferences.store.js';
+import { PreferencesController } from './preferences.controller.js';
+import { PreferencesService } from './preferences.service.js';
 import {
   STYNX_PREFERENCES_AUDIT,
   STYNX_PREFERENCES_AVATAR,
   STYNX_PREFERENCES_OPTIONS,
   STYNX_PREFERENCES_STORE,
-} from './tokens';
+} from './tokens.js';
 import type {
   PreferencesAuditSink,
   PreferencesAvatarResolver,
   StynxPreferencesModuleOptions,
-} from './types';
+} from './types.js';
 const noopAudit: PreferencesAuditSink = { write: () => undefined };
 const noopAvatar: PreferencesAvatarResolver = { resolve: async () => null };
 @Module({})

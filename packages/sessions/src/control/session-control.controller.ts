@@ -16,16 +16,16 @@ import {
 import { RequestContext } from '@stynx-nyx/core';
 import { NoIdempotent } from '@stynx-nyx/idempotency';
 import { v4 as uuid } from 'uuid';
-import { SessionControlError } from './errors';
-import { SessionControlService } from './session-control.service';
+import { SessionControlError } from './errors.js';
+import { SessionControlService } from './session-control.service.js';
 import type {
   SessionControlCommand,
   SessionMutationResult,
   SessionScope,
   SessionView,
   StynxSessionControlOptions,
-} from './types';
-import { STYNX_SESSION_CONTROL_OPTIONS } from './tokens';
+} from './types.js';
+import { STYNX_SESSION_CONTROL_OPTIONS } from './tokens.js';
 const forbidden = new Set([
   'tenantId',
   'tenant_id',

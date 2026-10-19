@@ -1,5 +1,5 @@
-import { resolvePdfADeclaration } from '../types';
-import type { PdfAValidateOptions, PdfAValidationResult, PdfAValidator } from '../types';
+import { resolvePdfADeclaration } from '../types.js';
+import type { PdfAValidateOptions, PdfAValidationResult, PdfAValidator } from '../types.js';
 
 export class NoopPdfAValidator implements PdfAValidator {
   async validate(_pdf: Uint8Array, opts: PdfAValidateOptions = {}): Promise<PdfAValidationResult> {

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Database, Transaction } from '@stynx-nyx/data';
-import { camelizeRow, type FlowRow } from './runtime-filters';
+import { camelizeRow, type FlowRow } from './runtime-filters.js';
 
 @Injectable()
 export class FlowRuntimeReadModel {

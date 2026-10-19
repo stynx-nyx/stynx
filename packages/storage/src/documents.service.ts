@@ -10,9 +10,9 @@ import {
   StorageDocumentNotFoundError,
   StorageTenantMismatchError,
   StorageValidationError,
-} from './errors';
-import { S3Service } from './s3.service';
-import { STYNX_STORAGE_OPTIONS } from './tokens';
+} from './errors.js';
+import { S3Service } from './s3.service.js';
+import { STYNX_STORAGE_OPTIONS } from './tokens.js';
 import type {
   CompleteDocumentHeaders,
   CompleteDocumentResult,
@@ -20,7 +20,7 @@ import type {
   InitiateDocumentInput,
   InitiateDocumentResult,
   StynxStorageModuleOptions,
-} from './types';
+} from './types.js';
 
 interface DocumentRow {
   id: string;

@@ -1,8 +1,8 @@
 import { type DynamicModule, Module } from '@nestjs/common';
-import { LocalPdfRenderBackend } from './local-backend';
-import { PdfRenderer } from './pdf-renderer';
-import { STYNX_PDF_BACKEND, STYNX_PDF_OPTIONS } from './tokens';
-import type { PdfRenderBackend, StynxPdfModuleOptions } from './types';
+import { LocalPdfRenderBackend } from './local-backend.js';
+import { PdfRenderer } from './pdf-renderer.js';
+import { STYNX_PDF_BACKEND, STYNX_PDF_OPTIONS } from './tokens.js';
+import type { PdfRenderBackend, StynxPdfModuleOptions } from './types.js';
 
 @Module({})
 export class StynxPdfModule {

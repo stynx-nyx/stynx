@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { StynxI18nModule } from '@stynx-nyx/i18n';
-import { AppModule } from '../app.module';
+import { AppModule } from '../app.module.js';
 
 @Module({
   imports: [AppModule, StynxI18nModule.forRoot()],

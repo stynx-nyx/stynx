@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Tenant and environment scoped feature flag provider for stynx",
+  "type": "module",
   "main": "dist/feature-flags/src/index.js",
   "types": "dist/feature-flags/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/feature-flags/src/index.d.ts",
-      "require": "./dist/feature-flags/src/index.js",
+      "import": "./dist/feature-flags/src/index.js",
       "default": "./dist/feature-flags/src/index.js"
     }
   },

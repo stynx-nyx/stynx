@@ -1,5 +1,5 @@
 import { HttpException } from '@nestjs/common';
-import { canonicalOfflineSyncPayload } from './payload-integrity';
+import { canonicalOfflineSyncPayload } from './payload-integrity.js';
 
 /** A rejected item keeps only lossless, bounded host context; invalid evidence remains retryable. */
 export function domainErrorContext(error: unknown): {

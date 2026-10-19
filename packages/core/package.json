@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Core runtime primitives for stynx packages",
+  "type": "module",
   "main": "dist/core/src/index.js",
   "types": "dist/core/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/core/src/index.d.ts",
-      "require": "./dist/core/src/index.js",
+      "import": "./dist/core/src/index.js",
       "default": "./dist/core/src/index.js"
     }
   },

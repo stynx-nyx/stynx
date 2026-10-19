@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { CatalogService } from './catalog.service';
-import { hasI18nTenantAdmission } from './tenant-context';
+import { CatalogService } from './catalog.service.js';
+import { hasI18nTenantAdmission } from './tenant-context.js';
 
 @Injectable()
 export class LocaleService {

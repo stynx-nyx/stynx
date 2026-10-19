@@ -2,7 +2,7 @@ import { ForbiddenException } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { RequestContext, SystemContext } from '@stynx-nyx/core';
 import { ActorContextMissingError, TenantContextMissingError } from '@stynx-nyx/data';
-import { currentI18nHttpContext } from './http-context';
+import { currentI18nHttpContext } from './http-context.js';
 
 function requireTenantId(tenantId: string): void {
   if (typeof tenantId !== 'string' || !tenantId.trim()) throw new TenantContextMissingError();

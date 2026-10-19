@@ -6,9 +6,9 @@ import {
   RefreshTokenReuseDetectedError,
   SessionExchangeError,
   SessionExpiredError,
-} from './errors';
-import { STYNX_SESSION_MIRROR, STYNX_SESSIONS_OPTIONS, STYNX_SESSION_STORE } from './tokens';
-import { SessionJwtSigningService } from './jwt-signing.service';
+} from './errors.js';
+import { STYNX_SESSION_MIRROR, STYNX_SESSIONS_OPTIONS, STYNX_SESSION_STORE } from './tokens.js';
+import { SessionJwtSigningService } from './jwt-signing.service.js';
 import type {
   DeviceMetadata,
   ResolvedStynxSessionsModuleOptions,
@@ -20,7 +20,7 @@ import type {
   SessionRecord,
   SessionStatus,
   SessionStore,
-} from './types';
+} from './types.js';
 
 function addSeconds(date: Date, seconds: number): Date {
   return new Date(date.getTime() + seconds * 1000);

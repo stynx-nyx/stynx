@@ -10,13 +10,13 @@ import {
 } from '@nestjs/common';
 import { headerToString } from '@stynx-nyx/contracts';
 import { firstValueFrom, from, Observable, of } from 'rxjs';
-import type { RequestLike } from '../common/request-context';
+import type { RequestLike } from '../common/request-context.js';
 import type {
   IdempotencyDecisionContext,
   IdempotencyInterceptorOptions,
   IdempotencyStore,
   IdempotencyStoredEntry,
-} from './types';
+} from './types.js';
 
 interface CachedResponse {
   body: unknown;

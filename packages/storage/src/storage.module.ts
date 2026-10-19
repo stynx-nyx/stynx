@@ -1,10 +1,10 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
-import { DocumentsService } from './documents.service';
-import { S3Service } from './s3.service';
-import { STYNX_STORAGE_OPTIONS } from './tokens';
-import type { StynxStorageModuleOptions } from './types';
+import { DocumentsService } from './documents.service.js';
+import { S3Service } from './s3.service.js';
+import { STYNX_STORAGE_OPTIONS } from './tokens.js';
+import type { StynxStorageModuleOptions } from './types.js';
 
 @Module({})
 export class StynxStorageModule {

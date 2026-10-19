@@ -5,10 +5,10 @@ import { ModuleRef } from '@nestjs/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
 import { parse } from 'yaml';
 import { z } from 'zod';
-import { PrivacyConfigurationError } from './errors';
-import { requirePrivacySystemContext, requirePrivacyTenantContext } from './privacy-context';
-import { STYNX_PRIVACY_OPTIONS } from './tokens';
-import type { PrivacyMapOverrideFile, PrivacyRule, StynxPrivacyModuleOptions } from './types';
+import { PrivacyConfigurationError } from './errors.js';
+import { requirePrivacySystemContext, requirePrivacyTenantContext } from './privacy-context.js';
+import { STYNX_PRIVACY_OPTIONS } from './tokens.js';
+import type { PrivacyMapOverrideFile, PrivacyRule, StynxPrivacyModuleOptions } from './types.js';
 
 const identifierPattern = /^[A-Za-z_][A-Za-z0-9_]*$/u;
 

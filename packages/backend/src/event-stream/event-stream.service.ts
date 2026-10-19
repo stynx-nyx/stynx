@@ -1,11 +1,11 @@
 import { Logger, type OnModuleDestroy } from '@nestjs/common';
 import { Inject, Injectable } from '@nestjs/common';
-import { STYNX_SSE_CONTEXT_RUNNER, STYNX_SSE_METRICS, STYNX_SSE_SCHEDULER } from './tokens';
+import { STYNX_SSE_CONTEXT_RUNNER, STYNX_SSE_METRICS, STYNX_SSE_SCHEDULER } from './tokens.js';
 import type {
   EventStreamContextRunner, EventStreamCursor, EventStreamMetricsSink, EventStreamRow,
   EventStreamScheduler, EventStreamSource, StynxEventStreamOptions, StynxSseRequest,
   StynxSseResponse, StynxSseScope,
-} from './types';
+} from './types.js';
 
 const DEFAULT_HEARTBEAT_MS = 20_000;
 const DEFAULT_REPLAY_WINDOW_MS = 86_400_000;

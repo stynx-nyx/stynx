@@ -2,14 +2,14 @@ import { Inject, Injectable, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
 import { StynxLogger } from '@stynx-nyx/logging';
-import { NotificationTemplateRegistry } from './templates/registry';
-import { NotificationTemplateRenderer } from './templates/render';
-import { STYNX_NOTIFICATIONS_CHANNEL_ADAPTERS, STYNX_NOTIFICATIONS_OPTIONS } from './tokens';
-import type { ChannelAdapter } from './adapters/channel-adapter';
+import { NotificationTemplateRegistry } from './templates/registry.js';
+import { NotificationTemplateRenderer } from './templates/render.js';
+import { STYNX_NOTIFICATIONS_CHANNEL_ADAPTERS, STYNX_NOTIFICATIONS_OPTIONS } from './tokens.js';
+import type { ChannelAdapter } from './adapters/channel-adapter.js';
 import type {
   ChannelRetryPolicy, DeliveryStatus, DispatchDueOptions, DispatchDueResult, DispatchOutcome,
   NotificationChannel, StynxNotificationsModuleOptions,
-} from './types';
+} from './types.js';
 
 const DEFAULT_RETRY_POLICY: ChannelRetryPolicy = {
   maxAttempts: 5,

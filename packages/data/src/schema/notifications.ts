@@ -1,6 +1,6 @@
 /* istanbul ignore file -- declarative Drizzle schema; the migration is the contract. */
 import { integer, jsonb, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { tenants } from './tenancy';
+import { tenants } from './tenancy.js';
 
 export const notificationsSchema = pgSchema('notifications');
 export const deliveryStatus = notificationsSchema.enum('delivery_status', ['QUEUED', 'SENT', 'DELIVERED', 'FAILED', 'SUPPRESSED']);

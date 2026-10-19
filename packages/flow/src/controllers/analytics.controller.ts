@@ -1,6 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
-import { FlowAnalyticsService } from '../flow-analytics.service';
+import { FlowAnalyticsService } from '../flow-analytics.service.js';
 
 @Controller('/flow')
 @UseGuards(StynxAuthGuard, PermissionGuard)

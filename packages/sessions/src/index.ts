@@ -3,15 +3,15 @@
  *
  * @packageDocumentation
  */
-export * from './errors';
-export * from './in-memory-session-store';
-export * from './jwks.controller';
-export * from './jwt-signing.service';
-export * from './redis-session-store';
-export * from './readiness';
-export * from './session-mirror.writer';
-export * from './session.service';
-export * from './sessions.module';
-export * from './tokens';
-export * from './types';
-export * from './control';
+export * from './errors.js';
+export * from './in-memory-session-store.js';
+export * from './jwks.controller.js';
+export * from './jwt-signing.service.js';
+export * from './redis-session-store.js';
+export * from './readiness.js';
+export * from './session-mirror.writer.js';
+export * from './session.service.js';
+export * from './sessions.module.js';
+export * from './tokens.js';
+export * from './types.js';
+export * from './control/index.js';

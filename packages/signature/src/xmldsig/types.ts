@@ -4,7 +4,7 @@ import type {
   CanonicalizationOrTransformAlgorithmType,
   HashAlgorithmType,
   SignatureAlgorithmType,
-} from 'xml-crypto/lib/types';
+} from 'xml-crypto';
 
 export type XmlDSigKeyMaterial = KeyLike;
 

@@ -1,13 +1,13 @@
-import { OfflineSyncError } from './errors';
-import { canonicalOfflineSyncPayload, canonicalOfflineSyncPayloadHash } from './payload-integrity';
-import { boundedConsumerAttributes } from './stynx-context';
+import { OfflineSyncError } from './errors.js';
+import { canonicalOfflineSyncPayload, canonicalOfflineSyncPayloadHash } from './payload-integrity.js';
+import { boundedConsumerAttributes } from './stynx-context.js';
 import type {
   CancelNumberingRangeInput,
   CreateNumberingRangeInput,
   ListNumberingRangesInput,
   NumberingRange,
   TrustedOfflineSyncScope,
-} from './types';
+} from './types.js';
 
 const invalid = (): never => {
   throw new OfflineSyncError(

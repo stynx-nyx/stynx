@@ -1,12 +1,12 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import type { SystemExecutionContext } from './database';
-import { SystemContextRequiredError } from './errors';
-import { RequestContext, RequestContextMutator } from './request-context';
+import type { SystemExecutionContext } from './database.js';
+import { SystemContextRequiredError } from './errors.js';
+import { RequestContext, RequestContextMutator } from './request-context.js';
 import {
   STYNX_SYSTEM_OPERATION_SINK,
   type SystemOperationRecord,
   type SystemOperationSink,
-} from './tokens';
+} from './tokens.js';
 
 class NoopSystemOperationSink implements SystemOperationSink {
   async write(_record: SystemOperationRecord): Promise<void> {}

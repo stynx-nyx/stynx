@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import type { SlaAggregateEvent, SlaEventSink, SlaSampleEvent } from './types';
+import type { SlaAggregateEvent, SlaEventSink, SlaSampleEvent } from './types.js';
 
 export class LoggerSlaEventSink implements SlaEventSink {
   private readonly logger: Logger;

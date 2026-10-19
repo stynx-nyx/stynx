@@ -3,12 +3,12 @@
  *
  * @packageDocumentation
  */
-export * from './catalog.service';
-export * from './error-translator.service';
-export * from './i18n-admin.service';
-export * from './i18n.controller';
-export * from './i18n.module';
-export * from './locale.interceptor';
-export * from './locale.service';
-export * from './tokens';
-export * from './types';
+export * from './catalog.service.js';
+export * from './error-translator.service.js';
+export * from './i18n-admin.service.js';
+export * from './i18n.controller.js';
+export * from './i18n.module.js';
+export * from './locale.interceptor.js';
+export * from './locale.service.js';
+export * from './tokens.js';
+export * from './types.js';

@@ -22,17 +22,17 @@ import {
   TenantContextMissingError,
   TransactionIdentityMismatchError,
   type TransactionIdentityMismatchReason,
-} from './errors';
-import { resolveAppRoleName } from './app-role';
-import { StynxPoolRegistry } from './pools';
-import { createDrizzle, Transaction, type StynxDrizzleDatabase } from './transaction';
+} from './errors.js';
+import { resolveAppRoleName } from './app-role.js';
+import { StynxPoolRegistry } from './pools.js';
+import { createDrizzle, Transaction, type StynxDrizzleDatabase } from './transaction.js';
 import {
   STYNX_DATA_METRICS,
   STYNX_DATA_OPTIONS,
   type StynxDataMetricsSink,
   type StynxDataModuleOptions,
-} from './tokens';
-import type { TxOptions } from './types';
+} from './tokens.js';
+import type { TxOptions } from './types.js';
 
 interface TransactionContextState {
   client: PoolClient;

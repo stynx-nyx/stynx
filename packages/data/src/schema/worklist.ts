@@ -9,9 +9,9 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { makeLiveOnly, softDeletable } from '../table-markers';
-import { perms, users } from './auth';
-import { tenants } from './tenancy';
+import { makeLiveOnly, softDeletable } from '../table-markers.js';
+import { perms, users } from './auth.js';
+import { tenants } from './tenancy.js';
 
 export const worklistSchema = pgSchema('worklist');
 

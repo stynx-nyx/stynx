@@ -10,11 +10,11 @@ import {
   StynxRateLimitModule,
   type StynxRateLimitModuleOptions,
 } from '@stynx-nyx/ratelimit';
-import { SlaMonitorInterceptor } from '../sla/sla-monitor.interceptor';
+import { SlaMonitorInterceptor } from '../sla/sla-monitor.interceptor.js';
 import {
   StynxSlaModule,
   type StynxSlaModuleOptions,
-} from '../sla/sla.module';
+} from '../sla/sla.module.js';
 
 export interface StynxPlatformPipelineModuleOptions {
   rateLimit?: StynxRateLimitModuleOptions | false;

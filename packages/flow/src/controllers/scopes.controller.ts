@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, NoIdempotent } from '@stynx-nyx/backend';
-import { FlowDesignService } from '../flow-design.service';
-import type { CreateFlowScopeDto, UpdateFlowScopeDto } from '../types';
+import { FlowDesignService } from '../flow-design.service.js';
+import type { CreateFlowScopeDto, UpdateFlowScopeDto } from '../types.js';
 
 @Controller('/flow/scopes')
 @UseGuards(StynxAuthGuard, PermissionGuard)

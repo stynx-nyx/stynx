@@ -2,8 +2,8 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, RateLimit } from '@stynx-nyx/backend';
 import { Idempotent } from '@stynx-nyx/idempotency';
-import { FlowRuntimeService } from '../flow-runtime.service';
-import type { FlowSignalDto } from '../types';
+import { FlowRuntimeService } from '../flow-runtime.service.js';
+import type { FlowSignalDto } from '../types.js';
 
 @Controller('/flow/signal')
 @UseGuards(StynxAuthGuard, PermissionGuard)

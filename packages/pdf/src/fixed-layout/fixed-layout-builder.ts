@@ -1,10 +1,10 @@
 import { PDFDocument, rgb } from 'pdf-lib';
 import type { PDFDocument as PdfLibDocument, PDFFont, PDFPage } from 'pdf-lib';
-import { embedPdfAFonts } from '../internals/pdf-a-fonts';
-import { applyPdfAConformanceMetadata } from '../internals/pdf-a-metadata';
-import { cleanPdfText } from './text';
-import { A4_PAGE_SIZE } from './types';
-import type { FixedLayoutDrawContext, FixedLayoutPageSize } from './types';
+import { embedPdfAFonts } from '../internals/pdf-a-fonts.js';
+import { applyPdfAConformanceMetadata } from '../internals/pdf-a-metadata.js';
+import { cleanPdfText } from './text.js';
+import { A4_PAGE_SIZE } from './types.js';
+import type { FixedLayoutDrawContext, FixedLayoutPageSize } from './types.js';
 
 export interface FixedLayoutDocumentMetadata {
   title: string;

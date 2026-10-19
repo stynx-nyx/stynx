@@ -1,8 +1,8 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import type { IdentityAdminAdapter, IdentityLocalSyncAdapter } from '@stynx-nyx/contracts';
-import { STYNX_IDENTITY_ADMIN_ADAPTER, STYNX_IDENTITY_LOCAL_SYNC_ADAPTER } from './constants';
-import { PecIdentityAdminFacade, PormIdentityAdminFacade } from './integration-facades';
-import { IdentityAdminService } from './identity-admin.service';
+import { STYNX_IDENTITY_ADMIN_ADAPTER, STYNX_IDENTITY_LOCAL_SYNC_ADAPTER } from './constants.js';
+import { PecIdentityAdminFacade, PormIdentityAdminFacade } from './integration-facades.js';
+import { IdentityAdminService } from './identity-admin.service.js';
 
 export interface StynxIdentityAdminModuleOptions {
   adapter: IdentityAdminAdapter;

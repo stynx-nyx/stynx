@@ -6,7 +6,7 @@ import {
   type RedisModules,
   type RedisScripts,
 } from 'redis';
-import { STYNX_SESSIONS_OPTIONS } from './tokens';
+import { STYNX_SESSIONS_OPTIONS } from './tokens.js';
 import type {
   RefreshTokenLookup,
   ResolvedStynxSessionsModuleOptions,
@@ -15,8 +15,8 @@ import type {
   SessionStore,
   SessionPolicyOptions,
   SessionPolicyResult,
-} from './types';
-import { SessionConflictError, SessionExchangeError } from './errors';
+} from './types.js';
+import { SessionConflictError, SessionExchangeError } from './errors.js';
 
 const CREATE_WITH_POLICY = `
 local prefix, recordJson, mode, priorSid = ARGV[1], ARGV[2], ARGV[3], ARGV[4]

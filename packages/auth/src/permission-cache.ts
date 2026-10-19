@@ -1,14 +1,14 @@
 import { Inject, Injectable, type OnModuleDestroy, type OnModuleInit, Optional } from '@nestjs/common';
-import { STYNX_AUTH_OPTIONS, STYNX_PERMISSION_CACHE_BACKEND } from './tokens';
-import { PermissionCacheMetrics } from './permission-cache-metrics';
-import { PermissionQueryService } from './permission-query.service';
+import { STYNX_AUTH_OPTIONS, STYNX_PERMISSION_CACHE_BACKEND } from './tokens.js';
+import { PermissionCacheMetrics } from './permission-cache-metrics.js';
+import { PermissionQueryService } from './permission-query.service.js';
 import type {
   HashProbeState,
   PermissionCacheBackend,
   PermissionCacheRecord,
   ResolvedStynxAuthModuleOptions,
   StynxAccessTokenClaims,
-} from './types';
+} from './types.js';
 
 interface TtlEntry<TValue> {
   value: TValue;

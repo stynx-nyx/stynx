@@ -1,14 +1,14 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, NoIdempotent } from '@stynx-nyx/backend';
-import { FlowPolicyService } from '../flow-policy.service';
+import { FlowPolicyService } from '../flow-policy.service.js';
 import type {
   CreateFlowPolicyRuleDto,
   CreateFlowPolicySetDto,
   FlowPolicyEvaluationDto,
   UpdateFlowPolicyRuleDto,
   UpdateFlowPolicySetDto,
-} from '../types';
+} from '../types.js';
 
 @Controller('/flow/policies')
 @UseGuards(StynxAuthGuard, PermissionGuard)

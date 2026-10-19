@@ -3,7 +3,7 @@ import {
   WorklistForbiddenError,
   WorklistInputError,
   WorklistNotFoundError,
-} from './errors';
+} from './errors.js';
 
 interface SqlErrorLike {
   code?: string;

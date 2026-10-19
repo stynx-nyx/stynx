@@ -1,11 +1,11 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Inject, Injectable, Optional } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
 import { STYNX_VERIFIED_TENANT_ID, type PolicyEvaluator } from '@stynx-nyx/contracts';
-import { getPrincipalFromRequest, type RequestLike } from '../common/request-context';
-import { DefaultPolicyEvaluator } from './default-policy-evaluator';
-import { STYNX_AUTHZ_METADATA, STYNX_AUTHZ_OPTIONS, STYNX_AUTHZ_POLICY_EVALUATOR } from './constants';
-import type { AuthzMetadata } from './decorators';
-import type { AuthorizationTarget, StynxAuthorizationModuleOptions } from './authorization.types';
+import { getPrincipalFromRequest, type RequestLike } from '../common/request-context.js';
+import { DefaultPolicyEvaluator } from './default-policy-evaluator.js';
+import { STYNX_AUTHZ_METADATA, STYNX_AUTHZ_OPTIONS, STYNX_AUTHZ_POLICY_EVALUATOR } from './constants.js';
+import type { AuthzMetadata } from './decorators.js';
+import type { AuthorizationTarget, StynxAuthorizationModuleOptions } from './authorization.types.js';
 
 function optionalProvider<T>(moduleRef: ModuleRef | undefined, token: symbol): T | undefined {
   if (!moduleRef) return undefined;

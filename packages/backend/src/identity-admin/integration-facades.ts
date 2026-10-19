@@ -5,7 +5,7 @@ import type {
   IdentityLocalSyncResult,
   IdentitySyncContext,
 } from '@stynx-nyx/contracts';
-import { IdentityAdminService } from './identity-admin.service';
+import { IdentityAdminService } from './identity-admin.service.js';
 
 export interface PormIdentityListUsersQuery {
   email?: string;

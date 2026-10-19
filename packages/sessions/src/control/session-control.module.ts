@@ -1,20 +1,20 @@
 import { type DynamicModule, Module } from '@nestjs/common';
-import { InMemorySessionRegistry } from './in-memory-registry';
-import { PostgresSessionRegistry } from './postgres-registry';
-import { SessionControlController } from './session-control.controller';
-import { SessionControlService } from './session-control.service';
+import { InMemorySessionRegistry } from './in-memory-registry.js';
+import { PostgresSessionRegistry } from './postgres-registry.js';
+import { SessionControlController } from './session-control.controller.js';
+import { SessionControlService } from './session-control.service.js';
 import {
   STYNX_SESSION_CONTROL_AUDIT,
   STYNX_SESSION_CONTROL_OPTIONS,
   STYNX_SESSION_PROVIDER,
   STYNX_SESSION_REGISTRY,
-} from './tokens';
+} from './tokens.js';
 import type {
   SessionAuditSink,
   SessionProviderAdapter,
   SessionRegistry,
   StynxSessionControlOptions,
-} from './types';
+} from './types.js';
 const noop: SessionAuditSink = { write: () => undefined };
 @Module({})
 export class StynxSessionControlModule {

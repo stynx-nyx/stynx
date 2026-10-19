@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { NotificationValidationError } from './errors';
-import type { InboxItem, InboxQuery } from './types';
+import { NotificationValidationError } from './errors.js';
+import type { InboxItem, InboxQuery } from './types.js';
 
 @Injectable()
 export class NotificationInboxService {
