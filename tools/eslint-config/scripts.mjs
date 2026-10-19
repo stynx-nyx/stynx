@@ -1,30 +1,7 @@
-import js from '@eslint/js';
-import globals from 'globals';
+// STYNX workspace entry point for repository scripts (`--config
+// ../../tools/eslint-config/scripts.mjs`). Adopters use the named
+// `createScriptsConfig` factory from the package root instead.
+import { createScriptsConfig } from './index.mjs';
+import { stynxWorkspaceOptions } from './workspace.mjs';
 
-export default [
-  {
-    ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**'],
-  },
-  {
-    files: ['**/*.js', '**/*.cjs'],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'commonjs',
-      globals: globals.node,
-    },
-    rules: {
-      ...js.configs.recommended.rules,
-    },
-  },
-  {
-    files: ['**/*.mjs'],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module',
-      globals: globals.node,
-    },
-    rules: {
-      ...js.configs.recommended.rules,
-    },
-  },
-];
+export default createScriptsConfig({ strict: stynxWorkspaceOptions.strict });

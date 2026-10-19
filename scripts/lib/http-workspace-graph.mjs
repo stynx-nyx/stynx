@@ -160,7 +160,7 @@ export function deriveHttpWorkspaceGraph(checkoutRoot) {
       // Config-only tooling: no build, no workspace edges. `published` tools (SM-02) must not be
       // private; unpublished ones must be.
       const sourceOnly = new Map([
-        ['@stynx-internal/eslint-config', { root: 'tools/eslint-config', published: false }],
+        ['@stynx-nyx/eslint-config', { root: 'tools/eslint-config', published: false }],
         ['@stynx-nyx/tsconfig', { root: 'tools/tsconfig', published: true }],
       ]);
       const tool = sourceOnly.get(name);

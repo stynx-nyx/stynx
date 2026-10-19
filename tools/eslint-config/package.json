@@ -1,20 +1,33 @@
 {
-  "name": "@stynx-internal/eslint-config",
+  "name": "@stynx-nyx/eslint-config",
   "private": true,
   "version": "0.2.0",
   "type": "module",
-  "description": "Shared flat ESLint config for the STYNX monorepo",
+  "description": "Shared flat ESLint profiles for STYNX packages and STYNX-based applications",
   "exports": {
     ".": "./index.mjs",
-    "./lib": "./lib.mjs",
-    "./nest": "./nest.mjs",
-    "./angular": "./angular.mjs"
+    "./test": "./test.mjs"
   },
   "scripts": {
-    "test": "node --test test/eslint-config.spec.mjs"
+    "test": "node --test test/eslint-config.spec.mjs test/rule-families.spec.mjs"
   },
   "files": [
     "*.mjs",
     "README.md"
-  ]
+  ],
+  "dependencies": {
+    "@angular-eslint/eslint-plugin": "22.0.0",
+    "@angular-eslint/eslint-plugin-template": "22.0.0",
+    "@angular-eslint/template-parser": "22.0.0",
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.61.0",
+    "@typescript-eslint/parser": "^8.61.0",
+    "eslint-plugin-boundaries": "^6.0.2",
+    "eslint-plugin-jsdoc": "^63.0.2",
+    "globals": "^17.7.0"
+  },
+  "peerDependencies": {
+    "eslint": "^10.5.0",
+    "typescript": "^6.0.3"
+  }
 }
