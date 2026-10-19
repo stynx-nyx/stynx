@@ -60,7 +60,7 @@ const allowedScopes = [
   '@stynx-nyx/angular-flow',
   '@stynx-nyx/angular-iam',
   '@stynx-nyx/sdk',
-  '@stynx-internal/eslint-config',
+  '@stynx-nyx/eslint-config',
   '@stynx-nyx/tsconfig',
   '@stynx-internal/migration-linter',
   '@stynx-nyx/migration-linter',
