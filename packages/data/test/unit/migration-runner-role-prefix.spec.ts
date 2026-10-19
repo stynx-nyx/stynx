@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { StynxMigrationRunner } from '../../src/migration-runner';
+import { StynxMigrationRunner } from '../../src/migration-runner.js';
 
 // SM-06 (S-18): the runner applies the product role prefix to the immutable
 // platform migrations at apply time and records the file's own checksum.

@@ -6,7 +6,7 @@ import {
   DEFAULT_ROLE_PREFIX,
   platformRoleNames,
   ROLE_PREFIX_MAX_LENGTH,
-} from '../../src/platform-roles';
+} from '../../src/platform-roles.js';
 
 // SM-06 (S-18): the platform migration files are immutable and name the
 // stynx_* roles; the runner rewrites only those role identifiers.

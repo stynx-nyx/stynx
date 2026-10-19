@@ -3,9 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Client } from 'pg';
-import { StynxDataModule } from '../../src/data.module';
-import { Database } from '../../src/database';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres';
+import { StynxDataModule } from '../../src/data.module.js';
+import { Database } from '../../src/database.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres.js';
 
 // SM-06 (S-18): a product bootstraps and connects as <product>_{owner,app,reader}.
 // The platform migration files are immutable; the runner applies the role

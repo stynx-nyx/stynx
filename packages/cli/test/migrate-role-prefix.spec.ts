@@ -1,7 +1,7 @@
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
-import { migrateDown, migrateRedo, migrateUp, type MigrationClient } from '../src/migrate';
+import { migrateDown, migrateRedo, migrateUp, type MigrationClient } from '../src/migrate.js';
 
 // SM-06 (S-18): `stynx migrate --role-prefix <product>` applies the immutable
 // platform migrations as <product>_{owner,app,reader}; the default is stynx.
