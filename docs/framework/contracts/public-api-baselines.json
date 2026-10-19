@@ -765,7 +765,7 @@
         "cli/src/index.d.ts": "6118f7a8fa7d3a96c5ac99ea116139c9a797b3a15d208d50a09d4259a1e04231",
         "cli/src/init.d.ts": "63a5193f65ed89824acc2bfe7a4db8dd1b0d1ebcbe3a07aed48cd8ff4bcb475a",
         "cli/src/main.d.ts": "fdbeaaceb1047d486b9d1e7fc381a8cb7f589bbe8e78d591cd17a7797f425c49",
-        "cli/src/migrate.d.ts": "c663a478a76f0c33e725a59acaa064fbd74684f2deca3cf515e617acf8b03bdb",
+        "cli/src/migrate.d.ts": "d6ee7b62f6b9217f15933c31e4bab6dfa15f4b1407f6c745130b4c2bdfdbd97e",
         "cli/src/privacy-ropa.d.ts": "e8c294172be32c1faff086f0c570980dfa3403727585875131aeb417a42ebef0"
       }
     },
