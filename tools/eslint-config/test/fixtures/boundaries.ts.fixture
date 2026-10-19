@@ -1,0 +1,4 @@
+// feature -> blocked is not on the consumer's allow list.
+import { blockedValue } from '../blocked/secret.js';
+
+export const leaked: number = blockedValue;

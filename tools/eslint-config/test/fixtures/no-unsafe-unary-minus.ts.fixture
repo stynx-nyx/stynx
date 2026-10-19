@@ -1,0 +1,2 @@
+const box = { amount: 1 };
+export const negated = -box;

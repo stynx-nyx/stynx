@@ -1,0 +1,5 @@
+// Same-element and allow-listed (feature -> core) edges both pass.
+import { coreValue } from '../core/value.js';
+import { helperValue } from './helper.js';
+
+export const total = (offset: number): number => coreValue + helperValue + offset;

@@ -1,0 +1,6 @@
+export interface Merged {
+  left: number;
+}
+export class Merged {
+  right = 1;
+}
