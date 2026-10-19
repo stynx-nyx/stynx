@@ -1,0 +1,10 @@
+const Controller = (): ClassDecorator => () => undefined;
+const Post = (): MethodDecorator => () => undefined;
+
+@Controller()
+export class BookmarksController {
+  @Post()
+  create(): string {
+    return 'created';
+  }
+}

@@ -1,0 +1,3 @@
+import value = require('../core/value.js');
+
+export const imported = value;

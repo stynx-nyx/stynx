@@ -1,0 +1,1 @@
+export const parsed: number = JSON.parse('1');
