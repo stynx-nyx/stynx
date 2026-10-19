@@ -5319,9 +5319,12 @@ test('clean preferences build emits both exact exports and reference-api fails c
     visitRuntimeDependency('@stynx-nyx/reference-api');
     const derivedTaskIds = [...closure.keys()].map((name) => `${name}#build`).sort();
     assert.equal(closure.size, 24);
-    const sourceOnlyTools = new Set(['@stynx-internal/eslint-config', '@stynx-internal/tsconfig']);
-    for (const name of sourceOnlyTools) {
-      assert.equal(closure.get(name).manifest.private, true);
+    const sourceOnlyTools = new Map([
+      ['@stynx-internal/eslint-config', { published: false }],
+      ['@stynx-nyx/tsconfig', { published: true }],
+    ]);
+    for (const [name, { published }] of sourceOnlyTools) {
+      assert.equal(closure.get(name).manifest.private, published ? undefined : true);
       assert.equal(closure.get(name).manifest.scripts.build, undefined);
     }
 

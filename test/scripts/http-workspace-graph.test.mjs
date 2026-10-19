@@ -764,17 +764,19 @@ function sourceOnlyTooling(f) {
     'pnpm-workspace.yaml',
     "packages:\n  - 'packages/*'\n  - 'reference/api'\n  - 'tools/*'\n",
   );
-  for (const short of ['eslint-config', 'tsconfig']) {
-    f.json(`tools/${short}/package.json`, {
-      name: `@stynx-internal/${short}`,
-      private: true,
-      scripts: { test: 'node --test test/tooling.spec.mjs' },
-    });
-  }
+  f.json('tools/eslint-config/package.json', {
+    name: '@stynx-internal/eslint-config',
+    private: true,
+    scripts: { test: 'node --test test/tooling.spec.mjs' },
+  });
+  f.json('tools/tsconfig/package.json', {
+    name: '@stynx-nyx/tsconfig',
+    scripts: { test: 'node --test test/tooling.spec.mjs' },
+  });
   f.update('reference/api/package.json', (value) => {
     value.devDependencies = {
       '@stynx-internal/eslint-config': 'workspace:*',
-      '@stynx-internal/tsconfig': 'workspace:*',
+      '@stynx-nyx/tsconfig': 'workspace:*',
     };
   });
 }
@@ -829,19 +831,39 @@ test('actual candidate closure declares exactly 22 compiler members and two sour
 });
 
 for (const short of ['eslint-config', 'tsconfig']) {
+  // eslint-config is unpublished (private: true required); tsconfig is published (SM-02: private absent).
+  const identity =
+    short === 'tsconfig'
+      ? [
+          [
+            'private manifest',
+            (value) => {
+              value.private = true;
+            },
+          ],
+          [
+            'explicit public flag',
+            (value) => {
+              value.private = false;
+            },
+          ],
+        ]
+      : [
+          [
+            'public manifest',
+            (value) => {
+              value.private = false;
+            },
+          ],
+          [
+            'missing private identity',
+            (value) => {
+              delete value.private;
+            },
+          ],
+        ];
   for (const [label, mutate] of [
-    [
-      'public manifest',
-      (value) => {
-        value.private = false;
-      },
-    ],
-    [
-      'missing private identity',
-      (value) => {
-        delete value.private;
-      },
-    ],
+    ...identity,
     [
       'prebuild command',
       (value) => {
