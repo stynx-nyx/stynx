@@ -3,6 +3,7 @@ import type { TestingModule } from '@nestjs/testing';
 import type { StartedTestContainer } from 'testcontainers';
 import type { Database, StynxPgClient, Transaction } from '@stynx-nyx/data';
 import type { RequestContextMutator } from '@stynx-nyx/core';
+import type { TestAppRoleNames } from './roles';
 import type { SessionJwtSigningService, StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
 
 export type TestSqlStep =
@@ -16,6 +17,12 @@ export interface TestAppOverrides {
 }
 
 export interface CreateTestAppOptions {
+  /**
+   * Product roles the app bootstraps and connects as (S-18): exactly
+   * `<prefix>_owner`, `<prefix>_app` and `<prefix>_reader`. Default
+   * `DEFAULT_TEST_APP_ROLES`, the STYNX platform roles.
+   */
+  roles?: TestAppRoleNames;
   migrations?: TestSqlStep[];
   seeds?: TestSqlStep[];
   overrides?: TestAppOverrides;

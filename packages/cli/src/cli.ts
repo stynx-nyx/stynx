@@ -33,6 +33,8 @@ export function buildProgram(): Command {
       console.log(targetDir);
     });
 
+  const roleOptions = (options: { rolePrefix?: string }): [] | [{ rolePrefix: string }] =>
+    options.rolePrefix === undefined ? [] : [{ rolePrefix: options.rolePrefix }];
   const migrate = program.command('migrate');
   migrate
     .command('status')
@@ -44,23 +46,26 @@ export function buildProgram(): Command {
     .command('up')
     .requiredOption('--database-url <url>')
     .option('--dry', 'Dry-run pending list', false)
+    .option('--role-prefix <prefix>', 'Product role prefix for the platform roles (default stynx)')
     .action(async (options) => {
-      console.log(JSON.stringify(await migrateUp(process.cwd(), options.databaseUrl, options.dry), null, 2));
+      console.log(JSON.stringify(await migrateUp(process.cwd(), options.databaseUrl, options.dry, ...roleOptions(options)), null, 2));
     });
   migrate
     .command('down')
     .requiredOption('--database-url <url>')
     .option('--steps <n>', 'How many applied migrations to roll back', '1')
     .option('--dry', 'Dry-run rollback list', false)
+    .option('--role-prefix <prefix>', 'Product role prefix for the platform roles (default stynx)')
     .action(async (options) => {
-      console.log(JSON.stringify(await migrateDown(process.cwd(), options.databaseUrl, Number(options.steps), options.dry), null, 2));
+      console.log(JSON.stringify(await migrateDown(process.cwd(), options.databaseUrl, Number(options.steps), options.dry, ...roleOptions(options)), null, 2));
     });
   migrate
     .command('redo')
     .requiredOption('--database-url <url>')
     .option('--dry', 'Dry-run redo plan', false)
+    .option('--role-prefix <prefix>', 'Product role prefix for the platform roles (default stynx)')
     .action(async (options) => {
-      console.log(JSON.stringify(await migrateRedo(process.cwd(), options.databaseUrl, options.dry), null, 2));
+      console.log(JSON.stringify(await migrateRedo(process.cwd(), options.databaseUrl, options.dry, ...roleOptions(options)), null, 2));
     });
 
   program

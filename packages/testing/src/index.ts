@@ -11,4 +11,5 @@ export * from './fake-transaction';
 export * from './lgpd-fixture';
 export * from './matchers';
 export * from './mint-test-session';
+export * from './roles';
 export * from './types';
