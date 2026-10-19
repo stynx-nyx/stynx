@@ -139,6 +139,32 @@ describe('migrate command surface', () => {
     expect(fake.connectionString).toBe('postgresql://default-client');
   });
 
+  it('gives the pg client no connectionString when no database URL is given (SM-06)', async () => {
+    const migrationDir = createFixtureDir();
+    const fake = new FakeMigrationClient();
+    mockPg.clients.push(fake);
+
+    await expect(migrationStatus(process.cwd(), undefined, { migrationDir })).resolves.toEqual({
+      applied: [],
+      pending: ['0001_first.sql', '0002_second.sql'],
+      rollbackable: [],
+    });
+    // node-postgres then reads PGHOST, PGPORT, PGUSER, PGPASSWORD and PGDATABASE.
+    expect(mockPg.Client).toHaveBeenLastCalledWith({});
+
+    const factoryOptions: MigrationClientFactoryOptions[] = [];
+    const factory = (options: MigrationClientFactoryOptions) => {
+      factoryOptions.push(options);
+      return new FakeMigrationClient();
+    };
+    await migrationStatus(process.cwd(), undefined, { migrationDir, clientFactory: factory });
+    await migrateUp(process.cwd(), undefined, false, { migrationDir, clientFactory: factory });
+    await migrateDown(process.cwd(), undefined, 1, true, { migrationDir, clientFactory: factory });
+    await migrateRedo(process.cwd(), undefined, true, { migrationDir, clientFactory: factory });
+    expect(factoryOptions.length).toBeGreaterThanOrEqual(4);
+    expect(factoryOptions.every((options) => !('connectionString' in options))).toBe(true);
+  });
+
   it('applies, rolls back, and redoes paired migrations', async () => {
     const migrationDir = createFixtureDir();
     const fake = new FakeMigrationClient();
