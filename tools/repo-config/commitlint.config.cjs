@@ -61,7 +61,7 @@ const allowedScopes = [
   '@stynx-nyx/angular-iam',
   '@stynx-nyx/sdk',
   '@stynx-internal/eslint-config',
-  '@stynx-internal/tsconfig',
+  '@stynx-nyx/tsconfig',
   '@stynx-internal/migration-linter',
   'clean',
   'deps',

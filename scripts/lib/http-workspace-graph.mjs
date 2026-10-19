@@ -157,13 +157,16 @@ export function deriveHttpWorkspaceGraph(checkoutRoot) {
     for (const dependency of dependencyNames) visit(dependency);
     const buildScript = member.manifest.scripts?.build;
     if (buildScript === undefined) {
+      // Config-only tooling: no build, no workspace edges. `published` tools (SM-02) must not be
+      // private; unpublished ones must be.
       const sourceOnly = new Map([
-        ['@stynx-internal/eslint-config', 'tools/eslint-config'],
-        ['@stynx-internal/tsconfig', 'tools/tsconfig'],
+        ['@stynx-internal/eslint-config', { root: 'tools/eslint-config', published: false }],
+        ['@stynx-nyx/tsconfig', { root: 'tools/tsconfig', published: true }],
       ]);
+      const tool = sourceOnly.get(name);
       if (
-        sourceOnly.get(name) !== member.root ||
-        member.manifest.private !== true ||
+        tool?.root !== member.root ||
+        (tool.published ? member.manifest.private !== undefined : member.manifest.private !== true) ||
         dependencyNames.length !== 0 ||
         Object.keys(member.manifest.scripts ?? {}).some((key) => key !== 'test')
       )

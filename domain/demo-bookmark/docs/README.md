@@ -30,7 +30,7 @@ production dependencies or be treated as a consumer-facing package.
 1. **DB migration finished** — `db/migration.sql` expanded from the scaffolder's 1-field stub to the full 9-field `demo__bookmark_bookmark` table + the `demo__bookmark_bookmark_tag` join table, with the blueprint's indexes and FK cascade. Includes a `core.pii_map` registration for the `notes` column (incidental PII, P1Y retention) per `INV-PRIVACY-001`.
 2. **Seed authored** — `db/seed.sql` has 3 representative bookmarks + 5 tags under the demo tenant. Idempotent (`ON CONFLICT DO NOTHING`).
 3. **Workspace registration** — `api/package.json` and `web/package.json` make the module visible to `pnpm install`. Both register as private `@stynx-domain/demo-bookmark-{api,web}` packages.
-4. **tsconfig** — `api/tsconfig.json` extends `@stynx-internal/tsconfig/lib.json`; `web/tsconfig.json` extends `@stynx-internal/tsconfig/angular18.json`.
+4. **tsconfig** — `api/tsconfig.json` extends `@stynx-nyx/tsconfig/lib.json`; `web/tsconfig.json` extends `@stynx-nyx/tsconfig/angular18.json`.
 
 ## What landed in R17 W07 (F-9 step 2/N)
 

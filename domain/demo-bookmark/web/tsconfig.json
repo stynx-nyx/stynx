@@ -1,5 +1,5 @@
 {
-  "extends": "@stynx-internal/tsconfig/angular18.json",
+  "extends": "@stynx-nyx/tsconfig/angular18.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src"

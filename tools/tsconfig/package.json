@@ -1,13 +1,25 @@
 {
-  "name": "@stynx-internal/tsconfig",
-  "private": true,
-  "version": "0.2.0",
-  "description": "Shared TypeScript presets for the STYNX monorepo",
+  "name": "@stynx-nyx/tsconfig",
+  "version": "1.6.2",
+  "license": "BUSL-1.1",
+  "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
+  "description": "Shared TypeScript presets for STYNX packages and STYNX-based products",
   "scripts": {
     "test": "node --test test/tsconfig.spec.mjs"
   },
   "files": [
-    "*.json",
+    "base.json",
+    "node24.json",
+    "lib.json",
+    "angular18.json",
     "README.md"
-  ]
+  ],
+  "peerDependencies": {
+    "typescript": "~6.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stynx-nyx/stynx.git",
+    "directory": "tools/tsconfig"
+  }
 }

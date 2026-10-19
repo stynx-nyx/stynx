@@ -91,7 +91,7 @@ export default [...lib];
 
 ## Related packages
 
-- [`@stynx-internal/tsconfig`](/docs/tools/tsconfig/) — the paired TypeScript configs; use both together.
+- [`@stynx-nyx/tsconfig`](/docs/tools/tsconfig/) — the paired TypeScript configs; use both together.
 - [`@stynx-internal/create-stynx-app`](/docs/tools/create-stynx-app/) — scaffolds apps that extend these configs.
 
 ## TypeDoc reference
