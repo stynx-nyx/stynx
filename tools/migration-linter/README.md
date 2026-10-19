@@ -47,13 +47,13 @@ stynx-migration-lint database/ddl database/migrations --format=json --lgpd \
 
 Each value flag takes either `--flag value` or `--flag=value`. An unknown flag exits 2.
 
-| Flag                   | Description                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `--format=human\|json` | Output format. JSON (`{ files, issues[], parserIssues[] }`) for CI gating.                                                |
-| `--fix-suggestions`    | Emit suggested fixes alongside violations.                                                                                |
-| `--lgpd`               | Enable `LINT012`: personal-data columns must carry `-- @pii: basis=<basis>, retention=<period>`.                          |
-| `--base-dir <dir>`     | Base revision of the linted files at their working-directory-relative paths (`LINT013`).                                  |
-| `--manifest <path>`    | Applied-migration manifest in `sha256sum` form (`<sha256>  <path>`), paths relative to the working directory (`LINT013`). |
+| Flag                   | Description                                                                                                                                                                                                            |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--format=human\|json` | Output format. JSON (`{ files, issues[], parserIssues[] }`) for CI gating.                                                                                                                                             |
+| `--fix-suggestions`    | Emit suggested fixes alongside violations.                                                                                                                                                                             |
+| `--lgpd`               | Enable `LINT012`: personal-data columns must carry `-- @pii: basis=<basis>, retention=<period>`.                                                                                                                       |
+| `--base-dir <dir>`     | Base revision (merge base) of the linted files at their working-directory-relative paths. Files present there are applied history: `LINT010` ignores collisions among them and `LINT013` requires them byte-identical. |
+| `--manifest <path>`    | Applied-migration manifest in `sha256sum` form (`<sha256>  <path>`), paths relative to the working directory (`LINT013`).                                                                                              |
 
 ### Exit codes
 
@@ -65,21 +65,21 @@ Each value flag takes either `--flag value` or `--flag=value`. An unknown flag e
 
 ### Rules
 
-| Code      | Catches                                                                                                                                 |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `LINT001` | Tenant-scoped table without RLS enabled and a tenant isolation policy in the same migration.                                            |
-| `LINT002` | Soft-deletable table without its `archive.*` mirror.                                                                                    |
-| `LINT003` | `ALTER TABLE` on a soft-deletable table without the paired archive change.                                                              |
-| `LINT004` | FK to a soft-deletable parent without `-- @softdelete_fk: hide \| cascade \| block`.                                                    |
-| `LINT005` | Destructive statement without `-- @destructive: approved-by=<ticket>`.                                                                  |
-| `LINT006` | `SECURITY DEFINER` without `-- @security-definer-approved: <name>/<ticket>`.                                                            |
-| `LINT007` | Non-`SELECT` grant on `audit.*` to `stynx_app`.                                                                                         |
-| `LINT008` | Two soft-deletable tables mapping to the same archive name.                                                                             |
-| `LINT009` | `hide` FK on a `NOT NULL` column.                                                                                                       |
-| `LINT010` | A numeric migration prefix (`0012_`) used by more than one file across all linted roots.                                                |
-| `LINT011` | A `CREATE`/`ALTER POLICY` that reads a GUC outside `app.*` through `current_setting`.                                                   |
-| `LINT012` | Under `--lgpd`: a personal-data column (email, CPF, phone, birth date, address, …) without a complete `-- @pii:` annotation.            |
-| `LINT013` | An applied migration whose bytes differ from the manifest digest or from the base revision, or a manifest-listed file that was removed. |
+| Code      | Catches                                                                                                                                                                                                                                                                     |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LINT001` | Tenant-scoped table without RLS enabled and a tenant isolation policy in the same migration.                                                                                                                                                                                |
+| `LINT002` | Soft-deletable table without its `archive.*` mirror.                                                                                                                                                                                                                        |
+| `LINT003` | `ALTER TABLE` on a soft-deletable table without the paired archive change.                                                                                                                                                                                                  |
+| `LINT004` | FK to a soft-deletable parent without `-- @softdelete_fk: hide \| cascade \| block`.                                                                                                                                                                                        |
+| `LINT005` | Destructive statement without `-- @destructive: approved-by=<ticket>`.                                                                                                                                                                                                      |
+| `LINT006` | `SECURITY DEFINER` without `-- @security-definer-approved: <name>/<ticket>`.                                                                                                                                                                                                |
+| `LINT007` | Non-`SELECT` grant on `audit.*` to `stynx_app`.                                                                                                                                                                                                                             |
+| `LINT008` | Two soft-deletable tables mapping to the same archive name.                                                                                                                                                                                                                 |
+| `LINT009` | `hide` FK on a `NOT NULL` column.                                                                                                                                                                                                                                           |
+| `LINT010` | A newly added file whose numeric prefix (`0012_`) is already used by another file across all linted roots. Files present in `--base-dir` are applied history and never collide with each other. Without `--base-dir` every file counts as new, so any duplicate is flagged. |
+| `LINT011` | A `CREATE`/`ALTER POLICY` that reads a GUC outside `app.*` through `current_setting`.                                                                                                                                                                                       |
+| `LINT012` | Under `--lgpd`: a personal-data column (email, CPF, phone, birth date, address, …) without a complete `-- @pii:` annotation.                                                                                                                                                |
+| `LINT013` | An applied migration whose bytes differ from the manifest digest or from the base revision, or a manifest-listed file that was removed.                                                                                                                                     |
 
 ### Library
 
@@ -94,6 +94,11 @@ The CLI has no configuration file. The flags above supply all the context. Annot
 ## Examples
 
 ### Example 1 — CI gate
+
+`lint:repo` lints STYNX's own `packages/data/migrations` against the merge base. It writes the
+base revision to a scratch `--base-dir`, taking the base from `STYNX_MIGRATION_BASE_REF`, else
+`git merge-base HEAD origin/main`, else (shallow checkouts) a depth-1 fetch of `origin main`. It
+exits 2 when no base resolves.
 
 ```yaml
 # In your CI chain
@@ -116,7 +121,7 @@ CREATE TABLE acme.contact (
 
 - **Missing RLS policy on a new tenant-scoped table** — the most common violation. Add the `CREATE POLICY` in the same migration.
 - **Editing an applied migration** — `LINT013` rejects it. Add a new migration that changes the schema instead.
-- **Reusing a prefix in another root** — `LINT010` checks every root passed in one run, so lint all migration roots together.
+- **Reusing a prefix in another root** — `LINT010` checks every root passed in one run, so lint all migration roots together and pass the merge base as `--base-dir`. Otherwise duplicates already in history are reported too.
 - **Running without the parser** — a missing `pg-query-emscripten` exits 2 with `parserIssues`. It never passes silently.
 
 ## Status
