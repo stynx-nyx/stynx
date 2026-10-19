@@ -25,27 +25,47 @@ type IssueSink = (issue: LintIssue) => void;
 
 const MIGRATION_PREFIX = /^(\d+)_/;
 
-/** LINT010: a numeric migration prefix (`0012_`) names exactly one file across every linted root. */
-export function checkGlobalPrefixes(population: PopulationFile[], report: IssueSink): void {
-  const owners = new Map<string, PopulationFile>();
+/**
+ * LINT010: a numeric migration prefix (`0012_`) names exactly one file across every linted root.
+ * Applied history is immutable (D-033, D-059), so a collision is reported only for files absent
+ * from `baseDir` (the merge base): duplicates that all exist at base never trip, and every newly
+ * added file that reuses a prefix does. Without a base dir every file counts as new.
+ */
+export function checkGlobalPrefixes(
+  population: PopulationFile[],
+  baseDir: string | null,
+  report: IssueSink,
+): void {
+  const groups = new Map<string, PopulationFile[]>();
   for (const file of population) {
     const prefix = MIGRATION_PREFIX.exec(basename(file.filePath))?.[1];
-    if (!prefix) {
+    if (prefix) {
+      groups.set(prefix, [...(groups.get(prefix) ?? []), file]);
+    }
+  }
+
+  for (const [prefix, files] of groups) {
+    if (files.length < 2) {
       continue;
     }
-    const owner = owners.get(prefix);
-    if (!owner) {
-      owners.set(prefix, file);
-      continue;
+    const isNew = (file: PopulationFile): boolean =>
+      baseDir === null || !existsSync(resolve(baseDir, cwdRelative(file.filePath)));
+    const added = new Set(files.filter(isNew));
+    // Without a base, the first file keeps the prefix and the rest collide with it.
+    const owner = files.find((file) => !added.has(file)) ?? files[0];
+    for (const file of files) {
+      if (file === owner || !added.has(file)) {
+        continue;
+      }
+      report({
+        code: 'LINT010',
+        file: file.relativeFile,
+        message: `Migration prefix ${prefix}_ is already used by ${owner?.displayFile ?? 'another migration'}; prefixes must be unique across every migration root.`,
+        line: 1,
+        statementLine: 1,
+        suggestion: `Rename ${basename(file.filePath)} to the next unused prefix.`,
+      });
     }
-    report({
-      code: 'LINT010',
-      file: file.relativeFile,
-      message: `Migration prefix ${prefix}_ is already used by ${owner.displayFile}; prefixes must be unique across every migration root.`,
-      line: 1,
-      statementLine: 1,
-      suggestion: `Rename ${basename(file.filePath)} to the next unused prefix.`,
-    });
   }
 }
 
