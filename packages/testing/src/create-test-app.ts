@@ -8,7 +8,7 @@ import {
   StynxDataModule,
   type StynxPgClient,
 } from '@stynx-nyx/data';
-import { DEFAULT_TEST_APP_ROLES, testAppRolePrefix, type TestAppRoleNames } from './roles';
+import { DEFAULT_TEST_APP_ROLES, testAppRolePrefix, type TestAppRoleNames } from './roles.js';
 import type {
   CreateTestAppOptions,
   StartedCognitoHandle,
