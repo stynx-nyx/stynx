@@ -133,6 +133,44 @@ describe('createTestApp', () => {
     });
   });
 
+  it('bootstraps and connects as the given product roles (SM-06)', async () => {
+    const { StynxDataModule } = await import('@stynx-nyx/data');
+    const app = await createTestApp({
+      localstack: { enabled: false },
+      roles: { owner: 'demo_owner', app: 'demo_app', reader: 'demo_reader' },
+    });
+
+    expect(query).toHaveBeenCalledWith(expect.stringMatching(/rolname = 'demo_app'/u));
+    expect(query).toHaveBeenCalledWith(expect.stringMatching(/create role demo_app login noinherit nobypassrls/u));
+    expect(query).toHaveBeenCalledWith("alter role demo_app with login password 'demo_app'");
+    expect(query).not.toHaveBeenCalledWith(expect.stringMatching(/stynx_/u));
+    const options = vi.mocked(StynxDataModule.forRoot).mock.calls.at(-1)?.[0];
+    expect(options?.migrations).toEqual({ enabled: true, rolePrefix: 'demo' });
+    expect(options?.appRoleName).toBe('demo_app');
+    const appUrl = new URL(options!.connections.app.connectionString!);
+    expect([appUrl.username, appUrl.password]).toEqual(['demo_app', 'demo_app']);
+    await app.teardown();
+  });
+
+  it('defaults to the stynx platform roles', async () => {
+    const { StynxDataModule } = await import('@stynx-nyx/data');
+    const app = await createTestApp({ localstack: { enabled: false } });
+
+    const options = vi.mocked(StynxDataModule.forRoot).mock.calls.at(-1)?.[0];
+    expect(options?.migrations).toEqual({ enabled: true, rolePrefix: 'stynx' });
+    expect(options?.appRoleName).toBe('stynx_app');
+    const appUrl = new URL(options!.connections.app.connectionString!);
+    expect([appUrl.username, appUrl.password]).toEqual(['stynx_app', 'stynx_app']);
+    await app.teardown();
+  });
+
+  it('refuses role names that do not share one product prefix before starting containers', async () => {
+    await expect(
+      createTestApp({ roles: { owner: 'demo_owner', app: 'demo_app', reader: 'other_reader' } }),
+    ).rejects.toThrow('Invalid test app roles');
+    expect(containers).toHaveLength(0);
+  });
+
   it('uses default LocalStack services and omits Cognito when disabled', async () => {
     const app = await createTestApp();
 
