@@ -1,4 +1,4 @@
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
 import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -6,18 +6,18 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
-import { realOfflineHttpAuthentication } from '../support/real-http-authentication';
+import { realOfflineHttpAuthentication } from '../support/real-http-authentication.js';
 import request from 'supertest';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
 import { RequestContextMutator, StynxCoreModule } from '@stynx-nyx/core';
 import type { IdempotencyStoredEntry, IdempotencyStore } from '@stynx-nyx/idempotency';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { StynxOfflineSyncModule } from '../../src/offline-sync.module';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { StynxOfflineSyncModule } from '../../src/offline-sync.module.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 // INV-OFFLINE-001; UPS-OFS-01…04. Prove historical 0001→0002 and exercise the current 0001→0009 PostgreSQL schema.
 const tenantA = '00000000-0000-4000-8000-0000000000a1';

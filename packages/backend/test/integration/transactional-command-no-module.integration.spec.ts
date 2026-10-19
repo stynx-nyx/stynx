@@ -4,9 +4,9 @@ import { Test } from '@nestjs/testing';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import request from 'supertest';
 import { z } from 'zod';
-import * as backend from '../../src/index';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
-import { StynxAuthModule } from '../../src/auth/auth.module';
+import * as backend from '../../src/index.js';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
+import { StynxAuthModule } from '../../src/auth/auth.module.js';
 
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2831a';

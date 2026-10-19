@@ -4,13 +4,13 @@ import { Reflector } from '@nestjs/core';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { lastValueFrom, Observable } from 'rxjs';
 import { StynxDataModule, Database } from '@stynx-nyx/data';
-import { STYNX_IDEMPOTENT_ROUTE } from '../../src/constants';
-import { DatabaseIdempotencyStore } from '../../src/database-idempotency.store';
-import { IdempotencyInterceptor } from '../../src/idempotency.interceptor';
-import { InMemoryIdempotencyMetrics } from '../../src/metrics';
-import { RedisIdempotencyBackend } from '../../src/redis-idempotency.backend';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { startRedisDockerContainer, stopRedisDockerContainer, type RedisDockerContainer } from '../../../../test/support/redis-docker';
+import { STYNX_IDEMPOTENT_ROUTE } from '../../src/constants.js';
+import { DatabaseIdempotencyStore } from '../../src/database-idempotency.store.js';
+import { IdempotencyInterceptor } from '../../src/idempotency.interceptor.js';
+import { InMemoryIdempotencyMetrics } from '../../src/metrics.js';
+import { RedisIdempotencyBackend } from '../../src/redis-idempotency.backend.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { startRedisDockerContainer, stopRedisDockerContainer, type RedisDockerContainer } from '../../../../test/support/redis-docker.js';
 
 function createExecutionContext(
   request: Record<string, unknown>,

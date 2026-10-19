@@ -1,4 +1,4 @@
-import { registerOfflineMinorRuntimeContracts } from '../support/minor-runtime-contract';
+import { registerOfflineMinorRuntimeContracts } from '../support/minor-runtime-contract.js';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -8,12 +8,12 @@ import { RequestContextMutator } from '@stynx-nyx/core';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
-import { batchContextFingerprint } from '../../src/transport';
-import type { CTG9SubmitSyncBatchInput, StynxOfflineSyncModuleOptions } from '../../src/types';
+} from '../../../data/test/support/postgres.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
+import { batchContextFingerprint } from '../../src/transport.js';
+import type { CTG9SubmitSyncBatchInput, StynxOfflineSyncModuleOptions } from '../../src/types.js';
 
 const tenantA = '00000000-0000-4000-8000-0000000000a9';
 const tenantB = '00000000-0000-4000-8000-0000000000b9';

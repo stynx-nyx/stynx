@@ -1,12 +1,12 @@
-import * as Backend from '../../src';
-import { StynxEventStreamModule } from '../../src/event-stream/event-stream.module';
-import { StynxEventStreamService } from '../../src/event-stream/event-stream.service';
-import { STYNX_SSE_CONTEXT_RUNNER, STYNX_SSE_METRICS, STYNX_SSE_SCHEDULER } from '../../src/event-stream/tokens';
+import * as Backend from '../../src/index.js';
+import { StynxEventStreamModule } from '../../src/event-stream/event-stream.module.js';
+import { StynxEventStreamService } from '../../src/event-stream/event-stream.service.js';
+import { STYNX_SSE_CONTEXT_RUNNER, STYNX_SSE_METRICS, STYNX_SSE_SCHEDULER } from '../../src/event-stream/tokens.js';
 import type {
   EventStreamContextRunner, EventStreamCursor, EventStreamMetricsSink,
   EventStreamRow, EventStreamScheduler, EventStreamSource,
   StynxEventStreamOptions, StynxSseRequest, StynxSseResponse, StynxSseScope,
-} from '../../src';
+} from '../../src/index.js';
 
 type PublicSseTypes = [
   EventStreamContextRunner, EventStreamCursor, EventStreamMetricsSink,

@@ -12,8 +12,8 @@ import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import request from 'supertest';
 import { z } from 'zod';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { Audit, AuthContextGuard as BuiltinAuthContextGuard, StynxAuthModule, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { Audit, AuthContextGuard as BuiltinAuthContextGuard, StynxAuthModule, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index.js';
 
 const TENANT_A = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const TENANT_B = '0197481e-6f84-77e4-8d6d-41f0b6fca9c2';

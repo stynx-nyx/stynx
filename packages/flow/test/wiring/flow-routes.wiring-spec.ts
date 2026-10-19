@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { RequestMethod } from '@nestjs/common';
-import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
-import { FlowFillsController } from '../../src/controllers/fills.controller';
-import { FlowFormsController } from '../../src/controllers/forms.controller';
-import { FlowRunsController } from '../../src/controllers/runs.controller';
-import { FlowTasksController } from '../../src/controllers/tasks.controller';
+import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants.js';
+import { FlowFillsController } from '../../src/controllers/fills.controller.js';
+import { FlowFormsController } from '../../src/controllers/forms.controller.js';
+import { FlowRunsController } from '../../src/controllers/runs.controller.js';
+import { FlowTasksController } from '../../src/controllers/tasks.controller.js';
 
 function route(controller: Function, handler: string) {
   const basePath = Reflect.getMetadata(PATH_METADATA, controller) as string;

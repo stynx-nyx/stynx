@@ -39,8 +39,8 @@ import request from 'supertest';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../../packages/data/test/support/postgres';
-import { ReferenceProbesController } from '../../src/sample/reference-probes.controller';
+} from '../../../../packages/data/test/support/postgres.js';
+import { ReferenceProbesController } from '../../src/sample/reference-probes.controller.js';
 
 const tenantA = '01978f4a-32bf-7c27-a131-fd73a9e001a1';
 const adminAUser = '01978f4a-32bf-7c27-a131-fd73a9e002a1';

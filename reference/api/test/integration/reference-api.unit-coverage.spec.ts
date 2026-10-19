@@ -4,16 +4,16 @@ import { Database } from '@stynx-nyx/data';
 import { PermissionCache, PermissionQueryService, StynxJwtValidator } from '@stynx-nyx/auth';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { SessionService } from '@stynx-nyx/sessions';
-import { DocumentsController } from '../../src/sample/documents.controller';
-import { RecordNotesController } from '../../src/sample/record-notes.controller';
-import { RecordsController } from '../../src/sample/records.controller';
-import { ReferenceDevAuthController } from '../../src/sample/reference-dev-auth.controller';
-import { ReferenceDevAuthService } from '../../src/sample/reference-dev-auth.service';
-import { ReferenceProbesController } from '../../src/sample/reference-probes.controller';
-import { ReferenceSampleService } from '../../src/sample/reference-sample.service';
-import { WorkItemEntriesController } from '../../src/sample/work-item-entries.controller';
-import { WorkItemLocksController } from '../../src/sample/work-item-locks.controller';
-import { WorkItemsController } from '../../src/sample/work-items.controller';
+import { DocumentsController } from '../../src/sample/documents.controller.js';
+import { RecordNotesController } from '../../src/sample/record-notes.controller.js';
+import { RecordsController } from '../../src/sample/records.controller.js';
+import { ReferenceDevAuthController } from '../../src/sample/reference-dev-auth.controller.js';
+import { ReferenceDevAuthService } from '../../src/sample/reference-dev-auth.service.js';
+import { ReferenceProbesController } from '../../src/sample/reference-probes.controller.js';
+import { ReferenceSampleService } from '../../src/sample/reference-sample.service.js';
+import { WorkItemEntriesController } from '../../src/sample/work-item-entries.controller.js';
+import { WorkItemLocksController } from '../../src/sample/work-item-locks.controller.js';
+import { WorkItemsController } from '../../src/sample/work-items.controller.js';
 import type { Mock } from 'vitest';
 
 function methods(names: string[]) {
@@ -100,9 +100,9 @@ describe('@stynx-nyx/reference-api controller delegation', () => {
       // invocations).
       vi.resetModules();
       const isolatedRateLimit = await import('@stynx-nyx/ratelimit');
-      const isolatedRecords = await import('../../src/sample/records.controller');
-      const isolatedDocuments = await import('../../src/sample/documents.controller');
-      const isolatedNotes = await import('../../src/sample/record-notes.controller');
+      const isolatedRecords = await import('../../src/sample/records.controller.js');
+      const isolatedDocuments = await import('../../src/sample/documents.controller.js');
+      const isolatedNotes = await import('../../src/sample/record-notes.controller.js');
       const metadataFor = (controller: object, method: string) =>
         Reflect.getMetadata(
           isolatedRateLimit.STYNX_RATE_LIMIT_ROUTE,

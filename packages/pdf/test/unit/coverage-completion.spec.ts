@@ -7,13 +7,13 @@ import {
   PdfValidationError,
   createFixturePdfBackend,
   interpolate,
-} from '../../src';
-import { PdfVerificationEvidenceAppender } from '../../src/evidence/pdf-verification-evidence-appender';
-import { appendIncrementalEvidenceObject } from '../../src/internals/pdf-incremental-evidence';
-import { applyPdfAConformanceMetadata } from '../../src/internals/pdf-a-metadata';
-import { payslipEvidenceInput, renderPublicPayslipPdf } from '../../src/templates/public-payroll/payslip';
-import { renderPublicYearlyIncomePdf } from '../../src/templates/public-payroll/yearly-income';
-import type { PublicPayslipDocument, PublicYearlyIncomeDocument } from '../../src/templates/public-payroll/types';
+} from '../../src/index.js';
+import { PdfVerificationEvidenceAppender } from '../../src/evidence/pdf-verification-evidence-appender.js';
+import { appendIncrementalEvidenceObject } from '../../src/internals/pdf-incremental-evidence.js';
+import { applyPdfAConformanceMetadata } from '../../src/internals/pdf-a-metadata.js';
+import { payslipEvidenceInput, renderPublicPayslipPdf } from '../../src/templates/public-payroll/payslip.js';
+import { renderPublicYearlyIncomePdf } from '../../src/templates/public-payroll/yearly-income.js';
+import type { PublicPayslipDocument, PublicYearlyIncomeDocument } from '../../src/templates/public-payroll/types.js';
 
 describe('PDF coverage edge behavior', () => {
   it('requires template IDs and sources and preserves null interpolation semantics', async () => {

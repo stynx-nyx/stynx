@@ -1,4 +1,4 @@
-import { hasPublicTenantRoute, STYNX_PUBLIC_TENANT_ROUTE } from '../src/tenancy';
+import { hasPublicTenantRoute, STYNX_PUBLIC_TENANT_ROUTE } from '../src/tenancy.js';
 
 // `reflect-metadata` is not a dependency of this package, so the spec installs
 // a minimal WeakMap-backed `Reflect.getMetadata` for the duration of the suite.

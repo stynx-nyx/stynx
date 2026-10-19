@@ -1,5 +1,5 @@
-import { PgRateLimitStore } from '../../src/pg-rate-limit.store';
-import type { RateLimitDecisionContext, RateLimitSqlExecutor } from '../../src/types';
+import { PgRateLimitStore } from '../../src/pg-rate-limit.store.js';
+import type { RateLimitDecisionContext, RateLimitSqlExecutor } from '../../src/types.js';
 
 function context(overrides: Partial<RateLimitDecisionContext> = {}): RateLimitDecisionContext {
   return {

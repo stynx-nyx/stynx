@@ -2,8 +2,8 @@
 import { sql } from 'drizzle-orm';
 import { pgSchema, text, uuid } from 'drizzle-orm/pg-core';
 import type { PoolClient } from 'pg';
-import { documentVersions, documents } from '../../src/schema/storage';
-import { ArchiveSelectQuery, createTransactionSelectRoot } from '../../src/query-helpers';
+import { documentVersions, documents } from '../../src/schema/storage.js';
+import { ArchiveSelectQuery, createTransactionSelectRoot } from '../../src/query-helpers.js';
 import type { Mock } from 'vitest';
 
 describe('query helpers', () => {

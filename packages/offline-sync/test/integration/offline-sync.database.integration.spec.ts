@@ -7,9 +7,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
-import type { SubmitSyncBatchInput, TrustedOfflineSyncScope } from '../../src/types';
+} from '../../../data/test/support/postgres.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
+import type { SubmitSyncBatchInput, TrustedOfflineSyncScope } from '../../src/types.js';
 
 const tenantA = '00000000-0000-4000-8000-0000000000a1';
 const tenantB = '00000000-0000-4000-8000-0000000000b1';

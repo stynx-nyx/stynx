@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { vi } from 'vitest';
-import { StynxEventStreamModule } from '../../src/event-stream/event-stream.module';
-import { StynxEventStreamService } from '../../src/event-stream/event-stream.service';
+import { StynxEventStreamModule } from '../../src/event-stream/event-stream.module.js';
+import { StynxEventStreamService } from '../../src/event-stream/event-stream.service.js';
 import type {
   EventStreamContextRunner,
   EventStreamCursor,
@@ -11,7 +11,7 @@ import type {
   EventStreamSource,
   StynxSseRequest,
   StynxSseResponse,
-} from '../../src/event-stream/types';
+} from '../../src/event-stream/types.js';
 import type { Database } from '@stynx-nyx/data';
 
 type Scope = { tenantId: string; actorId: string; sessionId?: string; policy: 'visible' | 'hidden' };

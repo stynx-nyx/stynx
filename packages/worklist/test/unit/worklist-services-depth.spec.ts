@@ -1,4 +1,4 @@
-import { resolveWorklistDeadline } from '../../src/deadline';
+import { resolveWorklistDeadline } from '../../src/deadline.js';
 import {
   UnknownWorklistStrategyError,
   WorklistCalendarRequiredError,
@@ -8,8 +8,8 @@ import {
   WorklistNotFoundError,
   WorklistSchedulerRequiredError,
   WorklistStrategyRegistrationError,
-} from '../../src/errors';
-import { NoopWorklistEventSink, SystemWorklistClock } from '../../src/ports';
+} from '../../src/errors.js';
+import { NoopWorklistEventSink, SystemWorklistClock } from '../../src/ports.js';
 import {
   EVENT_COLUMNS,
   ITEM_COLUMNS,
@@ -21,17 +21,17 @@ import {
   mapWorkerStateRow,
   pageLimitOffset,
   requireObject,
-} from '../../src/row-utils';
-import { mapWorklistSqlError } from '../../src/sql-errors';
+} from '../../src/row-utils.js';
+import { mapWorklistSqlError } from '../../src/sql-errors.js';
 import {
   LoadBalancedWorklistStrategy,
   RoundRobinWorklistStrategy,
   WorklistStrategyRegistry,
-} from '../../src/strategies';
-import { WorklistItemsService } from '../../src/worklist-items.service';
-import { WorklistQueuesService } from '../../src/worklist-queues.service';
-import { WorklistSlaService } from '../../src/worklist-sla.service';
-import { parseWorklistInput, pageQuerySchema } from '../../src/validation';
+} from '../../src/strategies.js';
+import { WorklistItemsService } from '../../src/worklist-items.service.js';
+import { WorklistQueuesService } from '../../src/worklist-queues.service.js';
+import { WorklistSlaService } from '../../src/worklist-sla.service.js';
+import { parseWorklistInput, pageQuerySchema } from '../../src/validation.js';
 
 const uuid = '01978f4a-32bf-7c27-a131-fd73a9e101a1';
 const otherUuid = '01978f4a-32bf-7c27-a131-fd73a9e101b2';

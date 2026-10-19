@@ -1,12 +1,12 @@
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncError } from '../../src/errors';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { StynxOfflineSyncContext } from '../../src/stynx-offline-sync.context';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncError } from '../../src/errors.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { StynxOfflineSyncContext } from '../../src/stynx-offline-sync.context.js';
 import type {
   OfflineSyncStore,
   SyncBatchItemInput,
   TrustedOfflineSyncScope,
-} from '../../src/types';
+} from '../../src/types.js';
 
 const tenantId = '00000000-0000-4000-8000-000000000001';
 const scope: TrustedOfflineSyncScope = { tenantId, actorId: 'agent-a' };

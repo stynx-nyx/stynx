@@ -1,4 +1,4 @@
-import * as sig from '../../src';
+import * as sig from '../../src/index.js';
 import { createHash } from 'node:crypto';
 import {
   bltCmsSignature as cmsSignature,
@@ -10,9 +10,9 @@ import {
   now,
   profile,
   rootPem,
-} from '../fixtures/trust';
-import { buildManifestBoundPades } from '../fixtures/pki/bound-pades';
-import { canonicalRfc8785Json } from '../../src';
+} from '../fixtures/trust.js';
+import { buildManifestBoundPades } from '../fixtures/pki/bound-pades.js';
+import { canonicalRfc8785Json } from '../../src/index.js';
 
 // UPS-SIG-03 / INV-SIGNATURE-001. The positive path below uses the concrete
 // STYNX verifier and a PDF whose manifest hash is inside the signed ByteRange.

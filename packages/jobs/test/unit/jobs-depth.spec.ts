@@ -12,9 +12,9 @@ import {
   normalizeBackoff,
   nextCronRunAt,
   parseCronExpression,
-} from '../../src';
-import { JobsRepository } from '../../src/jobs.repository';
-import type { JobExecutionResult } from '../../src/types';
+} from '../../src/index.js';
+import { JobsRepository } from '../../src/jobs.repository.js';
+import type { JobExecutionResult } from '../../src/types.js';
 
 const now = new Date('2026-08-25T00:00:00.000Z');
 const job = {

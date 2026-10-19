@@ -6,7 +6,7 @@ import {
   type TestAppContext,
 } from '@stynx-nyx/testing';
 import request from 'supertest';
-import { StynxTenancyModule } from '../../src/tenancy.module';
+import { StynxTenancyModule } from '../../src/tenancy.module.js';
 
 const ACTOR_ID = '0197481e-7294-7c53-8b03-5c36d7c2831a';
 const LIST_TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';

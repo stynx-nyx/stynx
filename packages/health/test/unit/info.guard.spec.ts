@@ -1,4 +1,4 @@
-import { StynxPlatformInfoGuard } from '../../src/info.guard';
+import { StynxPlatformInfoGuard } from '../../src/info.guard.js';
 
 describe('StynxPlatformInfoGuard', () => {
   it('blocks access when the platform flag is disabled', () => {

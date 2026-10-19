@@ -10,9 +10,9 @@ import {
   now,
   profile,
   rootPem,
-} from '../fixtures/trust';
-import { createCmsTrustVerifier, SignatureTrustUnavailableError } from '../../src';
-import { readPdfTrustEvidence } from '../../src/pdf-trust-evidence';
+} from '../fixtures/trust.js';
+import { createCmsTrustVerifier, SignatureTrustUnavailableError } from '../../src/index.js';
+import { readPdfTrustEvidence } from '../../src/pdf-trust-evidence.js';
 
 const verifier = (overrides: Record<string, unknown> = {}) => createCmsTrustVerifier({
   trustAnchorsPem: [rootPem],

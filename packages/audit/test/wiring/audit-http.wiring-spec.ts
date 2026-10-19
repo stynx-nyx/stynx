@@ -2,8 +2,8 @@ import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { StynxAuthGuard, PermissionGuard } from '@stynx-nyx/auth';
-import { StynxAuditController } from '../../src/audit.controller';
-import { StynxAuditService } from '../../src/audit.service';
+import { StynxAuditController } from '../../src/audit.controller.js';
+import { StynxAuditService } from '../../src/audit.service.js';
 
 describe('StynxAuditController E2E', () => {
   let app: INestApplication;

@@ -2,16 +2,16 @@ import { Controller, Get, Module, type CallHandler, type ExecutionContext } from
 import { Test } from '@nestjs/testing';
 import { defer, from, lastValueFrom } from 'rxjs';
 import { z } from 'zod';
-import { StynxCoreModule } from '../../src/core.module';
-import { StynxConfigService } from '../../src/config';
-import { RequestContext, RequestContextMutator } from '../../src/request-context';
-import { RequestContextInterceptor } from '../../src/request-context.interceptor';
-import { SystemContext } from '../../src/system-context';
+import { StynxCoreModule } from '../../src/core.module.js';
+import { StynxConfigService } from '../../src/config.js';
+import { RequestContext, RequestContextMutator } from '../../src/request-context.js';
+import { RequestContextInterceptor } from '../../src/request-context.interceptor.js';
+import { SystemContext } from '../../src/system-context.js';
 import {
   STYNX_SYSTEM_OPERATION_SINK,
   type SystemOperationRecord,
   type SystemOperationSink,
-} from '../../src/tokens';
+} from '../../src/tokens.js';
 
 class RecordingSink implements SystemOperationSink {
   readonly records: SystemOperationRecord[] = [];

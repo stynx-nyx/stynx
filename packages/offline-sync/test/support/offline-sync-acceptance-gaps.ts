@@ -1,13 +1,13 @@
 import { HttpException } from '@nestjs/common';
 import { expect, it, vi } from 'vitest';
-import type { OfflineSyncService } from '../../src/offline-sync.service';
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
+import type { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
 import type {
   CTG9SubmitSyncBatchInput,
   OfflineSyncItemContext,
   OfflineSyncEvent,
   StynxOfflineSyncModuleOptions,
-} from '../../src/types';
+} from '../../src/types.js';
 
 // INV-OFFLINE-001; #317 V-03, V-04, V-07, V-08, V-10 and V-13.
 // Each registration exercises a shipped store through the service boundary.
@@ -575,7 +575,7 @@ export function registerOfflineGapContracts(harness: () => OfflineGapHarness): v
         h.run(GAP_TENANT_A, () =>
           service.reconcileNumberingReservation(
             reservation.reservationId,
-            input as import('../../src/types').ReconcileNumberingInput,
+            input as import('../../src/types.js').ReconcileNumberingInput,
           ),
         ),
       ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT', status: 400 });

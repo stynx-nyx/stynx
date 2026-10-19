@@ -1,9 +1,9 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { RequestContextMutator, SystemContextRequiredError } from '@stynx-nyx/core';
-import { ActorContextMissingError, ReadOnlyViolationError } from '../../src/errors';
-import { Database } from '../../src/database';
-import { StynxDataModule } from '../../src/data.module';
-import { asAppRole, createPostgresTestDatabase } from '../support/postgres';
+import { ActorContextMissingError, ReadOnlyViolationError } from '../../src/errors.js';
+import { Database } from '../../src/database.js';
+import { StynxDataModule } from '../../src/data.module.js';
+import { asAppRole, createPostgresTestDatabase } from '../support/postgres.js';
 
 describe('StynxDataModule integration', () => {
 

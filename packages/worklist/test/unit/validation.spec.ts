@@ -10,7 +10,7 @@ import {
   supervisorOverrideSchema,
   updateQueueSchema,
   workerStateSchema,
-} from '../../src/validation';
+} from '../../src/validation.js';
 
 describe('worklist validation', () => {
   it('accepts canonical queue permissions and an extensible strategy key', () => {

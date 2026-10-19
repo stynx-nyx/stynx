@@ -1,4 +1,4 @@
-import { RequestLogFieldFactory, createPinoLogger, resolveRedactPaths } from '../../src/pino.factory';
+import { RequestLogFieldFactory, createPinoLogger, resolveRedactPaths } from '../../src/pino.factory.js';
 
 describe('createPinoLogger', () => {
   it('keeps the full default redact path contract stable', () => {

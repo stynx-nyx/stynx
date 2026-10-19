@@ -7,16 +7,16 @@ import {
   type StorageVerificationReport,
 } from '@stynx-nyx/data';
 import { Client } from 'pg';
-import { renderOutboxStorage, verifyOutboxStorage } from '../../src/index';
-import { StynxOutboxModule } from '../../src/outbox.module';
-import { OutboxService } from '../../src/outbox.service';
-import { OutboxEventStreamSource } from '../../src/event-stream-source';
-import { packedStorageCli } from '../support/packed-storage-cli';
+import { renderOutboxStorage, verifyOutboxStorage } from '../../src/index.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
+import { OutboxService } from '../../src/outbox.service.js';
+import { OutboxEventStreamSource } from '../../src/event-stream-source.js';
+import { packedStorageCli } from '../support/packed-storage-cli.js';
 import {
   createPostgresTestDatabase,
   withPostgresCredentials,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const ACTOR = 'f3333333-3333-4333-8333-333333333333';
 const asRole = (url: string, role: string) =>

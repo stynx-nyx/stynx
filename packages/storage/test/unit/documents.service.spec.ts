@@ -1,10 +1,10 @@
 import { RequestContext } from '@stynx-nyx/core';
-import { DocumentsService } from '../../src/documents.service';
+import { DocumentsService } from '../../src/documents.service.js';
 import {
   StorageCollectionNotFoundError,
   StorageDocumentNotFoundError,
   StorageTenantMismatchError,
-} from '../../src/errors';
+} from '../../src/errors.js';
 import type { Mock } from 'vitest';
 
 describe('DocumentsService', () => {

@@ -1,10 +1,10 @@
 import { RequestContext, SystemContext } from '@stynx-nyx/core';
 import { ClsService } from 'nestjs-cls';
 import type { PoolClient } from 'pg';
-import { Database } from '../../src/database';
-import type { StynxPoolRegistry } from '../../src/pools';
-import type { StynxDataModuleOptions } from '../../src/tokens';
-import type { TxOptions } from '../../src/types';
+import { Database } from '../../src/database.js';
+import type { StynxPoolRegistry } from '../../src/pools.js';
+import type { StynxDataModuleOptions } from '../../src/tokens.js';
+import type { TxOptions } from '../../src/types.js';
 
 // INV-RBAC-001: command transactions require the live app identity, including when nested.
 const TENANT = '018f53e4-28a1-7cd8-a0ff-5b22c3a07111';

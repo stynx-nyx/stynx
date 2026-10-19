@@ -1,4 +1,4 @@
-import { createMockPadesEvidenceAdapter, decodePadesEvidenceBlock, sha256 } from '../../src';
+import { createMockPadesEvidenceAdapter, decodePadesEvidenceBlock, sha256 } from '../../src/index.js';
 
 describe('MockPadesEvidenceAdapter', () => {
   it('produces a deterministic PAdES evidence envelope for SGP PDF bytes', () => {

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { VeraPdfDockerValidator } from '../../src';
+import { VeraPdfDockerValidator } from '../../src/index.js';
 
 // Per-attempt container budget. Kept well under the 420s vitest testTimeout
 // so a hung container (the emulated amd64 JVM intermittently aborts under

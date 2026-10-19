@@ -2,12 +2,12 @@ import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
 import { describe, expect, it } from 'vitest';
 import { collectStorageCatalog } from '@stynx-nyx/data';
-import { createPostgresTestDatabase } from '../../../data/test/support/postgres';
+import { createPostgresTestDatabase } from '../../../data/test/support/postgres.js';
 import {
   renderOfflineStorage,
   renderOfflineStorageMigrations,
   verifyOfflineStorage,
-} from '../../src/storage';
+} from '../../src/storage.js';
 
 // INV-OFFLINE-001: admitted forward prefixes preserve history and tenant isolation.
 describe('Bound offline forward SQL on populated consumer installations', () => {

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { StynxHealthModule } from '../../src/health.module';
+import { StynxHealthModule } from '../../src/health.module.js';
 
 describe('StynxHealthModule E2E', () => {
   let app: INestApplication;

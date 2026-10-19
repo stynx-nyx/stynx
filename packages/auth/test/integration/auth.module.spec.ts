@@ -12,18 +12,18 @@ import {
   StynxSessionsModule,
   STYNX_SESSION_STORE,
 } from '@stynx-nyx/sessions';
-import { CognitoJwtValidator } from '../../src/cognito-jwt.validator';
-import { EffectiveHashComputer } from '../../src/effective-hash-computer';
-import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend';
-import { PermissionCache } from '../../src/permission-cache';
-import { PermissionGuard } from '../../src/permission.guard';
-import { StynxAuthGuard } from '../../src/stynx-auth.guard';
-import { StynxAuthModule } from '../../src/auth.module';
-import { StynxAuthService } from '../../src/auth.service';
-import { Permission } from '../../src/decorators';
-import { STYNX_PERMISSION_CACHE_BACKEND } from '../../src/tokens';
-import { RedisPermissionCacheBackend } from '../../src/redis-permission-cache-backend';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import { CognitoJwtValidator } from '../../src/cognito-jwt.validator.js';
+import { EffectiveHashComputer } from '../../src/effective-hash-computer.js';
+import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend.js';
+import { PermissionCache } from '../../src/permission-cache.js';
+import { PermissionGuard } from '../../src/permission.guard.js';
+import { StynxAuthGuard } from '../../src/stynx-auth.guard.js';
+import { StynxAuthModule } from '../../src/auth.module.js';
+import { StynxAuthService } from '../../src/auth.service.js';
+import { Permission } from '../../src/decorators.js';
+import { STYNX_PERMISSION_CACHE_BACKEND } from '../../src/tokens.js';
+import { RedisPermissionCacheBackend } from '../../src/redis-permission-cache-backend.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 
 
 @Controller()

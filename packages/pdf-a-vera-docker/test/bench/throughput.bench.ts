@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { VeraPdfDockerValidator } from '../../src';
-import { isVeraPdfDockerUsable } from '../integration/docker-support';
+import { VeraPdfDockerValidator } from '../../src/index.js';
+import { isVeraPdfDockerUsable } from '../integration/docker-support.js';
 
 const describeIfDocker = isVeraPdfDockerUsable() ? describe : describe.skip;
 

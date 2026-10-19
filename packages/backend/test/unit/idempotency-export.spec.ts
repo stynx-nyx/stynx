@@ -1,7 +1,7 @@
 // Smoke check: idempotency submodule's exports are reachable through the
 // @stynx-nyx/backend barrel.
 
-import * as Backend from '../../src';
+import * as Backend from '../../src/index.js';
 
 describe('@stynx-nyx/backend exports surface for idempotency', () => {
   it('barrel surfaces at least one export', () => {

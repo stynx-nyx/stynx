@@ -1,10 +1,10 @@
-import { StynxAuditModule } from '../../src/audit.module';
+import { StynxAuditModule } from '../../src/audit.module.js';
 import {
   STYNX_AUDIT_ARCHIVE_STORE,
   STYNX_AUDIT_CLOCK,
   STYNX_AUDIT_DUMP_RUNNER,
   STYNX_AUDIT_OPTIONS,
-} from '../../src/tokens';
+} from '../../src/tokens.js';
 
 describe('StynxAuditModule.forRoot', () => {
   afterEach(() => {

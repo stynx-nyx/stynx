@@ -5,9 +5,9 @@ vi.mock('redis', () => ({
   createClient: mockCreateClient,
 }));
 
-import { RedisSessionStore } from '../../src/redis-session-store';
-import type { SessionRecord } from '../../src/types';
-import { resolveSessionsOptions } from '../../src/types';
+import { RedisSessionStore } from '../../src/redis-session-store.js';
+import type { SessionRecord } from '../../src/types.js';
+import { resolveSessionsOptions } from '../../src/types.js';
 
 function record(overrides: Partial<SessionRecord> = {}): SessionRecord {
   const now = new Date('2026-05-18T12:00:00.000Z').toISOString();

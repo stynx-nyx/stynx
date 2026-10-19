@@ -1,6 +1,6 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { StynxObjectStore } from '../../src/object-store.service';
+import { StynxObjectStore } from '../../src/object-store.service.js';
 import type { Mock } from 'vitest';
 
 vi.mock('@aws-sdk/s3-request-presigner', () => ({

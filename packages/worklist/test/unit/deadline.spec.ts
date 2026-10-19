@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Clock } from '@stynx-nyx/core';
-import { resolveWorklistDeadline } from '../../src/deadline';
-import { StynxWorklistModule } from '../../src/worklist.module';
+import { resolveWorklistDeadline } from '../../src/deadline.js';
+import { StynxWorklistModule } from '../../src/worklist.module.js';
 import { Global, Module } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
 import { RequestContext } from '@stynx-nyx/core';
@@ -10,7 +10,7 @@ import {
   WORKLIST_CLOCK,
   WORKLIST_BUSINESS_CALENDAR,
   type WorklistBusinessCalendar,
-} from '../../src';
+} from '../../src/index.js';
 import { Test } from '@nestjs/testing';
 
 @Global()

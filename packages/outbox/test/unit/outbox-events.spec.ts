@@ -1,5 +1,5 @@
 import { AuditChainKeyMismatchError } from '@stynx-nyx/data';
-import { OutboxService } from '../../src/outbox.service';
+import { OutboxService } from '../../src/outbox.service.js';
 import {
   OutboxAckQuarantineUnavailableError,
   OutboxCustomTableCutoverUnsupportedError,
@@ -8,9 +8,9 @@ import {
   OutboxEventTransactionError,
   OutboxLegacyCutoverError,
   OutboxOwnershipContentionError,
-} from '../../src/errors';
+} from '../../src/errors.js';
 import { IndependentTransactionConnectionError } from '@stynx-nyx/data';
-import type { OutboxAppendEvent, OutboxSqlExecutor } from '../../src/types';
+import type { OutboxAppendEvent, OutboxSqlExecutor } from '../../src/types.js';
 
 const tenant = '11111111-1111-4111-8111-111111111111';
 const event: OutboxAppendEvent = {

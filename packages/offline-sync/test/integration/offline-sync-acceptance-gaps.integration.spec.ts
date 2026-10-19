@@ -7,17 +7,17 @@ import { RequestContextMutator } from '@stynx-nyx/core';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
-import { OfflineSyncUpgradeRequiredError } from '../../src/errors';
-import { OfflineSyncService } from '../../src/offline-sync.service';
+} from '../../../data/test/support/postgres.js';
+import { OfflineSyncUpgradeRequiredError } from '../../src/errors.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
 import { OutboxService } from '@stynx-nyx/outbox';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
 import {
   GAP_AT,
   GAP_TENANT_A,
   GAP_TENANT_B,
   registerOfflineGapContracts,
-} from '../support/offline-sync-acceptance-gaps';
+} from '../support/offline-sync-acceptance-gaps.js';
 
 // INV-OFFLINE-001: real SQL, direct restricted-role login, tenant/actor context on every connection.
 describe('Offline acceptance gap contracts through real PostgreSQL', () => {

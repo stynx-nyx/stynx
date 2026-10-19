@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { importOfflineState } from '../../src/import-state';
-import { fixture, dispose, baseline, verify } from '../support/offline-storage-fixture';
+import { importOfflineState } from '../../src/import-state.js';
+import { fixture, dispose, baseline, verify } from '../support/offline-storage-fixture.js';
 import {
   reconciliationImportManifest,
   RECONCILIATION_IMPORT_ID,
-} from '../support/offline-reconciliation-import-fixture';
-import { OfflineImportError } from '../../src/import-contract';
-import { IMPORT_AT, rehashManifest } from '../support/offline-import-fixtures';
+} from '../support/offline-reconciliation-import-fixture.js';
+import { OfflineImportError } from '../../src/import-contract.js';
+import { IMPORT_AT, rehashManifest } from '../support/offline-import-fixtures.js';
 
 // INV-OFFLINE-001: real custom auth.tenants, owner maintenance, /2 replay and zero history rewriting.
 describe('Reconciliation history owner import', () => {

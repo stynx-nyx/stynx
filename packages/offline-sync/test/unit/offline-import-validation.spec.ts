@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { OfflineImportError } from '../../src/import-contract';
-import { legacyArchivedFixture } from '../support/offline-archive-fixture';
+import { OfflineImportError } from '../../src/import-contract.js';
+import { legacyArchivedFixture } from '../support/offline-archive-fixture.js';
 import {
   parseOfflineImportManifest,
   validateOfflineImportManifest,
@@ -8,7 +8,7 @@ import {
   parseImportJson,
   validRangeCreationEvidence,
   type RangeCreationEvidence,
-} from '../../src/import-validation';
+} from '../../src/import-validation.js';
 import {
   importManifest,
   rehashManifest,
@@ -17,7 +17,7 @@ import {
   IMPORT_AT,
   IMPORT_TENANT,
   IMPORT_OTHER_TENANT,
-} from '../support/offline-import-fixtures';
+} from '../support/offline-import-fixtures.js';
 
 const refused = (run: () => unknown) => {
   expect(run).toThrow(OfflineImportError);

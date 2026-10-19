@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import * as ts from 'typescript';
-import { buildProgram } from '../src/cli';
+import { buildProgram } from '../src/cli.js';
 
 type Blueprint = Record<string, any>;
 const sampleBytes = readFileSync(join(__dirname, 'fixtures/BP-OPS-EXAMPLE-001.json'));

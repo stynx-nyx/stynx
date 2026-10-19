@@ -1,8 +1,8 @@
 import { ForbiddenException } from '@nestjs/common';
-import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters';
-import { FlowAnalyticsService } from '../../src/flow-analytics.service';
-import { FlowPolicyService } from '../../src/flow-policy.service';
-import { FlowRuntimeService } from '../../src/flow-runtime.service';
+import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters.js';
+import { FlowAnalyticsService } from '../../src/flow-analytics.service.js';
+import { FlowPolicyService } from '../../src/flow-policy.service.js';
+import { FlowRuntimeService } from '../../src/flow-runtime.service.js';
 import type { Mock } from 'vitest';
 
 const tenantId = '01978f4a-32bf-7c27-a131-fd73a9e101a1';

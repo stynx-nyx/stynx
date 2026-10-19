@@ -1,14 +1,14 @@
 import JSZip from 'jszip';
 import { expectRLSIsolated } from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { queryRowsAsTenant } from '../fixtures/app';
-import { createAuthenticatedAgent, type AuthenticatedAgent } from '../fixtures/http';
+import { queryRowsAsTenant } from '../fixtures/app.js';
+import { createAuthenticatedAgent, type AuthenticatedAgent } from '../fixtures/http.js';
 import {
   closeReferenceApiPrivacyE2e,
   setupReferenceApiPrivacyE2e,
   type ReferenceApiPrivacyE2eContext,
-} from '../fixtures/privacy';
-import { actors, tenants } from '../fixtures/seed';
+} from '../fixtures/privacy.js';
+import { actors, tenants } from '../fixtures/seed.js';
 
 interface PrivacyExportBody {
   exportId: string;

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { StynxDataModule } from '@stynx-nyx/data';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 
 const tenantId = '01978f4a-32bf-7c27-a131-fd73a9e008a1';
 

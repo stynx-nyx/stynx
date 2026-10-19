@@ -1,9 +1,9 @@
 import { createHmac } from 'node:crypto';
-import { FixedIntervalBackoffPolicy } from '../../src/backoff';
-import { signOutboxAckPayload, verifyOutboxAckSignature } from '../../src/ack-signature';
-import { OutboxAmbiguousAckError } from '../../src/errors';
-import { OutboxService } from '../../src/outbox.service';
-import type { OutboxDispatcherPort, OutboxRow, OutboxSqlExecutor } from '../../src/types';
+import { FixedIntervalBackoffPolicy } from '../../src/backoff.js';
+import { signOutboxAckPayload, verifyOutboxAckSignature } from '../../src/ack-signature.js';
+import { OutboxAmbiguousAckError } from '../../src/errors.js';
+import { OutboxService } from '../../src/outbox.service.js';
+import type { OutboxDispatcherPort, OutboxRow, OutboxSqlExecutor } from '../../src/types.js';
 
 const row: OutboxRow = {
   id: 'message-1',

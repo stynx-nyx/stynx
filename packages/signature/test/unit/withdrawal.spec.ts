@@ -1,4 +1,4 @@
-import * as sig from '../../src';
+import * as sig from '../../src/index.js';
 import {
   bltCmsSignature,
   bltSignedDocument,
@@ -12,7 +12,7 @@ import {
   rootPem,
   signedDocument,
   sourceDocument,
-} from '../fixtures/trust';
+} from '../fixtures/trust.js';
 
 // UPS-SIG-04 / INV-SIGNATURE-001. The physical attestor is an authenticated
 // input, while the digital path must call the STYNX cryptographic verifier.

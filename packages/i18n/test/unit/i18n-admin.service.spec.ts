@@ -1,6 +1,6 @@
-import { systemModuleRef } from '../support/module-ref';
-import { I18nAdminService } from '../../src/i18n-admin.service';
-import type { CatalogService } from '../../src/catalog.service';
+import { systemModuleRef } from '../support/module-ref.js';
+import { I18nAdminService } from '../../src/i18n-admin.service.js';
+import type { CatalogService } from '../../src/catalog.service.js';
 
 describe('I18nAdminService', () => {
   it('lists only i18n override settings for a tenant', async () => {

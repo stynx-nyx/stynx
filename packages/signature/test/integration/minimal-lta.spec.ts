@@ -9,7 +9,7 @@ import {
   ltaRoots,
   ltaProfile,
   ltaArchiveAt,
-} from '../support/lta-fixture';
+} from '../support/lta-fixture.js';
 
 describe('independent minimal LTA public TEST packet', () => {
   it('pins every copied public fixture and keeps private key material outside the packet', () => {

@@ -1,14 +1,14 @@
 import { BadRequestException } from '@nestjs/common';
-import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters';
-import { FlowAnalyticsService } from '../../src/flow-analytics.service';
-import { FlowPolicyService } from '../../src/flow-policy.service';
-import { camelizeKey, camelizeRow, pageLimitOffset, requireObject } from '../../src/row-utils';
+import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters.js';
+import { FlowAnalyticsService } from '../../src/flow-analytics.service.js';
+import { FlowPolicyService } from '../../src/flow-policy.service.js';
+import { camelizeKey, camelizeRow, pageLimitOffset, requireObject } from '../../src/row-utils.js';
 import {
   addTextFilter,
   addUuidFilter,
   asJsonObject,
   optionalString,
-} from '../../src/internal/runtime/runtime-filters';
+} from '../../src/internal/runtime/runtime-filters.js';
 
 const SCOPE = '0190abcd-1234-7abc-89ab-000000000001';
 const POLICY_SET = '0190abcd-1234-7abc-89ab-000000000002';

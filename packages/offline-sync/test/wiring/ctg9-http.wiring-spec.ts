@@ -7,11 +7,11 @@ import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { StynxOfflineSyncModule } from '../../src/offline-sync.module';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { OfflineSyncError } from '../../src/errors';
-import type { OfflineSyncContextPort, StynxOfflineSyncModuleOptions } from '../../src/types';
+import { StynxOfflineSyncModule } from '../../src/offline-sync.module.js';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { OfflineSyncError } from '../../src/errors.js';
+import type { OfflineSyncContextPort, StynxOfflineSyncModuleOptions } from '../../src/types.js';
 
 // INV-OFFLINE-001; UPS-OFS-02. Real Nest HTTP route sensor, without DETRAN vocabulary.
 const itemPayload = { normativePackageId: 'rules-1', normativePackageVersion: '1.0.0' };

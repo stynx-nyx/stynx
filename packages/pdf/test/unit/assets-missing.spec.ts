@@ -1,13 +1,13 @@
 import { vi } from 'vitest';
 
 const fsMocks = { existsSync: vi.fn(() => false), readFileSync: vi.fn() };
-let loadPdfAFontAssets: typeof import('../../src/internals/assets').loadPdfAFontAssets;
+let loadPdfAFontAssets: typeof import('../../src/internals/assets.js').loadPdfAFontAssets;
 
 describe('missing PDF/A asset handling', () => {
   beforeAll(async () => {
     vi.resetModules();
     vi.doMock('node:fs', () => fsMocks);
-    ({ loadPdfAFontAssets } = await import('../../src/internals/assets'));
+    ({ loadPdfAFontAssets } = await import('../../src/internals/assets.js'));
   });
   afterAll(() => { vi.doUnmock('node:fs'); vi.resetModules(); });
 

@@ -8,10 +8,10 @@ import { StynxDataModule } from '@stynx-nyx/data';
 import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
 import request from 'supertest';
 import { z } from 'zod';
-import { Audit, StynxAuthModule, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
-import { PatternAuditMetadataRedactionPolicy } from '../../src/audit/redaction-policy';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import { Audit, StynxAuthModule, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index.js';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
+import { PatternAuditMetadataRedactionPolicy } from '../../src/audit/redaction-policy.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2831a';

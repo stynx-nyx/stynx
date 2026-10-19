@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
 import {
   registerRangeAdministrationContracts,
   RANGE_TENANT_A,
   RANGE_AT,
   rangeInput,
-} from '../support/range-administration-contract';
+} from '../support/range-administration-contract.js';
 
 describe('UPS-OFS-09 memory range administration', () => {
   const store = new InMemoryOfflineSyncStore();

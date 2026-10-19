@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
-import { StynxOutboxModule } from '../../src/outbox.module';
-import { OutboxService } from '../../src/outbox.service';
-import type { OutboxAppendEvent, OutboxDispatcherPort, OutboxEventRow, OutboxRow } from '../../src/types';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
+import { OutboxService } from '../../src/outbox.service.js';
+import type { OutboxAppendEvent, OutboxDispatcherPort, OutboxEventRow, OutboxRow } from '../../src/types.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 // UPS-OBX-11 (#320), ADR-OUTBOX-0003 D4. Real PostgreSQL, FORCE RLS, stynx_app without BYPASSRLS,
 // two tenants, two named destinations: RENACH with its own port and RENAEST on the module dispatcher.

@@ -1,5 +1,5 @@
 import { createClient } from 'redis';
-import { RedisPermissionCacheBackend } from '../../src/redis-permission-cache-backend';
+import { RedisPermissionCacheBackend } from '../../src/redis-permission-cache-backend.js';
 import type { Mock } from 'vitest';
 
 vi.mock('redis', () => ({

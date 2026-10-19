@@ -9,10 +9,10 @@ import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
 import request from 'supertest';
 import { z } from 'zod';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import * as backend from '../../src/index';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
-import { StynxAuthModule } from '../../src/auth/auth.module';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import * as backend from '../../src/index.js';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
+import { StynxAuthModule } from '../../src/auth/auth.module.js';
 
 type IfMatchApi = {
   RequireIfMatch: () => MethodDecorator;

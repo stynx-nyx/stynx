@@ -3,8 +3,8 @@ import type { ExecutionContext, INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { z } from 'zod';
-import { StynxCoreModule } from '../../src/core.module';
-import { RequestContext } from '../../src/request-context';
+import { StynxCoreModule } from '../../src/core.module.js';
+import { RequestContext } from '../../src/request-context.js';
 
 const REQUEST_ID = '0190abcd-1234-7abc-89ab-0123456789ab';
 

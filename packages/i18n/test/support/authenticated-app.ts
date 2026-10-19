@@ -25,15 +25,15 @@ import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 import {
   STYNX_RESOLVED_TENANT_COMMAND_CONTEXT,
   type ResolvedTenantCommandContextPort,
 } from '@stynx-nyx/contracts';
-import { CatalogService } from '../../src/catalog.service';
-import { I18nAdminService } from '../../src/i18n-admin.service';
-import { LocaleService } from '../../src/locale.service';
-import { StynxI18nModule } from '../../src/i18n.module';
+import { CatalogService } from '../../src/catalog.service.js';
+import { I18nAdminService } from '../../src/i18n-admin.service.js';
+import { LocaleService } from '../../src/locale.service.js';
+import { StynxI18nModule } from '../../src/i18n.module.js';
 
 export const TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 export const OTHER_TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9c2';

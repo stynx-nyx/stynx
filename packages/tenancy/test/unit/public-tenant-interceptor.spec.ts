@@ -7,8 +7,8 @@ import {
   STYNX_PUBLIC_TENANT_ROUTE,
   STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL,
 } from '@stynx-nyx/contracts';
-import type { MembershipAccessCache } from '../../src/membership-cache';
-import { TenantContextInterceptor } from '../../src/tenant-context.interceptor';
+import type { MembershipAccessCache } from '../../src/membership-cache.js';
+import { TenantContextInterceptor } from '../../src/tenant-context.interceptor.js';
 
 const TENANT_ID = '018f53e4-28a1-7cd8-a0ff-5b22c3a07111';
 const ACTOR_ID = '018f53e4-28a1-7cd8-a0ff-5b22c3a07112';

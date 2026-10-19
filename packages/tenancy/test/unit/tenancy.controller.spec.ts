@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import { GUARDS_METADATA } from '@nestjs/common/constants';
+import { GUARDS_METADATA } from '@nestjs/common/constants.js';
 import { STYNX_NO_IDEMPOTENT_ROUTE } from '@stynx-nyx/idempotency';
-import { TenancyController } from '../../src/tenancy.controller';
-import { TenancyPlatformAdminGuard } from '../../src/tenancy-platform-admin.guard';
-import type { TenancyService } from '../../src/tenancy.service';
+import { TenancyController } from '../../src/tenancy.controller.js';
+import { TenancyPlatformAdminGuard } from '../../src/tenancy-platform-admin.guard.js';
+import type { TenancyService } from '../../src/tenancy.service.js';
 
 function handler(name: string): Function {
   const value = TenancyController.prototype[name as keyof TenancyController];

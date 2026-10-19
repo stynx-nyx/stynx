@@ -8,8 +8,8 @@ import {
   queryRowsAsTenant,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
-} from '../fixtures/app';
-import { actors, tenants } from '../fixtures/seed';
+} from '../fixtures/app.js';
+import { actors, tenants } from '../fixtures/seed.js';
 
 interface TenantSettingsRow extends Record<string, unknown> {
   tenant_id: string;

@@ -2,14 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
 import type { Client } from 'pg';
-import { OutboxEventStreamSource } from '../../src/event-stream-source';
-import { StynxOutboxModule } from '../../src/outbox.module';
-import { OutboxService } from '../../src/outbox.service';
-import type { OutboxAppendEvent, OutboxEventRow } from '../../src/types';
+import { OutboxEventStreamSource } from '../../src/event-stream-source.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
+import { OutboxService } from '../../src/outbox.service.js';
+import type { OutboxAppendEvent, OutboxEventRow } from '../../src/types.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const ACTOR = 'e3333333-3333-4333-8333-333333333333';
 const OTHER_ACTOR = 'e4444444-4444-4444-8444-444444444444';

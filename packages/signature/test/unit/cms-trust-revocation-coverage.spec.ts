@@ -1,5 +1,5 @@
-import { bytes, certificate, now, profile, rootPem } from '../fixtures/trust';
-import { createCmsTrustVerifier } from '../../src';
+import { bytes, certificate, now, profile, rootPem } from '../fixtures/trust.js';
+import { createCmsTrustVerifier } from '../../src/index.js';
 
 const bTInput = () => ({
   tenantId: 'tenant-a',

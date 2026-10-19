@@ -14,7 +14,7 @@ const mockPg = vi.hoisted(() => ({
 
 vi.mock('pg', () => ({ Client: mockPg.Client }));
 
-import { verifyAuditChain, type AuditVerifyClient } from '../src/audit';
+import { verifyAuditChain, type AuditVerifyClient } from '../src/audit.js';
 
 class FakeAuditClient implements AuditVerifyClient {
   connected = false;

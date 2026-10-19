@@ -4,8 +4,8 @@ import {
   canonicalOfflineSyncPayload,
   canonicalOfflineSyncPayloadHash,
   verifyOfflineSyncPayloadHash,
-} from '../../src/payload-integrity';
-import type { CTG9SyncBatchItemInput, OfflineSyncItemContext } from '../../src/types';
+} from '../../src/payload-integrity.js';
+import type { CTG9SyncBatchItemInput, OfflineSyncItemContext } from '../../src/types.js';
 
 const context: OfflineSyncItemContext = {
   tenantId: '00000000-0000-4000-8000-0000000000a1',

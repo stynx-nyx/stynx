@@ -2,9 +2,9 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Client } from 'pg';
-import { StynxDataModule } from '../../src/data.module';
-import { StynxMigrationRunner } from '../../src/migration-runner';
-import { asAppRole, createPostgresTestDatabase } from '../support/postgres';
+import { StynxDataModule } from '../../src/data.module.js';
+import { StynxMigrationRunner } from '../../src/migration-runner.js';
+import { asAppRole, createPostgresTestDatabase } from '../support/postgres.js';
 
 async function expectedPlatformMigrationIds(): Promise<string[]> {
   const migrationDir = resolve(__dirname, '../../migrations/platform');

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { renderOfflineStorage, renderOfflineStorageMigrations } from '../../src/storage';
+import { renderOfflineStorage, renderOfflineStorageMigrations } from '../../src/storage.js';
 
 const sources = [
   '0001_offline_sync.sql',

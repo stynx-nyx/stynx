@@ -1,4 +1,4 @@
-import { OutboxService } from '../../src/outbox.service';
+import { OutboxService } from '../../src/outbox.service.js';
 
 // ADR-OUTBOX-0003 D2/D3 and ADR-OUTBOX-0004 D4: consumer-owned storage never
 // invokes platform legacy transfer or mutates a marker before audit readiness.

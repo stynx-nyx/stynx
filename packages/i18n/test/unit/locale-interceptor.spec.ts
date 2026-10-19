@@ -9,9 +9,9 @@ import {
 } from '@stynx-nyx/core';
 import { lastValueFrom, of } from 'rxjs';
 import { z } from 'zod';
-import { CatalogService } from '../../src/catalog.service';
-import { LocaleService } from '../../src/locale.service';
-import { LocaleInterceptor } from '../../src/locale.interceptor';
+import { CatalogService } from '../../src/catalog.service.js';
+import { LocaleService } from '../../src/locale.service.js';
+import { LocaleInterceptor } from '../../src/locale.interceptor.js';
 
 /** A manual public constructor consumer supplies no authenticated tenancy proof. */
 describe('LocaleInterceptor standalone compatibility', () => {

@@ -1,6 +1,6 @@
 import { HttpException } from '@nestjs/common';
 import { StynxError } from '@stynx-nyx/core';
-import { LocalizedErrorFilter } from '../../src/localized-error.filter';
+import { LocalizedErrorFilter } from '../../src/localized-error.filter.js';
 
 function host(response: unknown) {
   return {

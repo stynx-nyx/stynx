@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PostgresPreferencesStore } from '../src/postgres-preferences.store';
-import { tenantA } from './support/preferences-harness';
+import { PostgresPreferencesStore } from '../src/postgres-preferences.store.js';
+import { tenantA } from './support/preferences-harness.js';
 
 describe('preferences Postgres mapping and compare-and-set contract', () => {
   it('maps Postgres reads and compare-and-set insert, update, and conflict results', async () => {

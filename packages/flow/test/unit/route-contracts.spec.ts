@@ -10,28 +10,28 @@ import {
   STYNX_NO_IDEMPOTENT_ROUTE,
   STYNX_RATE_LIMIT_ROUTE,
 } from '@stynx-nyx/backend';
-import { GUARDS_METADATA } from '@nestjs/common/constants';
+import { GUARDS_METADATA } from '@nestjs/common/constants.js';
 import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
-import { FlowAgentRulesController } from '../../src/controllers/agent-rules.controller';
-import { FlowAnalyticsController } from '../../src/controllers/analytics.controller';
-import { FlowAnswersController } from '../../src/controllers/answers.controller';
-import { FlowEdgesController } from '../../src/controllers/edges.controller';
-import { FlowEventsController } from '../../src/controllers/events.controller';
-import { FlowEffectsController } from '../../src/controllers/effects.controller';
-import { FlowFillsController } from '../../src/controllers/fills.controller';
-import { FlowFormsController } from '../../src/controllers/forms.controller';
-import { FlowGraphsController } from '../../src/controllers/graphs.controller';
-import { FlowNodeFormRulesController } from '../../src/controllers/node-form-rules.controller';
-import { FlowNodeRunsController } from '../../src/controllers/node-runs.controller';
-import { FlowNodesController } from '../../src/controllers/nodes.controller';
-import { FlowPoliciesController } from '../../src/controllers/policies.controller';
-import { FlowQuestionsController } from '../../src/controllers/questions.controller';
-import { FlowRunsController } from '../../src/controllers/runs.controller';
-import { FlowScopesController } from '../../src/controllers/scopes.controller';
-import { FlowSignalController } from '../../src/controllers/signal.controller';
-import { FlowTasksController } from '../../src/controllers/tasks.controller';
-import { FlowTransitionEffectsController } from '../../src/controllers/transition-effects.controller';
-import { FlowWaiversController } from '../../src/controllers/waivers.controller';
+import { FlowAgentRulesController } from '../../src/controllers/agent-rules.controller.js';
+import { FlowAnalyticsController } from '../../src/controllers/analytics.controller.js';
+import { FlowAnswersController } from '../../src/controllers/answers.controller.js';
+import { FlowEdgesController } from '../../src/controllers/edges.controller.js';
+import { FlowEventsController } from '../../src/controllers/events.controller.js';
+import { FlowEffectsController } from '../../src/controllers/effects.controller.js';
+import { FlowFillsController } from '../../src/controllers/fills.controller.js';
+import { FlowFormsController } from '../../src/controllers/forms.controller.js';
+import { FlowGraphsController } from '../../src/controllers/graphs.controller.js';
+import { FlowNodeFormRulesController } from '../../src/controllers/node-form-rules.controller.js';
+import { FlowNodeRunsController } from '../../src/controllers/node-runs.controller.js';
+import { FlowNodesController } from '../../src/controllers/nodes.controller.js';
+import { FlowPoliciesController } from '../../src/controllers/policies.controller.js';
+import { FlowQuestionsController } from '../../src/controllers/questions.controller.js';
+import { FlowRunsController } from '../../src/controllers/runs.controller.js';
+import { FlowScopesController } from '../../src/controllers/scopes.controller.js';
+import { FlowSignalController } from '../../src/controllers/signal.controller.js';
+import { FlowTasksController } from '../../src/controllers/tasks.controller.js';
+import { FlowTransitionEffectsController } from '../../src/controllers/transition-effects.controller.js';
+import { FlowWaiversController } from '../../src/controllers/waivers.controller.js';
 
 type ControllerClass = abstract new (...args: never[]) => object;
 

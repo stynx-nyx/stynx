@@ -16,7 +16,7 @@ import {
   PreferencesServicePreferencesPort,
   SmsSnsChannelAdapter,
   type ChannelAdapter,
-} from '../../src';
+} from '../../src/index.js';
 
 const template = {
   id: 'inf.notice',

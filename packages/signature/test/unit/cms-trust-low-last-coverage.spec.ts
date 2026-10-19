@@ -1,13 +1,13 @@
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createCmsTrustVerifier } from '../../src';
-import { bytes, certificate, now, profile, rootPem } from '../fixtures/trust';
+import { createCmsTrustVerifier } from '../../src/index.js';
+import { bytes, certificate, now, profile, rootPem } from '../fixtures/trust.js';
 
 const controls = vi.hoisted(() => ({ forceOnlineRevocation: false }));
 
-vi.mock('../../src/pdf-trust-evidence', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../src/pdf-trust-evidence')>();
+vi.mock('../../src/pdf-trust-evidence.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/pdf-trust-evidence.js')>();
   return {
     ...actual,
     readPdfTrustEvidence: async (...args: Parameters<typeof actual.readPdfTrustEvidence>) => {

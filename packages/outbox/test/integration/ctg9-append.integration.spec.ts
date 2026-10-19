@@ -7,14 +7,14 @@ import {
   StynxPoolRegistry,
   type Transaction,
 } from '@stynx-nyx/data';
-import { OutboxService } from '../../src/outbox.service';
-import { OutboxEventStreamSource } from '../../src/event-stream-source';
-import { StynxOutboxError } from '../../src/errors';
-import { StynxOutboxModule } from '../../src/outbox.module';
+import { OutboxService } from '../../src/outbox.service.js';
+import { OutboxEventStreamSource } from '../../src/event-stream-source.js';
+import { StynxOutboxError } from '../../src/errors.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const TENANT_A = 'e1111111-1111-4111-8111-111111111111';
 const TENANT_B = 'e2222222-2222-4222-8222-222222222222';

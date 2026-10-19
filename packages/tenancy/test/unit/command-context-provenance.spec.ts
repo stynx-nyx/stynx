@@ -8,8 +8,8 @@ import {
 import * as contracts from '@stynx-nyx/contracts';
 import { Database } from '@stynx-nyx/data';
 import { lastValueFrom, of } from 'rxjs';
-import { StynxTenancyModule } from '../../src/tenancy.module';
-import { TenantContextInterceptor } from '../../src/tenant-context.interceptor';
+import { StynxTenancyModule } from '../../src/tenancy.module.js';
+import { TenantContextInterceptor } from '../../src/tenant-context.interceptor.js';
 
 // INV-RBAC-001: only successful tenancy validation publishes command actor provenance.
 const TENANT = '018f53e4-28a1-7cd8-a0ff-5b22c3a07111';

@@ -1,7 +1,7 @@
 import type { ModuleRef } from '@nestjs/core';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { SessionService, type SessionBundle } from '@stynx-nyx/sessions';
-import { StynxAuthService } from '../../src/auth.service';
+import { StynxAuthService } from '../../src/auth.service.js';
 
 // UPS-SES-02: Cognito's validated claims are the sole factor source.
 const bundle: SessionBundle = {

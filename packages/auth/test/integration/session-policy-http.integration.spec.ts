@@ -11,13 +11,13 @@ import {
   STYNX_SESSION_STORE,
   type StynxSessionsModuleOptions,
 } from '@stynx-nyx/sessions';
-import { CognitoJwtValidator } from '../../src/cognito-jwt.validator';
-import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend';
-import { StynxAuthGuard } from '../../src/stynx-auth.guard';
-import { StynxAuthModule } from '../../src/auth.module';
-import { RedisPermissionCacheBackend } from '../../src/redis-permission-cache-backend';
-import { STYNX_PERMISSION_CACHE_BACKEND } from '../../src/tokens';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
+import { CognitoJwtValidator } from '../../src/cognito-jwt.validator.js';
+import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend.js';
+import { StynxAuthGuard } from '../../src/stynx-auth.guard.js';
+import { StynxAuthModule } from '../../src/auth.module.js';
+import { RedisPermissionCacheBackend } from '../../src/redis-permission-cache-backend.js';
+import { STYNX_PERMISSION_CACHE_BACKEND } from '../../src/tokens.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9d1';
 const USER = '0197481e-7294-7c53-8b03-5c36d7c2841a';

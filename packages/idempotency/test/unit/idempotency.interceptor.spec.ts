@@ -8,14 +8,14 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { lastValueFrom, of, throwError } from 'rxjs';
-import { STYNX_IDEMPOTENT_ROUTE, STYNX_NO_IDEMPOTENT_ROUTE } from '../../src/constants';
-import { IdempotencyInterceptor } from '../../src/idempotency.interceptor';
+import { STYNX_IDEMPOTENT_ROUTE, STYNX_NO_IDEMPOTENT_ROUTE } from '../../src/constants.js';
+import { IdempotencyInterceptor } from '../../src/idempotency.interceptor.js';
 import type {
   IdempotencyBackend,
   IdempotencyDecisionContext,
   IdempotencyStore,
   IdempotencyStoredEntry,
-} from '../../src/types';
+} from '../../src/types.js';
 import type { Mock } from 'vitest';
 
 function createExecutionContext(

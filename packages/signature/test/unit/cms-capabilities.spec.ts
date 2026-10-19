@@ -1,4 +1,4 @@
-import { createCmsTrustVerifier, isCmsTrustVerifier } from '../../src';
+import { createCmsTrustVerifier, isCmsTrustVerifier } from '../../src/index.js';
 import {
   bltCmsSignature,
   bltSignedDocument,
@@ -10,7 +10,7 @@ import {
   rootPem,
   signedDocument,
   sourceDocument,
-} from '../fixtures/trust';
+} from '../fixtures/trust.js';
 
 describe('createCmsTrustVerifier capabilities', () => {
   it('returns STYNX owned capabilities under a valid local clock', async () => {

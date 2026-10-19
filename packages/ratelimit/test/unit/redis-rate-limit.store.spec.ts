@@ -17,8 +17,8 @@ vi.mock('redis', () => ({
   createClient: redisMock.createClient,
 }));
 
-import { RedisSlidingWindowRateLimitStore } from '../../src/redis-rate-limit.store';
-import type { RateLimitDecisionContext } from '../../src/types';
+import { RedisSlidingWindowRateLimitStore } from '../../src/redis-rate-limit.store.js';
+import type { RateLimitDecisionContext } from '../../src/types.js';
 
 function context(overrides: Partial<RateLimitDecisionContext> = {}): RateLimitDecisionContext {
   return {

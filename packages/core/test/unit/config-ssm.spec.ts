@@ -22,7 +22,7 @@ vi.mock('@aws-sdk/client-ssm', () => ({
 }));
 
 import { z } from 'zod';
-import { ConfigurationValidationError, loadStynxConfiguration, StynxConfigService } from '../../src';
+import { ConfigurationValidationError, loadStynxConfiguration, StynxConfigService } from '../../src/index.js';
 
 describe('loadStynxConfiguration SSM loading', () => {
   beforeEach(() => {

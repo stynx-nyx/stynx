@@ -1,4 +1,4 @@
-import { DefaultPolicyEvaluator } from '../../src/authorization/default-policy-evaluator';
+import { DefaultPolicyEvaluator } from '../../src/authorization/default-policy-evaluator.js';
 import type { Principal } from '@stynx-nyx/contracts';
 
 describe('DefaultPolicyEvaluator permission matching contract', () => {

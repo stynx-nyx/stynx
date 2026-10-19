@@ -1,9 +1,9 @@
 import { PDFDocument, PDFName, PDFNull, PDFObjectParser } from 'pdf-lib';
 import { describe, expect, it, vi } from 'vitest';
-import { SignatureTrustError } from '../../src/errors';
-import { readPdfTrustEvidence } from '../../src/pdf-trust-evidence';
-import { listUpdatedCatalogInXref } from '../fixtures/pki/xref-attacks';
-import { bltCmsSignature, bltSignedDocument } from '../fixtures/trust';
+import { SignatureTrustError } from '../../src/errors.js';
+import { readPdfTrustEvidence } from '../../src/pdf-trust-evidence.js';
+import { listUpdatedCatalogInXref } from '../fixtures/pki/xref-attacks.js';
+import { bltCmsSignature, bltSignedDocument } from '../fixtures/trust.js';
 
 const byteRange = (pdf: Uint8Array): number[] => {
   const match = /\/ByteRange\s*\[\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\]/u

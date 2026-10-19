@@ -1,8 +1,8 @@
 import { BadGatewayException, BadRequestException } from '@nestjs/common';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters';
-import { FlowDesignService } from '../../src/flow-design.service';
+import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters.js';
+import { FlowDesignService } from '../../src/flow-design.service.js';
 import {
   answerWriteSchema,
   createNodeSchema,
@@ -10,7 +10,7 @@ import {
   parseDto,
   policyEvaluationSchema,
   signalSchema,
-} from '../../src/validation';
+} from '../../src/validation.js';
 
 function sourceFiles(dir: string): string[] {
   const entries: string[] = [];

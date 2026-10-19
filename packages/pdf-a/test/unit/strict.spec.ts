@@ -1,4 +1,4 @@
-import { StrictPdfAValidator } from '../../src';
+import { StrictPdfAValidator } from '../../src/index.js';
 
 describe('StrictPdfAValidator', () => {
   it('always fails with a configured-validator error', async () => {

@@ -1,15 +1,15 @@
 import { createHmac } from 'node:crypto';
-import { ExponentialBackoffPolicy, FixedIntervalBackoffPolicy } from '../../src/backoff';
-import { verifyOutboxAckSignature } from '../../src/ack-signature';
+import { ExponentialBackoffPolicy, FixedIntervalBackoffPolicy } from '../../src/backoff.js';
+import { verifyOutboxAckSignature } from '../../src/ack-signature.js';
 import {
   OutboxAlreadyEnqueuedError,
   OutboxAmbiguousAckError,
   OutboxLegacyCutoverError,
   OutboxNotFoundError,
-} from '../../src/errors';
-import { HttpOutboxDispatcher } from '../../src/http-outbox-dispatcher';
-import { InMemoryOutboxMetrics } from '../../src/metrics';
-import { OutboxService } from '../../src/outbox.service';
+} from '../../src/errors.js';
+import { HttpOutboxDispatcher } from '../../src/http-outbox-dispatcher.js';
+import { InMemoryOutboxMetrics } from '../../src/metrics.js';
+import { OutboxService } from '../../src/outbox.service.js';
 import {
   assertQualifiedIdentifier,
   errorMessage,
@@ -17,7 +17,7 @@ import {
   isUniqueViolation,
   outboxColumns,
   toRows,
-} from '../../src/row-mapper';
+} from '../../src/row-mapper.js';
 import type {
   OutboxBackoffPolicy,
   OutboxDispatcherPort,
@@ -25,7 +25,7 @@ import type {
   OutboxModuleOptions,
   OutboxRow,
   OutboxSqlExecutor,
-} from '../../src/types';
+} from '../../src/types.js';
 
 const row: OutboxRow = {
   id: 'message-1',

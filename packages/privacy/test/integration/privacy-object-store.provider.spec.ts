@@ -20,7 +20,7 @@ import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainer
 // Exercise the public compiled package graph and the real AWS SDK, without source aliases.
 const require = createRequire(import.meta.url);
 const { PrivacyObjectStoreService, STYNX_PRIVACY_OPTIONS } =
-  require('@stynx-nyx/privacy') as typeof import('../../src');
+  require('@stynx-nyx/privacy') as typeof import('../../src/index.js');
 const { S3Service, STYNX_STORAGE_OPTIONS, StynxObjectStore } =
   require('@stynx-nyx/storage') as typeof import('@stynx-nyx/storage');
 
