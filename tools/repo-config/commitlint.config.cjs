@@ -63,6 +63,7 @@ const allowedScopes = [
   '@stynx-internal/eslint-config',
   '@stynx-nyx/tsconfig',
   '@stynx-internal/migration-linter',
+  '@stynx-nyx/migration-linter',
   'clean',
   'deps',
   'deps-dev',
