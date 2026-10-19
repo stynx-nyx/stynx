@@ -3,7 +3,7 @@ import type { TestingModule } from '@nestjs/testing';
 import type { StartedTestContainer } from 'testcontainers';
 import type { Database, StynxPgClient, Transaction } from '@stynx-nyx/data';
 import type { RequestContextMutator } from '@stynx-nyx/core';
-import type { TestAppRoleNames } from './roles';
+import type { TestAppRoleNames } from './roles.js';
 import type { SessionJwtSigningService, StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
 
 export type TestSqlStep =
