@@ -1,7 +1,7 @@
 import { Injectable, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
-import { DEFAULT_SCHEDULER_BATCH_SIZE } from './constants';
-import { JobsRepository } from './jobs.repository';
-import type { SchedulerOptions, TimerHandle, TimerPort } from './types';
+import { DEFAULT_SCHEDULER_BATCH_SIZE } from './constants.js';
+import { JobsRepository } from './jobs.repository.js';
+import type { SchedulerOptions, TimerHandle, TimerPort } from './types.js';
 
 const nativeTimer: TimerPort = {
   setInterval: (callback, ms) => setInterval(callback, ms),

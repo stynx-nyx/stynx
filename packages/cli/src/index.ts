@@ -3,10 +3,10 @@
  *
  * @packageDocumentation
  */
-export * from './cli';
-export * from './audit';
-export * from './doctor';
-export * from './init';
-export * from './migrate';
-export * from './privacy-ropa';
-export * from './adopt';
+export * from './cli.js';
+export * from './audit.js';
+export * from './doctor.js';
+export * from './init.js';
+export * from './migrate.js';
+export * from './privacy-ropa.js';
+export * from './adopt.js';

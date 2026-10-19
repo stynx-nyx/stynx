@@ -1,4 +1,4 @@
-import { sha256CanonicalJson } from './digest';
+import { sha256CanonicalJson } from './digest.js';
 
 export type GovBrSandboxState = 'pending' | 'completed' | 'failed';
 export type GovBrSandboxDecision = 'approved' | 'denied';

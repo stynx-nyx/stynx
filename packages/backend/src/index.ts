@@ -5,47 +5,47 @@
  */
 export * from '@stynx-nyx/contracts';
 
-export * from './common/request-context';
-export * from './event-stream/types';
-export * from './event-stream/tokens';
-export * from './event-stream/event-stream.module';
-export * from './event-stream/event-stream.service';
-export * from './webhook-signature/webhook-signature.guard';
-export * from './webhook-signature/webhook-signature.module';
+export * from './common/request-context.js';
+export * from './event-stream/types.js';
+export * from './event-stream/tokens.js';
+export * from './event-stream/event-stream.module.js';
+export * from './event-stream/event-stream.service.js';
+export * from './webhook-signature/webhook-signature.guard.js';
+export * from './webhook-signature/webhook-signature.module.js';
 
-export * from './auth/constants';
-export * from './auth/default-principal-mapper';
-export * from './auth/current-principal.decorator';
-export * from './auth/auth-context.guard';
-export * from './auth/auth.module';
-export * from './auth/required-tenant-header.resolver';
-export * from './auth/claim-first-tenant-entitlement.policy';
-export * from './auth/sql-tenant-entitlement.fallback';
+export * from './auth/constants.js';
+export * from './auth/default-principal-mapper.js';
+export * from './auth/current-principal.decorator.js';
+export * from './auth/auth-context.guard.js';
+export * from './auth/auth.module.js';
+export * from './auth/required-tenant-header.resolver.js';
+export * from './auth/claim-first-tenant-entitlement.policy.js';
+export * from './auth/sql-tenant-entitlement.fallback.js';
 
-export * from './authorization/constants';
-export * from './authorization/decorators';
-export * from './authorization/default-policy-evaluator';
-export * from './authorization/authorization.guard';
-export * from './authorization/authorization.module';
+export * from './authorization/constants.js';
+export * from './authorization/decorators.js';
+export * from './authorization/default-policy-evaluator.js';
+export * from './authorization/authorization.guard.js';
+export * from './authorization/authorization.module.js';
 
-export * from './audit/constants';
-export * from './audit/decorators';
-export * from './audit/audit.interceptor';
-export * from './audit/audit.module';
-export * from './audit/redaction-policy';
-export * from './transactional-command/transactional-command';
-export * from './transactional-command/transactional-command.module';
-export * from './if-match/if-match';
+export * from './audit/constants.js';
+export * from './audit/decorators.js';
+export * from './audit/audit.interceptor.js';
+export * from './audit/audit.module.js';
+export * from './audit/redaction-policy.js';
+export * from './transactional-command/transactional-command.js';
+export * from './transactional-command/transactional-command.module.js';
+export * from './if-match/if-match.js';
 
-export * from './db-context/constants';
-export * from './db-context/request-db-client-lifecycle';
-export * from './db-context/tenant-lifecycle.middleware';
-export * from './db-context/pg-session-db-context.applier';
-export * from './db-context/db-context.interceptor';
-export * from './db-context/db-context.module';
+export * from './db-context/constants.js';
+export * from './db-context/request-db-client-lifecycle.js';
+export * from './db-context/tenant-lifecycle.middleware.js';
+export * from './db-context/pg-session-db-context.applier.js';
+export * from './db-context/db-context.interceptor.js';
+export * from './db-context/db-context.module.js';
 
-export * from './storage/constants';
-export * from './storage/storage.module';
+export * from './storage/constants.js';
+export * from './storage/storage.module.js';
 
 /**
  * Idempotency injection tokens and route metadata helpers.
@@ -109,17 +109,17 @@ export {
   type StynxRateLimitModuleOptions,
 } from '@stynx-nyx/ratelimit';
 
-export * from './sla/constants';
-export * from './sla/types';
-export * from './sla/default-sla-category.resolver';
-export * from './sla/logger-sla-event.sink';
-export * from './sla/sla-monitor.interceptor';
-export * from './sla/sla.module';
+export * from './sla/constants.js';
+export * from './sla/types.js';
+export * from './sla/default-sla-category.resolver.js';
+export * from './sla/logger-sla-event.sink.js';
+export * from './sla/sla-monitor.interceptor.js';
+export * from './sla/sla.module.js';
 
-export * from './pipeline/platform-pipeline.module';
+export * from './pipeline/platform-pipeline.module.js';
 
-export * from './identity-admin/constants';
-export * from './identity-admin/identity-admin.module';
-export * from './identity-admin/identity-admin.service';
-export * from './identity-admin/integration-facades';
-export * from './identity-admin/pg-local-sync.adapter';
+export * from './identity-admin/constants.js';
+export * from './identity-admin/identity-admin.module.js';
+export * from './identity-admin/identity-admin.service.js';
+export * from './identity-admin/integration-facades.js';
+export * from './identity-admin/pg-local-sync.adapter.js';

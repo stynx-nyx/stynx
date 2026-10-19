@@ -12,9 +12,9 @@ import type {
   StorageVerificationReport,
   StorageVerifierTransaction,
 } from '@stynx-nyx/data';
-import { OFFLINE_STORAGE_TEMPLATE } from './storage-template.generated';
-import { OFFLINE_STORAGE_CATALOG } from './storage-catalog.generated';
-import { inspectOfflineRows } from './storage-invariants';
+import { OFFLINE_STORAGE_TEMPLATE } from './storage-template.generated.js';
+import { OFFLINE_STORAGE_CATALOG } from './storage-catalog.generated.js';
+import { inspectOfflineRows } from './storage-invariants.js';
 
 export type OfflineStorageOptions = StorageBindingOptions;
 export interface OfflineStorageManifest {

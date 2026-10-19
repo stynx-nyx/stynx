@@ -1,15 +1,15 @@
-import { consumptionReadInstant } from './consumption-projection';
-import { OfflineSyncError } from './errors';
-import { importDigest } from './import-validation';
-import { decodeCursor, listDefaultLimit, listMaxLimit } from './listing';
-import { rangeText } from './range-administration';
+import { consumptionReadInstant } from './consumption-projection.js';
+import { OfflineSyncError } from './errors.js';
+import { importDigest } from './import-validation.js';
+import { decodeCursor, listDefaultLimit, listMaxLimit } from './listing.js';
+import { rangeText } from './range-administration.js';
 import type {
   ListNumberingReconciliationsInput,
   NumberingConsumptionResult,
   ReconcileNumberingInput,
   ReconcileNumberingResult,
   TrustedOfflineSyncScope,
-} from './types';
+} from './types.js';
 
 /** Canonical request identity is shared with the lossless import validator. */
 export function reconciliationRequest(

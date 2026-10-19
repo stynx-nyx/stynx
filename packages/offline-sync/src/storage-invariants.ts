@@ -6,8 +6,8 @@ import {
   importBatchIdentity,
   importDigest,
   type RangeCreationEvidence,
-} from './import-validation';
-import { readOfflineImportLedger, type OfflineImportLedgerRow } from './import-receipt';
+} from './import-validation.js';
+import { readOfflineImportLedger, type OfflineImportLedgerRow } from './import-receipt.js';
 
 /** Only safe identities and counts leave the database; payloads and ACK bytes do not. */
 export async function inspectOfflineRows(

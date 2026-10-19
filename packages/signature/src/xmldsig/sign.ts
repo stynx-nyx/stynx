@@ -1,13 +1,13 @@
 import { SignedXml } from 'xml-crypto';
-import type { ComputeSignatureOptions, SignedXmlOptions } from 'xml-crypto/lib/types';
+import type { ComputeSignatureOptions, SignedXmlOptions } from 'xml-crypto';
 import {
   DEFAULT_XMLDSIG_CANONICALIZATION,
   DEFAULT_XMLDSIG_DIGEST,
   DEFAULT_XMLDSIG_SIGNATURE,
   defaultXmlDSigTransforms,
-} from './c14n';
-import type { XmlDSigReferenceOptions, XmlDSigSignOptions } from './types';
-import { XmlDSigInputError } from './types';
+} from './c14n.js';
+import type { XmlDSigReferenceOptions, XmlDSigSignOptions } from './types.js';
+import { XmlDSigInputError } from './types.js';
 
 const DEFAULT_ID_ATTRIBUTES = ['Id', 'ID', 'id'] as const;
 

@@ -7,7 +7,7 @@ import {
   STYNX_TRANSACTIONAL_COMMAND_OPTIONS,
   TransactionalCommandInterceptor,
   type StynxTransactionalCommandModuleOptions,
-} from './transactional-command';
+} from './transactional-command.js';
 
 @Module({})
 export class StynxTransactionalCommandModule {

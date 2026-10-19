@@ -1,10 +1,10 @@
-import { pgReconcile, pgListReconciliations } from './postgres-reconciliation';
+import { pgReconcile, pgListReconciliations } from './postgres-reconciliation.js';
 import {
   pgCreateNumberingRange,
   pgGetNumberingRange,
   pgListNumberingRanges,
   pgCancelNumberingRange,
-} from './postgres-ranges';
+} from './postgres-ranges.js';
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -14,28 +14,28 @@ import {
   OfflineSyncRangeUnavailableError,
   OfflineSyncReservationReplayError,
   OfflineSyncUpgradeRequiredError,
-} from './errors';
-import { rangeUnavailableReason, reservationFingerprint } from './listing';
-import { activeReservationError, legacyReservation } from './reservation-admission';
+} from './errors.js';
+import { rangeUnavailableReason, reservationFingerprint } from './listing.js';
+import { activeReservationError, legacyReservation } from './reservation-admission.js';
 import {
   lockReservationScope,
   pgReserveDurableNumbering,
   pgReplayDurableReservation,
   pgCancelDurableReservation,
-} from './postgres-reservations';
+} from './postgres-reservations.js';
 import {
   pgListBatches,
   pgListConflictActions,
   pgListConflicts,
   pgListItemReceipts,
   pgListQueueItems,
-} from './postgres-listing';
+} from './postgres-listing.js';
 import {
   boundedConsumerAttributes,
   mergeStynxSql,
   splitStynxContext,
   withoutResolution,
-} from './stynx-context';
+} from './stynx-context.js';
 import {
   pgGetBatch,
   pgGetItem,
@@ -43,7 +43,7 @@ import {
   pgTransition,
   pgConsumption,
   pgSubmit,
-} from './postgres-durable';
+} from './postgres-durable.js';
 import type {
   CreateNumberingRangeInput,
   CancelNumberingRangeInput,
@@ -90,7 +90,7 @@ import type {
   SyncConflictRecord,
   SyncItemReceiptRecord,
   SyncQueueItemRecord,
-} from './types';
+} from './types.js';
 
 interface NumberingRangeRow {
   id: string;
@@ -282,7 +282,7 @@ export class PostgresOfflineSyncStore implements OfflineSyncDurableStore {
     input: ResolveSyncConflictInput,
     now: string,
     port: OfflineSyncConflictResolver,
-    eventPort?: import('./types').OfflineSyncEventPort,
+    eventPort?: import('./types.js').OfflineSyncEventPort,
   ): Promise<SyncConflict> {
     return this.database
       .tx(async (trx) => {

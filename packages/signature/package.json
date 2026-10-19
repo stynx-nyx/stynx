@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "PAdES, TSA, and certificate-status signature facade for stynx",
+  "type": "module",
   "main": "dist/signature/src/index.js",
   "types": "dist/signature/src/index.d.ts",
   "engines": {
@@ -12,12 +13,12 @@
   "exports": {
     ".": {
       "types": "./dist/signature/src/index.d.ts",
-      "require": "./dist/signature/src/index.js",
+      "import": "./dist/signature/src/index.js",
       "default": "./dist/signature/src/index.js"
     },
     "./xmldsig": {
       "types": "./dist/signature/src/xmldsig/index.d.ts",
-      "require": "./dist/signature/src/xmldsig/index.js",
+      "import": "./dist/signature/src/xmldsig/index.js",
       "default": "./dist/signature/src/xmldsig/index.js"
     }
   },

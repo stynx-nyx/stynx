@@ -1,7 +1,7 @@
 import fontkit from '@pdf-lib/fontkit';
 import type { PDFDocument, PDFFont } from 'pdf-lib';
 
-import { loadPdfAFontAssets } from './assets';
+import { loadPdfAFontAssets } from './assets.js';
 
 export interface PdfAEmbeddedFonts {
   regular: PDFFont;

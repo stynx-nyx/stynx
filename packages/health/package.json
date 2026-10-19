@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Health and observability endpoints for stynx",
+  "type": "module",
   "main": "dist/health/src/index.js",
   "types": "dist/health/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/health/src/index.d.ts",
-      "require": "./dist/health/src/index.js",
+      "import": "./dist/health/src/index.js",
       "default": "./dist/health/src/index.js"
     }
   },

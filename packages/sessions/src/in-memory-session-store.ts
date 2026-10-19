@@ -6,8 +6,8 @@ import type {
   SessionStore,
   SessionPolicyOptions,
   SessionPolicyResult,
-} from './types';
-import { SessionConflictError, SessionExchangeError } from './errors';
+} from './types.js';
+import { SessionConflictError, SessionExchangeError } from './errors.js';
 
 export class InMemorySessionStore implements SessionStore {
   readonly invalidationEvents = new EventEmitter();

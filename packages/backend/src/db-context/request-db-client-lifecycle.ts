@@ -1,4 +1,4 @@
-import type { RequestLike } from '../common/request-context';
+import type { RequestLike } from '../common/request-context.js';
 
 export interface RequestDbClientAcquireContext {
   request: RequestLike;

@@ -8,21 +8,21 @@ import {
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClsModule, ClsService } from 'nestjs-cls';
 import { BadRequestException } from '@nestjs/common';
-import { generateRequestId, normalizeRequestId } from './request-id';
-import type { CoreClsStore } from './request-context';
+import { generateRequestId, normalizeRequestId } from './request-id.js';
+import type { CoreClsStore } from './request-context.js';
 import type { ZodTypeAny } from 'zod';
 import {
   loadStynxConfiguration,
   type StynxCoreModuleAsyncOptions,
   type StynxCoreModuleOptions,
   StynxConfigService,
-} from './config';
-import { StynxErrorFilter } from './error.filter';
-import { RequestContext, RequestContextMutator } from './request-context';
-import { RequestContextInterceptor } from './request-context.interceptor';
-import { SecretLoader } from './secret-loader';
-import { SystemContext } from './system-context';
-import { STYNX_CORE_CONFIG, STYNX_CORE_OPTIONS, STYNX_SYSTEM_OPERATION_SINK } from './tokens';
+} from './config.js';
+import { StynxErrorFilter } from './error.filter.js';
+import { RequestContext, RequestContextMutator } from './request-context.js';
+import { RequestContextInterceptor } from './request-context.interceptor.js';
+import { SecretLoader } from './secret-loader.js';
+import { SystemContext } from './system-context.js';
+import { STYNX_CORE_CONFIG, STYNX_CORE_OPTIONS, STYNX_SYSTEM_OPERATION_SINK } from './tokens.js';
 
 type ModuleImport = Type<unknown> | ForwardReference | DynamicModule | Promise<DynamicModule>;
 

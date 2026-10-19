@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "CLI for bootstrapping, doctor checks, migrations, privacy ROPA, and adoption helpers",
+  "type": "module",
   "main": "dist/cli/src/index.js",
   "types": "dist/cli/src/index.d.ts",
   "bin": {
@@ -15,7 +16,7 @@
   "exports": {
     ".": {
       "types": "./dist/cli/src/index.d.ts",
-      "require": "./dist/cli/src/index.js",
+      "import": "./dist/cli/src/index.js",
       "default": "./dist/cli/src/index.js"
     }
   },

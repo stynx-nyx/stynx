@@ -6,7 +6,7 @@ import type {
   MobileIdPort,
   MobilePrinterPort,
   MobileStynxSessionPort,
-} from './ports';
+} from './ports.js';
 import type {
   CreateMobileDraftInput,
   MobileConflictResolution,
@@ -25,7 +25,7 @@ import type {
   ReserveMobileNumberingInput,
   SyncConflictResolutionStrategy,
   SyncQueueStatus,
-} from './types';
+} from './types.js';
 
 /**
  * Offline-first mobile runtime for official entity drafting in the field.

@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Multi-channel notification delivery (email/SMS/push/in-app) with templates, preference-aware suppression, and retryable delivery tracking for stynx",
+  "type": "module",
   "main": "dist/notifications/src/index.js",
   "types": "dist/notifications/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/notifications/src/index.d.ts",
-      "require": "./dist/notifications/src/index.js",
+      "import": "./dist/notifications/src/index.js",
       "default": "./dist/notifications/src/index.js"
     }
   },

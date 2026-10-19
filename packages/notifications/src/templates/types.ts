@@ -1,4 +1,4 @@
-import type { NotificationChannel } from '../types';
+import type { NotificationChannel } from '../types.js';
 
 /**
  * A versioned, code-registered notification template.

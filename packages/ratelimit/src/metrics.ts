@@ -1,4 +1,4 @@
-import type { RateLimitMetricsSink } from './types';
+import type { RateLimitMetricsSink } from './types.js';
 
 const DEFAULT_BUCKETS_MS = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000];
 

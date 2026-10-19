@@ -1,5 +1,5 @@
-import { PrivacyConfigurationError } from './errors';
-import type { PrivacyCognitoAdmin } from './types';
+import { PrivacyConfigurationError } from './errors.js';
+import type { PrivacyCognitoAdmin } from './types.js';
 
 export class UnconfiguredPrivacyCognitoAdmin implements PrivacyCognitoAdmin {
   async disableUser(_subjectUserId: string): Promise<void> {

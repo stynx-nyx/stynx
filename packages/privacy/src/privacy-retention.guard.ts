@@ -5,7 +5,7 @@ import {
   type ExecutionContext,
 } from '@nestjs/common';
 import type { RequestLike } from '@stynx-nyx/auth';
-import { PrivacyValidationError } from './errors';
+import { PrivacyValidationError } from './errors.js';
 
 export function privacyRetentionDryRun(value: unknown): boolean {
   if (value === undefined || value === 'true') return true;

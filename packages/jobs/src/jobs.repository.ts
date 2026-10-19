@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
 import type { Transaction } from '@stynx-nyx/data';
-import type { JobRecord, ScheduleRecord, JobExecutionResult } from './types';
-import { nextCronRunAt } from './cron';
-import { InvalidCronExpressionError, InvalidScheduleError, ScheduleActorRequiredError } from './errors';
-import type { JobHandler, JobHandlerContext } from './types';
+import type { JobRecord, ScheduleRecord, JobExecutionResult } from './types.js';
+import { nextCronRunAt } from './cron.js';
+import { InvalidCronExpressionError, InvalidScheduleError, ScheduleActorRequiredError } from './errors.js';
+import type { JobHandler, JobHandlerContext } from './types.js';
 
 const JOB_COLUMNS = `id, tenant_id as "tenantId", schedule_id as "scheduleId", job_type as "jobType", payload, status, priority, attempts, max_attempts as "maxAttempts", run_at as "runAt", locked_by as "lockedBy", locked_until as "lockedUntil", started_at as "startedAt", finished_at as "finishedAt", last_error as "lastError", dead_letter_reason as "deadLetterReason", idempotency_key as "idempotencyKey", actor_id as "actorId", created_at as "createdAt", updated_at as "updatedAt"`;
 const SCHEDULE_COLUMNS = `id, tenant_id as "tenantId", name, job_type as "jobType", kind, actor_id as "actorId", timezone, cron_expression as "cronExpression", interval_seconds as "intervalSeconds", payload, priority, max_attempts as "maxAttempts", jsonb_build_object('baseMs', backoff_base_ms, 'maxMs', backoff_max_ms, 'multiplier', backoff_multiplier) as backoff, is_enabled as "isEnabled", disabled_reason as "disabledReason", next_run_at as "nextRunAt", last_enqueued_at as "lastEnqueuedAt", created_by as "createdBy", created_at as "createdAt", updated_at as "updatedAt"`;

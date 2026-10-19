@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { StynxLoggingOptions } from './tokens';
+import type { StynxLoggingOptions } from './tokens.js';
 
 interface DedupeEntry {
   expiresAt: number;

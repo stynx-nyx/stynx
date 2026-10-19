@@ -3,8 +3,8 @@ import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx-ny
 import { Idempotent } from '@stynx-nyx/idempotency';
 import { RateLimit } from '@stynx-nyx/ratelimit';
 import { Audit } from '@stynx-nyx/backend';
-import type { CreateWorkItemEntryDto, ListQuery, UpdateWorkItemEntryDto } from './dto';
-import { ReferenceSampleService } from './reference-sample.service';
+import type { CreateWorkItemEntryDto, ListQuery, UpdateWorkItemEntryDto } from './dto.js';
+import { ReferenceSampleService } from './reference-sample.service.js';
 
 @Controller('/work-item-entries')
 @UseGuards(StynxAuthGuard, PermissionGuard)

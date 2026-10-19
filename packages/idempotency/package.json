@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Idempotency primitives for stynx",
+  "type": "module",
   "main": "dist/idempotency/src/index.js",
   "types": "dist/idempotency/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/idempotency/src/index.d.ts",
-      "require": "./dist/idempotency/src/index.js",
+      "import": "./dist/idempotency/src/index.js",
       "default": "./dist/idempotency/src/index.js"
     }
   },

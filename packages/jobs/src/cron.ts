@@ -1,4 +1,4 @@
-import { InvalidCronExpressionError } from './errors';
+import { InvalidCronExpressionError } from './errors.js';
 
 /**
  * A minimal 5-field cron parser and next-run calculator: `minute hour

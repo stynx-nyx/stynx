@@ -3,12 +3,12 @@
  *
  * @packageDocumentation
  */
-export * from './auth';
-export * from './authorization';
-export * from './audit';
-export * from './storage';
-export * from './db-context';
-export * from './tenancy';
-export * from './errors';
-export * from './identity-admin';
-export * from './headers';
+export * from './auth.js';
+export * from './authorization.js';
+export * from './audit.js';
+export * from './storage.js';
+export * from './db-context.js';
+export * from './tenancy.js';
+export * from './errors.js';
+export * from './identity-admin.js';
+export * from './headers.js';

@@ -1,17 +1,17 @@
 import { type DynamicModule, Module } from '@nestjs/common';
-import { InMemoryOfflineSyncStore } from './in-memory-offline-sync.store';
-import { OfflineSyncController } from './offline-sync.controller';
-import { CTG9OfflineSyncController } from './ctg9-offline-sync.controller';
-import { OfflineSyncConfigurationError } from './errors';
-import { OfflineSyncService } from './offline-sync.service';
-import { PostgresOfflineSyncStore } from './postgres-offline-sync.store';
-import { StynxOfflineSyncContext } from './stynx-offline-sync.context';
+import { InMemoryOfflineSyncStore } from './in-memory-offline-sync.store.js';
+import { OfflineSyncController } from './offline-sync.controller.js';
+import { CTG9OfflineSyncController } from './ctg9-offline-sync.controller.js';
+import { OfflineSyncConfigurationError } from './errors.js';
+import { OfflineSyncService } from './offline-sync.service.js';
+import { PostgresOfflineSyncStore } from './postgres-offline-sync.store.js';
+import { StynxOfflineSyncContext } from './stynx-offline-sync.context.js';
 import {
   STYNX_OFFLINE_SYNC_CONTEXT,
   STYNX_OFFLINE_SYNC_OPTIONS,
   STYNX_OFFLINE_SYNC_STORE,
-} from './tokens';
-import type { StynxOfflineSyncModuleOptions } from './types';
+} from './tokens.js';
+import type { StynxOfflineSyncModuleOptions } from './types.js';
 
 @Module({})
 export class StynxOfflineSyncModule {

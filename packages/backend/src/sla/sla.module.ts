@@ -3,15 +3,15 @@ import {
   STYNX_SLA_CATEGORY_RESOLVER,
   STYNX_SLA_EVENT_SINK,
   STYNX_SLA_OPTIONS,
-} from './constants';
-import { DefaultSlaCategoryResolver } from './default-sla-category.resolver';
-import { LoggerSlaEventSink } from './logger-sla-event.sink';
-import { SlaMonitorInterceptor } from './sla-monitor.interceptor';
+} from './constants.js';
+import { DefaultSlaCategoryResolver } from './default-sla-category.resolver.js';
+import { LoggerSlaEventSink } from './logger-sla-event.sink.js';
+import { SlaMonitorInterceptor } from './sla-monitor.interceptor.js';
 import type {
   SlaCategoryResolver,
   SlaEventSink,
   SlaMonitorInterceptorOptions,
-} from './types';
+} from './types.js';
 
 export interface StynxSlaModuleOptions extends SlaMonitorInterceptorOptions {
   categoryResolver?: SlaCategoryResolver;

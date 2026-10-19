@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Rate limiting primitives for stynx",
+  "type": "module",
   "main": "dist/ratelimit/src/index.js",
   "types": "dist/ratelimit/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/ratelimit/src/index.d.ts",
-      "require": "./dist/ratelimit/src/index.js",
+      "import": "./dist/ratelimit/src/index.js",
       "default": "./dist/ratelimit/src/index.js"
     }
   },

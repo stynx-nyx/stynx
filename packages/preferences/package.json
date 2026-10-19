@@ -3,12 +3,13 @@
   "version": "1.6.2",
   "license": "BUSL-1.1",
   "description": "Closed tenant-subject profile and preference contracts for stynx",
+  "type": "module",
   "main": "dist/preferences/src/index.js",
   "types": "dist/preferences/src/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/preferences/src/index.d.ts",
-      "require": "./dist/preferences/src/index.js",
+      "import": "./dist/preferences/src/index.js",
       "default": "./dist/preferences/src/index.js"
     }
   },

@@ -1,4 +1,4 @@
-import type { RequestLike } from './request-context';
+import type { RequestLike } from './request-context.js';
 
 export interface IdempotentMetadata {
   transactional?: boolean;

@@ -1,4 +1,4 @@
-import type { PermissionCacheBackend, PermissionCacheRecord } from './types';
+import type { PermissionCacheBackend, PermissionCacheRecord } from './types.js';
 
 export class InMemoryPermissionCacheBackend implements PermissionCacheBackend {
   private readonly records = new Map<string, PermissionCacheRecord>();

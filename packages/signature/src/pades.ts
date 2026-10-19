@@ -1,4 +1,4 @@
-import { sha256, sha256CanonicalJson } from './digest';
+import { sha256, sha256CanonicalJson } from './digest.js';
 
 export interface PadesEvidenceRequest {
   payload: Uint8Array;

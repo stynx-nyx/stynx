@@ -17,7 +17,7 @@ import type {
   MobileSyncBatchResult,
   MobileSyncQueueItem,
   SyncConflictResolutionStrategy,
-} from './types';
+} from './types.js';
 
 /** Encrypted device-local key-value store, grouped by named collections. */
 export interface MobileEncryptedStorePort {

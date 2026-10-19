@@ -3,9 +3,9 @@
  *
  * @packageDocumentation
  */
-export * from './health.controller';
-export * from './health.module';
-export * from './health.service';
-export * from './info.guard';
-export * from './metrics.service';
-export * from './tokens';
+export * from './health.controller.js';
+export * from './health.module.js';
+export * from './health.service.js';
+export * from './info.guard.js';
+export * from './metrics.service.js';
+export * from './tokens.js';

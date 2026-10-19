@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Get, Headers, Post, Res } from '@nestjs/common';
 import { Public, StynxJwtValidator } from '@stynx-nyx/auth';
 import { NoIdempotent } from '@stynx-nyx/idempotency';
-import { ReferenceDevAuthService } from './reference-dev-auth.service';
+import { ReferenceDevAuthService } from './reference-dev-auth.service.js';
 
 interface DevLoginBody {
   email?: string;

@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Privacy exports, erasure orchestration, and ROPA generation for stynx",
+  "type": "module",
   "main": "dist/privacy/src/index.js",
   "types": "dist/privacy/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/privacy/src/index.d.ts",
-      "require": "./dist/privacy/src/index.js",
+      "import": "./dist/privacy/src/index.js",
       "default": "./dist/privacy/src/index.js"
     }
   },

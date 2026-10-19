@@ -1,14 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import type { Database, Transaction } from '@stynx-nyx/data';
-import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection';
-import { OfflineSyncError, OfflineSyncUpgradeRequiredError } from './errors';
-import { decodeCursor, finishPage, pgSortInstant } from './listing';
+import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection.js';
+import { OfflineSyncError, OfflineSyncUpgradeRequiredError } from './errors.js';
+import { decodeCursor, finishPage, pgSortInstant } from './listing.js';
 import {
   reconciliationConflict,
   reconciliationList,
   reconciliationRequest,
   reconciliationResult,
-} from './reconciliation';
+} from './reconciliation.js';
 import type {
   CTG9NumberingReservation,
   ListNumberingReconciliationsInput,
@@ -18,7 +18,7 @@ import type {
   ReconcileNumberingInput,
   ReconcileNumberingResult,
   TrustedOfflineSyncScope,
-} from './types';
+} from './types.js';
 
 type HistoryRow = {
   id: string;

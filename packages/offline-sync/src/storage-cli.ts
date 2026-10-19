@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { existsSync, realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createStynxPgClient } from '@stynx-nyx/data';
-import { renderOfflineStorage, verifyOfflineStorage, type OfflineStorageOptions } from './storage';
+import { renderOfflineStorage, verifyOfflineStorage, type OfflineStorageOptions } from './storage.js';
 
 export interface OfflineStorageCommandIO {
   stdout: Pick<NodeJS.WriteStream, 'write'>;
@@ -103,7 +104,7 @@ async function execute(
 
 // Compare the actual entry path, so imports remain side-effect free.
 export const storageCommandExecution =
-  existsSync(process.argv[1] ?? '') && realpathSync(process.argv[1]!) === realpathSync(__filename)
+  existsSync(process.argv[1] ?? '') && realpathSync(process.argv[1]!) === realpathSync(fileURLToPath(import.meta.url))
     ? runOfflineStorageCommand().then((code) => {
         process.exitCode = code;
         return code;

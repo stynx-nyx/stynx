@@ -1,8 +1,8 @@
 import { type DynamicModule, Module, OnModuleDestroy, OnModuleInit, Inject, Optional, Injectable } from '@nestjs/common';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
-import { StynxAuditController } from './audit.controller';
-import { StynxAuditService } from './audit.service';
+import { StynxAuditController } from './audit.controller.js';
+import { StynxAuditService } from './audit.service.js';
 import {
   STYNX_AUDIT_ARCHIVE_STORE,
   STYNX_AUDIT_CLOCK,
@@ -11,8 +11,8 @@ import {
   type AuditArchiveStore,
   type AuditClock,
   type AuditDumpRunner,
-} from './tokens';
-import type { StynxAuditModuleOptions } from './types';
+} from './tokens.js';
+import type { StynxAuditModuleOptions } from './types.js';
 
 class SystemAuditClock implements AuditClock {
   now(): Date {

@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Tenant-scoped work distribution primitives for stynx: queues, atomic claiming, distribution strategies, and SLA clocks",
+  "type": "module",
   "main": "dist/worklist/src/index.js",
   "types": "dist/worklist/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/worklist/src/index.d.ts",
-      "require": "./dist/worklist/src/index.js",
+      "import": "./dist/worklist/src/index.js",
       "default": "./dist/worklist/src/index.js"
     }
   },

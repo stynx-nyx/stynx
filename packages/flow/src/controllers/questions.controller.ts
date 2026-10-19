@@ -2,8 +2,8 @@ import { Body, Controller, Delete, Get, Param, Patch, Put, UseGuards } from '@ne
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, NoIdempotent } from '@stynx-nyx/backend';
 import { Idempotent } from '@stynx-nyx/idempotency';
-import { FlowFormsService } from '../flow-forms.service';
-import type { PutFlowQuestionScoreDto, UpdateFlowQuestionDto } from '../types';
+import { FlowFormsService } from '../flow-forms.service.js';
+import type { PutFlowQuestionScoreDto, UpdateFlowQuestionDto } from '../types.js';
 
 @Controller('/flow/questions')
 @UseGuards(StynxAuthGuard, PermissionGuard)

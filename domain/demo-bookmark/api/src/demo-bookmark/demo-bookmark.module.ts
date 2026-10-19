@@ -5,10 +5,10 @@
 // Local guards/decorators/ subdirs deleted in T2 — no longer needed.
 
 import { Module } from '@nestjs/common';
-import { BookmarkController } from './controllers/bookmark.controller';
-import { BookmarkTagController } from './controllers/bookmark-tag.controller';
-import { BookmarkService } from './services/bookmark.service';
-import { BookmarkTagService } from './services/bookmark-tag.service';
+import { BookmarkController } from './controllers/bookmark.controller.js';
+import { BookmarkTagController } from './controllers/bookmark-tag.controller.js';
+import { BookmarkService } from './services/bookmark.service.js';
+import { BookmarkTagService } from './services/bookmark-tag.service.js';
 
 @Module({
   controllers: [BookmarkController, BookmarkTagController],

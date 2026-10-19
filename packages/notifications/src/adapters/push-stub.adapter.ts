@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { ChannelAdapter, ChannelSendInput, ChannelSendResult } from './channel-adapter';
+import type { ChannelAdapter, ChannelSendInput, ChannelSendResult } from './channel-adapter.js';
 
 /**
  * Push port with no real provider yet. Push delivery lands with the mobile phase

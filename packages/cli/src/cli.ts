@@ -9,13 +9,13 @@ import {
   adoptScan,
   formatAdoptScanHuman,
   linkCognitoUsers,
-} from './adopt';
-import { verifyAuditChain } from './audit';
-import { runDoctor } from './doctor';
-import { scaffoldApp } from './init';
-import { migrateDown, migrateRedo, migrateUp, migrationStatus } from './migrate';
-import { generateRopaFromApp } from './privacy-ropa';
-import { generateModule } from './generate-module';
+} from './adopt.js';
+import { verifyAuditChain } from './audit.js';
+import { runDoctor } from './doctor.js';
+import { scaffoldApp } from './init.js';
+import { migrateDown, migrateRedo, migrateUp, migrationStatus } from './migrate.js';
+import { generateRopaFromApp } from './privacy-ropa.js';
+import { generateModule } from './generate-module.js';
 
 export function buildProgram(): Command {
   const program = new Command();

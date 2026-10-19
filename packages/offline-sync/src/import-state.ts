@@ -1,10 +1,10 @@
 import { quoteStorageIdentifier } from '@stynx-nyx/data';
 import type { StorageVerifierTransaction } from '@stynx-nyx/data';
-import { renderOfflineStorage, inspectOfflineImportStorage } from './storage';
-import { OfflineImportError } from './import-contract';
-import type { OfflineImportOptions, OfflineImportReceipt } from './import-contract';
-import type { OfflineImportManifest, OfflineImportRecord } from './import-schema.generated';
-import { OFFLINE_IMPORT_SCHEMA } from './import-schema.generated';
+import { renderOfflineStorage, inspectOfflineImportStorage } from './storage.js';
+import { OfflineImportError } from './import-contract.js';
+import type { OfflineImportOptions, OfflineImportReceipt } from './import-contract.js';
+import type { OfflineImportManifest, OfflineImportRecord } from './import-schema.generated.js';
+import { OFFLINE_IMPORT_SCHEMA } from './import-schema.generated.js';
 import {
   IMPORT_RELATIONS,
   IMPORT_KEYS,
@@ -14,11 +14,11 @@ import {
   importInstantMicroseconds,
   validateOfflineImportManifest,
   freezeImportJson,
-} from './import-validation';
-import { importRecordCounts, readOfflineImportLedger } from './import-receipt';
-import type { OfflineImportLedgerRow } from './import-receipt';
-import { verifyImportArchives } from './import-archive';
-import { preflightOfflineImport, type IntendedImportRow } from './import-preflight';
+} from './import-validation.js';
+import { importRecordCounts, readOfflineImportLedger } from './import-receipt.js';
+import type { OfflineImportLedgerRow } from './import-receipt.js';
+import { verifyImportArchives } from './import-archive.js';
+import { preflightOfflineImport, type IntendedImportRow } from './import-preflight.js';
 
 const ORDER: readonly OfflineImportRecord['kind'][] = [
   'ranges',

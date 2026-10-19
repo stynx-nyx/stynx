@@ -1,9 +1,9 @@
 import { quoteStorageIdentifier } from '@stynx-nyx/data';
 import type { StorageCatalogEntry, StorageVerifierTransaction } from '@stynx-nyx/data';
-import { inspectOfflineRows } from './storage-invariants';
-import { OfflineImportError } from './import-contract';
-import { IMPORT_RELATIONS, IMPORT_KEYS, canonicalImportJson } from './import-validation';
-import type { OfflineImportRecord } from './import-schema.generated';
+import { inspectOfflineRows } from './storage-invariants.js';
+import { OfflineImportError } from './import-contract.js';
+import { IMPORT_RELATIONS, IMPORT_KEYS, canonicalImportJson } from './import-validation.js';
+import type { OfflineImportRecord } from './import-schema.generated.js';
 
 export interface IntendedImportRow {
   readonly kind: OfflineImportRecord['kind'];

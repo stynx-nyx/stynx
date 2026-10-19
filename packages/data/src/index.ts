@@ -5,24 +5,24 @@
  */
 /* istanbul ignore file -- barrel export surface; package behavior is covered through concrete modules. */
 /** Data module exports for NestJS consumers. */
-export { StynxDataModule, StynxDataModule as DataModule } from './data.module';
+export { StynxDataModule, StynxDataModule as DataModule } from './data.module.js';
 /** Database service export. */
-export { Database } from './database';
+export { Database } from './database.js';
 /** Application SQL role configuration exports (ADR-OUTBOX-0003 D1). */
-export { APP_ROLE_NAME_MAX_BYTES, DEFAULT_APP_ROLE_NAME, resolveAppRoleName } from './app-role';
+export { APP_ROLE_NAME_MAX_BYTES, DEFAULT_APP_ROLE_NAME, resolveAppRoleName } from './app-role.js';
 /** Transaction and Drizzle helper exports. */
-export { Transaction, createDrizzle, type StynxDrizzleDatabase } from './transaction';
+export { Transaction, createDrizzle, type StynxDrizzleDatabase } from './transaction.js';
 /** PostgreSQL pool registry exports. */
-export { StynxPoolRegistry, createStynxPgPool, type StynxPgPoolOptions } from './pools';
+export { StynxPoolRegistry, createStynxPgPool, type StynxPgPoolOptions } from './pools.js';
 /** PostgreSQL client factory exports for controlled test and CLI utilities. */
-export { createStynxPgClient, type StynxPgClient, type StynxPgClientConfig } from './client';
+export { createStynxPgClient, type StynxPgClient, type StynxPgClientConfig } from './client.js';
 /** System-context helper export. */
-export { withSystemContext } from './system-context';
-export * from './table-markers';
-export * from './types';
-export * from './errors';
-export * from './tokens';
-export * from './schema';
-export * from './query-helpers';
-export * from './storage-contract';
-export * from './storage-catalog';
+export { withSystemContext } from './system-context.js';
+export * from './table-markers.js';
+export * from './types.js';
+export * from './errors.js';
+export * from './tokens.js';
+export * from './schema/index.js';
+export * from './query-helpers.js';
+export * from './storage-contract.js';
+export * from './storage-catalog.js';

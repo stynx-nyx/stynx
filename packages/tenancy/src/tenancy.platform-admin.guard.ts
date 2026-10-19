@@ -1,1 +1,1 @@
-export * from './tenancy-platform-admin.guard';
+export * from './tenancy-platform-admin.guard.js';

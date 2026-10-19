@@ -1,4 +1,4 @@
-import type { WorklistDistributionStrategy, WorklistEvent } from './types';
+import type { WorklistDistributionStrategy, WorklistEvent } from './types.js';
 
 export const WORKLIST_BUSINESS_CALENDAR = Symbol('WORKLIST_BUSINESS_CALENDAR');
 export const WORKLIST_SCHEDULER = Symbol('WORKLIST_SCHEDULER');

@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Authentication adapters and runtime primitives for stynx",
+  "type": "module",
   "main": "dist/auth/src/index.js",
   "types": "dist/auth/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/auth/src/index.d.ts",
-      "require": "./dist/auth/src/index.js",
+      "import": "./dist/auth/src/index.js",
       "default": "./dist/auth/src/index.js"
     }
   },

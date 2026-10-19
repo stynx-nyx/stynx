@@ -1,9 +1,9 @@
 import Handlebars from 'handlebars';
 import type { Browser, Page } from 'playwright';
 import { chromium } from 'playwright';
-import { PdfProfileUnsupportedError, PdfRenderError, PdfValidationError } from './errors';
-import { sha256Hex } from './pdf-renderer';
-import type { LocalPdfRendererOptions, PdfRenderBackend, RenderRequest, RenderResult } from './types';
+import { PdfProfileUnsupportedError, PdfRenderError, PdfValidationError } from './errors.js';
+import { sha256Hex } from './pdf-renderer.js';
+import type { LocalPdfRendererOptions, PdfRenderBackend, RenderRequest, RenderResult } from './types.js';
 
 export class LocalPdfRenderBackend implements PdfRenderBackend {
   private browser: Browser | undefined;

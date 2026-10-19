@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
-import { OfflineSyncError } from './errors';
-import { stableStringify } from './transport';
+import { OfflineSyncError } from './errors.js';
+import { stableStringify } from './transport.js';
 import type {
   NumberingRange,
   OfflineSyncPage,
   CTG9ReserveNumberingInput,
   TrustedOfflineSyncScope,
-} from './types';
+} from './types.js';
 
 export const listDefaultLimit = 50;
 /** Canonical payload hash (`sha256:` + 64 lowercase hex digits), INV-OFFLINE-001. */

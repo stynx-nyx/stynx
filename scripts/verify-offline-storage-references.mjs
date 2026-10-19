@@ -61,18 +61,18 @@ const DYNAMIC_SQL = {
 // The entire producer binding is frozen too: unchanged SQL text cannot admit
 // identifiers from a newly changed, unreviewed data source.
 const DYNAMIC_PRODUCER_SOURCES = {
-  'listing.ts': '160347fb814a76c5ec5d09a553852b4538299865adb7dfb3e8e318e33a5e46d2',
-  'stynx-context.ts': 'cff6d850b59b0b6309c0242839f8bfd5a67a425976e036908929723d1fe5df1f',
+  'listing.ts': '78b5baa982a354d190b65b3ddcf5c927678be651fc0cabe8429f95a92fd2b0c0',
+  'stynx-context.ts': 'efbfe38b87ea80de68cd58d76d34f4cdff0e51715033177316d7bb037e15409e',
 
-  'import-preflight.ts': 'a079ab03949aba9cd8fec29a8c2245f56f7b03ad16200815a92fbe68c544c962',
-  'import-state.ts': '15b7597d57df3a8d9f176f6b5a4799c8ac5af41ef01cff25852a6b63d9783493',
-  'storage-invariants.ts': '0482be3f6e8b54e64d7709c6328bd4077c46143c2cfc6cef79d83a749661c302',
-  'storage.ts': 'ab2ba8a75a4fc58d17cbbf63d98e04a1932d53c66c72b7c29f214d2c040e422b',
-  'postgres-reconciliation.ts': '67e1fc701ea76cc2b46915daf5a11211dda456f98fdecc1b62513df64a3b3a86',
-  'postgres-durable.ts': 'dffcf47ad634aa2c62c705aafa8a1e3b9819d111b0c7ca515d48deb43740697d',
-  'postgres-listing.ts': '642ea1b2aefdc19f361d2eeb4c75ac40723418e662b7ca2ff14334db3c87d646',
+  'import-preflight.ts': '7adf0f26fda82886eafd58d136da254c747aafdb2569994354097b83b65edf6a',
+  'import-state.ts': '2daa0fa6b3f696a1e3cc9a56b4850a4665110446b67e0fd917e0dc0018e4107b',
+  'storage-invariants.ts': '74ea7e98bf80faa63645572a76131eecfe1351323e4ad80513bc3fa57b09e7b3',
+  'storage.ts': '1bcd5da5893a85c075735e6f1169f58227411a09ba15ef11105c6551d749b7e5',
+  'postgres-reconciliation.ts': '38eb4d6b9b4245489cd78348cee9622100f0e7fcb6b759cdc567750e2eb18e29',
+  'postgres-durable.ts': '58f91ebe439ff700584183e4a95bc4011c8d655aa19a2bd2271bdb23b0015e79',
+  'postgres-listing.ts': '67b541e5c739483a64ca016d1b6e5b938911626a7561aac4cfec4e8bce1f765b',
   'postgres-offline-sync.store.ts':
-    'f0bfda660e75a7020f71c289729f3f8ee436cc12444a0c8196f40ad088e880c6',
+    '327744c17e091d76e55df38b3d94a4457895c4579eb69bb61e14f7dfdaa2e0a3',
 };
 
 const require = createRequire(resolve(root, 'node_modules/.pnpm/node_modules/_.js'));

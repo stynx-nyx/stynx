@@ -22,10 +22,10 @@ import {
 } from '@stynx-nyx/contracts';
 import { Database, IndependentTransactionConnectionError, type Transaction } from '@stynx-nyx/data';
 import { Observable, type Subscription } from 'rxjs';
-import { MembershipAccessCache } from './membership-cache';
-import { recordResolvedTenantCommandContext } from './command-context.port';
-import { STYNX_TENANCY_OPTIONS, STYNX_TENANT_MEMBERSHIP_CACHE } from './tokens';
-import type { RequestLike, ResolvedStynxTenancyModuleOptions } from './types';
+import { MembershipAccessCache } from './membership-cache.js';
+import { recordResolvedTenantCommandContext } from './command-context.port.js';
+import { STYNX_TENANCY_OPTIONS, STYNX_TENANT_MEMBERSHIP_CACHE } from './tokens.js';
+import type { RequestLike, ResolvedStynxTenancyModuleOptions } from './types.js';
 import {
   headerToString,
   isOptionalTenancyPath,
@@ -33,7 +33,7 @@ import {
   isUuidV7,
   normalizedPath,
   resolveSubdomainTenantId,
-} from './utils';
+} from './utils.js';
 
 @Injectable()
 export class TenantContextInterceptor implements NestInterceptor {

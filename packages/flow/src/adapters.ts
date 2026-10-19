@@ -1,6 +1,6 @@
 import { BadGatewayException, Inject, Injectable, Optional } from '@nestjs/common';
-import { FLOW_DOMAIN_ADAPTERS } from './tokens';
-import type { FlowJsonObject } from './types';
+import { FLOW_DOMAIN_ADAPTERS } from './tokens.js';
+import type { FlowJsonObject } from './types.js';
 
 export interface FlowFactsInput {
   tenantId: string;

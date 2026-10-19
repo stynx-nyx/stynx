@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { FlowGraphPackage } from './internal/design/graph-package';
-import { FlowDesignTableStore } from './internal/design/design-table-store';
-import type { FlowGraphExportDocument, FlowGraphImportDocument, FlowJsonObject } from './types';
+import { FlowGraphPackage } from './internal/design/graph-package.js';
+import { FlowDesignTableStore } from './internal/design/design-table-store.js';
+import type { FlowGraphExportDocument, FlowGraphImportDocument, FlowJsonObject } from './types.js';
 import {
   createAgentRuleSchema,
   createEdgeSchema,
@@ -26,7 +26,7 @@ import {
   updatePolicySetSchema,
   updateScopeSchema,
   updateTransitionEffectSchema,
-} from './validation';
+} from './validation.js';
 
 function normalizeNodeFormRule(input: FlowJsonObject): FlowJsonObject {
   if (input.gatingMode === 'any_answered') {

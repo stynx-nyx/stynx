@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, Transaction } from '@stynx-nyx/data';
-import { FORM_TABLES, formEntries, type FormTableKey } from './internal/forms/form-tables';
-import { camelizeRow, type FlowRow } from './row-utils';
+import { FORM_TABLES, formEntries, type FormTableKey } from './internal/forms/form-tables.js';
+import { camelizeRow, type FlowRow } from './row-utils.js';
 import {
   answerWriteSchema,
   bulkAnswerWriteSchema,
@@ -17,7 +17,7 @@ import {
   updateFormSchema,
   updateQuestionSchema,
   updateWaiverSchema,
-} from './validation';
+} from './validation.js';
 
 @Injectable()
 export class FlowFormsService {

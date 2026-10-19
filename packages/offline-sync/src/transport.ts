@@ -3,7 +3,7 @@ import type {
   SubmitSyncBatchOptions,
   TrustedOfflineSyncScope,
   StynxOfflineSyncModuleOptions,
-} from './types';
+} from './types.js';
 
 export function stableStringify(value: unknown): string {
   if (value === null || value === undefined) return 'null';

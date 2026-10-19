@@ -5,9 +5,9 @@ import {
   STYNX_OUTBOX_DISPATCHER,
   STYNX_OUTBOX_METRICS,
   STYNX_OUTBOX_OPTIONS,
-} from './constants';
-import { OutboxService } from './outbox.service';
-import type { OutboxModuleOptions } from './types';
+} from './constants.js';
+import { OutboxService } from './outbox.service.js';
+import type { OutboxModuleOptions } from './types.js';
 
 @Module({})
 export class StynxOutboxModule {

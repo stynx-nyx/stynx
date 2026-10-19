@@ -10,9 +10,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
 import { and, desc, eq, isNull } from 'drizzle-orm';
-import { bookmarks } from '../schema';
-import type { CreateBookmarkDto } from '../dto/create-bookmark.dto';
-import type { UpdateBookmarkDto } from '../dto/update-bookmark.dto';
+import { bookmarks } from '../schema.js';
+import type { CreateBookmarkDto } from '../dto/create-bookmark.dto.js';
+import type { UpdateBookmarkDto } from '../dto/update-bookmark.dto.js';
 
 function clampLimit(value?: number): number {
   if (!Number.isFinite(value)) return 50;

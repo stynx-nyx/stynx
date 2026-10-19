@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NestMiddleware, Optional } from '@nestjs/common';
-import type { RequestLike } from '../common/request-context';
-import type { ResponseLike } from './request-db-client-lifecycle';
+import type { RequestLike } from '../common/request-context.js';
+import type { ResponseLike } from './request-db-client-lifecycle.js';
 
 const RELEASED_FLAG = Symbol('STYNX_TENANT_LIFECYCLE_RELEASED');
 const TENANT_ID_UUID_PATTERN =

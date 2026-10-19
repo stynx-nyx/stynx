@@ -1,11 +1,11 @@
 import * as asn1js from 'asn1js';
 import { timingSafeEqual } from 'node:crypto';
-import { sha256Hex } from './signature.service';
-import { canonicalRfc8785Json } from './manifest';
-import { SignatureTrustUnavailableError, SignatureProviderConfigurationError } from './errors';
-import { isCmsTrustVerifier } from './cms-trust-verifier';
-import { readWithdrawalSourceBinding } from './pdf-trust-evidence';
-import type { SignatureCertificateRef, SignatureTrustProfile, SignatureTrustVerifier } from './types';
+import { sha256Hex } from './signature.service.js';
+import { canonicalRfc8785Json } from './manifest.js';
+import { SignatureTrustUnavailableError, SignatureProviderConfigurationError } from './errors.js';
+import { isCmsTrustVerifier } from './cms-trust-verifier.js';
+import { readWithdrawalSourceBinding } from './pdf-trust-evidence.js';
+import type { SignatureCertificateRef, SignatureTrustProfile, SignatureTrustVerifier } from './types.js';
 
 export interface WithdrawalVerificationInput {
   tenantId:string;caseId:string;documentId:string;document:Uint8Array;contentHash:string;

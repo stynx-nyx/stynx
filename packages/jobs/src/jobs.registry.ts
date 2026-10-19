@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { DuplicateJobTypeHandlerError, UnknownJobTypeError } from './errors';
-import type { JobHandler } from './types';
+import { DuplicateJobTypeHandlerError, UnknownJobTypeError } from './errors.js';
+import type { JobHandler } from './types.js';
 
 @Injectable()
 export class JobsRegistry {

@@ -1,13 +1,13 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
-import { SessionJwksController } from './jwks.controller';
-import { SessionJwtSigningService } from './jwt-signing.service';
-import { RedisSessionStore } from './redis-session-store';
-import { SessionMirrorWriter } from './session-mirror.writer';
-import { SessionService } from './session.service';
-import { STYNX_SESSION_MIRROR, STYNX_SESSIONS_OPTIONS, STYNX_SESSION_STORE } from './tokens';
-import { resolveSessionsOptions, type StynxSessionsModuleOptions } from './types';
+import { SessionJwksController } from './jwks.controller.js';
+import { SessionJwtSigningService } from './jwt-signing.service.js';
+import { RedisSessionStore } from './redis-session-store.js';
+import { SessionMirrorWriter } from './session-mirror.writer.js';
+import { SessionService } from './session.service.js';
+import { STYNX_SESSION_MIRROR, STYNX_SESSIONS_OPTIONS, STYNX_SESSION_STORE } from './tokens.js';
+import { resolveSessionsOptions, type StynxSessionsModuleOptions } from './types.js';
 
 @Module({})
 export class StynxSessionsModule {

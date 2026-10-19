@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { FlowAdapterRegistry } from '../../adapters';
-import type { FlowJsonObject } from '../../types';
-import { dispatchEffectsSchema, parseDto, signalSchema } from '../../validation';
+import { FlowAdapterRegistry } from '../../adapters.js';
+import type { FlowJsonObject } from '../../types.js';
+import { dispatchEffectsSchema, parseDto, signalSchema } from '../../validation.js';
 import {
   addTextFilter,
   addUuidFilter,
@@ -14,8 +14,8 @@ import {
   type FlowRow,
   type PendingEffectRow,
   type RuntimeFilterInput,
-} from './runtime-filters';
-import { FlowRuntimeReadModel } from './runtime-read-model';
+} from './runtime-filters.js';
+import { FlowRuntimeReadModel } from './runtime-read-model.js';
 
 @Injectable()
 export class FlowEffectDispatch {

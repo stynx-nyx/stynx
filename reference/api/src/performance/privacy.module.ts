@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { Module } from '@nestjs/common';
 import { StynxPrivacyModule } from '@stynx-nyx/privacy';
-import { AppModule } from '../app.module';
+import { AppModule } from '../app.module.js';
 
 function privacyConfiguration() {
   const endpoint = process.env.STYNX_STORAGE_ENDPOINT;

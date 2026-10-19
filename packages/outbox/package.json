@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Transactional outbox for stynx: same-transaction enqueue, claim-and-dispatch, pluggable dispatcher port, HMAC-verified inbound ACK",
+  "type": "module",
   "main": "dist/outbox/src/index.js",
   "types": "dist/outbox/src/index.d.ts",
   "bin": {
@@ -15,7 +16,7 @@
   "exports": {
     ".": {
       "types": "./dist/outbox/src/index.d.ts",
-      "require": "./dist/outbox/src/index.js",
+      "import": "./dist/outbox/src/index.js",
       "default": "./dist/outbox/src/index.js"
     }
   },

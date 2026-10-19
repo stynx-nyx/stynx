@@ -1,7 +1,7 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import { STYNX_RATE_LIMIT_OPTIONS, STYNX_RATE_LIMIT_STORE } from './constants';
-import { RateLimitGuard } from './rate-limit.guard';
-import type { RateLimitGuardOptions, RateLimitStore } from './types';
+import { STYNX_RATE_LIMIT_OPTIONS, STYNX_RATE_LIMIT_STORE } from './constants.js';
+import { RateLimitGuard } from './rate-limit.guard.js';
+import type { RateLimitGuardOptions, RateLimitStore } from './types.js';
 
 export interface StynxRateLimitModuleOptions extends RateLimitGuardOptions {
   store?: RateLimitStore;

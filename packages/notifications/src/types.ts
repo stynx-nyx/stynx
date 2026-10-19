@@ -138,10 +138,10 @@ export interface StynxNotificationsModuleOptions {
   ses?: { region: string; fromAddress: string; configurationSetName?: string; endpoint?: string };
   sns?: { region: string; senderId?: string; endpoint?: string };
   /** Overrides the default port that reads @stynx-nyx/preferences.NotificationDeliveryPreferences. */
-  preferencesPort?: import('./preferences/preferences.port').NotificationPreferencesPort;
+  preferencesPort?: import('./preferences/preferences.port.js').NotificationPreferencesPort;
   /** Additional/override channel adapters, keyed by channel. Mainly for tests. */
   channelAdapters?: Partial<
-    Record<NotificationChannel, import('./adapters/channel-adapter').ChannelAdapter>
+    Record<NotificationChannel, import('./adapters/channel-adapter.js').ChannelAdapter>
   >;
   mountController?: boolean;
 }

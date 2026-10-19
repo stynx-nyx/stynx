@@ -171,7 +171,7 @@ export const OFFLINE_STORAGE_CATALOG = {
     },
     {
       path: 'packages/data/src/storage-catalog.ts',
-      sha256: '30c90bbbeb1f238e72df839fee4760c4a84bbdc3b735e1d5b27312871da7b261',
+      sha256: '9ed994b0458ab0f6e6d1fb27459580707a66bdfcd200bf81b5981bf7c5ff40f0',
     },
   ],
   entries: [

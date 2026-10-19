@@ -3,9 +3,9 @@ import { ModuleRef } from '@nestjs/core';
 import { createPublicKey } from 'node:crypto';
 import { SessionJwtSigningService } from '@stynx-nyx/sessions';
 import { InvalidCredentialError } from '@stynx-nyx/contracts';
-import { STYNX_AUTH_OPTIONS } from './tokens';
-import type { ResolvedStynxAuthModuleOptions, StynxAccessTokenClaims } from './types';
-import { decodeJwtClaims, verifyJwtWithJwk } from './utils';
+import { STYNX_AUTH_OPTIONS } from './tokens.js';
+import type { ResolvedStynxAuthModuleOptions, StynxAccessTokenClaims } from './types.js';
+import { decodeJwtClaims, verifyJwtWithJwk } from './utils.js';
 
 interface CachedKeySet {
   expiresAt: number;

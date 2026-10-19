@@ -1,6 +1,6 @@
-import { FixedLayoutDocumentBuilder } from '../../fixed-layout';
-import { sha256Hex } from '../../pdf-renderer';
-import type { PdfEvidenceInput, PublicYearlyIncomeDocument } from './types';
+import { FixedLayoutDocumentBuilder } from '../../fixed-layout/index.js';
+import { sha256Hex } from '../../pdf-renderer.js';
+import type { PdfEvidenceInput, PublicYearlyIncomeDocument } from './types.js';
 
 export async function renderPublicYearlyIncomePdf(
   document: PublicYearlyIncomeDocument,

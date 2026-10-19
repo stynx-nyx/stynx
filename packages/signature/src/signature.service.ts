@@ -10,7 +10,7 @@ import {
   SignatureTrustError,
   SignatureTrustUnavailableError,
   SignatureVerificationInputError,
-} from './errors';
+} from './errors.js';
 import type {
   SignatureBackend,
   SignatureRequest,
@@ -20,9 +20,9 @@ import type {
   SignatureTrustVerifier,
   VerifyRequest,
   VerifyResult,
-} from './types';
-import { isCmsTrustVerifier } from './cms-trust-verifier';
-import { isMockSignatureBackend } from './backend-identity';
+} from './types.js';
+import { isCmsTrustVerifier } from './cms-trust-verifier.js';
+import { isMockSignatureBackend } from './backend-identity.js';
 
 class MissingSignatureBackend implements SignatureBackend {
   async sign(): Promise<SignatureResult> {

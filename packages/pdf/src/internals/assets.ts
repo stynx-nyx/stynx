@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const PDF_A_ASSET_SHA256 = {
   liberationSansRegular: '76d04c18ea243f426b7de1f3ad208e927008f961dc5945e5aad352d0dfde8ee8',
@@ -37,9 +38,10 @@ function readAsset(relativePath: string): Uint8Array {
 }
 
 function assetRootCandidates(): string[] {
+  const moduleDir = dirname(fileURLToPath(import.meta.url));
   return [
-    resolve(__dirname, '..', '..'),
-    resolve(__dirname, '..', '..', '..', '..'),
+    resolve(moduleDir, '..', '..'),
+    resolve(moduleDir, '..', '..', '..', '..'),
     resolve(process.cwd()),
   ];
 }

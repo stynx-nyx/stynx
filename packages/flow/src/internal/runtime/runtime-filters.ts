@@ -1,5 +1,5 @@
-import { camelizeRow, pageLimitOffset, type FlowRow } from '../../row-utils';
-import type { FlowJsonObject } from '../../types';
+import { camelizeRow, pageLimitOffset, type FlowRow } from '../../row-utils.js';
+import type { FlowJsonObject } from '../../types.js';
 
 export type RuntimeFilterInput = Record<string, unknown>;
 

@@ -1,14 +1,17 @@
 import { readdir, readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
-import { STYNX_DATA_OPTIONS, type StynxDataModuleOptions } from './tokens';
-import { StynxPoolRegistry } from './pools';
+import { STYNX_DATA_OPTIONS, type StynxDataModuleOptions } from './tokens.js';
+import { StynxPoolRegistry } from './pools.js';
+
+const moduleDir = dirname(fileURLToPath(import.meta.url));
 
 async function resolvePlatformMigrationDir(): Promise<string> {
   for (const candidate of [
-    resolve(__dirname, '../migrations/platform'),
-    resolve(__dirname, '../../migrations/platform'),
-    resolve(__dirname, '../../../migrations/platform'),
+    resolve(moduleDir, '../migrations/platform'),
+    resolve(moduleDir, '../../migrations/platform'),
+    resolve(moduleDir, '../../../migrations/platform'),
     resolve(process.cwd(), 'packages/data/migrations/platform'),
     resolve(process.cwd(), 'migrations/platform'),
   ]) {
@@ -20,7 +23,7 @@ async function resolvePlatformMigrationDir(): Promise<string> {
     }
   }
 
-  return resolve(__dirname, '../migrations/platform');
+  return resolve(moduleDir, '../migrations/platform');
 }
 
 @Injectable()

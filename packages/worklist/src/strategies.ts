@@ -1,9 +1,9 @@
-import { UnknownWorklistStrategyError, WorklistStrategyRegistrationError } from './errors';
+import { UnknownWorklistStrategyError, WorklistStrategyRegistrationError } from './errors.js';
 import type {
   WorklistCandidate,
   WorklistDistributionContext,
   WorklistDistributionStrategy,
-} from './types';
+} from './types.js';
 
 export const BUILTIN_WORKLIST_STRATEGY_KEYS = ['pull', 'round_robin', 'load_balanced'] as const;
 

@@ -1,4 +1,4 @@
-import type { OutboxMetricsSink } from './types';
+import type { OutboxMetricsSink } from './types.js';
 
 /** Default `OutboxMetricsSink` — in-process counters, useful for tests and `stynx doctor`-style introspection. */
 export class InMemoryOutboxMetrics implements OutboxMetricsSink {

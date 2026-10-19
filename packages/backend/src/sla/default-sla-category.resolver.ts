@@ -1,5 +1,5 @@
-import type { RequestLike } from '../common/request-context';
-import type { SlaCategory, SlaCategoryResolver } from './types';
+import type { RequestLike } from '../common/request-context.js';
+import type { SlaCategory, SlaCategoryResolver } from './types.js';
 
 function toUrl(request: RequestLike): string {
   const withUrl = request as RequestLike & { originalUrl?: string; url?: string };

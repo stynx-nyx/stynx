@@ -14,14 +14,14 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject, Injectable } from '@nestjs/common';
 import type { OnApplicationShutdown } from '@nestjs/common';
-import { StorageValidationError } from './errors';
-import { STYNX_STORAGE_OPTIONS } from './tokens';
+import { StorageValidationError } from './errors.js';
+import { STYNX_STORAGE_OPTIONS } from './tokens.js';
 import type {
   HeadedObject,
   S3LifecycleRule,
   S3ObjectLockConfig,
   StynxStorageModuleOptions,
-} from './types';
+} from './types.js';
 
 @Injectable()
 export class S3Service implements OnApplicationShutdown {

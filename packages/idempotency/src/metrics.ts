@@ -1,4 +1,4 @@
-import type { IdempotencyMetricsSink } from './types';
+import type { IdempotencyMetricsSink } from './types.js';
 
 export class InMemoryIdempotencyMetrics implements IdempotencyMetricsSink {
   private replayCount = 0;

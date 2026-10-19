@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
-import { CatalogService } from './catalog.service';
-import { requireI18nSystemContext, requireI18nTenantContext } from './tenant-context';
-import type { TenantOverrideUpdateInput } from './types';
+import { CatalogService } from './catalog.service.js';
+import { requireI18nSystemContext, requireI18nTenantContext } from './tenant-context.js';
+import type { TenantOverrideUpdateInput } from './types.js';
 
 @Injectable()
 export class I18nAdminService {

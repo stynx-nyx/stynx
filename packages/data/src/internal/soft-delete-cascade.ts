@@ -4,10 +4,10 @@ import {
   CascadeTooDeepError,
   CascadeTooLargeError,
   SoftDeleteBlockedError,
-} from '../errors';
-import type { CascadePlan } from '../types';
-import { mirrorQualifiedName, qualifiedName, quoteIdent, type TableMeta } from './table-meta';
-import type { RegistryEntry } from './archive-relations';
+} from '../errors.js';
+import type { CascadePlan } from '../types.js';
+import { mirrorQualifiedName, qualifiedName, quoteIdent, type TableMeta } from './table-meta.js';
+import type { RegistryEntry } from './archive-relations.js';
 
 export interface SoftDeleteContext {
   query<TRow extends QueryResultRow = QueryResultRow>(

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { PdfValidationError } from './errors';
-import type { PdfRenderBackend, RenderRequest, RenderResult } from './types';
+import { PdfValidationError } from './errors.js';
+import type { PdfRenderBackend, RenderRequest, RenderResult } from './types.js';
 
 export function sha256Hex(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');

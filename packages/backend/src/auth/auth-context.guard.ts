@@ -17,14 +17,14 @@ import { headerToString } from '@stynx-nyx/contracts';
 import { InvalidCredentialError, STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, hasPublicTenantRoute, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
 import { ModulesContainer, Reflector, ModuleRef } from '@nestjs/core';
 import { STYNX_PUBLIC_TENANT_OPTIONS } from '@stynx-nyx/contracts';
-import { DefaultPrincipalMapper } from './default-principal-mapper';
+import { DefaultPrincipalMapper } from './default-principal-mapper.js';
 import {
   STYNX_PRINCIPAL_MAPPER,
   STYNX_TENANT_ENTITLEMENT_POLICY,
   STYNX_TENANT_RESOLVER,
   STYNX_TOKEN_VERIFIER,
-} from './constants';
-import type { RequestLike } from '../common/request-context';
+} from './constants.js';
+import type { RequestLike } from '../common/request-context.js';
 
 @Injectable()
 export class AuthContextGuard implements CanActivate {

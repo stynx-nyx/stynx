@@ -8,7 +8,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { tenants } from './tenancy';
+import { tenants } from './tenancy.js';
 
 export const authSchema = pgSchema('auth');
 

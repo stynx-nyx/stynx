@@ -3,20 +3,20 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { NotificationValidationError } from './errors';
-import { NotificationTemplateRegistry } from './templates/registry';
-import { notifyRequestSchema } from './schema';
+import { NotificationValidationError } from './errors.js';
+import { NotificationTemplateRegistry } from './templates/registry.js';
+import { notifyRequestSchema } from './schema.js';
 import {
   STYNX_NOTIFICATIONS_PREFERENCES_PORT,
   STYNX_NOTIFICATIONS_TEMPLATE_REGISTRY,
-} from './tokens';
-import type { NotificationPreferencesPort } from './preferences/preferences.port';
+} from './tokens.js';
+import type { NotificationPreferencesPort } from './preferences/preferences.port.js';
 import type {
   DeliveryStatus,
   NotificationChannel,
   NotifyRequest,
   NotifyResult,
-} from './types';
+} from './types.js';
 
 interface DeliveryRow {
   id: string;

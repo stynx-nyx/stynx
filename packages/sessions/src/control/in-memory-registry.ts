@@ -4,7 +4,7 @@ import type {
   SessionRegistry,
   TrustedSessionContext,
   SessionInventoryQuery,
-} from './types';
+} from './types.js';
 export class InMemorySessionRegistry implements SessionRegistry {
   private readonly registrations = new Map<string, SessionRegistration>();
   private readonly operations = new Map<string, SessionOperationRecord>();

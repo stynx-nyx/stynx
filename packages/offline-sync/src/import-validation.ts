@@ -1,21 +1,21 @@
-import { instantMicroseconds } from './instant-microseconds';
+import { instantMicroseconds } from './instant-microseconds.js';
 import { createHash } from 'node:crypto';
-import { OfflineImportError } from './import-contract';
-import { canonicalOfflineSyncPayload } from './payload-integrity';
+import { OfflineImportError } from './import-contract.js';
+import { canonicalOfflineSyncPayload } from './payload-integrity.js';
 
 /** Applies the payload canonical encoding to any legal JSON root. */
 export function canonicalImportJson(value: unknown): string {
   return canonicalOfflineSyncPayload({ value }).slice(9, -1);
 }
 
-import { OFFLINE_IMPORT_SCHEMA } from './import-schema.generated';
+import { OFFLINE_IMPORT_SCHEMA } from './import-schema.generated.js';
 import type {
   OfflineImportManifest,
   OfflineImportRecord,
   OfflineImportMapping,
   OfflineImportBatchesKey,
   OfflineImportReconciliationsRow,
-} from './import-schema.generated';
+} from './import-schema.generated.js';
 
 export const IMPORT_RELATIONS = {
   ranges: 'numbering_ranges',
