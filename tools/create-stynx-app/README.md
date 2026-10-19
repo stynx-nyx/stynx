@@ -86,7 +86,7 @@ node tools/create-stynx-app/bin.mjs /tmp/smoke --no-install
 
 - [`@stynx-nyx/cli`](/docs/packages/cli/) — `stynx init` scaffolds the backend side.
 - [`@stynx-nyx/angular`](/docs/packages-web/angular/) — the foundation the generated app wires.
-- [`@stynx-internal/eslint-config`](/docs/tools/eslint-config/) + [`@stynx-internal/tsconfig`](/docs/tools/tsconfig/) — the configs the generated app extends.
+- [`@stynx-internal/eslint-config`](/docs/tools/eslint-config/) + [`@stynx-nyx/tsconfig`](/docs/tools/tsconfig/) — the configs the generated app extends.
 
 ## TypeDoc reference
 

@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:5557c445-4a4a-42d7-8e1e-ab07b179f996",
+  "serialNumber": "urn:uuid:0d694df6-1d34-4690-86a4-c7dc72c7baa6",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "5557c4454a4a62d7ae1eab07b179f9966a73c01d3ca90e2729edce834ba4aea6"
+        "value": "0d694df61d344690f6a4c7dc72c7baa6120c21707e63f64c63e261d661775e35"
       },
       {
         "name": "stynx:package-manager",
@@ -768,19 +768,6 @@
         {
           "name": "stynx:workspacePath",
           "value": "tools/migration-linter"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "@stynx-internal/tsconfig",
-      "version": "0.2.0",
-      "scope": "excluded",
-      "licenses": [],
-      "properties": [
-        {
-          "name": "stynx:workspacePath",
-          "value": "tools/tsconfig"
         }
       ]
     },
@@ -1680,6 +1667,26 @@
         {
           "name": "stynx:workspacePath",
           "value": "packages/testing"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@stynx-nyx/tsconfig",
+      "version": "1.6.2",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "BUSL-1.1"
+          }
+        }
+      ],
+      "purl": "pkg:npm/@stynx-nyx%2ftsconfig@1.6.2",
+      "properties": [
+        {
+          "name": "stynx:workspacePath",
+          "value": "tools/tsconfig"
         }
       ]
     },

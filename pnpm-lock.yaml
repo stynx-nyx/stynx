@@ -296,7 +296,7 @@ importers:
       '@stynx-internal/eslint-config':
         specifier: workspace:*
         version: link:../../../tools/eslint-config
-      '@stynx-internal/tsconfig':
+      '@stynx-nyx/tsconfig':
         specifier: workspace:*
         version: link:../../../tools/tsconfig
       '@types/node':
@@ -329,12 +329,12 @@ importers:
       '@stynx-internal/eslint-config':
         specifier: workspace:*
         version: link:../../../tools/eslint-config
-      '@stynx-internal/tsconfig':
-        specifier: workspace:*
-        version: link:../../../tools/tsconfig
       '@stynx-nyx/angular':
         specifier: workspace:*
         version: link:../../../packages-web/angular
+      '@stynx-nyx/tsconfig':
+        specifier: workspace:*
+        version: link:../../../tools/tsconfig
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -2542,7 +2542,11 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  tools/tsconfig: {}
+  tools/tsconfig:
+    dependencies:
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
 
 packages:
 

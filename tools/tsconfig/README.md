@@ -1,10 +1,10 @@
-# `@stynx-internal/tsconfig` — shared TypeScript presets for STYNX workspace packages
+# `@stynx-nyx/tsconfig` — shared TypeScript presets for STYNX workspace packages
 
-`@stynx-internal/tsconfig` provides the shared TypeScript configs every STYNX package extends. Presets — `base` (strict baseline), `node24` (Node 24 backend/server), `angular18` (Angular/browser), `lib` (reusable libraries) — encode STYNX's compiler settings so every package compiles with consistent strictness + module resolution. Extend the matching preset in your package's `tsconfig.json`.
+`@stynx-nyx/tsconfig` provides the shared TypeScript configs every STYNX package extends. Presets — `base` (strict baseline), `node24` (Node 24 backend/server), `angular18` (Angular/browser), `lib` (reusable libraries) — encode STYNX's compiler settings so every package compiles with consistent strictness + module resolution. Extend the matching preset in your package's `tsconfig.json`.
 
 ## Purpose
 
-A monorepo needs consistent TypeScript settings, but a Node server, an Angular app, and a published library target different runtimes + module systems. Maintaining per-package compiler options drifts. `@stynx-internal/tsconfig` centralises the presets; packages pick the matching one.
+A monorepo needs consistent TypeScript settings, but a Node server, an Angular app, and a published library target different runtimes + module systems. Maintaining per-package compiler options drifts. `@stynx-nyx/tsconfig` centralises the presets; packages pick the matching one.
 
 You reach for it when authoring a new `@stynx-*` package, or aligning a package's compiler config to the workspace standard.
 
@@ -17,7 +17,7 @@ Workspace package authors. Audience-pitch: _"My new package targets Node 24 — 
 ## Install
 
 ```bash
-pnpm add -D @stynx-internal/tsconfig
+pnpm add -D @stynx-nyx/tsconfig
 ```
 
 ## Quick start
@@ -25,7 +25,7 @@ pnpm add -D @stynx-internal/tsconfig
 ```jsonc
 // tsconfig.json in a Node backend package
 {
-  "extends": "@stynx-internal/tsconfig/node24.json",
+  "extends": "@stynx-nyx/tsconfig/node24.json",
   "compilerOptions": { "outDir": "dist" },
   "include": ["src"],
 }
@@ -34,7 +34,7 @@ pnpm add -D @stynx-internal/tsconfig
 ```jsonc
 // tsconfig.json in an Angular package
 {
-  "extends": "@stynx-internal/tsconfig/angular18.json",
+  "extends": "@stynx-nyx/tsconfig/angular18.json",
   "include": ["src"],
 }
 ```
@@ -56,7 +56,7 @@ Each preset is a JSON config you `extends`. Override `compilerOptions` in your l
 
 ```jsonc
 {
-  "extends": "@stynx-internal/tsconfig/lib.json",
+  "extends": "@stynx-nyx/tsconfig/lib.json",
   "compilerOptions": { "declarationDir": "dist/types" },
 }
 ```
@@ -66,14 +66,14 @@ Each preset is a JSON config you `extends`. Override `compilerOptions` in your l
 ### Example 1 — backend package
 
 ```jsonc
-{ "extends": "@stynx-internal/tsconfig/node24.json", "include": ["src"] }
+{ "extends": "@stynx-nyx/tsconfig/node24.json", "include": ["src"] }
 ```
 
 ### Example 2 — published library with declarations
 
 ```jsonc
 {
-  "extends": "@stynx-internal/tsconfig/lib.json",
+  "extends": "@stynx-nyx/tsconfig/lib.json",
   "compilerOptions": { "outDir": "dist", "declaration": true },
   "include": ["src"],
 }
@@ -82,7 +82,7 @@ Each preset is a JSON config you `extends`. Override `compilerOptions` in your l
 ### Example 3 — Angular package
 
 ```jsonc
-{ "extends": "@stynx-internal/tsconfig/angular18.json", "include": ["src"] }
+{ "extends": "@stynx-nyx/tsconfig/angular18.json", "include": ["src"] }
 ```
 
 ## Common pitfalls
