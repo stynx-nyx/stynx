@@ -9,7 +9,12 @@ export interface MigrationClient {
 }
 
 export interface MigrationClientFactoryOptions {
-  connectionString: string;
+  /**
+   * PostgreSQL URL. Absent when none was given: the client then connects with
+   * node-postgres defaults from the `PG*` environment (PGHOST, PGPORT, PGUSER,
+   * PGPASSWORD, PGDATABASE), so no credential needs to appear on argv.
+   */
+  connectionString?: string;
 }
 
 export interface MigrationOptions {
@@ -65,7 +70,9 @@ function applyRolePrefix(sql: string, prefix: string): string {
 }
 
 function defaultClientFactory(options: MigrationClientFactoryOptions): MigrationClient {
-  return new Client({ connectionString: options.connectionString }) as unknown as MigrationClient;
+  return new Client(
+    options.connectionString === undefined ? {} : { connectionString: options.connectionString },
+  ) as unknown as MigrationClient;
 }
 
 function migrationDirectory(rootDir: string, options?: MigrationOptions): string {
@@ -86,11 +93,13 @@ function listMigrationSpecs(rootDir: string, options?: MigrationOptions): Migrat
 }
 
 async function withClient<T>(
-  connectionString: string,
+  connectionString: string | undefined,
   options: MigrationOptions | undefined,
   fn: (client: MigrationClient) => Promise<T>,
 ): Promise<T> {
-  const client = (options?.clientFactory ?? defaultClientFactory)({ connectionString });
+  const client = (options?.clientFactory ?? defaultClientFactory)(
+    connectionString === undefined ? {} : { connectionString },
+  );
   await client.connect();
   try {
     return await fn(client);
@@ -197,7 +206,7 @@ async function applyMigrationDown(client: MigrationClient, spec: MigrationSpec, 
 
 export async function migrationStatus(
   rootDir: string,
-  connectionString: string,
+  connectionString: string | undefined,
   options?: MigrationOptions,
 ): Promise<MigrationStatus> {
   return withClient(connectionString, options, async (client) => {
@@ -212,7 +221,7 @@ export async function migrationStatus(
 
 export async function migrateUp(
   rootDir: string,
-  connectionString: string,
+  connectionString: string | undefined,
   dryRun = false,
   options?: MigrationOptions,
 ): Promise<string[]> {
@@ -241,7 +250,7 @@ export async function migrateUp(
 
 export async function migrateDown(
   rootDir: string,
-  connectionString: string,
+  connectionString: string | undefined,
   steps = 1,
   dryRun = false,
   options?: MigrationOptions,
@@ -269,7 +278,7 @@ export async function migrateDown(
 
 export async function migrateRedo(
   rootDir: string,
-  connectionString: string,
+  connectionString: string | undefined,
   dryRun = false,
   options?: MigrationOptions,
 ): Promise<{ down: string[]; up: string[] }> {

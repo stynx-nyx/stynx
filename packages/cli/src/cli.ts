@@ -38,13 +38,13 @@ export function buildProgram(): Command {
   const migrate = program.command('migrate');
   migrate
     .command('status')
-    .requiredOption('--database-url <url>')
+    .option('--database-url <url>', 'PostgreSQL URL (default: the PG* environment)')
     .action(async (options) => {
       console.log(JSON.stringify(await migrationStatus(process.cwd(), options.databaseUrl), null, 2));
     });
   migrate
     .command('up')
-    .requiredOption('--database-url <url>')
+    .option('--database-url <url>', 'PostgreSQL URL (default: the PG* environment)')
     .option('--dry', 'Dry-run pending list', false)
     .option('--role-prefix <prefix>', 'Product role prefix for the platform roles (default stynx)')
     .action(async (options) => {
@@ -52,7 +52,7 @@ export function buildProgram(): Command {
     });
   migrate
     .command('down')
-    .requiredOption('--database-url <url>')
+    .option('--database-url <url>', 'PostgreSQL URL (default: the PG* environment)')
     .option('--steps <n>', 'How many applied migrations to roll back', '1')
     .option('--dry', 'Dry-run rollback list', false)
     .option('--role-prefix <prefix>', 'Product role prefix for the platform roles (default stynx)')
@@ -61,7 +61,7 @@ export function buildProgram(): Command {
     });
   migrate
     .command('redo')
-    .requiredOption('--database-url <url>')
+    .option('--database-url <url>', 'PostgreSQL URL (default: the PG* environment)')
     .option('--dry', 'Dry-run redo plan', false)
     .option('--role-prefix <prefix>', 'Product role prefix for the platform roles (default stynx)')
     .action(async (options) => {
