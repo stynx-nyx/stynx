@@ -1,0 +1,3 @@
+it('parses', () => {
+  expect(JSON.parse('1')).toBeDefined();
+});

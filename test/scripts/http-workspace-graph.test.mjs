@@ -764,18 +764,21 @@ function sourceOnlyTooling(f) {
     'pnpm-workspace.yaml',
     "packages:\n  - 'packages/*'\n  - 'reference/api'\n  - 'tools/*'\n",
   );
-  for (const short of ['eslint-config', 'tsconfig']) {
+  const sourceOnlyToolNames = {
+    'eslint-config': '@stynx-nyx/eslint-config',
+    tsconfig: '@stynx-internal/tsconfig',
+  };
+  for (const [short, name] of Object.entries(sourceOnlyToolNames)) {
     f.json(`tools/${short}/package.json`, {
-      name: `@stynx-internal/${short}`,
+      name,
       private: true,
       scripts: { test: 'node --test test/tooling.spec.mjs' },
     });
   }
   f.update('reference/api/package.json', (value) => {
-    value.devDependencies = {
-      '@stynx-internal/eslint-config': 'workspace:*',
-      '@stynx-internal/tsconfig': 'workspace:*',
-    };
+    value.devDependencies = Object.fromEntries(
+      Object.values(sourceOnlyToolNames).map((name) => [name, 'workspace:*']),
+    );
   });
 }
 
