@@ -2595,6 +2595,14 @@ function assertCampaignVersionStage(root) {
       assert.deepEqual(readFileSync(join(root, file)), Buffer.from('---\n---\n'));
       assert.deepEqual(releases, []);
       assert.equal(summary, '');
+    } else if (releases.length === 0) {
+      // A no-release acknowledgement (e.g. curly-parts-fly, DEVAI v3 wave-1 tool items): exactly
+      // empty front matter plus a stated reason. It declares nothing and cannot satisfy a patch plan.
+      assert.ok(
+        readFileSync(join(root, file), 'utf8').startsWith('---\n---\n'),
+        `${file}: a no-release acknowledgement must have exactly empty front matter`,
+      );
+      assert.ok(summary.trim().length > 0, `${file}: a no-release acknowledgement must state why`);
     } else {
       assert.ok(releases.length > 0, `${file}: a stable changeset must declare a release`);
     }
@@ -2626,7 +2634,14 @@ function assertCampaignVersionStage(root) {
   let stage;
   if (rootManifest.version === candidate) {
     stage = 'VERSIONED';
-    assert.equal(pending.length, 0, 'the versioned candidate must consume its stable changesets');
+    assert.equal(
+      // The campaign acknowledgement must be consumed; standing no-release acknowledgements need not.
+      pending.filter(
+        ({ file, releases }) => releases.length > 0 || file === '.changeset/smart-friends-grab.md',
+      ).length,
+      0,
+      'the versioned candidate must consume its stable changesets',
+    );
     assert.deepEqual(
       validateReleaseVersionPolicy(root, config, { expectedVersion: candidate }),
       [],
