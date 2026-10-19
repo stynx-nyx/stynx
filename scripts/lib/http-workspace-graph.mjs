@@ -158,7 +158,7 @@ export function deriveHttpWorkspaceGraph(checkoutRoot) {
     const buildScript = member.manifest.scripts?.build;
     if (buildScript === undefined) {
       const sourceOnly = new Map([
-        ['@stynx-internal/eslint-config', 'tools/eslint-config'],
+        ['@stynx-nyx/eslint-config', 'tools/eslint-config'],
         ['@stynx-internal/tsconfig', 'tools/tsconfig'],
       ]);
       if (

@@ -785,15 +785,18 @@ syncPackageReadmes(
   'packages-web',
   (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
 );
-// R15 follow-up: surface tool packages on the published site. All current
-// tools live under @stynx-internal/* (create-stynx-app, eslint-config,
-// migration-linter, tsconfig). Internal scripts without a package.json
-// (ci-local, repo-config, stryker, npm-security-upgrade-auditor) are
-// intentionally skipped — they're not published packages.
+// R15 follow-up: surface tool packages on the published site. Tools live
+// under @stynx-internal/* (create-stynx-app, migration-linter, tsconfig) or,
+// once renamed for adopters (SM-03), under @stynx-nyx/* (eslint-config).
+// Internal scripts without a package.json (ci-local, repo-config, stryker,
+// npm-security-upgrade-auditor) are intentionally skipped — they're not
+// published packages.
 syncPackageReadmes(
   'tools',
   'tools',
-  (name) => typeof name === 'string' && name.startsWith('@stynx-internal/'),
+  (name) =>
+    typeof name === 'string' &&
+    (name.startsWith('@stynx-internal/') || name.startsWith('@stynx-nyx/')),
 );
 syncSpecs();
 

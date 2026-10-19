@@ -1,6 +1,6 @@
 import js from '@eslint/js';
 import { existsSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import angularPlugin from '@angular-eslint/eslint-plugin';
 import angularTemplatePlugin from '@angular-eslint/eslint-plugin-template';
@@ -10,9 +10,9 @@ import jsdocPlugin from 'eslint-plugin-jsdoc';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+import { stynxPlugin } from './plugin.mjs';
 
 const currentPackageName = () => process.env.npm_package_name ?? '';
-const workspaceRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 const deepImportPatterns = [
   {
@@ -31,20 +31,6 @@ const s3ImportPatterns = [
     group: ['@aws-sdk/client-s3*'],
     message: 'Direct S3 SDK imports are only allowed inside @stynx-nyx/storage.',
   },
-];
-
-const boundaryElements = [
-  { type: 'core', pattern: 'packages/core/src/**' },
-  { type: 'contracts', pattern: 'packages/contracts/src/**' },
-  { type: 'foundation', pattern: 'packages/{tenancy,logging,health}/src/**' },
-  { type: 'data', pattern: 'packages/data/src/**' },
-  { type: 'sessions', pattern: 'packages/sessions/src/**' },
-  { type: 'auth', pattern: 'packages/auth/src/**' },
-  { type: 'platform', pattern: 'packages/{audit,storage,ratelimit,idempotency,backend}/src/**' },
-  { type: 'experience', pattern: 'packages/{privacy,i18n}/src/**' },
-  { type: 'tooling', pattern: 'packages/{testing,cli}/src/**' },
-  { type: 'web', pattern: 'packages-web/*/src/**' },
-  { type: 'app', pattern: 'apps/*/src/**' },
 ];
 
 const tsdocPackages = new Set([
@@ -96,114 +82,6 @@ const tsdocExportContextsForPackage = () =>
       ]
     : tsdocExportContexts;
 
-const writeRouteDecoratorNames = new Set(['Post', 'Put', 'Patch']);
-const idempotencyDecoratorNames = new Set(['Idempotent', 'NoIdempotent']);
-
-function getDecoratorName(decorator) {
-  const expression = decorator.expression;
-  if (!expression) return null;
-  if (expression.type === 'Identifier') {
-    return expression.name;
-  }
-  if (expression.type === 'CallExpression') {
-    if (expression.callee.type === 'Identifier') {
-      return expression.callee.name;
-    }
-    if (
-      expression.callee.type === 'MemberExpression' &&
-      expression.callee.property.type === 'Identifier'
-    ) {
-      return expression.callee.property.name;
-    }
-  }
-  return null;
-}
-
-function collectDecoratorNames(node) {
-  if (!Array.isArray(node.decorators)) return [];
-  return node.decorators
-    .map((decorator) => getDecoratorName(decorator))
-    .filter((name) => typeof name === 'string');
-}
-
-const stynxPlugin = {
-  rules: {
-    'require-package-index-tsdoc': {
-      meta: {
-        type: 'suggestion',
-        docs: {
-          description: 'Require package barrel files to carry package-level TSDoc.',
-        },
-        schema: [],
-        messages: {
-          missingPackageDocs:
-            'Package public barrel must start with a TSDoc @packageDocumentation block.',
-        },
-      },
-      create(context) {
-        return {
-          Program(node) {
-            const sourceCode = context.sourceCode;
-            const firstComment = sourceCode.getAllComments()[0];
-            if (
-              firstComment?.type === 'Block' &&
-              firstComment.value.includes('*') &&
-              firstComment.value.includes('@packageDocumentation')
-            ) {
-              return;
-            }
-
-            context.report({
-              node,
-              messageId: 'missingPackageDocs',
-            });
-          },
-        };
-      },
-    },
-    'require-idempotent-route-decorator': {
-      meta: {
-        type: 'suggestion',
-        docs: {
-          description: 'Warn on POST/PUT/PATCH routes without @Idempotent() or @NoIdempotent().',
-        },
-        schema: [],
-        messages: {
-          missingDecorator:
-            'POST/PUT/PATCH routes should declare @Idempotent() or @NoIdempotent().',
-        },
-      },
-      create(context) {
-        return {
-          MethodDefinition(node) {
-            const routeDecorators = collectDecoratorNames(node).filter((name) =>
-              writeRouteDecoratorNames.has(name),
-            );
-            if (routeDecorators.length === 0) {
-              return;
-            }
-
-            const methodDecorators = collectDecoratorNames(node);
-            if (methodDecorators.some((name) => idempotencyDecoratorNames.has(name))) {
-              return;
-            }
-
-            const classDecorators = collectDecoratorNames(node.parent?.parent);
-            if (classDecorators.some((name) => idempotencyDecoratorNames.has(name))) {
-              return;
-            }
-
-            context.report({
-              node,
-              messageId: 'missingDecorator',
-            });
-          },
-        };
-      },
-    },
-  },
-};
-
 const sharedTypescriptRules = {
   ...js.configs.recommended.rules,
   ...tsPlugin.configs.recommended.rules,
@@ -216,38 +94,94 @@ const restrictedImportsRule = ({ allowPgImports, allowS3Imports }) => ({
   'no-restricted-imports': [
     'error',
     {
-      patterns: [
-        ...deepImportPatterns,
-        ...(allowS3Imports ? [] : s3ImportPatterns),
-      ],
+      patterns: [...deepImportPatterns, ...(allowS3Imports ? [] : s3ImportPatterns)],
       paths: allowPgImports ? [] : pgImportPaths,
     },
   ],
 });
 
-const s3FetchRule = (allow) => allow
-  ? {}
-  : {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector:
-            "CallExpression[callee.name='fetch'] > Literal:first-child[value=/https?:\\/\\/.*s3[.-].*/]",
-          message: 'Fetch calls to direct S3 URLs are only allowed inside @stynx-nyx/storage.',
-        },
-      ],
-    };
+const s3FetchRule = (allow) =>
+  allow
+    ? {}
+    : {
+        'no-restricted-syntax': [
+          'error',
+          {
+            selector:
+              "CallExpression[callee.name='fetch'] > Literal:first-child[value=/https?:\\/\\/.*s3[.-].*/]",
+            message: 'Fetch calls to direct S3 URLs are only allowed inside @stynx-nyx/storage.',
+          },
+        ],
+      };
 
-const resolveTsconfigProject = (tsconfig) => {
+// D-013: `no-explicit-any` and every `no-unsafe-*` rule the installed
+// typescript-eslint plugin ships, at error. Derived from the plugin so a new
+// `no-unsafe-*` rule is enabled by the upgrade that introduces it.
+const unsafeTypeRuleNames = Object.keys(tsPlugin.rules)
+  .filter((name) => name.startsWith('no-unsafe-'))
+  .sort()
+  .map((name) => `@typescript-eslint/${name}`);
+
+const typeSafetyRules = (strict) =>
+  strict
+    ? {
+        '@typescript-eslint/no-explicit-any': 'error',
+        ...Object.fromEntries(unsafeTypeRuleNames.map((name) => [name, 'error'])),
+      }
+    : {
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+      };
+
+const internalBoundaryRule = {
+  from: { type: '*' },
+  disallow: { to: { type: '*', internalPath: 'internal/**' } },
+  message: 'Internal workspace modules may only be imported by their owning package.',
+};
+
+// Strict profiles deny every dependency between declared elements unless the
+// consumer allows it (S-37); the workspace profile keeps STYNX's allow default.
+const boundaryDependenciesRule = (strict, allow) => [
+  'error',
+  {
+    default: strict ? 'disallow' : 'allow',
+    rules: [internalBoundaryRule, ...(strict ? allow : [])],
+  },
+];
+
+// Strict profiles resolve relative TypeScript imports so boundaries can
+// classify them (see import-resolver.mjs); bare specifiers use `node`.
+const importResolverPath = fileURLToPath(new URL('./import-resolver.mjs', import.meta.url));
+const importResolverSettings = (strict) =>
+  strict ? { 'import/resolver': { [importResolverPath]: {}, node: {} } } : {};
+
+const authoredCommonJsRule = (strict) => (strict ? { 'stynx/no-authored-cjs': 'error' } : {});
+
+const resolveTsconfigProject = (tsconfig, rootDir) => {
   if (Array.isArray(tsconfig)) {
-    const existing = tsconfig.filter((candidate) => existsSync(candidate));
+    const existing = tsconfig.filter((candidate) => existsSync(resolve(rootDir, candidate)));
     return existing.length > 0 ? existing : [tsconfig[tsconfig.length - 1]];
   }
 
   return tsconfig;
 };
 
-const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, nest = false, angular = false, allowPgPool = false, allowS3Fetch = false, processor = undefined }) => [
+const createConfig = ({
+  files,
+  tsconfig = './tsconfig.json',
+  browser = false,
+  nest = false,
+  angular = false,
+  allowPgPool = false,
+  allowS3Fetch = false,
+  processor = undefined,
+  strict = true,
+  rootDir = process.cwd(),
+  boundaries: { rootPath = rootDir, elements = [], allow = [] } = {},
+}) => [
   {
     ignores: [
       'dist/**',
@@ -265,8 +199,8 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        project: resolveTsconfigProject(tsconfig),
-        tsconfigRootDir: process.cwd(),
+        project: resolveTsconfigProject(tsconfig, rootDir),
+        tsconfigRootDir: rootDir,
         ecmaVersion: 2022,
         sourceType: 'module',
       },
@@ -282,34 +216,21 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
     },
     ...(processor ? { processor } : {}),
     settings: {
-      'boundaries/root-path': workspaceRoot,
-      'boundaries/elements': boundaryElements,
+      'boundaries/root-path': rootPath,
+      'boundaries/elements': elements,
+      ...importResolverSettings(strict),
     },
     rules: {
       ...sharedTypescriptRules,
       ...restrictedImportsRule({
-        allowPgImports: allowPgPool || ['@stynx-nyx/data', '@stynx-nyx/cli'].includes(currentPackageName()),
+        allowPgImports:
+          allowPgPool || ['@stynx-nyx/data', '@stynx-nyx/cli'].includes(currentPackageName()),
         allowS3Imports: currentPackageName() === '@stynx-nyx/storage',
       }),
       ...s3FetchRule(allowS3Fetch || currentPackageName() === '@stynx-nyx/storage'),
-      'boundaries/dependencies': [
-        'error',
-        {
-          default: 'allow',
-          rules: [
-            {
-              from: { type: '*' },
-              disallow: { to: { type: '*', internalPath: 'internal/**' } },
-              message: 'Internal workspace modules may only be imported by their owning package.',
-            },
-          ],
-        },
-      ],
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
+      'boundaries/dependencies': boundaryDependenciesRule(strict, allow),
+      ...typeSafetyRules(strict),
+      ...authoredCommonJsRule(strict),
       ...(nest
         ? {
             '@typescript-eslint/no-extraneous-class': 'off',
@@ -342,7 +263,7 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
         : {}),
       ...(nest
         ? {
-            'stynx/require-idempotent-route-decorator': 'warn',
+            'stynx/require-idempotent-route-decorator': strict ? 'error' : 'warn',
           }
         : {}),
     },
@@ -392,8 +313,10 @@ const createConfig = ({ files, tsconfig = './tsconfig.json', browser = false, ne
     : []),
 ];
 
-export const createLibConfig = (options = {}) => createConfig({ files: ['src/**/*.ts', 'lib/**/*.ts'], ...options });
-export const createNestConfig = (options = {}) => createConfig({ files: ['src/**/*.ts'], nest: true, ...options });
+export const createLibConfig = (options = {}) =>
+  createConfig({ files: ['src/**/*.ts', 'lib/**/*.ts'], ...options });
+export const createNestConfig = (options = {}) =>
+  createConfig({ files: ['src/**/*.ts'], nest: true, ...options });
 export const createAngularConfig = (options = {}) =>
   createConfig({
     files: ['src/**/*.ts'],
@@ -404,8 +327,134 @@ export const createAngularConfig = (options = {}) =>
     ...options,
   });
 
-export default {
-  createLibConfig,
-  createNestConfig,
-  createAngularConfig,
-};
+const scriptIgnores = ['dist/**', 'build/**', 'coverage/**', 'node_modules/**'];
+
+// Plain JavaScript tooling (build and repository scripts). Strict profiles lint
+// every script as ESM and forbid authored CommonJS (D-057); the workspace
+// profile keeps STYNX's CommonJS `.js`/`.cjs` scripts until SM-01 lands.
+export const createScriptsConfig = ({ strict = true, files } = {}) =>
+  strict
+    ? [
+        { ignores: scriptIgnores },
+        {
+          files: files ?? ['**/*.js', '**/*.mjs', '**/*.cjs'],
+          languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'module',
+            globals: globals.node,
+          },
+          plugins: {
+            stynx: stynxPlugin,
+          },
+          rules: {
+            ...js.configs.recommended.rules,
+            ...authoredCommonJsRule(strict),
+          },
+        },
+      ]
+    : [
+        { ignores: scriptIgnores },
+        {
+          files: ['**/*.js', '**/*.cjs'],
+          languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'commonjs',
+            globals: globals.node,
+          },
+          rules: {
+            ...js.configs.recommended.rules,
+          },
+        },
+        {
+          files: ['**/*.mjs'],
+          languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'module',
+            globals: globals.node,
+          },
+          rules: {
+            ...js.configs.recommended.rules,
+          },
+        },
+      ];
+
+// Test-file profile: CW-1 mutation-assertion guard rules (S-60).
+//
+// Does not require a per-package tsconfig.test.json: CW-1 rules are
+// syntax-based (no type information needed). We use the TS parser without a
+// `project:` reference so any package's test/ files can be linted directly
+// from the workspace root via `pnpm lint:tests`.
+export const createTestConfig = ({
+  files = ['**/*.spec.ts', '**/*.test.ts', '**/*.spec.tsx', '**/*.test.tsx'],
+} = {}) => [
+  {
+    files,
+    ignores: ['**/node_modules/**', '**/dist/**', '**/coverage*/**', '**/.stryker-tmp/**'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        // No `project:` — keeps the parser fast and unblocks per-package
+        // lint:tests without a tsconfig.test.json.
+      },
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+        ...globals.jest,
+        // Vitest globals — used by every spec without imports.
+        vi: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeAll: 'readonly',
+        beforeEach: 'readonly',
+        afterAll: 'readonly',
+        afterEach: 'readonly',
+        // Allow plain `Mock<...>` type imports as a global reference symbol.
+        Mock: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
+    rules: {
+      // CW-1 — ban mutation-assertion anti-patterns. Severity 'error' enforces
+      // the policy across all test files; flip to 'warn' temporarily during a
+      // remediation pass if needed.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.property.name='toHaveBeenCalled'][arguments.length=0]:not([callee.object.property.name='not'])",
+          message:
+            'WAVE-05A/CW-1: Use .toHaveBeenCalledWith(...) instead of bare .toHaveBeenCalled(); the bare form does not catch argument-shape mutations.',
+        },
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.property.name=/^toBe(Truthy|Falsy|Defined|Undefined|Null|NaN)$/][arguments.length=0]",
+          message:
+            'WAVE-05A/CW-1: Use a value assertion (.toBe(x) / .toEqual(...) / .toMatch(/.../)) instead of an existence-only assertion; existence assertions survive most mutations.',
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '../../../*/src',
+                '../../../*/src/*',
+                '../../../../*/src',
+                '../../../../*/src/*',
+              ],
+              message:
+                'R19-W06: Import sibling packages through their package name and test alias, not relative */src paths.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
