@@ -152,15 +152,18 @@ describe('buildProgram', () => {
       { name: 'up', options: [
         { flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true },
         { flags: '--dry', description: 'Dry-run pending list', defaultValue: false, mandatory: false },
+        { flags: '--role-prefix <prefix>', description: 'Product role prefix for the platform roles (default stynx)', defaultValue: undefined, mandatory: false },
       ] },
       { name: 'down', options: [
         { flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true },
         { flags: '--steps <n>', description: 'How many applied migrations to roll back', defaultValue: '1', mandatory: false },
         { flags: '--dry', description: 'Dry-run rollback list', defaultValue: false, mandatory: false },
+        { flags: '--role-prefix <prefix>', description: 'Product role prefix for the platform roles (default stynx)', defaultValue: undefined, mandatory: false },
       ] },
       { name: 'redo', options: [
         { flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true },
         { flags: '--dry', description: 'Dry-run redo plan', defaultValue: false, mandatory: false },
+        { flags: '--role-prefix <prefix>', description: 'Product role prefix for the platform roles (default stynx)', defaultValue: undefined, mandatory: false },
       ] },
     ]);
     expect(doctor.options.map((option) => [option.flags, option.description]))
@@ -213,6 +216,16 @@ describe('buildProgram', () => {
     expect(mocks.migrateRedo).toHaveBeenCalledWith(process.cwd(), 'postgres://db', true);
     expect(logs.join('\n')).toContain('"action": "status"');
     expect(logs.join('\n')).toContain('"action": "redo"');
+  });
+
+  it('passes --role-prefix to the migration runner only when given (SM-06)', async () => {
+    await runCli(['migrate', 'up', '--database-url', 'postgres://db', '--role-prefix', 'demo']);
+    await runCli(['migrate', 'down', '--database-url', 'postgres://db', '--role-prefix', 'demo']);
+    await runCli(['migrate', 'redo', '--database-url', 'postgres://db', '--role-prefix', 'demo']);
+
+    expect(mocks.migrateUp).toHaveBeenCalledWith(process.cwd(), 'postgres://db', false, { rolePrefix: 'demo' });
+    expect(mocks.migrateDown).toHaveBeenCalledWith(process.cwd(), 'postgres://db', 1, false, { rolePrefix: 'demo' });
+    expect(mocks.migrateRedo).toHaveBeenCalledWith(process.cwd(), 'postgres://db', false, { rolePrefix: 'demo' });
   });
 
   it('runs audit verification in json, valid-human, and broken-human modes', async () => {

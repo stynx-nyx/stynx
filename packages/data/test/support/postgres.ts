@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { userInfo } from 'node:os';
 import { resolve } from 'node:path';
 import { Client, type ClientConfig } from 'pg';
+import { applyRolePrefix, DEFAULT_ROLE_PREFIX, platformRoleNames } from '../../src/platform-roles';
 
 function localSocketDir(): string {
   return process.env.STYNX_TEST_PG_SOCKET_DIR ?? '/tmp';
@@ -123,17 +124,18 @@ export function withPostgresCredentials(
 }
 
 /** Bootstrap only cluster roles; leave the fresh database migration ledger untouched. */
-async function bootstrapRoles(client: Client): Promise<void> {
+async function bootstrapRoles(client: Client, rolePrefix: string): Promise<void> {
   await client.query('begin');
   try {
     // Execute the real immutable migration on this fixture database: its
     // current_database() grants must never target the admin database. These
     // grants are needed even when the cluster already has the shared roles.
+    // A product prefix is applied the way the migration runners apply it.
     const sql = await readFile(
       resolve(__dirname, '../../migrations/platform/0001_roles.sql'),
       'utf8',
     );
-    await client.query(sql);
+    await client.query(applyRolePrefix(sql, rolePrefix));
     await client.query('commit');
   } catch (error) {
     await client.query('rollback').catch(() => undefined);
@@ -198,6 +200,11 @@ export interface PostgresTestDatabase {
 
 export interface PostgresTestDatabaseOptions {
   readonly useTemplate?: boolean;
+  /**
+   * Product role prefix the fixture bootstraps (S-18); default `stynx`. A
+   * non-default prefix never clones the STYNX-migrated template.
+   */
+  readonly rolePrefix?: string;
 }
 
 export async function createPostgresTestDatabase(
@@ -205,7 +212,11 @@ export async function createPostgresTestDatabase(
   options: PostgresTestDatabaseOptions = {},
 ): Promise<PostgresTestDatabase> {
   const database = databaseName(prefix);
-  const template = options.useTemplate === false ? undefined : templateDatabase();
+  const rolePrefix = options.rolePrefix ?? DEFAULT_ROLE_PREFIX;
+  const template =
+    options.useTemplate === false || rolePrefix !== DEFAULT_ROLE_PREFIX
+      ? undefined
+      : templateDatabase();
 
   await withClient(adminConfig(), async (client) => {
     if (template) {
@@ -221,8 +232,8 @@ export async function createPostgresTestDatabase(
       await client.query(`create database "${database}"`);
     }
     await withRoleCatalogLock(client, async () => {
-      await withClient(adminConfig(database), bootstrapRoles);
-      await setRoleLogin(client, TEST_APP_ROLE);
+      await withClient(adminConfig(database), (bootstrap) => bootstrapRoles(bootstrap, rolePrefix));
+      await setRoleLogin(client, platformRoleNames(rolePrefix).app);
     });
   });
 
