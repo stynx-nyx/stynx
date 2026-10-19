@@ -1,13 +1,13 @@
 import type { Transaction } from '@stynx-nyx/data';
-import { OUTBOX_APP_ROLE_CHECKED_RELATIONS } from '../../src/constants';
+import { OUTBOX_APP_ROLE_CHECKED_RELATIONS } from '../../src/constants.js';
 import {
   OutboxAppRoleOwnershipError,
   OutboxEventTransactionError,
   OutboxOwnershipContentionError,
-} from '../../src/errors';
-import { OutboxEventStreamSource } from '../../src/event-stream-source';
-import { OutboxService } from '../../src/outbox.service';
-import type { OutboxSqlExecutor } from '../../src/types';
+} from '../../src/errors.js';
+import { OutboxEventStreamSource } from '../../src/event-stream-source.js';
+import { OutboxService } from '../../src/outbox.service.js';
+import type { OutboxSqlExecutor } from '../../src/types.js';
 
 // INV-TENANCY-001; UPS-OBX-10 (ADR-OUTBOX-0003 D1 items 2, 5 and 7): the
 // request-path sites compare current_user with the configured role, refuse

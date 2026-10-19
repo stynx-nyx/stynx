@@ -1,4 +1,4 @@
-import { StynxLogger } from '../../src/logger.service';
+import { StynxLogger } from '../../src/logger.service.js';
 
 describe('StynxLogger', () => {
   it('attaches trace and suppressed duplicate count to error logs', () => {

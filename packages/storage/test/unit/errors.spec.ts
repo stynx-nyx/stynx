@@ -3,7 +3,7 @@ import {
   StorageDocumentNotFoundError,
   StorageTenantMismatchError,
   StorageValidationError,
-} from '../../src/errors';
+} from '../../src/errors.js';
 
 describe('storage errors', () => {
   it('StorageCollectionNotFoundError carries 404 + collection context', () => {

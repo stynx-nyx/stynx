@@ -1,6 +1,6 @@
 import { SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
-import { SecretLoader } from '../../src/secret-loader';
-import { SecretLoadError } from '../../src/errors';
+import { SecretLoader } from '../../src/secret-loader.js';
+import { SecretLoadError } from '../../src/errors.js';
 
 describe('SecretLoader', () => {
   it('caches the secret value within ttlMs', async () => {

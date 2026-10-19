@@ -1,6 +1,6 @@
-import { OfflineSyncError as _OfflineSyncError } from '../../src/errors';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
-import type { SyncBatchItemInput, TrustedOfflineSyncScope } from '../../src/types';
+import { OfflineSyncError as _OfflineSyncError } from '../../src/errors.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
+import type { SyncBatchItemInput, TrustedOfflineSyncScope } from '../../src/types.js';
 
 const scope: TrustedOfflineSyncScope = {
   tenantId: '00000000-0000-4000-8000-000000000001',

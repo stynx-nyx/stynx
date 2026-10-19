@@ -1,11 +1,11 @@
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { z } from 'zod';
-import { StynxCoreModule } from '../../src/core.module';
+import { StynxCoreModule } from '../../src/core.module.js';
 import {
   STYNX_CORE_CONFIG,
   STYNX_CORE_OPTIONS,
   STYNX_SYSTEM_OPERATION_SINK,
-} from '../../src/tokens';
+} from '../../src/tokens.js';
 
 describe('StynxCoreModule', () => {
   it('wires sync and async option providers plus global infrastructure', async () => {

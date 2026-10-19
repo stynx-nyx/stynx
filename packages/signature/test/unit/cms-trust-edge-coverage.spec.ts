@@ -1,8 +1,8 @@
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createCmsTrustVerifier } from '../../src';
-import { bltCmsSignature, bltSignedDocument, bytes, certificate, now, profile, rootPem } from '../fixtures/trust';
+import { createCmsTrustVerifier } from '../../src/index.js';
+import { bltCmsSignature, bltSignedDocument, bytes, certificate, now, profile, rootPem } from '../fixtures/trust.js';
 
 const input = () => ({
   tenantId: 'tenant-a',

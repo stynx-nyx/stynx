@@ -1,5 +1,5 @@
 import type { ModuleRef } from '@nestjs/core';
-import { TenancyService } from '../../src/tenancy.service';
+import { TenancyService } from '../../src/tenancy.service.js';
 
 const TENANT_ID = '018f53e4-28a1-7cd8-a0ff-5b22c3a07121';
 const OWNER_ID = '018f53e4-28a1-7cd8-a0ff-5b22c3a07122';

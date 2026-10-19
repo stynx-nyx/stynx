@@ -11,11 +11,11 @@ import type {
   PrivacyService as PrivacyServiceType,
   PrivacyRule,
   PrivacyObjectStore,
-} from '../../src';
+} from '../../src/index.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 import { stringify } from 'yaml';
 
 // Public compiled package graph, without source aliases or owned component replacements.

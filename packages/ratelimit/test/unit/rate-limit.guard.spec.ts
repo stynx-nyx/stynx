@@ -2,10 +2,10 @@ import type { ExecutionContext } from '@nestjs/common';
 import { HttpException, HttpStatus, ServiceUnavailableException, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { STYNX_SYSTEM_ROUTE } from '@stynx-nyx/auth';
-import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants';
-import { InMemoryRateLimitMetrics } from '../../src/metrics';
-import { RateLimitGuard } from '../../src/rate-limit.guard';
-import type { RateLimitPolicyResolver, RateLimitStore } from '../../src/types';
+import { STYNX_RATE_LIMIT_ROUTE } from '../../src/constants.js';
+import { InMemoryRateLimitMetrics } from '../../src/metrics.js';
+import { RateLimitGuard } from '../../src/rate-limit.guard.js';
+import type { RateLimitPolicyResolver, RateLimitStore } from '../../src/types.js';
 
 interface ResponseStub {
   headers: Record<string, string>;

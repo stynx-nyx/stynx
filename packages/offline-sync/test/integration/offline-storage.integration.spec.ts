@@ -12,15 +12,15 @@ import {
   fixtureDigest,
   fixtureBytesDigest,
   rehashManifest,
-} from '../support/offline-import-fixtures';
-import { renderOfflineStorage, verifyOfflineStorage } from '../../src/storage';
+} from '../support/offline-import-fixtures.js';
+import { renderOfflineStorage, verifyOfflineStorage } from '../../src/storage.js';
 import {
   createPostgresTestDatabase,
   withPostgresCredentials,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
-import { fixture, dispose, verify, baseline } from '../support/offline-storage-fixture';
-import { packedStorageCli } from '../support/packed-storage-cli';
+import { fixture, dispose, verify, baseline } from '../support/offline-storage-fixture.js';
+import { packedStorageCli } from '../support/packed-storage-cli.js';
 
 describe('D6 independent closed offline storage PostgreSQL installation', () => {
   it.each([true, false])(

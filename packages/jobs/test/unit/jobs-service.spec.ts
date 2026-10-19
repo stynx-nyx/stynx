@@ -10,7 +10,7 @@ import {
   JobActorMembershipError,
   JobActorAssignmentDeniedError,
   nextCronRunAt,
-} from '../../src';
+} from '../../src/index.js';
 import { RequestContext, RequestContextMutator, RequestContextMissingError } from '@stynx-nyx/core';
 import { ActorContextMissingError, TenantContextMissingError } from '@stynx-nyx/data';
 

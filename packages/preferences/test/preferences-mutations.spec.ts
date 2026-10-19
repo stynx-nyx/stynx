@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PreferencesService } from '../src/preferences.service';
-import { PLATFORM_PREFERENCE_DEFAULTS } from '../src/schema';
-import type { PreferencesStore } from '../src/types';
-import { harness, tenantA, changed, preferencesError } from './support/preferences-harness';
+import { PreferencesService } from '../src/preferences.service.js';
+import { PLATFORM_PREFERENCE_DEFAULTS } from '../src/schema.js';
+import type { PreferencesStore } from '../src/types.js';
+import { harness, tenantA, changed, preferencesError } from './support/preferences-harness.js';
 
 describe('preferences atomic mutations and redacted audit', () => {
   it('supports atomic patch/null reset/all reset and deterministic exact no-op', async () => {

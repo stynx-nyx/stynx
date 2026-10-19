@@ -17,8 +17,8 @@ import {
   type StynxSseRequest,
   type StynxSseResponse,
 } from '@stynx-nyx/backend';
-import type { PostgresTestDatabase } from '../../../../packages/data/test/support/postgres';
-import { RealAuthenticationFixture } from '../../../../packages/backend/test/support/real-authentication';
+import type { PostgresTestDatabase } from '../../../../packages/data/test/support/postgres.js';
+import { RealAuthenticationFixture } from '../../../../packages/backend/test/support/real-authentication.js';
 
 const authentication = new RealAuthenticationFixture();
 const tenantA = authentication.tenantId;

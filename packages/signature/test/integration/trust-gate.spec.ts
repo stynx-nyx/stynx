@@ -2,15 +2,15 @@ import 'reflect-metadata';
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { X509Certificate } from '@peculiar/x509';
-import * as sig from '../../src';
-import { readPdfTrustEvidence } from '../../src/pdf-trust-evidence';
+import * as sig from '../../src/index.js';
+import { readPdfTrustEvidence } from '../../src/pdf-trust-evidence.js';
 import {
   appendCatalogShadow,
   appendDuplicatePrev,
   appendHybridXref,
   omitUpdatedCatalogFromXref,
   listUpdatedCatalogInXref,
-} from '../fixtures/pki/xref-attacks';
+} from '../fixtures/pki/xref-attacks.js';
 import {
   bltCmsSignature,
   bltSignedDocument,
@@ -27,7 +27,7 @@ import {
   signedDocument,
   signedResult,
   sourceDocument,
-} from '../fixtures/trust';
+} from '../fixtures/trust.js';
 
 // UPS-SIG-01 / INV-SIGNATURE-001. Resolve through the published barrel so the
 // failure is an observable missing behavior, never an import-time exception.

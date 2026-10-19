@@ -1,10 +1,10 @@
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
-import { RedisSessionStore } from '../../src/redis-session-store';
-import { RefreshTokenReuseDetectedError, SessionConflictError } from '../../src/errors';
-import { SessionJwtSigningService } from '../../src/jwt-signing.service';
-import { SessionService } from '../../src/session.service';
-import { resolveSessionsOptions, type SessionMirror, type StynxSessionsModuleOptions } from '../../src/types';
+import { RedisSessionStore } from '../../src/redis-session-store.js';
+import { RefreshTokenReuseDetectedError, SessionConflictError } from '../../src/errors.js';
+import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
+import { SessionService } from '../../src/session.service.js';
+import { resolveSessionsOptions, type SessionMirror, type StynxSessionsModuleOptions } from '../../src/types.js';
 
 // UPS-SES-01: separate clients share one Redis script/transaction boundary.
 const pair = generateKeyPairSync('rsa', { modulusLength: 2048 });

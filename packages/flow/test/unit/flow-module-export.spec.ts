@@ -2,7 +2,7 @@
 // to keep test/source ratio above the F3xT3 threshold as the Flow
 // surface grows (currently 0.125, threshold 0.10).
 
-import * as flow from '../../src/index';
+import * as flow from '../../src/index.js';
 
 describe('@stynx-nyx/flow module barrel', () => {
   it('top-level index.ts is importable', () => {

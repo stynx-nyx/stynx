@@ -21,7 +21,7 @@ import {
   runDoctorForApp,
   withActor,
   withTenant,
-} from '../src';
+} from '../src/index.js';
 
 const fixtureSchema = pgSchema('fixture');
 const fixtureParents = softDeletable(fixtureSchema.table('parents', {

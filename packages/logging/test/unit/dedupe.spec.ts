@@ -1,4 +1,4 @@
-import { LoggingDedupeService } from '../../src/dedupe';
+import { LoggingDedupeService } from '../../src/dedupe.js';
 
 describe('LoggingDedupeService', () => {
   it('uses the default dedupe window when no options are provided', () => {

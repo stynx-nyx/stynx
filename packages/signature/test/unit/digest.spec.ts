@@ -1,4 +1,4 @@
-import { canonicalJson, canonicalXmlDigest, sha256 } from '../../src';
+import { canonicalJson, canonicalXmlDigest, sha256 } from '../../src/index.js';
 
 describe('digest helpers', () => {
   it('computes deterministic SHA-256 encodings for strings and bytes', () => {

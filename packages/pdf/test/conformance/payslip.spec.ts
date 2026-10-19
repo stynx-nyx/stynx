@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { PdfVerificationEvidenceAppender, PublicPayrollPdfBuilder } from '../../src';
-import type { PublicPayslipDocument } from '../../src';
-import { VERAPDF_CONFORMANCE_TIMEOUT_MS, isVeraPdfDockerUsable, validatePdfsA2b } from './verapdf';
-import * as veraPdfConformance from './verapdf';
+import { PdfVerificationEvidenceAppender, PublicPayrollPdfBuilder } from '../../src/index.js';
+import type { PublicPayslipDocument } from '../../src/index.js';
+import { VERAPDF_CONFORMANCE_TIMEOUT_MS, isVeraPdfDockerUsable, validatePdfsA2b } from './verapdf.js';
+import * as veraPdfConformance from './verapdf.js';
 
 type Guard = (raw: string, expectedNames: string[]) => unknown;
 type AttemptRunner = (

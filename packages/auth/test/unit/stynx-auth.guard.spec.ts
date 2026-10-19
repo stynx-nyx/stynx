@@ -3,10 +3,10 @@ import type { ModuleRef } from '@nestjs/core';
 import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import * as contracts from '@stynx-nyx/contracts';
 import { SessionJwtSigningService, SessionService } from '@stynx-nyx/sessions';
-import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from '../../src/decorators';
-import { StynxAuthGuard } from '../../src/stynx-auth.guard';
-import { StynxJwtValidator } from '../../src/stynx-jwt.validator';
-import { hasVerifiedPrincipal, markVerifiedPrincipal } from '../../src/verified-principal';
+import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from '../../src/decorators.js';
+import { StynxAuthGuard } from '../../src/stynx-auth.guard.js';
+import { StynxJwtValidator } from '../../src/stynx-jwt.validator.js';
+import { hasVerifiedPrincipal, markVerifiedPrincipal } from '../../src/verified-principal.js';
 
 function createExecutionContext(request: Record<string, unknown>): ExecutionContext {
   return {

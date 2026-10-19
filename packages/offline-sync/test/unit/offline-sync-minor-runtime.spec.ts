@@ -1,11 +1,11 @@
 import { describe, expect } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
 import {
   registerOfflineMinorRuntimeContracts,
   MINOR_TENANT_A,
-} from '../support/minor-runtime-contract';
-import type { StynxOfflineSyncModuleOptions } from '../../src/types';
+} from '../support/minor-runtime-contract.js';
+import type { StynxOfflineSyncModuleOptions } from '../../src/types.js';
 
 describe('In-memory minor runtime contracts', () => {
   const store = new InMemoryOfflineSyncStore();

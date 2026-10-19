@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mintTestSession } from '../src/mint-test-session';
+import { mintTestSession } from '../src/mint-test-session.js';
 
 describe('mintTestSession', () => {
   const originalNodeEnv = process.env.NODE_ENV;

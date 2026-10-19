@@ -1,4 +1,4 @@
-import { StynxHealthService } from '../../src/health.service';
+import { StynxHealthService } from '../../src/health.service.js';
 
 describe('StynxHealthService', () => {
   it('fails readiness when a dependency is down', async () => {

@@ -1,11 +1,11 @@
 import { describe } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
 import {
   GAP_AT,
   GAP_TENANT_A,
   registerOfflineGapContracts,
-} from '../support/offline-sync-acceptance-gaps';
+} from '../support/offline-sync-acceptance-gaps.js';
 
 describe('Offline acceptance gap contracts through the memory store', () => {
   registerOfflineGapContracts(() => {

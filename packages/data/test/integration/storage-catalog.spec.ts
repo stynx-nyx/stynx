@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { collectStorageCatalog } from '../../src/storage-catalog';
-import type { StorageVerifierTransaction } from '../../src/storage-contract';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres';
+import { collectStorageCatalog } from '../../src/storage-catalog.js';
+import type { StorageVerifierTransaction } from '../../src/storage-contract.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres.js';
 
 // Real catalog introspection proves effective SQL support, preserving column ACL,
 // function/trigger flags, enum order, RLS policies and owner default grants.

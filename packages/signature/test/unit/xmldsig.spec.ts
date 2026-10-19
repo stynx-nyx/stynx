@@ -12,7 +12,7 @@ import {
   XmlDSigVerificationError,
   XmlDSigVerifier,
   sha256,
-} from '../../src';
+} from '../../src/index.js';
 
 // Ephemeral fixture keypair generated per test run — never hardcode key
 // material in the repo, even throwaway fixtures (secret scanners rightly

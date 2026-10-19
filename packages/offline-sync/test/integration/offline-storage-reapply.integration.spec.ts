@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { collectStorageCatalog } from '@stynx-nyx/data';
-import { renderOfflineStorage } from '../../src/storage';
-import { importOfflineState } from '../../src/import-state';
-import { fixture, dispose, baseline } from '../support/offline-storage-fixture';
-import { reconciliationImportManifest } from '../support/offline-reconciliation-import-fixture';
+import { renderOfflineStorage } from '../../src/storage.js';
+import { importOfflineState } from '../../src/import-state.js';
+import { fixture, dispose, baseline } from '../support/offline-storage-fixture.js';
+import { reconciliationImportManifest } from '../support/offline-reconciliation-import-fixture.js';
 
 // INV-OFFLINE-001: objects are fresh-only; binding repeats preserve data and archive effects.
 describe('Rendered offline storage fresh-install and role-binding boundaries', () => {

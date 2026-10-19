@@ -1,5 +1,5 @@
-import { JobsRepository } from '../../src/jobs.repository';
-import { ScheduleActorRequiredError } from '../../src/errors';
+import { JobsRepository } from '../../src/jobs.repository.js';
+import { ScheduleActorRequiredError } from '../../src/errors.js';
 
 const now = new Date('2026-08-26T10:00:00.000Z');
 const later = new Date('2026-08-26T11:00:00.000Z');

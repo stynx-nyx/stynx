@@ -6,7 +6,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { IdentityAdminError } from '@stynx-nyx/contracts';
-import { IdentityAdminService } from '../../src/identity-admin/identity-admin.service';
+import { IdentityAdminService } from '../../src/identity-admin/identity-admin.service.js';
 
 function makeAdapter(overrides: Partial<Record<string, unknown>> = {}) {
   return {

@@ -1,7 +1,7 @@
-import { PermissionCache } from '../../src/permission-cache';
-import { PermissionCacheMetrics } from '../../src/permission-cache-metrics';
-import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend';
-import type { PermissionQueryService } from '../../src/permission-query.service';
+import { PermissionCache } from '../../src/permission-cache.js';
+import { PermissionCacheMetrics } from '../../src/permission-cache-metrics.js';
+import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend.js';
+import type { PermissionQueryService } from '../../src/permission-query.service.js';
 
 describe('PermissionCache', () => {
   it('records metrics defensively when a tier lookup misses', () => {

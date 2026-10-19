@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { STYNX_IDEMPOTENT_ROUTE, STYNX_NO_IDEMPOTENT_ROUTE } from '../../src/constants';
-import { Idempotent, NoIdempotent } from '../../src/decorators';
-import { InMemoryIdempotencyMetrics } from '../../src/metrics';
+import { STYNX_IDEMPOTENT_ROUTE, STYNX_NO_IDEMPOTENT_ROUTE } from '../../src/constants.js';
+import { Idempotent, NoIdempotent } from '../../src/decorators.js';
+import { InMemoryIdempotencyMetrics } from '../../src/metrics.js';
 
 describe('idempotency decorators and metrics', () => {
   it('attaches idempotency metadata with default and custom options', () => {

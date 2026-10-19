@@ -7,18 +7,18 @@ import {
   OfflineSyncRangeUnavailableError,
   OfflineSyncReservationReplayError,
   OfflineSyncUpgradeRequiredError,
-} from '../../src/errors';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { decodeCursor, encodeCursor, pageOf, reservationFingerprint, sortInstantOf } from '../../src/listing';
-import { OFFLINE_SYNC_NO_SHIFT } from '../../src/numbering';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { batchContextFingerprint, stableStringify } from '../../src/transport';
+} from '../../src/errors.js';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { decodeCursor, encodeCursor, pageOf, reservationFingerprint, sortInstantOf } from '../../src/listing.js';
+import { OFFLINE_SYNC_NO_SHIFT } from '../../src/numbering.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { batchContextFingerprint, stableStringify } from '../../src/transport.js';
 import type {
   CTG9SubmitSyncBatchInput,
   OfflineSyncDurableStore,
   OfflineSyncItemContext,
   StynxOfflineSyncModuleOptions,
-} from '../../src/types';
+} from '../../src/types.js';
 
 // INV-OFFLINE-001; UPS-OFS-05, UPS-OFS-09 (receiptId), UPS-OFS-10, UPS-OFS-11, UPS-OFS-12, UPS-OFS-14 (#317;
 // ADR-MOBILE-OFFLINE-0003 D4 and D5).

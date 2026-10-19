@@ -1,13 +1,13 @@
 import { createPublicKey, generateKeyPairSync, verify as verifySignature } from 'node:crypto';
-import { InMemorySessionStore } from '../../src/in-memory-session-store';
-import { SessionJwtSigningService } from '../../src/jwt-signing.service';
-import { SessionMirrorWriter } from '../../src/session-mirror.writer';
-import { SessionService } from '../../src/session.service';
+import { InMemorySessionStore } from '../../src/in-memory-session-store.js';
+import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
+import { SessionMirrorWriter } from '../../src/session-mirror.writer.js';
+import { SessionService } from '../../src/session.service.js';
 import {
   InvalidRefreshTokenError,
   RefreshTokenReuseDetectedError,
   SessionExpiredError,
-} from '../../src/errors';
+} from '../../src/errors.js';
 import {
   resolveSessionsOptions,
   type RefreshTokenLookup,
@@ -16,7 +16,7 @@ import {
   type SessionRecord,
   type SessionStatus,
   type SessionStore,
-} from '../../src/types';
+} from '../../src/types.js';
 
 class RecordingMirror implements SessionMirror {
   readonly entries: SessionMirrorEntry[] = [];

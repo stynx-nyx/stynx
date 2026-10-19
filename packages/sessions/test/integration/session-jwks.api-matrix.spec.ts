@@ -2,10 +2,10 @@ import { generateKeyPairSync } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { SessionJwtSigningService } from '../../src/jwt-signing.service';
-import { SessionJwksController } from '../../src/jwks.controller';
-import { STYNX_SESSIONS_OPTIONS } from '../../src/tokens';
-import { resolveSessionsOptions } from '../../src/types';
+import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
+import { SessionJwksController } from '../../src/jwks.controller.js';
+import { STYNX_SESSIONS_OPTIONS } from '../../src/tokens.js';
+import { resolveSessionsOptions } from '../../src/types.js';
 
 function buildKeySet() {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });

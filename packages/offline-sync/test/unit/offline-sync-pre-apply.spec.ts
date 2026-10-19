@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { prepareOfflineSyncItem } from '../../src/pre-apply';
-import { StynxOfflineSyncModule } from '../../src/offline-sync.module';
+import { prepareOfflineSyncItem } from '../../src/pre-apply.js';
+import { StynxOfflineSyncModule } from '../../src/offline-sync.module.js';
 import type {
   CTG9SyncBatchItemInput,
   DurableBatchExecutionOptions,
   OfflineSyncItemContext,
   StynxOfflineSyncModuleOptions,
-} from '../../src/types';
+} from '../../src/types.js';
 
 const item: CTG9SyncBatchItemInput = {
   queueItemId: 'current',

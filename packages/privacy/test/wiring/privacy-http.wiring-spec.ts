@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { AuthenticatedPrivacyApp } from '../support/authenticated-privacy-app';
+import { AuthenticatedPrivacyApp } from '../support/authenticated-privacy-app.js';
 
 describe('PrivacyController E2E', () => {
   let fixture: AuthenticatedPrivacyApp;

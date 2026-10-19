@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { renderOutboxStorage } from '../../src/index';
+import { renderOutboxStorage } from '../../src/index.js';
 
 // ADR-OUTBOX-0003 D2/D3; ADR-OUTBOX-0004 D4: the published renderer is a
 // deterministic, offline binding boundary, not an arbitrary SQL template port.

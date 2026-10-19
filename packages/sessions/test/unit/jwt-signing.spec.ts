@@ -1,10 +1,10 @@
 import { generateKeyPairSync } from 'node:crypto';
-import { SessionJwtSigningService } from '../../src/jwt-signing.service';
-import { SessionSigningKeyError } from '../../src/errors';
+import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
+import { SessionSigningKeyError } from '../../src/errors.js';
 import type {
   ResolvedStynxSessionsModuleOptions,
   SessionRecord,
-} from '../../src/types';
+} from '../../src/types.js';
 import type { Mock } from 'vitest';
 
 interface FakeSecretLoader {

@@ -34,7 +34,7 @@ async function loadSampleModuleWithEnv(nodeEnv?: string, stynxEnvironment?: stri
   } else {
     process.env.STYNX_ENVIRONMENT = stynxEnvironment;
   }
-  return import('../../src/sample/sample.module');
+  return import('../../src/sample/sample.module.js');
 }
 
 afterEach(() => {

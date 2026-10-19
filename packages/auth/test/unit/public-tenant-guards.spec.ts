@@ -15,19 +15,19 @@ import { RequestContext } from '@stynx-nyx/core';
 import request from 'supertest';
 import { SessionService } from '@stynx-nyx/sessions';
 import { STYNX_PUBLIC_TENANT_OPTIONS, STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
-import { PermissionGuard } from '../../src/permission.guard';
-import { StynxAuthGuard } from '../../src/stynx-auth.guard';
+import { PermissionGuard } from '../../src/permission.guard.js';
+import { StynxAuthGuard } from '../../src/stynx-auth.guard.js';
 import {
   STYNX_PERMISSION_ROUTE,
   STYNX_PUBLIC_ROUTE,
   STYNX_READONLY_ROUTE,
   STYNX_SYSTEM_ROUTE,
-} from '../../src/decorators';
-import { PublicTenantRoute } from '../../src/decorators';
-import { StynxAuthModule } from '../../src/auth.module';
-import { PermissionCache } from '../../src/permission-cache';
-import { StynxJwtValidator } from '../../src/stynx-jwt.validator';
-import { PublicTenantBootstrap } from '../../src/public-tenant-bootstrap';
+} from '../../src/decorators.js';
+import { PublicTenantRoute } from '../../src/decorators.js';
+import { StynxAuthModule } from '../../src/auth.module.js';
+import { PermissionCache } from '../../src/permission-cache.js';
+import { StynxJwtValidator } from '../../src/stynx-jwt.validator.js';
+import { PublicTenantBootstrap } from '../../src/public-tenant-bootstrap.js';
 
 function context(request: Record<string, unknown>): ExecutionContext {
   return {

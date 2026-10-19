@@ -3,15 +3,15 @@ import type { Database } from '@stynx-nyx/data';
 import {
   OfflineSyncReservationReplayError,
   OfflineSyncUpgradeRequiredError,
-} from '../../src/errors';
-import { encodeCursor, reservationFingerprint } from '../../src/listing';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
+} from '../../src/errors.js';
+import { encodeCursor, reservationFingerprint } from '../../src/listing.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
 import {
   pgListBatches,
   pgListConflicts,
   pgListItemReceipts,
   pgListQueueItems,
-} from '../../src/postgres-listing';
+} from '../../src/postgres-listing.js';
 
 // INV-OFFLINE-001; UPS-OFS-05, UPS-OFS-11 (#317, conflict device filter): SQL-boundary sensors for the PostgreSQL store.
 const scope = { tenantId: '00000000-0000-4000-8000-000000000001', actorId: 'actor-a' };

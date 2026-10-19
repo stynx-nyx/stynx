@@ -3,9 +3,9 @@ import { randomUUID } from 'node:crypto';
 import type { Client } from 'pg';
 import { RequestContext, RequestContextMutator, SystemContext, SystemContextRequiredError } from '@stynx-nyx/core';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
-import { createPostgresTestDatabase } from '../../../data/test/support/postgres';
-import { JobActorAssignmentDeniedError, JobActorMembershipError, JobTenantMismatchError, JobsRegistry, JobsService, JobsWorker, ScheduleActorRequiredError, StynxJobsModule } from '../../src';
-import { JobsRepository } from '../../src/jobs.repository';
+import { createPostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { JobActorAssignmentDeniedError, JobActorMembershipError, JobTenantMismatchError, JobsRegistry, JobsService, JobsWorker, ScheduleActorRequiredError, StynxJobsModule } from '../../src/index.js';
+import { JobsRepository } from '../../src/jobs.repository.js';
 
 const tenant1 = '11111111-1111-4111-8111-111111111111';
 const tenant2 = '22222222-2222-4222-8222-222222222222';

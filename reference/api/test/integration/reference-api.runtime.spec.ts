@@ -28,14 +28,14 @@ import {
 import { SessionService } from '@stynx-nyx/sessions';
 import { RequestContextMutator } from '@stynx-nyx/core';
 import { StynxMetricsService } from '@stynx-nyx/health';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../packages/data/test/support/postgres';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../packages/data/test/support/postgres.js';
 import {
   recordNotes as liveRecordNotes,
   records as liveRecords,
   workItemEntries as liveWorkItemEntries,
   workItemLocks as liveWorkItemLocks,
   workItems as liveWorkItems,
-} from '../../src/sample/schema';
+} from '../../src/sample/schema.js';
 
 
 const tenantA = '01978f4a-32bf-7c27-a131-fd73a9e001a1';
@@ -523,7 +523,7 @@ describe('@stynx-nyx/reference-api runtime suite', () => {
       }),
     );
 
-    const { AppModule } = await import('../../src/app.module');
+    const { AppModule } = await import('../../src/app.module.js');
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })

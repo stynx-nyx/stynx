@@ -1,4 +1,4 @@
-import { quoteStorageIdentifier, resolveStorageRoleBinding } from '../../src/storage-contract';
+import { quoteStorageIdentifier, resolveStorageRoleBinding } from '../../src/storage-contract.js';
 
 // ADR-OUTBOX-0004 D4: identifiers cannot inject SQL or alias through PostgreSQL
 // truncation, and application/reader roles cannot inherit owner authority by name.

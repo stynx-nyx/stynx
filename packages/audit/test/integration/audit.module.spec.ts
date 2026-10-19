@@ -3,10 +3,10 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { Client } from 'pg';
 import { generateRequestId, RequestContextMutator } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { StynxAuditService } from '../../src/audit.service';
-import { StynxAuditModule } from '../../src/audit.module';
-import { findAuditRows } from '../../src/test-helpers';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { StynxAuditService } from '../../src/audit.service.js';
+import { StynxAuditModule } from '../../src/audit.module.js';
+import { findAuditRows } from '../../src/test-helpers.js';
 
 
 async function bootstrapSchema(client: Client): Promise<void> {

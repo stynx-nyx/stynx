@@ -3,7 +3,7 @@ import {
   ConfigOwnershipViolationError,
   loadStynxConfiguration,
   validateConfigOwnership,
-} from '../../src';
+} from '../../src/index.js';
 
 describe('config ownership metadata', () => {
   const schema = z.object({

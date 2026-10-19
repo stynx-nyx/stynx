@@ -4,7 +4,7 @@
 // NestJS @Module() metadata; provides incidental coverage that lifts
 // the package's line-coverage ratio above the F3xT2 80% threshold.
 
-import * as Barrel from '../../src';
+import * as Barrel from '../../src/index.js';
 
 describe('@stynx-nyx/data barrel', () => {
   it('exports at least one symbol', () => {

@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   generateRopaFromApp: vi.fn(() => 'ropa markdown'),
 }));
 
-vi.mock('../src/adopt', () => ({
+vi.mock('../src/adopt.js', () => ({
   adoptApply: mocks.adoptApply,
   adoptApplyProposedPermissions: mocks.adoptApplyProposedPermissions,
   adoptScan: mocks.adoptScan,
@@ -26,33 +26,33 @@ vi.mock('../src/adopt', () => ({
   linkCognitoUsers: mocks.linkCognitoUsers,
 }));
 
-vi.mock('../src/audit', () => ({
+vi.mock('../src/audit.js', () => ({
   verifyAuditChain: mocks.verifyAuditChain,
 }));
 
-vi.mock('../src/doctor', () => ({
+vi.mock('../src/doctor.js', () => ({
   runDoctor: mocks.runDoctor,
 }));
 
-vi.mock('../src/init', () => ({
+vi.mock('../src/init.js', () => ({
   scaffoldApp: mocks.scaffoldApp,
 }));
 
-vi.mock('../src/migrate', () => ({
+vi.mock('../src/migrate.js', () => ({
   migrateDown: mocks.migrateDown,
   migrateRedo: mocks.migrateRedo,
   migrateUp: mocks.migrateUp,
   migrationStatus: mocks.migrationStatus,
 }));
 
-vi.mock('../src/privacy-ropa', () => ({
+vi.mock('../src/privacy-ropa.js', () => ({
   generateRopaFromApp: mocks.generateRopaFromApp,
 }));
 
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
-import { buildProgram } from '../src/cli';
+import { buildProgram } from '../src/cli.js';
 
 async function runCli(args: string[]) {
   const program = buildProgram();

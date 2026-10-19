@@ -12,8 +12,8 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { StorageValidationError } from '../../src/errors';
-import { S3Service } from '../../src/s3.service';
+import { StorageValidationError } from '../../src/errors.js';
+import { S3Service } from '../../src/s3.service.js';
 import type { Mock } from 'vitest';
 
 vi.mock('@aws-sdk/s3-request-presigner', () => ({

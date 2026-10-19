@@ -2,7 +2,7 @@ import { IdentityAdminError } from '@stynx-nyx/contracts';
 import {
   PgIdentityLocalSyncAdapter,
   loadPormRoleMetaRows,
-} from '../../src/identity-admin/pg-local-sync.adapter';
+} from '../../src/identity-admin/pg-local-sync.adapter.js';
 
 const UUID_A = '0190abcd-1234-7abc-89ab-0123456789ab';
 const UUID_B = '0190abcd-1234-7abc-89ab-0123456789cd';

@@ -1,9 +1,9 @@
 import { Test } from '@nestjs/testing';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import * as sig from '../../src';
+import * as sig from '../../src/index.js';
 import { StynxHealthService } from '@stynx-nyx/health';
-import { profile, now, rootPem } from '../fixtures/trust';
+import { profile, now, rootPem } from '../fixtures/trust.js';
 
 // UPS-SIG-02 / INV-SIGNATURE-001. A capability is operational evidence,
 // rather than a provider's HTTP /health assertion.

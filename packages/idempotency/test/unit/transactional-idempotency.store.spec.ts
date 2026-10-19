@@ -3,7 +3,7 @@ import {
   TransactionalIdempotencyStore,
   TransactionalReservationTimeoutError,
   type TransactionalIdempotencyIdentity,
-} from '../../src/transactional-idempotency.store';
+} from '../../src/transactional-idempotency.store.js';
 
 const identity: TransactionalIdempotencyIdentity = {
   tenantId: '0197481e-6f84-77e4-8d6d-41f0b6fca9c1',

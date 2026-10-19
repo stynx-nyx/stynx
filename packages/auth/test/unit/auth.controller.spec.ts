@@ -1,4 +1,4 @@
-import { StynxAuthController } from '../../src/auth.controller';
+import { StynxAuthController } from '../../src/auth.controller.js';
 
 describe('StynxAuthController', () => {
   const authService = {

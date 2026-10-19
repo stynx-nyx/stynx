@@ -1,5 +1,5 @@
 import { Client } from 'pg';
-import { createPostgresTestDatabase } from '../support/postgres';
+import { createPostgresTestDatabase } from '../support/postgres.js';
 
 describe('PostgreSQL fixture bootstrap without a migrated template', () => {
   it('preserves escaped direct-role credentials and the Unix socket endpoint', async () => {

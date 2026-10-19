@@ -1,10 +1,10 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
-import { OutboxEventStreamSource } from '../../src/event-stream-source';
+import { OutboxEventStreamSource } from '../../src/event-stream-source.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const TENANT_A = 'f4111111-1111-4111-8111-111111111111';
 const TENANT_B = 'f4222222-2222-4222-8222-222222222222';

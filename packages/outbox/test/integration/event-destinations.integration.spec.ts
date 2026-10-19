@@ -1,15 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
-import { OutboxEventStreamSource } from '../../src/event-stream-source';
-import { OutboxEventConflictError } from '../../src/errors';
-import { StynxOutboxModule } from '../../src/outbox.module';
-import { OutboxService } from '../../src/outbox.service';
-import type { OutboxAppendEvent, OutboxDispatcherPort, OutboxEventRow, OutboxRow } from '../../src/types';
+import { OutboxEventStreamSource } from '../../src/event-stream-source.js';
+import { OutboxEventConflictError } from '../../src/errors.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
+import { OutboxService } from '../../src/outbox.service.js';
+import type { OutboxAppendEvent, OutboxDispatcherPort, OutboxEventRow, OutboxRow } from '../../src/types.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 // UPS-OBX-07 (#316), with the no-blocking rule of UPS-OBX-11 (#320). Real PostgreSQL, FORCE RLS,
 // stynx_app without BYPASSRLS, two tenants.

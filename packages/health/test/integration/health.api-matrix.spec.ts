@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { StynxHealthModule } from '../../src/health.module';
-import type { StynxHealthModuleOptions } from '../../src/tokens';
+import { StynxHealthModule } from '../../src/health.module.js';
+import type { StynxHealthModuleOptions } from '../../src/tokens.js';
 
 async function createHealthApp(options: StynxHealthModuleOptions = {}) {
   const moduleRef = await Test.createTestingModule({

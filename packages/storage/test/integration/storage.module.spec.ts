@@ -10,10 +10,10 @@ import {
 import { RequestContextMutator } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { DocumentsService } from '../../src/documents.service';
-import { StorageTenantMismatchError } from '../../src/errors';
-import { StynxStorageModule } from '../../src/storage.module';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { DocumentsService } from '../../src/documents.service.js';
+import { StorageTenantMismatchError } from '../../src/errors.js';
+import { StynxStorageModule } from '../../src/storage.module.js';
 
 function sha256Hex(value: Buffer): string {
   return createHash('sha256').update(value).digest('hex');

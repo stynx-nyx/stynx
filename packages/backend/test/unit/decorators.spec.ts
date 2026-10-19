@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
-import { STYNX_AUDIT_METADATA } from '../../src/audit/constants';
-import { Audit } from '../../src/audit/decorators';
-import { STYNX_AUTHZ_METADATA } from '../../src/authorization/constants';
-import { RequirePermissions, RequireRoles } from '../../src/authorization/decorators';
-import { CurrentPrincipal } from '../../src/auth/current-principal.decorator';
+import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants.js';
+import { STYNX_AUDIT_METADATA } from '../../src/audit/constants.js';
+import { Audit } from '../../src/audit/decorators.js';
+import { STYNX_AUTHZ_METADATA } from '../../src/authorization/constants.js';
+import { RequirePermissions, RequireRoles } from '../../src/authorization/decorators.js';
+import { CurrentPrincipal } from '../../src/auth/current-principal.decorator.js';
 
 describe('backend decorators', () => {
   it('attaches authorization and audit metadata', () => {

@@ -1,4 +1,4 @@
-import { headerToString } from '../src/headers';
+import { headerToString } from '../src/headers.js';
 
 describe('@stynx-nyx/contracts headers', () => {
   it('returns string header values unchanged', () => {

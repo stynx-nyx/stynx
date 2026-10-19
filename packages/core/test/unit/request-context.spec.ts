@@ -1,5 +1,5 @@
-import { RequestContext, RequestContextMutator } from '../../src/request-context';
-import { RequestContextMissingError, RequestContextMutationError } from '../../src/errors';
+import { RequestContext, RequestContextMutator } from '../../src/request-context.js';
+import { RequestContextMissingError, RequestContextMutationError } from '../../src/errors.js';
 
 class FakeClsService {
   private store = new Map<PropertyKey, unknown>();

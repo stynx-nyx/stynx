@@ -6,15 +6,15 @@ import {
   OutboxAppRoleOwnershipError,
   OutboxEventConflictError,
   OutboxEventTransactionError,
-} from '../../src/errors';
-import { OutboxEventStreamSource } from '../../src/event-stream-source';
-import { StynxOutboxModule } from '../../src/outbox.module';
-import { OutboxService } from '../../src/outbox.service';
-import type { OutboxEventRow } from '../../src/types';
+} from '../../src/errors.js';
+import { OutboxEventStreamSource } from '../../src/event-stream-source.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
+import { OutboxService } from '../../src/outbox.service.js';
+import type { OutboxEventRow } from '../../src/types.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 // INV-TENANCY-001; UPS-OBX-10 (ADR-OUTBOX-0003 D1): a conforming application
 // role other than stynx_app appends, reads and completes its own attempts

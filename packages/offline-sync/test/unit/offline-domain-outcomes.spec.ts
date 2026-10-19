@@ -1,16 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
-import { OfflineSyncConfigurationError } from '../../src/errors';
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { GAP_AT, GAP_TENANT_A, GAP_TENANT_B } from '../support/offline-sync-acceptance-gaps';
+import { OfflineSyncConfigurationError } from '../../src/errors.js';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { GAP_AT, GAP_TENANT_A, GAP_TENANT_B } from '../support/offline-sync-acceptance-gaps.js';
 
 import {
   registerDomainOutcomeContracts,
   domainBatch,
   domainFailure,
   domainEvents,
-} from '../support/offline-domain-outcomes';
+} from '../support/offline-domain-outcomes.js';
 
 const deferred = () => {
   let release!: () => void;
@@ -20,7 +20,7 @@ const deferred = () => {
   return { promise, release };
 };
 const memoryScope = { tenantId: GAP_TENANT_A, actorId: 'authenticated-audit-actor' };
-const legacyBatch = (id: string): import('../../src/types').SubmitSyncBatchInput => {
+const legacyBatch = (id: string): import('../../src/types.js').SubmitSyncBatchInput => {
   const input = domainBatch(id);
   const payloadJson = { legacyEffect: id };
   return {
@@ -37,7 +37,7 @@ const legacyBatch = (id: string): import('../../src/types').SubmitSyncBatchInput
 };
 const memoryService = (
   store: InMemoryOfflineSyncStore,
-  options: Partial<import('../../src/types').StynxOfflineSyncModuleOptions> = {},
+  options: Partial<import('../../src/types.js').StynxOfflineSyncModuleOptions> = {},
 ) =>
   new OfflineSyncService(
     store,
@@ -80,7 +80,7 @@ describe('Domain-outcome contracts through the memory store', () => {
       readConflictCode: async (conflictId) =>
         (
           store as unknown as {
-            conflictStynx: Map<string, import('../../src/types').OfflineSyncStynxContext>;
+            conflictStynx: Map<string, import('../../src/types.js').OfflineSyncStynxContext>;
           }
         ).conflictStynx.get(`${GAP_TENANT_A}:${conflictId}`)!.errorCode!,
       readConflictActions: async (conflictId) =>
@@ -376,7 +376,7 @@ describe('Domain-outcome contracts through the memory store', () => {
     })();
     const otherScope = { ...memoryScope, tenantId: GAP_TENANT_B };
     const otherInput = legacyBatch('independent-other-tenant');
-    let otherResult!: import('../../src/types').SyncConflict;
+    let otherResult!: import('../../src/types.js').SyncConflict;
     let finishedWhilePaused: boolean;
     try {
       await store.submitSyncBatch(otherScope, otherInput, GAP_AT);

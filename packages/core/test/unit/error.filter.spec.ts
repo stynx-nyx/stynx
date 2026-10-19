@@ -1,10 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
 import type { ArgumentsHost } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
-import { StynxErrorFilter } from '../../src/error.filter';
-import { StynxError } from '../../src/errors';
-import { RequestContext } from '../../src/request-context';
-import { STYNX_ERROR_TRANSLATOR } from '../../src/tokens';
+import { StynxErrorFilter } from '../../src/error.filter.js';
+import { StynxError } from '../../src/errors.js';
+import { RequestContext } from '../../src/request-context.js';
+import { STYNX_ERROR_TRANSLATOR } from '../../src/tokens.js';
 import type { Mock } from 'vitest';
 
 function makeHost(): {

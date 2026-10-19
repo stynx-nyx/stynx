@@ -3,10 +3,10 @@ import { resolve } from 'node:path';
 import { Controller, Get } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext, StynxError, SystemContext } from '@stynx-nyx/core';
-import { AuthenticatedI18nApp } from '../support/authenticated-app';
+import { AuthenticatedI18nApp } from '../support/authenticated-app.js';
 import request from 'supertest';
-import { I18nAdminService } from '../../src/i18n-admin.service';
-import { LocaleService } from '../../src/locale.service';
+import { I18nAdminService } from '../../src/i18n-admin.service.js';
+import { LocaleService } from '../../src/locale.service.js';
 
 @Controller('demo')
 class DemoController {

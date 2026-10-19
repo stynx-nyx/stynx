@@ -12,10 +12,10 @@ import {
   SerializationFailureError,
   StatementTimeoutError,
   TenantContextMissingError,
-} from '../../src/errors';
-import { Database } from '../../src/database';
-import { StynxPoolRegistry } from '../../src/pools';
-import type { StynxDataModuleOptions } from '../../src/tokens';
+} from '../../src/errors.js';
+import { Database } from '../../src/database.js';
+import { StynxPoolRegistry } from '../../src/pools.js';
+import type { StynxDataModuleOptions } from '../../src/tokens.js';
 import type { Mock } from 'vitest';
 
 describe('Database', () => {

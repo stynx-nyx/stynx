@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { GUARDS_METADATA } from '@nestjs/common/constants';
+import { GUARDS_METADATA } from '@nestjs/common/constants.js';
 import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
-import { StynxAuditController } from '../../src/audit.controller';
-import type { StynxAuditService } from '../../src/audit.service';
+import { StynxAuditController } from '../../src/audit.controller.js';
+import type { StynxAuditService } from '../../src/audit.service.js';
 
 function handler(name: string): Function {
   const value = StynxAuditController.prototype[name as keyof StynxAuditController];

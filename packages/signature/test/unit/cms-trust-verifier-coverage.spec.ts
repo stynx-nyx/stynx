@@ -6,8 +6,8 @@ import {
   now,
   profile,
   rootPem,
-} from '../fixtures/trust';
-import { createCmsTrustVerifier } from '../../src';
+} from '../fixtures/trust.js';
+import { createCmsTrustVerifier } from '../../src/index.js';
 
 const signatureContentsStart = (pdf: Buffer): number => {
   const index = pdf.indexOf(Buffer.from('/Contents <', 'latin1'));

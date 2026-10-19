@@ -6,7 +6,7 @@ import {
   normalizedPath,
   parseBearerTenantClaims,
   resolveSubdomainTenantId,
-} from '../../src/utils';
+} from '../../src/utils.js';
 
 function bearer(payload: Record<string, unknown>): string {
   return `Bearer header.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.sig`;
@@ -89,7 +89,7 @@ describe('tenancy utils', () => {
       },
     }));
 
-    const { createUuidV7: createWithSparseBytes, isUuidV7: isGeneratedUuidV7 } = await import('../../src/utils');
+    const { createUuidV7: createWithSparseBytes, isUuidV7: isGeneratedUuidV7 } = await import('../../src/utils.js');
 
     expect(isGeneratedUuidV7(createWithSparseBytes(0))).toBe(true);
     vi.doUnmock('node:crypto');

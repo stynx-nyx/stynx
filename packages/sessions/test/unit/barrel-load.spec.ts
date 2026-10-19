@@ -1,7 +1,7 @@
 // Smoke check: @stynx-nyx/sessions barrel loads cleanly. Incidental coverage
 // of index.ts + module.ts declarative paths.
 
-import * as Barrel from '../../src';
+import * as Barrel from '../../src/index.js';
 
 describe('@stynx-nyx/sessions barrel', () => {
   it('exports at least one symbol', () => {

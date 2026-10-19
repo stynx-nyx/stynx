@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, expect, it, vi } from 'vitest';
-import * as sig from '../../src';
+import * as sig from '../../src/index.js';
 import {
   bltCmsSignature,
   bltSignedDocument,
@@ -14,7 +14,7 @@ import {
   request,
   rootPem,
   signedResult,
-} from '../fixtures/trust';
+} from '../fixtures/trust.js';
 
 // UPS-SIG-06: declarative QUALIFIED rule by consumer-supplied certificate policy
 // OIDs per profile. The real test-PKI signer carries policy 1.2.3.4.5.6.7.

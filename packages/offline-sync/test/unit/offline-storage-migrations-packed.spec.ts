@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { renderOfflineStorageMigrations } from '../../src/storage';
-import { packedStorageCli } from '../support/packed-storage-cli';
+import { renderOfflineStorageMigrations } from '../../src/storage.js';
+import { packedStorageCli } from '../support/packed-storage-cli.js';
 
 // INV-OFFLINE-001: installed rendering requires neither a checkout nor live state.
 describe('Packed ordered offline migration renderer', () => {

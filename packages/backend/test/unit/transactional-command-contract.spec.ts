@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { EXCEPTION_FILTERS_METADATA } from '@nestjs/common/constants';
-import * as backend from '../../src/index';
-import { STYNX_AUDIT_METADATA } from '../../src/audit/constants';
+import { EXCEPTION_FILTERS_METADATA } from '@nestjs/common/constants.js';
+import * as backend from '../../src/index.js';
+import { STYNX_AUDIT_METADATA } from '../../src/audit/constants.js';
 
 type CommandDecorator = (options?: Record<string, unknown>) => MethodDecorator;
 

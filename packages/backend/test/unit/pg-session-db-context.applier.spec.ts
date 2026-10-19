@@ -1,4 +1,4 @@
-import { PgSessionDbContextApplier } from '../../src/db-context/pg-session-db-context.applier';
+import { PgSessionDbContextApplier } from '../../src/db-context/pg-session-db-context.applier.js';
 
 function makeClient() {
   return { query: vi.fn(async () => undefined) };

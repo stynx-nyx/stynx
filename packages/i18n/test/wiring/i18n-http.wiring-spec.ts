@@ -1,6 +1,6 @@
 import request from 'supertest';
-import { I18nAdminService } from '../../src/i18n-admin.service';
-import { AuthenticatedI18nApp, TENANT_ID } from '../support/authenticated-app';
+import { I18nAdminService } from '../../src/i18n-admin.service.js';
+import { AuthenticatedI18nApp, TENANT_ID } from '../support/authenticated-app.js';
 
 describe('I18nController E2E', () => {
   let fixture: AuthenticatedI18nApp;

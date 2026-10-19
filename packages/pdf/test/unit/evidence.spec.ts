@@ -1,5 +1,5 @@
 import { decodePadesEvidenceBlock } from '@stynx-nyx/signature';
-import { FixedLayoutDocumentBuilder, PdfVerificationEvidenceAppender } from '../../src';
+import { FixedLayoutDocumentBuilder, PdfVerificationEvidenceAppender } from '../../src/index.js';
 
 describe('PdfVerificationEvidenceAppender', () => {
   it('draws a verification hint and appends STYNX PAdES evidence', async () => {

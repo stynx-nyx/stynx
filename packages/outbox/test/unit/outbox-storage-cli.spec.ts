@@ -10,11 +10,11 @@ vi.mock('@stynx-nyx/data', async (original) => ({
   ...(await original<Record<string, unknown>>()),
   createStynxPgClient: harness.create,
 }));
-vi.mock('../../src/storage', async (original) => ({
+vi.mock('../../src/storage.js', async (original) => ({
   ...(await original<Record<string, unknown>>()),
   verifyOutboxStorage: harness.verify,
 }));
-import { runOutboxStorageCommand, storageCommandExecution } from '../../src/storage-cli';
+import { runOutboxStorageCommand, storageCommandExecution } from '../../src/storage-cli.js';
 
 function output() {
   const stdout: string[] = [];
@@ -196,7 +196,7 @@ describe('outbox storage command boundary', () => {
     try {
       process.argv = [process.execPath];
       vi.resetModules();
-      const embedded = await import('../../src/storage-cli');
+      const embedded = await import('../../src/storage-cli.js');
       expect(embedded.storageCommandExecution).toBe(undefined);
       expect(harness.create).not.toHaveBeenCalled();
     } finally {
@@ -217,7 +217,7 @@ describe('outbox storage command boundary', () => {
       try {
         process.argv = [process.execPath, mode === 'symlink' ? linked : direct, '--render'];
         vi.resetModules();
-        const executable = await import('../../src/storage-cli');
+        const executable = await import('../../src/storage-cli.js');
         await expect(executable.storageCommandExecution).resolves.toBe(0);
         expect(process.exitCode).toBe(0);
         expect(JSON.parse(String(write.mock.calls[0]![0]))).toMatchObject({

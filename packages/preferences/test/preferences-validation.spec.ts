@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PreferencesService } from '../src/preferences.service';
+import { PreferencesService } from '../src/preferences.service.js';
 import {
   harness,
   tenantA,
   changed,
   preferencesError,
   errorCode,
-} from './support/preferences-harness';
+} from './support/preferences-harness.js';
 
 describe('preferences closed validation and configured values', () => {
   it.each([

@@ -1,7 +1,7 @@
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createCmsTrustVerifier } from '../../src';
+import { createCmsTrustVerifier } from '../../src/index.js';
 import {
   bltCmsSignature,
   bltSignedDocument,
@@ -10,12 +10,12 @@ import {
   now,
   profile,
   rootPem,
-} from '../fixtures/trust';
+} from '../fixtures/trust.js';
 
 const controls = vi.hoisted(() => ({ stripDssCerts: false }));
 
-vi.mock('../../src/pdf-trust-evidence', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../src/pdf-trust-evidence')>();
+vi.mock('../../src/pdf-trust-evidence.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/pdf-trust-evidence.js')>();
   return {
     ...actual,
     readPdfTrustEvidence: async (...args: Parameters<typeof actual.readPdfTrustEvidence>) => {

@@ -1,8 +1,8 @@
 import { generateRequestId } from '@stynx-nyx/core';
 import request from 'supertest';
-import { I18nAdminService } from '../../src/i18n-admin.service';
-import { LocaleService } from '../../src/locale.service';
-import { CatalogService } from '../../src/catalog.service';
+import { I18nAdminService } from '../../src/i18n-admin.service.js';
+import { LocaleService } from '../../src/locale.service.js';
+import { CatalogService } from '../../src/catalog.service.js';
 import { RequestContext } from '@stynx-nyx/core';
 
 import {
@@ -10,7 +10,7 @@ import {
   TENANT_ID,
   OTHER_TENANT_ID,
   ACTOR_ID,
-} from '../support/authenticated-app';
+} from '../support/authenticated-app.js';
 
 let fixture: AuthenticatedI18nApp;
 

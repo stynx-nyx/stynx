@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { withSystemContext } from '../../src/system-context';
+import { withSystemContext } from '../../src/system-context.js';
 import type { SystemExecutionContext } from '@stynx-nyx/core';
 
 describe('withSystemContext', () => {

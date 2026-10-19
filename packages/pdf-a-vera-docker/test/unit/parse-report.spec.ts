@@ -1,4 +1,4 @@
-import { parseVeraPdfJson, VeraPdfReportParseError } from '../../src';
+import { parseVeraPdfJson, VeraPdfReportParseError } from '../../src/index.js';
 
 describe('parseVeraPdfJson', () => {
   it('normalizes a passing veraPDF report', () => {

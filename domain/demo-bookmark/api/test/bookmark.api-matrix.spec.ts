@@ -11,14 +11,14 @@ import {
 } from '@stynx-nyx/auth';
 import { StynxDataModule } from '@stynx-nyx/data';
 import { SessionService } from '@stynx-nyx/sessions';
-import { BookmarkController } from '../src/demo-bookmark/controllers/bookmark.controller';
-import { BookmarkTagController } from '../src/demo-bookmark/controllers/bookmark-tag.controller';
-import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service';
-import { BookmarkTagService } from '../src/demo-bookmark/services/bookmark-tag.service';
+import { BookmarkController } from '../src/demo-bookmark/controllers/bookmark.controller.js';
+import { BookmarkTagController } from '../src/demo-bookmark/controllers/bookmark-tag.controller.js';
+import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service.js';
+import { BookmarkTagService } from '../src/demo-bookmark/services/bookmark-tag.service.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../../packages/data/test/support/postgres';
+} from '../../../../packages/data/test/support/postgres.js';
 
 const READ_TOKEN = 'reader';
 const WRITE_TOKEN = 'writer';

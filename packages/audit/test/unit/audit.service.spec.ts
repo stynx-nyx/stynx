@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { ModuleRef } from '@nestjs/core';
-import { StynxAuditService } from '../../src/audit.service';
+import { StynxAuditService } from '../../src/audit.service.js';
 import type { Mock } from 'vitest';
 
 vi.mock('node:fs/promises', async (importOriginal) => {

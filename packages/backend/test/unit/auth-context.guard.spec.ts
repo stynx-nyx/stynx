@@ -2,7 +2,7 @@ import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
 import { InvalidCredentialError, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL } from '@stynx-nyx/contracts';
 import * as contracts from '@stynx-nyx/contracts';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
 
 function ctx(request: Record<string, unknown>): ExecutionContext {
   return {

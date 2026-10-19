@@ -8,12 +8,12 @@ import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { Client } from 'pg';
 import { StynxDataModule } from '@stynx-nyx/data';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { InMemorySessionStore } from '../../src/in-memory-session-store';
-import { RedisSessionStore } from '../../src/redis-session-store';
-import { StynxSessionsModule } from '../../src/sessions.module';
-import { SessionService } from '../../src/session.service';
-import { STYNX_SESSION_STORE } from '../../src/tokens';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { InMemorySessionStore } from '../../src/in-memory-session-store.js';
+import { RedisSessionStore } from '../../src/redis-session-store.js';
+import { StynxSessionsModule } from '../../src/sessions.module.js';
+import { SessionService } from '../../src/session.service.js';
+import { STYNX_SESSION_STORE } from '../../src/tokens.js';
 
 const execFileAsync = promisify(execFile);
 

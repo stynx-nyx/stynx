@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { SessionJwksController } from '../../src/jwks.controller';
-import { SessionJwtSigningService } from '../../src/jwt-signing.service';
+import { SessionJwksController } from '../../src/jwks.controller.js';
+import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
 
 describe('SessionJwksController E2E', () => {
   let app: INestApplication;

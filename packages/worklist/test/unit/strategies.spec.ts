@@ -4,8 +4,8 @@ import {
   LoadBalancedWorklistStrategy,
   RoundRobinWorklistStrategy,
   WorklistStrategyRegistry,
-} from '../../src/strategies';
-import type { WorklistCandidate, WorklistDistributionStrategy } from '../../src/types';
+} from '../../src/strategies.js';
+import type { WorklistCandidate, WorklistDistributionStrategy } from '../../src/types.js';
 
 const candidates: WorklistCandidate[] = [
   {

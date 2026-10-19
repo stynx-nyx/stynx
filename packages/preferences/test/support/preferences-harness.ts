@@ -1,10 +1,10 @@
 import { expect } from 'vitest';
-import { PreferencesController } from '../../src/preferences.controller';
-import { PreferencesError } from '../../src/errors';
-import { InMemoryPreferencesStore } from '../../src/in-memory-preferences.store';
-import { PLATFORM_PREFERENCE_DEFAULTS } from '../../src/schema';
-import { PreferencesService } from '../../src/preferences.service';
-import type { PreferenceValues, PreferencesAuditEvent } from '../../src/types';
+import { PreferencesController } from '../../src/preferences.controller.js';
+import { PreferencesError } from '../../src/errors.js';
+import { InMemoryPreferencesStore } from '../../src/in-memory-preferences.store.js';
+import { PLATFORM_PREFERENCE_DEFAULTS } from '../../src/schema.js';
+import { PreferencesService } from '../../src/preferences.service.js';
+import type { PreferenceValues, PreferencesAuditEvent } from '../../src/types.js';
 
 export const tenantA = '00000000-0000-4000-8000-000000000001';
 export const tenantB = '00000000-0000-4000-8000-000000000002';

@@ -84,8 +84,8 @@ vi.mock('@stynx-nyx/core', () => ({
   RequestContextMutator: class RequestContextMutator {},
 }));
 
-import { createTestApp } from '../src/create-test-app';
-import type { TestSqlStep } from '../src/types';
+import { createTestApp } from '../src/create-test-app.js';
+import type { TestSqlStep } from '../src/types.js';
 import { Wait } from 'testcontainers';
 
 describe('createTestApp', () => {

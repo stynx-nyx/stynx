@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { OfflineImportRecord } from '../../src/import-schema.generated';
+import type { OfflineImportRecord } from '../../src/import-schema.generated.js';
 import {
   importRecords,
   importManifest,
@@ -7,7 +7,7 @@ import {
   fixtureDigest,
   fixtureBytesDigest,
   rehashManifest,
-} from './offline-import-fixtures';
+} from './offline-import-fixtures.js';
 
 // Independent historical transport capture encoder; deliberately separate from the new canonical payload codec.
 function historicJson(value: unknown): string {

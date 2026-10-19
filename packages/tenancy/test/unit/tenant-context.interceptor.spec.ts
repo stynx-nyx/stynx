@@ -3,8 +3,8 @@ import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { IndependentTransactionConnectionError } from '@stynx-nyx/data';
-import { TenantContextInterceptor } from '../../src/tenant-context.interceptor';
-import { MembershipAccessCache } from '../../src/membership-cache';
+import { TenantContextInterceptor } from '../../src/tenant-context.interceptor.js';
+import { MembershipAccessCache } from '../../src/membership-cache.js';
 
 const TENANT_ID = '018f53e4-28a1-7cd8-a0ff-5b22c3a07111';
 const ACTOR_ID = '018f53e4-28a1-7cd8-a0ff-5b22c3a07112';

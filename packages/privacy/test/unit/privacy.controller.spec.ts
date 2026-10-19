@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { STYNX_NO_IDEMPOTENT_ROUTE } from '@stynx-nyx/idempotency';
-import { PrivacyController } from '../../src/privacy.controller';
-import type { PrivacyService } from '../../src/privacy.service';
+import { PrivacyController } from '../../src/privacy.controller.js';
+import type { PrivacyService } from '../../src/privacy.service.js';
 
 function handler(name: string): Function {
   const value = PrivacyController.prototype[name as keyof PrivacyController];

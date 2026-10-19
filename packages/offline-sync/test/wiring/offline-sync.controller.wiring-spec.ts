@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { OfflineSyncController } from '../../src/offline-sync.controller';
-import type { OfflineSyncService } from '../../src/offline-sync.service';
+import { OfflineSyncController } from '../../src/offline-sync.controller.js';
+import type { OfflineSyncService } from '../../src/offline-sync.service.js';
 
 function createController() {
   const service = {

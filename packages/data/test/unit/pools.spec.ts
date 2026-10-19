@@ -4,7 +4,7 @@
 // and the StynxPoolRegistry happy-path init + get + destroy methods.
 
 import { Pool } from 'pg';
-import { createStynxPgPool, StynxPoolRegistry } from '../../src/pools';
+import { createStynxPgPool, StynxPoolRegistry } from '../../src/pools.js';
 import type { Mock } from 'vitest';
 
 describe('createStynxPgPool', () => {

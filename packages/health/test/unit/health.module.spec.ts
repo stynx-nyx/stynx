@@ -1,5 +1,5 @@
-import { STYNX_HEALTH_INDICATORS, STYNX_HEALTH_OPTIONS } from '../../src/tokens';
-import { StynxHealthModule } from '../../src/health.module';
+import { STYNX_HEALTH_INDICATORS, STYNX_HEALTH_OPTIONS } from '../../src/tokens.js';
+import { StynxHealthModule } from '../../src/health.module.js';
 
 describe('StynxHealthModule.forRoot', () => {
   it('wires default module options and indicators', () => {

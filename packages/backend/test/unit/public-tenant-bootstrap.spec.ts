@@ -1,8 +1,8 @@
 import { Controller, Get, SetMetadata, UseGuards } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
-import { StynxAuthModule } from '../../src/auth/auth.module';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
+import { StynxAuthModule } from '../../src/auth/auth.module.js';
 
 @Controller('/backend-public')
 @UseGuards(AuthContextGuard)

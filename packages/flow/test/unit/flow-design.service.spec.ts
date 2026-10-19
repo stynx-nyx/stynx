@@ -1,12 +1,12 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
-import { FlowDesignService } from '../../src/flow-design.service';
+import { FlowDesignService } from '../../src/flow-design.service.js';
 import {
   FlowDesignTableStore,
   graphPublishMeta,
   jsonObject,
   requireString,
   withGraphPublishState,
-} from '../../src/internal/design/design-table-store';
+} from '../../src/internal/design/design-table-store.js';
 import type { Mock } from 'vitest';
 
 const SCOPE = '0190abcd-1234-7abc-89ab-000000000001';

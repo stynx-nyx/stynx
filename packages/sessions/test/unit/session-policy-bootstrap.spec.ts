@@ -1,10 +1,10 @@
 import { generateKeyPairSync } from 'node:crypto';
 import { Test } from '@nestjs/testing';
-import { InMemorySessionStore } from '../../src/in-memory-session-store';
-import { RedisSessionStore } from '../../src/redis-session-store';
-import { StynxSessionsModule } from '../../src/sessions.module';
-import { STYNX_SESSION_STORE } from '../../src/tokens';
-import type { StynxSessionsModuleOptions } from '../../src/types';
+import { InMemorySessionStore } from '../../src/in-memory-session-store.js';
+import { RedisSessionStore } from '../../src/redis-session-store.js';
+import { StynxSessionsModule } from '../../src/sessions.module.js';
+import { STYNX_SESSION_STORE } from '../../src/tokens.js';
+import type { StynxSessionsModuleOptions } from '../../src/types.js';
 
 // UPS-SES-01/02: invalid opt-in policy must fail while Nest constructs the module.
 const pair = generateKeyPairSync('rsa', { modulusLength: 2048 });

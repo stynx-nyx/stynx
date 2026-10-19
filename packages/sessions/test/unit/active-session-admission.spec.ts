@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { InMemorySessionStore } from '../../src/in-memory-session-store';
-import { SessionJwtSigningService } from '../../src/jwt-signing.service';
-import { SessionService } from '../../src/session.service';
-import { InvalidRefreshTokenError } from '../../src/errors';
+import { InMemorySessionStore } from '../../src/in-memory-session-store.js';
+import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
+import { SessionService } from '../../src/session.service.js';
+import { InvalidRefreshTokenError } from '../../src/errors.js';
 import {
   resolveSessionsOptions,
   type SessionMirrorEntry,
   type SessionRecord,
-} from '../../src/types';
+} from '../../src/types.js';
 
 // INV-RBAC-001; authorization-session-1.5.md, Active session admission in 1.6.0.
 const at = new Date('2026-10-10T12:00:00Z');

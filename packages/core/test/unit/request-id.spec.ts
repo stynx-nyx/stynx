@@ -1,4 +1,4 @@
-import { generateRequestId, isRequestId, normalizeRequestId } from '../../src/request-id';
+import { generateRequestId, isRequestId, normalizeRequestId } from '../../src/request-id.js';
 
 describe('request id helpers', () => {
   it('generates a UUIDv7-shaped request id', () => {

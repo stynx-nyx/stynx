@@ -1,4 +1,4 @@
-import { OutboxService } from '../../src/outbox.service';
+import { OutboxService } from '../../src/outbox.service.js';
 
 const tenantId = 'e1111111-1111-4111-8111-111111111111';
 const eventId = 'e2222222-2222-4222-8222-222222222222';

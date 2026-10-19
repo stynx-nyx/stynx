@@ -4,7 +4,7 @@ import {
   AuthorizationError,
   IdentityAdminError,
   InvalidCredentialError,
-} from '../src/errors';
+} from '../src/errors.js';
 
 describe('@stynx-nyx/contracts errors', () => {
   describe('StynxError', () => {

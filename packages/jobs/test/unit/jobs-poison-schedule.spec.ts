@@ -1,5 +1,5 @@
-import { InvalidCronExpressionError, InvalidScheduleError } from '../../src/errors';
-import { JobsRepository } from '../../src/jobs.repository';
+import { InvalidCronExpressionError, InvalidScheduleError } from '../../src/errors.js';
+import { JobsRepository } from '../../src/jobs.repository.js';
 
 const now = new Date('2026-09-27T10:00:00.000Z');
 const bad = {
@@ -16,8 +16,8 @@ const cronState = vi.hoisted(() => ({
   calls: [] as Array<[string, Date, string]>,
   error: null as Error | null,
 }));
-vi.mock('../../src/cron', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../../src/cron')>()),
+vi.mock('../../src/cron.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/cron.js')>()),
   nextCronRunAt: (expression: string, after: Date, timezone: string) => {
     cronState.calls.push([expression, after, timezone]);
     if (cronState.error) throw cronState.error;
