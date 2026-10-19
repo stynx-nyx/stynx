@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { Client, type ClientConfig } from 'pg';
-import { migrateUp } from '../src/migrate';
+import { migrateUp } from '../src/migrate.js';
 
 // SM-06 / 09 §1: the template's apply.sh runs `stynx migrate up --role-prefix
 // <product>` with no URL on argv; the runner connects from the PG* environment

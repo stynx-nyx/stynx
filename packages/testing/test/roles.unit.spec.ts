@@ -1,5 +1,5 @@
 import { platformRoleNames } from '@stynx-nyx/data';
-import { DEFAULT_TEST_APP_ROLES, testAppRolePrefix } from '../src/roles';
+import { DEFAULT_TEST_APP_ROLES, testAppRolePrefix } from '../src/roles.js';
 
 // SM-06 (S-18): createTestApp's default roles are the platform's stynx roles,
 // and any roles it takes are one product's <prefix>_{owner,app,reader}.
