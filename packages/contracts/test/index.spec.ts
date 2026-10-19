@@ -1,4 +1,4 @@
-import * as Contracts from '../src/index';
+import * as Contracts from '../src/index.js';
 
 describe('@stynx-nyx/contracts barrel', () => {
   it('re-exports core error classes', () => {

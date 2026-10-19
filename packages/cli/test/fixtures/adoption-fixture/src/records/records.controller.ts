@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { RecordsService } from './records.service';
+import { RecordsService } from './records.service.js';
 
 @Controller('records')
 export class RecordsController {

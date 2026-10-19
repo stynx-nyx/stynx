@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
 import { HttpException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
 import type {
   OfflineSyncContextPort,
   StynxOfflineSyncModuleOptions,
   SubmitSyncBatchInput,
-} from '../../src/types';
+} from '../../src/types.js';
 
 // INV-OFFLINE-001; UPS-OFS-01…04. These are contract sensors for the CTG9 extension.
 const tenant = '00000000-0000-4000-8000-0000000000a1';

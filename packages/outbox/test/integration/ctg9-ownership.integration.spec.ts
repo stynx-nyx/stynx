@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
-import { OutboxService } from '../../src/outbox.service';
-import { StynxOutboxModule } from '../../src/outbox.module';
+import { OutboxService } from '../../src/outbox.service.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const TENANT = 'c1111111-1111-4111-8111-111111111111';
 const ACTOR = 'c2222222-2222-4222-8222-222222222222';

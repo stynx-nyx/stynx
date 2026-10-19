@@ -4,9 +4,9 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { generateRequestId, RequestContext } from '@stynx-nyx/core';
 import { StynxDataModule } from '@stynx-nyx/data';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { StynxTenancyModule } from '../../src/tenancy.module';
-import { TenancyService } from '../../src/tenancy.service';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { StynxTenancyModule } from '../../src/tenancy.module.js';
+import { TenancyService } from '../../src/tenancy.service.js';
 
 
 interface TestRequest {

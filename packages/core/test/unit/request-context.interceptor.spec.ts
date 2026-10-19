@@ -1,11 +1,11 @@
 import { BadRequestException } from '@nestjs/common';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { Observable, of, throwError } from 'rxjs';
-import { RequestContextInterceptor } from '../../src/request-context.interceptor';
+import { RequestContextInterceptor } from '../../src/request-context.interceptor.js';
 import {
   RequestContextMutator,
   type RequestContextState,
-} from '../../src/request-context';
+} from '../../src/request-context.js';
 import type { Mock } from 'vitest';
 
 class FakeClsService {
@@ -253,7 +253,7 @@ describe('RequestContextInterceptor', () => {
       startedAt: new Date('2026-09-26T12:00:00.000Z'),
       locale: 'pt-BR',
     };
-    const requestContext = new (await import('../../src/request-context')).RequestContext(cls as never);
+    const requestContext = new (await import('../../src/request-context.js')).RequestContext(cls as never);
     const { context, response } = makeContext({}, {
       tenantId: '0197481e-6f84-77e4-8d6d-41f0b6fca9c1',
       principal: { id: '0197481e-7294-7c53-8b03-5c36d7c2831a' },
@@ -290,7 +290,7 @@ describe('RequestContextInterceptor', () => {
       observed: RequestContextState | undefined;
       setHeader: Mock;
     }> {
-      const { RequestContext } = await import('../../src/request-context');
+      const { RequestContext } = await import('../../src/request-context.js');
       const requestContext = new RequestContext(cls as never);
       const { context, response } = makeContext({ 'x-request-id': 'ignored-while-active' }, extras);
       let observed: RequestContextState | undefined;

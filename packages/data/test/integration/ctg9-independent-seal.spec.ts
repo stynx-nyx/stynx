@@ -1,10 +1,10 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { Database } from '../../src/database';
-import { StynxDataModule } from '../../src/data.module';
-import { ReadOnlyViolationError } from '../../src/errors';
-import { StynxPoolRegistry } from '../../src/pools';
-import type { Transaction } from '../../src/transaction';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres';
+import { Database } from '../../src/database.js';
+import { StynxDataModule } from '../../src/data.module.js';
+import { ReadOnlyViolationError } from '../../src/errors.js';
+import { StynxPoolRegistry } from '../../src/pools.js';
+import type { Transaction } from '../../src/transaction.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres.js';
 
 const TENANT = 'a1111111-1111-4111-8111-111111111111';
 const ACTOR = 'a2222222-2222-4222-8222-222222222222';

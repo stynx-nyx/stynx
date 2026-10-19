@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createCmsTrustVerifier } from '../../src/cms-trust-verifier';
-import type { CmsTrustVerifierOptions } from '../../src/cms-trust-verifier';
-import type { SignatureTrustProfile } from '../../src/types';
+import { createCmsTrustVerifier } from '../../src/cms-trust-verifier.js';
+import type { CmsTrustVerifierOptions } from '../../src/cms-trust-verifier.js';
+import type { SignatureTrustProfile } from '../../src/types.js';
 
 const directory = join(__dirname, '../fixtures/lta');
 export const ltaBytes = (name: string): Buffer => readFileSync(join(directory, name));

@@ -1,7 +1,7 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { of, throwError, Observable, lastValueFrom } from 'rxjs';
-import { AuditInterceptor } from '../../src/audit/audit.interceptor';
+import { AuditInterceptor } from '../../src/audit/audit.interceptor.js';
 
 class FakeReflector extends Reflector {
   constructor(private readonly metadata?: unknown) {

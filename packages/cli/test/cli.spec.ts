@@ -7,11 +7,11 @@ import {
   adoptScan,
   formatAdoptScanHuman,
   linkCognitoUsers,
-} from '../src/adopt';
-import { verifyAuditChain } from '../src/audit';
-import { runDoctor } from '../src/doctor';
-import { scaffoldApp } from '../src/init';
-import { generateRopaFromApp } from '../src/privacy-ropa';
+} from '../src/adopt.js';
+import { verifyAuditChain } from '../src/audit.js';
+import { runDoctor } from '../src/doctor.js';
+import { scaffoldApp } from '../src/init.js';
+import { generateRopaFromApp } from '../src/privacy-ropa.js';
 
 const proposedPermissionPlaceholder = 'TODO' + '_PERMISSION';
 

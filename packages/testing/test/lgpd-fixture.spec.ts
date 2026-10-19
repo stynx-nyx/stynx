@@ -1,4 +1,4 @@
-import { lgpdFixturePiiMapYaml, seedLgpdFixture } from '../src/lgpd-fixture';
+import { lgpdFixturePiiMapYaml, seedLgpdFixture } from '../src/lgpd-fixture.js';
 import type { StynxPgClient } from '@stynx-nyx/data';
 
 describe('LGPD fixture helpers', () => {

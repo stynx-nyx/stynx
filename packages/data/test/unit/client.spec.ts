@@ -1,7 +1,7 @@
 // @ts-nocheck
 // Unit test for the createStynxPgClient factory.
 import { Client } from 'pg';
-import { createStynxPgClient } from '../../src/client';
+import { createStynxPgClient } from '../../src/client.js';
 
 describe('createStynxPgClient', () => {
   let clients: Client[] = [];

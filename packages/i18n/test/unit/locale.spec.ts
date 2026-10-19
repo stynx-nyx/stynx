@@ -1,8 +1,8 @@
 import type { ModuleRef } from '@nestjs/core';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { CatalogService } from '../../src/catalog.service';
-import { LocaleService } from '../../src/locale.service';
+import { CatalogService } from '../../src/catalog.service.js';
+import { LocaleService } from '../../src/locale.service.js';
 
 function moduleRef(providers: Map<unknown, unknown>): ModuleRef {
   return {

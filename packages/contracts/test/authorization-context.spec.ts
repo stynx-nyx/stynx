@@ -1,5 +1,5 @@
-import type { PolicyEvaluationContext } from '../src/authorization';
-import type { Principal } from '../src/auth';
+import type { PolicyEvaluationContext } from '../src/authorization.js';
+import type { Principal } from '../src/auth.js';
 
 describe('PolicyEvaluationContext tenant and principal contract', () => {
   it('carries the verified tenant independently of unchanged principal claims', () => {

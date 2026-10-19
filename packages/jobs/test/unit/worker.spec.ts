@@ -1,5 +1,5 @@
-import { JobsRegistry, JobsWorker } from '../../src/index';
-import type { ClockPort, JobExecutionResult } from '../../src/types';
+import { JobsRegistry, JobsWorker } from '../../src/index.js';
+import type { ClockPort, JobExecutionResult } from '../../src/types.js';
 
 const job = { id: 'job-1', tenantId: 'tenant-1', scheduleId: null, jobType: 'sla.check', payload: {}, status: 'running' as const, priority: 0, attempts: 1, maxAttempts: 2, runAt: new Date(), lockedBy: 'worker', lockedUntil: null, startedAt: null, finishedAt: null, lastError: null, deadLetterReason: null, idempotencyKey: null, actorId: 'actor-1', createdAt: new Date(), updatedAt: new Date() };
 

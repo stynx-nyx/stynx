@@ -3,8 +3,8 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { Client } from 'pg';
 import { StynxDataModule } from '@stynx-nyx/data';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { StynxAuditModule } from '../../src/audit.module';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { StynxAuditModule } from '../../src/audit.module.js';
 
 async function seedAuditLogRow(client: Client): Promise<void> {
   await client.query(

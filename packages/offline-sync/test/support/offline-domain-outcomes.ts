@@ -1,14 +1,14 @@
 import { HttpException } from '@nestjs/common';
 import { expect, it, vi } from 'vitest';
-import { OfflineSyncError, OfflineSyncConfigurationError } from '../../src/errors';
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
-import type { CTG9SubmitSyncBatchInput, OfflineSyncDomainOutcomeClassifier } from '../../src/types';
+import { OfflineSyncError, OfflineSyncConfigurationError } from '../../src/errors.js';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
+import type { CTG9SubmitSyncBatchInput, OfflineSyncDomainOutcomeClassifier } from '../../src/types.js';
 import {
   GAP_AT,
   GAP_TENANT_A,
   GAP_TENANT_B,
   type OfflineGapHarness,
-} from './offline-sync-acceptance-gaps';
+} from './offline-sync-acceptance-gaps.js';
 
 // INV-OFFLINE-001; ADR-MOBILE-OFFLINE-0005 D1.1. Same behavioral observations on both shipped stores.
 export const domainBatch = (id: string): CTG9SubmitSyncBatchInput => ({
@@ -44,7 +44,7 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
     const h = harness();
     const input = domainBatch('original-code-custody');
     const failure = domainFailure({ originalContext: true });
-    const classify = vi.fn((observed: import('../../src/types').OfflineSyncDomainFailure) => {
+    const classify = vi.fn((observed: import('../../src/types.js').OfflineSyncDomainFailure) => {
       expect(observed).toEqual({ code: 'BUSINESS_CLOSED', context: { originalContext: true } });
       failure.code = 'BUSINESS_MUTATED_AFTER_CLASSIFICATION';
       return {
@@ -243,7 +243,7 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
         async (
           _trx: unknown,
           _id: string,
-          _context: import('../../src/types').OfflineSyncItemContext,
+          _context: import('../../src/types.js').OfflineSyncItemContext,
         ) => ['reject', 'retry_after_correction'] as const,
       );
       for (const override of [false, true]) {
@@ -387,7 +387,7 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
     const failure = new OfflineSyncConfigurationError('second item refuses');
     const eventPort = domainEvents();
     const apply = vi.fn(
-      async (_trx: unknown, item: import('../../src/types').CTG9SyncBatchItemInput) => {
+      async (_trx: unknown, item: import('../../src/types.js').CTG9SyncBatchItemInput) => {
         if (item.queueItemId === second.queueItemId) throw failure;
         return { serverEntityId: 'first-committed-server' };
       },
@@ -634,7 +634,7 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
 
   it('D1.1 preserves a context-free coded failure without fabricating consumer context', async () => {
     const h = harness();
-    const classify = vi.fn((failure: import('../../src/types').OfflineSyncDomainFailure) => {
+    const classify = vi.fn((failure: import('../../src/types.js').OfflineSyncDomainFailure) => {
       expect(failure).toEqual({ code: 'BUSINESS_CLOSED' });
       return {
         status: 'conflict' as const,
@@ -839,8 +839,8 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
     const classify = vi.fn(
       (
         _failure: unknown,
-        item: import('../../src/types').CTG9SyncBatchItemInput,
-        context: import('../../src/types').OfflineSyncItemContext,
+        item: import('../../src/types.js').CTG9SyncBatchItemInput,
+        context: import('../../src/types.js').OfflineSyncItemContext,
       ) => {
         expect(item.queueItemId).toBe(input.items[0]!.queueItemId);
         expect(context.receiptId).toBe(input.items[0]!.idempotencyKey);
@@ -852,7 +852,7 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
           : { status: 'received' as const };
       },
     );
-    let originalConflict!: import('../../src/types').SyncConflictRecord;
+    let originalConflict!: import('../../src/types.js').SyncConflictRecord;
     const subject = h.service({
       itemApplier: {
         apply: async () => {
@@ -922,8 +922,8 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
     const classify = vi.fn(
       (
         _failure: unknown,
-        item: import('../../src/types').CTG9SyncBatchItemInput,
-        context: import('../../src/types').OfflineSyncItemContext,
+        item: import('../../src/types.js').CTG9SyncBatchItemInput,
+        context: import('../../src/types.js').OfflineSyncItemContext,
       ) => {
         expect(item.queueItemId).toBe(input.items[0]!.queueItemId);
         expect(context.receiptId).toBe(input.items[0]!.idempotencyKey);
@@ -935,7 +935,7 @@ export function registerDomainOutcomeContracts(harness: () => OfflineDomainHarne
           : { status: 'received' as const };
       },
     );
-    let originalConflict!: import('../../src/types').SyncConflictRecord;
+    let originalConflict!: import('../../src/types.js').SyncConflictRecord;
     const subject = h.service({
       itemApplier: {
         apply: async () => {

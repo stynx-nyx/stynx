@@ -1,4 +1,4 @@
-import { VeraPdfDockerValidator } from '../../src';
+import { VeraPdfDockerValidator } from '../../src/index.js';
 
 describe('VeraPdfDockerValidator timeout handling', () => {
   it('returns stynx.timeout for a 1 ms adapter timeout', async () => {

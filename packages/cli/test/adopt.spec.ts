@@ -6,7 +6,7 @@ import {
   adoptApplyProposedPermissions,
   adoptScan,
   formatAdoptScanHuman,
-} from '../src/adopt';
+} from '../src/adopt.js';
 
 describe('adopt command family', () => {
   it('is idempotent on the fixture repo', () => {

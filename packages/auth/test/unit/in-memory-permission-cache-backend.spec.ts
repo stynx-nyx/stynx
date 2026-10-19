@@ -1,4 +1,4 @@
-import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend';
+import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend.js';
 
 describe('InMemoryPermissionCacheBackend edge branches', () => {
   it('ignores delete and malformed invalidation misses', async () => {

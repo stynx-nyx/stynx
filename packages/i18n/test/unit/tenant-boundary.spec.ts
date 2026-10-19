@@ -1,9 +1,9 @@
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext, SystemContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { I18nAdminService } from '../../src/i18n-admin.service';
-import { CatalogService } from '../../src/catalog.service';
-import { LocaleService } from '../../src/locale.service';
+import { I18nAdminService } from '../../src/i18n-admin.service.js';
+import { CatalogService } from '../../src/catalog.service.js';
+import { LocaleService } from '../../src/locale.service.js';
 
 function fixture() {
   const context = {

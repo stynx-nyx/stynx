@@ -1,14 +1,14 @@
 import { PDFDocument, PDFName, PDFString } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
-import { SignatureTrustError, SignatureTrustUnavailableError } from '../../src/errors';
+import { SignatureTrustError, SignatureTrustUnavailableError } from '../../src/errors.js';
 import {
   readPdfTrustEvidence, readSelectedSignatureDictionary, readWithdrawalSourceBinding,
-} from '../../src/pdf-trust-evidence';
-import { buildManifestBoundPades } from '../fixtures/pki/bound-pades';
+} from '../../src/pdf-trust-evidence.js';
+import { buildManifestBoundPades } from '../fixtures/pki/bound-pades.js';
 import {
   appendCatalogShadow, appendDuplicatePrev, appendHybridXref, listUpdatedCatalogInXref,
-} from '../fixtures/pki/xref-attacks';
-import { bltCmsSignature, bltSignedDocument, bytes } from '../fixtures/trust';
+} from '../fixtures/pki/xref-attacks.js';
+import { bltCmsSignature, bltSignedDocument, bytes } from '../fixtures/trust.js';
 
 const byteRange = (pdf: Uint8Array): number[] => {
   const match = /\/ByteRange\s*\[\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\]/u

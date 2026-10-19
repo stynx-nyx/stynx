@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { NotificationTemplateNotFoundError, NotificationValidationError } from '../../src/errors';
-import { notificationRecipientSchema, notifyRequestSchema } from '../../src/schema';
-import { NotificationTemplateRegistry } from '../../src/templates/registry';
+import { NotificationTemplateNotFoundError, NotificationValidationError } from '../../src/errors.js';
+import { notificationRecipientSchema, notifyRequestSchema } from '../../src/schema.js';
+import { NotificationTemplateRegistry } from '../../src/templates/registry.js';
 
 describe('notification contracts', () => {
   it('accepts a closed E.164 recipient and rejects undeclared request fields', () => {

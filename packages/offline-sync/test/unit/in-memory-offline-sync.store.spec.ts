@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
 import type {
   CTG9SubmitSyncBatchInput,
   DurableBatchExecutionOptions,
   OfflineSyncConflictResolver,
   NumberingRange,
   TrustedOfflineSyncScope,
-} from '../../src/types';
+} from '../../src/types.js';
 
 const tenant = '00000000-0000-4000-8000-0000000000a1';
 const now = '2026-09-29T12:00:00.000Z';

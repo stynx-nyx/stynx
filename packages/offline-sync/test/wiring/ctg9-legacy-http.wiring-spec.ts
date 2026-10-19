@@ -5,7 +5,7 @@ import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { IdempotencyInterceptor, type IdempotencyStoredEntry } from '@stynx-nyx/idempotency';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { StynxOfflineSyncModule } from '../../src/offline-sync.module';
+import { StynxOfflineSyncModule } from '../../src/offline-sync.module.js';
 
 // INV-OFFLINE-001: no policy resolver preserves E6 HTTP and rejects body-selected mode.
 const payload = {

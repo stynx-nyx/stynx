@@ -9,8 +9,8 @@ import {
   queryRowsAsTenant,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
-} from '../fixtures/app';
-import { tenants } from '../fixtures/seed';
+} from '../fixtures/app.js';
+import { tenants } from '../fixtures/seed.js';
 
 const demoTenantA = '01978f4a-32bf-7c27-a131-fd73a9e001a1';
 const demoTenantB = '01978f4a-32bf-7c27-a131-fd73a9e001a2';

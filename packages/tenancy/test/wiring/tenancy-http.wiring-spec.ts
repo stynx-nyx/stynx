@@ -1,9 +1,9 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { TenancyController } from '../../src/tenancy.controller';
-import { TenancyPlatformAdminGuard } from '../../src/tenancy-platform-admin.guard';
-import { TenancyService } from '../../src/tenancy.service';
+import { TenancyController } from '../../src/tenancy.controller.js';
+import { TenancyPlatformAdminGuard } from '../../src/tenancy-platform-admin.guard.js';
+import { TenancyService } from '../../src/tenancy.service.js';
 
 describe('TenancyController E2E', () => {
   let app: INestApplication;

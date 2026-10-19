@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import type { OfflineSyncDurableStore } from '../../src/types';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import type { OfflineSyncDurableStore } from '../../src/types.js';
 import {
   CLOCK_TENANT_A,
   CLOCK_ACTOR,
   CLOCK_BEFORE,
   registerConsumptionClockContracts,
-} from '../support/consumption-clock-contract';
+} from '../support/consumption-clock-contract.js';
 
 describe('UPS-OFS-01 memory consumption operation clock', () => {
   let store: InMemoryOfflineSyncStore;

@@ -1,7 +1,7 @@
-import { PgIdempotencyStore } from '../../src/idempotency/pg-idempotency.store';
-import type { IdempotencyDecisionContext, IdempotencySqlExecutor } from '../../src/idempotency/types';
-import { PgRateLimitStore } from '../../src/rate-limit/pg-rate-limit.store';
-import type { RateLimitDecisionContext, RateLimitSqlExecutor } from '../../src/rate-limit/types';
+import { PgIdempotencyStore } from '../../src/idempotency/pg-idempotency.store.js';
+import type { IdempotencyDecisionContext, IdempotencySqlExecutor } from '../../src/idempotency/types.js';
+import { PgRateLimitStore } from '../../src/rate-limit/pg-rate-limit.store.js';
+import type { RateLimitDecisionContext, RateLimitSqlExecutor } from '../../src/rate-limit/types.js';
 
 function idempotencyContext(
   overrides: Partial<IdempotencyDecisionContext> = {},

@@ -9,16 +9,16 @@ import { RequestContextMutator } from '@stynx-nyx/core';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
+} from '../../../data/test/support/postgres.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
 import {
   registerRangeAdministrationContracts,
   RANGE_TENANT_A,
   RANGE_TENANT_B,
   RANGE_AT,
   rangeInput,
-} from '../support/range-administration-contract';
+} from '../support/range-administration-contract.js';
 
 const sql = (name: string) => readFile(resolve(__dirname, '../../migrations', name), 'utf8');
 async function fixture(upgrade = true) {

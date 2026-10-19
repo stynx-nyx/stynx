@@ -1,4 +1,4 @@
-import { FixedLayoutDocumentBuilder, validatePdfAStyle } from '../../src';
+import { FixedLayoutDocumentBuilder, validatePdfAStyle } from '../../src/index.js';
 
 describe('fixed-layout PDF helpers', () => {
   it('renders deterministic structural PDF bytes with stable metadata', async () => {

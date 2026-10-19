@@ -4,7 +4,7 @@ import {
   ProviderBackedSignatureBackend,
   SignatureService,
   sha256Hex,
-} from '../../src';
+} from '../../src/index.js';
 import {
   bltCmsSignature,
   bltSignedDocument,
@@ -13,7 +13,7 @@ import {
   now,
   profile,
   rootPem,
-} from '../fixtures/trust';
+} from '../fixtures/trust.js';
 
 const currentCapabilities = () => ({
   simulated: false,

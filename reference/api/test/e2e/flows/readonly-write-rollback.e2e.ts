@@ -7,8 +7,8 @@ import {
   closeReferenceApiE2e,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
-} from '../fixtures/app';
-import { actors, tenants } from '../fixtures/seed';
+} from '../fixtures/app.js';
+import { actors, tenants } from '../fixtures/seed.js';
 
 // ADR-PERF-0001 / INV-PERF-001: functional no-write evidence only, not nominal latency evidence.
 // This is the actual handler's fixed SQL target, in this suite's uniquely owned database.

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import type { ModulesContainer } from '@nestjs/core';
 import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
-import { PublicTenantConfigurationCheck } from '../../src/public-tenant-configuration.check';
+import { PublicTenantConfigurationCheck } from '../../src/public-tenant-configuration.check.js';
 
 const PUBLIC_TENANT = {
   resolveHost: () => undefined,

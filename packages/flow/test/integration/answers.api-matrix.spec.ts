@@ -4,10 +4,10 @@ import { AuditInterceptor, StynxAuditModule } from '@stynx-nyx/backend';
 import { generateRequestId, StynxCoreModule } from '@stynx-nyx/core';
 import type { AuditEventEnvelope, AuditSink } from '@stynx-nyx/contracts';
 import { SessionService, type StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
-import { FlowRuntimeAuthModule } from '../support/runtime-auth';
+import { FlowRuntimeAuthModule } from '../support/runtime-auth.js';
 import request from 'supertest';
 import { z } from 'zod';
-import { StynxFlowModule } from '../../src/flow.module';
+import { StynxFlowModule } from '../../src/flow.module.js';
 import { createStynxFixtures, createTestApp, type TestAppContext } from '@stynx-nyx/testing';
 
 const TENANT_ID = '0197481e-6f84-77e4-8d6d-41f0b6fca9d1';

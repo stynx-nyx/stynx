@@ -7,12 +7,12 @@ import {
   recaptureArchive,
   legacyArchivedFixture,
   duplicateArchivedFixture,
-} from '../support/offline-archive-fixture';
-import { importedRuntime } from '../support/offline-import-runtime';
-import { importOfflineState } from '../../src/import-state';
-import { OfflineImportError } from '../../src/import-contract';
-import { OfflineSyncConfigurationError } from '../../src/errors';
-import type { OfflineImportRecord } from '../../src/import-schema.generated';
+} from '../support/offline-archive-fixture.js';
+import { importedRuntime } from '../support/offline-import-runtime.js';
+import { importOfflineState } from '../../src/import-state.js';
+import { OfflineImportError } from '../../src/import-contract.js';
+import { OfflineSyncConfigurationError } from '../../src/errors.js';
+import type { OfflineImportRecord } from '../../src/import-schema.generated.js';
 import {
   importRecords,
   importManifest,
@@ -20,13 +20,13 @@ import {
   fixtureDigest,
   IMPORT_AT,
   rehashManifest,
-} from '../support/offline-import-fixtures';
+} from '../support/offline-import-fixtures.js';
 import {
   fixture,
   dispose,
   baseline,
   type OfflineStorageFixture,
-} from '../support/offline-storage-fixture';
+} from '../support/offline-storage-fixture.js';
 
 // A real auth.users principal for the signed HTTP replay compositions.
 const httpActor = '0198d132-0000-7000-8000-000000000010';

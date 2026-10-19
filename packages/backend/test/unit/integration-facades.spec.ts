@@ -1,7 +1,7 @@
 import {
   PecIdentityAdminFacade,
   PormIdentityAdminFacade,
-} from '../../src/identity-admin/integration-facades';
+} from '../../src/identity-admin/integration-facades.js';
 
 function makeAdminService(overrides: Partial<Record<string, unknown>> = {}) {
   return {

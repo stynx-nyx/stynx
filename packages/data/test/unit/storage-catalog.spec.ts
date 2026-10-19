@@ -1,5 +1,5 @@
-import { collectStorageCatalog } from '../../src/storage-catalog';
-import type { StorageVerifierTransaction } from '../../src/storage-contract';
+import { collectStorageCatalog } from '../../src/storage-catalog.js';
+import type { StorageVerifierTransaction } from '../../src/storage-contract.js';
 
 // ADR-OUTBOX-0004 closed storage: a catalog is deterministic, schema-scoped,
 // carries all original security metadata, and never owns the caller transaction.

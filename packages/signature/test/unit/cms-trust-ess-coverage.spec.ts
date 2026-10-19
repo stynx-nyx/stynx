@@ -1,6 +1,6 @@
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
-import { createCmsTrustVerifier } from '../../src';
+import { createCmsTrustVerifier } from '../../src/index.js';
 import {
   bltCmsSignature,
   bltSignedDocument,
@@ -9,7 +9,7 @@ import {
   now,
   profile,
   rootPem,
-} from '../fixtures/trust';
+} from '../fixtures/trust.js';
 
 const cmsInput = (cmsSignature: Uint8Array) => {
   const signedDocument = Buffer.from(bltSignedDocument);

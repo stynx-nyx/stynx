@@ -1,4 +1,4 @@
-import { StynxTenancyModule } from '../../src/tenancy.module';
+import { StynxTenancyModule } from '../../src/tenancy.module.js';
 
 const NOMINAL_ACTOR_V4 = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 const NOMINAL_ACTOR_V7 = '0197481e-7294-7c53-8b03-5c36d7c2831a';

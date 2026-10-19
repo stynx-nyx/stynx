@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
 import type {
   OfflineSyncContextPort,
   SyncBatchItemInput,
   TrustedOfflineSyncScope,
-} from '../../src/types';
+} from '../../src/types.js';
 
 const tenantA = '00000000-0000-4000-8000-000000000001';
 const tenantB = '00000000-0000-4000-8000-000000000002';

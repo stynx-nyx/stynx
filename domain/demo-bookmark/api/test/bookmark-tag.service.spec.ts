@@ -6,9 +6,9 @@
 
 import { NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
-import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service';
-import { BookmarkTagService } from '../src/demo-bookmark/services/bookmark-tag.service';
-import { createDemoBookmarkFixture, type DemoBookmarkFixture } from './support/postgres-fixture';
+import { BookmarkService } from '../src/demo-bookmark/services/bookmark.service.js';
+import { BookmarkTagService } from '../src/demo-bookmark/services/bookmark-tag.service.js';
+import { createDemoBookmarkFixture, type DemoBookmarkFixture } from './support/postgres-fixture.js';
 
 
 describe('BookmarkTagService (per-task-DB integration)', () => {

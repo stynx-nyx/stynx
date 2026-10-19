@@ -4,8 +4,8 @@ import { StynxCoreModule } from '@stynx-nyx/core';
 import { StynxJwtValidator } from '@stynx-nyx/auth';
 import request from 'supertest';
 import { z } from 'zod';
-import { ReferenceDevAuthController } from '../../src/sample/reference-dev-auth.controller';
-import { ReferenceDevAuthService } from '../../src/sample/reference-dev-auth.service';
+import { ReferenceDevAuthController } from '../../src/sample/reference-dev-auth.controller.js';
+import { ReferenceDevAuthService } from '../../src/sample/reference-dev-auth.service.js';
 
 const demoTenantId = '01978f4a-32bf-7c27-a131-fd73a9e001a1';
 const validRequestId = '01978f4a-32bf-7c27-a131-fd73a9e004a1';

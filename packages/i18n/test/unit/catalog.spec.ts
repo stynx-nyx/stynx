@@ -2,8 +2,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { ModuleRef } from '@nestjs/core';
-import { systemModuleRef } from '../support/module-ref';
-import { CatalogService } from '../../src/catalog.service';
+import { systemModuleRef } from '../support/module-ref.js';
+import { CatalogService } from '../../src/catalog.service.js';
 
 function makeWorkspace(): string {
   const root = mkdtempSync(join(tmpdir(), 'stynx-i18n-cat-'));

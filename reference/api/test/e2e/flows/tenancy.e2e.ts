@@ -6,8 +6,8 @@ import {
   queryRowsAsTenant,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
-} from '../fixtures/app';
-import { actors, tenants } from '../fixtures/seed';
+} from '../fixtures/app.js';
+import { actors, tenants } from '../fixtures/seed.js';
 
 const lifecycleTenants = {
   update: '01978f4a-32bf-7c27-a131-fd73a9e201a1',

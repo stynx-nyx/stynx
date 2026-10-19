@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { ModuleRef } from '@nestjs/core';
-import { StynxAuditService } from '../../src/audit.service';
+import { StynxAuditService } from '../../src/audit.service.js';
 import type { Mock } from 'vitest';
 
 interface TestAuditChainRow {

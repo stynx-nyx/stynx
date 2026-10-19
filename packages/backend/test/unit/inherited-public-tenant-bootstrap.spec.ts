@@ -1,8 +1,8 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PublicTenantRoute } from '@stynx-nyx/auth';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
-import { StynxAuthModule } from '../../src/auth/auth.module';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
+import { StynxAuthModule } from '../../src/auth/auth.module.js';
 
 class PublicTenantBaseController {
   @Get('/status')

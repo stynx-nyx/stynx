@@ -1,11 +1,11 @@
-import { isSoftDeletable } from '../../../../packages/data/src/index';
+import { isSoftDeletable } from '../../../../packages/data/src/index.js';
 import {
   recordNotes,
   records,
   workItemEntries,
   workItemLocks,
   workItems,
-} from '../../src/sample/schema';
+} from '../../src/sample/schema.js';
 
 describe('@stynx-nyx/reference-api schema contract', () => {
   it('brands every sample table as soft deletable', () => {

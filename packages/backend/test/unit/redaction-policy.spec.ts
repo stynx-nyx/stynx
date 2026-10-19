@@ -1,4 +1,4 @@
-import { PatternAuditMetadataRedactionPolicy } from '../../src/audit/redaction-policy';
+import { PatternAuditMetadataRedactionPolicy } from '../../src/audit/redaction-policy.js';
 
 const ctx = { action: 'a', entity: 'e', request: {} as never };
 

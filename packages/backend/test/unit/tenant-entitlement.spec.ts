@@ -1,5 +1,5 @@
-import { ClaimFirstTenantEntitlementPolicy } from '../../src/auth/claim-first-tenant-entitlement.policy';
-import { SqlTenantEntitlementFallback } from '../../src/auth/sql-tenant-entitlement.fallback';
+import { ClaimFirstTenantEntitlementPolicy } from '../../src/auth/claim-first-tenant-entitlement.policy.js';
+import { SqlTenantEntitlementFallback } from '../../src/auth/sql-tenant-entitlement.fallback.js';
 
 function mkContext(claims: Record<string, unknown>, tenantId = 't-1') {
   return {

@@ -1,14 +1,14 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
-import { OutboxService } from '../../src/outbox.service';
-import { StynxOutboxModule } from '../../src/outbox.module';
-import { OutboxEventNotFailedError, OutboxNotFoundError } from '../../src/errors';
-import type { OutboxAppendEvent, OutboxEventRow, OutboxRow } from '../../src/types';
+import { OutboxService } from '../../src/outbox.service.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
+import { OutboxEventNotFailedError, OutboxNotFoundError } from '../../src/errors.js';
+import type { OutboxAppendEvent, OutboxEventRow, OutboxRow } from '../../src/types.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const ACTOR = 'c4333333-3333-4333-8333-333333333333';
 const asRole = (url: string, role: 'stynx_app' | 'stynx_reader') =>

@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { PDFArray, PDFDict, PDFDocument, PDFName, PDFRawStream, decodePDFRawStream } from 'pdf-lib';
-import { createCmsTrustVerifier } from '../../src/cms-trust-verifier';
-import type { SignatureTrustProfile } from '../../src/types';
-import { ltaDigest } from '../support/lta-fixture';
+import { createCmsTrustVerifier } from '../../src/cms-trust-verifier.js';
+import type { SignatureTrustProfile } from '../../src/types.js';
+import { ltaDigest } from '../support/lta-fixture.js';
 
 const directory = join(__dirname, '../fixtures/lta-inspector');
 const bytes = (name: string) => readFileSync(join(directory, name));

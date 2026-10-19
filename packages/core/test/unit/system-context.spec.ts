@@ -1,7 +1,7 @@
-import { RequestContext, RequestContextMutator } from '../../src/request-context';
-import { SystemContext, withSystemContext } from '../../src/system-context';
-import { SystemContextRequiredError } from '../../src/errors';
-import type { SystemOperationRecord, SystemOperationSink } from '../../src/tokens';
+import { RequestContext, RequestContextMutator } from '../../src/request-context.js';
+import { SystemContext, withSystemContext } from '../../src/system-context.js';
+import { SystemContextRequiredError } from '../../src/errors.js';
+import type { SystemOperationRecord, SystemOperationSink } from '../../src/tokens.js';
 
 class FakeClsService {
   private store = new Map<PropertyKey, unknown>();

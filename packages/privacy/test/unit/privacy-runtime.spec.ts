@@ -1,21 +1,21 @@
 import type { ExecutionContext } from '@nestjs/common';
-import { requirePrivacyTenantContext } from '../../src/privacy-context';
-import { PrivacyRetentionPermissionGuard } from '../../src/privacy-retention.guard';
+import { requirePrivacyTenantContext } from '../../src/privacy-context.js';
+import { PrivacyRetentionPermissionGuard } from '../../src/privacy-retention.guard.js';
 import {
   initializePrivacyTestContext,
   closePrivacyTestContext,
   privacyUnitModuleRef,
   runPrivacyInternal,
   runPrivacyUnadmittedUnitRequest,
-} from '../support/privacy-test-context';
+} from '../support/privacy-test-context.js';
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { StynxObjectStore } from '@stynx-nyx/storage';
-import { PrivacyConfigurationError, PrivacyValidationError } from '../../src/errors';
-import { PiiMapService } from '../../src/pii-map.service';
-import { PrivacyObjectStoreService } from '../../src/privacy-object-store.service';
-import { generateRopaMarkdown } from '../../src/ropa';
+import { PrivacyConfigurationError, PrivacyValidationError } from '../../src/errors.js';
+import { PiiMapService } from '../../src/pii-map.service.js';
+import { PrivacyObjectStoreService } from '../../src/privacy-object-store.service.js';
+import { generateRopaMarkdown } from '../../src/ropa.js';
 
 beforeAll(initializePrivacyTestContext);
 afterAll(closePrivacyTestContext);

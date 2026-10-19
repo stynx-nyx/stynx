@@ -3,7 +3,7 @@ import {
   loadPdfAFontAssets,
   loadSrgbIccProfile,
   PDF_A_ASSET_SHA256,
-} from '../../src/internals/assets';
+} from '../../src/internals/assets.js';
 
 describe('PDF/A bundled assets', () => {
   it('matches pinned font and ICC hashes', () => {

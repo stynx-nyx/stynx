@@ -1,16 +1,16 @@
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
 import { describe, expect, it, vi } from 'vitest';
 import type { Database } from '@stynx-nyx/data';
-import { OfflineSyncError, OfflineSyncUpgradeRequiredError } from '../../src/errors';
-import { encodeCursor } from '../../src/listing';
-import { pgSubmit } from '../../src/postgres-durable';
+import { OfflineSyncError, OfflineSyncUpgradeRequiredError } from '../../src/errors.js';
+import { encodeCursor } from '../../src/listing.js';
+import { pgSubmit } from '../../src/postgres-durable.js';
 import {
   pgListConflictActions,
   pgListConflicts,
   pgListItemReceipts,
   pgListQueueItems,
-} from '../../src/postgres-listing';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
+} from '../../src/postgres-listing.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
 import {
   OFFLINE_SYNC_CONSUMER_ATTRIBUTES_MAX_BYTES,
   boundedConsumerAttributes,
@@ -19,14 +19,14 @@ import {
   splitStynxContext,
   stynxContextOf,
   withoutResolution,
-} from '../../src/stynx-context';
-import { batchContextFingerprint, transportFingerprint } from '../../src/transport';
+} from '../../src/stynx-context.js';
+import { batchContextFingerprint, transportFingerprint } from '../../src/transport.js';
 import type {
   CTG9SubmitSyncBatchInput,
   DurableBatchExecutionOptions,
   OfflineSyncConflictResolver,
   SyncConflict,
-} from '../../src/types';
+} from '../../src/types.js';
 
 // INV-OFFLINE-001; UPS-OFS-06/-07/-08 (#317; ADR-MOBILE-OFFLINE-0003 D1, D2, D3): SQL-boundary sensors for the
 // PostgreSQL store paths that the real-database suite cannot reach (schema and transport failures, guards).

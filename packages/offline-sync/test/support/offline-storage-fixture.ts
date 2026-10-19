@@ -5,11 +5,11 @@ import {
   renderOfflineStorage,
   verifyOfflineStorage,
   type OfflineStorageOptions,
-} from '../../src/storage';
+} from '../../src/storage.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 export interface OfflineStorageFixture {
   postgres: PostgresTestDatabase;

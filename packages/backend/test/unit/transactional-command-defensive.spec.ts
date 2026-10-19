@@ -3,8 +3,8 @@ import { HttpException, type CallHandler, type ExecutionContext } from '@nestjs/
 import { STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_TENANT_ID } from '@stynx-nyx/contracts';
 import { STYNX_IDEMPOTENT_ROUTE } from '@stynx-nyx/idempotency';
 import { firstValueFrom, of } from 'rxjs';
-import { STYNX_AUDIT_METADATA } from '../../src/audit/constants';
-import { STYNX_TRANSACTIONAL_COMMAND, TransactionalCommandInterceptor } from '../../src/transactional-command/transactional-command';
+import { STYNX_AUDIT_METADATA } from '../../src/audit/constants.js';
+import { STYNX_TRANSACTIONAL_COMMAND, TransactionalCommandInterceptor } from '../../src/transactional-command/transactional-command.js';
 
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2831a';

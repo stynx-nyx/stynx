@@ -1,4 +1,4 @@
-import { StynxMetricsService } from '../../src/metrics.service';
+import { StynxMetricsService } from '../../src/metrics.service.js';
 
 describe('StynxMetricsService', () => {
   it('renders baseline prometheus metrics', async () => {

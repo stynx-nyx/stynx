@@ -1,7 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { Database } from '../../src/database';
-import { StynxDataModule } from '../../src/data.module';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres';
+import { Database } from '../../src/database.js';
+import { StynxDataModule } from '../../src/data.module.js';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../support/postgres.js';
 
 const TENANT = 'd1111111-1111-4111-8111-111111111111';
 const ACTOR = 'd2222222-2222-4222-8222-222222222222';

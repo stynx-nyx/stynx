@@ -19,14 +19,14 @@ import {
 } from '@stynx-nyx/testing';
 import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres.js';
 import {
   closeReferenceApiE2e,
   queryRowsAsTenant,
   type ReferenceApiE2eContext,
-} from '../fixtures/app';
-import { createAuthenticatedAgent, type AuthenticatedAgent } from '../fixtures/http';
-import { actors, tenants, type ActorName, seedRecordsAndNotesE2e } from '../fixtures/seed';
+} from '../fixtures/app.js';
+import { createAuthenticatedAgent, type AuthenticatedAgent } from '../fixtures/http.js';
+import { actors, tenants, type ActorName, seedRecordsAndNotesE2e } from '../fixtures/seed.js';
 
 const bucketName = 'stynx-docs-local-us-east-1';
 const documentPermissions = [
@@ -201,7 +201,7 @@ async function setupDocumentsE2e(): Promise<DocumentsE2eContext> {
     }),
   );
 
-  const { AppModule } = await import('../../../src/app.module');
+  const { AppModule } = await import('../../../src/app.module.js');
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();

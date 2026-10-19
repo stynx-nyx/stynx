@@ -2,15 +2,15 @@ import {
   STYNX_OUTBOX_DESTINATIONS,
   STYNX_OUTBOX_DISPATCHER,
   STYNX_OUTBOX_OPTIONS,
-} from '../../src/constants';
-import { StynxOutboxModule } from '../../src/outbox.module';
-import { OutboxService } from '../../src/outbox.service';
+} from '../../src/constants.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
+import { OutboxService } from '../../src/outbox.service.js';
 import type {
   OutboxDestination,
   OutboxDispatcherPort,
   OutboxRow,
   OutboxSqlExecutor,
-} from '../../src/types';
+} from '../../src/types.js';
 
 // UPS-OBX-11 (#320), ADR-OUTBOX-0003 D4: a named destination is sugar over the 1.5.5 entity
 // selector. It expands to its entity set in the dispatch sweeps and in queue health, routes

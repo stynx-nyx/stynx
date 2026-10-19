@@ -14,14 +14,14 @@ import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
 import { firstValueFrom, from, mergeMap } from 'rxjs';
 import { z } from 'zod';
 import { HttpContext, HttpHeaders, HttpRequest } from '../../../../packages-web/angular/node_modules/@angular/common/fesm2022/http.mjs';
-import { IdempotencyKeyInterceptor, STYNX_IDEMPOTENCY_COMMAND } from '../../../../packages-web/angular/src/idempotency';
+import { IdempotencyKeyInterceptor, STYNX_IDEMPOTENCY_COMMAND } from '../../../../packages-web/angular/src/idempotency.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
-import { Audit, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index';
-import { AuthContextGuard } from '../../src/auth/auth-context.guard';
-import { StynxAuthModule } from '../../src/auth/auth.module';
+} from '../../../data/test/support/postgres.js';
+import { Audit, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index.js';
+import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
+import { StynxAuthModule } from '../../src/auth/auth.module.js';
 
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9e5';
 const ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2832e';

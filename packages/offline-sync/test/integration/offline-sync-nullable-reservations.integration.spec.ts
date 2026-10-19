@@ -9,12 +9,12 @@ import { RequestContextMutator } from '@stynx-nyx/core';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
-import { OFFLINE_SYNC_NO_SHIFT } from '../../src/numbering';
-import { reservationFingerprint } from '../../src/listing';
-import type { CTG9ReserveNumberingInput } from '../../src/types';
+} from '../../../data/test/support/postgres.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
+import { OFFLINE_SYNC_NO_SHIFT } from '../../src/numbering.js';
+import { reservationFingerprint } from '../../src/listing.js';
+import type { CTG9ReserveNumberingInput } from '../../src/types.js';
 
 const tenantA = '00000000-0000-4000-8000-0000000000d4';
 const tenantB = '00000000-0000-4000-8000-0000000000e4';

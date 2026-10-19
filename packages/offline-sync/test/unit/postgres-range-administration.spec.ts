@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fixtureDigest } from '../support/offline-import-fixtures';
+import { fixtureDigest } from '../support/offline-import-fixtures.js';
 import type { Database } from '@stynx-nyx/data';
 import {
   pgCreateNumberingRange,
   pgGetNumberingRange,
   pgListNumberingRanges,
-} from '../../src/postgres-ranges';
-import { rangeInput, RANGE_AT, RANGE_TENANT_A } from '../support/range-administration-contract';
+} from '../../src/postgres-ranges.js';
+import { rangeInput, RANGE_AT, RANGE_TENANT_A } from '../support/range-administration-contract.js';
 
 const scope = { tenantId: RANGE_TENANT_A, actorId: 'audit-actor' };
 const id = '10000000-0000-4000-8000-0000000000a5';

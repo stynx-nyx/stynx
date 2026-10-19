@@ -1,10 +1,10 @@
 import { ForbiddenException } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
-import { TenancyPlatformAdminGuard } from '../../src/tenancy-platform-admin.guard';
+import { TenancyPlatformAdminGuard } from '../../src/tenancy-platform-admin.guard.js';
 import {
   TENANT_SYSTEM_OPERATION_SINK_PROVIDER,
   TenantSystemOperationSink,
-} from '../../src/tenant-system-operation.sink';
+} from '../../src/tenant-system-operation.sink.js';
 
 describe('TenancyPlatformAdminGuard', () => {
   const original = process.env.STYNX_TENANCY_PLATFORM_ADMIN;

@@ -6,8 +6,8 @@ import { Database, StynxDataModule } from '@stynx-nyx/data';
 import request from 'supertest';
 import { PublicTenantRoute, StynxAuthModule } from '@stynx-nyx/auth';
 import { STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL } from '@stynx-nyx/contracts';
-import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres';
-import { StynxTenancyModule } from '../../src/tenancy.module';
+import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
+import { StynxTenancyModule } from '../../src/tenancy.module.js';
 
 const TENANT_A = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const TENANT_B = '0197481e-6f84-77e4-8d6d-41f0b6fca9c2';

@@ -1,4 +1,4 @@
-import { PrivacyHttpContextMiddleware } from '../../src/privacy-context';
+import { PrivacyHttpContextMiddleware } from '../../src/privacy-context.js';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { ModuleRef } from '@nestjs/core';
 import { StynxCoreModule, SystemContext, RequestContextMutator } from '@stynx-nyx/core';

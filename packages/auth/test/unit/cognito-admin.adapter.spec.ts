@@ -17,7 +17,7 @@ import {
   CognitoIdentityAdminAdapter,
   buildCognitoAdminOptionsFromEnv,
   mapCognitoError,
-} from '../../src/cognito-admin.adapter';
+} from '../../src/cognito-admin.adapter.js';
 import type { Mock } from 'vitest';
 
 function makeAdapter(send: Mock) {

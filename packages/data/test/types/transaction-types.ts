@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import type { Transaction } from '../../src/transaction';
-import { makeLiveOnly, softDeletable } from '../../src/table-markers';
+import type { Transaction } from '../../src/transaction.js';
+import { makeLiveOnly, softDeletable } from '../../src/table-markers.js';
 
 const schema = pgSchema('typecheck_demo');
 

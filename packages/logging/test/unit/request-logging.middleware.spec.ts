@@ -1,4 +1,4 @@
-import { RequestLoggingMiddleware } from '../../src/request-logging.middleware';
+import { RequestLoggingMiddleware } from '../../src/request-logging.middleware.js';
 
 describe('RequestLoggingMiddleware', () => {
   it('logs one request completion record for non-health routes', () => {

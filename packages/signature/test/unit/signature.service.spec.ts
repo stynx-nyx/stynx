@@ -13,8 +13,8 @@ import {
   createMockSignatureBackend,
   sha256Hex as exportedSha256Hex,
   type SignatureProviderClient,
-} from '../../src';
-import { profile } from '../fixtures/trust';
+} from '../../src/index.js';
+import { profile } from '../fixtures/trust.js';
 
 function sha256Hex(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');

@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { RequestContext } from '@stynx-nyx/core';
-import { InMemoryPreferencesStore } from '../src/in-memory-preferences.store';
-import { PreferencesService } from '../src/preferences.service';
-import { PLATFORM_PREFERENCE_DEFAULTS } from '../src/schema';
-import type { PreferenceValues } from '../src/types';
+import { InMemoryPreferencesStore } from '../src/in-memory-preferences.store.js';
+import { PreferencesService } from '../src/preferences.service.js';
+import { PLATFORM_PREFERENCE_DEFAULTS } from '../src/schema.js';
+import type { PreferenceValues } from '../src/types.js';
 import {
   harness,
   changed,
@@ -11,7 +11,7 @@ import {
   tenantB,
   preferencesError,
   errorCode,
-} from './support/preferences-harness';
+} from './support/preferences-harness.js';
 
 describe('preferences defaults and trusted scope', () => {
   it('returns complete defaults and isolates tenant plus opaque subject keys', async () => {

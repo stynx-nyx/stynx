@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
 import { HttpException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { OFFLINE_SYNC_CONSUMER_ATTRIBUTES_MAX_BYTES } from '../../src/stynx-context';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { OFFLINE_SYNC_CONSUMER_ATTRIBUTES_MAX_BYTES } from '../../src/stynx-context.js';
 import type {
   CTG9SubmitSyncBatchInput,
   CTG9SyncBatchItemInput,
@@ -12,7 +12,7 @@ import type {
   OfflineSyncStynxContext,
   StynxOfflineSyncModuleOptions,
   SyncConflict,
-} from '../../src/types';
+} from '../../src/types.js';
 
 // INV-OFFLINE-001; UPS-OFS-06, UPS-OFS-07, UPS-OFS-08 (#317; ADR-MOBILE-OFFLINE-0003 D1, D2, D3) on the
 // in-memory store through the service. The PostgreSQL twin is

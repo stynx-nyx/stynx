@@ -2,18 +2,18 @@ import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule, StynxPoolRegistry, Transaction } from '@stynx-nyx/data';
 import * as outboxPublic from '@stynx-nyx/outbox';
-import { StynxEventStreamService } from '../../src/event-stream/event-stream.service';
+import { StynxEventStreamService } from '../../src/event-stream/event-stream.service.js';
 import type {
   EventStreamCursor,
   EventStreamRow,
   EventStreamSource,
   StynxSseRequest,
   StynxSseResponse,
-} from '../../src/event-stream/types';
+} from '../../src/event-stream/types.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const TENANT_A = 'b1111111-1111-4111-8111-111111111111';
 const TENANT_B = 'b2222222-2222-4222-8222-222222222222';

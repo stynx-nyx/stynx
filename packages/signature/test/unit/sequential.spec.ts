@@ -1,4 +1,4 @@
-import { SequentialSigner } from '../../src';
+import { SequentialSigner } from '../../src/index.js';
 
 describe('SequentialSigner', () => {
   const signers = [

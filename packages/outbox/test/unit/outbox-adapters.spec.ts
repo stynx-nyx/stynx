@@ -1,5 +1,5 @@
-import { HttpOutboxDispatcher } from '../../src/http-outbox-dispatcher';
-import { OutboxEventStreamSource } from '../../src/event-stream-source';
+import { HttpOutboxDispatcher } from '../../src/http-outbox-dispatcher.js';
+import { OutboxEventStreamSource } from '../../src/event-stream-source.js';
 import {
   OutboxAckQuarantineUnavailableError,
   OutboxClockAdmissionTimeoutError,
@@ -10,8 +10,8 @@ import {
   OutboxEventTransactionError,
   OutboxLegacyCutoverError,
   OutboxOwnershipContentionError,
-} from '../../src/errors';
-import type { OutboxRow, OutboxSqlExecutor } from '../../src/types';
+} from '../../src/errors.js';
+import type { OutboxRow, OutboxSqlExecutor } from '../../src/types.js';
 
 const row: OutboxRow = {
   id: 'message-1', tenantId: '11111111-1111-1111-1111-111111111111',

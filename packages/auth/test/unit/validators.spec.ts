@@ -4,17 +4,17 @@ import type { Mock } from 'vitest';
 import { InvalidCredentialError } from '@stynx-nyx/contracts';
 import * as contracts from '@stynx-nyx/contracts';
 
-vi.mock('../../src/utils', async () => {
-  const actual = await vi.importActual('../../src/utils');
+vi.mock('../../src/utils.js', async () => {
+  const actual = await vi.importActual('../../src/utils.js');
   return {
     ...actual,
     verifyJwtWithJwk: vi.fn(),
   };
 });
 
-import { CognitoJwtValidator, joseLoader } from '../../src/cognito-jwt.validator';
-import { StynxJwtValidator } from '../../src/stynx-jwt.validator';
-import { base64UrlEncode, decodeJwtClaims, verifyJwtWithJwk } from '../../src/utils';
+import { CognitoJwtValidator, joseLoader } from '../../src/cognito-jwt.validator.js';
+import { StynxJwtValidator } from '../../src/stynx-jwt.validator.js';
+import { base64UrlEncode, decodeJwtClaims, verifyJwtWithJwk } from '../../src/utils.js';
 
 function usableJwk(kid: string): Record<string, string> {
   const { publicKey } = generateKeyPairSync('rsa', { modulusLength: 1024 });
@@ -69,7 +69,7 @@ describe('auth validators', () => {
 
   it('refreshes a stale signing-service key set once so a rotated valid token succeeds, while refresh failure propagates', async () => {
     const { generateKeyPair } = await import('jose');
-    const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+    const actual = await vi.importActual<typeof import('../../src/utils.js')>('../../src/utils.js');
     const old = await generateKeyPair('RS256');
     const fresh = await generateKeyPair('RS256');
     const oldJwk = { ...(await crypto.subtle.exportKey('jwk', old.publicKey)), kid: 'old', alg: 'RS256', use: 'sig' } as Record<string, string>;
@@ -90,7 +90,7 @@ describe('auth validators', () => {
 
   it('classifies a bad signature against a usable RSA JWK as InvalidCredentialError', async () => {
     const { generateKeyPair } = await import('jose');
-    const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+    const actual = await vi.importActual<typeof import('../../src/utils.js')>('../../src/utils.js');
     const pair = await generateKeyPair('RS256');
     const wrong = await generateKeyPair('RS256');
     const jwk = { ...(await crypto.subtle.exportKey('jwk', pair.publicKey)), kid: 'usable', alg: 'RS256', use: 'sig' } as Record<string, string>;
@@ -101,7 +101,7 @@ describe('auth validators', () => {
 
   it('refreshes a stale jwksUri cache once for a rotated valid token', async () => {
     const { generateKeyPair } = await import('jose');
-    const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+    const actual = await vi.importActual<typeof import('../../src/utils.js')>('../../src/utils.js');
     const old = await generateKeyPair('RS256');
     const fresh = await generateKeyPair('RS256');
     const oldJwk = { ...(await crypto.subtle.exportKey('jwk', old.publicKey)), kid: 'old', alg: 'RS256', use: 'sig' } as Record<string, string>;
@@ -122,7 +122,7 @@ describe('auth validators', () => {
 
   it('propagates a jwksUri forced-refresh failure after warming its cache', async () => {
     const { generateKeyPair } = await import('jose');
-    const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+    const actual = await vi.importActual<typeof import('../../src/utils.js')>('../../src/utils.js');
     const old = await generateKeyPair('RS256');
     const rotated = await generateKeyPair('RS256');
     const oldJwk = { ...(await crypto.subtle.exportKey('jwk', old.publicKey)), kid: 'old', alg: 'RS256', use: 'sig' } as Record<string, string>;
@@ -145,7 +145,7 @@ describe('auth validators', () => {
 
   it('coalesces concurrent forced refreshes and suppresses another ambiguous refresh for 30 seconds', async () => {
     const { generateKeyPair } = await import('jose');
-    const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+    const actual = await vi.importActual<typeof import('../../src/utils.js')>('../../src/utils.js');
     const old = await generateKeyPair('RS256');
     const fresh = await generateKeyPair('RS256');
     const unknown = await generateKeyPair('RS256');
@@ -187,7 +187,7 @@ describe('auth validators', () => {
 
   it('keeps a failed refresh and its suppressed retry as key-source failures', async () => {
     const { generateKeyPair } = await import('jose');
-    const actual = await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+    const actual = await vi.importActual<typeof import('../../src/utils.js')>('../../src/utils.js');
     const old = await generateKeyPair('RS256');
     const unknown = await generateKeyPair('RS256');
     const oldJwk = { ...(await crypto.subtle.exportKey('jwk', old.publicKey)), kid: 'old', alg: 'RS256', use: 'sig' } as Record<string, string>;
@@ -619,7 +619,7 @@ describe('auth validators', () => {
   it('rejects invalid signatures from verifyJwtWithJwk', async () => {
     // Get the un-mocked verifyJwtWithJwk — bypasses the module-level vi.mock.
     const { verifyJwtWithJwk: actualVerifyJwtWithJwk } =
-      await vi.importActual<typeof import('../../src/utils')>('../../src/utils');
+      await vi.importActual<typeof import('../../src/utils.js')>('../../src/utils.js');
     const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 1024 });
     const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
     const payload = base64UrlEncode(JSON.stringify({ sub: 'user-1' }));

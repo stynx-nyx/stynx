@@ -11,7 +11,7 @@ import {
   STYNX_SESSION_MIRROR,
   resolveSessionsOptions,
 } from '@stynx-nyx/sessions';
-import type { PostgresTestDatabase } from '../../../data/test/support/postgres';
+import type { PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 
 /** Native JWTs, real owned guards/services, and the same restricted database as the upgrade. */
 export async function realOfflineHttpAuthentication(pg: PostgresTestDatabase, tenantId: string) {

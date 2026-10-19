@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readLtaPdfEvidence } from '../../src/pdf-trust-evidence';
-import { ltaBytes, ltaInput, ltaVerifier } from '../support/lta-fixture';
+import { readLtaPdfEvidence } from '../../src/pdf-trust-evidence.js';
+import { ltaBytes, ltaInput, ltaVerifier } from '../support/lta-fixture.js';
 
 describe('minimal LTA archive token container admission', () => {
   const original = ltaBytes('minimal-lta.pdf');

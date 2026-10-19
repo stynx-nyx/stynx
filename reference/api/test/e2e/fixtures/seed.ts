@@ -1,4 +1,4 @@
-import type { PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres';
+import type { PostgresTestDatabase } from '../../../../../packages/data/test/support/postgres.js';
 
 export const tenants = {
   tenantA: '01978f4a-32bf-7c27-a131-fd73a9e101a1',

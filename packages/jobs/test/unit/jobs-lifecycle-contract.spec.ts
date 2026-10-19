@@ -1,5 +1,5 @@
-import { JobsRegistry, JobsScheduler, JobsWorker } from '../../src';
-import type { ClockPort, JobExecutionResult, SchedulerOptions, TimerHandle, TimerPort, WorkerOptions } from '../../src';
+import { JobsRegistry, JobsScheduler, JobsWorker } from '../../src/index.js';
+import type { ClockPort, JobExecutionResult, SchedulerOptions, TimerHandle, TimerPort, WorkerOptions } from '../../src/index.js';
 
 const now = new Date('2026-08-26T10:00:00.000Z');
 const job = {

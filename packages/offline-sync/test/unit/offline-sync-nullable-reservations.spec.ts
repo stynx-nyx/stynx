@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { CTG9OfflineSyncController } from '../../src/ctg9-offline-sync.controller';
-import { OfflineSyncController } from '../../src/offline-sync.controller';
+import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { CTG9OfflineSyncController } from '../../src/ctg9-offline-sync.controller.js';
+import { OfflineSyncController } from '../../src/offline-sync.controller.js';
 import {
   activeReservationError,
   legacyReservation,
   reservationShiftScope,
-} from '../../src/reservation-admission';
-import { OFFLINE_SYNC_NO_SHIFT } from '../../src/numbering';
-import type { CTG9ReserveNumberingInput, CTG9NumberingReservation } from '../../src/types';
+} from '../../src/reservation-admission.js';
+import { OFFLINE_SYNC_NO_SHIFT } from '../../src/numbering.js';
+import type { CTG9ReserveNumberingInput, CTG9NumberingReservation } from '../../src/types.js';
 
 const tenantId = '00000000-0000-4000-8000-0000000000d4';
 const scope = { tenantId, actorId: 'actor-a' };

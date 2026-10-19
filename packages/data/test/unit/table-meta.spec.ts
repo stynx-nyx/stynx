@@ -5,7 +5,7 @@ import {
   mirrorQualifiedName,
   qualifiedName,
   quoteIdent,
-} from '../../src/internal/table-meta';
+} from '../../src/internal/table-meta.js';
 
 describe('table metadata helpers', () => {
   it('quotes identifiers and builds qualified relation names', () => {

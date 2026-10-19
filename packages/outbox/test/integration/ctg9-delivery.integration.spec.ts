@@ -1,14 +1,14 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
-import { HttpOutboxDispatcher } from '../../src/http-outbox-dispatcher';
-import { OutboxService } from '../../src/outbox.service';
-import { StynxOutboxModule } from '../../src/outbox.module';
-import type { OutboxRow, OutboxTransportEvidence } from '../../src/types';
+import { HttpOutboxDispatcher } from '../../src/http-outbox-dispatcher.js';
+import { OutboxService } from '../../src/outbox.service.js';
+import { StynxOutboxModule } from '../../src/outbox.module.js';
+import type { OutboxRow, OutboxTransportEvidence } from '../../src/types.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 const TENANT = 'd1111111-1111-4111-8111-111111111111';
 const ACTOR = 'd2222222-2222-4222-8222-222222222222';

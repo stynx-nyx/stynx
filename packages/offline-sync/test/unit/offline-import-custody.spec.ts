@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { validateArchiveAck, verifyImportArchives } from '../../src/import-archive';
-import { readOfflineImportLedger, type OfflineImportLedgerRow } from '../../src/import-receipt';
+import { validateArchiveAck, verifyImportArchives } from '../../src/import-archive.js';
+import { readOfflineImportLedger, type OfflineImportLedgerRow } from '../../src/import-receipt.js';
 import {
   archivedFixture,
   duplicateArchivedFixture,
   recaptureArchive,
-} from '../support/offline-archive-fixture';
-import { fixtureDigest, IMPORT_AT, importManifest } from '../support/offline-import-fixtures';
+} from '../support/offline-archive-fixture.js';
+import { fixtureDigest, IMPORT_AT, importManifest } from '../support/offline-import-fixtures.js';
 
 const tenant = '11111111-1111-4111-8111-111111111111';
 const row = (value: object) => value as Record<string, unknown>;

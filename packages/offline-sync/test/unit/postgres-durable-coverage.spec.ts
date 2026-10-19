@@ -1,4 +1,4 @@
-import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity';
+import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
 import { BadRequestException } from '@nestjs/common';
 import type { Database } from '@stynx-nyx/data';
 import {
@@ -8,13 +8,13 @@ import {
   pgReconcile,
   pgSubmit,
   pgTransition,
-} from '../../src/postgres-durable';
-import type { CTG9SubmitSyncBatchInput, DurableBatchExecutionOptions } from '../../src/types';
+} from '../../src/postgres-durable.js';
+import type { CTG9SubmitSyncBatchInput, DurableBatchExecutionOptions } from '../../src/types.js';
 import {
   batchContextFingerprint,
   transportCompositeKey,
   transportFingerprint,
-} from '../../src/transport';
+} from '../../src/transport.js';
 
 const scope = { tenantId: '0197481e-6f84-77e4-8d6d-41f0b6fca9c1', actorId: 'agent-1' };
 const now = '2026-09-28T00:00:00Z';

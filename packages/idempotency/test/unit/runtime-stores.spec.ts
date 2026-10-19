@@ -19,9 +19,9 @@ vi.mock('redis', () => ({
   createClient: redisMock.createClient,
 }));
 
-import { DatabaseIdempotencyStore } from '../../src/database-idempotency.store';
-import { RedisIdempotencyBackend } from '../../src/redis-idempotency.backend';
-import type { IdempotencyDecisionContext } from '../../src/types';
+import { DatabaseIdempotencyStore } from '../../src/database-idempotency.store.js';
+import { RedisIdempotencyBackend } from '../../src/redis-idempotency.backend.js';
+import type { IdempotencyDecisionContext } from '../../src/types.js';
 
 function context(overrides: Partial<IdempotencyDecisionContext> = {}): IdempotencyDecisionContext {
   return {

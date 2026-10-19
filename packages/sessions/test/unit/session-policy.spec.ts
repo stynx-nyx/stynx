@@ -1,9 +1,9 @@
 import { generateKeyPairSync } from 'node:crypto';
-import { InMemorySessionStore } from '../../src/in-memory-session-store';
-import { SessionJwtSigningService } from '../../src/jwt-signing.service';
-import { SessionService } from '../../src/session.service';
-import { RefreshTokenReuseDetectedError, SessionConflictError, StrongFactorRequiredError } from '../../src/errors';
-import { resolveSessionsOptions, type SessionMirror, type SessionMirrorEntry, type StynxSessionsModuleOptions } from '../../src/types';
+import { InMemorySessionStore } from '../../src/in-memory-session-store.js';
+import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
+import { SessionService } from '../../src/session.service.js';
+import { RefreshTokenReuseDetectedError, SessionConflictError, StrongFactorRequiredError } from '../../src/errors.js';
+import { resolveSessionsOptions, type SessionMirror, type SessionMirrorEntry, type StynxSessionsModuleOptions } from '../../src/types.js';
 
 // UPS-SES-01/02: policy is evaluated against active records in the target tenant.
 const keyPair = generateKeyPairSync('rsa', { modulusLength: 2048 });

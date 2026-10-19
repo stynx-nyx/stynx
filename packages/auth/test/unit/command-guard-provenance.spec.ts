@@ -1,7 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
 import * as contracts from '@stynx-nyx/contracts';
-import { StynxAuthGuard } from '../../src/stynx-auth.guard';
+import { StynxAuthGuard } from '../../src/stynx-auth.guard.js';
 
 // INV-RBAC-001: the command bootstrap trusts only an own brand on a built-in guard constructor.
 function guard() {

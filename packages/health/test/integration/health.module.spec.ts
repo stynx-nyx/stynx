@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { ServiceUnavailableException } from '@nestjs/common';
-import { StynxHealthController } from '../../src/health.controller';
-import { StynxHealthModule } from '../../src/health.module';
+import { StynxHealthController } from '../../src/health.controller.js';
+import { StynxHealthModule } from '../../src/health.module.js';
 
 describe('StynxHealthModule integration', () => {
   it('exposes the expected health endpoints through the controller surface', async () => {

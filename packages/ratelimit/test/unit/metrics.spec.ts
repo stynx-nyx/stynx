@@ -1,4 +1,4 @@
-import { InMemoryRateLimitMetrics } from '../../src/metrics';
+import { InMemoryRateLimitMetrics } from '../../src/metrics.js';
 
 describe('InMemoryRateLimitMetrics', () => {
   it('tracks blocked counters, latency percentiles, and histogram buckets', () => {

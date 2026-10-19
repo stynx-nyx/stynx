@@ -2,20 +2,20 @@ import 'reflect-metadata';
 import { createHash } from 'node:crypto';
 import { HttpException, type CallHandler, type ExecutionContext } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { EXCEPTION_FILTERS_METADATA, FILTER_CATCH_EXCEPTIONS, GUARDS_METADATA } from '@nestjs/common/constants';
+import { EXCEPTION_FILTERS_METADATA, FILTER_CATCH_EXCEPTIONS, GUARDS_METADATA } from '@nestjs/common/constants.js';
 import { HttpAdapterHost } from '@nestjs/core';
 import { STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE, STYNX_RESOLVED_TENANT_COMMAND_CONTEXT, STYNX_VERIFIED_TENANT_ID } from '@stynx-nyx/contracts';
 import { STYNX_IDEMPOTENT_ROUTE, TransactionalReservationTimeoutError } from '@stynx-nyx/idempotency';
 import { firstValueFrom, of, throwError } from 'rxjs';
-import type { RequestLike } from '../../src/common/request-context';
-import { STYNX_AUDIT_METADATA } from '../../src/audit/constants';
+import type { RequestLike } from '../../src/common/request-context.js';
+import { STYNX_AUDIT_METADATA } from '../../src/audit/constants.js';
 import {
   CommittedCommandError,
   CommittedCommandResponse,
   CommittedCommandResponseFilter,
   STYNX_TRANSACTIONAL_COMMAND,
   TransactionalCommandInterceptor,
-} from '../../src/transactional-command/transactional-command';
+} from '../../src/transactional-command/transactional-command.js';
 
 const TENANT = '0197481e-6f84-77e4-8d6d-41f0b6fca9c1';
 const ACTOR = '0197481e-7294-7c53-8b03-5c36d7c2831a';
@@ -105,7 +105,7 @@ describe('transactional command direct execution branches', () => {
       .resolves.toEqual({ id: 'record-1' });
     expect(unmarked.database.tx).not.toHaveBeenCalled();
 
-    const { CommandModuleRequiredInterceptor } = await import('../../src/transactional-command/transactional-command');
+    const { CommandModuleRequiredInterceptor } = await import('../../src/transactional-command/transactional-command.js');
     const moduleCheck = new CommandModuleRequiredInterceptor();
     const request = {};
     const context = { switchToHttp: () => ({ getRequest: () => request }) } as unknown as ExecutionContext;

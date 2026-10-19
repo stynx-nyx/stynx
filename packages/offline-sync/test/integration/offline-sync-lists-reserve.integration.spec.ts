@@ -9,15 +9,15 @@ import {
   OfflineSyncError,
   OfflineSyncRangeUnavailableError,
   OfflineSyncReservationReplayError,
-} from '../../src/errors';
-import { OFFLINE_SYNC_NO_SHIFT } from '../../src/numbering';
-import { OfflineSyncService } from '../../src/offline-sync.service';
-import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store';
-import type { OfflineSyncItemContext, StynxOfflineSyncModuleOptions } from '../../src/types';
+} from '../../src/errors.js';
+import { OFFLINE_SYNC_NO_SHIFT } from '../../src/numbering.js';
+import { OfflineSyncService } from '../../src/offline-sync.service.js';
+import { PostgresOfflineSyncStore } from '../../src/postgres-offline-sync.store.js';
+import type { OfflineSyncItemContext, StynxOfflineSyncModuleOptions } from '../../src/types.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../data/test/support/postgres';
+} from '../../../data/test/support/postgres.js';
 
 // INV-OFFLINE-001; UPS-OFS-05, UPS-OFS-09 (receiptId), UPS-OFS-10, UPS-OFS-11, UPS-OFS-12 (#317;
 // ADR-MOBILE-OFFLINE-0003 D4 and D5). Real PostgreSQL, 0001→0002→0003, app-role pool bound at

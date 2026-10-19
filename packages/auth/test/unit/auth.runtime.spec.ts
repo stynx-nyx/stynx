@@ -1,17 +1,17 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend';
-import { PermissionCacheMetrics } from '../../src/permission-cache-metrics';
-import { PermissionGuard } from '../../src/permission.guard';
-import { StynxAuthGuard } from '../../src/stynx-auth.guard';
-import { ActorContextInterceptor } from '../../src/actor-context.interceptor';
+import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend.js';
+import { PermissionCacheMetrics } from '../../src/permission-cache-metrics.js';
+import { PermissionGuard } from '../../src/permission.guard.js';
+import { StynxAuthGuard } from '../../src/stynx-auth.guard.js';
+import { ActorContextInterceptor } from '../../src/actor-context.interceptor.js';
 import {
   STYNX_PERMISSION_ROUTE,
   STYNX_PUBLIC_ROUTE,
   STYNX_READONLY_ROUTE,
   STYNX_SYSTEM_ROUTE,
-} from '../../src/decorators';
+} from '../../src/decorators.js';
 import {
   base64UrlDecode,
   base64UrlEncode,
@@ -19,7 +19,7 @@ import {
   decodeJwtClaims,
   expandPermissionWildcards,
   headerToString,
-} from '../../src/utils';
+} from '../../src/utils.js';
 
 function createExecutionContext(request: Record<string, unknown>): ExecutionContext {
   return {

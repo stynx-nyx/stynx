@@ -4,18 +4,18 @@ import type { Provider } from '@nestjs/common';
 import { desc } from 'drizzle-orm';
 import { pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import type { Client } from 'pg';
-import { Database } from '../../src/database';
+import { Database } from '../../src/database.js';
 import {
   CascadeTooDeepError,
   CascadeTooLargeError,
   RestoreCascadeParentsArchivedError,
   RestoreConflictError,
   SoftDeleteBlockedError,
-} from '../../src/errors';
-import { StynxDataModule } from '../../src/data.module';
-import { makeLiveOnly, softDeletable } from '../../src/table-markers';
-import type { StynxDataMetricsSink } from '../../src/tokens';
-import { asAppRole, createPostgresTestDatabase } from '../support/postgres';
+} from '../../src/errors.js';
+import { StynxDataModule } from '../../src/data.module.js';
+import { makeLiveOnly, softDeletable } from '../../src/table-markers.js';
+import type { StynxDataMetricsSink } from '../../src/tokens.js';
+import { asAppRole, createPostgresTestDatabase } from '../support/postgres.js';
 
 const demoSchema = pgSchema('demo');
 

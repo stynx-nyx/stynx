@@ -18,8 +18,8 @@ import { expect } from 'vitest';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
-} from '../../../../../packages/data/test/support/postgres';
-import { actors, tenants, type ActorName, seedRecordsAndNotesE2e } from './seed';
+} from '../../../../../packages/data/test/support/postgres.js';
+import { actors, tenants, type ActorName, seedRecordsAndNotesE2e } from './seed.js';
 
 export interface PrivacySubjectFixture {
   tenantId: string;
@@ -332,7 +332,7 @@ export async function setupReferenceApiPrivacyE2e(): Promise<ReferenceApiPrivacy
 
   const objectStore = new InMemoryPrivacyObjectStore();
   const cognitoAdmin = new CapturingPrivacyCognitoAdmin();
-  const { AppModule } = await import('../../../src/app.module');
+  const { AppModule } = await import('../../../src/app.module.js');
   const moduleRef = await Test.createTestingModule({
     imports: [
       AppModule,

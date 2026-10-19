@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { FlowFormsService } from '../../src/flow-forms.service';
+import { FlowFormsService } from '../../src/flow-forms.service.js';
 import type { Mock } from 'vitest';
 
 interface FakeTrx {

@@ -3,7 +3,7 @@ import {
   InMemoryIdempotencyStore,
   IntegrationAdapter,
   type IntegrationTelemetryEvent,
-} from '../../src';
+} from '../../src/index.js';
 
 describe('IntegrationAdapter', () => {
   it('executes the happy path and emits success telemetry', async () => {

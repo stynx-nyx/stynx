@@ -1,6 +1,6 @@
-import { DatabaseRateLimitPolicyResolver } from '../../src/rate-limit-policy.service';
-import type { RateLimitMetadata } from '../../src/types';
-import type { RequestLike } from '../../src/request-context';
+import { DatabaseRateLimitPolicyResolver } from '../../src/rate-limit-policy.service.js';
+import type { RateLimitMetadata } from '../../src/types.js';
+import type { RequestLike } from '../../src/request-context.js';
 import type { Mock } from 'vitest';
 
 interface FakeTrx {

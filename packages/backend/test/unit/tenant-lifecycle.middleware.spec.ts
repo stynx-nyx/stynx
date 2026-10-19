@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events';
 import {
   TenantLifecycleMiddleware,
   createTenantLifecycleMiddleware,
-} from '../../src/db-context/tenant-lifecycle.middleware';
+} from '../../src/db-context/tenant-lifecycle.middleware.js';
 
 function fakeResponse() {
   return new EventEmitter() as EventEmitter & { once: EventEmitter['once'] };
