@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { validate as validateUuid } from 'uuid';
-import { SessionControlError } from './errors';
+import { SessionControlError } from './errors.js';
 import type {
   SessionAction,
   SessionAuditSink,
@@ -12,7 +12,7 @@ import type {
   SessionRegistry,
   SessionView,
   TrustedSessionContext,
-} from './types';
+} from './types.js';
 
 const RETRY_SECONDS = [5, 30, 120, 600, 1800, 7200] as const;
 const noopAudit: SessionAuditSink = { write: () => undefined };

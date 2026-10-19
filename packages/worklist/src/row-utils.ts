@@ -1,4 +1,4 @@
-import { WorklistInputError } from './errors';
+import { WorklistInputError } from './errors.js';
 import type {
   WorklistCandidate,
   WorklistEvent,
@@ -6,7 +6,7 @@ import type {
   WorklistJsonObject,
   WorklistQueueRecord,
   WorklistWorkerStateRecord,
-} from './types';
+} from './types.js';
 
 export type WorklistRow = Record<string, unknown>;
 

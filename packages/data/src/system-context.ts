@@ -1,5 +1,5 @@
 import type { SystemExecutionContext } from '@stynx-nyx/core';
-import { Database } from './database';
+import { Database } from './database.js';
 
 export function withSystemContext<T>(
   database: Pick<Database, 'withSystemContext'>,

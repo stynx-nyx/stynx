@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Retry, timeout, idempotency, and circuit-breaker framework for stynx integrations",
+  "type": "module",
   "main": "dist/integration-adapter/src/index.js",
   "types": "dist/integration-adapter/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/integration-adapter/src/index.d.ts",
-      "require": "./dist/integration-adapter/src/index.js",
+      "import": "./dist/integration-adapter/src/index.js",
       "default": "./dist/integration-adapter/src/index.js"
     }
   },

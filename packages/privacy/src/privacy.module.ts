@@ -7,19 +7,19 @@ import {
 } from '@nestjs/common';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
-import { PrivacyController } from './privacy.controller';
-import { PrivacyObjectStoreService } from './privacy-object-store.service';
-import { PiiMapService } from './pii-map.service';
-import { PrivacyService } from './privacy.service';
-import { PrivacyHttpContextMiddleware } from './privacy-context';
-import { PrivacyRetentionPermissionGuard } from './privacy-retention.guard';
-import { UnconfiguredPrivacyCognitoAdmin } from './unconfigured-identity';
+import { PrivacyController } from './privacy.controller.js';
+import { PrivacyObjectStoreService } from './privacy-object-store.service.js';
+import { PiiMapService } from './pii-map.service.js';
+import { PrivacyService } from './privacy.service.js';
+import { PrivacyHttpContextMiddleware } from './privacy-context.js';
+import { PrivacyRetentionPermissionGuard } from './privacy-retention.guard.js';
+import { UnconfiguredPrivacyCognitoAdmin } from './unconfigured-identity.js';
 import {
   STYNX_PRIVACY_COGNITO_ADMIN,
   STYNX_PRIVACY_OBJECT_STORE,
   STYNX_PRIVACY_OPTIONS,
-} from './tokens';
-import type { PrivacyCognitoAdmin, PrivacyObjectStore, StynxPrivacyModuleOptions } from './types';
+} from './tokens.js';
+import type { PrivacyCognitoAdmin, PrivacyObjectStore, StynxPrivacyModuleOptions } from './types.js';
 
 @Module({})
 export class StynxPrivacyModule implements NestModule {

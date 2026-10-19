@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { ActorContextMissingError, TenantContextMissingError } from '@stynx-nyx/data';
-import { DEFAULT_BACKOFF_POLICY, DEFAULT_MAX_ATTEMPTS } from './constants';
-import { normalizeBackoff } from './backoff';
-import { InvalidJobInputError, InvalidScheduleError, JobActorAssignmentDeniedError, JobActorMembershipError, JobTenantMismatchError, ScheduleActorRequiredError } from './errors';
-import { JobsRepository } from './jobs.repository';
-import { nextCronRunAt, parseCronExpression } from './cron';
-import type { EnqueueJobInput, JobRecord, JobsPort, ScheduleRecord, StynxJobsModuleOptions, UpsertScheduleInput } from './types';
+import { DEFAULT_BACKOFF_POLICY, DEFAULT_MAX_ATTEMPTS } from './constants.js';
+import { normalizeBackoff } from './backoff.js';
+import { InvalidJobInputError, InvalidScheduleError, JobActorAssignmentDeniedError, JobActorMembershipError, JobTenantMismatchError, ScheduleActorRequiredError } from './errors.js';
+import { JobsRepository } from './jobs.repository.js';
+import { nextCronRunAt, parseCronExpression } from './cron.js';
+import type { EnqueueJobInput, JobRecord, JobsPort, ScheduleRecord, StynxJobsModuleOptions, UpsertScheduleInput } from './types.js';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 

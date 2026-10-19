@@ -1,6 +1,6 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import type { DocumentMetadataRepository, ObjectStorageService } from '@stynx-nyx/contracts';
-import { STYNX_DOCUMENT_METADATA_REPOSITORY, STYNX_OBJECT_STORAGE } from './constants';
+import { STYNX_DOCUMENT_METADATA_REPOSITORY, STYNX_OBJECT_STORAGE } from './constants.js';
 
 export interface StynxStorageModuleOptions {
   objectStorage: ObjectStorageService;

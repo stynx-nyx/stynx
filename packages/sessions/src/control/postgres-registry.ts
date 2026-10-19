@@ -10,7 +10,7 @@ import type {
   SessionRegistry,
   TrustedSessionContext,
   TrustedProviderAnchorInput,
-} from './types';
+} from './types.js';
 
 interface RegistrationRow {
   sid: string;

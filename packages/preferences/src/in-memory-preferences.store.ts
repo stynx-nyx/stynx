@@ -3,7 +3,7 @@ import type {
   PreferencesStore,
   StoredSubjectPreferences,
   TrustedPreferenceScope,
-} from './types';
+} from './types.js';
 export class InMemoryPreferencesStore implements PreferencesStore {
   private readonly rows = new Map<string, StoredSubjectPreferences>();
   private key(scope: TrustedPreferenceScope): string {

@@ -6,9 +6,9 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable, type Subscription } from 'rxjs';
-import { generateRequestId, normalizeRequestId } from './request-id';
-import type { RequestContextState } from './request-context';
-import { RequestContextMutator } from './request-context';
+import { generateRequestId, normalizeRequestId } from './request-id.js';
+import type { RequestContextState } from './request-context.js';
+import { RequestContextMutator } from './request-context.js';
 
 function extractHeader(value: unknown): string | undefined {
   if (typeof value === 'string') {

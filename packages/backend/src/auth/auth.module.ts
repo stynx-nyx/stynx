@@ -1,12 +1,12 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import type { PrincipalMapper, TenantEntitlementPolicy, TenantResolver, TokenVerifier } from '@stynx-nyx/contracts';
-import { AuthContextGuard } from './auth-context.guard';
+import { AuthContextGuard } from './auth-context.guard.js';
 import {
   STYNX_PRINCIPAL_MAPPER,
   STYNX_TENANT_ENTITLEMENT_POLICY,
   STYNX_TENANT_RESOLVER,
   STYNX_TOKEN_VERIFIER,
-} from './constants';
+} from './constants.js';
 
 export interface StynxAuthModuleOptions {
   tokenVerifier: TokenVerifier;

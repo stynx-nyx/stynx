@@ -11,9 +11,9 @@ import {
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, NoIdempotent } from '@stynx-nyx/backend';
 import { Idempotent } from '@stynx-nyx/idempotency';
-import { FlowAnalyticsService } from '../flow-analytics.service';
-import { FlowRuntimeService } from '../flow-runtime.service';
-import type { EnsureFlowRunDto, UpdateFlowRunDto } from '../types';
+import { FlowAnalyticsService } from '../flow-analytics.service.js';
+import { FlowRuntimeService } from '../flow-runtime.service.js';
+import type { EnsureFlowRunDto, UpdateFlowRunDto } from '../types.js';
 
 @Controller('/flow/runs')
 @UseGuards(StynxAuthGuard, PermissionGuard)

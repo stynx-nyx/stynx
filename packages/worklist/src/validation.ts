@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WorklistInputError } from './errors';
+import { WorklistInputError } from './errors.js';
 
 const uuidSchema = z.string().uuid();
 const textSchema = z.string().trim().min(1);

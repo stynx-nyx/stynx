@@ -3,13 +3,13 @@
  *
  * @packageDocumentation
  */
-export * from './membership-cache';
-export * from './tenant-context.interceptor';
-export * from './tenant-system-operation.sink';
-export * from './tenancy.controller';
-export * from './tenancy.module';
-export * from './tenancy.platform-admin.guard';
-export * from './tenancy.service';
-export * from './tokens';
-export * from './types';
-export * from './utils';
+export * from './membership-cache.js';
+export * from './tenant-context.interceptor.js';
+export * from './tenant-system-operation.sink.js';
+export * from './tenancy.controller.js';
+export * from './tenancy.module.js';
+export * from './tenancy.platform-admin.guard.js';
+export * from './tenancy.service.js';
+export * from './tokens.js';
+export * from './types.js';
+export * from './utils.js';

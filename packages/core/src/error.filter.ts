@@ -6,9 +6,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { RequestContext } from './request-context';
-import { StynxError } from './errors';
-import { STYNX_ERROR_TRANSLATOR, type ErrorTranslator } from './tokens';
+import { RequestContext } from './request-context.js';
+import { StynxError } from './errors.js';
+import { STYNX_ERROR_TRANSLATOR, type ErrorTranslator } from './tokens.js';
 
 interface ResponseLike {
   status(statusCode: number): ResponseLike;

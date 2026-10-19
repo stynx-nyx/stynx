@@ -16,7 +16,7 @@ import type {
   StartedRedisHandle,
   TestAppContext,
   TestSqlStep,
-} from './types';
+} from './types.js';
 
 async function applySqlSteps(client: StynxPgClient, steps: TestSqlStep[]): Promise<void> {
   for (const step of steps) {

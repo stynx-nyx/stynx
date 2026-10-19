@@ -2,15 +2,15 @@ import { createHash } from 'node:crypto';
 import { DOMParser } from '@xmldom/xmldom';
 import type { Element, Node } from '@xmldom/xmldom';
 import { SignedXml } from 'xml-crypto';
-import type { Reference, SignedXmlOptions } from 'xml-crypto/lib/types';
-import { XMLDSIG_ALGORITHMS } from './c14n';
+import type { Reference, SignedXmlOptions } from 'xml-crypto';
+import { XMLDSIG_ALGORITHMS } from './c14n.js';
 import type {
   XmlDSigPublicKey,
   XmlDSigReferenceMismatch,
   XmlDSigVerifyOptions,
   XmlDSigVerifyResult,
-} from './types';
-import { XmlDSigVerificationError } from './types';
+} from './types.js';
+import { XmlDSigVerificationError } from './types.js';
 
 const SIGNATURE_PATTERN =
   /<(?:\w+:)?Signature\b[\s\S]*?<\/(?:\w+:)?Signature>/gu;

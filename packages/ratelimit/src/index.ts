@@ -3,13 +3,13 @@
  *
  * @packageDocumentation
  */
-export * from './constants';
-export * from './decorators';
-export * from './metrics';
-export * from './pg-rate-limit.store';
-export * from './rate-limit-policy.service';
-export * from './rate-limit.guard';
-export * from './rate-limit.module';
-export * from './redis-rate-limit.store';
-export * from './request-context';
-export * from './types';
+export * from './constants.js';
+export * from './decorators.js';
+export * from './metrics.js';
+export * from './pg-rate-limit.store.js';
+export * from './rate-limit-policy.service.js';
+export * from './rate-limit.guard.js';
+export * from './rate-limit.module.js';
+export * from './redis-rate-limit.store.js';
+export * from './request-context.js';
+export * from './types.js';

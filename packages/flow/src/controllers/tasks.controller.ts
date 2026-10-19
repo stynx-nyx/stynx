@@ -2,8 +2,8 @@ import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/co
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, RateLimit } from '@stynx-nyx/backend';
 import { Idempotent } from '@stynx-nyx/idempotency';
-import { FlowRuntimeService } from '../flow-runtime.service';
-import type { FlowTaskActionDto, FlowTaskAssignmentDto, FlowTaskNoteDto } from '../types';
+import { FlowRuntimeService } from '../flow-runtime.service.js';
+import type { FlowTaskActionDto, FlowTaskAssignmentDto, FlowTaskNoteDto } from '../types.js';
 
 @Controller('/flow/tasks')
 @UseGuards(StynxAuthGuard, PermissionGuard)

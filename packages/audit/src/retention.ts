@@ -1,4 +1,4 @@
-import type { AuditDetachPlan } from './types';
+import type { AuditDetachPlan } from './types.js';
 
 export interface AuditPartitionCandidate {
   partitionName: string;

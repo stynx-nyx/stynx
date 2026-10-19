@@ -1,11 +1,11 @@
 import { DynamicModule, Module, type Provider } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { STYNX_IDEMPOTENCY_BACKEND, STYNX_IDEMPOTENCY_METRICS, STYNX_IDEMPOTENCY_OPTIONS, STYNX_IDEMPOTENCY_STORE } from './constants';
-import { DatabaseIdempotencyStore } from './database-idempotency.store';
-import { IdempotencyInterceptor } from './idempotency.interceptor';
-import { InMemoryIdempotencyMetrics } from './metrics';
-import { RedisIdempotencyBackend } from './redis-idempotency.backend';
-import type { IdempotencyBackend, IdempotencyInterceptorOptions, IdempotencyMetricsSink, IdempotencyStore } from './types';
+import { STYNX_IDEMPOTENCY_BACKEND, STYNX_IDEMPOTENCY_METRICS, STYNX_IDEMPOTENCY_OPTIONS, STYNX_IDEMPOTENCY_STORE } from './constants.js';
+import { DatabaseIdempotencyStore } from './database-idempotency.store.js';
+import { IdempotencyInterceptor } from './idempotency.interceptor.js';
+import { InMemoryIdempotencyMetrics } from './metrics.js';
+import { RedisIdempotencyBackend } from './redis-idempotency.backend.js';
+import type { IdempotencyBackend, IdempotencyInterceptorOptions, IdempotencyMetricsSink, IdempotencyStore } from './types.js';
 
 export interface StynxIdempotencyModuleOptions extends IdempotencyInterceptorOptions {
   store?: IdempotencyStore;

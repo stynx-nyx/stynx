@@ -2,7 +2,7 @@ import type {
   RateLimitDecisionContext,
   RateLimitSqlExecutor,
   RateLimitStore,
-} from './types';
+} from './types.js';
 
 function toRows<T>(result: { rows: T[] } | T[]): T[] {
   return Array.isArray(result) ? result : result.rows;

@@ -12,10 +12,10 @@ import type {
   IntegrationContext,
   IntegrationTelemetryEvent,
   RetryPolicy,
-} from './types';
+} from './types.js';
 
-export * from './types';
-export * from './webhook-signature';
+export * from './types.js';
+export * from './webhook-signature.js';
 
 const DEFAULT_RETRY_POLICY: RetryPolicy = {
   maxAttempts: 1,

@@ -1,8 +1,8 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext, StynxError } from '@stynx-nyx/core';
-import { ErrorTranslatorService } from './error-translator.service';
-import { i18nTenantProofPort, runWithI18nHttpContext } from './http-context';
+import { ErrorTranslatorService } from './error-translator.service.js';
+import { i18nTenantProofPort, runWithI18nHttpContext } from './http-context.js';
 
 interface ResponseLike {
   status(statusCode: number): ResponseLike;

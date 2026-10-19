@@ -4,10 +4,10 @@ import {
   reconciliationRequest,
   reconciliationResult,
   reconciliationSortInstant,
-} from './reconciliation';
-import { domainErrorContext } from './domain-error-context';
-import { classifyDomainOutcome, domainFailureCode } from './domain-outcome';
-import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection';
+} from './reconciliation.js';
+import { domainErrorContext } from './domain-error-context.js';
+import { classifyDomainOutcome, domainFailureCode } from './domain-outcome.js';
+import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection.js';
 import {
   cloneRange,
   rangeCreation,
@@ -16,7 +16,7 @@ import {
   rangeCancellation,
   rangeConflict,
   rangeNotFound,
-} from './range-administration';
+} from './range-administration.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { HttpException, UnprocessableEntityException } from '@nestjs/common';
@@ -26,28 +26,28 @@ import {
   OfflineSyncNumberingOutcome,
   OfflineSyncRangeUnavailableError,
   OfflineSyncReservationReplayError,
-} from './errors';
-import { pageOf, rangeUnavailableReason, reservationFingerprint, sortInstantOf } from './listing';
+} from './errors.js';
+import { pageOf, rangeUnavailableReason, reservationFingerprint, sortInstantOf } from './listing.js';
 import {
   applyReplayResponse,
   batchContextFingerprint,
   captureReplayableHeaders,
   transportCompositeKey,
   transportFingerprint,
-} from './transport';
-import { verifyOfflineSyncPayloadHash } from './payload-integrity';
-import { prepareOfflineSyncItem } from './pre-apply';
+} from './transport.js';
+import { verifyOfflineSyncPayloadHash } from './payload-integrity.js';
+import { prepareOfflineSyncItem } from './pre-apply.js';
 import {
   activeReservationError,
   legacyReservation,
   reservationShiftScope,
-} from './reservation-admission';
+} from './reservation-admission.js';
 import {
   boundedConsumerAttributes,
   executionStynxContext,
   stynxContextOf,
   withoutResolution,
-} from './stynx-context';
+} from './stynx-context.js';
 import type {
   CreateNumberingRangeInput,
   CancelNumberingRangeInput,
@@ -98,7 +98,7 @@ import type {
   SyncConflictRecord,
   SyncItemReceiptRecord,
   SyncQueueItemRecord,
-} from './types';
+} from './types.js';
 
 interface MemoryMutationFrame {
   tenantId: string;
@@ -988,7 +988,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     input: ResolveSyncConflictInput,
     now: string,
     port: OfflineSyncConflictResolver,
-    eventPort?: import('./types').OfflineSyncEventPort,
+    eventPort?: import('./types.js').OfflineSyncEventPort,
   ): Promise<SyncConflict> {
     const nested = this.mutationContext.getStore() !== undefined;
 
@@ -1010,7 +1010,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     input: ResolveSyncConflictInput,
     now: string,
     port: OfflineSyncConflictResolver,
-    eventPort?: import('./types').OfflineSyncEventPort,
+    eventPort?: import('./types.js').OfflineSyncEventPort,
   ): Promise<SyncConflict> {
     const frame = this.mutationContext.getStore()!;
     const key = this.key(scope.tenantId, id);

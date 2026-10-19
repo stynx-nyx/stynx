@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
-import { OfflineSyncConfigurationError, OfflineSyncError } from './errors';
-import { canonicalPayloadHash } from './listing';
+import { OfflineSyncConfigurationError, OfflineSyncError } from './errors.js';
+import { canonicalPayloadHash } from './listing.js';
 import type {
   CTG9SyncBatchItemInput,
   OfflineSyncItemContext,
   OfflineSyncPayloadHashPort,
-} from './types';
+} from './types.js';
 
 function invalid(): never {
   throw new OfflineSyncError(

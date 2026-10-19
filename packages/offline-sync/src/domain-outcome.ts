@@ -3,14 +3,14 @@ import {
   OfflineSyncConfigurationError,
   OfflineSyncError,
   OfflineSyncUpgradeRequiredError,
-} from './errors';
-import { canonicalOfflineSyncPayload } from './payload-integrity';
+} from './errors.js';
+import { canonicalOfflineSyncPayload } from './payload-integrity.js';
 import type {
   CTG9SyncBatchItemInput,
   OfflineSyncDomainOutcome,
   OfflineSyncDomainOutcomeClassifier,
   OfflineSyncItemContext,
-} from './types';
+} from './types.js';
 
 function closedData(value: unknown, names: readonly string[]): value is Record<string, unknown> {
   if (!value || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype)

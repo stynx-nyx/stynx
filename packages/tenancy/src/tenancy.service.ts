@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
-import { MembershipAccessCache } from './membership-cache';
+import { MembershipAccessCache } from './membership-cache.js';
 import {
   STYNX_TENANT_MEMBERSHIP_CACHE,
   STYNX_TENANT_ARCHIVE_EXPORTER,
@@ -12,7 +12,7 @@ import {
   type TenantInviteSender,
   type TenantPrefixProvisioner,
   type TenantPurgeDelegate,
-} from './tokens';
+} from './tokens.js';
 import type {
   ArchiveTenantResult,
   ProvisionTenantInput,
@@ -23,8 +23,8 @@ import type {
   TenantDetail,
   TenantSummary,
   UpdateTenantInput,
-} from './types';
-import { createUuidV7 } from './utils';
+} from './types.js';
+import { createUuidV7 } from './utils.js';
 
 interface TenantRow {
   id: string;

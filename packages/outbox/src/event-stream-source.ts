@@ -3,7 +3,7 @@ import {
   OutboxClockAdmissionTimeoutError,
   OutboxClockAmbientTransactionError,
   OutboxEventTransactionError,
-} from './errors';
+} from './errors.js';
 
 export interface OutboxStreamScope {
   tenantId: string;

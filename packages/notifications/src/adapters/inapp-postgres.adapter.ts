@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
-import type { ChannelAdapter, ChannelSendInput, ChannelSendResult } from './channel-adapter';
+import type { ChannelAdapter, ChannelSendInput, ChannelSendResult } from './channel-adapter.js';
 
 /**
  * In-app channel adapter. Persists directly to `notifications.inbox_items` — there is

@@ -1,5 +1,5 @@
-import { interpolate, sha256Hex } from './pdf-renderer';
-import type { PdfRenderBackend } from './types';
+import { interpolate, sha256Hex } from './pdf-renderer.js';
+import type { PdfRenderBackend } from './types.js';
 
 export function createFixturePdfBackend(): PdfRenderBackend {
   return {

@@ -1,15 +1,15 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { STYNX_ERROR_TRANSLATOR } from '@stynx-nyx/core';
-import { CatalogService } from './catalog.service';
-import { ErrorTranslatorService } from './error-translator.service';
-import { I18nAdminService } from './i18n-admin.service';
-import { I18nController } from './i18n.controller';
-import { LocalizedErrorFilter } from './localized-error.filter';
-import { LocaleInterceptor } from './locale.interceptor';
-import { LocaleService } from './locale.service';
-import { STYNX_I18N_OPTIONS } from './tokens';
-import type { StynxI18nModuleOptions } from './types';
+import { CatalogService } from './catalog.service.js';
+import { ErrorTranslatorService } from './error-translator.service.js';
+import { I18nAdminService } from './i18n-admin.service.js';
+import { I18nController } from './i18n.controller.js';
+import { LocalizedErrorFilter } from './localized-error.filter.js';
+import { LocaleInterceptor } from './locale.interceptor.js';
+import { LocaleService } from './locale.service.js';
+import { STYNX_I18N_OPTIONS } from './tokens.js';
+import type { StynxI18nModuleOptions } from './types.js';
 
 @Module({})
 export class StynxI18nModule {

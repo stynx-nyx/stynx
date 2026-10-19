@@ -6,10 +6,10 @@ import {
   Optional,
 } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
-import type { RequestLike } from '../common/request-context';
-import { CommittedCommandResponse } from '../transactional-command/transactional-command';
-import { DefaultSlaCategoryResolver } from './default-sla-category.resolver';
-import { LoggerSlaEventSink } from './logger-sla-event.sink';
+import type { RequestLike } from '../common/request-context.js';
+import { CommittedCommandResponse } from '../transactional-command/transactional-command.js';
+import { DefaultSlaCategoryResolver } from './default-sla-category.resolver.js';
+import { LoggerSlaEventSink } from './logger-sla-event.sink.js';
 import type {
   SlaAggregateEvent,
   SlaCategory,
@@ -17,7 +17,7 @@ import type {
   SlaEventSink,
   SlaMonitorInterceptorOptions,
   SlaSampleEvent,
-} from './types';
+} from './types.js';
 
 const DEFAULT_OPTIONS: Required<
   Pick<SlaMonitorInterceptorOptions, 'aggregateEvery' | 'windowSize'>

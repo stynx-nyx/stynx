@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
-import { WorklistNotFoundError } from './errors';
+import { WorklistNotFoundError } from './errors.js';
 import {
   QUEUE_COLUMNS,
   WORKER_STATE_COLUMNS,
@@ -8,8 +8,8 @@ import {
   mapWorkerStateRow,
   pageLimitOffset,
   type WorklistRow,
-} from './row-utils';
-import { mapWorklistSqlError } from './sql-errors';
+} from './row-utils.js';
+import { mapWorklistSqlError } from './sql-errors.js';
 import type {
   CreateWorklistQueueInput,
   SetWorklistWorkerStateInput,
@@ -17,14 +17,14 @@ import type {
   WorklistPage,
   WorklistQueueRecord,
   WorklistWorkerStateRecord,
-} from './types';
+} from './types.js';
 import {
   createQueueSchema,
   pageQuerySchema,
   parseWorklistInput,
   updateQueueSchema,
   workerStateSchema,
-} from './validation';
+} from './validation.js';
 
 @Injectable()
 export class WorklistQueuesService {

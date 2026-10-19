@@ -6,8 +6,8 @@ import {
   type RedisModules,
   type RedisScripts,
 } from 'redis';
-import { STYNX_AUTH_OPTIONS } from './tokens';
-import type { PermissionCacheBackend, PermissionCacheRecord, ResolvedStynxAuthModuleOptions } from './types';
+import { STYNX_AUTH_OPTIONS } from './tokens.js';
+import type { PermissionCacheBackend, PermissionCacheRecord, ResolvedStynxAuthModuleOptions } from './types.js';
 
 /**
  * Client type for the RESP2-pinned connection created below. node-redis 6

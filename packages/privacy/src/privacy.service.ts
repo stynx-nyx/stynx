@@ -4,16 +4,16 @@ import { ModuleRef } from '@nestjs/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
 import JSZip from 'jszip';
 import { z } from 'zod';
-import { requirePrivacySystemContext, requirePrivacyTenantContext } from './privacy-context';
-import { UnconfiguredPrivacyCognitoAdmin } from './unconfigured-identity';
-import { PiiMapService } from './pii-map.service';
-import { generateRopaMarkdown, type RopaMetadata } from './ropa';
-import { PrivacyConfigurationError, PrivacyValidationError } from './errors';
+import { requirePrivacySystemContext, requirePrivacyTenantContext } from './privacy-context.js';
+import { UnconfiguredPrivacyCognitoAdmin } from './unconfigured-identity.js';
+import { PiiMapService } from './pii-map.service.js';
+import { generateRopaMarkdown, type RopaMetadata } from './ropa.js';
+import { PrivacyConfigurationError, PrivacyValidationError } from './errors.js';
 import {
   STYNX_PRIVACY_COGNITO_ADMIN,
   STYNX_PRIVACY_OBJECT_STORE,
   STYNX_PRIVACY_OPTIONS,
-} from './tokens';
+} from './tokens.js';
 import type {
   PrivacyCognitoAdmin,
   PrivacyErasureRequest,
@@ -26,7 +26,7 @@ import type {
   PrivacyRetentionResult,
   PrivacyRule,
   StynxPrivacyModuleOptions,
-} from './types';
+} from './types.js';
 
 interface TableSnapshot {
   table: string;

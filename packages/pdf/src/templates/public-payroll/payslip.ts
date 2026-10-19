@@ -1,7 +1,7 @@
-import { FixedLayoutDocumentBuilder } from '../../fixed-layout';
-import { truncatePdfText } from '../../fixed-layout/text';
-import { sha256Hex } from '../../pdf-renderer';
-import type { PdfEvidenceInput, PublicPayslipDocument } from './types';
+import { FixedLayoutDocumentBuilder } from '../../fixed-layout/index.js';
+import { truncatePdfText } from '../../fixed-layout/text.js';
+import { sha256Hex } from '../../pdf-renderer.js';
+import type { PdfEvidenceInput, PublicPayslipDocument } from './types.js';
 
 export async function renderPublicPayslipPdf(document: PublicPayslipDocument): Promise<Uint8Array> {
   const builder = await FixedLayoutDocumentBuilder.create({

@@ -1,13 +1,13 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
-import { STYNX_RATE_LIMIT_OPTIONS } from './constants';
+import { STYNX_RATE_LIMIT_OPTIONS } from './constants.js';
 import type {
   RateLimitGuardOptions,
   RateLimitMetadata,
   RateLimitPolicyResolver,
   ResolvedRateLimitPolicy,
-} from './types';
-import type { RequestLike } from './request-context';
+} from './types.js';
+import type { RequestLike } from './request-context.js';
 
 interface ConfigRow {
   value: {

@@ -7,6 +7,6 @@
  *
  * @packageDocumentation
  */
-export * from './ports';
-export * from './runtime';
-export * from './types';
+export * from './ports.js';
+export * from './runtime.js';
+export * from './types.js';

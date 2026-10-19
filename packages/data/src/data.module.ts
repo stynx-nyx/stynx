@@ -1,18 +1,18 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { z } from 'zod';
-import { resolveAppRoleName } from './app-role';
-import { Database } from './database';
-import { StynxMigrationRunner } from './migration-runner';
-import { StynxPoolRegistry } from './pools';
+import { resolveAppRoleName } from './app-role.js';
+import { Database } from './database.js';
+import { StynxMigrationRunner } from './migration-runner.js';
+import { StynxPoolRegistry } from './pools.js';
 import {
   STYNX_DATABASE,
   STYNX_DATA_METRICS,
   STYNX_DATA_OPTIONS,
   type StynxDataModuleOptions,
-} from './tokens';
+} from './tokens.js';
 
-export type { StynxDataModuleOptions } from './tokens';
+export type { StynxDataModuleOptions } from './tokens.js';
 
 @Module({})
 export class StynxDataModule {

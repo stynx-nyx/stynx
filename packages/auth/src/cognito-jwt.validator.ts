@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { STYNX_AUTH_OPTIONS } from './tokens';
-import { headerToString } from './utils';
-import type { CognitoAccessTokenClaims, ResolvedStynxAuthModuleOptions } from './types';
+import { STYNX_AUTH_OPTIONS } from './tokens.js';
+import { headerToString } from './utils.js';
+import type { CognitoAccessTokenClaims, ResolvedStynxAuthModuleOptions } from './types.js';
 
 export const joseLoader = {
   load: () => import('jose'),

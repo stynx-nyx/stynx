@@ -3,14 +3,14 @@
  *
  * @packageDocumentation
  */
-export * from './constants';
-export * from './database-idempotency.store';
-export * from './decorators';
-export * from './idempotency.interceptor';
-export * from './idempotency.module';
-export * from './metrics';
-export * from './pg-idempotency.store';
-export * from './redis-idempotency.backend';
-export * from './request-context';
-export * from './types';
-export * from './transactional-idempotency.store';
+export * from './constants.js';
+export * from './database-idempotency.store.js';
+export * from './decorators.js';
+export * from './idempotency.interceptor.js';
+export * from './idempotency.module.js';
+export * from './metrics.js';
+export * from './pg-idempotency.store.js';
+export * from './redis-idempotency.backend.js';
+export * from './request-context.js';
+export * from './types.js';
+export * from './transactional-idempotency.store.js';

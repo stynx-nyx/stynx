@@ -15,7 +15,7 @@ import {
   type WebhookVerificationOptions,
   type WebhookVerificationResult,
 } from '@stynx-nyx/integration-adapter';
-import { STYNX_WEBHOOK_SIGNATURE_OPTIONS } from './webhook-signature.tokens';
+import { STYNX_WEBHOOK_SIGNATURE_OPTIONS } from './webhook-signature.tokens.js';
 
 export interface WebhookSignatureRequest extends WebhookVerificationInput {
   [key: string]: unknown;

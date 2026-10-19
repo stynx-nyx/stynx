@@ -1,7 +1,7 @@
 import type { Database } from '@stynx-nyx/data';
-import { OfflineSyncUpgradeRequiredError } from './errors';
-import { decodeCursor, finishPage, listDefaultLimit, pgSortInstant } from './listing';
-import { splitStynxContext } from './stynx-context';
+import { OfflineSyncUpgradeRequiredError } from './errors.js';
+import { decodeCursor, finishPage, listDefaultLimit, pgSortInstant } from './listing.js';
+import { splitStynxContext } from './stynx-context.js';
 import type {
   ListSyncBatchReceiptsInput,
   ListSyncConflictActionsInput,
@@ -17,7 +17,7 @@ import type {
   SyncItemReceiptRecord,
   SyncQueueItemRecord,
   TrustedOfflineSyncScope,
-} from './types';
+} from './types.js';
 
 type Sorted = { sort_at: string };
 const iso = (value: Date | string): string => new Date(value).toISOString();

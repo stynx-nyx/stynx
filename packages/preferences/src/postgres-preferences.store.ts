@@ -7,7 +7,7 @@ import type {
   PreferencesStore,
   StoredSubjectPreferences,
   TrustedPreferenceScope,
-} from './types';
+} from './types.js';
 interface Row {
   tenant_id: string;
   subject_id: string;

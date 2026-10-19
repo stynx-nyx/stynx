@@ -16,8 +16,8 @@ import { RequestContext } from '@stynx-nyx/core';
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit } from '@stynx-nyx/backend';
 import { Idempotent, NoIdempotent } from '@stynx-nyx/idempotency';
-import { OfflineSyncConfigurationError, OfflineSyncError } from './errors';
-import { OfflineSyncService } from './offline-sync.service';
+import { OfflineSyncConfigurationError, OfflineSyncError } from './errors.js';
+import { OfflineSyncService } from './offline-sync.service.js';
 import type {
   CancelNumberingReservationInput,
   CTG9ReserveNumberingInput,
@@ -25,7 +25,7 @@ import type {
   ResolveSyncConflictInput,
   ReconcileNumberingInput,
   SettleNumberingInput,
-} from './types';
+} from './types.js';
 
 const identityKeys = new Set([
   'tenantId',

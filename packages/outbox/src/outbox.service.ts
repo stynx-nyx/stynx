@@ -6,7 +6,7 @@ import {
 } from '@stynx-nyx/data';
 import { createHash } from 'node:crypto';
 import type { Transaction } from '@stynx-nyx/data';
-import { FixedIntervalBackoffPolicy } from './backoff';
+import { FixedIntervalBackoffPolicy } from './backoff.js';
 import {
   DEFAULT_OUTBOX_ACK_TABLE,
   DEFAULT_OUTBOX_DISPATCH_BATCH_SIZE,
@@ -17,7 +17,7 @@ import {
   STYNX_OUTBOX_DISPATCHER,
   STYNX_OUTBOX_METRICS,
   STYNX_OUTBOX_OPTIONS,
-} from './constants';
+} from './constants.js';
 import {
   OutboxAckQuarantineUnavailableError,
   OutboxAlreadyEnqueuedError,
@@ -34,14 +34,14 @@ import {
   OutboxRetirementInputError,
   OutboxRetirementConflictError,
   OutboxConsumerStorageCutoverUnsupportedError,
-} from './errors';
+} from './errors.js';
 import {
   assertQualifiedIdentifier,
   errorMessage,
   isUniqueViolation,
   outboxColumns,
   toRows,
-} from './row-mapper';
+} from './row-mapper.js';
 import type {
   OutboxAckInput,
   OutboxBackoffPolicy,
@@ -73,7 +73,7 @@ import type {
   OutboxDispatchFilter,
   OutboxEventRetirement,
   OutboxEventRetirementInput,
-} from './types';
+} from './types.js';
 
 const EVENT_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const DELIVERY_STATUSES: readonly OutboxEventDeliveryStatus[] = [

@@ -3,27 +3,27 @@
  *
  * @packageDocumentation
  */
-import { sha256Hex } from './signature.service';
-import type { SignatureBackend, SignatureCertificateRef, SignatureEvidence } from './types';
-import { markMockSignatureBackend } from './backend-identity';
+import { sha256Hex } from './signature.service.js';
+import type { SignatureBackend, SignatureCertificateRef, SignatureEvidence } from './types.js';
+import { markMockSignatureBackend } from './backend-identity.js';
 
-export * from './errors';
-export * from './cms-trust-verifier';
-export * from './readiness';
-export * from './manifest';
-export * from './withdrawal';
-export * from './digest';
-export * from './govbr-sandbox';
-export * from './http-provider-client';
-export * from './pades';
-export * from './provider-backend';
-export * from './sequential';
-export * from './signature.module';
-export * from './signature.service';
-export * from './tokens';
-export * from './trust-profile-set';
-export * from './types';
-export * from './xmldsig';
+export * from './errors.js';
+export * from './cms-trust-verifier.js';
+export * from './readiness.js';
+export * from './manifest.js';
+export * from './withdrawal.js';
+export * from './digest.js';
+export * from './govbr-sandbox.js';
+export * from './http-provider-client.js';
+export * from './pades.js';
+export * from './provider-backend.js';
+export * from './sequential.js';
+export * from './signature.module.js';
+export * from './signature.service.js';
+export * from './tokens.js';
+export * from './trust-profile-set.js';
+export * from './types.js';
+export * from './xmldsig/index.js';
 
 /**
  * Creates a deterministic in-memory signature backend for tests and local demos.

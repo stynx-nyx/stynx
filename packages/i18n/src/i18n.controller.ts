@@ -3,8 +3,8 @@ import { ModuleRef } from '@nestjs/core';
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { RequestContext } from '@stynx-nyx/core';
 import { NoIdempotent } from '@stynx-nyx/idempotency';
-import { I18nAdminService } from './i18n-admin.service';
-import type { TenantOverrideUpdateInput } from './types';
+import { I18nAdminService } from './i18n-admin.service.js';
+import type { TenantOverrideUpdateInput } from './types.js';
 
 @Controller('_tenancy/i18n/overrides')
 @UseGuards(StynxAuthGuard, PermissionGuard)

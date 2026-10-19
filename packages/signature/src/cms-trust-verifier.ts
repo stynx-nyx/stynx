@@ -8,18 +8,18 @@ import {
   SignatureTrustUnavailableError,
   SignatureCapabilityError,
   SignatureEvidenceMismatchError,
-} from './errors';
-import { sha256 as sha256Hex } from './digest';
+} from './errors.js';
+import { sha256 as sha256Hex } from './digest.js';
 import {
   readPdfTrustEvidence,
   readSelectedSignatureDictionary,
   readLtaPdfEvidence,
-} from './pdf-trust-evidence';
+} from './pdf-trust-evidence.js';
 import type {
   SignatureQualificationRule,
   SignatureTrustVerifier,
   SignatureTrustProof,
-} from './types';
+} from './types.js';
 
 const branded = new WeakSet<object>();
 export function isCmsTrustVerifier(value: object): boolean {

@@ -1,11 +1,11 @@
-import { consumptionReadInstant } from './consumption-projection';
+import { consumptionReadInstant } from './consumption-projection.js';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { OfflineSyncConfigurationError, OfflineSyncError } from './errors';
+import { OfflineSyncConfigurationError, OfflineSyncError } from './errors.js';
 import {
   STYNX_OFFLINE_SYNC_CONTEXT,
   STYNX_OFFLINE_SYNC_OPTIONS,
   STYNX_OFFLINE_SYNC_STORE,
-} from './tokens';
+} from './tokens.js';
 import type {
   NumberingRange,
   CreateNumberingRangeInput,
@@ -53,16 +53,16 @@ import type {
   SyncConflictRecord,
   SyncItemReceiptRecord,
   SyncQueueItemRecord,
-} from './types';
-import { canonicalPayloadHash, listDefaultLimit, listMaxLimit } from './listing';
-import { OFFLINE_SYNC_NO_SHIFT } from './numbering';
+} from './types.js';
+import { canonicalPayloadHash, listDefaultLimit, listMaxLimit } from './listing.js';
+import { OFFLINE_SYNC_NO_SHIFT } from './numbering.js';
 import {
   rangeCreation,
   rangeIdentity,
   rangeList,
   rangeCancellation,
   rangeNotFound,
-} from './range-administration';
+} from './range-administration.js';
 
 const queueStatuses = ['received', 'applied', 'conflict', 'rejected', 'pending'];
 

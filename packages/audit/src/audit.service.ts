@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { Injectable, Logger, Optional, Inject } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
-import { planAuditDetach } from './retention';
+import { planAuditDetach } from './retention.js';
 import {
   STYNX_AUDIT_ARCHIVE_STORE,
   STYNX_AUDIT_CLOCK,
@@ -14,7 +14,7 @@ import {
   type AuditArchiveStore,
   type AuditClock,
   type AuditDumpRunner,
-} from './tokens';
+} from './tokens.js';
 import type {
   AuditDetachPlan,
   AuditLogItem,
@@ -23,7 +23,7 @@ import type {
   AuditLogCursor,
   ChainVerificationResult,
   StynxAuditModuleOptions,
-} from './types';
+} from './types.js';
 
 interface AuditPartitionRow {
   partition_name: string;

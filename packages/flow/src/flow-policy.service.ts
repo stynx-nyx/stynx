@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Database, type Transaction } from '@stynx-nyx/data';
-import { FlowDesignService } from './flow-design.service';
-import type { FlowJsonObject } from './types';
-import { parseDto, policyEvaluationSchema } from './validation';
+import { FlowDesignService } from './flow-design.service.js';
+import type { FlowJsonObject } from './types.js';
+import { parseDto, policyEvaluationSchema } from './validation.js';
 
 @Injectable()
 export class FlowPolicyService {

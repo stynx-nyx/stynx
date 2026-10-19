@@ -1,4 +1,4 @@
-import type { StorageVerifierTransaction } from './storage-contract';
+import type { StorageVerifierTransaction } from './storage-contract.js';
 
 /** Stable catalog identities, without OIDs, rows, secret settings or sequence values. */
 export interface StorageCatalogEntry {

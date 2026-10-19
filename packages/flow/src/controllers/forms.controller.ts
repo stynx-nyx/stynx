@@ -12,14 +12,14 @@ import {
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit, NoIdempotent } from '@stynx-nyx/backend';
 import { Idempotent } from '@stynx-nyx/idempotency';
-import { FlowFormsService } from '../flow-forms.service';
+import { FlowFormsService } from '../flow-forms.service.js';
 import type {
   CreateFlowFillDto,
   CreateFlowFormDto,
   CreateFlowQuestionDto,
   CreateFlowWaiverDto,
   UpdateFlowFormDto,
-} from '../types';
+} from '../types.js';
 
 @Controller('/flow/forms')
 @UseGuards(StynxAuthGuard, PermissionGuard)

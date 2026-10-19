@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Tenant-isolated NestJS numbering reservation and offline sync services for stynx",
+  "type": "module",
   "main": "dist/offline-sync/src/index.js",
   "types": "dist/offline-sync/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/offline-sync/src/index.d.ts",
-      "require": "./dist/offline-sync/src/index.js",
+      "import": "./dist/offline-sync/src/index.js",
       "default": "./dist/offline-sync/src/index.js"
     }
   },

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { buildProgram } from './cli';
+import { buildProgram } from './cli.js';
 
 async function main(): Promise<void> {
   await buildProgram().parseAsync(process.argv);

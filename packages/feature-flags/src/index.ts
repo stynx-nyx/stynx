@@ -11,9 +11,9 @@ import type {
   FlagEvaluation,
   FlagSet,
   FlagValue,
-} from './types';
+} from './types.js';
 
-export * from './types';
+export * from './types.js';
 
 const FLAG_NAME_PATTERN = /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$/;
 

@@ -1,6 +1,6 @@
 import { Inject, Injectable, type NestMiddleware, Optional } from '@nestjs/common';
-import { STYNX_LOGGING_OPTIONS, type StynxLoggingOptions } from './tokens';
-import { StynxLogger } from './logger.service';
+import { STYNX_LOGGING_OPTIONS, type StynxLoggingOptions } from './tokens.js';
+import { StynxLogger } from './logger.service.js';
 
 export interface RequestLike {
   method?: string;

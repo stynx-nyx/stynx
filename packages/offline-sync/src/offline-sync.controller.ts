@@ -2,14 +2,14 @@ import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { Audit } from '@stynx-nyx/backend';
 import { Idempotent } from '@stynx-nyx/idempotency';
-import { OfflineSyncError } from './errors';
-import { OfflineSyncService } from './offline-sync.service';
+import { OfflineSyncError } from './errors.js';
+import { OfflineSyncService } from './offline-sync.service.js';
 import type {
   CancelNumberingReservationInput,
   ReserveNumberingInput,
   ResolveSyncConflictInput,
   SubmitSyncBatchInput,
-} from './types';
+} from './types.js';
 
 const identityKeys = new Set([
   'tenantId',

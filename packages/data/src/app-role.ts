@@ -1,6 +1,6 @@
 import type { Pool } from 'pg';
-import { AppRoleConfigurationError, type AppRoleProperty } from './errors';
-import type { StynxDataModuleOptions } from './tokens';
+import { AppRoleConfigurationError, type AppRoleProperty } from './errors.js';
+import type { StynxDataModuleOptions } from './tokens.js';
 
 /** Application SQL role created by platform migration `0001_roles.sql` (ADR-OUTBOX-0003 D1). */
 export const DEFAULT_APP_ROLE_NAME = 'stynx_app';

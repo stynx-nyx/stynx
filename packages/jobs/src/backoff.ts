@@ -1,4 +1,4 @@
-import type { BackoffPolicy } from './types';
+import type { BackoffPolicy } from './types.js';
 
 /** Exponential retry delay with full jitter, bounded by the configured ceiling. */
 export function computeBackoffMs(policy: BackoffPolicy, attempt: number, random = Math.random): number {

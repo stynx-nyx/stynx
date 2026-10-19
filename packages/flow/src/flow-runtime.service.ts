@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { FlowAdapterRegistry } from './adapters';
-import { requireObject } from './row-utils';
-import { FlowEffectDispatch } from './internal/runtime/effect-dispatch';
-import { FlowRunLifecycle } from './internal/runtime/run-lifecycle';
-import { FlowRuntimeReadModel } from './internal/runtime/runtime-read-model';
-import { FlowTaskDispatch } from './internal/runtime/task-dispatch';
+import { FlowAdapterRegistry } from './adapters.js';
+import { requireObject } from './row-utils.js';
+import { FlowEffectDispatch } from './internal/runtime/effect-dispatch.js';
+import { FlowRunLifecycle } from './internal/runtime/run-lifecycle.js';
+import { FlowRuntimeReadModel } from './internal/runtime/runtime-read-model.js';
+import { FlowTaskDispatch } from './internal/runtime/task-dispatch.js';
 
 export type FilterInput = Record<string, unknown>;
 

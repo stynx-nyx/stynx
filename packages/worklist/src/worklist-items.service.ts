@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
-import { resolveWorklistDeadline } from './deadline';
-import { WorklistConflictError, WorklistInputError, WorklistNotFoundError } from './errors';
+import { resolveWorklistDeadline } from './deadline.js';
+import { WorklistConflictError, WorklistInputError, WorklistNotFoundError } from './errors.js';
 import {
   EVENT_COLUMNS,
   ITEM_COLUMNS,
@@ -11,7 +11,7 @@ import {
   mapItemRow,
   pageLimitOffset,
   type WorklistRow,
-} from './row-utils';
+} from './row-utils.js';
 import {
   WORKLIST_BUSINESS_CALENDAR,
   WORKLIST_CLOCK,
@@ -19,9 +19,9 @@ import {
   type WorklistBusinessCalendar,
   type WorklistClock,
   type WorklistEventSink,
-} from './ports';
-import { mapWorklistSqlError } from './sql-errors';
-import { WorklistStrategyRegistry } from './strategies';
+} from './ports.js';
+import { mapWorklistSqlError } from './sql-errors.js';
+import { WorklistStrategyRegistry } from './strategies.js';
 import type {
   EnqueueWorkItemInput,
   WorklistCandidate,
@@ -29,15 +29,15 @@ import type {
   WorklistItemRecord,
   WorklistPage,
   WorklistSupervisorOverrideInput,
-} from './types';
+} from './types.js';
 import {
   enqueueWorkItemSchema,
   eventListQuerySchema,
   itemListQuerySchema,
   parseWorklistInput,
   supervisorOverrideSchema,
-} from './validation';
-import { WorklistQueuesService } from './worklist-queues.service';
+} from './validation.js';
+import { WorklistQueuesService } from './worklist-queues.service.js';
 
 interface ItemMutationResult {
   item: WorklistItemRecord;

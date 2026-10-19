@@ -5,14 +5,14 @@
  *
  * @packageDocumentation
  */
-export * from './ack-signature';
-export * from './backoff';
-export * from './constants';
-export * from './errors';
-export * from './event-stream-source';
-export * from './http-outbox-dispatcher';
-export * from './metrics';
-export * from './outbox.module';
-export * from './outbox.service';
-export * from './types';
-export * from './storage';
+export * from './ack-signature.js';
+export * from './backoff.js';
+export * from './constants.js';
+export * from './errors.js';
+export * from './event-stream-source.js';
+export * from './http-outbox-dispatcher.js';
+export * from './metrics.js';
+export * from './outbox.module.js';
+export * from './outbox.service.js';
+export * from './types.js';
+export * from './storage.js';

@@ -13,7 +13,7 @@ import {
   scopes as flowScopes,
   transitionEffects as flowTransitionEffects,
 } from '@stynx-nyx/data';
-import type { FlowJsonObject } from '../../types';
+import type { FlowJsonObject } from '../../types.js';
 
 export type DesignFlowRow = Record<string, unknown>;
 type ColumnMap = Record<string, string>;

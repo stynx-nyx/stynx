@@ -1,10 +1,10 @@
 import { Injectable, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { DEFAULT_BACKOFF_POLICY, DEFAULT_VISIBILITY_TIMEOUT_MS, DEFAULT_WORKER_BATCH_SIZE } from './constants';
-import { computeBackoffMs } from './backoff';
-import { JobsRegistry } from './jobs.registry';
-import { JobsRepository } from './jobs.repository';
-import type { JobExecutionResult, JobRecord, TimerHandle, TimerPort, WorkerOptions } from './types';
+import { DEFAULT_BACKOFF_POLICY, DEFAULT_VISIBILITY_TIMEOUT_MS, DEFAULT_WORKER_BATCH_SIZE } from './constants.js';
+import { computeBackoffMs } from './backoff.js';
+import { JobsRegistry } from './jobs.registry.js';
+import { JobsRepository } from './jobs.repository.js';
+import type { JobExecutionResult, JobRecord, TimerHandle, TimerPort, WorkerOptions } from './types.js';
 
 const nativeTimer: TimerPort = {
   setInterval: (callback, ms) => setInterval(callback, ms),

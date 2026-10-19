@@ -1,8 +1,8 @@
 import { GetParametersByPathCommand, SSMClient, type SSMClientConfig } from '@aws-sdk/client-ssm';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { z, type ZodTypeAny } from 'zod';
-import { ConfigOwnershipViolationError, ConfigurationValidationError } from './errors';
-import { STYNX_CORE_CONFIG, STYNX_CORE_OPTIONS } from './tokens';
+import { ConfigOwnershipViolationError, ConfigurationValidationError } from './errors.js';
+import { STYNX_CORE_CONFIG, STYNX_CORE_OPTIONS } from './tokens.js';
 
 export interface StynxSsmOptions {
   enabled?: boolean;

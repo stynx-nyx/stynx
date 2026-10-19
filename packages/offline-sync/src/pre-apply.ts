@@ -1,11 +1,11 @@
 import type { Transaction } from '@stynx-nyx/data';
-import { OfflineSyncConfigurationError } from './errors';
+import { OfflineSyncConfigurationError } from './errors.js';
 import type {
   CTG9SyncBatchItemInput,
   DurableBatchExecutionOptions,
   OfflineSyncConcurrentPair,
   OfflineSyncItemContext,
-} from './types';
+} from './types.js';
 
 /** Trusted pair witnesses are checked before a handoff can exempt them. */
 export async function prepareOfflineSyncItem(

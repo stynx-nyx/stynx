@@ -17,7 +17,7 @@ import type {
   IdentityVerifyChannelsRequest,
 } from '@stynx-nyx/contracts';
 import { IdentityAdminError } from '@stynx-nyx/contracts';
-import { STYNX_IDENTITY_ADMIN_ADAPTER, STYNX_IDENTITY_LOCAL_SYNC_ADAPTER } from './constants';
+import { STYNX_IDENTITY_ADMIN_ADAPTER, STYNX_IDENTITY_LOCAL_SYNC_ADAPTER } from './constants.js';
 
 function mapIdentityAdminError(error: IdentityAdminError): Error {
   switch (error.code) {

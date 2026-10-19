@@ -1,11 +1,11 @@
 import { DynamicModule, Module, type Provider } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { STYNX_RATE_LIMIT_METRICS, STYNX_RATE_LIMIT_OPTIONS, STYNX_RATE_LIMIT_POLICY, STYNX_RATE_LIMIT_STORE } from './constants';
-import { InMemoryRateLimitMetrics } from './metrics';
-import { DatabaseRateLimitPolicyResolver } from './rate-limit-policy.service';
-import { RateLimitGuard } from './rate-limit.guard';
-import { RedisSlidingWindowRateLimitStore } from './redis-rate-limit.store';
-import type { RateLimitGuardOptions, RateLimitMetricsSink, RateLimitPolicyResolver, RateLimitStore } from './types';
+import { STYNX_RATE_LIMIT_METRICS, STYNX_RATE_LIMIT_OPTIONS, STYNX_RATE_LIMIT_POLICY, STYNX_RATE_LIMIT_STORE } from './constants.js';
+import { InMemoryRateLimitMetrics } from './metrics.js';
+import { DatabaseRateLimitPolicyResolver } from './rate-limit-policy.service.js';
+import { RateLimitGuard } from './rate-limit.guard.js';
+import { RedisSlidingWindowRateLimitStore } from './redis-rate-limit.store.js';
+import type { RateLimitGuardOptions, RateLimitMetricsSink, RateLimitPolicyResolver, RateLimitStore } from './types.js';
 
 export interface StynxRateLimitModuleOptions extends RateLimitGuardOptions {
   store?: RateLimitStore;

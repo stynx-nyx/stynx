@@ -1,4 +1,4 @@
-import type { OutboxBackoffPolicy } from './types';
+import type { OutboxBackoffPolicy } from './types.js';
 
 /**
  * Fixed-interval backoff — every retry waits the same duration regardless of

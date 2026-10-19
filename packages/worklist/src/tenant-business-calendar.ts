@@ -1,5 +1,5 @@
-import { WorklistInputError } from './errors';
-import type { WorklistBusinessCalendar } from './ports';
+import { WorklistInputError } from './errors.js';
+import type { WorklistBusinessCalendar } from './ports.js';
 
 export interface TenantBusinessCalendarSource {
   timezoneForTenant(tenantId: string): Promise<string> | string;

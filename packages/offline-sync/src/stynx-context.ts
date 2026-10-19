@@ -1,10 +1,10 @@
-import { OfflineSyncError } from './errors';
+import { OfflineSyncError } from './errors.js';
 import type {
   DurableBatchExecutionOptions,
   OfflineSyncConsumerAttributes,
   OfflineSyncStynxContext,
   SyncConflict,
-} from './types';
+} from './types.js';
 
 /** Upper bound, in UTF-8 bytes of the JSON serialization, of `consumerAttributes` (ADR-MOBILE-OFFLINE-0003 D3.3). */
 export const OFFLINE_SYNC_CONSUMER_ATTRIBUTES_MAX_BYTES = 4096;

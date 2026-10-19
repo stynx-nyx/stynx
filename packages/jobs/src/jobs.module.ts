@@ -1,12 +1,12 @@
 import { DynamicModule, Module, type Provider } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
-import { STYNX_JOBS_OPTIONS, STYNX_JOBS_REGISTRY } from './constants';
-import { JobsRegistry } from './jobs.registry';
-import { JobsRepository } from './jobs.repository';
-import { JobsService } from './jobs.service';
-import { JobsScheduler } from './jobs.scheduler';
-import { JobsWorker } from './jobs.worker';
-import type { StynxJobsModuleOptions } from './types';
+import { STYNX_JOBS_OPTIONS, STYNX_JOBS_REGISTRY } from './constants.js';
+import { JobsRegistry } from './jobs.registry.js';
+import { JobsRepository } from './jobs.repository.js';
+import { JobsService } from './jobs.service.js';
+import { JobsScheduler } from './jobs.scheduler.js';
+import { JobsWorker } from './jobs.worker.js';
+import type { StynxJobsModuleOptions } from './types.js';
 
 @Module({})
 export class StynxJobsModule {

@@ -8,8 +8,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
 import { and, eq, isNull } from 'drizzle-orm';
-import { bookmarks, bookmarkTags } from '../schema';
-import type { CreateBookmarkTagDto } from '../dto/create-bookmark-tag.dto';
+import { bookmarks, bookmarkTags } from '../schema.js';
+import type { CreateBookmarkTagDto } from '../dto/create-bookmark-tag.dto.js';
 
 @Injectable()
 export class BookmarkTagService {

@@ -6,8 +6,8 @@ import {
   type RedisModules,
   type RedisScripts,
 } from 'redis';
-import { STYNX_RATE_LIMIT_OPTIONS } from './constants';
-import type { RateLimitDecision, RateLimitDecisionContext, RateLimitGuardOptions, RateLimitStore } from './types';
+import { STYNX_RATE_LIMIT_OPTIONS } from './constants.js';
+import type { RateLimitDecision, RateLimitDecisionContext, RateLimitGuardOptions, RateLimitStore } from './types.js';
 
 /**
  * Client type for the RESP2-pinned connection created below. node-redis 6

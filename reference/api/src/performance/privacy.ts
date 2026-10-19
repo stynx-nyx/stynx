@@ -1,5 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
-import type { ReferenceApplicationOptions } from '../bootstrap';
+import type { ReferenceApplicationOptions } from '../bootstrap.js';
 
 /** Explicit mounted root; production guards and reference infrastructure remain active. */
 export async function createReferenceApplication(

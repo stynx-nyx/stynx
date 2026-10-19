@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { Permission, PermissionGuard, ReadOnly, StynxAuthGuard } from '@stynx-nyx/auth';
-import { FlowRuntimeService } from '../flow-runtime.service';
+import { FlowRuntimeService } from '../flow-runtime.service.js';
 
 @Controller('/flow/node-runs')
 @UseGuards(StynxAuthGuard, PermissionGuard)

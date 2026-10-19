@@ -1,5 +1,5 @@
 import type { Principal } from '@stynx-nyx/contracts';
-import type { RequestLike } from '../common/request-context';
+import type { RequestLike } from '../common/request-context.js';
 
 export interface AuditMetadataRedactionContext {
   action: string;

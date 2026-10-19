@@ -1,8 +1,8 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import type { AuditSink } from '@stynx-nyx/contracts';
-import { AuditInterceptor } from './audit.interceptor';
-import { STYNX_AUDIT_METADATA_REDACTION_POLICY, STYNX_AUDIT_SINK } from './constants';
-import type { AuditMetadataRedactionPolicy } from './redaction-policy';
+import { AuditInterceptor } from './audit.interceptor.js';
+import { STYNX_AUDIT_METADATA_REDACTION_POLICY, STYNX_AUDIT_SINK } from './constants.js';
+import type { AuditMetadataRedactionPolicy } from './redaction-policy.js';
 
 export interface StynxAuditModuleOptions {
   sink: AuditSink;

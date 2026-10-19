@@ -1,13 +1,13 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
-import { FlowAdapterRegistry } from '../../adapters';
+import { FlowAdapterRegistry } from '../../adapters.js';
 import {
   assignTaskSchema,
   parseDto,
   taskActionSchema,
   taskNoteSchema,
-} from '../../validation';
+} from '../../validation.js';
 import {
   addTextFilter,
   addUuidFilter,
@@ -18,8 +18,8 @@ import {
   type FlowRow,
   type RuntimeFilterInput,
   type TaskAccessRow,
-} from './runtime-filters';
-import { FlowRuntimeReadModel } from './runtime-read-model';
+} from './runtime-filters.js';
+import { FlowRuntimeReadModel } from './runtime-read-model.js';
 
 @Injectable()
 export class FlowTaskDispatch {

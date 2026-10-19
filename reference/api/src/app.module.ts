@@ -1,6 +1,7 @@
 import { generateKeyPairSync } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Module, UseGuards } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PermissionGuard, StynxAuthGuard, StynxAuthModule } from '@stynx-nyx/auth';
@@ -22,7 +23,7 @@ import {
 import { StynxStorageModule } from '@stynx-nyx/storage';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import { AuditSqlSink, StynxAuditModule as StynxAuditApiModule } from '@stynx-nyx/audit';
-import { SampleModule } from './sample/sample.module';
+import { SampleModule } from './sample/sample.module.js';
 
 function env(name: string, fallback: string): string {
   return process.env[name] ?? fallback;
@@ -50,10 +51,12 @@ function resolveSessionKeySet() {
   return JSON.parse(raw) as ReturnType<typeof buildDefaultKeySet>;
 }
 
+const moduleDir = dirname(fileURLToPath(import.meta.url));
+
 function resolveReferenceMigrationDir(): string {
   for (const candidate of [
-    resolve(__dirname, '../migrations'),
-    resolve(__dirname, '../../migrations'),
+    resolve(moduleDir, '../migrations'),
+    resolve(moduleDir, '../../migrations'),
     resolve(process.cwd(), 'migrations'),
     resolve(process.cwd(), 'reference/api/migrations'),
   ]) {
@@ -65,7 +68,7 @@ function resolveReferenceMigrationDir(): string {
     }
   }
 
-  return resolve(__dirname, '../migrations');
+  return resolve(moduleDir, '../migrations');
 }
 
 async function bootstrapLegacyReferenceMigrationState(

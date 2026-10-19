@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { StynxPgClient } from '@stynx-nyx/data';
-import type { TestSqlStep } from './types';
+import type { TestSqlStep } from './types.js';
 
 export interface LgpdFixtureIds {
   tenantId: string;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { PreferenceValues } from './types';
+import type { PreferenceValues } from './types.js';
 
 const ascii = (max: number) =>
   z

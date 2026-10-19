@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { CatalogService } from '@stynx-nyx/i18n';
-import { NotificationValidationError } from '../errors';
-import type { NotificationTemplate, RenderedContent } from './types';
+import { NotificationValidationError } from '../errors.js';
+import type { NotificationTemplate, RenderedContent } from './types.js';
 
 const MAX_INAPP_TITLE_LENGTH = 120;
 

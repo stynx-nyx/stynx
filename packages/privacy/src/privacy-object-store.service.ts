@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { OnApplicationShutdown } from '@nestjs/common';
 import { StynxObjectStore } from '@stynx-nyx/storage';
-import { STYNX_PRIVACY_OPTIONS } from './tokens';
-import type { PrivacyObjectStore, StynxPrivacyModuleOptions } from './types';
+import { STYNX_PRIVACY_OPTIONS } from './tokens.js';
+import type { PrivacyObjectStore, StynxPrivacyModuleOptions } from './types.js';
 
 @Injectable()
 export class PrivacyObjectStoreService implements PrivacyObjectStore, OnApplicationShutdown {

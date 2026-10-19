@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationTemplateNotFoundError, NotificationValidationError } from '../errors';
-import type { NotificationTemplate, TemplateRegistry } from './types';
+import { NotificationTemplateNotFoundError, NotificationValidationError } from '../errors.js';
+import type { NotificationTemplate, TemplateRegistry } from './types.js';
 
 /**
  * In-process, code-registered template store. Templates are registered at module

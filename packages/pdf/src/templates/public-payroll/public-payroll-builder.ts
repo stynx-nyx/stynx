@@ -1,13 +1,13 @@
-import { validatePdfAStyle } from '../../fixed-layout';
-import type { PdfAStyleValidationResult } from '../../fixed-layout';
-import { payslipEvidenceInput, renderPublicPayslipPdf } from './payslip';
-import { renderPublicYearlyIncomePdf, yearlyIncomeEvidenceInput } from './yearly-income';
+import { validatePdfAStyle } from '../../fixed-layout/index.js';
+import type { PdfAStyleValidationResult } from '../../fixed-layout/index.js';
+import { payslipEvidenceInput, renderPublicPayslipPdf } from './payslip.js';
+import { renderPublicYearlyIncomePdf, yearlyIncomeEvidenceInput } from './yearly-income.js';
 import type {
   PdfEvidenceInput,
   PublicPayrollPdfBuilderOptions,
   PublicPayslipDocument,
   PublicYearlyIncomeDocument,
-} from './types';
+} from './types.js';
 
 export class PublicPayrollPdfBuilder {
   constructor(private readonly options: PublicPayrollPdfBuilderOptions = {}) {}

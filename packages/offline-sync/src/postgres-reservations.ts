@@ -5,16 +5,16 @@ import {
   OfflineSyncRangeUnavailableError,
   OfflineSyncReservationReplayError,
   OfflineSyncUpgradeRequiredError,
-} from './errors';
-import { rangeUnavailableReason, reservationFingerprint } from './listing';
-import { activeReservationError } from './reservation-admission';
+} from './errors.js';
+import { rangeUnavailableReason, reservationFingerprint } from './listing.js';
+import { activeReservationError } from './reservation-admission.js';
 import type {
   CancelNumberingReservationInput,
   CTG9NumberingReservation,
   CTG9ReserveNumberingInput,
   NumberingRange,
   TrustedOfflineSyncScope,
-} from './types';
+} from './types.js';
 
 interface ReservationRow {
   id: string;

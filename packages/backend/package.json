@@ -4,6 +4,7 @@
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "NestJS shared platform modules for stynx",
+  "type": "module",
   "main": "dist/backend/src/index.js",
   "types": "dist/backend/src/index.d.ts",
   "engines": {
@@ -12,7 +13,7 @@
   "exports": {
     ".": {
       "types": "./dist/backend/src/index.d.ts",
-      "require": "./dist/backend/src/index.js",
+      "import": "./dist/backend/src/index.js",
       "default": "./dist/backend/src/index.js"
     }
   },
