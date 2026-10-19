@@ -148,20 +148,20 @@ describe('buildProgram', () => {
         mandatory: option.mandatory,
       })),
     }))).toEqual([
-      { name: 'status', options: [{ flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true }] },
+      { name: 'status', options: [{ flags: '--database-url <url>', description: 'PostgreSQL URL (default: the PG* environment)', defaultValue: undefined, mandatory: false }] },
       { name: 'up', options: [
-        { flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true },
+        { flags: '--database-url <url>', description: 'PostgreSQL URL (default: the PG* environment)', defaultValue: undefined, mandatory: false },
         { flags: '--dry', description: 'Dry-run pending list', defaultValue: false, mandatory: false },
         { flags: '--role-prefix <prefix>', description: 'Product role prefix for the platform roles (default stynx)', defaultValue: undefined, mandatory: false },
       ] },
       { name: 'down', options: [
-        { flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true },
+        { flags: '--database-url <url>', description: 'PostgreSQL URL (default: the PG* environment)', defaultValue: undefined, mandatory: false },
         { flags: '--steps <n>', description: 'How many applied migrations to roll back', defaultValue: '1', mandatory: false },
         { flags: '--dry', description: 'Dry-run rollback list', defaultValue: false, mandatory: false },
         { flags: '--role-prefix <prefix>', description: 'Product role prefix for the platform roles (default stynx)', defaultValue: undefined, mandatory: false },
       ] },
       { name: 'redo', options: [
-        { flags: '--database-url <url>', description: '', defaultValue: undefined, mandatory: true },
+        { flags: '--database-url <url>', description: 'PostgreSQL URL (default: the PG* environment)', defaultValue: undefined, mandatory: false },
         { flags: '--dry', description: 'Dry-run redo plan', defaultValue: false, mandatory: false },
         { flags: '--role-prefix <prefix>', description: 'Product role prefix for the platform roles (default stynx)', defaultValue: undefined, mandatory: false },
       ] },
@@ -226,6 +226,18 @@ describe('buildProgram', () => {
     expect(mocks.migrateUp).toHaveBeenCalledWith(process.cwd(), 'postgres://db', false, { rolePrefix: 'demo' });
     expect(mocks.migrateDown).toHaveBeenCalledWith(process.cwd(), 'postgres://db', 1, false, { rolePrefix: 'demo' });
     expect(mocks.migrateRedo).toHaveBeenCalledWith(process.cwd(), 'postgres://db', false, { rolePrefix: 'demo' });
+  });
+
+  it('connects from the PG* environment when --database-url is omitted (SM-06)', async () => {
+    await runCli(['migrate', 'status']);
+    await runCli(['migrate', 'up', '--role-prefix', 'demo']);
+    await runCli(['migrate', 'down']);
+    await runCli(['migrate', 'redo', '--dry']);
+
+    expect(mocks.migrationStatus).toHaveBeenCalledWith(process.cwd(), undefined);
+    expect(mocks.migrateUp).toHaveBeenCalledWith(process.cwd(), undefined, false, { rolePrefix: 'demo' });
+    expect(mocks.migrateDown).toHaveBeenCalledWith(process.cwd(), undefined, 1, false);
+    expect(mocks.migrateRedo).toHaveBeenCalledWith(process.cwd(), undefined, true);
   });
 
   it('runs audit verification in json, valid-human, and broken-human modes', async () => {
