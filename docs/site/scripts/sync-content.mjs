@@ -638,7 +638,7 @@ writeDoc(
 );
 writeDoc(
   'tools/index.md',
-  '# Tools\n\nWorkspace tooling under `@stynx-internal/*` and, for presets published in the fixed group, `@stynx-nyx/*`: the scaffolder, shared ESLint config, migration linter, and TS config.\n',
+  '# Tools\n\nWorkspace tooling: the scaffolder (`@stynx-internal/create-stynx-app`) and the shared ESLint config, migration linter and TS config (`@stynx-nyx/eslint-config`, `@stynx-nyx/migration-linter`, `@stynx-nyx/tsconfig`).\n',
   'Tools',
 );
 writeDoc(
@@ -786,8 +786,8 @@ syncPackageReadmes(
   (name) => typeof name === 'string' && name.startsWith('@stynx-nyx/'),
 );
 // R15 follow-up: surface tool packages on the published site. Tools live under
-// @stynx-internal/* (create-stynx-app, eslint-config, migration-linter) or, once
-// published in the fixed group, @stynx-nyx/* (tsconfig, SM-02). Internal scripts without a package.json
+// @stynx-internal/* (create-stynx-app) or @stynx-nyx/* (eslint-config,
+// migration-linter, tsconfig; DEVAI v3 SM-02/03/04). Internal scripts without a package.json
 // (ci-local, repo-config, stryker, npm-security-upgrade-auditor) are
 // intentionally skipped — they're not published packages.
 syncPackageReadmes(
