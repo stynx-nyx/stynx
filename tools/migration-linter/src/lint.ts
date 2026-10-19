@@ -439,7 +439,7 @@ export async function lintSqlTargets(targets: readonly string[], options: LintOp
   const report = (issue: LintIssue): void => {
     result.issues.push(issue);
   };
-  checkGlobalPrefixes(population, report);
+  checkGlobalPrefixes(population, baseDir, report);
   checkAppliedBytes(roots, population, manifest, baseDir, report);
 
   result.issues.sort((left, right) => {
