@@ -4870,6 +4870,14 @@
       "assertion_digest_sha256": "935cde9c3f2a471e09e139e8b8fe167a6db134a56d74953abd6d521adffe9e75"
     },
     {
+      "path": "tools/migration-linter/test/context-rules.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
+      "lifecycle": "supported",
+      "assertion_count": 55,
+      "assertion_digest_sha256": "80b7f8a472e0e615f4d40092d53a6fd6d90dddfc2f1f1614b668e2cb9aed944f"
+    },
+    {
       "path": "tools/migration-linter/test/migration-linter.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
