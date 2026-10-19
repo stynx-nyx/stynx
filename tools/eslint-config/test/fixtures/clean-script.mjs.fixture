@@ -1,0 +1,4 @@
+import { readFileSync } from 'node:fs';
+
+export const here = import.meta.dirname;
+export const read = readFileSync;

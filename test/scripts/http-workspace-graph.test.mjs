@@ -765,7 +765,7 @@ function sourceOnlyTooling(f) {
     "packages:\n  - 'packages/*'\n  - 'reference/api'\n  - 'tools/*'\n",
   );
   f.json('tools/eslint-config/package.json', {
-    name: '@stynx-internal/eslint-config',
+    name: '@stynx-nyx/eslint-config',
     private: true,
     scripts: { test: 'node --test test/tooling.spec.mjs' },
   });
@@ -775,7 +775,7 @@ function sourceOnlyTooling(f) {
   });
   f.update('reference/api/package.json', (value) => {
     value.devDependencies = {
-      '@stynx-internal/eslint-config': 'workspace:*',
+      '@stynx-nyx/eslint-config': 'workspace:*',
       '@stynx-nyx/tsconfig': 'workspace:*',
     };
   });

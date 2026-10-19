@@ -1,0 +1,4 @@
+enum Fruit {
+  Apple = 0,
+}
+export const isApple = (value: number): boolean => value === Fruit.Apple;
