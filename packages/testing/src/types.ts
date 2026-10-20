@@ -117,7 +117,10 @@ export interface TestingFixtures {
 export interface MintTestSessionInput {
   userId: string;
   tenantId: string;
+  /** Permission keys minted into the verified `perms` claim. */
   perms?: string[];
+  /** Role keys minted into the verified `roles` claim. */
+  roles?: string[];
   sid?: string;
   cognitoSub?: string;
   issuer?: string;

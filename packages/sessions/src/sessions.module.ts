@@ -5,6 +5,7 @@ import { SessionJwksController } from './jwks.controller.js';
 import { SessionJwtSigningService } from './jwt-signing.service.js';
 import { RedisSessionStore } from './redis-session-store.js';
 import { SessionMirrorWriter } from './session-mirror.writer.js';
+import { SessionRevocationList } from './session-revocation-list.js';
 import { SessionService } from './session.service.js';
 import { STYNX_SESSION_MIRROR, STYNX_SESSIONS_OPTIONS, STYNX_SESSION_STORE } from './tokens.js';
 import { resolveSessionsOptions, type StynxSessionsModuleOptions } from './types.js';
@@ -36,9 +37,17 @@ export class StynxSessionsModule {
           useClass: SessionMirrorWriter,
         },
         SessionJwtSigningService,
+        SessionRevocationList,
         SessionService,
       ],
-      exports: [STYNX_SESSIONS_OPTIONS, STYNX_SESSION_STORE, STYNX_SESSION_MIRROR, SessionJwtSigningService, SessionService],
+      exports: [
+        STYNX_SESSIONS_OPTIONS,
+        STYNX_SESSION_STORE,
+        STYNX_SESSION_MIRROR,
+        SessionJwtSigningService,
+        SessionRevocationList,
+        SessionService,
+      ],
     };
   }
 }

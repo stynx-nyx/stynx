@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, type OnModuleInit, Optional } from '@nestjs/common';
 import {
   InvalidRefreshTokenError,
   StrongFactorRequiredError,
@@ -7,12 +7,20 @@ import {
   SessionExchangeError,
   SessionExpiredError,
 } from './errors.js';
-import { STYNX_SESSION_MIRROR, STYNX_SESSIONS_OPTIONS, STYNX_SESSION_STORE } from './tokens.js';
+import {
+  STYNX_SESSION_CLAIMS_RESOLVER,
+  STYNX_SESSION_MIRROR,
+  STYNX_SESSIONS_OPTIONS,
+  STYNX_SESSION_STORE,
+} from './tokens.js';
 import { SessionJwtSigningService } from './jwt-signing.service.js';
+import { SessionRevocationList } from './session-revocation-list.js';
 import type {
   DeviceMetadata,
   ResolvedStynxSessionsModuleOptions,
+  SessionAuthorizationClaims,
   SessionBundle,
+  SessionClaimsResolver,
   SessionCreateMetadata,
   SessionExchangeOptions,
   SessionExchangeResult,
@@ -28,6 +36,12 @@ function addSeconds(date: Date, seconds: number): Date {
 
 function minIso(a: string, b: string): string {
   return new Date(a).getTime() <= new Date(b).getTime() ? a : b;
+}
+
+function authorizationFields(
+  claims: SessionAuthorizationClaims,
+): Pick<SessionRecord, 'permissions' | 'roles'> {
+  return { permissions: [...claims.permissions], roles: [...claims.roles] };
 }
 
 function createRefreshToken(): string {
@@ -53,6 +67,11 @@ export class SessionService implements OnModuleInit {
     private readonly signingService: SessionJwtSigningService,
     @Inject(STYNX_SESSION_MIRROR)
     private readonly mirror: SessionMirror,
+    @Optional()
+    private readonly revocations?: SessionRevocationList,
+    @Optional()
+    @Inject(STYNX_SESSION_CLAIMS_RESOLVER)
+    private readonly claimsResolver?: SessionClaimsResolver,
   ) {}
 
   onModuleInit(): void {
@@ -108,19 +127,26 @@ export class SessionService implements OnModuleInit {
       factorVerifiedAt = now.toISOString();
     }
     if (this.options.strongFactor && !factorVerifiedAt) throw new StrongFactorRequiredError();
-    const refreshToken = createRefreshToken();
+    const sid = randomUUID();
     const expiresAt = addSeconds(now, this.options.timeouts.absoluteSeconds).toISOString();
+    // Authorization is resolved at mint time, before anything is persisted, so a
+    // subject without access in the tenant gets no session (S-12).
+    const claims =
+      metadata.claims ?? (await this.claimsResolver?.resolve({ sid, userId, tenantId, expiresAt }));
+    const permsHash = claims?.permsHash ?? metadata.permsHash;
+    const refreshToken = createRefreshToken();
     const idleExpiresAt = minIso(
       addSeconds(now, this.options.timeouts.idleSeconds).toISOString(),
       expiresAt,
     );
     const record: SessionRecord = {
-      sid: randomUUID(),
+      sid,
       userId,
       tenantId,
       cognitoSub,
       ...(metadata.membershipId !== undefined ? { membershipId: metadata.membershipId } : {}),
-      ...(metadata.permsHash !== undefined ? { permsHash: metadata.permsHash } : {}),
+      ...(permsHash !== undefined ? { permsHash } : {}),
+      ...(claims ? authorizationFields(claims) : {}),
       refreshFamilyId: randomUUID(),
       refreshTokenHash: hashRefreshToken(refreshToken),
       status: 'active',
@@ -147,6 +173,7 @@ export class SessionService implements OnModuleInit {
               ...(metadata.priorSessionId ? { priorSessionId: metadata.priorSessionId } : {}),
             })
           ).revoked;
+    for (const old of revoked) this.revocations?.add(old.sid, now.toISOString());
     for (const scope of new Set(revoked.map((old) => `${old.userId}:${old.tenantId}`))) {
       await this.store.publishInvalidation(scope);
     }
@@ -186,6 +213,14 @@ export class SessionService implements OnModuleInit {
       throw new InvalidRefreshTokenError();
     }
     this.assertActive(current, now);
+    // Re-resolve before rotating: a refreshed token carries current authorization,
+    // and a failed resolution leaves the presented refresh token usable.
+    const claims = await this.claimsResolver?.resolve({
+      sid: current.sid,
+      userId: current.userId,
+      tenantId: current.tenantId,
+      expiresAt: current.expiresAt,
+    });
 
     const nextRefreshToken = createRefreshToken();
     const nextIdleExpiresAt = minIso(
@@ -203,7 +238,14 @@ export class SessionService implements OnModuleInit {
       throw new InvalidRefreshTokenError();
     }
 
-    return this.bundle(rotated, nextRefreshToken, now);
+    const minted = claims
+      ? {
+          ...rotated,
+          ...authorizationFields(claims),
+          ...(claims.permsHash !== undefined ? { permsHash: claims.permsHash } : {}),
+        }
+      : rotated;
+    return this.bundle(minted, nextRefreshToken, now);
   }
 
   async revoke(sid: string): Promise<boolean> {
@@ -433,6 +475,7 @@ export class SessionService implements OnModuleInit {
     if (!record) {
       return null;
     }
+    this.revocations?.add(sid, revokedAt);
     return { record, revokedAt };
   }
 

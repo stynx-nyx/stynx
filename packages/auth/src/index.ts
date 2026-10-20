@@ -19,6 +19,7 @@ export * from './permission-cache-metrics.js';
 export * from './permission.guard.js';
 export * from './permission-query.service.js';
 export * from './redis-permission-cache-backend.js';
+export * from './session-claims-resolver.js';
 export * from './stynx-auth.guard.js';
 export * from './stynx-jwt.validator.js';
 export * from './tokens.js';

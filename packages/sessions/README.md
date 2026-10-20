@@ -76,6 +76,38 @@ the indicator uses a read-only lookup of a nonexistent session ID.
 
 The JWKS endpoint is `GET /.well-known/jwks.json`.
 
+## Session revocation without request-path reads (S-12)
+
+Access tokens carry their own authorization (`perms`, `roles`) and expire after
+`timeouts.accessSeconds` (default 10 minutes). Revoking a session therefore has
+to reach verifiers that never read the session store on the request path. That
+is the job of `SessionRevocationList`, which `StynxSessionsModule` provides and
+exports:
+
+- `isRevoked(sid)` and `isStale()` are synchronous, in-memory checks. They are
+  what `StynxAuthGuard` calls per request.
+- `SessionService` records each revocation in process when it happens: logout,
+  `revokeAllForUser`/`revokeAllForTenant`, refresh-token reuse, tenant switch
+  and single-session replacement.
+- The session store indexes revocations. `RedisSessionStore` uses the
+  `<keyPrefix>:revoked` sorted set, and the single-session Lua script writes it
+  atomically. A background job calls `SessionStore.listRevokedSessions(since)`
+  once at application bootstrap and then every `revocation.refreshIntervalMs`
+  (default 1000 ms). A revocation made on another instance therefore reaches
+  this one within about one interval.
+- An entry is kept for the access-token TTL plus 60 s of clock skew, then
+  dropped, because any token it could block has expired by then. Memory is
+  bounded by the number of revocations in one TTL window.
+- If the store supports `listRevokedSessions` and the last successful refresh is
+  older than `revocation.maxStalenessMs` (default 15000 ms), `isStale()` is true
+  and the guard fails closed with 503. A custom store without
+  `listRevokedSessions` gets in-process revocations and the TTL only.
+
+When a `STYNX_SESSION_CLAIMS_RESOLVER` is registered (`StynxAuthModule` does
+this), `create` and `refresh` mint its permissions and roles into the token.
+`create` accepts explicit `metadata.claims` instead. Claims are resolved before
+anything is persisted or a refresh token is rotated.
+
 ## Legacy configuration examples
 
 The examples below describe an earlier STYNX API. Use the 1.5.0 options

@@ -20,6 +20,15 @@ interface RefreshState {
   inFlight?: Promise<CachedKeySet>;
 }
 
+function stringListClaim(payload: Record<string, unknown>, name: string): string[] | undefined {
+  const value = payload[name];
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || !value.every((entry) => typeof entry === 'string' && entry.length > 0)) {
+    throw new InvalidCredentialError(`STYNX token ${name} claim is malformed`);
+  }
+  return [...new Set(value as string[])];
+}
+
 @Injectable()
 export class StynxJwtValidator {
   private cache?: CachedKeySet;
@@ -74,11 +83,15 @@ export class StynxJwtValidator {
       throw new InvalidCredentialError('STYNX token not active yet');
     }
 
+    const permissions = stringListClaim(payload, 'perms');
+    const roles = stringListClaim(payload, 'roles');
     return {
       sub: String(payload.sub ?? ''),
       sid: String(payload.sid ?? ''),
       tenantId: String(payload.tenant_id ?? ''),
       ...(typeof payload.perms_hash === 'string' ? { permsHash: payload.perms_hash } : {}),
+      ...(permissions ? { permissions } : {}),
+      ...(roles ? { roles } : {}),
       ...(typeof payload.cognito_sub === 'string' ? { cognitoSub: payload.cognito_sub } : {}),
       ...(typeof payload.iat === 'number' ? { issuedAt: payload.iat } : {}),
       ...(typeof payload.exp === 'number' ? { expiresAt: payload.exp } : {}),
