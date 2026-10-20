@@ -23,7 +23,7 @@ export default [
       '**/.angular/**',
       'docs/.docusaurus/**',
       'docs/build/**',
-      // Codegen output (openapi-typescript-codegen) — never lint: the sdk
+      // Codegen output (stynx-sdk-codegen) — never lint: the sdk
       // package lint ignores it, and eslint --fix here strips the generated
       // /* eslint-disable */ headers as "unused directives", making every
       // sdk build dirty the tree against the committed snapshot.
