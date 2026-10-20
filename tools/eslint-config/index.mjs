@@ -263,7 +263,7 @@ const createConfig = ({
         : {}),
       ...(nest
         ? {
-            'stynx/require-idempotent-route-decorator': strict ? 'error' : 'warn',
+            'stynx/require-idempotent-route-decorator': 'error',
           }
         : {}),
     },
