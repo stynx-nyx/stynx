@@ -28,9 +28,20 @@ pnpm add @stynx-nyx/i18n
 import { StynxI18nModule } from '@stynx-nyx/i18n';
 
 StynxI18nModule.forRoot({
+  // Default locale is en-US; opt in to pt-BR explicitly.
   defaultLocale: 'pt-BR',
-  workspaceRoot: process.cwd(),
 });
+
+// A feature module registers its own catalog; nothing scans the filesystem.
+@Injectable()
+export class NotesI18n implements OnModuleInit {
+  constructor(private readonly moduleRef: ModuleRef) {}
+  onModuleInit() {
+    const catalog = this.moduleRef.get(CatalogService, { strict: false });
+    catalog.registerCatalog('en-US', { 'notes.missing': 'Note not found.' });
+    catalog.registerCatalog('pt-BR', { 'notes.missing': 'Nota não encontrada.' });
+  }
+}
 ```
 
 ```ts
@@ -60,7 +71,7 @@ export class NotificationService {
 
 | Export                   | Description                                                                                                                                                                                                              |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `CatalogService`         | `translate(key, locale, vars?, tenantId?)` — synchronously look up and ICU-format a message.                                                                                                                             |
+| `CatalogService`         | `translate(key, locale, vars?, tenantId?)` — synchronously look up and ICU-format a message; `registerCatalog(locale, messages)`; `defaultLocale()`.                                                                     |
 | `LocaleService`          | Resolve / read the active locale.                                                                                                                                                                                        |
 | `LocaleInterceptor`      | Resolves the request's locale and writes it to `RequestContext`.                                                                                                                                                         |
 | `ErrorTranslatorService` | Translates a `StynxError`'s `messageKey` into the caller's locale for the response envelope.                                                                                                                             |
@@ -95,14 +106,15 @@ interceptor before locale resolution to make admitted tenant preferences availab
 
 ## Configuration
 
-| Option          | Type     | Default         | Description                                                                                                                                     |
-| --------------- | -------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `workspaceRoot` | `string` | `process.cwd()` | Consumer workspace root. Loads JSON catalogs from each child package’s `i18n` directory under the optional `packages` and `packages-web` roots. |
-| `defaultLocale` | `string` | `'pt-BR'`       | Ensures this locale exists in the aggregated catalog alongside `en-US`.                                                                         |
+| Option          | Type                                     | Default   | Description                                                                                                                                      |
+| --------------- | ---------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `defaultLocale` | `string`                                 | `'en-US'` | Default locale; `pt-BR` applies only when configured here. Always present in the catalog alongside `en-US`.                                      |
+| `catalogs`      | `Record<string, Record<string, string>>` | `{}`      | Catalogs registered at boot, keyed by locale. Modules can add more with `CatalogService.registerCatalog(locale, messages)`.                      |
+| `workspaceRoot` | `string`                                 | unset     | Opt-in only: scans `<workspaceRoot>/{packages,packages-web}/<name>/i18n/<locale>.json`. When unset, no filesystem scan happens (not even `cwd`). |
 
 Resolution preserves an active request locale, then a supported Accept-Language
-entry, then the admitted tenant's stored locale, then `pt-BR` when available or
-the first supported locale. Translation falls back to `en-US`, then the key.
+entry, then the admitted tenant's stored locale, then `defaultLocale` (`en-US`
+unless configured). Translation falls back to `en-US`, then the key.
 
 ## Examples
 
@@ -129,11 +141,11 @@ this.locale.t('inbox.summary', { count: 3 }, 'pt-BR');
 // → "3 mensagens"
 ```
 
-### Example 3 — package-catalog source per ADR-FE-ICU-i18n-0002
+### Example 3 — opt-in package-catalog scan per ADR-FE-ICU-i18n-0002
 
 ```ts
 StynxI18nModule.forRoot({
-  workspaceRoot: process.cwd(),
+  workspaceRoot: process.cwd(), // explicit: scanning is never implicit
   defaultLocale: 'pt-BR',
 });
 ```
