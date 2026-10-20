@@ -7453,7 +7453,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 20,
-      "assertion_digest_sha256": "bc50a112e26c8e16a9f7cb4708ece0f4d646911434d416db0730d13e155add84"
+      "assertion_digest_sha256": "b9bb2918a8f14771cf1636a6ef0feb12c31a039902974b4a2b1bf4d852d7e2f5"
     },
     {
       "path": "packages-web/sdk/test/codegen-check.spec.ts",
