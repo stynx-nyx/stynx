@@ -1,12 +1,12 @@
 import {
-  BadRequestException,
   CallHandler,
   ExecutionContext,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable, type Subscription } from 'rxjs';
-import { generateRequestId, normalizeRequestId } from './request-id.js';
+import { normalizeRequestId } from './request-id.js';
+import { requestIdRejection } from './request-id-rejection.js';
 import type { RequestContextState } from './request-context.js';
 import { RequestContextMutator } from './request-context.js';
 
@@ -68,8 +68,8 @@ export class RequestContextInterceptor implements NestInterceptor {
     const requestedId = extractHeader(request.headers['x-request-id']);
     const requestId = requestedId ? normalizeRequestId(requestedId) : undefined;
 
-    if (requestedId && !requestId) {
-      throw new BadRequestException('X-Request-Id must be a valid UUIDv7');
+    if (!requestId) {
+      throw requestIdRejection();
     }
 
     const locale = extractLocale(request.headers['accept-language']);
@@ -80,7 +80,7 @@ export class RequestContextInterceptor implements NestInterceptor {
       ?? request.user?.id;
     const sessionId = request.stynxClaims?.sid ?? request.verifiedSessionId;
     const seed: RequestContextState = {
-      requestId: requestId ?? generateRequestId(),
+      requestId,
       startedAt: new Date(),
       ...(tenantId ? { tenantId } : {}),
       ...(actorId ? { actorId } : {}),

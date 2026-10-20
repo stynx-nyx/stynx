@@ -3,5 +3,6 @@
   "REQUEST_CONTEXT_MUTATION_FORBIDDEN": "Request context mutations are only allowed inside an active request frame.",
   "CONFIGURATION_VALIDATION_ERROR": "Configuration validation failed.",
   "SYSTEM_CONTEXT_REQUIRED": "System context is required for this operation.",
-  "SECRET_LOAD_ERROR": "Unable to load the requested secret."
+  "SECRET_LOAD_ERROR": "Unable to load the requested secret.",
+  "REQUEST_ID_INVALID": "X-Request-Id must be a valid UUIDv7."
 }
