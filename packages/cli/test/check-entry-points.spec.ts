@@ -21,6 +21,9 @@ const packageRoot = resolve(__dirname, '..');
 const cli = join(packageRoot, 'dist/cli/src/main.js');
 const engines = join(packageRoot, 'engines');
 
+// Assembled so the repository's own boundary scan of this file does not read it as an import.
+const undeclaredSeam = ['@stynx', 'internal/data'].join('-');
+
 const commands: Array<[string, string[]]> = [
   ['list-routes', ['--json', '--roots', 'domain/*/api/src,apps/*/src']],
   ['verify-stynx-boundary', ['--json']],
@@ -224,7 +227,7 @@ describe('stynx check entry points from a consumer root', () => {
         write(
           root,
           'domain/notes/api/src/seam.ts',
-          "export const a = 1;\nimport { b } from '@stynx-internal/data';\n",
+          `export const a = 1;\nimport { b } from '${undeclaredSeam}';\n`,
         ),
       locator: /^domain\/notes\/api\/src\/seam\.ts:2$/u,
       message: /imports undeclared STYNX seam @stynx-internal\/data/u,
