@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:86c19c7d-ebee-40e3-88fd-2a0a579abd35",
+  "serialNumber": "urn:uuid:f0c9de5f-8472-4cf9-807e-fa4b2cedd064",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "86c19c7debee20e3a8fd2a0a579abd35dceb158cbf16e0d240748b623548191b"
+        "value": "f0c9de5f84721cf9c07efa4b2cedd064cc4ba8da0aaaa00a1fa3f603fc424a1a"
       },
       {
         "name": "stynx:package-manager",
@@ -2291,20 +2291,6 @@
         }
       ],
       "purl": "pkg:npm/ng-packagr@22.1.1"
-    },
-    {
-      "type": "library",
-      "name": "openapi-typescript-codegen",
-      "version": "0.31.0",
-      "scope": "required",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/openapi-typescript-codegen@0.31.0"
     },
     {
       "type": "library",

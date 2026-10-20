@@ -86,14 +86,16 @@ try {
 ### Example 3 — regenerating the SDK after a backend contract change
 
 ```bash
-pnpm sdk:codegen   # from the workspace root
+pnpm --filter @stynx-nyx/sdk codegen   # from the workspace root: rewrite src/generated/
+stynx-sdk-codegen --check --input docs/framework/contracts/openapi.json \
+  --output packages-web/sdk/src/generated   # verify only: exit 0 match, 1 drift; writes nothing
 ```
 
-This re-runs OpenAPI codegen against the backend's contract. Commit the regenerated `src/generated/`.
+This re-runs the package's `stynx-sdk-codegen` bin against the backend's contract. Commit the regenerated `src/generated/`; the check form is what CI and DEVAI's `generated` node run.
 
 ## Common pitfalls
 
-- **Stale generated client** — the SDK is generated; if the backend contract changes and you don't regenerate, runtime calls hit endpoints that have moved or DTOs that changed shape. Re-run `pnpm sdk:codegen` after backend contract changes.
+- **Stale generated client** — the SDK is generated; if the backend contract changes and you don't regenerate, runtime calls hit endpoints that have moved or DTOs that changed shape. Re-run `pnpm --filter @stynx-nyx/sdk codegen` after backend contract changes.
 - **Setting `OpenAPI.BASE` after the first call** — the base URL is read per-request, but inconsistent setting leads to some calls hitting the wrong origin. Set it once at bootstrap (via `provideStynxAngular`).
 - **Editing generated files by hand** — your edits are overwritten on the next codegen. Customize via the hand-authored helper layer, not the generated core.
 
@@ -123,7 +125,7 @@ _None._
 
 ### Peer dependencies
 
-_None._
+- `prettier`: `^3.8.4`
 
 ### Development-only dependencies
 
@@ -132,7 +134,7 @@ _None._
 - `@stynx-nyx/core`: `workspace:*`
 - `@types/node`: `24.13.4`
 - `ng-packagr`: `22.1.1`
-- `openapi-typescript-codegen`: `^0.31.0`
+- `prettier`: `^3.8.4`
 - `tslib`: `^2.8.1`
 - `typescript`: `6.0.3`
 
