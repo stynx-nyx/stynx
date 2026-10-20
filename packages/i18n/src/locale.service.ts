@@ -49,7 +49,7 @@ export class LocaleService {
       }
     }
 
-    const fallback = supported.includes('pt-BR') ? 'pt-BR' : (supported[0] ?? 'en-US');
+    const fallback = this.catalogService.defaultLocale();
     requestContextMutator.patch({ locale: fallback });
     return fallback;
   }
@@ -57,7 +57,9 @@ export class LocaleService {
   t(key: string, vars: Record<string, unknown> = {}, locale?: string): string {
     const requestContext = this.requestContext();
     const effectiveLocale =
-      locale ?? (requestContext.hasActiveContext() ? requestContext.locale : undefined) ?? 'pt-BR';
+      locale ??
+      (requestContext.hasActiveContext() ? requestContext.locale : undefined) ??
+      this.catalogService.defaultLocale();
     const tenantId = hasI18nTenantAdmission(this.moduleRef) ? requestContext.tenantId : undefined;
     return this.catalogService.translate(key, effectiveLocale, vars, tenantId);
   }
