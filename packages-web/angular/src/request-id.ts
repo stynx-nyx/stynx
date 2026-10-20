@@ -1,13 +1,16 @@
+/**
+ * Generates a UUIDv7 `X-Request-Id` for browser requests.
+ *
+ * The STYNX backend accepts only UUIDv7 request ids, so the id carries the
+ * millisecond timestamp in its first 48 bits and Web Crypto entropy in the
+ * rest. There is no `Math` based fallback: a runtime without
+ * `crypto.getRandomValues` cannot mint a request id and fails loudly.
+ */
 export function generateClientRequestId(): string {
-  const bytes = new Uint8Array(16);
-
-  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
-    crypto.getRandomValues(bytes);
-  } else {
-    for (let index = 0; index < bytes.length; index += 1) {
-      bytes[index] = Math.floor(Math.random() * 256);
-    }
+  if (typeof crypto === 'undefined' || typeof crypto.getRandomValues !== 'function') {
+    throw new Error('generateClientRequestId requires Web Crypto (crypto.getRandomValues)');
   }
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
 
   let timestamp = Date.now();
   for (let index = 5; index >= 0; index -= 1) {

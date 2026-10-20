@@ -1,12 +1,17 @@
-import { CSP_NONCE, importProvidersFrom, makeEnvironmentProviders } from '@angular/core';
+import { CSP_NONCE, makeEnvironmentProviders } from '@angular/core';
 import type { EnvironmentProviders, Provider } from '@angular/core';
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import {
+  HTTP_INTERCEPTORS,
+  provideHttpClient,
+  withInterceptors,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
 import { provideTenancy } from '@stynx-nyx/angular-tenancy';
 import type { TenancyOptions } from '@stynx-nyx/angular-tenancy';
 import { AuthInterceptor } from './auth.interceptor';
 import { ErrorBannerService } from './error-banner.service';
 import { ErrorInterceptor } from './error.interceptor';
-import { RequestIdInterceptor } from './request-id.interceptor';
+import { requestIdInterceptor } from './request-id.interceptor';
 import { STYNX_ANGULAR_OPTIONS, STYNX_AUTH_PROVIDER, STYNX_WINDOW } from './tokens';
 import { ToastService } from './toast.service';
 import type { StynxAngularModuleOptions } from './types';
@@ -63,7 +68,9 @@ export function provideStynxAngular(
   tenancy?: StynxTenancyConfig,
 ): EnvironmentProviders {
   const providers: Array<Provider | EnvironmentProviders> = [
-    importProvidersFrom(HttpClientModule),
+    // The functional request-id interceptor runs first, then the DI-registered
+    // auth and error interceptors, in that order.
+    provideHttpClient(withInterceptors([requestIdInterceptor]), withInterceptorsFromDi()),
     {
       provide: STYNX_ANGULAR_OPTIONS,
       useValue: config,
@@ -79,11 +86,6 @@ export function provideStynxAngular(
     ...provideTenancy(tenancyOptionsFor(config, tenancy)),
     ErrorBannerService,
     ToastService,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: RequestIdInterceptor,
-      multi: true,
-    },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
