@@ -4,7 +4,7 @@ import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
 export default createVitestConfig({
   packageDir: __dirname,
   packageName: '@stynx-nyx/testing',
-  include: ['test/**/*.spec.ts'],
+  include: ['test/*.spec.ts'],
   alias: {
     '@stynx-nyx/audit': resolve(__dirname, '../audit/src/index.ts'),
     '@stynx-nyx/auth': resolve(__dirname, '../auth/src/index.ts'),

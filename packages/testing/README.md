@@ -1,4 +1,4 @@
-# `@stynx-nyx/testing` — testcontainers-backed integration harness for STYNX apps
+# `@stynx-nyx/testing` — integration harness for STYNX apps on the declared PostgreSQL runtime
 
 ## Unit transaction fake (1.5)
 
@@ -8,11 +8,11 @@ tests. Each script step is a result (`rows`, `rowCount`) or an `Error`; the fake
 records bound values and Drizzle's optional array row mode. Use real
 PostgreSQL tests for builders, RLS, savepoints and rollback behavior.
 
-`@stynx-nyx/testing` is the integration-test substrate for STYNX-based apps. It provides `createTestApp()` — a one-call factory that boots an isolated NestJS app backed by **real Docker containers** (Postgres via testcontainers, plus optional LocalStack for S3/SQS and a Cognito stub) wired to your modules. The returned `TestAppContext` exposes the NestJS app instance, a request-context mutator (so tests can assert behaviour under a specific tenant/actor), session helpers (`mintTestSession` produces a valid JWT against the test signing key), LGPD fixtures (PII-column seed data + erasure scenarios), and a family of archive-aware matchers that understand soft-delete + restore semantics.
+`@stynx-nyx/testing` is the integration-test substrate for STYNX-based apps. It provides `createTestApp()` — a one-call factory that boots an isolated NestJS app on a fresh database of the PostgreSQL server that `DATABASE_URL` names (the declared runtime, bare or Docker), wired to your modules. It starts no container: Redis, LocalStack and Cognito endpoints are passed in when the runtime supplies them. The returned `TestAppContext` exposes the NestJS app instance, a request-context mutator (so tests can assert behaviour under a specific tenant/actor), session helpers (`mintTestSession` produces a valid JWT against the test signing key), LGPD fixtures (PII-column seed data + erasure scenarios), and a family of archive-aware matchers that understand soft-delete + restore semantics.
 
 ## Purpose
 
-Integration tests against a real DB catch the bugs unit tests with mocked repos miss: row-level security policies, soft-delete cascades, RLS interaction with the request context, idempotency replay semantics, audit-event emission. `@stynx-nyx/testing` removes the boilerplate: instead of every test file orchestrating its own Postgres container, schema migration, and request-context wiring, you call `createTestApp()` and get a working environment in one line. The fixtures + matchers then encode STYNX's idioms (archive-aware queries, soft-delete cascades, PII handling) so your test assertions stay readable.
+Integration tests against a real DB catch the bugs unit tests with mocked repos miss: row-level security policies, soft-delete cascades, RLS interaction with the request context, idempotency replay semantics, audit-event emission. `@stynx-nyx/testing` removes the boilerplate: instead of every test file creating its own database, schema migration, and request-context wiring, you call `createTestApp()` and get a working environment in one line. The fixtures + matchers then encode STYNX's idioms (archive-aware queries, soft-delete cascades, PII handling) so your test assertions stay readable.
 
 You reach for `@stynx-nyx/testing` when you are writing integration tests for a STYNX-based app — typically under `test/integration/` or `*.int.spec.ts` files run by Vitest. Unit tests with mocked services don't need it; integration tests against real Postgres + S3 do.
 
@@ -20,7 +20,7 @@ What it does NOT do: it does not replace Vitest/Jest. It's a runtime harness use
 
 ## Audience
 
-NestJS backend developers writing integration tests. Typical scenario: you have a `packages/<my-feature>/test/integration/*.int.spec.ts` file, and you want a real `TenantContext`, a real DB, a real session JWT, and assertions that understand archive-aware soft-delete semantics. Docker must be running locally; in CI, the testcontainers backend auto-detects the runtime.
+NestJS backend developers writing integration tests. Typical scenario: you have a `packages/<my-feature>/test/integration/*.int.spec.ts` file, and you want a real `TenantContext`, a real DB, a real session JWT, and assertions that understand archive-aware soft-delete semantics. The runtime supplies `DATABASE_URL`: bare, a PostgreSQL you started; docker, the Compose `postgres` service the rail starts. Without it `createTestApp` fails closed; it never starts a database.
 
 ## Install
 
@@ -28,7 +28,7 @@ NestJS backend developers writing integration tests. Typical scenario: you have 
 pnpm add -D @stynx-nyx/testing
 ```
 
-**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference). **Docker required at runtime.**
+**Dependencies and version ranges:** see [Generated dependency reference](#generated-dependency-reference). **A PostgreSQL server reachable through `DATABASE_URL` required at runtime; Docker is not.**
 
 **Node:** 24.x.
 
@@ -68,12 +68,12 @@ describe('UsersService (integration)', () => {
 
 ### Functions
 
-| Export            | Signature                                                       | Description                                                                                                                                                      |
-| ----------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `createTestApp`   | `(options: CreateTestAppOptions): Promise<TestAppContext>`      | Boots an isolated NestJS app with optional Postgres / LocalStack / Cognito containers. The returned context exposes `.app`, `.withRequest()`, `.db`, `.close()`. |
-| `mintTestSession` | `(input: { actorId, tenantId?, roles?, permissions? }): string` | Produces a JWT signed with the test signing key. Use to test endpoints that require a `Bearer <token>` header.                                                   |
-| `runDoctor`       | `(repoRoot: string): Promise<DoctorReport>`                     | Run the STYNX doctor harness check; useful in workspace tests.                                                                                                   |
-| `lgpdFixtures`    | `LgpdFixtures`                                                  | Pre-built PII fixture set: users with email + phone columns marked, erasure scenarios.                                                                           |
+| Export            | Signature                                                       | Description                                                                                                                                                                                      |
+| ----------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `createTestApp`   | `(options: CreateTestAppOptions): Promise<TestAppContext>`      | Creates a fresh database on the `DATABASE_URL` server and boots an isolated NestJS app on it; dropped on `teardown()`. The returned context exposes `.app`, `.withRequest()`, `.db`, `.close()`. |
+| `mintTestSession` | `(input: { actorId, tenantId?, roles?, permissions? }): string` | Produces a JWT signed with the test signing key. Use to test endpoints that require a `Bearer <token>` header.                                                                                   |
+| `runDoctor`       | `(repoRoot: string): Promise<DoctorReport>`                     | Run the STYNX doctor harness check; useful in workspace tests.                                                                                                                                   |
+| `lgpdFixtures`    | `LgpdFixtures`                                                  | Pre-built PII fixture set: users with email + phone columns marked, erasure scenarios.                                                                                                           |
 
 ### Matchers
 
@@ -90,28 +90,28 @@ describe('UsersService (integration)', () => {
 | `CreateTestAppOptions`                                                                              | `{ modules, sql?, providers?, postgres?, localstack?, cognito?, requestContext? }`.                           |
 | `TestAppContext`                                                                                    | `{ app, db, withRequest, close, signSession, localstack?, cognito? }`.                                        |
 | `TestSqlStep`                                                                                       | `string \| ((client: StynxPgClient) => Promise<void>)`. Each step is either raw SQL or an arbitrary function. |
-| `StartedPostgresHandle` / `StartedRedisHandle` / `StartedLocalstackHandle` / `StartedCognitoHandle` | Per-container started-handle types.                                                                           |
+| `StartedPostgresHandle` / `StartedRedisHandle` / `StartedLocalstackHandle` / `StartedCognitoHandle` | Handles for the per-app database and the supplied service endpoints.                                          |
 
 ## Configuration
 
 ### `CreateTestAppOptions`
 
-| Option           | Type                  | Default                           | Description                                                                        |
-| ---------------- | --------------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
-| `modules`        | `Type<unknown>[]`     | (required)                        | NestJS modules to import.                                                          |
-| `providers`      | `Provider[]`          | `[]`                              | Additional providers (override services, etc.).                                    |
-| `sql`            | `TestSqlStep[]`       | `[]`                              | SQL or migration runners executed against the test Postgres after container start. |
-| `postgres`       | `PostgresOptions`     | enabled with `postgres:16-alpine` | Postgres container config.                                                         |
-| `localstack`     | `LocalstackOptions`   | disabled                          | Enable S3 + SQS containers.                                                        |
-| `cognito`        | `CognitoOptions`      | disabled                          | Enable Cognito stub.                                                               |
-| `requestContext` | `RequestContextPatch` | empty                             | Default request frame for all tests in this app.                                   |
+| Option           | Type                    | Default    | Description                                                                        |
+| ---------------- | ----------------------- | ---------- | ---------------------------------------------------------------------------------- |
+| `modules`        | `Type<unknown>[]`       | (required) | NestJS modules to import.                                                          |
+| `providers`      | `Provider[]`            | `[]`       | Additional providers (override services, etc.).                                    |
+| `sql`            | `TestSqlStep[]`         | `[]`       | SQL or migration runners executed against the test Postgres after container start. |
+| `DATABASE_URL`   | environment             | (required) | The declared runtime's PostgreSQL server; a fresh database is created on it.       |
+| `redis`          | `{ url }`               | omitted    | A Redis endpoint the runtime supplies.                                             |
+| `localstack`     | `{ endpoint, region? }` | omitted    | A LocalStack endpoint the runtime supplies; `enabled: true` without it is refused. |
+| `cognito`        | `{ endpoint, ... }`     | omitted    | A Cognito-compatible endpoint the runtime supplies; same rules as `localstack`.    |
+| `requestContext` | `RequestContextPatch`   | empty      | Default request frame for all tests in this app.                                   |
 
 ### Environment variables
 
-| Variable                      | Default                      | Description                                               |
-| ----------------------------- | ---------------------------- | --------------------------------------------------------- |
-| `STYNX_TEST_PG_HOST`          | (unset; testcontainers auto) | Override host if running Postgres outside testcontainers. |
-| `TESTCONTAINERS_REUSE_ENABLE` | `true`                       | Reuse containers across test runs for speed.              |
+| Variable       | Default    | Description                                                                                                                                                       |
+| -------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL` | (required) | Admin URL of the declared runtime's PostgreSQL server. Its password, else `stynx_test_role`, is bound to the app role login. Unset, `createTestApp` fails closed. |
 
 ## Examples
 
@@ -151,8 +151,8 @@ expect(user).toEqual(archiveAwareEqual({ id: 'u1', email: 'seed@b.com' }));
 
 ## Common pitfalls
 
-- **Docker not running** — testcontainers throws "Could not find a working container runtime strategy". This is the pre-existing R15 finding; not specific to `@stynx-nyx/testing`. Ensure Docker Desktop / Colima is up before running integration tests.
-- **Forgetting `ctx.close()`** — leaks containers across test files. Use `afterAll` to call it; testcontainers' reuse mode mitigates but doesn't eliminate the leak.
+- **No `DATABASE_URL`** — `createTestApp` throws `createTestApp requires DATABASE_URL ...`. Start PostgreSQL for the declared runtime (bare) or run the checks with `DEVAI_RUNTIME=docker` so the rail starts its Compose service; the harness never falls back to the other mode.
+- **Forgetting `ctx.teardown()`** — leaves the per-app database on the server. Use `afterAll` to call it.
 - **Schema migration ordering** — `sql` runs in order, but if your schema depends on extensions (e.g. `pgcrypto`), include `CREATE EXTENSION` first.
 - **Running `withRequest()` outside an `await`** — the request frame is async-local; calls outside the callback don't see the frame.
 
@@ -189,7 +189,6 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `redis`: `^6.0.0`
 - `reflect-metadata`: `^0.2.2`
 - `rxjs`: `^7.8.2`
-- `testcontainers`: `^12.0.2`
 
 ### Optional dependencies
 

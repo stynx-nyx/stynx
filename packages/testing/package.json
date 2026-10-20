@@ -26,6 +26,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
+    "test:int": "vitest run --config ./vitest.int.config.ts",
     "stryker": "pnpm exec stryker run stryker.conf.mjs",
     "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
@@ -43,8 +44,7 @@
     "drizzle-orm": "^0.45.2",
     "redis": "^6.0.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
-    "testcontainers": "^12.0.2"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@types/node": "24.13.4",
