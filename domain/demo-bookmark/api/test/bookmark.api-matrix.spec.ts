@@ -9,6 +9,7 @@ import {
   StynxAuthGuard,
   StynxJwtValidator,
 } from '@stynx-nyx/auth';
+import { generateRequestId } from '@stynx-nyx/core';
 import { StynxDataModule } from '@stynx-nyx/data';
 import { SessionService } from '@stynx-nyx/sessions';
 import { BookmarkController } from '../src/demo-bookmark/controllers/bookmark.controller.js';
@@ -104,7 +105,10 @@ describe('Demo bookmark API error matrix', () => {
       headers?: Record<string, string>;
     } = {},
   ): Promise<HttpResult> {
+    // SM-15: STYNX rejects a missing X-Request-Id, so this client mints a UUIDv7 per request;
+    // a test that sets `x-request-id` itself overrides it.
     const headers: Record<string, string> = {
+      'x-request-id': generateRequestId(),
       ...(options.token ? { authorization: `Bearer ${options.token}` } : {}),
       ...(options.body !== undefined || options.rawBody !== undefined
         ? { 'content-type': 'application/json' }
@@ -245,7 +249,11 @@ describe('Demo bookmark API error matrix', () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body).toMatchObject({ message: 'X-Request-Id must be a valid UUIDv7' });
+      expect(response.body).toEqual({
+        code: 'VALIDATION',
+        messageKey: 'REQUEST_ID_INVALID',
+        requestId: null,
+      });
     });
 
     it('returns 401 without a bearer token', async () => {
