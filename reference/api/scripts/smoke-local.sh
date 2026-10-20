@@ -24,13 +24,18 @@ json_get() {
   node -e "const fs=require('node:fs'); const path=process.argv[1]; const key=process.argv[2]; const data=JSON.parse(fs.readFileSync(path,'utf8')); console.log(key.split('.').reduce((v,k)=>v&&v[k], data) ?? '');" "$1" "$2"
 }
 
+# STYNX rejects requests without a client-minted UUIDv7 X-Request-Id (SM-15).
+request_id() {
+  node -e 'const b=require("node:crypto").randomBytes(16);let t=Date.now();for(let i=5;i>=0;i--){b[i]=t%256;t=Math.floor(t/256)}b[6]=(b[6]&15)|112;b[8]=(b[8]&63)|128;const h=b.toString("hex");console.log([h.slice(0,8),h.slice(8,12),h.slice(12,16),h.slice(16,20),h.slice(20)].join("-"))'
+}
+
 request() {
   local method="$1"
   local path="$2"
   local body="${3:-}"
   local output="$4"
   shift 4
-  local args=(-sS -X "$method" "$BASE_URL$path" -o "$output" -w "%{http_code}" "$@")
+  local args=(-sS -X "$method" "$BASE_URL$path" -o "$output" -w "%{http_code}" -H "X-Request-Id: $(request_id)" "$@")
   if [[ -n "$body" ]]; then
     args+=(-H 'content-type: application/json' --data "$body")
   fi
@@ -73,12 +78,12 @@ node "$ROOT_DIR/packages/cli/dist/cli/src/main.js" migrate up --database-url "$D
 docker compose -f "$COMPOSE_FILE" up -d --build reference-api
 
 for _ in $(seq 1 90); do
-  if curl -sf "$BASE_URL/readyz" >/dev/null; then
+  if curl -sf -H "X-Request-Id: $(request_id)" "$BASE_URL/readyz" >/dev/null; then
     break
   fi
   sleep 2
 done
-curl -sf "$BASE_URL/readyz" >/dev/null
+curl -sf -H "X-Request-Id: $(request_id)" "$BASE_URL/readyz" >/dev/null
 
 login_body="$tmp_dir/login.json"
 status="$(request POST /_reference/dev-login "{\"email\":\"$EMAIL\",\"tenantId\":\"$TENANT_ID\"}" "$login_body")"

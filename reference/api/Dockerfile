@@ -79,8 +79,10 @@ RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 EXPOSE 3000
 
+# STYNX rejects requests without a UUIDv7 X-Request-Id (SM-15); the probe
+# sends a fixed, well-formed probe id.
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-  CMD wget -q -O- http://localhost:3000/healthz || exit 1
+  CMD wget -q -O- --header='X-Request-Id: 01900000-0000-7000-8000-000000000000' http://localhost:3000/healthz || exit 1
 
 USER node
 
