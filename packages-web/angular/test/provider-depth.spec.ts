@@ -1,5 +1,6 @@
 import '@angular/compiler';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import type { HttpHandler, HttpRequest } from '@angular/common/http';
 import { CSP_NONCE } from '@angular/core';
@@ -84,12 +85,44 @@ describe('@stynx-nyx/angular provider depth', () => {
     expect(TestBed.inject(STYNX_AUTH_PROVIDER)).toBe(authProvider);
     expect(TestBed.inject(CSP_NONCE)).toBe('nonce-r17');
     expect(TestBed.inject(HTTP_INTERCEPTORS)).toEqual(
-      expect.arrayContaining([
-        expect.any(RequestIdInterceptor),
-        expect.any(AuthInterceptor),
-        expect.any(ProvidedErrorInterceptor),
-      ]),
+      expect.arrayContaining([expect.any(AuthInterceptor), expect.any(ProvidedErrorInterceptor)]),
     );
+    // SM-16: request ids come from the functional interceptor, not a DI class.
+    expect(
+      TestBed.inject(HTTP_INTERCEPTORS).some((entry) => entry instanceof RequestIdInterceptor),
+    ).toBe(false);
+  });
+
+  it('sends a UUIDv7 X-Request-Id through the functional interceptor before auth (SM-16)', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideStynxDefaults({
+          angular: {
+            apiBaseUrl: 'https://api.example.test/',
+            authProvider: {
+              getAccessToken: vi.fn(async () => 'access-token'),
+              refresh: vi.fn(async () => null),
+            },
+            sessionMode: 'bearer',
+          },
+        }),
+        provideHttpClientTesting(),
+      ],
+    });
+    const http = TestBed.inject(HttpClient);
+    const controller = TestBed.inject(HttpTestingController);
+
+    const response = firstValueFrom(http.get('https://api.example.test/items'));
+    await Promise.resolve();
+    await Promise.resolve();
+    const pending = controller.expectOne('https://api.example.test/items');
+    expect(pending.request.headers.get('X-Request-Id')).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+    expect(pending.request.headers.get('Authorization')).toBe('Bearer access-token');
+    pending.flush({ ok: true });
+    await expect(response).resolves.toEqual({ ok: true });
+    controller.verify();
   });
 
   it('provides a null window when evaluated outside a browser', () => {
