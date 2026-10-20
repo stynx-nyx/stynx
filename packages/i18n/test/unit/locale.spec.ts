@@ -83,6 +83,7 @@ describe('LocaleService', () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
     const catalog = {
       supportedLocales: vi.fn(() => ['pt-BR', 'en-US']),
+      defaultLocale: vi.fn(() => 'pt-BR'),
     } as unknown as CatalogService;
     const service = new LocaleService(
       moduleRef(
@@ -138,6 +139,7 @@ describe('LocaleService', () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
     const catalog = {
       supportedLocales: vi.fn(() => ['en-US']),
+      defaultLocale: vi.fn(() => 'en-US'),
       primeTenantOverrides: vi.fn(async () => undefined),
     } as unknown as CatalogService;
     const database = {
@@ -163,11 +165,12 @@ describe('LocaleService', () => {
     expect(mutator.patch).toHaveBeenCalledWith({ locale: 'en-US' });
   });
 
-  it('falls back to pt-BR when supported and translates with explicit or contextual locale', async () => {
+  it('falls back to a configured pt-BR default and translates with explicit or contextual locale', async () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
     const requestContext = context({ active: true });
     const catalog = {
       supportedLocales: vi.fn(() => ['pt-BR', 'en-US']),
+      defaultLocale: vi.fn(() => 'pt-BR'),
       translate: vi.fn(() => 'Olá'),
     } as unknown as CatalogService;
     const service = new LocaleService(
@@ -210,6 +213,7 @@ describe('LocaleService', () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
     const catalog = {
       supportedLocales: vi.fn(() => ['en-US']),
+      defaultLocale: vi.fn(() => 'en-US'),
       translate: vi.fn(() => 'Hello'),
     } as unknown as CatalogService;
     const service = new LocaleService(
@@ -225,13 +229,15 @@ describe('LocaleService', () => {
     await expect(service.resolve('fr-FR')).resolves.toBe('en-US');
     expect(mutator.patch).toHaveBeenCalledWith({ locale: 'en-US' });
     expect(service.t('hello')).toBe('Hello');
-    expect(catalog.translate).toHaveBeenCalledWith('hello', 'pt-BR', {}, undefined);
+    // SM-19: with no locale configured the default translation locale is en-US.
+    expect(catalog.translate).toHaveBeenCalledWith('hello', 'en-US', {}, undefined);
   });
 
   it('uses en-US when the catalog reports no supported locales', async () => {
     const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
     const catalog = {
       supportedLocales: vi.fn(() => []),
+      defaultLocale: vi.fn(() => 'en-US'),
     } as unknown as CatalogService;
     const service = new LocaleService(
       moduleRef(
@@ -244,6 +250,26 @@ describe('LocaleService', () => {
     );
 
     await expect(service.resolve()).resolves.toBe('en-US');
+    expect(mutator.patch).toHaveBeenCalledWith({ locale: 'en-US' });
+  });
+
+  it('does not prefer pt-BR over the en-US default just because a pt-BR catalog exists (SM-19)', async () => {
+    const mutator = { patch: vi.fn() } as unknown as RequestContextMutator;
+    const catalog = {
+      supportedLocales: vi.fn(() => ['pt-BR', 'en-US']),
+      defaultLocale: vi.fn(() => 'en-US'),
+    } as unknown as CatalogService;
+    const service = new LocaleService(
+      moduleRef(
+        new Map([
+          [RequestContext, context({ active: false })],
+          [RequestContextMutator, mutator],
+        ]),
+      ),
+      catalog,
+    );
+
+    await expect(service.resolve('fr-FR')).resolves.toBe('en-US');
     expect(mutator.patch).toHaveBeenCalledWith({ locale: 'en-US' });
   });
 });
