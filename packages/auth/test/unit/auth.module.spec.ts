@@ -25,8 +25,8 @@ describe('StynxAuthModule', () => {
 
     expect(dynamicModule.global).toBe(true);
     // SM-20: imports and controllers are static @Module metadata, not forRoot() output.
-    expect(dynamicModule.imports).toBeUndefined();
-    expect(dynamicModule.controllers).toBeUndefined();
+    expect(dynamicModule.imports).toBe(undefined);
+    expect(dynamicModule.controllers).toBe(undefined);
     expect(Reflect.getMetadata(MODULE_METADATA.IMPORTS, StynxAuthModule)).toHaveLength(1);
     expect(Reflect.getMetadata(MODULE_METADATA.CONTROLLERS, StynxAuthModule)).toEqual([
       StynxAuthController,
