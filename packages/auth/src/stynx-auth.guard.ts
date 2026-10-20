@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
 import {
   InvalidCredentialError,
@@ -8,11 +14,10 @@ import {
   STYNX_VERIFIED_TENANT_ID,
   type PublicTenantRouteOptions,
 } from '@stynx-nyx/contracts';
-import { SessionService } from '@stynx-nyx/sessions';
-import { PermissionCache } from './permission-cache.js';
+import { SessionRevocationList } from '@stynx-nyx/sessions';
 import { StynxJwtValidator } from './stynx-jwt.validator.js';
 import { STYNX_PUBLIC_ROUTE, STYNX_READONLY_ROUTE, STYNX_SYSTEM_ROUTE } from './decorators.js';
-import type { RequestLike } from './types.js';
+import type { RequestLike, StynxAccessTokenClaims } from './types.js';
 import { headerToString } from './utils.js';
 import { clearVerifiedPrincipal, markVerifiedPrincipal } from './verified-principal.js';
 
@@ -29,13 +34,38 @@ function responseLike(
   };
 }
 
+/** Verified-token claims after the guard's completeness checks. */
+interface AuthorizedClaims extends StynxAccessTokenClaims {
+  permissions: string[];
+  roles: string[];
+  expiresAt: number;
+}
+
+function nonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0;
+}
+
+function stringList(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(nonEmptyString);
+}
+
+/**
+ * Authenticates STYNX bearer tokens and derives the request principal from the
+ * verified token alone (S-12, D-025, D-059 P-7-05).
+ *
+ * On the request path the guard verifies the JWT (signature, issuer, audience,
+ * `exp`/`nbf`), requires the `sub`, `sid`, `tenant_id`, `exp`, `perms` and
+ * `roles` claims, and checks the session id against the in-memory
+ * {@link SessionRevocationList}. It reads no session record, permission cache,
+ * Redis key or SQL row. Revocation is the short access-token TTL plus that list,
+ * which a background job refreshes from the session store off the request path.
+ */
 @Injectable()
 export class StynxAuthGuard implements CanActivate {
   constructor(
     private readonly moduleRef: ModuleRef,
     private readonly reflector: Reflector,
     private readonly validator: StynxJwtValidator,
-    private readonly permissionCache: PermissionCache,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -80,33 +110,22 @@ export class StynxAuthGuard implements CanActivate {
         if (error instanceof InvalidCredentialError) return true;
         throw error;
       }
-      if (
-        !claims ||
-        typeof claims.sub !== 'string' ||
-        !claims.sub ||
-        typeof claims.sid !== 'string' ||
-        !claims.sid ||
-        typeof claims.tenantId !== 'string' ||
-        !claims.tenantId
-      ) {
-        throw new UnauthorizedException('Token verification returned malformed claims');
-      }
-      const sessionService = this.moduleRef.get(SessionService, { strict: false });
-      if (sessionService && !(await sessionService.getActive(claims.sid))) return true;
-      const permissions = await this.permissionCache.getForSession(claims);
-      request.stynxClaims = claims;
+      const authorized = this.requireAuthorizedClaims(claims, 'Token verification returned malformed claims');
+      if (this.isRevoked(authorized.sid)) return true;
+      request.stynxClaims = authorized;
       request.principal = {
-        id: claims.sub,
-        roles: [],
-        permissions: permissions.permissions,
-        tenants: [claims.tenantId],
-        claims: claims.claims,
+        id: authorized.sub,
+        roles: [...authorized.roles],
+        permissions: [...authorized.permissions],
+        tenants: [authorized.tenantId],
+        claims: authorized.claims,
       };
       request.user = {
-        id: claims.sub,
-        permissions: permissions.permissions,
-        tenants: [claims.tenantId],
-        claims: claims.claims,
+        id: authorized.sub,
+        roles: [...authorized.roles],
+        permissions: [...authorized.permissions],
+        tenants: [authorized.tenantId],
+        claims: authorized.claims,
       };
       request.actor = request.user;
       markVerifiedPrincipal(request);
@@ -147,17 +166,13 @@ export class StynxAuthGuard implements CanActivate {
       }
       throw error;
     }
-    const sessionService = this.moduleRef.get(SessionService, { strict: false });
-    if (sessionService) {
-      const session = await sessionService.getActive(claims.sid);
-      if (!session) {
-        throw new UnauthorizedException('STYNX session is no longer active');
-      }
+    const authorized = this.requireAuthorizedClaims(claims, 'STYNX bearer token lacks required claims');
+    if (this.isRevoked(authorized.sid)) {
+      throw new UnauthorizedException('STYNX session is no longer active');
     }
-    const permissions = await this.permissionCache.getForSession(claims);
 
-    request.stynxClaims = claims;
-    request.tenantId = claims.tenantId;
+    request.stynxClaims = authorized;
+    request.tenantId = authorized.tenantId;
     request.stynxReadonly = Boolean(
       this.reflector.getAllAndOverride<boolean>(STYNX_READONLY_ROUTE, [
         context.getHandler(),
@@ -165,23 +180,71 @@ export class StynxAuthGuard implements CanActivate {
       ]),
     );
     request.principal = {
-      id: claims.sub,
-      roles: [],
-      permissions: permissions.permissions,
-      tenants: [claims.tenantId],
-      claims: claims.claims,
+      id: authorized.sub,
+      roles: [...authorized.roles],
+      permissions: [...authorized.permissions],
+      tenants: [authorized.tenantId],
+      claims: authorized.claims,
     };
     request.user = {
-      id: claims.sub,
-      permissions: permissions.permissions,
-      tenants: [claims.tenantId],
-      claims: claims.claims,
+      id: authorized.sub,
+      roles: [...authorized.roles],
+      permissions: [...authorized.permissions],
+      tenants: [authorized.tenantId],
+      claims: authorized.claims,
     };
     request.actor = request.user;
     markVerifiedPrincipal(request);
-    Reflect.set(request, STYNX_VERIFIED_TENANT_ID, claims.tenantId);
+    Reflect.set(request, STYNX_VERIFIED_TENANT_ID, authorized.tenantId);
     response?.setHeader('X-Stynx-Auth-Verify-Ms', (performance.now() - startedAt).toFixed(3));
     return true;
+  }
+
+  /**
+   * Requires every claim authorization depends on. A token without `perms` and
+   * `roles` (for example one minted before S-12) is refused, not looked up.
+   */
+  private requireAuthorizedClaims(
+    claims: StynxAccessTokenClaims | null | undefined,
+    message: string,
+  ): AuthorizedClaims {
+    if (
+      !claims ||
+      !nonEmptyString(claims.sub) ||
+      !nonEmptyString(claims.sid) ||
+      !nonEmptyString(claims.tenantId) ||
+      typeof claims.expiresAt !== 'number' ||
+      !Number.isFinite(claims.expiresAt) ||
+      !stringList(claims.permissions) ||
+      !stringList(claims.roles)
+    ) {
+      throw new UnauthorizedException(message);
+    }
+    if (claims.expiresAt * 1000 <= Date.now()) {
+      throw new UnauthorizedException('STYNX bearer token has expired');
+    }
+    return claims as AuthorizedClaims;
+  }
+
+  /**
+   * Synchronous, in-memory revocation check. Fails closed when the list has not
+   * been refreshed from the session store within its staleness bound.
+   */
+  private isRevoked(sid: string): boolean {
+    const revocations = this.revocationList();
+    if (!revocations) return false;
+    if (revocations.isStale()) {
+      throw new ServiceUnavailableException('STYNX session revocation list is stale');
+    }
+    return revocations.isRevoked(sid);
+  }
+
+  private revocationList(): SessionRevocationList | undefined {
+    try {
+      return this.moduleRef.get(SessionRevocationList, { strict: false }) ?? undefined;
+    } catch {
+      return undefined;
+    }
   }
 }
 

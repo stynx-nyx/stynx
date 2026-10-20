@@ -90,6 +90,42 @@ export class PermissionQueryService {
     });
   }
 
+  /**
+   * Role keys held by the user's active membership in the tenant, directly or
+   * through groups. Called when a session token is minted, never per request.
+   */
+  async resolveRolesForUser(userId: string, tenantId: string): Promise<string[]> {
+    return this.runWithActorContext(userId, tenantId, async () => {
+      const database = this.requireDatabase();
+      return database.tx(async (trx) => {
+        const result = await trx.query<PermissionKeyRow>(
+          `
+            with membership as (
+              select id
+              from auth.memberships
+              where user_id = $1
+                and tenant_id = $2
+                and is_active = true
+              limit 1
+            )
+            select distinct role_row.key
+            from auth.membership_roles membership_role
+            join auth.roles role_row on role_row.id = membership_role.role_id
+            join membership membership_row on membership_row.id = membership_role.membership_id
+            union
+            select distinct role_row.key
+            from auth.group_memberships group_membership
+            join auth.group_roles group_role on group_role.group_id = group_membership.group_id
+            join auth.roles role_row on role_row.id = group_role.role_id
+            join membership membership_row on membership_row.id = group_membership.membership_id
+          `,
+          [userId, tenantId],
+        );
+        return [...new Set(result.rows.map((row) => row.key))].sort();
+      });
+    });
+  }
+
   async probeHash(
     userId: string,
     tenantId: string,

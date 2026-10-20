@@ -15,6 +15,7 @@ import type {
   SessionStore,
   SessionPolicyOptions,
   SessionPolicyResult,
+  SessionRevocationEntry,
 } from './types.js';
 import { SessionConflictError, SessionExchangeError } from './errors.js';
 
@@ -58,6 +59,8 @@ local function revoke(s)
   redis.call('SREM', prefix .. ':sessions_by_tenant:' .. s.tenantId, s.sid)
   redis.call('SET', refreshKey(s.refreshTokenHash), cjson.encode({sid=s.sid,familyId=s.refreshFamilyId,state='used'}))
   if ttl > 0 then redis.call('PEXPIRE', refreshKey(s.refreshTokenHash), ttl) end
+  local now = redis.call('TIME')
+  redis.call('ZADD', prefix .. ':revoked', tonumber(now[1]) * 1000 + math.floor(tonumber(now[2]) / 1000), s.sid)
   s.status = 'revoked'
   s.revokedAt = ARGV[5]
   s.updatedAt = ARGV[5]
@@ -79,6 +82,11 @@ return cjson.encode({revoked=revoked})
 
 function unixSeconds(isoTimestamp: string): number {
   return Math.ceil(new Date(isoTimestamp).getTime() / 1000);
+}
+
+function revocationScore(isoTimestamp: string): number {
+  const millis = Date.parse(isoTimestamp);
+  return Number.isFinite(millis) ? millis : Date.now();
 }
 
 function parseJson<T>(value: string | null): T | null {
@@ -259,6 +267,7 @@ export class RedisSessionStore implements SessionStore, OnModuleInit, OnModuleDe
       state: 'used',
     } satisfies RefreshTokenLookup));
     multi.expireAt(this.refreshLookupKey(current.refreshTokenHash), unixSeconds(current.expiresAt));
+    multi.zAdd(this.revokedIndexKey(), { score: revocationScore(revokedAt), value: sid });
     await multi.exec();
 
     return {
@@ -279,6 +288,17 @@ export class RedisSessionStore implements SessionStore, OnModuleInit, OnModuleDe
 
   async publishInvalidation(message: string): Promise<void> {
     await this.getClient().publish(this.options.redis.invalidateChannel, message);
+  }
+
+  async listRevokedSessions(since: string): Promise<SessionRevocationEntry[]> {
+    const client = this.getClient();
+    const sinceMs = revocationScore(since);
+    await client.zRemRangeByScore(this.revokedIndexKey(), '-inf', `(${sinceMs}`);
+    const entries = await client.zRangeByScoreWithScores(this.revokedIndexKey(), sinceMs, '+inf');
+    return entries.map((entry) => ({
+      sid: String(entry.value),
+      revokedAt: new Date(Number(entry.score)).toISOString(),
+    }));
   }
 
   private async pruneIndex(indexKey: string): Promise<string[]> {
@@ -320,6 +340,10 @@ export class RedisSessionStore implements SessionStore, OnModuleInit, OnModuleDe
 
   private userIndexKey(userId: string): string {
     return `${this.options.redis.keyPrefix}:sessions_by_user:${userId}`;
+  }
+
+  private revokedIndexKey(): string {
+    return `${this.options.redis.keyPrefix}:revoked`;
   }
 
   private tenantIndexKey(tenantId: string): string {

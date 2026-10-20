@@ -57,6 +57,10 @@ export interface StynxAccessTokenClaims {
   sid: string;
   tenantId: string;
   permsHash?: string;
+  /** Verified `perms` claim: the permission keys this token authorizes (S-12). */
+  permissions?: string[];
+  /** Verified `roles` claim: the role keys this token carries (S-12). */
+  roles?: string[];
   cognitoSub?: string;
   issuedAt?: number;
   expiresAt?: number;
