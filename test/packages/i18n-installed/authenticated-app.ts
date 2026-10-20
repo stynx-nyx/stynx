@@ -214,6 +214,8 @@ export class AuthenticatedI18nApp {
             ]
           : []),
         StynxI18nModule.forRoot({
+          // This consumer opts in to pt-BR; the STYNX default is en-US (SM-19).
+          defaultLocale: 'pt-BR',
           ...(this.workspaceRoot ? { workspaceRoot: this.workspaceRoot } : {}),
         }),
       ],
