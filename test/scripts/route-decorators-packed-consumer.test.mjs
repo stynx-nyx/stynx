@@ -87,7 +87,13 @@ before(() => {
     assert.ok(archive?.endsWith('.tgz'), `${name}: pnpm pack produced no archive`);
     const installed = join(nodeModules, name);
     mkdirSync(installed, { recursive: true });
-    execFileSync('tar', ['-xzf', join(archiveDir, archive), '-C', installed, '--strip-components=1']);
+    execFileSync('tar', [
+      '-xzf',
+      join(archiveDir, archive),
+      '-C',
+      installed,
+      '--strip-components=1',
+    ]);
     for (const dep of [
       ...Object.keys(manifest.dependencies ?? {}),
       ...Object.keys(manifest.peerDependencies ?? {}),
@@ -118,7 +124,11 @@ for (const [pkg, name] of ${JSON.stringify(expected)}) {
 console.log(JSON.stringify(out));`;
   writeFileSync(join(fixture, 'probe.mjs'), script);
   const out = JSON.parse(
-    execFileSync(process.execPath, ['probe.mjs'], { cwd: fixture, encoding: 'utf8', timeout: 60000 }),
+    execFileSync(process.execPath, ['probe.mjs'], {
+      cwd: fixture,
+      encoding: 'utf8',
+      timeout: 60000,
+    }),
   );
   const types = expected.map(([pkg, name]) => out[`${pkg}#${name}`]);
   assert.deepEqual(types, ['function', 'function', 'function', 'function']);
