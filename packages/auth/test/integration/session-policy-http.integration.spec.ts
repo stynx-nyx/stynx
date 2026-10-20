@@ -2,7 +2,7 @@ import { generateKeyPairSync } from 'node:crypto';
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { StynxDataModule } from '@stynx-nyx/data';
 import {
   InMemorySessionStore,

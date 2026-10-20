@@ -1,6 +1,6 @@
 import { PermissionCache } from '@stynx-nyx/auth';
 import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
-import request from 'supertest';
+import request, { type Test as SupertestTest } from '../../support/request-with-id.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
@@ -109,7 +109,7 @@ function putQuestionScore(
   token: string,
   questionId: string,
   body: Record<string, unknown>,
-): request.Test {
+): SupertestTest {
   return request(context.app.getHttpServer())
     .put(`/flow/questions/${questionId}/score`)
     .set('authorization', `Bearer ${token}`)

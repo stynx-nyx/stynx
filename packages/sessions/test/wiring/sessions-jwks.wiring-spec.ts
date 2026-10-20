@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { SessionJwksController } from '../../src/jwks.controller.js';
 import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
 

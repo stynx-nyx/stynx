@@ -16,7 +16,7 @@ import { PrivacyService } from '../../src/privacy.service.js';
 import { StynxPrivacyModule } from '../../src/privacy.module.js';
 import type { PrivacyCognitoAdmin, PrivacyObjectStore } from '../../src/types.js';
 import { createHmac } from 'node:crypto';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import {
   AuthenticatedPrivacyApp,
   PrivacyBoundaryController,

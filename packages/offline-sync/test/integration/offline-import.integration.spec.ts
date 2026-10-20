@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import { Client } from 'pg';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import {
   archivedFixture,
   recaptureArchive,

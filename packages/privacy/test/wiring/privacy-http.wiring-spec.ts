@@ -1,4 +1,4 @@
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { AuthenticatedPrivacyApp } from '../support/authenticated-privacy-app.js';
 
 describe('PrivacyController E2E', () => {

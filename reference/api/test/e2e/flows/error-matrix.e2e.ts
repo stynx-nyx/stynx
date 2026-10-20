@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { PermissionCache } from '@stynx-nyx/auth';
 import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
-import request from 'supertest';
+import request from '../../support/request-with-id.js';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   closeReferenceApiE2e,

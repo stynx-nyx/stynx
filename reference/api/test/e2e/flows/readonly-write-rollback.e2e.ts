@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { PermissionCache } from '@stynx-nyx/auth';
 import { StynxPoolRegistry } from '@stynx-nyx/data';
-import request from 'supertest';
+import request from '../../support/request-with-id.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,

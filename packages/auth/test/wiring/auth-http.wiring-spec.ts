@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { PermissionGuard } from '../../src/permission.guard.js';
 import { StynxAuthGuard } from '../../src/stynx-auth.guard.js';
 import { StynxAuthController } from '../../src/auth.controller.js';

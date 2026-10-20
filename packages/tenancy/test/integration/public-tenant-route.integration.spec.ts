@@ -3,7 +3,7 @@ import type { CanActivate, ExecutionContext, INestApplication } from '@nestjs/co
 import { Test } from '@nestjs/testing';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { PublicTenantRoute, StynxAuthModule } from '@stynx-nyx/auth';
 import { STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL } from '@stynx-nyx/contracts';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';

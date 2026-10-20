@@ -1,7 +1,7 @@
 import { generateRequestId } from '@stynx-nyx/core';
 import { LocaleService } from '@stynx-nyx/i18n';
 import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
-import request from 'supertest';
+import request from '../../support/request-with-id.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,

@@ -6,7 +6,7 @@ import { userInfo } from 'node:os';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { Client, type ClientConfig } from 'pg';
-import request from 'supertest';
+import supertest from 'supertest';
 import {
   PermissionCache,
   PermissionCacheMetrics,
@@ -33,6 +33,29 @@ import {
 import { CrudProbeModule } from './generated/src/crud_probe.module';
 import { CrudProbeRepository } from './generated/src/crud_probe.repository';
 import { readFileSync } from 'node:fs';
+
+// Every STYNX client sends its own UUIDv7 X-Request-Id; STYNX rejects a
+// missing one (SM-15). This wraps supertest so each request carries a fresh id.
+const REQUEST_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options']);
+function request(app: Parameters<typeof supertest>[0]) {
+  const agent = supertest(app);
+  return new Proxy(agent, {
+    get(target, property, receiver) {
+      const value: unknown = Reflect.get(target, property, receiver);
+      if (
+        typeof property === 'string' &&
+        REQUEST_METHODS.has(property) &&
+        typeof value === 'function'
+      ) {
+        return (...args: unknown[]) =>
+          (value as (...input: unknown[]) => supertest.Test)
+            .apply(target, args)
+            .set('X-Request-Id', generateRequestId());
+      }
+      return value;
+    },
+  });
+}
 
 const tenantA = '11111111-1111-4111-8111-111111111111';
 const tenantB = '22222222-2222-4222-8222-222222222222';
@@ -80,7 +103,7 @@ async function connect(config: ClientConfig): Promise<Client> {
   await client.connect();
   return client;
 }
-async function expectStatus(req: request.Test, status: number): Promise<Record<string, unknown>> {
+async function expectStatus(req: supertest.Test, status: number): Promise<Record<string, unknown>> {
   const response = await req;
   assert(
     response.status === status,

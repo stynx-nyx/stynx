@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import type { INestApplication } from '@nestjs/common';
 import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { IdempotencyInterceptor, type IdempotencyStoredEntry } from '@stynx-nyx/idempotency';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { StynxOfflineSyncModule } from '../../src/offline-sync.module.js';
 
