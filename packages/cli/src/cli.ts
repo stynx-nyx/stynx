@@ -16,6 +16,15 @@ import { scaffoldApp } from './init.js';
 import { migrateDown, migrateRedo, migrateUp, migrationStatus } from './migrate.js';
 import { generateRopaFromApp } from './privacy-ropa.js';
 import { generateModule } from './generate-module.js';
+import {
+  defaultDdlRoots,
+  defaultRouteRoots,
+  exitCodeFor,
+  formatCheckText,
+  runCheck,
+  type CheckCommandName,
+  type CheckOptions,
+} from './checks.js';
 
 export function buildProgram(): Command {
   const program = new Command();
@@ -155,6 +164,36 @@ export function buildProgram(): Command {
       const cognitoUsers = parse(readFileSync(resolve(options.cognitoJson), 'utf8')) as Array<{ sub: string; email: string }>;
       console.log(JSON.stringify(linkCognitoUsers(users, cognitoUsers), null, 2));
     });
+
+  // Read-only check entry points (D-057): one JSON document on stdout with --json; exit 0/1/2.
+  const check = (name: CheckCommandName, description: string) =>
+    program
+      .command(name)
+      .description(description)
+      .option('--json', 'Print one JSON report on stdout', false);
+  const emit = async (name: CheckCommandName, options: CheckOptions & { json?: boolean }) => {
+    const report = await runCheck(name, options);
+    process.stdout.write(options.json ? `${JSON.stringify(report, null, 2)}\n` : formatCheckText(report));
+    process.exitCode = exitCodeFor(report);
+  };
+  check('list-routes', 'Inventory declared Nest routes under the roots')
+    .option('--roots <roots>', 'Comma-separated roots; * matches one directory', defaultRouteRoots)
+    .action((options: CheckOptions & { json?: boolean }) => emit('list-routes', options));
+  check('verify-stynx-boundary', 'Check imports against the .stynxrc.json boundary').action(
+    (options: { json?: boolean }) => emit('verify-stynx-boundary', options),
+  );
+  check('verify-api-coverage', 'Compare declared routes with the committed OpenAPI document')
+    .option('--strict', 'Treat drift as a failure', false)
+    .action((options: CheckOptions & { json?: boolean }) => emit('verify-api-coverage', options));
+  check('verify-openapi-contract', 'Check the OpenAPI document structure').action(
+    (options: { json?: boolean }) => emit('verify-openapi-contract', options),
+  );
+  check('verify-public-api-baselines', 'Compare built declarations with the baselines').action(
+    (options: { json?: boolean }) => emit('verify-public-api-baselines', options),
+  );
+  check('verify-rls-negative', 'Check tenant-scoped tables for enabled, forced RLS policies')
+    .option('--ddl <roots>', 'Comma-separated DDL roots or files; * matches one directory', defaultDdlRoots)
+    .action((options: CheckOptions & { json?: boolean }) => emit('verify-rls-negative', options));
 
   const generate = program.command('generate');
   generate.exitOverride();
