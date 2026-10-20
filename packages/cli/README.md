@@ -171,6 +171,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/privacy`: `workspace:*`
 - `commander`: `^15.0.0`
 - `pg`: `^8.22.0`
+- `typescript`: `~6.0.3`
 - `yaml`: `^2.8.3`
 
 ### Optional dependencies
@@ -185,6 +186,5 @@ _None._
 
 - `@types/node`: `24.13.4`
 - `@types/pg`: `^8.20.0`
-- `typescript`: `^6.0.3`
 
 <!-- stynx:generated-dependencies:end -->
