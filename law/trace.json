@@ -3446,7 +3446,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 101,
-      "assertion_digest_sha256": "07875b1ef7e075c75d32462762b8e9f0767b86c8c0f948d2aa8cf5d75455e1b2"
+      "assertion_digest_sha256": "6113547f6d210fb41845e8d9c2d2bbe0e219fb79faf68b0f0f9f7d1b45dc5790"
     },
     {
       "path": "packages/i18n/test/integration/i18n.module.spec.ts",
