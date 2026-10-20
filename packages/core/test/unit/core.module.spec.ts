@@ -53,8 +53,8 @@ describe('StynxCoreModule', () => {
     const defaultAsyncModule = StynxCoreModule.forRootAsync({
       useFactory: asyncFactory,
     });
-    expect(defaultAsyncModule.imports).toBeUndefined();
-    expect(syncModule.imports).toBeUndefined();
+    expect(defaultAsyncModule.imports).toBe(undefined);
+    expect(syncModule.imports).toBe(undefined);
     expect(defaultAsyncModule.providers).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -86,8 +86,8 @@ describe('StynxCoreModule', () => {
 
     // Neither dynamic module carries its own CLS import; both share the one
     // static descriptor on the StynxCoreModule class (SM-20).
-    expect(first.imports).toBeUndefined();
-    expect(second.imports).toBeUndefined();
+    expect(first.imports).toBe(undefined);
+    expect(second.imports).toBe(undefined);
     expect(first.module).toBe(second.module);
     expect(staticImports()).toHaveLength(1);
   });
@@ -102,7 +102,7 @@ describe('StynxCoreModule', () => {
       schema: z.object({}),
     });
 
-    expect(first.imports).toBeUndefined();
+    expect(first.imports).toBe(undefined);
     const clsModuleDescriptor = staticImports()[0] as {
       imports?: Array<{
         providers?: Array<{ provide?: unknown; useValue?: { middleware?: unknown } }>;
