@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.3.39",
   "meta": {
-    "last_updated": "2026-10-20T00:15:59.000000Z",
+    "last_updated": "2026-10-20T00:39:35.000000Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-19 Architect rebind for SM-16: rebinds packages-web/angular/test/stynx-angular.spec.ts (the two Math.random fallback cases now assert generateClientRequestId refuses without crypto.getRandomValues and never consults Math.random; the web-crypto case asserts no Math.random call; a new case drives the functional requestIdInterceptor, adding a UUIDv7 id and preserving a caller id; provideStynxDefaults no longer registers the RequestIdInterceptor class) and packages-web/angular/test/provider-depth.spec.ts (auth and error DI interceptors still registered, the request-id class is not, and an HttpClient request through provideStynxDefaults carries a UUIDv7 X-Request-Id and the bearer token). Assertions grow 93->96 and 7->11; none is weakened beyond the intended removal of the Math.random fallback.",
       "2026-10-19 Architect rebind for SM-13: rebinds tools/eslint-config/test/rule-families.spec.mjs after the STYNX workspace Nest profile assertion moves stynx/require-idempotent-route-decorator from warn to error (the published level). Assertion count unchanged at 17; no assertion is removed or weakened.",
       "2026-10-19 Architect rebind for SM-06 follow-up (template apply.sh runs `stynx migrate up --role-prefix <product>` with no URL on argv, 09 \u00a71): binds packages/cli/test/migrate-pg-env.integration.spec.ts (migrateUp with prefix demo and only PG* set against the STYNX_TEST_PG_* scratch PostgreSQL; skipped when none is configured) and rebinds packages/cli/test/migrate.spec.ts (no connectionString reaches the pg client or factory without a URL) and packages/cli/test/cli-program.spec.ts (--database-url optional on migrate status|up|down|redo; audit verify unchanged). No assertion is removed or weakened beyond the intended optional flag.",
       "2026-10-19 Architect rebind for SM-06: binds packages/data/test/unit/platform-roles.spec.ts (default prefix applies every platform migration byte for byte; prefix demo rewrites only stynx_{owner,app,reader} identifiers; invalid prefixes refused), packages/data/test/unit/migration-runner-role-prefix.spec.ts, packages/data/test/integration/role-prefix.integration.spec.ts (scratch PostgreSQL: default stays on stynx_*; prefix demo bootstraps demo_{owner,app,reader} with demo_app NOBYPASSRLS, no stynx_* role owning, granted or named in the database, tenant isolation as the product app role), packages/cli/test/migrate-role-prefix.spec.ts and packages/testing/test/roles.unit.spec.ts, and rebinds the extended packages/cli/test/cli-program.spec.ts (--role-prefix surface) and packages/testing/test/create-test-app.unit.spec.ts (product role names). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
@@ -2334,16 +2335,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "46c9e8f700c26b88cef0cbf61325b8560f17d9ba714846bdcb15f5e52056e40f"
+      "assertion_count": 11,
+      "assertion_digest_sha256": "b240ced8c9f7a8cc6cf991bd06af519828c2a4653cca8a9b80061ef1d5e4e458"
     },
     {
       "path": "packages-web/angular/test/stynx-angular.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 93,
-      "assertion_digest_sha256": "3b94187ce072ba710ad949f87107b74d13d1fa82c529b2d465be7cc334825fd2"
+      "assertion_count": 96,
+      "assertion_digest_sha256": "c57912b5f7538ad6632285eed369bd67da29a8009bf617d0539a27b9b8de8df9"
     },
     {
       "path": "packages-web/sdk/test/errors.spec.ts",
