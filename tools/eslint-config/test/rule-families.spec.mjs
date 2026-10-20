@@ -237,5 +237,6 @@ test('STYNX workspace entry points keep the pre-SM-11 levels', () => {
   assert.equal(libRules['@typescript-eslint/no-unsafe-assignment'], 'off');
   assert.equal(libRules['boundaries/dependencies'][1].default, 'allow');
   assert.equal(libRules['stynx/no-authored-cjs'], undefined);
-  assert.equal(rulesOf(nestConfig)['stynx/require-idempotent-route-decorator'], 'warn');
+  // SM-13 raised the workspace level from warn to the published error level.
+  assert.equal(rulesOf(nestConfig)['stynx/require-idempotent-route-decorator'], 'error');
 });
