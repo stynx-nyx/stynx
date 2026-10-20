@@ -16,6 +16,7 @@ import {
   SessionService,
   SessionJwtSigningService,
   SessionMirrorWriter,
+  SessionRevocationList,
   STYNX_SESSIONS_OPTIONS,
   STYNX_SESSION_STORE,
   STYNX_SESSION_MIRROR,
@@ -205,6 +206,7 @@ export class AuthenticatedI18nApp {
         { provide: STYNX_SESSION_MIRROR, useClass: SessionMirrorWriter },
         SessionJwtSigningService,
         SessionService,
+        SessionRevocationList,
       ],
     }).compile();
     this.app = this.moduleRef.createNestApplication();
@@ -330,6 +332,15 @@ export class AuthenticatedI18nApp {
       sid: kind,
       tenant_id: kind === 'other' || kind === 'otherWriter' ? OTHER_TENANT_ID : TENANT_ID,
       exp: Math.floor(Date.now() / 1000) + 3600,
+      // S-12 (SM-14): the verified token carries the actor's authorization, mirroring the
+      // direct_perms seeded below; `other` keeps the writer's grants so tenancy denies it.
+      perms:
+        kind === 'writer' || kind === 'other' || kind === 'otherWriter'
+          ? ['i18n:read', 'i18n:write']
+          : kind === 'reader'
+            ? ['i18n:read']
+            : [],
+      roles: [],
     };
     const input =
       Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'i18n-test', typ: 'JWT' })).toString(

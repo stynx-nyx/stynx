@@ -4,6 +4,7 @@ import { I18nAdminService } from '../../src/i18n-admin.service.js';
 import { LocaleService } from '../../src/locale.service.js';
 import { CatalogService } from '../../src/catalog.service.js';
 import { RequestContext } from '@stynx-nyx/core';
+import { SessionRevocationList } from '@stynx-nyx/sessions';
 
 import {
   AuthenticatedI18nApp,
@@ -612,6 +613,9 @@ describe('I18nController API error matrix', () => {
 
     it('refuses a revoked genuine session', async () => {
       await fixture.store.revokeSession('reader', new Date().toISOString(), 'revoked');
+      // S-12 (SM-14): revocations reach the guard through the in-memory list that a background
+      // job refreshes off the request path; refresh it now instead of waiting for the next tick.
+      await fixture.moduleRef.get(SessionRevocationList).refresh();
       await request(testApp.app.getHttpServer())
         .get('/_tenancy/i18n/overrides')
         .set('x-tenant-id', TENANT_ID)
