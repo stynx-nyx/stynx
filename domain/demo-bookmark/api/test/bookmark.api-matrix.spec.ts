@@ -175,10 +175,14 @@ describe('Demo bookmark API error matrix', () => {
         {
           provide: StynxJwtValidator,
           useValue: {
+            // S-12: authorization travels in the verified token claims.
             validate: async (token: string) => ({
               sid: `sid-${token}`,
               sub: ACTOR_ID,
               tenantId: TENANT_ID,
+              permissions: tokenPermissions(token),
+              roles: [],
+              expiresAt: Math.floor(Date.now() / 1000) + 3600,
               claims: { scope: 'bookmark-api-matrix' },
             }),
           },
@@ -186,26 +190,20 @@ describe('Demo bookmark API error matrix', () => {
         {
           provide: PermissionCache,
           useValue: {
-            getForSession: async (claims: { sid: string }) => {
-              const token = claims.sid.replace(/^sid-/u, '');
-              return {
-                sid: claims.sid,
-                userId: ACTOR_ID,
-                tenantId: TENANT_ID,
-                membershipId: 'membership-api-matrix',
-                permissions: tokenPermissions(token),
-                hash: tokenPermissions(token).join('|'),
-                generation: 1,
-                computedAt: Date.now(),
-              };
+            getForSession: async () => {
+              throw new Error('permission cache read on the request path');
             },
           },
         },
         {
           provide: SessionService,
           useValue: {
-            get: async () => ({ status: 'active' }),
-            getActive: async () => ({ status: 'active' }),
+            get: async () => {
+              throw new Error('session read on the request path');
+            },
+            getActive: async () => {
+              throw new Error('session read on the request path');
+            },
           },
         },
       ],

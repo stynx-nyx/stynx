@@ -18,6 +18,7 @@ import {
   type StynxSseResponse,
 } from '@stynx-nyx/backend';
 import type { PostgresTestDatabase } from '../../../../packages/data/test/support/postgres.js';
+import { SessionRevocationList } from '@stynx-nyx/sessions';
 import { RealAuthenticationFixture } from '../../../../packages/backend/test/support/real-authentication.js';
 
 const authentication = new RealAuthenticationFixture();
@@ -545,6 +546,9 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
         new Date().toISOString(),
         'revoked',
       );
+      // S-12: a store-level revocation reaches the guard through the background
+      // revocation-list refresh (run here instead of waiting for its next tick).
+      await moduleRef.get(SessionRevocationList).refresh();
       const revoked = await refusal(authentication.accessToken);
       expect(revoked.status).toBe(401);
       expect(revoked.contentType ?? '').not.toContain('text/event-stream');

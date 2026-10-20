@@ -4,6 +4,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
+  refreshActorTokens,
   queryRowsAsTenant,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
@@ -196,6 +197,9 @@ describe('@stynx-nyx/reference-api e2e auth and permissions', () => {
     viewerASid = tokenSid(context.tokens.viewerA);
     await grantPermissions(context, actors.adminA.membershipId, platformPermissionKeys);
     await context.app.get(PermissionCache).invalidateSid(adminASid);
+    // S-12: the platform grant reaches adminA's token on refresh (same sid).
+    await refreshActorTokens(context, ['adminA']);
+    expect(tokenSid(context.tokens.adminA)).toBe(adminASid);
 
     adminA = createAuthenticatedAgent(context.app, context.tokens.adminA);
     viewerA = createAuthenticatedAgent(context.app, context.tokens.viewerA);
@@ -269,6 +273,17 @@ describe('@stynx-nyx/reference-api e2e auth and permissions', () => {
 
     await grantPermissions(context, actors.viewerA.membershipId, ['sample:record:write']);
     await adminA.post(`/_platform/perms/${viewerASid}/invalidate`).send({}).expect(201);
+    // S-12: a grant is not looked up per request; the existing token keeps its claims.
+    await viewerA
+      .post('/records')
+      .send({
+        title: 'Viewer denied before refresh',
+        email: 'viewer-denied-before-refresh@example.com',
+      })
+      .expect(403);
+    await refreshActorTokens(context, ['viewerA']);
+    expect(tokenSid(context.tokens.viewerA)).toBe(viewerASid);
+    viewerA = createAuthenticatedAgent(context.app, context.tokens.viewerA);
 
     const record = (await viewerA
       .post('/records')
@@ -299,6 +314,8 @@ describe('@stynx-nyx/reference-api e2e auth and permissions', () => {
 
     await revokePermissions(context, actors.viewerA.membershipId, ['sample:record:write']);
     await adminA.post(`/_platform/perms/${viewerASid}/invalidate`).send({}).expect(201);
+    await refreshActorTokens(context, ['viewerA']);
+    viewerA = createAuthenticatedAgent(context.app, context.tokens.viewerA);
 
     await viewerA
       .patch(`/records/${record.id}`)

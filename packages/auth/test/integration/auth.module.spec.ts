@@ -9,6 +9,7 @@ import { Database, StynxDataModule } from '@stynx-nyx/data';
 import {
   InMemorySessionStore,
   RedisSessionStore,
+  SessionService,
   StynxSessionsModule,
   STYNX_SESSION_STORE,
 } from '@stynx-nyx/sessions';
@@ -152,6 +153,7 @@ describe('StynxAuthModule integration', () => {
   let permissionCache: PermissionCache;
   let effectiveHashComputer: EffectiveHashComputer;
   let requestContextMutator: RequestContextMutator;
+  let sessionService: SessionService;
   let database: PostgresTestDatabase;
   const sessionStore = new InMemorySessionStore();
   const permissionBackend = new InMemoryPermissionCacheBackend();
@@ -200,6 +202,7 @@ describe('StynxAuthModule integration', () => {
     permissionCache = moduleRef.get(PermissionCache);
     effectiveHashComputer = moduleRef.get(EffectiveHashComputer);
     requestContextMutator = moduleRef.get(RequestContextMutator);
+    sessionService = moduleRef.get(SessionService);
 
     const admin = await database.connectAsAdmin();
     try {
@@ -237,6 +240,12 @@ describe('StynxAuthModule integration', () => {
 
     const payload = tokenPayload(response.body.accessToken);
     expect(typeof payload.perms_hash).toBe('string');
+    // S-12: authorization is minted into the verified token.
+    expect(payload.perms).toEqual(
+      expect.arrayContaining(['document:read:*', 'platform:perms:inspect:*']),
+    );
+    expect(payload.perms).not.toContain('document:write:*');
+    expect(payload.roles).toEqual(['platform-ops', 'reader']);
 
     await request(app.getHttpServer())
       .get('/docs/read')
@@ -249,7 +258,7 @@ describe('StynxAuthModule integration', () => {
       .expect(403);
   });
 
-  it('refreshes permissions through pubsub invalidation within 2 seconds', async () => {
+  it('refreshes permissions into the token on refresh after pubsub invalidation, never per request', async () => {
     const session = await runWithRequestContext(
       '0197481e-6f84-77e4-8d6d-41f0b6fca9c1',
       '0197481e-7294-7c53-8b03-5c36d7c2831a',
@@ -279,13 +288,23 @@ describe('StynxAuthModule integration', () => {
     );
     await permissionCache.publishInvalidation('0197481e-7294-7c53-8b03-5c36d7c2831a:0197481e-6f84-77e4-8d6d-41f0b6fca9c1');
 
+    // S-12: the presented token's verified claims decide; the grant is not looked up per request.
     await request(app.getHttpServer())
       .get('/docs/write')
       .set('authorization', `Bearer ${session.accessToken}`)
+      .expect(403);
+
+    const refreshed = await sessionService.refresh(session.refreshToken);
+    expect(tokenPayload(refreshed.accessToken).perms).toEqual(
+      expect.arrayContaining(['document:read:*', 'document:write:*']),
+    );
+    await request(app.getHttpServer())
+      .get('/docs/write')
+      .set('authorization', `Bearer ${refreshed.accessToken}`)
       .expect(200);
   });
 
-  it('detects hash drift when pubsub invalidation is missed', async () => {
+  it('picks up a grant on token refresh when pubsub invalidation is missed', async () => {
     const session = await runWithRequestContext(
       '0197481e-6f84-77e4-8d6d-41f0b6fca9c1',
       '0197481e-7294-7c53-8b03-5c36d7c2831a',
@@ -318,6 +337,12 @@ describe('StynxAuthModule integration', () => {
     await request(app.getHttpServer())
       .get('/docs/delete')
       .set('authorization', `Bearer ${session.accessToken}`)
+      .expect(403);
+
+    const refreshed = await sessionService.refresh(session.refreshToken);
+    await request(app.getHttpServer())
+      .get('/docs/delete')
+      .set('authorization', `Bearer ${refreshed.accessToken}`)
       .expect(200);
   });
 

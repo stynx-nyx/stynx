@@ -3,6 +3,7 @@ import { auditExpect } from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
+  refreshActorTokens,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
 } from '../fixtures/app.js';
@@ -70,6 +71,7 @@ async function grantAuditReadPermission(context: ReferenceApiE2eContext): Promis
 
   const permissionCache = context.app.get(PermissionCache);
   await permissionCache.publishInvalidation(`${actors.adminA.userId}:${tenants.tenantA}`);
+  await refreshActorTokens(context, ['adminA']);
 }
 
 async function queryAuditEvents(
