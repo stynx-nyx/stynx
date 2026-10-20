@@ -95,4 +95,34 @@ describe('createStynxFixtures unit defaults', () => {
       byteSize: 64,
     });
   });
+
+  it('creates memberships active by default and keeps an explicit id and state', async () => {
+    const client = makeClient();
+    const fixtures = createStynxFixtures(vi.fn(async () => client as never));
+
+    const active = await fixtures.createMembership({ tenantId: 'tenant-1', userId: 'user-1' });
+    const inactive = await fixtures.createMembership({
+      id: 'membership-2',
+      tenantId: 'tenant-1',
+      userId: 'user-2',
+      isActive: false,
+    });
+
+    expect(active).toEqual({
+      id: expect.any(String),
+      tenantId: 'tenant-1',
+      userId: 'user-1',
+      isActive: true,
+    });
+    expect(inactive).toEqual({ id: 'membership-2', tenantId: 'tenant-1', userId: 'user-2', isActive: false });
+    expect(client.query).toHaveBeenCalledWith(
+      expect.stringContaining('insert into auth.memberships'),
+      [active.id, 'tenant-1', 'user-1', true, expect.any(String)],
+    );
+    expect(client.query).toHaveBeenCalledWith(
+      expect.stringContaining('insert into auth.memberships'),
+      ['membership-2', 'tenant-1', 'user-2', false, expect.any(String)],
+    );
+    expect(client.end).toHaveBeenCalledTimes(2);
+  });
 });

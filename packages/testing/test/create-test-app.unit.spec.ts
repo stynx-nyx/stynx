@@ -1,7 +1,6 @@
 // vi.hoisted bundle: declarations referenced by vi.mock factories must be
 // hoisted alongside the mock call (Vitest only hoists vi.mock + vi.hoisted).
-const { stop, connect, end, query, tx, withSystemContext, close, init, get, containers, FakeContainer } = vi.hoisted(() => {
-  const stop = vi.fn(async () => undefined);
+const { connect, end, query, tx, withSystemContext, close, init, get } = vi.hoisted(() => {
   const connect = vi.fn(async () => undefined);
   const end = vi.fn(async () => undefined);
   const query = vi.fn(async (_sql?: unknown, _params?: unknown[]) => ({ rows: [] }));
@@ -17,49 +16,8 @@ const { stop, connect, end, query, tx, withSystemContext, close, init, get, cont
     }
     return { runWithRequestContext: vi.fn() };
   });
-  const containers: Array<{
-    image: string;
-    environments: Record<string, string>[];
-    exposedPorts: number[][];
-    waitStrategies: unknown[];
-  }> = [];
-  class FakeContainer {
-    readonly environments: Record<string, string>[] = [];
-    readonly exposedPorts: number[][] = [];
-    readonly waitStrategies: unknown[] = [];
-    constructor(readonly image: string) {
-      containers.push(this);
-    }
-    withEnvironment(environment: Record<string, string>) {
-      this.environments.push(environment);
-      return this;
-    }
-    withExposedPorts(...ports: number[]) {
-      this.exposedPorts.push(ports);
-      return this;
-    }
-    withWaitStrategy(strategy: unknown) {
-      this.waitStrategies.push(strategy);
-      return this;
-    }
-    async start() {
-      return {
-        stop,
-        getHost: () => '127.0.0.1',
-        getMappedPort: (port: number) => port + 10_000,
-      };
-    }
-  }
-  return { stop, connect, end, query, tx, withSystemContext, close, init, get, containers, FakeContainer };
+  return { connect, end, query, tx, withSystemContext, close, init, get };
 });
-
-vi.mock('testcontainers', () => ({
-  GenericContainer: FakeContainer,
-  Wait: {
-    forLogMessage: vi.fn(() => 'log-wait'),
-    forListeningPorts: vi.fn(() => 'port-wait'),
-  },
-}));
 
 vi.mock('@nestjs/testing', () => ({
   Test: {
@@ -84,24 +42,55 @@ vi.mock('@stynx-nyx/core', () => ({
   RequestContextMutator: class RequestContextMutator {},
 }));
 
+import { createStynxPgClient, StynxDataModule } from '@stynx-nyx/data';
 import { createTestApp } from '../src/create-test-app.js';
+import { MISSING_DATABASE_URL_MESSAGE } from '../src/runtime.js';
 import type { TestSqlStep } from '../src/types.js';
-import { Wait } from 'testcontainers';
+
+const ADMIN_URL = 'postgresql://admin:s3cr%27t@db.test:6543/maintenance';
+const DATABASE_NAME = /^create database "(stynx_testapp_[0-9a-f]{16})"$/u;
+
+function sqlCalls(): string[] {
+  return query.mock.calls.map(([sql]) => String(sql));
+}
+
+function createdDatabase(pattern = DATABASE_NAME): string {
+  const name = sqlCalls().map((sql) => pattern.exec(sql)?.[1]).find(Boolean);
+  expect(name).toMatch(/_testapp_[0-9a-f]{16}$/u);
+  return name!;
+}
+
+function dataModuleOptions() {
+  const options = vi.mocked(StynxDataModule.forRoot).mock.calls.at(-1)?.[0];
+  expect(options?.appRoleName).toMatch(/_app$/u);
+  return options!;
+}
+
+function connectionUrls() {
+  const { connections } = dataModuleOptions();
+  return {
+    owner: new URL(connections.owner.connectionString!),
+    app: new URL(connections.app!.connectionString!),
+    reader: new URL(connections.reader!.connectionString!),
+  };
+}
 
 describe('createTestApp', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    containers.length = 0;
+    vi.stubEnv('DATABASE_URL', ADMIN_URL);
   });
 
-  it('starts optional services, applies SQL steps, exposes tx/admin helpers, and tears down', async () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('runs on the supplied DATABASE_URL, applies SQL steps, exposes tx/admin helpers, and tears down', async () => {
     const sqlStep: TestSqlStep = async (client) => {
       await client.query('select 2');
     };
     class ExtraModule {}
     const app = await createTestApp({
-      localstack: { enabled: false },
-      cognito: { enabled: true, image: 'cognito-test:latest' },
       migrations: ['select 1', sqlStep],
       seeds: ['select 3'],
       overrides: {
@@ -111,20 +100,34 @@ describe('createTestApp', () => {
       },
     });
 
-    // One admin client binds the stynx_app login before the module boots
-    // (ADR-OUTBOX-0003 D1), one applies the migration and seed steps.
-    expect(connect).toHaveBeenCalledTimes(2);
+    // The role bind and the database creation each use one maintenance
+    // client on DATABASE_URL; one admin client applies the SQL steps.
+    expect(vi.mocked(createStynxPgClient).mock.calls.slice(0, 2)).toEqual([
+      [{ connectionString: ADMIN_URL }],
+      [{ connectionString: ADMIN_URL }],
+    ]);
+    expect(connect).toHaveBeenCalledTimes(3);
+    expect(query).toHaveBeenCalledWith("select pg_advisory_xact_lock(hashtext('@stynx-nyx/testing:role-login'))");
     expect(query).toHaveBeenCalledWith(expect.stringMatching(/create role stynx_app login noinherit nobypassrls/u));
-    expect(query).toHaveBeenCalledWith(expect.stringMatching(/^alter role stynx_app with login password/u));
+    expect(query).toHaveBeenCalledWith("alter role stynx_app with login password 's3cr''t'");
+    expect(query).toHaveBeenCalledWith('commit');
+    const database = createdDatabase();
+    expect(app.postgres.database).toBe(database);
     expect(query).toHaveBeenCalledWith('select 1');
     expect(query).toHaveBeenCalledWith('select 2');
     expect(query).toHaveBeenCalledWith('select 3');
     await expect(app.tx(async () => 'ok')).resolves.toBe('ok');
     const admin = await app.adminClient();
     expect(admin).toEqual({ connect, query, end });
+    expect(vi.mocked(createStynxPgClient)).toHaveBeenLastCalledWith({
+      connectionString: app.postgres.adminConnectionString,
+    });
+
+    query.mockClear();
     await app.teardown();
     expect(close).toHaveBeenCalledTimes(1);
-    expect(stop).toHaveBeenCalledTimes(3);
+    expect(query).toHaveBeenCalledWith(expect.stringMatching(/pg_terminate_backend/u), [database]);
+    expect(query).toHaveBeenLastCalledWith(`drop database if exists "${database}"`);
     expect(withSystemContext).toHaveBeenCalledWith('stynx testing harness', expect.any(Function));
     expect(tx).toHaveBeenCalledWith(expect.any(Function), {
       role: 'owner',
@@ -133,147 +136,171 @@ describe('createTestApp', () => {
     });
   });
 
+  it('connects every pool to the per-app database on the DATABASE_URL server', async () => {
+    const app = await createTestApp();
+    const database = createdDatabase();
+    const urls = connectionUrls();
+
+    for (const [pool, url] of Object.entries(urls)) {
+      expect([url.host, url.pathname]).toEqual(['db.test:6543', `/${database}`]);
+      expect(url.searchParams.get('application_name')).toBe(`@stynx-nyx/testing:${pool}`);
+    }
+    expect([urls.owner.username, urls.reader.username]).toEqual(['admin', 'admin']);
+    const admin = new URL(app.postgres.connectionString);
+    expect([admin.username, admin.host, admin.pathname]).toEqual(['admin', 'db.test:6543', `/${database}`]);
+    expect(app.postgres.adminConnectionString).toBe(app.postgres.connectionString);
+    await app.teardown();
+  });
+
   it('bootstraps and connects as the given product roles (SM-06)', async () => {
-    const { StynxDataModule } = await import('@stynx-nyx/data');
     const app = await createTestApp({
-      localstack: { enabled: false },
       roles: { owner: 'demo_owner', app: 'demo_app', reader: 'demo_reader' },
     });
 
     expect(query).toHaveBeenCalledWith(expect.stringMatching(/rolname = 'demo_app'/u));
     expect(query).toHaveBeenCalledWith(expect.stringMatching(/create role demo_app login noinherit nobypassrls/u));
-    expect(query).toHaveBeenCalledWith("alter role demo_app with login password 'demo_app'");
+    expect(query).toHaveBeenCalledWith("alter role demo_app with login password 's3cr''t'");
+    expect(createdDatabase(/^create database "(demo_testapp_[0-9a-f]{16})"$/u)).toMatch(/^demo_/u);
     expect(query).not.toHaveBeenCalledWith(expect.stringMatching(/stynx_/u));
-    const options = vi.mocked(StynxDataModule.forRoot).mock.calls.at(-1)?.[0];
-    expect(options?.migrations).toEqual({ enabled: true, rolePrefix: 'demo' });
-    expect(options?.appRoleName).toBe('demo_app');
-    const appUrl = new URL(options!.connections.app.connectionString!);
-    expect([appUrl.username, appUrl.password]).toEqual(['demo_app', 'demo_app']);
+    const options = dataModuleOptions();
+    expect(options.migrations).toEqual({ enabled: true, rolePrefix: 'demo' });
+    expect(options.appRoleName).toBe('demo_app');
+    const appUrl = connectionUrls().app;
+    expect([appUrl.username, decodeURIComponent(appUrl.password)]).toEqual(['demo_app', "s3cr't"]);
     await app.teardown();
   });
 
   it('defaults to the stynx platform roles', async () => {
-    const { StynxDataModule } = await import('@stynx-nyx/data');
-    const app = await createTestApp({ localstack: { enabled: false } });
+    const app = await createTestApp();
 
-    const options = vi.mocked(StynxDataModule.forRoot).mock.calls.at(-1)?.[0];
-    expect(options?.migrations).toEqual({ enabled: true, rolePrefix: 'stynx' });
-    expect(options?.appRoleName).toBe('stynx_app');
-    const appUrl = new URL(options!.connections.app.connectionString!);
-    expect([appUrl.username, appUrl.password]).toEqual(['stynx_app', 'stynx_app']);
+    const options = dataModuleOptions();
+    expect(options.migrations).toEqual({ enabled: true, rolePrefix: 'stynx' });
+    expect(options.appRoleName).toBe('stynx_app');
+    const appUrl = connectionUrls().app;
+    expect([appUrl.username, decodeURIComponent(appUrl.password)]).toEqual(['stynx_app', "s3cr't"]);
     await app.teardown();
   });
 
-  it('refuses role names that do not share one product prefix before starting containers', async () => {
+  it('refuses role names that do not share one product prefix before connecting', async () => {
     await expect(
       createTestApp({ roles: { owner: 'demo_owner', app: 'demo_app', reader: 'other_reader' } }),
     ).rejects.toThrow('Invalid test app roles');
-    expect(containers).toHaveLength(0);
+    expect(connect).not.toHaveBeenCalled();
   });
 
-  it('uses default LocalStack services and omits Cognito when disabled', async () => {
+  it('fails closed without DATABASE_URL and starts nothing', async () => {
+    vi.stubEnv('DATABASE_URL', '');
+
+    await expect(createTestApp()).rejects.toThrow(MISSING_DATABASE_URL_MESSAGE);
+    expect(MISSING_DATABASE_URL_MESSAGE).toMatch(/starts no database/u);
+    expect(createStynxPgClient).not.toHaveBeenCalled();
+    expect(StynxDataModule.forRoot).not.toHaveBeenCalled();
+  });
+
+  it('refuses a DATABASE_URL that is not a PostgreSQL URI', async () => {
+    vi.stubEnv('DATABASE_URL', 'mysql://root@localhost/db');
+
+    await expect(createTestApp()).rejects.toThrow('DATABASE_URL must be a postgres:// or postgresql:// connection URI');
+    expect(createStynxPgClient).not.toHaveBeenCalled();
+  });
+
+  it('names the unreachable endpoint without its credentials', async () => {
+    connect.mockRejectedValueOnce(new Error('connect ECONNREFUSED'));
+
+    const failure = createTestApp();
+    await expect(failure).rejects.toThrow(
+      'createTestApp could not reach PostgreSQL at db.test:6543 (DATABASE_URL): connect ECONNREFUSED. Start PostgreSQL for the declared runtime.',
+    );
+    await expect(failure).rejects.not.toThrow(/s3cr/u);
+    expect(end).toHaveBeenCalledTimes(1);
+    expect(StynxDataModule.forRoot).not.toHaveBeenCalled();
+  });
+
+  it('keeps a Unix-socket DATABASE_URL and binds the default role password when it has none', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://me@/postgres?host=%2Ftmp%2Fpg');
+
+    const app = await createTestApp();
+    const database = createdDatabase();
+
+    expect(query).toHaveBeenCalledWith("alter role stynx_app with login password 'stynx_test_role'");
+    const { connections } = dataModuleOptions();
+    expect(connections.app!.connectionString).toBe(
+      `postgresql://stynx_app:stynx_test_role@/${database}?host=%2Ftmp%2Fpg&application_name=%40stynx-nyx%2Ftesting%3Aapp`,
+    );
+    expect(connections.owner.connectionString).toBe(
+      `postgresql://me@/${database}?host=%2Ftmp%2Fpg&application_name=%40stynx-nyx%2Ftesting%3Aowner`,
+    );
+    connect.mockRejectedValueOnce(new Error('no socket'));
+    await expect(app.teardown()).rejects.toThrow('could not reach PostgreSQL at socket /tmp/pg');
+  });
+
+  it('drops query-string credentials from the application login', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgres://db.test/postgres?user=admin&password=pw&sslmode=disable');
+
     const app = await createTestApp();
 
-    expect(app.localstack).toEqual(
-      expect.objectContaining({
-        endpoint: 'http://127.0.0.1:14566',
-        region: 'us-east-1',
-      }),
-    );
-    expect(app.cognito).toBe(undefined);
-    expect(containers.map((container) => ({
-      image: container.image,
-      environments: container.environments,
-      exposedPorts: container.exposedPorts,
-    }))).toEqual([
-      {
-        image: 'postgres:16-alpine',
-        environments: [{
-          GLOG_minloglevel: '2',
-          POSTGRES_DB: 'postgres',
-          POSTGRES_USER: 'postgres',
-          POSTGRES_PASSWORD: 'postgres',
-        }],
-        exposedPorts: [[5432]],
-      },
-      {
-        image: 'redis:7-alpine',
-        environments: [{ GLOG_minloglevel: '2' }],
-        exposedPorts: [[6379]],
-      },
-      {
-        image: 'localstack/localstack:3.8.1',
-        environments: [{
-          GLOG_minloglevel: '2',
-          SERVICES: 's3,kms',
-          AWS_DEFAULT_REGION: 'us-east-1',
-        }],
-        exposedPorts: [[4566]],
-      },
-    ]);
-    expect(app.postgres.connectionString).toBe('postgresql://postgres:postgres@127.0.0.1:15432/postgres');
-    expect(app.postgres.adminConnectionString).toBe('postgresql://postgres:postgres@127.0.0.1:15432/postgres');
-    expect(app.redis.url).toBe('redis://127.0.0.1:16379');
+    expect(query).toHaveBeenCalledWith("alter role stynx_app with login password 'pw'");
+    const appUrl = connectionUrls().app;
+    expect([appUrl.protocol, appUrl.username, appUrl.password]).toEqual(['postgres:', 'stynx_app', 'pw']);
+    expect([appUrl.searchParams.get('user'), appUrl.searchParams.get('password')]).toEqual([null, null]);
+    expect(appUrl.searchParams.get('sslmode')).toBe('disable');
+    expect(connectionUrls().owner.searchParams.get('user')).toBe('admin');
     await app.teardown();
   });
 
-  it('uses exact Cognito defaults and exposes its complete connection contract', async () => {
-    const app = await createTestApp({
-      localstack: { enabled: false },
-      cognito: { enabled: true },
-    });
+  it('starts no service and exposes only the endpoints the runtime supplies', async () => {
+    const bare = await createTestApp();
+    expect(bare.redis).toBe(undefined);
+    expect(bare.localstack).toBe(undefined);
+    expect(bare.cognito).toBe(undefined);
+    await bare.teardown();
 
-    const cognito = containers.find((container) => container.image === 'jagregory/cognito-local:latest');
-    expect(cognito).toEqual(expect.objectContaining({
-      environments: [{
-        GLOG_minloglevel: '2',
-        AWS_DEFAULT_REGION: 'us-east-1',
-        COGNITO_LOCAL_PORT: '9229',
-        COGNITO_LOCAL_USER_POOLS: JSON.stringify([{
-          Id: 'local_testing_pool',
-          Name: 'stynx-testing',
-          Clients: [{ ClientId: 'local_testing_client', ClientName: 'stynx-testing-client' }],
-        }]),
-      }],
-      exposedPorts: [[9229]],
-    }));
-    expect(app.cognito).toEqual(expect.objectContaining({
-      endpoint: 'http://127.0.0.1:19229',
+    const supplied = await createTestApp({
+      redis: { url: 'redis://cache.test:6379' },
+      localstack: { endpoint: 'http://aws.test:4566' },
+      cognito: { endpoint: 'http://cognito.test:9229' },
+    });
+    expect(supplied.redis).toEqual({ url: 'redis://cache.test:6379' });
+    expect(supplied.localstack).toEqual({ endpoint: 'http://aws.test:4566', region: 'us-east-1' });
+    expect(supplied.cognito).toEqual({
+      endpoint: 'http://cognito.test:9229',
       region: 'us-east-1',
       userPoolId: 'local_testing_pool',
       clientId: 'local_testing_client',
-    }));
-
-    await app.teardown();
-  });
-
-  it('waits for the final Postgres server readiness event', async () => {
-    const app = await createTestApp({ localstack: { enabled: false } });
-
-    expect(Wait.forLogMessage).toHaveBeenCalledWith(
-      /database system is ready to accept connections/u,
-      2,
-    );
-    await app.teardown();
-  });
-
-  it('starts LocalStack with caller-provided services', async () => {
-    const app = await createTestApp({
-      localstack: { services: ['sqs'] },
     });
+    await supplied.teardown();
 
-    expect(app.localstack).toEqual(
-      expect.objectContaining({
-        endpoint: 'http://127.0.0.1:14566',
-        region: 'us-east-1',
-      }),
+    const explicit = await createTestApp({
+      localstack: { enabled: false, endpoint: 'http://aws.test:4566' },
+      cognito: {
+        endpoint: 'http://cognito.test:9229',
+        region: 'sa-east-1',
+        userPoolId: 'pool',
+        clientId: 'client',
+      },
+    });
+    expect(explicit.localstack).toBe(undefined);
+    expect(explicit.cognito).toEqual({
+      endpoint: 'http://cognito.test:9229',
+      region: 'sa-east-1',
+      userPoolId: 'pool',
+      clientId: 'client',
+    });
+    await explicit.teardown();
+  });
+
+  it('refuses an enabled service without a supplied endpoint before connecting', async () => {
+    await expect(createTestApp({ localstack: { enabled: true } })).rejects.toThrow(
+      'createTestApp starts no containers: localstack.enabled requires localstack.endpoint from the runtime',
     );
-    await app.teardown();
+    await expect(createTestApp({ cognito: { enabled: true } })).rejects.toThrow(
+      'createTestApp starts no containers: cognito.enabled requires cognito.endpoint from the runtime',
+    );
+    expect(createStynxPgClient).not.toHaveBeenCalled();
   });
 
   it('applies seed-only SQL setup without requiring migrations', async () => {
     const app = await createTestApp({
-      localstack: { enabled: false },
       seeds: ['select seed_only'],
     });
 
@@ -281,25 +308,103 @@ describe('createTestApp', () => {
     await app.teardown();
   });
 
-  it('stops started containers when app initialization fails', async () => {
+  it('rolls back the role bind and creates no database when it fails', async () => {
+    query.mockImplementation(async (sql?: unknown) => {
+      if (String(sql).startsWith('alter role')) throw new Error('bind failed');
+      return { rows: [] };
+    });
+
+    try {
+      await expect(createTestApp()).rejects.toThrow('bind failed');
+      expect(query).toHaveBeenCalledWith('rollback');
+      expect(sqlCalls().some((sql) => sql.startsWith('create database'))).toBe(false);
+      expect(sqlCalls().some((sql) => sql.startsWith('drop database'))).toBe(false);
+    } finally {
+      query.mockImplementation(async () => ({ rows: [] }));
+    }
+  });
+
+  it('closes the app and drops the created database when initialization fails', async () => {
     init.mockRejectedValueOnce(new Error('init failed'));
 
-    await expect(createTestApp({ cognito: { enabled: true } })).rejects.toThrow('init failed');
+    await expect(createTestApp()).rejects.toThrow('init failed');
+    const database = createdDatabase();
     expect(close).toHaveBeenCalledTimes(1);
-    expect(stop).toHaveBeenCalledTimes(4);
+    expect(query).toHaveBeenLastCalledWith(`drop database if exists "${database}"`);
   });
 
   it('preserves the initialization error when cleanup also fails', async () => {
     init.mockRejectedValueOnce(new Error('init failed'));
     close.mockRejectedValueOnce(new Error('close failed'));
-    stop
-      .mockRejectedValueOnce(new Error('cognito stop failed'))
-      .mockRejectedValueOnce(new Error('localstack stop failed'))
-      .mockRejectedValueOnce(new Error('redis stop failed'))
-      .mockRejectedValueOnce(new Error('postgres stop failed'));
+    query.mockImplementation(async (sql?: unknown) => {
+      if (String(sql).startsWith('drop database')) throw new Error('drop failed');
+      return { rows: [] };
+    });
 
-    await expect(createTestApp({ cognito: { enabled: true } })).rejects.toThrow('init failed');
-    expect(close).toHaveBeenCalledTimes(1);
-    expect(stop).toHaveBeenCalledTimes(4);
+    try {
+      await expect(createTestApp()).rejects.toThrow('init failed');
+      expect(close).toHaveBeenCalledTimes(1);
+      expect(sqlCalls().some((sql) => sql.startsWith('drop database'))).toBe(true);
+    } finally {
+      query.mockImplementation(async () => ({ rows: [] }));
+    }
+  });
+
+  it('reports a non-Error connection failure even when closing the client also fails', async () => {
+    connect.mockRejectedValueOnce('refused');
+    end.mockRejectedValueOnce(new Error('end failed'));
+
+    await expect(createTestApp()).rejects.toThrow(
+      'createTestApp could not reach PostgreSQL at db.test:6543 (DATABASE_URL): refused.',
+    );
+  });
+
+  it('names the default socket when DATABASE_URL has neither host nor socket directory', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://');
+    connect.mockRejectedValueOnce(new Error('no server'));
+
+    await expect(createTestApp()).rejects.toThrow('could not reach PostgreSQL at the default socket');
+  });
+
+  it('keeps an anonymous login on a path-less DATABASE_URL', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://db.test:5432');
+
+    const app = await createTestApp();
+    const database = createdDatabase();
+
+    expect(query).toHaveBeenCalledWith("alter role stynx_app with login password 'stynx_test_role'");
+    expect(dataModuleOptions().connections.owner.connectionString).toBe(
+      `postgresql://db.test:5432/${database}?application_name=%40stynx-nyx%2Ftesting%3Aowner`,
+    );
+    await app.teardown();
+  });
+
+  it('omits Cognito when it is disabled even with an endpoint', async () => {
+    const app = await createTestApp({ cognito: { enabled: false, endpoint: 'http://cognito.test:9229' } });
+
+    expect(app.cognito).toBe(undefined);
+    await app.teardown();
+  });
+
+  it('applies migration-only SQL setup without requiring seeds', async () => {
+    const app = await createTestApp({ migrations: ['select migration_only'] });
+
+    expect(query).toHaveBeenCalledWith('select migration_only');
+    await app.teardown();
+  });
+
+  it('preserves the role bind error when its rollback also fails', async () => {
+    query.mockImplementation(async (sql?: unknown) => {
+      if (String(sql).startsWith('alter role')) throw new Error('bind failed');
+      if (sql === 'rollback') throw new Error('rollback failed');
+      return { rows: [] };
+    });
+
+    try {
+      await expect(createTestApp()).rejects.toThrow('bind failed');
+      expect(end).toHaveBeenCalledTimes(1);
+    } finally {
+      query.mockImplementation(async () => ({ rows: [] }));
+    }
   });
 });
