@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.3.39",
   "meta": {
-    "last_updated": "2026-10-19T23:30:00.000000Z",
+    "last_updated": "2026-10-20T01:30:00.000000Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,7 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
-      "2026-10-19 Architect rebind for SM-06 follow-up (template apply.sh runs `stynx migrate up --role-prefix <product>` with no URL on argv, 09 \u00a71): binds packages/cli/test/migrate-pg-env.integration.spec.ts (migrateUp with prefix demo and only PG* set against the STYNX_TEST_PG_* scratch PostgreSQL; skipped when none is configured) and rebinds packages/cli/test/migrate.spec.ts (no connectionString reaches the pg client or factory without a URL) and packages/cli/test/cli-program.spec.ts (--database-url optional on migrate status|up|down|redo; audit verify unchanged). No assertion is removed or weakened beyond the intended optional flag.",
+      "2026-10-19 Architect rebind for SM-06 follow-up (template apply.sh runs `stynx migrate up --role-prefix <product>` with no URL on argv, 09 §1): binds packages/cli/test/migrate-pg-env.integration.spec.ts (migrateUp with prefix demo and only PG* set against the STYNX_TEST_PG_* scratch PostgreSQL; skipped when none is configured) and rebinds packages/cli/test/migrate.spec.ts (no connectionString reaches the pg client or factory without a URL) and packages/cli/test/cli-program.spec.ts (--database-url optional on migrate status|up|down|redo; audit verify unchanged). No assertion is removed or weakened beyond the intended optional flag.",
       "2026-10-19 Architect rebind for SM-06: binds packages/data/test/unit/platform-roles.spec.ts (default prefix applies every platform migration byte for byte; prefix demo rewrites only stynx_{owner,app,reader} identifiers; invalid prefixes refused), packages/data/test/unit/migration-runner-role-prefix.spec.ts, packages/data/test/integration/role-prefix.integration.spec.ts (scratch PostgreSQL: default stays on stynx_*; prefix demo bootstraps demo_{owner,app,reader} with demo_app NOBYPASSRLS, no stynx_* role owning, granted or named in the database, tenant isolation as the product app role), packages/cli/test/migrate-role-prefix.spec.ts and packages/testing/test/roles.unit.spec.ts, and rebinds the extended packages/cli/test/cli-program.spec.ts (--role-prefix surface) and packages/testing/test/create-test-app.unit.spec.ts (product role names). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
       "2026-10-19 Architect rebind for SM-03: binds tools/eslint-config/test/rule-families.spec.mjs (one eslint --max-warnings=0 fixture per enabled rule family exits 1 naming its rule, a clean fixture per profile exits 0, the exports map and named-factory surface, and the unchanged STYNX workspace levels) and rebinds test/scripts/http-workspace-graph.test.mjs after its source-only tooling fixture follows the @stynx-nyx/eslint-config rename. All 57 workspace-graph assertion sites are unchanged in count and text; no assertion is removed or weakened.",
       "2026-10-17 Architect rebind adds exact restore response status and record identity assertions before existing trash disappearance and detail checks. All prior assertions remain; this test synchronization does not resolve the separately deferred stale-list UI race.",
@@ -104,7 +104,17 @@
       "STYNX 1.6.1 Architect binds Inspector 9940ce632790c6557c794dac6965580421cfd0ce against Engineer c1224903 declaring-dependency security producers under ADR-RELEASE-0004. The existing storage-version-pipeline projection adds three real-producer regression cases for local dependency custody under different ambient hoists, distinct declared versions in SBOM/license checks and second-version denied-license refusal; the original 35 cases remain unchanged. All 688 corpus paths, other 687 projections, invariant/gate mappings, historical evidence and thresholds are preserved. Normal release-checkout SBOM generation retains distinct installed declaring versions; actual license policy passes without an exception. This binding does not establish a completed RC, publication, consumer/provider acceptance or overall audit PASS.",
       "STYNX 1.6.1 Architect binds Inspector 41fb6064baadc28fede0e793fe4a9d2338506824 actual PostgreSQL fixture repairs under ADR-RELEASE-0004. Four existing corpus projections refresh for current0009 fixture installation, exact D1 sequence and D2 persisted submit-receipt context, canonical stored conflict fields and explicitly advanced injected action clocks. Historical upgrade/refusal schemas and exact action/cursor order assertions remain; three action-instant assertions and two populated0007-to0009 row-preservation/reconciliation assertions are additive. All 688 corpus paths, other 684 projections, invariant/gate mappings, historical evidence and thresholds remain unchanged. Inspector observed67/67 affected PostgreSQL cases PASS with zero skips or unhandled errors; cleanup drains both owned operations while preserving rejection. This component binding does not establish a completed RC, publication, consumer/provider acceptance or overall audit PASS.",
       "STYNX 1.6.1 Architect binds the independent boundary/coverage regressions through f2085f32f5ebdc1d6b7431e231e71eedc7e0f901 against Engineer a918f99513fed383e66dee96164321cef88780bf and 2cd2b03ec3e05ac17b166e29c06642dcc9f5d86d under MOBILE-OFFLINE-0005 D4.1. Six existing projections refresh; all 688 corpus paths, other 682 projections, invariant/gate relationships and historical evidence remain unchanged. Meaningful data/service and offline refusal/import/rollback tests retain the original assertions and unchanged 100% requirements. Public races cover unrelated writes, foreign dirty acknowledgements, nested owned E6/index/history rollback, detached callbacks, pending children, independent conflict progress, queue contention and per-item commit custody. The new nested-refusal pause is inside an already-entered resolver with its original sentinel/state assertions retained; late authorization separately proves no resolver invocation. Inspector observed1042 offline cases/51 files with100% metrics and data100%; these are component observations, not a completed RC or publication/audit/consumer/provider verdict. Existing PostgreSQL initial received admission after fatal configuration refusal is not applied provenance and is not forced to equal memory absence.",
-      "STYNX 1.6.1 Architect rebinds only the existing service projection after Inspector 99940ff181e19c9bb48cd9fc1064d4b7036bbf96 changes one unpublished negative absence assertion from toBeUndefined() to explicit toBe(undefined), satisfying unchanged CW1 test-family lint while retaining the exact undefined-only state obligation. Its 33 assertion sites, all other 687 corpus entries, every invariant/gate relationship, historical evidence and thresholds remain unchanged. Inspector observed15 focused service cases and workspace-wide test-family lint PASS; passing unit/integration evidence from the interrupted product RC is preserved. This binding grants no completed RC, auxiliary dispatch, publication or consumer/audit acceptance."
+      "STYNX 1.6.1 Architect rebinds only the existing service projection after Inspector 99940ff181e19c9bb48cd9fc1064d4b7036bbf96 changes one unpublished negative absence assertion from toBeUndefined() to explicit toBe(undefined), satisfying unchanged CW1 test-family lint while retaining the exact undefined-only state obligation. Its 33 assertion sites, all other 687 corpus entries, every invariant/gate relationship, historical evidence and thresholds remain unchanged. Inspector observed15 focused service cases and workspace-wide test-family lint PASS; passing unit/integration evidence from the interrupted product RC is preserved. This binding grants no completed RC, auxiliary dispatch, publication or consumer/audit acceptance.",
+      "2026-10-19 Architect rebind for SM-08 (02 §3, D-030, S-21, S-27): binds packages/data/test/unit/typed-query.spec.ts (defineQuery and sql are functions on the barrel; sql`${x}` fails tsc on a negative fixture; an over-limit argument raises QueryArgumentError with no SQL sent; expects one with no row raises NotFoundError; excess rows raise QueryCardinalityError; a row failing row raises QueryRowValidationError without leaking contents) and packages/data/test/integration/typed-query.integration.spec.ts (Transaction.run on scratch PostgreSQL as stynx_app: $n binding, every expects variant, no SQL on an over-limit argument, NotFoundError, int8-as-string row refused). No existing assertion is removed or weakened.",
+      "2026-10-20 Architect rebind for SM-07 and SM-18: binds packages/cli/test/check-entry-points.spec.ts (on a temporary git consumer outside the checkout the six read-only entry points exit 0 with one JSON object each, the boundary census lists the scanned file, git status --porcelain --ignored stays empty, and one seeded violation per command exits 1 with a <path>:<line> locator; unbuilt packages and an invalid .stynxrc.json are UNKNOWN, exit 2) and packages-web/sdk/test/codegen-check.spec.ts (stynx-sdk-codegen --check exits 0 on the committed SDK without writing, exits 1 naming the one edited file and leaves it unchanged, reports missing and unlisted files, the write form reproduces the committed bytes, bad invocations exit 2, and openapi-typescript-codegen is in neither dependency map), and rebinds packages/cli/test/cli-program.spec.ts (the pinned command tree lists the six check commands). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
+      "2026-10-19 Architect rebind for SM-14 (S-12, D-025, D-059 P-7-05: authorization from verified-token claims only): binds packages/auth/test/unit/session-claims-resolver.spec.ts (perms/roles resolved at token issuance; non-member refused), packages/backend/test/unit/stynx-token-roles-authorization.spec.ts (RequireRoles all/any over verified token roles with throwing session/cache/DB/network stubs) and packages/sessions/test/unit/session-revocation-list.spec.ts (in-memory sid revocation list, background refresh, staleness fail-closed, exp clamped to session deadlines, claims minted on create/refresh), and rebinds the guard, auth integration, public-tenant, probes, SSE, bookmark and reference e2e suites whose per-request session or permission reads became issuance-time claims, revocation-list checks or token refresh after grant changes. Every denial assertion is kept (revoked, reuse-detected, purged and expired sessions, missing permissions, store failure now fail-closed 503); no assertion is removed or weakened beyond the Owner-ruled move of revocation and permission changes off the request path.",
+      "2026-10-19 Architect rebind for SM-15 (S-70, D-014: a missing X-Request-Id is rejected like an invalid one, before authentication, with exactly code/messageKey/requestId and requestId null). Rebinds packages/core/test/integration/request-context-pre-guard.integration.spec.ts (missing and invalid ids return the same VALIDATION envelope before any guard), packages/core/test/unit/request-context.interceptor.spec.ts (missing and non-string ids rejected without seeding or echoing; client id sent by default), packages/core/test/integration/core.module.spec.ts (system-op call sends a client id), the flow and reference-dev-auth malformed-id matrix cases (new envelope), packages/backend/test/integration/angular-transactional-command-http.spec.ts (the Angular chain sends a UUIDv7) and reference/api/test/integration/reference-sse.rls.integration.spec.ts (raw SSE clients send ids); remaining entries move only by sending a client request id. Rebinds law/policy/finite-k6-derivative.json for test/perf/k6/lib/stynx.js, whose STYNX requests now carry a UUIDv7. No assertion is removed or weakened; the old synthesis expectations are replaced by the intended rejection. Also rebinds the SM-20 packages/core/test/unit/core.module.spec.ts and packages/auth/test/unit/auth.module.spec.ts after toBeUndefined() became toBe(undefined) for lint:tests (CW-1); same assertions.",
+      "2026-10-19 Architect rebind for SM-20: binds test/scripts/stynx-module-static-metadata.test.mjs (source parse of every consumed @Module in core, data, auth, backend, i18n, idempotency and flow: expected static imports/controllers, none composed in forRoot() except a caller's forRootAsync imports and the option-conditional StynxPlatformPipelineModule; runtime read of built class metadata without forRoot()) and rebinds packages/core/test/unit/core.module.spec.ts (CLS import read from static metadata, one shared descriptor) and packages/auth/test/unit/auth.module.spec.ts (core import and StynxAuthController in static metadata). Also rebinds test/scripts/route-decorators-packed-consumer.test.mjs after a Prettier-only reformat (SM-10). No assertion is removed or weakened.",
+      "2026-10-19 Architect rebind for SM-19: binds packages/i18n/test/unit/catalog-registration.spec.ts (consumer-shaped Nest app with no packages/*/i18n: a feature module's registerCatalog key resolves through CatalogService, default locale en-US, pt-BR only when configured, forRoot catalogs merge) and rebinds packages/i18n/test/unit/catalog.spec.ts (no cwd scan without workspaceRoot; built-in default en-US), packages/i18n/test/unit/locale.spec.ts (fallback is the catalog's configured default; en-US is not displaced by an available pt-BR catalog) and packages/i18n/test/unit/tenant-boundary.spec.ts (pre-authentication fallback en-US). Changed expectations follow the intended en-US default (D-014); no assertion is removed.",
+      "2026-10-19 Architect binding for SM-10: binds test/scripts/route-decorators-packed-consumer.test.mjs (pnpm-packed @stynx-nyx/idempotency, auth, backend and closure installed into an out-of-workspace consumer; typeof Idempotent, NoIdempotent, Permission, RequireRoles is function x4 resolved from the consumer, ErrorContract/UseCase/Slo absent per D-059, and the packed .d.ts type-check a decorated controller). No other corpus entry changes.",
+      "2026-10-19 Architect rebind for SM-16: rebinds packages-web/angular/test/stynx-angular.spec.ts (the two Math.random fallback cases now assert generateClientRequestId refuses without crypto.getRandomValues and never consults Math.random; the web-crypto case asserts no Math.random call; a new case drives the functional requestIdInterceptor, adding a UUIDv7 id and preserving a caller id; provideStynxDefaults no longer registers the RequestIdInterceptor class) and packages-web/angular/test/provider-depth.spec.ts (auth and error DI interceptors still registered, the request-id class is not, and an HttpClient request through provideStynxDefaults carries a UUIDv7 X-Request-Id and the bearer token). Assertions grow 93->96 and 7->11; none is weakened beyond the intended removal of the Math.random fallback.",
+      "2026-10-19 Architect rebind for SM-13: rebinds tools/eslint-config/test/rule-families.spec.mjs after the STYNX workspace Nest profile assertion moves stynx/require-idempotent-route-decorator from warn to error (the published level). Assertion count unchanged at 17; no assertion is removed or weakened.",
+      "2026-10-19 Architect merge of the wave-2 trace bindings (SM-07/08/10/13/14/15/16/18/19/20, #403-#406) onto the wave-1 candidate; rebinds reference-sse.rls (changed by SM-14 and SM-15)."
     ]
   },
   "invariants": [
@@ -948,7 +958,7 @@
           "path": "reference/api/test/integration/reference-api.runtime.spec.ts",
           "names": ["INV-CORE-001"],
           "assertions": [
-            "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment \u226580%)"
+            "the full framework + reference + domain + tools source surface is structurally claimed by INV-CORE-001 scope.code_areas[] (umbrella governance; reverse-claim ratio measured by sense-spec-alignment ≥80%)"
           ],
           "mode": "gray_box"
         },
@@ -1724,7 +1734,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 54,
-      "assertion_digest_sha256": "0e4e4580bfa33bbbfe5be8aad63f29584a1b834232a7e9acee5e726f1875b826"
+      "assertion_digest_sha256": "38b87dc520661e6ef6d9a3517bb7619aefeeef2dffc5a250da83214bbe595df3"
     },
     {
       "path": "domain/demo-bookmark/api/test/bookmark.controller.spec.ts",
@@ -2333,16 +2343,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "46c9e8f700c26b88cef0cbf61325b8560f17d9ba714846bdcb15f5e52056e40f"
+      "assertion_count": 11,
+      "assertion_digest_sha256": "b240ced8c9f7a8cc6cf991bd06af519828c2a4653cca8a9b80061ef1d5e4e458"
     },
     {
       "path": "packages-web/angular/test/stynx-angular.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 93,
-      "assertion_digest_sha256": "3b94187ce072ba710ad949f87107b74d13d1fa82c529b2d465be7cc334825fd2"
+      "assertion_count": 96,
+      "assertion_digest_sha256": "c57912b5f7538ad6632285eed369bd67da29a8009bf617d0539a27b9b8de8df9"
     },
     {
       "path": "packages-web/sdk/test/errors.spec.ts",
@@ -2487,8 +2497,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 16,
-      "assertion_digest_sha256": "4381c18b9c3e486383d5a6c62362b27e1ccda9068cf1248db21545ec7c916934"
+      "assertion_count": 22,
+      "assertion_digest_sha256": "2b2fc28411463fc595aa4e76924d135ac19a844ee49ced33dbb85da294d2fc11"
     },
     {
       "path": "packages/auth/test/unit/auth.controller.spec.ts",
@@ -2503,8 +2513,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 10,
-      "assertion_digest_sha256": "dba72db92c1d6f862259081e95e89b39378cc7df2446633e2fc65db8c14250a5"
+      "assertion_count": 12,
+      "assertion_digest_sha256": "0d0fac39cb33924b64822d42211a384fe94752b262f20ebf51a650c7652e4959"
     },
     {
       "path": "packages/auth/test/unit/auth.runtime.spec.ts",
@@ -2512,7 +2522,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 22,
-      "assertion_digest_sha256": "840a7d7f665d11f83622e3add1f82ba6f92214e81d9e95f42da5769095e0a89a"
+      "assertion_digest_sha256": "0f15ead8c749d45a391149bde2a950831bf6c909a1499cd68d02c8cdb4ca46e0"
     },
     {
       "path": "packages/auth/test/unit/auth.service.spec.ts",
@@ -2607,8 +2617,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 53,
-      "assertion_digest_sha256": "3252275c26dfac4235226b3f203776147aeb044ecb01c04093f187c455542ac7"
+      "assertion_count": 82,
+      "assertion_digest_sha256": "cffdfea6a4ca154f56f32b76d3c1c469f491f73ca17a339ace7a43ed06c43f97"
     },
     {
       "path": "packages/auth/test/unit/utils.spec.ts",
@@ -2896,7 +2906,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 56,
-      "assertion_digest_sha256": "949233c3a0cdf9dc2ea9e208dd9d1357862188b5d38824cceacb2b2cbb82c5e2"
+      "assertion_digest_sha256": "80be8ba358b5cf5de3af0acdbf861b7ae321dfdb97775fdc74cc0c1e9a26704a"
     },
     {
       "path": "packages/cli/test/cli.spec.ts",
@@ -2968,7 +2978,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 8,
-      "assertion_digest_sha256": "0445abe4c111a974c6a7fe9531b67f98af2beaa16390ed924eb5095c7170bc0c"
+      "assertion_digest_sha256": "85b4505a4383caa452dd7c7f09047711de762e8e02b81e8d4d80a4248e2ac109"
     },
     {
       "path": "packages/core/test/unit/config-ownership.spec.ts",
@@ -2991,8 +3001,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 10,
-      "assertion_digest_sha256": "07aa01c690c7d9b1da000283bbc2fe2518ea3abc97e4decc1abe956282a3bb31"
+      "assertion_count": 17,
+      "assertion_digest_sha256": "b1e1a86bc370271ee9088e8c68c02fd4475ee05add64b98f2aaeadc6c843d127"
     },
     {
       "path": "packages/core/test/unit/error.filter.spec.ts",
@@ -3007,8 +3017,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 35,
-      "assertion_digest_sha256": "e232e7ae67cc2555fe1d41e0a5db87240b7bb48d14a261dd94ad551a0e642199"
+      "assertion_count": 40,
+      "assertion_digest_sha256": "024785bf3ad40e85769b4892fd3981f2b2236a188a8bd66f3c6839aba10c87c9"
     },
     {
       "path": "packages/core/test/unit/request-context.spec.ts",
@@ -3167,7 +3177,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 13,
-      "assertion_digest_sha256": "b9db3a85e7f02f3ad71bb28a94a1d35a64c75ed1ec204495df117c7dfd0848a5"
+      "assertion_digest_sha256": "d5825c5cb4c67c6d03f26c8603a58590396a47df9842d70a840707648f603313"
     },
     {
       "path": "packages/flow/test/integration/answers.api-matrix.spec.ts",
@@ -3182,7 +3192,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 37,
-      "assertion_digest_sha256": "67e769dd9e4a0395cac5f6a0ac9e1d46ea498be575613b924551d77aab7d723b"
+      "assertion_digest_sha256": "6c2ba8609754e5fb94161086eda6e29998e6650755f890561b36ed75292861d4"
     },
     {
       "path": "packages/flow/test/integration/edges.api-matrix.spec.ts",
@@ -3197,7 +3207,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 47,
-      "assertion_digest_sha256": "9d0df119a9a949c63cadfeaf91446cc3b13650635a7a6b890b9dd262207ab4d8"
+      "assertion_digest_sha256": "4d179d52a23a922f1bdabd9ae5852b319d6e72f4882d0fa383a3ee726e4ad382"
     },
     {
       "path": "packages/flow/test/integration/effects.api-matrix.spec.ts",
@@ -3227,7 +3237,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 13,
-      "assertion_digest_sha256": "0891f909c45227a12635c36e5758b82f0fb7080c2a07aa80d65538c96b4a9069"
+      "assertion_digest_sha256": "e55b6a51825473e8f9ddbfc9a5d9cfb1fbc03c33076c18ed85ab1cbe92eeea7f"
     },
     {
       "path": "packages/flow/test/integration/flow.database.spec.ts",
@@ -3250,7 +3260,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 29,
-      "assertion_digest_sha256": "deb5aefbe3cf865dcaeaacbda84a1e5977aece802ed04d144e1497489742e2c7"
+      "assertion_digest_sha256": "2c11f4897940dd47353f06719ad17d0bf28e2b225b2fd08716f2b53ab93d0b62"
     },
     {
       "path": "packages/flow/test/integration/signal.api-matrix.spec.ts",
@@ -3451,8 +3461,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 20,
-      "assertion_digest_sha256": "9b9c3310455ff1c56ac5f897b3226bfc27150f91716d2fe11fea109a81001004"
+      "assertion_count": 23,
+      "assertion_digest_sha256": "4ee7e47a775de65b248774f20e9fe8e4c10b3a5ada0e94ba0b4309ef17a996c9"
     },
     {
       "path": "packages/i18n/test/unit/error-translator.spec.ts",
@@ -3483,8 +3493,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "3ed0635d1fcfc84fa08259bc51a816ddf9b294abd260e17ef26e5a8a09160086"
+      "assertion_count": 29,
+      "assertion_digest_sha256": "e315551c1e23e62ae40920b9ce2da042c0b4adc7a13568f2be3ba61626bef3a2"
     },
     {
       "path": "packages/i18n/test/unit/localized-error.filter.spec.ts",
@@ -3867,8 +3877,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "e2dd4d59b5a88af54a96891edc209d9c3685a170103187b3ad26ca636569bb71"
+      "assertion_count": 33,
+      "assertion_digest_sha256": "377187b5247de8097a8b69508bdc809c21607a56578f4f19a6b7ce5127ae9e2a"
     },
     {
       "path": "packages/sessions/test/unit/session-readiness-and-guards.spec.ts",
@@ -4131,8 +4141,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 12,
-      "assertion_digest_sha256": "5b931bf379983d908485a18463c08e4e45a1912aaecd9c6a4115b50127d7d922"
+      "assertion_count": 18,
+      "assertion_digest_sha256": "30a2d97a931860dbe718aafe9f2c37cc6d22a1f7d4405a89efbd325481aa3d38"
     },
     {
       "path": "packages/testing/test/testing.spec.ts",
@@ -4156,7 +4166,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 42,
-      "assertion_digest_sha256": "c3a8f1f9ba151dbc1cbc987f380f2e81564b95f4888f15cfb1b2b0612b128f62"
+      "assertion_digest_sha256": "ee41dafb1333449c08cad01141d95cd23948cdf6ef5656c2b9ffa4b7b5179b4e"
     },
     {
       "path": "reference/api/test/integration/reference-api.unit-coverage.spec.ts",
@@ -4180,7 +4190,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 27,
-      "assertion_digest_sha256": "bd55122e1302fcaa4fd64bd9fd7605b1d863ef1c4026fe6daa888f96714cdb4f"
+      "assertion_digest_sha256": "089ec857a2c68837216563ff551127b3842c7a1247766a7ebad46b34eec65919"
     },
     {
       "path": "reference/api/test/integration/reference-dev-auth.gating.spec.ts",
@@ -4196,7 +4206,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 52,
-      "assertion_digest_sha256": "3cc17dd861742d6fe7895c911144438e0afd3473feb0ca87fb39ce0b41b87f5b"
+      "assertion_digest_sha256": "43894749204195ad042dbcd127aa93792e1878ca2bd0bdc8f88e4d0142d84d99"
     },
     {
       "path": "reference/api/test/integration/sample.schema.spec.ts",
@@ -4878,7 +4888,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 17,
-      "assertion_digest_sha256": "0208d9bf166818686fc12688c1d0f28c2ab086498d42e4032d3b12a9d4a94041"
+      "assertion_digest_sha256": "d5565fe9c7453c7c87bef393a475eec3c21ffa618c4cde46ab7bf98dc6d2ae2e"
     },
     {
       "path": "tools/migration-linter/test/context-rules.spec.ts",
@@ -5269,8 +5279,8 @@
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 9,
-      "assertion_digest_sha256": "21a0fa3d9944caf7a0b9afaf8501587d95f2ec96c0c0d42bb641a3b30863f1d9"
+      "assertion_count": 19,
+      "assertion_digest_sha256": "c68aa4c4b3190369267697cf0542a22bb2b64b6da75c101e433e566ef577e760"
     },
     {
       "path": "packages/tenancy/test/integration/public-tenant-route.integration.spec.ts",
@@ -5302,15 +5312,15 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 20,
-      "assertion_digest_sha256": "a5e5dc218a7bd771d3f3aabef81f45161dde2174141a7c667815760534a9b91c"
+      "assertion_digest_sha256": "2c18253200016d4c2d791d728554cd38a57e2807354a55c8fd9daa5fe23a47c9"
     },
     {
       "path": "packages/backend/test/integration/auth-context-public-tenant.integration.spec.ts",
       "suite": "int",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001", "INV-RBAC-001"],
       "lifecycle": "supported",
-      "assertion_count": 44,
-      "assertion_digest_sha256": "415010699080907d4e7f0c8e379ecc2cdae0332e9fe9fd07dbd0d522bd339e95"
+      "assertion_count": 51,
+      "assertion_digest_sha256": "b11294fa7d173f8e54c9c9fc03a0400b9608813497d8872889ae831e3390906a"
     },
     {
       "path": "packages/backend/test/integration/auth-context-request-context.integration.spec.ts",
@@ -5438,7 +5448,7 @@
       "invariant_ids": ["INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 8,
-      "assertion_digest_sha256": "47015e2797462713b03e7571584765f5d42703740a1b7e11b822f8851d0c5fc5"
+      "assertion_digest_sha256": "91b2da8b21df44c7f1f91cfba57f451eff0ba371ff91b9bd699ab0512a03d5ae"
     },
     {
       "path": "packages/backend/test/integration/transactional-command-advanced.integration.spec.ts",
@@ -5582,7 +5592,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 16,
-      "assertion_digest_sha256": "3cc141d04f8fb06bbc2195c28f95735cbbc9affc6d172c60641c62fd3846a9d5"
+      "assertion_digest_sha256": "3fbfe9936b27b99cd2015f42c3e1397e26828b5b53a529a6d059cdbff76aa1fd"
     },
     {
       "path": "packages/cli/test/generate-module.spec.ts",
@@ -6646,15 +6656,15 @@
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 18,
-      "assertion_digest_sha256": "d9bceaae59451a571f854ecf373655a60e78da041083d12bf2ed3636574494b8"
+      "assertion_digest_sha256": "da0660894c57df592ae56da66c3441e42e0c8cbeefe1b5dcca9ab9a300929efa"
     },
     {
       "path": "reference/api/test/e2e/flows/auth-and-permissions.e2e.ts",
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 39,
-      "assertion_digest_sha256": "5b4d367e6d3ec077c843802bfc5ed8b0c56f5f723931b304f71a2d6e9c076f81"
+      "assertion_count": 42,
+      "assertion_digest_sha256": "c8267fafa688d536d873378bd74146d2a172444408230d691c5f5176f3057f40"
     },
     {
       "path": "reference/api/test/e2e/flows/documents.e2e.ts",
@@ -6670,7 +6680,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-ERROR-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 31,
-      "assertion_digest_sha256": "23b2cc625e09eec7945d40b57ae71683e07ce88cfa597ba96b904f2292b280da"
+      "assertion_digest_sha256": "cfdae4a75c3ab962896fc988097d22d10100225b4750f91ca1c1429564e532ca"
     },
     {
       "path": "reference/api/test/e2e/flows/flow-design-and-runtime.e2e.ts",
@@ -6684,7 +6694,7 @@
       ],
       "lifecycle": "supported",
       "assertion_count": 57,
-      "assertion_digest_sha256": "0ed7399f2739342767b4b126ce790b2d43cdbf8c77593f922ab54fe89c5a9a6f"
+      "assertion_digest_sha256": "9f21c6b1c6c3d43b7bb6d70c5766a05a6346cff341a1661b99e7efd964f9aef7"
     },
     {
       "path": "reference/api/test/e2e/flows/i18n.e2e.ts",
@@ -6715,8 +6725,8 @@
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 41,
-      "assertion_digest_sha256": "795d3613257797c9b317ee2abb713e4d3908bf9efd3b59252b31bd8a2aa4e30a"
+      "assertion_count": 43,
+      "assertion_digest_sha256": "b7eaad395ad473a37acffdfa5a872b13a5f470701a8e7c13ce3fb756c2a6231a"
     },
     {
       "path": "reference/api/test/e2e/flows/rate-limit.e2e.ts",
@@ -6724,7 +6734,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 14,
-      "assertion_digest_sha256": "2f8270dd68295509b0251f8e56d92b2e9189131204723f491c2ef367c175b741"
+      "assertion_digest_sha256": "fc4694664391556d940b437390fac80cdd0390e4adff57b2bc9694604d65fffa"
     },
     {
       "path": "reference/api/test/e2e/flows/readonly-write-rollback.e2e.ts",
@@ -6732,7 +6742,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001", "INV-RBAC-001"],
       "lifecycle": "supported",
       "assertion_count": 10,
-      "assertion_digest_sha256": "b5510f463699e141d96e6f278e563be8c15f38cf5528db6a370fd6fc673cf131"
+      "assertion_digest_sha256": "33e600871ea6295874539a35ef59d8da4e0e9194a5e7f22d61fd065e642b2df3"
     },
     {
       "path": "reference/api/test/e2e/flows/records-and-notes.e2e.ts",
@@ -6747,8 +6757,8 @@
       "suite": "e2e",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 14,
-      "assertion_digest_sha256": "bea5e807b9bd6c684d833fccd51ef4404bb65576d6706d57c0304dce1c2a68df"
+      "assertion_count": 18,
+      "assertion_digest_sha256": "58082be1d31252649d2485b0ccce6844d5ebb77dd20957e8992078abb77dddd7"
     },
     {
       "path": "reference/api/test/e2e/flows/sessions-management.e2e.ts",
@@ -6772,7 +6782,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 48,
-      "assertion_digest_sha256": "699869ebb58e8c94da2029922fe01b44dc69f5ab35ffb0f6aacbf6424a15fa5f"
+      "assertion_digest_sha256": "6d60ddd0d53421c5a32bae50d654bae4733e85bbd3d48e0c9188d960b103ec9b"
     },
     {
       "path": "test/scripts/devai-trace-contract.test.mjs",
@@ -6804,7 +6814,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 42,
-      "assertion_digest_sha256": "9dc6d5ecc5d2ac5447a354913d6065a9f13959469e07b02b1eade9c81f5d11af"
+      "assertion_digest_sha256": "96489ae9cd283fcbd344c8b3ac27aec052cfd54966dfd23dabf0127c0438988f"
     },
     {
       "path": "test/scripts/http-quota-ledger.test.mjs",
@@ -7445,6 +7455,86 @@
       "lifecycle": "supported",
       "assertion_count": 6,
       "assertion_digest_sha256": "218cc136ed8e43e7b9b135f4229e1552f571cbca125b2bf736bdf75b6877ca3e"
+    },
+    {
+      "path": "packages/data/test/unit/typed-query.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 41,
+      "assertion_digest_sha256": "61167f1c07a81509f12677ce6ff655b1babbef86edcf9b8fb59a43c25834c68c"
+    },
+    {
+      "path": "packages/data/test/integration/typed-query.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 11,
+      "assertion_digest_sha256": "dbb0cde820224d7b82bd3bb21f0b3ab14b2327ec53f461f0f1f1a44c69d31f6f"
+    },
+    {
+      "path": "packages/cli/test/check-entry-points.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "b9bb2918a8f14771cf1636a6ef0feb12c31a039902974b4a2b1bf4d852d7e2f5"
+    },
+    {
+      "path": "packages-web/sdk/test/codegen-check.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 19,
+      "assertion_digest_sha256": "6e1c131e7e2af366bec8080dc25d74b87a5a8bd4d318d627e42aa1cd14e7680b"
+    },
+    {
+      "path": "packages/auth/test/unit/session-claims-resolver.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 12,
+      "assertion_digest_sha256": "9a03c502eda86543ed0915c586f3d79303783c0b6ae327f8e697f14eec8c203b"
+    },
+    {
+      "path": "packages/backend/test/unit/stynx-token-roles-authorization.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 16,
+      "assertion_digest_sha256": "01035944da337d30937049eef104e649d133951b8e1d94e7611b1c603abecc4d"
+    },
+    {
+      "path": "packages/sessions/test/unit/session-revocation-list.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 57,
+      "assertion_digest_sha256": "736b85b613fd5a4e8d6414ddc697cde0a5f983b8cbc5dd2fc705d8449b79ac98"
+    },
+    {
+      "path": "test/scripts/route-decorators-packed-consumer.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "dc1d5c131dd9589dd465419f9ac91f9de6d4ab7b519bc08bc71f51a2c4e6d53d"
+    },
+    {
+      "path": "packages/i18n/test/unit/catalog-registration.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 12,
+      "assertion_digest_sha256": "22c8f017a8d62a988e44d990479c69c1cc26dfab7aa9473748c5dea799a8bc71"
+    },
+    {
+      "path": "test/scripts/stynx-module-static-metadata.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 23,
+      "assertion_digest_sha256": "5ea3693599967f906451256d01ca67581037e1129067642382eb4e2a4ae74b76"
     }
   ],
   "suites": {
