@@ -201,3 +201,78 @@ export class AuditChainKeyMismatchError extends StynxDataError {
     });
   }
 }
+
+/** One failed check of a typed query's arguments or rows: where and which rule, never a value. */
+export interface QueryIssue {
+  readonly path: ReadonlyArray<string | number>;
+  readonly code: string;
+}
+
+/**
+ * A typed query's arguments failed its `params` tuple (S-27). Raised before any SQL is sent;
+ * maps to 400. The context names the query and the failing paths, never the argument values.
+ */
+export class QueryArgumentError extends StynxDataError {
+  readonly query: string;
+  readonly issues: readonly QueryIssue[];
+
+  constructor(query: string, issues: readonly QueryIssue[]) {
+    super(`Arguments for query ${query} failed validation`, {
+      code: 'QUERY_ARGUMENT_INVALID',
+      status: 400,
+      context: { query, issues },
+    });
+    this.query = query;
+    this.issues = issues;
+  }
+}
+
+/** A typed query declared `expects: 'one'` returned no row; maps to 404. */
+export class NotFoundError extends StynxDataError {
+  constructor(context: Record<string, unknown>) {
+    super('The requested row was not found', {
+      code: 'NOT_FOUND',
+      status: 404,
+      context,
+    });
+  }
+}
+
+/** A typed query returned more rows than its `expects` allows (an infrastructure defect). */
+export class QueryCardinalityError extends StynxDataError {
+  readonly query: string;
+  readonly expects: string;
+  readonly rowCount: number;
+
+  constructor(query: string, expects: string, rowCount: number) {
+    super(`Query ${query} returned ${rowCount} rows; expects ${expects}`, {
+      code: 'QUERY_CARDINALITY',
+      status: 500,
+      context: { query, expects, rowCount },
+    });
+    this.query = query;
+    this.expects = expects;
+    this.rowCount = rowCount;
+  }
+}
+
+/**
+ * A row returned by a typed query failed its `row` schema; no row is exposed. The context
+ * names the query, the row index and the failing paths, never the row contents.
+ */
+export class QueryRowValidationError extends StynxDataError {
+  readonly query: string;
+  readonly rowIndex: number;
+  readonly issues: readonly QueryIssue[];
+
+  constructor(query: string, rowIndex: number, issues: readonly QueryIssue[]) {
+    super(`Row ${rowIndex} returned by query ${query} failed validation`, {
+      code: 'QUERY_ROW_INVALID',
+      status: 500,
+      context: { query, rowIndex, issues },
+    });
+    this.query = query;
+    this.rowIndex = rowIndex;
+    this.issues = issues;
+  }
+}
