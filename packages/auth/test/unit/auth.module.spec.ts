@@ -1,3 +1,4 @@
+import { MODULE_METADATA } from '@nestjs/common/constants.js';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { StynxAuthModule } from '../../src/auth.module.js';
 import { ActorContextInterceptor } from '../../src/actor-context.interceptor.js';
@@ -23,8 +24,13 @@ describe('StynxAuthModule', () => {
     });
 
     expect(dynamicModule.global).toBe(true);
-    expect(dynamicModule.imports).toHaveLength(1);
-    expect(dynamicModule.controllers).toContain(StynxAuthController);
+    // SM-20: imports and controllers are static @Module metadata, not forRoot() output.
+    expect(dynamicModule.imports).toBeUndefined();
+    expect(dynamicModule.controllers).toBeUndefined();
+    expect(Reflect.getMetadata(MODULE_METADATA.IMPORTS, StynxAuthModule)).toHaveLength(1);
+    expect(Reflect.getMetadata(MODULE_METADATA.CONTROLLERS, StynxAuthModule)).toEqual([
+      StynxAuthController,
+    ]);
     expect(dynamicModule.exports).toEqual(
       expect.arrayContaining([
         STYNX_AUTH_OPTIONS,
@@ -73,7 +79,9 @@ describe('StynxAuthModule', () => {
         provider !== null &&
         'provide' in provider &&
         provider.provide === STYNX_PERMISSION_CACHE_BACKEND,
-    ) as { useFactory: (backend: RedisPermissionCacheBackend) => RedisPermissionCacheBackend | null };
+    ) as {
+      useFactory: (backend: RedisPermissionCacheBackend) => RedisPermissionCacheBackend | null;
+    };
 
     const backend = {} as RedisPermissionCacheBackend;
     expect(backendProvider.useFactory(backend)).toBe(backend);
@@ -93,7 +101,9 @@ describe('StynxAuthModule', () => {
         provider !== null &&
         'provide' in provider &&
         provider.provide === STYNX_PERMISSION_CACHE_BACKEND,
-    ) as { useFactory: (backend: RedisPermissionCacheBackend) => RedisPermissionCacheBackend | null };
+    ) as {
+      useFactory: (backend: RedisPermissionCacheBackend) => RedisPermissionCacheBackend | null;
+    };
 
     expect(backendProvider.useFactory({} as RedisPermissionCacheBackend)).toBe(null);
   });
@@ -104,19 +114,21 @@ describe('StynxAuthModule', () => {
       permissions: { dbFallbackOnRedisDown: true },
     });
 
-    expect(resolveAuthOptions({
-      cognito: { issuer: 'https://cognito.test', audience: 'web' },
-      stynx: {
-        issuer: 'https://stynx.test',
-        audience: 'api',
-        jwksUri: 'https://stynx.test/jwks',
-      },
-      redis: { url: 'redis://local' },
-      permissions: {
-        dbFallbackOnRedisDown: false,
-        driftResyncIntervalMs: 250,
-      },
-    })).toEqual({
+    expect(
+      resolveAuthOptions({
+        cognito: { issuer: 'https://cognito.test', audience: 'web' },
+        stynx: {
+          issuer: 'https://stynx.test',
+          audience: 'api',
+          jwksUri: 'https://stynx.test/jwks',
+        },
+        redis: { url: 'redis://local' },
+        permissions: {
+          dbFallbackOnRedisDown: false,
+          driftResyncIntervalMs: 250,
+        },
+      }),
+    ).toEqual({
       cognito: { issuer: 'https://cognito.test', audience: 'web' },
       stynx: {
         issuer: 'https://stynx.test',

@@ -1,3 +1,4 @@
+import { MODULE_METADATA } from '@nestjs/common/constants.js';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { z } from 'zod';
 import { StynxCoreModule } from '../../src/core.module.js';
@@ -6,6 +7,11 @@ import {
   STYNX_CORE_OPTIONS,
   STYNX_SYSTEM_OPERATION_SINK,
 } from '../../src/tokens.js';
+
+// SM-20: the CLS import is static `@Module` metadata, read without forRoot().
+function staticImports(): unknown[] {
+  return (Reflect.getMetadata(MODULE_METADATA.IMPORTS, StynxCoreModule) ?? []) as unknown[];
+}
 
 describe('StynxCoreModule', () => {
   it('wires sync and async option providers plus global infrastructure', async () => {
@@ -31,7 +37,9 @@ describe('StynxCoreModule', () => {
       inject: ['dep'],
       useFactory: asyncFactory,
     });
-    expect(asyncModule.imports).toHaveLength(2);
+    // Only the caller's imports stay dynamic; the CLS import is static (SM-20).
+    expect(asyncModule.imports).toHaveLength(1);
+    expect(staticImports()).toHaveLength(1);
     expect(asyncModule.providers).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -45,7 +53,8 @@ describe('StynxCoreModule', () => {
     const defaultAsyncModule = StynxCoreModule.forRootAsync({
       useFactory: asyncFactory,
     });
-    expect(defaultAsyncModule.imports).toHaveLength(1);
+    expect(defaultAsyncModule.imports).toBeUndefined();
+    expect(syncModule.imports).toBeUndefined();
     expect(defaultAsyncModule.providers).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -75,7 +84,12 @@ describe('StynxCoreModule', () => {
       schema: z.object({}),
     });
 
-    expect(first.imports?.[0]).toBe(second.imports?.[0]);
+    // Neither dynamic module carries its own CLS import; both share the one
+    // static descriptor on the StynxCoreModule class (SM-20).
+    expect(first.imports).toBeUndefined();
+    expect(second.imports).toBeUndefined();
+    expect(first.module).toBe(second.module);
+    expect(staticImports()).toHaveLength(1);
   });
 
   it('mounts the shared CLS request seed before guards and keeps it on one descriptor', () => {
@@ -88,7 +102,8 @@ describe('StynxCoreModule', () => {
       schema: z.object({}),
     });
 
-    const clsModuleDescriptor = first.imports?.[0] as {
+    expect(first.imports).toBeUndefined();
+    const clsModuleDescriptor = staticImports()[0] as {
       imports?: Array<{
         providers?: Array<{ provide?: unknown; useValue?: { middleware?: unknown } }>;
       }>;
@@ -106,6 +121,7 @@ describe('StynxCoreModule', () => {
         }),
       }),
     );
-    expect(second.imports?.[0]).toBe(first.imports?.[0]);
+    expect(second.module).toBe(first.module);
+    expect(staticImports()[0]).toBe(clsModuleDescriptor);
   });
 });
