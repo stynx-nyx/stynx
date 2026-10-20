@@ -172,7 +172,8 @@ describe('i18n tenant capability boundaries', () => {
       },
     } as ModuleRef;
     const locale = new LocaleService(providers, f.catalog);
-    await expect(locale.resolve('unsupported')).resolves.toBe('pt-BR');
+    // SM-19: no locale configured, so the pre-authentication fallback is en-US.
+    await expect(locale.resolve('unsupported')).resolves.toBe('en-US');
     expect(locale.t('title')).toBe('title');
     await expect(locale.resolve('en-US')).resolves.toBe('en-US');
     expect(f.query).not.toHaveBeenCalled();
