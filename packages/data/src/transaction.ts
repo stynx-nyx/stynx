@@ -2,6 +2,7 @@ import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { type SQL, type SQLWrapper } from 'drizzle-orm';
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
 import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
+import type { z } from 'zod';
 import {
   ArchiveMirrorMissingError,
   ReadOnlyViolationError,
@@ -30,6 +31,7 @@ import { getTableMeta, qualifiedName, type TableMeta } from './internal/table-me
 import { createTransactionSelectRoot, type TransactionSelectRoot } from './query-helpers.js';
 import * as schema from './schema/index.js';
 import { isSoftDeletable } from './table-markers.js';
+import { executeTypedQuery, type ResultOf, type TypedQuery } from './typed-query.js';
 import type { StynxDataMetricsSink, StynxDataRole } from './tokens.js';
 import type {
   CascadePlan,
@@ -105,12 +107,27 @@ export class Transaction {
     return this.db.execute(query as SQL<unknown>);
   }
 
+  /**
+   * @internal Raw executor for STYNX's own data layer until it moves to typed
+   * definitions (D-007, SM-09); new code uses `run` with a `defineQuery` (D-030).
+   */
   async query<TRow extends QueryResultRow = QueryResultRow>(
     text: string,
     values?: unknown[],
   ): Promise<QueryResult<TRow>> {
     this.ensureActive();
     return this.client.query<TRow>(text, values);
+  }
+
+  /**
+   * Executes a {@link defineQuery} definition (02 §3, D-030). Arguments are parsed by its
+   * `params` tuple before any SQL is sent (failure: `QueryArgumentError`), bound as `$n`, the
+   * row count is checked against `expects` (`one` with no row: `NotFoundError`) and every row is
+   * validated against `row` (failure: `QueryRowValidationError`) before it is returned.
+   */
+  async run<Q extends TypedQuery>(query: Q, params: z.input<Q['params']>): Promise<ResultOf<Q>> {
+    this.ensureActive();
+    return executeTypedQuery(this.client, query, params);
   }
 
   async softDelete<T extends AnyPgTable>(

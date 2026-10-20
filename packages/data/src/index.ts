@@ -19,6 +19,8 @@ export {
   platformRoleNames,
   type PlatformRoleNames,
 } from './platform-roles.js';
+/** Typed-query helper exports (02 §3, D-030). */
+export { defineQuery, sql, type Expects, type ResultOf, type TypedQuery } from './typed-query.js';
 /** Transaction and Drizzle helper exports. */
 export { Transaction, createDrizzle, type StynxDrizzleDatabase } from './transaction.js';
 /** PostgreSQL pool registry exports. */
