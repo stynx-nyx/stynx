@@ -3,10 +3,11 @@
 // them; this module is not exported.
 //
 // `strict: false` keeps the levels STYNX lints with today: `no-explicit-any`
-// and four `no-unsafe-*` rules off, `boundaries/dependencies` allow-by-default,
-// `stynx/require-idempotent-route-decorator` at warn and no `no-authored-cjs`.
-// Migration items SM-11, SM-12, SM-13 and SM-01 move STYNX onto the strict
-// (published default) levels and then delete this switch.
+// and four `no-unsafe-*` rules off, `boundaries/dependencies` allow-by-default
+// and no `no-authored-cjs`. `stynx/require-idempotent-route-decorator` is at
+// error in every profile since SM-13. Migration items SM-11, SM-12 and SM-01
+// move STYNX onto the remaining strict (published default) levels and then
+// delete this switch.
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
