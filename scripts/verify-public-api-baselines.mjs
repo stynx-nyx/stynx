@@ -1,11 +1,15 @@
 #!/usr/bin/env node
-import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
-import { normalizePublicApiDeclaration } from './verify-public-api-declaration.mjs';
+import {
+  compareBaselines,
+  currentBaselines,
+} from '../packages/cli/engines/public-api-baselines.mjs';
 
+// The comparison ships in @stynx-nyx/cli (`stynx verify-public-api-baselines --json`, SM-07);
+// this script keeps the repository's clean build and its `--write` pair.
 const repoRoot = process.cwd();
 const write = process.argv.includes('--write');
 const baselinePath = resolve(repoRoot, 'docs/framework/contracts/public-api-baselines.json');
@@ -30,10 +34,7 @@ if (!preverifiedTestGraph) {
   run('pnpm', ['build'], repoRoot);
 }
 
-const current = {
-  schemaVersion: '1',
-  packages: Object.fromEntries(packageSpecs.map((spec) => [spec.name, packageBaseline(spec)])),
-};
+const current = currentBaselines(repoRoot, packageSpecs);
 
 if (write) {
   writeFileSync(baselinePath, `${JSON.stringify(current, null, 2)}\n`);
@@ -48,28 +49,7 @@ if (!existsSync(baselinePath)) {
 }
 
 const expected = JSON.parse(readFileSync(baselinePath, 'utf8'));
-const failures = [];
-for (const spec of packageSpecs) {
-  const expectedPkg = expected.packages?.[spec.name];
-  const actualPkg = current.packages[spec.name];
-  if (!expectedPkg) {
-    failures.push(`${spec.name}: missing baseline entry`);
-    continue;
-  }
-  for (const [file, actualHash] of Object.entries(actualPkg.declarationHashes)) {
-    const expectedHash = expectedPkg.declarationHashes?.[file];
-    if (!expectedHash) failures.push(`${spec.name}: new public declaration ${file}`);
-    else if (expectedHash !== actualHash)
-      failures.push(`${spec.name}: public declaration changed ${file}`);
-  }
-  for (const file of Object.keys(expectedPkg.declarationHashes ?? {})) {
-    if (!actualPkg.declarationHashes[file])
-      failures.push(`${spec.name}: removed public declaration ${file}`);
-  }
-  const expectedExports = JSON.stringify(expectedPkg.exports ?? {});
-  const actualExports = JSON.stringify(actualPkg.exports ?? {});
-  if (expectedExports !== actualExports) failures.push(`${spec.name}: package exports changed`);
-}
+const failures = compareBaselines(expected, current, packageSpecs);
 
 if (failures.length > 0) {
   console.error('[api-baseline] failed');
@@ -78,43 +58,6 @@ if (failures.length > 0) {
 }
 
 console.log(`[api-baseline] OK: ${packageSpecs.length} package baselines matched`);
-
-function packageBaseline(spec) {
-  const manifest = JSON.parse(readFileSync(resolve(repoRoot, spec.dir, 'package.json'), 'utf8'));
-  const distDir = resolve(repoRoot, spec.dir, 'dist');
-  const declarationFiles = walk(distDir)
-    .filter((file) => file.endsWith('.d.ts'))
-    .sort((left, right) => left.localeCompare(right));
-  if (declarationFiles.length === 0) {
-    throw new Error(
-      `${spec.name}: build emitted no public declaration files under ${spec.dir}/dist`,
-    );
-  }
-  const declarationHashes = Object.fromEntries(
-    declarationFiles.map((file) => {
-      const relativeFile = relative(distDir, file);
-      const normalized = normalizePublicApiDeclaration({
-        packageName: spec.name,
-        declarationPath: relativeFile,
-        packageVersion: manifest.version,
-        source: readFileSync(file, 'utf8'),
-      });
-      return [relativeFile, createHash('sha256').update(normalized).digest('hex')];
-    }),
-  );
-  return {
-    exports: manifest.exports ?? {},
-    declarationHashes,
-  };
-}
-
-function walk(dir) {
-  if (!existsSync(dir) || !statSync(dir).isDirectory()) return [];
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name);
-    return entry.isDirectory() ? walk(path) : [path];
-  });
-}
 
 function run(command, args, cwd) {
   const result = spawnSync(command, args, {
