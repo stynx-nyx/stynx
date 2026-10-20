@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.3.39",
   "meta": {
-    "last_updated": "2026-10-19T23:30:00.000000Z",
+    "last_updated": "2026-10-20T01:15:00.000000Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-20 Architect rebind for SM-07 and SM-18: binds packages/cli/test/check-entry-points.spec.ts (on a temporary git consumer outside the checkout the six read-only entry points exit 0 with one JSON object each, the boundary census lists the scanned file, git status --porcelain --ignored stays empty, and one seeded violation per command exits 1 with a <path>:<line> locator; unbuilt packages and an invalid .stynxrc.json are UNKNOWN, exit 2) and packages-web/sdk/test/codegen-check.spec.ts (stynx-sdk-codegen --check exits 0 on the committed SDK without writing, exits 1 naming the one edited file and leaves it unchanged, reports missing and unlisted files, the write form reproduces the committed bytes, bad invocations exit 2, and openapi-typescript-codegen is in neither dependency map), and rebinds packages/cli/test/cli-program.spec.ts (the pinned command tree lists the six check commands). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
       "2026-10-19 Architect rebind for SM-06 follow-up (template apply.sh runs `stynx migrate up --role-prefix <product>` with no URL on argv, 09 \u00a71): binds packages/cli/test/migrate-pg-env.integration.spec.ts (migrateUp with prefix demo and only PG* set against the STYNX_TEST_PG_* scratch PostgreSQL; skipped when none is configured) and rebinds packages/cli/test/migrate.spec.ts (no connectionString reaches the pg client or factory without a URL) and packages/cli/test/cli-program.spec.ts (--database-url optional on migrate status|up|down|redo; audit verify unchanged). No assertion is removed or weakened beyond the intended optional flag.",
       "2026-10-19 Architect rebind for SM-06: binds packages/data/test/unit/platform-roles.spec.ts (default prefix applies every platform migration byte for byte; prefix demo rewrites only stynx_{owner,app,reader} identifiers; invalid prefixes refused), packages/data/test/unit/migration-runner-role-prefix.spec.ts, packages/data/test/integration/role-prefix.integration.spec.ts (scratch PostgreSQL: default stays on stynx_*; prefix demo bootstraps demo_{owner,app,reader} with demo_app NOBYPASSRLS, no stynx_* role owning, granted or named in the database, tenant isolation as the product app role), packages/cli/test/migrate-role-prefix.spec.ts and packages/testing/test/roles.unit.spec.ts, and rebinds the extended packages/cli/test/cli-program.spec.ts (--role-prefix surface) and packages/testing/test/create-test-app.unit.spec.ts (product role names). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
       "2026-10-19 Architect rebind for SM-03: binds tools/eslint-config/test/rule-families.spec.mjs (one eslint --max-warnings=0 fixture per enabled rule family exits 1 naming its rule, a clean fixture per profile exits 0, the exports map and named-factory surface, and the unchanged STYNX workspace levels) and rebinds test/scripts/http-workspace-graph.test.mjs after its source-only tooling fixture follows the @stynx-nyx/eslint-config rename. All 57 workspace-graph assertion sites are unchanged in count and text; no assertion is removed or weakened.",
@@ -2896,7 +2897,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 56,
-      "assertion_digest_sha256": "949233c3a0cdf9dc2ea9e208dd9d1357862188b5d38824cceacb2b2cbb82c5e2"
+      "assertion_digest_sha256": "80be8ba358b5cf5de3af0acdbf861b7ae321dfdb97775fdc74cc0c1e9a26704a"
     },
     {
       "path": "packages/cli/test/cli.spec.ts",
@@ -7445,6 +7446,22 @@
       "lifecycle": "supported",
       "assertion_count": 6,
       "assertion_digest_sha256": "218cc136ed8e43e7b9b135f4229e1552f571cbca125b2bf736bdf75b6877ca3e"
+    },
+    {
+      "path": "packages/cli/test/check-entry-points.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "bc50a112e26c8e16a9f7cb4708ece0f4d646911434d416db0730d13e155add84"
+    },
+    {
+      "path": "packages-web/sdk/test/codegen-check.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 19,
+      "assertion_digest_sha256": "6e1c131e7e2af366bec8080dc25d74b87a5a8bd4d318d627e42aa1cd14e7680b"
     }
   ],
   "suites": {
