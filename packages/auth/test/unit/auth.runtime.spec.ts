@@ -1,6 +1,7 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { SessionRevocationList } from '@stynx-nyx/sessions';
 import { InMemoryPermissionCacheBackend } from '../../src/in-memory-permission-cache-backend.js';
 import { PermissionCacheMetrics } from '../../src/permission-cache-metrics.js';
 import { PermissionGuard } from '../../src/permission.guard.js';
@@ -106,10 +107,9 @@ describe('auth runtime helpers', () => {
   });
 
   it('hydrates request auth context and readonly state from a valid bearer token', async () => {
+    const revocations = new SessionRevocationList();
     const moduleRef = {
-      get: vi.fn(() => ({
-        getActive: vi.fn().mockResolvedValue({ sid: 'sid-1' }),
-      })),
+      get: vi.fn((token: unknown) => (token === SessionRevocationList ? revocations : undefined)),
     };
     const reflector = {
       getAllAndOverride: vi.fn((key: symbol) => key === STYNX_READONLY_ROUTE),
@@ -119,21 +119,14 @@ describe('auth runtime helpers', () => {
         sub: 'user-1',
         sid: 'sid-1',
         tenantId: 'tenant-1',
+        permissions: ['document:read:*'],
+        roles: [],
+        expiresAt: Math.floor(Date.now() / 1000) + 300,
         claims: { scope: 'read' },
       }),
     };
-    const permissionCache = {
-      getForSession: vi.fn().mockResolvedValue({
-        permissions: ['document:read:*'],
-      }),
-    };
 
-    const guard = new StynxAuthGuard(
-      moduleRef as never,
-      reflector,
-      validator as never,
-      permissionCache as never,
-    );
+    const guard = new StynxAuthGuard(moduleRef as never, reflector, validator as never);
     const request = {
       headers: {
         authorization: 'Bearer access-token',
@@ -153,28 +146,23 @@ describe('auth runtime helpers', () => {
     const reflector = {
       getAllAndOverride: vi.fn(() => false),
     } as unknown as Reflector;
+    const revocations = new SessionRevocationList();
+    revocations.add('sid-1');
     const moduleRef = {
-      get: vi.fn(() => ({
-        getActive: vi.fn().mockResolvedValue(null),
-      })),
+      get: vi.fn((token: unknown) => (token === SessionRevocationList ? revocations : undefined)),
     };
     const validator = {
       validate: vi.fn().mockResolvedValue({
         sub: 'user-1',
         sid: 'sid-1',
         tenantId: 'tenant-1',
+        permissions: [],
+        roles: [],
+        expiresAt: Math.floor(Date.now() / 1000) + 300,
         claims: {},
       }),
     };
-    const permissionCache = {
-      getForSession: vi.fn(),
-    };
-    const guard = new StynxAuthGuard(
-      moduleRef as never,
-      reflector,
-      validator as never,
-      permissionCache as never,
-    );
+    const guard = new StynxAuthGuard(moduleRef as never, reflector, validator as never);
 
     await expect(guard.canActivate(createExecutionContext({ headers: {} }))).rejects.toBeInstanceOf(
       UnauthorizedException,

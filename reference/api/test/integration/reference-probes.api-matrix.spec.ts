@@ -21,6 +21,7 @@ import {
   STYNX_PERMISSION_CACHE_BACKEND,
   StynxAuthGuard,
   StynxJwtValidator,
+  StynxSessionClaimsResolver,
 } from '@stynx-nyx/auth';
 import { StynxPlatformPipelineModule } from '@stynx-nyx/backend';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
@@ -29,7 +30,9 @@ import {
   resolveSessionsOptions,
   SessionJwtSigningService,
   SessionMirrorWriter,
+  SessionRevocationList,
   SessionService,
+  STYNX_SESSION_CLAIMS_RESOLVER,
   STYNX_SESSIONS_OPTIONS,
   STYNX_SESSION_MIRROR,
   STYNX_SESSION_STORE,
@@ -78,11 +81,15 @@ const keySet = buildKeySet();
     { provide: STYNX_SESSION_STORE, useValue: new InMemorySessionStore() },
     { provide: STYNX_SESSION_MIRROR, useClass: SessionMirrorWriter },
     SessionJwtSigningService,
+    SessionRevocationList,
     SessionService,
     StynxJwtValidator,
     PermissionCacheMetrics,
     PermissionQueryService,
     PermissionCache,
+    // S-12: permissions are resolved when a session token is minted, not per request.
+    StynxSessionClaimsResolver,
+    { provide: STYNX_SESSION_CLAIMS_RESOLVER, useExisting: StynxSessionClaimsResolver },
     StynxAuthGuard,
     PermissionGuard,
   ],
@@ -90,6 +97,7 @@ const keySet = buildKeySet();
     STYNX_AUTH_OPTIONS,
     STYNX_PERMISSION_CACHE_BACKEND,
     SessionJwtSigningService,
+    SessionRevocationList,
     SessionService,
     StynxJwtValidator,
     PermissionCacheMetrics,

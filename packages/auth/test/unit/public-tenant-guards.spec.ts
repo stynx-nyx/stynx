@@ -82,8 +82,13 @@ function modulesWith(metatypes: Array<unknown>): ModulesContainer {
   controllers: [AuthOnlyController],
   providers: [
     {
+      // S-12: the guard must not read the session store on the request path.
       provide: SessionService,
-      useValue: { getActive: async () => ({ sid: 'auth-only-session' }) },
+      useValue: {
+        getActive: async () => {
+          throw new Error('session store read on the request path');
+        },
+      },
     },
   ],
 })
@@ -102,9 +107,16 @@ describe('public tenant guard boundaries', () => {
       { get: () => undefined } as never,
       reflector,
       {
-        validate: vi.fn(async () => ({ sid: 'sid', sub: 'actor', tenantId: 'tenant', claims: {} })),
+        validate: vi.fn(async () => ({
+          sid: 'sid',
+          sub: 'actor',
+          tenantId: 'tenant',
+          permissions: [],
+          roles: [],
+          expiresAt: Math.floor(Date.now() / 1000) + 300,
+          claims: {},
+        })),
       } as never,
-      { getForSession: vi.fn(async () => ({ permissions: [] })) } as never,
     );
     const nominal = { headers: {} };
     const verified = { headers: { authorization: 'Bearer valid' } };
@@ -176,11 +188,18 @@ describe('public tenant guard boundaries', () => {
           sid: 'auth-only-session',
           sub: 'auth-only-actor',
           tenantId: '0197481e-6f84-77e4-8d6d-41f0b6fca9c1',
+          permissions: ['records:read'],
+          roles: [],
+          expiresAt: Math.floor(Date.now() / 1000) + 300,
           claims: {},
         }),
       })
       .overrideProvider(PermissionCache)
-      .useValue({ getForSession: async () => ({ permissions: ['records:read'] }) })
+      .useValue({
+        getForSession: async () => {
+          throw new Error('permission cache read on the request path');
+        },
+      })
       .compile();
     const app: INestApplication = testing.createNestApplication();
     await app.init();
@@ -218,19 +237,18 @@ describe('public tenant guard boundaries', () => {
         key === STYNX_PUBLIC_TENANT_ROUTE ? { optionalAuth: true } : false,
       ),
     } as unknown as Reflector;
-    const permissionCache = {
-      getForSession: vi.fn(async () => ({ permissions: ['records:read'] })),
-    };
+    const lookups = { get: vi.fn(() => undefined) };
     for (const claims of [
       null,
       { sid: '', sub: 'actor', tenantId: 'tenant', claims: {} },
       { sid: 'sid', sub: 'actor', tenantId: 42, claims: {} },
+      // A verified token without the S-12 `perms` claim is malformed, not looked up.
+      { sid: 'sid', sub: 'actor', tenantId: 'tenant', roles: [], expiresAt: 4_102_444_800, claims: {} },
     ]) {
       const guard = new StynxAuthGuard(
-        { get: () => undefined } as never,
+        lookups as never,
         reflector,
         { validate: vi.fn(async () => claims) } as never,
-        permissionCache as never,
       );
       const verified: Record<string, unknown> = { headers: { authorization: 'Bearer malformed' } };
       await expect(guard.canActivate(context(verified))).rejects.toThrow(
@@ -239,7 +257,8 @@ describe('public tenant guard boundaries', () => {
       expect(verified.principal).toBe(undefined);
       expect(verified.publicTenantOptionalAuth).toBe(true);
     }
-    expect(permissionCache.getForSession).toHaveBeenCalledTimes(0);
+    // Malformed claims are refused before the revocation list is even consulted.
+    expect(lookups.get).toHaveBeenCalledTimes(0);
   });
 
   it('skips controller wrappers without a metatype and accepts public-tenant controllers when tenancy options exist', () => {

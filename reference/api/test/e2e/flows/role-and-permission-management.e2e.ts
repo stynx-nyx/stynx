@@ -3,6 +3,7 @@ import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
+  refreshActorTokens,
   queryRowsAsTenant,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
@@ -220,6 +221,9 @@ describe('@stynx-nyx/reference-api e2e role and permission management', () => {
 
     await grantDirectPermissions(context, actors.adminA.membershipId, platformPermissionKeys);
     await context.app.get(PermissionCache).invalidateSid(tokenSid(context.tokens.adminA));
+    // S-12: the platform grant reaches adminA's token on refresh (same sid).
+    await refreshActorTokens(context, ['adminA']);
+    adminA = createAuthenticatedAgent(context.app, context.tokens.adminA);
   }, 180_000);
 
   afterAll(async () => {
@@ -251,6 +255,15 @@ describe('@stynx-nyx/reference-api e2e role and permission management', () => {
     await auditExpect(context.database, 'membership_roles', 'INSERT', { schema: 'auth' });
 
     await adminA.post(`/_platform/perms/${viewerASid}/invalidate`).send({}).expect(201);
+    // S-12: the existing token is decided by its own claims until it is refreshed.
+    await viewerA.post('/records').send({
+      title: 'Role writer still denied before refresh',
+      email: 'role-denied-before-refresh@example.com',
+    }).expect(403);
+    await refreshActorTokens(context, ['viewerA']);
+    expect(tokenSid(context.tokens.viewerA)).toBe(viewerASid);
+    expect(decodeJwtPayload(context.tokens.viewerA).roles).toContain('e2e-role-record-writer');
+    viewerA = createAuthenticatedAgent(context.app, context.tokens.viewerA);
     const record = (await viewerA.post('/records').send({
       title: 'Role writer created record',
       email: 'role-writer-created@example.com',
@@ -272,6 +285,9 @@ describe('@stynx-nyx/reference-api e2e role and permission management', () => {
     await auditExpect(context.database, 'membership_roles', 'DELETE', { schema: 'auth' });
 
     await adminA.post(`/_platform/perms/${viewerASid}/invalidate`).send({}).expect(201);
+    await refreshActorTokens(context, ['viewerA']);
+    expect(decodeJwtPayload(context.tokens.viewerA).roles).not.toContain('e2e-role-record-writer');
+    viewerA = createAuthenticatedAgent(context.app, context.tokens.viewerA);
     await viewerA.post('/records').send({
       title: 'Role writer denied after revoke',
       email: 'role-denied-after@example.com',

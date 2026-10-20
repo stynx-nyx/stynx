@@ -20,6 +20,7 @@ export interface ReferenceApiE2eContext {
   postgres: PostgresTestDatabase;
   redis: StartedTestContainer;
   tokens: Record<ActorName, string>;
+  refreshTokens: Record<ActorName, string>;
 }
 
 export interface ReferenceApiE2eOptions {
@@ -76,7 +77,7 @@ function setRuntimeEnvironment(postgres: PostgresTestDatabase, redisUrl: string)
 
 async function mintActorSessions(
   sessionService: SessionService,
-): Promise<Record<ActorName, string>> {
+): Promise<Pick<ReferenceApiE2eContext, 'tokens' | 'refreshTokens'>> {
   const entries = await Promise.all(
     (Object.entries(actors) as Array<[ActorName, (typeof actors)[ActorName]]>).map(
       async ([name, actor]) => {
@@ -87,11 +88,36 @@ async function mintActorSessions(
           {},
           { membershipId: actor.membershipId },
         );
-        return [name, session.accessToken] as const;
+        return [name, session] as const;
       },
     ),
   );
-  return Object.fromEntries(entries) as Record<ActorName, string>;
+  return {
+    tokens: Object.fromEntries(entries.map(([name, session]) => [name, session.accessToken])) as Record<
+      ActorName,
+      string
+    >,
+    refreshTokens: Object.fromEntries(
+      entries.map(([name, session]) => [name, session.refreshToken]),
+    ) as Record<ActorName, string>,
+  };
+}
+
+/**
+ * S-12: grants reach an access token when it is minted, not per request. After
+ * changing an actor's grants, refresh its session (same sid) so the next token
+ * carries them; agents must be created from the refreshed `context.tokens`.
+ */
+export async function refreshActorTokens(
+  context: ReferenceApiE2eContext,
+  names: readonly ActorName[] = Object.keys(actors) as ActorName[],
+): Promise<void> {
+  const sessionService = context.app.get(SessionService);
+  for (const name of names) {
+    const refreshed = await sessionService.refresh(context.refreshTokens[name]);
+    context.tokens[name] = refreshed.accessToken;
+    context.refreshTokens[name] = refreshed.refreshToken;
+  }
 }
 
 export async function setupReferenceApiE2e(
@@ -135,7 +161,7 @@ export async function setupReferenceApiE2e(
     requestContextMutator: moduleRef.get(RequestContextMutator),
     postgres,
     redis,
-    tokens: await mintActorSessions(sessionService),
+    ...(await mintActorSessions(sessionService)),
   };
 }
 

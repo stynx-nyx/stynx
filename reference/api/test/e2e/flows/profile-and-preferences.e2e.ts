@@ -1,6 +1,7 @@
 import { PermissionCache, StynxJwtValidator } from '@stynx-nyx/auth';
 import { generateRequestId } from '@stynx-nyx/core';
 import { LocaleService } from '@stynx-nyx/i18n';
+import { SessionService } from '@stynx-nyx/sessions';
 import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -19,6 +20,7 @@ const adminBEmail = 'profile-admin@sample-ops.test';
 
 interface DevLoginResponse {
   accessToken: string;
+  refreshToken: string;
   tenantId: string;
   email: string;
   permissions: string[];
@@ -180,7 +182,12 @@ async function login(
   // through the completed public operation before its first authorized call.
   const claims = await context.app.get(StynxJwtValidator).validate(login.accessToken);
   await cache.invalidateSid(claims.sid);
-  return login;
+  // S-12: the grants reach the token when the session is refreshed (same sid).
+  const refreshed = await context.app.get(SessionService).refresh(login.refreshToken);
+  const refreshedClaims = await context.app.get(StynxJwtValidator).validate(refreshed.accessToken);
+  expect(refreshedClaims.sid).toBe(claims.sid);
+  expect(refreshedClaims.permissions).toEqual(expect.arrayContaining(['i18n:read', 'i18n:write']));
+  return { ...login, accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken };
 }
 
 describe('@stynx-nyx/reference-api e2e profile and preferences', () => {

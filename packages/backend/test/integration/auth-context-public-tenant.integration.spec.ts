@@ -25,6 +25,7 @@ import {
   SessionService,
   SessionJwtSigningService,
   SessionMirrorWriter,
+  SessionRevocationList,
   STYNX_SESSIONS_OPTIONS,
   STYNX_SESSION_STORE,
   STYNX_SESSION_MIRROR,
@@ -136,11 +137,15 @@ const sessionOptions = resolveSessionsOptions({
   },
 });
 const sessionStore = new InMemorySessionStore();
+// S-12: STYNX tokens carry the actor's authorization in verified `perms`/`roles` claims.
+const MEMBER_CLAIMS = { perms: ['records:read'], roles: ['member'] };
+const NO_GRANTS = { perms: [] as string[], roles: [] as string[] };
 const signed = (
   sid: string,
   userId = MEMBER,
   tenantId = TENANT_A,
   privateKey = keys.privateKey,
+  authorization: { perms: string[]; roles: string[] } = NO_GRANTS,
 ): string => {
   const head = Buffer.from(
     JSON.stringify({ alg: 'RS256', typ: 'JWT', kid: 'public-tenant-test' }),
@@ -151,6 +156,7 @@ const signed = (
       sub: userId,
       sid,
       tenant_id: tenantId,
+      ...authorization,
       exp: Math.floor(Date.now() / 1000) + 3600,
     }),
   ).toString('base64url');
@@ -270,6 +276,7 @@ const tokenVerifier = {
     { provide: STYNX_SESSION_STORE, useValue: sessionStore },
     { provide: STYNX_SESSION_MIRROR, useClass: SessionMirrorWriter },
     SessionJwtSigningService,
+    SessionRevocationList,
     SessionService,
   ],
 })
@@ -357,15 +364,26 @@ describe('AuthContextGuard public tenant HTTP contract', () => {
         cognitoSub: userId,
         refreshFamilyId: label,
         refreshTokenHash: label,
-        status: label === 'revoked' ? 'revoked' : 'active',
+        status: 'active',
         createdAt: now,
         updatedAt: now,
         lastTouchedAt: now,
         expiresAt: future,
         idleExpiresAt: future,
       } satisfies SessionRecord);
-      realTokens.set(label, signed(label + '-session', userId, tenantId));
+      realTokens.set(
+        label,
+        signed(
+          label + '-session',
+          userId,
+          tenantId,
+          keys.privateKey,
+          label === 'member' || label === 'revoked' ? MEMBER_CLAIMS : NO_GRANTS,
+        ),
+      );
     }
+    // Revocation reaches the guard through the in-memory revocation list, not a store read.
+    await expect(testing.get(SessionService).revoke('revoked-session')).resolves.toBe(true);
     const jwtValidator = testing.get(StynxJwtValidator);
     expect(jwtValidator).toBeInstanceOf(StynxJwtValidator);
     expect(testing.get(PermissionCache)).toBeInstanceOf(PermissionCache);
@@ -595,25 +613,43 @@ describe('AuthContextGuard public tenant HTTP contract', () => {
           'absolute-expiry': '000000000104',
           'idle-expiry': '000000000105',
         }[state];
-      if (state !== 'missing') {
-        const past = new Date(Date.now() - 60_000).toISOString();
-        const future = new Date(Date.now() + 3_600_000).toISOString();
-        await sessionStore.createSession({
-          sid,
-          userId: MEMBER,
-          tenantId: TENANT_A,
-          cognitoSub: MEMBER,
-          refreshFamilyId: sid,
-          refreshTokenHash: sid,
-          status: state === 'revoked' || state === 'reuse_detected' ? state : 'active',
-          createdAt: past,
-          updatedAt: past,
-          lastTouchedAt: past,
-          expiresAt: state === 'absolute-expiry' ? past : future,
-          idleExpiresAt: state === 'absolute-expiry' || state === 'idle-expiry' ? past : future,
-        });
+      // S-12: no session read on the request path. Revoked, reuse-detected and
+      // revoked-then-purged ("missing") sessions reach the guard through the in-memory
+      // revocation list; absolute and idle expiry are enforced by the issued token's exp.
+      const sessions = app.get(SessionService);
+      const past = new Date(Date.now() - 60_000).toISOString();
+      const future = new Date(Date.now() + 3_600_000).toISOString();
+      const record: SessionRecord = {
+        sid,
+        userId: MEMBER,
+        tenantId: TENANT_A,
+        cognitoSub: MEMBER,
+        refreshFamilyId: sid,
+        refreshTokenHash: sid,
+        status: 'active',
+        createdAt: past,
+        updatedAt: past,
+        lastTouchedAt: past,
+        expiresAt: state === 'absolute-expiry' ? past : future,
+        idleExpiresAt: state === 'absolute-expiry' || state === 'idle-expiry' ? past : future,
+        permissions: MEMBER_CLAIMS.perms,
+        roles: MEMBER_CLAIMS.roles,
+      };
+      let header = 'Bearer ' + signed(sid, MEMBER, TENANT_A, keys.privateKey, MEMBER_CLAIMS);
+      if (state === 'missing' || state === 'revoked') {
+        await sessionStore.createSession(record);
+        await expect(sessions.revoke(sid)).resolves.toBe(true);
+        if (state === 'missing') await expect(sessionStore.getSession(sid)).resolves.toBe(null);
+      } else if (state === 'reuse_detected') {
+        const bundle = await sessions.create(MEMBER, TENANT_A, MEMBER);
+        await sessions.refresh(bundle.refreshToken);
+        await expect(sessions.refresh(bundle.refreshToken)).rejects.toThrow();
+        header = 'Bearer ' + signed(bundle.sid, MEMBER, TENANT_A, keys.privateKey, MEMBER_CLAIMS);
+      } else {
+        await sessionStore.createSession(record);
+        header = 'Bearer ' + (await app.get(SessionJwtSigningService).signAccessToken(record, new Date())).token;
       }
-      const header = 'Bearer ' + signed(sid);
+      const expiry = state === 'absolute-expiry' || state === 'idle-expiry';
       await request(app.getHttpServer())
         .get('/auth-public/optional')
         .set('host', 'a.portal.test')
@@ -625,7 +661,7 @@ describe('AuthContextGuard public tenant HTTP contract', () => {
         .set('authorization', header)
         .expect(401)
         .expect({
-          message: 'STYNX session is no longer active',
+          message: expiry ? 'Invalid STYNX bearer token' : 'STYNX session is no longer active',
           error: 'Unauthorized',
           statusCode: 401,
         });
@@ -635,18 +671,33 @@ describe('AuthContextGuard public tenant HTTP contract', () => {
   it.each(['optional', 'protected'] as const)(
     'propagates actual session-store failure over %s HTTP without credential downgrade',
     async (route) => {
+      // The store is read only by the background revocation refresh. When that refresh
+      // keeps failing past the staleness bound, the guard fails closed (503), never nominal.
+      const revocations = app.get(SessionRevocationList);
+      revocations.onModuleDestroy(); // pause the background refresh so call counts are exact
       const failure = vi
-        .spyOn(sessionStore, 'getSession')
-        .mockRejectedValueOnce(new Error('session storage unavailable'));
+        .spyOn(sessionStore, 'listRevokedSessions')
+        .mockRejectedValue(new Error('session storage unavailable'));
+      const reads = vi.spyOn(sessionStore, 'getSession');
+      const realNow = Date.now.bind(Date);
+      const clock = vi.spyOn(Date, 'now');
       try {
+        await expect(revocations.refresh()).rejects.toThrow('session storage unavailable');
+        clock.mockImplementation(() => realNow() + 60_000);
+        expect(revocations.isStale()).toBe(true);
+        const calls = failure.mock.calls.length;
         await request(app.getHttpServer())
           .get('/auth-public/' + route)
           .set('host', 'a.portal.test')
           .set('authorization', authHeader('member'))
-          .expect(500);
-        expect(failure).toHaveBeenCalledExactlyOnceWith('member-session');
+          .expect(503);
+        expect(failure.mock.calls.length).toBe(calls);
+        expect(reads).not.toHaveBeenCalled();
       } finally {
+        clock.mockRestore();
         failure.mockRestore();
+        reads.mockRestore();
+        await revocations.onApplicationBootstrap();
       }
     },
   );

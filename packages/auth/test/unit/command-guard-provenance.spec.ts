@@ -7,9 +7,18 @@ import { StynxAuthGuard } from '../../src/stynx-auth.guard.js';
 function guard() {
   const moduleRef = { get: vi.fn(() => undefined) } as unknown as ModuleRef;
   const reflector = { getAllAndOverride: vi.fn(() => false) };
-  const validator = { validate: vi.fn(async () => ({ sid: 'sid', sub: 'verified-actor', tenantId: 'verified-tenant', claims: {} })) };
-  const permissionCache = { getForSession: vi.fn(async () => ({ permissions: [] })) };
-  return new StynxAuthGuard(moduleRef, reflector as never, validator as never, permissionCache as never);
+  const validator = {
+    validate: vi.fn(async () => ({
+      sid: 'sid',
+      sub: 'verified-actor',
+      tenantId: 'verified-tenant',
+      permissions: [],
+      roles: [],
+      expiresAt: Math.floor(Date.now() / 1000) + 300,
+      claims: {},
+    })),
+  };
+  return new StynxAuthGuard(moduleRef, reflector as never, validator as never);
 }
 
 function context(request: Record<string | symbol, unknown>): ExecutionContext {

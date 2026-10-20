@@ -5,6 +5,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   closeReferenceApiE2e,
+  refreshActorTokens,
   queryRowsAsTenant,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
@@ -56,6 +57,7 @@ async function grantProbeReadPermission(context: ReferenceApiE2eContext): Promis
 
   const permissionCache = context.app.get(PermissionCache);
   await permissionCache.publishInvalidation(`${actors.viewerA.userId}:${tenants.tenantA}`);
+  await refreshActorTokens(context, ['viewerA']);
 }
 
 async function countAuditRows(

@@ -6,6 +6,7 @@ import {
   SessionService,
   SessionJwtSigningService,
   SessionMirrorWriter,
+  SessionRevocationList,
   STYNX_SESSIONS_OPTIONS,
   STYNX_SESSION_STORE,
   STYNX_SESSION_MIRROR,
@@ -30,6 +31,9 @@ export class RealAuthenticationFixture {
     sid: 'sid-1',
     tenant_id: this.tenantId,
     custom: 'claim-kept',
+    // S-12: the verified token carries the actor's authorization.
+    perms: ['records:read'],
+    roles: [],
     exp: Math.floor(Date.now() / 1000) + 3600,
   };
   readonly options = resolveSessionsOptions({
@@ -54,6 +58,7 @@ export class RealAuthenticationFixture {
     { provide: STYNX_SESSION_STORE, useValue: this.store },
     { provide: STYNX_SESSION_MIRROR, useClass: SessionMirrorWriter },
     SessionJwtSigningService,
+    SessionRevocationList,
     SessionService,
   ];
   database?: PostgresTestDatabase;

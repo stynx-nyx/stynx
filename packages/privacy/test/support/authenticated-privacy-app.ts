@@ -332,6 +332,7 @@ export class AuthenticatedPrivacyApp {
           useClass: Sessions.SessionMirrorWriter,
         },
         Sessions.SessionJwtSigningService,
+        Sessions.SessionRevocationList,
         Sessions.SessionService,
       ],
     }).compile();
@@ -534,6 +535,14 @@ export class AuthenticatedPrivacyApp {
       sub,
       sid: override.sid ?? kind,
       tenant_id: kind === 'other' || kind === 'otherWriter' ? OTHER_TENANT : TENANT,
+      // S-12: the token carries the membership's seeded grants; 'other' has no membership.
+      perms:
+        kind === 'writer' || kind === 'otherWriter'
+          ? ['privacy:read', 'privacy:subject-rights']
+          : kind === 'reader'
+            ? ['privacy:read']
+            : [],
+      roles: [],
       exp: override.exp ?? Math.floor(Date.now() / 1000) + 3600,
     };
     const input =
@@ -623,9 +632,9 @@ export class AuthenticatedPrivacyApp {
       sid: 'revoked',
       refreshTokenHash: 'revoked',
       refreshFamilyId: 'revoked',
-      status: 'revoked',
-      revokedAt: new Date().toISOString(),
     });
+    // Revocation reaches the guard through the in-memory revocation list (S-12).
+    await this.moduleRef.get(Sessions.SessionService).revoke('revoked');
   }
   resetObservations() {
     this.observations.length = 0;

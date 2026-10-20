@@ -6,6 +6,7 @@ import {
   SessionService,
   SessionJwtSigningService,
   SessionMirrorWriter,
+  SessionRevocationList,
   STYNX_SESSIONS_OPTIONS,
   STYNX_SESSION_STORE,
   STYNX_SESSION_MIRROR,
@@ -86,6 +87,9 @@ export async function realOfflineHttpAuthentication(pg: PostgresTestDatabase, te
           sub: userId,
           sid,
           tenant_id: tenantId,
+          // S-12: the token carries exactly the grants seeded above.
+          perms: userId === actorId ? ['offline-sync:batches:submit'] : [],
+          roles: [],
           exp: Math.floor(Date.now() / 1000) + 3600,
         }),
       ).toString('base64url');
@@ -112,6 +116,7 @@ export async function realOfflineHttpAuthentication(pg: PostgresTestDatabase, te
       { provide: STYNX_SESSION_STORE, useValue: store },
       { provide: STYNX_SESSION_MIRROR, useClass: SessionMirrorWriter },
       SessionJwtSigningService,
+      SessionRevocationList,
       SessionService,
     ],
   };
