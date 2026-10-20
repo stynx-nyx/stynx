@@ -11,6 +11,10 @@ export interface SessionRecord {
   cognitoSub: string;
   membershipId?: string;
   permsHash?: string;
+  /** Effective permission keys minted into the access token `perms` claim (S-12). */
+  permissions?: string[];
+  /** Role keys minted into the access token `roles` claim (S-12). */
+  roles?: string[];
   deviceMeta?: DeviceMetadata;
   refreshFamilyId: string;
   refreshTokenHash: string;
@@ -58,6 +62,11 @@ export interface SessionBundle {
 export interface SessionCreateMetadata {
   membershipId?: string;
   permsHash?: string;
+  /**
+   * Authorization claims to mint into the access token. When omitted, the
+   * registered {@link SessionClaimsResolver} supplies them.
+   */
+  claims?: SessionAuthorizationClaims;
   verifiedFactorClaims?: Record<string, unknown>;
   priorSessionId?: string;
 }
@@ -95,6 +104,39 @@ export interface SessionExchangeResult {
   revokedSessionId: string;
 }
 
+/**
+ * Authorization carried by a STYNX access token. The request path reads these
+ * from the verified token only (S-12); nothing is looked up per request.
+ */
+export interface SessionAuthorizationClaims {
+  permissions: string[];
+  roles: string[];
+  permsHash?: string;
+}
+
+/** Subject whose authorization claims are resolved at token mint time. */
+export interface SessionClaimsSubject {
+  sid: string;
+  userId: string;
+  tenantId: string;
+  /** The session's absolute expiry (ISO instant). */
+  expiresAt: string;
+}
+
+/**
+ * Resolves the authorization claims minted into access tokens on session
+ * creation and refresh. Runs on token issuance only, never on the request path.
+ */
+export interface SessionClaimsResolver {
+  resolve(subject: SessionClaimsSubject): Promise<SessionAuthorizationClaims>;
+}
+
+/** One revoked session id, as listed by {@link SessionStore.listRevokedSessions}. */
+export interface SessionRevocationEntry {
+  sid: string;
+  revokedAt: string;
+}
+
 export interface SessionStore {
   createSession(record: SessionRecord): Promise<void>;
   createWithPolicy?(record: SessionRecord, options: SessionPolicyOptions): Promise<SessionPolicyResult>;
@@ -113,6 +155,12 @@ export interface SessionStore {
   listSessionIdsByUser(userId: string): Promise<string[]>;
   listSessionIdsByTenant(tenantId: string): Promise<string[]>;
   publishInvalidation(message: string): Promise<void>;
+  /**
+   * Lists sessions revoked at or after `since` (ISO instant) and may drop older
+   * entries. The revocation refresher calls it in the background; stores that do
+   * not implement it leave revocation to in-process records and the token TTL.
+   */
+  listRevokedSessions?(since: string): Promise<SessionRevocationEntry[]>;
 }
 
 export interface SessionMirror {
@@ -153,6 +201,13 @@ export interface StynxSessionsModuleOptions {
     idleSeconds?: number;
     accessNotBeforeDelaySeconds?: number;
   };
+  /** Background refresh of the in-memory session revocation list. */
+  revocation?: {
+    /** Interval between background refreshes. Defaults to 1000 ms. */
+    refreshIntervalMs?: number;
+    /** Age after which an unrefreshed list fails closed. Defaults to 15000 ms. */
+    maxStalenessMs?: number;
+  };
   clock?: () => Date;
 }
 
@@ -176,6 +231,11 @@ export interface ResolvedStynxSessionsModuleOptions {
     absoluteSeconds: number;
     idleSeconds: number;
     accessNotBeforeDelaySeconds: number;
+  };
+  /** Optional so hand-built resolved options stay valid; the resolver always sets it. */
+  revocation?: {
+    refreshIntervalMs: number;
+    maxStalenessMs: number;
   };
   clock: () => Date;
 }
@@ -209,6 +269,10 @@ export function resolveSessionsOptions(
       absoluteSeconds: options.timeouts?.absoluteSeconds ?? 24 * 60 * 60,
       idleSeconds: options.timeouts?.idleSeconds ?? 30 * 60,
       accessNotBeforeDelaySeconds: options.timeouts?.accessNotBeforeDelaySeconds ?? 0,
+    },
+    revocation: {
+      refreshIntervalMs: options.revocation?.refreshIntervalMs ?? 1000,
+      maxStalenessMs: options.revocation?.maxStalenessMs ?? 15_000,
     },
     clock: options.clock ?? (() => new Date()),
   };

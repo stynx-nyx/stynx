@@ -6,6 +6,7 @@ import type {
   SessionStore,
   SessionPolicyOptions,
   SessionPolicyResult,
+  SessionRevocationEntry,
 } from './types.js';
 import { SessionConflictError, SessionExchangeError } from './errors.js';
 
@@ -17,6 +18,7 @@ export class InMemorySessionStore implements SessionStore {
   private readonly refreshLookups = new Map<string, RefreshTokenLookup>();
   private readonly sessionsByUser = new Map<string, Set<string>>();
   private readonly sessionsByTenant = new Map<string, Set<string>>();
+  private readonly revokedSessions = new Map<string, string>();
 
   async createSession(record: SessionRecord): Promise<void> {
     this.sessions.set(record.sid, { ...record });
@@ -52,6 +54,7 @@ export class InMemorySessionStore implements SessionStore {
       });
       this.sessionsByUser.get(session.userId)?.delete(session.sid);
       this.sessionsByTenant.get(session.tenantId)?.delete(session.sid);
+      this.revokedSessions.set(session.sid, options.now);
       revoked.push({ ...session, status: 'revoked', revokedAt: options.now, updatedAt: options.now });
     }
     this.sessions.set(record.sid, { ...record });
@@ -153,6 +156,7 @@ export class InMemorySessionStore implements SessionStore {
     });
     this.sessionsByUser.get(session.userId)?.delete(sid);
     this.sessionsByTenant.get(session.tenantId)?.delete(sid);
+    this.revokedSessions.set(sid, revokedAt);
 
     return {
       ...session,
@@ -173,6 +177,16 @@ export class InMemorySessionStore implements SessionStore {
   async publishInvalidation(message: string): Promise<void> {
     this.invalidations.push(message);
     this.invalidationEvents.emit('invalidate', message);
+  }
+
+  async listRevokedSessions(since: string): Promise<SessionRevocationEntry[]> {
+    const sinceMs = Date.parse(since);
+    const entries: SessionRevocationEntry[] = [];
+    for (const [sid, revokedAt] of this.revokedSessions) {
+      if (Date.parse(revokedAt) < sinceMs) this.revokedSessions.delete(sid);
+      else entries.push({ sid, revokedAt });
+    }
+    return entries;
   }
 
   sessionCount(): number {

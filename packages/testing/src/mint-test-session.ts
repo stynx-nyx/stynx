@@ -47,6 +47,9 @@ export async function mintTestSession(input: MintTestSessionInput): Promise<Mint
       expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
       idleExpiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
       ...(input.perms && input.perms.length > 0 ? { permsHash: input.perms.sort().join('|') } : {}),
+      // S-12: the STYNX guard authorizes from these verified claims alone.
+      permissions: [...(input.perms ?? [])],
+      roles: [...(input.roles ?? [])],
     },
     new Date(),
   );

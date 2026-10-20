@@ -48,6 +48,38 @@ transition. For a bounded Redis readiness probe, compose
 `createSessionStoreReadinessIndicator` from
 `@stynx-nyx/sessions` with the existing health module.
 
+## Authorization from verified-token claims (S-12)
+
+`StynxAuthGuard` decides authorization from the verified STYNX bearer token
+alone. On the request path it verifies the JWT (signature against the JWKS,
+issuer, audience, `exp`, `nbf`), requires the `sub`, `sid`, `tenant_id`, `exp`,
+`perms` and `roles` claims, and checks `sid` against the in-memory
+`SessionRevocationList` from `@stynx-nyx/sessions`. It reads no session record,
+`PermissionCache`, Redis key or SQL row. `request.principal.permissions` and
+`request.principal.roles` are the token's `perms` and `roles` claims, so
+`PermissionGuard`, `@RequirePermissions` and `@RequireRoles` (all/any) evaluate
+claims only.
+
+- **Minting.** `StynxAuthModule` registers `StynxSessionClaimsResolver` as the
+  sessions `STYNX_SESSION_CLAIMS_RESOLVER`. `SessionService.create` and
+  `SessionService.refresh` call it, so every access token carries the effective
+  permission keys (wildcards expanded) and role keys of the active membership.
+  A subject without an active membership in the tenant gets no session.
+- **Refusals.** A token without `perms` or `roles` (for example one minted
+  before this change) is refused with 401. It is not looked up. Clients obtain a
+  new token through refresh.
+- **Permission changes** take effect when the token is next refreshed, within
+  the access-token TTL (`timeouts.accessSeconds`, default 10 minutes). To remove
+  access immediately, revoke the session.
+- **Revocation** combines the short TTL with the session revocation list
+  described in the `@stynx-nyx/sessions` README. A revoked `sid` is refused with 401. If the store-backed list has not been refreshed within its staleness
+  bound, the guard fails closed with 503.
+- **Token size.** `perms` holds the expanded permission set. Keep grants
+  coarse enough that the bearer header stays within proxy limits.
+
+`PermissionCache` and its backends stay exported for inspection endpoints and
+existing callers. The guard does not use them.
+
 ## Legacy configuration examples
 
 The examples below describe an earlier STYNX API. Use the exported
@@ -118,22 +150,23 @@ export class OrdersController {
 
 ### Services / Injectables
 
-| Export                           | Description                                                                                                              |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `StynxAuthService`               | High-level auth ops: exchange Cognito token for a STYNX session, resolve principal, refresh permissions.                 |
-| `StynxAuthGuard`                 | Global `CanActivate`. Verifies Bearer token, populates `RequestContext` with the principal, rejects with 401 if invalid. |
-| `PermissionGuard`                | Checks `@Permission(...)` metadata against the cached principal permissions; throws 403 if missing.                      |
-| `PermissionCache`                | The permission cache façade (backed by in-memory or Redis).                                                              |
-| `PermissionCacheMetrics`         | Hit/miss/eviction counters.                                                                                              |
-| `PermissionQueryService`         | Programmatic permission lookups (rare; useful in cron jobs / system contexts).                                           |
-| `EffectiveHashComputer`          | Hashes the principal's effective permission set for cache invalidation.                                                  |
-| `InMemoryPermissionCacheBackend` | Default permission cache backend.                                                                                        |
-| `RedisPermissionCacheBackend`    | Redis-backed cache backend (multi-instance deployments).                                                                 |
-| `CognitoAdminAdapter`            | AWS Cognito admin operations. Consumed by the `backend/identity-admin` submodule.                                        |
-| `CognitoTokenVerifier`           | Wraps `aws-jwt-verify` for Cognito access tokens.                                                                        |
-| `CognitoJwtValidator`            | Lower-level validator.                                                                                                   |
-| `StynxJwtValidator`              | Generic-JWT validator alternative.                                                                                       |
-| `ActorContextInterceptor`        | Populates `RequestContext` after the guard accepts.                                                                      |
+| Export                           | Description                                                                                                                            |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `StynxAuthService`               | High-level auth ops: exchange Cognito token for a STYNX session, resolve principal, refresh permissions.                               |
+| `StynxAuthGuard`                 | Global `CanActivate`. Verifies Bearer token, builds the principal from its claims only (S-12), rejects with 401 if invalid or revoked. |
+| `StynxSessionClaimsResolver`     | Resolves the `perms`/`roles` claims minted into session tokens (issuance only, never per request).                                     |
+| `PermissionGuard`                | Checks `@Permission(...)` metadata against the cached principal permissions; throws 403 if missing.                                    |
+| `PermissionCache`                | The permission cache façade (backed by in-memory or Redis).                                                                            |
+| `PermissionCacheMetrics`         | Hit/miss/eviction counters.                                                                                                            |
+| `PermissionQueryService`         | Programmatic permission lookups (rare; useful in cron jobs / system contexts).                                                         |
+| `EffectiveHashComputer`          | Hashes the principal's effective permission set for cache invalidation.                                                                |
+| `InMemoryPermissionCacheBackend` | Default permission cache backend.                                                                                                      |
+| `RedisPermissionCacheBackend`    | Redis-backed cache backend (multi-instance deployments).                                                                               |
+| `CognitoAdminAdapter`            | AWS Cognito admin operations. Consumed by the `backend/identity-admin` submodule.                                                      |
+| `CognitoTokenVerifier`           | Wraps `aws-jwt-verify` for Cognito access tokens.                                                                                      |
+| `CognitoJwtValidator`            | Lower-level validator.                                                                                                                 |
+| `StynxJwtValidator`              | Generic-JWT validator alternative.                                                                                                     |
+| `ActorContextInterceptor`        | Populates `RequestContext` after the guard accepts.                                                                                    |
 
 ### Decorators
 

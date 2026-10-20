@@ -97,7 +97,15 @@ export class SessionJwtSigningService {
     }
 
     const issuedAtSeconds = Math.floor(issuedAt.getTime() / 1000);
-    const expiresAtSeconds = issuedAtSeconds + this.options.timeouts.accessSeconds;
+    // A token never outlives its session's absolute or idle deadline as of issuance:
+    // with no per-request session read (S-12), `exp` is what enforces them.
+    const sessionDeadlines = [record.expiresAt, record.idleExpiresAt]
+      .map((deadline) => Math.floor(Date.parse(String(deadline)) / 1000))
+      .filter((deadline) => Number.isFinite(deadline));
+    const expiresAtSeconds = Math.min(
+      issuedAtSeconds + this.options.timeouts.accessSeconds,
+      ...sessionDeadlines,
+    );
     const notBeforeSeconds =
       issuedAtSeconds + this.options.timeouts.accessNotBeforeDelaySeconds;
     const header = {
@@ -112,6 +120,11 @@ export class SessionJwtSigningService {
       tenant_id: record.tenantId,
       cognito_sub: record.cognitoSub,
       ...(record.permsHash ? { perms_hash: record.permsHash } : {}),
+      // S-12: authorization travels in the verified token. A record without
+      // resolved permissions mints no `perms` claim, and the STYNX guard denies it.
+      ...(record.permissions
+        ? { perms: [...record.permissions], roles: [...(record.roles ?? [])] }
+        : {}),
       amr: ['refresh'],
       iat: issuedAtSeconds,
       exp: expiresAtSeconds,
