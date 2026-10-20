@@ -4091,12 +4091,20 @@
       "assertion_digest_sha256": "6eb0ea47cbb3bc2630961a04ff34e6dd50d28999b5eaad51e876d4aeac022a31"
     },
     {
+      "path": "packages/testing/test/context.unit.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "0de33adf82d2fe4ebfdcaca8f440a76e5a62b587be380e371b4dc41f992fffcd"
+    },
+    {
       "path": "packages/testing/test/create-test-app.unit.spec.ts",
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 41,
-      "assertion_digest_sha256": "65f2544e6d410f1648fd4be778cfb1bfae61ce4b078b95f313c2eb5c23c73255"
+      "assertion_count": 87,
+      "assertion_digest_sha256": "3e51034d63991371f49643469b820770baaed1fb7a891ee1b5a822484ce1e430"
     },
     {
       "path": "packages/testing/test/doctor.unit.spec.ts",
@@ -4119,8 +4127,16 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 9,
-      "assertion_digest_sha256": "f18487a4d3e87f1f8791a7a9bda9ed5a121ee195d9b549d9e2e63e4702807374"
+      "assertion_count": 14,
+      "assertion_digest_sha256": "ee1229bf0bc6d32fdec297af25ebe84909d521f95599235db2d6517dc965aaee"
+    },
+    {
+      "path": "packages/testing/test/integration/testing.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 7,
+      "assertion_digest_sha256": "c97b56ceaa33d96bc02a1645b0492db9e82fd9096c3c1b1225c9c5507ab5ffb1"
     },
     {
       "path": "packages/testing/test/lgpd-fixture.spec.ts",
@@ -4145,14 +4161,6 @@
       "lifecycle": "supported",
       "assertion_count": 18,
       "assertion_digest_sha256": "30a2d97a931860dbe718aafe9f2c37cc6d22a1f7d4405a89efbd325481aa3d38"
-    },
-    {
-      "path": "packages/testing/test/testing.spec.ts",
-      "suite": "unit",
-      "invariant_ids": ["INV-CORE-001"],
-      "lifecycle": "supported",
-      "assertion_count": 7,
-      "assertion_digest_sha256": "c97b56ceaa33d96bc02a1645b0492db9e82fd9096c3c1b1225c9c5507ab5ffb1"
     },
     {
       "path": "reference/api/test/integration/reference-api.runtime.spec.ts",

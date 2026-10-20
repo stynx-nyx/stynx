@@ -2776,7 +2776,7 @@
       },
       "declarationHashes": {
         "testing/src/context.d.ts": "8ff587afd65df0ff9a4b332d9bc284711ddd63ac82e8e3fe271a83170a956c17",
-        "testing/src/create-test-app.d.ts": "6ff1975eef88ebd5924818d85ff21778f3dba4d455f76d5319cb13af80bc3829",
+        "testing/src/create-test-app.d.ts": "fd9662594b406be3afe9b5a0be9c33912a9d3cf39c58dd2a0baa8df8e7b689ea",
         "testing/src/doctor.d.ts": "6b4fa9b212becbd8d09b4dbe9e10ca209bc3baee2d264af81d61cb000791fe49",
         "testing/src/fake-transaction.d.ts": "e51799aa9b6cebe4914b112ab7a1f05a2cbaaf44b004573378fc8df9e782d36b",
         "testing/src/fixtures.d.ts": "06d4b747241ab6d387166fc52371d6079f7dab88ab65a4e6b2d82b972ff6d3ca",
@@ -2785,7 +2785,8 @@
         "testing/src/matchers.d.ts": "9a5c914452f4738a7046b5395343b133bea3e72699ca9f00c95f881799196468",
         "testing/src/mint-test-session.d.ts": "44f06a719189725e0bfe25edef926f611aa3f0288ba8cc7609f438a96b1261bb",
         "testing/src/roles.d.ts": "707a9e709ffe4ddfa2dff4c26fa85210af2810ae4ade3eeb5802d3ba423da217",
-        "testing/src/types.d.ts": "5e716b6de878bb6812fc5824dd4f0c755e1b9f6f57158cb9cad63907456b38c3"
+        "testing/src/runtime.d.ts": "b27d2360162b635a5386b7323b11982ccf6a529082388b6de3f7d22656b21512",
+        "testing/src/types.d.ts": "9c72df48f7befa3662208f1dda4f07865016ddbaa2d4670c340f5d818710290d"
       }
     },
     "@stynx-nyx/worklist": {
