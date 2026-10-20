@@ -104,7 +104,21 @@ describe('buildProgram', () => {
     const audit = program.commands.find((command) => command.name() === 'audit');
 
     expect(program.name()).toBe('stynx');
-    expect(commandNames).toEqual(['init', 'migrate', 'doctor', 'privacy', 'audit', 'adopt', 'generate']);
+    expect(commandNames).toEqual([
+      'init',
+      'migrate',
+      'doctor',
+      'privacy',
+      'audit',
+      'adopt',
+      'list-routes',
+      'verify-stynx-boundary',
+      'verify-api-coverage',
+      'verify-openapi-contract',
+      'verify-public-api-baselines',
+      'verify-rls-negative',
+      'generate',
+    ]);
     expect(migrate?.commands.map((command) => command.name())).toEqual(['status', 'up', 'down', 'redo']);
     expect(adopt?.commands.map((command) => command.name())).toEqual([
       'scan',
