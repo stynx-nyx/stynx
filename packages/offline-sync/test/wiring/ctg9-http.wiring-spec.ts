@@ -5,7 +5,7 @@ import { IdempotencyInterceptor } from '@stynx-nyx/idempotency';
 import type { INestApplication } from '@nestjs/common';
 import { PermissionGuard, StynxAuthGuard } from '@stynx-nyx/auth';
 import { StynxCoreModule } from '@stynx-nyx/core';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { StynxOfflineSyncModule } from '../../src/offline-sync.module.js';
 import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';

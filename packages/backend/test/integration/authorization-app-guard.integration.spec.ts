@@ -14,7 +14,7 @@ import { StynxCoreModule } from '@stynx-nyx/core';
 import { StynxAuthGuard, StynxJwtValidator } from '@stynx-nyx/auth';
 import { RealAuthenticationFixture } from '../support/real-authentication.js';
 import { APP_GUARD as NEST_APP_GUARD } from '@nestjs/core';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
 import { StynxAuthModule } from '../../src/auth/auth.module.js';

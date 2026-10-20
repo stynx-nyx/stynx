@@ -5,7 +5,7 @@ import { dirname, resolve, sep } from 'node:path';
 import { createRequire } from 'node:module';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { lastValueFrom, of } from 'rxjs';
-import request from 'supertest';
+import supertest from 'supertest';
 import {
   CatalogService,
   LocaleService,
@@ -32,6 +32,29 @@ import {
   OTHER_TENANT_ID as B,
   ACTOR_ID,
 } from './authenticated-app';
+
+// Every STYNX client sends its own UUIDv7 X-Request-Id; STYNX rejects a
+// missing one (SM-15). This wraps supertest so each request carries a fresh id.
+const REQUEST_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options']);
+function request(app: Parameters<typeof supertest>[0]) {
+  const agent = supertest(app);
+  return new Proxy(agent, {
+    get(target, property, receiver) {
+      const value: unknown = Reflect.get(target, property, receiver);
+      if (
+        typeof property === 'string' &&
+        REQUEST_METHODS.has(property) &&
+        typeof value === 'function'
+      ) {
+        return (...args: unknown[]) =>
+          (value as (...input: unknown[]) => supertest.Test)
+            .apply(target, args)
+            .set('X-Request-Id', generateRequestId());
+      }
+      return value;
+    },
+  });
+}
 
 const observations: { name: string; status: 'PASS' }[] = [];
 async function witness(name: string, fn: () => Promise<void> | void) {

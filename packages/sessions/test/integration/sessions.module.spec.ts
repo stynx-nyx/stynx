@@ -3,7 +3,7 @@ import { createPublicKey, generateKeyPairSync, verify as verifySignature } from 
 import { URL } from 'node:url';
 import { promisify } from 'node:util';
 import { createClient } from 'redis';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { Client } from 'pg';

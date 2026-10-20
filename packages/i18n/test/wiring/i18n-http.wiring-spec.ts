@@ -1,4 +1,4 @@
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { I18nAdminService } from '../../src/i18n-admin.service.js';
 import { AuthenticatedI18nApp, TENANT_ID } from '../support/authenticated-app.js';
 

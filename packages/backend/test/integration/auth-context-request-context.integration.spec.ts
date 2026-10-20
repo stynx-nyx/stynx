@@ -2,7 +2,7 @@ import { Controller, Get, Module, UseGuards } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { RequestContext, StynxCoreModule } from '@stynx-nyx/core';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
 import { StynxAuthModule } from '../../src/auth/auth.module.js';

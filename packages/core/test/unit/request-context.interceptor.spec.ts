@@ -40,6 +40,10 @@ class FakeClsService {
   }
 }
 
+const CLIENT_REQUEST_ID = '0190abcd-1234-7abc-89ab-0123456789ff';
+
+// Every client sends a UUIDv7 (SM-15); cases about a missing id pass
+// `'x-request-id': undefined` explicitly.
 function makeContext(
   headers: Record<string, unknown> = {},
   extras: Record<string, unknown> = {},
@@ -47,7 +51,10 @@ function makeContext(
   context: ExecutionContext;
   response: { setHeader: Mock };
 } {
-  const request = { headers, ...extras } as Record<string, unknown>;
+  const request = {
+    headers: { 'x-request-id': CLIENT_REQUEST_ID, ...headers },
+    ...extras,
+  } as Record<string, unknown>;
   const response = { setHeader: vi.fn() };
   const context = {
     switchToHttp: () => ({
@@ -79,12 +86,34 @@ describe('RequestContextInterceptor', () => {
     interceptor = new RequestContextInterceptor(mutator);
   });
 
-  it('generates a UUIDv7 request id when none provided and sets X-Request-Id', async () => {
-    const { context, response } = makeContext({});
-    const value = await run(interceptor.intercept(context, makeHandler('result')));
-    expect(value).toBe('result');
-    const id = response.setHeader.mock.calls[0]?.[1] as string;
-    expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  it('rejects a missing X-Request-Id exactly like an invalid one and synthesises none (SM-15)', () => {
+    const { context, response } = makeContext({ 'x-request-id': undefined });
+    const handler = { handle: vi.fn(() => of('result')) };
+    let missing: unknown;
+    try {
+      interceptor.intercept(context, handler);
+    } catch (error) {
+      missing = error;
+    }
+    expect(missing).toBeInstanceOf(BadRequestException);
+    expect((missing as BadRequestException).getStatus()).toBe(400);
+    expect((missing as BadRequestException).getResponse()).toEqual({
+      code: 'VALIDATION',
+      messageKey: 'REQUEST_ID_INVALID',
+      requestId: null,
+    });
+    expect(handler.handle).not.toHaveBeenCalled();
+    expect(response.setHeader).not.toHaveBeenCalled();
+
+    const invalid = makeContext({ 'x-request-id': 'not-a-uuid' });
+    expect(() => interceptor.intercept(invalid.context, handler)).toThrow(BadRequestException);
+    try {
+      interceptor.intercept(invalid.context, handler);
+    } catch (error) {
+      expect((error as BadRequestException).getResponse()).toEqual(
+        (missing as BadRequestException).getResponse(),
+      );
+    }
   });
 
   it('honors a valid X-Request-Id header from the caller', async () => {
@@ -98,7 +127,9 @@ describe('RequestContextInterceptor', () => {
     const { context } = makeContext({ 'x-request-id': 'not-a-uuid' });
     expect(() => interceptor.intercept(context, makeHandler())).toThrow(BadRequestException);
     expect(() => interceptor.intercept(context, makeHandler())).toThrow(
-      'X-Request-Id must be a valid UUIDv7',
+      expect.objectContaining({
+        response: { code: 'VALIDATION', messageKey: 'REQUEST_ID_INVALID', requestId: null },
+      }),
     );
   });
 
@@ -125,15 +156,13 @@ describe('RequestContextInterceptor', () => {
     expect(seed.locale).toBe('en-US');
   });
 
-  it('generates a fresh request id when the caller header is an array without a string first value', async () => {
+  it('rejects a caller header array without a string first value instead of synthesising one (SM-15)', () => {
     const { context, response } = makeContext({ 'x-request-id': [123, '0190abcd-1234-7abc-89ab-0123456789ab'] });
     const spy = vi.spyOn(mutator, 'runWithRequestContext');
-    await run(interceptor.intercept(context, makeHandler()));
-    const seed = spy.mock.calls[0]?.[0] as RequestContextState;
+    expect(() => interceptor.intercept(context, makeHandler())).toThrow(BadRequestException);
 
-    expect(seed.requestId).not.toBe('0190abcd-1234-7abc-89ab-0123456789ab');
-    expect(seed.requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu);
-    expect(response.setHeader).toHaveBeenCalledWith('X-Request-Id', seed.requestId);
+    expect(spy).not.toHaveBeenCalled();
+    expect(response.setHeader).not.toHaveBeenCalled();
   });
 
   it('ignores Accept-Language when only whitespace', async () => {

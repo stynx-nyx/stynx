@@ -1,11 +1,11 @@
 import type { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import request, { type Test as SupertestTest } from '../../support/request-with-id.js';
 
 export interface AuthenticatedAgent {
-  get(path: string): request.Test;
-  post(path: string): request.Test;
-  patch(path: string): request.Test;
-  delete(path: string): request.Test;
+  get(path: string): SupertestTest;
+  post(path: string): SupertestTest;
+  patch(path: string): SupertestTest;
+  delete(path: string): SupertestTest;
 }
 
 export function createAuthenticatedAgent(app: INestApplication, token: string): AuthenticatedAgent {

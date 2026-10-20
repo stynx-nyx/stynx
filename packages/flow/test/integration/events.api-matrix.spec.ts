@@ -2,7 +2,7 @@ import { generateKeyPairSync } from 'node:crypto';
 import { generateRequestId, StynxCoreModule } from '@stynx-nyx/core';
 import { SessionService, type StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
 import { FlowRuntimeAuthModule } from '../support/runtime-auth.js';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { StynxFlowModule } from '../../src/flow.module.js';
 import { createStynxFixtures, createTestApp, type TestAppContext } from '@stynx-nyx/testing';
@@ -318,7 +318,11 @@ describe('FlowEventsController API error matrix', () => {
         })
         .expect(400)
         .expect(({ body }) => {
-          expect(body.message).toBe('X-Request-Id must be a valid UUIDv7');
+          expect(body).toEqual({
+            code: 'VALIDATION',
+            messageKey: 'REQUEST_ID_INVALID',
+            requestId: null,
+          });
         });
     });
 

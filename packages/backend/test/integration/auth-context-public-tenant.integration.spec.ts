@@ -32,7 +32,7 @@ import {
   type SessionRecord,
 } from '@stynx-nyx/sessions';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';
 import { STYNX_TENANT_ENTITLEMENT_POLICY, STYNX_TOKEN_VERIFIER } from '../../src/auth/constants.js';
 

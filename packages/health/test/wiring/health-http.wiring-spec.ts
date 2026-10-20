@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { StynxHealthModule } from '../../src/health.module.js';
 
 describe('StynxHealthModule E2E', () => {

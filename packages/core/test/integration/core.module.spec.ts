@@ -148,7 +148,12 @@ describe('StynxCoreModule integration', () => {
     expect(response.response.headers['x-request-id']).toBe(response.body.requestId);
     expect(response.body.configValue).toBe('from-env');
 
-    const systemResponse = await invokeRoute(interceptor, {}, () => controller.systemOp());
+    // Every client sends its own UUIDv7; none is synthesised (SM-15).
+    const systemResponse = await invokeRoute(
+      interceptor,
+      { 'x-request-id': '0197130f-61ce-7d91-89d2-7d427f3257f5' },
+      () => controller.systemOp(),
+    );
     expect(systemResponse.body.reason).toBe('integration test audit');
     expect(sink.records).toHaveLength(1);
     expect(sink.records[0]?.requestId).toBe(systemResponse.body.requestId);

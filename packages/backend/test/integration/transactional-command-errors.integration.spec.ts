@@ -6,7 +6,7 @@ import { AuditSqlSink } from '@stynx-nyx/audit';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { StynxDataModule } from '@stynx-nyx/data';
 import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { Audit, StynxAuthModule, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index.js';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';

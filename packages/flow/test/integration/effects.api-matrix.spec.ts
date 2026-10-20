@@ -16,7 +16,7 @@ import { generateRequestId, StynxCoreModule } from '@stynx-nyx/core';
 import type { AuditEventEnvelope, AuditSink } from '@stynx-nyx/contracts';
 import { SessionService, type StynxSessionSigningKeySet } from '@stynx-nyx/sessions';
 import { FlowRuntimeAuthModule } from '../support/runtime-auth.js';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { StynxFlowModule } from '../../src/flow.module.js';
 import { FLOW_DOMAIN_ADAPTERS } from '../../src/tokens.js';

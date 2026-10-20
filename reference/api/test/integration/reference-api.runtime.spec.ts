@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import { Logger, type INestApplication } from '@nestjs/common';
-import request, { type Response, type Test as SupertestTest } from 'supertest';
+import request, { type Response, type Test as SupertestTest } from '../support/request-with-id.js';
 import {
   CreateBucketCommand,
   ListObjectVersionsCommand,

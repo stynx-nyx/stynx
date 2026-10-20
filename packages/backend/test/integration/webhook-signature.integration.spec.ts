@@ -8,7 +8,7 @@ import { STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL } from '@stynx-nyx/contracts';
 import { RequestContext, StynxCoreModule } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { StynxWebhookSignatureModule, WebhookSignatureGuard } from '../../src/index.js';
 import {

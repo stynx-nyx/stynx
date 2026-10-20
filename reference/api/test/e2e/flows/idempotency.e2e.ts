@@ -1,5 +1,5 @@
 import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
-import request from 'supertest';
+import request, { type Test as SupertestTest } from '../../support/request-with-id.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
@@ -37,7 +37,7 @@ function postRecord(
   token: string,
   idempotencyKey: string,
   body: ReturnType<typeof recordPayload>,
-): request.Test {
+): SupertestTest {
   return request(context.app.getHttpServer())
     .post('/records')
     .set('authorization', `Bearer ${token}`)

@@ -3,7 +3,7 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { Client } from 'pg';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { generateRequestId, RequestContextMutator } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import {

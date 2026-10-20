@@ -1,5 +1,5 @@
 import { generateRequestId } from '@stynx-nyx/core';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { I18nAdminService } from '../../src/i18n-admin.service.js';
 import { LocaleService } from '../../src/locale.service.js';
 import { CatalogService } from '../../src/catalog.service.js';

@@ -5,7 +5,7 @@ import { Controller, Get, Inject, Req, Res, UseGuards } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Database } from '@stynx-nyx/data';
 import { StynxAuthGuard } from '@stynx-nyx/auth';
-import { RequestContext } from '@stynx-nyx/core';
+import { RequestContext, generateRequestId } from '@stynx-nyx/core';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
 import {
   StynxEventStreamModule,
@@ -155,6 +155,7 @@ function openStream(
       path: '/_sse',
       headers: {
         host: 'reference-api.test',
+        'x-request-id': generateRequestId(),
         authorization: 'Bearer ' + authentication.accessToken,
         'x-tenant-id': tenantA,
         ...(lastEventId ? { 'last-event-id': lastEventId } : {}),
@@ -340,6 +341,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
             path: '/_sse',
             headers: {
               host: 'reference-api.test',
+              'x-request-id': generateRequestId(),
               authorization: 'Bearer ' + authentication.accessToken,
               'x-tenant-id': tenantA,
               'last-event-id': lastEventId,
@@ -427,6 +429,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
           path: '/_sse',
           headers: {
             host: 'reference-api.test',
+            'x-request-id': generateRequestId(),
             authorization: 'Bearer ' + authentication.accessToken,
             'x-tenant-id': tenantB,
           },
@@ -466,6 +469,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
             path: `/_sse?probe=${probe}`,
             headers: {
               host: 'reference-api.test',
+              'x-request-id': generateRequestId(),
               authorization: 'Bearer ' + authentication.accessToken,
               'x-tenant-id': tenantA,
             },
@@ -516,6 +520,7 @@ describe('reference API SSE with PostgreSQL FORCE RLS (UPS-SSE-04, UPS-SSE-05)',
               path: '/_sse',
               headers: {
                 host: 'reference-api.test',
+                'x-request-id': generateRequestId(),
                 'x-tenant-id': tenantA,
                 ...(token ? { authorization: 'Bearer ' + token } : {}),
               },
