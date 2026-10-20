@@ -11,12 +11,11 @@ import { LocaleService } from './locale.service.js';
 import { STYNX_I18N_OPTIONS } from './tokens.js';
 import type { StynxI18nModuleOptions } from './types.js';
 
-@Module({})
+@Module({ controllers: [I18nController] })
 export class StynxI18nModule {
   static forRoot(options: StynxI18nModuleOptions = {}): DynamicModule {
     return {
       module: StynxI18nModule,
-      controllers: [I18nController],
       providers: [
         {
           provide: STYNX_I18N_OPTIONS,
