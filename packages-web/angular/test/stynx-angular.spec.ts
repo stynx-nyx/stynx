@@ -1,5 +1,11 @@
 import '@angular/compiler';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import {
+  HTTP_INTERCEPTORS,
+  HttpHeaders,
+  HttpRequest,
+  HttpResponse,
+  type HttpEvent,
+} from '@angular/common/http';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApplicationRef, Injector, NgZone, runInInjectionContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -10,7 +16,7 @@ import { ErrorBannerService } from '../src/error-banner.service';
 import { ErrorInterceptor } from '../src/error.interceptor';
 import { provideStynxDefaults } from '../src/provide-defaults';
 import { generateClientRequestId } from '../src/request-id';
-import { RequestIdInterceptor } from '../src/request-id.interceptor';
+import { RequestIdInterceptor, requestIdInterceptor } from '../src/request-id.interceptor';
 import { StynxAngularModule } from '../src/stynx-angular.module';
 import { EmptyStateComponent } from '../src/empty-state.component';
 import { TenantContextService } from '../src/tenant-context.service';
@@ -172,7 +178,7 @@ describe('@stynx-nyx/angular', () => {
     expect(generateClientRequestId()).toMatch(REQUEST_ID_PATTERN);
   });
 
-  it('falls back to Math.random when web crypto is unavailable', () => {
+  it('refuses to mint a request id when web crypto is unavailable (SM-16)', () => {
     const originalCrypto = globalThis.crypto;
     const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
     const now = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
@@ -182,7 +188,8 @@ describe('@stynx-nyx/angular', () => {
     });
 
     try {
-      expect(generateClientRequestId()).toMatch(REQUEST_ID_PATTERN);
+      expect(() => generateClientRequestId()).toThrow(/Web Crypto/);
+      expect(random).not.toHaveBeenCalled();
     } finally {
       Object.defineProperty(globalThis, 'crypto', {
         configurable: true,
@@ -193,18 +200,18 @@ describe('@stynx-nyx/angular', () => {
     }
   });
 
-  it('generates deterministic UUIDv7 bytes from fallback entropy and timestamp', () => {
+  it('refuses a web crypto without getRandomValues instead of using Math.random (SM-16)', () => {
     const originalCrypto = globalThis.crypto;
     const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
     const now = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
     Object.defineProperty(globalThis, 'crypto', {
       configurable: true,
-      value: undefined,
+      value: {},
     });
 
     try {
-      expect(generateClientRequestId()).toBe('018bcfe5-6800-7080-8080-808080808080');
-      expect(random).toHaveBeenCalledTimes(16);
+      expect(() => generateClientRequestId()).toThrow(/crypto\.getRandomValues/);
+      expect(random).not.toHaveBeenCalled();
     } finally {
       Object.defineProperty(globalThis, 'crypto', {
         configurable: true,
@@ -233,7 +240,7 @@ describe('@stynx-nyx/angular', () => {
     try {
       expect(generateClientRequestId()).toBe('018bcfe5-6800-7607-8809-0a0b0c0d0e0f');
       expect(getRandomValues).toHaveBeenCalledWith(expect.any(Uint8Array));
-      expect(random).not.toHaveBeenCalledTimes(1);
+      expect(random).not.toHaveBeenCalled();
     } finally {
       Object.defineProperty(globalThis, 'crypto', {
         configurable: true,
@@ -242,6 +249,27 @@ describe('@stynx-nyx/angular', () => {
       random.mockRestore();
       now.mockRestore();
     }
+  });
+
+  it('functional interceptor adds a UUIDv7 id and preserves caller ids (SM-16)', async () => {
+    const seen: string[] = [];
+    const next = (forwarded: HttpRequest<unknown>) => {
+      seen.push(forwarded.headers.get('X-Request-Id') ?? '');
+      return of(new HttpResponse({ status: 200 })) as Observable<HttpEvent<unknown>>;
+    };
+
+    await firstValueFrom(requestIdInterceptor(new HttpRequest('GET', '/api/items'), next));
+    await firstValueFrom(
+      requestIdInterceptor(
+        new HttpRequest('GET', '/api/items', {
+          headers: new HttpHeaders({ 'X-Request-Id': 'caller-id' }),
+        }),
+        next,
+      ),
+    );
+
+    expect(seen[0]).toMatch(REQUEST_ID_PATTERN);
+    expect(seen[1]).toBe('caller-id');
   });
 
   it('preserves caller request ids', async () => {
@@ -853,8 +881,9 @@ describe('@stynx-nyx/angular', () => {
     expect(TestBed.inject(STYNX_TENANCY_WINDOW)).toBe(window);
 
     const interceptors = TestBed.inject(HTTP_INTERCEPTORS);
+    // SM-16: the request id comes from the functional interceptor, not a DI class.
     expect(interceptors.some((interceptor) => interceptor instanceof RequestIdInterceptor)).toBe(
-      true,
+      false,
     );
     expect(interceptors.some((interceptor) => interceptor instanceof AuthInterceptor)).toBe(true);
     expect(interceptors.some((interceptor) => interceptor instanceof ErrorInterceptor)).toBe(true);
