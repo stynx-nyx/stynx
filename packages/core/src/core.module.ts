@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClsModule, ClsService } from 'nestjs-cls';
-import { BadRequestException } from '@nestjs/common';
-import { generateRequestId, normalizeRequestId } from './request-id.js';
+import { normalizeRequestId } from './request-id.js';
+import { requestIdRejection } from './request-id-rejection.js';
 import type { CoreClsStore } from './request-context.js';
 import type { ZodTypeAny } from 'zod';
 import {
@@ -44,9 +44,10 @@ const STYNX_CLS_MODULE = ClsModule.forRoot({
         res?: { setHeader(name: string, value: string): void };
       },
     ) => {
-      const supplied = request.headers['x-request-id'];
-      const requestId = supplied === undefined ? generateRequestId() : normalizeRequestId(supplied);
-      if (!requestId) throw new BadRequestException('X-Request-Id must be a valid UUIDv7');
+      // A missing id is rejected exactly like an invalid one, before any guard
+      // (authentication included) runs; no id is ever synthesised (SM-15).
+      const requestId = normalizeRequestId(request.headers['x-request-id']);
+      if (!requestId) throw requestIdRejection();
       const rawLocale = request.headers['accept-language'];
       const locale = typeof rawLocale === 'string' ? rawLocale.split(',')[0]?.trim() : undefined;
       new RequestContextMutator(cls).initialize({

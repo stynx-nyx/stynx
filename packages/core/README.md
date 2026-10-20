@@ -102,7 +102,7 @@ That's the minimum. `StynxCoreModule` registers the request-context interceptor 
 | Export                      | Description                                                                                                                                                                               |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `StynxErrorFilter`          | Global `ExceptionFilter` registered automatically. Transforms thrown `StynxError` subclasses into the canonical error envelope; non-Stynx errors are wrapped with a generic 500 envelope. |
-| `RequestContextInterceptor` | Global `NestInterceptor` registered automatically. Wraps every request in a CLS frame with a freshly generated `requestId`.                                                               |
+| `RequestContextInterceptor` | Global `NestInterceptor` registered automatically. Wraps every request in a CLS frame with the caller's UUIDv7 `requestId`; a missing or invalid `X-Request-Id` is a 400 `VALIDATION`.    |
 
 ### Errors (all extend `StynxError`)
 
@@ -121,7 +121,7 @@ That's the minimum. `StynxCoreModule` registers the request-context interceptor 
 | Export                   | Signature                                               | Description                                                                                                               |
 | ------------------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `getRequestId`           | `(req: Request \| FastifyRequest): string \| undefined` | Standalone helper to read the request id from a raw HTTP request (use in HTTP middleware, before NestJS DI is available). |
-| `generateRequestId`      | `(): string`                                            | Generate a new request id. Used internally by the interceptor; exposed for tests.                                         |
+| `generateRequestId`      | `(): string`                                            | Generate a UUIDv7 request id for clients, system contexts and tests; the server never synthesises one for a request.      |
 | `loadStynxConfiguration` | `(options): Promise<TConfig>`                           | Standalone configuration loader (called by the module's factory; exposed for tests + advanced use).                       |
 
 ### Types / Interfaces
