@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "version": "1.3.39",
   "meta": {
-    "last_updated": "2026-10-20T00:40:30.000000Z",
+    "last_updated": "2026-10-20T00:46:03.000000Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-19 Architect rebind for SM-19: binds packages/i18n/test/unit/catalog-registration.spec.ts (consumer-shaped Nest app with no packages/*/i18n: a feature module's registerCatalog key resolves through CatalogService, default locale en-US, pt-BR only when configured, forRoot catalogs merge) and rebinds packages/i18n/test/unit/catalog.spec.ts (no cwd scan without workspaceRoot; built-in default en-US), packages/i18n/test/unit/locale.spec.ts (fallback is the catalog's configured default; en-US is not displaced by an available pt-BR catalog) and packages/i18n/test/unit/tenant-boundary.spec.ts (pre-authentication fallback en-US). Changed expectations follow the intended en-US default (D-014); no assertion is removed.",
       "2026-10-19 Architect binding for SM-10: binds test/scripts/route-decorators-packed-consumer.test.mjs (pnpm-packed @stynx-nyx/idempotency, auth, backend and closure installed into an out-of-workspace consumer; typeof Idempotent, NoIdempotent, Permission, RequireRoles is function x4 resolved from the consumer, ErrorContract/UseCase/Slo absent per D-059, and the packed .d.ts type-check a decorated controller). No other corpus entry changes.",
       "2026-10-19 Architect rebind for SM-16: rebinds packages-web/angular/test/stynx-angular.spec.ts (the two Math.random fallback cases now assert generateClientRequestId refuses without crypto.getRandomValues and never consults Math.random; the web-crypto case asserts no Math.random call; a new case drives the functional requestIdInterceptor, adding a UUIDv7 id and preserving a caller id; provideStynxDefaults no longer registers the RequestIdInterceptor class) and packages-web/angular/test/provider-depth.spec.ts (auth and error DI interceptors still registered, the request-id class is not, and an HttpClient request through provideStynxDefaults carries a UUIDv7 X-Request-Id and the bearer token). Assertions grow 93->96 and 7->11; none is weakened beyond the intended removal of the Math.random fallback.",
       "2026-10-19 Architect rebind for SM-13: rebinds tools/eslint-config/test/rule-families.spec.mjs after the STYNX workspace Nest profile assertion moves stynx/require-idempotent-route-decorator from warn to error (the published level). Assertion count unchanged at 17; no assertion is removed or weakened.",
@@ -3454,8 +3455,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 20,
-      "assertion_digest_sha256": "9b9c3310455ff1c56ac5f897b3226bfc27150f91716d2fe11fea109a81001004"
+      "assertion_count": 23,
+      "assertion_digest_sha256": "4ee7e47a775de65b248774f20e9fe8e4c10b3a5ada0e94ba0b4309ef17a996c9"
     },
     {
       "path": "packages/i18n/test/unit/error-translator.spec.ts",
@@ -3486,8 +3487,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 27,
-      "assertion_digest_sha256": "3ed0635d1fcfc84fa08259bc51a816ddf9b294abd260e17ef26e5a8a09160086"
+      "assertion_count": 29,
+      "assertion_digest_sha256": "e315551c1e23e62ae40920b9ce2da042c0b4adc7a13568f2be3ba61626bef3a2"
     },
     {
       "path": "packages/i18n/test/unit/localized-error.filter.spec.ts",
@@ -6807,7 +6808,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 42,
-      "assertion_digest_sha256": "9dc6d5ecc5d2ac5447a354913d6065a9f13959469e07b02b1eade9c81f5d11af"
+      "assertion_digest_sha256": "96489ae9cd283fcbd344c8b3ac27aec052cfd54966dfd23dabf0127c0438988f"
     },
     {
       "path": "test/scripts/http-quota-ledger.test.mjs",
@@ -7456,6 +7457,14 @@
       "lifecycle": "supported",
       "assertion_count": 6,
       "assertion_digest_sha256": "a715486ad92883497dfda20c6719c8968d7d3ffcca46c5d078a570455b1940f7"
+    },
+    {
+      "path": "packages/i18n/test/unit/catalog-registration.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 12,
+      "assertion_digest_sha256": "22c8f017a8d62a988e44d990479c69c1cc26dfab7aa9473748c5dea799a8bc71"
     }
   ],
   "suites": {
