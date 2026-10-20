@@ -58,12 +58,19 @@ describe('CatalogService.translate', () => {
     expect(service.translate('missing.key', 'pt-BR')).toBe('missing.key');
   });
 
-  it('uses process cwd when no workspace root is configured', () => {
-    const svc = new CatalogService({ get: vi.fn() } as unknown as ModuleRef, {
-      defaultLocale: 'pt-BR',
-    });
+  it('does not scan process cwd when no workspace root is configured (SM-19)', () => {
+    const cwd = vi.spyOn(process, 'cwd').mockReturnValue(root);
+    try {
+      const svc = new CatalogService({ get: vi.fn() } as unknown as ModuleRef, {
+        defaultLocale: 'pt-BR',
+      });
 
-    expect(svc.supportedLocales()).toContain('pt-BR');
+      expect(svc.supportedLocales()).toContain('pt-BR');
+      expect(svc.translate('greeting.hello', 'pt-BR', { name: 'Ana' })).toBe('greeting.hello');
+      expect(cwd).not.toHaveBeenCalled();
+    } finally {
+      cwd.mockRestore();
+    }
   });
 
   it('merges tenant overrides over the base catalog', () => {
@@ -126,7 +133,7 @@ describe('CatalogService.supportedLocales', () => {
     }
   });
 
-  it('skips package entries whose i18n path is not a directory and uses the built-in default locale', () => {
+  it('skips package entries whose i18n path is not a directory and uses the built-in en-US default', () => {
     const rootWithFile = mkdtempSync(join(tmpdir(), 'stynx-i18n-file-'));
     try {
       mkdirSync(join(rootWithFile, 'packages', 'sample-file'), { recursive: true });
@@ -135,7 +142,9 @@ describe('CatalogService.supportedLocales', () => {
         workspaceRoot: rootWithFile,
       });
 
-      expect(svc.supportedLocales()).toEqual(expect.arrayContaining(['en-US', 'pt-BR']));
+      // SM-19: the built-in default is en-US; pt-BR appears only when configured.
+      expect(svc.supportedLocales()).toEqual(['en-US']);
+      expect(svc.defaultLocale()).toBe('en-US');
     } finally {
       rmSync(rootWithFile, { recursive: true, force: true });
     }
