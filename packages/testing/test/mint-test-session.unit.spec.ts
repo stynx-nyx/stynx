@@ -35,6 +35,9 @@ describe('mintTestSession', () => {
     expect(payload.aud).toBe('stynx-tests');
     expect(payload.sid).toBe('sid-1');
     expect(payload.perms_hash).toBe(undefined);
+    // S-12: an empty grant is still an explicit, verified claim.
+    expect(payload.perms).toEqual([]);
+    expect(payload.roles).toEqual([]);
     expect(session.jwks.keys).toEqual([
       expect.objectContaining({ kid: 'stynx-testing-key' }),
     ]);
@@ -62,6 +65,8 @@ describe('mintTestSession', () => {
       expect(payload.tenant_id).toBe(tenantId);
       expect(payload.cognito_sub).toBe(userId);
       expect(payload.perms_hash).toBe('audit:read|storage:write');
+      expect(payload.perms).toEqual(['audit:read', 'storage:write']);
+      expect(payload.roles).toEqual([]);
       expect(payload.exp).toBe(Math.floor(now.getTime() / 1000) + 10 * 60);
     } finally {
       vi.useRealTimers();
@@ -79,5 +84,20 @@ describe('mintTestSession', () => {
     const payload = JSON.parse(Buffer.from(payloadSegment ?? '', 'base64url').toString('utf8')) as Record<string, unknown>;
 
     expect(payload.cognito_sub).toBe('cognito-sub-1');
+  });
+
+  it('mints requested roles into the verified roles claim', async () => {
+    process.env.NODE_ENV = 'test';
+    const session = await mintTestSession({
+      userId: randomUUID(),
+      tenantId: randomUUID(),
+      perms: ['records:read'],
+      roles: ['auditor', 'admin'],
+    });
+    const [, payloadSegment] = session.token.split('.');
+    const payload = JSON.parse(Buffer.from(payloadSegment ?? '', 'base64url').toString('utf8')) as Record<string, unknown>;
+
+    expect(payload.perms).toEqual(['records:read']);
+    expect(payload.roles).toEqual(['auditor', 'admin']);
   });
 });

@@ -31,6 +31,7 @@ function record(overrides: Partial<SessionRecord> = {}): SessionRecord {
 function makeClient() {
   const values = new Map<string, string>();
   const sets = new Map<string, Set<string>>();
+  const zsets = new Map<string, Map<string, number>>();
   const multiCalls: string[] = [];
   const multiTx = {
     set: vi.fn((key: string, value: string) => {
@@ -55,6 +56,12 @@ function makeClient() {
       values.delete(key);
       return multiTx;
     }),
+    zAdd: vi.fn((key: string, member: { score: number; value: string }) => {
+      const bucket = zsets.get(key) ?? new Map<string, number>();
+      bucket.set(member.value, member.score);
+      zsets.set(key, bucket);
+      return multiTx;
+    }),
     exec: vi.fn(async () => undefined),
   };
   const client = {
@@ -71,10 +78,23 @@ function makeClient() {
       for (const value of valuesToRemove) sets.get(key)?.delete(value);
     }),
     publish: vi.fn(async () => 1),
+    zRemRangeByScore: vi.fn(async (key: string, _min: string, max: string) => {
+      const bound = Number(max.replace('(', ''));
+      for (const [value, score] of zsets.get(key) ?? new Map<string, number>()) {
+        if (score < bound) zsets.get(key)?.delete(value);
+      }
+      return 0;
+    }),
+    zRangeByScoreWithScores: vi.fn(async (key: string, min: number) =>
+      [...(zsets.get(key) ?? new Map<string, number>())]
+        .filter(([, score]) => score >= min)
+        .map(([value, score]) => ({ value, score })),
+    ),
     eval: vi.fn(async (): Promise<unknown> => '{"revoked":[]}'),
     ping: vi.fn(async () => 'PONG'),
     values,
     sets,
+    zsets,
     multiTx,
     multiCalls,
   };
@@ -144,6 +164,38 @@ describe('RedisSessionStore', () => {
 
     expect(client.publish).toHaveBeenCalledWith('invalidate', 'user-1:tenant-1');
     expect(client.multiTx.exec).toHaveBeenCalledTimes(4);
+    expect(client.multiTx.zAdd).toHaveBeenCalledTimes(1);
+    expect(client.multiTx.zAdd).toHaveBeenCalledWith('test:revoked', {
+      score: Date.parse('2026-05-18T12:03:00.000Z'),
+      value: 'sid-1',
+    });
+  });
+
+  it('indexes revoked session ids for the background revocation refresh and drops expired entries', async () => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    client.zsets.set(
+      'test:revoked',
+      new Map([
+        ['old-sid', Date.parse('2026-05-18T11:00:00.000Z')],
+        ['recent-sid', Date.parse('2026-05-18T12:03:00.000Z')],
+      ]),
+    );
+
+    await expect(store.listRevokedSessions('2026-05-18T12:00:00.000Z')).resolves.toEqual([
+      { sid: 'recent-sid', revokedAt: '2026-05-18T12:03:00.000Z' },
+    ]);
+    expect(client.zRemRangeByScore).toHaveBeenCalledWith(
+      'test:revoked',
+      '-inf',
+      `(${Date.parse('2026-05-18T12:00:00.000Z')}`,
+    );
+    expect([...(client.zsets.get('test:revoked')?.keys() ?? [])]).toEqual(['recent-sid']);
+
+    vi.spyOn(Date, 'now').mockReturnValueOnce(1_234);
+    await store.listRevokedSessions('not-an-instant');
+    expect(client.zRangeByScoreWithScores).toHaveBeenLastCalledWith('test:revoked', 1_234, '+inf');
   });
 
   it('prunes stale ids from indexes', async () => {

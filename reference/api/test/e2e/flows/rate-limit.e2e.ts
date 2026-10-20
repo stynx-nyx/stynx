@@ -3,6 +3,7 @@ import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
+  refreshActorTokens,
   queryRowsAsTenant,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
@@ -66,6 +67,7 @@ async function grantRateLimitFlowPermissions(context: ReferenceApiE2eContext): P
   const permissionCache = context.app.get(PermissionCache);
   await permissionCache.publishInvalidation(`${actors.adminA.userId}:${tenants.tenantA}`);
   await permissionCache.publishInvalidation(`${actors.adminB.userId}:${tenants.tenantB}`);
+  await refreshActorTokens(context, ['adminA', 'adminB']);
 }
 
 function lockTimestamp(): string {

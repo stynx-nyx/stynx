@@ -5,6 +5,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,
+  refreshActorTokens,
   setupReferenceApiE2e,
   type ReferenceApiE2eContext,
 } from '../fixtures/app.js';
@@ -101,6 +102,7 @@ describe('readonly probe independent full-visibility business-state proof', () =
     await context.app
       .get(PermissionCache)
       .publishInvalidation(`${actors.viewerA.userId}:${tenants.tenantA}`);
+    await refreshActorTokens(context, ['viewerA']);
     const appIdentity = await context.app.get(StynxPoolRegistry).pools.app.query(`select
       current_user,session_user,rolsuper,rolbypassrls from pg_roles where rolname=current_user`);
     expect(appIdentity.rows).toEqual([
