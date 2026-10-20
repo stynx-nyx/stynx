@@ -1160,6 +1160,9 @@ importers:
       pg:
         specifier: ^8.22.0
         version: 8.23.1
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
       yaml:
         specifier: ^2.8.3
         version: 2.9.0
@@ -1170,9 +1173,6 @@ importers:
       '@types/pg':
         specifier: ^8.20.0
         version: 8.20.0
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/contracts:
     devDependencies:
