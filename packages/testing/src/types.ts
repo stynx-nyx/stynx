@@ -1,6 +1,5 @@
 import type { DynamicModule, INestApplication, Provider, Type } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
-import type { StartedTestContainer } from 'testcontainers';
 import type { Database, StynxPgClient, Transaction } from '@stynx-nyx/data';
 import type { RequestContextMutator } from '@stynx-nyx/core';
 import type { TestAppRoleNames } from './roles.js';
@@ -26,35 +25,57 @@ export interface CreateTestAppOptions {
   migrations?: TestSqlStep[];
   seeds?: TestSqlStep[];
   overrides?: TestAppOverrides;
+  /**
+   * A Redis the runtime supplies. `@stynx-nyx/testing` starts no service;
+   * omitted, the context has no `redis`.
+   */
+  redis?: {
+    url: string;
+  };
+  /**
+   * A LocalStack endpoint the runtime supplies. Omitted (or `enabled: false`),
+   * the context has no `localstack`; `enabled: true` without an `endpoint`
+   * is refused, since no container is started.
+   */
   localstack?: {
     enabled?: boolean;
-    services?: string[];
+    endpoint?: string;
+    region?: string;
   };
+  /**
+   * A Cognito-compatible endpoint the runtime supplies, with the same rules
+   * as `localstack`. The pool and client default to `local_testing_pool` and
+   * `local_testing_client`.
+   */
   cognito?: {
     enabled?: boolean;
-    image?: string;
+    endpoint?: string;
+    region?: string;
+    userPoolId?: string;
+    clientId?: string;
   };
 }
 
-export interface StartedServiceHandle {
-  container: StartedTestContainer;
-}
-
-export interface StartedPostgresHandle extends StartedServiceHandle {
+/**
+ * The per-app database `createTestApp` creates on the server `DATABASE_URL`
+ * names (and drops on teardown).
+ */
+export interface StartedPostgresHandle {
+  database: string;
   connectionString: string;
   adminConnectionString: string;
 }
 
-export interface StartedRedisHandle extends StartedServiceHandle {
+export interface StartedRedisHandle {
   url: string;
 }
 
-export interface StartedLocalstackHandle extends StartedServiceHandle {
+export interface StartedLocalstackHandle {
   endpoint: string;
   region: string;
 }
 
-export interface StartedCognitoHandle extends StartedServiceHandle {
+export interface StartedCognitoHandle {
   endpoint: string;
   region: string;
   userPoolId: string;
@@ -67,7 +88,7 @@ export interface TestAppContext {
   database: Database;
   requestContextMutator: RequestContextMutator;
   postgres: StartedPostgresHandle;
-  redis: StartedRedisHandle;
+  redis?: StartedRedisHandle;
   localstack?: StartedLocalstackHandle;
   cognito?: StartedCognitoHandle;
   adminClient(): Promise<StynxPgClient>;

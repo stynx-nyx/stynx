@@ -1,6 +1,6 @@
+import { randomUUID } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import { type INestApplication } from '@nestjs/common';
-import { GenericContainer, Wait } from 'testcontainers';
 import { RequestContextMutator } from '@stynx-nyx/core';
 import {
   createStynxPgClient,
@@ -9,6 +9,12 @@ import {
   type StynxPgClient,
 } from '@stynx-nyx/data';
 import { DEFAULT_TEST_APP_ROLES, testAppRolePrefix, type TestAppRoleNames } from './roles.js';
+import {
+  describePostgresEndpoint,
+  postgresLogin,
+  postgresUriFor,
+  resolveTestDatabaseUrl,
+} from './runtime.js';
 import type {
   CreateTestAppOptions,
   StartedCognitoHandle,
@@ -29,176 +35,171 @@ async function applySqlSteps(client: StynxPgClient, steps: TestSqlStep[]): Promi
   }
 }
 
-async function startPostgresContainer(): Promise<StartedPostgresHandle> {
-  const container = await new GenericContainer('postgres:16-alpine')
-    .withEnvironment({
-      GLOG_minloglevel: '2',
-      POSTGRES_DB: 'postgres',
-      POSTGRES_USER: 'postgres',
-      POSTGRES_PASSWORD: 'postgres',
-    })
-    .withExposedPorts(5432)
-    // The official Postgres image emits this line once for the temporary
-    // initdb server and again for the final server. Waiting for both prevents
-    // callers from connecting during the intervening shutdown/startup window.
-    .withWaitStrategy(Wait.forLogMessage(/database system is ready to accept connections/u, 2))
-    .start();
+const DEFAULT_REGION = 'us-east-1';
+/** Login password bound to the app role when `DATABASE_URL` carries none. */
+const DEFAULT_APP_ROLE_PASSWORD = 'stynx_test_role';
 
-  const host = container.getHost();
-  const port = container.getMappedPort(5432);
-  const auth = `postgres:postgres@${host}:${port}`;
-  return {
-    container,
-    connectionString: `postgresql://${auth}/postgres`,
-    adminConnectionString: `postgresql://${auth}/postgres`,
-  };
-}
-
-async function startRedisContainer(): Promise<StartedRedisHandle> {
-  const container = await new GenericContainer('redis:7-alpine')
-    .withEnvironment({
-      GLOG_minloglevel: '2',
-    })
-    .withExposedPorts(6379)
-    .withWaitStrategy(Wait.forLogMessage(/Ready to accept connections/u))
-    .start();
-
-  return {
-    container,
-    url: `redis://${container.getHost()}:${container.getMappedPort(6379)}`,
-  };
-}
-
-async function startLocalstackContainer(services: string[]): Promise<StartedLocalstackHandle> {
-  const container = await new GenericContainer('localstack/localstack:3.8.1')
-    .withEnvironment({
-      GLOG_minloglevel: '2',
-      SERVICES: services.join(','),
-      AWS_DEFAULT_REGION: 'us-east-1',
-    })
-    .withExposedPorts(4566)
-    .withWaitStrategy(Wait.forLogMessage(/Ready\./u))
-    .start();
-
-  return {
-    container,
-    endpoint: `http://${container.getHost()}:${container.getMappedPort(4566)}`,
-    region: 'us-east-1',
-  };
-}
-
-async function startCognitoContainer(image: string): Promise<StartedCognitoHandle> {
-  const region = 'us-east-1';
-  const userPoolId = 'local_testing_pool';
-  const clientId = 'local_testing_client';
-  const container = await new GenericContainer(image)
-    .withEnvironment({
-      GLOG_minloglevel: '2',
-      AWS_DEFAULT_REGION: region,
-      COGNITO_LOCAL_PORT: '9229',
-      COGNITO_LOCAL_USER_POOLS: JSON.stringify([
-        {
-          Id: userPoolId,
-          Name: 'stynx-testing',
-          Clients: [{ ClientId: clientId, ClientName: 'stynx-testing-client' }],
-        },
-      ]),
-    })
-    .withExposedPorts(9229)
-    .withWaitStrategy(Wait.forListeningPorts())
-    .start();
-
-  return {
-    container,
-    endpoint: `http://${container.getHost()}:${container.getMappedPort(9229)}`,
-    region,
-    userPoolId,
-    clientId,
-  };
-}
-
-function connectionStringWithAppName(base: string, appName: string): string {
-  const url = new URL(base);
-  url.searchParams.set('application_name', appName);
-  return url.toString();
-}
-
-/**
- * ADR-OUTBOX-0003 D1 refuses an application pool whose `current_user` is not
- * the application role or whose login is privileged, so the container's
- * superuser cannot serve the app pool. Create the application role ahead of
- * the platform migrations (which keep it: `0001_roles.sql` is `IF NOT EXISTS`)
- * and bind a login password, equal to the role name, for the test container
- * only. `appRole` is a validated lower-case identifier (`testAppRolePrefix`).
- */
-async function bindApplicationRoleLogin(adminConnectionString: string, appRole: string): Promise<void> {
-  const client = createStynxPgClient({ connectionString: adminConnectionString });
-  await client.connect();
+async function withClient<T>(
+  connectionString: string,
+  fn: (client: StynxPgClient) => Promise<T>,
+): Promise<T> {
+  const client = createStynxPgClient({ connectionString });
   try {
-    await client.query(`do $$
-      begin
-        if not exists (select 1 from pg_catalog.pg_roles where rolname = '${appRole}') then
-          create role ${appRole} login noinherit nobypassrls;
-        end if;
-      end $$`);
-    await client.query(`alter role ${appRole} with login password '${appRole}'`);
+    await client.connect();
+  } catch (error) {
+    await client.end().catch(() => undefined);
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `createTestApp could not reach PostgreSQL at ${describePostgresEndpoint(connectionString)} ` +
+        `(DATABASE_URL): ${reason}. Start PostgreSQL for the declared runtime.`,
+      { cause: error },
+    );
+  }
+  try {
+    return await fn(client);
   } finally {
     await client.end();
   }
 }
 
-function applicationConnectionString(base: string, appName: string, appRole: string): string {
-  const url = new URL(connectionStringWithAppName(base, appName));
-  url.username = appRole;
-  url.password = appRole;
-  return url.toString();
+function sqlLiteral(value: string): string {
+  return `'${value.replace(/'/gu, "''")}'`;
 }
 
+/** A fresh database name; `rolePrefix` is a validated lower-case identifier. */
+function testDatabaseName(rolePrefix: string): string {
+  return `${rolePrefix}_testapp_${randomUUID().replace(/-/gu, '').slice(0, 16)}`;
+}
+
+function resolveLocalstack(options: CreateTestAppOptions['localstack']): StartedLocalstackHandle | undefined {
+  if (options?.enabled === false) return undefined;
+  if (!options?.endpoint) {
+    if (options?.enabled === true) {
+      throw new Error(
+        'createTestApp starts no containers: localstack.enabled requires localstack.endpoint from the runtime',
+      );
+    }
+    return undefined;
+  }
+  return { endpoint: options.endpoint, region: options.region ?? DEFAULT_REGION };
+}
+
+function resolveCognito(options: CreateTestAppOptions['cognito']): StartedCognitoHandle | undefined {
+  if (options?.enabled === false) return undefined;
+  if (!options?.endpoint) {
+    if (options?.enabled === true) {
+      throw new Error(
+        'createTestApp starts no containers: cognito.enabled requires cognito.endpoint from the runtime',
+      );
+    }
+    return undefined;
+  }
+  return {
+    endpoint: options.endpoint,
+    region: options.region ?? DEFAULT_REGION,
+    userPoolId: options.userPoolId ?? 'local_testing_pool',
+    clientId: options.clientId ?? 'local_testing_client',
+  };
+}
+
+/**
+ * ADR-OUTBOX-0003 D1 refuses an application pool whose `current_user` is not
+ * the application role or whose login is privileged, so the admin login of
+ * `DATABASE_URL` cannot serve the app pool. Create the application role ahead
+ * of the platform migrations (which keep it: `0001_roles.sql` is
+ * `IF NOT EXISTS`) and bind its login password. Roles are cluster-wide, so
+ * the bind is serialized and its password is the one every suite on this
+ * server uses: the password of `DATABASE_URL`, else `stynx_test_role`.
+ * `appRole` is a validated lower-case identifier (`testAppRolePrefix`).
+ */
+async function bindApplicationRoleLogin(
+  maintenanceUrl: string,
+  appRole: string,
+  password: string,
+): Promise<void> {
+  await withClient(maintenanceUrl, async (client) => {
+    await client.query('begin');
+    try {
+      await client.query(`select pg_advisory_xact_lock(hashtext('@stynx-nyx/testing:role-login'))`);
+      await client.query(`do $$
+      begin
+        if not exists (select 1 from pg_catalog.pg_roles where rolname = '${appRole}') then
+          create role ${appRole} login noinherit nobypassrls;
+        end if;
+      end $$`);
+      await client.query(`alter role ${appRole} with login password ${sqlLiteral(password)}`);
+      await client.query('commit');
+    } catch (error) {
+      await client.query('rollback').catch(() => undefined);
+      throw error;
+    }
+  });
+}
+
+async function createDatabase(maintenanceUrl: string, database: string): Promise<void> {
+  await withClient(maintenanceUrl, async (client) => {
+    await client.query(`create database "${database}"`);
+  });
+}
+
+async function dropDatabase(maintenanceUrl: string, database: string): Promise<void> {
+  await withClient(maintenanceUrl, async (client) => {
+    await client.query(
+      'select pg_terminate_backend(pid) from pg_stat_activity where datname = $1 and pid <> pg_backend_pid()',
+      [database],
+    );
+    await client.query(`drop database if exists "${database}"`);
+  });
+}
+
+/**
+ * Boots an isolated NestJS test app on the PostgreSQL server the runtime
+ * supplies through `DATABASE_URL` (02 §6, D-011): bare or docker, the URL is
+ * the harness's or rail's. It creates a fresh database there, binds the app
+ * role login, runs the platform migrations as the given product roles and
+ * drops the database on teardown. It starts no container; without
+ * `DATABASE_URL` it fails closed.
+ */
 export async function createTestApp(options: CreateTestAppOptions = {}): Promise<TestAppContext> {
   const roles: TestAppRoleNames = options.roles ?? DEFAULT_TEST_APP_ROLES;
   const rolePrefix = testAppRolePrefix(roles);
-  let postgres: StartedPostgresHandle | undefined;
-  let redis: StartedRedisHandle | undefined;
-  let localstack: StartedLocalstackHandle | undefined;
-  let cognito: StartedCognitoHandle | undefined;
+  const maintenanceUrl = resolveTestDatabaseUrl();
+  const localstack = resolveLocalstack(options.localstack);
+  const cognito = resolveCognito(options.cognito);
+  const redis: StartedRedisHandle | undefined = options.redis ? { url: options.redis.url } : undefined;
+  const appRolePassword = postgresLogin(maintenanceUrl).password ?? DEFAULT_APP_ROLE_PASSWORD;
+  const databaseName = testDatabaseName(rolePrefix);
+  let created = false;
   let testingModule;
   let app: INestApplication | undefined;
 
   try {
-    postgres = await startPostgresContainer();
-    redis = await startRedisContainer();
-    localstack =
-      options.localstack?.enabled === false
-        ? undefined
-        : await startLocalstackContainer(options.localstack?.services ?? ['s3', 'kms']);
-    cognito = options.cognito?.enabled
-      ? await startCognitoContainer(options.cognito.image ?? 'jagregory/cognito-local:latest')
-      : undefined;
+    await bindApplicationRoleLogin(maintenanceUrl, roles.app, appRolePassword);
+    await createDatabase(maintenanceUrl, databaseName);
+    created = true;
 
-    await bindApplicationRoleLogin(postgres.adminConnectionString, roles.app);
+    const adminUrl = postgresUriFor(maintenanceUrl, databaseName, '@stynx-nyx/testing:admin');
+    const postgres: StartedPostgresHandle = {
+      database: databaseName,
+      connectionString: adminUrl,
+      adminConnectionString: adminUrl,
+    };
 
     testingModule = await Test.createTestingModule({
       imports: [
         StynxDataModule.forRoot({
           connections: {
             owner: {
-              connectionString: connectionStringWithAppName(
-                postgres.connectionString,
-                '@stynx-nyx/testing:owner',
-              ),
+              connectionString: postgresUriFor(maintenanceUrl, databaseName, '@stynx-nyx/testing:owner'),
             },
             app: {
-              connectionString: applicationConnectionString(
-                postgres.connectionString,
-                '@stynx-nyx/testing:app',
-                roles.app,
-              ),
+              connectionString: postgresUriFor(maintenanceUrl, databaseName, '@stynx-nyx/testing:app', {
+                user: roles.app,
+                password: appRolePassword,
+              }),
             },
             reader: {
-              connectionString: connectionStringWithAppName(
-                postgres.connectionString,
-                '@stynx-nyx/testing:reader',
-              ),
+              connectionString: postgresUriFor(maintenanceUrl, databaseName, '@stynx-nyx/testing:reader'),
             },
           },
           migrations: { enabled: true, rolePrefix },
@@ -214,7 +215,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
     await app.init();
 
     async function adminClient(): Promise<StynxPgClient> {
-      const client = createStynxPgClient({ connectionString: postgres!.adminConnectionString });
+      const client = createStynxPgClient({ connectionString: adminUrl });
       await client.connect();
       return client;
     }
@@ -235,6 +236,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
 
     const database = testingModule.get(Database);
     const requestContextMutator = testingModule.get(RequestContextMutator);
+    const startedApp = app;
 
     return {
       app,
@@ -242,7 +244,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
       database,
       requestContextMutator,
       postgres,
-      redis,
+      ...(redis ? { redis } : {}),
       ...(localstack ? { localstack } : {}),
       ...(cognito ? { cognito } : {}),
       adminClient,
@@ -256,19 +258,15 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
         );
       },
       async teardown(): Promise<void> {
-        await app?.close();
-        await cognito?.container.stop();
-        await localstack?.container.stop();
-        await redis?.container.stop();
-        await postgres?.container.stop();
+        await startedApp.close();
+        await dropDatabase(maintenanceUrl, databaseName);
       },
     };
   } catch (error) {
     await app?.close().catch(() => undefined);
-    await cognito?.container.stop().catch(() => undefined);
-    await localstack?.container.stop().catch(() => undefined);
-    await redis?.container.stop().catch(() => undefined);
-    await postgres?.container.stop().catch(() => undefined);
+    if (created) {
+      await dropDatabase(maintenanceUrl, databaseName).catch(() => undefined);
+    }
     throw error;
   }
 }

@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 import swcMod from 'unplugin-swc';
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { userInfo } from 'node:os';
 import { resolve, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
@@ -151,6 +152,29 @@ function pureBarrelEntryPoints(packageDir) {
   });
 }
 
+/**
+ * The runtime database URL STYNX's own harness supplies to tests (02 §6,
+ * D-011). `@stynx-nyx/testing` reads only `DATABASE_URL`; when the caller
+ * already set it, it is used as is. Otherwise the URL is derived from the
+ * harness's declared server (`STYNX_TEST_PG_HOST`, or an explicit
+ * `STYNX_TEST_PG_SOCKET_DIR`), the same server the package-local Postgres
+ * fixtures use. With neither, nothing is supplied and the test fails closed.
+ */
+export function harnessDatabaseUrl(env = process.env) {
+  if (env.DATABASE_URL) return env.DATABASE_URL;
+  const host = env.STYNX_TEST_PG_HOST;
+  const socketDir = env.STYNX_TEST_PG_SOCKET_DIR;
+  if (!host && !socketDir) return undefined;
+  const user = encodeURIComponent(env.STYNX_TEST_PG_USER ?? userInfo().username);
+  const password = env.STYNX_TEST_PG_PASSWORD
+    ? `:${encodeURIComponent(env.STYNX_TEST_PG_PASSWORD)}`
+    : '';
+  if (host) {
+    return `postgresql://${user}${password}@${host}:${env.STYNX_TEST_PG_PORT ?? '5432'}/postgres`;
+  }
+  return `postgresql://${user}${password}@/postgres?host=${encodeURIComponent(socketDir)}`;
+}
+
 export function createVitestConfig({
   packageDir,
   packageName,
@@ -257,6 +281,8 @@ export function createVitestConfig({
     ? { 'drizzle-orm/entity': resolve(repoRoot, 'tools/repo-config/drizzle-entity-shim.mjs') }
     : {};
 
+  const databaseUrl = harnessDatabaseUrl();
+
   return defineConfig({
     root: packageDir,
     resolve: {
@@ -273,6 +299,7 @@ export function createVitestConfig({
       environment,
       include,
       setupFiles,
+      env: databaseUrl ? { DATABASE_URL: databaseUrl } : {},
       testTimeout,
       hookTimeout,
       retry,
