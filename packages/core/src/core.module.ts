@@ -37,7 +37,13 @@ const STYNX_CLS_MODULE = ClsModule.forRoot({
   global: true,
   middleware: {
     mount: true,
-    setup: (cls: ClsService<CoreClsStore>, request: { headers: Record<string, unknown>; res?: { setHeader(name: string, value: string): void } }) => {
+    setup: (
+      cls: ClsService<CoreClsStore>,
+      request: {
+        headers: Record<string, unknown>;
+        res?: { setHeader(name: string, value: string): void };
+      },
+    ) => {
       const supplied = request.headers['x-request-id'];
       const requestId = supplied === undefined ? generateRequestId() : normalizeRequestId(supplied);
       if (!requestId) throw new BadRequestException('X-Request-Id must be a valid UUIDv7');
@@ -71,7 +77,9 @@ function createSystemOperationSinkProvider(): Provider {
   };
 }
 
-@Module({})
+// Static imports keep the module graph statically readable (SM-20); only
+// caller-supplied `forRootAsync({ imports })` stay on the dynamic module.
+@Module({ imports: [STYNX_CLS_MODULE] })
 export class StynxCoreModule {
   static forRoot<TSchema extends ZodTypeAny>(
     options: StynxCoreModuleOptions<TSchema>,
@@ -102,7 +110,7 @@ export class StynxCoreModule {
     return {
       module: StynxCoreModule,
       global: true,
-      imports: [STYNX_CLS_MODULE, ...imports],
+      ...(imports.length > 0 ? { imports } : {}),
       providers: [
         optionsProvider,
         createConfigProvider(),
