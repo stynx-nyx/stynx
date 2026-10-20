@@ -1734,7 +1734,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-COVERAGE-001", "INV-ERROR-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 54,
-      "assertion_digest_sha256": "38b87dc520661e6ef6d9a3517bb7619aefeeef2dffc5a250da83214bbe595df3"
+      "assertion_digest_sha256": "7687ec8b8e3924a9cfef4585d3d3edbf4f0c26a310d7e9b1a064dbe469b76be4"
     },
     {
       "path": "domain/demo-bookmark/api/test/bookmark.controller.spec.ts",
