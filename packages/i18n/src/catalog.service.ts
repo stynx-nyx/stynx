@@ -5,10 +5,12 @@ import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
 import IntlMessageFormat from 'intl-messageformat';
 import { STYNX_I18N_OPTIONS } from './tokens.js';
-import type { StynxI18nModuleOptions } from './types.js';
+import type { I18nCatalogMessages, StynxI18nModuleOptions } from './types.js';
 import { requireI18nCacheContext } from './tenant-context.js';
 
 type Catalogs = Map<string, Map<string, string>>;
+
+export const STYNX_I18N_DEFAULT_LOCALE = 'en-US';
 
 function loadJsonCatalog(filePath: string): Record<string, string> {
   return JSON.parse(readFileSync(filePath, 'utf8')) as Record<string, string>;
@@ -29,6 +31,25 @@ export class CatalogService {
     return [...this.catalogsMap().keys()];
   }
 
+  /** The configured default locale, `en-US` unless `defaultLocale` is set. */
+  defaultLocale(): string {
+    return this.options.defaultLocale ?? STYNX_I18N_DEFAULT_LOCALE;
+  }
+
+  /**
+   * Registers (or extends) one locale's catalog. Modules call this, for
+   * example from `onModuleInit`, instead of shipping files the service scans.
+   * Later registrations of a key override earlier ones.
+   */
+  registerCatalog(locale: string, messages: I18nCatalogMessages): void {
+    const catalogs = this.catalogsMap();
+    const target = catalogs.get(locale) ?? new Map<string, string>();
+    for (const [key, value] of Object.entries(messages)) {
+      target.set(key, value);
+    }
+    catalogs.set(locale, target);
+  }
+
   translate(
     key: string,
     locale: string,
@@ -43,7 +64,7 @@ export class CatalogService {
       return new IntlMessageFormat(exact, locale).format(vars) as string;
     }
 
-    const fallback = layered.get('en-US')?.get(key);
+    const fallback = layered.get(STYNX_I18N_DEFAULT_LOCALE)?.get(key);
     if (fallback) {
       return new IntlMessageFormat(fallback, 'en-US').format(vars) as string;
     }
@@ -90,7 +111,24 @@ export class CatalogService {
   }
 
   private loadCatalogs(): Catalogs {
-    const workspaceRoot = this.options.workspaceRoot ?? process.cwd();
+    const catalogs: Catalogs = new Map();
+    for (const [locale, messages] of Object.entries(this.options.catalogs ?? {})) {
+      catalogs.set(locale, new Map(Object.entries(messages)));
+    }
+    if (this.options.workspaceRoot !== undefined) {
+      this.scanWorkspaceCatalogs(this.options.workspaceRoot, catalogs);
+    }
+
+    if (!catalogs.has(STYNX_I18N_DEFAULT_LOCALE)) {
+      catalogs.set(STYNX_I18N_DEFAULT_LOCALE, new Map());
+    }
+    if (!catalogs.has(this.defaultLocale())) {
+      catalogs.set(this.defaultLocale(), new Map());
+    }
+    return catalogs;
+  }
+
+  private scanWorkspaceCatalogs(workspaceRoot: string, catalogs: Catalogs): void {
     const packageRoots = ['packages', 'packages-web']
       .map((segment) => resolve(workspaceRoot, segment))
       .filter((candidate) => {
@@ -101,7 +139,6 @@ export class CatalogService {
         }
       });
 
-    const catalogs: Catalogs = new Map();
     for (const packageRoot of packageRoots) {
       for (const packageName of readdirSync(packageRoot)) {
         const i18nDir = join(packageRoot, packageName, 'i18n');
@@ -126,14 +163,6 @@ export class CatalogService {
         }
       }
     }
-
-    if (!catalogs.has('en-US')) {
-      catalogs.set('en-US', new Map());
-    }
-    if (!catalogs.has(this.options.defaultLocale ?? 'pt-BR')) {
-      catalogs.set(this.options.defaultLocale ?? 'pt-BR', new Map());
-    }
-    return catalogs;
   }
 
   private mergeTenantOverrides(catalogs: Catalogs, tenantId?: string): Catalogs {
