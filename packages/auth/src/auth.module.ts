@@ -18,20 +18,21 @@ import { StynxJwtValidator } from './stynx-jwt.validator.js';
 import { STYNX_AUTH_OPTIONS, STYNX_PERMISSION_CACHE_BACKEND } from './tokens.js';
 import { resolveAuthOptions, type StynxAuthModuleOptions } from './types.js';
 
-@Module({})
+@Module({
+  imports: [
+    StynxCoreModule.forRoot({
+      appName: 'auth',
+      schema: z.object({}),
+    }),
+  ],
+  controllers: [StynxAuthController],
+})
 export class StynxAuthModule {
   static forRoot(options: StynxAuthModuleOptions): DynamicModule {
     const resolved = resolveAuthOptions(options);
     return {
       module: StynxAuthModule,
       global: true,
-      imports: [
-        StynxCoreModule.forRoot({
-          appName: 'auth',
-          schema: z.object({}),
-        }),
-      ],
-      controllers: [StynxAuthController],
       providers: [
         {
           provide: STYNX_AUTH_OPTIONS,

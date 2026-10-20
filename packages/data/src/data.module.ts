@@ -14,19 +14,20 @@ import {
 
 export type { StynxDataModuleOptions } from './tokens.js';
 
-@Module({})
+@Module({
+  imports: [
+    StynxCoreModule.forRoot({
+      appName: 'data',
+      schema: z.object({}),
+    }),
+  ],
+})
 export class StynxDataModule {
   static forRoot(options: StynxDataModuleOptions): DynamicModule {
     resolveAppRoleName(options);
     return {
       module: StynxDataModule,
       global: true,
-      imports: [
-        StynxCoreModule.forRoot({
-          appName: 'data',
-          schema: z.object({}),
-        }),
-      ],
       providers: [
         {
           provide: STYNX_DATA_OPTIONS,
