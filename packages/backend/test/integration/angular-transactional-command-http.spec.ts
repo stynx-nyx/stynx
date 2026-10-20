@@ -15,6 +15,7 @@ import { firstValueFrom, from, mergeMap } from 'rxjs';
 import { z } from 'zod';
 import { HttpContext, HttpHeaders, HttpRequest } from '../../../../packages-web/angular/node_modules/@angular/common/fesm2022/http.mjs';
 import { IdempotencyKeyInterceptor, STYNX_IDEMPOTENCY_COMMAND } from '../../../../packages-web/angular/src/idempotency.js';
+import { generateClientRequestId } from '../../../../packages-web/angular/src/request-id.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,
@@ -116,7 +117,12 @@ describe('Angular NGIDEM to transactional command over live HTTP and PostgreSQL'
         reuseKey ? { key: reuseKey } : { action: 'command.create', target: 'record-7', includeBodyHash: true });
       const request = new HttpRequest('POST', url, body, {
         context,
-        headers: new HttpHeaders({ Authorization: 'Bearer verified', 'Content-Type': 'application/json' }),
+        // The Angular requestIdInterceptor sends a UUIDv7 on every request (SM-15/SM-16).
+        headers: new HttpHeaders({
+          Authorization: 'Bearer verified',
+          'Content-Type': 'application/json',
+          'X-Request-Id': generateClientRequestId(),
+        }),
       });
       return firstValueFrom(interceptor.intercept(request, {
         handle: (outbound) => from(fetch(outbound.url, {

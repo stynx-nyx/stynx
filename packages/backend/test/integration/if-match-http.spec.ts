@@ -7,7 +7,7 @@ import { StynxCoreModule } from '@stynx-nyx/core';
 import { AuditSqlSink } from '@stynx-nyx/audit';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 import * as backend from '../../src/index.js';

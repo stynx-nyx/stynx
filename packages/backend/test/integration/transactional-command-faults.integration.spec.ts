@@ -15,7 +15,7 @@ import {
   StynxIdempotencyModule,
   TransactionalIdempotencyStore,
 } from '@stynx-nyx/idempotency';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { Audit, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index.js';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';

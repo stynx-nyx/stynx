@@ -12,7 +12,7 @@ import { ModulesContainer, Reflector } from '@nestjs/core';
 import type { ModuleRef } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { RequestContext } from '@stynx-nyx/core';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { SessionService } from '@stynx-nyx/sessions';
 import { STYNX_PUBLIC_TENANT_OPTIONS, STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import { PermissionGuard } from '../../src/permission.guard.js';

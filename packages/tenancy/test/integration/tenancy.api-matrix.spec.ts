@@ -5,7 +5,7 @@ import {
   mintTestSession,
   type TestAppContext,
 } from '@stynx-nyx/testing';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { StynxTenancyModule } from '../../src/tenancy.module.js';
 
 const ACTOR_ID = '0197481e-7294-7c53-8b03-5c36d7c2831a';

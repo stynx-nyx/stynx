@@ -1,5 +1,6 @@
 import http from 'k6/http';
 import { check, fail } from 'k6';
+import { randomBytes } from 'k6/crypto';
 import { Trend } from 'k6/metrics';
 import { BASE_URL, EMAIL, S3_PUBLIC_BASE_URL, SUMMARY_PATH, TENANT_ID, idempotencyKey, uniqueSuffix } from './config.js';
 
@@ -13,8 +14,22 @@ let rateLimitProbePrimed = false;
 let idempotencyProbeKey;
 let idempotencyProbePrimed = false;
 
+// STYNX rejects a request without a client-minted UUIDv7 X-Request-Id (SM-15).
+export function requestId() {
+  const bytes = new Uint8Array(randomBytes(16));
+  let timestamp = Date.now();
+  for (let index = 5; index >= 0; index -= 1) {
+    bytes[index] = timestamp % 256;
+    timestamp = Math.floor(timestamp / 256);
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x70;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 function jsonHeaders(extra = {}) {
-  return Object.assign({ 'content-type': 'application/json' }, extra);
+  return Object.assign({ 'content-type': 'application/json', 'X-Request-Id': requestId() }, extra);
 }
 
 function serializeMetrics(metrics) {

@@ -4,7 +4,7 @@ import { Controller, Get } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext, StynxError, SystemContext } from '@stynx-nyx/core';
 import { AuthenticatedI18nApp } from '../support/authenticated-app.js';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { I18nAdminService } from '../../src/i18n-admin.service.js';
 import { LocaleService } from '../../src/locale.service.js';
 

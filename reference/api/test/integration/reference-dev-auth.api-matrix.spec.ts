@@ -2,7 +2,7 @@ import { UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { StynxCoreModule } from '@stynx-nyx/core';
 import { StynxJwtValidator } from '@stynx-nyx/auth';
-import request from 'supertest';
+import request from '../support/request-with-id.js';
 import { z } from 'zod';
 import { ReferenceDevAuthController } from '../../src/sample/reference-dev-auth.controller.js';
 import { ReferenceDevAuthService } from '../../src/sample/reference-dev-auth.service.js';
@@ -116,7 +116,11 @@ describe('ReferenceDevAuthController API error matrix', () => {
         .set('X-Request-Id', 'not-a-uuidv7')
         .expect(400)
         .expect(({ body }) => {
-          expect(body.message).toBe('X-Request-Id must be a valid UUIDv7');
+          expect(body).toEqual({
+            code: 'VALIDATION',
+            messageKey: 'REQUEST_ID_INVALID',
+            requestId: null,
+          });
         });
     });
   });

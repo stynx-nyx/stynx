@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { Client } from 'pg';
 import { StynxDataModule } from '@stynx-nyx/data';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';

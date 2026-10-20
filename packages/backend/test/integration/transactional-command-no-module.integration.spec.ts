@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { Controller, Post, UseGuards } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { StynxCoreModule } from '@stynx-nyx/core';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import * as backend from '../../src/index.js';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';

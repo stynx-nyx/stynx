@@ -38,7 +38,7 @@ import {
   STYNX_SESSION_STORE,
   type StynxSessionSigningKeySet,
 } from '@stynx-nyx/sessions';
-import request from 'supertest';
+import request from '../support/request-with-id.js';
 import {
   createPostgresTestDatabase,
   type PostgresTestDatabase,

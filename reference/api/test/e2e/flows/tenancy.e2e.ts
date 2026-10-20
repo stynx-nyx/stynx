@@ -1,5 +1,5 @@
 import { auditExpect, expectRLSIsolated } from '@stynx-nyx/testing';
-import request from 'supertest';
+import request from '../../support/request-with-id.js';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   closeReferenceApiE2e,

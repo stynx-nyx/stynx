@@ -23,7 +23,7 @@ import {
   type PostgresTestDatabase,
 } from '../../../data/test/support/postgres.js';
 import { map } from 'rxjs';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import * as backend from '../../src/index.js';
 import { AuthContextGuard } from '../../src/auth/auth-context.guard.js';

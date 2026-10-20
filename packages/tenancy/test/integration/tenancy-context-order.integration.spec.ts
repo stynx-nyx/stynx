@@ -5,7 +5,7 @@ import { Test } from '@nestjs/testing';
 import { PublicTenantRoute } from '@stynx-nyx/auth';
 import { RequestContext, StynxCoreModule } from '@stynx-nyx/core';
 import { StynxDataModule } from '@stynx-nyx/data';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 import { StynxTenancyModule } from '../../src/tenancy.module.js';

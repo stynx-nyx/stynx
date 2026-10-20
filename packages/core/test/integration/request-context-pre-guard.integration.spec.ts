@@ -84,15 +84,33 @@ describe('RequestContext before Nest guards', () => {
   });
 
   it('returns the filter 400 body for an invalid middleware request id', async () => {
-    await request(app.getHttpServer())
+    guard.seen = undefined;
+    const response = await request(app.getHttpServer())
       .get('/context/guard')
       .set('x-request-id', 'not-a-uuidv7')
       .expect(400)
-      .expect({
-        message: 'X-Request-Id must be a valid UUIDv7',
-        error: 'Bad Request',
-        statusCode: 400,
-      });
+      .expect({ code: 'VALIDATION', messageKey: 'REQUEST_ID_INVALID', requestId: null });
+    expect(Object.keys(response.body as object).sort()).toEqual(['code', 'messageKey', 'requestId']);
+    expect(response.headers['x-request-id']).toBe(undefined);
+    expect(guard.seen).toBe(undefined);
+  });
+
+  it('rejects a missing request id exactly like an invalid one, before any guard (SM-15)', async () => {
+    guard.seen = undefined;
+    const missing = await request(app.getHttpServer())
+      .post('/context/guard')
+      .set('authorization', 'Bearer not-checked')
+      .expect(400);
+    const invalid = await request(app.getHttpServer())
+      .post('/context/guard')
+      .set('x-request-id', 'not-a-uuidv7')
+      .expect(400);
+
+    expect(missing.body).toEqual({ code: 'VALIDATION', messageKey: 'REQUEST_ID_INVALID', requestId: null });
+    expect(Object.keys(missing.body as object).sort()).toEqual(['code', 'messageKey', 'requestId']);
+    expect(missing.body).toEqual(invalid.body);
+    expect(missing.headers['x-request-id']).toBe(undefined);
+    expect(guard.seen).toBe(undefined);
   });
 
   it('keeps one request id when two transitive modules import core', async () => {

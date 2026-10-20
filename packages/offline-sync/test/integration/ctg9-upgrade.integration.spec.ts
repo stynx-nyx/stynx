@@ -7,7 +7,7 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
 import { realOfflineHttpAuthentication } from '../support/real-http-authentication.js';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { Database, StynxDataModule, StynxPoolRegistry } from '@stynx-nyx/data';
 import { RequestContextMutator, StynxCoreModule } from '@stynx-nyx/core';
 import type { IdempotencyStoredEntry, IdempotencyStore } from '@stynx-nyx/idempotency';

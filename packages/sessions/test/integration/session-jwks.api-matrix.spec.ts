@@ -1,7 +1,7 @@
 import { generateKeyPairSync } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { SessionJwtSigningService } from '../../src/jwt-signing.service.js';
 import { SessionJwksController } from '../../src/jwks.controller.js';
 import { STYNX_SESSIONS_OPTIONS } from '../../src/tokens.js';

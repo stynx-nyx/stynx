@@ -10,7 +10,7 @@ import { STYNX_RESOLVED_TENANT_COMMAND_CONTEXT, type ResolvedTenantCommandContex
 import { Database, StynxDataModule } from '@stynx-nyx/data';
 import { Idempotent, StynxIdempotencyModule } from '@stynx-nyx/idempotency';
 import { StynxTenancyModule } from '@stynx-nyx/tenancy';
-import request from 'supertest';
+import request from '../../../core/test/support/request-with-id.js';
 import { z } from 'zod';
 import { createPostgresTestDatabase, type PostgresTestDatabase } from '../../../data/test/support/postgres.js';
 import { Audit, AuthContextGuard as BuiltinAuthContextGuard, StynxAuthModule, StynxTransactionalCommandModule, TransactionalCommand } from '../../src/index.js';
