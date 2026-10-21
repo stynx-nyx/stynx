@@ -149,15 +149,15 @@ const pgDirectory = '/Applications/Postgres.app/Contents/Versions/18/bin';
 const tools = Object.freeze({
   postgres: [
     join(pgDirectory, 'postgres'),
-    'e5ced2a1cf0375859196ccd15172bcbdf263c6b4fde5a83da93a92d67d63732c',
+    '9c5ba4d92f6392120d0334ae381c19716631bfd8c572d45548ab1b2762b67c8c',
   ],
   initdb: [
     join(pgDirectory, 'initdb'),
-    'd103626d91c90af601aa1e8356b383b983cbac000e3310d6c3e951db54e7337a',
+    '223cd2331ce34070ec87949c602e97f0cb73e384bac7b698bf6006c67e4e8089',
   ],
   psql: [
     join(pgDirectory, 'psql'),
-    '6118e2b9d262ea230c5401382a2ff795c65ae87e99d06418a9a979075cd41591',
+    'f68592cfaff42309867e5368cff2454ad93cf9fc1e68beec06017e883f76b09e',
   ],
   docker: [
     '/opt/homebrew/Cellar/docker/29.7.2/bin/docker',
