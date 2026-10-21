@@ -17,6 +17,7 @@ import {
   STYNX_PERMISSION_CACHE_BACKEND,
   StynxAuthGuard,
   StynxJwtValidator,
+  StynxSessionClaimsResolver,
 } from '@stynx-nyx/auth';
 import { generateRequestId, RequestContextMutator } from '@stynx-nyx/core';
 import { Database, StynxDataModule } from '@stynx-nyx/data';
@@ -27,6 +28,7 @@ import {
   SessionMirrorWriter,
   SessionService,
   STYNX_SESSIONS_OPTIONS,
+  STYNX_SESSION_CLAIMS_RESOLVER,
   STYNX_SESSION_MIRROR,
   STYNX_SESSION_STORE,
 } from '@stynx-nyx/sessions';
@@ -467,6 +469,9 @@ async function main(): Promise<void> {
         { provide: STYNX_SESSION_MIRROR, useClass: SessionMirrorWriter },
         SessionJwtSigningService,
         SessionService,
+        // S-12 (SM-14): tokens carry perms/roles minted at issuance, as StynxAuthModule wires it.
+        StynxSessionClaimsResolver,
+        { provide: STYNX_SESSION_CLAIMS_RESOLVER, useExisting: StynxSessionClaimsResolver },
         StynxJwtValidator,
         PermissionCacheMetrics,
         PermissionQueryService,
