@@ -116,6 +116,35 @@ describe('RequestContextInterceptor', () => {
     }
   });
 
+  it('passes a GET or HEAD probe without X-Request-Id through without a context (D-072)', async () => {
+    for (const extras of [
+      { method: 'GET', originalUrl: '/healthz' },
+      { method: 'HEAD', url: '/readyz?full=1' },
+    ]) {
+      const { context, response } = makeContext({ 'x-request-id': undefined }, extras);
+      const handler = { handle: vi.fn(() => of('probe')) };
+      await run(interceptor.intercept(context, handler));
+      expect(handler.handle).toHaveBeenCalledTimes(1);
+      expect(response.setHeader).not.toHaveBeenCalled();
+    }
+  });
+
+  it('rejects a missing X-Request-Id on non-probe methods and paths (D-072)', () => {
+    for (const extras of [
+      { method: 'POST', originalUrl: '/healthz' },
+      { method: 'GET', originalUrl: '/healthz/deep' },
+      { method: 'GET', originalUrl: '/api/readyz' },
+    ]) {
+      const { context } = makeContext({ 'x-request-id': undefined }, extras);
+      expect(() => interceptor.intercept(context, makeHandler())).toThrow(BadRequestException);
+    }
+  });
+
+  it('holds a probe that sends an invalid X-Request-Id to the UUIDv7 rule (D-072)', () => {
+    const { context } = makeContext({ 'x-request-id': 'not-a-uuid' }, { method: 'GET', originalUrl: '/healthz' });
+    expect(() => interceptor.intercept(context, makeHandler())).toThrow(BadRequestException);
+  });
+
   it('honors a valid X-Request-Id header from the caller', async () => {
     const requestedId = '0190abcd-1234-7abc-89ab-0123456789ab';
     const { context, response } = makeContext({ 'x-request-id': requestedId });
