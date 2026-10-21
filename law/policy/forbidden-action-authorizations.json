@@ -1507,6 +1507,12 @@
       "commit": "c17f4309dc29bc0181ffe46b4017385b34dbec16",
       "authorized_by": "Owner",
       "reason": "Records the Owner's 2026-10-17 blocker-repair authorization to retain this exact historical audit persistence commit. Its 80 prior proof records are semantically unchanged and 53 appended verb-attributed records verify with pinned DEVAI 2.6.2. This is current authorization, not a claim of historical approval: one of 57 referenced artifacts (build reading SR-c79cd9416ed9ef5b) is unavailable, and the historical FAIL scorecard and readiness_promoting=false remain unchanged. No readiness, publication, test, registry or release-range waiver is granted."
+    },
+    {
+      "forbidden_id": "FORBID-DROP-PROD",
+      "commit": "c7dc3651ec800d4e4dccd48e81ed0edb06b55624",
+      "authorized_by": "Owner",
+      "reason": "The Owner authorized this receipt on 2026-10-21 for SM-17. createTestApp drops only the uniquely named local scratch database it created on the supplied DATABASE_URL; it does not target production. Same case as FORBID-DROP-PROD@0018f245."
     }
   ]
 }
