@@ -115,7 +115,8 @@
       "2026-10-19 Architect rebind for SM-16: rebinds packages-web/angular/test/stynx-angular.spec.ts (the two Math.random fallback cases now assert generateClientRequestId refuses without crypto.getRandomValues and never consults Math.random; the web-crypto case asserts no Math.random call; a new case drives the functional requestIdInterceptor, adding a UUIDv7 id and preserving a caller id; provideStynxDefaults no longer registers the RequestIdInterceptor class) and packages-web/angular/test/provider-depth.spec.ts (auth and error DI interceptors still registered, the request-id class is not, and an HttpClient request through provideStynxDefaults carries a UUIDv7 X-Request-Id and the bearer token). Assertions grow 93->96 and 7->11; none is weakened beyond the intended removal of the Math.random fallback.",
       "2026-10-19 Architect rebind for SM-13: rebinds tools/eslint-config/test/rule-families.spec.mjs after the STYNX workspace Nest profile assertion moves stynx/require-idempotent-route-decorator from warn to error (the published level). Assertion count unchanged at 17; no assertion is removed or weakened.",
       "2026-10-19 Architect merge of the wave-2 trace bindings (SM-07/08/10/13/14/15/16/18/19/20, #403-#406) onto the wave-1 candidate; rebinds reference-sse.rls (changed by SM-14 and SM-15).",
-      "2026-10-21 Architect rebind for D-072 (the Owner revisited D-071: GET/HEAD /healthz and /readyz may omit X-Request-Id). Rebinds packages/core/test/integration/request-context-pre-guard.integration.spec.ts (probes without an id are served with no context or echoed header; a probe with an invalid id is still the SM-15 400 and a valid one is echoed; /healthz/deep and POST /healthz without an id stay 400) and packages/core/test/unit/request-context.interceptor.spec.ts (the same exemption and limits in RequestContextInterceptor). Assertions grow 19->33 and 40->44; no assertion is removed or weakened."
+      "2026-10-21 Architect rebind for D-072 (the Owner revisited D-071: GET/HEAD /healthz and /readyz may omit X-Request-Id). Rebinds packages/core/test/integration/request-context-pre-guard.integration.spec.ts (probes without an id are served with no context or echoed header; a probe with an invalid id is still the SM-15 400 and a valid one is echoed; /healthz/deep and POST /healthz without an id stay 400) and packages/core/test/unit/request-context.interceptor.spec.ts (the same exemption and limits in RequestContextInterceptor). Assertions grow 19->33 and 40->44; no assertion is removed or weakened.",
+      "2026-10-21 Architect rebind for D-072 (CI fix): rebinds packages/tenancy/test/unit/tenant-context.interceptor.spec.ts (an id-less /healthz with no request context reaches the handler without creating one; a tenant request without a context still fails with RequestContextMissingError). Assertions grow 42->49; no assertion is removed or weakened."
     ]
   },
   "invariants": [
@@ -4078,8 +4079,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-RBAC-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
-      "assertion_count": 42,
-      "assertion_digest_sha256": "dc84f01409dea7022c3c061c15a4e7106d158585ae0d89c6edeac1364a05bec2"
+      "assertion_count": 49,
+      "assertion_digest_sha256": "dd98f31bffd9450eaf5489f3298e1993d16c3321ea31df95e73956a1a1cd9fcf"
     },
     {
       "path": "packages/tenancy/test/unit/utils.spec.ts",
