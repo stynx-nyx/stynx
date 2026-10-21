@@ -175,11 +175,6 @@ export const HISTORICAL_CITATIONS = [
     path: 'packages-web/*/test/e2e/*.e2e-spec.ts',
     reason: 'migration note about the removal of these specs',
   },
-  {
-    file: 'packages/testing/README.md',
-    path: 'test/integration',
-    reason: 'conventional directory in the consuming application',
-  },
 ];
 
 const BUILD_OUTPUT_HINT = /(^|\/)(node_modules|dist|build|coverage|\.turbo|\.angular)(\/|$)/u;
