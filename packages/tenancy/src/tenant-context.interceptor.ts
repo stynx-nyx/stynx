@@ -11,6 +11,7 @@ import { ModuleRef, Reflector } from '@nestjs/core';
 import {
   generateRequestId,
   RequestContext,
+  RequestContextMissingError,
   RequestContextMutator,
   StynxError,
 } from '@stynx-nyx/core';
@@ -138,7 +139,19 @@ export class TenantContextInterceptor implements NestInterceptor {
             );
             run();
           } else {
-            const snapshot = { ...this.requestContext.snapshot() };
+            let active: ReturnType<RequestContext['snapshot']>;
+            try {
+              active = this.requestContext.snapshot();
+            } catch (error) {
+              // An id-less liveness/readiness probe runs without a request context (D-072);
+              // with nothing to patch there is no context to create either.
+              if (error instanceof RequestContextMissingError && Object.keys(patch).length === 0) {
+                run();
+                return;
+              }
+              throw error;
+            }
+            const snapshot = { ...active };
             if (publicTenant) delete snapshot.sessionId;
             const { sessionId: nextSessionId, ...contextPatch } = patch;
             this.requestContextMutator.runWithRequestContext(
