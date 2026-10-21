@@ -34,9 +34,27 @@ class ContextBeforeInterceptorController {
   }
 }
 
+@Controller()
+class ProbeController {
+  @Get('/healthz')
+  liveness() {
+    return { status: 'ok' };
+  }
+
+  @Get('/readyz')
+  readiness() {
+    return { status: 'ready' };
+  }
+
+  @Get('/healthz/deep')
+  deep() {
+    return { status: 'deep' };
+  }
+}
+
 @Module({
   imports: [StynxCoreModule.forRoot({ appName: 'pre-guard-context', schema: z.object({}) })],
-  controllers: [ContextBeforeInterceptorController],
+  controllers: [ContextBeforeInterceptorController, ProbeController],
   providers: [PreInterceptorContextGuard],
 })
 class PreGuardContextModule {}
@@ -111,6 +129,42 @@ describe('RequestContext before Nest guards', () => {
     expect(missing.body).toEqual(invalid.body);
     expect(missing.headers['x-request-id']).toBe(undefined);
     expect(guard.seen).toBe(undefined);
+  });
+
+  it('serves /healthz and /readyz probes without a request id or context (D-072)', async () => {
+    const live = await request(app.getHttpServer()).get('/healthz').expect(200).expect({ status: 'ok' });
+    const ready = await request(app.getHttpServer())
+      .get('/readyz?full=1')
+      .expect(200)
+      .expect({ status: 'ready' });
+    await request(app.getHttpServer()).head('/healthz').expect(200);
+
+    expect(live.headers['x-request-id']).toBe(undefined);
+    expect(ready.headers['x-request-id']).toBe(undefined);
+  });
+
+  it('still holds a probe that sends an id to the UUIDv7 rule (D-072)', async () => {
+    await request(app.getHttpServer())
+      .get('/healthz')
+      .set('x-request-id', 'not-a-uuidv7')
+      .expect(400)
+      .expect({ code: 'VALIDATION', messageKey: 'REQUEST_ID_INVALID', requestId: null });
+    await request(app.getHttpServer())
+      .get('/readyz')
+      .set('x-request-id', REQUEST_ID)
+      .expect(200)
+      .expect('x-request-id', REQUEST_ID);
+  });
+
+  it('rejects a missing request id on any path other than the exact probes (D-072)', async () => {
+    await request(app.getHttpServer())
+      .get('/healthz/deep')
+      .expect(400)
+      .expect({ code: 'VALIDATION', messageKey: 'REQUEST_ID_INVALID', requestId: null });
+    await request(app.getHttpServer())
+      .post('/healthz')
+      .expect(400)
+      .expect({ code: 'VALIDATION', messageKey: 'REQUEST_ID_INVALID', requestId: null });
   });
 
   it('keeps one request id when two transitive modules import core', async () => {
