@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable, type Subscription } from 'rxjs';
 import { normalizeRequestId } from './request-id.js';
-import { requestIdRejection } from './request-id-rejection.js';
+import { isProbeRequest, requestIdRejection } from './request-id-rejection.js';
 import type { RequestContextState } from './request-context.js';
 import { RequestContextMutator } from './request-context.js';
 
@@ -34,6 +34,9 @@ interface ResponseLike {
 
 interface RequestLike {
   headers: Record<string, unknown>;
+  method?: string;
+  originalUrl?: string;
+  url?: string;
   tenantId?: string;
   verifiedSessionId?: string;
   principal?: { id?: string };
@@ -66,6 +69,9 @@ export class RequestContextInterceptor implements NestInterceptor {
       return next.handle();
     }
     const requestedId = extractHeader(request.headers['x-request-id']);
+    if (requestedId === undefined && isProbeRequest(request)) {
+      return next.handle();
+    }
     const requestId = requestedId ? normalizeRequestId(requestedId) : undefined;
 
     if (!requestId) {
