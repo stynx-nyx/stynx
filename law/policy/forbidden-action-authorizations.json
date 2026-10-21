@@ -1513,6 +1513,12 @@
       "commit": "c7dc3651ec800d4e4dccd48e81ed0edb06b55624",
       "authorized_by": "Owner",
       "reason": "The Owner authorized this receipt on 2026-10-21 for SM-17. createTestApp drops only the uniquely named local scratch database it created on the supplied DATABASE_URL; it does not target production. Same case as FORBID-DROP-PROD@0018f245."
+    },
+    {
+      "forbidden_id": "FORBID-DROP-PROD",
+      "commit": "44cb3cf56764371488ce4b29e2725fd3c1f2b3e9",
+      "authorized_by": "Owner",
+      "reason": "The Owner authorized this receipt on 2026-10-21 for SM-17 as landed on stynx-v3-wave-1 (the linear-history cherry-pick of c7dc3651). createTestApp drops only the uniquely named local scratch database it created on the supplied DATABASE_URL; it does not target production. Same case as FORBID-DROP-PROD@0018f245."
     }
   ]
 }
