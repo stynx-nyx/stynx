@@ -16,3 +16,24 @@ export function requestIdRejection(): BadRequestException {
     requestId: null,
   });
 }
+
+const PROBE_PATH = /^\/(?:healthz|readyz)(?:\?|$)/u;
+
+interface ProbeRequestLike {
+  method?: string;
+  originalUrl?: string;
+  url?: string;
+}
+
+/**
+ * Whether the request is a liveness or readiness probe (`GET`/`HEAD` on
+ * `/healthz` or `/readyz`). Orchestrators and load balancers send these without
+ * a client id, so a probe without `X-Request-Id` is served without a request
+ * context instead of rejected (D-072); a probe that sends one is still held to
+ * the UUIDv7 rule.
+ */
+export function isProbeRequest(request: ProbeRequestLike): boolean {
+  const method = request.method?.toUpperCase();
+  if (method !== 'GET' && method !== 'HEAD') return false;
+  return PROBE_PATH.test(request.originalUrl ?? request.url ?? '');
+}

@@ -99,10 +99,10 @@ That's the minimum. `StynxCoreModule` registers the request-context interceptor 
 
 ### Classes
 
-| Export                      | Description                                                                                                                                                                               |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `StynxErrorFilter`          | Global `ExceptionFilter` registered automatically. Transforms thrown `StynxError` subclasses into the canonical error envelope; non-Stynx errors are wrapped with a generic 500 envelope. |
-| `RequestContextInterceptor` | Global `NestInterceptor` registered automatically. Wraps every request in a CLS frame with the caller's UUIDv7 `requestId`; a missing or invalid `X-Request-Id` is a 400 `VALIDATION`.    |
+| Export                      | Description                                                                                                                                                                                                                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `StynxErrorFilter`          | Global `ExceptionFilter` registered automatically. Transforms thrown `StynxError` subclasses into the canonical error envelope; non-Stynx errors are wrapped with a generic 500 envelope.                                                                               |
+| `RequestContextInterceptor` | Global `NestInterceptor` registered automatically. Wraps every request in a CLS frame with the caller's UUIDv7 `requestId`; a missing or invalid `X-Request-Id` is a 400 `VALIDATION`, except that a `GET`/`HEAD` probe on `/healthz` or `/readyz` may omit it (D-072). |
 
 ### Errors (all extend `StynxError`)
 

@@ -8,7 +8,7 @@ import {
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClsModule, ClsService } from 'nestjs-cls';
 import { normalizeRequestId } from './request-id.js';
-import { requestIdRejection } from './request-id-rejection.js';
+import { isProbeRequest, requestIdRejection } from './request-id-rejection.js';
 import type { CoreClsStore } from './request-context.js';
 import type { ZodTypeAny } from 'zod';
 import {
@@ -41,12 +41,19 @@ const STYNX_CLS_MODULE = ClsModule.forRoot({
       cls: ClsService<CoreClsStore>,
       request: {
         headers: Record<string, unknown>;
+        method?: string;
+        originalUrl?: string;
+        url?: string;
         res?: { setHeader(name: string, value: string): void };
       },
     ) => {
       // A missing id is rejected exactly like an invalid one, before any guard
       // (authentication included) runs; no id is ever synthesised (SM-15).
-      const requestId = normalizeRequestId(request.headers['x-request-id']);
+      // Only a liveness/readiness probe may omit it, and then runs without a
+      // request context (D-072).
+      const rawRequestId = request.headers['x-request-id'];
+      if (rawRequestId === undefined && isProbeRequest(request)) return;
+      const requestId = normalizeRequestId(rawRequestId);
       if (!requestId) throw requestIdRejection();
       const rawLocale = request.headers['accept-language'];
       const locale = typeof rawLocale === 'string' ? rawLocale.split(',')[0]?.trim() : undefined;
