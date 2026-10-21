@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
-import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
+import { RequestContext, RequestContextMissingError, RequestContextMutator } from '@stynx-nyx/core';
 import { IndependentTransactionConnectionError } from '@stynx-nyx/data';
 import { TenantContextInterceptor } from '../../src/tenant-context.interceptor.js';
 import { MembershipAccessCache } from '../../src/membership-cache.js';
@@ -76,8 +76,61 @@ describe('TenantContextInterceptor', () => {
       } as never,
     );
 
-    return { interceptor, txQuery, database, membershipCache, requestContextMutator };
+    return { interceptor, txQuery, database, membershipCache, requestContext, requestContextMutator };
   }
+
+  it('runs an id-less probe without creating a request context (D-072)', async () => {
+    const { interceptor, requestContext, requestContextMutator } = createInterceptor({ cached: true });
+    vi.mocked(requestContext.snapshot).mockImplementation(() => {
+      throw new RequestContextMissingError();
+    });
+    const next: CallHandler = {
+      handle: vi.fn(() => ({
+        subscribe: vi.fn((observer) => {
+          observer.next('ok');
+          observer.complete();
+          return { unsubscribe: vi.fn() };
+        }),
+      })),
+    };
+    const received: unknown[] = [];
+    const errors: unknown[] = [];
+
+    interceptor
+      .intercept(createExecutionContext({ headers: {}, originalUrl: '/healthz' }), next)
+      .subscribe({ next: (value) => received.push(value), error: (error) => errors.push(error) });
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(errors).toEqual([]);
+    expect(received).toEqual(['ok']);
+    expect(next.handle).toHaveBeenCalledTimes(1);
+    expect(requestContextMutator.runWithRequestContext).not.toHaveBeenCalled();
+  });
+
+  it('still fails a tenant request that arrives without a request context (D-072)', async () => {
+    const { interceptor, requestContext } = createInterceptor({ cached: true });
+    vi.mocked(requestContext.snapshot).mockImplementation(() => {
+      throw new RequestContextMissingError();
+    });
+    const next: CallHandler = { handle: vi.fn(() => ({ subscribe: vi.fn() })) };
+    const errors: unknown[] = [];
+
+    interceptor
+      .intercept(
+        createExecutionContext({
+          headers: { 'x-tenant-id': TENANT_ID },
+          originalUrl: '/records',
+          principal: { id: ACTOR_ID },
+        }),
+        next,
+      )
+      .subscribe({ error: (error) => errors.push(error) });
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toBeInstanceOf(RequestContextMissingError);
+    expect(next.handle).not.toHaveBeenCalled();
+  });
 
   it('skips optional paths without hitting the database', async () => {
     const { interceptor, txQuery } = createInterceptor();
