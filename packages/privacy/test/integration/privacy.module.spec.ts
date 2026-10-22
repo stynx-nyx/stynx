@@ -16,6 +16,7 @@ import { PrivacyService } from '../../src/privacy.service.js';
 import { StynxPrivacyModule } from '../../src/privacy.module.js';
 import type { PrivacyCognitoAdmin, PrivacyObjectStore } from '../../src/types.js';
 import { createHmac } from 'node:crypto';
+import { GenericContainer, Wait, type StartedTestContainer } from 'testcontainers';
 import request from '../../../core/test/support/request-with-id.js';
 import {
   AuthenticatedPrivacyApp,
@@ -55,6 +56,27 @@ class CapturingCognitoAdmin implements PrivacyCognitoAdmin {
 }
 
 describe('StynxPrivacyModule integration', () => {
+  // @stynx-nyx/testing starts no database (SM-17, D-071): createTestApp reads
+  // DATABASE_URL. test:int supplies one; the coverage census (release:prepare)
+  // runs this suite without it, so the suite supplies a throwaway server then.
+  let suppliedDatabase: StartedTestContainer | undefined;
+
+  beforeAll(async () => {
+    if (process.env.DATABASE_URL?.trim()) return;
+    suppliedDatabase = await new GenericContainer('postgres:16-alpine')
+      .withEnvironment({ POSTGRES_PASSWORD: 'postgres' })
+      .withExposedPorts(5432)
+      .withWaitStrategy(Wait.forLogMessage(/database system is ready to accept connections/u, 2))
+      .start();
+    process.env.DATABASE_URL = `postgresql://postgres:postgres@${suppliedDatabase.getHost()}:${suppliedDatabase.getMappedPort(5432)}/postgres`;
+  }, 120_000);
+
+  afterAll(async () => {
+    if (!suppliedDatabase) return;
+    delete process.env.DATABASE_URL;
+    await suppliedDatabase.stop();
+  });
+
   // Timeout raised from 60s: the full `pnpm test` run executes every
   // package's suite concurrently (turbo) against one shared Postgres, and
   // this test pays fresh-database + full platform-migration setup under

@@ -134,6 +134,7 @@ describe('RequestContextInterceptor', () => {
       { method: 'POST', originalUrl: '/healthz' },
       { method: 'GET', originalUrl: '/healthz/deep' },
       { method: 'GET', originalUrl: '/api/readyz' },
+      { method: 'GET' },
     ]) {
       const { context } = makeContext({ 'x-request-id': undefined }, extras);
       expect(() => interceptor.intercept(context, makeHandler())).toThrow(BadRequestException);
