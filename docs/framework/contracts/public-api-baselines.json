@@ -871,6 +871,23 @@
         "data/src/types.d.ts": "326274c51ef59b1aeb5feb658d518102e26694bf92fd4cdc540c0ed39816c59f"
       }
     },
+    "@stynx-nyx/eslint-config": {
+      "exports": {
+        ".": "./index.mjs",
+        "./test": "./test.mjs"
+      },
+      "declarationHashes": {
+        "angular.mjs": "c575cdebc9c6f9fe609dc731c2b1097a6118dbafc32ea1dbac68c0f5561b9b7a",
+        "import-resolver.mjs": "a17e78977c9b27c05df457b0973fbe218ea37bbffc3ed3583ed9ce1b229e5ac6",
+        "index.mjs": "8b2a510393da51cf283e73c0da563cd0ab884deaca2656cfb930835e7a5f1461",
+        "lib.mjs": "a129fd821b93f61d4cbf66b1204292b7b11cfeb201ac72a19089d6f36bf7a42f",
+        "nest.mjs": "cae9ea26a7186e739ed622fae70eb138da31c1ddac9d138d602c35ecc889cc5a",
+        "plugin.mjs": "4c86950ff93953cce4cb3151c096bd6950ab20050ed9f80c7db8fdc0559dc223",
+        "scripts.mjs": "172faf7c68e3d516476d2528f28ba2cb22ada63710a01423afc3d3f8f73e901e",
+        "test.mjs": "d94ee748c527b66a19deae5f3b4fe183fa6eebece42a8c6315360a38ec1a75c4",
+        "workspace.mjs": "555f32ea328edee0ca6083c7489f156b2ad15827c839250244cf546e4b331dee"
+      }
+    },
     "@stynx-nyx/feature-flags": {
       "exports": {
         ".": {
@@ -1466,6 +1483,27 @@
         "logging/src/pino.factory.d.ts": "f013db50f87fa8a9ced3a5863aab99c4f10ad507d7279639134345b78940e574",
         "logging/src/request-logging.middleware.d.ts": "7dcf1569d7d8b3b590e0ae3fa9b3725ce94d529ac5a08bae19fb3e40570bffb4",
         "logging/src/tokens.d.ts": "c81aef3c22eaf07eae105869de47a10c17dbec08f5ee6e019d40960a755c1c6d"
+      }
+    },
+    "@stynx-nyx/migration-linter": {
+      "exports": {
+        ".": {
+          "types": "./dist/src/index.d.ts",
+          "default": "./dist/src/index.js"
+        },
+        "./package.json": "./package.json"
+      },
+      "declarationHashes": {
+        "src/cli.d.ts": "6f77e82bfb5dd3b1015dd92c63e427d505f9bbbdaa041cad6c704f41c553a536",
+        "src/context-rules.d.ts": "9c3f2aeb120b6f1b529c4064decdc75993dfc2349ba52dd72f6baeeb62a57aec",
+        "src/destructive.d.ts": "ac86dda2edd8e587256f082bc255304ec7af245d3917433b4b58f070890ea499",
+        "src/index.d.ts": "1a837ff7a1d30c3073bc15bb0331985ac9bc8d67c00028843c71718839ca8017",
+        "src/lint.d.ts": "9af6f986981d300c2d299dd765c0a6740d82fe11a541262047ab8b8f27cda865",
+        "src/parser.d.ts": "c7546fbbc37629e5c32cb5aa8639626192d8cc2f53d6e7b11ccebecde10affd9",
+        "src/sql.d.ts": "28fe7a8bc441265fddcd3517cbdc7284f39f215701d583ca2ccbb1f49c7d3426",
+        "src/types.d.ts": "1e24c94441e9953a1c107c38722a27470629749c95eb5e4d2e4b73bb43e070f9",
+        "test/context-rules.spec.d.ts": "015569dabfc76a5f059ee4962dd68fe25cc914ecaa45bd605bf3a7966ef1d9da",
+        "test/migration-linter.spec.d.ts": "e2d60cc2b69d541dcc7656a7db83b958eedbec68e15c8dfca38cc62f28de67c7"
       }
     },
     "@stynx-nyx/mobile-runtime": {
@@ -2787,6 +2825,15 @@
         "testing/src/roles.d.ts": "707a9e709ffe4ddfa2dff4c26fa85210af2810ae4ade3eeb5802d3ba423da217",
         "testing/src/runtime.d.ts": "b27d2360162b635a5386b7323b11982ccf6a529082388b6de3f7d22656b21512",
         "testing/src/types.d.ts": "9c72df48f7befa3662208f1dda4f07865016ddbaa2d4670c340f5d818710290d"
+      }
+    },
+    "@stynx-nyx/tsconfig": {
+      "exports": {},
+      "declarationHashes": {
+        "angular18.json": "683d4d3d0b368e4d87d4353f2ca3449a290e90ebb9687df6bb0938606a24f865",
+        "base.json": "3b9eb9c8a84c568c131c35ccb6f8d73cf33f8dc528553a7555b2ab0a8f837911",
+        "lib.json": "905db02aad8596dcffbd740fbf1032ca788c9fb46318aa8a20e1e1985a976048",
+        "node24.json": "24155fa78dc7aae3d2a902c7bee21e0daa8fe461d55e40eb18c646ae2991c485"
       }
     },
     "@stynx-nyx/worklist": {
