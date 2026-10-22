@@ -26,6 +26,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "test:coverage": "pnpm run build && node ../../scripts/node-test-coverage.mjs dist/test/migration-linter.spec.js dist/test/context-rules.spec.js",
     "build": "tsc -p tsconfig.json",
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",

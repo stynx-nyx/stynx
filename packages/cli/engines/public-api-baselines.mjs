@@ -68,6 +68,9 @@ export function discoverPackages(root, packageRoots) {
 
 function packageBaseline(root, spec) {
   const manifest = JSON.parse(readFileSync(resolve(root, spec.dir, 'package.json'), 'utf8'));
+  // Unbuilt config packages (tsconfig presets, ESLint profiles) publish their
+  // sources as-is; their baseline is the bytes of each published preset.
+  if (typeof manifest.scripts?.build !== 'string') return sourceBaseline(root, spec, manifest);
   const distDir = resolve(root, spec.dir, 'dist');
   const declarationFiles = walk(distDir)
     .filter((file) => file.endsWith('.d.ts'))
@@ -95,6 +98,32 @@ function packageBaseline(root, spec) {
   return {
     exports: manifest.exports ?? {},
     declarationHashes,
+  };
+}
+
+function sourceBaseline(root, spec, manifest) {
+  const packageDir = resolve(root, spec.dir);
+  const presetFiles = readdirSync(packageDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /\.(?:mjs|json)$/u.test(entry.name))
+    .map((entry) => entry.name)
+    .filter((name) => name !== 'package.json')
+    .sort((left, right) => left.localeCompare(right));
+  if (presetFiles.length === 0) {
+    const error = new Error(`${spec.name}: unbuilt package publishes no preset files`);
+    error.code = 'declarations-missing';
+    error.locator = `${spec.dir}/package.json:1`;
+    throw error;
+  }
+  return {
+    exports: manifest.exports ?? {},
+    declarationHashes: Object.fromEntries(
+      presetFiles.map((name) => [
+        name,
+        createHash('sha256')
+          .update(readFileSync(join(packageDir, name)))
+          .digest('hex'),
+      ]),
+    ),
   };
 }
 

@@ -6,7 +6,14 @@ import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
 
 const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const metrics = ['branches', 'functions', 'lines', 'statements'];
-const packages = discoverPublishablePackages(repoRoot);
+// ADR-RELEASE-0006: @stynx-nyx/tsconfig publishes JSON presets only; it has no
+// executable population, so it is named here instead of measured.
+const configOnlyPackages = new Set(['@stynx-nyx/tsconfig']);
+const discovered = discoverPublishablePackages(repoRoot);
+const packages = discovered.filter(({ name }) => !configOnlyPackages.has(name));
+const exempt = discovered
+  .filter(({ name }) => configOnlyPackages.has(name))
+  .map(({ name }) => name);
 const results = [];
 const failures = [];
 const collectExisting = process.argv.includes('--collect-existing');
@@ -81,7 +88,7 @@ if (results.length !== packages.length) {
 }
 writeFileSync(
   outputPath,
-  `${JSON.stringify({ packageCount: packages.length, results, failures }, null, 2)}\n`,
+  `${JSON.stringify({ packageCount: packages.length, exempt, results, failures }, null, 2)}\n`,
 );
 if (failures.length > 0) throw new Error(`Coverage verification failed:\n${failures.join('\n')}`);
 process.stdout.write(`Coverage verified for ${packages.length} publishable packages.\n`);
