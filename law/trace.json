@@ -116,7 +116,8 @@
       "2026-10-19 Architect rebind for SM-13: rebinds tools/eslint-config/test/rule-families.spec.mjs after the STYNX workspace Nest profile assertion moves stynx/require-idempotent-route-decorator from warn to error (the published level). Assertion count unchanged at 17; no assertion is removed or weakened.",
       "2026-10-19 Architect merge of the wave-2 trace bindings (SM-07/08/10/13/14/15/16/18/19/20, #403-#406) onto the wave-1 candidate; rebinds reference-sse.rls (changed by SM-14 and SM-15).",
       "2026-10-21 Architect rebind for D-072 (the Owner revisited D-071: GET/HEAD /healthz and /readyz may omit X-Request-Id). Rebinds packages/core/test/integration/request-context-pre-guard.integration.spec.ts (probes without an id are served with no context or echoed header; a probe with an invalid id is still the SM-15 400 and a valid one is echoed; /healthz/deep and POST /healthz without an id stay 400) and packages/core/test/unit/request-context.interceptor.spec.ts (the same exemption and limits in RequestContextInterceptor). Assertions grow 19->33 and 40->44; no assertion is removed or weakened.",
-      "2026-10-21 Architect rebind for D-072 (CI fix): rebinds packages/tenancy/test/unit/tenant-context.interceptor.spec.ts (an id-less /healthz with no request context reaches the handler without creating one; a tenant request without a context still fails with RequestContextMissingError). Assertions grow 42->49; no assertion is removed or weakened."
+      "2026-10-21 Architect rebind for D-072 (CI fix): rebinds packages/tenancy/test/unit/tenant-context.interceptor.spec.ts (an id-less /healthz with no request context reaches the handler without creating one; a tenant request without a context still fails with RequestContextMissingError). Assertions grow 42->49; no assertion is removed or weakened.",
+      "2026-10-21 Architect binding for the release coverage census: binds packages/cli/test/check-reports.spec.ts (69), cli-checks.spec.ts (20) and check-engines-location.spec.ts (1), which drive every SM-07 report path in src/checks.ts and the six check commands in src/cli.ts (INV-CORE-001, like check-entry-points.spec.ts); rebinds packages/core/test/unit/request-context.interceptor.spec.ts (D-072 empty-URL case, 44) and packages/privacy/test/integration/privacy.module.spec.ts (supplies a throwaway Postgres only when no DATABASE_URL is given, SM-17; 182). No assertion is removed or weakened."
     ]
   },
   "invariants": [
@@ -3020,7 +3021,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-TENANCY-001"],
       "lifecycle": "supported",
       "assertion_count": 44,
-      "assertion_digest_sha256": "16d978d1e355982746bf10f68759d875ad4ecb0ac7f18ce28bba546c38fbfa68"
+      "assertion_digest_sha256": "e2f698c6b3f8c457800e6143a0660865ae9a72ca68f6b977714102d43a0398a0"
     },
     {
       "path": "packages/core/test/unit/request-context.spec.ts",
@@ -3752,7 +3753,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
       "assertion_count": 182,
-      "assertion_digest_sha256": "2055b10013e06374946390cd074660374bf15d8ee27fa2a5dfb612f7101c8331"
+      "assertion_digest_sha256": "bbf7d3b4045f8881fbf91fa01a085afe14d32fb57ab4a97601fe5fd412811092"
     },
     {
       "path": "packages/privacy/test/unit/privacy-runtime.spec.ts",
@@ -7489,6 +7490,30 @@
       "lifecycle": "supported",
       "assertion_count": 20,
       "assertion_digest_sha256": "b9bb2918a8f14771cf1636a6ef0feb12c31a039902974b4a2b1bf4d852d7e2f5"
+    },
+    {
+      "path": "packages/cli/test/check-engines-location.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 1,
+      "assertion_digest_sha256": "355994907a2e24c6d8bf9677a500ef407100164e10e0eec57105297f0b86a01a"
+    },
+    {
+      "path": "packages/cli/test/check-reports.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 69,
+      "assertion_digest_sha256": "5b76fe86921aa7fbdd79fcd6f2397505e13c1d94bd1297c6568f6f8371c43dbe"
+    },
+    {
+      "path": "packages/cli/test/cli-checks.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 20,
+      "assertion_digest_sha256": "b257421c312ba27d052561285c6d5f5f304d27a83f82f933239c4884f05e3070"
     },
     {
       "path": "packages-web/sdk/test/codegen-check.spec.ts",
