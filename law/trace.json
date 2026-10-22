@@ -7505,7 +7505,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 69,
-      "assertion_digest_sha256": "5b76fe86921aa7fbdd79fcd6f2397505e13c1d94bd1297c6568f6f8371c43dbe"
+      "assertion_digest_sha256": "3e87be25b81105fe5f9ddd4e5d28ae9006d1c3486dd8d0a5186d3d28144bbcf6"
     },
     {
       "path": "packages/cli/test/cli-checks.spec.ts",
