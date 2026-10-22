@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
 
-const packageRoots = ['packages', 'packages-web'];
+const packageRoots = ['packages', 'packages-web', 'tools'];
 const publicScope = '@stynx-nyx/';
 
 export function discoverPublishablePackages(repoRoot) {
