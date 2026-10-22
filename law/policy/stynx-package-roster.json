@@ -1,14 +1,14 @@
 {
   "schemaVersion": "1.0.0",
   "policy_id": "stynx.package-roster",
-  "policy_version": "1.0.0",
+  "policy_version": "1.1.0",
   "authority": "Architect",
   "description": "Candidate-independent STYNX package roster. Extracted from the retired release-campaign-1.1.1 policy so the product package census survives the DEVAI adoption migration. Counts are product truth, not release authority.",
   "counts": {
-    "publishable": 44,
+    "publishable": 47,
     "existing_private": 44,
     "mutation": 38,
-    "approved_first_publications": 0
+    "approved_first_publications": 3
   },
   "publishable_packages": [
     "@stynx-nyx/angular",
@@ -30,6 +30,7 @@
     "@stynx-nyx/contracts",
     "@stynx-nyx/core",
     "@stynx-nyx/data",
+    "@stynx-nyx/eslint-config",
     "@stynx-nyx/feature-flags",
     "@stynx-nyx/flow",
     "@stynx-nyx/health",
@@ -38,6 +39,7 @@
     "@stynx-nyx/integration-adapter",
     "@stynx-nyx/jobs",
     "@stynx-nyx/logging",
+    "@stynx-nyx/migration-linter",
     "@stynx-nyx/mobile-runtime",
     "@stynx-nyx/notifications",
     "@stynx-nyx/offline-sync",
@@ -54,6 +56,7 @@
     "@stynx-nyx/storage",
     "@stynx-nyx/tenancy",
     "@stynx-nyx/testing",
+    "@stynx-nyx/tsconfig",
     "@stynx-nyx/worklist"
   ],
   "existing_private_packages": [
@@ -142,5 +145,9 @@
     "@stynx-nyx/testing",
     "@stynx-nyx/worklist"
   ],
-  "approved_first_publications": []
+  "approved_first_publications": [
+    "@stynx-nyx/eslint-config",
+    "@stynx-nyx/migration-linter",
+    "@stynx-nyx/tsconfig"
+  ]
 }

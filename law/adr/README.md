@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-RELEASE-0006 — STYNX 3.0.0 SM-21 fixed-group release and exact publication scope](2026-10-22-stynx-3.0.0-sm-21-release.md)
+
 - [ADR-RELEASE-0005 — STYNX 1.6.2 audit tranche and exact publication scope](2026-10-13-patch-1.6.2-audit-tranche.md)
 
 - [Supported task-bound scorecard readings and complete individual collection](2026-10-12-supported-scorecard-task-collection.md)

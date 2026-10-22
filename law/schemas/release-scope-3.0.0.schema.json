@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stynx.dev/schemas/release-scope-3.0.0.schema.json",
+  "title": "Exact prospective STYNX 3.0.0 bounded publication scope",
+  "description": "Owner-authorized one-version publication scope; omitted measurements never become passing audit or performance evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policy_id",
+    "policy_version",
+    "authority",
+    "ownerMandate",
+    "releaseUnit",
+    "version",
+    "packageRoster",
+    "rc",
+    "omitted",
+    "audit",
+    "productionProviderApprovalClaimed",
+    "consumerAcceptanceRequiredForPublication"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "policy_id": {
+      "const": "stynx.release-scope.3.0.0"
+    },
+    "policy_version": {
+      "const": "1.0.0"
+    },
+    "authority": {
+      "const": "Architect"
+    },
+    "ownerMandate": {
+      "const": "2026-10-22 STYNX 3.0.0 SM-21 fixed-group release of the 47-package roster with three first publications; no k6 or mutation execution"
+    },
+    "releaseUnit": {
+      "const": "stynx-workspace"
+    },
+    "version": {
+      "const": "3.0.0"
+    },
+    "packageRoster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "count"],
+      "properties": {
+        "path": {
+          "const": "law/policy/stynx-package-roster.json"
+        },
+        "sha256": {
+          "const": "0c8dcb55e64354311359931b374659651b7e16e82984902a0da371d3cfe6b234"
+        },
+        "count": {
+          "const": 47
+        }
+      }
+    },
+    "rc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "requiredCheck", "binding", "requiredNodes"],
+      "properties": {
+        "profile": {
+          "const": "rc"
+        },
+        "requiredCheck": {
+          "const": "verified-local-rc"
+        },
+        "binding": {
+          "const": "exact-tree"
+        },
+        "requiredNodes": {
+          "const": [
+            "engines",
+            "api:contracts",
+            "lint:families",
+            "typecheck",
+            "test:unit",
+            "test:integration",
+            "build",
+            "reference:apps",
+            "db:rls",
+            "test:e2e",
+            "docs",
+            "test:performance",
+            "security",
+            "doctor",
+            "release:prepare"
+          ]
+        }
+      }
+    },
+    "omitted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["httpPerformance", "k6", "mutation"],
+      "properties": {
+        "httpPerformance": {
+          "const": "NOT_OBSERVED"
+        },
+        "k6": {
+          "const": "NOT_OBSERVED"
+        },
+        "mutation": {
+          "const": "NOT_RUN"
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiredOverallPass", "readinessPromoting", "preserveHistorical"],
+      "properties": {
+        "requiredOverallPass": {
+          "const": false
+        },
+        "readinessPromoting": {
+          "const": false
+        },
+        "preserveHistorical": {
+          "const": true
+        }
+      }
+    },
+    "productionProviderApprovalClaimed": {
+      "const": false
+    },
+    "consumerAcceptanceRequiredForPublication": {
+      "const": false
+    }
+  }
+}
