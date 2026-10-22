@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/migration-linter",
-  "version": "0.2.0",
+  "version": "1.6.2",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "type": "module",
