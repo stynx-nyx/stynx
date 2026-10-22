@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.0.0",
+  "policy_id": "stynx.release-scope.3.0.0",
+  "policy_version": "1.0.0",
+  "authority": "Architect",
+  "ownerMandate": "2026-10-22 STYNX 3.0.0 SM-21 fixed-group release of the 47-package roster with three first publications; no k6 or mutation execution",
+  "releaseUnit": "stynx-workspace",
+  "version": "3.0.0",
+  "packageRoster": {
+    "path": "law/policy/stynx-package-roster.json",
+    "sha256": "0c8dcb55e64354311359931b374659651b7e16e82984902a0da371d3cfe6b234",
+    "count": 47
+  },
+  "rc": {
+    "profile": "rc",
+    "requiredCheck": "verified-local-rc",
+    "binding": "exact-tree",
+    "requiredNodes": [
+      "engines",
+      "api:contracts",
+      "lint:families",
+      "typecheck",
+      "test:unit",
+      "test:integration",
+      "build",
+      "reference:apps",
+      "db:rls",
+      "test:e2e",
+      "docs",
+      "test:performance",
+      "security",
+      "doctor",
+      "release:prepare"
+    ]
+  },
+  "omitted": {
+    "httpPerformance": "NOT_OBSERVED",
+    "k6": "NOT_OBSERVED",
+    "mutation": "NOT_RUN"
+  },
+  "audit": {
+    "requiredOverallPass": false,
+    "readinessPromoting": false,
+    "preserveHistorical": true
+  },
+  "productionProviderApprovalClaimed": false,
+  "consumerAcceptanceRequiredForPublication": false
+}

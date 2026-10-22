@@ -53,3 +53,9 @@ neither schema validity nor audit greenness establishes publication success.
 patch under ADR-RELEASE-0005. It retains the fifteen-node signed RC and
 non-promoting standing without running k6 or mutation tests. Its exact
 descriptor and schema identities must be independently rebound before use.
+
+`release-scope-3.0.0.schema.json` validates the SM-21 major release under
+ADR-RELEASE-0006: the 47-package roster with three first publications. It
+retains the fifteen-node signed RC and non-promoting standing without running
+k6 or mutation tests. Its exact descriptor and schema identities must be
+independently rebound before use.
