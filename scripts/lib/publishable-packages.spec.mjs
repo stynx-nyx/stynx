@@ -10,6 +10,7 @@ function workspaceFixture() {
   const workspace = mkdtempSync(join(tmpdir(), 'stynx-publishable-packages-'));
   mkdirSync(join(workspace, 'packages'), { recursive: true });
   mkdirSync(join(workspace, 'packages-web'), { recursive: true });
+  mkdirSync(join(workspace, 'tools'), { recursive: true });
   return workspace;
 }
 
@@ -24,6 +25,8 @@ test('discovers the complete public roster deterministically and skips private p
   try {
     writeManifest(workspace, 'packages', 'zeta', { name: '@stynx-nyx/zeta' });
     writeManifest(workspace, 'packages-web', 'alpha', { name: '@stynx-nyx/alpha' });
+    writeManifest(workspace, 'tools', 'tsconfig', { name: '@stynx-nyx/tsconfig' });
+    writeManifest(workspace, 'tools', 'braces', { name: 'braces', private: true });
     writeManifest(workspace, 'packages', 'internal', {
       name: '@stynx-nyx/internal',
       private: true,
@@ -33,6 +36,7 @@ test('discovers the complete public roster deterministically and skips private p
       discoverPublishablePackages(workspace).map(({ name, dir }) => ({ name, dir })),
       [
         { name: '@stynx-nyx/alpha', dir: 'packages-web/alpha' },
+        { name: '@stynx-nyx/tsconfig', dir: 'tools/tsconfig' },
         { name: '@stynx-nyx/zeta', dir: 'packages/zeta' },
       ],
     );

@@ -126,6 +126,7 @@ test('canonical version pipeline updates both generated storage versions and pre
   for (const path of [
     'scripts/version-packages.mjs',
     'scripts/lib/fixed-group-version.mjs',
+    'scripts/lib/registry-version-policy.mjs',
     'scripts/lib/release-version-policy.mjs',
     'scripts/lib/publishable-packages.mjs',
     'scripts/lib/private-workspace-version.mjs',
