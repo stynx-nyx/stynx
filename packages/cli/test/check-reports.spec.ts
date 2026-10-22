@@ -650,7 +650,7 @@ describe('engine errors', () => {
         },
       ],
     });
-    expect(report.reason).toBeUndefined();
+    expect(report.reason).toBe(undefined);
     expect(exitCodeFor(report)).toBe(1);
   });
 
