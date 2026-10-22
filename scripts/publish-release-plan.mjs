@@ -8,6 +8,7 @@ import { discoverPublishablePackages } from './lib/publishable-packages.mjs';
 import { registryVersionPolicyConstants } from './lib/registry-version-policy.mjs';
 import { readPendingChangesets, readPreState } from './lib/fixed-group-version.mjs';
 import {
+  PublicationDistTagError,
   assertNoPendingPreChangesets,
   buildNpmPublishArgs,
   publicationPlanConstants,
@@ -50,6 +51,7 @@ mkdirSync(receiptRoot, { recursive: true });
 
 // Observe the complete registry state for every package before the first publish.
 const preflightDistTags = new Map();
+const firstPublications = new Set(registryVersionPolicyConstants.approvedFirstPublications);
 for (const entry of packages) {
   const observed = registryMetadata(entry.name);
   if (observed.kind === 'unknown') {
@@ -59,6 +61,13 @@ for (const entry of packages) {
     fail('PUBLICATION_CANDIDATE_COLLISION', `${entry.name}@${version} already exists`);
   }
   const tags = registryDistTags(entry.name);
+  if (firstPublications.has(entry.name)) {
+    if (observed.kind !== 'absent' || tags.kind !== 'absent') {
+      fail('PUBLICATION_FIRST_PUBLICATION_PRESENT', `${entry.name}: approved first publication already exists`);
+    }
+    preflightDistTags.set(entry.name, {});
+    continue;
+  }
   if (tags.kind !== 'known') {
     fail('PUBLICATION_DIST_TAG_UNKNOWN', `${entry.name}: registry dist-tags are unreadable`);
   }
@@ -183,15 +192,21 @@ function observePublishedCandidate(entry) {
       metadata_kind: metadata.kind,
       dist_tags: tags.kind === 'known' ? tags.value : null,
     });
-    if (metadata.kind === 'unknown' || tags.kind !== 'known') {
+    if (metadata.kind === 'unknown' || tags.kind === 'unknown' ||
+      (tags.kind === 'absent' && !firstPublications.has(entry.package))) {
       return { metadata, observations, error: { code: 'PUBLICATION_DIST_TAG_UNKNOWN', message: 'registry metadata is unreadable after publish' } };
     }
     let tagError = null;
     try {
+      // A first publication may not be visible yet; reread it like a missing tag.
+      if (tags.kind === 'absent') {
+        throw new PublicationDistTagError('PUBLICATION_DIST_TAG_UNKNOWN', 'the first publication is not yet visible');
+      }
       verifyPostPublishDistTags({
         candidate: version,
         preflightLatest: registryVersionPolicyConstants.preflightLatestVersion,
         preflightDistTags: entry.preflight_dist_tags,
+        firstPublication: firstPublications.has(entry.package),
         distTags: tags.value,
       });
     } catch (error) {
@@ -220,7 +235,10 @@ function registryDistTags(packageName) {
     ['view', packageName, 'dist-tags', '--json', '--registry', registry],
     { cwd: repoRoot, env: publishEnvironment(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
   );
-  if (result.status !== 0) return { kind: 'unknown' };
+  if (result.status !== 0) {
+    if (/E404|404 Not Found/u.test(`${result.stdout}\n${result.stderr}`)) return { kind: 'absent' };
+    return { kind: 'unknown' };
+  }
   try {
     return { kind: 'known', value: JSON.parse(result.stdout) };
   } catch {

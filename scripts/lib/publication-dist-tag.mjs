@@ -86,8 +86,17 @@ export function validatePreflightDistTags({ preflightLatest, preflightRc, distTa
   return { ...snapshot };
 }
 
-export function verifyPostPublishDistTags({ candidate, preflightLatest, preflightDistTags, distTags }) {
-  const before = validatePreflightDistTags({ preflightLatest, distTags: preflightDistTags });
+export function verifyPostPublishDistTags({
+  candidate,
+  preflightLatest,
+  preflightDistTags,
+  distTags,
+  firstPublication = false,
+}) {
+  // An approved first publication has no registry dist-tags before it publishes.
+  const before = firstPublication
+    ? checkedFirstPublicationPreflight(preflightDistTags)
+    : validatePreflightDistTags({ preflightLatest, distTags: preflightDistTags });
   const after = checkedDistTags(distTags);
   const mutableTag = rcVersion.test(candidate) ? 'rc' : stableVersion.test(candidate) ? 'latest' : null;
   if (!mutableTag) fail('PUBLICATION_DIST_TAG_INVALID', 'candidate version is unsupported');
@@ -107,6 +116,13 @@ export function verifyPostPublishDistTags({ candidate, preflightLatest, prefligh
     }
     fail('PUBLICATION_DIST_TAG_UNKNOWN', `the candidate is not yet visible under the ${mutableTag} dist-tag`);
   }
+}
+
+function checkedFirstPublicationPreflight(value) {
+  if (!isRecord(value) || Object.keys(value).length !== 0) {
+    fail('PUBLICATION_DIST_TAG_DRIFT', 'an approved first publication had registry dist-tags before publication');
+  }
+  return value;
 }
 
 export function assertNoPendingPreChangesets({ preState, changesetIds }) {

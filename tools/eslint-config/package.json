@@ -2,6 +2,7 @@
   "name": "@stynx-nyx/eslint-config",
   "version": "1.6.2",
   "type": "module",
+  "license": "BUSL-1.1",
   "description": "Shared flat ESLint profiles for STYNX packages and STYNX-based applications",
   "exports": {
     ".": "./index.mjs",
@@ -12,7 +13,8 @@
   },
   "files": [
     "*.mjs",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "dependencies": {
     "@angular-eslint/eslint-plugin": "22.0.0",

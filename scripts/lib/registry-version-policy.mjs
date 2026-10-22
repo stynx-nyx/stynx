@@ -4,12 +4,17 @@ import { resolve } from 'node:path';
 
 export const registryVersionPolicyConstants = Object.freeze({
   anomalyPolicyPath: 'law/policy/registry-version-anomalies.json',
-  anomalyPolicySha256: '4f3460aae87b49ff138d2aa613141bece3d621c7a988dddc5fe411fe47f20dc4',
-  candidate: '1.6.2',
+  anomalyPolicySha256: 'dc6fbbd33f153b20e470d254f33a9c46aaa6d485743b19c4938c49659aac3ca9',
+  candidate: '3.0.0',
   previousCandidate: '1.5.0-rc.2',
-  preflightLatestVersion: '1.6.1',
-  canonicalMajor: 1,
-  packageCount: 44,
+  preflightLatestVersion: '1.6.2',
+  canonicalMajor: 3,
+  packageCount: 47,
+  approvedFirstPublications: Object.freeze([
+    '@stynx-nyx/eslint-config',
+    '@stynx-nyx/migration-linter',
+    '@stynx-nyx/tsconfig',
+  ]),
   registryUrl: 'https://npm.pkg.github.com',
 });
 
@@ -53,7 +58,7 @@ export function loadRegistryAnomalyPolicy(repoRoot, candidate) {
   if (
     policy.schemaVersion !== '1.0.0' ||
     policy.policy_id !== 'stynx.registry-version-anomalies' ||
-    policy.canonical_line !== '1.x' ||
+    policy.canonical_line !== `${registryVersionPolicyConstants.canonicalMajor}.x` ||
     policy.next_unified_version !== registryVersionPolicyConstants.candidate ||
     policy.preflight_latest_version !== registryVersionPolicyConstants.preflightLatestVersion ||
     candidate !== policy.next_unified_version ||
@@ -74,8 +79,7 @@ export function loadRegistryAnomalyPolicy(repoRoot, candidate) {
     anomaly.github_package_version_id !== 1024692931 ||
     anomaly.classification !== 'erroneous-semver-publication' ||
     anomaly.allowed_candidate !== candidate ||
-    JSON.stringify(anomaly.allowed_effects) !==
-      JSON.stringify(['registry-monotonicity-exception']) ||
+    JSON.stringify(anomaly.allowed_effects) !== JSON.stringify(['noncanonical-history-census']) ||
     anomaly.applies_to_other_packages !== false ||
     anomaly.applies_to_other_versions !== false
   ) {
@@ -195,9 +199,9 @@ export function validateRegistryCensus({
 
 function validateCampaignPolicy(policy, packageNames, candidate) {
   const approved = policy?.approved_first_publications;
-  // Every package in the fixed group has a published 1.1.1; the six first
-  // publications of the 1.1.1 campaign are closed, so no absence is approved.
-  const expected = [];
+  // ADR-RELEASE-0006: the three tool packages joining the fixed group at 3.0.0
+  // are the only approved absences; every other package has registry history.
+  const expected = [...registryVersionPolicyConstants.approvedFirstPublications];
   if (
     policy?.candidate?.version !== candidate ||
     !Array.isArray(approved) ||
@@ -207,7 +211,7 @@ function validateCampaignPolicy(policy, packageNames, candidate) {
   ) {
     fail(
       'REGISTRY_FIRST_PUBLICATION_POLICY_UNSUPPORTED',
-      'the first-publication policy does not match the exact 44/44/0 campaign',
+      'the first-publication policy does not match the exact 47/44/3 roster',
     );
   }
 }
@@ -280,14 +284,18 @@ function validatePackageMetadata(packageName, metadata, candidate, anomaly) {
     }
 
     const comparison = compareSemver(parsed, candidateVersion);
+    // The 2.0.0 anomaly sits below the 3.x line; the census still observes it once.
     if (
-      comparison >= 0 &&
       packageName === anomaly.package &&
       version === anomaly.version &&
       anomaly.allowed_candidate === candidate
     ) {
       anomalyMatches += 1;
-      continue;
+      if (comparison < 0) continue;
+      fail(
+        'REGISTRY_UNADJUDICATED_VERSION',
+        `${packageName}@${version} is not below candidate ${candidate}`,
+      );
     }
     if (parsed.major === registryVersionPolicyConstants.canonicalMajor && comparison >= 0) {
       fail(

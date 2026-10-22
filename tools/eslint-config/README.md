@@ -139,3 +139,36 @@ STYNX lints its own packages through `tools/eslint-config/{lib,nest,angular,scri
 ## TypeDoc reference
 
 Config-only package; no symbol-level API surface.
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `@angular-eslint/eslint-plugin`: `22.0.0`
+- `@angular-eslint/eslint-plugin-template`: `22.0.0`
+- `@angular-eslint/template-parser`: `22.0.0`
+- `@eslint/js`: `^10.0.1`
+- `@typescript-eslint/eslint-plugin`: `^8.61.0`
+- `@typescript-eslint/parser`: `^8.61.0`
+- `eslint-plugin-boundaries`: `^6.0.2`
+- `eslint-plugin-jsdoc`: `^63.0.2`
+- `globals`: `^17.7.0`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+- `eslint`: `^10.5.0`
+- `typescript`: `^6.0.3`
+
+### Development-only dependencies
+
+_None._
+
+<!-- stynx:generated-dependencies:end -->
