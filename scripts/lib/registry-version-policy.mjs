@@ -297,6 +297,13 @@ function validatePackageMetadata(packageName, metadata, candidate, anomaly) {
         `${packageName}@${version} is not below candidate ${candidate}`,
       );
     }
+    // ADR-RELEASE-0006: the skipped 2.x line holds only the one recorded anomaly.
+    if (parsed.major > 1 && parsed.major < registryVersionPolicyConstants.canonicalMajor) {
+      fail(
+        'REGISTRY_UNADJUDICATED_VERSION',
+        `${packageName}@${version} is on a skipped major line and has no exact exception`,
+      );
+    }
     if (parsed.major === registryVersionPolicyConstants.canonicalMajor && comparison >= 0) {
       fail(
         'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC',

@@ -5,6 +5,7 @@
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Shared TypeScript presets for STYNX packages and STYNX-based products",
   "scripts": {
+    "clean": "node -e \"for (const path of ['dist', 'coverage']) require('node:fs').rmSync(path, { recursive: true, force: true })\"",
     "test": "node --test test/tsconfig.spec.mjs"
   },
   "files": [

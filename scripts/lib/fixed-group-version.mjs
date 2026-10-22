@@ -17,6 +17,7 @@
 // one wherever it appears in the release unit.
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { registryVersionPolicyConstants } from './registry-version-policy.mjs';
 import { collectPublicPackages } from './release-version-policy.mjs';
 
 export const bumpTypes = Object.freeze(['patch', 'minor', 'major']);
@@ -178,6 +179,14 @@ export function incrementVersion(version, bump) {
   }
 }
 
+// ADR-RELEASE-0006: a stable major lands on the registry policy's canonical
+// line, skipping a major that holds only recorded non-canonical history (2.x).
+export function skipToCanonicalMajor(version, bump) {
+  const { canonicalMajor } = registryVersionPolicyConstants;
+  if (bump !== 'major' || Number(version.split('.')[0]) >= canonicalMajor) return version;
+  return `${canonicalMajor}.0.0`;
+}
+
 export function fixedGroupNames(changesetConfig) {
   const groups = Array.isArray(changesetConfig?.fixed) ? changesetConfig.fixed : [];
   if (groups.length !== 1 || !Array.isArray(groups[0]) || groups[0].length === 0) {
@@ -264,7 +273,7 @@ export function planFixedGroupVersion(repoRoot, changesetConfig) {
   const bump = computeFixedGroupBump(changesets, groupNames);
   const expected = preState
     ? bump === null ? current : `${incrementVersion(initialVersion, computeFixedGroupBump(allChangesets, groupNames))}-${preState.tag}.${semver.test(current) ? 1 : Number(prerelease.exec(current)[5]) + 1}`
-    : bump === null ? current : incrementVersion(current, bump);
+    : bump === null ? current : skipToCanonicalMajor(incrementVersion(current, bump), bump);
   return {
     current,
     bump,
