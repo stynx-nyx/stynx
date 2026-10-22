@@ -28,11 +28,20 @@ function fixture(t, version = '1.6.0') {
     'package.json',
     `law/schemas/release-scope-${version}.schema.json`,
     `law/policy/release-scope-${version}.json`,
-    'law/policy/stynx-package-roster.json',
   ]) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     cpSync(join(repository, path), join(root, path));
   }
+  // The 1.6.x scopes bind the 44-package roster bytes they were released with.
+  cpSync(
+    join(
+      repository,
+      version.startsWith('1.')
+        ? 'test/fixtures/release-scope/stynx-package-roster-44.json'
+        : 'law/policy/stynx-package-roster.json',
+    ),
+    join(root, 'law/policy/stynx-package-roster.json'),
+  );
   cpSync(
     join(
       repository,
@@ -46,6 +55,7 @@ function fixture(t, version = '1.6.0') {
     write(root, `packages/${shortName}/package.json`, { name, version });
   }
   mkdirSync(join(root, 'packages-web'));
+  mkdirSync(join(root, 'tools'));
   write(root, 'package.json', { ...read(root, 'package.json'), version });
   return root;
 }
@@ -526,3 +536,47 @@ test('1.6.2 actual verifier requires unique successful exact-head RC evidence', 
     assert.equal(report.scope.version, '1.6.2');
   }
 });
+
+// ADR-RELEASE-0006: the SM-21 major release scopes the 47-package roster.
+test('3.0.0 binds the 47-package roster and keeps omissions nonpromoting', (t) => {
+  const root = fixture(t, '3.0.0');
+  const selected = resolvePublicationEvidenceRequirements(root);
+  const prior = read(repository, 'law/policy/release-scope-1.6.2.json');
+  assert.equal(selected.scope.version, '3.0.0');
+  assert.equal(selected.scope.packageRoster.count, 47);
+  assert.deepEqual(selected.scope.rc.requiredNodes, prior.rc.requiredNodes);
+  assert.deepEqual(selected.requiredChecks, [
+    ['verified-local-rc', 'signed exact-candidate local RC'],
+  ]);
+  assert.deepEqual(selected.scope.omitted, {
+    httpPerformance: 'NOT_OBSERVED',
+    k6: 'NOT_OBSERVED',
+    mutation: 'NOT_RUN',
+  });
+  assert.equal(selected.scope.audit.readinessPromoting, false);
+});
+
+for (const [label, change] of [
+  [
+    '44-package roster',
+    (root) =>
+      cpSync(
+        join(repository, 'test/fixtures/release-scope/stynx-package-roster-44.json'),
+        join(root, 'law/policy/stynx-package-roster.json'),
+      ),
+  ],
+  ['missing tool package', (root) => rmSync(join(root, 'packages/tsconfig'), { recursive: true })],
+  [
+    'tool package left at 1.6.2',
+    (root) =>
+      mutate(root, 'packages/eslint-config/package.json', (v) => ({ ...v, version: '1.6.2' })),
+  ],
+])
+  test(`3.0.0 refuses ${label}`, (t) => {
+    const root = fixture(t, '3.0.0');
+    change(root);
+    assert.throws(
+      () => resolvePublicationEvidenceRequirements(root),
+      /STYNX_RELEASE_SCOPE_INVALID/u,
+    );
+  });

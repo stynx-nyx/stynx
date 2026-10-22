@@ -86,9 +86,11 @@ const packageRoster = JSON.parse(
 // The registry census is validated against the current unified candidate
 // (registryVersionPolicyConstants.candidate), not the historical 1.2.0
 // rebaseline target that unified-rebaseline.mjs still describes.
-const currentCandidate = '1.6.2';
+// ADR-RELEASE-0006: SM-21 advances the candidate to 3.0.0 on the 3.x line with
+// the 47-package roster; three tool packages are approved first publications.
+const currentCandidate = '3.0.0';
 const previousCandidate = '1.5.0-rc.2';
-const preflightLatest = '1.6.1';
+const preflightLatest = '1.6.2';
 
 const campaignPolicy = {
   policy_id: 'stynx.package-roster',
@@ -108,7 +110,7 @@ const changesetConfig = JSON.parse(
   readFileSync(join(repoRoot, '.changeset', 'config.json'), 'utf8'),
 );
 const packageNames = [...changesetConfig.fixed[0]].sort();
-const firstPublicationNames = [];
+const firstPublicationNames = [...packageRoster.approved_first_publications];
 const singleVersionNames = [
   '@stynx-nyx/jobs',
   '@stynx-nyx/mobile-runtime',
@@ -189,6 +191,15 @@ function assertPolicyError(callback, code) {
   });
 }
 
+// Releases up to 1.6.2 shipped the 44-package roster; their fixtures stay pinned to it.
+const historicalRoster = JSON.parse(
+  readFileSync(join(repoRoot, 'test/fixtures/release-scope/stynx-package-roster-44.json'), 'utf8'),
+);
+function historicalPublicPackages() {
+  const names = new Set(historicalRoster.publishable_packages);
+  return collectPublicPackages(repoRoot).filter(({ name }) => names.has(name));
+}
+
 const preparedBaseCommit = 'b77b50230e3906cee632eb9218b06603cce6c89a';
 const preparedHeadCommit = '6d7f86d70e784a281fe025bf50babc9f3b3e8aee';
 
@@ -226,7 +237,7 @@ test('ordinary changed publishable packages without a Changeset remain ordinary 
 });
 
 test('versioned RC status accepts only the complete consumed fixed-group candidate', () => {
-  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+  const packageStates = historicalPublicPackages().map(({ name, manifestPath }) => ({
     name,
     manifestPath: relative(repoRoot, manifestPath),
     baseVersion: '1.4.0',
@@ -383,7 +394,7 @@ test('versioned RC status accepts only the complete consumed fixed-group candida
 });
 
 test('final versioned candidate accepts a late single marker and exact generated release surface', () => {
-  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+  const packageStates = historicalPublicPackages().map(({ name, manifestPath }) => ({
     name,
     manifestPath: relative(repoRoot, manifestPath),
     baseVersion: '1.5.0-rc.3',
@@ -608,7 +619,7 @@ test('final versioned candidate accepts a late single marker and exact generated
 });
 
 test('stable 1.5.1 patch context consumes one changeset and rejects ungoverned follow-ups', () => {
-  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+  const packageStates = historicalPublicPackages().map(({ name, manifestPath }) => ({
     name,
     manifestPath: relative(repoRoot, manifestPath),
     parentVersion: '1.5.0',
@@ -766,7 +777,7 @@ test('stable 1.5.1 patch context consumes one changeset and rejects ungoverned f
 });
 
 test('stable 1.5.2 patch context consumes only session policy and rejects unbound changes', () => {
-  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+  const packageStates = historicalPublicPackages().map(({ name, manifestPath }) => ({
     name,
     manifestPath: relative(repoRoot, manifestPath),
     parentVersion: '1.5.1',
@@ -995,7 +1006,7 @@ test('stable 1.5.3 patch context consumes exactly the eleven pending changesets 
     '.changeset/signature-offline-sync-test-clock.md',
     '.changeset/sse-429-retry-after-polling.md',
   ];
-  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+  const packageStates = historicalPublicPackages().map(({ name, manifestPath }) => ({
     name,
     manifestPath: relative(repoRoot, manifestPath),
     parentVersion: '1.5.2',
@@ -1220,7 +1231,7 @@ test('stable 1.5.4 patch context consumes exactly the four pending changesets fr
     '.changeset/readme-generated-dependency-pointer.md',
     '.changeset/serialize-db-backed-specs.md',
   ];
-  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+  const packageStates = historicalPublicPackages().map(({ name, manifestPath }) => ({
     name,
     manifestPath: relative(repoRoot, manifestPath),
     parentVersion: '1.5.3',
@@ -1438,7 +1449,7 @@ test('stable 1.5.4 patch context consumes exactly the four pending changesets fr
 
 test('stable 1.5.5 patch context consumes exactly the one pending changeset from the unpublished 1.5.4 base', () => {
   const changesets = ['.changeset/pdf-handlebars-advisories.md'];
-  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+  const packageStates = historicalPublicPackages().map(({ name, manifestPath }) => ({
     name,
     manifestPath: relative(repoRoot, manifestPath),
     parentVersion: '1.5.4',
@@ -1663,7 +1674,7 @@ test('stable 1.5.6 patch context consumes exactly the 4 pending changesets from 
     '.changeset/outbox-named-destinations.md',
     '.changeset/signature-trust-profile-sets.md',
   ];
-  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+  const packageStates = historicalPublicPackages().map(({ name, manifestPath }) => ({
     name,
     manifestPath: relative(repoRoot, manifestPath),
     parentVersion: '1.5.5',
@@ -1886,7 +1897,7 @@ function seventhStablePatchFixture() {
     '.changeset/offline-sync-1-5-7-pending-review-context.md',
     '.changeset/outbox-configurable-app-role.md',
   ];
-  const packageStates = collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+  const packageStates = historicalPublicPackages().map(({ name, manifestPath }) => ({
     name,
     manifestPath: relative(repoRoot, manifestPath),
     parentVersion: '1.5.6',
@@ -2074,7 +2085,7 @@ function patch161ReleaseFixture() {
       baseVersion: '1.6.0',
       version: '1.6.1',
     })),
-    packageStates: collectPublicPackages(repoRoot).map(({ name, manifestPath }) => ({
+    packageStates: historicalPublicPackages().map(({ name, manifestPath }) => ({
       name,
       manifestPath: relative(repoRoot, manifestPath),
       parentVersion: gitJson(`${marker}^`, relative(repoRoot, manifestPath)).version,
@@ -2283,7 +2294,7 @@ function patch162ReleaseFixture() {
       baseVersion: '1.6.1',
       version: '1.6.2',
     })),
-    packageStates: collectPublicPackages(repoRoot).map(({ name, manifestPath }) => {
+    packageStates: historicalPublicPackages().map(({ name, manifestPath }) => {
       const path = relative(repoRoot, manifestPath);
       return {
         name,
@@ -2535,23 +2546,29 @@ test('version rebaseline permits only the three generated dependency README cons
   );
 });
 
-test('Architect policy and workspace structurally define exactly 44/44/0', () => {
+test('Architect policy and workspace structurally define exactly 47/44/3', () => {
   const { roster: mutationRoster, failures: mutationFailures } = discoverMutationRoster(repoRoot);
   const mutationNames = mutationRoster.map(({ packageName }) => packageName).sort();
-  assert.equal(registryVersionPolicyConstants.packageCount, 44);
-  assert.equal(packageNames.length, 44);
-  assert.equal(new Set(packageNames).size, 44);
+  assert.equal(registryVersionPolicyConstants.packageCount, 47);
+  assert.equal(packageNames.length, 47);
+  assert.equal(new Set(packageNames).size, 47);
   assert.equal(publishedPackageNames.length, 44);
+  assert.deepEqual(firstPublicationNames, [
+    '@stynx-nyx/eslint-config',
+    '@stynx-nyx/migration-linter',
+    '@stynx-nyx/tsconfig',
+  ]);
+  assert.deepEqual(registryVersionPolicyConstants.approvedFirstPublications, firstPublicationNames);
   assert.deepEqual([...packageRoster.publishable_packages].sort(), packageNames);
   assert.deepEqual([...packageRoster.existing_private_packages].sort(), publishedPackageNames);
   assert.deepEqual(mutationFailures, []);
   assert.equal(mutationNames.length, 38);
   assert.deepEqual([...packageRoster.mutation_packages].sort(), mutationNames);
   assert.deepEqual([...packageRoster.approved_first_publications].sort(), firstPublicationNames);
-  assert.equal(packageRoster.counts.publishable, 44);
+  assert.equal(packageRoster.counts.publishable, 47);
   assert.equal(packageRoster.counts.mutation, 38);
   assert.equal(packageRoster.counts.existing_private, 44);
-  assert.equal(packageRoster.counts.approved_first_publications, 0);
+  assert.equal(packageRoster.counts.approved_first_publications, 3);
 });
 
 // This observes the existing read-only validators. It does not version manifests,
@@ -2575,16 +2592,16 @@ function assertCampaignVersionStage(root) {
   assert.equal(anomaly.next_unified_version, candidate);
   assert.equal(anomaly.anomalies[0].allowed_candidate, candidate);
   assert.deepEqual(validateReleaseVersionPolicy(root, config), []);
-  assert.equal(publishablePackages.length, 44);
+  assert.equal(publishablePackages.length, 47);
   const names = publishablePackages.map(({ manifest }) => manifest.name).sort();
   const governedNames = [...packageRoster.publishable_packages].sort();
-  assert.equal(new Set(names).size, 44);
+  assert.equal(new Set(names).size, 47);
   assert.deepEqual(names, governedNames);
-  assert.equal(roster.counts.publishable, 44);
+  assert.equal(roster.counts.publishable, 47);
   assert.deepEqual([...roster.publishable_packages].sort(), governedNames);
-  assert.equal(new Set(roster.publishable_packages).size, 44);
+  assert.equal(new Set(roster.publishable_packages).size, 47);
   assert.deepEqual(config.fixed, [config.fixed[0]]);
-  assert.equal(new Set(config.fixed[0]).size, 44);
+  assert.equal(new Set(config.fixed[0]).size, 47);
   assert.deepEqual([...config.fixed[0]].sort(), governedNames);
   assert.equal(fixedGroupVersion.readPreState(root), null);
   const pending = readPendingChangesets(root);
@@ -2646,7 +2663,7 @@ function assertCampaignVersionStage(root) {
       validateReleaseVersionPolicy(root, config, { expectedVersion: candidate }),
       [],
     );
-    // Original final-candidate equalities remain exact, including all 44 rows.
+    // Original final-candidate equalities remain exact, including all 47 rows.
     assert.equal(rootManifest.version, candidate);
     for (const { manifest } of publishablePackages) {
       assert.equal(
@@ -2672,7 +2689,8 @@ function assertCampaignVersionStage(root) {
       'the feature candidate requires a nonempty stable changeset plan',
     );
     assert.equal(plan.current, preflightLatest);
-    assert.equal(plan.bump, 'patch');
+    // ADR-RELEASE-0006: SM-21 is a major (ESM is breaking).
+    assert.equal(plan.bump, 'major');
     assert.equal(plan.expected, candidate);
     assert.equal(anomaly.next_unified_version, plan.expected);
     assert.equal(anomaly.anomalies[0].allowed_candidate, plan.expected);
@@ -2688,11 +2706,11 @@ function assertCampaignVersionStage(root) {
   };
 }
 
-test('final registry policy candidate equals the root and all 44 publishable manifest versions', () => {
+test('final registry policy candidate equals the root and all 47 publishable manifest versions', () => {
   const observation = assertCampaignVersionStage(repoRoot);
   assert.ok(['PREVERSION', 'VERSIONED'].includes(observation.stage));
   assert.equal(observation.target, currentCandidate);
-  assert.equal(observation.packageCount, 44);
+  assert.equal(observation.packageCount, 47);
 });
 
 function createCampaignStageFixture({ version = preflightLatest, pending = true } = {}) {
@@ -2714,7 +2732,7 @@ function createCampaignStageFixture({ version = preflightLatest, pending = true 
   });
   const changesetPath = join(root, '.changeset/feature.md');
   if (pending)
-    writeFileSync(changesetPath, `---\n'${names[0]}': patch\n---\n\nActual fixture feature.\n`);
+    writeFileSync(changesetPath, `---\n'${names[0]}': major\n---\n\nActual fixture feature.\n`);
   return { root, names, manifestPaths, changesetPath };
 }
 
@@ -2733,14 +2751,14 @@ test('campaign version stages observe the actual preversion patch plan and consu
       assert.equal(observation.current, options.version ?? preflightLatest);
       assert.equal(observation.target, currentCandidate);
       assert.deepEqual(observation.names, fixture.names);
-      assert.equal(observation.packageCount, 44);
+      assert.equal(observation.packageCount, 47);
       assert.equal(observation.plan.expected, currentCandidate);
-      assert.equal(observation.plan.bump, options.version ? null : 'patch');
+      assert.equal(observation.plan.bump, options.version ? null : 'major');
       assert.equal(observation.changesets.length, options.version ? 0 : 1);
       if (!options.version) {
         assert.equal(observation.changesets[0].file, '.changeset/feature.md');
         assert.deepEqual(observation.changesets[0].releases, [
-          { name: fixture.names[0], type: 'patch' },
+          { name: fixture.names[0], type: 'major' },
         ]);
         assert.equal(
           observation.changesets[0].sha256,
@@ -2777,9 +2795,9 @@ test('campaign version stages retain the actual Changesets empty acknowledgement
     if (emittedPath !== acknowledgementPath) rmSync(emittedPath);
     const observation = assertCampaignVersionStage(fixture.root);
     assert.equal(observation.stage, 'PREVERSION');
-    assert.equal(observation.plan.bump, 'patch');
+    assert.equal(observation.plan.bump, 'major');
     assert.equal(observation.plan.expected, currentCandidate);
-    assert.equal(observation.packageCount, 44);
+    assert.equal(observation.packageCount, 47);
     assert.equal(observation.changesets.length, 2);
     const acknowledgement = observation.changesets.find(
       ({ file }) => file === '.changeset/smart-friends-grab.md',
@@ -2788,7 +2806,7 @@ test('campaign version stages retain the actual Changesets empty acknowledgement
     assert.equal(acknowledgement.summary, '');
     assert.equal(acknowledgement.sha256, createHash('sha256').update(actualBytes).digest('hex'));
     assert.deepEqual(observation.plan.changesets, [
-      { file: '.changeset/feature.md', types: ['patch'] },
+      { file: '.changeset/feature.md', types: ['major'] },
       { file: '.changeset/smart-friends-grab.md', types: [] },
     ]);
   } finally {
@@ -2938,7 +2956,7 @@ const campaignStageRefusals = [
   ],
   ['no effective bump', (f) => writeFileSync(f.changesetPath, '---\n\n---\n\nEmpty release.\n')],
   ['minor plan', (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': minor\n---\n`)],
-  ['major plan', (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': major\n---\n`)],
+  ['patch plan', (f) => writeFileSync(f.changesetPath, `---\n'${f.names[0]}': patch\n---\n`)],
   ['present prestate', (f) => writeRcPreState(f, { initialVersion: preflightLatest })],
   ['malformed prestate', (f) => writeFileSync(join(f.root, '.changeset/pre.json'), '{')],
   [
@@ -2997,7 +3015,7 @@ test('campaign version stages refuse a wrong uniform source and unconsumed final
   }
 });
 
-test('campaign version stages enforce the final root and each of all 44 exact package equalities', () => {
+test('campaign version stages enforce the final root and each of all 47 exact package equalities', () => {
   const fixture = createCampaignStageFixture({ version: currentCandidate, pending: false });
   try {
     const rootPath = join(fixture.root, 'package.json');
@@ -3070,9 +3088,10 @@ test('complete discovered mutation roster resolves the governed break=90 floor',
   }
 });
 
-test('complete authenticated registry and inventory census returns 44/44/0', () => {
+test('complete authenticated registry and inventory census returns 47/44/3', () => {
   const census = validRegistryCensus();
-  for (const name of packageNames) {
+  for (const name of firstPublicationNames) assert.equal(census.get(name).status, 404);
+  for (const name of publishedPackageNames) {
     assert.ok(
       Object.hasOwn(census.get(name).metadata.versions, previousCandidate),
       `${name} must retain RC2`,
@@ -3085,8 +3104,8 @@ test('complete authenticated registry and inventory census returns 44/44/0', () 
   }
   assert.deepEqual(validate(), {
     anomalyMatches: 1,
-    absentPackageCount: 0,
-    packageCount: 44,
+    absentPackageCount: 3,
+    packageCount: 47,
     publishedPackageCount: 44,
   });
 });
@@ -3289,7 +3308,7 @@ test('authenticated census rejects malformed metadata and unsupported HTTP statu
 test('Architect anomaly policy is required at its exact approved digest', () => {
   // The next unified candidate must be explicitly bound in the Architect
   // policy; 1.2.0 remains historical rebaseline data.
-  assert.equal(currentCandidate, '1.6.2');
+  assert.equal(currentCandidate, '3.0.0');
   assert.equal(anomalyPolicy.next_unified_version, currentCandidate);
   assert.equal(anomalyPolicy.owner_decision.date, '2026-10-10');
   const historicalPolicy = spawnSync(
@@ -3329,18 +3348,30 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
     );
   }
   const prospective = anomalyPolicy.prospective_owner_decision;
-  assert.equal(prospective.date, '2026-10-13');
-  assert.equal(prospective.repository_baseline, '3e3da1f7ceb6dd4a7dd2f9d6e0dc704437e262a0');
-  assert.equal(prospective.repository_tree, 'e2ce9989249d1bc13403dc21f5a421b24178ef29');
+  assert.equal(prospective.date, '2026-10-22');
+  assert.equal(prospective.repository_baseline, '4ef181c09cf0a6335f4cfc84c00e30162eaa6546');
   assert.equal(prospective.next_unified_version, currentCandidate);
   assert.equal(prospective.preflight_latest_version, preflightLatest);
   assert.equal(prospective.preserved_rc_version, previousCandidate);
+  assert.deepEqual(prospective.approved_first_publications, firstPublicationNames);
   assert.deepEqual(prospective.supersedes, {
-    next_unified_version: '1.6.1',
-    preflight_latest_version: '1.6.0',
+    next_unified_version: '1.6.2',
+    preflight_latest_version: '1.6.1',
+    canonical_line: '1.x',
   });
-  assert.equal(prospective.scope_adr, 'ADR-RELEASE-0005');
-  assert.equal(prospective.scope_policy, 'law/policy/release-scope-1.6.2.json');
+  assert.equal(anomalyPolicy.canonical_line, '3.x');
+  assert.equal(prospective.scope_adr, 'ADR-RELEASE-0006');
+  assert.equal(prospective.scope_policy, 'law/policy/release-scope-3.0.0.json');
+  const released162Policy = spawnSync(
+    'git',
+    ['show', 'v1.6.2:law/policy/registry-version-anomalies.json'],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+  assert.equal(released162Policy.status, 0, released162Policy.stderr);
+  assert.deepEqual(
+    anomalyPolicy.prior_prospective_owner_decision_1_6_2,
+    JSON.parse(released162Policy.stdout).prospective_owner_decision,
+  );
   const publishedPolicy = spawnSync(
     'git',
     ['show', 'v1.6.1:law/policy/registry-version-anomalies.json'],
@@ -3370,7 +3401,7 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
   const anomaly = loadRegistryAnomalyPolicy(repoRoot, currentCandidate);
   assert.equal(anomaly.allowed_candidate, currentCandidate);
   for (const phrase of [
-    '44',
+    '47',
     currentCandidate,
     previousCandidate,
     'rc',
@@ -3407,6 +3438,9 @@ test('Architect anomaly policy is required at its exact approved digest', () => 
   const unchangedAnomaly = structuredClone(anomalyPolicy.anomalies[0]);
   unchangedAnomaly.allowed_candidate = recordedRc2Anomaly.allowed_candidate;
   unchangedAnomaly.closure_condition = recordedRc2Anomaly.closure_condition;
+  // ADR-RELEASE-0006: below 3.0.0 the anomaly is a census observation, not an exception.
+  assert.deepEqual(anomalyPolicy.anomalies[0].allowed_effects, ['noncanonical-history-census']);
+  unchangedAnomaly.allowed_effects = recordedRc2Anomaly.allowed_effects;
   assert.deepEqual(unchangedAnomaly, recordedRc2Anomaly);
   assertPolicyError(
     () => loadRegistryAnomalyPolicy(repoRoot, previousCandidate),
@@ -3563,7 +3597,7 @@ const rootManifest = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'ut
 const repositorySource = (path) => readFileSync(join(repoRoot, path), 'utf8');
 
 function publicWorkspaceManifests() {
-  return ['packages', 'packages-web']
+  return ['packages', 'packages-web', 'tools']
     .flatMap((directory) =>
       readdirSync(join(repoRoot, directory), { withFileTypes: true })
         .filter((entry) => entry.isDirectory())
@@ -3659,11 +3693,11 @@ function assertConfined(packageRoot, target, label) {
   assert.equal(lstatSync(target).isSymbolicLink(), false, `${label}: symlink target is forbidden`);
 }
 
-test('all 44 package clean operations are confined, executable, idempotent, and tracked-tree preserving', () => {
+test('all 47 package clean operations are confined, executable, idempotent, and tracked-tree preserving', () => {
   const manifests = publicWorkspaceManifests();
   const names = manifests.map(({ manifest }) => manifest.name);
-  assert.equal(manifests.length, 44);
-  assert.equal(new Set(names).size, 44);
+  assert.equal(manifests.length, 47);
+  assert.equal(new Set(names).size, 47);
   assert.deepEqual(names, [...packageRoster.publishable_packages].sort());
 
   const paths = trackedPaths();
@@ -3698,7 +3732,7 @@ test('all 44 package clean operations are confined, executable, idempotent, and 
       declaredTargets,
     };
   });
-  assert.equal(operations.length, 44);
+  assert.equal(operations.length, 47);
 
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-clean-contract-'));
   const fixtureDisplacement = relative(resolve(tmpdir()), fixtureRoot);
@@ -3795,7 +3829,7 @@ test('generated README dependency truth covers the exact 44-package manifest gra
   assert.equal(check.status, 0, check.stderr || check.stdout);
 });
 
-test('coverage is executable and reports four metrics for every one of the 44 packages', () => {
+test('coverage is executable and reports four metrics for every one of the 46 measured packages', () => {
   assert.match(rootManifest.scripts['test:coverage'], /scripts\/run-coverage/u);
   assert.match(rootManifest.scripts['ci:stynx:release'], /test:coverage/u);
   const coverage = repositorySource('scripts/run-coverage.mjs');
@@ -3832,8 +3866,12 @@ test('coverage is executable and reports four metrics for every one of the 44 pa
   for (const metric of ['branches', 'functions', 'lines', 'statements']) {
     assert.match(coverage, new RegExp(metric, 'u'));
   }
-  const workspaces = publicWorkspaceManifests();
-  assert.equal(workspaces.length, 44);
+  // ADR-RELEASE-0006: only the JSON-only tsconfig preset package is exempt.
+  assert.match(coverage, /configOnlyPackages = new Set\(\['@stynx-nyx\/tsconfig'\]\)/u);
+  const workspaces = publicWorkspaceManifests().filter(
+    ({ manifest }) => manifest.name !== '@stynx-nyx/tsconfig',
+  );
+  assert.equal(workspaces.length, 46);
   for (const { manifest } of workspaces) {
     assert.match(
       manifest.scripts?.['test:coverage'] ?? '',
@@ -3942,7 +3980,7 @@ test('D24.32 exact type-only coverage candidates fail closed and four configs bi
   assert.equal('stryker-setup-1.js'.startsWith('src/'), false);
 });
 
-test('public API baselines exactly cover 44 packages including jobs, notifications, and outbox', () => {
+test('public API baselines exactly cover 47 packages including jobs, notifications, and outbox', () => {
   const baseline = JSON.parse(
     repositorySource('docs/framework/contracts/public-api-baselines.json'),
   );
@@ -4099,7 +4137,7 @@ test('publication uses an ordered 44-package plan, durable per-package receipts,
 });
 
 test('final registry monotonicity accepts prerelease history and only its singular anomaly', () => {
-  assert.equal(packageNames.length, 44);
+  assert.equal(packageNames.length, 47);
   assert.equal(registryVersionPolicyConstants.candidate, currentCandidate);
   assert.equal(registryVersionPolicyConstants.previousCandidate, previousCandidate);
   assert.equal(registryVersionPolicyConstants.preflightLatestVersion, preflightLatest);
@@ -4131,8 +4169,8 @@ test('final registry monotonicity accepts prerelease history and only its singul
     );
     assert.deepEqual(validate({ registryStatesByPackage: history }), {
       anomalyMatches: 1,
-      absentPackageCount: 0,
-      packageCount: 44,
+      absentPackageCount: 3,
+      packageCount: 47,
       publishedPackageCount: 44,
     });
   }
@@ -4140,8 +4178,11 @@ test('final registry monotonicity accepts prerelease history and only its singul
   for (const [version, code] of [
     [currentCandidate, 'REGISTRY_CANDIDATE_EXISTS'],
     ['1.5.0-rc.4', null],
-    ['1.6.3', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
+    ['1.6.3', null],
+    ['3.0.1', 'REGISTRY_CANONICAL_LINE_NOT_MONOTONIC'],
     ['2.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
+    ['2.1.0', 'REGISTRY_UNADJUDICATED_VERSION'],
+    ['4.0.0', 'REGISTRY_UNADJUDICATED_VERSION'],
   ]) {
     const history = validRegistryCensus();
     history.set(
@@ -4161,6 +4202,7 @@ test('final registry monotonicity accepts prerelease history and only its singul
     '1.5.3',
     '1.6.0',
     '1.6.1',
+    '1.6.2',
   ]) {
     assertPolicyError(
       () => loadRegistryAnomalyPolicy(repoRoot, candidate),
@@ -4302,11 +4344,11 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   const helperSource = repositorySource('scripts/lib/publication-dist-tag.mjs');
   assert.match(
     helperSource,
-    /export function verifyPostPublishDistTags\(\{ candidate, preflightLatest, preflightDistTags, distTags \}\)/u,
+    /export function verifyPostPublishDistTags\(\{\n  candidate,\n  preflightLatest,\n  preflightDistTags,\n  distTags,\n  firstPublication = false,\n\}\)/u,
   );
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
-  assert.equal(preflightLatest, '1.6.1');
+  assert.equal(preflightLatest, '1.6.2');
   assert.deepEqual(
     validatePreflightDistTags({
       preflightLatest,
@@ -4366,6 +4408,40 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   );
 });
 
+// ADR-RELEASE-0006: a first publication starts with no dist-tags and gains only latest.
+test('first publication requires an empty preflight and exactly latest after publishing', async () => {
+  const { verifyPostPublishDistTags } = await import('../../scripts/lib/publication-dist-tag.mjs');
+  assert.doesNotThrow(() =>
+    verifyPostPublishDistTags({
+      candidate: currentCandidate,
+      preflightLatest,
+      preflightDistTags: {},
+      distTags: { latest: currentCandidate },
+      firstPublication: true,
+    }),
+  );
+  for (const [preflightDistTags, distTags, code] of [
+    [{ latest: preflightLatest }, { latest: currentCandidate }, 'PUBLICATION_DIST_TAG_DRIFT'],
+    [{}, { latest: currentCandidate, rc: previousCandidate }, 'PUBLICATION_DIST_TAG_DRIFT'],
+    [{}, { latest: '1.0.0' }, 'PUBLICATION_DIST_TAG_DRIFT'],
+  ]) {
+    assert.throws(
+      () =>
+        verifyPostPublishDistTags({
+          candidate: currentCandidate,
+          preflightLatest,
+          preflightDistTags,
+          distTags,
+          firstPublication: true,
+        }),
+      (error) => error?.code === code,
+    );
+  }
+  const publisher = repositorySource('scripts/publish-release-plan.mjs');
+  assert.match(publisher, /PUBLICATION_FIRST_PUBLICATION_PRESENT/u);
+  assert.match(publisher, /firstPublication: firstPublications\.has\(entry\.package\)/u);
+});
+
 test('final publication moves only latest while RC2 and other tags stay fixed', async () => {
   const { verifyPostPublishDistTags } = await import('../../scripts/lib/publication-dist-tag.mjs');
   const preflightDistTags = { latest: preflightLatest, rc: previousCandidate, legacy: '0.9.0' };
@@ -4410,7 +4486,7 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
     ...entry,
     manifest: { ...entry.manifest, version: candidate },
   }));
-  assert.equal(packages.length, 44);
+  assert.equal(packages.length, 47);
   assert.equal(packages[0].name, '@stynx-nyx/angular');
   assert.doesNotThrow(() => publication.validatePublicationRoster(packages, candidate));
   for (const roster of [packages.slice(1), [packages[1], packages[0], ...packages.slice(2)]]) {
@@ -4431,7 +4507,7 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
     (error) => error?.code === 'PUBLICATION_VERSION_DRIFT',
   );
   assert.equal(publication.publicationPlanConstants.canaryPackage, '@stynx-nyx/angular');
-  assert.equal(publication.publicationPlanConstants.packageCount, 44);
+  assert.equal(publication.publicationPlanConstants.packageCount, 47);
   assert.equal(publication.publicationPlanConstants.maxVisibilityRereads, 5);
   assert.equal(publication.publicationPlanConstants.visibilityRereadDelayMs, 2_000);
   for (const [rc, code] of [
@@ -4449,7 +4525,7 @@ test('final stable publication roster, rc2 visibility, bounded rereads, and stab
       (error) => error?.code === code,
     );
   }
-  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [1n, 6n, 2n]);
+  assert.deepEqual(parseStableVersionTag(`v${candidate}`), [3n, 0n, 0n]);
   assert.throws(
     () => parseStableVersionTag(`v${previousCandidate}`),
     /malformed stable release tag/u,
