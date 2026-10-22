@@ -12,7 +12,8 @@
     "node24.json",
     "lib.json",
     "angular18.json",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "peerDependencies": {
     "typescript": "~6.0.3"

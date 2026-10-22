@@ -99,3 +99,27 @@ Each preset is a JSON config you `extends`. Override `compilerOptions` in your l
 ## TypeDoc reference
 
 Config-only package; no symbol-level API surface.
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+_None._
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+- `typescript`: `~6.0.3`
+
+### Development-only dependencies
+
+_None._
+
+<!-- stynx:generated-dependencies:end -->

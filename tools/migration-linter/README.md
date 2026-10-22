@@ -137,3 +137,28 @@ publication follows in the STYNX release that publishes the tooling packages.
 ## TypeDoc reference
 
 CLI-first tool; the library entry point re-exports the lint functions and rule constants listed above.
+
+<!-- stynx:generated-dependencies:start -->
+
+## Generated dependency reference
+
+This section is generated from `package.json`. Run `pnpm package-readmes:write` to update it.
+
+### Runtime dependencies
+
+- `pg-query-emscripten`: `^5.1.0`
+
+### Optional dependencies
+
+_None._
+
+### Peer dependencies
+
+_None._
+
+### Development-only dependencies
+
+- `@types/node`: `24.13.4`
+- `typescript`: `^6.0.3`
+
+<!-- stynx:generated-dependencies:end -->

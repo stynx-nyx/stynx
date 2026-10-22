@@ -92,7 +92,10 @@ const requiredPublicExports = {
   '@stynx-nyx/pdf': ['.', './evidence', './fixed-layout', './public-payroll'],
   '@stynx-nyx/signature': ['.', './xmldsig'],
   '@stynx-nyx/sessions': ['.', './control'],
+  '@stynx-nyx/eslint-config': ['.', './test'],
 };
+// Presets consumed by path (`extends: "@stynx-nyx/tsconfig/node24.json"`) have no barrel.
+const configOnlyPackages = new Set(['@stynx-nyx/tsconfig']);
 
 for (const pkg of packages) {
   const licensePath = resolve(pkg.dirPath, 'LICENSE');
@@ -111,7 +114,11 @@ for (const pkg of packages) {
       : [];
   const allowedExports = allowedExportKeys(pkg.manifest.name);
   const unknownExports = exportKeys.filter((key) => !allowedExports.has(key));
-  if (!exportKeys.includes('.')) {
+  if (configOnlyPackages.has(pkg.manifest.name)) {
+    if (exportKeys.length > 0) {
+      errors.push(`${pkg.manifest.name}: a config-only package must not declare exports`);
+    }
+  } else if (!exportKeys.includes('.')) {
     errors.push(`${pkg.manifest.name}: exports must include the "." barrel entry`);
   }
   if (unknownExports.length > 0) {
