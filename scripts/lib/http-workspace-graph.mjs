@@ -157,18 +157,22 @@ export function deriveHttpWorkspaceGraph(checkoutRoot) {
     for (const dependency of dependencyNames) visit(dependency);
     const buildScript = member.manifest.scripts?.build;
     if (buildScript === undefined) {
-      // Config-only tooling: no build, no workspace edges. `published` tools (SM-02) must not be
-      // private; unpublished ones must be.
+      // Config-only tooling: no build, no workspace edges. `published` tools (SM-02, SM-21) must
+      // not be private; unpublished ones must be.
       const sourceOnly = new Map([
-        ['@stynx-nyx/eslint-config', { root: 'tools/eslint-config', published: false }],
+        ['@stynx-nyx/eslint-config', { root: 'tools/eslint-config', published: true }],
         ['@stynx-nyx/tsconfig', { root: 'tools/tsconfig', published: true }],
       ]);
+      // SM-21: published tools also carry coverage and clean scripts, never a build.
+      const sourceOnlyScripts = new Set(['test', 'test:coverage', 'clean']);
       const tool = sourceOnly.get(name);
       if (
         tool?.root !== member.root ||
-        (tool.published ? member.manifest.private !== undefined : member.manifest.private !== true) ||
+        (tool.published
+          ? member.manifest.private !== undefined
+          : member.manifest.private !== true) ||
         dependencyNames.length !== 0 ||
-        Object.keys(member.manifest.scripts ?? {}).some((key) => key !== 'test')
+        Object.keys(member.manifest.scripts ?? {}).some((key) => !sourceOnlyScripts.has(key))
       )
         refuse('Unsupported selected workspace build script or source-only tooling');
       selectedTooling.push({
