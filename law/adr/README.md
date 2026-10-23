@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-DEVAI-ADOPTION-0029 — Bounded compatibility operations for existing configurable SQL APIs](2026-10-23-s10-configurable-sql-compatibility-proposal.md)
+
 - [ADR-DEVAI-ADOPTION-0028 — Typed-query adoption, strict workspace lint and bounded legacy archive compatibility (S10 SM-09, SM-11)](2026-10-23-s10-typed-query-adoption.md)
 
 - [ADR-DEVAI-ADOPTION-0027 — app.* GUC dialect and deny-by-default boundaries for STYNX itself (S10 SM-05, SM-12)](2026-10-23-s10-app-guc-dialect-and-workspace-boundaries.md)
