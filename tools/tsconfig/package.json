@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/tsconfig",
-  "version": "1.6.2",
+  "version": "3.0.0",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "Shared TypeScript presets for STYNX packages and STYNX-based products",

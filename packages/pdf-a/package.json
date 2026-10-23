@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/pdf-a",
-  "version": "1.6.2",
+  "version": "3.0.0",
   "license": "BUSL-1.1",
   "author": "Antonio Augusto Russo <aarusso@nyxk.com.br>",
   "description": "PDF/A validation contract and stubs for stynx",
@@ -29,7 +29,7 @@
     "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
   },
   "peerDependencies": {
-    "@stynx-nyx/logging": "^1.6.2"
+    "@stynx-nyx/logging": "^3.0.0"
   },
   "peerDependenciesMeta": {
     "@stynx-nyx/logging": {
