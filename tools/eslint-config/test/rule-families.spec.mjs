@@ -21,6 +21,7 @@ import { dirname, join, matchesGlob } from 'node:path';
 import { describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 import { ESLint } from 'eslint';
 import angularConfig from '../angular.mjs';
 import libConfig from '../lib.mjs';
@@ -443,4 +444,42 @@ test('STYNX workspace: domain API lint invokes the governed Nest profile', () =>
     manifest.scripts.lint,
     /--config\s+['"]?\.\.\/\.\.\/\.\.\/tools\/eslint-config\/nest\.mjs(?:['"]|\s|$)/u,
   );
+});
+
+test('workspace redeclaration enforcement admits overloads and rejects duplicate implementations', async () => {
+  const overload =
+    'function convert(value: string): string; function convert(value: number): number; function convert(value: string | number): string | number { return value; }';
+  const duplicate =
+    'function duplicate(): number { return 1; } function duplicate(): number { return 2; }';
+  for (const config of [libConfig, nestConfig, angularConfig]) {
+    const rules = rulesOf(config);
+    assert.equal(rules['no-redeclare'], 'off');
+    assert.equal(rules['@typescript-eslint/no-redeclare'], 'error');
+    const eslint = new ESLint({
+      overrideConfigFile: true,
+      overrideConfig: [
+        {
+          files: ['**/*.ts'],
+          languageOptions: { parser: tsParser },
+          plugins: { '@typescript-eslint': tsPlugin },
+          rules: {
+            'no-redeclare': rules['no-redeclare'],
+            '@typescript-eslint/no-redeclare': rules['@typescript-eslint/no-redeclare'],
+          },
+        },
+      ],
+    });
+    const [valid] = await eslint.lintText(overload, { filePath: 'overload.ts' });
+    assert.deepEqual(valid.messages, []);
+    const [invalid] = await eslint.lintText(duplicate, { filePath: 'duplicate.ts' });
+    assert.deepEqual(
+      invalid.messages.filter((message) => message.fatal),
+      [],
+    );
+    assert.ok(
+      invalid.messages.some(
+        (message) => message.ruleId === '@typescript-eslint/no-redeclare' && message.severity === 2,
+      ),
+    );
+  }
 });

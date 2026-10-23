@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 import tsParser from '@typescript-eslint/parser';
@@ -14,7 +15,7 @@ const imports = `import type { PoolClient, Client, Pool } from 'pg';\nimport typ
 
 // A real TypeScript checker sees actual pg and Transaction declarations. Virtual
 // files exercise exact admitted paths without writing or modifying production.
-async function lint(source, relativePath, rule, extraSources = {}) {
+async function lint(source, relativePath, rule, extraSources = {}, packagePaths = {}) {
   assert.equal(typeof stynxPlugin.rules[rule]?.create, 'function', `missing stynx/${rule}`);
   const filename = join(workspace, relativePath);
   const sources = new Map([
@@ -35,13 +36,17 @@ async function lint(source, relativePath, rule, extraSources = {}) {
   // otherwise TypeScript would silently turn these receivers into `any`.
   const pg = ts.resolveModuleName('pg', transactionPath, options, ts.sys).resolvedModule;
   assert.ok(pg, 'the real data package must resolve PostgreSQL declarations');
-  options.paths = { pg: [pg.resolvedFileName] };
+  options.paths = { pg: [pg.resolvedFileName], ...packagePaths };
   const host = ts.createCompilerHost(options);
   const originalRead = host.readFile.bind(host);
   const originalExists = host.fileExists.bind(host);
   const originalSource = host.getSourceFile.bind(host);
   host.readFile = (file) => sources.get(resolve(file)) ?? originalRead(file);
   host.fileExists = (file) => sources.has(resolve(file)) || originalExists(file);
+  const originalDirectoryExists = host.directoryExists.bind(host);
+  host.directoryExists = (directory) =>
+    [...sources.keys()].some((file) => file.startsWith(`${resolve(directory)}/`)) ||
+    originalDirectoryExists(directory);
   host.getSourceFile = (file, languageVersion, ...rest) =>
     sources.has(resolve(file))
       ? ts.createSourceFile(file, sources.get(resolve(file)), languageVersion, true)
@@ -49,6 +54,7 @@ async function lint(source, relativePath, rule, extraSources = {}) {
   const program = ts.createProgram([...sources.keys()], options, host);
   const checker = program.getTypeChecker();
   for (const file of sources.keys()) {
+    if (file.endsWith('.d.ts')) continue;
     const parsed = program.getSourceFile(file);
     assert.ok(parsed, `virtual fixture must enter the TypeScript program: ${file}`);
     for (const statement of parsed.statements) {
@@ -224,6 +230,178 @@ test('query definitions accept repository files and ignore unrelated local names
     await lint(
       'function defineQuery(value: string) { return value; } defineQuery("search");',
       applicationPath,
+      'define-query-location',
+    ),
+    [],
+  );
+});
+
+test('package imports retain raw-query provenance at the actual emitted declaration layout', async () => {
+  const manifest = JSON.parse(readFileSync(join(workspace, 'packages/data/package.json'), 'utf8'));
+  const entry = join('packages/data', manifest.exports['.'].types);
+  assert.equal(entry, 'packages/data/dist/data/src/index.d.ts');
+  // Emit the actual class declaration in memory, without a workspace build.
+  // Resolve the public package name through its declared types export, exactly
+  // where pnpm realpath resolution lands after a build.
+  const declaration = ts.transpileDeclaration(readFileSync(transactionPath, 'utf8'), {
+    fileName: transactionPath,
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+  }).outputText;
+  assert.match(declaration, /export declare class Transaction/u);
+  const findings = await lint(
+    'import type { Transaction } from "@stynx-nyx/data"; declare const trx: Transaction; trx.query("select 1"); trx.execute({});',
+    applicationPath,
+    'no-raw-query',
+    {
+      [entry]: 'export { Transaction } from "./transaction.js";',
+      'packages/data/dist/data/src/transaction.d.ts': declaration,
+    },
+    { '@stynx-nyx/data': [join(workspace, entry)] },
+  );
+  assert.equal(findings.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 2);
+});
+
+test('same-named unrelated emitted declarations remain unrelated', async () => {
+  const unrelated = 'packages/health/dist/health/src/transaction.d.ts';
+  assert.deepEqual(
+    await lint(
+      `import type { Transaction } from ${JSON.stringify(join(workspace, unrelated))}; declare const trx: Transaction; trx.query("search"); trx.execute();`,
+      applicationPath,
+      'no-raw-query',
+      {
+        [unrelated]:
+          'export declare class Transaction { query(value: string): string; execute(): number; }',
+      },
+    ),
+    [],
+  );
+});
+
+for (const [name, expression] of [
+  ['Pick Transaction', 'declare const trx: Pick<Transaction, "query">; trx.query("select 1");'],
+  [
+    'bound Transaction',
+    'declare const trx: Transaction; const run = trx.query.bind(trx); run("select 1");',
+  ],
+]) {
+  test(`workspace raw-query rule rejects ${name}`, async () => {
+    const findings = await lint(imports + expression, applicationPath, 'no-raw-query');
+    assert.ok(findings.some((finding) => finding.ruleId === 'stynx/no-raw-query'));
+  });
+}
+
+test('query definitions follow namespace and indirect barrel imports', async () => {
+  for (const source of [
+    `import * as definitions from ${JSON.stringify(typedQueryPath)}; definitions.defineQuery({});`,
+    'import { declareSql } from "./query-definitions.js"; declareSql({});',
+  ]) {
+    const findings = await lint(source, applicationPath, 'define-query-location', {
+      'packages/health/src/query-definitions.ts': `export { defineQuery as declareSql } from ${JSON.stringify(typedQueryPath)};`,
+    });
+    assert.equal(
+      findings.filter((finding) => finding.ruleId === 'stynx/define-query-location').length,
+      1,
+    );
+  }
+});
+
+test('executor-looking local functions have no checked-executor provenance', async () => {
+  assert.deepEqual(
+    await lint(
+      'function executeRawScript() { return 1; } function executeLegacyArchive() { return 2; } executeRawScript(); executeLegacyArchive();',
+      applicationPath,
+      'no-raw-query',
+    ),
+    [],
+  );
+});
+
+for (const [name, modulePath] of [
+  ['CheckedQueryClient', 'packages/data/src/checked-executor.ts'],
+  ['StorageVerifierTransaction', 'packages/data/src/storage-contract.ts'],
+  ['IdempotencySqlExecutor', 'packages/idempotency/src/types.ts'],
+  ['IdempotencySqlExecutor', 'packages/backend/src/idempotency/types.ts'],
+]) {
+  test(`raw-query provenance includes the exact ${modulePath} port`, async () => {
+    const source = `import type { ${name} as Port } from ${JSON.stringify(join(workspace, modulePath))}; declare const port: Port; port.query("select 1"); const alias = port; alias.query("select 2"); const { query: run } = port; run("select 3");`;
+    const findings = await lint(source, applicationPath, 'no-raw-query');
+    assert.equal(findings.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 3);
+  });
+}
+
+test('structural port names alone do not classify unrelated query operations as PostgreSQL', async () => {
+  for (const name of [
+    'CheckedQueryClient',
+    'StorageVerifierTransaction',
+    'IdempotencySqlExecutor',
+  ]) {
+    assert.deepEqual(
+      await lint(
+        `interface ${name} { query(value: string): Promise<string>; } declare const port: ${name}; port.query("search");`,
+        applicationPath,
+        'no-raw-query',
+      ),
+      [],
+    );
+  }
+});
+
+for (const [label, expression] of [
+  [
+    'dynamic text',
+    'declare const dynamicText: ReturnType<typeof literalSql>; declareSql({ text: dynamicText });',
+  ],
+  ['plain text bypass', 'declareSql({ text: "select 1" });'],
+  [
+    'dynamic options',
+    'declare const options: Parameters<typeof declareSql>[0]; declareSql(options);',
+  ],
+  [
+    'spread options',
+    'declare const options: Parameters<typeof declareSql>[0]; declareSql({ ...options });',
+  ],
+  [
+    'spread overriding explicit text',
+    'declare const options: Parameters<typeof declareSql>[0]; declareSql({ text: literalSql`select 1`, ...options });',
+  ],
+  ['direct sql call', 'declare const strings: TemplateStringsArray; literalSql(strings);'],
+  [
+    'tag interpolation',
+    'declare const value: string; declareSql({ text: literalSql`select ${value}` });',
+  ],
+  [
+    'untrusted tag',
+    'declare function untrusted(strings: TemplateStringsArray): string; declareSql({ text: untrusted`select 1` });',
+  ],
+]) {
+  test(`repository query definitions reject ${label}`, async () => {
+    const source = `import { defineQuery as declareSql, sql as literalSql } from ${JSON.stringify(typedQueryPath)}; ${expression}`;
+    const findings = await lint(
+      source,
+      'packages/health/src/probe.repository.ts',
+      'define-query-location',
+    );
+    assert.ok(
+      findings.some(
+        (finding) => finding.ruleId === 'stynx/define-query-location' && finding.severity === 2,
+      ),
+    );
+  });
+}
+
+test('repository literal enforcement accepts trusted zero-hole namespace tags and unrelated local names', async () => {
+  assert.deepEqual(
+    await lint(
+      `import * as definitions from ${JSON.stringify(typedQueryPath)}; definitions.defineQuery({ text: definitions.sql\`select 1\` });`,
+      'packages/health/src/probe.repository.ts',
+      'define-query-location',
+    ),
+    [],
+  );
+  assert.deepEqual(
+    await lint(
+      'function sql(value: string) { return value; } function defineQuery(value: string) { return value; } defineQuery(sql("search"));',
+      'packages/health/src/probe.repository.ts',
       'define-query-location',
     ),
     [],

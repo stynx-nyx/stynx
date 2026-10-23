@@ -138,4 +138,17 @@ describe('@stynx-nyx/contracts hasPublicTenantRoute', () => {
       store.delete(Object.prototype.toString);
     }
   });
+
+  it('fails explicitly when the host has not installed metadata reflection', () => {
+    const installed = reflect.getMetadata;
+    try {
+      reflect.getMetadata = undefined;
+      expect(() => hasPublicTenantRoute(class Controller {})).toThrow(
+        'Reflect.getMetadata must be installed before checking public tenant routes',
+      );
+      expect(lookups).toEqual([]);
+    } finally {
+      reflect.getMetadata = installed;
+    }
+  });
 });

@@ -155,6 +155,26 @@ describe('typed-query helper', () => {
     ).toBe(text);
   });
 
+  it('recognizes PostgreSQL identifier boundaries around dollar text', () => {
+    for (const [text, params] of [
+      [sql`select foo$1 from source`, z.tuple([])],
+      [sql`select café$2 from source`, z.tuple([])],
+      [sql`select foo$tag$, $1 from source`, z.tuple([z.number()])],
+      [sql`select foo$$, $1 from source`, z.tuple([z.number()])],
+      [sql`select E'can\\'t $9', 'it''s $8', "$7""suffix", $1`, z.tuple([z.number()])],
+    ] as const) {
+      expect(
+        defineQuery({
+          name: 'unit.placeholder.identifier-boundary',
+          text,
+          params,
+          row: z.object({}),
+          expects: 'many',
+        }).text,
+      ).toBe(text);
+    }
+  });
+
   it('binds parsed arguments as $n and returns the validated row for expects one', async () => {
     const { tx, client } = createTx([{ id: ID }]);
     await expect(tx.run(insertNote, [ID, 'short', 3])).resolves.toEqual({ id: ID });

@@ -1,3 +1,4 @@
+import { forwardRef } from '@nestjs/common';
 import { MODULE_METADATA } from '@nestjs/common/constants.js';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { z } from 'zod';
@@ -123,5 +124,65 @@ describe('StynxCoreModule', () => {
     );
     expect(second.module).toBe(first.module);
     expect(staticImports()[0]).toBe(clsModuleDescriptor);
+  });
+
+  it('preserves delayed Nest imports and injection references without evaluating callbacks', async () => {
+    class DependencyModule {}
+    class DependencyToken {}
+    const dynamic = { module: DependencyModule };
+    const resolveModule = vi.fn(() => DependencyModule);
+    const resolveToken = vi.fn(() => DependencyToken);
+    const delayedModule = forwardRef(resolveModule);
+    const delayedToken = forwardRef(resolveToken);
+    const optionalDelayedToken = { token: delayedToken, optional: true };
+    const symbolToken = Symbol('dependency');
+    const dependencies = [
+      'dependency',
+      symbolToken,
+      DependencyToken,
+      { token: 'optional', optional: true },
+      delayedToken,
+      optionalDelayedToken,
+    ];
+    const imports = [
+      DependencyModule,
+      dynamic,
+      delayedModule,
+      Promise.resolve(DependencyModule),
+      Promise.resolve(dynamic),
+      Promise.resolve(delayedModule),
+    ];
+    const factory = vi.fn(() => ({ appName: 'compatibility', schema: z.object({}) }));
+    const module = StynxCoreModule.forRootAsync({
+      imports,
+      inject: dependencies,
+      useFactory: factory,
+    });
+    expect(module.imports).toHaveLength(6);
+    expect(module.imports).toBe(imports);
+    for (let index = 0; index < 3; index++) expect(module.imports?.[index]).toBe(imports[index]);
+    expect(await Promise.all((module.imports ?? []).slice(3))).toEqual([
+      DependencyModule,
+      dynamic,
+      delayedModule,
+    ]);
+    const provider = module.providers?.find(
+      (entry) =>
+        typeof entry === 'object' &&
+        entry !== null &&
+        'provide' in entry &&
+        entry.provide === STYNX_CORE_OPTIONS,
+    );
+    if (!provider || typeof provider !== 'object' || !('inject' in provider)) {
+      throw new Error('Async options factory provider must retain its dependency metadata');
+    }
+    expect(provider.inject).toHaveLength(dependencies.length);
+    expect(provider.inject).toBe(dependencies);
+    for (let index = 0; index < dependencies.length; index++) {
+      expect(provider.inject?.[index]).toBe(dependencies[index]);
+    }
+    expect(resolveModule).not.toHaveBeenCalled();
+    expect(resolveToken).not.toHaveBeenCalled();
+    expect(factory).not.toHaveBeenCalled();
   });
 });

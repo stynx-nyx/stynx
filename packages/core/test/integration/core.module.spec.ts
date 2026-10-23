@@ -1,4 +1,11 @@
-import { Controller, Get, Module, type CallHandler, type ExecutionContext } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Module,
+  forwardRef,
+  type CallHandler,
+  type ExecutionContext,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { defer, from, lastValueFrom } from 'rxjs';
 import { z } from 'zod';
@@ -188,5 +195,49 @@ describe('StynxCoreModule integration', () => {
 
     await expect(app.init()).resolves.toBe(app);
     await app.close();
+  });
+
+  // Direct forwardRef factory injection also fails on the pre-refactor module with
+  // null STYNX_CORE_OPTIONS under Nest 11.2.3. Its metadata compatibility is
+  // covered in the unit suite; this boot witness uses runtime-valid tokens.
+  it('boots promised and delayed module imports with ordinary and optional factory tokens', async () => {
+    class DependencyToken {}
+    class MissingToken {}
+    const dependency = { value: 'resolved-by-nest' };
+    @Module({
+      providers: [{ provide: DependencyToken, useValue: dependency }],
+      exports: [DependencyToken],
+    })
+    class DependencyModule {}
+    const dynamic = { module: DependencyModule };
+    const resolveModule = vi.fn(() => DependencyModule);
+    const delayedModule = forwardRef(resolveModule);
+    const factory = vi.fn((_dependency: unknown, _missing: unknown) => ({
+      appName: 'delayed-import-compatibility',
+      schema: z.object({}),
+    }));
+    const core = StynxCoreModule.forRootAsync({
+      imports: [
+        DependencyModule,
+        dynamic,
+        delayedModule,
+        Promise.resolve(DependencyModule),
+        Promise.resolve(dynamic),
+        Promise.resolve(delayedModule),
+      ],
+      inject: [DependencyToken, { token: MissingToken, optional: true }],
+      useFactory: factory,
+    });
+    expect(resolveModule).not.toHaveBeenCalled();
+    expect(factory).not.toHaveBeenCalled();
+    const moduleRef = await Test.createTestingModule({ imports: [core] }).compile();
+    try {
+      expect(factory).toHaveBeenCalledWith(dependency, undefined);
+      expect(resolveModule).toHaveBeenCalled();
+      expect(moduleRef.get(DependencyToken)).toBe(dependency);
+      expect(moduleRef.get(StynxConfigService)).toBeInstanceOf(StynxConfigService);
+    } finally {
+      await moduleRef.close();
+    }
   });
 });

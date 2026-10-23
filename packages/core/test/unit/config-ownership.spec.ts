@@ -83,4 +83,22 @@ describe('config ownership metadata', () => {
       }),
     ).rejects.toBeInstanceOf(ConfigOwnershipViolationError);
   });
+
+  it('retains JavaScript property access on primitive, array and function schema results', () => {
+    const required = { owner: 'platform', required: true };
+    const callable = Object.assign(() => 'unused', { configured: 'yes' });
+    for (const [value, key] of [
+      ['configured', 'length'],
+      [['configured'], '0'],
+      [callable, 'configured'],
+    ] as const) {
+      expect(() => validateConfigOwnership(value, { [key]: required })).not.toThrow();
+    }
+    expect(() => validateConfigOwnership('', { length: required })).not.toThrow();
+    expect(() => validateConfigOwnership('value', { absent: required })).toThrow(
+      ConfigOwnershipViolationError,
+    );
+    expect(() => validateConfigOwnership(null, { required })).toThrow(TypeError);
+    expect(() => validateConfigOwnership(undefined, { required })).toThrow(TypeError);
+  });
 });

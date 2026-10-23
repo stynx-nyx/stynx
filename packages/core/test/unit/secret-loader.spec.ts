@@ -143,9 +143,11 @@ describe('SecretLoader', () => {
     const loader = new SecretLoader({ secretCacheTtlMs: 60_000 } as never);
     (loader as unknown as { client: { send: typeof send } }).client = { send } as never;
 
-    await expect(loader.withConnectionErrorRefresh('id-1', async () => {
-      throw new TypeError('bad input');
-    })).rejects.toThrow('bad input');
+    await expect(
+      loader.withConnectionErrorRefresh('id-1', async () => {
+        throw new TypeError('bad input');
+      }),
+    ).rejects.toThrow('bad input');
     expect(send).toHaveBeenCalledTimes(1);
   });
 
@@ -154,9 +156,20 @@ describe('SecretLoader', () => {
     const loader = new SecretLoader({ secretCacheTtlMs: 60_000 } as never);
     (loader as unknown as { client: { send: typeof send } }).client = { send } as never;
 
-    await expect(loader.withConnectionErrorRefresh('id-1', async () => {
-      throw 'bad input';
-    })).rejects.toBe('bad input');
+    await expect(
+      loader.withConnectionErrorRefresh('id-1', async () => {
+        throw 'bad input';
+      }),
+    ).rejects.toBe('bad input');
     expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves the configured SDK region and refuses truthy primitive client options', async () => {
+    const loader = new SecretLoader({ secretsClientConfig: { region: 'eu-west-1' } } as never);
+    const client = (loader as unknown as { client: SecretsManagerClient }).client;
+    await expect(client.config.region()).resolves.toBe('eu-west-1');
+    for (const invalid of ['region', 42, true]) {
+      expect(() => new SecretLoader({ secretsClientConfig: invalid } as never)).toThrow(TypeError);
+    }
   });
 });
