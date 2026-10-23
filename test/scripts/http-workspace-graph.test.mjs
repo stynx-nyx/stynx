@@ -766,7 +766,6 @@ function sourceOnlyTooling(f) {
   );
   f.json('tools/eslint-config/package.json', {
     name: '@stynx-nyx/eslint-config',
-    private: true,
     scripts: { test: 'node --test test/tooling.spec.mjs' },
   });
   f.json('tools/tsconfig/package.json', {
@@ -831,37 +830,21 @@ test('actual candidate closure declares exactly 22 compiler members and two sour
 });
 
 for (const short of ['eslint-config', 'tsconfig']) {
-  // eslint-config is unpublished (private: true required); tsconfig is published (SM-02: private absent).
-  const identity =
-    short === 'tsconfig'
-      ? [
-          [
-            'private manifest',
-            (value) => {
-              value.private = true;
-            },
-          ],
-          [
-            'explicit public flag',
-            (value) => {
-              value.private = false;
-            },
-          ],
-        ]
-      : [
-          [
-            'public manifest',
-            (value) => {
-              value.private = false;
-            },
-          ],
-          [
-            'missing private identity',
-            (value) => {
-              delete value.private;
-            },
-          ],
-        ];
+  // Both tools are published (SM-02, SM-21): private must be absent.
+  const identity = [
+    [
+      'private manifest',
+      (value) => {
+        value.private = true;
+      },
+    ],
+    [
+      'explicit public flag',
+      (value) => {
+        value.private = false;
+      },
+    ],
+  ];
   for (const [label, mutate] of [
     ...identity,
     [
