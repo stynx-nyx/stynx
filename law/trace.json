@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.39",
+  "version": "1.3.40",
   "meta": {
-    "last_updated": "2026-10-20T01:30:00.000000Z",
+    "last_updated": "2026-10-23T22:46:01.590403Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-23 Architect rebind of eight stale assertion projections after the approved SM-21 release, post-release dependency freezes and S8 historical descriptor fixture: reference-web checkout alias layering, published tsconfig LICENSE, tools roster discovery, exact 3.0.0 marker and 47-package release census, public tooling graph identity, root manifest freezes, historical release-scope task bytes, and storage-version fixture support. Existing assertions, invariant mappings, completeness thresholds and historical provenance are preserved; this binding does not authorize publication or downstream DETRAN/PORM acceptance.",
       "2026-10-19 Architect rebind for SM-06 follow-up (template apply.sh runs `stynx migrate up --role-prefix <product>` with no URL on argv, 09 §1): binds packages/cli/test/migrate-pg-env.integration.spec.ts (migrateUp with prefix demo and only PG* set against the STYNX_TEST_PG_* scratch PostgreSQL; skipped when none is configured) and rebinds packages/cli/test/migrate.spec.ts (no connectionString reaches the pg client or factory without a URL) and packages/cli/test/cli-program.spec.ts (--database-url optional on migrate status|up|down|redo; audit verify unchanged). No assertion is removed or weakened beyond the intended optional flag.",
       "2026-10-19 Architect rebind for SM-06: binds packages/data/test/unit/platform-roles.spec.ts (default prefix applies every platform migration byte for byte; prefix demo rewrites only stynx_{owner,app,reader} identifiers; invalid prefixes refused), packages/data/test/unit/migration-runner-role-prefix.spec.ts, packages/data/test/integration/role-prefix.integration.spec.ts (scratch PostgreSQL: default stays on stynx_*; prefix demo bootstraps demo_{owner,app,reader} with demo_app NOBYPASSRLS, no stynx_* role owning, granted or named in the database, tenant isolation as the product app role), packages/cli/test/migrate-role-prefix.spec.ts and packages/testing/test/roles.unit.spec.ts, and rebinds the extended packages/cli/test/cli-program.spec.ts (--role-prefix surface) and packages/testing/test/create-test-app.unit.spec.ts (product role names). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
       "2026-10-19 Architect rebind for SM-03: binds tools/eslint-config/test/rule-families.spec.mjs (one eslint --max-warnings=0 fixture per enabled rule family exits 1 naming its rule, a clean fixture per profile exits 0, the exports map and named-factory surface, and the unchanged STYNX workspace levels) and rebinds test/scripts/http-workspace-graph.test.mjs after its source-only tooling fixture follows the @stynx-nyx/eslint-config rename. All 57 workspace-graph assertion sites are unchanged in count and text; no assertion is removed or weakened.",
@@ -4532,8 +4533,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 16,
-      "assertion_digest_sha256": "18d5a2ef12c4b83c0fe93cd36356bef5afcbcbab4c064d45596d4c6cf4dd8429"
+      "assertion_count": 17,
+      "assertion_digest_sha256": "48ae2accfcfc74a81ca0fca04755a1ea7b9a444d02015c356c847a827afb379a"
     },
     {
       "path": "scripts/list-ddl-objects.spec.mjs",
@@ -4939,7 +4940,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 29,
-      "assertion_digest_sha256": "2c510e69120cab38a8511cd4f5d738e78afd3c2f226f6950f6abeea8ae5dcdb9"
+      "assertion_digest_sha256": "fd6b27e248043e4ac21b6498579c5598b17a15d7b967b90a9d020fee27f1f986"
     },
     {
       "path": "packages/mobile-runtime/test/mobile-runtime-edge-cases.spec.ts",
@@ -5003,7 +5004,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 5,
-      "assertion_digest_sha256": "7ef54e5ccc31a272cbbf44740f05b1420bb7d59c9c342b849a35e622fb345485"
+      "assertion_digest_sha256": "b290fc89e8f61bcbab1c9ec3f96c00769f9d1514a1acd88dde8601d09b6328ed"
     },
     {
       "path": "scripts/verify-branch-protection.spec.mjs",
@@ -5235,7 +5236,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 899,
-      "assertion_digest_sha256": "8e29f12aa8d70dc6e23b5ecf144c0e96e16fb72a64ee9e6d1e28415d7bd81d42"
+      "assertion_digest_sha256": "c28d343b53758c3db293f3607ee165ed931ae4677cbd5311e6df212a5aff0398"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -5266,8 +5267,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 452,
-      "assertion_digest_sha256": "de8a133b249c0a093085da014903d7f97ee7cbfeb54efce057d8c9f1410c0c27"
+      "assertion_count": 479,
+      "assertion_digest_sha256": "dbe0e4d3ab32d2ee73c0aea34402c58ed9331af838e6c68ec33e2781a9f3bf3c"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -6921,7 +6922,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 57,
-      "assertion_digest_sha256": "7fdd7661de7e4a0f970d4086b1c0d9a8c1a84dfc434bb92cbfd863237883402a"
+      "assertion_digest_sha256": "d3dc356304ed36d0bec3ef5ea995bd8fe7d6878e5b19599b652bd81ff806eca2"
     },
     {
       "path": "test/scripts/http-fresh-build.test.mjs",
@@ -7296,8 +7297,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 41,
-      "assertion_digest_sha256": "aacaad2e2251527f5648f3fb5bac75be9ea1d199016cbc468a6aecd771cf5eef"
+      "assertion_count": 48,
+      "assertion_digest_sha256": "18edd0f9e8103ad7febcf175b4952dc2de42f60cf7ca061952cb28632b216639"
     },
     {
       "path": "test/scripts/stynx-boundary.test.mjs",
@@ -7321,7 +7322,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 38,
-      "assertion_digest_sha256": "998467372c26829bb1fb8436ca103a7b0280d613027a4d7540b1cd3909d98eb8"
+      "assertion_digest_sha256": "1b21a556000a54b8af83a50c117e1141763656b01f651bebe8e7160a5cdc6b3c"
     },
     {
       "path": "test/scripts/api-task-source-custody.test.mjs",
