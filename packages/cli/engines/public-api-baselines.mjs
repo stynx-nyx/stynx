@@ -68,10 +68,11 @@ export function discoverPackages(root, packageRoots) {
 
 function packageBaseline(root, spec) {
   const manifest = JSON.parse(readFileSync(resolve(root, spec.dir, 'package.json'), 'utf8'));
+  const distDir = resolve(root, spec.dir, 'dist');
   // Unbuilt config packages (tsconfig presets, ESLint profiles) publish their
   // sources as-is; their baseline is the bytes of each published preset.
-  if (typeof manifest.scripts?.build !== 'string') return sourceBaseline(root, spec, manifest);
-  const distDir = resolve(root, spec.dir, 'dist');
+  if (typeof manifest.scripts?.build !== 'string' && !existsSync(distDir))
+    return sourceBaseline(root, spec, manifest);
   const declarationFiles = walk(distDir)
     .filter((file) => file.endsWith('.d.ts'))
     .sort((left, right) => left.localeCompare(right));
