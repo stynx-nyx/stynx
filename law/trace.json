@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.40",
+  "version": "1.3.41",
   "meta": {
-    "last_updated": "2026-10-23T22:46:01.590403Z",
+    "last_updated": "2026-10-23T22:49:34.516608Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-23 Architect binding for the local integration verification-order regression: executes the production shell runner with isolated command doubles to prove migrate, database verification and platform RLS smoke precede bootstrap reset, and that each failed gate preserves its exit status, skips later gates and cleans up. This is orchestration evidence, not a live PostgreSQL tenant-isolation result; all existing assertions, thresholds and invariant statements remain unchanged.",
       "2026-10-23 Architect rebind of eight stale assertion projections after the approved SM-21 release, post-release dependency freezes and S8 historical descriptor fixture: reference-web checkout alias layering, published tsconfig LICENSE, tools roster discovery, exact 3.0.0 marker and 47-package release census, public tooling graph identity, root manifest freezes, historical release-scope task bytes, and storage-version fixture support. Existing assertions, invariant mappings, completeness thresholds and historical provenance are preserved; this binding does not authorize publication or downstream DETRAN/PORM acceptance.",
       "2026-10-19 Architect rebind for SM-06 follow-up (template apply.sh runs `stynx migrate up --role-prefix <product>` with no URL on argv, 09 §1): binds packages/cli/test/migrate-pg-env.integration.spec.ts (migrateUp with prefix demo and only PG* set against the STYNX_TEST_PG_* scratch PostgreSQL; skipped when none is configured) and rebinds packages/cli/test/migrate.spec.ts (no connectionString reaches the pg client or factory without a URL) and packages/cli/test/cli-program.spec.ts (--database-url optional on migrate status|up|down|redo; audit verify unchanged). No assertion is removed or weakened beyond the intended optional flag.",
       "2026-10-19 Architect rebind for SM-06: binds packages/data/test/unit/platform-roles.spec.ts (default prefix applies every platform migration byte for byte; prefix demo rewrites only stynx_{owner,app,reader} identifiers; invalid prefixes refused), packages/data/test/unit/migration-runner-role-prefix.spec.ts, packages/data/test/integration/role-prefix.integration.spec.ts (scratch PostgreSQL: default stays on stynx_*; prefix demo bootstraps demo_{owner,app,reader} with demo_app NOBYPASSRLS, no stynx_* role owning, granted or named in the database, tenant isolation as the product app role), packages/cli/test/migrate-role-prefix.spec.ts and packages/testing/test/roles.unit.spec.ts, and rebinds the extended packages/cli/test/cli-program.spec.ts (--role-prefix surface) and packages/testing/test/create-test-app.unit.spec.ts (product role names). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
@@ -595,6 +596,18 @@
             "The real reference design/runtime flow preserves tenant-scoped run visibility and denies unauthorized mutations."
           ],
           "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "test/scripts/ci-local-integration.test.mjs",
+          "names": [
+            "local integration verifies migrated platform RLS",
+            "local integration preserves"
+          ],
+          "assertions": [
+            "The production shell runner invokes the platform RLS smoke before bootstrap reset and retains fail-closed status propagation and cleanup for every gate; command doubles model schema state and do not claim live database isolation."
+          ],
+          "mode": "white_box"
         }
       ],
       "code_areas": [
@@ -7571,6 +7584,14 @@
       "lifecycle": "supported",
       "assertion_count": 23,
       "assertion_digest_sha256": "5ea3693599967f906451256d01ca67581037e1129067642382eb4e2a4ae74b76"
+    },
+    {
+      "path": "test/scripts/ci-local-integration.test.mjs",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-FLOW-001"],
+      "lifecycle": "supported",
+      "assertion_count": 6,
+      "assertion_digest_sha256": "2adf2883d6fc6abf6e51cef2d832839e3975d58a4bc901c3ea1c97da017abf58"
     }
   ],
   "suites": {
