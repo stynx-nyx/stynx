@@ -237,13 +237,29 @@ describe('rule-family fixtures', { concurrency: availableParallelism() }, () => 
 
 const rulesOf = (config) => Object.assign({}, ...config.map((item) => item.rules ?? {}));
 
-test('STYNX workspace entry points keep the pre-SM-11 type-safety levels', () => {
-  const libRules = rulesOf(libConfig);
-  assert.equal(libRules['@typescript-eslint/no-explicit-any'], 'off');
-  assert.equal(libRules['@typescript-eslint/no-unsafe-assignment'], 'off');
-  assert.equal(libRules['stynx/no-authored-cjs'], undefined);
-  // SM-13 raised the workspace level from warn to the published error level.
+test('STYNX workspace entry points enforce every installed unsafe rule at error', () => {
+  for (const config of [libConfig, nestConfig, angularConfig]) {
+    const rules = rulesOf(config);
+    assert.equal(rules['@typescript-eslint/no-explicit-any'], 'error');
+    for (const rule of unsafeRuleNames)
+      assert.equal(rules[`@typescript-eslint/${rule}`], 'error', rule);
+    assert.equal(rules['stynx/no-authored-cjs'], 'error');
+    assert.equal(rules['stynx/no-raw-query'][0], 'error');
+    assert.deepEqual(rules['stynx/no-raw-query'][1], { rootDir: workspaceRoot });
+    assert.equal(rules['stynx/define-query-location'][0], 'error');
+    assert.deepEqual(rules['stynx/define-query-location'][1], { rootDir: workspaceRoot });
+  }
   assert.equal(rulesOf(nestConfig)['stynx/require-idempotent-route-decorator'], 'error');
+});
+
+test('workspace query enforcement preserves published profile defaults and strict option', async () => {
+  const { createLibConfig, createNestConfig, createAngularConfig } = await import('../index.mjs');
+  for (const factory of [createLibConfig, createNestConfig, createAngularConfig]) {
+    assert.equal(rulesOf(factory())['stynx/no-raw-query'], undefined);
+    assert.equal(rulesOf(factory())['stynx/define-query-location'], undefined);
+    assert.equal(rulesOf(factory({ strict: false }))['@typescript-eslint/no-explicit-any'], 'off');
+    assert.equal(rulesOf(factory({ strict: true }))['@typescript-eslint/no-explicit-any'], 'error');
+  }
 });
 
 // SM-12: STYNX lints itself with boundaries deny-by-default ahead of SM-11.

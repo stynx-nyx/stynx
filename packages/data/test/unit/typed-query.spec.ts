@@ -121,6 +121,40 @@ describe('typed-query helper', () => {
     expect(() => defineQuery({ ...base, expects: 'some' as unknown as 'many' })).toThrow(TypeError);
   });
 
+  it('requires contiguous placeholders matching the finite argument tuple', () => {
+    const base = {
+      name: 'unit.placeholder',
+      row: z.object({ value: z.number() }),
+      expects: 'one' as const,
+    };
+    for (const [text, params] of [
+      [sql`select $2 as value`, z.tuple([z.number()])],
+      [sql`select $1 + $3 as value`, z.tuple([z.number(), z.number(), z.number()])],
+      [sql`select $1 as value`, z.tuple([])],
+      [sql`select $1 as value`, z.tuple([z.number(), z.number()])],
+      [sql`select $0 as value`, z.tuple([z.number()])],
+    ] as const)
+      expect(() => defineQuery({ ...base, text, params })).toThrow(TypeError);
+    expect(
+      defineQuery({ ...base, text: sql`select $1 + $1 as value`, params: z.tuple([z.number()]) })
+        .text,
+    ).toBe('select $1 + $1 as value');
+  });
+
+  it('does not count placeholder-shaped text in SQL strings, identifiers or comments', () => {
+    const text = sql`select '$9', "$8", $$ $7 $$, $label$ $6 $label$ -- $5
+      /* $4 /* nested $3 */ $2 */ where $1::int = 1`;
+    expect(
+      defineQuery({
+        name: 'unit.placeholder.lexical',
+        text,
+        params: z.tuple([z.number()]),
+        row: z.object({}),
+        expects: 'many',
+      }).text,
+    ).toBe(text);
+  });
+
   it('binds parsed arguments as $n and returns the validated row for expects one', async () => {
     const { tx, client } = createTx([{ id: ID }]);
     await expect(tx.run(insertNote, [ID, 'short', 3])).resolves.toEqual({ id: ID });
