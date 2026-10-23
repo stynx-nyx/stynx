@@ -11,6 +11,7 @@ const packDir = join(tempRoot, 'packs');
 const fixturesRoot = join(tempRoot, 'consumers');
 
 const packageSpecs = discoverPublishablePackages(repoRoot);
+const configOnlyPackages = new Set(['@stynx-nyx/tsconfig']);
 
 try {
   mkdirSync(packDir, { recursive: true });
@@ -284,6 +285,13 @@ function assertPackedManifest(tarball, packageName) {
   const serialized = JSON.stringify(manifest);
   if (serialized.includes('workspace:')) {
     throw new Error(`${packageName} tarball ${basename(tarball)} leaks workspace: dependencies`);
+  }
+  // Config-only presets are consumed by path (`extends`), never imported.
+  if (configOnlyPackages.has(packageName)) {
+    if (manifest.exports !== undefined) {
+      throw new Error(`${packageName} config-only tarball must not declare exports`);
+    }
+    return;
   }
   if (!manifest.exports?.['.']) {
     throw new Error(`${packageName} tarball is missing root export`);
