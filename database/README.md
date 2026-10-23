@@ -18,6 +18,7 @@ Current bootstrap DDL:
 Current migration support:
 
 - `database/migrations/000_migrate-check-preseed.sql` prepares roles and default privileges for migration checks.
+- `database/migrations/001_app_guc_context.sql` moves the bootstrap helpers, setters and RLS policies onto the `app.*` settings that `@stynx-nyx/data`'s `Database.tx` writes (`app.tenant_id`, `app.actor_id`, `app.roles`, `app.lang`, `app.request_id`; SM-05, ADR-DEVAI-ADOPTION-0027). `database/ddl` stays as applied.
 
 Current seeds:
 

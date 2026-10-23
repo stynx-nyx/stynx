@@ -63,6 +63,7 @@
         { "kind": "prefix", "pattern": "reference/" },
         { "kind": "prefix", "pattern": "tools/" },
         { "kind": "prefix", "pattern": "scripts/" },
+        { "kind": "prefix", "pattern": "database/migrations/" },
         { "kind": "prefix", "pattern": ".github/workflows/" },
         { "kind": "glob", "pattern": "*.config.*" }
       ],
@@ -106,7 +107,8 @@
         { "kind": "glob", "pattern": "packages-web/*/test/**" },
         { "kind": "glob", "pattern": "tools/*/src/**" },
         { "kind": "glob", "pattern": "tools/*/test/**" },
-        { "kind": "prefix", "pattern": "test/" }
+        { "kind": "prefix", "pattern": "test/" },
+        { "kind": "prefix", "pattern": "database/" }
       ],
       "toolchainKeys": ["node", "pnpm", "vitest"],
       "allowlistedEnv": [
@@ -218,6 +220,7 @@
         { "kind": "glob", "pattern": "packages/*/migrations/**" },
         { "kind": "glob", "pattern": "domain/*/db/**" },
         { "kind": "prefix", "pattern": "reference/api/migrations/" },
+        { "kind": "prefix", "pattern": "database/" },
         { "kind": "glob", "pattern": "scripts/*db*.mjs" },
         { "kind": "glob", "pattern": "scripts/*rls*" }
       ],
