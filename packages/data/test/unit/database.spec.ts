@@ -202,6 +202,7 @@ describe('Database', () => {
       `SELECT set_config('app.request_id', $1, true)`,
       `SELECT set_config('app.tenant_id', $1, true)`,
       `SELECT set_config('app.actor_id', $1, true)`,
+      `SELECT set_config('app.roles', $1, true)`,
       `SELECT set_config('app.session_id', $1, true)`,
       'SET LOCAL TRANSACTION READ ONLY',
       `SELECT set_config('statement_timeout', $1, true)`,
@@ -209,7 +210,8 @@ describe('Database', () => {
       'COMMIT',
     ]);
     expect(queries[1]?.values).toEqual(['app']);
-    expect(queries[7]?.values).toEqual(['1500']);
+    expect(queries[5]?.values).toEqual(['']);
+    expect(queries[8]?.values).toEqual(['1500']);
     expect(cls.set).toHaveBeenCalledWith(
       expect.any(Symbol),
       expect.objectContaining({ savepointCounter: 0 }),
@@ -245,6 +247,35 @@ describe('Database', () => {
     ]);
     expect(queries[5]?.values).toEqual(['tenant:admin,platform:superadmin']);
   });
+
+  for (const role of ['app', 'reader'] as const) {
+    for (const roles of [undefined, []]) {
+      it(`clears ambient app.roles for ${role} with ${roles ? 'empty' : 'absent'} verified roles`, async () => {
+        const { client, queries } = createClient();
+        const database = createPoolBackedDatabase(client, {
+          requestContext: {
+            hasActiveContext: () => true,
+            snapshot: () => ({
+              requestId: 'req-empty-roles',
+              tenantId: 'tenant-1',
+              actorId: 'actor-1',
+              ...(roles ? { roles } : {}),
+              startedAt: new Date(),
+            }),
+          } as unknown as RequestContext,
+        });
+
+        await database.tx(async () => undefined, { role, readonly: role === 'reader' });
+
+        expect(queries).toEqual(
+          expect.arrayContaining([
+            { text: `SELECT set_config('app.roles', $1, true)`, values: [''] },
+          ]),
+        );
+        expect(client.release).toHaveBeenCalledTimes(1);
+      });
+    }
+  }
 
   it('maps PostgreSQL readonly and statement-timeout errors during rollback', async () => {
     for (const [code, ErrorClass] of [
@@ -616,6 +647,7 @@ describe('Database', () => {
     expect(queries).toEqual(
       expect.arrayContaining([
         { text: `SELECT set_config('app.role', $1, true)`, values: ['owner'] },
+        { text: `SELECT set_config('app.roles', $1, true)`, values: [''] },
         { text: `SELECT set_config('app.request_id', $1, true)`, values: ['sys-req'] },
         { text: `SELECT set_config('app.actor_id', $1, true)`, values: ['sys-actor'] },
       ]),
@@ -637,6 +669,7 @@ describe('Database', () => {
 
     await database.tx(async () => 'owner', { role: 'owner', readonly: true });
 
+    expect(client.query).toHaveBeenCalledWith(`SELECT set_config('app.roles', $1, true)`, ['']);
     expect(queries.some((query) => query.text.includes('app.request_id'))).toBe(false);
     expect(queries.some((query) => query.text.includes('app.actor_id'))).toBe(false);
   });
@@ -649,8 +682,9 @@ describe('Database', () => {
 
     await database.tx(async () => {
       expect(database.hasHeldConnection()).toBe(true);
-      await expect(database.txIndependent(async () => 'forbidden'))
-        .rejects.toMatchObject({ code: 'INDEPENDENT_TRANSACTION_CONNECTION' });
+      await expect(database.txIndependent(async () => 'forbidden')).rejects.toMatchObject({
+        code: 'INDEPENDENT_TRANSACTION_CONNECTION',
+      });
     });
     expect(database.hasHeldConnection()).toBe(false);
     await expect(database.txIndependent(async () => 'independent')).resolves.toBe('independent');
@@ -660,25 +694,33 @@ describe('Database', () => {
   it('rejects a hidden strict connection and a nested isolation change', async () => {
     const { client } = createClient();
     const hidden = createPoolBackedDatabase(client);
-    await hidden.tx(async () => {
-      await expect(hidden.tx(async () => 'forbidden')).rejects.toMatchObject({
-        code: 'INDEPENDENT_TRANSACTION_CONNECTION',
-      });
-    }, { strictItemMode: true });
+    await hidden.tx(
+      async () => {
+        await expect(hidden.tx(async () => 'forbidden')).rejects.toMatchObject({
+          code: 'INDEPENDENT_TRANSACTION_CONNECTION',
+        });
+      },
+      { strictItemMode: true },
+    );
 
     let active: unknown;
     const cls = {
       get: vi.fn(() => active),
-      set: vi.fn((_key: PropertyKey, value: unknown) => { active = value; }),
+      set: vi.fn((_key: PropertyKey, value: unknown) => {
+        active = value;
+      }),
     } as unknown as ClsService<Record<PropertyKey, unknown>>;
     const nested = createPoolBackedDatabase(createClient().client, { cls });
     await nested.tx(async () => {
-      await expect(nested.tx(async () => 'forbidden', { isolation: 'serializable' }))
-        .rejects.toMatchObject({ code: 'TRANSACTION_IDENTITY_MISMATCH' });
-      await expect(nested.tx(async () => 'forbidden', { strictItemMode: true }))
-        .rejects.toMatchObject({ code: 'INDEPENDENT_TRANSACTION_CONNECTION' });
-      await expect(nested.txIndependent(async () => 'forbidden'))
-        .rejects.toMatchObject({ code: 'INDEPENDENT_TRANSACTION_CONNECTION' });
+      await expect(
+        nested.tx(async () => 'forbidden', { isolation: 'serializable' }),
+      ).rejects.toMatchObject({ code: 'TRANSACTION_IDENTITY_MISMATCH' });
+      await expect(
+        nested.tx(async () => 'forbidden', { strictItemMode: true }),
+      ).rejects.toMatchObject({ code: 'INDEPENDENT_TRANSACTION_CONNECTION' });
+      await expect(nested.txIndependent(async () => 'forbidden')).rejects.toMatchObject({
+        code: 'INDEPENDENT_TRANSACTION_CONNECTION',
+      });
     });
   });
 
@@ -687,11 +729,17 @@ describe('Database', () => {
     const database = createPoolBackedDatabase(client);
 
     await database.tx(async () => 'committed', {
-      isolation: 'serializable', lockTimeoutMs: 250, retry: false,
+      isolation: 'serializable',
+      lockTimeoutMs: 250,
+      retry: false,
     });
-    expect(queries).toContainEqual({ text: 'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE', values: undefined });
     expect(queries).toContainEqual({
-      text: "SELECT set_config('lock_timeout', $1, true)", values: ['250'],
+      text: 'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE',
+      values: undefined,
+    });
+    expect(queries).toContainEqual({
+      text: "SELECT set_config('lock_timeout', $1, true)",
+      values: ['250'],
     });
   });
 
@@ -700,11 +748,17 @@ describe('Database', () => {
     const database = createPoolBackedDatabase(client, {
       requestContext: {
         hasActiveContext: () => true,
-        snapshot: () => ({ requestId: 'req', tenantId: 'tenant-1', actorId: ' ', startedAt: new Date() }),
+        snapshot: () => ({
+          requestId: 'req',
+          tenantId: 'tenant-1',
+          actorId: ' ',
+          startedAt: new Date(),
+        }),
       } as unknown as RequestContext,
     });
-    await expect(database.tx(async () => 'forbidden', { requireActor: true }))
-      .rejects.toBeInstanceOf(ActorContextMissingError);
+    await expect(
+      database.tx(async () => 'forbidden', { requireActor: true }),
+    ).rejects.toBeInstanceOf(ActorContextMissingError);
     expect(client.query).not.toHaveBeenCalled();
   });
 
@@ -716,8 +770,14 @@ describe('Database', () => {
       const { client } = createClient();
       const database = createPoolBackedDatabase(client);
       const error = Object.assign(new Error(message), { code });
-      await expect(database.tx(async () => { throw error; }, { retry: false }))
-        .rejects.toMatchObject({ code: expected });
+      await expect(
+        database.tx(
+          async () => {
+            throw error;
+          },
+          { retry: false },
+        ),
+      ).rejects.toMatchObject({ code: expected });
       expect(client.release).toHaveBeenCalledTimes(1);
     }
   });
@@ -728,8 +788,7 @@ describe('Database', () => {
     client.query.mockRejectedValueOnce(beginFailure);
     const database = createPoolBackedDatabase(client);
 
-    await expect(database.tx(async () => 'unreached', { retry: false }))
-      .rejects.toBe(beginFailure);
+    await expect(database.tx(async () => 'unreached', { retry: false })).rejects.toBe(beginFailure);
     expect(client.query).toHaveBeenCalledWith('ROLLBACK');
     expect(client.release).toHaveBeenCalledTimes(1);
     expect(database.hasHeldConnection()).toBe(false);
