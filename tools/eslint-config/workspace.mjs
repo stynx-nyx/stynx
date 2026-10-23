@@ -75,6 +75,8 @@ const allowedDependencies = {
   sdk: [],
   // tools/*
   'migration-linter': [],
+  // domain/*/api
+  'domain-demo-bookmark-api': ['auth', 'core', 'data', 'idempotency'],
   // reference/*
   'reference-api': [
     'audit',
@@ -82,6 +84,7 @@ const allowedDependencies = {
     'backend',
     'core',
     'data',
+    'domain-demo-bookmark-api',
     'flow',
     'health',
     'i18n',
@@ -113,6 +116,7 @@ const allowedDependencies = {
 
 const elementDirectory = (type) => {
   if (type === 'migration-linter') return 'tools/migration-linter';
+  if (type === 'domain-demo-bookmark-api') return 'domain/demo-bookmark/api';
   if (type.startsWith('reference-')) return `reference/${type.slice('reference-'.length)}`;
   if (type === 'sdk' || type === 'angular' || type.startsWith('angular-')) {
     return `packages-web/${type}`;
@@ -129,13 +133,17 @@ const boundaryAllow = Object.entries(allowedDependencies)
   .filter(([, targets]) => targets.length > 0)
   .map(([type, targets]) => ({ from: { type }, allow: { to: { type: targets } } }));
 
-// Package name -> directory, so a `@stynx-nyx/<name>` import resolves to its
-// source element instead of `dist` (see import-resolver.mjs).
+// Package name -> directory or explicit source entry, so workspace imports
+// resolve to their source element instead of `dist` (see import-resolver.mjs).
 const workspacePackages = Object.fromEntries(
   Object.keys(allowedDependencies).map((type) => {
     const directory = join(workspaceRoot, elementDirectory(type));
     const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'));
-    return [manifest.name, directory];
+    const source =
+      type === 'domain-demo-bookmark-api'
+        ? join(directory, 'src/demo-bookmark/demo-bookmark.module.ts')
+        : directory;
+    return [manifest.name, source];
   }),
 );
 

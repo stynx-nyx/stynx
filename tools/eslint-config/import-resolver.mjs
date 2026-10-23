@@ -8,7 +8,7 @@
 // `node` resolver listed after it.
 //
 // The STYNX workspace profile also passes `workspacePackages` (package name ->
-// package directory). Workspace packages import each other only by package
+// package directory or explicit source entry). Workspace packages import each other by package
 // name, which `node` resolves to `dist` outside every boundary element, so
 // those specifiers resolve to the package's own source entry instead (SM-12).
 // Published profiles pass no map and keep the behaviour above.
@@ -40,6 +40,9 @@ function resolveWorkspacePackage(source, workspacePackages) {
     return { found: false };
   }
   const packageDir = workspacePackages[name];
+  // An explicit source entry classifies packages without a conventional barrel,
+  // including their emitted subpaths, without consulting generated dist files.
+  if (isFile(packageDir)) return { found: true, path: packageDir };
   const subpath = source.slice(name.length + 1);
   const subpathCandidates =
     subpath.length > 0

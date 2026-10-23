@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint --max-warnings=0 'src/**/*.ts' 'test/**/*.ts'",
+    "lint": "eslint --config ../../../tools/eslint-config/nest.mjs --max-warnings=0 'src/**/*.ts' && eslint --max-warnings=0 'test/**/*.ts'",
     "test": "vitest run --config ./vitest.config.ts",
     "test:int": "vitest run --config ./vitest.int.config.ts"
   },
