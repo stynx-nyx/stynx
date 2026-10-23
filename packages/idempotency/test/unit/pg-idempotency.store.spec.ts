@@ -17,10 +17,13 @@ function context(overrides: Partial<IdempotencyDecisionContext> = {}): Idempoten
 
 describe('PgIdempotencyStore', () => {
   it('validates configured SQL identifiers', () => {
-    expect(() => new PgIdempotencyStore({
-      executor: { query: vi.fn() },
-      table: 'bad-name',
-    })).toThrow('Invalid SQL identifier');
+    expect(
+      () =>
+        new PgIdempotencyStore({
+          executor: { query: vi.fn() },
+          table: 'bad-name',
+        }),
+    ).toThrow('Invalid SQL identifier');
   });
 
   it('returns null or false for tenantless contexts without querying', async () => {
@@ -37,11 +40,28 @@ describe('PgIdempotencyStore', () => {
 
   it('maps lookup rows for pending, completed, empty, and array result shapes', async () => {
     const executor: IdempotencySqlExecutor = {
-      query: vi.fn()
+      query: vi
+        .fn()
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce([undefined])
-        .mockResolvedValueOnce([{ requestFingerprint: 'fp-1', statusCode: null, responseBody: { ignored: true }, expiresAt: '2026-01-01T00:00:00.000Z' }])
-        .mockResolvedValueOnce({ rows: [{ requestFingerprint: 'fp-1', statusCode: 201, responseBody: { ok: true }, expiresAt: '2026-01-01T00:00:00.000Z' }] }),
+        .mockResolvedValueOnce([
+          {
+            requestFingerprint: 'fp-1',
+            statusCode: null,
+            responseBody: { ignored: true },
+            expiresAt: '2026-01-01T00:00:00.000Z',
+          },
+        ])
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              requestFingerprint: 'fp-1',
+              statusCode: 201,
+              responseBody: { ok: true },
+              expiresAt: '2026-01-01T00:00:00.000Z',
+            },
+          ],
+        }),
     };
     const store = new PgIdempotencyStore({ executor });
 
@@ -63,7 +83,8 @@ describe('PgIdempotencyStore', () => {
 
   it('reserves, persists, and clears rows with expected parameters', async () => {
     const executor: IdempotencySqlExecutor = {
-      query: vi.fn()
+      query: vi
+        .fn()
         .mockResolvedValueOnce({ rows: [{ reserved: 1 }] })
         .mockResolvedValueOnce({ rowCount: 1 })
         .mockResolvedValueOnce([]),
@@ -80,24 +101,25 @@ describe('PgIdempotencyStore', () => {
 
     expect(executor.query).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining('INSERT INTO custom.idempotency'),
+      expect.stringContaining('INSERT INTO "custom"."idempotency"'),
       expect.arrayContaining(['tenant-1:k1', 'fp-1', 2]),
     );
     expect(executor.query).toHaveBeenNthCalledWith(
       2,
-      expect.stringContaining('UPDATE custom.idempotency'),
+      expect.stringContaining('UPDATE "custom"."idempotency"'),
       expect.arrayContaining([204, 'null', 2]),
     );
     expect(executor.query).toHaveBeenNthCalledWith(
       3,
-      expect.stringContaining('DELETE FROM custom.idempotency'),
+      expect.stringContaining('DELETE FROM "custom"."idempotency"'),
       expect.arrayContaining(['tenant-1:k1', 'fp-1']),
     );
   });
 
   it('persists defined bodies and maps alternate executor result shapes', async () => {
     const executor: IdempotencySqlExecutor = {
-      query: vi.fn()
+      query: vi
+        .fn()
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce({})
         .mockResolvedValueOnce([{ updated: 1 }]),
@@ -112,5 +134,21 @@ describe('PgIdempotencyStore', () => {
       expect.arrayContaining(['{"ok":true}']),
     );
     await expect(store.persistResponse(context(), 200, { ok: true })).resolves.toBe(true);
+  });
+
+  it('retains long unquoted configuration names and refuses quoted names as before', async () => {
+    const query = vi.fn(async (_text: string, _params?: ReadonlyArray<unknown>) => ({ rows: [] }));
+    const longName = 'A'.repeat(70);
+    const store = new PgIdempotencyStore({
+      executor: { query },
+      table: `Custom.${longName}`,
+      keyColumn: 'IdemKey',
+    });
+    await expect(store.lookup(context())).resolves.toBe(null);
+    expect(query.mock.calls[0]?.[0]).toContain(`FROM "custom"."${longName.toLowerCase()}"`);
+    expect(query.mock.calls[0]?.[0]).toContain('"idemkey" = $2');
+    expect(
+      () => new PgIdempotencyStore({ executor: { query }, table: '"Custom"."Idempotency"' }),
+    ).toThrow('Invalid SQL identifier');
   });
 });

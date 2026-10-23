@@ -189,7 +189,11 @@ for (const [entry, admitted, rejected] of [
   ],
 ]) {
   test(`${entry} admits its exact family and rejects aliased calls from ordinary application code`, async () => {
-    const source = `import { ${entry} as run } from ${JSON.stringify(executorPath)}; run();`;
+    const args =
+      entry === 'executeLegacyArchive'
+        ? '{} as never, "select", "select 1", [], (row: unknown) => row'
+        : '{} as never, "select 1"';
+    const source = `import { ${entry} as run } from ${JSON.stringify(executorPath)}; run(${args});`;
     assert.deepEqual(await lint(source, admitted, 'no-raw-query'), []);
     for (const path of [
       rejected,
@@ -353,6 +357,15 @@ for (const [label, expression] of [
   ],
   ['plain text bypass', 'declareSql({ text: "select 1" });'],
   [
+    'computed text override',
+    'const key = "text"; declareSql({ text: literalSql`select 1`, [key]: "dynamic" });',
+  ],
+  [
+    'borrowed tag type',
+    'const fake: typeof literalSql = (() => "dynamic") as typeof literalSql; declareSql({ text: fake`select 1` });',
+  ],
+  ['mutable tag alias', 'let tag = literalSql; declareSql({ text: tag`select 1` });'],
+  [
     'dynamic options',
     'declare const options: Parameters<typeof declareSql>[0]; declareSql(options);',
   ],
@@ -407,3 +420,96 @@ test('repository literal enforcement accepts trusted zero-hole namespace tags an
     [],
   );
 });
+
+test('repository literal enforcement follows immutable trusted tag aliases', async () => {
+  assert.deepEqual(
+    await lint(
+      `import { defineQuery, sql } from ${JSON.stringify(typedQueryPath)}; const first = sql; const second = first; defineQuery({ text: second\`select 1\` });`,
+      'packages/health/src/probe.repository.ts',
+      'define-query-location',
+    ),
+    [],
+  );
+});
+
+for (const caller of [
+  'packages/idempotency/src/pg-idempotency.store.ts',
+  'packages/backend/src/idempotency/pg-idempotency.store.ts',
+]) {
+  test(`configured operations bind exact IDs to ${caller}`, async () => {
+    const prefix = `import * as executor from ${JSON.stringify(executorPath)};`;
+    const args = '{} as never, "idempotency.lookup", {} as never, [] as never';
+    const source = `${prefix} executor.executeConfiguredQuery(${args}); const alias = executor.executeConfiguredQuery; alias(${args}); const { executeConfiguredQuery: run } = executor; run(${args});`;
+    assert.deepEqual(await lint(source, caller, 'no-raw-query'), []);
+    const findings = await lint(source, applicationPath, 'no-raw-query');
+    assert.equal(findings.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 3);
+    for (const operation of ['"unknown.operation"', '"__proto__"', 'dynamic']) {
+      const rejected = `${prefix} declare const dynamic: Parameters<typeof executor.executeConfiguredQuery>[1]; executor.executeConfiguredQuery({} as never, ${operation}, {} as never, [] as never);`;
+      const errors = await lint(rejected, caller, 'no-raw-query');
+      assert.equal(errors.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 1);
+    }
+  });
+}
+
+test('configured operation entry follows indirect barrel imports', async () => {
+  const source =
+    'import { run } from "./configured-entry.js"; run({} as never, "idempotency.lookup", {} as never, [] as never);';
+  const findings = await lint(source, applicationPath, 'no-raw-query', {
+    'packages/health/src/configured-entry.ts': `export { executeConfiguredQuery as run } from ${JSON.stringify(executorPath)};`,
+  });
+  assert.equal(findings.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 1);
+});
+
+for (const [path, admitted, rejected] of [
+  [
+    'reference/api/src/app.module.ts',
+    'async function runReferenceApiMigrations() { await run({} as never, "select 1"); }',
+    'async function ordinaryRequest() { await run({} as never, "select 1"); }',
+  ],
+  [
+    'reference/api/src/performance/offline-storage.ts',
+    'class OfflinePerformanceStorageInstaller { async onApplicationBootstrap() { await run({} as never, "select 1"); } }',
+    'class OfflinePerformanceStorageInstaller { async requestHandler() { await run({} as never, "select 1"); } }',
+  ],
+]) {
+  test(`reference script admission is bounded to its existing installer scope: ${path}`, async () => {
+    const prefix = `import { executeRawScript as run } from ${JSON.stringify(executorPath)};`;
+    assert.deepEqual(await lint(prefix + admitted, path, 'no-raw-query'), []);
+    const findings = await lint(prefix + rejected, path, 'no-raw-query');
+    assert.equal(findings.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 1);
+  });
+}
+
+for (const [path, operations] of [
+  ['packages/data/src/query-helpers.ts', ['select']],
+  ['packages/data/src/transaction.ts', ['hard-delete-live', 'hard-delete-archive']],
+  [
+    'packages/data/src/internal/archive-restore.ts',
+    ['restore-insert', 'restore-delete-archive', 'restore-children'],
+  ],
+  [
+    'packages/data/src/internal/archive-relations.ts',
+    [
+      'list-child-ids',
+      'count-blocking-children',
+      'sample-blocking-children',
+      'load-archived-row',
+      'live-parent-exists',
+      'archived-parent-exists',
+      'restore-conflict',
+    ],
+  ],
+  ['packages/data/src/internal/soft-delete-cascade.ts', ['soft-delete-insert', 'soft-delete-live']],
+]) {
+  test(`archive bridge binds its established operation IDs to ${path}`, async () => {
+    const prefix = `import { executeLegacyArchive as run } from ${JSON.stringify(executorPath)};`;
+    const calls = operations
+      .map((operation) => `run({} as never, ${JSON.stringify(operation)}, "select 1", []);`)
+      .join('\n');
+    assert.deepEqual(await lint(prefix + calls, path, 'no-raw-query'), []);
+    const otherFamily = operations.includes('select') ? 'restore-insert' : 'select';
+    const rejected = `${prefix} declare const dynamic: Parameters<typeof run>[1]; run({} as never, ${JSON.stringify(otherFamily)}, "select 1", []); run({} as never, dynamic, "select 1", []);`;
+    const findings = await lint(rejected, path, 'no-raw-query');
+    assert.equal(findings.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 2);
+  });
+}

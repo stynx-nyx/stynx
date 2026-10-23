@@ -701,3 +701,60 @@ describe('SessionControlService remaining behavior', () => {
     );
   });
 });
+
+describe('PostgresSessionRegistry checked-query compatibility', () => {
+  it('accepts PostgreSQL UUID values without imposing RFC version or variant bits', async () => {
+    const pgUuid = '11111111-1111-1111-1111-111111111111';
+    const query = vi.fn().mockResolvedValue({
+      rows: [
+        registrationRow({
+          sid: pgUuid,
+          anchor_id: pgUuid,
+          tenant_id: pgUuid,
+        }),
+      ],
+    });
+    const { registry } = postgres(query);
+    await expect(
+      registry.register({ ...registration, sid: pgUuid, anchorId: pgUuid, tenantId: pgUuid }),
+    ).resolves.toMatchObject({ sid: pgUuid, anchorId: pgUuid, tenantId: pgUuid });
+    await expect(registry.list({ ...context, tenantId: pgUuid }, {})).resolves.toEqual([
+      expect.objectContaining({ sid: pgUuid, tenantId: pgUuid }),
+    ]);
+    expect(query.mock.calls[1]?.[1]).toEqual([pgUuid, null]);
+    query.mockResolvedValueOnce({
+      rows: [
+        operationRow({
+          operation_id: pgUuid,
+          attempt_count: 2,
+          result_json: { ...result, operationId: pgUuid },
+        }),
+      ],
+    });
+    await expect(
+      registry.operation(`tenant:subject-a:revoke-one:${pgUuid}`),
+    ).resolves.toMatchObject({ result: { operationId: pgUuid } });
+  });
+
+  it('preserves legal opaque JSON extension data while checking known capability and result envelopes', async () => {
+    const extension = { provider: { flags: [true, null, 'retained'], number: 42 } };
+    const capabilities = { ...COGNITO_COMPATIBLE_CAPABILITIES, extension };
+    const storedResult = {
+      ...result,
+      extension,
+      guarantee: { ...none, extension },
+      results: [{ ...result.results[0], extension, guarantee: { ...none, extension } }],
+    };
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [registrationRow({ capabilities })] })
+      .mockResolvedValueOnce({
+        rows: [operationRow({ attempt_count: 2, result_json: storedResult })],
+      });
+    const { registry } = postgres(query);
+    const [listed] = await registry.list(context, {});
+    expect(listed?.capabilities).toEqual(capabilities);
+    const loaded = await registry.operation(operation.key);
+    expect(loaded?.result).toEqual(storedResult);
+  });
+});
