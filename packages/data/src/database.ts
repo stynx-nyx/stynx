@@ -397,11 +397,9 @@ export class Database extends CoreDatabase {
     if (executionContext.actorId) {
       await client.query(`SELECT set_config('app.actor_id', $1, true)`, [executionContext.actorId]);
     }
-    if (executionContext.roles) {
-      await client.query(`SELECT set_config('app.roles', $1, true)`, [
-        executionContext.roles.join(','),
-      ]);
-    }
+    await client.query(`SELECT set_config('app.roles', $1, true)`, [
+      (executionContext.roles ?? []).join(','),
+    ]);
     if (executionContext.sessionId) {
       await client.query(`SELECT set_config('app.session_id', $1, true)`, [
         executionContext.sessionId,
