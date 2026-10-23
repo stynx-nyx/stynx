@@ -1,6 +1,8 @@
 import {
   type DynamicModule,
   type ForwardReference,
+  type InjectionToken,
+  type FactoryProvider,
   Module,
   type Provider,
   type Type,
@@ -24,7 +26,67 @@ import { SecretLoader } from './secret-loader.js';
 import { SystemContext } from './system-context.js';
 import { STYNX_CORE_CONFIG, STYNX_CORE_OPTIONS, STYNX_SYSTEM_OPERATION_SINK } from './tokens.js';
 
-type ModuleImport = Type<unknown> | ForwardReference | DynamicModule | Promise<DynamicModule>;
+// Nest's runtime accepts delayed forward references in factory injection and
+// awaited class/forward-reference imports. Its published FactoryProvider and
+// ModuleMetadata declarations describe a narrower subset. Validate the runtime
+// shapes here, then install those fields reflectively without retyping a valid
+// runtime value as the narrower vendor union or resolving it prematurely.
+type RuntimeModuleImport = Type<unknown> | ForwardReference | DynamicModule | PromiseLike<unknown>;
+type RuntimeInjectionToken = InjectionToken<unknown> | ForwardReference;
+type RuntimeFactoryDependency =
+  RuntimeInjectionToken | { token: RuntimeInjectionToken; optional: boolean };
+
+function isModuleClass(value: unknown): value is Type<unknown> {
+  return typeof value === 'function';
+}
+
+function isDynamicModule(value: unknown): value is DynamicModule {
+  return (
+    typeof value === 'object' && value !== null && 'module' in value && isModuleClass(value.module)
+  );
+}
+
+function isForwardReference(value: unknown): value is ForwardReference {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'forwardRef' in value &&
+    typeof value.forwardRef === 'function'
+  );
+}
+
+function isRuntimeModuleImport(value: unknown): value is RuntimeModuleImport {
+  if (isModuleClass(value) || isDynamicModule(value) || isForwardReference(value)) return true;
+  // Nest awaits thenables when it compiles the module. Leave the original
+  // thenable, its timing, and validation of its resolved module with Nest.
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'then' in value &&
+    typeof value.then === 'function'
+  );
+}
+
+function isRuntimeInjectionToken(value: unknown): value is RuntimeInjectionToken {
+  return (
+    typeof value === 'string' ||
+    typeof value === 'symbol' ||
+    typeof value === 'function' ||
+    isForwardReference(value)
+  );
+}
+
+function isRuntimeFactoryDependency(value: unknown): value is RuntimeFactoryDependency {
+  return (
+    isRuntimeInjectionToken(value) ||
+    (typeof value === 'object' &&
+      value !== null &&
+      'token' in value &&
+      isRuntimeInjectionToken(value.token) &&
+      'optional' in value &&
+      typeof value.optional === 'boolean')
+  );
+}
 
 // `nestjs-cls` creates a dynamic `ClsRootModule` for each `forRoot()` call.
 // STYNX packages compose `StynxCoreModule.forRoot()` transitively, so creating
@@ -101,24 +163,29 @@ export class StynxCoreModule {
   static forRootAsync<TSchema extends ZodTypeAny>(
     options: StynxCoreModuleAsyncOptions<TSchema>,
   ): DynamicModule {
-    return this.createModule(
-      {
-        provide: STYNX_CORE_OPTIONS,
-        inject: (options.inject ?? []) as never[],
-        useFactory: options.useFactory,
-      },
-      (options.imports ?? []) as ModuleImport[],
-    );
+    const imports = options.imports ?? [];
+    const dependencies = options.inject ?? [];
+    if (!imports.every(isRuntimeModuleImport)) {
+      throw new TypeError('Invalid asynchronous core module import');
+    }
+    if (!dependencies.every(isRuntimeFactoryDependency)) {
+      throw new TypeError('Invalid asynchronous core injection dependency');
+    }
+    const provider: FactoryProvider = {
+      provide: STYNX_CORE_OPTIONS,
+      useFactory: options.useFactory,
+    };
+    Reflect.set(provider, 'inject', dependencies);
+    return this.createModule(provider, imports);
   }
 
   private static createModule(
     optionsProvider: Provider,
-    imports: ModuleImport[] = [],
+    imports: RuntimeModuleImport[] = [],
   ): DynamicModule {
-    return {
+    const module: DynamicModule = {
       module: StynxCoreModule,
       global: true,
-      ...(imports.length > 0 ? { imports } : {}),
       providers: [
         optionsProvider,
         createConfigProvider(),
@@ -148,5 +215,7 @@ export class StynxCoreModule {
         SystemContext,
       ],
     };
+    if (imports.length > 0) Reflect.set(module, 'imports', imports);
+    return module;
   }
 }

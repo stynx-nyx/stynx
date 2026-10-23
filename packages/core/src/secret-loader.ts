@@ -1,8 +1,4 @@
-import {
-  GetSecretValueCommand,
-  SecretsManagerClient,
-  type SecretsManagerClientConfig,
-} from '@aws-sdk/client-secrets-manager';
+import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { SecretLoadError } from './errors.js';
 import type { StynxCoreModuleOptions } from './config.js';
@@ -32,9 +28,11 @@ export class SecretLoader {
     options?: StynxCoreModuleOptions,
   ) {
     this.ttlMs = options?.secretCacheTtlMs ?? 5 * 60 * 1000;
-    const secretsClientConfig = (options as StynxCoreModuleOptions & {
-      secretsClientConfig?: SecretsManagerClientConfig;
-    })?.secretsClientConfig;
+    const secretsClientConfig =
+      options && 'secretsClientConfig' in options ? options.secretsClientConfig : undefined;
+    if (secretsClientConfig && typeof secretsClientConfig !== 'object') {
+      throw new TypeError('Secrets Manager client configuration must be an object');
+    }
     this.client = secretsClientConfig
       ? new SecretsManagerClient(secretsClientConfig)
       : new SecretsManagerClient();

@@ -37,14 +37,12 @@ export type AnnotatedSchema<TSchema extends ZodTypeAny> = {
 export interface StynxCoreModuleAsyncOptions<TSchema extends ZodTypeAny = ZodTypeAny> {
   imports?: unknown[];
   inject?: unknown[];
-  useFactory: (...args: unknown[]) =>
-    | StynxCoreModuleOptions<TSchema>
-    | Promise<StynxCoreModuleOptions<TSchema>>;
+  useFactory: (
+    ...args: unknown[]
+  ) => StynxCoreModuleOptions<TSchema> | Promise<StynxCoreModuleOptions<TSchema>>;
 }
 
-async function loadSsmValues(
-  options: StynxCoreModuleOptions,
-): Promise<Record<string, string>> {
+async function loadSsmValues(options: StynxCoreModuleOptions): Promise<Record<string, string>> {
   if (!options.ssm?.enabled) {
     return {};
   }
@@ -116,7 +114,16 @@ export function validateConfigOwnership<TSchema extends ZodTypeAny>(
       continue;
     }
 
-    const value = (parsed as Record<string, unknown>)[key];
+    // Property access boxes primitive schema results too. Keep that behavior
+    // while refusing null/undefined as JavaScript property access does.
+    if (parsed === null || parsed === undefined) {
+      throw new TypeError('Cannot read configuration ownership from null or undefined');
+    }
+    const target: unknown = Object(parsed);
+    const value: unknown =
+      (typeof target === 'object' && target !== null) || typeof target === 'function'
+        ? Reflect.get(target, key)
+        : undefined;
     if (meta.required && (value === undefined || value === null || value === '')) {
       violations.push({
         key,
