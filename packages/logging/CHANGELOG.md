@@ -1,5 +1,12 @@
 # @stynx-nyx/logging
 
+## 3.0.0
+
+### Patch Changes
+
+- Updated dependencies [4a35f0b]
+  - @stynx-nyx/core@3.0.0
+
 ## 1.6.2
 
 ### Patch Changes

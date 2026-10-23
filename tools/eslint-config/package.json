@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/eslint-config",
-  "version": "1.6.2",
+  "version": "3.0.0",
   "type": "module",
   "license": "BUSL-1.1",
   "description": "Shared flat ESLint profiles for STYNX packages and STYNX-based applications",

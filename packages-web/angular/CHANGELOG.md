@@ -1,5 +1,12 @@
 # @stynx-nyx/angular
 
+## 3.0.0
+
+### Patch Changes
+
+- @stynx-nyx/sdk@3.0.0
+- @stynx-nyx/angular-tenancy@3.0.0
+
 ## 1.6.2
 
 ### Patch Changes
