@@ -35,7 +35,13 @@ test('reference-web package scripts point at local build and runtime inputs', ()
 test('reference-web tsconfig stays on the shared Angular preset', () => {
   const tsconfig = readJson('tsconfig.json');
 
-  assert.equal(tsconfig.extends, '../../tools/tsconfig/angular18.json');
+  // SM-02: checkout tsconfigs extend the repo-config alias layer, which adds the
+  // monorepo paths on top of the published @stynx-nyx/tsconfig Angular preset.
+  assert.equal(tsconfig.extends, '../../tools/repo-config/tsconfig/angular18.json');
+  const aliasLayer = JSON.parse(
+    readFileSync(resolve(appRoot, '../../tools/repo-config/tsconfig/angular18.json'), 'utf8'),
+  );
+  assert.equal(aliasLayer.extends, '../../tsconfig/angular18.json');
   assert.equal(tsconfig.compilerOptions.outDir, 'dist');
   assert.equal(tsconfig.compilerOptions.rootDir, '../..');
   assert.equal(tsconfig.compilerOptions.experimentalDecorators, true);
