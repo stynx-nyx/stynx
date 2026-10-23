@@ -30,6 +30,12 @@ async function lint(source, relativePath, rule, extraSources = {}) {
     allowImportingTsExtensions: true,
     noEmit: true,
   };
+  // The negative fixture deliberately lives in health, which has no pg
+  // dependency. Resolve the real driver declarations from its actual consumer;
+  // otherwise TypeScript would silently turn these receivers into `any`.
+  const pg = ts.resolveModuleName('pg', transactionPath, options, ts.sys).resolvedModule;
+  assert.ok(pg, 'the real data package must resolve PostgreSQL declarations');
+  options.paths = { pg: [pg.resolvedFileName] };
   const host = ts.createCompilerHost(options);
   const originalRead = host.readFile.bind(host);
   const originalExists = host.fileExists.bind(host);
