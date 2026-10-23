@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.40",
+  "version": "1.3.42",
   "meta": {
-    "last_updated": "2026-10-23T20:30:00.000000Z",
+    "last_updated": "2026-10-23T23:00:12.571480Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-23 Architect S10 A+B correction binding: database unit and real PostgreSQL reused-connection tests prove transaction-local app.roles masks ambient roles for absent/empty verified claims and owner context; workspace boundary tests include the domain API and real Nest lint entry; bookmark route metadata/interceptor tests preserve three existing non-idempotent write routes without key, durable store or replay behavior. Eight already-reviewed post-release projections are rebound to this branch before S8/S7 integration; the historical release-scope fixture projection must be reconciled after rebase. Assertions, invariant statements, completeness thresholds and prior provenance remain preserved.",
       "2026-10-19 Architect rebind for SM-06 follow-up (template apply.sh runs `stynx migrate up --role-prefix <product>` with no URL on argv, 09 §1): binds packages/cli/test/migrate-pg-env.integration.spec.ts (migrateUp with prefix demo and only PG* set against the STYNX_TEST_PG_* scratch PostgreSQL; skipped when none is configured) and rebinds packages/cli/test/migrate.spec.ts (no connectionString reaches the pg client or factory without a URL) and packages/cli/test/cli-program.spec.ts (--database-url optional on migrate status|up|down|redo; audit verify unchanged). No assertion is removed or weakened beyond the intended optional flag.",
       "2026-10-19 Architect rebind for SM-06: binds packages/data/test/unit/platform-roles.spec.ts (default prefix applies every platform migration byte for byte; prefix demo rewrites only stynx_{owner,app,reader} identifiers; invalid prefixes refused), packages/data/test/unit/migration-runner-role-prefix.spec.ts, packages/data/test/integration/role-prefix.integration.spec.ts (scratch PostgreSQL: default stays on stynx_*; prefix demo bootstraps demo_{owner,app,reader} with demo_app NOBYPASSRLS, no stynx_* role owning, granted or named in the database, tenant isolation as the product app role), packages/cli/test/migrate-role-prefix.spec.ts and packages/testing/test/roles.unit.spec.ts, and rebinds the extended packages/cli/test/cli-program.spec.ts (--role-prefix surface) and packages/testing/test/create-test-app.unit.spec.ts (product role names). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
       "2026-10-19 Architect rebind for SM-03: binds tools/eslint-config/test/rule-families.spec.mjs (one eslint --max-warnings=0 fixture per enabled rule family exits 1 naming its rule, a clean fixture per profile exits 0, the exports map and named-factory surface, and the unchanged STYNX workspace levels) and rebinds test/scripts/http-workspace-graph.test.mjs after its source-only tooling fixture follows the @stynx-nyx/eslint-config rename. All 57 workspace-graph assertion sites are unchanged in count and text; no assertion is removed or weakened.",
@@ -283,6 +284,24 @@
           "names": ["INV-RBAC-001"],
           "assertions": [
             "Normal administration requires tenant/actor context, internal owner capability is explicit, and incompatible frames refuse before SQL/cache access."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/data/test/integration/roles-session.integration.spec.ts",
+          "names": ["Database transaction role isolation"],
+          "assertions": [
+            "On reused PostgreSQL connections, app/reader role context comes only from the current verified role list and absent/empty lists shadow ambient session roles; owner context is empty, and SET LOCAL leaves the ambient value unchanged outside the transaction."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "domain/demo-bookmark/api/test/bookmark-idempotency-contract.spec.ts",
+          "names": ["demo bookmark explicit non-idempotent route contract"],
+          "assertions": [
+            "Three explicit NoIdempotent write declarations retain exact route/auth/permission metadata and execute each request without a key, durable store call or replay headers."
           ],
           "mode": "white_box"
         }
@@ -3101,8 +3120,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 82,
-      "assertion_digest_sha256": "ffae40f3cd9c544b5912e3cdc931ff22cc64ebd7948d057fe4b1af1b7a2095e6"
+      "assertion_count": 86,
+      "assertion_digest_sha256": "890226845437a14a7479318846a58def3de12d6301cc5ae6e967ee69a76b95dd"
     },
     {
       "path": "packages/data/test/unit/errors.spec.ts",
@@ -4533,8 +4552,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 16,
-      "assertion_digest_sha256": "18d5a2ef12c4b83c0fe93cd36356bef5afcbcbab4c064d45596d4c6cf4dd8429"
+      "assertion_count": 17,
+      "assertion_digest_sha256": "48ae2accfcfc74a81ca0fca04755a1ea7b9a444d02015c356c847a827afb379a"
     },
     {
       "path": "scripts/list-ddl-objects.spec.mjs",
@@ -4907,8 +4926,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "d680ca1a325f3e1e3e1720fdd383fc75728fe3ab88fc0851cf66a759e6948d9b"
+      "assertion_count": 30,
+      "assertion_digest_sha256": "65172244bedcd75a64c6fae916a6b5d8980a21f60650257f031c4b9540b2c7c6"
     },
     {
       "path": "tools/migration-linter/test/context-rules.spec.ts",
@@ -4948,7 +4967,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 29,
-      "assertion_digest_sha256": "2c510e69120cab38a8511cd4f5d738e78afd3c2f226f6950f6abeea8ae5dcdb9"
+      "assertion_digest_sha256": "fd6b27e248043e4ac21b6498579c5598b17a15d7b967b90a9d020fee27f1f986"
     },
     {
       "path": "packages/mobile-runtime/test/mobile-runtime-edge-cases.spec.ts",
@@ -5012,7 +5031,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 5,
-      "assertion_digest_sha256": "7ef54e5ccc31a272cbbf44740f05b1420bb7d59c9c342b849a35e622fb345485"
+      "assertion_digest_sha256": "b290fc89e8f61bcbab1c9ec3f96c00769f9d1514a1acd88dde8601d09b6328ed"
     },
     {
       "path": "scripts/verify-branch-protection.spec.mjs",
@@ -5244,7 +5263,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 899,
-      "assertion_digest_sha256": "8e29f12aa8d70dc6e23b5ecf144c0e96e16fb72a64ee9e6d1e28415d7bd81d42"
+      "assertion_digest_sha256": "c28d343b53758c3db293f3607ee165ed931ae4677cbd5311e6df212a5aff0398"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
@@ -5275,8 +5294,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 452,
-      "assertion_digest_sha256": "de8a133b249c0a093085da014903d7f97ee7cbfeb54efce057d8c9f1410c0c27"
+      "assertion_count": 479,
+      "assertion_digest_sha256": "dbe0e4d3ab32d2ee73c0aea34402c58ed9331af838e6c68ec33e2781a9f3bf3c"
     },
     {
       "path": "packages/auth/test/unit/auth.module.bootstrap.spec.ts",
@@ -6930,7 +6949,7 @@
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
       "assertion_count": 57,
-      "assertion_digest_sha256": "7fdd7661de7e4a0f970d4086b1c0d9a8c1a84dfc434bb92cbfd863237883402a"
+      "assertion_digest_sha256": "d3dc356304ed36d0bec3ef5ea995bd8fe7d6878e5b19599b652bd81ff806eca2"
     },
     {
       "path": "test/scripts/http-fresh-build.test.mjs",
@@ -7305,8 +7324,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001", "INV-PERF-001"],
       "lifecycle": "supported",
-      "assertion_count": 41,
-      "assertion_digest_sha256": "aacaad2e2251527f5648f3fb5bac75be9ea1d199016cbc468a6aecd771cf5eef"
+      "assertion_count": 48,
+      "assertion_digest_sha256": "5e060270b0f98c9e6ee75af4c1707b2d357352d33913b7ae30bac6b27e554407"
     },
     {
       "path": "test/scripts/stynx-boundary.test.mjs",
@@ -7330,7 +7349,7 @@
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
       "assertion_count": 38,
-      "assertion_digest_sha256": "998467372c26829bb1fb8436ca103a7b0280d613027a4d7540b1cd3909d98eb8"
+      "assertion_digest_sha256": "1b21a556000a54b8af83a50c117e1141763656b01f651bebe8e7160a5cdc6b3c"
     },
     {
       "path": "test/scripts/api-task-source-custody.test.mjs",
@@ -7579,6 +7598,22 @@
       "lifecycle": "supported",
       "assertion_count": 23,
       "assertion_digest_sha256": "5ea3693599967f906451256d01ca67581037e1129067642382eb4e2a4ae74b76"
+    },
+    {
+      "path": "domain/demo-bookmark/api/test/bookmark-idempotency-contract.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 13,
+      "assertion_digest_sha256": "8fe8cd0835705c843756efaa16aedb98b1d84124de1790ba6012c79c02ec9129"
+    },
+    {
+      "path": "packages/data/test/integration/roles-session.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 3,
+      "assertion_digest_sha256": "043c818fccb26d30405a8bf7128fe017dd5623acd68dbe858a1be7fe1934ec31"
     }
   ],
   "suites": {
