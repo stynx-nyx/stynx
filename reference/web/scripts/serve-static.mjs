@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { createReadStream, existsSync } from 'node:fs';
+import { createReadStream, existsSync, fstatSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,3 +51,21 @@ const server = http.createServer(async (request, response) => {
 server.listen(port, host, () => {
   console.log(`reference-web serving ${distRoot} on http://${host}:${port}`);
 });
+
+function stdinIsOwnerPipe() {
+  try {
+    const stdin = fstatSync(0);
+    return stdin.isSocket() || stdin.isFIFO();
+  } catch {
+    return false;
+  }
+}
+
+// The Playwright webServer launcher holds this stdin pipe and never closes it; the pipe ends only
+// when that owner exits, including by SIGKILL, so the server releases its port with it.
+if (stdinIsOwnerPipe()) {
+  process.stdin.once('end', () => process.exit(0));
+  process.stdin.once('error', () => process.exit(0));
+  process.stdin.unref();
+  process.stdin.resume();
+}
