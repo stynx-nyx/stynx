@@ -42,10 +42,14 @@ function fixture(t, version = '1.6.0') {
     ),
     join(root, 'law/policy/stynx-package-roster.json'),
   );
+  // Each scope binds the task descriptor bytes it was released with; 1.6.1
+  // through 3.0.0 share one reviewed descriptor.
   cpSync(
     join(
       repository,
-      version === '1.6.0' ? 'test/fixtures/release-scope/test-tasks-1.6.0.json' : 'test-tasks.json',
+      version === '1.6.0'
+        ? 'test/fixtures/release-scope/test-tasks-1.6.0.json'
+        : 'test/fixtures/release-scope/test-tasks-3.0.0.json',
     ),
     join(root, 'test-tasks.json'),
   );
