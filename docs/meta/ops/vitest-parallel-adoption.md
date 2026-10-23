@@ -65,7 +65,7 @@ Used as `setupFiles` in `packages/{auth,core,sessions,testing}/jest.config.cjs`.
 
 ### Workspace dependencies (root devDependencies)
 
-- `vitest@^4` (4.1.11 pinned through `pnpm.overrides`; moved from the 3.x line on 2026-09-12)
+- `vitest@^4` (4.1.12 pinned through `pnpm.overrides`; moved from the 3.x line on 2026-09-12, 4.1.12 on 2026-10-23 per ADR-DEVAI-ADOPTION-0026)
 - `@vitest/coverage-v8@^4`
 - `unplugin-swc`
 - `@swc/core`
