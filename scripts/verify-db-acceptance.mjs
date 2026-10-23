@@ -6,6 +6,7 @@ const repoRoot = process.cwd();
 const args = new Set(process.argv.slice(2));
 const config = readConfig().dbAcceptance ?? {};
 const ddlPaths = expand(config.ddlPaths ?? ['database/ddl/*.sql']);
+const migrationPaths = expand(config.migrationPaths ?? ['database/migrations/*.sql']);
 const seedPaths = expand(config.seedPaths ?? ['database/seed/*.sql']);
 const seedGroups = Object.entries(config.seedGroups ?? {}).map(([name, patterns]) => ({
   name,
@@ -14,7 +15,7 @@ const seedGroups = Object.entries(config.seedGroups ?? {}).map(([name, patterns]
 const requiredSchemas = config.requiredSchemas ?? ['auth', 'audit', 'storage'];
 const requiredTables = config.requiredTables ?? [];
 const requiredRlsTables = config.requiredRlsTables ?? [];
-const sql = ddlPaths.map((file) => readFileSync(file, 'utf8')).join('\n');
+const sql = [...ddlPaths, ...migrationPaths].map((file) => readFileSync(file, 'utf8')).join('\n');
 const failures = [];
 
 for (const schema of requiredSchemas) {
@@ -52,6 +53,7 @@ for (const group of seedGroups) {
 const summary = {
   schemaVersion: '1',
   ddlFiles: ddlPaths.map((file) => relative(repoRoot, file)),
+  migrationFiles: migrationPaths.map((file) => relative(repoRoot, file)),
   seedFiles: seedPaths.map((file) => relative(repoRoot, file)),
   seedGroups: seedGroups.map((group) => ({
     name: group.name,
@@ -60,7 +62,10 @@ const summary = {
   failures,
 };
 if (args.has('--json')) console.log(JSON.stringify(summary, null, 2));
-else console.log(`DB acceptance: ${ddlPaths.length} DDL files, ${seedPaths.length} seed files.`);
+else
+  console.log(
+    `DB acceptance: ${ddlPaths.length} DDL files, ${migrationPaths.length} migration files, ${seedPaths.length} seed files.`,
+  );
 if (failures.length > 0) throw new Error(`DB acceptance failed:\n${failures.join('\n')}`);
 
 function readConfig() {

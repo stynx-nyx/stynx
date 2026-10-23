@@ -21,6 +21,9 @@ run_sql database/ddl/00-extensions.sql
 run_sql database/ddl/01-auth.sql
 run_sql database/ddl/02-audit.sql
 run_sql database/ddl/03-storage.sql
+for file in database/migrations/*.sql; do
+  run_sql "$file"
+done
 run_sql database/seed/00-base.sql
 
 echo "Database reset complete"

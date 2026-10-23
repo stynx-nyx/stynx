@@ -241,6 +241,9 @@
       "ddlPaths": [
         "database/ddl/*.sql"
       ],
+      "migrationPaths": [
+        "database/migrations/*.sql"
+      ],
       "seedPaths": [
         "database/seed/*.sql"
       ],

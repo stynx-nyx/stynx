@@ -5,7 +5,7 @@ import { verifyRlsNegative } from '../packages/cli/engines/rls-negative.mjs';
 // this script adds the repository's runtime-negative specs and evidence manifest.
 const { failures, tables } = verifyRlsNegative({
   root: process.cwd(),
-  ddlRoots: ['database/ddl'],
+  ddlRoots: ['database/ddl', 'database/migrations'],
   runtimeDir: 'test/db/runtime',
   runtimeEvidence: [
     ['auth cross-tenant insert rejection', /rejects cross-tenant tenancy inserts/iu],

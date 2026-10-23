@@ -143,7 +143,7 @@ const internalBoundaryRule = {
 };
 
 // Strict profiles deny every dependency between declared elements unless the
-// consumer allows it (S-37); the workspace profile keeps STYNX's allow default.
+// consumer allows it (S-37).
 const boundaryDependenciesRule = (strict, allow) => [
   'error',
   {
@@ -155,8 +155,15 @@ const boundaryDependenciesRule = (strict, allow) => [
 // Strict profiles resolve relative TypeScript imports so boundaries can
 // classify them (see import-resolver.mjs); bare specifiers use `node`.
 const importResolverPath = fileURLToPath(new URL('./import-resolver.mjs', import.meta.url));
-const importResolverSettings = (strict) =>
-  strict ? { 'import/resolver': { [importResolverPath]: {}, node: {} } } : {};
+const importResolverSettings = (strict, workspacePackages) =>
+  strict
+    ? {
+        'import/resolver': {
+          [importResolverPath]: workspacePackages ? { workspacePackages } : {},
+          node: {},
+        },
+      }
+    : {};
 
 const authoredCommonJsRule = (strict) => (strict ? { 'stynx/no-authored-cjs': 'error' } : {});
 
@@ -180,7 +187,16 @@ const createConfig = ({
   processor = undefined,
   strict = true,
   rootDir = process.cwd(),
-  boundaries: { rootPath = rootDir, elements = [], allow = [] } = {},
+  // `strict` and `workspacePackages` inside `boundaries` are not public: only the
+  // STYNX workspace profile passes them, to lint itself deny-by-default (SM-12)
+  // while its type-safety levels wait for SM-11.
+  boundaries: {
+    rootPath = rootDir,
+    elements = [],
+    allow = [],
+    strict: strictBoundaries = strict,
+    workspacePackages = undefined,
+  } = {},
 }) => [
   {
     ignores: [
@@ -218,7 +234,7 @@ const createConfig = ({
     settings: {
       'boundaries/root-path': rootPath,
       'boundaries/elements': elements,
-      ...importResolverSettings(strict),
+      ...importResolverSettings(strictBoundaries, workspacePackages),
     },
     rules: {
       ...sharedTypescriptRules,
@@ -228,7 +244,7 @@ const createConfig = ({
         allowS3Imports: currentPackageName() === '@stynx-nyx/storage',
       }),
       ...s3FetchRule(allowS3Fetch || currentPackageName() === '@stynx-nyx/storage'),
-      'boundaries/dependencies': boundaryDependenciesRule(strict, allow),
+      'boundaries/dependencies': boundaryDependenciesRule(strictBoundaries, allow),
       ...typeSafetyRules(strict),
       ...authoredCommonJsRule(strict),
       ...(nest

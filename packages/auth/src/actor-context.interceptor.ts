@@ -14,6 +14,7 @@ export class ActorContextInterceptor implements NestInterceptor {
         tenantId: request.stynxClaims.tenantId,
         actorId: request.stynxClaims.sub,
         sessionId: request.stynxClaims.sid,
+        ...(request.stynxClaims.roles ? { roles: request.stynxClaims.roles } : {}),
       });
     }
     return next.handle();
