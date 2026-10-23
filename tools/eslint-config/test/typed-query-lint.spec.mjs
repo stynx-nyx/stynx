@@ -47,6 +47,37 @@ async function lint(source, relativePath, rule, extraSources = {}) {
       ? ts.createSourceFile(file, sources.get(resolve(file)), languageVersion, true)
       : originalSource(file, languageVersion, ...rest);
   const program = ts.createProgram([...sources.keys()], options, host);
+  const checker = program.getTypeChecker();
+  for (const file of sources.keys()) {
+    const parsed = program.getSourceFile(file);
+    assert.ok(parsed, `virtual fixture must enter the TypeScript program: ${file}`);
+    for (const statement of parsed.statements) {
+      if (!ts.isImportDeclaration(statement) || !statement.importClause) continue;
+      const specifier = statement.moduleSpecifier.text;
+      if (specifier === 'zod') continue; // Probe argument validity is deliberately outside this guard.
+      const bindings = statement.importClause.namedBindings;
+      const names =
+        bindings && ts.isNamedImports(bindings)
+          ? bindings.elements.map((element) => element.name)
+          : bindings
+            ? [bindings.name]
+            : [];
+      for (const name of names) {
+        const symbol = checker.getSymbolAtLocation(name);
+        const declaration =
+          symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+        assert.ok(
+          declaration?.declarations?.length,
+          `unresolved critical fixture import: ${specifier} / ${name.text}`,
+        );
+        assert.equal(
+          checker.getTypeAtLocation(name).flags & ts.TypeFlags.Any,
+          0,
+          `critical fixture import must not silently become any: ${specifier} / ${name.text}`,
+        );
+      }
+    }
+  }
   const eslint = new ESLint({
     cwd: workspace,
     overrideConfigFile: true,

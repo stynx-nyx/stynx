@@ -197,10 +197,25 @@ describe('query helpers', () => {
   });
 
   it('maps archived rows and keeps promise helpers delegated to execute', async () => {
+    const documentProjection = {
+      s3_key: 'contracts/archive.pdf',
+      filename: 'archive.pdf',
+      mime_type: 'application/pdf',
+      byte_size: 42,
+      checksum_sha256: 'a'.repeat(64),
+      scan_status: 'not_scanned',
+      scan_detail: {},
+      encryption: 'aws:kms',
+      classification: null,
+      owner_user_id: 'actor-1',
+      created_at: new Date('2025-12-01T00:00:00Z'),
+      updated_at: new Date('2025-12-01T00:00:00Z'),
+    };
     const client = {
       query: vi.fn(async () => ({
         rows: [
           {
+            ...documentProjection,
             id: 'doc-1',
             tenant_id: 'tenant-1',
             collection: 'contracts',
@@ -211,6 +226,7 @@ describe('query helpers', () => {
             last_erasure_at: null,
           },
           {
+            ...documentProjection,
             id: 'doc-2',
             tenant_id: 'tenant-1',
             collection: 'contracts',
@@ -221,6 +237,7 @@ describe('query helpers', () => {
             last_erasure_at: null,
           },
           {
+            ...documentProjection,
             id: 'doc-3',
             tenant_id: 'tenant-1',
             collection: 'contracts',
