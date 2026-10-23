@@ -1,5 +1,11 @@
 # @stynx-nyx/pdf
 
+## 3.0.0
+
+### Patch Changes
+
+- @stynx-nyx/signature@3.0.0
+
 ## 1.6.2
 
 ### Patch Changes

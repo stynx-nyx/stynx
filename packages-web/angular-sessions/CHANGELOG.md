@@ -1,5 +1,14 @@
 # @stynx-nyx/angular-sessions
 
+## 3.0.0
+
+### Patch Changes
+
+- @stynx-nyx/angular@3.0.0
+- @stynx-nyx/angular-auth@3.0.0
+- @stynx-nyx/angular-i18n@3.0.0
+- @stynx-nyx/angular-ui@3.0.0
+
 ## 1.6.2
 
 ### Patch Changes
