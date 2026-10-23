@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.44",
+  "version": "1.3.45",
   "meta": {
-    "last_updated": "2026-10-24T14:58:21.306030Z",
+    "last_updated": "2026-10-24T16:46:48.769704Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-24 Architect S7 rebase binding onto verified S8 landing d47a57a7e9770aa18ca59ec42d5cdedd43105b93: preserve S8 security, bounded ordinary-unit scheduling, release applicability controls and all 712 trace entries. Inspector replays 3d27b34ddd74c3a1eb43e459a4f13bf1a6a14126 and aa5aabe2641a15123cb51f4ee8d0ab77b8659811 retain the S8 normalized root freeze and bind S7 owner exit plus GitHub-only API reuse to actual Playwright bytes. Official projection derives the intermediate 913 assertions and final 918 assertions under unchanged INV-CORE-001; only this final local-RC-contract binding changes from the preceding S7 checkpoint. All historical provenance, other corpus entries, invariant statements, links and thresholds remain intact. This is trace custody, not a runtime test, signed S7 RC, receipt-follow-up integration, publication or downstream acceptance claim.",
       "2026-10-24 Architect binding for ADR0036 applicability clarification after Inspector 70c1ff0070dc172961c391c6ea55c67bd5eaa9d9 and lifecycle correction 1b3bc5bbabb2cd1c110c77938bbec479071f4bee: separate actual nonpublishing workspace observation from completed-campaign VERSIONED purpose. Preserve the byte-identical strict campaign helper and all prior negative controls; retain actual 47-manifest/roster/range/policy/prestate/full-changeset-plan checks without requiring a permanent S8 filename, patch-only plan or source-to-prospective-target equality. Historical exact security bytes and isolated actual verifier controls preserve strict pending-publication refusal without network or live lifecycle coupling. Inspector full policy cohort 137/137 passed. Rebind only release-version-policy assertion projection 479 to 566 under unchanged INV-CORE-001; all other corpus entries, invariants and thresholds remain unchanged. The e6684b48 ADR0035 route fix, actual security changeset and production release/publication guards are preserved. No successful full root, signed RC, integration, publication or downstream acceptance is claimed.",
       "2026-10-24 Architect binding for accepted ADR0035 after Engineer 4932061c75acfc10435bd3a8e937a3e0affd6d46 and Inspector 9bf31e01c48454a1905b75d58bdb0549016aa22a: Owner approved bounded ordinary-test scheduling; two root Turbo package slots and one Vitest/Node file worker replace only the prior ordinary-unit no-cap restriction. Bind the complete-roster, command/configuration/dependency/input preservation and actual runner barrier/failure/owned-cleanup sensor (24 assertion projections) under existing INV-CORE-001. Rebind only local RC contract (899 to 901, including three normalized root freezes) and release-evidence scope (48 to 51, preserving historical descriptors while binding active 3.0.0). All other corpus entries, invariant statements/links, completeness thresholds, populations, timeouts and unrelated gates remain unchanged. Inspector budget 24/24 and unchanged Preferences fixture rerun passed after exact locked-store hydration; focused evidence is not a full unit result, signed RC, publication or downstream acceptance.",
       "2026-10-24 Architect rebind for Inspector 0a8ac04ef09cec0e5db68c448a600a49a482b1ab: the real SQL negative fixture retains its complete compiler Program, production import/configuration, both original assertions, 60000ms timeout and separate full-workspace typecheck; pre-emit diagnostics enumerate the exact fixture SourceFile with a fail-closed identity guard. Fresh-program full/fixture controls establish identical selected diagnostics and mutation sensitivity; Inspector typed-query 12/12 and data unit 184/184 passed. All 41 assertion texts/count, invariant links, other corpus entries and thresholds remain unchanged; line movement changes only this projection digest. The two prior unit-failed RC attempts remain failed without receipts; this binding is not a full RC, publication or downstream acceptance verdict.",
@@ -5251,8 +5252,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 913,
-      "assertion_digest_sha256": "02b808dcd678ca6218e0dbbde0542547b32ba5d87f20fa1e9f59c62c71023c94"
+      "assertion_count": 918,
+      "assertion_digest_sha256": "9d8e3c0051ae3a3386eb56ae14fc8b7437f236ec65c01dc3f2cb6646eb03b143"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
