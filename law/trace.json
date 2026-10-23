@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.46",
+  "version": "1.3.47",
   "meta": {
-    "last_updated": "2026-10-24T17:59:26.267921Z",
+    "last_updated": "2026-10-24T18:03:53.853461Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-24 Architect final S10 A+B replay binding of original 545e119bea70639a8acfe90d12785127eea96fdb after all nine preceding role commits at d4e4eb98a39495ff4dac5999406c86e06532757e: preserve all S8/S7 history and trace entries, and retain the A+B role-context, domain-boundary and bookmark-idempotency sensors with their existing invariant links. Official current executable projection passes 715/715. The current local-RC, release-version and release-evidence projections retain the integrated S8/S7 assertions; no older source-branch projection replaces them. All historical provenance and thresholds remain. This records actual replayed test bytes only; the forthcoming ordinary-budget descriptor overlay, official public API baseline, final gates and A+B RC remain separate checkpoints. No source execution, runtime qualification, publication or consumer acceptance is claimed.",
       "2026-10-24 Architect intermediate S10 A+B replay of original 4ef31dd4649f0dc7c86acdcab431f3c952f34a05 after Inspector ec79c6786016bae0630404ce9e7a1726fc2cb139 onto qualified and protected S7 landing: retain all S8/S7 trace history, invariant links and thresholds, and bind only the existing first A+B executable cohort. Official current projection passes 713/713; later A+B Inspector/source commits have not replayed and no future projection is selected. Retain the three approved database descriptor selectors together with every existing ordinary-unit and RLS selector; no runtime test, final A+B qualification, publication or consumer acceptance is claimed.",
       "2026-10-24 Architect S7 rebase binding onto verified S8 landing d47a57a7e9770aa18ca59ec42d5cdedd43105b93: preserve S8 security, bounded ordinary-unit scheduling, release applicability controls and all 712 trace entries. Inspector replays 3d27b34ddd74c3a1eb43e459a4f13bf1a6a14126 and aa5aabe2641a15123cb51f4ee8d0ab77b8659811 retain the S8 normalized root freeze and bind S7 owner exit plus GitHub-only API reuse to actual Playwright bytes. Official projection derives the intermediate 913 assertions and final 918 assertions under unchanged INV-CORE-001; only this final local-RC-contract binding changes from the preceding S7 checkpoint. All historical provenance, other corpus entries, invariant statements, links and thresholds remain intact. This is trace custody, not a runtime test, signed S7 RC, receipt-follow-up integration, publication or downstream acceptance claim.",
       "2026-10-24 Architect binding for ADR0036 applicability clarification after Inspector 70c1ff0070dc172961c391c6ea55c67bd5eaa9d9 and lifecycle correction 1b3bc5bbabb2cd1c110c77938bbec479071f4bee: separate actual nonpublishing workspace observation from completed-campaign VERSIONED purpose. Preserve the byte-identical strict campaign helper and all prior negative controls; retain actual 47-manifest/roster/range/policy/prestate/full-changeset-plan checks without requiring a permanent S8 filename, patch-only plan or source-to-prospective-target equality. Historical exact security bytes and isolated actual verifier controls preserve strict pending-publication refusal without network or live lifecycle coupling. Inspector full policy cohort 137/137 passed. Rebind only release-version-policy assertion projection 479 to 566 under unchanged INV-CORE-001; all other corpus entries, invariants and thresholds remain unchanged. The e6684b48 ADR0035 route fix, actual security changeset and production release/publication guards are preserved. No successful full root, signed RC, integration, publication or downstream acceptance is claimed.",
@@ -17,6 +18,7 @@
       "2026-10-24 Architect rebind for Inspector 0a8ac04ef09cec0e5db68c448a600a49a482b1ab: the real SQL negative fixture retains its complete compiler Program, production import/configuration, both original assertions, 60000ms timeout and separate full-workspace typecheck; pre-emit diagnostics enumerate the exact fixture SourceFile with a fail-closed identity guard. Fresh-program full/fixture controls establish identical selected diagnostics and mutation sensitivity; Inspector typed-query 12/12 and data unit 184/184 passed. All 41 assertion texts/count, invariant links, other corpus entries and thresholds remain unchanged; line movement changes only this projection digest. The two prior unit-failed RC attempts remain failed without receipts; this binding is not a full RC, publication or downstream acceptance verdict.",
       "2026-10-23 Architect binding for the local integration verification-order regression: executes the production shell runner with isolated command doubles to prove migrate, database verification and platform RLS smoke precede bootstrap reset, and that each failed gate preserves its exit status, skips later gates and cleans up. This is orchestration evidence, not a live PostgreSQL tenant-isolation result; all existing assertions, thresholds and invariant statements remain unchanged.",
       "2026-10-23 Architect rebind of eight stale assertion projections after the approved SM-21 release, post-release dependency freezes and S8 historical descriptor fixture: reference-web checkout alias layering, published tsconfig LICENSE, tools roster discovery, exact 3.0.0 marker and 47-package release census, public tooling graph identity, root manifest freezes, historical release-scope task bytes, and storage-version fixture support. Existing assertions, invariant mappings, completeness thresholds and historical provenance are preserved; this binding does not authorize publication or downstream DETRAN/PORM acceptance.",
+      "2026-10-23 Architect S10 A+B correction binding: database unit and real PostgreSQL reused-connection tests prove transaction-local app.roles masks ambient roles for absent/empty verified claims and owner context; workspace boundary tests include the domain API and real Nest lint entry; bookmark route metadata/interceptor tests preserve three existing non-idempotent write routes without key, durable store or replay behavior. Eight already-reviewed post-release projections are rebound to this branch before S8/S7 integration; the historical release-scope fixture projection must be reconciled after rebase. Assertions, invariant statements, completeness thresholds and prior provenance remain preserved.",
       "2026-10-19 Architect rebind for SM-06 follow-up (template apply.sh runs `stynx migrate up --role-prefix <product>` with no URL on argv, 09 §1): binds packages/cli/test/migrate-pg-env.integration.spec.ts (migrateUp with prefix demo and only PG* set against the STYNX_TEST_PG_* scratch PostgreSQL; skipped when none is configured) and rebinds packages/cli/test/migrate.spec.ts (no connectionString reaches the pg client or factory without a URL) and packages/cli/test/cli-program.spec.ts (--database-url optional on migrate status|up|down|redo; audit verify unchanged). No assertion is removed or weakened beyond the intended optional flag.",
       "2026-10-19 Architect rebind for SM-06: binds packages/data/test/unit/platform-roles.spec.ts (default prefix applies every platform migration byte for byte; prefix demo rewrites only stynx_{owner,app,reader} identifiers; invalid prefixes refused), packages/data/test/unit/migration-runner-role-prefix.spec.ts, packages/data/test/integration/role-prefix.integration.spec.ts (scratch PostgreSQL: default stays on stynx_*; prefix demo bootstraps demo_{owner,app,reader} with demo_app NOBYPASSRLS, no stynx_* role owning, granted or named in the database, tenant isolation as the product app role), packages/cli/test/migrate-role-prefix.spec.ts and packages/testing/test/roles.unit.spec.ts, and rebinds the extended packages/cli/test/cli-program.spec.ts (--role-prefix surface) and packages/testing/test/create-test-app.unit.spec.ts (product role names). No assertion is removed or weakened; all other corpus entries, invariants and thresholds are unchanged.",
       "2026-10-19 Architect rebind for SM-03: binds tools/eslint-config/test/rule-families.spec.mjs (one eslint --max-warnings=0 fixture per enabled rule family exits 1 naming its rule, a clean fixture per profile exits 0, the exports map and named-factory surface, and the unchanged STYNX workspace levels) and rebinds test/scripts/http-workspace-graph.test.mjs after its source-only tooling fixture follows the @stynx-nyx/eslint-config rename. All 57 workspace-graph assertion sites are unchanged in count and text; no assertion is removed or weakened.",
@@ -290,6 +292,24 @@
           "names": ["INV-RBAC-001"],
           "assertions": [
             "Normal administration requires tenant/actor context, internal owner capability is explicit, and incompatible frames refuse before SQL/cache access."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "int",
+          "path": "packages/data/test/integration/roles-session.integration.spec.ts",
+          "names": ["Database transaction role isolation"],
+          "assertions": [
+            "On reused PostgreSQL connections, app/reader role context comes only from the current verified role list and absent/empty lists shadow ambient session roles; owner context is empty, and SET LOCAL leaves the ambient value unchanged outside the transaction."
+          ],
+          "mode": "gray_box"
+        },
+        {
+          "suite": "unit",
+          "path": "domain/demo-bookmark/api/test/bookmark-idempotency-contract.spec.ts",
+          "names": ["demo bookmark explicit non-idempotent route contract"],
+          "assertions": [
+            "Three explicit NoIdempotent write declarations retain exact route/auth/permission metadata and execute each request without a key, durable store call or replay headers."
           ],
           "mode": "white_box"
         }
@@ -3120,8 +3140,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001", "INV-PRIVACY-001"],
       "lifecycle": "supported",
-      "assertion_count": 82,
-      "assertion_digest_sha256": "ffae40f3cd9c544b5912e3cdc931ff22cc64ebd7948d057fe4b1af1b7a2095e6"
+      "assertion_count": 86,
+      "assertion_digest_sha256": "890226845437a14a7479318846a58def3de12d6301cc5ae6e967ee69a76b95dd"
     },
     {
       "path": "packages/data/test/unit/errors.spec.ts",
@@ -4926,8 +4946,8 @@
       "suite": "unit",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 26,
-      "assertion_digest_sha256": "d680ca1a325f3e1e3e1720fdd383fc75728fe3ab88fc0851cf66a759e6948d9b"
+      "assertion_count": 30,
+      "assertion_digest_sha256": "65172244bedcd75a64c6fae916a6b5d8980a21f60650257f031c4b9540b2c7c6"
     },
     {
       "path": "tools/migration-linter/test/context-rules.spec.ts",
@@ -7614,6 +7634,22 @@
       "lifecycle": "supported",
       "assertion_count": 24,
       "assertion_digest_sha256": "4db7d63d544ea683dc02075feb11766d48842ba2db5f07e5d69ddc86b01f8557"
+    },
+    {
+      "path": "domain/demo-bookmark/api/test/bookmark-idempotency-contract.spec.ts",
+      "suite": "unit",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 13,
+      "assertion_digest_sha256": "8fe8cd0835705c843756efaa16aedb98b1d84124de1790ba6012c79c02ec9129"
+    },
+    {
+      "path": "packages/data/test/integration/roles-session.integration.spec.ts",
+      "suite": "int",
+      "invariant_ids": ["INV-CORE-001", "INV-RBAC-001"],
+      "lifecycle": "supported",
+      "assertion_count": 3,
+      "assertion_digest_sha256": "043c818fccb26d30405a8bf7128fe017dd5623acd68dbe858a1be7fe1934ec31"
     }
   ],
   "suites": {
