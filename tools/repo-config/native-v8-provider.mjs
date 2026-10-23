@@ -272,7 +272,7 @@ export class NativeV8CoverageProvider extends V8CoverageProvider {
       super.initialize(ctx);
       const options = this.resolveOptions();
       // These are the unchanged hard-coded exclusions appended by installed
-      // Vitest 4.1.11. They cover tests/config/virtual/dependency files only.
+      // Vitest 4.1.12. They cover tests/config/virtual/dependency files only.
       const resolvedExcludes = [
         ...original.test.coverage.exclude,
         ...config.include,
