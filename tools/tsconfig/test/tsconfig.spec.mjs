@@ -64,7 +64,7 @@ test('published identity carries no checkout aliases (SM-02)', () => {
   assert.equal(manifest.name, '@stynx-nyx/tsconfig');
   assert.equal(manifest.private, undefined);
   assert.equal(manifest.peerDependencies.typescript, '~6.0.3');
-  assert.deepEqual(manifest.files, ['base.json', 'node24.json', 'lib.json', 'angular18.json', 'README.md']);
+  assert.deepEqual(manifest.files, ['base.json', 'node24.json', 'lib.json', 'angular18.json', 'README.md', 'LICENSE']);
   for (const fileName of ['base.json', 'node24.json', 'lib.json', 'angular18.json']) {
     assert.equal(readJson(fileName).compilerOptions?.paths, undefined, `${fileName} must not map checkout paths`);
   }
