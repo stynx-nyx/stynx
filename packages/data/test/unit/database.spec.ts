@@ -218,6 +218,34 @@ describe('Database', () => {
     expect(client.release).toHaveBeenCalledTimes(1);
   });
 
+  it('writes the request roles as app.roles, the role source of the bootstrap policies (SM-05)', async () => {
+    const { client, queries } = createClient();
+    const database = createPoolBackedDatabase(client, {
+      requestContext: {
+        hasActiveContext: () => true,
+        snapshot: () => ({
+          requestId: 'req-1',
+          tenantId: 'tenant-1',
+          actorId: 'actor-1',
+          roles: ['tenant:admin', 'platform:superadmin'],
+          startedAt: new Date(),
+        }),
+      } as unknown as RequestContext,
+    });
+
+    await database.tx(async () => undefined);
+
+    expect(queries.slice(0, 6).map((query) => query.text)).toEqual([
+      'BEGIN',
+      `SELECT set_config('app.role', $1, true)`,
+      `SELECT set_config('app.request_id', $1, true)`,
+      `SELECT set_config('app.tenant_id', $1, true)`,
+      `SELECT set_config('app.actor_id', $1, true)`,
+      `SELECT set_config('app.roles', $1, true)`,
+    ]);
+    expect(queries[5]?.values).toEqual(['tenant:admin,platform:superadmin']);
+  });
+
   it('maps PostgreSQL readonly and statement-timeout errors during rollback', async () => {
     for (const [code, ErrorClass] of [
       ['25006', ReadOnlyViolationError],

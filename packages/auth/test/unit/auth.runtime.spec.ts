@@ -57,6 +57,32 @@ describe('auth runtime helpers', () => {
     expect(patch).not.toHaveBeenCalledTimes(1);
   });
 
+  it('patches the verified roles claim into the request context (SM-05 app.roles)', () => {
+    const patch = vi.fn();
+    const interceptor = new ActorContextInterceptor({ patch } as never);
+    const next: CallHandler = {
+      handle: vi.fn(() => 'handled'),
+    };
+
+    interceptor.intercept(
+      createExecutionContext({
+        stynxClaims: {
+          tenantId: 'tenant-1',
+          sub: 'user-1',
+          sid: 'sid-1',
+          roles: ['tenant:admin', 'platform:superadmin'],
+        },
+      }),
+      next,
+    );
+    expect(patch).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      actorId: 'user-1',
+      sessionId: 'sid-1',
+      roles: ['tenant:admin', 'platform:superadmin'],
+    });
+  });
+
   it('allows public and system routes and enforces permission membership otherwise', () => {
     const reflector = {
       getAllAndOverride: vi.fn((key: symbol) => {
