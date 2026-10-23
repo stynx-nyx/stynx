@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AUTH_DDL="$ROOT_DIR/database/ddl/01-auth.sql"
 AUDIT_DDL="$ROOT_DIR/database/ddl/02-audit.sql"
 STORAGE_DDL="$ROOT_DIR/database/ddl/03-storage.sql"
+GUC_MIGRATION="$ROOT_DIR/database/migrations/001_app_guc_context.sql"
 MISSING=0
 
 assert_pattern() {
@@ -45,6 +46,15 @@ assert_pattern "$STORAGE_DDL" "auth\\.create_rls_policy\\(\\s*'storage'\\s*,\\s*
 
 assert_pattern "$AUDIT_DDL" "CREATE POLICY tenant_scope ON audit\\.events" "explicit audit.events tenant policy"
 assert_pattern "$AUDIT_DDL" "tenancy_id IS NULL" "audit.events policy keeps global events visibility"
+
+# SM-05: the bootstrap policies are recreated on the app.* dialect after database/ddl.
+assert_pattern "$GUC_MIGRATION" "CREATE OR REPLACE FUNCTION auth\\.create_rls_policy" "auth.create_rls_policy on app.*"
+assert_pattern "$GUC_MIGRATION" "CREATE POLICY tenant_scope ON audit\\.events\\s+USING \\(\\s+tenancy_id = NULLIF\\(current_setting\\('app\\.tenant_id'" "audit.events tenant policy on app.tenant_id"
+assert_pattern "$GUC_MIGRATION" "CREATE POLICY users_isolation ON auth\\.users" "auth.users policy on app.*"
+if grep -Eq "current_setting\\('(auth|stynx)\\.|set_config\\('(auth|stynx)\\." "$GUC_MIGRATION"; then
+  echo "[RLS][legacy] $GUC_MIGRATION reads or writes an auth.*/stynx.* setting"
+  MISSING=1
+fi
 
 DB_URL="${STYNX_TEST_DATABASE_URL:-${STYNX_DATABASE_URL:-${DATABASE_URL:-}}}"
 LIVE_REQUIRED="${STYNX_RLS_LIVE_REQUIRED:-0}"

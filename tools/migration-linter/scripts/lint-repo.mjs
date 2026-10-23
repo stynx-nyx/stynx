@@ -10,14 +10,29 @@
 //   3. after `git fetch --depth=1 origin main` (shallow CI checkouts): git merge-base HEAD
 //      FETCH_HEAD, else FETCH_HEAD itself — on a pull_request merge ref that is the base tip.
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = resolve(packageRoot, '..', '..');
-const migrationRoot = 'packages/data/migrations';
+// database/migrations holds the bootstrap layout's incremental files (SM-05); its
+// 000_/001_ prefixes never collide with the four-digit platform prefixes. Every file
+// there is linted except the applied migration-check preseed, whose comments name
+// SECURITY DEFINER (a LINT006 false positive) and whose bytes are immutable (D-033).
+const migrationRoots = ['packages/data/migrations', 'database/migrations'];
+const unlintedAppliedFiles = new Set(['database/migrations/000_migrate-check-preseed.sql']);
+
+function lintTargets() {
+  const [platformRoot, bootstrapRoot] = migrationRoots;
+  const bootstrapFiles = readdirSync(join(repoRoot, bootstrapRoot))
+    .filter((name) => name.endsWith('.sql'))
+    .map((name) => `${bootstrapRoot}/${name}`)
+    .filter((path) => !unlintedAppliedFiles.has(path))
+    .sort();
+  return [platformRoot, ...bootstrapFiles];
+}
 const cliPath = join(packageRoot, 'dist', 'src', 'cli.js');
 
 function git(args, options = {}) {
@@ -60,7 +75,7 @@ function resolveBase() {
 }
 
 function materialize(sha, baseDir) {
-  const listed = git(['ls-tree', '-r', '-z', '--name-only', sha, '--', migrationRoot]);
+  const listed = git(['ls-tree', '-r', '-z', '--name-only', sha, '--', ...migrationRoots]);
   if (listed.status !== 0)
     throw new Error(`git ls-tree ${sha} failed: ${listed.stderr.toString('utf8').trim()}`);
   const paths = listed.stdout.toString('utf8').split('\0').filter(Boolean);
@@ -79,11 +94,11 @@ try {
   baseDir = mkdtempSync(join(tmpdir(), 'stynx-migration-base-'));
   const count = materialize(base.sha, baseDir);
   console.error(
-    `[lint:repo] base ${base.sha.slice(0, 12)} (${base.how}): ${count} file(s) under ${migrationRoot}`,
+    `[lint:repo] base ${base.sha.slice(0, 12)} (${base.how}): ${count} file(s) under ${migrationRoots.join(', ')}`,
   );
   const run = spawnSync(
     process.execPath,
-    [cliPath, migrationRoot, '--base-dir', baseDir, ...process.argv.slice(2)],
+    [cliPath, ...lintTargets(), '--base-dir', baseDir, ...process.argv.slice(2)],
     {
       cwd: repoRoot,
       stdio: 'inherit',

@@ -52,6 +52,7 @@ interface ResolvedExecutionContext {
   tenantId?: string;
   actorId?: string;
   sessionId?: string;
+  roles?: readonly string[];
 }
 
 const TX_CONTEXT_KEY = Symbol('stynx.data.tx');
@@ -396,6 +397,11 @@ export class Database extends CoreDatabase {
     if (executionContext.actorId) {
       await client.query(`SELECT set_config('app.actor_id', $1, true)`, [executionContext.actorId]);
     }
+    if (executionContext.roles) {
+      await client.query(`SELECT set_config('app.roles', $1, true)`, [
+        executionContext.roles.join(','),
+      ]);
+    }
     if (executionContext.sessionId) {
       await client.query(`SELECT set_config('app.session_id', $1, true)`, [
         executionContext.sessionId,
@@ -438,6 +444,7 @@ export class Database extends CoreDatabase {
       tenantId: currentContext.tenantId,
       actorId: currentContext.actorId,
       ...(currentContext.sessionId ? { sessionId: currentContext.sessionId } : {}),
+      ...(currentContext.roles?.length ? { roles: currentContext.roles } : {}),
     };
   }
 }
