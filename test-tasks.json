@@ -219,7 +219,8 @@
         { "kind": "glob", "pattern": "domain/*/db/**" },
         { "kind": "prefix", "pattern": "reference/api/migrations/" },
         { "kind": "glob", "pattern": "scripts/*db*.mjs" },
-        { "kind": "glob", "pattern": "scripts/*rls*" }
+        { "kind": "glob", "pattern": "scripts/*rls*" },
+        { "kind": "exact", "pattern": "packages/cli/engines/rls-negative.mjs" }
       ],
       "toolchainKeys": ["node", "pnpm", "postgres"],
       "allowlistedEnv": [
