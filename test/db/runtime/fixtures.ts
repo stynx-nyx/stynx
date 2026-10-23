@@ -60,6 +60,7 @@ export async function createDbRuntimeFixture(
   try {
     const appliedFiles = [
       ...(await applySqlFiles(client, 'database/ddl')),
+      ...(await applySqlFiles(client, 'database/migrations')),
       ...(await applySqlFiles(client, 'database/seed')),
     ];
 

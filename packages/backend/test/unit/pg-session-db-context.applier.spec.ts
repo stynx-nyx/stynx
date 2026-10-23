@@ -28,11 +28,11 @@ describe('PgSessionDbContextApplier', () => {
       ([sql, params]) =>
         sql === 'select set_config($1, $2, false)' &&
         Array.isArray(params) &&
-        ['stynx.current_tenant', 'auth.current_tenant', 'app.current_tenant'].includes(
+        ['stynx.current_tenant', 'auth.current_tenant', 'app.current_tenant', 'app.tenant_id'].includes(
           params[0] as string,
         ),
     );
-    expect(tenantCalls).toHaveLength(3);
+    expect(tenantCalls).toHaveLength(4);
     for (const [, params] of tenantCalls) {
       expect((params as unknown[])[1]).toBe('tenant-7');
     }
@@ -54,6 +54,9 @@ describe('PgSessionDbContextApplier', () => {
     expect(settings.get('stynx.app_user_id')).toBe('user-1');
     expect(settings.get('stynx.correlation_id')).toBe('corr-1');
     expect(settings.get('stynx.request_id')).toBe('req-1');
+    // SM-05: the bootstrap helpers and policies read only the app.* dialect.
+    expect(settings.get('app.actor_id')).toBe('user-1');
+    expect(settings.get('app.request_id')).toBe('req-1');
   });
 
   it('joins roles and permissions arrays into comma-separated strings', async () => {
@@ -199,16 +202,21 @@ describe('PgSessionDbContextApplier', () => {
     expect(client.query.mock.calls).toEqual([
       ['select set_config($1, $2, false)', ['stynx.app_user_id', 'user-1']],
       ['select set_config($1, $2, false)', ['auth.app_user_id', 'user-1']],
+      ['select set_config($1, $2, false)', ['app.actor_id', 'user-1']],
       ['select set_config($1, $2, false)', ['stynx.roles', 'owner,member']],
       ['select set_config($1, $2, false)', ['auth.roles', 'owner,member']],
+      ['select set_config($1, $2, false)', ['app.roles', 'owner,member']],
       ['select set_config($1, $2, false)', ['stynx.permissions', 'read,write']],
       ['select set_config($1, $2, false)', ['stynx.current_tenant', 'tenant-1']],
       ['select set_config($1, $2, false)', ['auth.current_tenant', 'tenant-1']],
       ['select set_config($1, $2, false)', ['app.current_tenant', 'tenant-1']],
+      ['select set_config($1, $2, false)', ['app.tenant_id', 'tenant-1']],
       ['select set_config($1, $2, false)', ['stynx.correlation_id', 'corr-1']],
       ['select set_config($1, $2, false)', ['stynx.request_id', 'req-1']],
+      ['select set_config($1, $2, false)', ['app.request_id', 'req-1']],
       ['select set_config($1, $2, false)', ['stynx.lang', 'pt-BR']],
       ['select set_config($1, $2, false)', ['auth.lang', 'pt-BR']],
+      ['select set_config($1, $2, false)', ['app.lang', 'pt-BR']],
       ['select set_config($1, $2, false)', ['stynx.org_cnpj', '123']],
       ['select set_config($1, $2, false)', ['auth.org_cnpj', '123']],
     ]);
@@ -239,10 +247,12 @@ describe('PgSessionDbContextApplier', () => {
     expect(client.query.mock.calls).toEqual([
       ['select set_config($1, $2, false)', ['stynx.roles', 'admin']],
       ['select set_config($1, $2, false)', ['auth.roles', 'admin']],
+      ['select set_config($1, $2, false)', ['app.roles', 'admin']],
       ['select set_config($1, $2, false)', ['custom.tenant', 'tenant-1']],
       ['select set_config($1, $2, false)', ['custom.tenant.secondary', 'tenant-1']],
       ['select set_config($1, $2, false)', ['stynx.lang', 'pt-BR']],
       ['select set_config($1, $2, false)', ['auth.lang', 'pt-BR']],
+      ['select set_config($1, $2, false)', ['app.lang', 'pt-BR']],
       ['select set_config($1, $2, false)', ['stynx.org_cnpj', '123']],
       ['select set_config($1, $2, false)', ['auth.org_cnpj', '123']],
     ]);

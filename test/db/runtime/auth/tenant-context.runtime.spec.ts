@@ -67,7 +67,7 @@ describe('auth tenant context runtime helpers', () => {
           auth.has_role('tenant:admin') as has_tenant_admin,
           auth.has_role('tenant:missing') as has_missing_role,
           auth.current_tenant()::text as current_tenant,
-          current_setting('auth.lang', true) as lang
+          current_setting('app.lang', true) as lang
       `,
     );
 
@@ -96,7 +96,7 @@ describe('auth tenant context runtime helpers', () => {
           auth.current_user_id()::text as current_user_id,
           auth.current_roles() as current_roles,
           auth.current_tenant()::text as current_tenant,
-          current_setting('auth.lang', true) as lang
+          current_setting('app.lang', true) as lang
       `,
     );
 
@@ -111,7 +111,7 @@ describe('auth tenant context runtime helpers', () => {
   });
 
   it('rejects a non-UUID user context value with SQLSTATE 22023', async () => {
-    await fixture.client.query("select set_config('auth.app_user_id', 'not-a-uuid', false)");
+    await fixture.client.query("select set_config('app.actor_id', 'not-a-uuid', false)");
 
     await expectPgError(
       () => fixture.client.query('select auth.current_user_id()'),

@@ -10,20 +10,25 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { availableParallelism, tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, matchesGlob } from 'node:path';
 import { describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+import { ESLint } from 'eslint';
+import angularConfig from '../angular.mjs';
 import libConfig from '../lib.mjs';
 import nestConfig from '../nest.mjs';
+import { stynxWorkspaceOptions } from '../workspace.mjs';
 
 const packageDir = dirname(dirname(fileURLToPath(import.meta.url)));
+const workspaceRoot = dirname(dirname(packageDir));
 const fixturesDir = join(packageDir, 'test', 'fixtures');
 const packageManifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
 const eslintBin = join(
@@ -230,13 +235,120 @@ describe('rule-family fixtures', { concurrency: availableParallelism() }, () => 
   }
 });
 
-test('STYNX workspace entry points keep the pre-SM-11 levels', () => {
-  const rulesOf = (config) => Object.assign({}, ...config.map((item) => item.rules ?? {}));
+const rulesOf = (config) => Object.assign({}, ...config.map((item) => item.rules ?? {}));
+
+test('STYNX workspace entry points keep the pre-SM-11 type-safety levels', () => {
   const libRules = rulesOf(libConfig);
   assert.equal(libRules['@typescript-eslint/no-explicit-any'], 'off');
   assert.equal(libRules['@typescript-eslint/no-unsafe-assignment'], 'off');
-  assert.equal(libRules['boundaries/dependencies'][1].default, 'allow');
   assert.equal(libRules['stynx/no-authored-cjs'], undefined);
   // SM-13 raised the workspace level from warn to the published error level.
   assert.equal(rulesOf(nestConfig)['stynx/require-idempotent-route-decorator'], 'error');
+});
+
+// SM-12: STYNX lints itself with boundaries deny-by-default ahead of SM-11.
+test('STYNX workspace entry points deny undeclared boundary dependencies', () => {
+  for (const config of [libConfig, nestConfig, angularConfig]) {
+    const [level, options] = rulesOf(config)['boundaries/dependencies'];
+    assert.equal(level, 'error');
+    assert.equal(options.default, 'disallow');
+  }
+});
+
+// Every package linted through a workspace entry point is exactly one element;
+// an unclassified package would sit outside the boundaries rule entirely.
+const workspaceLintedPackages = () =>
+  ['packages', 'packages-web', 'tools', 'reference']
+    .flatMap((group) =>
+      readdirSync(join(workspaceRoot, group), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => `${group}/${entry.name}`),
+    )
+    .filter((dir) => {
+      try {
+        const manifest = JSON.parse(readFileSync(join(workspaceRoot, dir, 'package.json'), 'utf8'));
+        return /tools\/eslint-config\/(?:lib|nest|angular)\.mjs/u.test(manifest.scripts?.lint ?? '');
+      } catch {
+        return false;
+      }
+    })
+    .sort();
+
+test('STYNX workspace boundaries classify every workspace-linted package once', () => {
+  const { elements } = stynxWorkspaceOptions.boundaries;
+  const packages = workspaceLintedPackages();
+  assert.ok(packages.length >= 45, `expected the whole workspace; found ${packages.length}`);
+  for (const dir of packages) {
+    const matches = elements.filter((element) => matchesGlob(`${dir}/src/probe.ts`, element.pattern));
+    assert.equal(matches.length, 1, `${dir}: matched ${JSON.stringify(matches.map((element) => element.type))}`);
+  }
+  assert.deepEqual(
+    elements.filter((element) => !packages.some((dir) => matchesGlob(`${dir}/src/probe.ts`, element.pattern))),
+    [],
+    'expected no element for a directory that does not exist',
+  );
+});
+
+// Lints `code` as `<dir>/src/s12-probe.ts` through a STYNX workspace entry
+// point with only `boundaries/dependencies` enabled, so the probe needs no
+// type information and nothing is written into the workspace.
+async function lintWorkspaceProbe(config, dir, code) {
+  const boundariesOnly = Object.fromEntries(
+    Object.keys(rulesOf(config))
+      .filter((ruleId) => ruleId !== 'boundaries/dependencies')
+      .map((ruleId) => [ruleId, 'off']),
+  );
+  const eslint = new ESLint({
+    cwd: join(workspaceRoot, dir),
+    overrideConfigFile: true,
+    overrideConfig: [
+      ...config,
+      {
+        files: ['**/*.ts'],
+        languageOptions: { parserOptions: { project: false, projectService: false } },
+        rules: boundariesOnly,
+      },
+    ],
+  });
+  const [result] = await eslint.lintText(code, {
+    filePath: join(workspaceRoot, dir, 'src', 's12-probe.ts'),
+  });
+  return result.messages;
+}
+
+const undeclaredEdge = readFileSync(join(fixturesDir, 'workspace-undeclared-edge.ts.fixture'), 'utf8');
+
+test('STYNX workspace: an undeclared package-name edge exits at error', async () => {
+  const messages = await lintWorkspaceProbe(nestConfig, 'packages/core', undeclaredEdge);
+  assert.deepEqual(
+    messages.map((message) => [message.ruleId, message.severity]),
+    [['boundaries/dependencies', 2]],
+  );
+});
+
+test('STYNX workspace: declared package-name edges stay clean', async () => {
+  assert.deepEqual(
+    await lintWorkspaceProbe(nestConfig, 'packages/data', "export * from '@stynx-nyx/core';\n"),
+    [],
+  );
+  assert.deepEqual(
+    await lintWorkspaceProbe(nestConfig, 'packages/auth', "export * from '@stynx-nyx/idempotency';\n"),
+    [],
+  );
+});
+
+test('STYNX workspace: the reverse of a declared edge is denied', async () => {
+  const messages = await lintWorkspaceProbe(nestConfig, 'packages/data', "export * from '@stynx-nyx/auth';\n");
+  assert.deepEqual(
+    messages.map((message) => message.ruleId),
+    ['boundaries/dependencies'],
+  );
+});
+
+test('STYNX workspace: web packages are bound by package name too', async () => {
+  const messages = await lintWorkspaceProbe(angularConfig, 'packages-web/angular-ui', "export * from '@stynx-nyx/sdk';\n");
+  assert.deepEqual(
+    messages.map((message) => message.ruleId),
+    ['boundaries/dependencies'],
+  );
 });

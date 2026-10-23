@@ -33,7 +33,7 @@ describe('audit DML trigger runtime behavior', () => {
   beforeEach(async () => {
     await fixture.client.query('truncate scratch.audit_items, scratch.no_primary_key, audit.events');
     await fixture.client.query('select auth.set_tenant(null), auth.set_user_context(null, null)');
-    await fixture.client.query(`select set_config('stynx.correlation_id', '', false)`);
+    await fixture.client.query(`select set_config('app.request_id', '', false)`);
   });
 
   afterAll(async () => {
@@ -72,7 +72,7 @@ describe('audit DML trigger runtime behavior', () => {
   it('fn_log_dml records INSERT, UPDATE, and DELETE through audit.attach_dml_triggers', async () => {
     await fixture.client.query('select auth.set_tenant($1::uuid)', [tenantId]);
     await fixture.client.query(`select auth.set_user_context($1::uuid, array['tenant:admin'])`, [actorId]);
-    await fixture.client.query(`select set_config('stynx.correlation_id', 'request-dml-1', false)`);
+    await fixture.client.query(`select set_config('app.request_id', 'request-dml-1', false)`);
 
     await fixture.client.query(
       `

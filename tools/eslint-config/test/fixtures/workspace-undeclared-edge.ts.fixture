@@ -1,0 +1,6 @@
+// SM-12: a cross-package edge imported by package name, the only way STYNX
+// source crosses packages. `core` declares no workspace dependency, so the
+// STYNX workspace profile must deny it.
+import { Database } from '@stynx-nyx/data';
+
+export const leaked: unknown = Database;
