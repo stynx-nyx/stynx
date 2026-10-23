@@ -686,6 +686,9 @@ const playwrightApiReadyLine = '[reference-api-startup] runtime-route-table-pres
 const playwrightApiReadyWaitSource = '^\\[reference-api-startup\\] runtime-route-table-present$';
 const playwrightApiReadyWaitLine =
   '      wait: { stderr: /^\\[reference-api-startup\\] runtime-route-table-present$/m },\n';
+const playwrightApiReuseLine =
+  "      reuseExistingServer: process.env.GITHUB_ACTIONS === 'true',\n";
+const githubActionsReuse = process.env.GITHUB_ACTIONS === 'true';
 const d21ComposeTerminalCodes = [
   'compose-up-spawn-failed',
   'compose-up-exit-nonzero',
@@ -3204,11 +3207,38 @@ test('S7 Playwright refuses an already-available webServer once reuse is off', a
     ),
     true,
   );
-  const config = (await import(`../../reference/web/playwright.config.mjs?s7=${Date.now()}`))
-    .default;
-  assert.deepEqual(
-    config.webServer.map((entry) => entry.reuseExistingServer),
-    [false, false],
+  // Only GitHub CI, which provisions the API stack on a fresh runner, may reuse it; the signed
+  // local RC does not allowlist GITHUB_ACTIONS.
+  const hadGithubActions = Object.hasOwn(process.env, 'GITHUB_ACTIONS');
+  const priorGithubActions = process.env.GITHUB_ACTIONS;
+  const reuseUnder = async (value) => {
+    if (value === undefined) delete process.env.GITHUB_ACTIONS;
+    else process.env.GITHUB_ACTIONS = value;
+    const config = (
+      await import(`../../reference/web/playwright.config.mjs?s7=${value}-${Date.now()}`)
+    ).default;
+    return config.webServer.map((entry) => entry.reuseExistingServer);
+  };
+  try {
+    assert.deepEqual(await reuseUnder(undefined), [false, false]);
+    assert.deepEqual(await reuseUnder('false'), [false, false]);
+    assert.deepEqual(await reuseUnder('true'), [true, false]);
+  } finally {
+    if (hadGithubActions) process.env.GITHUB_ACTIONS = priorGithubActions;
+    else delete process.env.GITHUB_ACTIONS;
+  }
+  const allowlistedEnv = JSON.parse(
+    readFileSync(join(repoRoot, 'test-tasks.json'), 'utf8'),
+  ).tasks.find((task) => task.nodeId === 'test:e2e').allowlistedEnv;
+  assert.equal(allowlistedEnv.includes('GITHUB_ACTIONS'), false);
+  assert.equal(
+    Object.hasOwn(
+      JSON.parse(
+        readFileSync(join(repoRoot, 'law/policy/devai-local-rc-environment.json'), 'utf8'),
+      ),
+      'GITHUB_ACTIONS',
+    ),
+    false,
   );
 });
 
@@ -4370,7 +4400,7 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
   const frozenBaseline = normalizeD20PlaywrightWait(configSource);
   assert.equal(
     createHash('sha256').update(frozenBaseline).digest('hex'),
-    'eb068ecb98fa1e6f19e1ee7e39d502b7ae5743fe02686e144e532269d448f866',
+    '601112427b18b3f2da3d4ee8fdcaa8040e88e9069325b4f501bc68be81a27fe6',
   );
   if (occurrenceCount === 0) {
     assert.equal(frozenBaseline, configSource);
@@ -4379,14 +4409,14 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
     assert.equal(configSource.replace(playwrightApiReadyWaitLine, ''), frozenBaseline);
   }
 
-  const apiAnchor = '      reuseExistingServer: false,\n      timeout: 300_000,\n';
+  const apiAnchor = `${playwrightApiReuseLine}      timeout: 300_000,\n`;
   assert.equal(
     (frozenBaseline.match(new RegExp(escapeRegExpLiteral(apiAnchor), 'gu')) ?? []).length,
     1,
   );
   const withExactWait = frozenBaseline.replace(
     apiAnchor,
-    `      reuseExistingServer: false,\n${playwrightApiReadyWaitLine}      timeout: 300_000,\n`,
+    `${playwrightApiReuseLine}${playwrightApiReadyWaitLine}      timeout: 300_000,\n`,
   );
   assert.equal(normalizeD20PlaywrightWait(withExactWait), frozenBaseline);
   assert.throws(() => normalizeD20PlaywrightWait(`${withExactWait}${playwrightApiReadyWaitLine}`));
@@ -4402,7 +4432,7 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
     normalizeD20PlaywrightWait(
       frozenBaseline.replace(
         apiAnchor,
-        '      reuseExistingServer: false,\n      wait: { stderr: /(runtime-route-table-present)/g },\n      timeout: 300_000,\n',
+        `${playwrightApiReuseLine}      wait: { stderr: /(runtime-route-table-present)/g },\n      timeout: 300_000,\n`,
       ),
     ),
   );
@@ -4410,7 +4440,7 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
     normalizeD20PlaywrightWait(
       frozenBaseline.replace(
         apiAnchor,
-        '      reuseExistingServer: false,\n      wait: { stdout: /runtime-route-table-present/m },\n      timeout: 300_000,\n',
+        `${playwrightApiReuseLine}      wait: { stdout: /runtime-route-table-present/m },\n      timeout: 300_000,\n`,
       ),
     ),
   );
@@ -4422,7 +4452,7 @@ test('D20 production adds only the exact API-entry raw-stderr wait', async () =>
   const frozenWithoutWait = normalizeD20PlaywrightWait(configSource);
   assert.equal(
     createHash('sha256').update(frozenWithoutWait).digest('hex'),
-    'eb068ecb98fa1e6f19e1ee7e39d502b7ae5743fe02686e144e532269d448f866',
+    '601112427b18b3f2da3d4ee8fdcaa8040e88e9069325b4f501bc68be81a27fe6',
   );
   assert.equal(
     configSource.includes(playwrightApiReadyWaitLine),
@@ -4445,7 +4475,7 @@ test('D20 production adds only the exact API-entry raw-stderr wait', async () =>
   assert.equal(apiEntry.command, 'node scripts/serve-reference-api-stack.mjs');
   assert.equal(apiEntry.cwd, fileURLToPath(new URL('../../reference/web/', import.meta.url)));
   assert.equal(apiEntry.url, 'http://127.0.0.1:3000/readyz');
-  assert.equal(apiEntry.reuseExistingServer, false);
+  assert.equal(apiEntry.reuseExistingServer, githubActionsReuse);
   assert.equal(apiEntry.timeout, 300_000);
   assert.ok(apiEntry.wait, 'D20 exact API stderr wait is not implemented');
   assert.deepEqual(Object.keys(apiEntry.wait), ['stderr']);
@@ -4566,7 +4596,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
   const frozenFiles = {
     'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
-      '85f46a3edefaa0850c55133a789d7588b9c0737a45a756cb07ad730887afb916',
+      'cb41ada94a79b8a0cc220c193fb39a579a4749f2b60dd8705ef145a769fc7d02',
     'package.json': '52a026774e3090f6d5e75f04aeef446c774691281176f09a0c5847ebe4e61f7f',
     'reference/api/package.json':
       'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
@@ -4823,7 +4853,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
   const frozenFiles = {
     'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
-      '85f46a3edefaa0850c55133a789d7588b9c0737a45a756cb07ad730887afb916',
+      'cb41ada94a79b8a0cc220c193fb39a579a4749f2b60dd8705ef145a769fc7d02',
     'package.json': '52a026774e3090f6d5e75f04aeef446c774691281176f09a0c5847ebe4e61f7f',
     'reference/api/package.json':
       'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
@@ -4911,7 +4941,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
   const frozen = {
     'reference/api/src/main.ts': '95fd04b29c57830982b7669f13c5f4466d11ca54b913241599b6e4685478146f',
     'reference/web/playwright.config.mjs':
-      'eb068ecb98fa1e6f19e1ee7e39d502b7ae5743fe02686e144e532269d448f866',
+      '601112427b18b3f2da3d4ee8fdcaa8040e88e9069325b4f501bc68be81a27fe6',
     'package.json': '52a026774e3090f6d5e75f04aeef446c774691281176f09a0c5847ebe4e61f7f',
     'reference/api/package.json':
       'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
@@ -4991,7 +5021,8 @@ test('D16 preserves D14 dynamic Redis and Playwright readiness configuration', (
   assertD14HelperContract(helper, rootManifest);
   assert.match(playwright, /timeout:\s*90_000/u);
   assert.match(playwright, /url:\s*'http:\/\/127\.0\.0\.1:3000\/readyz'/u);
-  assert.equal((playwright.match(/reuseExistingServer:\s*false,/gu) ?? []).length, 3);
+  assert.equal((playwright.match(/reuseExistingServer:\s*false,/gu) ?? []).length, 2);
+  assert.equal(playwright.split(playwrightApiReuseLine).length - 1, 1);
   assert.doesNotMatch(playwright, /reuseExistingServer:\s*true/u);
   assert.match(playwright, /timeout:\s*300_000/u);
   assert.doesNotMatch(`${helper}\n${playwright}`, /(?:setTimeout|retry|poll)\s*\(/iu);
@@ -6586,7 +6617,7 @@ test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwrigh
       stderrSource: playwrightApiReadyWaitSource,
       stderrFlags: 'm',
     },
-    reuseExistingServer: false,
+    reuseExistingServer: githubActionsReuse,
     timeout: 300_000,
   };
   const staticServer = {
