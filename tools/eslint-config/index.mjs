@@ -1,6 +1,6 @@
 import js from '@eslint/js';
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import angularPlugin from '@angular-eslint/eslint-plugin';
 import angularTemplatePlugin from '@angular-eslint/eslint-plugin-template';
@@ -186,6 +186,7 @@ const createConfig = ({
   allowS3Fetch = false,
   processor = undefined,
   strict = true,
+  workspaceQuery = undefined,
   rootDir = process.cwd(),
   // `strict` and `workspacePackages` inside `boundaries` are not public: only the
   // STYNX workspace profile passes them, to lint itself deny-by-default (SM-12)
@@ -247,6 +248,14 @@ const createConfig = ({
       'boundaries/dependencies': boundaryDependenciesRule(strictBoundaries, allow),
       ...typeSafetyRules(strict),
       ...authoredCommonJsRule(strict),
+      ...(workspaceQuery?.packageRoots.includes(
+        relative(workspaceQuery.rootDir, rootDir).replaceAll('\\', '/'),
+      )
+        ? {
+            'stynx/no-raw-query': ['error', { rootDir: workspaceQuery.rootDir }],
+            'stynx/define-query-location': ['error', { rootDir: workspaceQuery.rootDir }],
+          }
+        : {}),
       ...(nest
         ? {
             '@typescript-eslint/no-extraneous-class': 'off',

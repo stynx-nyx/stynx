@@ -149,6 +149,9 @@ const workspacePackages = Object.fromEntries(
 
 export const stynxWorkspaceOptions = {
   strict: false,
+  // S10 C1 ratchet. Expand only after each batch passes its converted-query
+  // checks; D removes the ratchet and enables the rules for the full workspace.
+  workspaceQuery: { rootDir: workspaceRoot, packageRoots: ['packages/data'] },
   boundaries: {
     rootPath: workspaceRoot,
     elements: boundaryElements,

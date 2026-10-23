@@ -1,4 +1,5 @@
 // The `stynx/*` ESLint rules shared by every profile in this package.
+import { noRawQuery, defineQueryLocation } from './query-rules.mjs';
 
 const writeRouteDecoratorNames = new Set(['Post', 'Put', 'Patch']);
 const idempotencyDecoratorNames = new Set(['Idempotent', 'NoIdempotent']);
@@ -41,6 +42,8 @@ function collectDecoratorNames(node) {
 
 export const stynxPlugin = {
   rules: {
+    'no-raw-query': noRawQuery,
+    'define-query-location': defineQueryLocation,
     'no-authored-cjs': {
       meta: {
         type: 'problem',
