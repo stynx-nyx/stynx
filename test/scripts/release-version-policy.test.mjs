@@ -4344,7 +4344,7 @@ test('final preflight requires the RC2 tag and stable latest on every package', 
   const helperSource = repositorySource('scripts/lib/publication-dist-tag.mjs');
   assert.match(
     helperSource,
-    /export function verifyPostPublishDistTags\(\{\n  candidate,\n  preflightLatest,\n  preflightDistTags,\n  distTags,\n  firstPublication = false,\n\}\)/u,
+    /export function verifyPostPublishDistTags\(\{\n {2}candidate,\n {2}preflightLatest,\n {2}preflightDistTags,\n {2}distTags,\n {2}firstPublication = false,\n\}\)/u,
   );
   const preflightLatest = registryVersionPolicyConstants.preflightLatestVersion;
   const preflightRc = previousCandidate;
