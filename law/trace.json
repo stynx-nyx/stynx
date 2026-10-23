@@ -5251,8 +5251,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 901,
-      "assertion_digest_sha256": "22caa9527fbe64ae6178df734584e7fba1e3b50d7505c18916bff4988e6ddc2e"
+      "assertion_count": 913,
+      "assertion_digest_sha256": "02b808dcd678ca6218e0dbbde0542547b32ba5d87f20fa1e9f59c62c71023c94"
     },
     {
       "path": "test/scripts/angular-testing-consumer.test.mjs",
