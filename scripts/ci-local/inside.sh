@@ -361,10 +361,10 @@ job_integration() {
     run pnpm db:verify || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
-    run bash scripts/db-reset.sh --database-url "$DATABASE_URL" || status=$?
+    run pnpm check:rls-smoke || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
-    run pnpm check:rls-smoke || status=$?
+    run bash scripts/db-reset.sh --database-url "$DATABASE_URL" || status=$?
   fi
   if [[ "$status" -eq 0 ]]; then
     CI_LOCAL_TURBO_CONCURRENCY=1 root_turbo_run test:int --filter='./packages/*' || status=$?
