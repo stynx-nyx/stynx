@@ -7,6 +7,7 @@
 
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { Permission, ReadOnly, StynxAuthGuard, PermissionGuard } from '@stynx-nyx/auth';
+import { NoIdempotent } from '@stynx-nyx/idempotency';
 import { BookmarkService } from '../services/bookmark.service.js';
 import { CreateBookmarkDto } from '../dto/create-bookmark.dto.js';
 import { UpdateBookmarkDto } from '../dto/update-bookmark.dto.js';
@@ -31,12 +32,16 @@ export class BookmarkController {
   }
 
   @Post()
+  // Preserve the service's per-request transaction, without a key or replay contract.
+  @NoIdempotent()
   @Permission('demo:bookmark:write')
   create(@Body() dto: CreateBookmarkDto) {
     return this.service.create(dto);
   }
 
   @Patch(':id')
+  // Preserve the service's per-request transaction, without a key or replay contract.
+  @NoIdempotent()
   @Permission('demo:bookmark:write')
   update(@Param('id') id: string, @Body() dto: UpdateBookmarkDto) {
     return this.service.update(id, dto);
