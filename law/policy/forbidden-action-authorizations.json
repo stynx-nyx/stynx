@@ -1525,6 +1525,12 @@
       "commit": "75f2562cb7a3912d7f7894a8d40526dd759061d4",
       "authorized_by": "Owner",
       "reason": "The Owner authorized this receipt on 2026-10-22 for SM-17 as rebased onto main after #407 (the same change as 44cb3cf5). createTestApp drops only the uniquely named local scratch database it created on the supplied DATABASE_URL; it does not target production. Same case as FORBID-DROP-PROD@0018f245."
+    },
+    {
+      "forbidden_id": "FORBID-DROP-PROD",
+      "commit": "e40efeea8bb1cf950c935cace880a614f1917ce5",
+      "authorized_by": "Owner",
+      "reason": "The Owner authorized this receipt on 2026-10-22 for SM-17 as rebase-merged to main by #400 (the same change as 75f2562c). createTestApp drops only the uniquely named local scratch database it created on the supplied DATABASE_URL; it does not target production. Same case as FORBID-DROP-PROD@0018f245."
     }
   ]
 }
