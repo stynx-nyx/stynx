@@ -7,7 +7,7 @@ import { generateRequestId } from './request-id.js';
 
 const REQUEST_CONTEXT_KEY = Symbol('stynx.request-context');
 const SYSTEM_CONTEXT_KEY = Symbol('stynx.system-context');
-const optionalRequestContextKeys = ['tenantId', 'actorId', 'sessionId', 'locale'] as const;
+const optionalRequestContextKeys = ['tenantId', 'actorId', 'sessionId', 'locale', 'roles'] as const;
 
 export interface RequestContextState {
   requestId: string;
@@ -15,6 +15,8 @@ export interface RequestContextState {
   actorId?: string;
   sessionId?: string;
   locale?: string;
+  /** Verified role codes of the actor; `Database.tx` writes them as `app.roles`. */
+  roles?: readonly string[];
   startedAt: Date;
 }
 
@@ -23,6 +25,7 @@ export interface RequestContextPatch {
   actorId?: string;
   sessionId?: string;
   locale?: string;
+  roles?: readonly string[];
 }
 
 export type CoreClsStore = {
@@ -52,6 +55,10 @@ export class RequestContext {
 
   get locale(): string | undefined {
     return this.read().locale;
+  }
+
+  get roles(): readonly string[] | undefined {
+    return this.read().roles;
   }
 
   get startedAt(): Date {

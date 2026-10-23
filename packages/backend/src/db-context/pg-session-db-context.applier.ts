@@ -24,14 +24,17 @@ export interface PgSessionDbContextApplierOptions {
   orgCnpjExtraKeys?: string[];
 }
 
+// The app.* names are the dialect the bootstrap helpers and policies read since
+// SM-05 (database/migrations/001_app_guc_context.sql); the legacy names stay for
+// consumers whose own SQL still reads them.
 const DEFAULT_SETTINGS: PgSessionSettingMap = {
-  userId: ['stynx.app_user_id', 'auth.app_user_id'],
-  roles: ['stynx.roles', 'auth.roles'],
+  userId: ['stynx.app_user_id', 'auth.app_user_id', 'app.actor_id'],
+  roles: ['stynx.roles', 'auth.roles', 'app.roles'],
   permissions: ['stynx.permissions'],
-  tenantId: ['stynx.current_tenant', 'auth.current_tenant', 'app.current_tenant'],
+  tenantId: ['stynx.current_tenant', 'auth.current_tenant', 'app.current_tenant', 'app.tenant_id'],
   correlationId: ['stynx.correlation_id'],
-  requestId: ['stynx.request_id'],
-  language: ['stynx.lang', 'auth.lang'],
+  requestId: ['stynx.request_id', 'app.request_id'],
+  language: ['stynx.lang', 'auth.lang', 'app.lang'],
   orgCnpj: ['stynx.org_cnpj', 'auth.org_cnpj'],
 };
 
