@@ -61,7 +61,9 @@ export default defineConfig({
       cwd: fileURLToPath(new URL('.', import.meta.url)),
       url: 'http://127.0.0.1:3000/readyz',
       wait: { stderr: /^\[reference-api-startup\] runtime-route-table-present$/m },
-      reuseExistingServer: false,
+      // GitHub CI provisions this stack on a fresh runner before Playwright; workstations and the
+      // signed local RC must never reuse a listener on this port.
+      reuseExistingServer: process.env.GITHUB_ACTIONS === 'true',
       timeout: 300_000,
     },
     {
