@@ -67,6 +67,7 @@ describe('RequestContext', () => {
         expect(initialSnapshot).not.toHaveProperty('actorId');
         expect(initialSnapshot).not.toHaveProperty('sessionId');
         expect(initialSnapshot).not.toHaveProperty('locale');
+        expect(initialSnapshot).not.toHaveProperty('roles');
         expect(initialSnapshot.startedAt).not.toBe(requestContext.startedAt);
 
         mutator.patch({
@@ -80,18 +81,21 @@ describe('RequestContext', () => {
         });
         mutator.patch({
           actorId: 'actor-b',
+          roles: ['tenant:admin'],
         });
 
         expect(requestContext.tenantId).toBe('tenant-b');
         expect(requestContext.actorId).toBe('actor-b');
         expect(requestContext.sessionId).toBe('session-a');
         expect(requestContext.locale).toBe('pt-BR');
+        expect(requestContext.roles).toEqual(['tenant:admin']);
         expect(requestContext.snapshot()).toStrictEqual({
           requestId: '018f5502-9f95-7c6b-8c74-d1173ec95f14',
           tenantId: 'tenant-b',
           actorId: 'actor-b',
           sessionId: 'session-a',
           locale: 'pt-BR',
+          roles: ['tenant:admin'],
           startedAt: new Date('2026-01-01T00:00:00.000Z'),
         });
       },

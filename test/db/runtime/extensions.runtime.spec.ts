@@ -11,12 +11,14 @@ describe('db runtime extensions', () => {
     await fixture?.dispose();
   });
 
-  it('applies DDL and seed files in lexical order', () => {
+  it('applies DDL, migration and seed files in lexical order', () => {
     expect(fixture.appliedFiles).toEqual([
       'database/ddl/00-extensions.sql',
       'database/ddl/01-auth.sql',
       'database/ddl/02-audit.sql',
       'database/ddl/03-storage.sql',
+      'database/migrations/000_migrate-check-preseed.sql',
+      'database/migrations/001_app_guc_context.sql',
       'database/seed/00-base.sql',
     ]);
   });
