@@ -64,7 +64,8 @@
         { "kind": "prefix", "pattern": "tools/" },
         { "kind": "prefix", "pattern": "scripts/" },
         { "kind": "prefix", "pattern": ".github/workflows/" },
-        { "kind": "glob", "pattern": "*.config.*" }
+        { "kind": "glob", "pattern": "*.config.*" },
+        { "kind": "prefix", "pattern": "database/migrations/" }
       ],
       "toolchainKeys": ["node", "pnpm", "typescript"],
       "allowlistedEnv": ["CI"],
@@ -119,7 +120,8 @@
         { "kind": "glob", "pattern": "packages/*/vitest.config.*" },
         { "kind": "glob", "pattern": "packages-web/*/vitest.config.*" },
         { "kind": "glob", "pattern": "tools/*/vitest.config.*" },
-        { "kind": "glob", "pattern": "test/*/vitest.config.*" }
+        { "kind": "glob", "pattern": "test/*/vitest.config.*" },
+        { "kind": "prefix", "pattern": "database/" }
       ],
       "toolchainKeys": ["node", "pnpm", "vitest"],
       "allowlistedEnv": [
@@ -233,7 +235,8 @@
         { "kind": "prefix", "pattern": "reference/api/migrations/" },
         { "kind": "glob", "pattern": "scripts/*db*.mjs" },
         { "kind": "glob", "pattern": "scripts/*rls*" },
-        { "kind": "exact", "pattern": "packages/cli/engines/rls-negative.mjs" }
+        { "kind": "exact", "pattern": "packages/cli/engines/rls-negative.mjs" },
+        { "kind": "prefix", "pattern": "database/" }
       ],
       "toolchainKeys": ["node", "pnpm", "postgres"],
       "allowlistedEnv": [
