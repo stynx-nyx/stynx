@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { fstatSync } from 'node:fs';
 
 const host = process.env.HOST ?? '127.0.0.1';
 const port = Number(process.env.OIDC_PORT ?? '3200');
@@ -144,3 +145,21 @@ const server = createServer(async (request, response) => {
 server.listen(port, host, () => {
   console.log(`reference-web fake OIDC ready at ${issuer}`);
 });
+
+function stdinIsOwnerPipe() {
+  try {
+    const stdin = fstatSync(0);
+    return stdin.isSocket() || stdin.isFIFO();
+  } catch {
+    return false;
+  }
+}
+
+// The Playwright webServer launcher holds this stdin pipe and never closes it; the pipe ends only
+// when that owner exits, including by SIGKILL, so the server releases its port with it.
+if (stdinIsOwnerPipe()) {
+  process.stdin.once('end', () => process.exit(0));
+  process.stdin.once('error', () => process.exit(0));
+  process.stdin.unref();
+  process.stdin.resume();
+}
