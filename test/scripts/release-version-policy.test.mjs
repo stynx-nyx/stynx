@@ -19,6 +19,7 @@ import {
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import test from 'node:test';
+import { isDeepStrictEqual } from 'node:util';
 import { parse as parseYaml } from 'yaml';
 
 import {
@@ -2453,6 +2454,199 @@ test('stable 1.6.2 patch refuses marker, roster, storage, follow-up and root dri
     const invalid = clone();
     mutate(invalid);
     assert.equal(releaseContext.isPatch162VersionedCandidate(invalid), false, label);
+  }
+});
+
+// ADR-RELEASE-0006: the 3.0.0 marker and its closed follow-up population as merged by #410.
+function major300ReleaseFixture() {
+  const uniqueAncestorBySubject = (subject) => {
+    const result = spawnSync('git', ['log', '--first-parent', '--format=%H%x09%s', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const matches = result.stdout
+      .trim()
+      .split('\n')
+      .map((line) => line.split('\t'))
+      .filter(([, actualSubject]) => actualSubject === subject);
+    assert.equal(matches.length, 1, `expected one ancestor with subject: ${subject}`);
+    assert.match(matches[0][0], /^[0-9a-f]{40}$/u);
+    return matches[0][0];
+  };
+  const marker = uniqueAncestorBySubject(releaseContextConstants.major300VersionCommitSubject);
+  // This fixture describes the reviewed version PR, not later repository history.
+  const fixtureHead = uniqueAncestorBySubject(
+    'test(stynx-workspace): admit the 3.0.0 root manifest in the RC freezes',
+  );
+  const git = (args) => {
+    const result = spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+  const gitBytes = (revision, path) => {
+    const result = spawnSync('git', ['show', `${revision}:${path}`], { cwd: repoRoot });
+    assert.equal(result.status, 0, result.stderr.toString());
+    return result.stdout;
+  };
+  const gitJson = (revision, path) => JSON.parse(gitBytes(revision, path).toString());
+  const gitChanges = (from, to) =>
+    git(['diff', '--name-status', '--no-renames', from, to])
+      .split('\n')
+      .map((line) => {
+        const [status, path] = line.split('\t');
+        return { status, path };
+      });
+  const markerCommits = git([
+    'log',
+    '--first-parent',
+    '--reverse',
+    '--format=%H%x09%s',
+    `${marker}^..${fixtureHead}`,
+  ])
+    .split('\n')
+    .map((line) => {
+      const [sha, subject] = line.split('\t');
+      return { sha, subject };
+    });
+  const markerParentChangesets = git(['ls-tree', '-r', '--name-only', `${marker}^`, '.changeset'])
+    .split('\n')
+    .filter((path) => /^\.changeset\/[^/]+\.md$/u.test(path) && path !== '.changeset/README.md');
+  return {
+    baseRootVersion: gitJson(`${marker}^`, 'package.json').version,
+    markerParentRootVersion: gitJson(`${marker}^`, 'package.json').version,
+    candidateRootVersion: gitJson(fixtureHead, 'package.json').version,
+    markerCommits,
+    markerChanges: gitChanges(`${marker}^`, marker),
+    markerParentChangesets,
+    followUpChanges: gitChanges(marker, fixtureHead),
+    rootManifestMatchesMarker: isDeepStrictEqual(
+      gitJson(marker, 'package.json'),
+      gitJson(fixtureHead, 'package.json'),
+    ),
+    storageVersionArtifacts: releaseContext.versionedStorageTemplates.map(({ path }) => ({
+      path,
+      before: gitBytes(`${marker}^`, path),
+      after: gitBytes(marker, path),
+      baseVersion: '1.6.2',
+      version: '3.0.0',
+    })),
+    packageStates: collectPublicPackages(repoRoot).map(({ name, manifestPath }) => {
+      const path = relative(repoRoot, manifestPath);
+      return {
+        name,
+        manifestPath: path,
+        parentVersion: gitJson(`${marker}^`, path).version,
+        candidateVersion: gitJson(marker, path).version,
+      };
+    }),
+    changesetIdsOnDisk: [],
+    preState: null,
+    markerParentPreState: null,
+  };
+}
+
+test('major 3.0.0 accepts the actual leading marker over the 47-package roster', () => {
+  const input = major300ReleaseFixture();
+  assert.equal(
+    input.markerCommits[0].subject,
+    releaseContextConstants.major300VersionCommitSubject,
+  );
+  assert.equal(input.packageStates.length, 47);
+  assert.equal(input.markerParentChangesets.length, 14);
+  assert.equal(input.storageVersionArtifacts.length, 2);
+  // 14 consumed changesets, 47 manifests, 47 CHANGELOGs, 6 support paths, 2 storage templates.
+  assert.equal(input.markerChanges.length, 116);
+  const added = input.markerChanges.filter(({ status }) => status === 'A').map(({ path }) => path);
+  assert.deepEqual(added.sort(), [
+    'tools/eslint-config/CHANGELOG.md',
+    'tools/migration-linter/CHANGELOG.md',
+    'tools/tsconfig/CHANGELOG.md',
+  ]);
+  assert.deepEqual(input.followUpChanges.map(({ path, status }) => `${status} ${path}`).sort(), [
+    'M scripts/lib/release-context.mjs',
+    'M scripts/run-release-preparation.mjs',
+    'M test/scripts/local-rc-blocker-contract.test.mjs',
+  ]);
+  assert.equal(releaseContext.isMajor300VersionedCandidate(input), true);
+});
+
+test('major 3.0.0 refuses marker order, version, roster, changelog and follow-up drift', () => {
+  const original = major300ReleaseFixture();
+  const clone = () => ({
+    ...structuredClone(original),
+    storageVersionArtifacts: original.storageVersionArtifacts.map((artifact) => ({
+      ...artifact,
+      before: Buffer.from(artifact.before),
+      after: Buffer.from(artifact.after),
+    })),
+  });
+  const tsconfigChangelog = 'tools/tsconfig/CHANGELOG.md';
+  const mutations = [
+    [
+      'marker not first',
+      (value) =>
+        value.markerCommits.unshift({
+          sha: 'a'.repeat(40),
+          subject: 'docs(release): govern 3.0.0',
+        }),
+    ],
+    [
+      'duplicate marker',
+      (value) =>
+        value.markerCommits.push({ sha: 'c'.repeat(40), subject: value.markerCommits[0].subject }),
+    ],
+    ['2.0.0 candidate', (value) => (value.candidateRootVersion = '2.0.0')],
+    ['3.0.1 candidate', (value) => (value.candidateRootVersion = '3.0.1')],
+    ['wrong base', (value) => (value.baseRootVersion = '1.6.1')],
+    ['2.0.0 package version', (value) => (value.packageStates[0].candidateVersion = '2.0.0')],
+    [
+      'missing first-publication CHANGELOG',
+      (value) => {
+        value.markerChanges = value.markerChanges.filter(({ path }) => path !== tsconfigChangelog);
+      },
+    ],
+    [
+      'first-publication CHANGELOG modified, not added',
+      (value) => {
+        value.markerChanges.find(({ path }) => path === tsconfigChangelog).status = 'M';
+      },
+    ],
+    [
+      'extra follow-up path',
+      (value) =>
+        value.followUpChanges.push({ status: 'M', path: 'packages/core/src/unreviewed.ts' }),
+    ],
+    ['missing follow-up path', (value) => value.followUpChanges.pop()],
+    ['wrong follow-up status', (value) => (value.followUpChanges[0].status = 'A')],
+    [
+      '44 packages',
+      (value) => {
+        const tools = new Set([
+          'tools/eslint-config/package.json',
+          'tools/migration-linter/package.json',
+          'tools/tsconfig/package.json',
+        ]);
+        value.packageStates = value.packageStates.filter(
+          ({ manifestPath }) => !tools.has(manifestPath),
+        );
+      },
+    ],
+    ['missing consumed changeset', (value) => value.markerParentChangesets.pop()],
+    ['unconsumed changeset', (value) => value.changesetIdsOnDisk.push('unreviewed')],
+    ['missing storage snapshot', (value) => value.storageVersionArtifacts.pop()],
+    [
+      'extra marker path',
+      (value) => value.markerChanges.push({ status: 'M', path: 'docs/unreviewed.md' }),
+    ],
+    ['root manifest drift', (value) => (value.rootManifestMatchesMarker = false)],
+    ['prerelease retained', (value) => (value.preState = { mode: 'pre' })],
+  ];
+  assert.equal(releaseContext.isMajor300VersionedCandidate(clone()), true);
+  for (const [label, mutate] of mutations) {
+    const invalid = clone();
+    mutate(invalid);
+    assert.equal(releaseContext.isMajor300VersionedCandidate(invalid), false, label);
   }
 });
 
