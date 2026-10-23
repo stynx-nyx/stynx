@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { rmSync } from 'node:fs';
+import { fstatSync, rmSync } from 'node:fs';
 import { get } from 'node:http';
 import { isIP } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -1150,3 +1150,25 @@ process.once('beforeExit', () => {
 process.once('exit', () => {
   composeDownSync();
 });
+
+function stdinIsOwnerPipe() {
+  try {
+    const stdin = fstatSync(0);
+    return stdin.isSocket() || stdin.isFIFO();
+  } catch {
+    return false;
+  }
+}
+
+// The Playwright webServer launcher holds this stdin pipe and never closes it; the pipe ends only
+// when that owner exits, including by SIGKILL, so the owned stack stops with it.
+if (stdinIsOwnerPipe()) {
+  process.stdin.once('end', () => {
+    void shutdown('SIGTERM');
+  });
+  process.stdin.once('error', () => {
+    void shutdown('SIGTERM');
+  });
+  process.stdin.unref();
+  process.stdin.resume();
+}

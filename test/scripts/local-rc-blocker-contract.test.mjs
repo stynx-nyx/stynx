@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   chmodSync,
@@ -685,6 +685,9 @@ const playwrightApiReadyLine = '[reference-api-startup] runtime-route-table-pres
 const playwrightApiReadyWaitSource = '^\\[reference-api-startup\\] runtime-route-table-present$';
 const playwrightApiReadyWaitLine =
   '      wait: { stderr: /^\\[reference-api-startup\\] runtime-route-table-present$/m },\n';
+const playwrightApiReuseLine =
+  "      reuseExistingServer: process.env.GITHUB_ACTIONS === 'true',\n";
+const githubActionsReuse = process.env.GITHUB_ACTIONS === 'true';
 const d21ComposeTerminalCodes = [
   'compose-up-spawn-failed',
   'compose-up-exit-nonzero',
@@ -2321,6 +2324,8 @@ childProcess.spawn = (command, args = [], options = {}) => {
   if (command === 'node') {
     action('api');
     const child = new SeamChild(41001, 'api');
+    // The live API child's IPC channel keeps the helper's event loop alive.
+    if (scenario === 's7-owner-pipe-closure') setInterval(() => {}, 1_000);
     later(() => {
       child.emit('spawn');
       if (scenario !== 'sync-cleanup-watchdog-only') recordApiSpawnEmitted();
@@ -3025,6 +3030,215 @@ test('D16.1 production contains watchdog-worker rmSync and shutdown child-kill t
     );
   }
   assert.deepEqual(violations, []);
+});
+
+function waitForOwnedChildExit(child) {
+  return new Promise((resolveExit) => {
+    child.once('exit', (code, signal) => resolveExit({ code, signal }));
+  });
+}
+
+function stopOwnedChild(child) {
+  if (child && child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+}
+
+async function runHelperOwnerPipeClosure(signal) {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'stynx-s7-owner-pipe-'));
+  const helperSource = readFileSync(
+    join(repoRoot, 'reference/web/scripts/serve-reference-api-stack.mjs'),
+    'utf8',
+  );
+  const helperPath = join(fixtureRoot, 'reference/web/scripts/serve-reference-api-stack.mjs');
+  const preloadPath = join(fixtureRoot, 'seam-preload.mjs');
+  const actionsPath = join(fixtureRoot, 'actions.log');
+  const composeRoot = join(fixtureRoot, 'owned-compose');
+  const readActions = () =>
+    existsSync(actionsPath)
+      ? readFileSync(actionsPath, 'utf8').trim().split(/\r?\n/u).filter(Boolean)
+      : [];
+  let child;
+  try {
+    for (const directory of [
+      dirname(helperPath),
+      join(fixtureRoot, 'scripts'),
+      join(fixtureRoot, 'reference/api/dist/reference/api/src'),
+      composeRoot,
+    ]) {
+      mkdirSync(directory, { recursive: true });
+    }
+    writeFileSync(helperPath, helperSource);
+    writeFileSync(preloadPath, helperSeamPreloadSource());
+    writeFileSync(
+      join(fixtureRoot, 'scripts/verify-reference-api-build-inputs.mjs'),
+      'process.exit(0);\n',
+    );
+    writeFileSync(
+      join(fixtureRoot, 'reference/api/dist/reference/api/src/main.js'),
+      'process.exit(0);\n',
+    );
+    writeFileSync(join(composeRoot, 'compose.yml'), 'services: {}\n');
+
+    // Playwright 1.60 launches webServer commands with a stdin pipe it never closes.
+    child = spawn(process.execPath, ['--import', preloadPath, helperPath], {
+      cwd: fixtureRoot,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      signal,
+      env: {
+        PATH: process.env.PATH,
+        HOME: process.env.HOME,
+        TMPDIR: fixtureRoot,
+        D16_ACTIONS: actionsPath,
+        D16_SCENARIO: 's7-owner-pipe-closure',
+        STYNX_REFERENCE_API_STACK_COMPOSE_DIR: composeRoot,
+      },
+    });
+    const exited = waitForOwnedChildExit(child);
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8').on('data', (chunk) => {
+      stdout += chunk;
+    });
+    const actionsBeforeClosure = await new Promise((resolveSpawned, rejectSpawned) => {
+      child.stderr.setEncoding('utf8').on('data', (chunk) => {
+        stderr += chunk;
+        if (stderr.includes(fixedStartupOutput('child-spawned'))) resolveSpawned(readActions());
+      });
+      void exited.then(() => rejectSpawned(new Error('helper exited while its owner was alive')));
+    });
+    child.stdin.end();
+    const exit = await exited;
+    return {
+      ...exit,
+      stdout,
+      stderr,
+      actionsBeforeClosure,
+      actions: readActions(),
+      ownedComposePresent: existsSync(composeRoot),
+    };
+  } finally {
+    stopOwnedChild(child);
+    rmSync(fixtureRoot, { recursive: true, force: true });
+    assert.equal(existsSync(fixtureRoot), false, 'S7 owner-pipe fixture must always be removed');
+  }
+}
+
+async function runServerOwnerPipeClosure(script, env, readyLine, signal) {
+  let child;
+  try {
+    child = spawn(process.execPath, [join(repoRoot, 'reference/web/scripts', script)], {
+      cwd: join(repoRoot, 'reference/web'),
+      stdio: ['pipe', 'pipe', 'pipe'],
+      signal,
+      env: { PATH: process.env.PATH, HOME: process.env.HOME, HOST: '127.0.0.1', ...env },
+    });
+    const exited = waitForOwnedChildExit(child);
+    await new Promise((resolveReady, rejectReady) => {
+      let stdout = '';
+      child.stdout.setEncoding('utf8').on('data', (chunk) => {
+        stdout += chunk;
+        if (readyLine.test(stdout)) resolveReady();
+      });
+      void exited.then(() => rejectReady(new Error(`${script} exited while its owner was alive`)));
+    });
+    child.stdin.end();
+    return await exited;
+  } finally {
+    stopOwnedChild(child);
+  }
+}
+
+test(
+  'S7 the owned reference API stack stops when its owner closes the stdin pipe',
+  {
+    timeout: 60_000,
+  },
+  async (t) => {
+    const childActions = ['up', 'port', 'port', 'role', 'verify', 'api', 'watchdog'];
+    const result = await runHelperOwnerPipeClosure(t.signal);
+    assert.deepEqual(result.actionsBeforeClosure, childActions);
+    assert.deepEqual(result.actions, [...childActions, 'down']);
+    assert.deepEqual({ code: result.code, signal: result.signal }, { code: 0, signal: null });
+    assert.equal(result.ownedComposePresent, false);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, `${helperSuccessStates.map(fixedStartupOutput).join('\n')}\n`);
+  },
+);
+
+test(
+  'S7 the reference static and fake-OIDC servers exit when their owner closes stdin',
+  {
+    timeout: 60_000,
+  },
+  async (t) => {
+    assert.deepEqual(
+      await runServerOwnerPipeClosure(
+        'serve-static.mjs',
+        { PORT: '0' },
+        /^reference-web serving /mu,
+        t.signal,
+      ),
+      { code: 0, signal: null },
+    );
+    assert.deepEqual(
+      await runServerOwnerPipeClosure(
+        'serve-fake-oidc.mjs',
+        { OIDC_PORT: '0' },
+        /^reference-web fake OIDC ready at /mu,
+        t.signal,
+      ),
+      { code: 0, signal: null },
+    );
+  },
+);
+
+test('S7 Playwright refuses an already-available webServer once reuse is off', async () => {
+  const referenceWebRequire = createRequire(join(repoRoot, 'reference/web/package.json'));
+  const playwrightRequire = createRequire(
+    referenceWebRequire.resolve('@playwright/test/package.json'),
+  );
+  const runnerSource = readFileSync(
+    join(dirname(playwrightRequire.resolve('playwright/package.json')), 'lib/runner/index.js'),
+    'utf8',
+  );
+  assert.equal(
+    runnerSource.includes(
+      '      if (this._options.reuseExistingServer)\n        return;\n      const port = new URL(this._options.url).port;\n      throw new Error(',
+    ),
+    true,
+  );
+  // Only GitHub CI, which provisions the API stack on a fresh runner, may reuse it; the signed
+  // local RC does not allowlist GITHUB_ACTIONS.
+  const hadGithubActions = Object.hasOwn(process.env, 'GITHUB_ACTIONS');
+  const priorGithubActions = process.env.GITHUB_ACTIONS;
+  const reuseUnder = async (value) => {
+    if (value === undefined) delete process.env.GITHUB_ACTIONS;
+    else process.env.GITHUB_ACTIONS = value;
+    const config = (
+      await import(`../../reference/web/playwright.config.mjs?s7=${value}-${Date.now()}`)
+    ).default;
+    return config.webServer.map((entry) => entry.reuseExistingServer);
+  };
+  try {
+    assert.deepEqual(await reuseUnder(undefined), [false, false]);
+    assert.deepEqual(await reuseUnder('false'), [false, false]);
+    assert.deepEqual(await reuseUnder('true'), [true, false]);
+  } finally {
+    if (hadGithubActions) process.env.GITHUB_ACTIONS = priorGithubActions;
+    else delete process.env.GITHUB_ACTIONS;
+  }
+  const allowlistedEnv = JSON.parse(
+    readFileSync(join(repoRoot, 'test-tasks.json'), 'utf8'),
+  ).tasks.find((task) => task.nodeId === 'test:e2e').allowlistedEnv;
+  assert.equal(allowlistedEnv.includes('GITHUB_ACTIONS'), false);
+  assert.equal(
+    Object.hasOwn(
+      JSON.parse(
+        readFileSync(join(repoRoot, 'law/policy/devai-local-rc-environment.json'), 'utf8'),
+      ),
+      'GITHUB_ACTIONS',
+    ),
+    false,
+  );
 });
 
 test('D17 starts only on listening and classifies each HTTP status exactly once in order', () => {
@@ -4185,7 +4399,7 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
   const frozenBaseline = normalizeD20PlaywrightWait(configSource);
   assert.equal(
     createHash('sha256').update(frozenBaseline).digest('hex'),
-    'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
+    '601112427b18b3f2da3d4ee8fdcaa8040e88e9069325b4f501bc68be81a27fe6',
   );
   if (occurrenceCount === 0) {
     assert.equal(frozenBaseline, configSource);
@@ -4194,14 +4408,14 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
     assert.equal(configSource.replace(playwrightApiReadyWaitLine, ''), frozenBaseline);
   }
 
-  const apiAnchor = '      reuseExistingServer: true,\n      timeout: 300_000,\n';
+  const apiAnchor = `${playwrightApiReuseLine}      timeout: 300_000,\n`;
   assert.equal(
     (frozenBaseline.match(new RegExp(escapeRegExpLiteral(apiAnchor), 'gu')) ?? []).length,
     1,
   );
   const withExactWait = frozenBaseline.replace(
     apiAnchor,
-    `      reuseExistingServer: true,\n${playwrightApiReadyWaitLine}      timeout: 300_000,\n`,
+    `${playwrightApiReuseLine}${playwrightApiReadyWaitLine}      timeout: 300_000,\n`,
   );
   assert.equal(normalizeD20PlaywrightWait(withExactWait), frozenBaseline);
   assert.throws(() => normalizeD20PlaywrightWait(`${withExactWait}${playwrightApiReadyWaitLine}`));
@@ -4217,7 +4431,7 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
     normalizeD20PlaywrightWait(
       frozenBaseline.replace(
         apiAnchor,
-        '      reuseExistingServer: true,\n      wait: { stderr: /(runtime-route-table-present)/g },\n      timeout: 300_000,\n',
+        `${playwrightApiReuseLine}      wait: { stderr: /(runtime-route-table-present)/g },\n      timeout: 300_000,\n`,
       ),
     ),
   );
@@ -4225,7 +4439,7 @@ test('D20 frozen Playwright normalization admits only the exact API wait field',
     normalizeD20PlaywrightWait(
       frozenBaseline.replace(
         apiAnchor,
-        '      reuseExistingServer: true,\n      wait: { stdout: /runtime-route-table-present/m },\n      timeout: 300_000,\n',
+        `${playwrightApiReuseLine}      wait: { stdout: /runtime-route-table-present/m },\n      timeout: 300_000,\n`,
       ),
     ),
   );
@@ -4237,7 +4451,7 @@ test('D20 production adds only the exact API-entry raw-stderr wait', async () =>
   const frozenWithoutWait = normalizeD20PlaywrightWait(configSource);
   assert.equal(
     createHash('sha256').update(frozenWithoutWait).digest('hex'),
-    'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
+    '601112427b18b3f2da3d4ee8fdcaa8040e88e9069325b4f501bc68be81a27fe6',
   );
   assert.equal(
     configSource.includes(playwrightApiReadyWaitLine),
@@ -4260,7 +4474,7 @@ test('D20 production adds only the exact API-entry raw-stderr wait', async () =>
   assert.equal(apiEntry.command, 'node scripts/serve-reference-api-stack.mjs');
   assert.equal(apiEntry.cwd, fileURLToPath(new URL('../../reference/web/', import.meta.url)));
   assert.equal(apiEntry.url, 'http://127.0.0.1:3000/readyz');
-  assert.equal(apiEntry.reuseExistingServer, true);
+  assert.equal(apiEntry.reuseExistingServer, githubActionsReuse);
   assert.equal(apiEntry.timeout, 300_000);
   assert.ok(apiEntry.wait, 'D20 exact API stderr wait is not implemented');
   assert.deepEqual(Object.keys(apiEntry.wait), ['stderr']);
@@ -4276,7 +4490,7 @@ test('D20 production adds only the exact API-entry raw-stderr wait', async () =>
     command: 'pnpm build:web && PORT=3100 node scripts/serve-static.mjs',
     cwd: fileURLToPath(new URL('../../reference/web/', import.meta.url)),
     port: 3100,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 120_000,
   });
   assert.doesNotMatch(configSource, /wait:\s*\{\s*stdout:/u);
@@ -4381,7 +4595,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
   const frozenFiles = {
     'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
-      '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
+      'cb41ada94a79b8a0cc220c193fb39a579a4749f2b60dd8705ef145a769fc7d02',
     'package.json': '8e4025b997f7ef7524413707957c018830f3048b6ece21f4652b1381337438f3',
     'reference/api/package.json':
       'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
@@ -4638,7 +4852,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
   const frozenFiles = {
     'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
-      '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
+      'cb41ada94a79b8a0cc220c193fb39a579a4749f2b60dd8705ef145a769fc7d02',
     'package.json': '8e4025b997f7ef7524413707957c018830f3048b6ece21f4652b1381337438f3',
     'reference/api/package.json':
       'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
@@ -4726,7 +4940,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
   const frozen = {
     'reference/api/src/main.ts': '95fd04b29c57830982b7669f13c5f4466d11ca54b913241599b6e4685478146f',
     'reference/web/playwright.config.mjs':
-      'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
+      '601112427b18b3f2da3d4ee8fdcaa8040e88e9069325b4f501bc68be81a27fe6',
     'package.json': '8e4025b997f7ef7524413707957c018830f3048b6ece21f4652b1381337438f3',
     'reference/api/package.json':
       'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
@@ -4806,7 +5020,9 @@ test('D16 preserves D14 dynamic Redis and Playwright readiness configuration', (
   assertD14HelperContract(helper, rootManifest);
   assert.match(playwright, /timeout:\s*90_000/u);
   assert.match(playwright, /url:\s*'http:\/\/127\.0\.0\.1:3000\/readyz'/u);
-  assert.match(playwright, /reuseExistingServer:\s*true/u);
+  assert.equal((playwright.match(/reuseExistingServer:\s*false,/gu) ?? []).length, 2);
+  assert.equal(playwright.split(playwrightApiReuseLine).length - 1, 1);
+  assert.doesNotMatch(playwright, /reuseExistingServer:\s*true/u);
   assert.match(playwright, /timeout:\s*300_000/u);
   assert.doesNotMatch(`${helper}\n${playwright}`, /(?:setTimeout|retry|poll)\s*\(/iu);
 });
@@ -6382,7 +6598,7 @@ test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwrigh
     url: 'http://127.0.0.1:3200/readyz',
     port: null,
     wait: null,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 30_000,
   };
   const apiServer = {
@@ -6396,7 +6612,7 @@ test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwrigh
       stderrSource: playwrightApiReadyWaitSource,
       stderrFlags: 'm',
     },
-    reuseExistingServer: true,
+    reuseExistingServer: githubActionsReuse,
     timeout: 300_000,
   };
   const staticServer = {
@@ -6406,7 +6622,7 @@ test('D24.22 filesystem URLs preserve decoded space-bearing engine and Playwrigh
     url: null,
     port: 3100,
     wait: null,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 120_000,
   };
   const compensatingDecoder = /(?:decodeURI(?:Component)?|replace(?:All)?\([^)]*%20)/u;

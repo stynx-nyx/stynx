@@ -51,7 +51,7 @@ export default defineConfig({
             command: 'node scripts/serve-fake-oidc.mjs',
             cwd: fileURLToPath(new URL('.', import.meta.url)),
             url: 'http://127.0.0.1:3200/readyz',
-            reuseExistingServer: true,
+            reuseExistingServer: false,
             timeout: 30_000,
           },
         ]
@@ -61,14 +61,16 @@ export default defineConfig({
       cwd: fileURLToPath(new URL('.', import.meta.url)),
       url: 'http://127.0.0.1:3000/readyz',
       wait: { stderr: /^\[reference-api-startup\] runtime-route-table-present$/m },
-      reuseExistingServer: true,
+      // GitHub CI provisions this stack on a fresh runner before Playwright; workstations and the
+      // signed local RC must never reuse a listener on this port.
+      reuseExistingServer: process.env.GITHUB_ACTIONS === 'true',
       timeout: 300_000,
     },
     {
       command: 'pnpm build:web && PORT=3100 node scripts/serve-static.mjs',
       cwd: fileURLToPath(new URL('.', import.meta.url)),
       port: 3100,
-      reuseExistingServer: true,
+      reuseExistingServer: false,
       timeout: 120_000,
     },
   ],
