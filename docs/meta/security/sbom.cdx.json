@@ -1141,9 +1141,16 @@
     {
       "type": "library",
       "name": "@stynx-nyx/eslint-config",
-      "version": "0.2.0",
-      "scope": "excluded",
-      "licenses": [],
+      "version": "1.6.2",
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "id": "BUSL-1.1"
+          }
+        }
+      ],
+      "purl": "pkg:npm/@stynx-nyx%2feslint-config@1.6.2",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1314,7 +1321,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/migration-linter",
-      "version": "0.2.0",
+      "version": "1.6.2",
       "scope": "required",
       "licenses": [
         {
@@ -1323,7 +1330,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fmigration-linter@0.2.0",
+      "purl": "pkg:npm/@stynx-nyx%2fmigration-linter@1.6.2",
       "properties": [
         {
           "name": "stynx:workspacePath",
