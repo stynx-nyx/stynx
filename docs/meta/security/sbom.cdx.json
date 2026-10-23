@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:493b2684-4959-4cbd-8fa2-bc5cce619e11",
+  "serialNumber": "urn:uuid:e3056941-f88f-456f-8151-03279c56c7bf",
   "version": 1,
   "metadata": {
     "timestamp": "2026-05-29T00:00:00.000Z",
@@ -27,7 +27,7 @@
     "properties": [
       {
         "name": "stynx:pnpm-lock-sha256",
-        "value": "493b268449591cbd1fa2bc5cce619e11be1638d992282dcd1b9f26366d74d8b1"
+        "value": "e3056941f88f256f915103279c56c7bfcd1d33e1b3acd997002502f7bd5386a4"
       },
       {
         "name": "stynx:package-manager",
@@ -1839,7 +1839,7 @@
     {
       "type": "library",
       "name": "@vitest/coverage-v8",
-      "version": "4.1.11",
+      "version": "4.1.12",
       "scope": "required",
       "licenses": [
         {
@@ -1848,7 +1848,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@vitest%2fcoverage-v8@4.1.11"
+      "purl": "pkg:npm/@vitest%2fcoverage-v8@4.1.12"
     },
     {
       "type": "library",
@@ -2738,7 +2738,7 @@
     {
       "type": "library",
       "name": "vitest",
-      "version": "4.1.11",
+      "version": "4.1.12",
       "scope": "required",
       "licenses": [
         {
@@ -2747,7 +2747,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/vitest@4.1.11"
+      "purl": "pkg:npm/vitest@4.1.12"
     },
     {
       "type": "library",
