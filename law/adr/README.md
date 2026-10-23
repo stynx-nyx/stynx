@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-DEVAI-ADOPTION-0028 — Typed-query adoption, strict workspace lint and bounded legacy archive compatibility (S10 SM-09, SM-11)](2026-10-23-s10-typed-query-adoption.md)
+
 - [ADR-DEVAI-ADOPTION-0027 — app.* GUC dialect and deny-by-default boundaries for STYNX itself (S10 SM-05, SM-12)](2026-10-23-s10-app-guc-dialect-and-workspace-boundaries.md)
 
 - [ADR-RELEASE-0006 — STYNX 3.0.0 SM-21 fixed-group release and exact publication scope](2026-10-22-stynx-3.0.0-sm-21-release.md)
