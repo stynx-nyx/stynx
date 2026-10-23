@@ -264,10 +264,18 @@ const workspaceLintedPackages = () =>
         .filter((entry) => entry.isDirectory())
         .map((entry) => `${group}/${entry.name}`),
     )
+    .concat(
+      readdirSync(join(workspaceRoot, 'domain'), { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => `domain/${entry.name}/api`),
+    )
     .filter((dir) => {
       try {
         const manifest = JSON.parse(readFileSync(join(workspaceRoot, dir, 'package.json'), 'utf8'));
-        return /tools\/eslint-config\/(?:lib|nest|angular)\.mjs/u.test(manifest.scripts?.lint ?? '');
+        return (
+          dir.startsWith('domain/') ||
+          /tools\/eslint-config\/(?:lib|nest|angular)\.mjs/u.test(manifest.scripts?.lint ?? '')
+        );
       } catch {
         return false;
       }
@@ -279,11 +287,19 @@ test('STYNX workspace boundaries classify every workspace-linted package once', 
   const packages = workspaceLintedPackages();
   assert.ok(packages.length >= 45, `expected the whole workspace; found ${packages.length}`);
   for (const dir of packages) {
-    const matches = elements.filter((element) => matchesGlob(`${dir}/src/probe.ts`, element.pattern));
-    assert.equal(matches.length, 1, `${dir}: matched ${JSON.stringify(matches.map((element) => element.type))}`);
+    const matches = elements.filter((element) =>
+      matchesGlob(`${dir}/src/probe.ts`, element.pattern),
+    );
+    assert.equal(
+      matches.length,
+      1,
+      `${dir}: matched ${JSON.stringify(matches.map((element) => element.type))}`,
+    );
   }
   assert.deepEqual(
-    elements.filter((element) => !packages.some((dir) => matchesGlob(`${dir}/src/probe.ts`, element.pattern))),
+    elements.filter(
+      (element) => !packages.some((dir) => matchesGlob(`${dir}/src/probe.ts`, element.pattern)),
+    ),
     [],
     'expected no element for a directory that does not exist',
   );
@@ -316,7 +332,10 @@ async function lintWorkspaceProbe(config, dir, code) {
   return result.messages;
 }
 
-const undeclaredEdge = readFileSync(join(fixturesDir, 'workspace-undeclared-edge.ts.fixture'), 'utf8');
+const undeclaredEdge = readFileSync(
+  join(fixturesDir, 'workspace-undeclared-edge.ts.fixture'),
+  'utf8',
+);
 
 test('STYNX workspace: an undeclared package-name edge exits at error', async () => {
   const messages = await lintWorkspaceProbe(nestConfig, 'packages/core', undeclaredEdge);
@@ -332,13 +351,21 @@ test('STYNX workspace: declared package-name edges stay clean', async () => {
     [],
   );
   assert.deepEqual(
-    await lintWorkspaceProbe(nestConfig, 'packages/auth', "export * from '@stynx-nyx/idempotency';\n"),
+    await lintWorkspaceProbe(
+      nestConfig,
+      'packages/auth',
+      "export * from '@stynx-nyx/idempotency';\n",
+    ),
     [],
   );
 });
 
 test('STYNX workspace: the reverse of a declared edge is denied', async () => {
-  const messages = await lintWorkspaceProbe(nestConfig, 'packages/data', "export * from '@stynx-nyx/auth';\n");
+  const messages = await lintWorkspaceProbe(
+    nestConfig,
+    'packages/data',
+    "export * from '@stynx-nyx/auth';\n",
+  );
   assert.deepEqual(
     messages.map((message) => message.ruleId),
     ['boundaries/dependencies'],
@@ -346,9 +373,58 @@ test('STYNX workspace: the reverse of a declared edge is denied', async () => {
 });
 
 test('STYNX workspace: web packages are bound by package name too', async () => {
-  const messages = await lintWorkspaceProbe(angularConfig, 'packages-web/angular-ui', "export * from '@stynx-nyx/sdk';\n");
+  const messages = await lintWorkspaceProbe(
+    angularConfig,
+    'packages-web/angular-ui',
+    "export * from '@stynx-nyx/sdk';\n",
+  );
   assert.deepEqual(
     messages.map((message) => message.ruleId),
     ['boundaries/dependencies'],
+  );
+});
+
+test('STYNX workspace: domain API denies undeclared framework imports', async () => {
+  const messages = await lintWorkspaceProbe(
+    nestConfig,
+    'domain/demo-bookmark/api',
+    "export * from '@stynx-nyx/signature';\n",
+  );
+  assert.deepEqual(
+    messages.map((message) => [message.ruleId, message.severity]),
+    [['boundaries/dependencies', 2]],
+  );
+});
+
+test('STYNX workspace: framework code cannot import a domain package alias', async () => {
+  const messages = await lintWorkspaceProbe(
+    nestConfig,
+    'packages/core',
+    "export * from '@stynx-domain/demo-bookmark-api';\n",
+  );
+  assert.deepEqual(
+    messages.map((message) => [message.ruleId, message.severity]),
+    [['boundaries/dependencies', 2]],
+  );
+});
+
+test('STYNX workspace: declared domain API imports stay clean', async () => {
+  assert.deepEqual(
+    await lintWorkspaceProbe(
+      nestConfig,
+      'domain/demo-bookmark/api',
+      "export * from '@stynx-nyx/data';\n",
+    ),
+    [],
+  );
+});
+
+test('STYNX workspace: domain API lint invokes the governed Nest profile', () => {
+  const manifest = JSON.parse(
+    readFileSync(join(workspaceRoot, 'domain/demo-bookmark/api/package.json'), 'utf8'),
+  );
+  assert.match(
+    manifest.scripts.lint,
+    /--config\s+['"]?\.\.\/\.\.\/\.\.\/tools\/eslint-config\/nest\.mjs(?:['"]|\s|$)/u,
   );
 });
