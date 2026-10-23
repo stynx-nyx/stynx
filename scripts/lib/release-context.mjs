@@ -18,6 +18,7 @@ const sixthStablePatchVersionCommitSubject = 'chore(repo): version fixed group t
 const seventhStablePatchVersionCommitSubject = 'chore(repo): version fixed group to 1.5.7';
 const patch161VersionCommitSubject = 'chore(release): prepare the 1.6.1 fixed group';
 const patch162VersionCommitSubject = 'chore(stynx-workspace): version fixed group to 1.6.2';
+const major300VersionCommitSubject = 'chore(stynx-workspace): version fixed group to 3.0.0';
 
 export const versionedStorageTemplates = Object.freeze([
   Object.freeze({
@@ -1045,6 +1046,125 @@ export function isPatch162VersionedCandidate(input) {
   );
 }
 
+// ADR-RELEASE-0006: the 3.0.0 marker consumes exactly these changesets.
+const major300Changesets = Object.freeze([
+  '.changeset/curly-parts-fly.md',
+  '.changeset/d072-probe-request-id.md',
+  '.changeset/d072-tenancy-probe.md',
+  '.changeset/sm-01-backend-esm-no-release.md',
+  '.changeset/sm-02-tsconfig-no-release.md',
+  '.changeset/sm-03-eslint-config-profiles.md',
+  '.changeset/sm-04-migration-linter-no-release.md',
+  '.changeset/sm-06-product-roles-no-release.md',
+  '.changeset/sm-07-sm-18-check-entry-points-no-release.md',
+  '.changeset/sm-08-typed-query-no-release.md',
+  '.changeset/sm-14-token-claims-authorization-no-release.md',
+  '.changeset/sm-17-testing-runtime-no-release.md',
+  '.changeset/sm-21-stynx-3-0-0.md',
+  '.changeset/w2-small-no-release.md',
+]);
+
+// The three first publications gain their first CHANGELOG at the marker.
+const major300FirstPublicationManifests = new Set([
+  'tools/eslint-config/package.json',
+  'tools/migration-linter/package.json',
+  'tools/tsconfig/package.json',
+]);
+
+const major300VersionSupportPaths = new Set([
+  'docs/meta/security/sbom.cdx.json',
+  'package.json',
+  'packages/pdf/README.md',
+  'packages/pdf-a/README.md',
+  'packages/pdf-a-vera-docker/README.md',
+  'tools/create-stynx-app/template/package.json',
+]);
+
+// The reviewed post-marker population is closed; a new path needs review.
+const major300FollowUpStatuses = new Map([
+  ['scripts/lib/release-context.mjs', 'M'],
+  ['scripts/run-release-preparation.mjs', 'M'],
+  ['test/scripts/local-rc-blocker-contract.test.mjs', 'M'],
+]);
+
+/** The 3.0.0 marker leads its PR and covers the exact 47-package roster. */
+export function isMajor300VersionedCandidate(input) {
+  if (
+    !input ||
+    input.baseRootVersion !== '1.6.2' ||
+    input.markerParentRootVersion !== '1.6.2' ||
+    input.candidateRootVersion !== '3.0.0' ||
+    input.preState !== null ||
+    input.markerParentPreState !== null ||
+    input.rootManifestMatchesMarker !== true ||
+    !Array.isArray(input.markerCommits) ||
+    !Array.isArray(input.markerChanges) ||
+    !Array.isArray(input.markerParentChangesets) ||
+    !Array.isArray(input.followUpChanges) ||
+    !Array.isArray(input.packageStates) ||
+    !Array.isArray(input.storageVersionArtifacts) ||
+    !Array.isArray(input.changesetIdsOnDisk) ||
+    input.changesetIdsOnDisk.length !== 0 ||
+    !isDeepStrictEqual([...input.markerParentChangesets].sort(), [...major300Changesets])
+  )
+    return false;
+
+  const { markerCommits, markerChanges, followUpChanges, packageStates } = input;
+  if (
+    markerCommits[0]?.subject !== major300VersionCommitSubject ||
+    markerCommits.filter(({ subject }) => subject === major300VersionCommitSubject).length !== 1 ||
+    markerCommits.some(({ sha, subject }) => !fullSha.test(sha) || typeof subject !== 'string') ||
+    new Set(markerCommits.map(({ sha }) => sha)).size !== markerCommits.length
+  )
+    return false;
+
+  const manifests = new Set(packageStates.map(({ manifestPath }) => manifestPath));
+  if (
+    packageStates.length !== 47 ||
+    new Set(packageStates.map(({ name }) => name)).size !== 47 ||
+    manifests.size !== 47 ||
+    ![...major300FirstPublicationManifests].every((path) => manifests.has(path)) ||
+    !packageStates.every(
+      ({ name, manifestPath, parentVersion, candidateVersion }) =>
+        /^@stynx-nyx\/[a-z0-9-]+$/u.test(name) &&
+        /^(?:packages|packages-web|tools)\/[^/]+\/package\.json$/u.test(manifestPath) &&
+        parentVersion === '1.6.2' &&
+        candidateVersion === '3.0.0',
+    ) ||
+    input.storageVersionArtifacts.length !== versionedStorageTemplates.length ||
+    input.storageVersionArtifacts.some(
+      ({ baseVersion, version }) => baseVersion !== '1.6.2' || version !== '3.0.0',
+    )
+  )
+    return false;
+
+  try {
+    validateStorageVersionChanges(markerChanges, input.storageVersionArtifacts);
+  } catch (error) {
+    if (error instanceof ReleaseContextError) return false;
+    throw error;
+  }
+
+  const expected = new Map(major300Changesets.map((path) => [path, 'D']));
+  for (const manifestPath of manifests) {
+    expected.set(manifestPath, 'M');
+    expected.set(
+      manifestPath.replace(/package\.json$/u, 'CHANGELOG.md'),
+      major300FirstPublicationManifests.has(manifestPath) ? 'A' : 'M',
+    );
+  }
+  for (const path of major300VersionSupportPaths) expected.set(path, 'M');
+  for (const { path } of versionedStorageTemplates) expected.set(path, 'M');
+  return (
+    markerChanges.length === expected.size &&
+    new Set(markerChanges.map(({ path }) => path)).size === markerChanges.length &&
+    markerChanges.every(({ path, status }) => expected.get(path) === status) &&
+    followUpChanges.length === major300FollowUpStatuses.size &&
+    new Set(followUpChanges.map(({ path }) => path)).size === followUpChanges.length &&
+    followUpChanges.every(({ path, status }) => major300FollowUpStatuses.get(path) === status)
+  );
+}
+
 export function classifyReleaseContext({
   baseCommit,
   headCommit,
@@ -1108,6 +1228,7 @@ export const releaseContextConstants = Object.freeze({
   seventhStablePatchVersionCommitSubject,
   patch161VersionCommitSubject,
   patch162VersionCommitSubject,
+  major300VersionCommitSubject,
   unifiedRebaselineVersion,
   releasePreparationCommand: 'node scripts/run-release-preparation.mjs',
   versionPackagesCommand: 'node scripts/version-packages.mjs',

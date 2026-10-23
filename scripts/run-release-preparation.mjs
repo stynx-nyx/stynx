@@ -9,6 +9,7 @@ import {
   isFinalVersionedCandidate,
   isPatch161VersionedCandidate,
   isPatch162VersionedCandidate,
+  isMajor300VersionedCandidate,
   isSeventhStablePatchVersionedCandidate,
   isSixthStablePatchVersionedCandidate,
   isFifthStablePatchVersionedCandidate,
@@ -318,6 +319,7 @@ function stablePatchVersionedContext(
   const followUpChanges = [
     releaseContextConstants.patch161VersionCommitSubject,
     releaseContextConstants.patch162VersionCommitSubject,
+    releaseContextConstants.major300VersionCommitSubject,
   ].includes(markerSubject)
     ? parseChanges(marker.sha, headCommit)
     : commits
@@ -345,6 +347,7 @@ function stablePatchVersionedContext(
     ...([
       releaseContextConstants.patch161VersionCommitSubject,
       releaseContextConstants.patch162VersionCommitSubject,
+      releaseContextConstants.major300VersionCommitSubject,
     ].includes(markerSubject)
       ? {
           rootManifestAtMarker: readGitJson(marker.sha, 'package.json'),
@@ -412,6 +415,10 @@ function releaseContext() {
   return classified.kind === 'ordinary'
     ? (versionedPreModeContext(baseCommit, headCommit, commits) ??
         finalVersionedContext(baseCommit, headCommit, commits) ??
+        stablePatchVersionedContext(baseCommit, headCommit, commits, {
+          markerSubject: releaseContextConstants.major300VersionCommitSubject,
+          predicate: isMajor300VersionedCandidate,
+        }) ??
         stablePatchVersionedContext(baseCommit, headCommit, commits, {
           markerSubject: releaseContextConstants.patch162VersionCommitSubject,
           predicate: isPatch162VersionedCandidate,
