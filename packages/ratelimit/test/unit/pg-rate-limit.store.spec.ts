@@ -1,3 +1,4 @@
+import { QueryRowValidationError } from '@stynx-nyx/data';
 import { PgRateLimitStore } from '../../src/pg-rate-limit.store.js';
 import type { RateLimitDecisionContext, RateLimitSqlExecutor } from '../../src/types.js';
 
@@ -66,7 +67,7 @@ describe('PgRateLimitStore', () => {
       });
       expect(executor.query).toHaveBeenNthCalledWith(
         1,
-        expect.stringContaining('INSERT INTO custom.rate_windows'),
+        expect.stringContaining('INSERT INTO "custom"."rate_windows"'),
         expect.arrayContaining(['tenant:route', 2]),
       );
     } finally {
@@ -91,4 +92,38 @@ describe('PgRateLimitStore', () => {
       nowSpy.mockRestore();
     }
   });
+
+  it.each([{}, { hitCount: '2' }, { hitCount: null }, { hitCount: 1.5 }, { hitCount: Number.NaN }, { hitCount: 2147483648 }])(
+    'rejects malformed populated hit counts without treating them as an allowed decision: %j', async (row) => {
+      const query = vi.fn(async () => ({ rows: [row] }));
+      await expect(new PgRateLimitStore({ executor: { query } }).consume(context()))
+        .rejects.toBeInstanceOf(QueryRowValidationError);
+      expect(query).toHaveBeenCalledTimes(1);
+    });
+
+  it('preserves default and long custom names, folds unquoted case and binds hostile bucket values', async () => {
+    const query = vi.fn(async (_sql: string, _values?: unknown[]) => ({ rows: [{ hitCount: 2 }] }));
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(65_000);
+    const bucket = "bucket'); DROP TABLE windows; --";
+    try {
+      await new PgRateLimitStore({ executor: { query } }).consume(context({ bucketKey: bucket }));
+      expect(query).toHaveBeenNthCalledWith(1,
+        expect.stringContaining('INSERT INTO "integration"."rate_limit_windows"'),
+        [context().tenantId, bucket, '1970-01-01T00:01:00.000Z', 2, '1970-01-01T00:03:00.000Z']);
+      const longName = 'W'.repeat(70);
+      await new PgRateLimitStore({ executor: { query }, table: `Custom.${longName}`,
+        tenantColumn: 'TenantId', bucketColumn: 'BucketKey', hitsColumn: 'Hits',
+      }).consume(context({ bucketKey: bucket }));
+      const sql = query.mock.calls[1]?.[0];
+      expect(sql).toContain(`INSERT INTO "custom"."${longName.toLowerCase()}"`);
+      expect(sql).toContain('"tenantid"');
+      expect(sql).toContain('"bucketkey"');
+      expect(sql).toContain('"hits"');
+      expect(sql).not.toContain(bucket);
+      expect(query).toHaveBeenCalledTimes(2);
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
 });

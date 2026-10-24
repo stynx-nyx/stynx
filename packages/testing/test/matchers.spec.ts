@@ -4,6 +4,9 @@
 
 import {
   type Database,
+  type Transaction,
+  executeTypedQuery,
+  QueryRowValidationError,
   ReadOnlyViolationError,
   RestoreConflictError,
   SoftDeleteBlockedError,
@@ -42,8 +45,10 @@ const publicDocuments = softDeletable(pgTable('public_documents', {
 function databaseWithRows(rows: Array<{ rows: Array<Record<string, unknown>> }>) {
   const queue = [...rows];
   const query = vi.fn(async () => queue.shift() ?? { rows: [] });
-  const tx = vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
-    callback({ query }),
+  const run: Transaction['run'] = (statement, params) =>
+    executeTypedQuery({ query }, statement, params);
+  const tx = vi.fn(async (callback: (trx: { query: typeof query; run: typeof run }) => Promise<unknown>) =>
+    callback({ query, run }),
   );
   const withSystemContext = vi.fn(async (_label: string, callback: () => Promise<unknown>) =>
     callback(),
@@ -89,12 +94,12 @@ describe('archive-aware matchers', () => {
       { rows: [{ value: 0 }] },
     ]);
 
-    await expect(expectInArchive(database, unitDocuments, 'row-1')).resolves.toBe(undefined);
-    await expect(expectNotInLive(database, unitDocuments, 'row-1')).resolves.toBe(undefined);
-    await expect(expectRestored(database, unitDocuments, 'row-1')).resolves.toBe(undefined);
+    await expect(expectInArchive(database, unitDocuments, '00000001-1111-1111-1111-111111111111')).resolves.toBe(undefined);
+    await expect(expectNotInLive(database, unitDocuments, '00000001-1111-1111-1111-111111111111')).resolves.toBe(undefined);
+    await expect(expectRestored(database, unitDocuments, '00000001-1111-1111-1111-111111111111')).resolves.toBe(undefined);
     expect(query).toHaveBeenCalledWith(
       'select count(*)::int as value from "archive"."unit_documents" where id = $1::uuid',
-      ['row-1'],
+      ['00000001-1111-1111-1111-111111111111'],
     );
     expect(withSystemContext).toHaveBeenCalledWith('testing matcher scalar', expect.any(Function));
     expect(tx).toHaveBeenCalledWith(expect.any(Function), {
@@ -106,42 +111,78 @@ describe('archive-aware matchers', () => {
 
   it('reports rows missing from archive or still present in live tables', async () => {
     await expect(
-      expectInArchive(databaseWithRows([{ rows: [] }]).database, unitDocuments, 'empty'),
-    ).rejects.toThrow('Expected "archive"."unit_documents" to contain row empty');
+      expectInArchive(databaseWithRows([{ rows: [] }]).database, unitDocuments, '00000002-1111-1111-1111-111111111111'),
+    ).rejects.toThrow('Expected "archive"."unit_documents" to contain row 00000002-1111-1111-1111-111111111111');
 
     await expect(
-      expectInArchive(databaseWithRows([{ rows: [{ value: 0 }] }]).database, unitDocuments, 'missing'),
-    ).rejects.toThrow('Expected "archive"."unit_documents" to contain row missing');
+      expectInArchive(databaseWithRows([{ rows: [{ value: 0 }] }]).database, unitDocuments, '00000003-1111-1111-1111-111111111111'),
+    ).rejects.toThrow('Expected "archive"."unit_documents" to contain row 00000003-1111-1111-1111-111111111111');
 
     await expect(
-      expectNotInLive(databaseWithRows([{ rows: [{ value: 1 }] }]).database, unitDocuments, 'live'),
-    ).rejects.toThrow('Expected "unit"."documents" to not contain row live');
+      expectNotInLive(databaseWithRows([{ rows: [{ value: 1 }] }]).database, unitDocuments, '00000004-1111-1111-1111-111111111111'),
+    ).rejects.toThrow('Expected "unit"."documents" to not contain row 00000004-1111-1111-1111-111111111111');
 
     await expect(
       expectRestored(
         databaseWithRows([{ rows: [{ value: 0 }] }, { rows: [{ value: 1 }] }]).database,
         unitDocuments,
-        'archived',
+        '00000005-1111-1111-1111-111111111111',
       ),
-    ).rejects.toThrow('Expected archived to be restored into "unit"."documents"');
+    ).rejects.toThrow('Expected 00000005-1111-1111-1111-111111111111 to be restored into "unit"."documents"');
 
     await expect(
       expectRestored(
         databaseWithRows([{ rows: [{ value: 1 }] }, { rows: [{ value: 1 }] }]).database,
         unitDocuments,
-        'still-archived',
+        '00000006-1111-1111-1111-111111111111',
       ),
-    ).rejects.toThrow('Expected still-archived to be restored into "unit"."documents"');
+    ).rejects.toThrow('Expected 00000006-1111-1111-1111-111111111111 to be restored into "unit"."documents"');
   });
 
   it('uses public schema metadata for tables without an explicit schema', async () => {
     const { database, query } = databaseWithRows([{ rows: [{ value: 0 }] }]);
 
-    await expect(expectNotInLive(database, publicDocuments, 'public-row')).resolves.toBe(undefined);
+    await expect(expectNotInLive(database, publicDocuments, '00000007-1111-1111-1111-111111111111')).resolves.toBe(undefined);
     expect(query).toHaveBeenCalledWith(
       'select count(*)::int as value from "public"."public_documents" where id = $1::uuid',
-      ['public-row'],
+      ['00000007-1111-1111-1111-111111111111'],
     );
+  });
+
+  it('quotes Drizzle identifiers as individual case-preserving names and binds the row ID', async () => {
+    const unusual = softDeletable(pgSchema('Mixed.Schema"').table('Table.Name"', {
+      id: uuid('id').primaryKey(),
+    }));
+    const id = '11111111-1111-1111-1111-111111111111';
+    const { database, query } = databaseWithRows([
+      { rows: [{ value: 1 }] },
+      { rows: [{ value: 0 }] },
+    ]);
+    await expectInArchive(database, unusual, id);
+    await expectNotInLive(database, unusual, id);
+    expect(query).toHaveBeenNthCalledWith(1,
+      'select count(*)::int as value from "archive"."Mixed.Schema""_Table.Name""" where id = $1::uuid',
+      [id]);
+    expect(query).toHaveBeenNthCalledWith(2,
+      'select count(*)::int as value from "Mixed.Schema"""."Table.Name""" where id = $1::uuid',
+      [id]);
+  });
+
+  it.each([{}, { value: '1' }, { value: -1 }, { value: 0.5 }, { value: Number.NaN }])(
+    'rejects malformed driver counts before interpreting matcher success: %j', async (row) => {
+      const { database, query } = databaseWithRows([{ rows: [row] }]);
+      await expect(expectInArchive(database, unitDocuments,
+        '11111111-1111-1111-1111-111111111111')).rejects.toBeInstanceOf(QueryRowValidationError);
+      expect(query).toHaveBeenCalledTimes(1);
+    });
+
+  it('rejects malformed catalog projections instead of reporting ordinary mirror drift', async () => {
+    await expect(expectArchiveMirrorExists(
+      databaseWithRows([{ rows: [{ value: '1' }] }]).database, unitDocuments,
+    )).rejects.toBeInstanceOf(QueryRowValidationError);
+    await expect(expectArchiveMirrorInSync(
+      databaseWithRows([{ rows: [{ column_name: 17 }] }]).database, unitDocuments,
+    )).rejects.toBeInstanceOf(QueryRowValidationError);
   });
 
   it('checks archive mirror existence and column parity', async () => {

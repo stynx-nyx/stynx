@@ -1,6 +1,6 @@
 import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
 import { BadRequestException } from '@nestjs/common';
-import type { Database } from '@stynx-nyx/data';
+import { executeTypedQuery, type Database, type Transaction } from '@stynx-nyx/data';
 import {
   pgConsumption,
   pgGetBatch,
@@ -21,7 +21,7 @@ const now = '2026-09-28T00:00:00Z';
 const reservation = {
   id: '0197481e-6f84-77e4-8d6d-41f0b6fca9c2',
   tenant_id: scope.tenantId,
-  range_id: 'range-1',
+  range_id: '0197481e-6f84-77e4-8d6d-41f0b6fca9d1',
   org_unit_id: 'org-1',
   entity_type: 'citation',
   series: 'C',
@@ -79,6 +79,13 @@ const execution: DurableBatchExecutionOptions = {
   transport,
 };
 
+// Keep SQL/value assertions connected to the actual checked executor when a
+// production path adopts Transaction.run; a canned run mock would hide schemas.
+function checkedTransaction(query: (sql: string, values?: unknown[]) => Promise<{ rows: unknown[]; rowCount: number }>) {
+  const run: Transaction['run'] = (statement, params) => executeTypedQuery({ query }, statement, params);
+  return { query, run };
+}
+
 function databaseWith(...results: Array<{ rows?: unknown[]; rowCount?: number } | Error>) {
   const pending = [...results];
   const query = vi.fn(async (_sql: string, _values?: unknown[]) => {
@@ -88,7 +95,7 @@ function databaseWith(...results: Array<{ rows?: unknown[]; rowCount?: number } 
     return { rows: result.rows ?? [], rowCount: result.rowCount ?? 0 };
   });
   const database = {
-    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn({ query })),
+    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn(checkedTransaction(query))),
   } as unknown as Database;
   return { database, query };
 }
@@ -100,7 +107,7 @@ function routedDatabase(route: (sql: string) => { rows?: unknown[]; rowCount?: n
   });
   const database = {
     hasHeldConnection: () => false,
-    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn({ query })),
+    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn(checkedTransaction(query))),
   } as unknown as Database;
   return { database, query };
 }
@@ -126,7 +133,7 @@ function executableDatabase(
     ...verifiedClosedRow,
     status: 'open',
     lease_generation: '1',
-    lease_token: 'lease-1',
+    lease_token: '0197481e-6f84-77e4-8d6d-41f0b6fca9d2',
     lease_valid: false,
     response_body_bytes: null,
   };
@@ -149,6 +156,7 @@ function executableDatabase(
         rows: [
           options.item ?? {
             id: syncItem.queueItemId,
+            local_entity_id: syncItem.localEntityId,
             payload_hash: syncItem.payloadHash,
             identity_mode: 'ctg9',
             device_id: syncBatch.deviceId,
@@ -185,7 +193,7 @@ function executableDatabase(
   const { database, query } = routedDatabase(route);
   Object.assign(database, {
     txIndependent: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) =>
-      fn({ query }),
+      fn(checkedTransaction(query)),
     ),
   });
   return { database, query };
@@ -209,11 +217,12 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
         rows: [
           {
             queue_item_id: 'queue-1',
+            event_at: now,
             status: 'rejected',
             error_code: 'INVALID',
             context_json: { reason: 'bad' },
           },
-          { queue_item_id: 'queue-2', status: 'applied', error_code: null, context_json: null },
+          { event_at: now, queue_item_id: 'queue-2', status: 'applied', error_code: null, context_json: null },
         ],
       },
     );
@@ -260,6 +269,8 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
         databaseWith({
           rows: [
             {
+              idempotency_key: 'key-1',
+              payload_hash: syncItem.payloadHash,
               queue_item_id: 'queue-1',
               status: 'conflict',
               error_code: 'CONFLICT',
@@ -280,7 +291,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
       pgGetItem(
         databaseWith({
           rows: [
-            { queue_item_id: 'queue-2', status: 'applied', error_code: null, context_json: null },
+            { idempotency_key: 'key-2', payload_hash: syncItem.payloadHash, queue_item_id: 'queue-2', status: 'applied', error_code: null, context_json: null },
           ],
         }).database,
         scope,
@@ -662,6 +673,35 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     });
   });
 
+  it('retains null-header replay failure after status and before headers or body decoding', async () => {
+    const calls: unknown[] = [];
+    const status = vi.fn((code: number) => { calls.push(['status', code]); });
+    const setHeader = vi.fn((name: string, value: string) => { calls.push(['header', name, value]); });
+    const { database } = executableDatabase({ existing: {
+      ...verifiedClosedRow,
+      response_body_bytes: Buffer.from('invalid JSON'),
+    } });
+    await expect(pgSubmit(database, scope, syncBatch, {
+      ...execution, transport: { ...transport, response: { status, setHeader } },
+    }, now)).rejects.toMatchObject({
+      name: 'TypeError', message: 'Cannot convert undefined or null to object',
+    });
+    expect(calls).toEqual([['status', 201]]);
+    expect(setHeader).not.toHaveBeenCalled();
+  });
+
+  it('preserves the response status error identity before null-header validation', async () => {
+    const failure = new Error('native response status failed');
+    const status = vi.fn(() => { throw failure; });
+    const setHeader = vi.fn();
+    const { database } = executableDatabase({ existing: verifiedClosedRow });
+    await expect(pgSubmit(database, scope, syncBatch, {
+      ...execution, transport: { ...transport, response: { status, setHeader } },
+    }, now)).rejects.toBe(failure);
+    expect(status).toHaveBeenCalledExactlyOnceWith(201);
+    expect(setHeader).not.toHaveBeenCalled();
+  });
+
   it('refuses changed batch context, a changed body for the same key, and key rebinding', async () => {
     const fingerprint = transportFingerprint(transport, syncBatch);
     const compositeKey = transportCompositeKey(scope, transport);
@@ -841,7 +881,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     const held = {
       ...verifiedClosedRow,
       status: 'open',
-      lease_token: 'other-worker',
+      lease_token: '0197481e-6f84-77e4-8d6d-41f0b6fca9d3',
       lease_valid: true,
     };
     let reads = 0;
@@ -874,7 +914,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     const held = {
       ...verifiedClosedRow,
       status: 'open',
-      lease_token: 'other-worker',
+      lease_token: '0197481e-6f84-77e4-8d6d-41f0b6fca9d3',
       lease_valid: true,
     };
     let reads = 0;
@@ -898,7 +938,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     const held = {
       ...verifiedClosedRow,
       status: 'open',
-      lease_token: 'other-worker',
+      lease_token: '0197481e-6f84-77e4-8d6d-41f0b6fca9d3',
       lease_valid: true,
     };
     const timeout = Object.assign(new Error('lock timeout'), { code: '55P03' });
@@ -932,14 +972,14 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     const held = {
       ...verifiedClosedRow,
       status: 'open',
-      lease_token: 'other-worker',
+      lease_token: '0197481e-6f84-77e4-8d6d-41f0b6fca9d3',
       lease_valid: true,
     };
     const { database, query } = executableDatabase({
       existing: held,
       routeOverride: (sql) => {
         if (sql.includes('update offline.sync_batches set lease_token=$4'))
-          return { rows: [{ ...held, lease_generation: '2', lease_token: 'new-worker' }] };
+          return { rows: [{ ...held, lease_generation: '2', lease_token: '0197481e-6f84-77e4-8d6d-41f0b6fca9d4' }] };
         return undefined;
       },
     });
@@ -962,7 +1002,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     const held = {
       ...verifiedClosedRow,
       status: 'open',
-      lease_token: 'other-worker',
+      lease_token: '0197481e-6f84-77e4-8d6d-41f0b6fca9d3',
       lease_valid: true,
     };
     const error = new Error('database lost while waiting');
@@ -993,7 +1033,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
       existing: open,
       routeOverride: (sql) =>
         sql.includes('update offline.sync_batches set lease_token=$4')
-          ? { rows: [{ ...open, lease_generation: '2', lease_token: 'new-lease' }] }
+          ? { rows: [{ ...open, lease_generation: '2', lease_token: '0197481e-6f84-77e4-8d6d-41f0b6fca9d5' }] }
           : undefined,
     });
     await expect(pgSubmit(database, scope, syncBatch, execution, now)).resolves.toMatchObject({
@@ -1175,6 +1215,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
   it('rejects a payload-hash mismatch for an existing item identity', async () => {
     const { database, query } = executableDatabase({
       receipt: {
+        idempotency_key: syncItem.idempotencyKey,
         queue_item_id: syncItem.queueItemId,
         payload_hash: 'different',
         status: 'received',
@@ -1195,6 +1236,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
   it('projects an existing receipt bound to another queue item with its provenance', async () => {
     const { database, query } = executableDatabase({
       receipt: {
+        idempotency_key: syncItem.idempotencyKey,
         queue_item_id: 'original-queue',
         payload_hash: syncItem.payloadHash,
         status: 'applied',
@@ -1221,6 +1263,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
   it('keeps a duplicate received item retryable while its original worker owns the receipt', async () => {
     const { database } = executableDatabase({
       receipt: {
+        idempotency_key: syncItem.idempotencyKey,
         queue_item_id: 'original-queue',
         payload_hash: syncItem.payloadHash,
         status: 'received',
@@ -1292,6 +1335,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
             return {
               rows: [
                 {
+                  idempotency_key: syncItem.idempotencyKey,
                   queue_item_id: syncItem.queueItemId,
                   payload_hash: syncItem.payloadHash,
                   device_id: syncBatch.deviceId,
@@ -1328,6 +1372,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     const { database, query } = executableDatabase({
       item: {
         id: syncItem.queueItemId,
+        local_entity_id: syncItem.localEntityId,
         payload_hash: syncItem.payloadHash,
         identity_mode: 'e6',
         device_id: syncBatch.deviceId,
@@ -1348,6 +1393,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     const { database } = executableDatabase({
       item: {
         id: syncItem.queueItemId,
+        local_entity_id: syncItem.localEntityId,
         payload_hash: syncItem.payloadHash,
         identity_mode: 'e6',
         device_id: syncBatch.deviceId,
@@ -1357,6 +1403,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
         status: 'applied',
       },
       receipt: {
+        idempotency_key: syncItem.idempotencyKey,
         queue_item_id: syncItem.queueItemId,
         payload_hash: syncItem.payloadHash,
         status: 'applied',
@@ -1385,8 +1432,8 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     [
       'ambiguous covering reservations',
       [
-        { id: 'r1', status: 'reserved', valid_until: now },
-        { id: 'r2', status: 'reserved', valid_until: now },
+        { id: '0197481e-6f84-77e4-8d6d-41f0b6fca9d7', status: 'reserved', valid_until: now },
+        { id: '0197481e-6f84-77e4-8d6d-41f0b6fca9d8', status: 'reserved', valid_until: now },
       ],
       [],
       1,
@@ -1395,7 +1442,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     ],
     [
       'previously applied number',
-      [{ id: 'r1', status: 'reserved', valid_until: now }],
+      [{ id: '0197481e-6f84-77e4-8d6d-41f0b6fca9d7', status: 'reserved', valid_until: now }],
       [{ status: 'applied' }],
       1,
       'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',
@@ -1403,7 +1450,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     ],
     [
       'expired reservation',
-      [{ id: 'r1', status: 'expired', valid_until: now }],
+      [{ id: '0197481e-6f84-77e4-8d6d-41f0b6fca9d7', status: 'expired', valid_until: now }],
       [],
       1,
       'OFFLINE_SYNC_NUMBERING_EXPIRED',
@@ -1411,7 +1458,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     ],
     [
       'invalid consumption state',
-      [{ id: 'r1', status: 'reserved', valid_until: now }],
+      [{ id: '0197481e-6f84-77e4-8d6d-41f0b6fca9d7', status: 'reserved', valid_until: now }],
       [{ status: 'blocked' }],
       1,
       'OFFLINE_SYNC_NUMBERING_EXPIRED',
@@ -1419,7 +1466,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
     ],
     [
       'lost claim race',
-      [{ id: 'r1', status: 'reserved', valid_until: now }],
+      [{ id: '0197481e-6f84-77e4-8d6d-41f0b6fca9d7', status: 'reserved', valid_until: now }],
       [],
       0,
       'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',
@@ -1476,7 +1523,7 @@ describe('PostgreSQL offline sync durable read and transition boundaries', () =>
         if (sql.includes('select r.id,r.status,r.valid_until'))
           return {
             rows: [
-              { id: 'reservation-1', status: 'reserved', valid_until: '2026-10-01T00:00:00Z' },
+              { id: '0197481e-6f84-77e4-8d6d-41f0b6fca9d6', status: 'reserved', valid_until: '2026-10-01T00:00:00Z' },
             ],
           };
         if (sql.includes('select status from offline.numbering_consumption')) return { rows: [] };

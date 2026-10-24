@@ -23,4 +23,14 @@ describe('notification contracts', () => {
     registry.register({ id: 'inf.notice', version: 1, supportedChannels: ['email'], bodyKey: 'notifications.example.body' });
     expect(() => registry.register({ id: 'inf.notice', version: 1, supportedChannels: ['email'], bodyKey: 'notifications.example.body' })).toThrow(NotificationValidationError);
   });
+
+  it.each(['email', 'sms', 'push', 'inapp'])('retains declared channel %s without enum coercion', (channel) => {
+    const parsed = notifyRequestSchema.parse({ recipient: { subjectId: 'subject-1' }, category: 'inf.notice', templateId: 'notice', locale: 'en', channels: [channel] });
+    expect(parsed.channels).toEqual([channel]);
+  });
+
+  it.each(['EMAIL', 'custom', '', null, 0])('retains refusal of unsupported channel %j', (channel) => {
+    expect(() => notifyRequestSchema.parse({ recipient: { subjectId: 'subject-1' }, category: 'inf.notice', templateId: 'notice', locale: 'en', channels: [channel] })).toThrow();
+  });
+
 });

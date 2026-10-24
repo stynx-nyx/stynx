@@ -269,4 +269,100 @@ describe('RedisSessionStore', () => {
     client.ping.mockResolvedValueOnce('LOADING');
     await expect(store.probeReadiness()).resolves.toBe(false);
   });
+
+  it('retains opaque JSON extensions and arbitrary string identities through reads and rotation', async () => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    const extension = { nested: [null, true, { label: 'retained' }] };
+    const saved = { ...record({ permissions: ['document.read'], roles: ['reader'], deviceMeta: extension }), extension };
+    const lookup = { sid: saved.sid, familyId: saved.refreshFamilyId, state: 'active', extension };
+    client.values.set('test:session:sid-1', JSON.stringify(saved));
+    client.values.set('test:refresh:hash-1', JSON.stringify(lookup));
+    await expect(store.getSession('sid-1')).resolves.toEqual(saved);
+    await expect(store.lookupRefreshToken('hash-1')).resolves.toEqual(lookup);
+    await expect(store.rotateRefreshToken('sid-1', 'hash-1', 'hash-next', saved.idleExpiresAt, saved.updatedAt))
+      .resolves.toEqual({ ...saved, refreshTokenHash: 'hash-next' });
+    const created = record({ sid: 'new-session' });
+    client.eval.mockResolvedValueOnce(JSON.stringify({ revoked: [saved] }));
+    const policyResult = await store.createWithPolicy(created, { mode: 'revoke-existing', now: saved.updatedAt });
+    expect(policyResult.created).toBe(created);
+    expect(policyResult.revoked).toEqual([saved]);
+    await expect(store.getSession('missing')).resolves.toBe(null);
+    await expect(store.lookupRefreshToken('missing')).resolves.toBe(null);
+  });
+
+  it('preserves empty-string cache misses for sessions and refresh lookup records', async () => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    client.values.set('test:session:empty', '');
+    client.values.set('test:refresh:empty', '');
+    await expect(store.getSession('empty')).resolves.toBe(null);
+    await expect(store.lookupRefreshToken('empty')).resolves.toBe(null);
+    expect(client.multi).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'sid', 'userId', 'tenantId', 'cognitoSub', 'refreshFamilyId', 'refreshTokenHash',
+    'createdAt', 'updatedAt', 'lastTouchedAt', 'expiresAt', 'idleExpiresAt',
+    'membershipId', 'permsHash', 'revokedAt', 'strongFactorVerifiedAt',
+  ])('validates persisted session string field %s without returning a partial record', async (field) => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    client.values.set('test:session:sid-1', JSON.stringify({ ...record(), [field]: 42 }));
+    await expect(store.getSession('sid-1')).rejects.toThrow('Invalid Redis session record');
+    expect(client.multi).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'private-session-payload invalid JSON', 'null', '[]', '{}',
+    JSON.stringify(record({ status: 'unknown' as never })),
+    JSON.stringify(record({ sid: 42 as never })),
+    JSON.stringify(record({ permissions: [42] as never })),
+    JSON.stringify(record({ roles: [42] as never })),
+    JSON.stringify(record({ deviceMeta: [] as never })),
+  ])('refuses malformed persisted session data before writes: %s', async (raw) => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    client.values.set('test:session:sid-1', raw);
+    const error = await store.getSession('sid-1').catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(Error);
+    expect(String(error)).not.toContain('private-session-payload');
+    expect(client.multi).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'private-refresh-payload invalid JSON', 'null', '[]', '{}',
+    JSON.stringify({ sid: 'sid-1', familyId: 'family-1', state: 'unknown' }),
+    JSON.stringify({ sid: 42, familyId: 'family-1', state: 'active' }),
+  ])('refuses malformed refresh lookup data: %s', async (raw) => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    client.values.set('test:refresh:hash-1', raw);
+    const error = await store.lookupRefreshToken('hash-1').catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(Error);
+    expect(String(error)).not.toContain('private-refresh-payload');
+    expect(client.multi).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'private-policy-payload invalid JSON', 'null', '[]',
+    JSON.stringify({ error: 'unknown-error' }),
+    JSON.stringify({ revoked: [record(), { sid: 'incomplete' }] }),
+  ])('refuses malformed atomic policy results including invalid revoked rows: %s', async (reply) => {
+    const client = makeClient();
+    const store = makeStore();
+    await store.onModuleInit();
+    client.eval.mockResolvedValueOnce(reply);
+    const error = await store.createWithPolicy(record(), { mode: 'revoke-existing', now: record().updatedAt })
+      .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(Error);
+    expect(String(error)).not.toContain('private-policy-payload');
+    expect(client.eval).toHaveBeenCalledTimes(1);
+  });
+
 });

@@ -30,7 +30,8 @@ vi.mock('@nestjs/testing', () => ({
   },
 }));
 
-vi.mock('@stynx-nyx/data', () => ({
+vi.mock('@stynx-nyx/data', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@stynx-nyx/data')>(),
   createStynxPgClient: vi.fn(() => ({ connect, query, end })),
   Database: class Database {},
   StynxDataModule: {

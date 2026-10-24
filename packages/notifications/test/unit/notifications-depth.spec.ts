@@ -1,4 +1,4 @@
-import { Database } from '@stynx-nyx/data';
+import { Database, executeTypedQuery, type Transaction } from '@stynx-nyx/data';
 import { CatalogService } from '@stynx-nyx/i18n';
 import { PreferencesService } from '@stynx-nyx/preferences';
 import {
@@ -31,7 +31,9 @@ const template = {
 function databaseWith(
   query: (sql: string, values?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>,
 ) {
-  const trx = { query: vi.fn(query) };
+  const driver = { query: vi.fn(query) };
+  const run: Transaction['run'] = (statement, params) => executeTypedQuery(driver, statement, params);
+  const trx = { ...driver, run };
   const database = { tx: vi.fn(async (fn: (value: typeof trx) => unknown) => fn(trx)) };
   return { database, trx };
 }
@@ -44,7 +46,7 @@ describe('notification service and adapter depth', () => {
     const renderer = new NotificationTemplateRenderer({
       get: (token: unknown) => (token === CatalogService ? { translate } : undefined),
     } as never);
-    expect(renderer.render(template, 'en-US', { name: 'Ada' }, 'tenant-1')).toEqual({
+    expect(renderer.render(template, 'en-US', { name: 'Ada' }, '0190abcd-1234-7abc-89ab-000000000001')).toEqual({
       subject: 'rendered:subject',
       body: 'x'.repeat(130),
       inAppTitle: 'rendered:title',
@@ -104,14 +106,14 @@ describe('notification service and adapter depth', () => {
       new NotificationTemplateNotFoundError('missing'),
       new NotificationTemplateNotFoundError('missing', 2),
       new NotificationNoRecipientAddressError('email'),
-      new NotificationDeliveryNotFoundError('delivery-1'),
+      new NotificationDeliveryNotFoundError('0190abcd-1234-7abc-89ab-000000000006'),
     ])
       expect(error.code).toMatch(/^NOTIFICATIONS_/);
   });
 
   it('uses open preference defaults or the configured preferences document', async () => {
     const absent = new PreferencesServicePreferencesPort({ get: () => undefined } as never);
-    await expect(absent.read('tenant-1', 'subject-1')).resolves.toEqual({
+    await expect(absent.read('0190abcd-1234-7abc-89ab-000000000001', 'subject-1')).resolves.toEqual({
       email: true,
       push: true,
       inApp: true,
@@ -122,7 +124,7 @@ describe('notification service and adapter depth', () => {
     const present = new PreferencesServicePreferencesPort({
       get: (token: unknown) => (token === PreferencesService ? { getPreferences } : undefined),
     } as never);
-    await expect(present.read('tenant-1', 'subject-1')).resolves.toEqual({
+    await expect(present.read('0190abcd-1234-7abc-89ab-000000000001', 'subject-1')).resolves.toEqual({
       email: false,
       push: true,
       inApp: false,
@@ -138,7 +140,7 @@ describe('notification service and adapter depth', () => {
     });
     const service = new NotificationsService(
       { get: (token: unknown) => (token === Database ? database : undefined) } as never,
-      { tenantId: 'tenant-1', actorId: 'actor-1' } as never,
+      { tenantId: '0190abcd-1234-7abc-89ab-000000000001', actorId: '0190abcd-1234-7abc-89ab-000000000002' } as never,
       registry,
       { read: vi.fn(async () => ({ email: false, push: true, inApp: true })) },
     );
@@ -162,12 +164,12 @@ describe('notification service and adapter depth', () => {
 
     const correlatedDb = databaseWith(async (sql) =>
       sql.includes('select id from notifications.notifications')
-        ? { rows: [{ id: 'notification-existing' }] }
-        : { rows: [{ id: 'delivery-existing', channel: 'push', status: 'QUEUED' }] },
+        ? { rows: [{ id: '0190abcd-1234-7abc-89ab-000000000003' }] }
+        : { rows: [{ id: '0190abcd-1234-7abc-89ab-000000000004', channel: 'push', status: 'QUEUED' }] },
     );
     const correlated = new NotificationsService(
       { get: () => correlatedDb.database } as never,
-      { tenantId: 'tenant-1' } as never,
+      { tenantId: '0190abcd-1234-7abc-89ab-000000000001' } as never,
       registry,
       { read: vi.fn() },
     );
@@ -181,14 +183,14 @@ describe('notification service and adapter depth', () => {
         correlationId: 'correlation-1',
       }),
     ).resolves.toEqual({
-      notificationId: 'notification-existing',
-      deliveries: [{ channel: 'push', deliveryId: 'delivery-existing', status: 'QUEUED' }],
+      notificationId: '0190abcd-1234-7abc-89ab-000000000003',
+      deliveries: [{ channel: 'push', deliveryId: '0190abcd-1234-7abc-89ab-000000000004', status: 'QUEUED' }],
     });
 
     const defaultsDb = databaseWith(async () => ({ rows: [] }));
     const defaults = new NotificationsService(
       { get: () => defaultsDb.database } as never,
-      { tenantId: 'tenant-1' } as never,
+      { tenantId: '0190abcd-1234-7abc-89ab-000000000001' } as never,
       registry,
       { read: vi.fn(async () => ({ email: true, push: true, inApp: true })) },
     );
@@ -214,7 +216,7 @@ describe('notification service and adapter depth', () => {
       new NotificationsService({ get: () => database } as never, { tenantId } as never, registry, {
         read: vi.fn(async () => ({ email: true, push: true, inApp: true })),
       });
-    await expect(make('tenant-1', {}).enqueue({} as never)).rejects.toThrow(
+    await expect(make('0190abcd-1234-7abc-89ab-000000000001', {}).enqueue({} as never)).rejects.toThrow(
       NotificationValidationError,
     );
     await expect(
@@ -227,7 +229,7 @@ describe('notification service and adapter depth', () => {
       }),
     ).rejects.toThrow('Tenant context is required');
     await expect(
-      make('tenant-1').enqueue({
+      make('0190abcd-1234-7abc-89ab-000000000001').enqueue({
         recipient: { subjectId: 'subject-1' },
         category: 'inf.notice',
         templateId: template.id,
@@ -239,7 +241,7 @@ describe('notification service and adapter depth', () => {
     emailOnly.register({ ...template, supportedChannels: ['email'] });
     const unsupported = new NotificationsService(
       { get: () => databaseWith(async () => ({ rows: [] })).database } as never,
-      { tenantId: 'tenant-1' } as never,
+      { tenantId: '0190abcd-1234-7abc-89ab-000000000001' } as never,
       emailOnly,
       { read: vi.fn(async () => ({ email: true, push: true, inApp: true })) },
     );
@@ -256,27 +258,33 @@ describe('notification service and adapter depth', () => {
   });
 
   it('lists and marks inbox rows while enforcing tenant and database boundaries', async () => {
-    const item = { id: 'inbox-1' };
+    const item = {
+      id: '0190abcd-1234-7abc-89ab-000000000005',
+      notificationId: '0190abcd-1234-7abc-89ab-000000000007',
+      deliveryId: '0190abcd-1234-7abc-89ab-000000000006',
+      title: 'Notice', body: 'Body', locale: 'en-US',
+      readAt: null, dismissedAt: null, createdAt: new Date('2026-08-25T00:00:00Z'),
+    };
     const { database, trx } = databaseWith(async (sql) => ({
       rows: sql.includes('select id') ? [item] : [],
     }));
     const inbox = new NotificationInboxService(
       { get: () => database } as never,
-      { tenantId: 'tenant-1' } as never,
+      { tenantId: '0190abcd-1234-7abc-89ab-000000000001' } as never,
     );
     await expect(
       inbox.list({ subjectId: 'subject-1', unreadOnly: true, limit: 999 }),
     ).resolves.toEqual([item]);
     await expect(inbox.list({ subjectId: 'subject-1' })).resolves.toEqual([item]);
-    await inbox.markRead('inbox-1');
+    await inbox.markRead('0190abcd-1234-7abc-89ab-000000000005');
     expect(trx.query).toHaveBeenCalledWith(
       expect.stringContaining('update notifications.inbox_items'),
-      ['inbox-1', 'tenant-1'],
+      ['0190abcd-1234-7abc-89ab-000000000005', '0190abcd-1234-7abc-89ab-000000000001'],
     );
     await expect(
       new NotificationInboxService(
         { get: () => undefined } as never,
-        { tenantId: 'tenant-1' } as never,
+        { tenantId: '0190abcd-1234-7abc-89ab-000000000001' } as never,
       ).list({ subjectId: 'subject-1' }),
     ).rejects.toThrow('Database provider is unavailable');
     await expect(
@@ -289,9 +297,9 @@ describe('notification service and adapter depth', () => {
   it('persists in-app messages and exercises SES/SNS channel outcomes', async () => {
     const { database } = databaseWith(async () => ({ rows: [] }));
     const input = {
-      deliveryId: 'delivery-1',
-      notificationId: 'notification-1',
-      tenantId: 'tenant-1',
+      deliveryId: '0190abcd-1234-7abc-89ab-000000000006',
+      notificationId: '0190abcd-1234-7abc-89ab-000000000007',
+      tenantId: '0190abcd-1234-7abc-89ab-000000000001',
       recipient: { subjectId: 'subject-1', email: 'ada@example.test', phone: '+5511999999999' },
       subject: 'Subject',
       body: 'Body',
@@ -386,9 +394,9 @@ describe('notification service and adapter depth', () => {
 
   it('dispatches mixed delivery outcomes with bounded retry persistence and safe logs', async () => {
     const rows = ['email', 'sms', 'inapp', 'push'].map((channel, index) => ({
-      id: `delivery-${index}`,
-      tenant_id: 'tenant-1',
-      notification_id: 'notification-1',
+      id: `0190abcd-1234-7abc-89ab-00000000010${index}`,
+      tenant_id: '0190abcd-1234-7abc-89ab-000000000001',
+      notification_id: '0190abcd-1234-7abc-89ab-000000000007',
       channel,
       attempt_count: 0,
       max_attempts: 5,
@@ -467,7 +475,7 @@ describe('notification service and adapter depth', () => {
             rows: [
               {
                 ...rows[3],
-                id: 'delivery-push-with-adapter',
+                id: '0190abcd-1234-7abc-89ab-000000000008',
               },
             ],
           }

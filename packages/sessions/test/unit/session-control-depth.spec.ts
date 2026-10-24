@@ -127,6 +127,25 @@ function postgres(query: ReturnType<typeof vi.fn>) {
 }
 
 describe('PostgresSessionRegistry depth', () => {
+  it.each([
+    ['stock Date', new Date('2026-10-23T12:34:56.789Z')],
+    ['supported parser string', '2026-10-23T12:34:56.789Z'],
+  ])('preserves ISO mapping and milliseconds for %s', async (_label, created_at) => {
+    const query = vi.fn(async () => ({ rows: [registrationRow({ created_at })] }));
+    const rows = await postgres(query).registry.list(context, {});
+    expect(rows[0]?.createdAt).toBe('2026-10-23T12:34:56.789Z');
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([new Date(Number.NaN), Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, 'not-a-date'])(
+    'preserves the existing ISO mapper RangeError for %s rather than rejecting the driver representation early',
+    async (created_at) => {
+      const query = vi.fn(async () => ({ rows: [registrationRow({ created_at })] }));
+      await expect(postgres(query).registry.list(context, {})).rejects.toBeInstanceOf(RangeError);
+      expect(query).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it('provisions either opaque anchor form with optional expiration', async () => {
     const query = vi.fn(async () => ({ rows: [] }));
     const { registry } = postgres(query);
@@ -703,6 +722,77 @@ describe('SessionControlService remaining behavior', () => {
 });
 
 describe('PostgresSessionRegistry checked-query compatibility', () => {
+  it('preserves original mutation result, nested and opaque own-property identities', async () => {
+    const opaque = { date: new Date('2026-10-24T00:00:00Z'), bytes: new Uint8Array([7]), absent: undefined };
+    const stored = { ...result, extension: opaque };
+    Object.defineProperty(stored, '__proto__', { value: opaque, enumerable: true });
+    const query = vi.fn(async () => ({ rows: [operationRow({ result_json: stored })] }));
+    const loaded = await postgres(query).registry.operation(operation.key);
+    expect(loaded?.result).toBe(stored);
+    expect(loaded?.result.results).toBe(stored.results);
+    expect(loaded?.result.guarantee).toBe(stored.guarantee);
+    expect(Object.getOwnPropertyDescriptor(loaded?.result, '__proto__')?.value).toBe(opaque);
+    expect(stored.extension).toBe(opaque);
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { location: 'top level', bad: null },
+    { location: 'top level', bad: undefined },
+    { location: 'top level', bad: 42 },
+    { location: 'top level', bad: { secret: 'private-error-code' } },
+    { location: 'item', bad: null },
+    { location: 'item', bad: undefined },
+    { location: 'item', bad: 42 },
+    { location: 'item', bad: { secret: 'private-error-code' } },
+  ])('rejects malformed declared errorCode at $location without exposing its value', async ({ location, bad }) => {
+    const stored = location === 'top level'
+      ? { ...result, errorCode: bad }
+      : { ...result, results: [{ ...result.results[0], errorCode: bad }] };
+    const query = vi.fn(async () => ({ rows: [operationRow({ result_json: stored })] }));
+    const failure: unknown = await postgres(query).registry.operation(operation.key).catch((error: unknown) => error);
+    expect(failure).toMatchObject({ name: 'QueryRowValidationError' });
+    expect(String(failure)).not.toContain('private-error-code');
+    expect(JSON.stringify(failure)).not.toContain('private-error-code');
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a sparse mutation-result population rather than skipping its missing item', async () => {
+    const stored = { ...result, results: new Array(1) };
+    const query = vi.fn(async () => ({ rows: [operationRow({ result_json: stored })] }));
+    await expect(postgres(query).registry.operation(operation.key)).rejects.toMatchObject({ name: 'QueryRowValidationError' });
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { label: 'ordinary buffer', bytes: new Uint8Array(new ArrayBuffer(3)) },
+    { label: 'shared buffer', bytes: new Uint8Array(new SharedArrayBuffer(3)) },
+  ])('preserves opaque $label correlation identity through checked parameters', async ({ bytes }) => {
+    bytes.set([1, 2, 3]);
+    const query = vi.fn(async () => ({ rows: [], rowCount: 0 }));
+    const { registry } = postgres(query);
+    await registry.provisionAnchor({
+      id: registration.anchorId,
+      provider: 'fixture',
+      providerSubjectKey: 'subject-key',
+      encryptedHandle: bytes,
+      capabilities: COGNITO_COMPATIBLE_CAPABILITIES,
+    });
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query.mock.calls[0]?.[1]?.[2]).toBe(bytes);
+    expect(query.mock.calls[0]?.[1]?.[3]).toBe(null);
+    expect(Array.from(bytes)).toEqual([1, 2, 3]);
+  });
+
+  it('retains nonempty internal key strings and lets the existing query find no operation', async () => {
+    const query = vi.fn(async () => ({ rows: [], rowCount: 0 }));
+    const { registry } = postgres(query);
+    const operationId = '00000000-0000-4000-8000-000000000021';
+    await expect(registry.operation(`unrecognized-scope:actor:unrecognized-action:${operationId}`)).resolves.toBe(null);
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query.mock.calls[0]?.[1]).toEqual([operationId, 'unrecognized-scope', 'actor', 'unrecognized-action']);
+  });
+
   it('accepts PostgreSQL UUID values without imposing RFC version or variant bits', async () => {
     const pgUuid = '11111111-1111-1111-1111-111111111111';
     const query = vi.fn().mockResolvedValue({

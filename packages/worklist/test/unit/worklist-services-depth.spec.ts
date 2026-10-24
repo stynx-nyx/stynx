@@ -1,3 +1,4 @@
+import { bindQueryContext, executeTypedQuery, type Transaction } from '@stynx-nyx/data';
 import { resolveWorklistDeadline } from '../../src/deadline.js';
 import {
   UnknownWorklistStrategyError,
@@ -100,7 +101,7 @@ const eventRow = {
   eventId: uuid,
   tenantId: uuid,
   itemId: uuid,
-  kind: 'enqueued',
+  kind: 'enqueue',
   actorId: uuid,
   fromAssignee: null,
   toAssignee: null,
@@ -109,9 +110,14 @@ const eventRow = {
   createdAt: now,
 };
 
+function checkedTransaction(query: ReturnType<typeof vi.fn>) {
+  const run: Transaction['run'] = (definition, params) => executeTypedQuery(bindQueryContext({ query }), definition, params);
+  return { query, run };
+}
+
 function database(query: ReturnType<typeof vi.fn>) {
   return {
-    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn({ query })),
+    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn(checkedTransaction(query))),
   };
 }
 
@@ -120,7 +126,7 @@ function observedDatabase(query: ReturnType<typeof vi.fn>) {
     async (
       operation: (trx: { query: typeof query }) => Promise<unknown>,
       _options?: { role: string; readonly: boolean },
-    ) => operation({ query }),
+    ) => operation(checkedTransaction(query)),
   );
   return { database: { tx } as never, tx };
 }
@@ -451,6 +457,8 @@ describe('WorklistItemsService', () => {
       if (sql.includes('count(*)')) return { rows: [{ total: '0' }] };
       if (sql.includes('item_enqueue') || sql.includes('claim_next') || sql.includes('assign_next'))
         return { rows: [{ item_id: uuid }] };
+      const command = /select worklist\.(item_claim|item_release|item_complete|item_cancel|item_reassign)\(/u.exec(sql)?.[1];
+      if (command) return { rows: [{ [command]: '' }] };
       if (sql.includes('from worklist.items')) return { rows: [itemRow] };
       if (sql.includes('item_events')) return { rows: [eventRow] };
       return { rows: [] };
@@ -761,7 +769,9 @@ describe('D24.4 observable survivor boundaries', () => {
       createdAt: now,
       updatedAt: now,
     });
-    expect(mapEventRow(eventRow)).toStrictEqual({
+    // The direct mapper historically passes text through; retain that assertion
+    // separately from physical PostgreSQL enum rows used by checked execution.
+    expect(mapEventRow({ ...eventRow, kind: 'enqueued' })).toStrictEqual({
       id: uuid,
       tenantId: uuid,
       itemId: uuid,
@@ -844,6 +854,8 @@ describe('D24.4 observable survivor boundaries', () => {
 
   it('binds every queue write and read to exact SQL parameter projections', async () => {
     const query = vi.fn(async (sql: string) => {
+      if (sql.includes('select worklist.assert_can_work('))
+        return { rows: [{ assert_can_work: '' }] };
       if (sql.includes('worker_state')) return { rows: [workerRow] };
       return { rows: [queueRow] };
     });
@@ -1297,7 +1309,7 @@ describe('D24.10 exact survivor projections', () => {
         `select ${QUEUE_COLUMNS} from worklist.queues order by code, id limit $1 offset $2`,
         [25, 25],
       ],
-      ['select count(*)::text as total from worklist.queues'],
+      ['select count(*)::text as total from worklist.queues', []],
     ]);
   });
 
