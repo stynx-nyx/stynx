@@ -9,14 +9,14 @@ import {
   rmSync,
   existsSync,
 } from 'node:fs';
-import { createRequire } from 'node:module';
+import { resolveTestImport, resolveTestImportPath } from './support/esm-test-imports.mjs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
 const main = fileURLToPath(new URL('../..', import.meta.url));
-const require = createRequire(`${main}/tools/repo-config/native-coverage.mjs`);
-const compiler = require.resolve('typescript/lib/tsc.js');
+const coverageAnchor = `${main}/tools/repo-config/native-coverage.mjs`;
+const compiler = resolveTestImportPath('typescript/lib/tsc.js', coverageAnchor);
 function fixture(mode, setupBody, collection) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'stynx provider spaces 日本語-')));
   try {
@@ -261,7 +261,7 @@ test('genuine omitted source branch retains zero and fails unchanged standalone1
 // INV-CORE-001: real source/native collection and byte refusals retain the
 // original finite source census and unchanged standalone100 coverage policy.
 function collectRawNative(root) {
-  const runtime = pathToFileURL(require.resolve('@vitest/coverage-v8')).href;
+  const runtime = resolveTestImport('@vitest/coverage-v8', coverageAnchor);
   const nativePath = join(root, 'dist/service.js');
   const result = JSON.parse(
     execFileSync(

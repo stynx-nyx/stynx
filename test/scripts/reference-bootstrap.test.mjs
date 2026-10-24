@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { createRequire } from 'node:module';
+import { resolveTestImport } from './support/esm-test-imports.mjs';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { runInNewContext } from 'node:vm';
@@ -10,11 +10,12 @@ import { runInNewContext } from 'node:vm';
 // ports. This proves bootstrap orchestration, not the normal AppModule's HTTP
 // population, source/build custody, storage admission or production readiness.
 const root = resolve(import.meta.dirname, '../..');
-const requireApi = createRequire(join(root, 'reference/api/package.json'));
-const requireAdapter = createRequire(requireApi.resolve('@nestjs/platform-express'));
-const express = requireAdapter('express');
-const cors = requireAdapter('cors');
-const ts = requireApi('typescript');
+const apiAnchor = join(root, 'reference/api/package.json');
+const adapterAnchor = resolveTestImport('@nestjs/platform-express', apiAnchor);
+const { default: express } = await import(resolveTestImport('express', adapterAnchor));
+const { default: cors } = await import(resolveTestImport('cors', adapterAnchor));
+const { default: ts } = await import(resolveTestImport('typescript', apiAnchor));
+const { default: helmet } = await import(resolveTestImport('helmet', apiAnchor));
 const protocol = 'stynx-reference-api-startup-v1';
 const filenames = Object.fromEntries(
   ['bootstrap', 'main', 'security-headers'].map((name) => [
@@ -114,7 +115,7 @@ function unitPorts(options = {}) {
     if (specifier === './security-headers.js') {
       return evaluate('security-headers', load, processPort, consolePort);
     }
-    if (specifier === 'helmet') return requireApi('helmet');
+    if (specifier === 'helmet') return helmet;
     if (specifier === './bootstrap.js') return factory;
     throw new Error(`Unadmitted unit dependency: ${specifier}`);
   };

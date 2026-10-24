@@ -11,18 +11,20 @@ import {
   realpathSync,
   cpSync,
 } from 'node:fs';
-import { createRequire } from 'node:module';
+import { resolveTestImport, resolveTestImportPath } from './support/esm-test-imports.mjs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import { createNativeCoverage } from '../../tools/repo-config/native-coverage.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
-const require = createRequire(import.meta.url);
-const compiler = require.resolve('typescript/lib/tsc.js');
-const engineRequire = createRequire(require.resolve('vitest/package.json'));
-const { moduleRunnerTransform } = await import(pathToFileURL(engineRequire.resolve('vite')));
-const remappingUmd = engineRequire('@jridgewell/remapping');
+const compiler = resolveTestImportPath('typescript/lib/tsc.js', import.meta.url);
+const engineAnchor = import.meta.resolve('vitest/package.json');
+const { moduleRunnerTransform } = await import(resolveTestImport('vite', engineAnchor));
+// Keep the explicit UMD witness distinct from the package's ESM entry.
+const remappingManifestPath = resolveTestImportPath('@jridgewell/remapping/package.json', engineAnchor);
+const remappingManifest = JSON.parse(readFileSync(remappingManifestPath, 'utf8'));
+const { default: remappingUmd } = await import(pathToFileURL(join(dirname(remappingManifestPath), remappingManifest.main)));
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const sourceText =
   "import { double } from './math.js';\nexport function choose(enabled: boolean): string {\n  return enabled ? `olá 日本語 ${double(2)}` : 'off';\n}\n";
@@ -131,7 +133,7 @@ test('existing exact compiler sourcesContent is retained and every returned map 
     { inlineSources: true },
   ));
 test('source Program transform executes the same behavior while native IDs are left to Node', () =>
-  fixture(({ root, admit }) => {
+  fixture(async ({ root, admit }) => {
     const helper = admit();
     const source = join(root, 'src/service.ts');
     const transformed = helper.plugin.transform(sourceText, source);
@@ -139,7 +141,7 @@ test('source Program transform executes the same behavior while native IDs are l
     assert.deepEqual(transformed.map.sources, [source]);
     assert.deepEqual(transformed.map.sourcesContent, [sourceText]);
     assert.equal(helper.plugin.transform('native bytes', join(root, 'dist/service.js')), null);
-    const actual = createRequire(join(root, 'entry.cjs'))('./dist/service.js');
+    const actual = await import(pathToFileURL(join(root, 'dist/service.js')));
     assert.equal(actual.choose(true), 'olá 日本語 4');
     assert.equal(actual.choose(false), 'off');
     assert.throws(
@@ -334,11 +336,11 @@ test('isolated installed compiler/package/lib snapshots reject real dependency b
     mkdirSync(join(owner, 'tools/repo-config'), { recursive: true });
     mkdirSync(join(owner, 'node_modules'), { recursive: true });
     cpSync(
-      require.resolve('typescript/package.json').replace(/\/package\.json$/u, ''),
+      resolveTestImportPath('typescript/package.json', import.meta.url).replace(/\/package\.json$/u, ''),
       join(owner, 'node_modules/typescript'),
       { recursive: true },
     );
-    const codecManifest = require.resolve('@jridgewell/sourcemap-codec/package.json');
+    const codecManifest = resolveTestImportPath('@jridgewell/sourcemap-codec/package.json', import.meta.url);
     cpSync(dirname(codecManifest), join(owner, 'node_modules/@jridgewell/sourcemap-codec'), {
       recursive: true,
     });
@@ -383,7 +385,10 @@ test('isolated installed compiler/package/lib snapshots reject real dependency b
         join(owner, 'package.json'),
         join(owner, 'pnpm-lock.yaml'),
         join(owner, 'node_modules/@jridgewell/sourcemap-codec/package.json'),
-        createRequire(helperPath).resolve('@jridgewell/sourcemap-codec'),
+        // The current producer binds the package's UMD/CommonJS entry. Keep
+        // that exact byte-tampering witness even though this test host is ESM.
+        join(owner, 'node_modules/@jridgewell/sourcemap-codec',
+          JSON.parse(readFileSync(join(owner, 'node_modules/@jridgewell/sourcemap-codec/package.json'), 'utf8')).main),
       ]) {
         const original = readFileSync(path);
         writeFileSync(path, Buffer.concat([original, Buffer.from('\n')]));

@@ -17,8 +17,10 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { createRequire } from 'node:module';
+import { resolveTestImportPath } from './support/esm-test-imports.mjs';
 import test from 'node:test';
+import { parse } from 'yaml';
+import ts from 'typescript';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
@@ -4098,13 +4100,11 @@ test('D19 production binds the exact default-endpoint classifier without frozen 
 });
 
 test('D20 binds the exact installed Playwright 1.60 spawned-readiness semantics', () => {
-  const referenceWebRequire = createRequire(join(repoRoot, 'reference/web/package.json'));
-  const playwrightTestPackagePath = referenceWebRequire.resolve('@playwright/test/package.json');
+  const playwrightTestPackagePath = resolveTestImportPath('@playwright/test/package.json', join(repoRoot, 'reference/web/package.json'));
   const playwrightTestPackage = JSON.parse(readFileSync(playwrightTestPackagePath, 'utf8'));
-  const playwrightRequire = createRequire(playwrightTestPackagePath);
-  const playwrightPackagePath = playwrightRequire.resolve('playwright/package.json');
+  const playwrightPackagePath = resolveTestImportPath('playwright/package.json', playwrightTestPackagePath);
   const playwrightPackage = JSON.parse(readFileSync(playwrightPackagePath, 'utf8'));
-  const playwrightCorePackagePath = playwrightRequire.resolve('playwright-core/package.json');
+  const playwrightCorePackagePath = resolveTestImportPath('playwright-core/package.json', playwrightTestPackagePath);
   const playwrightCorePackage = JSON.parse(readFileSync(playwrightCorePackagePath, 'utf8'));
   const runnerSource = readFileSync(
     join(dirname(playwrightPackagePath), 'lib/runner/index.js'),
@@ -4589,7 +4589,6 @@ test('D22 actual helper confines failed restricted app provisioning before child
 
 test('D22 canonical Compose provisions only the restricted app identity without unrelated drift', () => {
   const source = readFileSync(join(repoRoot, 'reference/api/docker-compose.yml'), 'utf8');
-  const { parse } = createRequire(import.meta.url)('yaml');
   const compose = parse(source);
   const mount = './postgres/init-app-role.sql:/docker-entrypoint-initdb.d/10-stynx-app-role.sql:ro';
   assert.deepEqual(compose.services.postgres.volumes, [mount]);
@@ -4998,7 +4997,6 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
     'ropa',
     'unconfigured-identity',
   ].map((name) => ({ source: `src/${name}.ts`, output: `dist/privacy/src/${name}.js` }));
-  const ts = createRequire(import.meta.url)('typescript');
   const parsedCoverage = ts.createSourceFile(
     'vitest.coverage.config.ts',
     coverageConfig,
@@ -5473,13 +5471,14 @@ test('clean preferences build emits both exact exports and reference-api fails c
     const resolvedPackages = new Set(['@stynx-nyx/reference-api']);
     for (const [importerName, entry] of closure) {
       if (sourceOnlyTools.has(importerName)) continue;
-      const importerRequire = createRequire(runtimeTargets.get(importerName));
+      const importerAnchor = runtimeTargets.get(importerName);
       for (const [dependencyName] of workspaceDependencies(entry.manifest)) {
         if (sourceOnlyTools.has(dependencyName)) continue;
-        const resolvedRuntime = importerRequire.resolve(
+        const resolvedRuntime = resolveTestImportPath(
           dependencyName === '@stynx-domain/demo-bookmark-api'
             ? domainModuleImport
             : dependencyName,
+          importerAnchor,
         );
         assert.equal(
           realpathSync(resolvedRuntime),

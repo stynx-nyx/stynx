@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
-import { fork } from 'node:child_process';
-import { createRequire } from 'node:module';
+import { execFileSync, fork } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import {
   lstatSync,
@@ -244,10 +243,16 @@ function fullResolutionFacts() {
   const context = value.context.moduleContext;
   const modules = value.frames[8].body.modules;
   const anchor = context.bindings.resolutionAnchors[2];
-  const require = createRequire(new URL('../../packages/flow/package.json', import.meta.url));
+  // Require-condition facts remain an explicit CJS fixture, independent of the
+  // ESM host; changing the resolver would change what these parser rows mean.
+  const resolved = JSON.parse(execFileSync(process.execPath, ['-e',
+    "const { createRequire } = require('node:module'); const resolve = createRequire(new URL(process.argv[1])).resolve; process.stdout.write(JSON.stringify(JSON.parse(process.argv[2]).map(specifier => resolve(specifier))));",
+    new URL('../../packages/flow/package.json', import.meta.url).href,
+    JSON.stringify(anchor.requests),
+  ], { encoding: 'utf8' }));
   let sequence = Math.max(...modules.evaluations.map((row) => row.sequence));
-  for (const specifier of anchor.requests) {
-    const file = realpathSync(require.resolve(specifier));
+  for (const [index, specifier] of anchor.requests.entries()) {
+    const file = realpathSync(resolved[index]);
     const bytes = readFileSync(file),
       url = pathToFileURL(file).href;
     if (!context.bindings.roster.some((row) => row.url === url))

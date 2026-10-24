@@ -9,14 +9,14 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { createRequire } from 'node:module';
+import { resolveTestImport } from './support/esm-test-imports.mjs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
 
 const repoRoot = resolve(import.meta.dirname, '../..');
-const docsRequire = createRequire(join(repoRoot, 'docs/site/package.json'));
-const { handleBrokenLinks } = docsRequire('@docusaurus/core/lib/server/brokenLinks.js');
+const docsAnchor = join(repoRoot, 'docs/site/package.json');
+const { handleBrokenLinks } = (await import(resolveTestImport('@docusaurus/core/lib/server/brokenLinks.js', docsAnchor))).default;
 const adrRoute = '/docs/adr/performance-contract';
 const performanceRoute = '/docs/framework/performance/http-endpoint-slos';
 

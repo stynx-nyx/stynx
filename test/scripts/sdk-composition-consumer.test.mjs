@@ -1,10 +1,9 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { createRequire } from 'node:module';
+import { resolveTestImport } from './support/esm-test-imports.mjs';
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { after, before, test } from 'node:test';
 import * as ts from 'typescript';
 
@@ -34,8 +33,7 @@ before(async () => {
     '--strip-components=1',
   ]);
   writeFileSync(join(fixture, 'package.json'), JSON.stringify({ type: 'module' }));
-  const require = createRequire(join(fixture, 'consumer.mjs'));
-  sdk = await import(pathToFileURL(require.resolve('@stynx-nyx/sdk')).href);
+  sdk = await import(resolveTestImport('@stynx-nyx/sdk', join(fixture, 'consumer.mjs')));
 });
 
 after(() => {

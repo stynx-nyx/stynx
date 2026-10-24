@@ -1,17 +1,15 @@
 import assert from 'node:assert/strict';
 import { mkdtempSync, realpathSync, writeFileSync, rmSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import { resolveTestImport } from './support/esm-test-imports.mjs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import ts from 'typescript';
 import { encode } from '@jridgewell/sourcemap-codec';
 import { repairSourceMap } from '../../tools/repo-config/native-source-map.mjs';
 
-const require = createRequire(import.meta.url);
-const viteRequire = createRequire(require.resolve('vitest/package.json'));
-const { moduleRunnerTransform } = await import(pathToFileURL(viteRequire.resolve('vite')));
+const vitestManifest = import.meta.resolve('vitest/package.json');
+const { moduleRunnerTransform } = await import(resolveTestImport('vite', vitestManifest));
 
 // Independent VLQ decoding checks the complete ordered population, rather than
 // calling the mapper's codec or reconstructing its token-selection algorithm.

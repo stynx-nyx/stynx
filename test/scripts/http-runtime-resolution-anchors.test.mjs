@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { createRequire } from 'node:module';
+import { execFileSync } from 'node:child_process';
 import {
   lstatSync,
   mkdirSync,
@@ -26,7 +26,12 @@ const cleanExit = { code: 0, signal: null };
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const targets = ['reflect-metadata', '@nestjs/core'].map((request, index) => {
   const manifest = index ? 'packages/flow/package.json' : 'reference/api/package.json';
-  const installed = createRequire(join(repository, manifest)).resolve(request);
+  // This parser witness intentionally describes CommonJS resolution conditions;
+  // keep that loader in an isolated fixture rather than the ESM test host.
+  const installed = execFileSync(process.execPath, ['-e',
+    "const { createRequire } = require('node:module'); process.stdout.write(createRequire(process.argv[1]).resolve(process.argv[2]));",
+    join(repository, manifest), request,
+  ], { encoding: 'utf8' });
   const bytes = readFileSync(installed);
   const file = join(root, 'node_modules/anchor-targets', `${index}.js`);
   mkdirSync(dirname(file), { recursive: true });

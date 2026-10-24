@@ -12,7 +12,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { createRequire } from 'node:module';
+import { resolveTestImportPath } from './support/esm-test-imports.mjs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import test, { after, before, beforeEach } from 'node:test';
@@ -25,8 +25,7 @@ import {
 // These real compiler witnesses qualify the diagnostic plan/map reconciler.
 // They cannot establish that an arbitrary prior output was freshly compiled.
 const repo = resolve(import.meta.dirname, '../..');
-const require = createRequire(import.meta.url);
-const installedCompiler = dirname(dirname(realpathSync(require.resolve('typescript'))));
+const installedCompiler = dirname(dirname(realpathSync(resolveTestImportPath('typescript', import.meta.url))));
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 let checkout;
 let saved;
@@ -129,7 +128,7 @@ after(() => {
   rmSync(saved, { recursive: true, force: true });
 });
 
-test('real pinned tsc emits both included and imported sibling modules with linked declaration maps', () => {
+test('real pinned tsc emits both included and imported sibling modules with linked declaration maps', async () => {
   const value = plan();
   assert.equal(value.compiler.version, '6.0.3');
   assert.deepEqual(value.configs.map((row) => row.path).sort(), [
@@ -153,7 +152,7 @@ test('real pinned tsc emits both included and imported sibling modules with link
     value.sources.some((row) => row.path.endsWith('lib.es5.d.ts') && row.declarationInput),
     true,
   );
-  assert.equal(require(join(checkout, 'packages/feature/dist/feature/src/index.js')).answer, 42);
+  assert.equal((await import(pathToFileURL(join(checkout, 'packages/feature/dist/feature/src/index.js')))).answer, 42);
   const result = reconcile(value);
   assert.equal(result.outputs.length, 8);
   assert.equal(result.mapLinks.length, 4);

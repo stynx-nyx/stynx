@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import { resolveTestImport } from './support/esm-test-imports.mjs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
@@ -9,8 +9,9 @@ import { captureNestHttpRuntime } from '../../scripts/lib/http-runtime-census.mj
 
 const root = resolve(import.meta.dirname, '../..');
 const source = 'test/scripts/http-runtime-census.test.mjs';
-const requireRuntime = createRequire(join(root, 'packages/flow/package.json'));
-requireRuntime('reflect-metadata');
+const runtimeAnchor = join(root, 'packages/flow/package.json');
+const resolveRuntime = (specifier) => resolveTestImport(specifier, runtimeAnchor);
+await import(resolveRuntime('reflect-metadata'));
 const {
   Controller,
   Delete,
@@ -24,13 +25,13 @@ const {
   Version,
   VersioningType,
   VERSION_NEUTRAL,
-} = requireRuntime('@nestjs/common');
-const { NestFactory } = requireRuntime('@nestjs/core');
-const { ExpressAdapter } = requireRuntime('@nestjs/platform-express');
-const requireAdapter = createRequire(requireRuntime.resolve('@nestjs/platform-express'));
-const express = requireAdapter('express');
+} = (await import(resolveRuntime('@nestjs/common'))).default;
+const { NestFactory } = (await import(resolveRuntime('@nestjs/core'))).default;
+const adapterAnchor = resolveRuntime('@nestjs/platform-express');
+const { ExpressAdapter } = (await import(adapterAnchor)).default;
+const { default: express } = await import(resolveTestImport('express', adapterAnchor));
 const { Permission, Public, PublicTenantRoute, ReadOnly, System } =
-  requireRuntime('@stynx-nyx/auth');
+  await import(resolveRuntime('@stynx-nyx/auth'));
 const sourceSha256 = createHash('sha256')
   .update(readFileSync(join(root, source)))
   .digest('hex');

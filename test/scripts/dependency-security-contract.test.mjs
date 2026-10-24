@@ -1,19 +1,18 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import { resolveTestImport, resolveTestImportPath } from './support/esm-test-imports.mjs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 const root = resolve(import.meta.dirname, '../..');
 // Resolve the installed workspace dependency graph, rather than importing the fork source directly.
-const installed = createRequire(join(root, 'node_modules/.pnpm/node_modules/package.json'));
-const micromatchPath = installed.resolve('micromatch');
-const consumer = createRequire(micromatchPath);
-const bracesPath = consumer.resolve('braces');
-const braces = consumer('braces');
-const CachePolicy = installed('http-cache-semantics');
+const installedAnchor = join(root, 'node_modules/.pnpm/node_modules/package.json');
+const micromatchPath = resolveTestImportPath('micromatch', installedAnchor);
+const bracesPath = resolveTestImportPath('braces', micromatchPath);
+const { default: braces } = await import(resolveTestImport('braces', micromatchPath));
+const { default: CachePolicy } = await import(resolveTestImport('http-cache-semantics', installedAnchor));
 
 function bounded(program) {
   const result = spawnSync(process.execPath, ['-e', program, bracesPath], {
@@ -37,10 +36,10 @@ const refused = fn => assert.throws(fn, error => error instanceof RangeError &&
 
 test('workspace consumers resolve the real braces fork and exact supported cache/TOML packages', () => {
   assert.equal(realpathSync(bracesPath), realpathSync(join(root, 'tools/braces-safe/index.js')));
-  assert.equal(consumer('braces/package.json').version, '3.0.4-stynx.1');
-  assert.equal(installed('http-cache-semantics/package.json').version, '4.3.1-stynx.1');
+  assert.equal(JSON.parse(readFileSync(resolveTestImportPath('braces/package.json', micromatchPath), 'utf8')).version, '3.0.4-stynx.1');
+  assert.equal(JSON.parse(readFileSync(resolveTestImportPath('http-cache-semantics/package.json', installedAnchor), 'utf8')).version, '4.3.1-stynx.1');
   assert.equal(
-    realpathSync(installed.resolve('http-cache-semantics')),
+    realpathSync(resolveTestImportPath('http-cache-semantics', installedAnchor)),
     realpathSync(join(root, 'tools/http-cache-semantics-safe/index.js')),
   );
   assert.equal(
@@ -75,7 +74,7 @@ const parity = [
   ['{}', '{}', ['{}'], '{}'],
 ];
 for (const [pattern, compiled, expanded, stringified] of parity) {
-  test(`installed braces preserves upstream public API for ${JSON.stringify(pattern)}`, () => {
+  test(`installed braces preserves upstream public API for ${JSON.stringify(pattern)}`, async () => {
     assert.deepEqual(braces(pattern), [compiled]);
     assert.equal(braces.compile(pattern), compiled);
     assert.deepEqual(braces.create(pattern), pattern.length < 3 ? [pattern] : compiled);
@@ -83,7 +82,7 @@ for (const [pattern, compiled, expanded, stringified] of parity) {
     assert.deepEqual(braces.expand(pattern), expanded);
     assert.equal(braces.stringify(braces.parse(pattern)), stringified);
     for (const method of ['compile', 'expand', 'stringify']) {
-      const direct = consumer(`braces/lib/${method}`);
+      const { default: direct } = await import(resolveTestImport(`braces/lib/${method}.js`, micromatchPath));
       assert.deepEqual(
         direct(braces.parse(pattern)),
         method === 'compile' ? compiled : method === 'expand' ? expanded : stringified,
@@ -175,8 +174,9 @@ refused(() => lib('expand')(make()));
   });
 }
 
-test('actual micromatch and fast-glob consumers retain glob boundary behavior', (t) => {
-  const micromatch = installed('micromatch');
+test('actual micromatch and fast-glob consumers retain glob boundary behavior', async (t) => {
+  const { default: micromatch } = await import(resolveTestImport('micromatch', installedAnchor));
+  const { default: fastGlob } = await import(resolveTestImport('fast-glob', installedAnchor));
   assert.deepEqual(
     micromatch(['src/a.ts', 'src/b.js', 'src/c.json', 'src/.hidden.ts'], 'src/*.{ts,js}'),
     ['src/a.ts', 'src/b.js'],
@@ -187,7 +187,7 @@ test('actual micromatch and fast-glob consumers retain glob boundary behavior', 
   mkdirSync(join(directory, 'src'));
   for (const name of ['a.ts', 'b.js', 'c.json', '.hidden.ts'])
     writeFileSync(join(directory, 'src', name), '');
-  assert.deepEqual(installed('fast-glob').sync('src/*.{ts,js}', { cwd: directory }).sort(), [
+  assert.deepEqual(fastGlob.sync('src/*.{ts,js}', { cwd: directory }).sort(), [
     'src/a.ts',
     'src/b.js',
   ]);
@@ -275,8 +275,8 @@ test('cache respects Set-Cookie opt-in and Vary matching', () => {
   assert.equal(star.value.satisfiesWithoutRevalidation(star.request), false);
 });
 
-test('installed TOML preserves typed values and reports malformed input', () => {
-  const toml = installed('smol-toml');
+test('installed TOML preserves typed values and reports malformed input', async () => {
+  const toml = await import(resolveTestImport('smol-toml', installedAnchor));
   const document = { title: 'tenant á', active: true, retries: 3, nested: { names: ['a', 'b'] } };
   const parsed = toml.parse(toml.stringify(document));
   assert.deepEqual(JSON.parse(JSON.stringify(parsed)), document);
