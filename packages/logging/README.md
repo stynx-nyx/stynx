@@ -175,7 +175,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/core`: `workspace:*`
 - `pino`: `^10.3.1`
 - `pino-pretty`: `^13.1.3`
-- `zod`: `^4.3.6`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 
